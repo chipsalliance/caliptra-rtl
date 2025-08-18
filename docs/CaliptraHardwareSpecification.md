@@ -117,6 +117,7 @@ The following table shows the memory map address ranges for each of the IP block
 | SHA256                              | 10        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
 | ML-DSA                              | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
 | AES                                 | 15        | 4 KiB        | 0x1001_1000   | 0x1001_1FFF |
+| SHA3                                | 16        | 4 KiB        | 0x1004_0000   | 0x1004_0FFF |
 
 #### Peripherals subsystem
 
@@ -627,14 +628,15 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
 
 * Symmetric cryptographic primitives
     * De-obfuscation engine
-     * SHA512/384 (based on NIST FIPS 180-4 [2])
-     * SHA256 (based on NIST FIPS 180-4 [2])
-     * HMAC512 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
+    * SHA512/384 (based on NIST FIPS 180-4 [2])
+    * SHA256 (based on NIST FIPS 180-4 [2])
+    * HMAC512 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
+    * SHA3 (based on [NIST FIPS 202](https://doi.org/10.6028/NIST.FIPS.202) [17])
 * Public-key cryptography
-     * NIST Secp384r1 Deterministic Digital Signature Algorithm (based on FIPS-186-4  [11] and RFC 6979 [7])
+    * NIST Secp384r1 Deterministic Digital Signature Algorithm (based on FIPS-186-4 [11] and RFC 6979 [7])
 * Key vault
-     * Key slots
-     * Key slot management
+    * Key slots
+    * Key slot management
 
 The high-level architecture of Caliptra cryptographic subsystem is shown in the following figure.
 
@@ -1379,7 +1381,7 @@ LMS parameters are shown in the following table:
 | w         | The width (in bits) of the Winternitz coefficients.                    | {1, 2, 4, 8}        |
 | p         | The number of n-byte string elements that make up the LM-OTS signature.| {265, 133, 67, 34}  |
 | H         | A cryptographic hash function.                                         | SHA256              |
-| h         | The height of the tree.	                                        	| {5, 10, 15, 20, 25} |
+| h         | The height of the tree.                                                | {5, 10, 15, 20, 25} |
 
 - SHA256 is used for n=32 and SHA256/192 is used for n=24.
 - SHAKE256 is not supported in this architecture.
@@ -2425,10 +2427,11 @@ The following terminology is used in this document.
 9. Coron, J.-S.: Resistance against differential power analysis for elliptic curve cryptosystems. In: Ko¸c, C¸ .K., Paar, C. (eds.) CHES 1999. LNCS, vol. 1717, pp. 292–302.
 10. Schindler, W., Wiemers, A.: Efficient side-channel attacks on scalar blinding on elliptic curves with special structure. In: NISTWorkshop on ECC Standards (2015).
 11. National Institute of Standards and Technology, "Digital Signature Standard (DSS)", Federal Information Processing Standards Publication (FIPS PUB) 186-4, July 2013.
-12. NIST SP 800-90A, Rev 1: "Recommendation for Random Number Generation Using Deterministic Random Bit Generators", 2012. |
+12. NIST SP 800-90A, Rev 1: "Recommendation for Random Number Generation Using Deterministic Random Bit Generators", 2012.
 13. CHIPS Alliance, “RISC-V VeeR EL2 Programmer’s Reference Manual” \[Online\] Available at https://github.com/chipsalliance/Cores-VeeR-EL2/blob/main/docs/RISC-V_VeeR_EL2_PRM.pdf.
 14. “The RISC-V Instruction Set Manual, Volume I: User-Level ISA, Document Version 20191213”, Editors Andrew Waterman and Krste Asanovi ́c, RISC-V Foundation, December 2019. Available at https://riscv.org/technical/specifications/.
 15. “The RISC-V Instruction Set Manual, Volume II: Privileged Architecture, Document Version 20211203”, Editors Andrew Waterman, Krste Asanovi ́c, and John Hauser, RISC-V International, December 2021. Available at https://riscv.org/technical/specifications/.
-16. NIST SP 800-56A, Rev 3: "Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography", 2018, |
+16. NIST SP 800-56A, Rev 3: "Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography", 2018.
+17. NIST FIPS 202: "SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions", 2015. Available at: [https://csrc.nist.gov/pubs/fips/202/final](https://doi.org/10.6028/NIST.FIPS.202).
 
 <sup>[1]</sup> _Caliptra.**  **Spanish for “root cap” and describes the deepest part of the root_
