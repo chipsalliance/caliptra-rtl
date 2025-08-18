@@ -164,7 +164,7 @@ void main(void) {
             aes_key.kv_reuse_key = FALSE;
             aes_key.kv_expect_err = FALSE;
             
-            // Preload KV16 with a zero key
+            // Preload KV16 with a known key
             SEND_STDOUT_CTRL(KV16_KEY);
 
             // Loading the KV23 slot with a key from AES
