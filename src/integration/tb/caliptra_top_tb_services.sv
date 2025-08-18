@@ -747,7 +747,7 @@ module caliptra_top_tb_services
                     //inject valid hmac_block dest and hmac512_block value to key reg
                     else if((WriteData[7:0] == 8'hb0) && mailbox_write) begin
                         inject_hmac_block <= 1'b1;
-                        if (slot_id == 4) begin
+                        if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'h2;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
