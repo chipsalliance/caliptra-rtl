@@ -51,6 +51,7 @@
 +incdir+${CALIPTRA_ROOT}/src/kmac/rtl
 +incdir+${CALIPTRA_ROOT}/src/aes/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl
++incdir+${CALIPTRA_ROOT}/src/sha3/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/asserts
 +incdir+${CALIPTRA_AXI4PC_DIR}
 +incdir+${CALIPTRA_ROOT}/src/entropy_src/tb
@@ -64,6 +65,7 @@
 +incdir+${CALIPTRA_ROOT}/src/keyvault/coverage
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/coverage
 +incdir+${CALIPTRA_ROOT}/src/axi/coverage
++incdir+${CALIPTRA_ROOT}/src/aes/coverage
 +incdir+${CALIPTRA_ROOT}/src/integration/tb
 +incdir+${CALIPTRA_ROOT}/src/integration/coverage
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
@@ -527,6 +529,7 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_pkg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_28_22_dec.sv
@@ -573,6 +576,11 @@ ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_rsp_intg_chk.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_data_integ_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_err.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_err_resp.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_fifo_sync.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_socket_1n.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_sram_byte.sv
+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl/caliptra_tlul_adapter_sram.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_masked.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_cipher_core.sv
@@ -608,7 +616,6 @@ ${CALIPTRA_ROOT}/src/aes/rtl/aes_reduced_round.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_status.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_top.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes.sv
-${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_wrapper.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_core.sv
@@ -621,6 +628,24 @@ ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_block_encrypt.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_state_db.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_cmd_stage.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/ot_sha3_pkg.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac_pkg.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac_reg_pkg.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/sha3_reg_pkg.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/ot_keccak_2share.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/ot_keccak_round.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac_app.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac_core.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac_entropy.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac_errchk.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac_msgfifo.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac_reg_top.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac_staterd.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/kmac.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/ot_sha3pad.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/sha3_reg.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/ot_sha3.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/sha3_ctrl.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_top.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/caliptra_axi_sram.sv
 ${CALIPTRA_ROOT}/src/integration/asserts/caliptra_top_sva.sv
@@ -649,6 +674,8 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/coverage/abr_top_cov_bind.s
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_if.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_props.sv
+${CALIPTRA_ROOT}/src/aes/coverage/aes_cov_if.sv
+${CALIPTRA_ROOT}/src/aes/coverage/aes_cov_bind.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/tb/dma_testcase_generator.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_veer_sram_export.sv

@@ -33,4 +33,8 @@ inline uint32_t lsu_read_32(uintptr_t addr) {
   return *(volatile uint32_t *)addr;
 }
 
+inline void lsu_write_8(uintptr_t addr, uint8_t data) {
+  volatile uint8_t *ptr = (volatile uint8_t *)addr;
+  *ptr = data;
+}
 #endif /* RISCV_HW_IF_H */
