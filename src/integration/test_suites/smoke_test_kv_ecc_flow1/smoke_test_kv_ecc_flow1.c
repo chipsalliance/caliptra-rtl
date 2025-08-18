@@ -229,8 +229,7 @@ void main(){
 
     //inject seed to kv key reg (in RTL)
     printf("Inject SEED into KV\n");
-    uint8_t seed_inject_cmd = 0x80 + (seed_kv_id & 0x7);
-    printf("%c", seed_inject_cmd);
+    lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
     cptra_intr_rcv.ecc_notif = 0;

@@ -79,8 +79,7 @@ void hmac_test(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id
 void ecc_test(uint8_t seed_kv_id, uint8_t privkey_kv_id){    
     //inject seed to kv key reg (in RTL)
     printf("Inject SEED into KV\n");
-    uint8_t seed_inject_cmd = 0x80 + (seed_kv_id & 0x7);
-    printf("%c", seed_inject_cmd);  
+    lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
 
     // Program ECC_SEED Read with 12 dwords from seed_kv_id
     lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, (ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
