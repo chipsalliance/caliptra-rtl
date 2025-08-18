@@ -165,7 +165,7 @@ void main() {
     if (ocp_lock_mode){
         uint8_t kv_slot0, kv_slot1, kv_slot2;
 
-        uint8_t op = 1; //rand() % 4;
+        uint8_t op = rand() % 4;
         kv_slot0 = rand() % 24;
         if (kv_slot0 < 16){
             do {
