@@ -34,6 +34,12 @@ module caliptra_top
     input logic                        cptra_pwrgood,
     input logic                        cptra_rst_b,
 
+    output logic 		       cptra_uc_rst_b_o,
+    input logic 		       cptra_uc_rst_b_i,
+
+    output logic 		       cptra_noncore_rst_b_o,
+    input logic 		       cptra_noncore_rst_b_i,  
+
     input logic [255:0]                              cptra_obf_key,
     input logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key,    
     input logic                                      cptra_obf_field_entropy_vld,
@@ -141,10 +147,7 @@ module caliptra_top
     localparam NUM_INTR = `RV_PIC_TOTAL_INT; // 31
     localparam TOTAL_OBF_KEY_BITS = `CLP_OBF_KEY_DWORDS * 32;
 
-    //caliptra reset driven by boot fsm in mailbox
-    logic                       cptra_noncore_rst_b;
-    logic                       cptra_uc_rst_b;
-
+  
     //clock gating signals
     logic                       clk_gating_en   ;
     logic                       rdc_clk_dis     ;
@@ -364,7 +367,7 @@ end
     )
     ahb_lite_bus_i (
         .hclk                          ( clk_cg                      ),
-        .hreset_n                      ( cptra_noncore_rst_b         ),
+        .hreset_n                      ( cptra_noncore_rst_b_i       ),
         .force_bus_idle                ( fw_update_rst_window        ),
         .ahb_lite_responders           ( responder_inst              ),
         .ahb_lite_initiator            ( initiator_inst              ),
@@ -458,7 +461,7 @@ el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
     .rst_l                  ( 1'b0 ),
 `else
-    .rst_l                  ( cptra_uc_rst_b),
+    .rst_l                  ( cptra_uc_rst_b_i),
 `endif
     .dbg_rst_l              ( cptra_pwrgood), 
     .clk                    ( uc_clk_cg    ),
@@ -609,7 +612,7 @@ el2_veer_wrapper rvtop (
         .AHB_NO_OPT(1) //Prevent address and data phase overlap between initiators
     ) u_sb_lsu_ahb_mux (
         .hclk                (clk_cg),
-        .hreset_n            (cptra_noncore_rst_b),
+        .hreset_n            (cptra_noncore_rst_b_i),
         .force_bus_idle      (fw_update_rst_window),
         // Initiator 0
         .hsel_i_0            (1'b1          ),
@@ -650,8 +653,8 @@ el2_veer_wrapper rvtop (
 
     // Security State value captured on a Caliptra reset deassertion
     // Security State can be unlocked by setting ss_dbg_manuf_enable or ss_soc_dbg_unlock_level[0]
-    always_ff  @(posedge clk or negedge cptra_noncore_rst_b) begin
-        if (~cptra_noncore_rst_b) begin
+    always_ff  @(posedge clk or negedge cptra_noncore_rst_b_i) begin
+        if (~cptra_noncore_rst_b_i) begin
             unlock_caliptra_security_state <= 1;
         end
         else begin
@@ -659,8 +662,8 @@ el2_veer_wrapper rvtop (
         end
     end
 
-    always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
-        if (~cptra_noncore_rst_b) begin
+    always_ff @(posedge clk or negedge cptra_noncore_rst_b_i) begin
+        if (~cptra_noncore_rst_b_i) begin
             cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
             cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
         end
@@ -706,8 +709,8 @@ el2_veer_wrapper rvtop (
 
 
     //capture incoming CSR HMAC key
-    always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
-        if (~cptra_noncore_rst_b) begin
+    always_ff @(posedge clk or negedge cptra_noncore_rst_b_i) begin
+        if (~cptra_noncore_rst_b_i) begin
             cptra_csr_hmac_key_reg <= '0;
         end
         //Only latch the value during device manufacturing
@@ -753,7 +756,7 @@ end
 
 clk_gate cg (
     .clk(clk),
-    .cptra_rst_b(cptra_noncore_rst_b),
+    .cptra_rst_b(cptra_noncore_rst_b_i),
     .psel(|s_axi_active || s_axi_r_if.arvalid || s_axi_w_if.awvalid),
     .clk_gate_en(clk_gating_en),
     .cpu_halt_status(o_cpu_halt_status),
@@ -778,7 +781,7 @@ ahb_lite_2to1_mux #(
     .AHB_LITE_DATA_WIDTH(`CALIPTRA_IMEM_DATA_WIDTH)
 ) u_ahb_lite_2to1_mux (
     .hclk           (clk_cg),
-    .hreset_n       (cptra_uc_rst_b),
+    .hreset_n       (cptra_uc_rst_b_i),
     .force_bus_idle (fw_update_rst_window),
     // From Initiator 0
     // Inputs
@@ -829,7 +832,7 @@ caliptra_ahb_srom #(
 
     //AMBA AHB Lite INF
     .hclk       (clk_cg),
-    .hreset_n   (cptra_uc_rst_b),
+    .hreset_n   (cptra_uc_rst_b_i),
     .haddr_i    (imem_haddr[`CALIPTRA_IMEM_BYTE_ADDR_W-1:0]),
     .hwdata_i   (`CALIPTRA_IMEM_DATA_WIDTH'(0)             ),
     .hsel_i     (imem_hsel),
@@ -855,7 +858,7 @@ sha512_ctrl #(
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA512))
 ) sha512 (
     .clk            (clk_cg),
-    .reset_n        (cptra_noncore_rst_b),
+    .reset_n        (cptra_noncore_rst_b_i),
     .cptra_pwrgood  (cptra_pwrgood),
     .haddr_i        (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA512)-1:0]),
     .hwdata_i       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hwdata),
@@ -883,7 +886,7 @@ sha256_ctrl #(
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA256))
 ) sha256 (
     .clk            (clk_cg),
-    .reset_n        (cptra_noncore_rst_b),
+    .reset_n        (cptra_noncore_rst_b_i),
     .cptra_pwrgood  (cptra_pwrgood),
     .haddr_i        (responder_inst[`CALIPTRA_SLAVE_SEL_SHA256].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SHA256)-1:0]),
     .hwdata_i       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA256].hwdata),
@@ -940,7 +943,7 @@ doe_ctrl #(
     .AHB_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DOE))
 ) doe (
     .clk               (clk_cg),
-    .reset_n           (cptra_noncore_rst_b),
+    .reset_n           (cptra_noncore_rst_b_i),
     .cptra_pwrgood     (cptra_pwrgood),
     .cptra_obf_key     (cptra_obf_key_dbg),
     .obf_uds_seed      (obf_uds_seed_dbg),
@@ -973,7 +976,7 @@ ecc_top #(
 ecc_top1
 (
     .clk             (clk_cg),
-    .reset_n         (cptra_noncore_rst_b),
+    .reset_n         (cptra_noncore_rst_b_i),
     .cptra_pwrgood   (cptra_pwrgood),
     .haddr_i         (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ECC)-1:0]),
     .hwdata_i        (responder_inst[`CALIPTRA_SLAVE_SEL_ECC].hwdata),
@@ -1002,7 +1005,7 @@ hmac_ctrl #(
      .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_HMAC))
 )hmac (
      .clk(clk_cg),
-     .reset_n       (cptra_noncore_rst_b),
+     .reset_n       (cptra_noncore_rst_b_i),
      .cptra_pwrgood (cptra_pwrgood),
      .cptra_csr_hmac_key(cptra_csr_hmac_key_dbg),
      .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_HMAC)-1:0]),
@@ -1031,7 +1034,7 @@ abr_top #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA))
 ) abr_inst (
      .clk               (clk_cg),
-     .rst_b             (cptra_noncore_rst_b),
+     .rst_b             (cptra_noncore_rst_b_i),
      //TODO: pwrgood
      .haddr_i           (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA)-1:0]),
      .hwdata_i          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hwdata),
@@ -1064,7 +1067,7 @@ aes_clp_wrapper #(
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES))
 ) aes_inst (
     .clk(clk_cg),
-    .reset_n(cptra_noncore_rst_b),
+    .reset_n(cptra_noncore_rst_b_i),
     .cptra_pwrgood(cptra_pwrgood),
 
     .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_AES].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES)-1:0]),
@@ -1112,8 +1115,8 @@ kv #(
 key_vault1
 (
     .clk                  (clk_cg),
-    .rst_b                (cptra_noncore_rst_b),
-    .core_only_rst_b      (cptra_uc_rst_b),
+    .rst_b                (cptra_noncore_rst_b_i),
+    .core_only_rst_b      (cptra_uc_rst_b_i),
     .cptra_pwrgood        (cptra_pwrgood),
     .fw_update_rst_window (fw_update_rst_window),
     .haddr_i              (responder_inst[`CALIPTRA_SLAVE_SEL_KV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_KV)-1:0]),
@@ -1145,8 +1148,8 @@ pv #(
 pcr_vault1
 (
     .clk                  (clk_cg),
-    .rst_b                (cptra_noncore_rst_b),
-    .core_only_rst_b      (cptra_uc_rst_b),
+    .rst_b                (cptra_noncore_rst_b_i),
+    .core_only_rst_b      (cptra_uc_rst_b_i),
     .cptra_pwrgood        (cptra_pwrgood),
     .fw_update_rst_window (fw_update_rst_window),
     .haddr_i              (responder_inst[`CALIPTRA_SLAVE_SEL_PV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_PV)-1:0]),
@@ -1173,8 +1176,8 @@ dv #(
 data_vault1
 (
     .clk             (clk_cg),
-    .rst_b           (cptra_noncore_rst_b),
-    .core_only_rst_b (cptra_uc_rst_b),
+    .rst_b           (cptra_noncore_rst_b_i),
+    .core_only_rst_b (cptra_uc_rst_b_i),
     .cptra_pwrgood (cptra_pwrgood),
     .haddr_i         (responder_inst[`CALIPTRA_SLAVE_SEL_DV].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DV)-1:0]),
     .hwdata_i        (responder_inst[`CALIPTRA_SLAVE_SEL_DV].hwdata),
@@ -1208,7 +1211,7 @@ csrng #(
 ) csrng (
     // Clock and reset connections
     .clk_i                  (clk_cg),
-    .rst_ni                 (cptra_noncore_rst_b),
+    .rst_ni                 (cptra_noncore_rst_b_i),
     // AMBA AHB Lite Interface
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_CSRNG)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hwdata),
@@ -1247,7 +1250,7 @@ entropy_src #(
     .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC))
 ) entropy_src (
     .clk_i                  (clk_cg),
-    .rst_ni                 (cptra_noncore_rst_b),
+    .rst_ni                 (cptra_noncore_rst_b_i),
     // AMBA AHB Lite Interface
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hwdata),
@@ -1423,8 +1426,9 @@ soc_ifc_top1
     .iccm_lock       (iccm_lock                                    ),
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`CALIPTRA_SLAVE_SEL_IDMA]),
     //uC reset
-    .cptra_noncore_rst_b (cptra_noncore_rst_b),
-    .cptra_uc_rst_b (cptra_uc_rst_b),
+    .cptra_noncore_rst_b (cptra_noncore_rst_b_o),
+    .cptra_noncore_rst_b_i (cptra_noncore_rst_b_i),
+    .cptra_uc_rst_b (cptra_uc_rst_b_o),
     //Clock gating en
     .clk_gating_en(clk_gating_en),
     .rdc_clk_dis(rdc_clk_dis),
@@ -1456,27 +1460,27 @@ genvar sva_i;
 generate
   for(sva_i= 0; sva_i<`CALIPTRA_AHB_SLAVES_NUM; sva_i=sva_i+1)
   begin: gen_caliptra_asserts
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        responder_inst[sva_i].haddr,       clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       responder_inst[sva_i].hwdata,      clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         responder_inst[sva_i].hsel,        clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       responder_inst[sva_i].hwrite,      clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       responder_inst[sva_i].hready,      clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       responder_inst[sva_i].htrans,      clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        responder_inst[sva_i].hsize,       clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        responder_inst[sva_i].hresp,       clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    responder_inst[sva_i].hreadyout,   clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       responder_inst[sva_i].hreadyout ? responder_inst[sva_i].hrdata : '0,      clk, !cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HADDR_X,        responder_inst[sva_i].haddr,       clk, !cptra_noncore_rst_b_i)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HWDATA_X,       responder_inst[sva_i].hwdata,      clk, !cptra_noncore_rst_b_i)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HSEL_X,         responder_inst[sva_i].hsel,        clk, !cptra_noncore_rst_b_i)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HWRITE_X,       responder_inst[sva_i].hwrite,      clk, !cptra_noncore_rst_b_i)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HREADY_X,       responder_inst[sva_i].hready,      clk, !cptra_noncore_rst_b_i)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HTRANS_X,       responder_inst[sva_i].htrans,      clk, !cptra_noncore_rst_b_i)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        responder_inst[sva_i].hsize,       clk, !cptra_noncore_rst_b_i)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        responder_inst[sva_i].hresp,       clk, !cptra_noncore_rst_b_i)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    responder_inst[sva_i].hreadyout,   clk, !cptra_noncore_rst_b_i)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       responder_inst[sva_i].hreadyout ? responder_inst[sva_i].hrdata : '0,      clk, !cptra_noncore_rst_b_i)
   end
 endgenerate
 
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HADDR_X,        initiator_inst.haddr,       clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       initiator_inst.hwdata,      clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       initiator_inst.hwrite,      clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HREADY_X,       initiator_inst.hready,      clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       initiator_inst.htrans,      clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HADDR_X,        initiator_inst.haddr,       clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HWDATA_X,       initiator_inst.hwdata,      clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HWRITE_X,       initiator_inst.hwrite,      clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HREADY_X,       initiator_inst.hready,      clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       initiator_inst.htrans,      clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b_i)
+`CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, !cptra_noncore_rst_b_i)
 
 endmodule

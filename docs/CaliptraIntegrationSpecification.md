@@ -82,6 +82,10 @@ The following tables describe the interface signals.
 | :--------- | :--------- | :--------- | :--------- | :--------- |
 | cptra_pwrgood | 1 | Input | Asynchronous Assertion<br> Synchronous deassertion to clk | Active high power good indicator.<br> Deassertion hard resets Caliptra. |
 | cptra_rst_b | 1 | Input | Asynchronous Assertion<br> Synchronous deassertion to clk | Active low asynchronous reset. |
+| cptra_uc_rst_b_o | 1 | Output | Synchronous to clk | Processor core reset export. |
+| cptra_uc_rst_b_i | 1 | Input | Synchrinous to clk | Processor core reset input. Connect to cptra_us_rst_b_o by default.|
+| cptra_noncore_rst_b_o | 1 | Output | Synchronous to clk | Logic reset export. |
+| cptra_noncore_rst_b_i | 1 | Input | Synchronous to clk | Logic reset input. Connect to cptra_noncore_rst_b_o by default.|
 | clk | 1 | Input | | Convergence and validation done at 400MHz. All other frequencies are up to the user. |
 
 *Table 5: AXI Subordinate Interface*
