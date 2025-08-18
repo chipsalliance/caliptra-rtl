@@ -43,7 +43,7 @@ import kv_defines_pkg::*;
     always_comb begin
         rule_fail.aes_only_to_key_release = write_metrics.ocp_lock_in_progress &&
                                             // Any write source indicated (other than AES) causes rule failure
-                                           (write_metrics.kv_write_src & ~(KV_NUM_WRITE'(1) << KV_WRITE_IDX_AES)) &&
+                                          |(write_metrics.kv_write_src & ~(KV_NUM_WRITE'(1) << KV_WRITE_IDX_AES)) &&
                                             write_metrics.kv_write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT;
     end
 
