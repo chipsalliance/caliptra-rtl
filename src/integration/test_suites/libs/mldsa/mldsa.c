@@ -91,6 +91,13 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     // Enable MLDSA KEYGEN core
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN);
 
+    //Try to Program mldsa seed
+    if(seed.kv_intf){
+        // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                          ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+    }
+
     // // wait for MLDSA KEYGEN process to be done
     wait_for_mldsa_intr();
     
@@ -175,6 +182,13 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     // Enable MLDSA KEYGEN + SIGNING core
     printf("\nMLDSA KEYGEN + SIGNING\n");
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+
+    //Try to program mldsa seed after engine started
+    if(seed.kv_intf){
+        // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                          ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+    }
 
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
@@ -342,6 +356,13 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
     lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN | 
                                            MLDSA_REG_MLDSA_CTRL_EXTERNAL_MU_MASK);
 
+    //Try to program mldsa seed after engine started
+    if(seed.kv_intf){
+        // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
+        lsu_write_32(CLP_MLDSA_REG_MLDSA_KV_RD_SEED_CTRL, (MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                          ((seed.kv_id << MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & MLDSA_REG_MLDSA_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+    }
+    
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
