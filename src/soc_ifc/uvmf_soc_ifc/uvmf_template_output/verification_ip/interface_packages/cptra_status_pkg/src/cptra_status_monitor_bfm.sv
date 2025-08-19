@@ -16,6 +16,7 @@
 // limitations under the License.
 
 // pragma uvmf custom header begin
+import kv_defines_pkg::*;
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -89,6 +90,7 @@ end
   tri [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_i;
   tri [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_i;
   tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_i;
+  tri [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed_i;
   tri  soc_ifc_error_intr_i;
   tri  soc_ifc_notif_intr_i;
   tri  sha_error_intr_i;
@@ -107,6 +109,7 @@ end
   assign cptra_obf_key_reg_i = bus.cptra_obf_key_reg;
   assign obf_field_entropy_i = bus.obf_field_entropy;
   assign obf_uds_seed_i = bus.obf_uds_seed;
+  assign obf_hek_seed_i = bus.obf_hek_seed;
   assign soc_ifc_error_intr_i = bus.soc_ifc_error_intr;
   assign soc_ifc_notif_intr_i = bus.soc_ifc_notif_intr;
   assign sha_error_intr_i = bus.sha_error_intr;
@@ -129,6 +132,7 @@ end
   reg [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg_o = 'b0;
   reg [`CLP_OBF_FE_DWORDS-1:0][31:0] obf_field_entropy_o = 'b0;
   reg [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed_o = 'b0;
+  reg [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed_o = 'b0;
   reg  soc_ifc_error_intr_o = 'b0;
   reg  soc_ifc_notif_intr_o = 'b0;
   reg  sha_error_intr_o = 'b0;
@@ -144,7 +148,8 @@ end
           return cptra_noncore_rst_b_i ||
                  |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) || /* NOTE:             */
                  |(obf_field_entropy_i    ^  obf_field_entropy_o        ) || /*   These are reset */
-                 |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ;  /*   by pwrgood      */
+                 |(obf_uds_seed_i         ^  obf_uds_seed_o             ) || /*   by pwrgood      */
+                 |(obf_hek_seed_i         ^  obf_hek_seed_o             ) ;  /*                   */
       else
           return |(cptra_noncore_rst_b_i  ^  cptra_noncore_rst_b_o      ) ||
                  |(cptra_uc_rst_b_i       ^  cptra_uc_rst_b_o           ) ||
@@ -152,6 +157,7 @@ end
                  |(cptra_obf_key_reg_i    ^  cptra_obf_key_reg_o        ) ||
                  |(obf_field_entropy_i    ^  obf_field_entropy_o        ) ||
                  |(obf_uds_seed_i         ^  obf_uds_seed_o             ) ||
+                 |(obf_hek_seed_i         ^  obf_hek_seed_o             ) ||
                  |(soc_ifc_error_intr_i   & !soc_ifc_error_intr_o       ) ||
                  |(soc_ifc_notif_intr_i   & !soc_ifc_notif_intr_o       ) ||
                  |(sha_error_intr_i       & !sha_error_intr_o           ) ||
@@ -243,6 +249,7 @@ end
     //     //    cptra_status_monitor_struct.cptra_obf_key_reg
     //     //    cptra_status_monitor_struct.obf_field_entropy
     //     //    cptra_status_monitor_struct.obf_uds_seed
+    //     //    cptra_status_monitor_struct.obf_hek_seed
     //     //    cptra_status_monitor_struct.nmi_vector
     //     //    cptra_status_monitor_struct.nmi_intr_pending
     //     //    cptra_status_monitor_struct.iccm_locked
@@ -259,6 +266,7 @@ end
     //      cptra_status_monitor_struct.xyz = cptra_obf_key_reg_i;  //    [`CLP_OBF_KEY_DWORDS-1:0][31:0] 
     //      cptra_status_monitor_struct.xyz = obf_field_entropy_i;  //    [`CLP_OBF_FE_DWORDS-1:0][31:0] 
     //      cptra_status_monitor_struct.xyz = obf_uds_seed_i;  //    [`CLP_OBF_UDS_DWORDS-1:0][31:0] 
+    //      cptra_status_monitor_struct.xyz = obf_hek_seed_i;  //    [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] 
     //      cptra_status_monitor_struct.xyz = soc_ifc_error_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = soc_ifc_notif_intr_i;  //     
     //      cptra_status_monitor_struct.xyz = sha_error_intr_i;  //     
@@ -299,6 +307,7 @@ end
     cptra_obf_key_reg_o            <= cptra_obf_key_reg_i   ;
     obf_field_entropy_o            <= obf_field_entropy_i   ;
     obf_uds_seed_o                 <= obf_uds_seed_i        ;
+    obf_hek_seed_o                 <= obf_hek_seed_i        ;
     soc_ifc_error_intr_o           <= soc_ifc_error_intr_i  ;
     soc_ifc_notif_intr_o           <= soc_ifc_notif_intr_i  ;
     sha_error_intr_o               <= sha_error_intr_i      ;
@@ -325,6 +334,7 @@ end
          cptra_status_monitor_struct.cptra_obf_key_reg          =  cptra_obf_key_reg_i;
          cptra_status_monitor_struct.obf_field_entropy          =  obf_field_entropy_i;
          cptra_status_monitor_struct.obf_uds_seed               =  obf_uds_seed_i;
+         cptra_status_monitor_struct.obf_hek_seed               =  obf_hek_seed_i;
          cptra_status_monitor_struct.nmi_vector                 =  nmi_vector_i;
          cptra_status_monitor_struct.nmi_intr_pending           =  nmi_intr_i;
          cptra_status_monitor_struct.iccm_locked                =  iccm_lock_i;

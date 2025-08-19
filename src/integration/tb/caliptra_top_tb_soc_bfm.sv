@@ -23,6 +23,7 @@ module caliptra_top_tb_soc_bfm
 import axi_pkg::*;
 import soc_ifc_pkg::*;
 import mbox_pkg::*;
+import kv_defines_pkg::*;
 import caliptra_top_tb_pkg::*; #(
     parameter SKIP_BRINGUP = 0
 ) (
@@ -37,9 +38,15 @@ import caliptra_top_tb_pkg::*; #(
 
     input  logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand,
     input  logic [0:`CLP_OBF_FE_DWORDS-1] [31:0]          cptra_fe_rand,
+    input  logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0]     cptra_hek_rand,
     input  logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb,
 
     axi_if m_axi_bfm_if,
+
+    output logic [15:0] strap_ss_key_release_key_size,
+    output logic [63:0] strap_ss_key_release_base_addr,
+
+    output logic ss_ocp_lock_en,
 
     input logic ready_for_fuses,
     input logic ready_for_mb_processing,
@@ -70,6 +77,7 @@ import caliptra_top_tb_pkg::*; #(
 
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_tb;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_tb;
+    logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0]     cptra_hek_tb;
 
     // AXI request signals
     axi_resp_e wresp, rresp;
@@ -134,6 +142,71 @@ import caliptra_top_tb_pkg::*; #(
     always_comb deassert_rst_flag_from_fatal = count_deassert_rst_flag_from_fatal == 31;
 
     initial begin
+        // Initialize strap_ss_key_release_key_size based on plusargs
+        if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_MANUAL")) begin
+            if (!$value$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_MANUAL=%h", strap_ss_key_release_key_size)) begin
+                $error("Failed to get value for +STRAP_SS_KEY_RELEASE_KEY_SIZE_MANUAL");
+            end
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE set manually to 0x%04x", strap_ss_key_release_key_size);
+        end
+        else if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_RAND_LOW")) begin
+            // Randomize from 4 to 64 bytes, ensure DWORD alignment
+            strap_ss_key_release_key_size = $urandom_range(16'h4, 16'h40);
+            strap_ss_key_release_key_size = strap_ss_key_release_key_size & ~16'h3;
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE randomized (0x4-0x40, DWORD aligned) to 0x%04x", strap_ss_key_release_key_size);
+        end
+        else if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_RAND_HIGH")) begin
+`ifdef CLP_ASSERT_ON
+    `ifndef VERILATOR
+            $assertoff(0, `CPTRA_TOP_PATH.soc_ifc_top1.SS_STRAP_KEY_SIZE_LTE_64);
+    `endif // VERILATOR
+`endif // CLP_ASSERT_ON
+            strap_ss_key_release_key_size = $urandom_range(16'h44, 16'hFFFF);
+            // Ensure DWORD alignment by clearing lower 2 bits
+            strap_ss_key_release_key_size = strap_ss_key_release_key_size & ~16'h3;
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE randomized (>0x40, DWORD aligned) to 0x%04x", strap_ss_key_release_key_size);
+        end
+        else if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_RAND_ANY")) begin
+            strap_ss_key_release_key_size = $urandom();
+            // Ensure DWORD alignment by clearing lower 2 bits
+            strap_ss_key_release_key_size = strap_ss_key_release_key_size & ~16'h3;
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE randomized (any value, DWORD aligned) to 0x%04x", strap_ss_key_release_key_size);
+        end
+        else begin
+            // Default value (already DWORD aligned)
+            strap_ss_key_release_key_size = 16'h40;
+            $display("STRAP_SS_KEY_RELEASE_KEY_SIZE set to default value 0x%04x", strap_ss_key_release_key_size);
+        end
+        
+        if ($test$plusargs("CLP_OCP_LOCK_EN")) begin
+            ss_ocp_lock_en = 1'b1;
+        end
+        else if ($test$plusargs("CLP_OCP_LOCK_DIS")) begin
+            ss_ocp_lock_en = 1'b0;
+        end
+        else begin
+            // Randomize when neither plusarg is set
+            ss_ocp_lock_en = $urandom();
+        end
+
+        // Initialize strap_ss_key_release_base_addr based on plusargs
+        if ($test$plusargs("STRAP_SS_KEY_RELEASE_BASE_ADDR_RAND_SRAM")) begin
+            logic [63:0] random_offset;
+            // Ensure address is at least 64 bytes (512 bits) before end of SRAM
+            random_offset = $urandom_range(64'h0, AXI_SRAM_SIZE_BYTES - 64 - 1);
+            random_offset = random_offset & ~64'h3;
+            strap_ss_key_release_base_addr = AXI_SRAM_BASE_ADDR + random_offset;
+            $display("STRAP_SS_KEY_RELEASE_BASE_ADDR randomized within AXI SRAM to 0x%016x", strap_ss_key_release_base_addr);
+        end
+        else begin
+            // Default value
+            strap_ss_key_release_base_addr = AXI_SRAM_BASE_ADDR;
+            $display("STRAP_SS_KEY_RELEASE_BASE_ADDR set to default value 0x%016x", strap_ss_key_release_base_addr);
+        end
+    end
+
+
+    initial begin
         cptra_pwrgood = 1'b0;
         BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
         cptra_rst_b = 1'b0;
@@ -155,6 +228,7 @@ import caliptra_top_tb_pkg::*; #(
 
             cptra_uds_tb = cptra_uds_rand;
             cptra_fe_tb = cptra_fe_rand;
+            cptra_hek_tb = cptra_hek_rand;
         end
         else begin
             if ($test$plusargs("SECOND_DOE_KAT")) begin
@@ -162,6 +236,7 @@ import caliptra_top_tb_pkg::*; #(
                 cptra_obfkey_tb = 256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c;
                 cptra_uds_tb = 512'h32cd8a75b5e515bd7b0fe37a6de144696aeedb1f5e03225a71fc690f5b004ff593794db7a99ced97c376385149c4ecafd3afd70cb657a6f6434bfd911983f4ff;
                 cptra_fe_tb = 256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b;
+                cptra_hek_tb = 256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b; // FIXME unique value?
                            /*256'h7dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b,
                            256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
                            256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};*/
@@ -170,9 +245,10 @@ import caliptra_top_tb_pkg::*; #(
                 cptra_obfkey_tb = 256'h31358e8af34d6ac31c958bbd5c8fb33c334714bffb41700d28b07f11cfe891e7;
                 cptra_uds_tb = 512'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d461c76c107307654db5566a5bd693e227c144516246a752c329056d884daf3c89d;
                 cptra_fe_tb = 256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835;
+                cptra_hek_tb = 256'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee835; // FIXME
             end
             //swizzle the key so it matches the endianness of AES block
-            //used for visual inspection of uds/fe flow, manually switching keys and checking both
+            //used for visual inspection of uds/fe/hek flow, manually switching keys and checking both
             for (int dword = 0; dword < $bits(cptra_obf_key)/32; dword++) begin
                 cptra_obf_key[dword] = cptra_obfkey_tb[dword];
             end
@@ -215,6 +291,11 @@ import caliptra_top_tb_pkg::*; #(
                     $display ("SoC: Writing obfuscated Field Entropy to fuse bank\n");
                     for (int dw=0; dw < `CLP_OBF_FE_DWORDS; dw++) begin
                         m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_FIELD_ENTROPY_0 + 4 * dw), .data(cptra_fe_tb[dw]), .resp(wresp), .resp_user(buser));
+                    end
+
+                    $display ("SoC: Writing obfuscated HEK seed to fuse bank\n");
+                    for (int dw=0; dw < OCP_LOCK_HEK_NUM_DWORDS; dw++) begin
+                        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_HEK_SEED_0 + 4 * dw), .data(cptra_hek_tb[dw]), .resp(wresp), .resp_user(buser));
                     end
 
                     $display ("SoC: Writing SOC Stepping ID to fuse bank\n");

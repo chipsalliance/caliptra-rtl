@@ -41,6 +41,7 @@ module doe_ctrl
     //Obfuscated UDS and FE
     input logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy,
     input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
+    input logic [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed,
 
     // from SLAVES PORT
     input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
@@ -64,6 +65,7 @@ module doe_ctrl
     // Interrupt
     output logic error_intr,
     output logic notif_intr,
+    input  logic ocp_lock_en, // Synth-time constant strap input instead of ocp_lock_in_progress
     input  logic debugUnlock_or_scan_mode_switch
 );
 
@@ -86,6 +88,7 @@ module doe_ctrl
         .cptra_obf_key(cptra_obf_key),
         .obf_uds_seed(obf_uds_seed),
         .obf_field_entropy(obf_field_entropy),
+        .obf_hek_seed(obf_hek_seed),
         .cs(doe_cs),
         .we(doe_we),
         .address(doe_address),
@@ -96,6 +99,7 @@ module doe_ctrl
         .busy_o(busy_o),
         .clear_obf_secrets(clear_obf_secrets),
         .kv_write(kv_write),
+        .ocp_lock_en(ocp_lock_en), // Synth-time constant strap input instead of ocp_lock_in_progress
         .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch)
     );
 

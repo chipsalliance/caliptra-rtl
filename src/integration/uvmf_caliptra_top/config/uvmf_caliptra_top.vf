@@ -10,9 +10,9 @@
 +incdir+${CALIPTRA_ROOT}/src/csrng/rtl
 +incdir+${CALIPTRA_ROOT}/src/edn/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl
++incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include
-+incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/pcrvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/sha512/rtl
 +incdir+${CALIPTRA_ROOT}/src/doe/rtl
@@ -105,6 +105,7 @@
 +incdir+${CALIPTRA_ROOT}/src/keyvault/coverage
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/coverage
 +incdir+${CALIPTRA_ROOT}/src/axi/coverage
++incdir+${CALIPTRA_ROOT}/src/aes/coverage
 +incdir+${CALIPTRA_ROOT}/src/integration/tb
 +incdir+${CALIPTRA_ROOT}/src/integration/coverage
 +incdir+${CALIPTRA_ROOT}/src/integration/uvmf_caliptra_top/uvmf_template_output/project_benches/caliptra_top/tb/parameters
@@ -224,6 +225,8 @@ ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_clock_mux2.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_fifo_async.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_fifo_async_simple.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_gf_mult.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_req_if.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_reg.sv
@@ -235,14 +238,14 @@ ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pdef.vh
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include/el2_def.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/common_defines.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/beh_lib.sv
-${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
-${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_fsm.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_client.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_client.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_rule_check.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_rule_check.sv
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_macros.svh
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_gen_hash.sv
@@ -570,6 +573,7 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_pkg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_enc.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_28_22_dec.sv
@@ -656,7 +660,6 @@ ${CALIPTRA_ROOT}/src/aes/rtl/aes_reduced_round.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_status.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_top.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes.sv
-${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_wrapper.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_core.sv
@@ -800,6 +803,8 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/coverage/abr_top_cov_bind.s
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_if.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_props.sv
+${CALIPTRA_ROOT}/src/aes/coverage/aes_cov_if.sv
+${CALIPTRA_ROOT}/src/aes/coverage/aes_cov_bind.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/tb/dma_testcase_generator.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_veer_sram_export.sv

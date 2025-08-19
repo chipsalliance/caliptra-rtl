@@ -76,7 +76,7 @@ class kv_read2reg_adapter #(
                              )
 ::type_id::create("trans_h");
     
-    // // pragma uvmf custom reg2bus begin
+    // pragma uvmf custom reg2bus begin
     // // UVMF_CHANGE_ME : Fill in the reg2bus adapter mapping registe fields to protocol fields.
      uvm_reg_addr_t rd_addr;
      reg [KV_ENTRY_ADDR_W-1:0] rd_entry;

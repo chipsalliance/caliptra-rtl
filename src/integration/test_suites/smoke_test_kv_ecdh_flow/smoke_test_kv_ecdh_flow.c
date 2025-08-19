@@ -17,6 +17,7 @@
 #include "caliptra_isr.h"
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
+#include <stdint.h>
 #include "printf.h"
 #include "ecc.h"
 #include "aes.h"
@@ -165,6 +166,8 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
 
     //Key from KV
     aes_key.kv_intf = TRUE;
+    aes_key.kv_reuse_key = FALSE;
+    aes_key.kv_expect_err = FALSE;
     aes_key.kv_id = aes_kv_id;
     VPRINTF(LOW, "Key Stored in KV ID %d\n", aes_key.kv_id);
 
@@ -172,6 +175,7 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
     aes_input.text_len = plaintext_length;
     aes_input.plaintext = plaintext;
     aes_input.ciphertext = ciphertext;
+    aes_input.data_src_mode = AES_DATA_DIRECT;
 
     //Run ENC
     aes_flow(op, mode, key_len, aes_input);

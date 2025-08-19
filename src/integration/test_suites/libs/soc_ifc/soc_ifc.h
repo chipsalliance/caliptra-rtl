@@ -54,7 +54,8 @@ enum axi_dma_wr_route_e {
     axi_dma_wr_route_DISABLE  = 0x0,
     axi_dma_wr_route_MBOX     = 0x1,
     axi_dma_wr_route_AHB_FIFO = 0x2,
-    axi_dma_wr_route_AXI_RD   = 0x3
+    axi_dma_wr_route_AXI_RD   = 0x3,
+    axi_dma_wr_route_KEYVAULT = 0x4
 };
 
 enum axi_dma_fsm_e {
@@ -63,6 +64,27 @@ enum axi_dma_fsm_e {
     axi_dma_fsm_DMA_DONE      = 0x2,
     axi_dma_fsm_DMA_ERROR     = 0x3
 };
+
+enum err_inj_type {
+//    cmd_inv_rd_route    ,
+    cmd_inv_wr_route_kv    ,
+    cmd_inv_wr_route_invld_range    ,
+    cmd_inv_route_combo ,
+    cmd_inv_route_combo_kv ,
+    cmd_inv_src_addr    ,
+    cmd_inv_dst_addr    ,
+    cmd_inv_dst_addr_kv ,
+    cmd_inv_byte_count  ,
+    cmd_inv_byte_count_kv  ,
+    cmd_inv_byte_count_kv_large  ,
+    cmd_inv_rd_fixed    ,
+    cmd_inv_wr_fixed    ,
+    cmd_inv_wr_fixed_kv ,
+    cmd_inv_block_size,
+    cmd_inv_mbox_lock
+//    cmd_inv_sha_lock
+};
+
 
 /**
 * Decode:
@@ -155,7 +177,13 @@ uint8_t soc_ifc_axi_dma_send_mbox_payload(uint64_t src_addr, uint64_t dst_addr, 
 uint8_t soc_ifc_axi_dma_read_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size);
 uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size);
 uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode);
+uint8_t soc_ifc_axi_dma_send_axi_to_axi_error(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode);
 uint8_t soc_ifc_axi_dma_send_axi_to_axi_no_wait(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode);
+uint8_t soc_ifc_axi_dma_send_kv_to_axi(uint64_t dst_addr, uint32_t byte_count);
+uint8_t soc_ifc_axi_dma_send_kv_to_axi_error(uint64_t dst_addr, uint32_t byte_count);
+uint8_t soc_ifc_axi_dma_send_kv_to_axi_no_wait(uint64_t dst_addr, uint32_t byte_count);
 uint8_t soc_ifc_axi_dma_wait_idle      (uint8_t clr_lock);
+uint8_t soc_ifc_axi_dma_wait_error     (uint8_t clr_lock);
+uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type);
 
 #endif

@@ -149,6 +149,10 @@ module doe_reg (
                 logic [4:0] next;
                 logic load_next;
             } DEST;
+            struct packed{
+                logic [1:0] next;
+                logic load_next;
+            } CMD_EXT;
         } DOE_CTRL;
         struct packed{
             struct packed{
@@ -163,6 +167,10 @@ module doe_reg (
                 logic next;
                 logic load_next;
             } DEOBF_SECRETS_CLEARED;
+            struct packed{
+                logic next;
+                logic load_next;
+            } ERROR;
         } DOE_STATUS;
         struct packed{
             struct packed{
@@ -356,6 +364,9 @@ module doe_reg (
             struct packed{
                 logic [4:0] value;
             } DEST;
+            struct packed{
+                logic [1:0] value;
+            } CMD_EXT;
         } DOE_CTRL;
         struct packed{
             struct packed{
@@ -367,6 +378,9 @@ module doe_reg (
             struct packed{
                 logic value;
             } DEOBF_SECRETS_CLEARED;
+            struct packed{
+                logic value;
+            } ERROR;
         } DOE_STATUS;
         struct packed{
             struct packed{
@@ -571,6 +585,31 @@ module doe_reg (
         end
     end
     assign hwif_out.DOE_CTRL.DEST.value = field_storage.DOE_CTRL.DEST.value;
+    // Field: doe_reg.DOE_CTRL.CMD_EXT
+    always_comb begin
+        automatic logic [1:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.DOE_CTRL.CMD_EXT.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.DOE_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.DOE_CTRL.CMD_EXT.value & ~decoded_wr_biten[8:7]) | (decoded_wr_data[8:7] & decoded_wr_biten[8:7]);
+            load_next_c = '1;
+        end else if(hwif_in.DOE_CTRL.CMD_EXT.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.DOE_CTRL.CMD_EXT.next = next_c;
+        field_combo.DOE_CTRL.CMD_EXT.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.DOE_CTRL.CMD_EXT.value <= 2'h0;
+        end else if(field_combo.DOE_CTRL.CMD_EXT.load_next) begin
+            field_storage.DOE_CTRL.CMD_EXT.value <= field_combo.DOE_CTRL.CMD_EXT.next;
+        end
+    end
+    assign hwif_out.DOE_CTRL.CMD_EXT.value = field_storage.DOE_CTRL.CMD_EXT.value;
+    assign hwif_out.DOE_CTRL.CMD_EXT.swmod = decoded_reg_strb.DOE_CTRL && decoded_req_is_wr;
     // Field: doe_reg.DOE_STATUS.READY
     always_comb begin
         automatic logic [0:0] next_c;
@@ -635,6 +674,29 @@ module doe_reg (
             field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value <= 1'h0;
         end else if(field_combo.DOE_STATUS.DEOBF_SECRETS_CLEARED.load_next) begin
             field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value <= field_combo.DOE_STATUS.DEOBF_SECRETS_CLEARED.next;
+        end
+    end
+    // Field: doe_reg.DOE_STATUS.ERROR
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.DOE_STATUS.ERROR.value;
+        load_next_c = '0;
+        if(hwif_in.DOE_STATUS.ERROR.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.DOE_STATUS.ERROR.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.DOE_STATUS.ERROR.next = next_c;
+        field_combo.DOE_STATUS.ERROR.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.DOE_STATUS.ERROR.value <= 1'h0;
+        end else if(field_combo.DOE_STATUS.ERROR.load_next) begin
+            field_storage.DOE_STATUS.ERROR.value <= field_combo.DOE_STATUS.ERROR.next;
         end
     end
     // Field: doe_reg.intr_block_rf.global_intr_en_r.error_en
@@ -1421,13 +1483,17 @@ module doe_reg (
     end
     assign readback_array[4][1:0] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.CMD.value : '0;
     assign readback_array[4][6:2] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.DEST.value : '0;
-    assign readback_array[4][31:7] = '0;
+    assign readback_array[4][8:7] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.CMD_EXT.value : '0;
+    assign readback_array[4][31:9] = '0;
     assign readback_array[5][0:0] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.READY.value : '0;
     assign readback_array[5][1:1] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.VALID.value : '0;
     assign readback_array[5][2:2] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? hwif_in.DOE_STATUS.UDS_FLOW_DONE.next : '0;
     assign readback_array[5][3:3] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? hwif_in.DOE_STATUS.FE_FLOW_DONE.next : '0;
     assign readback_array[5][4:4] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value : '0;
-    assign readback_array[5][31:5] = '0;
+    assign readback_array[5][5:5] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? hwif_in.DOE_STATUS.HEK_FLOW_DONE.next : '0;
+    assign readback_array[5][7:6] = '0;
+    assign readback_array[5][8:8] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.ERROR.value : '0;
+    assign readback_array[5][31:9] = '0;
     assign readback_array[6][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
     assign readback_array[6][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
     assign readback_array[6][31:2] = '0;

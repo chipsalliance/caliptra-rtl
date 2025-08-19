@@ -161,6 +161,10 @@ uvmf:
       hvl_typedefs: []
 
       ports:
+      - name: debugUnlock_or_scan_mode_switch
+        dir: output
+        width: '1'
+
       - name: clear_obf_secrets
         dir: output
         width: '1'
@@ -180,6 +184,10 @@ uvmf:
       transaction_constraints: []
 
       transaction_vars:
+      - name: debugUnlock_or_scan_mode_switch
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
       - name: assert_clear_secrets
         type: bit
         iscompare: 'False'

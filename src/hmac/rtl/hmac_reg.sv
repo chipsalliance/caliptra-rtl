@@ -306,7 +306,11 @@ module hmac_reg (
                 logic load_next;
             } mlkem_msg_dest_valid;
             struct packed{
-                logic [17:0] next;
+                logic next;
+                logic load_next;
+            } dma_data_dest_valid;
+            struct packed{
+                logic [16:0] next;
                 logic load_next;
             } rsvd;
         } HMAC512_KV_WR_CTRL;
@@ -606,7 +610,10 @@ module hmac_reg (
                 logic value;
             } mlkem_msg_dest_valid;
             struct packed{
-                logic [17:0] value;
+                logic value;
+            } dma_data_dest_valid;
+            struct packed{
+                logic [16:0] value;
             } rsvd;
         } HMAC512_KV_WR_CTRL;
         struct packed{
@@ -991,7 +998,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.read_en.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_KEY_CTRL.read_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.hwclr) begin // HW Clear
@@ -1015,7 +1022,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.read_entry.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_RD_KEY_CTRL.read_entry.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_KEY_CTRL.read_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
         end
@@ -1036,7 +1043,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
         end
@@ -1057,7 +1064,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_RD_KEY_CTRL.rsvd.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_RD_KEY_CTRL.rsvd.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_KEY_CTRL.rsvd.value & ~decoded_wr_biten[31:7]) | (decoded_wr_data[31:7] & decoded_wr_biten[31:7]);
             load_next_c = '1;
         end
@@ -1101,7 +1108,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_en.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.hwclr) begin // HW Clear
@@ -1125,7 +1132,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_entry.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_BLOCK_CTRL.read_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
         end
@@ -1146,7 +1153,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
         end
@@ -1167,7 +1174,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_RD_BLOCK_CTRL.rsvd.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_RD_BLOCK_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_RD_BLOCK_CTRL.rsvd.value & ~decoded_wr_biten[31:7]) | (decoded_wr_data[31:7] & decoded_wr_biten[31:7]);
             load_next_c = '1;
         end
@@ -1211,7 +1218,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.write_en.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.write_en.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.write_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(hwif_in.HMAC512_KV_WR_CTRL.write_en.hwclr) begin // HW Clear
@@ -1235,7 +1242,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.write_entry.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.write_entry.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.write_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
         end
@@ -1256,7 +1263,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
         end
@@ -1277,7 +1284,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
             load_next_c = '1;
         end
@@ -1298,7 +1305,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
             load_next_c = '1;
         end
@@ -1319,7 +1326,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.value & ~decoded_wr_biten[9:9]) | (decoded_wr_data[9:9] & decoded_wr_biten[9:9]);
             load_next_c = '1;
         end
@@ -1340,7 +1347,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.value & ~decoded_wr_biten[10:10]) | (decoded_wr_data[10:10] & decoded_wr_biten[10:10]);
             load_next_c = '1;
         end
@@ -1361,7 +1368,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.aes_key_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.aes_key_dest_valid.value & ~decoded_wr_biten[11:11]) | (decoded_wr_data[11:11] & decoded_wr_biten[11:11]);
             load_next_c = '1;
         end
@@ -1382,7 +1389,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.value & ~decoded_wr_biten[12:12]) | (decoded_wr_data[12:12] & decoded_wr_biten[12:12]);
             load_next_c = '1;
         end
@@ -1403,7 +1410,7 @@ module hmac_reg (
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe) begin // SW write
             next_c = (field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value & ~decoded_wr_biten[13:13]) | (decoded_wr_data[13:13] & decoded_wr_biten[13:13]);
             load_next_c = '1;
         end
@@ -1418,14 +1425,35 @@ module hmac_reg (
         end
     end
     assign hwif_out.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value;
+    // Field: hmac_reg.HMAC512_KV_WR_CTRL.dma_data_dest_valid
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_KV_WR_CTRL.dma_data_dest_valid.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.dma_data_dest_valid.swwe) begin // SW write
+            next_c = (field_storage.HMAC512_KV_WR_CTRL.dma_data_dest_valid.value & ~decoded_wr_biten[14:14]) | (decoded_wr_data[14:14] & decoded_wr_biten[14:14]);
+            load_next_c = '1;
+        end
+        field_combo.HMAC512_KV_WR_CTRL.dma_data_dest_valid.next = next_c;
+        field_combo.HMAC512_KV_WR_CTRL.dma_data_dest_valid.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.HMAC512_KV_WR_CTRL.dma_data_dest_valid.value <= 1'h0;
+        end else if(field_combo.HMAC512_KV_WR_CTRL.dma_data_dest_valid.load_next) begin
+            field_storage.HMAC512_KV_WR_CTRL.dma_data_dest_valid.value <= field_combo.HMAC512_KV_WR_CTRL.dma_data_dest_valid.next;
+        end
+    end
+    assign hwif_out.HMAC512_KV_WR_CTRL.dma_data_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.dma_data_dest_valid.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.rsvd
     always_comb begin
-        automatic logic [17:0] next_c;
+        automatic logic [16:0] next_c;
         automatic logic load_next_c;
         next_c = field_storage.HMAC512_KV_WR_CTRL.rsvd.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.HMAC512_KV_WR_CTRL.rsvd.value & ~decoded_wr_biten[31:14]) | (decoded_wr_data[31:14] & decoded_wr_biten[31:14]);
+        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe) begin // SW write
+            next_c = (field_storage.HMAC512_KV_WR_CTRL.rsvd.value & ~decoded_wr_biten[31:15]) | (decoded_wr_data[31:15] & decoded_wr_biten[31:15]);
             load_next_c = '1;
         end
         field_combo.HMAC512_KV_WR_CTRL.rsvd.next = next_c;
@@ -1433,7 +1461,7 @@ module hmac_reg (
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.HMAC512_KV_WR_CTRL.rsvd.value <= 18'h0;
+            field_storage.HMAC512_KV_WR_CTRL.rsvd.value <= 17'h0;
         end else if(field_combo.HMAC512_KV_WR_CTRL.rsvd.load_next) begin
             field_storage.HMAC512_KV_WR_CTRL.rsvd.value <= field_combo.HMAC512_KV_WR_CTRL.rsvd.next;
         end
@@ -2279,7 +2307,8 @@ module hmac_reg (
     assign readback_array[25][11:11] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.aes_key_dest_valid.value : '0;
     assign readback_array[25][12:12] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.value : '0;
     assign readback_array[25][13:13] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value : '0;
-    assign readback_array[25][31:14] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.rsvd.value : '0;
+    assign readback_array[25][14:14] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.dma_data_dest_valid.value : '0;
+    assign readback_array[25][31:15] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.rsvd.value : '0;
     assign readback_array[26][0:0] = (decoded_reg_strb.HMAC512_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC512_KV_WR_STATUS.READY.next : '0;
     assign readback_array[26][1:1] = (decoded_reg_strb.HMAC512_KV_WR_STATUS && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_STATUS.VALID.value : '0;
     assign readback_array[26][9:2] = (decoded_reg_strb.HMAC512_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC512_KV_WR_STATUS.ERROR.next : '0;

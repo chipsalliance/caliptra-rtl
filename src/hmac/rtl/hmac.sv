@@ -57,6 +57,7 @@ module hmac
 
         output wire error_intr,
         output wire notif_intr,
+        input logic ocp_lock_in_progress,
         input logic debugUnlock_or_scan_mode_switch
       );
 
@@ -116,7 +117,8 @@ module hmac
   //KV Read Data Present
   logic kv_key_data_present, kv_key_data_present_set;
   logic [BLOCK_NUM_DWORDS-1:0] block_reg_lock, block_reg_lock_nxt;
-  logic kv_data_present, kv_data_present_set, kv_data_present_reset;
+  logic kv_block_data_present, kv_block_data_present_set;
+  logic kv_data_present, kv_data_present_reset;
 
   logic dest_keyvault;
   kv_error_code_e kv_key_error, kv_block_error, kv_write_error;
@@ -127,6 +129,9 @@ module hmac
   kv_read_ctrl_reg_t kv_key_read_ctrl_reg;
   kv_read_ctrl_reg_t kv_block_read_ctrl_reg;
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
+  kv_read_filter_metrics_t  kv_key_read_metrics;
+  kv_read_filter_metrics_t  kv_block_read_metrics;
+  kv_write_filter_metrics_t kv_write_metrics;
   logic core_tag_we;
 
   logic key_zero_error, key_zero_error_reg, key_zero_error_edge;
@@ -200,7 +205,7 @@ module hmac
           ready_reg       <= '0;
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
-          kv_data_present <= '0;
+          kv_block_data_present <= '0;
         end
       else if (zeroize_reg)
         begin
@@ -210,7 +215,7 @@ module hmac
           ready_reg       <= '0;
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
-          kv_data_present <= '0;
+          kv_block_data_present <= '0;
         end
       else
         begin
@@ -226,8 +231,8 @@ module hmac
           block_reg_lock <= block_reg_lock_nxt;
           kv_key_data_present <= kv_key_data_present_set ? '1 :
                                  kv_data_present_reset ? '0 : kv_key_data_present;
-          kv_data_present <= kv_data_present_set ? '1 :
-                             kv_data_present_reset ? '0 : kv_data_present;
+          kv_block_data_present <= kv_block_data_present_set ? '1 :
+                                   kv_data_present_reset ? '0 : kv_block_data_present;
         end
     end // reg_update
 
@@ -327,6 +332,33 @@ always_comb begin
   end
 end
 
+// Software write-enables to prevent KV reg manipulation mid-operation
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.swwe         = !kv_key_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_entry.swwe      = !kv_key_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = !kv_key_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.rsvd.swwe            = !kv_key_data_present && core_ready;
+
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe         = !kv_block_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe      = !kv_block_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.swwe = !kv_block_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe            = !kv_block_data_present && core_ready;
+
+// KV write control must be written before HMAC core operation begins, even though
+// output isn't written to KV until the end of the operation.
+// Prevent partial-key attacks by blocking register modifications during core execution.
+always_comb hwif_in.HMAC512_KV_WR_CTRL.write_en.swwe              = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.write_entry.swwe           = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.swwe = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe    = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.dma_data_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe                  = core_ready;
+
 //keyvault control reg macros for assigning to struct
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC512_KV_RD_KEY_CTRL)
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_block_read_ctrl_reg, HMAC512_KV_RD_BLOCK_CTRL)
@@ -334,7 +366,8 @@ end
 
 //Force result into KV reg whenever source came from KV
 always_comb kv_key_data_present_set = kv_key_read_ctrl_reg.read_en;
-always_comb kv_data_present_set = kv_key_read_ctrl_reg.read_en | kv_block_read_ctrl_reg.read_en;
+always_comb kv_block_data_present_set = kv_block_read_ctrl_reg.read_en;
+always_comb kv_data_present = kv_key_data_present | kv_block_data_present;
 always_comb kv_data_present_reset = kv_data_present & core_tag_we;
 
 // Register block
@@ -398,6 +431,13 @@ assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // T
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
+//Key Vault Control Modules
+always_comb begin
+    kv_key_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_key_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_HMAC_KEY);
+    kv_key_read_metrics.kv_key_entry         = kv_key_read_ctrl_reg.read_entry;
+end
+
 //Read Key
 kv_read_client #(
   .DATA_WIDTH(KEY_SIZE),
@@ -411,6 +451,7 @@ hmac_key_kv_read
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
+    .read_metrics (kv_key_read_metrics ),
 
     //interface with kv
     .kv_read(kv_read[0]),
@@ -426,6 +467,13 @@ hmac_key_kv_read
     .read_done(kv_key_done)
 );
 
+//Key Vault Control Modules
+always_comb begin
+    kv_block_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_block_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_HMAC_BLOCK);
+    kv_block_read_metrics.kv_key_entry         = kv_block_read_ctrl_reg.read_entry;
+end
+
 //Read Block
 kv_read_client #(
   .DATA_WIDTH(BLOCK_SIZE),
@@ -440,6 +488,7 @@ hmac_block_kv_read
 
     //client control register
     .read_ctrl_reg(kv_block_read_ctrl_reg),
+    .read_metrics(kv_block_read_metrics),
 
     //interface with kv
     .kv_read(kv_read[1]),
@@ -460,6 +509,17 @@ logic [$clog2(TAG_SIZE/32):0] num_dwords;
 always_comb num_dwords = mode_reg ? 'd16 : 'd12;
 
 //Write to keyvault
+always_comb begin
+    kv_write_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_write_metrics.kv_data0_present     = kv_key_data_present;
+    kv_write_metrics.kv_data0_entry       = kv_key_read_ctrl_reg.read_entry; // FIXME latch this at start-time
+    kv_write_metrics.kv_data1_present     = kv_block_data_present;
+    kv_write_metrics.kv_data1_entry       = kv_block_read_ctrl_reg.read_entry; // FIXME latch this at start-time
+    kv_write_metrics.kv_write_src         = KV_NUM_WRITE'(1 << KV_WRITE_IDX_HMAC);
+    kv_write_metrics.kv_write_entry       = kv_write_ctrl_reg.write_entry;
+    kv_write_metrics.aes_decrypt_ecb_op   = 1'b0;
+end
+
 kv_write_client #(
   .DATA_WIDTH(TAG_SIZE)
 )
@@ -471,6 +531,7 @@ hmac_result_kv_write
 
   //client control register
   .write_ctrl_reg(kv_write_ctrl_reg),
+  .write_metrics(kv_write_metrics),
   .num_dwords(num_dwords), 
 
   //interface with kv

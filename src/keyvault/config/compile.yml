@@ -36,6 +36,7 @@ provides: [keyvault]
 schema_version: 2.4.0
 requires: 
   - libs
+  - caliptra_prim
   - kv_defines_pkg
 targets:
   rtl:
@@ -48,6 +49,8 @@ targets:
       - $COMPILE_ROOT/rtl/kv_fsm.sv
       - $COMPILE_ROOT/rtl/kv_read_client.sv
       - $COMPILE_ROOT/rtl/kv_write_client.sv
+      - $COMPILE_ROOT/rtl/kv_read_rule_check.sv
+      - $COMPILE_ROOT/rtl/kv_write_rule_check.sv
     tops: [kv]
   rtl_lint:
     directories: []

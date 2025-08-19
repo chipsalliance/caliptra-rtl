@@ -136,6 +136,9 @@ uvmf:
       - name: obf_uds_seed
         dir: output
         width: ["`CLP_OBF_UDS_DWORDS","32"]
+      - name: obf_hek_seed
+        dir: output
+        width: ["kv_defines_pkg::OCP_LOCK_HEK_NUM_DWORDS","32"]
 
       #uC Interrupts
       - name: soc_ifc_error_intr
@@ -219,7 +222,7 @@ uvmf:
         iscompare: 'True'
         isrand: 'False'
 
-      #Obfuscated UDS and FE
+      #Obfuscated UDS, FE, HEK
       - name: cptra_obf_key_reg
         type: bit [`CLP_OBF_KEY_DWORDS-1:0] [31:0]
         iscompare: 'True'
@@ -230,6 +233,10 @@ uvmf:
         isrand: 'False'
       - name: obf_uds_seed
         type: bit [`CLP_OBF_UDS_DWORDS-1:0] [31:0]
+        iscompare: 'True'
+        isrand: 'False'
+      - name: obf_hek_seed
+        type: bit [kv_defines_pkg::OCP_LOCK_HEK_NUM_DWORDS] [31:0]
         iscompare: 'True'
         isrand: 'False'
 

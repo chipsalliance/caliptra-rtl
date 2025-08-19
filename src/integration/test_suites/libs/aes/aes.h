@@ -19,6 +19,7 @@
 #include "caliptra_defines.h"
 #include "caliptra_reg.h"
 #include "riscv_hw_if.h"
+#include "keyvault.h"
 
 typedef uint8_t BOOL;
 #define FALSE 0u
@@ -55,10 +56,19 @@ typedef enum {
 
 typedef struct {
     BOOL      kv_intf;
+    BOOL      kv_reuse_key;
+    BOOL      kv_expect_err;
     uint8_t   kv_id;
     uint32_t  key_share0[8];
     uint32_t  key_share1[8];
 } aes_key_t;
+
+typedef struct {
+    BOOL      kv_intf;
+    uint8_t   kv_id;
+    BOOL      kv_expect_err;
+    dest_valid_t dest_valid;
+} aes_key_o_t;
 
 typedef enum {
     AES_DATA_DIRECT, // Use pointers in aes_flow_t
@@ -72,6 +82,7 @@ typedef struct packed {
 
 typedef struct {
   aes_key_t key;
+  aes_key_o_t key_o;
   uint32_t *iv;
   uint32_t text_len;
   uint32_t *plaintext;
@@ -87,5 +98,6 @@ void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_s
 void aes_wait_idle();
 void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input);
 void aes_zeroize();
+void populate_kv_slot_aes(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t override_text_length, uint32_t expected_key[16], uint8_t encrypt, aes_mode_e mode);
 
 #endif

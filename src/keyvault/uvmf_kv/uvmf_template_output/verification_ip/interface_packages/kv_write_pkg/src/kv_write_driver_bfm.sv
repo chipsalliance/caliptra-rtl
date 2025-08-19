@@ -74,6 +74,7 @@ import kv_write_pkg_hdl::*;
 interface kv_write_driver_bfm #(
   string KV_WRITE_REQUESTOR = "HMAC"
   )
+
   (kv_write_if bus);
   // The following pragma and additional ones in-lined further below are for running this BFM on Veloce
   // pragma attribute kv_write_driver_bfm partition_interface_xif
@@ -123,16 +124,17 @@ end
   assign kv_wr_resp_i = bus.kv_wr_resp;
   assign bus.kv_wr_resp = (initiator_responder == RESPONDER) ? kv_wr_resp_o : 'bz;
 
+
   // These are signals marked as 'output' by the config file, but the outputs will
   // not be driven by this BFM unless placed in INITIATOR mode.
-  
   assign bus.kv_write = (initiator_responder == INITIATOR) ? kv_write_o : 'bz;
   assign kv_write_i = bus.kv_write;
 
   // Proxy handle to UVM driver
   kv_write_pkg::kv_write_driver #(
     .KV_WRITE_REQUESTOR(KV_WRITE_REQUESTOR)
-    )  proxy;
+    )
+  proxy;
   // pragma tbx oneway proxy.my_function_name_in_uvm_driver                 
 
   // ****************************************************************************
@@ -249,14 +251,14 @@ end
 
 
     @(posedge clk_i);
-    kv_write_o[49] <= 1'b0; //Set write_en to 0 after txn is complete
+    kv_write_o[50] <= 1'b0; //Set write_en to 0 after txn is complete
     //kv_write_o[45] <= 1'b0; //Set entry_is_pcr to 0 after txn is complete
 
-    kv_write_responder_struct.write_en          = kv_write_i[49];//kv_write_i[0];
-    kv_write_responder_struct.write_entry       = kv_write_i[48:44];//kv_write_i[4:2];
-    kv_write_responder_struct.write_offset      = kv_write_i[43:40];//kv_write_i[8:5];
-    kv_write_responder_struct.write_data        = kv_write_i[39:8];//kv_write_i[40:9];
-    kv_write_responder_struct.write_dest_valid  = kv_write_i[7:0];//kv_write_i[48:41];
+    kv_write_responder_struct.write_en          = kv_write_i[50];//kv_write_i[0];
+    kv_write_responder_struct.write_entry       = kv_write_i[49:45];//kv_write_i[4:2];
+    kv_write_responder_struct.write_offset      = kv_write_i[44:41];//kv_write_i[8:5];
+    kv_write_responder_struct.write_data        = kv_write_i[40:9];//kv_write_i[40:9];
+    kv_write_responder_struct.write_dest_valid  = kv_write_i[8:0];//kv_write_i[48:41];
 
     responder_struct = kv_write_responder_struct;
   endtask        
