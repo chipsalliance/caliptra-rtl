@@ -317,7 +317,7 @@ void main(){
         printf("\nParallel Crypto is successfully detected for test: %0d\n", rst_count);
     }
 
-    if (rst_count < 5){
+    if (rst_count < 6){
         rst_count++;
         //Issue cold reset
         SEND_STDOUT_CTRL(0xf5);
