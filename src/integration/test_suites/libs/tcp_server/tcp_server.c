@@ -3,7 +3,6 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "tcp_server.h"
-#include "printf.h"
 
 #include <assert.h>
 #include <errno.h>
@@ -204,7 +203,7 @@ static int client_tryaccept(struct tcp_server_ctx *ctx) {
   ctx->cfd = cfd;
   assert(ctx->cfd > 0);
 
-  VPRINTF(LOW, "%s: Accepted client connection\n", ctx->display_name);
+  printf("%s: Accepted client connection\n", ctx->display_name);
 
   return 0;
 }
@@ -269,7 +268,7 @@ static void put_byte(struct tcp_server_ctx *ctx, char cmd) {
       if (errno == EAGAIN || errno == EWOULDBLOCK) {
         continue;
       } else if (errno == EPIPE) {
-        VPRINTF(LOW, "%s: Remote disconnected.\n", ctx->display_name);
+        printf("%s: Remote disconnected.\n", ctx->display_name);
         tcp_server_client_close(ctx);
         break;
       } else {
@@ -346,7 +345,7 @@ static void *server_create(void *ctx_void) {
     rv = select(mfd + 1, &read_fds, NULL, NULL, &timeout);
 
     if (rv < 0) {
-      VPRINTF(LOW, "%s: Socket read failed, port: %d\n", ctx->display_name,
+      printf("%s: Socket read failed, port: %d\n", ctx->display_name,
              ctx->listen_port);
       tcp_server_client_close(ctx);
     }
