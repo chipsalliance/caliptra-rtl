@@ -314,7 +314,7 @@ void main(){
         while(1);
     }
     else {
-        printf("\nParallel Crypto error is successfully detected for test: %0d\n", rst_count);
+        printf("\nParallel Crypto is successfully detected for test: %0d\n", rst_count);
     }
 
     if (rst_count < 5){
