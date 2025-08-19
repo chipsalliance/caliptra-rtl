@@ -4,6 +4,7 @@
 // SPDX-License-Identifier: Apache-2.0
 
 #include "jtagdpi.h"
+#include "printf.h"
 
 #include <assert.h>
 #include <stdbool.h>
@@ -103,7 +104,7 @@ static void update_jtag_signals(struct jtagdpi_ctx *ctx) {
     act_quit = true;
   } else {
     // quit if unknown command
-    printf("JTAG DPI: unsupported command %c\n", cmd);
+    VPRINTF(LOW, "JTAG DPI: unsupported command %c\n", cmd);
     act_quit = true;
   }
 
@@ -114,7 +115,7 @@ static void update_jtag_signals(struct jtagdpi_ctx *ctx) {
   }
 
   if (act_quit) {
-    printf("JTAG DPI: Remote disconnected.\n");
+    VPRINTF(LOW, "JTAG DPI: Remote disconnected.\n");
     tcp_server_client_close(ctx->sock);
   }
 }
@@ -132,7 +133,7 @@ void *jtagdpi_create(const char *display_name, int listen_port) {
 
   reset_jtag_signals(ctx);
 
-  printf(
+  VPRINTF( LOW,
       "\n"
       "JTAG: Virtual JTAG interface %s is listening on port %d. Use\n"
       "OpenOCD and the following configuration to connect:\n"
