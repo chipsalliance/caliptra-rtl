@@ -353,8 +353,8 @@ module caliptra_top
 
     always_comb begin
         case (ecc_state)
-            IDLE:     ecc_next_state = ecc_state ? INITIAL : IDLE;
-            INITIAL:  ecc_next_state = ecc_state ? INITIAL : DONE;
+            IDLE:     ecc_next_state = ecc_busy ? INITIAL : IDLE;
+            INITIAL:  ecc_next_state = ecc_busy ? INITIAL : DONE;
             DONE:     ecc_next_state = DONE;
             default:  ecc_next_state = IDLE;
         endcase
