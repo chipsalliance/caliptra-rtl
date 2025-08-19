@@ -350,10 +350,10 @@ always_comb hwif_in.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = core_ready;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = core_ready;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = core_ready;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe    = core_ready;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = core_ready;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = core_ready;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.dma_data_dest_valid.swwe   = core_ready;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe                  = core_ready;
+
+`CALIPTRA_ASSERT_NEVER(EHMAC_KV_KEY_OP_NOT_IDLE, kv_key_read_ctrl_reg.read_en & !core_ready , clk, !reset_n)
+`CALIPTRA_ASSERT_NEVER(HMAC_KV_BLOCK_OP_NOT_IDLE, kv_block_read_ctrl_reg.read_en & !core_ready , clk, !reset_n)
 
 //keyvault control reg macros for assigning to struct
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC512_KV_RD_KEY_CTRL)

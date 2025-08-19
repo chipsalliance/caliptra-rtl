@@ -345,9 +345,6 @@ module sha512
     always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = ready_reg && !gen_hash_ip;
     always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = ready_reg && !gen_hash_ip;
     always_comb hwif_in.SHA512_KV_WR_CTRL.aes_key_dest_valid.swwe    = ready_reg && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = ready_reg && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = ready_reg && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.dma_data_dest_valid.swwe   = ready_reg && !gen_hash_ip;
     always_comb hwif_in.SHA512_KV_WR_CTRL.rsvd.swwe                  = ready_reg && !gen_hash_ip;
 
   `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)

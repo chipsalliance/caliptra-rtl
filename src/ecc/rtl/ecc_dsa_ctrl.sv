@@ -509,9 +509,6 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = ecc_ready_reg;
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = ecc_ready_reg;
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = ecc_ready_reg;
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = ecc_ready_reg;
 
     //keyvault control reg macros for assigning to struct
@@ -970,5 +967,6 @@ module ecc_dsa_ctrl
 always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, !reset_n)
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, !reset_n)
-
+    `CALIPTRA_ASSERT_NEVER(ECC_KV_PRIVKEY_OP_NOT_IDLE, kv_privkey_read_ctrl_reg.read_en & !ecc_ready_reg , clk, !reset_n)
+    `CALIPTRA_ASSERT_NEVER(ECC_KV_SEED_OP_NOT_IDLE, kv_seed_read_ctrl_reg.read_en & !ecc_ready_reg , clk, !reset_n)
 endmodule
