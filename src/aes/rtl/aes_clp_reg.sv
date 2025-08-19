@@ -672,7 +672,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_RD_KEY_CTRL.read_en.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_RD_KEY_CTRL && decoded_req_is_wr && hwif_in.AES_KV_RD_KEY_CTRL.read_en.swwe) begin // SW write
             next_c = (field_storage.AES_KV_RD_KEY_CTRL.read_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(hwif_in.AES_KV_RD_KEY_CTRL.read_en.hwclr) begin // HW Clear
@@ -696,7 +696,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_RD_KEY_CTRL.read_entry.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_RD_KEY_CTRL && decoded_req_is_wr && hwif_in.AES_KV_RD_KEY_CTRL.read_entry.swwe) begin // SW write
             next_c = (field_storage.AES_KV_RD_KEY_CTRL.read_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
         end
@@ -717,7 +717,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_RD_KEY_CTRL.pcr_hash_extend.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_RD_KEY_CTRL && decoded_req_is_wr && hwif_in.AES_KV_RD_KEY_CTRL.pcr_hash_extend.swwe) begin // SW write
             next_c = (field_storage.AES_KV_RD_KEY_CTRL.pcr_hash_extend.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
         end
@@ -738,7 +738,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_RD_KEY_CTRL.rsvd.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_RD_KEY_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_RD_KEY_CTRL && decoded_req_is_wr && hwif_in.AES_KV_RD_KEY_CTRL.rsvd.swwe) begin // SW write
             next_c = (field_storage.AES_KV_RD_KEY_CTRL.rsvd.value & ~decoded_wr_biten[31:7]) | (decoded_wr_data[31:7] & decoded_wr_biten[31:7]);
             load_next_c = '1;
         end
@@ -782,7 +782,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.write_en.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.write_en.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.write_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end else if(hwif_in.AES_KV_WR_CTRL.write_en.hwclr) begin // HW Clear
@@ -806,7 +806,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.write_entry.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.write_entry.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.write_entry.value & ~decoded_wr_biten[5:1]) | (decoded_wr_data[5:1] & decoded_wr_biten[5:1]);
             load_next_c = '1;
         end
@@ -827,7 +827,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.hmac_key_dest_valid.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
             load_next_c = '1;
         end
@@ -848,7 +848,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.hmac_block_dest_valid.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
             load_next_c = '1;
         end
@@ -869,7 +869,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.mldsa_seed_dest_valid.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
             load_next_c = '1;
         end
@@ -890,7 +890,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.ecc_pkey_dest_valid.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value & ~decoded_wr_biten[9:9]) | (decoded_wr_data[9:9] & decoded_wr_biten[9:9]);
             load_next_c = '1;
         end
@@ -911,7 +911,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.ecc_seed_dest_valid.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value & ~decoded_wr_biten[10:10]) | (decoded_wr_data[10:10] & decoded_wr_biten[10:10]);
             load_next_c = '1;
         end
@@ -932,7 +932,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.aes_key_dest_valid.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value & ~decoded_wr_biten[11:11]) | (decoded_wr_data[11:11] & decoded_wr_biten[11:11]);
             load_next_c = '1;
         end
@@ -953,7 +953,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.mlkem_seed_dest_valid.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value & ~decoded_wr_biten[12:12]) | (decoded_wr_data[12:12] & decoded_wr_biten[12:12]);
             load_next_c = '1;
         end
@@ -974,7 +974,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.mlkem_msg_dest_valid.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value & ~decoded_wr_biten[13:13]) | (decoded_wr_data[13:13] & decoded_wr_biten[13:13]);
             load_next_c = '1;
         end
@@ -995,7 +995,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.dma_data_dest_valid.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value & ~decoded_wr_biten[14:14]) | (decoded_wr_data[14:14] & decoded_wr_biten[14:14]);
             load_next_c = '1;
         end
@@ -1016,7 +1016,7 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.AES_KV_WR_CTRL.rsvd.value;
         load_next_c = '0;
-        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.AES_KV_WR_CTRL && decoded_req_is_wr && hwif_in.AES_KV_WR_CTRL.rsvd.swwe) begin // SW write
             next_c = (field_storage.AES_KV_WR_CTRL.rsvd.value & ~decoded_wr_biten[31:15]) | (decoded_wr_data[31:15] & decoded_wr_biten[31:15]);
             load_next_c = '1;
         end

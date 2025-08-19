@@ -30,6 +30,7 @@ schema_version: 2.4.0
 requires: 
   - sha512_ctrl
   - sha512_coverage
+  - caliptra_top_reg_defines
 targets:
   tb:
     directories: 

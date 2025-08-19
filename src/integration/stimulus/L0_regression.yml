@@ -14,6 +14,8 @@ contents:
         - ../test_suites/smoke_test_sha256/smoke_test_sha256.yml
         - ../test_suites/smoke_test_sha256_wntz/smoke_test_sha256_wntz.yml
         - ../test_suites/smoke_test_sha256_wntz_rand/smoke_test_sha256_wntz_rand.yml
+        - ../test_suites/smoke_test_sha3/smoke_test_sha3.yml
+        - ../test_suites/smoke_test_cshake/smoke_test_cshake.yml
         - ../test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
         - ../test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml
         - ../test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm.yml
@@ -29,7 +31,9 @@ contents:
         - ../test_suites/smoke_test_aes_gcm/smoke_test_aes_gcm.yml
         - ../test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
         - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv.yml
-        - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_short.yml
+        # Key Size < 0x40 would only occur for setting the strap in non-lock use-cases
+        # but it would not use the new LOCK hardware
+#        - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_short.yml
         - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_large.yml
         - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_no_ocp_lock.yml
         - ../test_suites/smoke_test_aes_kv_rand/smoke_test_aes_kv_rand.yml

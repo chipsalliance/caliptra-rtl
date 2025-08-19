@@ -28,7 +28,7 @@ import kv_defines_pkg::*;
     // Signals                                 //
     // --------------------------------------- //
     struct packed {
-        logic doe_to_key_release; // DOE can not write to key release slot
+        logic aes_only_to_key_release; // NO crypto other than AES can write to key release slot
         logic std_to_std; // Standard slot inputs can only write to standard outputs
         logic lock_to_lock; // OCP Lock slot inputs can only write to OCP Lock outputs
         logic aes_dec_to_rt_obf_key;
@@ -39,11 +39,12 @@ import kv_defines_pkg::*;
     // Rules                                   //
     // --------------------------------------- //
     // IF (OCP_LOCK_IN_PROGRESS)
-    //   THEN (DOE SHALL not write to OCP_LOCK_KEY_RELEASE_KV_SLOT)
+    //   THEN (NO CRYPTO may write to OCP_LOCK_KEY_RELEASE_KV_SLOT, other than AES)
     always_comb begin
-        rule_fail.doe_to_key_release = write_metrics.ocp_lock_in_progress &&
-                                       write_metrics.kv_write_src[KV_WRITE_IDX_DOE] &&
-                                       write_metrics.kv_write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT;
+        rule_fail.aes_only_to_key_release = write_metrics.ocp_lock_in_progress &&
+                                            // Any write source indicated (other than AES) causes rule failure
+                                          |(write_metrics.kv_write_src & ~(KV_NUM_WRITE'(1) << KV_WRITE_IDX_AES)) &&
+                                            write_metrics.kv_write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT;
     end
 
     // IF (OCP_LOCK_IN_PROGRESS) AND (input inside [STD region])
@@ -75,7 +76,7 @@ import kv_defines_pkg::*;
     //   THEN (dest = OCP_LOCK_KEY_RELEASE_KV_SLOT)
     // ELSEIF (AES any other op)
     //   THEN (dest = FW)
-    // TODO aes.sv still needs to be updated to enforce that kv write IS requested when the input criteria are met
+    // NOTE: aes.sv enforces this rule by blocking the register output when kv write is expected due to input criteria being met
     always_comb begin
         rule_fail.aes_dec_to_rt_obf_key = write_metrics.kv_write_src[KV_WRITE_IDX_AES] &&
                                           (!write_metrics.ocp_lock_in_progress ||

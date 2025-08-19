@@ -36,6 +36,7 @@ provides: [keyvault]
 schema_version: 2.4.0
 requires: 
   - libs
+  - caliptra_prim
   - kv_defines_pkg
 targets:
   rtl:

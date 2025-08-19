@@ -1544,9 +1544,6 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_pwrgood) begin
     end
 end
 
-`ifndef CALIPTRA_MODE_SUBSYSTEM
-`CALIPTRA_ASSERT_INIT_NET(SS_STRAP_OCP_LOCK_EN   , ss_ocp_lock_en == 1'b0)
-`endif
 `CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE_DW_MULT , strap_ss_key_release_key_size[1:0]  == 2'b00 , clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (SS_STRAP_KEY_SIZE_LTE_64  , strap_ss_key_release_key_size[15:0] <= 16'h40, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_ADDR_WIDTH, SOC_IFC_ADDR_W == AXI_ADDR_WIDTH, clk, !cptra_noncore_rst_b)

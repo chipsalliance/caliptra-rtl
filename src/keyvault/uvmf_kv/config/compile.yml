@@ -8,6 +8,7 @@ requires:
   - caliptra_top_defines
   - caliptra_top_reg_defines
   - keyvault_cov
+  - caliptra_prim
 targets:
   tb:
     directories:

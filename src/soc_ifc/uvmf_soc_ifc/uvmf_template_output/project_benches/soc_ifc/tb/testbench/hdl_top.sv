@@ -281,6 +281,9 @@ import aaxi_uvm_pkg::*;
         // RV ECC Status Interface
         .rv_ecc_sts(cptra_ctrl_agent_bus.rv_ecc_sts),
 
+        // Clear KeyVault secrets
+        .debugUnlock_or_scan_mode_switch(1'b0), // TODO currently not driving debug/scan tests in UVM
+
         //Obfuscated UDS and FE
         .clear_obf_secrets          (cptra_ctrl_agent_bus.clear_obf_secrets          ),
         .scan_mode                  (1'b0                                            ),
@@ -292,6 +295,20 @@ import aaxi_uvm_pkg::*;
         .cptra_obf_uds_seed_vld     (soc_ifc_ctrl_agent_bus.cptra_obf_uds_seed_vld     ),
         .cptra_obf_uds_seed         (soc_ifc_ctrl_agent_bus.cptra_obf_uds_seed         ),
         .obf_uds_seed               (cptra_status_agent_bus.obf_uds_seed             ),
+        .obf_hek_seed               (cptra_status_agent_bus.obf_hek_seed             ),
+
+        .aes_input_ready (1'b0              ), // \
+        .aes_output_valid(1'b0              ), //  \
+        .aes_status_idle (1'b0              ), //   \
+        .aes_req_dv      (                  ), //   |----- TODO
+        .aes_req_hold    (1'b0              ), //   /
+        .aes_req_data    (                  ), //  /
+        .aes_rdata       (SOC_IFC_DATA_W'(0)), // /
+        .aes_error       (1'b0              ), ///
+
+        // kv interface
+        .kv_read   (  /*TODO*/),
+        .kv_rd_resp('0/*TODO*/),
 
         // Subsystem mode straps
         .strap_ss_caliptra_base_addr                            (ss_mode_ctrl_agent_bus.strap_ss_caliptra_base_addr                            ),
@@ -300,6 +317,8 @@ import aaxi_uvm_pkg::*;
         .strap_ss_external_staging_area_base_addr               (ss_mode_ctrl_agent_bus.strap_ss_external_staging_area_base_addr                        ),
         .strap_ss_otp_fc_base_addr                              (ss_mode_ctrl_agent_bus.strap_ss_otp_fc_base_addr                              ),
         .strap_ss_uds_seed_base_addr                            (ss_mode_ctrl_agent_bus.strap_ss_uds_seed_base_addr                            ),
+        .strap_ss_key_release_base_addr                         (ss_mode_ctrl_agent_bus.strap_ss_key_release_base_addr                         ),
+        .strap_ss_key_release_key_size                          (ss_mode_ctrl_agent_bus.strap_ss_key_release_key_size                          ),
         .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(ss_mode_ctrl_agent_bus.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),
         .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (ss_mode_ctrl_agent_bus.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       ),
         .strap_ss_strap_generic_0                               (ss_mode_ctrl_agent_bus.strap_ss_strap_generic_0                               ),
@@ -316,6 +335,11 @@ import aaxi_uvm_pkg::*;
 
         // Subsystem mode firmware execution control
         .ss_generic_fw_exec_ctrl(ss_mode_status_agent_bus.ss_generic_fw_exec_ctrl),
+
+        // Subsystem mode OCP LOCK status
+        .ss_ocp_lock_en         (1'b0/*TODO*/),
+        .ss_ocp_lock_in_progress(    /*TODO*/),
+        .ss_key_release_key_size(    /*TODO*/),
 
         // NMI Vector 
         .nmi_vector(cptra_status_agent_bus.nmi_vector),

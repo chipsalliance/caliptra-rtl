@@ -45,6 +45,7 @@
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/power2round/rtl
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/compress/rtl
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/decompress/rtl
++incdir+${CALIPTRA_ROOT}/src/aes/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/asserts
 +incdir+${CALIPTRA_AXI4PC_DIR}
 +incdir+${CALIPTRA_ROOT}/src/entropy_src/tb
@@ -58,6 +59,7 @@
 +incdir+${CALIPTRA_ROOT}/src/keyvault/coverage
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/coverage
 +incdir+${CALIPTRA_ROOT}/src/axi/coverage
++incdir+${CALIPTRA_ROOT}/src/aes/coverage
 +incdir+${CALIPTRA_ROOT}/src/integration/tb
 +incdir+${CALIPTRA_ROOT}/src/integration/coverage
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
@@ -472,6 +474,10 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/rtl/abr_seq.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/rtl/abr_ctrl.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/rtl/abr_top.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/rtl/abr_reg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_pkg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/aes_pkg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_pkg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/asserts/caliptra_top_sva.sv
 ${CALIPTRA_AXI4PC_DIR}/Axi4PC.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng.sv
@@ -498,6 +504,8 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/coverage/abr_top_cov_bind.s
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_if.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_props.sv
+${CALIPTRA_ROOT}/src/aes/coverage/aes_cov_if.sv
+${CALIPTRA_ROOT}/src/aes/coverage/aes_cov_bind.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/tb/dma_testcase_generator.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_veer_sram_export.sv

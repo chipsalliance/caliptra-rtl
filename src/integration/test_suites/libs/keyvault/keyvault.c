@@ -18,6 +18,12 @@
 #include "caliptra_defines.h"
 #include "printf.h"
 
+void kv_set_clear(uint32_t entry){
+    VPRINTF(MEDIUM,"KV: clearing KV entry 0x%x\n", entry);
+    lsu_write_32(CLP_KV_REG_KEY_CTRL_0 + 4*entry, KV_REG_KEY_CTRL_1_CLEAR_MASK);
+
+}
+
 void kv_error_check(uint32_t reg_addr) {
     VPRINTF(MEDIUM,"KV: checking for errors\n");
     if ((lsu_read_32(reg_addr) & KV_RD_STATUS_ERROR_MASK) != 0) {

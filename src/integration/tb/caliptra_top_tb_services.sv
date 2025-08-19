@@ -144,6 +144,7 @@ module caliptra_top_tb_services
    //=========================================================================-
     logic                       mailbox_write;
     wire [31:0]                 WriteData;
+    logic [31:0]                prev_mailbox_data;
     logic                       mailbox_data_val;
     int                         commit_count;
 
@@ -362,6 +363,7 @@ module caliptra_top_tb_services
     //         8'hc8        - Inject key 0x0 into slot 16 for AES 
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
+    //         8'hcb        - Inject key 0x0 into all slots for AES
     //         8'hcb: 8'hd4 - Unused
     //         8'hd5        - Inject randomized HEK test vector
     //         8'hd6        - Inject mldsa timeout
@@ -554,6 +556,7 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   hmac512_key_tb   = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
     logic [0:15][31:0]   hmac512_block_tb = 512'h_e7f1293c6f23a53289143df1399e784cb71180e3830c3869fd725fe78f0b6480559d6344edc1aaf64b7d0701e78672d2_00000000000000000000000000000000;
     logic [0:15][31:0]   mldsa_seed_tb    = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
+    logic [0:15][31:0]   aes256_key_tb    = 512'hbc623095823dafe190998314fedbac4258395063234564532123adfcefda2344_0000000000000000000000000000000000000000000000000000000000000000;
     logic [0:15][31:0]   ecc_privkey_random;
     logic [0:15][31:0]   mldsa_seed_random;
     logic [15:0][31:0]   mlkem_seed_random;
@@ -734,6 +737,40 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = random_key_size - 1; 
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
+                        end
+                    end
+                    // inject key for AES into all key slots
+                    else if((WriteData[7:0] == 8'hcb) && mailbox_write) begin
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b000100000; // AES access
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
+                        if(dword_i < 8) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'h0;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = aes256_key_tb[dword_i][31 : 0];
+                        end
+                        else begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'h0;
+                        end
+                    end
+                    // inject key for AES into all key slots
+                    else if((WriteData[7:0] == 8'hcc) && mailbox_write) begin
+                        if (slot_id == 16) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b000100000; // AES access
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
+                            if(dword_i < 8) begin
+                                force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                                force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'h0;
+                                force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = aes256_key_tb[dword_i][31 : 0];
+                            end
+                            else begin
+                                force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                                force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'h0;
+                            end
                         end
                     end
                     //inject valid hmac_block dest and hmac512_block value to key reg
@@ -1993,6 +2030,15 @@ endgenerate //IV_NO
         end
     `endif
 
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if(!cptra_rst_b) begin
+            prev_mailbox_data <= 'hA; // Initialize with newline character so timestamp is printed to console for the first line
+        end
+        else if(mailbox_data_val & mailbox_write) begin
+            prev_mailbox_data <= WriteData;
+        end
+    end
+
     initial cycleCnt = 0;
     initial cycleCntKillReq = 0;
     always @(negedge clk) begin
@@ -2007,6 +2053,10 @@ endgenerate //IV_NO
         end
         // console Monitor
         if( mailbox_data_val & mailbox_write) begin
+            if (prev_mailbox_data[7:0] inside {8'h0A,8'h0D}) begin
+                $fwrite(fd,"%0t - ", $time);
+                if (!UVM_TB) $write("%0t - ", $time);
+            end
             $fwrite(fd,"%c", WriteData[7:0]);
             // Prints get lost in sim.log amidst a flurry of UVM_INFO
             // messages....  best to just omit and send to console.log
@@ -2838,6 +2888,7 @@ abr_top_cov_bind i_abr_top_cov_bind();
 keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
 axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
+aes_cov_bind i_aes_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */
