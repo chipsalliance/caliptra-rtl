@@ -226,8 +226,7 @@ void main(){
                                                 ((hmac_tag_id << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) & HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK));
     
     //inject hmac512_key to kv key reg (in RTL)
-    uint8_t key512_inject_cmd = 0xa8 + (hmac_key_id & 0x7);
-    printf("%c", key512_inject_cmd);
+    lsu_write_32(STDOUT, (hmac_key_id << 8) | 0xa9); 
 
     VPRINTF(LOW,"   Load Key data to HMAC from KV slot = %x\n", hmac_key_id);
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
