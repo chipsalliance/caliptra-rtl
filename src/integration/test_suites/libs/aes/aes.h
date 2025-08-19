@@ -92,6 +92,7 @@ void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_s
 void aes_lsu_write_32(uint32_t addr, uint32_t data, aes_endian_e endian_mode);
 void aes_wait_idle();
 void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input, aes_endian_e endian_mode);
+void aes_flow_w_error_expected(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input, aes_endian_e endian_mode, uint8_t error_expected);
 void aes_zeroize();
 
 #endif

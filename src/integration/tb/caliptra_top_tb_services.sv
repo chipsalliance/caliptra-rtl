@@ -84,7 +84,9 @@ module caliptra_top_tb_services
 
     output logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] cptra_uds_tb,
     output logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] cptra_fe_tb,
-    output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb
+    output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb,
+
+    output logic axi_error_inj_en
 
 );
 
@@ -348,7 +350,11 @@ module caliptra_top_tb_services
     //         8'hb2        - Inject MLKEM MSG to keyvault
     //         8'hb3        - Check MLKEM KV result against shared key test vector
     //         8'hb4        - Inject MLKEM zeroize during KV access
-    //         8'hb5:bf     - Unused
+    //         8'hb5        - Turn on Assertion using $asserton
+    //         8'hb6        - Turn off Assertion using $assertoff
+    //         8'hb7        - AXI Error Injection Enabled
+    //         8'hb8        - AXI Error Injection Disabled
+    //         8'hb9:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hc8: 8'hd5 - Unused
     //         8'hd6        - Inject mldsa timeout
@@ -1283,6 +1289,28 @@ endgenerate //IV_NO
         end
     end
 
+    always@(posedge clk) begin
+        if((WriteData[7:0] == 8'hb5) && mailbox_write) begin
+            $display("Turning ON assertions using $asserton");
+            $asserton;
+        end
+        else if((WriteData[7:0] == 8'hb6) && mailbox_write) begin
+            $display("Turning OFF assertion using $assertoff");
+            $assertoff;
+        end
+    end
+
+    always@(posedge clk or negedge cptra_rst_b) begin
+        if(!cptra_rst_b) begin
+            axi_error_inj_en <= 1'b0;
+        end else if((WriteData[7:0] == 8'hb7) && mailbox_write) begin
+            $display("AXI Err Injection Enabled");
+            axi_error_inj_en <= 1'b1;
+        end else if((WriteData[7:0] == 8'hb8) && mailbox_write) begin
+            $display("AXI Err Injection Disabled");
+            axi_error_inj_en <= 1'b0;
+        end
+    end
 
     logic inject_mlkem_zeroize_kv_read;
     logic inject_zeroize_to_mlkem;
