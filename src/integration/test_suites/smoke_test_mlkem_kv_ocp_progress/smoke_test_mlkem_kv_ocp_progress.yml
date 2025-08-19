@@ -1,0 +1,5 @@
+---
+seed: 1
+testname: smoke_test_mlkem_kv_ocp_progress
+plusargs:
+  - +CLP_OCP_LOCK_EN

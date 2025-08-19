@@ -361,7 +361,7 @@ void kv_hmac512(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     hmac512_tag.kv_id = tag_id;
     VPRINTF(LOW,"hmac tag kv id = %x\n", hmac512_tag.kv_id);
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 }
 
 //******************************************************************
@@ -399,7 +399,7 @@ void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_i
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = ecc_seed_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 
     uint32_t idevid_mldsa_key[] = {0x69646576, 0x69645F6D, 0x6C647361, 0x5F6B6579,
                                 0x80000000, 0x00000000, 0x00000000, 0x00000000,
@@ -421,7 +421,7 @@ void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_i
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = mldsa_seed_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 }
 
 void kv_ecc(uint8_t seed_id, uint8_t privkey_id){

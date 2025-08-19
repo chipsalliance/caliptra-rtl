@@ -250,7 +250,7 @@ void main() {
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = 3;
     hmac512_tag.data_size = 16;
-    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, FALSE);
     hmac_zeroize();
 
     //Use SK in AES to generate ciphertext, compare agains the one generated before

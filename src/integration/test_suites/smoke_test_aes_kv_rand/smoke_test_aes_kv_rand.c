@@ -163,7 +163,7 @@ void main() {
     for (int i = 0; i < hmac384_tag.data_size; i++)
         hmac384_tag.data[i] = hmac_tag[i];
     
-    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
     hmac_zeroize();
 
     //Run again, but put the tag in keyvault
@@ -192,7 +192,7 @@ void main() {
     uint8_t key384_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
     printf("%c", key384_inject_cmd);
 
-    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
     hmac_zeroize();
 
     printf("----------------------------------\n");

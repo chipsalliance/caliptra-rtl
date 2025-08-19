@@ -154,7 +154,7 @@ void main() {
     uint8_t key384_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
     printf("%c", key384_inject_cmd);
 
-    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
     hmac_zeroize();
 
 

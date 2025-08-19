@@ -244,8 +244,8 @@ void main() {
     uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
     printf("%c", key_inject_cmd);
 
-    hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE);
-    hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE);
+    hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE, FALSE);
+    hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE, FALSE);
     hmac_zeroize();
 
     //sign with the generated key

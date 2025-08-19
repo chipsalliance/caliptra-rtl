@@ -143,7 +143,7 @@ void kv_hmac512_flow(uint8_t block_id, uint8_t tag_id){
     hmac512_tag.kv_id = tag_id;
     VPRINTF(LOW,"hmac tag kv id = %x\n", hmac512_tag.kv_id);
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
     hmac_zeroize();
 }
 

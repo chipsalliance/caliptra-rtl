@@ -632,6 +632,7 @@ module caliptra_top_tb_services
                     //inject valid hmac_key dest and zero hmac_key value to key reg
                     else if(((WriteData[7:0]) == 8'ha8) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
+                        $display("Injecting zero HMAC key to slot %0d", slot_id);
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
@@ -643,6 +644,7 @@ module caliptra_top_tb_services
                     else if((WriteData[7:0] >= 8'ha0) && (WriteData[7:0] < 8'ha8) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                            $display("Injecting HMAC384 key to slot %0d", slot_id);
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
@@ -655,6 +657,8 @@ module caliptra_top_tb_services
                     else if((WriteData[7:0] > 8'ha8) && (WriteData[7:0] <= 8'haf) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                            $display("Injecting HMAC512 key to slot %0d", slot_id);
+                            $display("Injecting HMAC512 key to slot %0d and write data = %h", slot_id, WriteData[7:0]);
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
@@ -663,10 +667,35 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
                         end
                     end
+                    else if ((WriteData[7:0] == 8'h9f) && mailbox_write) begin
+                        inject_hmac_key <= 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.next = 5'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.next = 'd15;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
+                        
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.next = 5'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.next = 'd15;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
+
+                        inject_hmac_block <= 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].dest_valid.next = 6'h2;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].last_dword.next = 'd11;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[16][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[16][dword_i].data.next = hmac512_block_tb[dword_i][31 : 0];
+                    end
                     // inject key 0x0 into slot 16 for AES
                     else if((WriteData[7:0] == 8'hc8) && mailbox_write) begin
                         inject_kv16_zero_key <= '1;
                         if (slot_id == 16) begin
+                            $display("Injecting zero key to slot %0d for AES", slot_id);
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b000100000; // AES access
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
@@ -800,7 +829,7 @@ module caliptra_top_tb_services
             assign kv_entry_data[g_dword] = `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_ENTRY[kv_entry_id][g_dword].data.value;
             for (g_byte = 0; g_byte < 4; g_byte++) begin
             //KeyVault is stored big endian, so we need to reverse the order of bytes in the test vector
-            `CALIPTRA_ASSERT(KV_MLKEM_CHECK0, kv_entry_data[g_dword][g_byte*8 +: 8] == mlkem_test_vector.sharedkey[g_dword][31-(g_byte*8) -: 8], clk, mlkem_kv_check_dis);
+            `CALIPTRA_ASSERT(KV_MLKEM_CHECK0, `CPTRA_TOP_PATH.soc_ifc_top1.ss_ocp_lock_in_progress ? $stable($past(kv_entry_data[g_dword], 16)) : kv_entry_data[g_dword][g_byte*8 +: 8] == mlkem_test_vector.sharedkey[g_dword][31-(g_byte*8) -: 8], clk, mlkem_kv_check_dis);
             end
         end
     endgenerate
