@@ -515,6 +515,9 @@ generate
           kv_key_reg[g_dword][g_byte] <= '0;
         end else if(debugUnlock_or_scan_mode_switch) begin
           kv_key_reg[g_dword][g_byte] <= '0;
+        // zeroize the buffered KeyVault value when reading in a new key
+        end else if (kv_key_write_en && (kv_key_write_offset <  g_dword)) begin
+          kv_key_reg[g_dword][g_byte] <= 0;
         end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
           kv_key_reg[g_dword][g_byte] <= kv_key_write_data[3-g_byte];
         end
