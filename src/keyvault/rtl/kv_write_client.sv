@@ -112,7 +112,11 @@ always_ff @(posedge clk or negedge rst_b) begin
         error_code <= KV_SUCCESS;
     end
     else begin
-        error_code <= dest_data_avail & write_ctrl_reg.write_en & !write_allow ? KV_WRITE_FAIL :
+        // On first beat of kv write, latch any error conditions.
+        // On subsequent beats of kv write, preserve any error that was previously
+        // flagged or decode new error conditions
+        error_code <= dest_write_en && |dest_write_offset && (error_code != KV_SUCCESS) ? error_code : 
+                      dest_data_avail & write_ctrl_reg.write_en & !write_allow ? KV_WRITE_FAIL :
                       dest_write_en & kv_resp.error ? KV_WRITE_FAIL : 
                       dest_write_en & ~kv_resp.error ? KV_SUCCESS : error_code;
     end
