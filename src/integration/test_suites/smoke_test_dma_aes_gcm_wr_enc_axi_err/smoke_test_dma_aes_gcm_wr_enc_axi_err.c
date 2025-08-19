@@ -115,11 +115,13 @@ void main(void) {
 
     SEND_STDOUT_CTRL( 0xb7); // AXI Error Injection Enabled
     VPRINTF(LOW, "Trying the AES GCM Operation.. Err Inj ON\n");
-    aes_flow_w_error_expected(op, mode, key_len, aes_input, endian_mode, 1); // 1 indicates that an error is expected
+    aes_input.aes_expect_err = TRUE;
+    aes_flow(op, mode, key_len, aes_input, endian_mode);
     SEND_STDOUT_CTRL( 0xb8); //  AXI Error Injection Disabled   
     SEND_STDOUT_CTRL( 0xb5); // asserton
 
     VPRINTF(LOW, "Trying Again the AES GCM Operation.. Err Inj OFF\n");
+    aes_input.aes_expect_err = FALSE;
     aes_flow(op, mode, key_len, aes_input, endian_mode);
 
     SEND_STDOUT_CTRL( 0xff);

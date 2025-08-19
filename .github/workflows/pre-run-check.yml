@@ -22,7 +22,7 @@ on:
         value: ${{ jobs.evaluate_if_run.outputs.run_vltr }}
 
 env:
-  MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" "nileshbpat" "ekarabu" )
+  MSFT_ACTORS: ( "Nitsirks" "calebofearth" "mojtaba-bisheh" "anjpar" "upadhyayulakiran" "nileshbpat" "ekarabu" "marnovandermaas" "andrea-caforio" "h-filali" )
 
 jobs:
   # Fail if any compile.yml has been modified

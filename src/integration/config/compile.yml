@@ -60,6 +60,7 @@ requires:
   - entropy_src
   - csrng
   - aes
+  - sha3_ctrl
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -107,6 +108,7 @@ requires:
   - entropy_src
   - csrng
   - aes
+  - sha3_ctrl
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -150,6 +152,7 @@ requires:
   - keyvault_cov
   - abr_coverage
   - axi_dma_coverage
+  - aes_coverage
 targets:
   dpi_compile:
     directories:

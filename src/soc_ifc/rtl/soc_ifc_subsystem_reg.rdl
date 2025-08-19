@@ -159,7 +159,7 @@ reg {
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
     strap addr_l[32]=0x0;
- } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
+} SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L;
 
 reg {
     name = "Subsystem External Staging Area Base Address (High)";
@@ -168,8 +168,49 @@ reg {
              [br]Caliptra Access: RO
              [br]SOC Access:      RWL-S";
      strap addr_h[32]=0x0;
- } SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+} SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
 
+reg {
+    name = "Subsystem Key Release Base Address (Low)";
+    desc = "Address of external register to which key may be released from Key Vault. Only 1 predetermined KV slot is permitted to be released to this destination. KV release
+            is only permitted if both CPTRA_HW_CONFIG.OCP_LOCK_MODE_en and SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS are set to 1. Otherwise, HW will return a command error on
+            Key Release operation requests. Lower 32-bits of address.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    strap addr_l[32]=0x0;
+} SS_KEY_RELEASE_BASE_ADDR_L;
+
+reg {
+    name = "Subsystem Key Release Base Address (High)";
+    desc = "Address of external register to which key may be released from Key Vault. Only 1 predetermined KV slot is permitted to be released to this destination. KV release
+            is only permitted if both CPTRA_HW_CONFIG.OCP_LOCK_MODE_en and SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS are set to 1. Otherwise, HW will return a command error on
+            Key Release operation requests. Upper 32-bits of address.
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    strap addr_h[32]=0x0;
+} SS_KEY_RELEASE_BASE_ADDR_H;
+
+reg {
+    name = "Subsystem Key Release Key Size";
+    desc = "Configurable strap that indicates size (in bytes) of the Key that will be released to the subsystem at the address specified by SS_KEY_RELEASE_BASE_ADDR.
+            Maximum value is 64. Must be a multiple of 4 (Key is dword-aligned).
+            [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    strap size[16] = 16'h0;
+} SS_KEY_RELEASE_SIZE;
+
+reg {
+    name = "OCP LOCK Control";
+    desc = "Programmed by Caliptra firmware to enable OCP LOCK operations. Writable only when CPTRA_HW_CONFIG.OCP_LOCK_MODE_en
+            is set to 1. Read-only otherwise.
+            [br]These bits are only writable for Caliptra firmware.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      RO";
+    field {sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b; } LOCK_IN_PROGRESS = 1'b0;
+} SS_OCP_LOCK_CTRL;
 
 reg {
     name = "GENERIC STRAP";

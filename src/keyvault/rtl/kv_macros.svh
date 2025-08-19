@@ -27,6 +27,7 @@ assign struct_name.write_dest_vld[4] = ``hwif_name.``ctrl_reg_name.ecc_seed_dest
 assign struct_name.write_dest_vld[5] = ``hwif_name.``ctrl_reg_name.aes_key_dest_valid.value;\
 assign struct_name.write_dest_vld[6] = ``hwif_name.``ctrl_reg_name.mlkem_seed_dest_valid.value;\
 assign struct_name.write_dest_vld[7] = ``hwif_name.``ctrl_reg_name.mlkem_msg_dest_valid.value;\
+assign struct_name.write_dest_vld[8] = ``hwif_name.``ctrl_reg_name.dma_data_dest_valid.value;\
 assign struct_name.write_entry = ``hwif_name.``ctrl_reg_name.write_entry.value;\
 assign struct_name.write_en = ``hwif_name.``ctrl_reg_name.write_en.value;
 

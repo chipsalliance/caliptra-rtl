@@ -75,7 +75,9 @@ COMP_LIB_NAMES := aes \
 		  datavault \
 		  sha256 \
 		  sha512 \
+		  sha3 \
 		  soc_ifc \
+		  caliptra_rtl_lib \
 		  clk_gate \
 		  wdt
 COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration/test_suites/libs/$(name))
