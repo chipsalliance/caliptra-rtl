@@ -14,11 +14,14 @@
 
 `ifndef VERILATOR
 
-interface ecc_top_cov_if     
+interface ecc_top_cov_if
+    import ecc_params_pkg::*;
+    import kv_defines_pkg::*;  
     (
     input logic           clk,
     input logic           reset_n,
-    input logic           cptra_pwrgood
+    input logic           cptra_pwrgood,
+    input logic           ocp_lock_in_progress
 
 );
 
@@ -62,6 +65,9 @@ interface ecc_top_cov_if
     logic mult_last_reduction;
     logic mult_final_subtraction;
 
+    kv_write_filter_metrics_t kv_write_metrics;
+    kv_write_ctrl_reg_t kv_write_ctrl_reg;
+
     assign mod_p_q = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.mod_p_q;
     assign add_en = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.add_en_i;
     assign add_sub_i = ecc_top.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.sub_i;
@@ -80,6 +86,9 @@ interface ecc_top_cov_if
     assign zeroize = ecc_top.ecc_dsa_ctrl_i.zeroize_reg;
     assign ready = ecc_top.ecc_dsa_ctrl_i.ecc_ready_reg;
     assign valid = ecc_top.ecc_dsa_ctrl_i.ecc_valid_reg;
+
+    assign kv_write_metrics = ecc_top.ecc_dsa_ctrl_i.kv_write_metrics;
+    assign kv_write_ctrl_reg = ecc_top.ecc_dsa_ctrl_i.kv_write_ctrl_reg;
 
     always_ff @(posedge clk) begin
         if (!reset_n) begin
@@ -187,7 +196,40 @@ interface ecc_top_cov_if
 
     endgroup
 
+    covergroup ecc_ocp_lock_cov_grp @(posedge clk);
+
+        ocp_lock_in_progress_cp: coverpoint ocp_lock_in_progress;
+
+        kv_read_entry_0_cp: coverpoint {kv_write_metrics.kv_data0_present, kv_write_metrics.kv_data0_entry} 
+        iff (ecc_cmd inside {KEYGEN}) {
+            bins fw = {1'b0, [0:$]};
+            bins lower_slots = {1'b1, [0:15]};
+            bins upper_slots = {1'b1, [16:22]};
+            bins slot_23 = {1'b1, 23};
+        }
+
+        kv_read_entry_1_cp: coverpoint {kv_write_metrics.kv_data1_present, kv_write_metrics.kv_data1_entry} 
+        iff (ecc_cmd inside {SIGN,SHARED_KEY}) {
+            bins fw = {1'b0, [0:$]};
+            bins lower_slots = {1'b1, [0:15]};
+            bins upper_slots = {1'b1, [16:22]};
+            bins slot_23 = {1'b1, 23};
+        }
+
+        kv_write_entry_cp: coverpoint {kv_write_ctrl_reg.write_en, kv_write_metrics.kv_write_entry} 
+        iff (~ready) {
+            bins fw = {1'b0, [0:$]};
+            bins lower_slots = {1'b1, [0:15]};
+            bins upper_slots = {1'b1, [16:22]};
+            bins slot_23 = {1'b1, 23};
+        }
+
+        ocp_lock_X_kv_read_entry0: cross ocp_lock_in_progress_cp, kv_write_entry_cp, kv_read_entry_0_cp;
+        ocp_lock_X_kv_read_entry1: cross ocp_lock_in_progress_cp, kv_write_entry_cp, kv_read_entry_1_cp;
+    endgroup  
+
     ecc_top_cov_grp ecc_top_cov_grp1 = new();
+    ecc_ocp_lock_cov_grp ecc_ocp_lock_cov_grp1 = new();
 
 endinterface
 

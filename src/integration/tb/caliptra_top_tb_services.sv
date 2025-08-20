@@ -2860,6 +2860,7 @@ keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
 axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 aes_cov_bind i_aes_cov_bind();
+doe_cov_bind i_doe_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

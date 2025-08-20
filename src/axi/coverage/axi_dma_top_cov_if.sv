@@ -43,6 +43,7 @@ interface axi_dma_top_cov_if
         input logic ocp_lock_in_progress,
         input logic [63:0] key_release_addr,
         input logic [15:0] key_release_size,
+        input kv_read_t    kv_read,
 
         // Mailbox SRAM INF
 
@@ -611,14 +612,23 @@ interface axi_dma_top_cov_if
             bins lock_inactive = {0};
         }
 
+        ocp_lock_in_progress_cp: coverpoint ocp_lock_in_progress;
+
         // Cross coverage: Route combination with OCP lock status
-        route_ocp_lock_cross: cross wr_route, ocp_lock_in_progress iff (dma_xfer_start_pulse) {
+        route_ocp_lock_cross: cross wr_route, ocp_lock_in_progress_cp iff (dma_xfer_start_pulse) {
             // Only interested in KEYVAULT route combinations
             bins keyvault_with_lock = binsof(wr_route) intersect {axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT} &&
-                                     binsof(ocp_lock_in_progress) intersect {1};
+                                     binsof(ocp_lock_in_progress_cp) intersect {1};
             bins keyvault_without_lock = binsof(wr_route) intersect {axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT} &&
-                                        binsof(ocp_lock_in_progress) intersect {0};
+                                        binsof(ocp_lock_in_progress_cp) intersect {0};
         }
+
+        kv_read_en_cp: coverpoint kv_read.read_entry iff (kv_read_en) {
+            bins kv_23 = {23};
+            bins kv_not_23 = {23};
+        }
+        
+        kv_read_X_ocp_lock: cross kv_read_en_cp, ocp_lock_in_progress_cp;
 
         //-------------------------------------------------------------
         // Edge Function Coverpoints
