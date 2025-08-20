@@ -161,17 +161,10 @@ void sha512_restore_flow(sha512_io block, uint8_t mode, sha512_io restore_digest
     while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_15) {
         sha512_digest[offset] = *reg_ptr;
         if (sha512_digest[offset] != digest.data[offset]) {
-<<<<<<< HEAD
-            VPRINTF(LOW, "At offset [%d], sha_digest data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", sha512_digest[offset]);
-            VPRINTF(LOW, "Expected data: 0x%x\n", digest.data[offset]);
-            SEND_STDOUT_CTRL(fail_cmd);
-=======
             VPRINTF(ERROR, "At offset [%d], sha_digest data mismatch!\n", offset);
             VPRINTF(ERROR, "Actual   data: 0x%x\n", sha512_digest[offset]);
             VPRINTF(ERROR, "Expected data: 0x%x\n", digest.data[offset]);
-            VPRINTF(ERROR, "%c", fail_cmd);
->>>>>>> 25eefb1a (Update sha512.c)
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
