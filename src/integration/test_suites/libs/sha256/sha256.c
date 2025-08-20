@@ -30,7 +30,7 @@ void wait_for_sha256_intr(uint32_t notif, uint32_t error){
         }
     };
     if (error) {
-        VPRINTF(LOW, "Received SHA256 err intr with status = %d\n", cptra_intr_rcv.sha256_error);
+        VPRINTF(ERROR, "Received SHA256 err intr with status = %d\n", cptra_intr_rcv.sha256_error);
     }
     else {
         VPRINTF(LOW, "Received SHA256 notif intr with status = %d\n", cptra_intr_rcv.sha256_notif);
