@@ -462,30 +462,6 @@ void main() {
           ((0 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
     lsu_write_32(CLP_ECC_REG_ECC_CTRL,reg);
 
-    VPRINTF(MEDIUM,"MLDSA: Running PCR Sign Function\n");
-    //run MLDSA keygen+signing on PCR
-    reg = ((1 << ABR_REG_MLDSA_CTRL_PCR_SIGN_LOW) & ABR_REG_MLDSA_CTRL_PCR_SIGN_MASK) |
-          (MLDSA_CMD_KEYGEN_SIGN & ABR_REG_MLDSA_CTRL_CTRL_MASK) |
-          ((0 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
-    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL,reg);
-
-    VPRINTF(MEDIUM,"MLDSA: Polling for PCR Sign to be complete\n");
-    // wait for MLDSA KEYGEN+SIGNING process to be done
-    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_VALID_MASK) == 0);
-
-    //check expected output from signature
-    printf("Load SIGN data from MLDSA\n");
-    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
-    offset = 0;
-    while (offset < MLDSA87_SIGN_SIZE) {
-        read_data = *reg_ptr;
-        if (exp_mldsa_signature[MLDSA87_SIGN_SIZE-1-offset] != read_data) {
-            VPRINTF(FATAL,"MLDSA SIGNATURE Result Mismatch at offset [%d]- EXP: 0x%x RECVD: 0x%x\n", offset, exp_mldsa_signature[offset], read_data);
-            SEND_STDOUT_CTRL( 0x01);
-        }
-        reg_ptr++;
-        offset++;
-    }
     VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
     // wait for ECC SIGNING process to be done
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
@@ -513,6 +489,32 @@ void main() {
         }
         offset++;
     }
+
+    VPRINTF(MEDIUM,"MLDSA: Running PCR Sign Function\n");
+    //run MLDSA keygen+signing on PCR
+    reg = ((1 << ABR_REG_MLDSA_CTRL_PCR_SIGN_LOW) & ABR_REG_MLDSA_CTRL_PCR_SIGN_MASK) |
+          (MLDSA_CMD_KEYGEN_SIGN & ABR_REG_MLDSA_CTRL_CTRL_MASK) |
+          ((0 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL,reg);
+
+    VPRINTF(MEDIUM,"MLDSA: Polling for PCR Sign to be complete\n");
+    // wait for MLDSA KEYGEN+SIGNING process to be done
+    while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_VALID_MASK) == 0);
+
+    //check expected output from signature
+    printf("Load SIGN data from MLDSA\n");
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
+    offset = 0;
+    while (offset < MLDSA87_SIGN_SIZE) {
+        read_data = *reg_ptr;
+        if (exp_mldsa_signature[MLDSA87_SIGN_SIZE-1-offset] != read_data) {
+            VPRINTF(FATAL,"MLDSA SIGNATURE Result Mismatch at offset [%d]- EXP: 0x%x RECVD: 0x%x\n", offset, exp_mldsa_signature[offset], read_data);
+            SEND_STDOUT_CTRL( 0x01);
+        }
+        reg_ptr++;
+        offset++;
+    }
+    
     VPRINTF(LOW,"----------------------------------\n");
     VPRINTF(LOW," KV PCR Hash Extend Test Complete!\n");
     VPRINTF(LOW,"----------------------------------\n");

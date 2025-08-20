@@ -349,7 +349,9 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
             offset++;
         }
     } else {
-        lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS) >> 2) == 0) {
+            lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        }
 
         // Read the shared key from MLKEM register
         printf("[MLKEM Encaps] KV used, check Shared Key is 0\n");
@@ -457,7 +459,9 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
     }
 
     if (shared_key.kv_intf) {
-        lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS) >> 2) == 0) {
+            lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        }
     }
     else if (!msg.kv_intf & !shared_key.kv_intf){
         // Read the shared key from MLKEM register
@@ -551,7 +555,9 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
             offset++;
         }
     } else {
-        lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS) >> 2) == 0) {
+            lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        }
 
         // Read the shared key from MLKEM register
         printf("[MLKEM Decaps] KV used, check Shared Key is 0\n");
@@ -627,7 +633,9 @@ void mlkem_decaps_flow(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[M
             offset++;
         }
     } else {
-        lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS) >> 2) == 0) {
+            lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        }
 
         // Read the shared key from MLKEM register
         printf("[MLKEM KeyGen Decaps] KV used, check Shared Key is 0\n");
@@ -716,7 +724,9 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
 
     // Read the data back from MLKEM register
     if (shared_key.kv_intf) {
-        lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS) >> 2) == 0) {
+            lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
+        }
     }
     else if(!seed.kv_intf & !shared_key.kv_intf){
         // Read the shared key from MLKEM register

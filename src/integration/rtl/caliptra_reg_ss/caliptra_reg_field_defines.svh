@@ -6730,7 +6730,7 @@
 `define ABR_REG_MLDSA_CTX_63                                                                        (32'h25c)
 `endif
 `ifndef ABR_REG_KV_MLDSA_SEED_RD_CTRL
-`define ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                               (32'h7320)
+`define ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                               (32'h8000)
 `define ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_LOW                                                   (0)
 `define ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK                                                  (32'h1)
 `define ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW                                                (1)
@@ -6741,7 +6741,7 @@
 `define ABR_REG_KV_MLDSA_SEED_RD_CTRL_RSVD_MASK                                                     (32'hffffff80)
 `endif
 `ifndef ABR_REG_KV_MLDSA_SEED_RD_STATUS
-`define ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                             (32'h7324)
+`define ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                             (32'h8004)
 `define ABR_REG_KV_MLDSA_SEED_RD_STATUS_READY_LOW                                                   (0)
 `define ABR_REG_KV_MLDSA_SEED_RD_STATUS_READY_MASK                                                  (32'h1)
 `define ABR_REG_KV_MLDSA_SEED_RD_STATUS_VALID_LOW                                                   (1)
@@ -6750,26 +6750,26 @@
 `define ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_MASK                                                  (32'h3fc)
 `endif
 `ifndef ABR_REG_MLKEM_NAME_0
-`define ABR_REG_MLKEM_NAME_0                                                                        (32'h8000)
+`define ABR_REG_MLKEM_NAME_0                                                                        (32'h8100)
 `endif
 `ifndef ABR_REG_MLKEM_NAME_1
-`define ABR_REG_MLKEM_NAME_1                                                                        (32'h8004)
+`define ABR_REG_MLKEM_NAME_1                                                                        (32'h8104)
 `endif
 `ifndef ABR_REG_MLKEM_VERSION_0
-`define ABR_REG_MLKEM_VERSION_0                                                                     (32'h8008)
+`define ABR_REG_MLKEM_VERSION_0                                                                     (32'h8108)
 `endif
 `ifndef ABR_REG_MLKEM_VERSION_1
-`define ABR_REG_MLKEM_VERSION_1                                                                     (32'h800c)
+`define ABR_REG_MLKEM_VERSION_1                                                                     (32'h810c)
 `endif
 `ifndef ABR_REG_MLKEM_CTRL
-`define ABR_REG_MLKEM_CTRL                                                                          (32'h8010)
+`define ABR_REG_MLKEM_CTRL                                                                          (32'h8110)
 `define ABR_REG_MLKEM_CTRL_CTRL_LOW                                                                 (0)
 `define ABR_REG_MLKEM_CTRL_CTRL_MASK                                                                (32'h7)
 `define ABR_REG_MLKEM_CTRL_ZEROIZE_LOW                                                              (3)
 `define ABR_REG_MLKEM_CTRL_ZEROIZE_MASK                                                             (32'h8)
 `endif
 `ifndef ABR_REG_MLKEM_STATUS
-`define ABR_REG_MLKEM_STATUS                                                                        (32'h8014)
+`define ABR_REG_MLKEM_STATUS                                                                        (32'h8114)
 `define ABR_REG_MLKEM_STATUS_READY_LOW                                                              (0)
 `define ABR_REG_MLKEM_STATUS_READY_MASK                                                             (32'h1)
 `define ABR_REG_MLKEM_STATUS_VALID_LOW                                                              (1)
@@ -6778,76 +6778,76 @@
 `define ABR_REG_MLKEM_STATUS_ERROR_MASK                                                             (32'h4)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_0
-`define ABR_REG_MLKEM_SEED_D_0                                                                      (32'h8018)
+`define ABR_REG_MLKEM_SEED_D_0                                                                      (32'h8118)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_1
-`define ABR_REG_MLKEM_SEED_D_1                                                                      (32'h801c)
+`define ABR_REG_MLKEM_SEED_D_1                                                                      (32'h811c)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_2
-`define ABR_REG_MLKEM_SEED_D_2                                                                      (32'h8020)
+`define ABR_REG_MLKEM_SEED_D_2                                                                      (32'h8120)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_3
-`define ABR_REG_MLKEM_SEED_D_3                                                                      (32'h8024)
+`define ABR_REG_MLKEM_SEED_D_3                                                                      (32'h8124)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_4
-`define ABR_REG_MLKEM_SEED_D_4                                                                      (32'h8028)
+`define ABR_REG_MLKEM_SEED_D_4                                                                      (32'h8128)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_5
-`define ABR_REG_MLKEM_SEED_D_5                                                                      (32'h802c)
+`define ABR_REG_MLKEM_SEED_D_5                                                                      (32'h812c)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_6
-`define ABR_REG_MLKEM_SEED_D_6                                                                      (32'h8030)
+`define ABR_REG_MLKEM_SEED_D_6                                                                      (32'h8130)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_7
-`define ABR_REG_MLKEM_SEED_D_7                                                                      (32'h8034)
+`define ABR_REG_MLKEM_SEED_D_7                                                                      (32'h8134)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_0
-`define ABR_REG_MLKEM_SEED_Z_0                                                                      (32'h8038)
+`define ABR_REG_MLKEM_SEED_Z_0                                                                      (32'h8138)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_1
-`define ABR_REG_MLKEM_SEED_Z_1                                                                      (32'h803c)
+`define ABR_REG_MLKEM_SEED_Z_1                                                                      (32'h813c)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_2
-`define ABR_REG_MLKEM_SEED_Z_2                                                                      (32'h8040)
+`define ABR_REG_MLKEM_SEED_Z_2                                                                      (32'h8140)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_3
-`define ABR_REG_MLKEM_SEED_Z_3                                                                      (32'h8044)
+`define ABR_REG_MLKEM_SEED_Z_3                                                                      (32'h8144)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_4
-`define ABR_REG_MLKEM_SEED_Z_4                                                                      (32'h8048)
+`define ABR_REG_MLKEM_SEED_Z_4                                                                      (32'h8148)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_5
-`define ABR_REG_MLKEM_SEED_Z_5                                                                      (32'h804c)
+`define ABR_REG_MLKEM_SEED_Z_5                                                                      (32'h814c)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_6
-`define ABR_REG_MLKEM_SEED_Z_6                                                                      (32'h8050)
+`define ABR_REG_MLKEM_SEED_Z_6                                                                      (32'h8150)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_7
-`define ABR_REG_MLKEM_SEED_Z_7                                                                      (32'h8054)
+`define ABR_REG_MLKEM_SEED_Z_7                                                                      (32'h8154)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_0
-`define ABR_REG_MLKEM_SHARED_KEY_0                                                                  (32'h8058)
+`define ABR_REG_MLKEM_SHARED_KEY_0                                                                  (32'h8158)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_1
-`define ABR_REG_MLKEM_SHARED_KEY_1                                                                  (32'h805c)
+`define ABR_REG_MLKEM_SHARED_KEY_1                                                                  (32'h815c)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_2
-`define ABR_REG_MLKEM_SHARED_KEY_2                                                                  (32'h8060)
+`define ABR_REG_MLKEM_SHARED_KEY_2                                                                  (32'h8160)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_3
-`define ABR_REG_MLKEM_SHARED_KEY_3                                                                  (32'h8064)
+`define ABR_REG_MLKEM_SHARED_KEY_3                                                                  (32'h8164)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_4
-`define ABR_REG_MLKEM_SHARED_KEY_4                                                                  (32'h8068)
+`define ABR_REG_MLKEM_SHARED_KEY_4                                                                  (32'h8168)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_5
-`define ABR_REG_MLKEM_SHARED_KEY_5                                                                  (32'h806c)
+`define ABR_REG_MLKEM_SHARED_KEY_5                                                                  (32'h816c)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_6
-`define ABR_REG_MLKEM_SHARED_KEY_6                                                                  (32'h8070)
+`define ABR_REG_MLKEM_SHARED_KEY_6                                                                  (32'h8170)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_7
-`define ABR_REG_MLKEM_SHARED_KEY_7                                                                  (32'h8074)
+`define ABR_REG_MLKEM_SHARED_KEY_7                                                                  (32'h8174)
 `endif
 `ifndef ABR_REG_KV_MLKEM_SEED_RD_CTRL
 `define ABR_REG_KV_MLKEM_SEED_RD_CTRL                                                               (32'hae20)

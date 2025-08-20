@@ -284,6 +284,8 @@ Debug mode values may be set by integrators in the Caliptra configuration files.
 | Key Vault Debug Value 0     | All 0xA       |
 | Key Vault Debug Value 1     | All 0x5       |
 
+Note: When entering debug or scan mode, all crypto engines are zeroized. Before starting any crypto operation in these modes, the status registers of all crypto engines must be checked to confirm they are ready. Failing to do so may trigger a fatal error caused by concurrent crypto operations.
+
 ## Clock gating
 
 Caliptra provides a clock gating feature that turns off clocks when the microcontroller is halted. Clock gating is disabled by default, but can be globally enabled via the following register.
