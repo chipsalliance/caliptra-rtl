@@ -36,9 +36,9 @@ volatile uint32_t  intr_count = 0;
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With hmac384 flow !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With hmac384 flow !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -242,7 +242,7 @@ void main() {
 
     //inject hmac384_key to kv key reg (in RTL)
     uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
-    printf("%c", key_inject_cmd);
+    SEND_STDOUT_CTRL(key_inject_cmd);
 
     hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE);
     hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE);
@@ -254,6 +254,6 @@ void main() {
 
     ecc_zeroize();
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

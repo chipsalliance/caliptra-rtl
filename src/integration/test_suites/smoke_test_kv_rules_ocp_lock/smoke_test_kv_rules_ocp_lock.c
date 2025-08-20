@@ -78,7 +78,7 @@ void hmac_test(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id
 
 void ecc_test(uint8_t seed_kv_id, uint8_t privkey_kv_id){    
     //inject seed to kv key reg (in RTL)
-    printf("Inject SEED into KV\n");
+    VPRINTF(LOW,"Inject SEED into KV\n");
     lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
 
     // Program ECC_SEED Read with 12 dwords from seed_kv_id
@@ -92,7 +92,7 @@ void ecc_test(uint8_t seed_kv_id, uint8_t privkey_kv_id){
                                                 ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK |
                                                 ((privkey_kv_id << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) & ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK)));
 
-    printf("\nECC KEYGEN\n");
+    VPRINTF(LOW,"\nECC KEYGEN\n");
     // Enable ECC KEYGEN core
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
 
@@ -139,9 +139,9 @@ void enable_ocp_lock(){
 }
 
 void main() {
-    printf("------------------------------\n");
-    printf(" KV Rules for OCP LOCK Mode !!\n");
-    printf("------------------------------\n");
+    VPRINTF(LOW,"------------------------------\n");
+    VPRINTF(LOW," KV Rules for OCP LOCK Mode !!\n");
+    VPRINTF(LOW,"------------------------------\n");
 
     /* Intializes random number generator */
     srand(rand_seed);
@@ -255,12 +255,12 @@ void main() {
                 break;
 
             default:
-                printf("%c",0xff); //End the test
+                SEND_STDOUT_CTRL(0xff); //End the test
         }
     }
     else{
         VPRINTF(LOW,"This test is supported only in SS_MODE\n");
     }
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

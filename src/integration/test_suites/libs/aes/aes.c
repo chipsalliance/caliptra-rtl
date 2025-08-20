@@ -195,7 +195,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
               VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
               VPRINTF(FATAL, "Actual   data: 0x%x\n", read_payload[j] & mask);
               VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j] & mask);
-              VPRINTF(FATAL,"%c", fail_cmd);
+              SEND_STDOUT_CTRL(fail_cmd);
               while(1);
             }
           } else if (op == AES_DEC) {
@@ -203,7 +203,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
               VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
               VPRINTF(FATAL, "Actual   data: 0x%x\n", read_payload[j] & mask);
               VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j] & mask);
-              VPRINTF(FATAL,"%c", fail_cmd);
+              SEND_STDOUT_CTRL(fail_cmd);
               while(1);
             }
           }
@@ -272,13 +272,13 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
             if(ocp_lock_block_output) {
                 if((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK) == 0) {
                     VPRINTF(FATAL, "EXPECTED OUTPUT_LOST to be non-zero since OCP LOCK protections are blocking the output to FW\n");
-                    VPRINTF(FATAL,"%c", fail_cmd);
+                    SEND_STDOUT_CTRL(fail_cmd);
                     while(1);
                 }
             
             } else if((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK) != 0) {
                 VPRINTF(FATAL, "EXPECTED OUTPUT_LOST to be 0x0 - Actual: 0x%x", (lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK));
-                VPRINTF(FATAL,"%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
 
@@ -300,7 +300,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
                   VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
                   VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
                   VPRINTF(FATAL, "Expected data: 0x0\n");
-                  VPRINTF(FATAL,"%c", fail_cmd);
+                  SEND_STDOUT_CTRL(fail_cmd);
                   while(1);
                 }
 
@@ -310,7 +310,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
                   VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
                   VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
                   VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
-                  VPRINTF(FATAL,"%c", fail_cmd);
+                  SEND_STDOUT_CTRL(fail_cmd);
                   while(1);
                 }
               } else if (op == AES_DEC) {
@@ -318,7 +318,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
                   VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
                   VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
                   VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j+i*4] & mask);
-                  VPRINTF(FATAL,"%c", fail_cmd);
+                  SEND_STDOUT_CTRL(fail_cmd);
                   while(1);
                 }
               }
@@ -398,7 +398,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         VPRINTF(FATAL,"At offset [%d], tag data mismatch!\n", j);
         VPRINTF(FATAL,"Actual   data: 0x%x\n", tag[j]);
         VPRINTF(FATAL,"Expected data: 0x%x\n", aes_input.tag[j]);
-        VPRINTF(FATAL,"%c", fail_cmd);
+        SEND_STDOUT_CTRL(fail_cmd);
         while(1);
       }
     }

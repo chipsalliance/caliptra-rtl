@@ -119,7 +119,7 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
                 VPRINTF(LOW, "At offset [%d], ecc_privkey data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_privkey[offset]);
                 VPRINTF(LOW, "Expected data: 0x%x\n", privkey.data[offset]);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -137,7 +137,7 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
             VPRINTF(LOW, "At offset [%d], ecc_pubkey_x data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_pubkey_x[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", pubkey_x.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 
         reg_ptr++;
@@ -153,7 +153,7 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
             VPRINTF(LOW, "At offset [%d], ecc_pubkey_y data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_pubkey_y[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", pubkey_y.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -247,7 +247,7 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
                 VPRINTF(LOW, "At offset [%d], ecc_sharedkey data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sharedkey[offset]);
                 VPRINTF(LOW, "Expected data: 0x%x\n", sharedkey.data[offset]);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -327,7 +327,7 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
             VPRINTF(LOW, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sign_r[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", sign_r.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -343,7 +343,7 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
             VPRINTF(LOW, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sign_s[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", sign_s.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 
         reg_ptr++;
@@ -414,7 +414,7 @@ void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sig
             VPRINTF(LOW, "At offset [%d], ecc_verify_r data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_verify_r[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", sign_r.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -459,7 +459,7 @@ void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s){
             VPRINTF(LOW, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sign_r[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", sign_r.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -475,7 +475,7 @@ void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s){
             VPRINTF(LOW, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sign_s[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", sign_s.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 
         reg_ptr++;

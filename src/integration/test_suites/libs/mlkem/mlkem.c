@@ -109,7 +109,7 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
             VPRINTF(LOW, "At offset [%d], mlkem_encaps_key data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
             VPRINTF(LOW, "Expected data: 0x%x\n", encaps_key[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -126,7 +126,7 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
                 VPRINTF(LOW, "At offset [%d], mlkem_decaps_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", decaps_key[offset]);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -177,7 +177,7 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
                 VPRINTF(LOW, "At offset [%d], mlkem_seed_d data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -193,7 +193,7 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
                 VPRINTF(LOW, "At offset [%d], mlkem_seed_z data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -245,7 +245,7 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
                 VPRINTF(LOW, "At offset [%d], mlkem_dk data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -292,7 +292,7 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
                 VPRINTF(LOW, "At offset [%d], mlkem_msg data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -324,7 +324,7 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
             VPRINTF(LOW, "At offset [%d], mlkem_ciphertext data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
             VPRINTF(LOW, "Expected data: 0x%x\n", ciphertext[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -342,7 +342,7 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
                 VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", shared_key.data[offset]);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -363,7 +363,7 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
                 VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -410,7 +410,7 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
                 VPRINTF(LOW, "At offset [%d], mlkem_msg data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -484,7 +484,7 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
                 VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -548,7 +548,7 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
                 VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", shared_key.data[offset]);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -569,7 +569,7 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
                 VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -647,7 +647,7 @@ void mlkem_decaps_flow(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[M
                 VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -739,7 +739,7 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
                 VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", shared_key.data[offset]);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -756,7 +756,7 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
                 VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -854,7 +854,7 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
                 VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;

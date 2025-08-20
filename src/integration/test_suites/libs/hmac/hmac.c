@@ -151,7 +151,7 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
                 VPRINTF(LOW, "At offset [%d], hmac_tag data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", hmac_tag[offset]);
                 VPRINTF(LOW, "Expected data: 0x%x\n", tag.data[offset]);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -270,7 +270,7 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
                 VPRINTF(LOW, "At offset [%d], hmac_tag data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", hmac_tag[offset]);
                 VPRINTF(LOW, "Expected data: 0x%x\n", tag.data[offset]);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;

@@ -183,9 +183,9 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With ECDH flow !!  \n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With ECDH flow !!  \n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -208,7 +208,7 @@ void main(){
 
     // VPRINTF(LOW, "Inject HMAC BLOCK into KV ID 4\n");
     // uint8_t hmac_block_inject_cmd = 0xb0;
-    // printf("%c", hmac_block_inject_cmd);
+    // SEND_STDOUT_CTRL(hmac_block_inject_cmd);
 
     /* RUN HMAC512(0, sharedkey) to generate AES key*/
     kv_hmac512_flow(sharedkey_kv_id, hmac_tag_kv_id);
@@ -219,5 +219,5 @@ void main(){
     /* RUN AES to encrypt a data*/
     kv_aes_flow(hmac_tag_kv_id, plaintext_str_ECB1, ciphertext_str_ECB1);
     
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 }

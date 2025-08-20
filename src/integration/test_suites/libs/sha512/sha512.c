@@ -114,7 +114,7 @@ void sha512_flow(sha512_io block, uint8_t mode, sha512_io digest){
             VPRINTF(LOW, "At offset [%d], sha_digest data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", sha512_digest[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", digest.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -164,7 +164,7 @@ void sha512_restore_flow(sha512_io block, uint8_t mode, sha512_io restore_digest
             VPRINTF(LOW, "At offset [%d], sha_digest data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", sha512_digest[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", digest.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;

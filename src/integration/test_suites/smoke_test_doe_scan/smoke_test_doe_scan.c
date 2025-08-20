@@ -58,20 +58,20 @@ volatile uint32_t doe_status_int;
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void wait_for_cryptos_ready(){
-    printf("Waiting for all crypto status ready\n");
+    VPRINTF(LOW,"Waiting for all crypto status ready\n");
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
-    printf("ECC is ready\n");
+    VPRINTF(LOW,"ECC is ready\n");
     while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_READY_MASK) == 0);
-    printf("DOE is ready\n");
+    VPRINTF(LOW,"DOE is ready\n");
     while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-    printf("HMAC is ready\n");
+    VPRINTF(LOW,"HMAC is ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
-    printf("MLDSA is ready\n");
+    VPRINTF(LOW,"MLDSA is ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
-    printf("MLKEM is ready\n");
+    VPRINTF(LOW,"MLKEM is ready\n");
     while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_IDLE_MASK) == 0);
-    printf("AES is ready\n");
-    printf("All crypto are ready\n");
+    VPRINTF(LOW,"AES is ready\n");
+    VPRINTF(LOW,"All crypto are ready\n");
 }
 
 void main() {
@@ -88,7 +88,7 @@ void main() {
     if (rst_count == 1) {
     
     //VPRINTF(LOW,"Rand UDS\n");
-    printf("Rand UDS\n");
+    VPRINTF(LOW, "Rand UDS\n");
 
     //Start UDS and store in KV3
     SEND_STDOUT_CTRL(0xec);
@@ -170,12 +170,12 @@ void main() {
         SEND_STDOUT_CTRL(0xb5); //Running DOE when scan_mode is enbaled
 
         if ((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK) == 0){
-            printf("\nParallel Crypto error is not detected\n");
-            printf("%c", 0x1);
+            VPRINTF(ERROR,"\nParallel Crypto error is not detected\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
         else {
-            printf("\nParallel Crypto is successfully detected\n");
+            VPRINTF(LOW,"\nParallel Crypto is successfully detected\n");
         }
 
         //Issue cold reset

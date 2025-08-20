@@ -36,9 +36,9 @@ volatile uint32_t  intr_count = 0;
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With HEK flow !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW,"----------------------------------\n");
+    VPRINTF(LOW," KV Smoke Test With HEK flow !!\n");
+    VPRINTF(LOW,"----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -83,6 +83,6 @@ void main() {
 
     hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

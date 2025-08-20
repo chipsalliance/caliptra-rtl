@@ -173,9 +173,9 @@ void aes_ECB_run(uint8_t aes_key_id){
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test Parallel Access !!!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW,"----------------------------------\n");
+    VPRINTF(LOW," KV Smoke Test Parallel Access !!!\n");
+    VPRINTF(LOW,"----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -189,24 +189,24 @@ void main(){
 
     uint32_t iv_data_uds[]  = {0x2eb94297,0x77285196,0x3dd39a1e,0xb95d438f};
     
-    printf("DOE Preparation **************\n");
+    VPRINTF(LOW,"DOE Preparation **************\n");
     uint32_t* reg_ptr;
     uint8_t offset;
-    printf("   Writing UDS IV\n");
+    VPRINTF(LOW,"   Writing UDS IV\n");
     reg_ptr = (uint32_t*) CLP_DOE_REG_DOE_IV_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_DOE_REG_DOE_IV_3) {
         *reg_ptr++ = iv_data_uds[offset++];
     }
 
-    printf("ECC Preparation **************\n");
+    VPRINTF(LOW,"ECC Preparation **************\n");
     //inject seed to kv key reg (in RTL)
-    printf("   Inject randomized PRIVKEY into KV slot and MSG into SHA512 digest\n");
-    printf("%c", 0x91);
+    VPRINTF(LOW,"   Inject randomized PRIVKEY into KV slot and MSG into SHA512 digest\n");
+    SEND_STDOUT_CTRL( 0x91);
     
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
     
-    printf("HMAC Preparation **************\n");
+    VPRINTF(LOW,"HMAC Preparation **************\n");
 
     uint32_t hmac512_block   [HMAC512_BLOCK_SIZE];
     uint32_t hmac512_lfsr_seed [HMAC512_LFSR_SEED_SIZE];
@@ -233,31 +233,31 @@ void main(){
                                                     ((hmac_key_id << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
 
     
-    printf("MLDSA Preparation **************\n");
+    VPRINTF(LOW,"MLDSA Preparation **************\n");
     //inject mldsa seed to kv key reg (in RTL)
     uint8_t mldsa_seed_inject_cmd = 0xc0 + (mldsa_seed_id & 0x7);
-    printf("%c", mldsa_seed_inject_cmd);
+    SEND_STDOUT_CTRL( mldsa_seed_inject_cmd);
 
     lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((mldsa_seed_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
-    printf("MLKEM Preparation **************\n");
+    VPRINTF(LOW,"MLKEM Preparation **************\n");
     //inject mldsa seed to kv key reg (in RTL)
     lsu_write_32(STDOUT, (mlkem_seed_id << 8) | 0xb1);
-    printf("%c", mlkem_seed_id);
+    SEND_STDOUT_CTRL( mlkem_seed_id);
 
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((mlkem_seed_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
-    printf("AES Preparation **************\n");
+    VPRINTF(LOW,"AES Preparation **************\n");
     while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_IDLE_MASK) == 0);
     //inject aes key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (aes_key_id << 8) | 0x9f); //Inject AES key vectors into KV 10
 
 
     if ((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK) != 0){
-        printf("\nFATAL error is already set.\n");
-        printf("%c", 0x1);
+        VPRINTF(ERROR,"\nFATAL error is already set.\n");
+        SEND_STDOUT_CTRL( 0x1);
         while(1);
     }
 
@@ -305,16 +305,16 @@ void main(){
             aes_ECB_run(aes_key_id);
             break;
         default:
-            printf("%c",0xff); //End the test
+            SEND_STDOUT_CTRL(0xff); //End the test
     }
     
     if ((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK) == 0){
-        printf("\nParallel Crypto error is not detected for test: %0d\n", rst_count);
-        printf("%c", 0x1);
+        VPRINTF(ERROR,"\nParallel Crypto error is not detected for test: %0d\n", rst_count);
+        SEND_STDOUT_CTRL( 0x1);
         while(1);
     }
     else {
-        printf("\nParallel Crypto is successfully detected for test: %0d\n", rst_count);
+        VPRINTF(LOW,"\nParallel Crypto is successfully detected for test: %0d\n", rst_count);
     }
 
     if (rst_count < 6){
@@ -323,6 +323,6 @@ void main(){
         SEND_STDOUT_CTRL(0xf5);
     }
     else
-        printf("%c",0xff); //End the test
+        SEND_STDOUT_CTRL(0xff); //End the test
 
 }
