@@ -166,10 +166,8 @@ void main() {
         SEND_STDOUT_CTRL(0xf5);
     }
     else if (rst_count == 4) {
-        SEND_STDOUT_CTRL(0xed); //Generate rand FE vector
-        SEND_STDOUT_CTRL(0xfa); //Debug mode unlocked
-
-        *doe_ctrl = 0x0000005e; //Start FE flow
+        SEND_STDOUT_CTRL(0xec); //Generate rand UDS vector
+        SEND_STDOUT_CTRL(0xb5); //Running DOE when scan_mode is enbaled
 
         if ((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK) == 0){
             printf("\nParallel Crypto error is not detected\n");

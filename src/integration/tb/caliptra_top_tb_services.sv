@@ -360,7 +360,8 @@ module caliptra_top_tb_services
     //         8'hb2        - Inject MLKEM MSG to keyvault
     //         8'hb3        - Check MLKEM KV result against shared key test vector
     //         8'hb4        - Inject MLKEM zeroize during KV access
-    //         8'hb5:bf     - Unused
+    //         8'hb5        - Enable scan mode and run DOE back to back
+    //         8'hb6:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hc8        - Inject key 0x0 into slot 16 for AES 
     //         8'hc9        - Inject key smaller than key_release_size into KV23
@@ -1308,6 +1309,10 @@ endgenerate //IV_NO
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
         end
+        else if ((WriteData[7:0] == 8'hb5) && mailbox_write) begin
+            scan_mode <= 1'b1;
+            assert_scan_mode <= 'b0;
+        end
         else if (assert_scan_mode_doe_done && (`CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.kv_doe_fsm_ps == 'h5)) begin
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
@@ -1318,6 +1323,15 @@ endgenerate //IV_NO
         end
     end
     
+    always@(negedge clk) begin
+        if ((WriteData[7:0] == 8'hb5) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_CTRL.CMD.value = 2'b1;
+            cycleCnt_ff <= cycleCnt;
+        end
+        else if(cycleCnt == cycleCnt_ff + 'd5) begin
+            release `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_CTRL.CMD.value;
+        end
+    end
     
     always@(negedge clk) begin
         if((WriteData[7:0] == 8'hf2) && mailbox_write) begin
