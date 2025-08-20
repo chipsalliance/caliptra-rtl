@@ -783,7 +783,9 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
 
 
 uint8_t soc_ifc_axi_dma_wait_idle_w_error_expected(uint8_t clr_lock, uint8_t error_expected) {
+    
     uint32_t reg;
+    uint32_t error_observed = 0;
 
     // Check completion
     reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
@@ -796,12 +798,19 @@ uint8_t soc_ifc_axi_dma_wait_idle_w_error_expected(uint8_t clr_lock, uint8_t err
         if(error_expected){
             VPRINTF(LOW, "AXI DMA reports status for xfer that would require DMA Flush\n");
             lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+            error_observed = 1;
         } else {
             VPRINTF(FATAL, "AXI DMA reports status for xfer that would require DMA Flush\n");
             lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
             SEND_STDOUT_CTRL(0x1);
         }
         
+    }
+
+    if(error_expected && !error_observed) {
+        VPRINTF(FATAL, "AXI DMA did not report err status for xfer that would require DMA Flush\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        SEND_STDOUT_CTRL(0x1);
     }
 
     if (clr_lock) {

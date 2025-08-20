@@ -72,6 +72,55 @@ void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_s
     }
 }
 
+// hex_to_uint32_array_with_endianess
+void hex_to_uint32_array_with_endianess(const char *hex_str, uint32_t *array, uint32_t *array_size, aes_endian_e endian_mode) {
+    int len = strlen(hex_str);
+    int num_dwords;
+    int num_chars;
+
+    VPRINTF(LOW, "String length is %d.\n", len);
+    const uint32_t index[] = {1, 0, 3, 2, 5, 4, 7, 6};
+    if (len % 2 != 0) {
+        VPRINTF(ERROR, "Error: Hex string length must be a multiple of 2.\n");
+        return;
+    }
+    num_dwords = (len / 8);
+    *array_size = (len / 2);
+    for (int i = 0; i <= num_dwords; i++) {
+        uint32_t value = 0x00000000;
+        num_chars = (i == num_dwords) ? len % 8 : 8;
+        for (int j = 0; j < num_chars; j++) {
+            char c = hex_str[i * 8 + j];
+            uint32_t digit;
+
+            if (c >= '0' && c <= '9') {
+                digit = c - '0';
+            } else if (c >= 'a' && c <= 'f') {
+                digit = c - 'a' + 10;
+            } else if (c >= 'A' && c <= 'F') {
+                digit = c - 'A' + 10;
+            } else {
+                VPRINTF(ERROR, "Error: Invalid hex character: %c\n", c);
+                return;
+            }
+            value |= digit << (4 * index[j]);
+        }
+        if (num_chars != 0) {
+            array[i] = value;
+        }
+    }
+
+    // Apply endianness if needed
+    if (endian_mode == AES_BIG_ENDIAN) {
+        for (int i = 0; i < *array_size; i++) {
+            array[i] =  (((array[i] & 0xFF000000) >> 24) |
+                        ((array[i] & 0x00FF0000) >> 8)  |
+                        ((array[i] & 0x0000FF00) << 8)  |
+                        ((array[i] & 0x000000FF) << 24));
+        }
+    }
+}
+
 void aes_wait_idle(){
   while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_IDLE_MASK) == 0);
 }
@@ -90,6 +139,9 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   uint32_t masked = 0;
   uint32_t read_payload[100];
   uint8_t  gcm_mode = mode == AES_GCM;
+  uint8_t  src_fixed = 0;
+  uint8_t  dst_fixed = 0;
+  uint8_t  block_size = 0;
 
   // wait for AES to be idle
   aes_wait_idle();
@@ -212,10 +264,20 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           (uint32_t)(aes_input.dma_transfer_data.src_addr & 0xFFFFFFFF),
           (uint32_t)((aes_input.dma_transfer_data.dst_addr >> 32) & 0xFFFFFFFF),
           (uint32_t)(aes_input.dma_transfer_data.dst_addr & 0xFFFFFFFF));
+        
+        if(aes_input.aes_dma_err == TRUE) {
+          VPRINTF(LOW, "Injecting DMA error\n");
+          while(src_fixed == 0 && dst_fixed == 0 && block_size == 0) {
+            src_fixed = xorshift32()%2;
+            dst_fixed = xorshift32()%2;
+            block_size = xorshift32()%20;
+          }
+          aes_input.aes_expect_err = TRUE;
+        }
 
-        soc_ifc_axi_dma_send_axi_to_axi_w_error_expected(aes_input.dma_transfer_data.src_addr, 0, aes_input.dma_transfer_data.dst_addr, 0,  aes_input.text_len, 0, 1, gcm_mode, (aes_input.aes_expect_err == TRUE));
+        soc_ifc_axi_dma_send_axi_to_axi_w_error_expected(aes_input.dma_transfer_data.src_addr, src_fixed, aes_input.dma_transfer_data.dst_addr, dst_fixed,  aes_input.text_len, block_size, 1, gcm_mode, (aes_input.aes_expect_err == TRUE));
 
-        soc_ifc_axi_dma_read_ahb_payload_w_error_expected(aes_input.dma_transfer_data.dst_addr, 0, read_payload, aes_input.text_len, 0, (aes_input.aes_expect_err == TRUE));
+        soc_ifc_axi_dma_read_ahb_payload(aes_input.dma_transfer_data.dst_addr, 0, read_payload, aes_input.text_len, 0);
 
         // Compare to cypher text
         for (int j = 0; j < aes_input.text_len/4; j++) {

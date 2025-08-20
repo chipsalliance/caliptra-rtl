@@ -1396,12 +1396,20 @@ endgenerate //IV_NO
 
     always@(posedge clk) begin
         if((WriteData[7:0] == 8'hb5) && mailbox_write) begin
-            $display("Turning ON assertions using $asserton");
-            $asserton;
+        `ifdef CLP_ASSERT_ON
+            `ifndef VERILATOR
+                $display("Turning ON assertions using $asserton");
+                $asserton;
+            `endif
+        `endif
         end
         else if((WriteData[7:0] == 8'hb6) && mailbox_write) begin
-            $display("Turning OFF assertion using $assertoff");
-            $assertoff;
+        `ifdef CLP_ASSERT_ON
+            `ifndef VERILATOR
+                $display("Turning OFF assertion using $assertoff");
+                $assertoff;
+            `endif
+        `endif
         end
     end
 

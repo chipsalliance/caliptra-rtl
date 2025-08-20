@@ -46,55 +46,6 @@ typedef struct {
     uint8_t use_src_as_dst;
 } test_config_t;
 
-// hex_to_uint32_array_with_endianess
-void hex_to_uint32_array_with_endianess(const char *hex_str, uint32_t *array, uint32_t *array_size, aes_endian_e endian_mode) {
-    int len = strlen(hex_str);
-    int num_dwords;
-    int num_chars;
-
-    VPRINTF(HIGH, "String length is %d.\n", len);
-    const uint32_t index[] = {1, 0, 3, 2, 5, 4, 7, 6};
-    if (len % 2 != 0) {
-        VPRINTF(HIGH, "Error: Hex string length must be a multiple of 2.\n");
-        return;
-    }
-    num_dwords = (len / 8);
-    *array_size = (len / 2);
-    for (int i = 0; i <= num_dwords; i++) {
-        uint32_t value = 0x00000000;
-        num_chars = (i == num_dwords) ? len % 8 : 8;
-        for (int j = 0; j < num_chars; j++) {
-            char c = hex_str[i * 8 + j];
-            uint32_t digit;
-
-            if (c >= '0' && c <= '9') {
-                digit = c - '0';
-            } else if (c >= 'a' && c <= 'f') {
-                digit = c - 'a' + 10;
-            } else if (c >= 'A' && c <= 'F') {
-                digit = c - 'A' + 10;
-            } else {
-                VPRINTF(HIGH, "Error: Invalid hex character: %c\n", c);
-                return;
-            }
-            value |= digit << (4 * index[j]);
-        }
-        if (num_chars != 0) {
-            array[i] = value;
-        }
-    }
-
-    // Apply endianness if needed
-    if (endian_mode == AES_BIG_ENDIAN) {
-        for (int i = 0; i < *array_size; i++) {
-            array[i] =  (((array[i] & 0xFF000000) >> 24) |
-                        ((array[i] & 0x00FF0000) >> 8)  |
-                        ((array[i] & 0x0000FF00) << 8)  |
-                        ((array[i] & 0x000000FF) << 24));
-        }
-    }
-}
-
 void run_aes_test(test_config_t test_config) {
     aes_flow_t aes_input = {0};
     aes_op_e op = test_config.operation;

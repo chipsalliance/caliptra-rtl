@@ -98,9 +98,11 @@ typedef struct {
   aes_data_src_e data_src_mode;
   dma_transfer_data_t dma_transfer_data;
   BOOL aes_expect_err;
+  BOOL aes_dma_err;
 } aes_flow_t;
 
 void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_size);
+void hex_to_uint32_array_with_endianess(const char *hex_str, uint32_t *array, uint32_t *array_size, aes_endian_e endian_mode);
 void aes_lsu_write_32(uint32_t addr, uint32_t data, aes_endian_e endian_mode);
 void aes_wait_idle();
 void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input, aes_endian_e endian_mode);

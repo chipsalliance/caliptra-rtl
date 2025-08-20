@@ -142,68 +142,10 @@ int get_vector_index(uint32_t dword_len) {
     return (dword_len >= 1 && dword_len <= 8) ? (dword_len - 1) : 0; // Default to first vector if out of range
 }
 
-// Simple LFSR-based pseudo-random number generator
-static uint32_t lfsr_state = 0xACE1; // Non-zero seed
-
-uint32_t simple_rand() {
-    // 16-bit LFSR with taps at positions 16, 14, 13, 11
-    uint32_t bit = ((lfsr_state >> 0) ^ (lfsr_state >> 2) ^ (lfsr_state >> 3) ^ (lfsr_state >> 5)) & 1;
-    lfsr_state = (lfsr_state >> 1) | (bit << 15);
-    return lfsr_state;
-}
 
 // Generate random dword length between 1 and 7
 uint32_t get_random_dword_length() {
-    return (simple_rand() % 7) + 1; // 1 to 7 dwords
-}
-
-// hex_to_uint32_array_with_endianess
-void hex_to_uint32_array_with_endianess(const char *hex_str, uint32_t *array, uint32_t *array_size, aes_endian_e endian_mode) {
-    int len = strlen(hex_str);
-    int num_dwords;
-    int num_chars;
-
-    VPRINTF(HIGH, "String length is %d.\n", len);
-    const uint32_t index[] = {1, 0, 3, 2, 5, 4, 7, 6};
-    if (len % 2 != 0) {
-        VPRINTF(HIGH, "Error: Hex string length must be a multiple of 2.\n");
-        return;
-    }
-    num_dwords = (len / 8);
-    *array_size = (len / 2);
-    for (int i = 0; i <= num_dwords; i++) {
-        uint32_t value = 0x00000000;
-        num_chars = (i == num_dwords) ? len % 8 : 8;
-        for (int j = 0; j < num_chars; j++) {
-            char c = hex_str[i * 8 + j];
-            uint32_t digit;
-
-            if (c >= '0' && c <= '9') {
-                digit = c - '0';
-            } else if (c >= 'a' && c <= 'f') {
-                digit = c - 'a' + 10;
-            } else if (c >= 'A' && c <= 'F') {
-                digit = c - 'A' + 10;
-            } else {
-                VPRINTF(HIGH, "Error: Invalid hex character: %c\n", c);
-                return;
-            }
-            value |= digit << (4 * index[j]);
-        }
-        if (num_chars != 0) {
-            array[i] = value;
-        }
-    }
-
-    // Apply endianness if needed
-    if (endian_mode == AES_BIG_ENDIAN) {
-        for (int i = 0; i < *array_size; i++) {
-            array[i] =  (((array[i] & 0xFF000000) >> 24) |
-                        ((array[i] & 0x00FF0000) >> 8)  |
-                        ((array[i] & 0x0000FF00) << 8)  |
-                        ((array[i] & 0x000000FF) << 24));
-        }
-    }
+    return (xorshift32() % 7) + 1; // 1 to 7 dwords
 }
 
 // Count = 8
