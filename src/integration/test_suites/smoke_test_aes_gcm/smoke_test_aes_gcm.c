@@ -67,7 +67,7 @@ Tag = 5bc94fbc3221a5db94fae95ae7121a47
 
 void main() {
 
-    aes_flow_t aes_input;
+    aes_flow_t aes_input = {0};
     aes_input.data_src_mode = AES_DATA_DIRECT;
     aes_input.dma_transfer_data = (dma_transfer_data_t){0};
     aes_op_e op = AES_ENC;
@@ -116,7 +116,7 @@ void main() {
     uint32_t tag[4]; 
     uint32_t tag_length;
 
-    aes_key_t aes_key;
+    aes_key_t aes_key = {0};
 
     // Entry message
     VPRINTF(LOW, "----------------------------------\n");

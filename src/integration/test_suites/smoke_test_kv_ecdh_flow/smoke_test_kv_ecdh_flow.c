@@ -153,8 +153,8 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_ECB;
     aes_key_len_e key_len = AES_256;
-    aes_key_t aes_key;
-    aes_flow_t aes_input;
+    aes_key_t aes_key = {0};
+    aes_flow_t aes_input = {0};
 
     uint32_t plaintext[32]; //arbitrary length here
     uint32_t plaintext_length;

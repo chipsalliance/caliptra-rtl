@@ -37,7 +37,7 @@ volatile uint32_t  fail      __attribute__((section(".dccm.persistent"))) = 0;
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(void) {
-    aes_flow_t aes_input;
+    aes_flow_t aes_input = {0};
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_GCM;
     aes_key_len_e key_len;
@@ -68,7 +68,7 @@ void main(void) {
     uint32_t tag[4]; 
     uint32_t tag_length;
 
-    aes_key_t aes_key;
+    aes_key_t aes_key = {0};
 
     endian_mode = AES_LITTLE_ENDIAN;
 

@@ -221,7 +221,7 @@ void main() {
     printf(" Run AES using key in KV\n");
     printf("----------------------------------\n");
 
-    aes_flow_t aes_input;
+    aes_flow_t aes_input = {0};
     aes_input.data_src_mode = AES_DATA_DIRECT;
     aes_input.dma_transfer_data = (dma_transfer_data_t){0};
     
@@ -242,7 +242,7 @@ void main() {
     uint32_t tag[4]; 
     uint32_t tag_length;
 
-    aes_key_t aes_key;
+    aes_key_t aes_key = {0};
 
     const char key_str[] = "b6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc";
 

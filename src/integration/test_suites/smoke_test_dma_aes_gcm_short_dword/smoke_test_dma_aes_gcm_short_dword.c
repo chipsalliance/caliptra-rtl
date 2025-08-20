@@ -215,11 +215,11 @@ void hex_to_uint32_array_with_endianess(const char *hex_str, uint32_t *array, ui
 // Tag = e099c64d2966e780ce7d2eaae97f47d8
 
 void run_aes_test(test_config_t test_config) {
-    aes_flow_t aes_input;
+    aes_flow_t aes_input = {0};
     aes_op_e op = test_config.operation;
     aes_mode_e mode = test_config.mode;
     aes_key_len_e key_len;
-    aes_key_t aes_key;
+    aes_key_t aes_key = {0};
 
     VPRINTF(LOW, "\n----------------------------------\n%s\n----------------------------------\n", test_config.test_name);
     

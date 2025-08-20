@@ -502,7 +502,7 @@ void populate_kv_slot_aes(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t ove
 
     aes_op_e op = AES_DEC;
     aes_key_len_e key_len = AES_256;
-    aes_flow_t aes_input;
+    aes_flow_t aes_input = {0};
 
     uint32_t plaintext[32]; //arbitrary length here
     uint32_t plaintext_length;
