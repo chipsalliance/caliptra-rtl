@@ -102,9 +102,9 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
         while (offset < MLDSA87_PRIVKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != privkey[offset]) {
-                VPRINTF(LOW, "At offset [%d], mldsa_privkey data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", privkey[offset]);
+                VPRINTF(ERROR, "At offset [%d], mldsa_privkey data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", privkey[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -120,9 +120,9 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     while (offset < MLDSA87_PUBKEY_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != pubkey[offset]) {
-            VPRINTF(LOW, "At offset [%d], mldsa_pubkey data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(LOW, "Expected data: 0x%x\n", pubkey[offset]);
+            VPRINTF(ERROR, "At offset [%d], mldsa_pubkey data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 
@@ -186,9 +186,9 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     while (offset < MLDSA87_SIGN_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != sign[offset]) {
-            VPRINTF(LOW, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(LOW, "Expected data: 0x%x\n", sign[offset]);
+            VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -238,9 +238,9 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
     while (offset < MLDSA87_SIGN_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != sign[offset]) {
-            VPRINTF(LOW, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(LOW, "Expected data: 0x%x\n", sign[offset]);
+            VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -284,9 +284,9 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
     while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
         actual_data = *reg_ptr;
         if (actual_data != verify_res[offset]) {
-            VPRINTF(LOW, "At offset [%d], mldsa_verify_res data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(LOW, "Expected data: 0x%x\n", verify_res[offset]);
+            VPRINTF(ERROR, "At offset [%d], mldsa_verify_res data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", verify_res[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -352,9 +352,9 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
     while (offset < MLDSA87_SIGN_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != sign[offset]) {
-            VPRINTF(LOW, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(LOW, "Expected data: 0x%x\n", sign[offset]);
+            VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -405,9 +405,9 @@ void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint
     while (offset < MLDSA87_SIGN_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != sign[offset]) {
-            VPRINTF(LOW, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(LOW, "Expected data: 0x%x\n", sign[offset]);
+            VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -453,9 +453,9 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
     while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
         actual_data = *reg_ptr;
         if (actual_data != verify_res[offset]) {
-            VPRINTF(LOW, "At offset [%d], actual_data data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(LOW, "Expected data: 0x%x\n", verify_res[offset]);
+            VPRINTF(ERROR, "At offset [%d], actual_data data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", verify_res[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
