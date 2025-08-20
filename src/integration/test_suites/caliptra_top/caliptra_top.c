@@ -79,7 +79,11 @@ void main() {
     //Cold Boot, run DOE flows, wait for FW image
     if (reset_reason == 0x0) {
         VPRINTF(LOW, "Beginning Cold Boot flow\n");
-        doe_init(iv_data_uds, iv_data_fe, iv_data_hek, 0x6); // TODO replace 0x6 with entry indicators
+        uint8_t doe_uds_dest_id = 0;
+        uint8_t doe_fe_dest_id = 2;
+        uint8_t doe_hek_dest_id = 22;
+
+        doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
 
         VPRINTF(LOW, "Setting Flow Status\n");
         soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK);

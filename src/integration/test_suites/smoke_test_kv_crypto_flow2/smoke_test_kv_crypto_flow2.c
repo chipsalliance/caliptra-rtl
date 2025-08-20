@@ -326,9 +326,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 //******************************************************************
 // DOE(IV_OBF, IV_FE)
 //****************************************************************** 
-void kv_doe(uint8_t doe_fe_dest_id){
+void kv_doe(uint8_t doe_uds_dest_id, uint8_t doe_fe_dest_id, uint8_t doe_hek_dest_id){
 
-    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_fe_dest_id);
+    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
 
     VPRINTF(LOW,"doe_fe kv id = %x\n", doe_fe_dest_id);
 
@@ -590,6 +590,7 @@ void main(){
 
     uint8_t doe_uds_dest_id;
     uint8_t doe_fe_dest_id;
+    uint8_t doe_hek_dest_id;
     uint8_t cdi_idevid_id;
     uint8_t idevid_ecc_seed_id;
     uint8_t idevid_mldsa_seed_id;
@@ -621,7 +622,7 @@ void main(){
     else if(rst_count == 1) {
         VPRINTF(LOW, "2nd FE flow + warm reset\n");
 
-        kv_doe(doe_fe_dest_id);
+        kv_doe(doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
         
         //Issue timed warm reset :TODO
         rst_count++;
@@ -642,7 +643,7 @@ void main(){
         printf("idevid_ecc_privkey_id = 0x%x\n",idevid_ecc_privkey_id);
         printf("cdi_ldevid_id = 0x%x\n\n",cdi_ldevid_id);
 
-        kv_doe(doe_fe_dest_id);
+        kv_doe(doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
 
         kv_hmac512(doe_uds_dest_id, doe_fe_dest_id, cdi_idevid_id);
 

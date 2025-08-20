@@ -50,10 +50,12 @@ void main() {
     // Enable OCP LOCK mode
     VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK));
 
+    uint8_t doe_uds_dest_id = 0;
     uint8_t doe_fe_dest_id = 2;
+    uint8_t doe_hek_dest_id = 22;
 
-    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_fe_dest_id);
-    VPRINTF(LOW,"doe_hek kv id = %x\n", DOE_HEK_DES);
+    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
+    VPRINTF(LOW,"doe_hek kv id = %x\n", doe_hek_dest_id);
     doe_clear_secrets();
 
     int32_t hmac512_lfsr_seed_data[HMAC512_LFSR_SEED_SIZE] = {0xC8F518D4, 0xF3AA1BD4, 0x6ED56C1C, 0x3C9E16FB, 
@@ -72,7 +74,7 @@ void main() {
     lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
 
     hmac512_block.kv_intf = TRUE;
-    hmac512_block.kv_id = DOE_HEK_DES;
+    hmac512_block.kv_id = doe_hek_dest_id;
 
     hmac512_lfsr_seed.data_size = HMAC512_LFSR_SEED_SIZE;
     for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
