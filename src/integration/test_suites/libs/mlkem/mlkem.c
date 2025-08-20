@@ -106,9 +106,9 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     while (offset < MLKEM_EK_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != encaps_key[offset]) {
-            VPRINTF(LOW, "At offset [%d], mlkem_encaps_key data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(LOW, "Expected data: 0x%x\n", encaps_key[offset]);
+            VPRINTF(ERROR, "At offset [%d], mlkem_encaps_key data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", encaps_key[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -123,9 +123,9 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
         while (offset < MLKEM_DK_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != decaps_key[offset]) {
-                VPRINTF(LOW, "At offset [%d], mlkem_decaps_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", decaps_key[offset]);
+                VPRINTF(ERROR, "At offset [%d], mlkem_decaps_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", decaps_key[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -174,9 +174,9 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_SEED_D_7) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_seed_d data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_seed_d data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -190,9 +190,9 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_SEED_Z_7) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_seed_z data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_seed_z data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -242,9 +242,9 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_DECAPS_KEY_END_ADDR) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_dk data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_dk data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -289,9 +289,9 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_msg data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_msg data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -321,9 +321,9 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
     while (offset < MLKEM_CIPHERTEXT_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != ciphertext[offset]) {
-            VPRINTF(LOW, "At offset [%d], mlkem_ciphertext data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(LOW, "Expected data: 0x%x\n", ciphertext[offset]);
+            VPRINTF(ERROR, "At offset [%d], mlkem_ciphertext data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", ciphertext[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -339,9 +339,9 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != shared_key.data[offset]) {
-                VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", shared_key.data[offset]);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", shared_key.data[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -360,9 +360,9 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -407,9 +407,9 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_msg data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_msg data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -481,9 +481,9 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -545,9 +545,9 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != shared_key.data[offset]) {
-                VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", shared_key.data[offset]);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", shared_key.data[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -566,9 +566,9 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -644,9 +644,9 @@ void mlkem_decaps_flow(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[M
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -736,9 +736,9 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != shared_key.data[offset]) {
-                VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", shared_key.data[offset]);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", shared_key.data[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -753,9 +753,9 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -851,9 +851,9 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                VPRINTF(LOW, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(LOW, "Expected data: 0x%x\n", 0x0);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }

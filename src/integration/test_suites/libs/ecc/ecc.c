@@ -116,9 +116,9 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
         while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_OUT_11) {
             ecc_privkey[offset] = *reg_ptr;
             if (ecc_privkey[offset] != privkey.data[offset]) {
-                VPRINTF(LOW, "At offset [%d], ecc_privkey data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_privkey[offset]);
-                VPRINTF(LOW, "Expected data: 0x%x\n", privkey.data[offset]);
+                VPRINTF(ERROR, "At offset [%d], ecc_privkey data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_privkey[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", privkey.data[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -134,9 +134,9 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
         ecc_pubkey_x[offset] = *reg_ptr;
         if (ecc_pubkey_x[offset] != pubkey_x.data[offset]) {
-            VPRINTF(LOW, "At offset [%d], ecc_pubkey_x data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_pubkey_x[offset]);
-            VPRINTF(LOW, "Expected data: 0x%x\n", pubkey_x.data[offset]);
+            VPRINTF(ERROR, "At offset [%d], ecc_pubkey_x data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_pubkey_x[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey_x.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 
@@ -150,9 +150,9 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
         ecc_pubkey_y[offset] = *reg_ptr;
         if (ecc_pubkey_y[offset] != pubkey_y.data[offset]) {
-            VPRINTF(LOW, "At offset [%d], ecc_pubkey_y data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_pubkey_y[offset]);
-            VPRINTF(LOW, "Expected data: 0x%x\n", pubkey_y.data[offset]);
+            VPRINTF(ERROR, "At offset [%d], ecc_pubkey_y data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_pubkey_y[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey_y.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -244,9 +244,9 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
         while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_DH_SHARED_KEY_11) {
             ecc_sharedkey[offset] = *reg_ptr;
             if (ecc_sharedkey[offset] != sharedkey.data[offset]) {
-                VPRINTF(LOW, "At offset [%d], ecc_sharedkey data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sharedkey[offset]);
-                VPRINTF(LOW, "Expected data: 0x%x\n", sharedkey.data[offset]);
+                VPRINTF(ERROR, "At offset [%d], ecc_sharedkey data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sharedkey[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", sharedkey.data[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -324,9 +324,9 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
         ecc_sign_r[offset] = *reg_ptr;
         if (ecc_sign_r[offset] != sign_r.data[offset]) {
-            VPRINTF(LOW, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sign_r[offset]);
-            VPRINTF(LOW, "Expected data: 0x%x\n", sign_r.data[offset]);
+            VPRINTF(ERROR, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_r[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign_r.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -340,9 +340,9 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
         ecc_sign_s[offset] = *reg_ptr;
         if (ecc_sign_s[offset] != sign_s.data[offset]) {
-            VPRINTF(LOW, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sign_s[offset]);
-            VPRINTF(LOW, "Expected data: 0x%x\n", sign_s.data[offset]);
+            VPRINTF(ERROR, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_s[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign_s.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 
@@ -411,9 +411,9 @@ void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sig
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_VERIFY_R_11) {
         ecc_verify_r[offset] = *reg_ptr;
         if (ecc_verify_r[offset] != sign_r.data[offset]) {
-            VPRINTF(LOW, "At offset [%d], ecc_verify_r data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_verify_r[offset]);
-            VPRINTF(LOW, "Expected data: 0x%x\n", sign_r.data[offset]);
+            VPRINTF(ERROR, "At offset [%d], ecc_verify_r data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_verify_r[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign_r.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -456,9 +456,9 @@ void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s){
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
         ecc_sign_r[offset] = *reg_ptr;
         if (ecc_sign_r[offset] != sign_r.data[offset]) {
-            VPRINTF(LOW, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sign_r[offset]);
-            VPRINTF(LOW, "Expected data: 0x%x\n", sign_r.data[offset]);
+            VPRINTF(ERROR, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_r[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign_r.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -472,9 +472,9 @@ void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s){
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
         ecc_sign_s[offset] = *reg_ptr;
         if (ecc_sign_s[offset] != sign_s.data[offset]) {
-            VPRINTF(LOW, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", ecc_sign_s[offset]);
-            VPRINTF(LOW, "Expected data: 0x%x\n", sign_s.data[offset]);
+            VPRINTF(ERROR, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_s[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign_s.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 

@@ -148,9 +148,9 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
         while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_11) {
             hmac_tag[offset] = *reg_ptr;
             if (hmac_tag[offset] != tag.data[offset]) {
-                VPRINTF(LOW, "At offset [%d], hmac_tag data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", hmac_tag[offset]);
-                VPRINTF(LOW, "Expected data: 0x%x\n", tag.data[offset]);
+                VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", hmac_tag[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", tag.data[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -267,9 +267,9 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
         while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {
             hmac_tag[offset] = *reg_ptr;
             if (hmac_tag[offset] != tag.data[offset]) {
-                VPRINTF(LOW, "At offset [%d], hmac_tag data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", hmac_tag[offset]);
-                VPRINTF(LOW, "Expected data: 0x%x\n", tag.data[offset]);
+                VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", hmac_tag[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", tag.data[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }

@@ -76,9 +76,9 @@ void sha256_flow(sha256_io block, uint8_t mode, uint8_t wntz_mode, uint8_t wntz_
     while (reg_ptr <= (uint32_t*) CLP_SHA256_REG_SHA256_DIGEST_7) {
         sha256_digest[offset] = *reg_ptr;
         if (sha256_digest[offset] != digest.data[offset]) {
-            VPRINTF(LOW, "At offset [%d], sha_digest data mismatch!\n", offset);
-            VPRINTF(LOW, "Actual   data: 0x%x\n", sha256_digest[offset]);
-            VPRINTF(LOW, "Expected data: 0x%x\n", digest.data[offset]);
+            VPRINTF(ERROR, "At offset [%d], sha_digest data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", sha256_digest[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", digest.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
