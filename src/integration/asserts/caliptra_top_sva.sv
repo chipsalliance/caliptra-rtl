@@ -669,7 +669,7 @@ module caliptra_top_sva
       // when (`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) is active
       ZEROIZE_MEM_DONE_TRANSITION: assert property (
         @(posedge `SVA_RDC_CLK)
-        (`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |=> 
+        $rose(`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |=> 
         ( !`ABR_PATH.zeroize_mem_done )[*0:$] ##1 
         $rose(`ABR_PATH.zeroize_mem_done)
       )
