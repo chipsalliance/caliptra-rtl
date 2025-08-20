@@ -15,7 +15,6 @@
 `ifndef VERILATOR
 
 interface ecc_top_cov_if
-    import ecc_params_pkg::*;
     import kv_defines_pkg::*;  
     (
     input logic           clk,
@@ -201,7 +200,7 @@ interface ecc_top_cov_if
         ocp_lock_in_progress_cp: coverpoint ocp_lock_in_progress;
 
         kv_read_entry_0_cp: coverpoint {kv_write_metrics.kv_data0_present, kv_write_metrics.kv_data0_entry} 
-        iff (ecc_cmd inside {KEYGEN}) {
+        iff (keygen_process) {
             bins fw = {1'b0, [0:$]};
             bins lower_slots = {1'b1, [0:15]};
             bins upper_slots = {1'b1, [16:22]};
@@ -209,7 +208,7 @@ interface ecc_top_cov_if
         }
 
         kv_read_entry_1_cp: coverpoint {kv_write_metrics.kv_data1_present, kv_write_metrics.kv_data1_entry} 
-        iff (ecc_cmd inside {SIGN,SHARED_KEY}) {
+        iff (signing_process || sharedkey_process) {
             bins fw = {1'b0, [0:$]};
             bins lower_slots = {1'b1, [0:15]};
             bins upper_slots = {1'b1, [16:22]};
