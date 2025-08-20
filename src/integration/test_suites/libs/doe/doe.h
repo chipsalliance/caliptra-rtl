@@ -18,6 +18,8 @@
 
 #include "stdint.h"
 
+#define DOE_HEK_DES 22
+
 /* --------------- symbols/typedefs --------------- */
 enum doe_cmd_e {
     DOE_IDLE = 0,

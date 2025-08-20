@@ -47,8 +47,63 @@ volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-    
-void aes_ECB_run(uint8_t aes_key_id){
+enum Engine {
+    ECC,
+    MLDSA,
+    MLKEM,
+    AES,
+    HMAC,
+    DOE,
+    NUM_ENGINES
+};
+
+
+uint8_t is_high_latency(enum Engine e) {
+    return (e == ECC || e == MLDSA || e == MLKEM);
+}
+
+// Stub for your hardware operations
+void run_engine(enum Engine eng) {
+    switch (eng) {
+        case ECC:
+            lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
+                        ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+            break;
+        case MLDSA:
+            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+            break;
+        case MLKEM:
+            lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
+            break;
+        case AES:
+            aes_ECB_run();
+            break;
+        case HMAC:
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+            break;
+        case DOE:
+            lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
+            break;
+        default:
+            break;
+    }
+}
+
+const char* engine_name(enum Engine e) {
+    switch (e) {
+        case ECC:   return "ECC";
+        case MLDSA: return "MLDSA";
+        case MLKEM: return "MLKEM";
+        case AES:   return "AES";
+        case HMAC:  return "HMAC";
+        case DOE:   return "DOE";
+        default:    return "UNKNOWN";
+    }
+}
+
+void aes_ECB_run(){
+    uint8_t aes_key_id = 5;
     aes_flow_t aes_input;
     aes_input.data_src_mode = AES_DATA_DIRECT;
     aes_input.dma_transfer_data = (dma_transfer_data_t){0};
@@ -180,6 +235,9 @@ void main(){
     //Call interrupt init
     init_interrupts();
 
+    /* Intializes random number generator */  //TODO    
+    srand(time);
+
     uint8_t doe_fe_dest_id = 1;
     uint8_t hmac_key_id = 2;
     uint8_t hmac_tag_id = 5;
@@ -261,52 +319,88 @@ void main(){
         while(1);
     }
 
-    switch (rst_count){
-        case 0:
-            VPRINTF(LOW,"Running ECC and HMAC core\n");
-            lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
-                        ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
-            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-            break;
-        case 1:
-            VPRINTF(LOW,"Running ECC and MLDSA core\n");
-            lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
-                        ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
-            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
-            break;
-        case 2:
-            VPRINTF(LOW,"Running MLKEM and HMAC core\n");
-            lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
-            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-            break;
-        case 3:
-            VPRINTF(LOW,"Running MLKEM and DOE core\n");
-            lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
-            lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
-            break;
-        case 4:
-            VPRINTF(LOW,"Running HMAC and DOE core\n");
-            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-            lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
-            break;
-        case 5:
-            VPRINTF(LOW,"Running AES and MLDSA core\n");
-            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);            
-            aes_ECB_run(aes_key_id);
-            break;
-        case 6:
-            VPRINTF(LOW,"Running AES and ECC core\n");
-            lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
-                        ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
-            
-            aes_ECB_run(aes_key_id);
-            break;
-        default:
-            printf("%c",0xff); //End the test
+    uint8_t num_engines = (rand() % 2) + 2;
+
+    enum Engine engines[NUM_ENGINES] = {ECC, MLDSA, MLKEM, AES, HMAC, DOE};
+    for (int i = NUM_ENGINES - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        enum Engine tmp = engines[i];
+        engines[i] = engines[j];
+        engines[j] = tmp;
     }
+
+    // Pick the first N engines
+    enum Engine chosen[3];
+    for (int i = 0; i < num_engines; i++) {
+        chosen[i] = engines[i];
+    }
+
+    VPRINTF(LOW, "Running %d engines:\n", num_engines);
+    for (int i = 0; i < num_engines; i++) {
+        printf("%s%s", engine_name(chosen[i]), (i == num_engines - 1) ? "\n" : ", ");
+    }
+
+    // Step 1: Run high-latency engines first
+    for (int i = 0; i < num_engines; i++) {
+        if (is_high_latency(chosen[i])) {
+            run_engine(chosen[i]);
+        }
+    }
+
+    // Step 2: Run the rest
+    for (int i = 0; i < num_engines; i++) {
+        if (!is_high_latency(chosen[i])) {
+            run_engine(chosen[i]);
+        }
+    }
+
+
+    // switch (rst_count){
+    //     case 0:
+    //         VPRINTF(LOW,"Running ECC and HMAC core\n");
+    //         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
+    //                     ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+    //         lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+    //                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+    //         break;
+    //     case 1:
+    //         VPRINTF(LOW,"Running ECC and MLDSA core\n");
+    //         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
+    //                     ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+    //         lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+    //         break;
+    //     case 2:
+    //         VPRINTF(LOW,"Running MLKEM and HMAC core\n");
+    //         lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
+    //         lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+    //                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+    //         break;
+    //     case 3:
+    //         VPRINTF(LOW,"Running MLKEM and DOE core\n");
+    //         lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
+    //         lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
+    //         break;
+    //     case 4:
+    //         VPRINTF(LOW,"Running HMAC and DOE core\n");
+    //         lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+    //                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+    //         lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
+    //         break;
+    //     case 5:
+    //         VPRINTF(LOW,"Running AES and MLDSA core\n");
+    //         lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);            
+    //         aes_ECB_run(aes_key_id);
+    //         break;
+    //     case 6:
+    //         VPRINTF(LOW,"Running AES and ECC core\n");
+    //         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
+    //                     ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+            
+    //         aes_ECB_run(aes_key_id);
+    //         break;
+    //     default:
+    //         printf("%c",0xff); //End the test
+    // }
     
     if ((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK) == 0){
         printf("\nParallel Crypto error is not detected for test: %0d\n", rst_count);
@@ -317,12 +411,12 @@ void main(){
         printf("\nParallel Crypto is successfully detected for test: %0d\n", rst_count);
     }
 
-    if (rst_count < 6){
-        rst_count++;
-        //Issue cold reset
-        SEND_STDOUT_CTRL(0xf5);
-    }
-    else
+    // if (rst_count < 6){
+    //     rst_count++;
+    //     //Issue cold reset
+    //     SEND_STDOUT_CTRL(0xf5);
+    // }
+    // else
         printf("%c",0xff); //End the test
 
 }
