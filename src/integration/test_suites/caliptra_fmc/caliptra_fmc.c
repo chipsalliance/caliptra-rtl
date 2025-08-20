@@ -63,13 +63,12 @@ void caliptra_fmc() {
     VPRINTF(LOW,    "- Caliptra Validation FMC!!\n"       );
     VPRINTF(MEDIUM, "----------------------------------\n");
 
-    // TODO
-    // Do other stuff before jumping immediately to Runtime image?
+    //Enhancement - Do other stuff before jumping immediately to Runtime image?
 
     //read the mbox command
     op = soc_ifc_read_mbox_cmd();
     if (op.cmd == MBOX_CMD_RT_UPDATE) {
-        //TODO: Enhancement - Check the integrity of the firmware
+        //Enhancement - Check the integrity of the firmware
 
         // Load RT FW from mailbox
         soc_ifc_mbox_fw_flow(op);
