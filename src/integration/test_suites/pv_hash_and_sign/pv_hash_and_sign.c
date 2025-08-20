@@ -450,10 +450,10 @@ void main() {
     }
 
     //inject seed to kv key reg (in RTL)
-    printf("ECC: Inject PRIVKEY into KV slot 7\n");
-    printf("MLDSA: Inject SEED into KV slot 8\n");
-    printf("ECC/MLDSA: Inject PCR into msg_reg\n");
-    printf("%c", 0x90);
+    VPRINTF(LOW, "ECC: Inject PRIVKEY into KV slot 7\n");
+    VPRINTF(LOW, "MLDSA: Inject SEED into KV slot 8\n");
+    VPRINTF(LOW, "ECC/MLDSA: Inject PCR into msg_reg\n");
+    SEND_STDOUT_CTRL(0x90);
 
     VPRINTF(MEDIUM,"ECC: Running PCR Sign Function\n");
     //run ECC signing on PCR
@@ -474,7 +474,7 @@ void main() {
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_VALID_MASK) == 0);
 
     //check expected output from signature
-    printf("Load SIGN data from MLDSA\n");
+    VPRINTF(LOW, "Load SIGN data from MLDSA\n");
     reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {

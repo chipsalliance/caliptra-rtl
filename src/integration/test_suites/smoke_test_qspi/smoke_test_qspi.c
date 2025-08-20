@@ -45,7 +45,7 @@ int read_and_compare(uint32_t addr, uint32_t exp_data) {
   uint32_t act_data;
   act_data = lsu_read_32(addr);
   if (act_data != exp_data) {
-    printf("Got:%x Want: %x\n", act_data, exp_data);
+    VPRINTF(ERROR, "Got:%x Want: %x\n", act_data, exp_data);
     return 1;
   }
   return 0;
@@ -69,7 +69,7 @@ void set_spi_csid(int host) { lsu_write_32(CLP_SPI_HOST_REG_CSID, host); }
 void spi_command(int length, int csaat, speed_t speed, direction_t direction) {
   uint32_t status;
 
-  printf("  - Writing spi_command: len:%d csaat:%d speed:%d direction:%d\n",
+  VPRINTF(LOW, "  - Writing spi_command: len:%d csaat:%d speed:%d direction:%d\n",
          length, csaat, speed, direction);
 
   // Wait for Status.ready
@@ -102,7 +102,7 @@ int fifo_rx_wait(int queue_depth) {
             SPI_HOST_REG_STATUS_RXQD_LOW);
     timeout++;
     if (timeout > 1000) {
-      printf(
+      VPRINTF(ERROR, 
           "fifo_rx_wait: timed out waiting for queue_depth = %d. status:0x%x "
           "rxqd: %d\n",
           queue_depth, status, rxqd);
@@ -119,7 +119,7 @@ void write_tx_fifo(uint32_t data) {
 // configure_spi_host enables the IP and sets the timing behavior
 void enable_spi_host() {
   uint32_t read_data;
-  printf("Enabling spi_host\n");
+  VPRINTF(LOW, "Enabling spi_host\n");
   lsu_write_32(CLP_SPI_HOST_REG_CONTROL,
                (1 << SPI_HOST_REG_CONTROL_SPIEN_LOW) |
                    (1 << SPI_HOST_REG_CONTROL_OUTPUT_EN_LOW) |
@@ -135,7 +135,7 @@ void configure_spi_host(int host) {
     offset = CLP_SPI_HOST_REG_CONFIGOPTS_1;
   }
 
-  printf("Configuring spi_host[%d]\n", host);
+  VPRINTF(LOW, "Configuring spi_host[%d]\n", host);
   lsu_write_32(offset, (0 << SPI_HOST_REG_CONFIGOPTS_0_CPOL_LOW) |
                            (0 << SPI_HOST_REG_CONFIGOPTS_0_CPHA_LOW) |
                            (0 << SPI_HOST_REG_CONFIGOPTS_0_FULLCYC_LOW) |
@@ -195,7 +195,7 @@ int run_jedec_id_test(int host) {
   words = sizeof(exp_data) / 4;
   error += fifo_rx_wait(words);
 
-  printf("  - reading data from device...\n");
+  VPRINTF(LOW, "  - reading data from device...\n");
   for (int ii = 0; ii < words; ii += 1) {
     error += read_and_compare(CLP_SPI_HOST_REG_RXDATA, exp_data[ii]);
   }
@@ -254,7 +254,7 @@ int run_read_test(int host) {
   // Wait for spi commands to finish before reading responses
   spi_command_wait();
 
-  printf("  - reading data from device...\n");
+  VPRINTF(LOW, "  - reading data from device...\n");
 
   error += fifo_rx_wait(NumBytes / 4);
 
@@ -276,9 +276,9 @@ int run_read_test(int host) {
 void main() {
   int error;
 
-  printf("---------------------------\n");
-  printf(" QSPI Smoke Test \n");
-  printf("---------------------------\n");
+  VPRINTF(LOW, "---------------------------\n");
+  VPRINTF(LOW, " QSPI Smoke Test \n");
+  VPRINTF(LOW, "---------------------------\n");
 
   end_sim_if_qspi_disabled();
   enable_spi_host();
@@ -286,15 +286,15 @@ void main() {
   for (int host = 0; host < NUM_QSPI; host++) {
     configure_spi_host(host);
     error += run_jedec_id_test(host);
-    if (error > 0) printf("Error: %d\n", error);
+    if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
     error += run_read_test(host);
-    if (error > 0) printf("Error: %d\n", error);
+    if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
     error += run_read_test(host);
-    if (error > 0) printf("Error: %d\n", error);
+    if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
     error += run_read_test(host);
-    if (error > 0) printf("Error: %d\n", error);
+    if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
   }
 
   // End the sim in failure
-  if (error > 0) printf("%c", 0x1);
+  if (error > 0) SEND_STDOUT_CTRL(0x1);
 }

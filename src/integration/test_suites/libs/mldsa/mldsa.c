@@ -105,7 +105,7 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
                 VPRINTF(LOW, "At offset [%d], mldsa_privkey data mismatch!\n", offset);
                 VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(LOW, "Expected data: 0x%x\n", privkey[offset]);
-                VPRINTF(LOW, "%c", fail_cmd);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -123,7 +123,7 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
             VPRINTF(LOW, "At offset [%d], mldsa_pubkey data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
             VPRINTF(LOW, "Expected data: 0x%x\n", pubkey[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 
         reg_ptr++;
@@ -189,7 +189,7 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
             VPRINTF(LOW, "At offset [%d], mldsa_sign data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
             VPRINTF(LOW, "Expected data: 0x%x\n", sign[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -241,7 +241,7 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
             VPRINTF(LOW, "At offset [%d], mldsa_sign data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
             VPRINTF(LOW, "Expected data: 0x%x\n", sign[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -287,7 +287,7 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
             VPRINTF(LOW, "At offset [%d], mldsa_verify_res data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
             VPRINTF(LOW, "Expected data: 0x%x\n", verify_res[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -355,7 +355,7 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
             VPRINTF(LOW, "At offset [%d], mldsa_sign data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
             VPRINTF(LOW, "Expected data: 0x%x\n", sign[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -408,7 +408,7 @@ void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint
             VPRINTF(LOW, "At offset [%d], mldsa_sign data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
             VPRINTF(LOW, "Expected data: 0x%x\n", sign[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -456,7 +456,7 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
             VPRINTF(LOW, "At offset [%d], actual_data data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", actual_data);
             VPRINTF(LOW, "Expected data: 0x%x\n", verify_res[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -471,7 +471,7 @@ void mldsa_keyload_error_flow(mldsa_io seed)
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     //Enable force of zeroize during keyvault read
-    VPRINTF(LOW, "%c",0x9b);
+    SEND_STDOUT_CTRL(0x9b);
 
     // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
     lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |

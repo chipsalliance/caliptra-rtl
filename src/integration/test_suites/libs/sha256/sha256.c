@@ -79,7 +79,7 @@ void sha256_flow(sha256_io block, uint8_t mode, uint8_t wntz_mode, uint8_t wntz_
             VPRINTF(LOW, "At offset [%d], sha_digest data mismatch!\n", offset);
             VPRINTF(LOW, "Actual   data: 0x%x\n", sha256_digest[offset]);
             VPRINTF(LOW, "Expected data: 0x%x\n", digest.data[offset]);
-            VPRINTF(LOW, "%c", fail_cmd);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -107,11 +107,11 @@ void sha256_error_flow(sha256_io block, uint8_t mode, uint8_t next, uint8_t wntz
     // init and next triggers error1 bit. Check to make sure correct error arg is given
     if (next & (error == SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK)) {
         VPRINTF(LOW, "Error1 is expected when init and next are asserted at the same time. Check args given to sha256_error_flow()\n");
-        VPRINTF(LOW, "%c", fail_cmd);
+        SEND_STDOUT_CTRL(fail_cmd);
     }
     else if (~next & (error == SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK)) {
         VPRINTF(LOW, "Error0 is expected for invalid wntz_mode or w. Check args given to sha256_error_flow()\n");
-        VPRINTF(LOW, "%c", fail_cmd);
+        SEND_STDOUT_CTRL(fail_cmd);
     }
 
     // Enable SHA256 core 

@@ -113,9 +113,9 @@ void main() {
 
 
 
-    printf("----------------------------\n");
-    printf(" Running MLKEM Smoke Test !!\n");
-    printf("----------------------------\n");
+    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF(LOW, " Running MLKEM Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -147,7 +147,7 @@ void main() {
     //Generate shared key and ciphertext
     mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey);
 
-    printf("Shared Key data: 0x%x\n", actual_sharedkey[0]);
+    VPRINTF(LOW, "Shared Key data: 0x%x\n", actual_sharedkey[0]);
 
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
@@ -188,7 +188,7 @@ void main() {
         hmac512_tag.data[i] = 0x00000000;
 
 
-    printf("Block data: 0x%x\n", hmac_block.data[0]);
+    VPRINTF(LOW, "Block data: 0x%x\n", hmac_block.data[0]);
     hmac512_flow_return(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, actual_tag);
     hmac_zeroize();
 
@@ -275,6 +275,6 @@ void main() {
     aes_flow(op, mode, key_len, aes_input);
 
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

@@ -67,11 +67,11 @@ void init_interrupts(void);
 
 // These inline functions are used to insert event-specific functionality into the
 // otherwise generic ISR that gets laid down by the parameterized macro "nonstd_veer_isr"
-inline void service_doe_error_intr() {printf("ERROR");}
-inline void service_doe_notif_intr() {printf("ERROR");}
-inline void service_ecc_error_intr   () {printf("ERROR");}
-inline void service_ecc_notif_intr   () {printf("ERROR");}
-inline void service_hmac_error_intr  () {printf("ERROR");}
+inline void service_doe_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_doe_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_ecc_error_intr   () {VPRINTF(ERROR, "ERROR");}
+inline void service_ecc_notif_intr   () {VPRINTF(ERROR, "ERROR");}
+inline void service_hmac_error_intr  () {VPRINTF(ERROR, "ERROR");}
 inline void service_hmac_notif_intr  () {
     uint32_t * reg = (uint32_t *) (CLP_HMAC_REG_BASE_ADDR + HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
@@ -80,19 +80,19 @@ inline void service_hmac_notif_intr  () {
         *reg = HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
     }
     if (sts == 0) {
-        printf("bad hmac_notif_intr sts:%x\n", sts);
+        VPRINTF(LOW, "bad hmac_notif_intr sts:%x\n", sts);
     } else {
         reg = (uint32_t *) (CLP_HMAC_REG_HMAC512_STATUS);
         hmac_intr_status = *reg;
     }
 }
 
-inline void service_kv_error_intr    () {printf("ERROR");}
-inline void service_kv_notif_intr    () {printf("ERROR");}
-inline void service_sha512_error_intr() {printf("ERROR");}
-inline void service_sha512_notif_intr() {printf("ERROR");}
-inline void service_sha256_error_intr() {printf("ERROR");}
-inline void service_sha256_notif_intr() {printf("ERROR");}
+inline void service_kv_error_intr    () {VPRINTF(ERROR, "ERROR");}
+inline void service_kv_notif_intr    () {VPRINTF(ERROR, "ERROR");}
+inline void service_sha512_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_sha512_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_sha256_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_sha256_notif_intr() {VPRINTF(ERROR, "ERROR");}
 inline void service_soc_ifc_error_intr  () {
     uint32_t * reg = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
     uint32_t sts = *reg;
@@ -117,13 +117,13 @@ inline void service_soc_ifc_notif_intr  () {
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK;
     }
 }
-inline void service_sha512_acc_error_intr() {printf("ERROR");}
-inline void service_sha512_acc_notif_intr() {printf("ERROR");}
+inline void service_sha512_acc_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_sha512_acc_notif_intr() {VPRINTF(ERROR, "ERROR");}
 
-inline void service_abr_error_intr() {printf("ERROR");}
-inline void service_abr_notif_intr() {printf("ERROR");}
-inline void service_axi_dma_error_intr() {printf("ERROR");}
-inline void service_axi_dma_notif_intr() {printf("ERROR");}
+inline void service_abr_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_abr_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_axi_dma_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_axi_dma_notif_intr() {VPRINTF(ERROR, "ERROR");}
 
 
 #endif //CALIPTRA_ISR_H
