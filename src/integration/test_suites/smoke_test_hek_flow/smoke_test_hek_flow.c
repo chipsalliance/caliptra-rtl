@@ -48,7 +48,6 @@ void main() {
     uint32_t iv_data_hek[]  = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d};// TODO unique val?
 
     // Enable OCP LOCK mode
-    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG, SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
     VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK));
 
     uint8_t doe_fe_dest_id = 2;
