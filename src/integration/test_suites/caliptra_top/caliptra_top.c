@@ -63,7 +63,7 @@ void main() {
                              0x6a752c32,
                              0x9056d884,
                              0xdaf3c89d};
-    const uint32_t iv_data_hek[]  = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d}; // TODO unique value
+    const uint32_t iv_data_hek[]  = {0x3e8b1c72,0xa459d6f0,0x5c27b9ae,0xf02d4389};
 
     VPRINTF(MEDIUM, "----------------------------------\n");
     VPRINTF(LOW,    "- Caliptra Validation ROM!!\n"       );

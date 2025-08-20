@@ -35,6 +35,12 @@ volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+#ifdef MY_RANDOM_SEED
+    unsigned time = (unsigned) MY_RANDOM_SEED;
+#else
+    unsigned time = 0;
+#endif
+
 void main() {
     printf("----------------------------------\n");
     printf(" KV Smoke Test With HEK flow !!\n");
@@ -43,16 +49,27 @@ void main() {
     //Call interrupt init
     init_interrupts();
 
+    /* Intializes random number generator */  //TODO    
+    srand(time);
+
     uint32_t iv_data_uds[]  = {0x2eb94297,0x77285196,0x3dd39a1e,0xb95d438f};
     uint32_t iv_data_fe[]   = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d};
-    uint32_t iv_data_hek[]  = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d};// TODO unique val?
+    uint32_t iv_data_hek[]  = {0x3e8b1c72,0xa459d6f0,0x5c27b9ae,0xf02d4389};
 
     // Enable OCP LOCK mode
     VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK));
 
-    uint8_t doe_uds_dest_id = 0;
-    uint8_t doe_fe_dest_id = 2;
-    uint8_t doe_hek_dest_id = 22;
+    uint8_t doe_uds_dest_id;
+    uint8_t doe_fe_dest_id;
+    uint8_t doe_hek_dest_id;
+
+    doe_uds_dest_id = rand() % 24;
+    doe_fe_dest_id = rand() % 24;
+    doe_hek_dest_id = rand() % 24;
+
+    VPRINTF(LOW,"doe_uds_dest_id = %u\n", doe_uds_dest_id);
+    VPRINTF(LOW,"doe_fe_dest_id  = %u\n", doe_fe_dest_id);
+    VPRINTF(LOW,"doe_hek_dest_id = %u\n", doe_hek_dest_id);
 
     doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
     VPRINTF(LOW,"doe_hek kv id = %x\n", doe_hek_dest_id);
@@ -81,10 +98,10 @@ void main() {
         hmac512_lfsr_seed.data[i] = hmac512_lfsr_seed_data[i];
 
     hmac512_tag.kv_intf = TRUE;
-    hmac512_tag.kv_id = DOE_HEK_DES;
+    hmac512_tag.kv_id = doe_hek_dest_id;
 
     hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

@@ -57,7 +57,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
     const uint32_t iv_data_uds[]  = {0xF046BDE4,0x8AB68862,0x484604A5,0x6024F793};
     const uint32_t iv_data_fe[]   = {0x15CEB4E6,0x8F5D504D,0x1D022FBA,0x9EEEB655};
-    const uint32_t iv_data_hek[]  = {0x15CEB4E6,0x8F5D504D,0x1D022FBA,0x9EEEB655}; // FIXME unique value from FE?
+    const uint32_t iv_data_hek[]  = {0x3e8b1c72,0xa459d6f0,0x5c27b9ae,0xf02d4389};
 
 /* CDI HMAC512 test vector
     KEY =   96cff59db2e5fb5800da7f598e032d465e1db55a3d52c5108e60b64608a2c857de5ca4924a13134a2d93b337a832609ec74b26e881c37f4be2eb38aa6abd1e83
