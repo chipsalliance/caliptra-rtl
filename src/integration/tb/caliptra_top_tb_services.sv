@@ -187,6 +187,7 @@ module caliptra_top_tb_services
     logic                       check_pcr_mldsa_signing;
     logic                       inject_single_msg_for_ecc_mldsa;
     logic [4:0]                 mlkem_kv_write_slot;
+    logic                       unlock_security_state;
 
     // Decode:
     //  [0] - Single bit, ICCM Error Injection
@@ -329,7 +330,7 @@ module caliptra_top_tb_services
     //         8'h1         - Kill the simulation with a Failed status
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
-    //         8'h7F        - Do nothing
+    //         8'h7F        - Switch to MANUF device lifecycle state
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
     //         8'h88        - Toggle recovery interface emulation in AXI complex
     //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
@@ -975,6 +976,8 @@ module caliptra_top_tb_services
             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
         else
             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+            
+            unlock_security_state = 1'b0; // Default to not unlocking security state
     end
 `endif
     always @(negedge clk) begin
@@ -993,6 +996,16 @@ module caliptra_top_tb_services
         else if(assert_ss_tran && (cycleCnt == cycleCnt_ff + 'd100)) begin
             security_state.debug_locked <= 1'b0;
             assert_ss_tran <= 'b0;
+        end
+
+        if ((WriteData[7:0] == 8'h7F) && mailbox_write) begin
+            security_state.device_lifecycle <= DEVICE_MANUFACTURING;
+            unlock_security_state <= 1'b1; // Force unlock security state
+            force `CPTRA_TOP_PATH.unlock_caliptra_security_state = 1'b1; // Force unlock security state
+        end
+        else if (unlock_security_state) begin
+            unlock_security_state <= 1'b0; // Reset unlock security state
+            release `CPTRA_TOP_PATH.unlock_caliptra_security_state; // Release force unlock security state
         end
     end
 
@@ -2924,6 +2937,7 @@ keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
 axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 aes_cov_bind i_aes_cov_bind();
+doe_cov_bind i_doe_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

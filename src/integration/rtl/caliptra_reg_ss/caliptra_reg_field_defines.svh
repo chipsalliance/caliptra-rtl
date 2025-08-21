@@ -6749,27 +6749,90 @@
 `define ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_LOW                                                   (2)
 `define ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_MASK                                                  (32'h3fc)
 `endif
+`ifndef ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
+`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                      (32'h8100)
+`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                         (0)
+`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK                                        (32'h1)
+`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_LOW                                         (1)
+`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK                                        (32'h2)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                       (32'h8104)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_LOW                                 (0)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK                                (32'h1)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                       (32'h8108)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_LOW                                 (0)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK                                (32'h1)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R
+`define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                                   (32'h810c)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_LOW                                       (0)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_MASK                                      (32'h1)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                                   (32'h8110)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_LOW                                       (0)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_MASK                                      (32'h1)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                                 (32'h8114)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_LOW                          (0)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK                         (32'h1)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                                 (32'h8118)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_LOW                          (0)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK                         (32'h1)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                     (32'h811c)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_INTERNAL_TRIG_LOW                             (0)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_INTERNAL_TRIG_MASK                            (32'h1)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                     (32'h8120)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_LOW                             (0)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK                            (32'h1)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R                                           (32'h8200)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                           (32'h8280)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R                                      (32'h8300)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
+`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_MASK                           (32'h1)
+`endif
+`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                      (32'h8304)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
+`define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                           (32'h1)
+`endif
 `ifndef ABR_REG_MLKEM_NAME_0
-`define ABR_REG_MLKEM_NAME_0                                                                        (32'h8100)
+`define ABR_REG_MLKEM_NAME_0                                                                        (32'h9000)
 `endif
 `ifndef ABR_REG_MLKEM_NAME_1
-`define ABR_REG_MLKEM_NAME_1                                                                        (32'h8104)
+`define ABR_REG_MLKEM_NAME_1                                                                        (32'h9004)
 `endif
 `ifndef ABR_REG_MLKEM_VERSION_0
-`define ABR_REG_MLKEM_VERSION_0                                                                     (32'h8108)
+`define ABR_REG_MLKEM_VERSION_0                                                                     (32'h9008)
 `endif
 `ifndef ABR_REG_MLKEM_VERSION_1
-`define ABR_REG_MLKEM_VERSION_1                                                                     (32'h810c)
+`define ABR_REG_MLKEM_VERSION_1                                                                     (32'h900c)
 `endif
 `ifndef ABR_REG_MLKEM_CTRL
-`define ABR_REG_MLKEM_CTRL                                                                          (32'h8110)
+`define ABR_REG_MLKEM_CTRL                                                                          (32'h9010)
 `define ABR_REG_MLKEM_CTRL_CTRL_LOW                                                                 (0)
 `define ABR_REG_MLKEM_CTRL_CTRL_MASK                                                                (32'h7)
 `define ABR_REG_MLKEM_CTRL_ZEROIZE_LOW                                                              (3)
 `define ABR_REG_MLKEM_CTRL_ZEROIZE_MASK                                                             (32'h8)
 `endif
 `ifndef ABR_REG_MLKEM_STATUS
-`define ABR_REG_MLKEM_STATUS                                                                        (32'h8114)
+`define ABR_REG_MLKEM_STATUS                                                                        (32'h9014)
 `define ABR_REG_MLKEM_STATUS_READY_LOW                                                              (0)
 `define ABR_REG_MLKEM_STATUS_READY_MASK                                                             (32'h1)
 `define ABR_REG_MLKEM_STATUS_VALID_LOW                                                              (1)
@@ -6778,79 +6841,79 @@
 `define ABR_REG_MLKEM_STATUS_ERROR_MASK                                                             (32'h4)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_0
-`define ABR_REG_MLKEM_SEED_D_0                                                                      (32'h8118)
+`define ABR_REG_MLKEM_SEED_D_0                                                                      (32'h9018)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_1
-`define ABR_REG_MLKEM_SEED_D_1                                                                      (32'h811c)
+`define ABR_REG_MLKEM_SEED_D_1                                                                      (32'h901c)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_2
-`define ABR_REG_MLKEM_SEED_D_2                                                                      (32'h8120)
+`define ABR_REG_MLKEM_SEED_D_2                                                                      (32'h9020)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_3
-`define ABR_REG_MLKEM_SEED_D_3                                                                      (32'h8124)
+`define ABR_REG_MLKEM_SEED_D_3                                                                      (32'h9024)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_4
-`define ABR_REG_MLKEM_SEED_D_4                                                                      (32'h8128)
+`define ABR_REG_MLKEM_SEED_D_4                                                                      (32'h9028)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_5
-`define ABR_REG_MLKEM_SEED_D_5                                                                      (32'h812c)
+`define ABR_REG_MLKEM_SEED_D_5                                                                      (32'h902c)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_6
-`define ABR_REG_MLKEM_SEED_D_6                                                                      (32'h8130)
+`define ABR_REG_MLKEM_SEED_D_6                                                                      (32'h9030)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_D_7
-`define ABR_REG_MLKEM_SEED_D_7                                                                      (32'h8134)
+`define ABR_REG_MLKEM_SEED_D_7                                                                      (32'h9034)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_0
-`define ABR_REG_MLKEM_SEED_Z_0                                                                      (32'h8138)
+`define ABR_REG_MLKEM_SEED_Z_0                                                                      (32'h9038)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_1
-`define ABR_REG_MLKEM_SEED_Z_1                                                                      (32'h813c)
+`define ABR_REG_MLKEM_SEED_Z_1                                                                      (32'h903c)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_2
-`define ABR_REG_MLKEM_SEED_Z_2                                                                      (32'h8140)
+`define ABR_REG_MLKEM_SEED_Z_2                                                                      (32'h9040)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_3
-`define ABR_REG_MLKEM_SEED_Z_3                                                                      (32'h8144)
+`define ABR_REG_MLKEM_SEED_Z_3                                                                      (32'h9044)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_4
-`define ABR_REG_MLKEM_SEED_Z_4                                                                      (32'h8148)
+`define ABR_REG_MLKEM_SEED_Z_4                                                                      (32'h9048)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_5
-`define ABR_REG_MLKEM_SEED_Z_5                                                                      (32'h814c)
+`define ABR_REG_MLKEM_SEED_Z_5                                                                      (32'h904c)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_6
-`define ABR_REG_MLKEM_SEED_Z_6                                                                      (32'h8150)
+`define ABR_REG_MLKEM_SEED_Z_6                                                                      (32'h9050)
 `endif
 `ifndef ABR_REG_MLKEM_SEED_Z_7
-`define ABR_REG_MLKEM_SEED_Z_7                                                                      (32'h8154)
+`define ABR_REG_MLKEM_SEED_Z_7                                                                      (32'h9054)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_0
-`define ABR_REG_MLKEM_SHARED_KEY_0                                                                  (32'h8158)
+`define ABR_REG_MLKEM_SHARED_KEY_0                                                                  (32'h9058)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_1
-`define ABR_REG_MLKEM_SHARED_KEY_1                                                                  (32'h815c)
+`define ABR_REG_MLKEM_SHARED_KEY_1                                                                  (32'h905c)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_2
-`define ABR_REG_MLKEM_SHARED_KEY_2                                                                  (32'h8160)
+`define ABR_REG_MLKEM_SHARED_KEY_2                                                                  (32'h9060)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_3
-`define ABR_REG_MLKEM_SHARED_KEY_3                                                                  (32'h8164)
+`define ABR_REG_MLKEM_SHARED_KEY_3                                                                  (32'h9064)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_4
-`define ABR_REG_MLKEM_SHARED_KEY_4                                                                  (32'h8168)
+`define ABR_REG_MLKEM_SHARED_KEY_4                                                                  (32'h9068)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_5
-`define ABR_REG_MLKEM_SHARED_KEY_5                                                                  (32'h816c)
+`define ABR_REG_MLKEM_SHARED_KEY_5                                                                  (32'h906c)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_6
-`define ABR_REG_MLKEM_SHARED_KEY_6                                                                  (32'h8170)
+`define ABR_REG_MLKEM_SHARED_KEY_6                                                                  (32'h9070)
 `endif
 `ifndef ABR_REG_MLKEM_SHARED_KEY_7
-`define ABR_REG_MLKEM_SHARED_KEY_7                                                                  (32'h8174)
+`define ABR_REG_MLKEM_SHARED_KEY_7                                                                  (32'h9074)
 `endif
 `ifndef ABR_REG_KV_MLKEM_SEED_RD_CTRL
-`define ABR_REG_KV_MLKEM_SEED_RD_CTRL                                                               (32'hae20)
+`define ABR_REG_KV_MLKEM_SEED_RD_CTRL                                                               (32'hc000)
 `define ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_LOW                                                   (0)
 `define ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK                                                  (32'h1)
 `define ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW                                                (1)
@@ -6861,7 +6924,7 @@
 `define ABR_REG_KV_MLKEM_SEED_RD_CTRL_RSVD_MASK                                                     (32'hffffff80)
 `endif
 `ifndef ABR_REG_KV_MLKEM_SEED_RD_STATUS
-`define ABR_REG_KV_MLKEM_SEED_RD_STATUS                                                             (32'hae24)
+`define ABR_REG_KV_MLKEM_SEED_RD_STATUS                                                             (32'hc004)
 `define ABR_REG_KV_MLKEM_SEED_RD_STATUS_READY_LOW                                                   (0)
 `define ABR_REG_KV_MLKEM_SEED_RD_STATUS_READY_MASK                                                  (32'h1)
 `define ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_LOW                                                   (1)
@@ -6870,7 +6933,7 @@
 `define ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK                                                  (32'h3fc)
 `endif
 `ifndef ABR_REG_KV_MLKEM_MSG_RD_CTRL
-`define ABR_REG_KV_MLKEM_MSG_RD_CTRL                                                                (32'hae28)
+`define ABR_REG_KV_MLKEM_MSG_RD_CTRL                                                                (32'hc008)
 `define ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_LOW                                                    (0)
 `define ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK                                                   (32'h1)
 `define ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW                                                 (1)
@@ -6881,7 +6944,7 @@
 `define ABR_REG_KV_MLKEM_MSG_RD_CTRL_RSVD_MASK                                                      (32'hffffff80)
 `endif
 `ifndef ABR_REG_KV_MLKEM_MSG_RD_STATUS
-`define ABR_REG_KV_MLKEM_MSG_RD_STATUS                                                              (32'hae2c)
+`define ABR_REG_KV_MLKEM_MSG_RD_STATUS                                                              (32'hc00c)
 `define ABR_REG_KV_MLKEM_MSG_RD_STATUS_READY_LOW                                                    (0)
 `define ABR_REG_KV_MLKEM_MSG_RD_STATUS_READY_MASK                                                   (32'h1)
 `define ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_LOW                                                    (1)
@@ -6890,7 +6953,7 @@
 `define ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK                                                   (32'h3fc)
 `endif
 `ifndef ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL
-`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL                                                          (32'hae30)
+`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL                                                          (32'hc010)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_EN_LOW                                             (0)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_EN_MASK                                            (32'h1)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW                                          (1)
@@ -6917,76 +6980,13 @@
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_RSVD_MASK                                                (32'hffff8000)
 `endif
 `ifndef ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS
-`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS                                                        (32'hae34)
+`define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS                                                        (32'hc014)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_READY_LOW                                              (0)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_READY_MASK                                             (32'h1)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_VALID_LOW                                              (1)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_VALID_MASK                                             (32'h2)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_ERROR_LOW                                              (2)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_ERROR_MASK                                             (32'h3fc)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
-`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                      (32'hb000)
-`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                         (0)
-`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK                                        (32'h1)
-`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_LOW                                         (1)
-`define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK                                        (32'h2)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                       (32'hb004)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_LOW                                 (0)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK                                (32'h1)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                       (32'hb008)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_LOW                                 (0)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK                                (32'h1)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R
-`define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                                   (32'hb00c)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_LOW                                       (0)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_MASK                                      (32'h1)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                                   (32'hb010)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_LOW                                       (0)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_MASK                                      (32'h1)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                                 (32'hb014)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_LOW                          (0)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK                         (32'h1)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                                 (32'hb018)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_LOW                          (0)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK                         (32'h1)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                     (32'hb01c)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_INTERNAL_TRIG_LOW                             (0)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_INTERNAL_TRIG_MASK                            (32'h1)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                     (32'hb020)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_LOW                             (0)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK                            (32'h1)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R                                           (32'hb100)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                           (32'hb180)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R                                      (32'hb200)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
-`define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_MASK                           (32'h1)
-`endif
-`ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                      (32'hb204)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
-`define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                           (32'h1)
 `endif
 `ifndef SHA3_SHA3_NAME_0
 `define SHA3_SHA3_NAME_0                                                                            (32'h0)

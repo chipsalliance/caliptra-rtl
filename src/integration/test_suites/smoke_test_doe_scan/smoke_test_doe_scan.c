@@ -88,7 +88,7 @@ void main() {
     if (rst_count == 1) {
     
     //VPRINTF(LOW,"Rand UDS\n");
-    VPRINTF(LOW, "Rand UDS\n");
+    printf("Rand UDS\n");
 
     //Start UDS and store in KV3
     SEND_STDOUT_CTRL(0xec);
