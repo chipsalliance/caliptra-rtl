@@ -21,7 +21,7 @@
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 void wait_for_hmac_intr(){
-    printf("HMAC flow in progress...\n");
+    VPRINTF(LOW, "HMAC flow in progress...\n");
     while((cptra_intr_rcv.hmac_error == 0) & (cptra_intr_rcv.hmac_notif == 0)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during HMAC operation to allow ISR to execute and show idle time in sims
@@ -29,13 +29,19 @@ void wait_for_hmac_intr(){
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    //printf("Received HMAC error intr with status = %d\n", cptra_intr_rcv.hmac_error);
-    printf("Received HMAC notif/err intr with status = %d/ %d\n", cptra_intr_rcv.hmac_notif, cptra_intr_rcv.hmac_error);
+    //VPRINTF(LOW, "Received HMAC error intr with status = %d\n", cptra_intr_rcv.hmac_error);
+    VPRINTF(LOW, "Received HMAC notif/err intr with status = %d/ %d\n", cptra_intr_rcv.hmac_notif, cptra_intr_rcv.hmac_error);
 }
 
 void hmac_zeroize(){
-    printf("HMAC zeroize flow.\n");
+    VPRINTF(LOW, "HMAC zeroize flow.\n");
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, (1 << HMAC_REG_HMAC512_CTRL_ZEROIZE_LOW) & HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK);
+}
+
+void write_hmac_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size) {
+    for (uint32_t i = 0; i < size; i++) {
+        base_addr[i] = data[i];
+    }
 }
 
 void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL exp_failure){
@@ -403,11 +409,11 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
 
     if (tag.kv_intf){
         // wait for HMAC process - check dest done
-        printf("Load TAG data from HMAC to KV\n");
+        VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
     }
     else{
-        printf("Load TAG data from HMAC\n");
+        VPRINTF(LOW, "Load TAG data from HMAC\n");
         reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
         offset = 0;
         while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {

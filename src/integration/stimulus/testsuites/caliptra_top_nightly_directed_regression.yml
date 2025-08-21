@@ -29,6 +29,10 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecdh/smoke_test_ecdh.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_short_dword/smoke_test_dma_aes_gcm_short_dword.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_gcm_non_gcm_en_dec/smoke_test_dma_gcm_non_gcm_en_dec.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_rd_enc_axi_err/smoke_test_dma_aes_gcm_rd_enc_axi_err.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_wr_enc_axi_err/smoke_test_dma_aes_gcm_wr_enc_axi_err.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_no_ocp_lock.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu.yml
@@ -70,6 +74,8 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma/smoke_test_dma.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_parallel_access/smoke_test_kv_parallel_access.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hek_flow/smoke_test_hek_flow.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms24/fw_test_lms24.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms32/fw_test_lms32.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h5/fw_test_lms_n24_w1_h5.yml

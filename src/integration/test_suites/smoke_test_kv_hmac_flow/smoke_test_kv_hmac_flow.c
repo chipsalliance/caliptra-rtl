@@ -52,9 +52,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With hmac384 flow !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With hmac384 flow !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -152,15 +152,15 @@ void main() {
 
     //inject hmac384_key to kv key reg (in RTL)
     uint8_t key384_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
-    printf("%c", key384_inject_cmd);
+    SEND_STDOUT_CTRL(key384_inject_cmd);
 
     hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
     hmac_zeroize();
 
 
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With hmac512 flow !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With hmac512 flow !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //this is a random lfsr_seed
     uint32_t hmac512_lfsr_seed_data[12] =  {0xC8F518D4,
@@ -220,12 +220,11 @@ void main() {
 
 
     //inject hmac512_key to kv key reg (in RTL)
-    uint8_t key512_inject_cmd = 0xa8 + (hmac512_key.kv_id & 0x7);
-    printf("%c", key512_inject_cmd);
+    lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
 
     hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
     hmac_zeroize();
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

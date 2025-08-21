@@ -583,9 +583,9 @@ void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With DOE flow    !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With DOE flow    !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     uint8_t doe_uds_dest_id;
     uint8_t doe_fe_dest_id;
@@ -615,7 +615,7 @@ void main(){
 
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 1) {
         VPRINTF(LOW, "2nd FE flow + warm reset\n");
@@ -624,20 +624,20 @@ void main(){
         
         //Issue timed warm reset :TODO
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 2){
         VPRINTF(LOW, "3rd FE flow + Cold reset\n");
         rst_count++;
-        printf("%c",0xf5); //Issue cold reset and see lock_FE_flow getting reset
+        SEND_STDOUT_CTRL(0xf5); //Issue cold reset and see lock_FE_flow getting reset
     }
     else if(rst_count == 3) {
         VPRINTF(LOW, "4th FE flow after cold reset\n");
 
-        printf("doe_fe_dest_id = 0x%x\n",doe_fe_dest_id);
+        VPRINTF(LOW, "doe_fe_dest_id = 0x%x\n",doe_fe_dest_id);
 
         kv_doe(doe_fe_dest_id);
 
-        printf("%c",0xff); //End the test
+        SEND_STDOUT_CTRL(0xff); //End the test
     }
 }
