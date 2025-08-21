@@ -113,7 +113,7 @@ void dif_kmac_function_name_init(const char *data, size_t len, dif_kmac_function
 
 void dif_kmac_mode_sha3_start(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
-    dif_kmac_mode_sha3_t mode) {
+    dif_kmac_mode_sha3_t mode, const dif_kmac_msg_endianness_t msg_endianness) {
   if (kmac == 0 || operation_state == 0) {
     VPRINTF(ERROR, "dif_kmac_mode_sha3_start: ERROR kmac or operation_state NULL.\n");
     while(1);
@@ -167,11 +167,12 @@ void dif_kmac_mode_sha3_start(
 
   // Configure SHA-3 mode with the given strength.
   // Must be written twice because it is a shadow register.
-  uint32_t config_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) |
-                        (KMAC_CFG_SHADOWED_MODE_VALUE_SHA3 << KMAC_CFG_SHADOWED_MODE_INDEX);
-  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, config_reg);
-  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, config_reg);
-  config_reg = lsu_read_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET);
+  uint32_t cfg_reg = (msg_endianness << KMAC_CFG_SHADOWED_MSG_ENDIANNESS_INDEX) |
+                     (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) |
+                     (KMAC_CFG_SHADOWED_MODE_VALUE_SHA3 << KMAC_CFG_SHADOWED_MODE_INDEX);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
+  cfg_reg = lsu_read_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET);
 
   // Issue start command.
   lsu_write_32(kmac + KMAC_CMD_REG_OFFSET,
@@ -183,7 +184,7 @@ void dif_kmac_mode_sha3_start(
 
 void dif_kmac_mode_shake_start(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
-    dif_kmac_mode_shake_t mode) {
+    dif_kmac_mode_shake_t mode, const dif_kmac_msg_endianness_t msg_endianness) {
   if (kmac == 0 || operation_state == NULL) {
     VPRINTF(ERROR, "dif_kmac_mode_shake_start: ERROR kmac and operation state cannot be NULL.\n");
     while (1);
@@ -219,9 +220,10 @@ void dif_kmac_mode_shake_start(
   operation_state->d = 0;  // Zero indicates variable digest length.
   operation_state->offset = 0;
 
-  // Configure SHAKE mode with the given strength.
-  uint32_t cfg_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) |
-                        (KMAC_CFG_SHADOWED_MODE_VALUE_SHAKE << KMAC_CFG_SHADOWED_MODE_INDEX);
+  // Configure SHAKE mode with the given strength and big endian.
+  uint32_t cfg_reg = (msg_endianness << KMAC_CFG_SHADOWED_MSG_ENDIANNESS_INDEX) |
+                     (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) |
+                     (KMAC_CFG_SHADOWED_MODE_VALUE_SHAKE << KMAC_CFG_SHADOWED_MODE_INDEX);
   lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
   lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
 
@@ -234,7 +236,7 @@ void dif_kmac_mode_shake_start(
 void dif_kmac_mode_cshake_start(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
     dif_kmac_mode_cshake_t mode, const dif_kmac_function_name_t *n,
-    const dif_kmac_customization_string_t *s) {
+    const dif_kmac_customization_string_t *s, const dif_kmac_msg_endianness_t msg_endianness) {
   if (kmac == 0 || operation_state == NULL) {
     VPRINTF(ERROR, "dif_kmac_mode_cshake_start: ERROR kmac or operation state is NULL.\n");
     while (1);
@@ -247,10 +249,10 @@ void dif_kmac_mode_cshake_start(
   if (n_is_empty && s_is_empty) {
     switch (mode) {
       case kDifKmacModeCshakeLen128:
-        dif_kmac_mode_shake_start(kmac, operation_state, kDifKmacModeShakeLen128);
+        dif_kmac_mode_shake_start(kmac, operation_state, kDifKmacModeShakeLen128, msg_endianness);
         return;
       case kDifKmacModeCshakeLen256:
-        dif_kmac_mode_shake_start(kmac, operation_state, kDifKmacModeShakeLen256);
+        dif_kmac_mode_shake_start(kmac, operation_state, kDifKmacModeShakeLen256, msg_endianness);
         return;
       default:
         VPRINTF(ERROR, "dif_kmac_mode_cshake_start: ERROR unsupported mode for empty N and S.\n");
@@ -289,7 +291,9 @@ void dif_kmac_mode_cshake_start(
   operation_state->offset = 0;
 
   // Configure cSHAKE mode with the given strength.
-  uint32_t cfg_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) | (KMAC_CFG_SHADOWED_MODE_VALUE_CSHAKE << KMAC_CFG_SHADOWED_MODE_INDEX);
+  uint32_t cfg_reg = (msg_endianness << KMAC_CFG_SHADOWED_MSG_ENDIANNESS_INDEX) |
+                     (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) |
+                     (KMAC_CFG_SHADOWED_MODE_VALUE_CSHAKE << KMAC_CFG_SHADOWED_MODE_INDEX);
   lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
   lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
 
