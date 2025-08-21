@@ -173,7 +173,7 @@ void run_sha3_test(uintptr_t kmac) {
     VPRINTF(LOW, "run_sha3_test: processing test with index %d\n", i);
     sha3_test_t test = sha3_tests[i];
 
-    dif_kmac_mode_sha3_start(kmac, &operation_state, test.mode);
+    dif_kmac_mode_sha3_start(kmac, &operation_state, test.mode, kDifKmacMsgEndiannessLittle);
     if (test.message_len > 0) {
       dif_kmac_absorb(kmac, &operation_state, test.message,
                       test.message_len, NULL);
@@ -223,7 +223,7 @@ void run_sha3_alignment_test(uintptr_t kmac) {
     }
     memcpy(&buffer[i], kMsg, kSize);
 
-    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode);
+    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode, kDifKmacMsgEndiannessLittle);
     dif_kmac_absorb(kmac, &operation_state, &buffer[i], kSize, NULL);
 
     // Checking the first 32-bits of the digest is sufficient.
@@ -246,7 +246,7 @@ void run_sha3_alignment_test(uintptr_t kmac) {
 
   // Run a SHA-3 test case using multiple absorb calls.
   {
-    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode);
+    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode, kDifKmacMsgEndiannessLittle);
     dif_kmac_absorb(kmac, &operation_state, &kMsg[0], 1, NULL);
     dif_kmac_absorb(kmac, &operation_state, &kMsg[1], 2, NULL);
     dif_kmac_absorb(kmac, &operation_state, &kMsg[3], 5, NULL);
@@ -282,7 +282,7 @@ void run_shake_test(uintptr_t kmac) {
     VPRINTF(LOW, "run_shake_test: processing test with index %d\n", i);
     shake_test_t test = shake_tests[i];
 
-    dif_kmac_mode_shake_start(kmac, &operation_state, test.mode);
+    dif_kmac_mode_shake_start(kmac, &operation_state, test.mode, kDifKmacMsgEndiannessLittle);
     if (test.message_len > 0) {
       dif_kmac_absorb(kmac, &operation_state, test.message, test.message_len, NULL);
     }
