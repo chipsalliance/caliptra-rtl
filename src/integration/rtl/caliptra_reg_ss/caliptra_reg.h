@@ -8560,9 +8560,9 @@
 #define CLP_ABR_REG_MLDSA_PRIVKEY_OUT_END_ADDR                                                      (0x1003531f)
 #define CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR                                                      (0x10036000)
 #define CLP_ABR_REG_MLDSA_PRIVKEY_IN_END_ADDR                                                       (0x1003731f)
-#define CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                           (0x10037320)
+#define CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                           (0x10038000)
 #ifndef ABR_REG_KV_MLDSA_SEED_RD_CTRL
-#define ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                               (0x7320)
+#define ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                               (0x8000)
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_LOW                                                   (0)
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK                                                  (0x1)
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW                                                (1)
@@ -8572,9 +8572,9 @@
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_RSVD_LOW                                                      (7)
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_RSVD_MASK                                                     (0xffffff80)
 #endif
-#define CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                         (0x10037324)
+#define CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                         (0x10038004)
 #ifndef ABR_REG_KV_MLDSA_SEED_RD_STATUS
-#define ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                             (0x7324)
+#define ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                             (0x8004)
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_READY_LOW                                                   (0)
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_READY_MASK                                                  (0x1)
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_VALID_LOW                                                   (1)
@@ -8582,33 +8582,110 @@
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_LOW                                                   (2)
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_MASK                                                  (0x3fc)
 #endif
-#define CLP_ABR_REG_MLKEM_NAME_0                                                                    (0x10038000)
+#define CLP_ABR_REG_INTR_BLOCK_RF_START                                                             (0x10038100)
+#define CLP_ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (0x10038100)
+#ifndef ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
+#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                      (0x8100)
+#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                         (0)
+#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK                                        (0x1)
+#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_LOW                                         (1)
+#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK                                        (0x2)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                   (0x10038104)
+#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                       (0x8104)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_LOW                                 (0)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK                                (0x1)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                   (0x10038108)
+#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                       (0x8108)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_LOW                                 (0)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK                                (0x1)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                               (0x1003810c)
+#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R
+#define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                                   (0x810c)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_LOW                                       (0)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_MASK                                      (0x1)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                               (0x10038110)
+#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                                   (0x8110)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_LOW                                       (0)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_MASK                                      (0x1)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                             (0x10038114)
+#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                                 (0x8114)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_LOW                          (0)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK                         (0x1)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                             (0x10038118)
+#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                                 (0x8118)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_LOW                          (0)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK                         (0x1)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                 (0x1003811c)
+#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                     (0x811c)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_INTERNAL_TRIG_LOW                             (0)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_INTERNAL_TRIG_MASK                            (0x1)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                 (0x10038120)
+#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                     (0x8120)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_LOW                             (0)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK                            (0x1)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R                                       (0x10038200)
+#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R                                           (0x8200)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                       (0x10038280)
+#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                           (0x8280)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R                                  (0x10038300)
+#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R                                      (0x8300)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
+#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_MASK                           (0x1)
+#endif
+#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                  (0x10038304)
+#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                      (0x8304)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
+#define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                           (0x1)
+#endif
+#define CLP_ABR_REG_MLKEM_NAME_0                                                                    (0x10039000)
 #ifndef ABR_REG_MLKEM_NAME_0
-#define ABR_REG_MLKEM_NAME_0                                                                        (0x8000)
+#define ABR_REG_MLKEM_NAME_0                                                                        (0x9000)
 #endif
-#define CLP_ABR_REG_MLKEM_NAME_1                                                                    (0x10038004)
+#define CLP_ABR_REG_MLKEM_NAME_1                                                                    (0x10039004)
 #ifndef ABR_REG_MLKEM_NAME_1
-#define ABR_REG_MLKEM_NAME_1                                                                        (0x8004)
+#define ABR_REG_MLKEM_NAME_1                                                                        (0x9004)
 #endif
-#define CLP_ABR_REG_MLKEM_VERSION_0                                                                 (0x10038008)
+#define CLP_ABR_REG_MLKEM_VERSION_0                                                                 (0x10039008)
 #ifndef ABR_REG_MLKEM_VERSION_0
-#define ABR_REG_MLKEM_VERSION_0                                                                     (0x8008)
+#define ABR_REG_MLKEM_VERSION_0                                                                     (0x9008)
 #endif
-#define CLP_ABR_REG_MLKEM_VERSION_1                                                                 (0x1003800c)
+#define CLP_ABR_REG_MLKEM_VERSION_1                                                                 (0x1003900c)
 #ifndef ABR_REG_MLKEM_VERSION_1
-#define ABR_REG_MLKEM_VERSION_1                                                                     (0x800c)
+#define ABR_REG_MLKEM_VERSION_1                                                                     (0x900c)
 #endif
-#define CLP_ABR_REG_MLKEM_CTRL                                                                      (0x10038010)
+#define CLP_ABR_REG_MLKEM_CTRL                                                                      (0x10039010)
 #ifndef ABR_REG_MLKEM_CTRL
-#define ABR_REG_MLKEM_CTRL                                                                          (0x8010)
+#define ABR_REG_MLKEM_CTRL                                                                          (0x9010)
 #define ABR_REG_MLKEM_CTRL_CTRL_LOW                                                                 (0)
 #define ABR_REG_MLKEM_CTRL_CTRL_MASK                                                                (0x7)
 #define ABR_REG_MLKEM_CTRL_ZEROIZE_LOW                                                              (3)
 #define ABR_REG_MLKEM_CTRL_ZEROIZE_MASK                                                             (0x8)
 #endif
-#define CLP_ABR_REG_MLKEM_STATUS                                                                    (0x10038014)
+#define CLP_ABR_REG_MLKEM_STATUS                                                                    (0x10039014)
 #ifndef ABR_REG_MLKEM_STATUS
-#define ABR_REG_MLKEM_STATUS                                                                        (0x8014)
+#define ABR_REG_MLKEM_STATUS                                                                        (0x9014)
 #define ABR_REG_MLKEM_STATUS_READY_LOW                                                              (0)
 #define ABR_REG_MLKEM_STATUS_READY_MASK                                                             (0x1)
 #define ABR_REG_MLKEM_STATUS_VALID_LOW                                                              (1)
@@ -8616,113 +8693,113 @@
 #define ABR_REG_MLKEM_STATUS_ERROR_LOW                                                              (2)
 #define ABR_REG_MLKEM_STATUS_ERROR_MASK                                                             (0x4)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_0                                                                  (0x10038018)
+#define CLP_ABR_REG_MLKEM_SEED_D_0                                                                  (0x10039018)
 #ifndef ABR_REG_MLKEM_SEED_D_0
-#define ABR_REG_MLKEM_SEED_D_0                                                                      (0x8018)
+#define ABR_REG_MLKEM_SEED_D_0                                                                      (0x9018)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_1                                                                  (0x1003801c)
+#define CLP_ABR_REG_MLKEM_SEED_D_1                                                                  (0x1003901c)
 #ifndef ABR_REG_MLKEM_SEED_D_1
-#define ABR_REG_MLKEM_SEED_D_1                                                                      (0x801c)
+#define ABR_REG_MLKEM_SEED_D_1                                                                      (0x901c)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_2                                                                  (0x10038020)
+#define CLP_ABR_REG_MLKEM_SEED_D_2                                                                  (0x10039020)
 #ifndef ABR_REG_MLKEM_SEED_D_2
-#define ABR_REG_MLKEM_SEED_D_2                                                                      (0x8020)
+#define ABR_REG_MLKEM_SEED_D_2                                                                      (0x9020)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_3                                                                  (0x10038024)
+#define CLP_ABR_REG_MLKEM_SEED_D_3                                                                  (0x10039024)
 #ifndef ABR_REG_MLKEM_SEED_D_3
-#define ABR_REG_MLKEM_SEED_D_3                                                                      (0x8024)
+#define ABR_REG_MLKEM_SEED_D_3                                                                      (0x9024)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_4                                                                  (0x10038028)
+#define CLP_ABR_REG_MLKEM_SEED_D_4                                                                  (0x10039028)
 #ifndef ABR_REG_MLKEM_SEED_D_4
-#define ABR_REG_MLKEM_SEED_D_4                                                                      (0x8028)
+#define ABR_REG_MLKEM_SEED_D_4                                                                      (0x9028)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_5                                                                  (0x1003802c)
+#define CLP_ABR_REG_MLKEM_SEED_D_5                                                                  (0x1003902c)
 #ifndef ABR_REG_MLKEM_SEED_D_5
-#define ABR_REG_MLKEM_SEED_D_5                                                                      (0x802c)
+#define ABR_REG_MLKEM_SEED_D_5                                                                      (0x902c)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_6                                                                  (0x10038030)
+#define CLP_ABR_REG_MLKEM_SEED_D_6                                                                  (0x10039030)
 #ifndef ABR_REG_MLKEM_SEED_D_6
-#define ABR_REG_MLKEM_SEED_D_6                                                                      (0x8030)
+#define ABR_REG_MLKEM_SEED_D_6                                                                      (0x9030)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_7                                                                  (0x10038034)
+#define CLP_ABR_REG_MLKEM_SEED_D_7                                                                  (0x10039034)
 #ifndef ABR_REG_MLKEM_SEED_D_7
-#define ABR_REG_MLKEM_SEED_D_7                                                                      (0x8034)
+#define ABR_REG_MLKEM_SEED_D_7                                                                      (0x9034)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_0                                                                  (0x10038038)
+#define CLP_ABR_REG_MLKEM_SEED_Z_0                                                                  (0x10039038)
 #ifndef ABR_REG_MLKEM_SEED_Z_0
-#define ABR_REG_MLKEM_SEED_Z_0                                                                      (0x8038)
+#define ABR_REG_MLKEM_SEED_Z_0                                                                      (0x9038)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_1                                                                  (0x1003803c)
+#define CLP_ABR_REG_MLKEM_SEED_Z_1                                                                  (0x1003903c)
 #ifndef ABR_REG_MLKEM_SEED_Z_1
-#define ABR_REG_MLKEM_SEED_Z_1                                                                      (0x803c)
+#define ABR_REG_MLKEM_SEED_Z_1                                                                      (0x903c)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_2                                                                  (0x10038040)
+#define CLP_ABR_REG_MLKEM_SEED_Z_2                                                                  (0x10039040)
 #ifndef ABR_REG_MLKEM_SEED_Z_2
-#define ABR_REG_MLKEM_SEED_Z_2                                                                      (0x8040)
+#define ABR_REG_MLKEM_SEED_Z_2                                                                      (0x9040)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_3                                                                  (0x10038044)
+#define CLP_ABR_REG_MLKEM_SEED_Z_3                                                                  (0x10039044)
 #ifndef ABR_REG_MLKEM_SEED_Z_3
-#define ABR_REG_MLKEM_SEED_Z_3                                                                      (0x8044)
+#define ABR_REG_MLKEM_SEED_Z_3                                                                      (0x9044)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_4                                                                  (0x10038048)
+#define CLP_ABR_REG_MLKEM_SEED_Z_4                                                                  (0x10039048)
 #ifndef ABR_REG_MLKEM_SEED_Z_4
-#define ABR_REG_MLKEM_SEED_Z_4                                                                      (0x8048)
+#define ABR_REG_MLKEM_SEED_Z_4                                                                      (0x9048)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_5                                                                  (0x1003804c)
+#define CLP_ABR_REG_MLKEM_SEED_Z_5                                                                  (0x1003904c)
 #ifndef ABR_REG_MLKEM_SEED_Z_5
-#define ABR_REG_MLKEM_SEED_Z_5                                                                      (0x804c)
+#define ABR_REG_MLKEM_SEED_Z_5                                                                      (0x904c)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_6                                                                  (0x10038050)
+#define CLP_ABR_REG_MLKEM_SEED_Z_6                                                                  (0x10039050)
 #ifndef ABR_REG_MLKEM_SEED_Z_6
-#define ABR_REG_MLKEM_SEED_Z_6                                                                      (0x8050)
+#define ABR_REG_MLKEM_SEED_Z_6                                                                      (0x9050)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_7                                                                  (0x10038054)
+#define CLP_ABR_REG_MLKEM_SEED_Z_7                                                                  (0x10039054)
 #ifndef ABR_REG_MLKEM_SEED_Z_7
-#define ABR_REG_MLKEM_SEED_Z_7                                                                      (0x8054)
+#define ABR_REG_MLKEM_SEED_Z_7                                                                      (0x9054)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_0                                                              (0x10038058)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_0                                                              (0x10039058)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_0
-#define ABR_REG_MLKEM_SHARED_KEY_0                                                                  (0x8058)
+#define ABR_REG_MLKEM_SHARED_KEY_0                                                                  (0x9058)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_1                                                              (0x1003805c)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_1                                                              (0x1003905c)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_1
-#define ABR_REG_MLKEM_SHARED_KEY_1                                                                  (0x805c)
+#define ABR_REG_MLKEM_SHARED_KEY_1                                                                  (0x905c)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_2                                                              (0x10038060)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_2                                                              (0x10039060)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_2
-#define ABR_REG_MLKEM_SHARED_KEY_2                                                                  (0x8060)
+#define ABR_REG_MLKEM_SHARED_KEY_2                                                                  (0x9060)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_3                                                              (0x10038064)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_3                                                              (0x10039064)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_3
-#define ABR_REG_MLKEM_SHARED_KEY_3                                                                  (0x8064)
+#define ABR_REG_MLKEM_SHARED_KEY_3                                                                  (0x9064)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_4                                                              (0x10038068)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_4                                                              (0x10039068)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_4
-#define ABR_REG_MLKEM_SHARED_KEY_4                                                                  (0x8068)
+#define ABR_REG_MLKEM_SHARED_KEY_4                                                                  (0x9068)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_5                                                              (0x1003806c)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_5                                                              (0x1003906c)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_5
-#define ABR_REG_MLKEM_SHARED_KEY_5                                                                  (0x806c)
+#define ABR_REG_MLKEM_SHARED_KEY_5                                                                  (0x906c)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_6                                                              (0x10038070)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_6                                                              (0x10039070)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_6
-#define ABR_REG_MLKEM_SHARED_KEY_6                                                                  (0x8070)
+#define ABR_REG_MLKEM_SHARED_KEY_6                                                                  (0x9070)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_7                                                              (0x10038074)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_7                                                              (0x10039074)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_7
-#define ABR_REG_MLKEM_SHARED_KEY_7                                                                  (0x8074)
+#define ABR_REG_MLKEM_SHARED_KEY_7                                                                  (0x9074)
 #endif
-#define CLP_ABR_REG_MLKEM_MSG_BASE_ADDR                                                             (0x10038080)
-#define CLP_ABR_REG_MLKEM_MSG_END_ADDR                                                              (0x1003809f)
-#define CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR                                                      (0x10039000)
-#define CLP_ABR_REG_MLKEM_DECAPS_KEY_END_ADDR                                                       (0x10039c5f)
-#define CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR                                                      (0x1003a000)
-#define CLP_ABR_REG_MLKEM_ENCAPS_KEY_END_ADDR                                                       (0x1003a61f)
-#define CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR                                                      (0x1003a800)
-#define CLP_ABR_REG_MLKEM_CIPHERTEXT_END_ADDR                                                       (0x1003ae1f)
-#define CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL                                                           (0x1003ae20)
+#define CLP_ABR_REG_MLKEM_MSG_BASE_ADDR                                                             (0x10039080)
+#define CLP_ABR_REG_MLKEM_MSG_END_ADDR                                                              (0x1003909f)
+#define CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR                                                      (0x1003a000)
+#define CLP_ABR_REG_MLKEM_DECAPS_KEY_END_ADDR                                                       (0x1003ac5f)
+#define CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR                                                      (0x1003b000)
+#define CLP_ABR_REG_MLKEM_ENCAPS_KEY_END_ADDR                                                       (0x1003b61f)
+#define CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR                                                      (0x1003b800)
+#define CLP_ABR_REG_MLKEM_CIPHERTEXT_END_ADDR                                                       (0x1003be1f)
+#define CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL                                                           (0x1003c000)
 #ifndef ABR_REG_KV_MLKEM_SEED_RD_CTRL
-#define ABR_REG_KV_MLKEM_SEED_RD_CTRL                                                               (0xae20)
+#define ABR_REG_KV_MLKEM_SEED_RD_CTRL                                                               (0xc000)
 #define ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_LOW                                                   (0)
 #define ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK                                                  (0x1)
 #define ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW                                                (1)
@@ -8732,9 +8809,9 @@
 #define ABR_REG_KV_MLKEM_SEED_RD_CTRL_RSVD_LOW                                                      (7)
 #define ABR_REG_KV_MLKEM_SEED_RD_CTRL_RSVD_MASK                                                     (0xffffff80)
 #endif
-#define CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS                                                         (0x1003ae24)
+#define CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS                                                         (0x1003c004)
 #ifndef ABR_REG_KV_MLKEM_SEED_RD_STATUS
-#define ABR_REG_KV_MLKEM_SEED_RD_STATUS                                                             (0xae24)
+#define ABR_REG_KV_MLKEM_SEED_RD_STATUS                                                             (0xc004)
 #define ABR_REG_KV_MLKEM_SEED_RD_STATUS_READY_LOW                                                   (0)
 #define ABR_REG_KV_MLKEM_SEED_RD_STATUS_READY_MASK                                                  (0x1)
 #define ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_LOW                                                   (1)
@@ -8742,9 +8819,9 @@
 #define ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_LOW                                                   (2)
 #define ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK                                                  (0x3fc)
 #endif
-#define CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL                                                            (0x1003ae28)
+#define CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL                                                            (0x1003c008)
 #ifndef ABR_REG_KV_MLKEM_MSG_RD_CTRL
-#define ABR_REG_KV_MLKEM_MSG_RD_CTRL                                                                (0xae28)
+#define ABR_REG_KV_MLKEM_MSG_RD_CTRL                                                                (0xc008)
 #define ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_LOW                                                    (0)
 #define ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK                                                   (0x1)
 #define ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW                                                 (1)
@@ -8754,9 +8831,9 @@
 #define ABR_REG_KV_MLKEM_MSG_RD_CTRL_RSVD_LOW                                                       (7)
 #define ABR_REG_KV_MLKEM_MSG_RD_CTRL_RSVD_MASK                                                      (0xffffff80)
 #endif
-#define CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS                                                          (0x1003ae2c)
+#define CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS                                                          (0x1003c00c)
 #ifndef ABR_REG_KV_MLKEM_MSG_RD_STATUS
-#define ABR_REG_KV_MLKEM_MSG_RD_STATUS                                                              (0xae2c)
+#define ABR_REG_KV_MLKEM_MSG_RD_STATUS                                                              (0xc00c)
 #define ABR_REG_KV_MLKEM_MSG_RD_STATUS_READY_LOW                                                    (0)
 #define ABR_REG_KV_MLKEM_MSG_RD_STATUS_READY_MASK                                                   (0x1)
 #define ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_LOW                                                    (1)
@@ -8764,9 +8841,9 @@
 #define ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_LOW                                                    (2)
 #define ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK                                                   (0x3fc)
 #endif
-#define CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL                                                      (0x1003ae30)
+#define CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL                                                      (0x1003c010)
 #ifndef ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL
-#define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL                                                          (0xae30)
+#define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL                                                          (0xc010)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_EN_LOW                                             (0)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_EN_MASK                                            (0x1)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW                                          (1)
@@ -8792,92 +8869,15 @@
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_RSVD_LOW                                                 (15)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_RSVD_MASK                                                (0xffff8000)
 #endif
-#define CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS                                                    (0x1003ae34)
+#define CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS                                                    (0x1003c014)
 #ifndef ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS
-#define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS                                                        (0xae34)
+#define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS                                                        (0xc014)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_READY_LOW                                              (0)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_READY_MASK                                             (0x1)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_VALID_LOW                                              (1)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_VALID_MASK                                             (0x2)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_ERROR_LOW                                              (2)
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_ERROR_MASK                                             (0x3fc)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_START                                                             (0x1003b000)
-#define CLP_ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (0x1003b000)
-#ifndef ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
-#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                      (0xb000)
-#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                         (0)
-#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK                                        (0x1)
-#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_LOW                                         (1)
-#define ABR_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK                                        (0x2)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                   (0x1003b004)
-#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                       (0xb004)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_LOW                                 (0)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK                                (0x1)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                   (0x1003b008)
-#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                       (0xb008)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_LOW                                 (0)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK                                (0x1)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                               (0x1003b00c)
-#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R
-#define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                                   (0xb00c)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_LOW                                       (0)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_MASK                                      (0x1)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                               (0x1003b010)
-#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                                   (0xb010)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_LOW                                       (0)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_MASK                                      (0x1)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                             (0x1003b014)
-#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                                 (0xb014)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_LOW                          (0)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK                         (0x1)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                             (0x1003b018)
-#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                                 (0xb018)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_LOW                          (0)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK                         (0x1)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                 (0x1003b01c)
-#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                     (0xb01c)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_INTERNAL_TRIG_LOW                             (0)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR_INTERNAL_TRIG_MASK                            (0x1)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                 (0x1003b020)
-#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                     (0xb020)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_LOW                             (0)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK                            (0x1)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R                                       (0x1003b100)
-#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_R                                           (0xb100)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                       (0x1003b180)
-#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                           (0xb180)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R                                  (0x1003b200)
-#ifndef ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R                                      (0xb200)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
-#define ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_COUNT_INCR_R_PULSE_MASK                           (0x1)
-#endif
-#define CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                  (0x1003b204)
-#ifndef ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                      (0xb204)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                            (0)
-#define ABR_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                           (0x1)
 #endif
 #define CLP_SHA3_BASE_ADDR                                                                          (0x10040000)
 #define CLP_SHA3_SHA3_NAME_0                                                                        (0x10040000)

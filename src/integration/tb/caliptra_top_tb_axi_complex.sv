@@ -19,11 +19,45 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     input logic cptra_rst_b,
     axi_if m_axi_if,
     output logic recovery_data_avail,
-    input var axi_complex_ctrl_t ctrl
+    input var axi_complex_ctrl_t ctrl,
+    input logic axi_error_inj_en
 );
 
     import axi_pkg::*;
     import soc_ifc_pkg::*;
+
+    //=========================================================================-
+    // Error Response Injection Parameters
+    //=========================================================================-
+    logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] err_resp_start_addr;
+    logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] err_resp_end_addr;
+    logic err_resp_enable;
+    logic cmdline_err_resp_enable;
+    
+    // Command line parameter parsing
+    initial begin
+        // string err_start_str, err_end_str;
+        string err_resp_enable_str;
+        cmdline_err_resp_enable = 1'b0;
+        err_resp_start_addr = '0;
+        err_resp_end_addr = '0;
+        
+        if ($value$plusargs("ERR_RESP_START_ADDR=%x", err_resp_start_addr)) begin
+            if ($value$plusargs("ERR_RESP_END_ADDR=%x", err_resp_end_addr)) begin
+                cmdline_err_resp_enable = 1'b1;
+                $display("[%0t] TB: Err response injection enabled for address range 0x%09h to 0x%09h", $time, err_resp_start_addr, err_resp_end_addr);
+            end else begin
+                $error("TB: ERR_RESP_START_ADDR specified but ERR_RESP_END_ADDR missing. Err injection disabled.");
+            end
+        end
+    end
+
+    assign err_resp_enable = cmdline_err_resp_enable && axi_error_inj_en;
+
+    // Function to check if address is in error injection range
+    function automatic logic addr_in_err_range(logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] addr);
+        return err_resp_enable && (addr >= err_resp_start_addr) && (addr <= err_resp_end_addr);;
+    endfunction
 
     //=========================================================================-
     // Local i/fs
@@ -187,6 +221,65 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     //=========================================================================-
     // Dummy interconnect
     //=========================================================================-
+    // Error injection signals
+    logic inject_read_err;
+    logic inject_write_err;
+    logic inject_write_err_pending; // Set when AW is received, cleared when wlast+bresp is sent
+    logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] read_addr_reg;
+    logic [`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:0] write_addr_reg;
+
+    logic err_addr_detected;
+    logic err_addr_detected_1d;
+
+    assign err_addr_detected = inject_read_err || inject_write_err ? 1'b1 : err_addr_detected_1d;
+
+    // Register read and write addresses for error injection
+    always_ff@(posedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            read_addr_reg <= '0;
+            write_addr_reg <= '0;
+            inject_read_err <= 1'b0;
+            inject_write_err <= 1'b0;
+            inject_write_err_pending <= 1'b0;
+            err_addr_detected_1d <= 1'b0;
+        end else begin
+
+            err_addr_detected_1d <= err_addr_detected;
+            // Capture read address and check for error injection
+            if (m_axi_if.arvalid && m_axi_if.arready) begin
+                read_addr_reg <= m_axi_if.araddr;
+                inject_read_err <= (addr_in_err_range(m_axi_if.araddr) && (err_addr_detected_1d == 0));
+                if (addr_in_err_range(m_axi_if.araddr) && (err_addr_detected_1d == 0)) begin
+                    $display("[%0t] TB: Injecting read err for address 0x%08h",$time, m_axi_if.araddr);
+                end
+            end
+            
+            // Capture write address and check for error injection
+            if (m_axi_if.awvalid && m_axi_if.awready) begin
+                write_addr_reg <= m_axi_if.awaddr;
+                inject_write_err_pending <= (addr_in_err_range(m_axi_if.awaddr) && (err_addr_detected_1d == 0));
+                if (addr_in_err_range(m_axi_if.awaddr) && (err_addr_detected_1d == 0)) begin
+                    $display("[%0t] TB: Injecting write err for address 0x%08h",$time, m_axi_if.awaddr);
+                end
+            end
+            
+            // Assert write error response only after receiving wlast
+            if (inject_write_err_pending && m_axi_if.wvalid && m_axi_if.wready && m_axi_if.wlast) begin
+                inject_write_err <= 1'b1;
+                inject_write_err_pending <= 1'b0;
+                $display("[%0t] TB: Write err response ready after wlast for address 0x%08h",$time, write_addr_reg);
+            end
+            
+            // Clear error injection flags when responses are sent
+            if (m_axi_if.rvalid && m_axi_if.rready && m_axi_if.rlast) begin
+                inject_read_err <= 1'b0;
+            end
+            if (m_axi_if.bvalid && m_axi_if.bready) begin
+                inject_write_err <= 1'b0;
+            end
+        end
+    end
+
     // --------------------- Endpoint mux ---------------------
     logic [1:0] sram_r_active;
     logic       sram_ar_hshake;
@@ -205,55 +298,68 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     logic       fifo_b_hshake;
 
     always_comb begin
-        // AXI AR
-        m_axi_if.arready          = (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ? axi_sram_if.arready :
-                                    (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) ? axi_fifo_if.arready :
-                                                                                                                                                                                      1'b0;
+        // AXI AR - Block ready when injecting errors
+        m_axi_if.arready          = (addr_in_err_range(m_axi_if.araddr) && (err_addr_detected_1d == 0))? 1'b1 :
+                                    (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == 
+                                     AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ? 
+                                     axi_sram_if.arready :
+                                    (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == 
+                                     AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) ? 
+                                     axi_fifo_if.arready : 1'b0;
                                                     
-        // AXI R                                    
+        // AXI R - Inject error responses when needed
         m_axi_if.rdata            = sram_r_active ? axi_sram_if.rdata :
                                     fifo_r_active ? axi_fifo_if.rdata :
                                                     '0;
-        m_axi_if.rresp            = sram_r_active ? axi_sram_if.rresp :
+        m_axi_if.rresp            = inject_read_err ? axi_pkg::AXI_RESP_SLVERR:
+                                    sram_r_active ? axi_sram_if.rresp :
                                     fifo_r_active ? axi_fifo_if.rresp :
-                                                    '0;
+                                                    axi_pkg::AXI_RESP_OKAY;
+        
         m_axi_if.rid              = sram_r_active ? axi_sram_if.rid   :
                                     fifo_r_active ? axi_fifo_if.rid   :
                                                     '0;
+
         m_axi_if.ruser            = sram_r_active ? axi_sram_if.ruser :
                                     fifo_r_active ? axi_fifo_if.ruser :
                                                     '0;
         m_axi_if.rlast            = sram_r_active ? axi_sram_if.rlast :
                                     fifo_r_active ? axi_fifo_if.rlast :
                                                     '0;
-        m_axi_if.ruser            = sram_r_active ? axi_sram_if.ruser :
-                                    fifo_r_active ? axi_fifo_if.ruser :
-                                                    '0;
+        
         m_axi_if.rvalid           = sram_r_active ? axi_sram_if.rvalid :
                                     fifo_r_active ? axi_fifo_if.rvalid :
                                                     '0;
                                                     
-        // AXI AW                                   
-        m_axi_if.awready          = (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ? axi_sram_if.awready :
-                                    (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) ? axi_fifo_if.awready :
-                                                                                                                                                                                      1'b0;
+        // AXI AW - Block ready when injecting errors
+        m_axi_if.awready          = (addr_in_err_range(m_axi_if.awaddr) && (err_addr_detected_1d == 0)) ? 1'b1 :
+                                    (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == 
+                                     AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]) ? 
+                                     axi_sram_if.awready :
+                                    (m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == 
+                                     AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH]) ? 
+                                     axi_fifo_if.awready : 1'b0;
                                                     
-        // AXI W                                    
-        m_axi_if.wready           = sram_w_active ? axi_sram_if.wready :
+        // AXI W - Accept data when injecting errors, but don't forward
+        m_axi_if.wready           = (inject_write_err || inject_write_err_pending) ? 1'b1 :
+                                    sram_w_active ? axi_sram_if.wready :
                                     fifo_w_active ? axi_fifo_if.wready :
                                                     1'b0;
                                                     
-        // AXI B                                    
-        m_axi_if.bresp            = sram_w_active ? axi_sram_if.bresp :
+        // AXI B - Inject error responses when needed
+        m_axi_if.bresp            = inject_write_err ? axi_pkg::AXI_RESP_SLVERR :
+                                    sram_w_active ? axi_sram_if.bresp :
                                     fifo_w_active ? axi_fifo_if.bresp :
-                                                    '0;
+                                                    axi_pkg::AXI_RESP_OKAY;
+
         m_axi_if.bid              = sram_w_active ? axi_sram_if.bid :
                                     fifo_w_active ? axi_fifo_if.bid :
                                                     '0;
         m_axi_if.buser            = sram_w_active ? axi_sram_if.buser :
                                     fifo_w_active ? axi_fifo_if.buser :
                                                     '0;
-        m_axi_if.bvalid           = sram_w_active ? axi_sram_if_bvalid_force :
+        m_axi_if.bvalid           = inject_write_err ? 1'b1 :
+                                    sram_w_active ? axi_sram_if_bvalid_force :
                                     fifo_w_active ? axi_fifo_if_bvalid_force :
                                                     '0;
     end
@@ -317,8 +423,10 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     // 1 write request accepted and pending
     `CALIPTRA_ASSERT_NEVER(SRAM_GT4_WR_PENDING, (sram_w_active == 4) && sram_aw_hshake && !sram_b_hshake, core_clk, !cptra_rst_b)
 
-    // AXI AR
-    assign axi_sram_if.arvalid       = m_axi_if.arvalid && m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
+    // AXI AR - Don't forward requests when injecting errors
+    assign axi_sram_if.arvalid       = m_axi_if.arvalid
+                                        && (m_axi_if.araddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH]
+                                            == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH])  ;
     assign axi_sram_if.araddr        = m_axi_if.araddr[AXI_SRAM_ADDR_WIDTH-1:0];
     assign axi_sram_if.arburst       = m_axi_if.arburst;
     assign axi_sram_if.arsize        = m_axi_if.arsize ;
@@ -330,8 +438,11 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     // AXI R                                    
     assign axi_sram_if.rready        = sram_r_active ? m_axi_if.rready : '0;
 
-    // AXI AW                                   
-    assign axi_sram_if.awvalid       = m_axi_if.awvalid && m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
+    // AXI AW - Don't forward requests when injecting errors
+    assign axi_sram_if.awvalid       = m_axi_if.awvalid && 
+                                       !(addr_in_err_range(m_axi_if.awaddr) && (err_addr_detected_1d == 0))&&
+                                       m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH] == 
+                                       AXI_SRAM_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_SRAM_ADDR_WIDTH];
     assign axi_sram_if.awaddr        = m_axi_if.awaddr[AXI_SRAM_ADDR_WIDTH-1:0];
     assign axi_sram_if.awburst       = m_axi_if.awburst;
     assign axi_sram_if.awsize        = m_axi_if.awsize ;
@@ -340,12 +451,14 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     assign axi_sram_if.awid          = m_axi_if.awid   ;
     assign axi_sram_if.awlock        = m_axi_if.awlock ;
 
-    // AXI W                                    
-    assign axi_sram_if.wvalid        = sram_w_active ? m_axi_if.wvalid : '0;
-    assign axi_sram_if.wdata         = sram_w_active ? m_axi_if.wdata  : '0;
-    assign axi_sram_if.wstrb         = sram_w_active ? m_axi_if.wstrb  : '0;
-    assign axi_sram_if.wuser         = sram_w_active ? m_axi_if.wuser  : '0;
-    assign axi_sram_if.wlast         = sram_w_active ? m_axi_if.wlast  : '0;
+    // AXI W - Don't forward data when injecting errors
+    logic sram_w_blocked;
+    assign sram_w_blocked = inject_write_err || inject_write_err_pending;
+    assign axi_sram_if.wvalid        = (sram_w_active && !sram_w_blocked) ? m_axi_if.wvalid : '0;
+    assign axi_sram_if.wdata         = (sram_w_active && !sram_w_blocked) ? m_axi_if.wdata  : '0;
+    assign axi_sram_if.wstrb         = (sram_w_active && !sram_w_blocked) ? m_axi_if.wstrb  : '0;
+    assign axi_sram_if.wuser         = (sram_w_active && !sram_w_blocked) ? m_axi_if.wuser  : '0;
+    assign axi_sram_if.wlast         = (sram_w_active && !sram_w_blocked) ? m_axi_if.wlast  : '0;
 
     // AXI B
     assign axi_sram_if.bready        = sram_w_active ? m_axi_if.bready : '0;
@@ -492,8 +605,11 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     // AXI R                                    
     assign axi_fifo_if.rready        = fifo_r_active ? m_axi_if.rready : '0;
 
-    // AXI AW                                   
-    assign axi_fifo_if.awvalid       = m_axi_if.awvalid && m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH];
+    // AXI AW - Don't forward requests when injecting errors
+    assign axi_fifo_if.awvalid       = m_axi_if.awvalid && 
+                                       !(addr_in_err_range(m_axi_if.awaddr) && (err_addr_detected_1d == 0)) &&
+                                       m_axi_if.awaddr[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH] == 
+                                       AXI_FIFO_BASE_ADDR[`CALIPTRA_AXI_DMA_ADDR_WIDTH-1:AXI_FIFO_ADDR_WIDTH];
     assign axi_fifo_if.awaddr        = m_axi_if.awaddr[AXI_FIFO_ADDR_WIDTH-1:0];
     assign axi_fifo_if.awburst       = m_axi_if.awburst;
     assign axi_fifo_if.awsize        = m_axi_if.awsize ;
@@ -502,12 +618,14 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     assign axi_fifo_if.awid          = m_axi_if.awid   ;
     assign axi_fifo_if.awlock        = m_axi_if.awlock ;
 
-    // AXI W                                    
-    assign axi_fifo_if.wvalid        = fifo_w_active ? m_axi_if.wvalid : '0;
-    assign axi_fifo_if.wdata         = fifo_w_active ? m_axi_if.wdata  : '0;
-    assign axi_fifo_if.wstrb         = fifo_w_active ? m_axi_if.wstrb  : '0;
-    assign axi_fifo_if.wuser         = fifo_w_active ? m_axi_if.wuser  : '0;
-    assign axi_fifo_if.wlast         = fifo_w_active ? m_axi_if.wlast  : '0;
+    // AXI W - Don't forward data when injecting errors
+    logic fifo_w_blocked;
+    assign fifo_w_blocked = inject_write_err || inject_write_err_pending;
+    assign axi_fifo_if.wvalid        = (fifo_w_active && !fifo_w_blocked) ? m_axi_if.wvalid : '0;
+    assign axi_fifo_if.wdata         = (fifo_w_active && !fifo_w_blocked) ? m_axi_if.wdata  : '0;
+    assign axi_fifo_if.wstrb         = (fifo_w_active && !fifo_w_blocked) ? m_axi_if.wstrb  : '0;
+    assign axi_fifo_if.wuser         = (fifo_w_active && !fifo_w_blocked) ? m_axi_if.wuser  : '0;
+    assign axi_fifo_if.wlast         = (fifo_w_active && !fifo_w_blocked) ? m_axi_if.wlast  : '0;
                                                     
     // AXI B                                    
     assign axi_fifo_if.bready        = fifo_w_active ? m_axi_if.bready : '0;

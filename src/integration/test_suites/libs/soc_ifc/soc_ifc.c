@@ -334,6 +334,13 @@ uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint3
     soc_ifc_axi_dma_wait_idle(0);
 }
 
+// AXI DMA Functions
+uint8_t soc_ifc_axi_dma_send_ahb_payload_w_error_expected(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size, uint8_t error_expected) {
+    soc_ifc_axi_dma_arm_send_ahb_payload(dst_addr, fixed, payload, byte_count, block_size);
+    soc_ifc_axi_dma_get_send_ahb_payload(payload, byte_count);
+    soc_ifc_axi_dma_wait_idle_w_error_expected(0, error_expected);
+}
+
 uint8_t soc_ifc_axi_dma_arm_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
     uint32_t reg;
 
@@ -367,6 +374,13 @@ uint8_t soc_ifc_axi_dma_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint3
     soc_ifc_axi_dma_get_read_ahb_payload(payload, byte_count);
     soc_ifc_axi_dma_wait_idle(0);
 }
+
+uint8_t soc_ifc_axi_dma_read_ahb_payload_w_error_expected(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size, uint8_t error_expected) {
+    soc_ifc_axi_dma_arm_read_ahb_payload(src_addr, fixed, payload, byte_count, block_size);
+    soc_ifc_axi_dma_get_read_ahb_payload(payload, byte_count);
+    soc_ifc_axi_dma_wait_idle_w_error_expected(0, error_expected);
+}
+
 uint8_t soc_ifc_axi_dma_arm_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
     uint32_t reg;
 
@@ -490,7 +504,7 @@ uint8_t soc_ifc_axi_dma_read_mbox_payload(uint64_t src_addr, uint64_t dst_addr, 
 
     // Check status
     if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
-        VPRINTF(FATAL, "FATAL: AXI DMA reports error status for AXI-to-MBOX xfer\n");
+        VPRINTF(LOW, "FATAL: AXI DMA reports error status for AXI-to-MBOX xfer\n");
         lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
         SEND_STDOUT_CTRL(0x1);
     }
@@ -580,6 +594,11 @@ uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, ui
     soc_ifc_axi_dma_wait_idle(0);
 }
 
+uint8_t soc_ifc_axi_dma_send_axi_to_axi_w_error_expected(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode, uint8_t error_expected) {
+    soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, src_fixed, dst_addr, dst_fixed, byte_count, block_size,  aes_mode, aes_gcm_mode);
+    soc_ifc_axi_dma_wait_idle_w_error_expected(0, error_expected);
+}
+
 uint8_t soc_ifc_axi_dma_send_axi_to_axi_no_wait(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
     uint32_t reg;
 
@@ -613,7 +632,7 @@ uint8_t soc_ifc_axi_dma_wait_idle(uint8_t clr_lock) {
 
     // Check status
     if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
-        VPRINTF(FATAL, "FATAL: AXI DMA reports error status for xfer\n");
+        VPRINTF(LOW, "FATAL: AXI DMA reports error status for xfer\n");
         lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
         SEND_STDOUT_CTRL(0x1);
     }
@@ -762,3 +781,39 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
     return 0;
 }
 
+
+uint8_t soc_ifc_axi_dma_wait_idle_w_error_expected(uint8_t clr_lock, uint8_t error_expected) {
+    
+    uint32_t reg;
+    uint32_t error_observed = 0;
+
+    // Check completion
+    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+    }
+
+    // Check status
+    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
+        if(error_expected){
+            VPRINTF(LOW, "AXI DMA reports status for xfer that would require DMA Flush\n");
+            lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+            error_observed = 1;
+        } else {
+            VPRINTF(FATAL, "AXI DMA reports status for xfer that would require DMA Flush\n");
+            lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+            SEND_STDOUT_CTRL(0x1);
+        }
+        
+    }
+
+    if(error_expected && !error_observed) {
+        VPRINTF(FATAL, "AXI DMA did not report err status for xfer that would require DMA Flush\n");
+        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
+        SEND_STDOUT_CTRL(0x1);
+    }
+
+    if (clr_lock) {
+        lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+    }
+}

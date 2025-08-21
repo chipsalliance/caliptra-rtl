@@ -375,9 +375,9 @@ const uint32_t mldsa_entropy[] = {
 
 
 void main() {
-    printf("----------------------------\n");
-    printf(" Running MLDSA SIGN RND Smoke Test !!\n");
-    printf("----------------------------\n");
+    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF(LOW, " Running MLDSA SIGN RND Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -409,7 +409,7 @@ void main() {
     cptra_intr_rcv.abr_notif = 0;
     
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
 

@@ -340,10 +340,10 @@ aes_inst (
 always_comb begin
   hwif_in.error_reset_b = cptra_pwrgood;
   hwif_in.reset_b =  reset_n;
-  hwif_in.AES_NAME[0].NAME.next = '0; //FIXME
-  hwif_in.AES_NAME[1].NAME.next = '0; //FIXME
-  hwif_in.AES_VERSION[0].VERSION.next = '0; //FIXME
-  hwif_in.AES_VERSION[1].VERSION.next = '0; //FIXME
+  hwif_in.AES_NAME[0].NAME.next = 32'h0061657; //"aes"
+  hwif_in.AES_NAME[1].NAME.next = '0; 
+  hwif_in.AES_VERSION[0].VERSION.next = 32'h00312e30; //"1.0"
+  hwif_in.AES_VERSION[1].VERSION.next = '0; 
 
   //set ready when keyvault isn't busy
   hwif_in.AES_KV_RD_KEY_STATUS.READY.next = kv_key_ready;
@@ -366,11 +366,11 @@ always_comb begin
   //clear enable when busy
   hwif_in.AES_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
 
-  hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = '0; //FIXME
-  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
+  hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = '0; //unused
+  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // unused
+  hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // unused
+  hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // unused
+  hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // unused
 end
 
 // Software write-enables to prevent KV reg manipulation mid-operation

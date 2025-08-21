@@ -84,16 +84,16 @@ void main() {
     uint32_t actual_tag[HMAC512_TAG_SIZE];
 
     //AES
-    aes_flow_t aes_input;
+    aes_flow_t aes_input = {0};
     aes_input.data_src_mode = AES_DATA_DIRECT;
     aes_input.dma_transfer_data = (dma_transfer_data_t){0};
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_GCM;
     aes_key_len_e key_len = AES_256;
-    aes_key_t aes_key_mlkem;
-    aes_key_t aes_key_hmac;
-    aes_key_t aes_key_mlkem_kv;
-    aes_key_t aes_key_hmac_kv;
+    aes_key_t aes_key_mlkem = {0};
+    aes_key_t aes_key_hmac = {0};
+    aes_key_t aes_key_mlkem_kv = {0};
+    aes_key_t aes_key_hmac_kv = {0};
     uint32_t iv[4] = {0x00000000, 0x00000000, 0x00000000, 0x00000000};
 
     const char plaintext_str[] = "00000000000000000000000000000000";
@@ -113,9 +113,9 @@ void main() {
 
 
 
-    printf("----------------------------\n");
-    printf(" Running MLKEM Smoke Test !!\n");
-    printf("----------------------------\n");
+    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF(LOW, " Running MLKEM Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -147,7 +147,7 @@ void main() {
     //Generate shared key and ciphertext
     mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey);
 
-    printf("Shared Key data: 0x%x\n", actual_sharedkey[0]);
+    VPRINTF(LOW, "Shared Key data: 0x%x\n", actual_sharedkey[0]);
 
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
@@ -188,7 +188,7 @@ void main() {
         hmac512_tag.data[i] = 0x00000000;
 
 
-    printf("Block data: 0x%x\n", hmac_block.data[0]);
+    VPRINTF(LOW, "Block data: 0x%x\n", hmac_block.data[0]);
     hmac512_flow_return(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, actual_tag);
     hmac_zeroize();
 
@@ -213,7 +213,7 @@ void main() {
     aes_input.tag = tag_mlkem;
     aes_input.iv = iv;
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
 
     //Use HMAC result in AES to generate ciphertext
@@ -236,7 +236,7 @@ void main() {
     aes_input.tag = tag_hmac;
     aes_input.iv = iv;
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //Now do the same flow through KeyVault
     //Decaps the same shared key into keyvault
@@ -262,7 +262,7 @@ void main() {
     aes_input.ciphertext = ciphertext_mlkem;
     aes_input.tag = tag_mlkem;
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //Use HMAC result in AES to generate ciphertext, compare against the one generated before
     aes_key_hmac_kv.kv_intf = TRUE;
@@ -272,9 +272,9 @@ void main() {
     aes_input.ciphertext = ciphertext_hmac;
     aes_input.tag = tag_hmac;
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
