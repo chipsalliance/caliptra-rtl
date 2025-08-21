@@ -38,7 +38,7 @@ int read_and_compare(uint32_t addr, uint32_t exp_data) {
   uint32_t act_data;
   act_data = lsu_read_32(addr);
   if (act_data != exp_data) {
-    printf("Got:%x Want: %x", act_data, exp_data);
+    VPRINTF(ERROR, "Got:%x Want: %x", act_data, exp_data);
     return 1;
   }
   return 0;
@@ -48,7 +48,7 @@ int read_and_compare(uint32_t addr, uint32_t exp_data) {
 void poll_reg(uint32_t addr, uint32_t expected_data) {
   uint32_t read_data;
 
-  printf("  - Polling addr=%x until it reads back %x...\n", addr,
+  VPRINTF(LOW, "  - Polling addr=%x until it reads back %x...\n", addr,
          expected_data);
   do {
     read_data = lsu_read_32(addr);
@@ -70,15 +70,15 @@ void end_sim_if_itrng_disabled() {
 
 void enable_csrng() {
   uint32_t read_data;
-  printf("Enabling entropy_src\n");
+  VPRINTF(LOW, "Enabling entropy_src\n");
   lsu_write_32(CLP_ENTROPY_SRC_REG_CONF, 0x2649999);
   lsu_write_32(CLP_ENTROPY_SRC_REG_MODULE_ENABLE, 0x6);
 
-  printf("Enabling csrng\n");
+  VPRINTF(LOW, "Enabling csrng\n");
   lsu_write_32(CLP_CSRNG_REG_CTRL, 0x666);
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x901);
 
-  printf("  - Waiting for boot done...\n");
+  VPRINTF(LOW, "  - Waiting for boot done...\n");
 
   poll_reg(CLP_ENTROPY_SRC_REG_DEBUG_STATUS,
            ENTROPY_SRC_REG_DEBUG_STATUS_MAIN_SM_BOOT_DONE_MASK);
@@ -88,12 +88,12 @@ int run_entropy_source_seed_test() {
   uint32_t read_data;
   int error;
 
-  printf("\nEntropy Source Seed Test\n");
+  VPRINTF(LOW, "\nEntropy Source Seed Test\n");
 
-  printf("Instantiate Command\n");
+  VPRINTF(LOW, "Instantiate Command\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x1003);
 
-  printf("  - Waiting for csrng to generate bits ...\n");
+  VPRINTF(LOW, "  - Waiting for csrng to generate bits ...\n");
   poll_reg(CLP_CSRNG_REG_GENBITS_VLD, CSRNG_REG_GENBITS_VLD_GENBITS_VLD_MASK);
 
   error += read_and_compare(CLP_CSRNG_REG_GENBITS, 0x15eb2a44);
@@ -107,14 +107,14 @@ int run_entropy_source_seed_test() {
 int run_smoke_test() {
   int error;
 
-  printf("\nTRNG Smoke Test\n");
+  VPRINTF(LOW, "\nTRNG Smoke Test\n");
 
-  printf("Uninitiate Command\n");
+  VPRINTF(LOW, "Uninitiate Command\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x905);
 
   poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
-  printf("Initiate Command - Writing 48B of seed\n");
+  VPRINTF(LOW, "Initiate Command - Writing 48B of seed\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x06C1);
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x73BEC010);
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x9262474c);
@@ -131,7 +131,7 @@ int run_smoke_test() {
 
   poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
-  printf("Generate Command - 512b\n");
+  VPRINTF(LOW, "Generate Command - 512b\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x4903);
   poll_reg(CLP_CSRNG_REG_GENBITS_VLD, CSRNG_REG_GENBITS_VLD_GENBITS_VLD_MASK);
 
@@ -160,7 +160,7 @@ int run_smoke_test() {
 
   poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
-  printf("Generate Command - 512b\n");
+  VPRINTF(LOW, "Generate Command - 512b\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x4903);
   poll_reg(CLP_CSRNG_REG_GENBITS_VLD, CSRNG_REG_GENBITS_VLD_GENBITS_VLD_MASK);
 
@@ -196,17 +196,17 @@ int run_smoke_test() {
 void main() {
   int error;
 
-  printf("---------------------------\n");
-  printf(" TRNG Smoke Test \n");
-  printf("---------------------------\n");
+  VPRINTF(LOW, "---------------------------\n");
+  VPRINTF(LOW, " TRNG Smoke Test \n");
+  VPRINTF(LOW, "---------------------------\n");
 
   end_sim_if_itrng_disabled();
   enable_csrng();
   error += run_entropy_source_seed_test();
-  if (error > 0) printf("Error: %d\n", error);
+  if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
   error += run_smoke_test();
-  if (error > 0) printf("Error: %d\n", error);
+  if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
 
   // End the sim in failure
-  if (error > 0) printf("%c", 0x1);
+  if (error > 0) SEND_STDOUT_CTRL(0x1);
 }

@@ -46,9 +46,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" Smoke Test With Crypto Zeroize !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Smoke Test With Crypto Zeroize !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -123,7 +123,7 @@ void main() {
 
     //inject hmac_key to kv key reg (in RTL)
     uint8_t key_inject_cmd = 0xa0 + (hmackey_kv_id & 0x7);
-    printf("%c", key_inject_cmd);
+    SEND_STDOUT_CTRL(key_inject_cmd);
 
     // wait for HMAC to be ready
     while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);

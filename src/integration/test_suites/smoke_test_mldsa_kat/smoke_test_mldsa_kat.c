@@ -32,9 +32,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" Running MLDSA KAT Smoke Test !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Running MLDSA KAT Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     // uint32_t mldsa_msg[] = {};
 
@@ -148,7 +148,7 @@ void main() {
     // mldsa_zeroize();
     // cptra_intr_rcv.abr_notif = 0;
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
 

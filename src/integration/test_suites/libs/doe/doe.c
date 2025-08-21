@@ -79,7 +79,7 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_
         //start HEK and store in KV22
         // FIXME -- DOE should force result to KV22?
         VPRINTF(MEDIUM,"DOE: Starting HEK Deobfuscation flow\n");
-        doe_set_ctrl(DOE_HEK, 22); // FIXME magic number
+        doe_set_ctrl(DOE_HEK, DOE_HEK_DES); // FIXME magic number
 
         // Check that HEK flow is done
         while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);

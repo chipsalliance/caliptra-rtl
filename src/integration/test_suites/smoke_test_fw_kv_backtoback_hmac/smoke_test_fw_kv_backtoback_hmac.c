@@ -46,9 +46,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" Smoke Test With FW HMAC after KV flow !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Smoke Test With FW HMAC after KV flow !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -163,11 +163,11 @@ void main() {
 
     //inject hmac384_key to kv key reg (in RTL)
     uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
-    printf("%c", key_inject_cmd);
+    SEND_STDOUT_CTRL(key_inject_cmd);
 
     hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE);
     
-    printf("KV HMAC flow is completed.\n\n");
+    VPRINTF(LOW, "KV HMAC flow is completed.\n\n");
 
     /*
         Start FW HMAC without injecting the key/block
@@ -176,7 +176,7 @@ void main() {
         and zero block since all values should be cleared 
         after KV flow.
     */
-    printf("Start FW HMAC\n");
+    VPRINTF(LOW, "Start FW HMAC\n");
     // Enable HMAC core with next command to avoid changing the key
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
                                             (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
@@ -184,15 +184,15 @@ void main() {
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
-    printf("Load TAG from FW HMAC\n");
+    VPRINTF(LOW, "Load TAG from FW HMAC\n");
     reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_11) {
         if (tag384_zerokey_zeroblock[offset] != *reg_ptr) {
-            printf("At offset [%d], hmac384_tag data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("Expected data: 0x%x\n", tag384_zerokey_zeroblock[offset]);
-            printf("%c", 0x1); //fail_cmd
+            VPRINTF(ERROR, "At offset [%d], hmac384_tag data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", tag384_zerokey_zeroblock[offset]);
+            SEND_STDOUT_CTRL(0x1); //fail_cmd
             while(1);
         }
         reg_ptr++;
@@ -201,6 +201,6 @@ void main() {
 
     hmac_zeroize();
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
