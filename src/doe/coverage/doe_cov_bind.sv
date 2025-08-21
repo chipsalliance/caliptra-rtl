@@ -13,13 +13,8 @@
 // limitations under the License.
 
 
-module aes_cov_bind;
+module doe_cov_bind;
     `ifdef FCOV
-    bind aes_clp_wrapper aes_cov_if #(
-        .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES)),
-        .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
-        .CIF_DATA_WIDTH(32) // FIXME hardcoded value?
-        )
-        i_aes_cov_if (.*);
+    bind doe_ctrl doe_cov_if i_doe_cov_if(.*);
     `endif
 endmodule
