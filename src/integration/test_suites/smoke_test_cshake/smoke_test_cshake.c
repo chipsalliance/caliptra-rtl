@@ -107,7 +107,7 @@ void run_cshake_test(uintptr_t kmac) {
   // Run cSHAKE test cases using single blocking absorb/squeeze operations.
   for (int i = 0; i < sizeof(cshake_tests) / sizeof(cshake_test_t); ++i) {
     cshake_test_t test = cshake_tests[i];
-    printf("run_cshake_test: running test %d.\n", i);
+    VPRINTF(LOW, "run_cshake_test: running test %d.\n", i);
     dif_kmac_operation_state_t kmac_operation_state;
 
     dif_kmac_function_name_t n;
@@ -124,7 +124,7 @@ void run_cshake_test(uintptr_t kmac) {
     dif_kmac_absorb(kmac, &kmac_operation_state, test.message, test.message_len, NULL);
     uint32_t out[DIGEST_LEN_CSHAKE_MAX];
     if (DIGEST_LEN_CSHAKE_MAX < test.digest_len) {
-      printf("run_cshake_test: Error digest length %d is greater than max %d.\n", test.digest_len, DIGEST_LEN_CSHAKE_MAX);
+      VPRINTF(ERROR, "run_cshake_test: Error digest length %d is greater than max %d.\n", test.digest_len, DIGEST_LEN_CSHAKE_MAX);
       SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
       while (1);
       return;
@@ -134,7 +134,7 @@ void run_cshake_test(uintptr_t kmac) {
 
     for (int j = 0; j < test.digest_len; ++j) {
       if (out[j] != test.digest[j]) {
-        printf("test %d: mismatch at %d got=0x%x want=0x%x", i, j, out[j], test.digest[j]);
+        VPRINTF(ERROR, "test %d: mismatch at %d got=0x%x want=0x%x", i, j, out[j], test.digest[j]);
         SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
         while (1);
         return;

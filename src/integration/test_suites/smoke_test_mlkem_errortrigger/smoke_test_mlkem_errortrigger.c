@@ -664,9 +664,9 @@ void main() {
     uint32_t mlkem_ciphertext[MLKEM_CIPHERTEXT_SIZE];
 
 
-    printf("------------------------------------------\n");
-    printf(" Running MLKEM Error Trigger Smoke Test !!\n");
-    printf("------------------------------------------\n");
+    VPRINTF(LOW, "------------------------------------------\n");
+    VPRINTF(LOW, " Running MLKEM Error Trigger Smoke Test !!\n");
+    VPRINTF(LOW, "------------------------------------------\n");
 
     /* Intializes random number generator */
     srand(time);
@@ -708,9 +708,9 @@ void main() {
 
     if(rst_count == 0) {
         
-        printf("\n TEST INVALID ek\n");
+        VPRINTF(LOW, "\n TEST INVALID ek\n");
 
-        printf("[MLKEM Encaps] Waiting for ready\n");
+        VPRINTF(LOW, "[MLKEM Encaps] Waiting for ready\n");
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
         // Select a random coefficient to make invalid
@@ -738,34 +738,34 @@ void main() {
         }
 
         // Program MLKEM Encaps Key
-        printf("[MLKEM Encaps] Writing invalid encaps key\n");
+        VPRINTF(LOW, "[MLKEM Encaps] Writing invalid encaps key\n");
         write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR, mlkem_ek, MLKEM_EK_SIZE);
 
         write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR, msg.data, MLKEM_MSG_SIZE);
 
         // Enable MLKEM ENCAPS flow
-        printf("[MLKEM Encaps] Sending command\n");
+        VPRINTF(LOW, "[MLKEM Encaps] Sending command\n");
         lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
 
         wait_for_mlkem_intr();
         if ((cptra_intr_rcv.abr_error == 0)){
-            printf("\nMLKEM invalid ek input is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(ERROR, "\nMLKEM invalid ek input is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
 
         mlkem_zeroize();
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if (rst_count == 1) {
-        printf("\n TEST INVALID KeyGen+Zeroize command\n");
+        VPRINTF(LOW, "\n TEST INVALID KeyGen+Zeroize command\n");
 
-        printf("Waiting for ready\n");
+        VPRINTF(LOW, "Waiting for ready\n");
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
-        printf("MLKEM KEYGEN and ZEROIZE\n");
+        VPRINTF(LOW, "MLKEM KEYGEN and ZEROIZE\n");
         lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN | 
                                             (1 << ABR_REG_MLKEM_CTRL_ZEROIZE_LOW) & ABR_REG_MLKEM_CTRL_ZEROIZE_MASK);
         
@@ -773,21 +773,21 @@ void main() {
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
         if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_VALID_MASK) == 1){
-            printf("\nMLKEM invalid command is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(LOW, "\nMLKEM invalid command is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
 
         // Read the data back from MLKEM register
-        printf("Try to Load Encaps key data from MLKEM\n");
+        VPRINTF(LOW, "Try to Load Encaps key data from MLKEM\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR;
         offset = 0;
         while (offset < MLKEM_EK_SIZE) {
             if (*reg_ptr != 0) {
-                printf("At offset [%d], mlkem encaps key mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", *reg_ptr);
-                printf("Expected data: 0x%x\n", 0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem encaps key mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -797,17 +797,17 @@ void main() {
         mlkem_zeroize();
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if (rst_count == 2) {
-        printf("\n TEST INVALID Encaps+Zeroize command\n");
+        VPRINTF(LOW, "\n TEST INVALID Encaps+Zeroize command\n");
 
-        printf("Waiting for ready\n");
+        VPRINTF(LOW, "Waiting for ready\n");
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
         write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR, mlkem_ek, MLKEM_EK_SIZE);
 
-        printf("MLKEM ENCAPS and ZEROIZE\n");
+        VPRINTF(LOW, "MLKEM ENCAPS and ZEROIZE\n");
         lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS | 
                                             (1 << ABR_REG_MLKEM_CTRL_ZEROIZE_LOW) & ABR_REG_MLKEM_CTRL_ZEROIZE_MASK);
         
@@ -815,21 +815,21 @@ void main() {
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
         if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_VALID_MASK) == 1){
-            printf("\nMLKEM invalid command is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(LOW, "\nMLKEM invalid command is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
 
         // Read the data back from MLKEM register
-        printf("Try to Load Ciphertext data from MLKEM\n");
+        VPRINTF(LOW, "Try to Load Ciphertext data from MLKEM\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR;
         offset = 0;
         while (offset < MLKEM_CIPHERTEXT_SIZE) {
             if (*reg_ptr != 0) {
-                printf("At offset [%d], mlkem_ciphertext mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", *reg_ptr);
-                printf("Expected data: 0x%x\n", 0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_ciphertext mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -839,18 +839,18 @@ void main() {
         mlkem_zeroize();
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if (rst_count == 3) {
-        printf("\n TEST INVALID Decaps+Zeroize command\n");
+        VPRINTF(LOW, "\n TEST INVALID Decaps+Zeroize command\n");
 
-        printf("Waiting for ready\n");
+        VPRINTF(LOW, "Waiting for ready\n");
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
         write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR, mlkem_dk, MLKEM_DK_SIZE);
         write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR, mlkem_ciphertext, MLKEM_CIPHERTEXT_SIZE);
 
-        printf("MLKEM DECAPS and ZEROIZE\n");
+        VPRINTF(LOW, "MLKEM DECAPS and ZEROIZE\n");
         lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_DECAPS | 
                                             (1 << ABR_REG_MLKEM_CTRL_ZEROIZE_LOW) & ABR_REG_MLKEM_CTRL_ZEROIZE_MASK);
         
@@ -858,21 +858,21 @@ void main() {
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
         if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_VALID_MASK) == 1){
-            printf("\nMLKEM invalid command is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(LOW, "\nMLKEM invalid command is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
 
         // Read the data back from MLKEM register
-        printf("Try to Load Shared Key data from MLKEM\n");
+        VPRINTF(LOW, "Try to Load Shared Key data from MLKEM\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             if (*reg_ptr != 0) {
-                printf("At offset [%d], mlkem_shared_key mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", *reg_ptr);
-                printf("Expected data: 0x%x\n", 0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -886,8 +886,8 @@ void main() {
     // mlkem_zeroize();
     // cptra_intr_rcv.abr_notif = 0;
 
-    printf("MLKEM TEST IS COMPLETED\n");
+    VPRINTF(LOW, "MLKEM TEST IS COMPLETED\n");
     
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

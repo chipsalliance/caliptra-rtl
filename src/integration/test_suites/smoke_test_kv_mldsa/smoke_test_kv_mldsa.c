@@ -493,9 +493,9 @@ const uint32_t mldsa_verify_res [] = {
 };
 
 void main() {
-    printf("---------------------------------\n");
-    printf(" KV Smoke Test With MLDSA flow !!\n");
-    printf("---------------------------------\n");
+    VPRINTF(LOW, "---------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With MLDSA flow !!\n");
+    VPRINTF(LOW, "---------------------------------\n");
 
 
     //Call interrupt init
@@ -529,7 +529,7 @@ void main() {
 
     //inject mldsa seed to kv key reg (in RTL)
     uint8_t key_inject_cmd = 0xc0 + (seed.kv_id & 0x7);
-    printf("%c", key_inject_cmd);
+    SEND_STDOUT_CTRL(key_inject_cmd);
 
     // mldsa_keygen_flow(seed, entropy, privkey, pubkey);
     // mldsa_zeroize();
@@ -539,7 +539,7 @@ void main() {
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
 

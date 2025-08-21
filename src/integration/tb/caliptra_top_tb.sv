@@ -77,6 +77,8 @@ module caliptra_top_tb (
     logic                       jtag_tdo;    // JTAG TDO
     logic                       jtag_tdoEn;  // JTAG TDO enable
 
+    logic                       axi_error_inj_en;
+
     // AXI Interface
     axi_if #(
         .AW(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
@@ -375,8 +377,10 @@ caliptra_top_tb_services #(
     
     .cptra_uds_tb(cptra_uds_rand),
     .cptra_fe_tb(cptra_fe_rand),
+    .cptra_obf_key_tb(cptra_obf_key_tb),
     .cptra_hek_tb(cptra_hek_rand),
-    .cptra_obf_key_tb(cptra_obf_key_tb)
+
+    .axi_error_inj_en(axi_error_inj_en)
 
 );
 
@@ -385,7 +389,8 @@ caliptra_top_tb_axi_complex tb_axi_complex_i (
     .cptra_rst_b        (cptra_rst_b        ),
     .m_axi_if           (m_axi_if           ),
     .recovery_data_avail(recovery_data_avail),
-    .ctrl               (axi_complex_ctrl   )
+    .ctrl               (axi_complex_ctrl   ),
+    .axi_error_inj_en   (axi_error_inj_en)
 );
 
 //=========================================================================-

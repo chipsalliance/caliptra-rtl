@@ -43,9 +43,9 @@ void main() {
     uint32_t actual_ciphertext[MLKEM_CIPHERTEXT_SIZE];
     uint32_t actual_sharedkey[MLKEM_SHAREDKEY_SIZE];
 
-    printf("----------------------------\n");
-    printf(" Running MLKEM Smoke Test !!\n");
-    printf("----------------------------\n");
+    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF(LOW, " Running MLKEM Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -76,6 +76,6 @@ void main() {
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

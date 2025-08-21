@@ -54,7 +54,7 @@ void main() {
 
         //inject zero to kv key reg (in RTL)
         key_inject_cmd = 0xa8;
-        printf("%c", key_inject_cmd);
+        SEND_STDOUT_CTRL(key_inject_cmd);
 
         // Program KEY Read from key_kv_id
         lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
@@ -69,14 +69,14 @@ void main() {
         // wait for HMAC process to be done
         wait_for_hmac_intr();
         if ((cptra_intr_rcv.hmac_error == 0)){
-            printf("\nHMAC key_zero error is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(ERROR, "\nHMAC key_zero error is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
         hmac_zeroize();
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 1) {
         VPRINTF(LOW, " ***** HMAC384 key_zero_error !!\n");
@@ -85,7 +85,7 @@ void main() {
 
         //inject zero to kv key reg (in RTL)
         key_inject_cmd = 0xa8;
-        printf("%c", key_inject_cmd);
+        SEND_STDOUT_CTRL(key_inject_cmd);
 
         // Program KEY Read from key_kv_id
         lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
@@ -100,21 +100,21 @@ void main() {
         // wait for HMAC process to be done
         wait_for_hmac_intr();
         if ((cptra_intr_rcv.hmac_error == 0)){
-            printf("\nHMAC key_zero error is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(ERROR, "\nHMAC key_zero error is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
         hmac_zeroize();
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     if(rst_count == 2) {
         VPRINTF(LOW, " ***** HMAC key_mode_error !!\n");
         
         //inject hmac384_key to kv key reg (in RTL)
         key_inject_cmd = 0xa0 + (key_slot & 0x7);
-        printf("%c", key_inject_cmd);
+        SEND_STDOUT_CTRL(key_inject_cmd);
 
         // wait for HMAC to be ready
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
@@ -132,8 +132,8 @@ void main() {
         // wait for HMAC process to be done
         wait_for_hmac_intr();
         if ((cptra_intr_rcv.hmac_error == 0)){
-            printf("\nHMAC key_mode_error is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(ERROR, "\nHMAC key_mode_error is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
         hmac_zeroize();
