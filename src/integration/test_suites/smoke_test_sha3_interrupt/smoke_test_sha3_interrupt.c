@@ -46,7 +46,7 @@ void main() {
     lsu_write_32(CLP_KMAC_INTR_ENABLE, KMAC_INTR_ENABLE_KMAC_DONE_MASK);
 
     // Get the SHA3 block to finish the absorbing state.
-    dif_kmac_mode_sha3_start(CLP_KMAC_BASE_ADDR, &operation_state, kDifKmacModeSha3Len224);
+    dif_kmac_mode_sha3_start(CLP_KMAC_BASE_ADDR, &operation_state, kDifKmacModeSha3Len224, kDifKmacMsgEndiannessLittle);
     dif_kmac_absorb(CLP_KMAC_BASE_ADDR, &operation_state, "OpenTitan", 9, NULL);
     dif_kmac_squeeze(CLP_KMAC_BASE_ADDR, &operation_state, &digest, sizeof(uint32_t), /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(CLP_KMAC_BASE_ADDR, &operation_state);
@@ -66,7 +66,7 @@ void main() {
     lsu_write_32(CLP_KMAC_INTR_ENABLE, KMAC_INTR_ENABLE_FIFO_EMPTY_MASK);
 
     // Get SHA3 block into the absorbing state.
-    dif_kmac_mode_sha3_start(CLP_KMAC_BASE_ADDR, &operation_state, kDifKmacModeSha3Len224);
+    dif_kmac_mode_sha3_start(CLP_KMAC_BASE_ADDR, &operation_state, kDifKmacModeSha3Len224, kDifKmacMsgEndiannessLittle);
     // Fill up message FIFO.
     for (int i = 0; i < 2*KMAC_PARAM_NUM_ENTRIES_MSG_FIFO*KMAC_PARAM_NUM_BYTES_MSG_FIFO_ENTRY; ++i) {
         lsu_write_32(CLP_KMAC_MSG_FIFO_BASE_ADDR, 0);

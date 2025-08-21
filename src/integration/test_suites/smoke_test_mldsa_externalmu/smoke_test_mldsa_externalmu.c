@@ -458,39 +458,29 @@ uint32_t mldsa_verify_res [] = {
 #define EXTERNAL_MU_HEADER_LEN (2)
 
 // This function calculates external mu based on the message and public key and compares it against the expected external mu value.
-void check_external_mu(uintptr_t kmac, const char *message, const size_t message_len, const char *public_key, const uint32_t *expected_external_mu) {
+void check_external_mu(uintptr_t kmac, const uint32_t *message, const size_t message_len, const uint32_t *public_key, const uint32_t *expected_external_mu) {
     uint32_t mu[MLDSA87_EXTERNAL_MU_SIZE];
     uint32_t public_key_hash[MLDSA87_PUBKEY_HASH_SIZE];
     dif_kmac_operation_state_t operation_state;
     const char message_header[EXTERNAL_MU_HEADER_LEN] = "\x00\x00";
-    char public_key_hash_str[MLDSA87_PUBKEY_HASH_SIZE*4];
 
     printf("External mu: Checking pre-computed value with SHA3 engine.\n");
 
     // Calculate `tr` which is the 64-bit SHAKE hash of the public key.
-    dif_kmac_mode_shake_start(kmac, &operation_state, kDifKmacModeShakeLen256);
+    dif_kmac_mode_shake_start(kmac, &operation_state, kDifKmacModeShakeLen256, kDifKmacMsgEndiannessLittle);
     dif_kmac_absorb(kmac, &operation_state, public_key, MLDSA87_PUBKEY_SIZE*4, NULL);
     dif_kmac_squeeze(kmac, &operation_state, public_key_hash, MLDSA87_PUBKEY_HASH_SIZE, /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
-    // Convert 32-bit integers into a character array to pass back to the engine as a message.
-    for (int i = 0; i < MLDSA87_PUBKEY_HASH_SIZE; i++) {
-        uint32_t word = public_key_hash[i];
-        for (int j = 0; j < 4; j++) {
-            public_key_hash_str[i*4 + j] = (char) (word & 0xFF);
-            word >>= 8;
-        }
-    }
-
     // Calculate External mu which is a 64-bit SHAKE hash of the formatted message `tr ^ M'`.
     // `M' = 0 ^ 0 ^ M` where ^ is concatenation is M is the message.
-    dif_kmac_mode_shake_start(kmac, &operation_state, kDifKmacModeShakeLen256);
+    dif_kmac_mode_shake_start(kmac, &operation_state, kDifKmacModeShakeLen256, kDifKmacMsgEndiannessLittle);
     // Absorb the public key hash digest.
-    dif_kmac_absorb(kmac, &operation_state, public_key_hash_str, MLDSA87_PUBKEY_HASH_SIZE*4, NULL);
+    dif_kmac_absorb(kmac, &operation_state, public_key_hash, MLDSA87_PUBKEY_HASH_SIZE*4, NULL);
     // Absorb the formatted message.
     dif_kmac_absorb(kmac, &operation_state, message_header, EXTERNAL_MU_HEADER_LEN, NULL);
-    dif_kmac_absorb(kmac, &operation_state, message, message_len, NULL);
+    dif_kmac_absorb(kmac, &operation_state, message, message_len*4, NULL);
     dif_kmac_squeeze(kmac, &operation_state, mu, MLDSA87_EXTERNAL_MU_SIZE, /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
@@ -514,26 +504,8 @@ void main() {
 
     //Call interrupt init
     init_interrupts();
-    char msg_char[MLDSA87_MSG_SIZE*4];
-    char pubkey_char[MLDSA87_PUBKEY_SIZE*4];
 
-    for (int i = 0; i < MLDSA87_MSG_SIZE; i++) {
-        uint32_t word = mldsa_msg[i];
-        for (int j = 0; j < 4; j++) {
-            msg_char[i*4 + j] = (char) (word & 0xFF);
-            word >>= 8;
-        }
-    }
-
-    for (int i = 0; i < MLDSA87_PUBKEY_SIZE; i++) {
-        uint32_t word = mldsa_pubkey[i];
-        for (int j = 0; j < 4; j++) {
-            pubkey_char[i*4 + j] = (char) (word & 0xFF);
-            word >>= 8;
-        }
-    }
-
-    check_external_mu(CLP_KMAC_BASE_ADDR, msg_char, MLDSA87_MSG_SIZE*4, pubkey_char, mldsa_external_mu);
+    check_external_mu(CLP_KMAC_BASE_ADDR, mldsa_msg, MLDSA87_MSG_SIZE, mldsa_pubkey, mldsa_external_mu);
 
     mldsa_keygen_signing_external_mu_flow(mldsa_seed, mldsa_external_mu, mldsa_sign_rnd, mldsa_entropy, mldsa_sign);
     mldsa_zeroize();
