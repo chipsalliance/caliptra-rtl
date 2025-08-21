@@ -676,21 +676,21 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
                         end
                     end
-                    else if ((WriteData[7:0] == 8'h9f) && mailbox_write) begin
-                        inject_hmac_key <= 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.next = 5'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.next = 'd15;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
+                    else if ((WriteData[7:0] == 8'haa) && mailbox_write) begin
+                    //     inject_hmac_key <= 1'b1;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.we = 1'b1;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.next = 5'b1;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.we = 1'b1;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.next = 'd15;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.we = 1'b1;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
                         
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.next = 5'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.next = 'd15;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.we = 1'b1;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.next = 5'b1;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.we = 1'b1;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.next = 'd15;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.we = 1'b1;
+                    //     force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
 
                         inject_hmac_block <= 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].dest_valid.we = 1'b1;
@@ -814,7 +814,7 @@ module caliptra_top_tb_services
                         end
                     end
                     //Inject mldsa seed to 22 and 23
-                    else if(((WriteData[7:0] == 8'hb5)) && mailbox_write) begin
+                    else if(((WriteData[7:0] == 8'hab)) && mailbox_write) begin
                         inject_mldsa_seed <= 1'b1;
                         // inject_ecc_seed <= 1'b1;
                         // inject_ecc_privkey <= 1'b1;
@@ -833,7 +833,7 @@ module caliptra_top_tb_services
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.next = mldsa_seed_tb[dword_i][31 : 0];
                     end
                     //Inject ecc seed to 22 and 23
-                    else if(((WriteData[7:0] == 8'hb6)) && mailbox_write) begin
+                    else if(((WriteData[7:0] == 8'hac)) && mailbox_write) begin
                         inject_ecc_seed <= 1'b1;
                         // inject_ecc_privkey <= 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.we = 1'b1;

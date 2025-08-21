@@ -535,7 +535,7 @@ void main() {
             verify_res[i] = mldsa_verify_res[MLDSA_VERIFY_RES_SIZE-1-i];
 
         //inject mldsa seed to kv key reg (in RTL)
-        uint8_t key_inject_cmd = 0xb5; //0xc0 + (seed.kv_id & 0x7); TODO: change 0xb5 to something else since it is used
+        uint8_t key_inject_cmd = 0xab; //0xc0 + (seed.kv_id & 0x7); TODO: change 0xb5 to something else since it is used
         printf("%c", key_inject_cmd);
 
         ocp_progress_bit = rand() % 2;

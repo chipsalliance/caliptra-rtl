@@ -243,7 +243,7 @@ void main(){
 
         //inject seed to kv key reg (in RTL)
         printf("Inject SEED into KV\n");
-        uint8_t seed_inject_cmd = 0xb6; //0x80 + (seed_kv_id & 0x7); //TODO: change
+        uint8_t seed_inject_cmd = 0xac; //0x80 + (seed_kv_id & 0x7); //TODO: change
         printf("%c", seed_inject_cmd);
 
         ocp_progress_bit = 1; //rand() % 2;

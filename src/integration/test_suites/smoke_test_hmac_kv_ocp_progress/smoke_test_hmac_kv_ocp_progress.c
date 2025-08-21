@@ -179,8 +179,10 @@ void main() {
 
 
             //inject hmac384_key to kv key reg (in RTL)
-            uint8_t key384_inject_cmd = 0x9f; //0xa0 + (hmac384_key.kv_id & 0x7);
-            printf("%c", key384_inject_cmd);
+            // uint8_t key384_inject_cmd = 0x9f; //0xa0 + (hmac384_key.kv_id & 0x7);
+            // printf("%c", key384_inject_cmd);
+            lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa9);
+            lsu_write_32(STDOUT, 0xaa);
 
             ocp_progress_bit = rand() % 2;
             if (ocp_progress_bit) {
@@ -270,8 +272,10 @@ void main() {
 
 
             //inject hmac512_key to kv key reg (in RTL)
-            uint8_t key512_inject_cmd = 0x9f; //0xa8 + (hmac512_key.kv_id & 0x7); //TODO: update
-            printf("%c", key512_inject_cmd);
+            // uint8_t key512_inject_cmd = 0x9f; //0xa8 + (hmac512_key.kv_id & 0x7); //TODO: update
+            // printf("%c", key512_inject_cmd);
+            lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9);
+            lsu_write_32(STDOUT, 0xaa);
 
             ocp_progress_bit = rand() % 2;
             if (ocp_progress_bit) {
