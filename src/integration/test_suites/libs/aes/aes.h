@@ -86,6 +86,10 @@ typedef struct packed {
 } dma_transfer_data_t;
 
 typedef struct {
+  BOOL sideload_corrupt;
+} aes_flow_err_inj_t;
+
+typedef struct {
   aes_key_t key;
   aes_key_o_t key_o;
   uint32_t *iv;
@@ -95,6 +99,7 @@ typedef struct {
   uint32_t aad_len;
   uint32_t *aad;
   uint32_t *tag;
+  aes_flow_err_inj_t aes_err_inj;
   aes_data_src_e data_src_mode;
   dma_transfer_data_t dma_transfer_data;
   BOOL aes_expect_err;

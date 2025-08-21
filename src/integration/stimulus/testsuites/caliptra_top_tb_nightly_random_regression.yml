@@ -33,3 +33,4 @@ contents:
         $CALIPTRA_ROOT/src/integration/test_suites/test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv.yml      : { weight 50 }
 #        $CALIPTRA_ROOT/src/integration/test_suites/test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_short.yml: { weight 50 }
         $CALIPTRA_ROOT/src/integration/test_suites/test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_large.yml: { weight 50 }
+        $CALIPTRA_ROOT/src/integration/test_suites/test_suites/smoke_test_kv_rules_ocp_lock/smoke_test_kv_rules_ocp_lock.yml: { weight 100 }

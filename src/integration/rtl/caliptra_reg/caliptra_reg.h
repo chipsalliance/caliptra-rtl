@@ -8560,9 +8560,9 @@
 #define CLP_ABR_REG_MLDSA_PRIVKEY_OUT_END_ADDR                                                      (0x1003531f)
 #define CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR                                                      (0x10036000)
 #define CLP_ABR_REG_MLDSA_PRIVKEY_IN_END_ADDR                                                       (0x1003731f)
-#define CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                           (0x10037320)
+#define CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                           (0x10038000)
 #ifndef ABR_REG_KV_MLDSA_SEED_RD_CTRL
-#define ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                               (0x7320)
+#define ABR_REG_KV_MLDSA_SEED_RD_CTRL                                                               (0x8000)
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_LOW                                                   (0)
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK                                                  (0x1)
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW                                                (1)
@@ -8572,9 +8572,9 @@
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_RSVD_LOW                                                      (7)
 #define ABR_REG_KV_MLDSA_SEED_RD_CTRL_RSVD_MASK                                                     (0xffffff80)
 #endif
-#define CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                         (0x10037324)
+#define CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                         (0x10038004)
 #ifndef ABR_REG_KV_MLDSA_SEED_RD_STATUS
-#define ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                             (0x7324)
+#define ABR_REG_KV_MLDSA_SEED_RD_STATUS                                                             (0x8004)
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_READY_LOW                                                   (0)
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_READY_MASK                                                  (0x1)
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_VALID_LOW                                                   (1)
@@ -8582,33 +8582,33 @@
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_LOW                                                   (2)
 #define ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_MASK                                                  (0x3fc)
 #endif
-#define CLP_ABR_REG_MLKEM_NAME_0                                                                    (0x10038000)
+#define CLP_ABR_REG_MLKEM_NAME_0                                                                    (0x10038100)
 #ifndef ABR_REG_MLKEM_NAME_0
-#define ABR_REG_MLKEM_NAME_0                                                                        (0x8000)
+#define ABR_REG_MLKEM_NAME_0                                                                        (0x8100)
 #endif
-#define CLP_ABR_REG_MLKEM_NAME_1                                                                    (0x10038004)
+#define CLP_ABR_REG_MLKEM_NAME_1                                                                    (0x10038104)
 #ifndef ABR_REG_MLKEM_NAME_1
-#define ABR_REG_MLKEM_NAME_1                                                                        (0x8004)
+#define ABR_REG_MLKEM_NAME_1                                                                        (0x8104)
 #endif
-#define CLP_ABR_REG_MLKEM_VERSION_0                                                                 (0x10038008)
+#define CLP_ABR_REG_MLKEM_VERSION_0                                                                 (0x10038108)
 #ifndef ABR_REG_MLKEM_VERSION_0
-#define ABR_REG_MLKEM_VERSION_0                                                                     (0x8008)
+#define ABR_REG_MLKEM_VERSION_0                                                                     (0x8108)
 #endif
-#define CLP_ABR_REG_MLKEM_VERSION_1                                                                 (0x1003800c)
+#define CLP_ABR_REG_MLKEM_VERSION_1                                                                 (0x1003810c)
 #ifndef ABR_REG_MLKEM_VERSION_1
-#define ABR_REG_MLKEM_VERSION_1                                                                     (0x800c)
+#define ABR_REG_MLKEM_VERSION_1                                                                     (0x810c)
 #endif
-#define CLP_ABR_REG_MLKEM_CTRL                                                                      (0x10038010)
+#define CLP_ABR_REG_MLKEM_CTRL                                                                      (0x10038110)
 #ifndef ABR_REG_MLKEM_CTRL
-#define ABR_REG_MLKEM_CTRL                                                                          (0x8010)
+#define ABR_REG_MLKEM_CTRL                                                                          (0x8110)
 #define ABR_REG_MLKEM_CTRL_CTRL_LOW                                                                 (0)
 #define ABR_REG_MLKEM_CTRL_CTRL_MASK                                                                (0x7)
 #define ABR_REG_MLKEM_CTRL_ZEROIZE_LOW                                                              (3)
 #define ABR_REG_MLKEM_CTRL_ZEROIZE_MASK                                                             (0x8)
 #endif
-#define CLP_ABR_REG_MLKEM_STATUS                                                                    (0x10038014)
+#define CLP_ABR_REG_MLKEM_STATUS                                                                    (0x10038114)
 #ifndef ABR_REG_MLKEM_STATUS
-#define ABR_REG_MLKEM_STATUS                                                                        (0x8014)
+#define ABR_REG_MLKEM_STATUS                                                                        (0x8114)
 #define ABR_REG_MLKEM_STATUS_READY_LOW                                                              (0)
 #define ABR_REG_MLKEM_STATUS_READY_MASK                                                             (0x1)
 #define ABR_REG_MLKEM_STATUS_VALID_LOW                                                              (1)
@@ -8616,104 +8616,104 @@
 #define ABR_REG_MLKEM_STATUS_ERROR_LOW                                                              (2)
 #define ABR_REG_MLKEM_STATUS_ERROR_MASK                                                             (0x4)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_0                                                                  (0x10038018)
+#define CLP_ABR_REG_MLKEM_SEED_D_0                                                                  (0x10038118)
 #ifndef ABR_REG_MLKEM_SEED_D_0
-#define ABR_REG_MLKEM_SEED_D_0                                                                      (0x8018)
+#define ABR_REG_MLKEM_SEED_D_0                                                                      (0x8118)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_1                                                                  (0x1003801c)
+#define CLP_ABR_REG_MLKEM_SEED_D_1                                                                  (0x1003811c)
 #ifndef ABR_REG_MLKEM_SEED_D_1
-#define ABR_REG_MLKEM_SEED_D_1                                                                      (0x801c)
+#define ABR_REG_MLKEM_SEED_D_1                                                                      (0x811c)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_2                                                                  (0x10038020)
+#define CLP_ABR_REG_MLKEM_SEED_D_2                                                                  (0x10038120)
 #ifndef ABR_REG_MLKEM_SEED_D_2
-#define ABR_REG_MLKEM_SEED_D_2                                                                      (0x8020)
+#define ABR_REG_MLKEM_SEED_D_2                                                                      (0x8120)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_3                                                                  (0x10038024)
+#define CLP_ABR_REG_MLKEM_SEED_D_3                                                                  (0x10038124)
 #ifndef ABR_REG_MLKEM_SEED_D_3
-#define ABR_REG_MLKEM_SEED_D_3                                                                      (0x8024)
+#define ABR_REG_MLKEM_SEED_D_3                                                                      (0x8124)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_4                                                                  (0x10038028)
+#define CLP_ABR_REG_MLKEM_SEED_D_4                                                                  (0x10038128)
 #ifndef ABR_REG_MLKEM_SEED_D_4
-#define ABR_REG_MLKEM_SEED_D_4                                                                      (0x8028)
+#define ABR_REG_MLKEM_SEED_D_4                                                                      (0x8128)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_5                                                                  (0x1003802c)
+#define CLP_ABR_REG_MLKEM_SEED_D_5                                                                  (0x1003812c)
 #ifndef ABR_REG_MLKEM_SEED_D_5
-#define ABR_REG_MLKEM_SEED_D_5                                                                      (0x802c)
+#define ABR_REG_MLKEM_SEED_D_5                                                                      (0x812c)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_6                                                                  (0x10038030)
+#define CLP_ABR_REG_MLKEM_SEED_D_6                                                                  (0x10038130)
 #ifndef ABR_REG_MLKEM_SEED_D_6
-#define ABR_REG_MLKEM_SEED_D_6                                                                      (0x8030)
+#define ABR_REG_MLKEM_SEED_D_6                                                                      (0x8130)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_D_7                                                                  (0x10038034)
+#define CLP_ABR_REG_MLKEM_SEED_D_7                                                                  (0x10038134)
 #ifndef ABR_REG_MLKEM_SEED_D_7
-#define ABR_REG_MLKEM_SEED_D_7                                                                      (0x8034)
+#define ABR_REG_MLKEM_SEED_D_7                                                                      (0x8134)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_0                                                                  (0x10038038)
+#define CLP_ABR_REG_MLKEM_SEED_Z_0                                                                  (0x10038138)
 #ifndef ABR_REG_MLKEM_SEED_Z_0
-#define ABR_REG_MLKEM_SEED_Z_0                                                                      (0x8038)
+#define ABR_REG_MLKEM_SEED_Z_0                                                                      (0x8138)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_1                                                                  (0x1003803c)
+#define CLP_ABR_REG_MLKEM_SEED_Z_1                                                                  (0x1003813c)
 #ifndef ABR_REG_MLKEM_SEED_Z_1
-#define ABR_REG_MLKEM_SEED_Z_1                                                                      (0x803c)
+#define ABR_REG_MLKEM_SEED_Z_1                                                                      (0x813c)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_2                                                                  (0x10038040)
+#define CLP_ABR_REG_MLKEM_SEED_Z_2                                                                  (0x10038140)
 #ifndef ABR_REG_MLKEM_SEED_Z_2
-#define ABR_REG_MLKEM_SEED_Z_2                                                                      (0x8040)
+#define ABR_REG_MLKEM_SEED_Z_2                                                                      (0x8140)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_3                                                                  (0x10038044)
+#define CLP_ABR_REG_MLKEM_SEED_Z_3                                                                  (0x10038144)
 #ifndef ABR_REG_MLKEM_SEED_Z_3
-#define ABR_REG_MLKEM_SEED_Z_3                                                                      (0x8044)
+#define ABR_REG_MLKEM_SEED_Z_3                                                                      (0x8144)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_4                                                                  (0x10038048)
+#define CLP_ABR_REG_MLKEM_SEED_Z_4                                                                  (0x10038148)
 #ifndef ABR_REG_MLKEM_SEED_Z_4
-#define ABR_REG_MLKEM_SEED_Z_4                                                                      (0x8048)
+#define ABR_REG_MLKEM_SEED_Z_4                                                                      (0x8148)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_5                                                                  (0x1003804c)
+#define CLP_ABR_REG_MLKEM_SEED_Z_5                                                                  (0x1003814c)
 #ifndef ABR_REG_MLKEM_SEED_Z_5
-#define ABR_REG_MLKEM_SEED_Z_5                                                                      (0x804c)
+#define ABR_REG_MLKEM_SEED_Z_5                                                                      (0x814c)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_6                                                                  (0x10038050)
+#define CLP_ABR_REG_MLKEM_SEED_Z_6                                                                  (0x10038150)
 #ifndef ABR_REG_MLKEM_SEED_Z_6
-#define ABR_REG_MLKEM_SEED_Z_6                                                                      (0x8050)
+#define ABR_REG_MLKEM_SEED_Z_6                                                                      (0x8150)
 #endif
-#define CLP_ABR_REG_MLKEM_SEED_Z_7                                                                  (0x10038054)
+#define CLP_ABR_REG_MLKEM_SEED_Z_7                                                                  (0x10038154)
 #ifndef ABR_REG_MLKEM_SEED_Z_7
-#define ABR_REG_MLKEM_SEED_Z_7                                                                      (0x8054)
+#define ABR_REG_MLKEM_SEED_Z_7                                                                      (0x8154)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_0                                                              (0x10038058)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_0                                                              (0x10038158)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_0
-#define ABR_REG_MLKEM_SHARED_KEY_0                                                                  (0x8058)
+#define ABR_REG_MLKEM_SHARED_KEY_0                                                                  (0x8158)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_1                                                              (0x1003805c)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_1                                                              (0x1003815c)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_1
-#define ABR_REG_MLKEM_SHARED_KEY_1                                                                  (0x805c)
+#define ABR_REG_MLKEM_SHARED_KEY_1                                                                  (0x815c)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_2                                                              (0x10038060)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_2                                                              (0x10038160)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_2
-#define ABR_REG_MLKEM_SHARED_KEY_2                                                                  (0x8060)
+#define ABR_REG_MLKEM_SHARED_KEY_2                                                                  (0x8160)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_3                                                              (0x10038064)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_3                                                              (0x10038164)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_3
-#define ABR_REG_MLKEM_SHARED_KEY_3                                                                  (0x8064)
+#define ABR_REG_MLKEM_SHARED_KEY_3                                                                  (0x8164)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_4                                                              (0x10038068)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_4                                                              (0x10038168)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_4
-#define ABR_REG_MLKEM_SHARED_KEY_4                                                                  (0x8068)
+#define ABR_REG_MLKEM_SHARED_KEY_4                                                                  (0x8168)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_5                                                              (0x1003806c)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_5                                                              (0x1003816c)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_5
-#define ABR_REG_MLKEM_SHARED_KEY_5                                                                  (0x806c)
+#define ABR_REG_MLKEM_SHARED_KEY_5                                                                  (0x816c)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_6                                                              (0x10038070)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_6                                                              (0x10038170)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_6
-#define ABR_REG_MLKEM_SHARED_KEY_6                                                                  (0x8070)
+#define ABR_REG_MLKEM_SHARED_KEY_6                                                                  (0x8170)
 #endif
-#define CLP_ABR_REG_MLKEM_SHARED_KEY_7                                                              (0x10038074)
+#define CLP_ABR_REG_MLKEM_SHARED_KEY_7                                                              (0x10038174)
 #ifndef ABR_REG_MLKEM_SHARED_KEY_7
-#define ABR_REG_MLKEM_SHARED_KEY_7                                                                  (0x8074)
+#define ABR_REG_MLKEM_SHARED_KEY_7                                                                  (0x8174)
 #endif
-#define CLP_ABR_REG_MLKEM_MSG_BASE_ADDR                                                             (0x10038080)
-#define CLP_ABR_REG_MLKEM_MSG_END_ADDR                                                              (0x1003809f)
+#define CLP_ABR_REG_MLKEM_MSG_BASE_ADDR                                                             (0x10038180)
+#define CLP_ABR_REG_MLKEM_MSG_END_ADDR                                                              (0x1003819f)
 #define CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR                                                      (0x10039000)
 #define CLP_ABR_REG_MLKEM_DECAPS_KEY_END_ADDR                                                       (0x10039c5f)
 #define CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR                                                      (0x1003a000)

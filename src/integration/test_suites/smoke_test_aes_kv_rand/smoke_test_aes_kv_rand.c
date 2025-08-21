@@ -51,9 +51,9 @@ void main() {
     VPRINTF(LOW,"\nUsing random seed = %u\n\n", (uint32_t) MY_RANDOM_SEED);
     srand((uint32_t) MY_RANDOM_SEED);
 
-    printf("----------------------------------\n");
-    printf(" Run HMAC 384 to generate a key in KV !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Run HMAC 384 to generate a key in KV !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -190,14 +190,14 @@ void main() {
 
     //inject hmac384_key to kv key reg (in RTL)
     uint8_t key384_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
-    printf("%c", key384_inject_cmd);
+    SEND_STDOUT_CTRL(key384_inject_cmd);
 
     hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
     hmac_zeroize();
 
-    printf("----------------------------------\n");
-    printf(" Reseed AES entropy interface \n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Reseed AES entropy interface \n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     // After reseeding the state of the Trivium stream cipher primitive with
     // the seed below, it will produce the following key stream:
@@ -217,9 +217,9 @@ void main() {
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_7, 0xEB4814D1);
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0xE843DB60);
 
-    printf("----------------------------------\n");
-    printf(" Run AES using key in KV\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Run AES using key in KV\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     aes_flow_t aes_input = {0};
     aes_input.data_src_mode = AES_DATA_DIRECT;
