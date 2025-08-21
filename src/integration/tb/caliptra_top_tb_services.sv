@@ -356,7 +356,10 @@ module caliptra_top_tb_services
     //         8'ha0: 8'ha7 - Inject HMAC384_KEY to kv_key register
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9        - Inject HMAC512_KEY to kv_key register
-    //         8'haa: 8'haf - Unused
+    //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
+    //         8'hab        - Inject MLDSA SEED to kv_key22/23 register
+    //         8'hac        - Inject ECC seed to kv_key22/23 register
+    //         8'had: 8'haf - Unused
     //         8'hb0        - Inject HMAC512_BLOCK to kv_key register
     //         8'hb1        - Inject MLKEM SEED to keyvault
     //         8'hb2        - Inject MLKEM MSG to keyvault
