@@ -370,14 +370,6 @@ module caliptra_top_sva
     end
   endgenerate
 
-  // generate
-  //   for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-  //     if (dword < `CLP_OBF_FE_DWORDS) begin
-  //       kv_doe_w_flow:
-  //     end
-  //   end
-  // endgenerate
-
 
 `ifdef CALIPTRA_MODE_SUBSYSTEM
 
