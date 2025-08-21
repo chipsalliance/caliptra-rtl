@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 #include "caliptra_defines.h"
+#include "caliptra_rtl_lib.h"
 #include "soc_ifc.h"
 #include "printf.h"
 #include "aes.h"

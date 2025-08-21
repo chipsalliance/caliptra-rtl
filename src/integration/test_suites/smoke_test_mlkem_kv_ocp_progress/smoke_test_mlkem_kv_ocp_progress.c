@@ -65,6 +65,7 @@ void main() {
     if (ocp_lock_mode) {
         seed.kv_intf = TRUE;
         seed.kv_id = (rand() % 2) + 22;
+        VPRINTF(LOW, "Running mldsa with seed kv_id = 0x%x\n", seed.kv_id);
         msg.kv_intf = TRUE;
         msg.kv_id = 21;
         shared_key.kv_intf = TRUE;
