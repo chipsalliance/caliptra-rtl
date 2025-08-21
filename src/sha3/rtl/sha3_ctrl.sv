@@ -23,6 +23,7 @@
 //======================================================================
 
 module sha3_ctrl
+  import sha3_param_pkg::*;
   import sha3_reg_pkg::*;
   import kmac_pkg::*;
 #(
@@ -48,7 +49,6 @@ module sha3_ctrl
 
   output logic busy_o,
 
-  // Interrupt TODO
   output logic error_intr,
   output logic notif_intr,
   input  logic debugUnlock_or_scan_mode_switch
@@ -77,6 +77,10 @@ sha3_reg__in_t hwif_in;
 sha3_reg__out_t hwif_out;
 
 caliptra_prim_mubi_pkg::mubi4_t sha_idle;
+
+logic intr_kmac_done, intr_kmac_done_reg, intr_kmac_done_edge;
+logic intr_fifo_empty, intr_fifo_empty_reg, intr_fifo_empty_edge;
+logic intr_kmac_err, intr_kmac_err_reg, intr_kmac_err_edge;
 
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(sha_idle);
 
@@ -114,7 +118,8 @@ ahb_slv_sif #(
     .rdata(ahb_rdata)
 );
 
-//TODO integrate this into ahb_slv_sif
+// This is a workaround. A cleaner solution is tracked in issue #914 to integrate this functionality into ahb_slv_sif:
+// https://github.com/chipsalliance/caliptra-rtl/issues/914
 always_ff @(posedge clk or negedge reset_n) begin
   if(!reset_n) begin
     ahb_size <= '0;
@@ -230,7 +235,6 @@ u_sha_inst (
   .alert_tx_o                     (),
 
   // KeyMgr sideload (secret key) interface
-  //TODO connect
   .keymgr_key_i                   ('0),
 
   // KeyMgr KDF data path
@@ -245,9 +249,9 @@ u_sha_inst (
   .lc_escalate_en_i               (lc_ctrl_pkg::Off),
 
   // interrupts
-  .intr_kmac_done_o               (),
-  .intr_fifo_empty_o              (),
-  .intr_kmac_err_o                (),
+  .intr_kmac_done_o               (intr_kmac_done),
+  .intr_fifo_empty_o              (intr_fifo_empty),
+  .intr_kmac_err_o                (intr_kmac_err),
 
   // parameter consistency check with keymgr
   .en_masking_o                   (),
@@ -259,27 +263,49 @@ u_sha_inst (
 always_comb begin
   hwif_in.error_reset_b = cptra_pwrgood;
   hwif_in.reset_b = reset_n;
-  hwif_in.SHA3_NAME[0].NAME.next = '0; // TODO
-  hwif_in.SHA3_NAME[1].NAME.next = '0; // TODO
-  hwif_in.SHA3_VERSION[0].VERSION.next = '0; // TODO
-  hwif_in.SHA3_VERSION[1].VERSION.next = '0; // TODO
+  hwif_in.SHA3_NAME[0].NAME.next = SHA3_CORE_NAME[31:0];
+  hwif_in.SHA3_NAME[1].NAME.next = SHA3_CORE_NAME[63:32];
+  hwif_in.SHA3_VERSION[0].VERSION.next = SHA3_CORE_VERSION[31:0];
+  hwif_in.SHA3_VERSION[1].VERSION.next = SHA3_CORE_VERSION[63:32];
 
-  hwif_in.STATUS = '{default: '0}; // TODO
-  hwif_in.STATE = '{default: '0}; // TODO
-  hwif_in.MSG_FIFO = '{default: '0}; // TODO
-  hwif_in.ERR_CODE.ERR_CODE.next = '0; // TODO
-  hwif_in.CFG_SHADOWED = '{default: '0}; // TODO
-  hwif_in.CFG_REGWEN.en.next = 1'b0; // TODO
-
-  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.notif_internal_intr_r.notif_msg_fifo_empty_sts.hwset = 1'b0; // TODO
-
-  error_intr = 1'b0; // TODO
-  notif_intr = 1'b0; // TODO
+  // Duplicates of regs in top_reg are tied to 0.
+  hwif_in.STATUS = '{default: '0};
+  hwif_in.STATE = '{default: '0};
+  hwif_in.MSG_FIFO = '{default: '0};
+  hwif_in.ERR_CODE.ERR_CODE.next = '0;
+  hwif_in.CFG_SHADOWED = '{default: '0};
+  hwif_in.CFG_REGWEN.en.next = 1'b0;
 end
+
+// Detect edges for interrupts and errors.
+always_ff @(posedge clk or negedge reset_n) 
+begin : error_interrupt_detection
+    if(!reset_n) begin
+      intr_kmac_err_reg   <= 1'b0;
+      intr_kmac_done_reg  <= 1'b0;
+      intr_fifo_empty_reg <= 1'b0;
+    end
+    else begin
+      intr_kmac_err_reg   <= intr_kmac_err;
+      intr_kmac_done_reg  <= intr_kmac_done;
+      intr_fifo_empty_reg <= intr_fifo_empty;
+    end
+end // error_interrupt_detection
+
+// Error/Interrupt edge detection signals.
+always_comb intr_kmac_err_edge = intr_kmac_err & (!intr_kmac_err_reg);
+always_comb intr_kmac_done_edge = intr_kmac_done & (!intr_kmac_done_reg);
+always_comb intr_fifo_empty_edge = intr_fifo_empty & (!intr_fifo_empty_reg);
+
+// Assign error/interrupt signals
+assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = intr_kmac_err_edge;
+assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0;
+assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0;
+assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0;
+assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = intr_kmac_done_edge;
+assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_msg_fifo_empty_sts.hwset = intr_fifo_empty_edge;
+
+assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
+assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 endmodule
