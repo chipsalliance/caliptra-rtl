@@ -120,7 +120,7 @@ void run_cshake_test(uintptr_t kmac) {
     dif_kmac_function_name_t *np = test.function_name_len == 0 ? NULL : &n;
     dif_kmac_customization_string_t *sp = test.customization_string_len == 0 ? NULL : &s;
 
-    dif_kmac_mode_cshake_start(kmac, &kmac_operation_state, test.mode, np, sp);
+    dif_kmac_mode_cshake_start(kmac, &kmac_operation_state, test.mode, np, sp, kDifKmacMsgEndiannessLittle);
     dif_kmac_absorb(kmac, &kmac_operation_state, test.message, test.message_len, NULL);
     uint32_t out[DIGEST_LEN_CSHAKE_MAX];
     if (DIGEST_LEN_CSHAKE_MAX < test.digest_len) {
