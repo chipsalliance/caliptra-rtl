@@ -72,12 +72,11 @@ void main() {
     } while(hmac512_key_kv_id == doe_hek_dest_id);
     
 
-    VPRINTF(LOW,"doe_uds_dest_id = %u\n", doe_uds_dest_id);
-    VPRINTF(LOW,"doe_fe_dest_id  = %u\n", doe_fe_dest_id);
-    VPRINTF(LOW,"doe_hek_dest_id = %u\n", doe_hek_dest_id);
+    VPRINTF(LOW,"doe_uds_dest_id = 0x%x\n", doe_uds_dest_id);
+    VPRINTF(LOW,"doe_fe_dest_id  = 0x%x\n", doe_fe_dest_id);
+    VPRINTF(LOW,"doe_hek_dest_id = 0x%x\n", doe_hek_dest_id);
 
     doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
-    VPRINTF(LOW,"doe_hek kv id = %x\n", doe_hek_dest_id);
     doe_clear_secrets();
 
     int32_t hmac512_lfsr_seed_data[HMAC512_LFSR_SEED_SIZE] = {0xC8F518D4, 0xF3AA1BD4, 0x6ED56C1C, 0x3C9E16FB, 
@@ -91,6 +90,7 @@ void main() {
 
     hmac512_key.kv_intf = TRUE;
     hmac512_key.kv_id = hmac512_key_kv_id;
+    VPRINTF(LOW,"hmac512_key_kv_id = 0x%x\n", hmac512_key_kv_id);
 
     //inject hmac512_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
