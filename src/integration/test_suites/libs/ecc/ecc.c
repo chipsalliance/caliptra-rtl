@@ -41,7 +41,7 @@ void ecc_zeroize(){
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
 }
 
-void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y){
+void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, BOOL check_result){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -127,37 +127,39 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
         }
     }
 
-    // Read the data back from ECC register
-    VPRINTF(LOW, "Load PUBKEY_X data from ECC\n");
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
-        ecc_pubkey_x[offset] = *reg_ptr;
-        if (ecc_pubkey_x[offset] != pubkey_x.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], ecc_pubkey_x data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_pubkey_x[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey_x.data[offset]);
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        } 
-        reg_ptr++;
-        offset++;
-    }
-
-    VPRINTF(LOW, "Load PUBKEY_Y data from ECC\n");
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
-        ecc_pubkey_y[offset] = *reg_ptr;
-        if (ecc_pubkey_y[offset] != pubkey_y.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], ecc_pubkey_y data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_pubkey_y[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey_y.data[offset]);
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
+    if (check_result == TRUE) {
+        // Read the data back from ECC register
+        printf("Load PUBKEY_X data from ECC\n");
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
+            ecc_pubkey_x[offset] = *reg_ptr;
+            if (ecc_pubkey_x[offset] != pubkey_x.data[offset]) {
+                printf("At offset [%d], ecc_pubkey_x data mismatch!\n", offset);
+                printf("Actual   data: 0x%x\n", ecc_pubkey_x[offset]);
+                printf("Expected data: 0x%x\n", pubkey_x.data[offset]);
+                printf("%c", fail_cmd);
+                while(1);
+            } 
+            reg_ptr++;
+            offset++;
         }
-        reg_ptr++;
-        offset++;
+
+        printf("Load PUBKEY_Y data from ECC\n");
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
+            ecc_pubkey_y[offset] = *reg_ptr;
+            if (ecc_pubkey_y[offset] != pubkey_y.data[offset]) {
+                printf("At offset [%d], ecc_pubkey_y data mismatch!\n", offset);
+                printf("Actual   data: 0x%x\n", ecc_pubkey_y[offset]);
+                printf("Expected data: 0x%x\n", pubkey_y.data[offset]);
+                printf("%c", fail_cmd);
+                while(1);
+            }
+            reg_ptr++;
+            offset++;
+        }
     }
     
 }
@@ -257,7 +259,7 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
     
 }
 
-void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s){
+void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s, BOOL check_result){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -317,37 +319,39 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     // wait for ECC SIGNING process to be done
     wait_for_ecc_intr();
     
-    // Read the data back from ECC register
-    VPRINTF(LOW, "Load SIGN_R data from ECC\n");
-    reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
-        ecc_sign_r[offset] = *reg_ptr;
-        if (ecc_sign_r[offset] != sign_r.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_r[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", sign_r.data[offset]);
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
+    if (check_result == TRUE) {
+        // Read the data back from ECC register
+        printf("Load SIGN_R data from ECC\n");
+        reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
+            ecc_sign_r[offset] = *reg_ptr;
+            if (ecc_sign_r[offset] != sign_r.data[offset]) {
+                printf("At offset [%d], ecc_sign_r data mismatch!\n", offset);
+                printf("Actual   data: 0x%x\n", ecc_sign_r[offset]);
+                printf("Expected data: 0x%x\n", sign_r.data[offset]);
+                printf("%c", fail_cmd);
+                while(1);
+            }
+            reg_ptr++;
+            offset++;
         }
-        reg_ptr++;
-        offset++;
-    }
 
-    VPRINTF(LOW, "Load SIGN_S data from ECC\n");
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
-        ecc_sign_s[offset] = *reg_ptr;
-        if (ecc_sign_s[offset] != sign_s.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_s[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", sign_s.data[offset]);
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        } 
-        reg_ptr++;
-        offset++;
+        printf("Load SIGN_S data from ECC\n");
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
+            ecc_sign_s[offset] = *reg_ptr;
+            if (ecc_sign_s[offset] != sign_s.data[offset]) {
+                printf("At offset [%d], ecc_sign_s data mismatch!\n", offset);
+                printf("Actual   data: 0x%x\n", ecc_sign_s[offset]);
+                printf("Expected data: 0x%x\n", sign_s.data[offset]);
+                printf("%c", fail_cmd);
+                while(1);
+            } 
+            reg_ptr++;
+            offset++;
+        }
     }
 
 }

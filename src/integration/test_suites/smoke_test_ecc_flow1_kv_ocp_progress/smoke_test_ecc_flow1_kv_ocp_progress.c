@@ -28,6 +28,12 @@ volatile uint32_t  intr_count = 0;
     enum printf_verbosity verbosity_g = LOW;
 #endif
 
+#ifdef MY_RANDOM_SEED
+    unsigned time = (unsigned) MY_RANDOM_SEED;
+#else
+    unsigned time = 0;
+#endif
+
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 /* ECC test vector:
@@ -44,9 +50,12 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(){
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With ECC flow !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    printf("----------------------------------\n");
+    printf(" KV Smoke Test With ECC flow !!\n");
+    printf("----------------------------------\n");
+
+    srand(time);
+    uint8_t ocp_progress_bit;
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -160,9 +169,9 @@ void main(){
     //Call interrupt init
     init_interrupts();
 
-    uint8_t seed_kv_id = 0x1;
-    uint8_t privkey_kv_id = 0x2;
-    uint8_t sharedkey_kv_id = 0x7;
+    uint8_t seed_kv_id = (rand() % 2) + 22; //0x1;
+    uint8_t privkey_kv_id = 0x17; //0x2;
+    uint8_t sharedkey_kv_id = 0x17; //0x7;
 
     ecc_io seed;
     ecc_io nonce;
@@ -178,66 +187,85 @@ void main(){
     ecc_io pubkey_y_dh;
     ecc_io sharedkey_dh;
 
+    uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
+    VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
-    pubkey_x_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        pubkey_x_dh.data[i] = ecc_pubkey_x_dh[i];  
+    if (ocp_lock_mode) {
 
-    pubkey_y_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        pubkey_y_dh.data[i] = ecc_pubkey_y_dh[i];  
+        VPRINTF(LOW, "Running ecc with seed kv_id = 0x%x\n", seed_kv_id);
+        pubkey_x_dh.kv_intf = FALSE;
+        for (int i = 0; i < 12; i++)
+            pubkey_x_dh.data[i] = ecc_pubkey_x_dh[i];  
 
-    sharedkey_dh.kv_intf = TRUE;
-    sharedkey_dh.kv_id = sharedkey_kv_id;
+        pubkey_y_dh.kv_intf = FALSE;
+        for (int i = 0; i < 12; i++)
+            pubkey_y_dh.data[i] = ecc_pubkey_y_dh[i];  
 
-    privkey_dh.kv_intf = TRUE;
-    privkey_dh.kv_id = privkey_kv_id;
+        sharedkey_dh.kv_intf = TRUE;
+        sharedkey_dh.kv_id = sharedkey_kv_id;
 
-    seed.kv_intf = TRUE;
-    seed.kv_id = seed_kv_id;
+        privkey_dh.kv_intf = TRUE;
+        privkey_dh.kv_id = privkey_kv_id;
 
-    nonce.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        nonce.data[i] = ecc_nonce[i];
+        seed.kv_intf = TRUE;
+        seed.kv_id = seed_kv_id;
+
+        nonce.kv_intf = FALSE;
+        for (int i = 0; i < 12; i++)
+            nonce.data[i] = ecc_nonce[i];
+        
+        iv.kv_intf = FALSE;
+        for (int i = 0; i < 12; i++)
+            iv.data[i] = ecc_iv[i];
     
-    iv.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        iv.data[i] = ecc_iv[i];
-    
-    msg.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        msg.data[i] = ecc_msg[i];
+        msg.kv_intf = FALSE;
+        for (int i = 0; i < 12; i++)
+            msg.data[i] = ecc_msg[i];
 
-    privkey.kv_intf = TRUE;
-    privkey.kv_id = privkey_kv_id;
+        privkey.kv_intf = TRUE;
+        privkey.kv_id = privkey_kv_id;
 
-    pubkey_x.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        pubkey_x.data[i] = expected_pubkey_x[i];
-    
-    pubkey_y.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        pubkey_y.data[i] = expected_pubkey_y[i];
-    
-    sign_r.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        sign_r.data[i] = expected_sign_r[i];
-    
-    sign_s.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
-        sign_s.data[i] = expected_sign_s[i];
+        pubkey_x.kv_intf = FALSE;
+        for (int i = 0; i < 12; i++)
+            pubkey_x.data[i] = expected_pubkey_x[i];
+        
+        pubkey_y.kv_intf = FALSE;
+        for (int i = 0; i < 12; i++)
+            pubkey_y.data[i] = expected_pubkey_y[i];
+        
+        sign_r.kv_intf = FALSE;
+        for (int i = 0; i < 12; i++)
+            sign_r.data[i] = expected_sign_r[i];
+        
+        sign_s.kv_intf = FALSE;
+        for (int i = 0; i < 12; i++)
+            sign_s.data[i] = expected_sign_s[i];
 
-    //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW, "Inject SEED into KV\n");
-    lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
+        //inject seed to kv key reg (in RTL)
+        printf("Inject SEED into KV\n");
+        uint8_t seed_inject_cmd = 0xb6; //0x80 + (seed_kv_id & 0x7); //TODO: change
+        printf("%c", seed_inject_cmd);
 
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
-    cptra_intr_rcv.ecc_notif = 0;
+        ocp_progress_bit = 1; //rand() % 2;
+        if (ocp_progress_bit) {
+            // Enable OCP LOCK mode
+            VPRINTF(LOW,"OCP lock in progress\n");
+            lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
+        } else {
+            VPRINTF(LOW,"OCP lock not in progress\n");
+        }
 
-    ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
-    cptra_intr_rcv.ecc_notif = 0;
+        ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, FALSE);
+        cptra_intr_rcv.ecc_notif = 0;
 
-    ecc_zeroize();
+        ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE);
+        cptra_intr_rcv.ecc_notif = 0;
 
-    SEND_STDOUT_CTRL(0xff); //End the test
+        ecc_zeroize();
+
+    } else {
+        VPRINTF(LOW, "This test is supported only in SS_MODE\n");
+    }
+
+    printf("%c",0xff); //End the test
 }

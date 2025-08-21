@@ -251,7 +251,7 @@ void main() {
     for (int i = 0; i < 12; i++)
         sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
 
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();

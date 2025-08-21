@@ -59,41 +59,47 @@ void main() {
     //Call interrupt init
     init_interrupts();
 
-    seed.kv_intf = TRUE;
-    seed.kv_id = 23;
-    msg.kv_intf = TRUE;
-    msg.kv_id = 21;
-    shared_key.kv_intf = TRUE;
-    shared_key.kv_id = 23;
-    for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
-        shared_key.data[i] = 0;
+    uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
+    VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
+
+    if (ocp_lock_mode) {
+        seed.kv_intf = TRUE;
+        seed.kv_id = (rand() % 2) + 22;
+        msg.kv_intf = TRUE;
+        msg.kv_id = 21;
+        shared_key.kv_intf = TRUE;
+        shared_key.kv_id = 23;
+        for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
+            shared_key.data[i] = 0;
+        }
+
+        lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors into KV 0
+        lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV 1
+
+        ocp_progress_bit = rand() % 2;
+        if (ocp_progress_bit) {
+            VPRINTF(LOW,"OCP lock in progress\n");
+            lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
+        } else {
+            VPRINTF(LOW,"OCP lock not in progress\n");
+        }
+
+        //Generate vectors
+        mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk); //Read from KV23
+        mlkem_zeroize();
+        cptra_intr_rcv.abr_notif = 0;
+
+        mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey); //write to KV23
+        mlkem_zeroize();
+        cptra_intr_rcv.abr_notif = 0;
+
+        mlkem_keygen_decaps_check(seed, actual_ciphertext, abr_entropy, shared_key); //read/write from/to KV23
+        mlkem_zeroize();
+        cptra_intr_rcv.abr_notif = 0;
     }
-
-    lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors into KV 0
-    lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV 1
-
-    ocp_progress_bit = rand() % 2;
-    if (ocp_progress_bit) {
-        #define CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
-        VPRINTF(LOW,"OCP lock in progress\n");
-        lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-    } else {
-        #undef CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
-        VPRINTF(LOW,"OCP lock not in progress\n");
+    else {
+        VPRINTF(LOW, "This test is supported only in SS_MODE\n");
     }
-
-    //Generate vectors
-    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk); //Read from KV23
-    mlkem_zeroize();
-    cptra_intr_rcv.abr_notif = 0;
-
-    mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey); //write to KV23
-    mlkem_zeroize();
-    cptra_intr_rcv.abr_notif = 0;
-
-    mlkem_keygen_decaps_check(seed, actual_ciphertext, abr_entropy, shared_key); //read/write from/to KV23
-    mlkem_zeroize();
-    cptra_intr_rcv.abr_notif = 0;
 
     printf("%c",0xff); //End the test
     

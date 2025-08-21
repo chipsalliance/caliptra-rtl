@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 ---
-seed: ${PLAYBOOK_RANDOM_SEED}
-testname: smoke_test_kv_ocp_progress
+seed: 1
+testname: smoke_test_ecc_flow2_kv_ocp_progress
 plusargs:
   - +CLP_OCP_LOCK_EN

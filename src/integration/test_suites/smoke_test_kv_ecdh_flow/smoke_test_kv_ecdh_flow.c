@@ -90,7 +90,7 @@ void kv_ecc_flow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint8_t sharedkey_kv
     VPRINTF(LOW, "Inject SEED into KV ID %d\n", seed_kv_id);
     lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
 
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
+    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
     VPRINTF(LOW, "Stored ECC Privkey into KV ID %d\n", privkey_kv_id);
 

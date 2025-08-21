@@ -813,6 +813,61 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mldsa_seed_tb[dword_i][31 : 0];
                         end
                     end
+                    //Inject mldsa seed to 22 and 23
+                    else if(((WriteData[7:0] == 8'hb5)) && mailbox_write) begin
+                        inject_mldsa_seed <= 1'b1;
+                        // inject_ecc_seed <= 1'b1;
+                        // inject_ecc_privkey <= 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.next = 9'b0_0000_0100;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.next = 7;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.next = mldsa_seed_tb[dword_i][31 : 0];
+
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.next = 9'b0_0000_0100;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.next = 7;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.next = mldsa_seed_tb[dword_i][31 : 0];
+                    end
+                    //Inject ecc seed to 22 and 23
+                    else if(((WriteData[7:0] == 8'hb6)) && mailbox_write) begin
+                        inject_ecc_seed <= 1'b1;
+                        // inject_ecc_privkey <= 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.next = 9'b0_0001_1000;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.next = 15;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.next = ecc_seed_tb[dword_i][31 : 0];
+
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.next = 9'b0_0001_1000;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.next = 15;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.next = ecc_seed_tb[dword_i][31 : 0];
+                    end
+                    //Inject ecc pkey to 22 and 23
+                    else if(((WriteData[7:0] == 8'hb7)) && mailbox_write) begin
+                        // inject_ecc_seed <= 1'b1;
+                        inject_ecc_privkey <= 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].dest_valid.next = 9'b0_0001_1000;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[22].last_dword.next = 15;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[22][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
+
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].dest_valid.next = 9'b0_0001_1000;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[23].last_dword.next = 15;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[23][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
+                    end
                     //inject mlkem seed
                     else if((WriteData[7:0] == 8'hb1) && mailbox_write) begin
                         inject_mlkem_kv <= 1'b1;
@@ -883,7 +938,7 @@ module caliptra_top_tb_services
             assign kv_entry_data[g_dword] = `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_ENTRY[kv_entry_id][g_dword].data.value;
             for (g_byte = 0; g_byte < 4; g_byte++) begin
             //KeyVault is stored big endian, so we need to reverse the order of bytes in the test vector
-            `CALIPTRA_ASSERT(KV_MLKEM_CHECK0, `CPTRA_TOP_PATH.soc_ifc_top1.ss_ocp_lock_in_progress ? $stable($past(kv_entry_data[g_dword], 16)) : kv_entry_data[g_dword][g_byte*8 +: 8] == mlkem_test_vector.sharedkey[g_dword][31-(g_byte*8) -: 8], clk, mlkem_kv_check_dis);
+            `CALIPTRA_ASSERT(KV_MLKEM_CHECK0, kv_entry_data[g_dword][g_byte*8 +: 8] == mlkem_test_vector.sharedkey[g_dword][31-(g_byte*8) -: 8], clk, mlkem_kv_check_dis);
             end
         end
     endgenerate
@@ -893,7 +948,7 @@ module caliptra_top_tb_services
             mlkem_kv_check_dis <= 1'b1;
         end
         else begin
-            mlkem_kv_check_dis <= ~((WriteData[7:0] == 8'hb3) && mailbox_write);
+            mlkem_kv_check_dis <= ~((WriteData[7:0] == 8'hb3) && mailbox_write) | `CPTRA_TOP_PATH.soc_ifc_top1.ss_ocp_lock_in_progress;
         end
     end
 

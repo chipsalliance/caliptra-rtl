@@ -249,7 +249,7 @@ void main() {
     hmac_zeroize();
 
     //sign with the generated key
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();
