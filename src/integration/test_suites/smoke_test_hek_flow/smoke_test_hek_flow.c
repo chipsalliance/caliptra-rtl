@@ -62,10 +62,15 @@ void main() {
     uint8_t doe_uds_dest_id;
     uint8_t doe_fe_dest_id;
     uint8_t doe_hek_dest_id;
+    uint8_t hmac512_key_kv_id;
 
-    doe_uds_dest_id = rand() % 24;
-    doe_fe_dest_id = rand() % 24;
-    doe_hek_dest_id = rand() % 24;
+    doe_uds_dest_id = rand() % 23;
+    doe_fe_dest_id = rand() % 23;
+    doe_hek_dest_id = rand() % 23;
+    do {
+        hmac512_key_kv_id = rand() % 23;
+    } while(hmac512_key_kv_id == doe_hek_dest_id);
+    
 
     VPRINTF(LOW,"doe_uds_dest_id = %u\n", doe_uds_dest_id);
     VPRINTF(LOW,"doe_fe_dest_id  = %u\n", doe_fe_dest_id);
@@ -85,7 +90,7 @@ void main() {
     hmac_io hmac512_tag;
 
     hmac512_key.kv_intf = TRUE;
-    hmac512_key.kv_id = 12;
+    hmac512_key.kv_id = hmac512_key_kv_id;
 
     //inject hmac512_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
