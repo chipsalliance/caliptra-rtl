@@ -23,7 +23,7 @@
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 void wait_for_mlkem_intr(){
-    printf("[MLKEM] Waiting for interrupt\n");
+    VPRINTF(LOW, "[MLKEM] Waiting for interrupt\n");
     while((cptra_intr_rcv.abr_error == 0) & (cptra_intr_rcv.abr_notif == 0)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during MLKEM operation to allow ISR to execute and show idle time in sims
@@ -31,15 +31,15 @@ void wait_for_mlkem_intr(){
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    printf("Received MLKEM notif/ err intr with status = %d/ %d\n", cptra_intr_rcv.abr_notif, cptra_intr_rcv.abr_error);
+    VPRINTF(LOW, "Received MLKEM notif/ err intr with status = %d/ %d\n", cptra_intr_rcv.abr_notif, cptra_intr_rcv.abr_error);
 }
 
 void mlkem_zeroize(){
-    printf("[MLKEM] Starting zeroize\n");
+    VPRINTF(LOW, "[MLKEM] Starting zeroize\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, (1 << ABR_REG_MLKEM_CTRL_ZEROIZE_LOW) & ABR_REG_MLKEM_CTRL_ZEROIZE_MASK);
 
     // wait for MLKEM to be ready
-    printf("[MLKEM] Waiting for ready\n");
+    VPRINTF(LOW, "[MLKEM] Waiting for ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
 }
@@ -59,7 +59,7 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     uint32_t actual_data;
     
     // wait for ABR to be ready
-    printf("[MLKEM KeyGen] Waiting for ready\n");
+    VPRINTF(LOW, "[MLKEM KeyGen] Waiting for ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
     //Program mlkem seed
@@ -89,10 +89,10 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     }
 
     // Write MLKEM ENTROPY
-    printf("[MLKEM KeyGen] Writing entropy\n");
+    VPRINTF(LOW, "[MLKEM KeyGen] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
-    printf("[MLKEM KeyGen] Sending command\n");
+    VPRINTF(LOW, "[MLKEM KeyGen] Sending command\n");
     // Enable MLKEM KEYGEN flow
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
 
@@ -100,16 +100,16 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     wait_for_mlkem_intr();
     
     // Read the data back from MLKEM register
-    printf("[MLKEM KeyGen] Checking encaps key\n");
+    VPRINTF(LOW, "[MLKEM KeyGen] Checking encaps key\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR;
     offset = 0;
     while (offset < MLKEM_EK_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != encaps_key[offset]) {
-            printf("At offset [%d], mlkem_encaps_key data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", actual_data);
-            printf("Expected data: 0x%x\n", encaps_key[offset]);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], mlkem_encaps_key data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", encaps_key[offset]);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -117,16 +117,16 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     }
         
     if(!seed.kv_intf){
-        printf("[MLKEM KeyGen] Checking decaps key\n");
+        VPRINTF(LOW, "[MLKEM KeyGen] Checking decaps key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR;
         offset = 0;
         while (offset < MLKEM_DK_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != decaps_key[offset]) {
-                printf("At offset [%d], mlkem_decaps_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", decaps_key[offset]);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_decaps_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", decaps_key[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -144,7 +144,7 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     uint32_t actual_data;
     
     // wait for ABR to be ready
-    printf("[MLKEM KeyGen] Waiting for ready\n");
+    VPRINTF(LOW, "[MLKEM KeyGen] Waiting for ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
     //Program mlkem seed
@@ -174,10 +174,10 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_SEED_D_7) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                printf("At offset [%d], mlkem_seed_d data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_seed_d data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -190,10 +190,10 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_SEED_Z_7) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                printf("At offset [%d], mlkem_seed_z data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_seed_z data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -206,10 +206,10 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     }
 
     // Write MLKEM ENTROPY
-    printf("[MLKEM KeyGen] Writing entropy\n");
+    VPRINTF(LOW, "[MLKEM KeyGen] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
-    printf("[MLKEM KeyGen] Sending command\n");
+    VPRINTF(LOW, "[MLKEM KeyGen] Sending command\n");
     // Enable MLKEM KEYGEN flow
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
 
@@ -217,7 +217,7 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     wait_for_mlkem_intr();
     
     // Read the data back from MLKEM register
-    printf("[MLKEM KeyGen] Read Encaps Key\n");
+    VPRINTF(LOW, "[MLKEM KeyGen] Read Encaps Key\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR;
     offset = 0;
     while (offset < MLKEM_EK_SIZE) {
@@ -227,7 +227,7 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     }
         
     if(!seed.kv_intf){
-        printf("[MLKEM KeyGen] Read Decaps Key\n");
+        VPRINTF(LOW, "[MLKEM KeyGen] Read Decaps Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR;
         offset = 0;
         while (offset < MLKEM_DK_SIZE) {
@@ -242,10 +242,10 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_DECAPS_KEY_END_ADDR) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                printf("At offset [%d], mlkem_dk data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_dk data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -262,11 +262,11 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
 
     uint32_t actual_data;
 
-    printf("[MLKEM Encaps] Waiting for ready\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Waiting for ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
     // Program MLKEM Encaps Key
-    printf("[MLKEM Encaps] Writing encaps key\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Writing encaps key\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR, encaps_key, MLKEM_EK_SIZE);
 
     // Program MLKEM MSG
@@ -289,10 +289,10 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                printf("At offset [%d], mlkem_msg data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_msg data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -304,27 +304,27 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
     }
 
     // Write MLKEM ENTROPY
-    printf("[MLKEM Encaps] Writing entropy\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
     // Enable MLKEM ENCAPS flow
-    printf("[MLKEM Encaps] Sending command\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
 
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
 
     // Read the data back from MLKEM register
-    printf("[MLKEM Encaps] Check Ciphertext\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Check Ciphertext\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR;
     offset = 0;
     while (offset < MLKEM_CIPHERTEXT_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != ciphertext[offset]) {
-            printf("At offset [%d], mlkem_ciphertext data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", actual_data);
-            printf("Expected data: 0x%x\n", ciphertext[offset]);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], mlkem_ciphertext data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", ciphertext[offset]);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -333,16 +333,16 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
 
     if(!msg.kv_intf & !shared_key.kv_intf){
         // Read the shared key from MLKEM register
-        printf("[MLKEM Encaps] Check Shared Key\n");
+        VPRINTF(LOW, "[MLKEM Encaps] Check Shared Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != shared_key.data[offset]) {
-                printf("At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", shared_key.data[offset]);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", shared_key.data[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -354,16 +354,16 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
         }
 
         // Read the shared key from MLKEM register
-        printf("[MLKEM Encaps] KV used, check Shared Key is 0\n");
+        VPRINTF(LOW, "[MLKEM Encaps] KV used, check Shared Key is 0\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                printf("At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -380,11 +380,11 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
 
     uint32_t actual_data;
 
-    printf("[MLKEM Encaps] Waiting for ready\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Waiting for ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
     // Program MLKEM Encaps Key
-    printf("[MLKEM Encaps] Writing encaps key\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Writing encaps key\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR, encaps_key, MLKEM_EK_SIZE);
 
     // Program MLKEM MSG
@@ -407,10 +407,10 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
             actual_data = *reg_ptr;
             if (actual_data != 0x0) {
-                printf("At offset [%d], mlkem_msg data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_msg data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             *reg_ptr++;
@@ -421,7 +421,7 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
     }
 
     // Write MLKEM ENTROPY
-    printf("[MLKEM Encaps] Writing entropy\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
     //program KV destination for shared key
@@ -442,14 +442,14 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
 
 
     // Enable MLKEM ENCAPS flow
-    printf("[MLKEM Encaps] Sending Command\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Sending Command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
 
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
 
     // Read the data back from MLKEM register
-    printf("[MLKEM Encaps] Read Ciphertext\n");
+    VPRINTF(LOW, "[MLKEM Encaps] Read Ciphertext\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR;
     offset = 0;
     while (offset < MLKEM_CIPHERTEXT_SIZE) {
@@ -465,7 +465,7 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
     }
     else if (!msg.kv_intf & !shared_key.kv_intf){
         // Read the shared key from MLKEM register
-        printf("[MLKEM Encaps] Read Shared Key\n");
+        VPRINTF(LOW, "[MLKEM Encaps] Read Shared Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
@@ -475,16 +475,16 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
         }
     } else {
         // Read the shared key from MLKEM register
-        printf("[MLKEM Encaps] KV used, check Shared Key is 0\n");
+        VPRINTF(LOW, "[MLKEM Encaps] KV used, check Shared Key is 0\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                printf("At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -501,18 +501,18 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
 
     uint32_t actual_data;
 
-    printf("[MLKEM Decaps] Waiting for ready\n");
+    VPRINTF(LOW, "[MLKEM Decaps] Waiting for ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
     // Program MLKEM Decaps Key
-    printf("[MLKEM Decaps] Writing decaps key\n");
+    VPRINTF(LOW, "[MLKEM Decaps] Writing decaps key\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR, decaps_key, MLKEM_DK_SIZE);
 
     // Program MLKEM Ciphertext
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR, ciphertext, MLKEM_CIPHERTEXT_SIZE);
 
     // Write MLKEM ENTROPY
-    printf("[MLKEM Decaps] Writing entropy\n");
+    VPRINTF(LOW, "[MLKEM Decaps] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
     
     //program KV destination for shared key
@@ -531,7 +531,7 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
     }
 
     // Enable MLKEM DECAPS flow
-    printf("[MLKEM Decaps] Sending command\n");
+    VPRINTF(LOW, "[MLKEM Decaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_DECAPS);
 
     // wait for MLKEM DECAPS process to be done
@@ -539,16 +539,16 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
 
     // Read the shared key from MLKEM register
     if (!shared_key.kv_intf) {
-        printf("[MLKEM Decaps] Check Shared Key\n");
+        VPRINTF(LOW, "[MLKEM Decaps] Check Shared Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != shared_key.data[offset]) {
-                printf("At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", shared_key.data[offset]);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", shared_key.data[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -560,16 +560,16 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
         }
 
         // Read the shared key from MLKEM register
-        printf("[MLKEM Decaps] KV used, check Shared Key is 0\n");
+        VPRINTF(LOW, "[MLKEM Decaps] KV used, check Shared Key is 0\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                printf("At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -586,18 +586,18 @@ void mlkem_decaps_flow(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[M
 
     uint32_t actual_data;
 
-    printf("[MLKEM Decaps] Waiting for ready\n");
+    VPRINTF(LOW, "[MLKEM Decaps] Waiting for ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
     // Program MLKEM Decaps Key
-    printf("[MLKEM Decaps] Writing decaps key\n");
+    VPRINTF(LOW, "[MLKEM Decaps] Writing decaps key\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR, decaps_key, MLKEM_DK_SIZE);
 
     // Program MLKEM Ciphertext
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR, ciphertext, MLKEM_CIPHERTEXT_SIZE);
 
     // Write MLKEM ENTROPY
-    printf("[MLKEM Decaps] Writing entropy\n");
+    VPRINTF(LOW, "[MLKEM Decaps] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
     
     //program KV destination for shared key
@@ -616,7 +616,7 @@ void mlkem_decaps_flow(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[M
     }
     
     // Enable MLKEM DECAPS flow
-    printf("[MLKEM Decaps] Sending command\n");
+    VPRINTF(LOW, "[MLKEM Decaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_DECAPS);
 
     // wait for MLKEM DECAPS process to be done
@@ -624,7 +624,7 @@ void mlkem_decaps_flow(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[M
 
     if (!shared_key.kv_intf) {
         // Read the shared key from MLKEM register
-        printf("[MLKEM Decaps] Read Shared Key\n");
+        VPRINTF(LOW, "[MLKEM Decaps] Read Shared Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
@@ -638,16 +638,16 @@ void mlkem_decaps_flow(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[M
         }
 
         // Read the shared key from MLKEM register
-        printf("[MLKEM KeyGen Decaps] KV used, check Shared Key is 0\n");
+        VPRINTF(LOW, "[MLKEM KeyGen Decaps] KV used, check Shared Key is 0\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                printf("At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -664,7 +664,7 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
 
     uint32_t actual_data;
 
-    printf("[MLKEM KeyGen Decaps] Waiting for ready\n");
+    VPRINTF(LOW, "[MLKEM KeyGen Decaps] Waiting for ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
     //Program mlkem seed
@@ -697,7 +697,7 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR, ciphertext, MLKEM_CIPHERTEXT_SIZE);
 
     // Write MLKEM ENTROPY
-    printf("[MLKEM KeyGen Decaps] Writing entropy\n");
+    VPRINTF(LOW, "[MLKEM KeyGen Decaps] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
     
     //program KV destination for shared key
@@ -716,7 +716,7 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
     }
     
     // Enable MLKEM KEYGEN DECAPS flow
-    printf("[MLKEM KeyGen Decaps] Sending command\n");
+    VPRINTF(LOW, "[MLKEM KeyGen Decaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN_DECAPS);
 
     // wait for MLKEM DECAPS process to be done
@@ -730,16 +730,16 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
     }
     else if(!seed.kv_intf & !shared_key.kv_intf){
         // Read the shared key from MLKEM register
-        printf("[MLKEM KeyGen Decaps] Check Shared Key\n");
+        VPRINTF(LOW, "[MLKEM KeyGen Decaps] Check Shared Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != shared_key.data[offset]) {
-                printf("At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", shared_key.data[offset]);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", shared_key.data[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -747,16 +747,16 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
         }
     } else {
         // Read the shared key from MLKEM register
-        printf("[MLKEM KeyGen Decaps] KV used, check Shared Key is 0\n");
+        VPRINTF(LOW, "[MLKEM KeyGen Decaps] KV used, check Shared Key is 0\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                printf("At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -774,7 +774,7 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
 
     uint32_t actual_data;
 
-    printf("[MLKEM KeyGen Decaps] Waiting for ready\n");
+    VPRINTF(LOW, "[MLKEM KeyGen Decaps] Waiting for ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
     //Program mlkem seed
@@ -807,7 +807,7 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_CIPHERTEXT_BASE_ADDR, ciphertext, MLKEM_CIPHERTEXT_SIZE);
 
     // Write MLKEM ENTROPY
-    printf("[MLKEM KeyGen Decaps] Writing entropy\n");
+    VPRINTF(LOW, "[MLKEM KeyGen Decaps] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
     
     //program KV destination for shared key
@@ -826,7 +826,7 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
     }
 
     // Enable MLKEM KEYGEN DECAPS flow
-    printf("[MLKEM KeyGen Decaps] Sending command\n");
+    VPRINTF(LOW, "[MLKEM KeyGen Decaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN_DECAPS);
 
     // wait for MLKEM DECAPS process to be done
@@ -835,7 +835,7 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
     // Read the data back from MLKEM register
     if(!seed.kv_intf){
         // Read the shared key from MLKEM register
-        printf("[MLKEM KeyGen Decaps] Read Shared Key\n");
+        VPRINTF(LOW, "[MLKEM KeyGen Decaps] Read Shared Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
@@ -845,16 +845,16 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
         }
     } else {
         // Read the shared key from MLKEM register
-        printf("[MLKEM KeyGen Decaps] KV used, check Shared Key is 0\n");
+        VPRINTF(LOW, "[MLKEM KeyGen Decaps] KV used, check Shared Key is 0\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != 0) {
-                printf("At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", actual_data);
-                printf("Expected data: 0x%x\n", 0x0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;

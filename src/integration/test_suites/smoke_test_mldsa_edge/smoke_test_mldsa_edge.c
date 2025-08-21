@@ -467,9 +467,9 @@ const uint32_t mldsa_verify_res [] = {
 };
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" Running MLDSA Smoke Test !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Running MLDSA Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -511,7 +511,7 @@ void main() {
     // **********************************************
 
     // wait for MLDSA to be ready
-    printf("Waiting for mldsa status ready in keygen\n");
+    VPRINTF(LOW, "Waiting for mldsa status ready in keygen\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SEED_0;
@@ -535,7 +535,7 @@ void main() {
     }
 
     // Write MLDSA ENTROPY
-    printf("Writing entropy\n");
+    VPRINTF(LOW, "Writing entropy\n");
     reg_ptr = (uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ABR_REG_ABR_ENTROPY_15) {
@@ -543,25 +543,25 @@ void main() {
     }
 
     // Enable MLDSA KEYGEN + SIGNING core
-    printf("\nMLDSA KEYGEN + SIGNING\n");
+    VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
-    printf("Injecting random failure\n");
-    printf("%c",0xd7);
+    VPRINTF(LOW, "Injecting random failure\n");
+    SEND_STDOUT_CTRL(0xd7);
 
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
     // Read the data back from MLDSA register
-    printf("Load SIGN data from MLDSA\n");
+    VPRINTF(LOW, "Load SIGN data from MLDSA\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
         if (sign[offset] != *reg_ptr) {
-            printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("Expected data: 0x%x\n", sign[offset]);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -597,25 +597,25 @@ void main() {
     }
 
     // Enable MLDSA VERIFYING core
-    printf("\nMLDSA VERIFYING\n");
+    VPRINTF(LOW, "\nMLDSA VERIFYING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
 
-    printf("Injecting norm check failure\n");
-    printf("%c",0xd7);
+    VPRINTF(LOW, "Injecting norm check failure\n");
+    SEND_STDOUT_CTRL(0xd7);
 
     // wait for MLDSA VERIFYING process to be done
     wait_for_mldsa_intr();
     
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_VERIFY_RES_0;
     // Read the data back from MLDSA register
-    printf("Load VERIFY_RES data from MLDSA\n");
+    VPRINTF(LOW, "Load VERIFY_RES data from MLDSA\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
         if (verify_res[offset] != *reg_ptr) {
-            printf("At offset [%d], mldsa_verify_res data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("Expected data: 0x%x\n", verify_res[offset]);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], mldsa_verify_res data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", verify_res[offset]);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -625,7 +625,7 @@ void main() {
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
 

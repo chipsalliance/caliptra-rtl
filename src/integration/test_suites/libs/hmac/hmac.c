@@ -21,7 +21,7 @@
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 void wait_for_hmac_intr(){
-    printf("HMAC flow in progress...\n");
+    VPRINTF(LOW, "HMAC flow in progress...\n");
     while((cptra_intr_rcv.hmac_error == 0) & (cptra_intr_rcv.hmac_notif == 0)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during HMAC operation to allow ISR to execute and show idle time in sims
@@ -29,12 +29,12 @@ void wait_for_hmac_intr(){
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    //printf("Received HMAC error intr with status = %d\n", cptra_intr_rcv.hmac_error);
-    printf("Received HMAC notif/err intr with status = %d/ %d\n", cptra_intr_rcv.hmac_notif, cptra_intr_rcv.hmac_error);
+    //VPRINTF(LOW, "Received HMAC error intr with status = %d\n", cptra_intr_rcv.hmac_error);
+    VPRINTF(LOW, "Received HMAC notif/err intr with status = %d/ %d\n", cptra_intr_rcv.hmac_notif, cptra_intr_rcv.hmac_error);
 }
 
 void hmac_zeroize(){
-    printf("HMAC zeroize flow.\n");
+    VPRINTF(LOW, "HMAC zeroize flow.\n");
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, (1 << HMAC_REG_HMAC512_CTRL_ZEROIZE_LOW) & HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK);
 }
 
@@ -138,20 +138,20 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
 
     if (tag.kv_intf){
         // wait for HMAC process - check dest done
-        printf("Load TAG data from HMAC to KV\n");
+        VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
     }
     else{
-        printf("Load TAG data from HMAC\n");
+        VPRINTF(LOW, "Load TAG data from HMAC\n");
         reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
         offset = 0;
         while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_11) {
             hmac_tag[offset] = *reg_ptr;
             if (hmac_tag[offset] != tag.data[offset]) {
-                printf("At offset [%d], hmac_tag data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", hmac_tag[offset]);
-                printf("Expected data: 0x%x\n", tag.data[offset]);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", hmac_tag[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", tag.data[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -257,20 +257,20 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
 
     if (tag.kv_intf){
         // wait for HMAC process - check dest done
-        printf("Load TAG data from HMAC to KV\n");
+        VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
     }
     else{
-        printf("Load TAG data from HMAC\n");
+        VPRINTF(LOW, "Load TAG data from HMAC\n");
         reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
         offset = 0;
         while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {
             hmac_tag[offset] = *reg_ptr;
             if (hmac_tag[offset] != tag.data[offset]) {
-                printf("At offset [%d], hmac_tag data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", hmac_tag[offset]);
-                printf("Expected data: 0x%x\n", tag.data[offset]);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", hmac_tag[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", tag.data[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -376,11 +376,11 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
 
     if (tag.kv_intf){
         // wait for HMAC process - check dest done
-        printf("Load TAG data from HMAC to KV\n");
+        VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
     }
     else{
-        printf("Load TAG data from HMAC\n");
+        VPRINTF(LOW, "Load TAG data from HMAC\n");
         reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
         offset = 0;
         while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {

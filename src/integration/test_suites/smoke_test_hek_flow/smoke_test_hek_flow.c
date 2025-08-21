@@ -42,9 +42,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #endif
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With HEK flow !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW,"----------------------------------\n");
+    VPRINTF(LOW," KV Smoke Test With HEK flow !!\n");
+    VPRINTF(LOW,"----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();

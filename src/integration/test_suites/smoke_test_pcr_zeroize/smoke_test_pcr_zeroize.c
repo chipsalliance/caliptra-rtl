@@ -44,9 +44,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" Smoke Test With PCR Signing flow !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Smoke Test With PCR Signing flow !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -150,12 +150,12 @@ void main(){
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     //inject seed to kv key reg (in RTL)
-    printf("Inject PRIVKEY into KV slot 7\n");
+    VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
     uint8_t privkey_inject_cmd = 0x88 + 0x7;
-    printf("%c", privkey_inject_cmd);
+    SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-    printf("Inject MSG into SHA512 digest\n");
-    printf("%c", 0x90);
+    VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+    SEND_STDOUT_CTRL(0x90);
 
     // Program ECC IV
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -165,7 +165,7 @@ void main(){
     }
 
     // Enable ECC PCR SIGNING core
-    printf("\nECC PCR SIGNING\n");
+    VPRINTF(LOW, "\nECC PCR SIGNING\n");
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
                 ((1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK));
@@ -174,28 +174,28 @@ void main(){
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
 
-    printf("Load SIGN_R data from ECC\n");
+    VPRINTF(LOW, "Load SIGN_R data from ECC\n");
     reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
         if (*reg_ptr != 0) {
-            printf("At offset [%d], ecc_sign_r data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
         offset++;
     }
 
-    printf("Load SIGN_S data from ECC\n");
+    VPRINTF(LOW, "Load SIGN_S data from ECC\n");
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
         if (*reg_ptr != 0) {
-            printf("At offset [%d], ecc_sign_s data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 
         reg_ptr++;
@@ -208,11 +208,11 @@ void main(){
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     //inject seed to kv key reg (in RTL)
-    printf("Inject PRIVKEY into KV slot 7\n");
-    printf("%c", privkey_inject_cmd);
+    VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
+    SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-    printf("Inject MSG into SHA512 digest\n");
-    printf("%c", 0x90);
+    VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+    SEND_STDOUT_CTRL(0x90);
 
     // Program ECC IV
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -222,7 +222,7 @@ void main(){
     }
 
     // Enable ECC PCR SIGNING core
-    printf("\nECC PCR SIGNING\n");
+    VPRINTF(LOW, "\nECC PCR SIGNING\n");
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
@@ -235,19 +235,19 @@ void main(){
     // wait for ECC to be ready
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-    printf("Load SIGN_R data from ECC\n");
+    VPRINTF(LOW, "Load SIGN_R data from ECC\n");
     reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
         if (*reg_ptr != 0) {
-            printf("At offset [%d], ecc_sign_r data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
         offset++;
     }
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 }

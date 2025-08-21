@@ -55,8 +55,8 @@ void main(void) {
     char *argv[1];
     uint32_t reg;
     uint32_t kv_expected_key[16];
-    aes_key_o_t aes_key_o;
-    aes_key_t aes_key;
+    aes_key_o_t aes_key_o = {0};
+    aes_key_t aes_key = {0};
     uint32_t random_text_length;
     uint8_t rand_aes_encrypt;
     aes_mode_e rand_aes_mode;
