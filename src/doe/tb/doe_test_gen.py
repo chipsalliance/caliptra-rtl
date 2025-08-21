@@ -122,6 +122,32 @@ def generate_doe_testvector():
     f.write(key_str+'\n'+iv_str+'\n'+plain_str+'\n'+cipher_str+'\n')
     g.write("OBF FE key: "+key_str+'\n'+"IV: "+iv_str+'\n'+"FE plaintext: "+plain_str+'\n'+"FE ciphertext: "+cipher_str+'\n')
 
+    #-------------------------------------
+    #HEK
+    #-------------------------------------
+    p = open("hek", "w")
+    c = open("ciphertext", "w")
+    
+    plain_str = "" #Clear out plain str
+    #iv_str, plain_str = generate_rand_bytes(16, 32) #Use same key as UDS
+    iv_str      = generate_rand_bytes(16)
+    plain_str   = generate_rand_bytes(32)
+    p.write(plain_str)
+    p.close()
+
+    #Encrypt plaintext
+    cipher_str = encrypt("hek", key_str, iv_str)
+    c.write(cipher_str)
+    c.close()
+
+    #Decrypt ciphertext and make sure it matches with generated plaintext
+    decrypt_and_compare("ciphertext", key_str, iv_str, plain_str, "HEK")
+    
+
+    #Write all values to a file to be used in test
+    f.write(key_str+'\n'+iv_str+'\n'+plain_str+'\n'+cipher_str+'\n')
+    g.write("OBF HEK key: "+key_str+'\n'+"IV: "+iv_str+'\n'+"HEK plaintext: "+plain_str+'\n'+"HEK ciphertext: "+cipher_str+'\n')
+
     g.write('---------------------------------\n')
     f.close()
     g.close()
@@ -129,6 +155,7 @@ def generate_doe_testvector():
     #Temp file clean up
     os.remove("uds")
     os.remove("fe")
+    os.remove("hek")
     os.remove("ciphertext")
     os.remove("temp")
 

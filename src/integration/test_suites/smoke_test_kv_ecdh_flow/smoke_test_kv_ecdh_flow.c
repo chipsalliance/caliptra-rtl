@@ -17,6 +17,7 @@
 #include "caliptra_isr.h"
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
+#include <stdint.h>
 #include "printf.h"
 #include "ecc.h"
 #include "aes.h"
@@ -87,8 +88,7 @@ void kv_ecc_flow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint8_t sharedkey_kv
 
     //inject seed to kv key reg (in RTL)
     VPRINTF(LOW, "Inject SEED into KV ID %d\n", seed_kv_id);
-    uint8_t seed_inject_cmd = 0x80 + (seed_kv_id & 0x7);
-    printf("%c", seed_inject_cmd);
+    lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
     cptra_intr_rcv.ecc_notif = 0;
@@ -152,8 +152,8 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_ECB;
     aes_key_len_e key_len = AES_256;
-    aes_key_t aes_key;
-    aes_flow_t aes_input;
+    aes_key_t aes_key = {0};
+    aes_flow_t aes_input = {0};
 
     uint32_t plaintext[32]; //arbitrary length here
     uint32_t plaintext_length;
@@ -165,6 +165,8 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
 
     //Key from KV
     aes_key.kv_intf = TRUE;
+    aes_key.kv_reuse_key = FALSE;
+    aes_key.kv_expect_err = FALSE;
     aes_key.kv_id = aes_kv_id;
     VPRINTF(LOW, "Key Stored in KV ID %d\n", aes_key.kv_id);
 
@@ -172,17 +174,18 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
     aes_input.text_len = plaintext_length;
     aes_input.plaintext = plaintext;
     aes_input.ciphertext = ciphertext;
+    aes_input.data_src_mode = AES_DATA_DIRECT;
 
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
 }
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With ECDH flow !!  \n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With ECDH flow !!  \n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -205,7 +208,7 @@ void main(){
 
     // VPRINTF(LOW, "Inject HMAC BLOCK into KV ID 4\n");
     // uint8_t hmac_block_inject_cmd = 0xb0;
-    // printf("%c", hmac_block_inject_cmd);
+    // SEND_STDOUT_CTRL(hmac_block_inject_cmd);
 
     /* RUN HMAC512(0, sharedkey) to generate AES key*/
     kv_hmac512_flow(sharedkey_kv_id, hmac_tag_kv_id);
@@ -216,5 +219,5 @@ void main(){
     /* RUN AES to encrypt a data*/
     kv_aes_flow(hmac_tag_kv_id, plaintext_str_ECB1, ciphertext_str_ECB1);
     
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 }

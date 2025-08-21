@@ -117,7 +117,7 @@ void main() {
     while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
     if ((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_VALID_MASK) != 0){
         VPRINTF(LOW, "Wrong command is not detected\n");
-        printf("%c", 0x1);
+        SEND_STDOUT_CTRL(0x1);
     }
 
     VPRINTF(LOW, "Next/Restore and Zeroize\n");
@@ -130,7 +130,7 @@ void main() {
     while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
     if ((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_VALID_MASK) != 0){
         VPRINTF(LOW, "Wrong command is not detected\n");
-        printf("%c", 0x1);
+        SEND_STDOUT_CTRL(0x1);
     }
     
     // Write 0xff to STDOUT for TB to terminate test.

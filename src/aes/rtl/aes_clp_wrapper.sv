@@ -23,6 +23,7 @@
 //======================================================================
 
 module aes_clp_wrapper
+  import aes_pkg::*;
   import kv_defines_pkg::*;
   import aes_clp_reg_pkg::*;
   #(
@@ -49,6 +50,10 @@ module aes_clp_wrapper
   output logic hreadyout_o,
   output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
   
+  // OCP LOCK
+  input  logic ocp_lock_in_progress,
+  input logic [15:0] key_release_key_size,
+
   // status signals
   output logic input_ready_o,
   output logic output_valid_o,
@@ -66,6 +71,8 @@ module aes_clp_wrapper
   // kv interface
   output kv_read_t kv_read,
   input kv_rd_resp_t kv_rd_resp,
+  output kv_write_t kv_write,
+  input kv_wr_resp_t kv_wr_resp,
 
   output logic busy_o,
 
@@ -108,15 +115,26 @@ logic [caliptra_tlul_pkg::TL_AW-1 : 0] clp_reg_addr;
 aes_clp_reg_pkg::aes_clp_reg__in_t hwif_in;
 aes_clp_reg_pkg::aes_clp_reg__out_t hwif_out;
 
+caliptra2aes_t caliptra2aes;
+aes2caliptra_t aes2caliptra;
+
 caliptra_prim_mubi_pkg::mubi4_t aes_idle;
 
 kv_read_ctrl_reg_t kv_key_read_ctrl_reg;
+kv_read_filter_metrics_t kv_key_read_metrics;
 kv_error_code_e kv_key_error;
 logic kv_key_ready, kv_key_done;
+logic [KV_ENTRY_ADDR_W-1:0] kv_key_present_slot;
 
 logic kv_key_write_en;
 logic [2:0] kv_key_write_offset;
 logic [3:0][7:0] kv_key_write_data;
+
+kv_write_ctrl_reg_t kv_write_ctrl_reg;
+kv_write_filter_metrics_t kv_write_metrics;
+kv_error_code_e kv_write_error;
+logic kv_write_ready;
+logic [$clog2(CLP_AES_KV_WR_DW/32):0] kv_wr_num_dwords;
 
 edn_pkg::edn_req_t edn_req;
 
@@ -205,7 +223,7 @@ always_comb begin
   end 
 end
 
-assign dma_req_rdata = dma_req_dv ? aes_cif_req_rdata_post_endian : '0;
+assign dma_req_rdata = dma_req_dv ? aes_cif_req_rdata_post_endian : '0; // TODO block dma interface when kv write is requested
 assign ahb_rdata = ahb_dv ? aes_cif_req_rdata_post_endian: '0;
 
 
@@ -278,6 +296,9 @@ edn_pkg::edn_rsp_t edn_i;
 logic [edn_pkg::ENDPOINT_BUS_WIDTH-1:0] edn_bus;
 assign edn_i = '{edn_ack:edn_req.edn_req, edn_fips:0, edn_bus:edn_bus};
 
+assign caliptra2aes.clear_secrets = debugUnlock_or_scan_mode_switch;
+assign caliptra2aes.key_release_key_size = key_release_key_size;
+
 //AES Engine
 aes
 aes_inst (
@@ -293,6 +314,10 @@ aes_inst (
   // status signals
   .input_ready_o,
   .output_valid_o,
+
+  // Caliptra interface
+  .caliptra2aes(caliptra2aes),
+  .aes2caliptra(aes2caliptra),
 
   // Entropy distribution network (EDN) interface
   .clk_edn_i(clk),
@@ -315,10 +340,10 @@ aes_inst (
 always_comb begin
   hwif_in.error_reset_b = cptra_pwrgood;
   hwif_in.reset_b =  reset_n;
-  hwif_in.AES_NAME[0].NAME.next = '0; //FIXME
-  hwif_in.AES_NAME[1].NAME.next = '0; //FIXME
-  hwif_in.AES_VERSION[0].VERSION.next = '0; //FIXME
-  hwif_in.AES_VERSION[1].VERSION.next = '0; //FIXME
+  hwif_in.AES_NAME[0].NAME.next = 32'h0061657; //"aes"
+  hwif_in.AES_NAME[1].NAME.next = '0; 
+  hwif_in.AES_VERSION[0].VERSION.next = 32'h00312e30; //"1.0"
+  hwif_in.AES_VERSION[1].VERSION.next = '0; 
 
   //set ready when keyvault isn't busy
   hwif_in.AES_KV_RD_KEY_STATUS.READY.next = kv_key_ready;
@@ -330,17 +355,66 @@ always_comb begin
   hwif_in.AES_KV_RD_KEY_STATUS.VALID.hwclr = kv_key_read_ctrl_reg.read_en;
   //clear enable when busy
   hwif_in.AES_KV_RD_KEY_CTRL.read_en.hwclr = ~kv_key_ready;
+  //set ready when keyvault isn't busy
+  hwif_in.AES_KV_WR_STATUS.READY.next = kv_write_ready;
+  //set error code
+  hwif_in.AES_KV_WR_STATUS.ERROR.next = kv_write_error;
+  //set valid when fsm is done
+  hwif_in.AES_KV_WR_STATUS.VALID.hwset = caliptra2aes.kv_write_done;
+  //clear valid when new request is made
+  hwif_in.AES_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en;
+  //clear enable when busy
+  hwif_in.AES_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
 
-  hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = '0; //FIXME
-  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
-  hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
+  hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = '0; //unused
+  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // unused
+  hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // unused
+  hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // unused
+  hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // unused
 end
+
+// Software write-enables to prevent KV reg manipulation mid-operation
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_en.swwe         = status_idle_o && input_ready_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_entry.swwe      = status_idle_o && input_ready_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = status_idle_o && input_ready_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.rsvd.swwe            = status_idle_o && input_ready_o && kv_key_ready;
+
+// KV write control must be written while AES engine is idle, even though
+// output isn't written to KV until the end of the operation.
+// Prevent partial-key attacks by blocking register modifications during core execution.
+always_comb hwif_in.AES_KV_WR_CTRL.write_en.swwe              = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.write_entry.swwe           = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.hmac_key_dest_valid.swwe   = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.hmac_block_dest_valid.swwe = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.aes_key_dest_valid.swwe    = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.dma_data_dest_valid.swwe   = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.rsvd.swwe                  = status_idle_o && input_ready_o;
 
 //keyault FSM
 //keyvault control reg macros for assigning to struct
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, AES_KV_RD_KEY_CTRL)
+`CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, AES_KV_WR_CTRL)
+
+//Read Key context
+always_ff@(posedge clk or negedge reset_n) begin
+    if (!reset_n) begin
+        kv_key_present_slot <= '0;
+    end
+    else if (kv_key_read_ctrl_reg.read_en) begin
+        kv_key_present_slot <= kv_key_read_ctrl_reg.read_entry;
+    end
+end
+
+always_comb begin
+    kv_key_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_key_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_AES_KEY);
+    kv_key_read_metrics.kv_key_entry         = kv_key_read_ctrl_reg.read_entry;
+end
 
 //Read Key
 kv_read_client #(
@@ -355,6 +429,9 @@ aes_key_kv_read
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
+
+    //access filtering rule metrics
+    .read_metrics (kv_key_read_metrics),
 
     //interface with kv
     .kv_read(kv_read),
@@ -371,6 +448,60 @@ aes_key_kv_read
 );
 
 logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
+
+// AES KV write is only supported for key-release in ocp-lock mode, with the AES-ECB-decrypt use-case
+// Key size is in bytes
+always_comb kv_wr_num_dwords = ($clog2(CLP_AES_KV_WR_DW/32)+1)'(key_release_key_size>>2);
+
+// ============== AES Checks, conditions, HW rules for RAS TODO ============= //
+// * swizzle result data?                                                     //
+// ================================ END TODO ================================ //
+always_comb begin
+    kv_write_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+    kv_write_metrics.kv_data0_present     = aes2caliptra.kv_key_in_use; // TODO -- what if FW toggles sideload while op is in progress?
+    kv_write_metrics.kv_data0_entry       = kv_key_present_slot;
+    kv_write_metrics.kv_data1_present     = 1'b0;
+    kv_write_metrics.kv_data1_entry       = KV_ENTRY_ADDR_W'(0);
+    kv_write_metrics.kv_write_src         = KV_NUM_WRITE'(1 << KV_WRITE_IDX_AES);
+    kv_write_metrics.kv_write_entry       = kv_write_ctrl_reg.write_entry;
+    kv_write_metrics.aes_decrypt_ecb_op   = aes2caliptra.aes_operation_is_ecb_decrypt;
+end
+
+always_comb caliptra2aes.block_reg_output = ocp_lock_in_progress &&
+                                            (aes2caliptra.kv_key_in_use && kv_key_present_slot == OCP_LOCK_RT_OBF_KEY_KV_SLOT) &&
+                                            aes2caliptra.aes_operation_is_ecb_decrypt;
+
+//Write to keyvault
+kv_write_client #(
+  .DATA_WIDTH(CLP_AES_KV_WR_DW),
+  .KV_WRITE_SWAP_DWORDS(0)
+)
+aes_result_kv_write
+(
+  .clk(clk),
+  .rst_b(reset_n),
+  .zeroize(debugUnlock_or_scan_mode_switch),
+
+  //client control register
+  .write_ctrl_reg(kv_write_ctrl_reg),
+  .num_dwords    (kv_wr_num_dwords ),
+
+  //access filtering rule metrics
+  .write_metrics (kv_write_metrics),
+
+  //interface with kv
+  .kv_write(kv_write  ),
+  .kv_resp (kv_wr_resp),
+
+  //interface with client
+  .dest_keyvault  (caliptra2aes.kv_en            ),
+  .dest_data_avail(aes2caliptra.kv_data_out_valid),
+  .dest_data      (aes2caliptra.kv_data_out      ),
+
+  .error_code(kv_write_error            ),
+  .kv_ready  (kv_write_ready            ),
+  .dest_done (caliptra2aes.kv_write_done)
+);
 
 //load keyvault key into local reg
 //swizzle keyvault value to match endianness of aes engine

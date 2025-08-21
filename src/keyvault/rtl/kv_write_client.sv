@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 //`include "kv_defines.svh"
+`include "caliptra_prim_assert.sv"
 
 module kv_write_client 
     import kv_defines_pkg::*;
@@ -33,6 +34,10 @@ module kv_write_client
     //client control register
     input kv_write_ctrl_reg_t write_ctrl_reg,
 
+    //access filtering rule metrics
+    //NOTE: must be stabilized 1 clock cycle prior to dest_data_avail
+    input var kv_write_filter_metrics_t write_metrics,
+
     //interface with kv
     output kv_write_t kv_write,
     input  kv_wr_resp_t kv_resp,
@@ -47,12 +52,23 @@ module kv_write_client
     output logic dest_done
 );
 
+logic write_allow;
+
 logic [DATA_OFFSET_W-1:0] dest_read_offset;
 logic [DATA_OFFSET_W-1:0] dest_write_offset;
 logic dest_write_en;
 logic [31:0] pad_data;
 logic write_pad;
 logic write_last;
+
+kv_write_rule_check kv_write_rules
+(
+    .clk  (clk  ),
+    .rst_b(rst_b),
+
+    .write_metrics(write_metrics),
+    .write_allow  (write_allow  )
+);
 
 //dest write block
 kv_fsm #(
@@ -65,6 +81,7 @@ kv_dest_write_fsm
     .rst_b(rst_b),
     .zeroize(zeroize),
     .start(dest_data_avail & write_ctrl_reg.write_en),
+    .allow(write_allow),
     .last('0),
     .pcr_hash_extend(1'b0),
     .num_dwords(num_dwords),
@@ -95,9 +112,12 @@ always_ff @(posedge clk or negedge rst_b) begin
         error_code <= KV_SUCCESS;
     end
     else begin
-        error_code <= dest_write_en & kv_resp.error ? KV_WRITE_FAIL : 
+        error_code <= dest_data_avail & write_ctrl_reg.write_en & !write_allow ? KV_WRITE_FAIL :
+                      dest_write_en & kv_resp.error ? KV_WRITE_FAIL : 
                       dest_write_en & ~kv_resp.error ? KV_SUCCESS : error_code;
     end
 end
+
+`CALIPTRA_ASSERT_KNOWN(WRITE_METRICS_X, write_metrics, clk, !rst_b)
 
 endmodule

@@ -19,6 +19,7 @@
 module axi_dma_top
 import axi_pkg::*;
 import soc_ifc_pkg::*;
+import kv_defines_pkg::*;
 #(
     parameter AW = 64,
     parameter DW = 32,         // Data Width
@@ -41,6 +42,10 @@ import soc_ifc_pkg::*;
     // SOC_IFC Internal Signaling
     input logic mbox_lock,
     input logic sha_lock,
+    input logic debugUnlock_or_scan_mode_switch,
+    input logic ocp_lock_in_progress,
+    input logic [63:0] key_release_addr,
+    input logic [15:0] key_release_size,
 
     // AES Interface
     input  logic             aes_input_ready,
@@ -51,6 +56,10 @@ import soc_ifc_pkg::*;
     output soc_ifc_req_t     aes_req_data,
     input  logic [DW-1:0]    aes_rdata,
     input  logic             aes_err,
+
+    // kv interface
+    output kv_read_t    kv_read,
+    input  kv_rd_resp_t kv_rd_resp,
 
     // Configuration for requests
     input logic [UW-1:0] axuser,
@@ -121,8 +130,12 @@ import soc_ifc_pkg::*;
         .recovery_image_activated(recovery_image_activated),
 
         // Internal Signaling
-        .mbox_lock(mbox_lock),
-        .sha_lock (sha_lock ),
+        .mbox_lock           (mbox_lock           ),
+        .sha_lock            (sha_lock            ),
+        .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch),
+        .ocp_lock_in_progress(ocp_lock_in_progress),
+        .key_release_addr    (key_release_addr    ),
+        .key_release_size    (key_release_size    ),
 
         // AES Interface
         .aes_input_ready,
@@ -133,6 +146,10 @@ import soc_ifc_pkg::*;
         .aes_req_data,
         .aes_rdata,
         .aes_err,
+
+        // KV interface
+        .kv_read   (kv_read   ),
+        .kv_rd_resp(kv_rd_resp),
 
         // Mailbox SRAM INF
         .mb_dv   (mb_dv   ),

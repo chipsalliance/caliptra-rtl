@@ -30,11 +30,13 @@
 //
 class kv_read_transaction #(
       string KV_READ_REQUESTOR = "HMAC_KEY"
-      ) extends uvmf_transaction_base;
+      )
+ extends uvmf_transaction_base;
 
   `uvm_object_param_utils( kv_read_transaction #(
                            KV_READ_REQUESTOR
-                           ))
+                           )
+)
 
   rand logic [KV_ENTRY_ADDR_W-1:0] read_entry ;
   rand logic [KV_ENTRY_SIZE_W-1:0] read_offset ;
@@ -43,10 +45,10 @@ class kv_read_transaction #(
   logic [KV_DATA_W-1:0] read_data ;
 
   //Constraints for the transaction variables:
-  constraint read_entry_c {read_entry >= 0; read_entry < KV_NUM_KEYS;}
-  constraint read_offset_c {read_offset >= 0; read_offset < KV_NUM_DWORDS;}
 
   // pragma uvmf custom class_item_additional begin
+  constraint read_entry_c {read_entry >= 0; read_entry < KV_NUM_KEYS;}
+  constraint read_offset_c {read_offset >= 0; read_offset < KV_NUM_DWORDS;}
   // pragma uvmf custom class_item_additional end
 
   //*******************************************************************
@@ -150,7 +152,8 @@ class kv_read_transaction #(
   virtual function bit do_compare (uvm_object rhs, uvm_comparer comparer);
     kv_read_transaction #(
         .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-        ) RHS;
+        )
+ RHS;
     if (!$cast(RHS,rhs)) return 0;
     // pragma uvmf custom do_compare begin
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
@@ -172,7 +175,8 @@ class kv_read_transaction #(
   virtual function void do_copy (uvm_object rhs);
     kv_read_transaction #(
         .KV_READ_REQUESTOR(KV_READ_REQUESTOR)
-        ) RHS;
+        )
+ RHS;
     assert($cast(RHS,rhs));
     // pragma uvmf custom do_copy begin
     super.do_copy(rhs);

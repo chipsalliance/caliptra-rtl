@@ -104,6 +104,8 @@ module caliptra_top
     input logic [63:0] strap_ss_external_staging_area_base_addr,
     input logic [63:0] strap_ss_otp_fc_base_addr,
     input logic [63:0] strap_ss_uds_seed_base_addr,
+    input logic [63:0] strap_ss_key_release_base_addr,
+    input logic [15:0] strap_ss_key_release_key_size,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
     input logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
     input logic [31:0] strap_ss_caliptra_dma_axi_user,
@@ -112,6 +114,9 @@ module caliptra_top
     input logic [31:0] strap_ss_strap_generic_2,
     input logic [31:0] strap_ss_strap_generic_3,
     input logic        ss_debug_intent,
+
+    // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
+    input logic        ss_ocp_lock_en,
 
     // Subsystem mode debug outputs
     output logic        ss_dbg_manuf_enable,
@@ -199,6 +204,7 @@ module caliptra_top
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
     logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
     logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed;
+    logic [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed;
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key_reg;
 
     //caliptra uncore jtag ports & pertinent logic
@@ -290,6 +296,11 @@ module caliptra_top
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key_dbg;
     logic                                      cptra_in_debug_scan_mode;
 
+    // Subsystem mode OCP LOCK status
+    logic ss_ocp_lock_in_progress;
+    // Key release size (used as input to AES operation)
+    logic [15:0] ss_key_release_key_size;
+
     logic [31:0] imem_haddr;
     logic imem_hsel;
     logic imem_hwrite;
@@ -304,11 +315,64 @@ module caliptra_top
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
     logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
+    logic aes_busy_filtered, ecc_busy_filtered;
     logic crypto_error;
 
-    always_comb crypto_error = (hmac_busy & ecc_busy) |
-                               (ecc_busy & doe_busy)  |
-                               (hmac_busy & doe_busy);
+    typedef enum logic [1:0] {
+        IDLE,
+        INITIAL,
+        DONE
+    } crypto_state_t;
+    crypto_state_t aes_state, aes_next_state;
+    crypto_state_t ecc_state, ecc_next_state;
+
+    always_ff @(posedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b)
+            aes_state <= IDLE;
+        else
+            aes_state <= aes_next_state;
+    end
+
+    always_comb begin
+        case (aes_state)
+            IDLE:     aes_next_state = aes_busy ? INITIAL : IDLE;
+            INITIAL:  aes_next_state = aes_busy ? INITIAL : DONE;
+            DONE:     aes_next_state = DONE;
+            default:  aes_next_state = IDLE;
+        endcase
+    end
+
+    always_comb aes_busy_filtered = (aes_state == DONE) ? aes_busy : 1'b0;
+
+    always_ff @(posedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b)
+            ecc_state <= IDLE;
+        else
+            ecc_state <= ecc_next_state;
+    end
+
+    always_comb begin
+        case (ecc_state)
+            IDLE:     ecc_next_state = ecc_busy ? INITIAL : IDLE;
+            INITIAL:  ecc_next_state = ecc_busy ? INITIAL : DONE;
+            DONE:     ecc_next_state = DONE;
+            default:  ecc_next_state = IDLE;
+        endcase
+    end
+
+    always_comb ecc_busy_filtered = (ecc_state == DONE) ? ecc_busy : 1'b0;
+
+    always_comb crypto_error =  (hmac_busy & ecc_busy_filtered)         |
+                                (hmac_busy & abr_busy)                  |
+                                (hmac_busy & doe_busy)                  |
+                                (hmac_busy & aes_busy_filtered)         |
+                                (ecc_busy_filtered & doe_busy)          |
+                                (ecc_busy_filtered & abr_busy)          |
+                                (ecc_busy_filtered & aes_busy_filtered) |
+                                (abr_busy & doe_busy)                   |
+                                (abr_busy & aes_busy_filtered)          |
+                                (doe_busy & aes_busy_filtered)  ;
+            
 
 always_comb begin
     mbox_sram_cs = mbox_sram_req.cs;
@@ -945,6 +1009,7 @@ doe_ctrl #(
     .cptra_obf_key     (cptra_obf_key_dbg),
     .obf_uds_seed      (obf_uds_seed_dbg),
     .obf_field_entropy (obf_field_entropy_dbg),
+    .obf_hek_seed      (obf_hek_seed),
     .haddr_i           (responder_inst[`CALIPTRA_SLAVE_SEL_DOE].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_DOE)-1:0]),
     .hwdata_i          (responder_inst[`CALIPTRA_SLAVE_SEL_DOE].hwdata),
     .hsel_i            (responder_inst[`CALIPTRA_SLAVE_SEL_DOE].hsel),
@@ -960,8 +1025,9 @@ doe_ctrl #(
     .notif_intr(doe_notif_intr),
     .clear_obf_secrets(clear_obf_secrets), //Output
     .busy_o(doe_busy),
-    .kv_write (kv_write[KV_NUM_WRITE-1]),
-    .kv_wr_resp (kv_wr_resp[KV_NUM_WRITE-1]),
+    .kv_write (kv_write[KV_WRITE_IDX_DOE]),
+    .kv_wr_resp (kv_wr_resp[KV_WRITE_IDX_DOE]),
+    .ocp_lock_en(ss_ocp_lock_en),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
 );
@@ -988,9 +1054,10 @@ ecc_top1
 
     .kv_read         (kv_read[4:3]),
     .kv_rd_resp      (kv_rd_resp[4:3]),
-    .kv_write        (kv_write[2]),
-    .kv_wr_resp      (kv_wr_resp[2]),
+    .kv_write        (kv_write[KV_WRITE_IDX_ECC]),
+    .kv_wr_resp      (kv_wr_resp[KV_WRITE_IDX_ECC]),
     .pcr_signing_data(pcr_signing_data),
+    .ocp_lock_in_progress(ss_ocp_lock_in_progress),
     .busy_o          (ecc_busy),
     .error_intr      (ecc_error_intr),
     .notif_intr      (ecc_notif_intr),
@@ -1016,12 +1083,13 @@ hmac_ctrl #(
      .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC].hreadyout),
      .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC].hrdata),
      .kv_read       (kv_read[1:0]),
-     .kv_write      (kv_write[0]),
+     .kv_write      (kv_write[KV_WRITE_IDX_HMAC]),
      .kv_rd_resp    (kv_rd_resp[1:0]),
-     .kv_wr_resp    (kv_wr_resp[0]),
+     .kv_wr_resp    (kv_wr_resp[KV_WRITE_IDX_HMAC]),
      .busy_o        (hmac_busy),
      .error_intr(hmac_error_intr),
      .notif_intr(hmac_notif_intr),
+     .ocp_lock_in_progress(ss_ocp_lock_in_progress),
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 
 );
@@ -1051,6 +1119,7 @@ abr_top #(
      .busy_o            (abr_busy),
      .error_intr        (abr_error_intr),
      .notif_intr        (abr_notif_intr),
+     .ocp_lock_in_progress(ss_ocp_lock_in_progress),
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
      .abr_memory_export (abr_memory_export)
 );
@@ -1077,25 +1146,31 @@ aes_clp_wrapper #(
     .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hresp),
     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hreadyout),
     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_AES].hrdata),
-  
+
+
+    // OCP LOCK
+    .ocp_lock_in_progress(ss_ocp_lock_in_progress),
+    .key_release_key_size(ss_key_release_key_size),
     // status signals
     .input_ready_o(aes_input_ready),
     .output_valid_o(aes_output_valid),
     .status_idle_o(aes_status_idle),
-    
+
     // DMA CIF IF
-   .dma_req_dv(aes_cif_dma_req_dv),
-   .dma_req_write(aes_cif_dma_req_data.write),
-   .dma_req_addr(aes_cif_dma_req_data.addr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES)-1:0]),
-   .dma_req_wdata(aes_cif_dma_req_data.wdata),
-   .dma_req_hold(aes_cif_dma_req_hold), 
-   .dma_req_error(aes_cif_dma_req_error),
-   .dma_req_rdata(aes_cif_dma_req_rdata),
+    .dma_req_dv(aes_cif_dma_req_dv),
+    .dma_req_write(aes_cif_dma_req_data.write),
+    .dma_req_addr(aes_cif_dma_req_data.addr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_AES)-1:0]),
+    .dma_req_wdata(aes_cif_dma_req_data.wdata),
+    .dma_req_hold(aes_cif_dma_req_hold),
+    .dma_req_error(aes_cif_dma_req_error),
+    .dma_req_rdata(aes_cif_dma_req_rdata),
 
 
     // kv interface
-    .kv_read(kv_read[5]),
-    .kv_rd_resp(kv_rd_resp[5]),
+    .kv_read   (kv_read   [KV_DEST_IDX_AES_KEY]),
+    .kv_rd_resp(kv_rd_resp[KV_DEST_IDX_AES_KEY]),
+    .kv_write  (kv_write  [KV_WRITE_IDX_AES]   ),
+    .kv_wr_resp(kv_wr_resp[KV_WRITE_IDX_AES]   ),
 
     .busy_o(aes_busy),
 
@@ -1381,6 +1456,10 @@ soc_ifc_top1
     .dma_error_intr(dma_error_intr),
     .dma_notif_intr(dma_notif_intr),
     .timer_intr(timer_int),
+
+    //Clear KeyVault secrets
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
+
     //Obfuscated UDS and FE
     .clear_obf_secrets(clear_obf_secrets_debugScanQ), //input - includes debug & scan modes to do the register clearing
     .scan_mode(scan_mode),
@@ -1392,6 +1471,11 @@ soc_ifc_top1
     .cptra_obf_uds_seed_vld(cptra_obf_uds_seed_vld),
     .cptra_obf_uds_seed(cptra_obf_uds_seed),
     .obf_uds_seed(obf_uds_seed),
+    .obf_hek_seed(obf_hek_seed),
+
+    // kv interface
+    .kv_read   (kv_read   [KV_DEST_IDX_DMA_DATA]),
+    .kv_rd_resp(kv_rd_resp[KV_DEST_IDX_DMA_DATA]),
 
     // Subsystem mode straps
     .strap_ss_caliptra_base_addr                            (strap_ss_caliptra_base_addr                            ),
@@ -1400,6 +1484,8 @@ soc_ifc_top1
     .strap_ss_external_staging_area_base_addr               (strap_ss_external_staging_area_base_addr               ),
     .strap_ss_otp_fc_base_addr                              (strap_ss_otp_fc_base_addr                              ),
     .strap_ss_uds_seed_base_addr                            (strap_ss_uds_seed_base_addr                            ),
+    .strap_ss_key_release_base_addr                         (strap_ss_key_release_base_addr                         ),
+    .strap_ss_key_release_key_size                          (strap_ss_key_release_key_size                          ),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       ),
     .strap_ss_caliptra_dma_axi_user                         (strap_ss_caliptra_dma_axi_user                         ),
@@ -1415,6 +1501,11 @@ soc_ifc_top1
 
     // Subsystem mode firmware execution control
     .ss_generic_fw_exec_ctrl(ss_generic_fw_exec_ctrl),
+
+    // Subsystem mode OCP LOCK status
+    .ss_ocp_lock_en(ss_ocp_lock_en),
+    .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
+    .ss_key_release_key_size(ss_key_release_key_size),
 
     // NMI Vector 
     .nmi_vector(nmi_vector),

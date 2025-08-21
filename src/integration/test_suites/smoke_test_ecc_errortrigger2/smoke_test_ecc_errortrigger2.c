@@ -44,9 +44,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 */
 
 void main() {
-    printf("----------------------------------------\n");
-    printf(" Running ECC Smoke Test error_trigger !!\n");
-    printf("----------------------------------------\n");
+    VPRINTF(LOW, "----------------------------------------\n");
+    VPRINTF(LOW, " Running ECC Smoke Test error_trigger !!\n");
+    VPRINTF(LOW, "----------------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -202,7 +202,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        printf("\n TEST PCR WITH INVALID OUTPUT SIGN_R\n");
+        VPRINTF(LOW, "\n TEST PCR WITH INVALID OUTPUT SIGN_R\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -212,18 +212,18 @@ void main() {
         }
 
         //Inject invalid zero sign_r
-        printf("%c",0x98);
+        SEND_STDOUT_CTRL(0x98);
 
         //inject seed to kv key reg (in RTL)
-        printf("Inject PRIVKEY into KV slot 7\n");
+        VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
         privkey_inject_cmd = 0x88 + 0x7;
-        printf("%c", privkey_inject_cmd);
+        SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-        printf("Inject MSG into SHA512 digest\n");
-        printf("%c", 0x90);
+        VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+        SEND_STDOUT_CTRL(0x90);
 
         // Enable ECC PCR SIGNING core
-        printf("\nECC PCR SIGNING\n");
+        VPRINTF(LOW, "\nECC PCR SIGNING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
@@ -231,21 +231,21 @@ void main() {
         // wait for ECC PCR SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            printf("\nECC PCR r_output_outofrange error is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(ERROR, "\nECC PCR r_output_outofrange error is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
 
         ecc_zeroize();
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }  
     else if(rst_count == 1) {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        printf("\n TEST PCR WITH INVALID INPUT COMMAND\n");
+        VPRINTF(LOW, "\n TEST PCR WITH INVALID INPUT COMMAND\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -255,15 +255,15 @@ void main() {
         }
 
         //inject seed to kv key reg (in RTL)
-        printf("Inject PRIVKEY into KV slot 7\n");
+        VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
         privkey_inject_cmd = 0x88 + 0x7;
-        printf("%c", privkey_inject_cmd);
+        SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-        printf("Inject MSG into SHA512 digest\n");
-        printf("%c", 0x90);
+        VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+        SEND_STDOUT_CTRL(0x90);
 
         // Enable ECC PCR KEYGEN core
-        printf("\nECC PCR KEYGEN\n");
+        VPRINTF(LOW, "\nECC PCR KEYGEN\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
@@ -271,21 +271,21 @@ void main() {
         // wait for ECC KEYGEN process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            printf("\nECC PCR invalid command error is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(ERROR, "\nECC PCR invalid command error is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
 
         ecc_zeroize();
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 2) {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        printf("\n TEST PCR WITH INVALID INPUT COMMAND\n");
+        VPRINTF(LOW, "\n TEST PCR WITH INVALID INPUT COMMAND\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -295,29 +295,29 @@ void main() {
         }
 
         //inject seed to kv key reg (in RTL)
-        printf("Inject PRIVKEY into KV slot 7\n");
+        VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
         privkey_inject_cmd = 0x88 + 0x7;
-        printf("%c", privkey_inject_cmd);
+        SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-        printf("Inject MSG into SHA512 digest\n");
-        printf("%c", 0x90);
+        VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+        SEND_STDOUT_CTRL(0x90);
 
         // Enable ECC PCR
-        printf("\nECC PCR without Signing\n");
+        VPRINTF(LOW, "\nECC PCR without Signing\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
 
         // check if ECC accepts the cmd
         if ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0){
-            printf("\nECC PCR without Signing error is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(ERROR, "\nECC PCR without Signing error is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
         else {
-            printf("\nECC PCR without Signing is correctly ignored .\n");
+            VPRINTF(LOW, "\nECC PCR without Signing is correctly ignored .\n");
         }
 
         // Enable ECC PCR VERIFYING core
-        printf("\nECC PCR VERIFYING\n");
+        VPRINTF(LOW, "\nECC PCR VERIFYING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_VERIFYING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
@@ -325,15 +325,15 @@ void main() {
         // wait for ECC VERIFYING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            printf("\nECC PCR invalid command error is not detected.\n");
-            printf("%c", 0x1);
+            VPRINTF(ERROR, "\nECC PCR invalid command error is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
             while(1);
         }
 
         ecc_zeroize();
     }
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
 

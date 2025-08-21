@@ -57,6 +57,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
     const uint32_t iv_data_uds[]  = {0x2eb94297,0x77285196,0x3dd39a1e,0xb95d438f};
     const uint32_t iv_data_fe[]   = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d};
+    const uint32_t iv_data_hek[]  = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d}; // TODO unique value
 
 /* CDI HMAC512 test vector
     KEY =   dff9f0021e1ab0bda2781e1a709cafdb341953bdbd6836d9c1ea520a6043041daf7218b19ce98302a5f8f95a6b51f5c1219a09d73819e2ba0d2c4b932489c586
@@ -326,7 +327,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 //****************************************************************** 
 void kv_doe(uint8_t doe_fe_dest_id){
 
-    doe_init(iv_data_uds, iv_data_fe, doe_fe_dest_id);
+    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, (uint32_t) doe_fe_dest_id);
 
     VPRINTF(LOW,"doe_fe kv id = %x\n", doe_fe_dest_id);
 
@@ -510,7 +511,7 @@ void kv_mldsa(uint8_t seed_id){
     for (int i = 0; i < MLDSA87_PUBKEY_SIZE; i++)
         pubkey[i] = mldsa_pubkey[i];
 
-    uint32_t privkey; //no returnable when seed came from KV
+    uint32_t privkey[MLDSA87_PRIVKEY_SIZE]; //no returnable when seed came from KV
 
     mldsa_keygen_flow(seed, entropy, privkey, pubkey);
     mldsa_zeroize();
@@ -582,9 +583,9 @@ void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With DOE flow    !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With DOE flow    !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     uint8_t doe_uds_dest_id;
     uint8_t doe_fe_dest_id;
@@ -614,7 +615,7 @@ void main(){
 
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 1) {
         VPRINTF(LOW, "2nd FE flow + warm reset\n");
@@ -623,20 +624,20 @@ void main(){
         
         //Issue timed warm reset :TODO
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 2){
         VPRINTF(LOW, "3rd FE flow + Cold reset\n");
         rst_count++;
-        printf("%c",0xf5); //Issue cold reset and see lock_FE_flow getting reset
+        SEND_STDOUT_CTRL(0xf5); //Issue cold reset and see lock_FE_flow getting reset
     }
     else if(rst_count == 3) {
         VPRINTF(LOW, "4th FE flow after cold reset\n");
 
-        printf("doe_fe_dest_id = 0x%x\n",doe_fe_dest_id);
+        VPRINTF(LOW, "doe_fe_dest_id = 0x%x\n",doe_fe_dest_id);
 
         kv_doe(doe_fe_dest_id);
 
-        printf("%c",0xff); //End the test
+        SEND_STDOUT_CTRL(0xff); //End the test
     }
 }

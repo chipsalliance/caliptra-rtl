@@ -97,6 +97,8 @@ addrmap aes_clp_reg {
     /* ---- AES Key Vault Control Reg ---- */
     kv_read_ctrl_reg AES_KV_RD_KEY_CTRL @0x200;
     kv_status_reg AES_KV_RD_KEY_STATUS;
+    kv_write_ctrl_reg AES_KV_WR_CTRL @0x208;
+    kv_status_reg AES_KV_WR_STATUS;
 
    
     /* ---- Global Interrupt Enable ---- */

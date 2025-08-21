@@ -302,17 +302,6 @@ import aaxi_uvm_pkg::*;
         .m_axi_w_if(m_axi_if.w_mgr),
         .m_axi_r_if(m_axi_if.r_mgr),
 
-//        .PADDR  (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDR      ),
-//        .PPROT  (3'b000/*FIXME*/                                                                                  ),
-//        .PAUSER (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PAUSER     ),
-//        .PENABLE(uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PENABLE    ),
-//        .PRDATA (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRDATA     ),
-//        .PREADY (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PREADY     ),
-//        .PSEL   (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSEL       ),
-//        .PSLVERR(uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERR    ),
-//        .PWDATA (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWDATA     ),
-//        .PWRITE (uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWRITE     ),
-
         .el2_mem_export(el2_mem_export.veer_sram_src),
         .abr_memory_export(abr_memory_export.req),
 
@@ -361,6 +350,8 @@ import aaxi_uvm_pkg::*;
         .strap_ss_external_staging_area_base_addr               (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_external_staging_area_base_addr                        ),
         .strap_ss_otp_fc_base_addr                              (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_otp_fc_base_addr                              ),
         .strap_ss_uds_seed_base_addr                            (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_uds_seed_base_addr                            ),
+        .strap_ss_key_release_base_addr                         (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_key_release_base_addr                         ),
+        .strap_ss_key_release_key_size                          (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_key_release_key_size                          ),
         .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset),
         .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       ),
         .strap_ss_caliptra_dma_axi_user                         (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_caliptra_dma_axi_user                         ),
@@ -369,6 +360,9 @@ import aaxi_uvm_pkg::*;
         .strap_ss_strap_generic_2                               (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_strap_generic_2                               ),
         .strap_ss_strap_generic_3                               (soc_ifc_subenv_ss_mode_ctrl_agent_bus.strap_ss_strap_generic_3                               ),
         .ss_debug_intent                                        (soc_ifc_subenv_ss_mode_ctrl_agent_bus.ss_debug_intent                                        ),
+
+        // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
+        .ss_ocp_lock_en(1'b0), // TODO
 
         // Subsystem mode debug outputs
         .ss_dbg_manuf_enable    (soc_ifc_subenv_ss_mode_status_agent_bus.ss_dbg_manuf_enable    ),
@@ -393,24 +387,6 @@ import aaxi_uvm_pkg::*;
         .scan_mode     (1'b0) // TODO
     );
     assign soc_ifc_subenv_ss_mode_status_agent_bus.cptra_ss_debug_intent = caliptra_top_dut.cptra_ss_debug_intent;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWUSER           = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSER           = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSER           = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWAKEUP          = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PADDRCHK         = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PCTRLCHK         = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSELxCHK         = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PENABLECHK       = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWDATACHK        = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSTRBCHK         = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWAKEUPCHK       = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PAUSERCHK        = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PWUSERCHK        = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PREADYCHK        = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRDATACHK        = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PSLVERRCHK       = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PRUSERCHK        = 0;
-//    assign uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_qvip_hdl.apb5_master_0_PBUSERCHK        = 0;
     // Internal AHB monitor connections [soc_ifc slave]
     assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HADDR     = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0];
     assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWDATA    = caliptra_top_dut.responder_inst[`CALIPTRA_SLAVE_SEL_SOC_IFC].hwdata   ;
@@ -544,6 +520,7 @@ import aaxi_uvm_pkg::*;
     assign soc_ifc_subenv_cptra_status_agent_bus.nmi_intr = caliptra_top_dut.nmi_int;
     assign soc_ifc_subenv_cptra_status_agent_bus.obf_field_entropy = caliptra_top_dut.obf_field_entropy;
     assign soc_ifc_subenv_cptra_status_agent_bus.obf_uds_seed = caliptra_top_dut.obf_uds_seed;
+    assign soc_ifc_subenv_cptra_status_agent_bus.obf_hek_seed = caliptra_top_dut.obf_hek_seed;
     assign soc_ifc_subenv_cptra_status_agent_bus.sha_error_intr = caliptra_top_dut.sha_error_intr;
     assign soc_ifc_subenv_cptra_status_agent_bus.sha_notif_intr = caliptra_top_dut.sha_notif_intr;
     assign soc_ifc_subenv_cptra_status_agent_bus.soc_ifc_error_intr = caliptra_top_dut.soc_ifc_error_intr;

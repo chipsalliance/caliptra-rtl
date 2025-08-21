@@ -28,6 +28,7 @@ module kv_fsm
     input logic zeroize,
 
     input logic start,
+    input logic allow,
     input logic last,
 
     input logic pcr_hash_extend,
@@ -66,6 +67,7 @@ typedef enum logic [2:0] {
 
 kv_fsm_state_e kv_fsm_ps, kv_fsm_ns;
 logic arc_KV_IDLE_KV_RW;
+logic arc_KV_IDLE_KV_DONE;
 logic arc_KV_RW_KV_DONE;
 logic arc_KV_DONE_KV_IDLE;
 logic arc_KV_RW_KV_PAD;
@@ -88,7 +90,8 @@ always_comb ready = (kv_fsm_ps == KV_IDLE);
 // HMAC adds 1024 bits to the length to account for the key
 always_comb length_for_pad = (HMAC == 1) ? (32'b0 | ((num_dwords_data << 5) + 'd1024)) : (32'b0 | (num_dwords_data << 5));
 
-always_comb arc_KV_IDLE_KV_RW = start;
+always_comb arc_KV_IDLE_KV_RW = start && allow;
+always_comb arc_KV_IDLE_KV_DONE = start && !allow;
 always_comb arc_KV_RW_KV_DONE = ((PAD == 0) | pcr_hash_extend) & (($bits(num_dwords_total)'(offset) == (num_dwords_total-1)) | last); //jump to done when we've written all dwords
 always_comb arc_KV_RW_KV_PAD  = ((PAD == 1) & ~pcr_hash_extend) & last; //jump to pad when data is done
 always_comb arc_KV_PAD_KV_ZERO = (PAD == 1) && (kv_fsm_ps == KV_PAD);
@@ -109,7 +112,8 @@ always_comb begin : kv_fsm_comb
     done = '0;
     unique case (kv_fsm_ps)
         KV_IDLE: begin
-            if (arc_KV_IDLE_KV_RW) kv_fsm_ns = KV_RW;
+            if      (arc_KV_IDLE_KV_RW)   kv_fsm_ns = KV_RW;
+            else if (arc_KV_IDLE_KV_DONE) kv_fsm_ns = KV_DONE;
         end
         KV_RW: begin
             if (arc_KV_RW_KV_PAD) kv_fsm_ns = KV_PAD;

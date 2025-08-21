@@ -9,9 +9,13 @@ uvmf:
       # Writes
       - name: kv_hmac_write_agent_ae
         type: 'kv_write_transaction'
+      - name: kv_mlkem_write_agent_ae
+        type: 'kv_write_transaction'
       - name: kv_ecc_write_agent_ae
         type: 'kv_write_transaction'
       - name: kv_doe_write_agent_ae
+        type: 'kv_write_transaction'
+      - name: kv_aes_write_agent_ae
         type: 'kv_write_transaction'
       # Reads
       - name: kv_hmac_key_read_agent_ae
@@ -25,7 +29,13 @@ uvmf:
       - name: kv_ecc_seed_read_agent_ae
         type: 'kv_read_transaction'
       - name: kv_aes_key_read_agent_ae
-        type: 'kv_read_transaction'        
+        type: 'kv_read_transaction'
+      - name: kv_mlkem_seed_read_agent_ae
+        type: 'kv_read_transaction'
+      - name: kv_mlkem_msg_read_agent_ae
+        type: 'kv_read_transaction'
+      - name: kv_dma_read_agent_ae
+        type: 'kv_read_transaction'
       # AHB QVIP
       - name: ahb_slave_0_ae
         type: 'mvc_sequence_item_base'

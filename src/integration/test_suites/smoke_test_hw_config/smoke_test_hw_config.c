@@ -55,10 +55,10 @@ void main(void) {
             VPRINTF(FATAL, "HW REV ID register reports a version of major [%u], minor [%u], patch [%u] which does not match the expected value %u.%u.%u\n",
                            (data & 0xf),
                            (data & 0xf0) >> 4,
-                           (data & 0xff00) >> 16,
+                           (data & 0xff00) >> 8,
                            (CALIPTRA_HW_REV_ID & 0xf),
                            (CALIPTRA_HW_REV_ID & 0xf0) >> 4,
-                           (CALIPTRA_HW_REV_ID & 0xff00) >> 16);
+                           (CALIPTRA_HW_REV_ID & 0xff00) >> 8);
             fail = 1;
         }
         #else

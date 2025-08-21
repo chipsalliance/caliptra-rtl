@@ -63,7 +63,7 @@ addrmap doe_reg {
         default hw = r;
 
         field {
-            desc = "Indicates the command for DOE to run";
+            desc = "Indicates the command for DOE to run. Additional command encodings in the CMD_EXT field are combined with this field to define the full command.";
 
             enum doe_cmd_e {
                 DOE_IDLE = 2'd0 {
@@ -81,6 +81,24 @@ addrmap doe_reg {
             };
             encode = doe_cmd_e; hwclr; swmod;} CMD[2]=0;
         field {desc = "Key Vault entry to store the result.";} DEST[5] = 0;
+        field {
+            desc = "Additional encoding bits for DOE command to run";
+
+            enum doe_cmd_ext_e {
+                DOE_STD = 2'd0 {
+                    desc = "DOE is in idle state (or running a standard, non-extended command)";
+                };
+                DOE_HEK = 2'd1 {
+                    desc = "Request DOE to run OCP LOCK HEK seed flow.";
+                };
+                DOE_RSVD0 = 2'd2 {
+                    desc = "RESERVED";
+                };
+                DOE_RSVD1 = 2'd3 {
+                    desc = "RESERVED";
+                };
+            };
+        encode = doe_cmd_ext_e; hwclr; swmod;} CMD_EXT[2]=0;
 
     } DOE_CTRL;
 
@@ -95,6 +113,9 @@ addrmap doe_reg {
         field {desc = "UDS Flow Completed";           sw = r; hw = w; resetsignal=cptra_pwrgood;} UDS_FLOW_DONE = 1'b0;
         field {desc = "FE flow completed";            sw = r; hw = w; resetsignal=cptra_pwrgood;} FE_FLOW_DONE = 1'b0;
         field {desc = "Clear Secrets flow completed"; sw = r; hw = na; hwset; resetsignal=cptra_pwrgood;} DEOBF_SECRETS_CLEARED = 1'b0;
+        field {desc = "HEK flow completed";           sw = r; hw = w; resetsignal=cptra_pwrgood;} HEK_FLOW_DONE = 1'b0;
+        /* bits 7:6 RESERVED */
+        field {desc = "Status error bit - Indicates if the DOE operation failed and results were not written to the keyvault."; sw = r; hw = na; hwset; hwclr; } ERROR[8:8] = 1'b0;
     
     } DOE_STATUS;
 

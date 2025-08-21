@@ -18,12 +18,18 @@
 #include "riscv_hw_if.h"
 #include "printf.h"
 
+inline void doe_set_ctrl(const enum doe_cmd_e cmd, uint32_t kv_dest) {
+    lsu_write_32(CLP_DOE_REG_DOE_CTRL, ((cmd        << DOE_REG_DOE_CTRL_CMD_LOW    ) & DOE_REG_DOE_CTRL_CMD_MASK    ) |
+                                       ((kv_dest    << DOE_REG_DOE_CTRL_DEST_LOW   ) & DOE_REG_DOE_CTRL_DEST_MASK   ) |
+                                       (((cmd >> 2) << DOE_REG_DOE_CTRL_CMD_EXT_LOW) & DOE_REG_DOE_CTRL_CMD_EXT_MASK));
+}
+
 /**
  * @brief Initialize deobfuscation engine
  * @param iv_data_uds Init Vector for UDS. Pointer to 4-entry array of 32-bit values
  * @param iv_data_fe Init Vector for Field Entropy. Pointer to 4-entry array of 32-bit values
  */
-void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t kv_dest_fe) {
+void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_hek, uint32_t kv_dest_fe) {
     uint8_t offset;
     uint32_t* reg_ptr;
 
@@ -39,7 +45,7 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t kv_dest_fe
 
     //start UDS and store in KV0
     VPRINTF(MEDIUM,"DOE: Starting UDS Deobfuscation flow\n");
-    lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
+    doe_set_ctrl(DOE_UDS, 0);
 
     // Check that UDS flow is done
     while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
@@ -55,12 +61,32 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t kv_dest_fe
 
     //start FE and store in KV6/7
     VPRINTF(MEDIUM,"DOE: Starting Field Entropy Deobfuscation flow\n");
-    lsu_write_32(CLP_DOE_REG_DOE_CTRL, (DOE_FE << DOE_REG_DOE_CTRL_CMD_LOW) |
-                                       ((kv_dest_fe << DOE_REG_DOE_CTRL_DEST_LOW) & DOE_REG_DOE_CTRL_DEST_MASK));
+    doe_set_ctrl(DOE_FE, kv_dest_fe);
 
     // Check that FE flow is done
     while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
     VPRINTF(MEDIUM,"DOE: Field Entropy Deobfuscation flow complete\n");
+
+    // Write IV
+    VPRINTF(MEDIUM,"DOE: Writing HEK IV\n");
+    reg_ptr = (uint32_t*) CLP_DOE_REG_DOE_IV_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_DOE_REG_DOE_IV_3) {
+        *reg_ptr++ = iv_data_hek[offset++];
+    }
+
+    if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) {
+        //start HEK and store in KV22
+        // FIXME -- DOE should force result to KV22?
+        VPRINTF(MEDIUM,"DOE: Starting HEK Deobfuscation flow\n");
+        doe_set_ctrl(DOE_HEK, DOE_HEK_DES); // FIXME magic number
+
+        // Check that HEK flow is done
+        while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
+        VPRINTF(MEDIUM,"DOE: HEK Seed Deobfuscation flow complete\n");
+    } else {
+        VPRINTF(LOW, "DOE: Skipping HEK Deobfuscation due to HW_CONFIG\n");
+    }
 
 }
 

@@ -743,4 +743,26 @@ function automatic logic [3:0][7:0] aes_prd_get_lsbs(
   return prd_lsbs;
 endfunction
 
+/* ------------------------- CALIPTRA definitions ------------------------- */
+
+// AES writes to KeyVault have a max value of 512b
+parameter CLP_AES_KV_WR_DW = 512;
+
+typedef struct packed {
+    logic kv_en;
+    logic kv_write_done;
+    logic block_reg_output;
+    logic clear_secrets;
+    logic [15:0] key_release_key_size;
+} caliptra2aes_t;
+
+typedef struct packed {
+    logic [CLP_AES_KV_WR_DW-1:0] kv_data_out;
+    logic                        kv_data_out_valid;
+    logic                        kv_key_in_use;
+    logic                        aes_operation_is_ecb_decrypt;
+} aes2caliptra_t;
+
+/* ---------------------- END CALIPTRA definitions ------------------------ */
+
 endpackage

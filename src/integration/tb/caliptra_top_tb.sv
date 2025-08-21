@@ -30,6 +30,7 @@ module caliptra_top_tb (
 `endif
 
     import axi_pkg::*;
+    import kv_defines_pkg::*;
     import soc_ifc_pkg::*;
     import caliptra_top_tb_pkg::*;
 
@@ -49,6 +50,9 @@ module caliptra_top_tb (
     int                         cycleCnt;
 
 
+    logic [15:0] strap_ss_key_release_key_size;
+    logic [63:0] strap_ss_key_release_base_addr;
+
     logic                       cptra_pwrgood;
     logic                       cptra_rst_b;
     logic                       BootFSM_BrkPoint;
@@ -62,6 +66,7 @@ module caliptra_top_tb (
 
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
+    logic [0:OCP_LOCK_HEK_NUM_DWORDS-1][31:0]      cptra_hek_rand;
     logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb;
 
     //jtag interface
@@ -71,6 +76,8 @@ module caliptra_top_tb (
     logic                       jtag_trst_n; // JTAG Reset
     logic                       jtag_tdo;    // JTAG TDO
     logic                       jtag_tdoEn;  // JTAG TDO enable
+
+    logic                       axi_error_inj_en;
 
     // AXI Interface
     axi_if #(
@@ -102,6 +109,8 @@ module caliptra_top_tb (
     //device lifecycle
     security_state_t security_state;
 
+    logic ss_ocp_lock_en;
+
     ras_test_ctrl_t ras_test_ctrl;
     axi_complex_ctrl_t axi_complex_ctrl;
     logic [63:0] generic_input_wires;
@@ -131,7 +140,7 @@ module caliptra_top_tb (
       core_clk = #5ns ~core_clk;
     end // clk_gen
 `endif
-    
+
 
 caliptra_top_tb_soc_bfm soc_bfm_inst (
     .core_clk        (core_clk        ),
@@ -145,8 +154,13 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .cptra_obf_key      (cptra_obf_key   ),
     .cptra_csr_hmac_key (cptra_csr_hmac_key),
 
+    .strap_ss_key_release_key_size,
+    .strap_ss_key_release_base_addr,
+    .ss_ocp_lock_en,
+
     .cptra_uds_rand  (cptra_uds_rand  ),
     .cptra_fe_rand   (cptra_fe_rand   ),
+    .cptra_hek_rand  (cptra_hek_rand  ),
     .cptra_obf_key_tb(cptra_obf_key_tb),
 
     .m_axi_bfm_if(m_axi_bfm_if),
@@ -197,10 +211,10 @@ caliptra_top caliptra_top_dut (
     .clk                        (core_clk),
 
     .cptra_obf_key              (cptra_obf_key),
-    .cptra_obf_uds_seed_vld     ('0), //TODO
-    .cptra_obf_uds_seed         ('0), //TODO
-    .cptra_obf_field_entropy_vld('0), //TODO
-    .cptra_obf_field_entropy    ('0), //TODO
+    .cptra_obf_uds_seed_vld     ('0), //validated at caliptra-ss
+    .cptra_obf_uds_seed         ('0), //validated at caliptra-ss
+    .cptra_obf_field_entropy_vld('0), //validated at caliptra-ss
+    .cptra_obf_field_entropy    ('0), //validated at caliptra-ss
     .cptra_csr_hmac_key         (cptra_csr_hmac_key),
 
     .jtag_tck(jtag_tck),
@@ -263,6 +277,8 @@ caliptra_top caliptra_top_dut (
     .strap_ss_external_staging_area_base_addr               (64'h0),
     .strap_ss_otp_fc_base_addr                              (64'h0),
     .strap_ss_uds_seed_base_addr                            (64'h0),
+    .strap_ss_key_release_base_addr                         ,
+    .strap_ss_key_release_key_size                          ,
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(32'h0),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (32'h0),
     .strap_ss_caliptra_dma_axi_user                         (32'h0),
@@ -271,6 +287,9 @@ caliptra_top caliptra_top_dut (
     .strap_ss_strap_generic_2                               (32'h0),
     .strap_ss_strap_generic_3                               (32'h0),
     .ss_debug_intent                                        ( 1'b0),
+
+    // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
+    .ss_ocp_lock_en                                         (ss_ocp_lock_en),
 
     // Subsystem mode debug outputs
     .ss_dbg_manuf_enable    (/*TODO*/),
@@ -358,7 +377,10 @@ caliptra_top_tb_services #(
     
     .cptra_uds_tb(cptra_uds_rand),
     .cptra_fe_tb(cptra_fe_rand),
-    .cptra_obf_key_tb(cptra_obf_key_tb)
+    .cptra_obf_key_tb(cptra_obf_key_tb),
+    .cptra_hek_tb(cptra_hek_rand),
+
+    .axi_error_inj_en(axi_error_inj_en)
 
 );
 
@@ -367,7 +389,8 @@ caliptra_top_tb_axi_complex tb_axi_complex_i (
     .cptra_rst_b        (cptra_rst_b        ),
     .m_axi_if           (m_axi_if           ),
     .recovery_data_avail(recovery_data_avail),
-    .ctrl               (axi_complex_ctrl   )
+    .ctrl               (axi_complex_ctrl   ),
+    .axi_error_inj_en   (axi_error_inj_en)
 );
 
 //=========================================================================-

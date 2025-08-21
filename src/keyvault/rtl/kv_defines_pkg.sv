@@ -23,14 +23,47 @@ parameter KV_ADDR_W = 13;
 parameter KV_DATA_W = 32;
 parameter KV_ENTRY_ADDR_W = $clog2(KV_NUM_KEYS);
 parameter KV_ENTRY_SIZE_W = $clog2(KV_NUM_DWORDS);
-parameter KV_NUM_READ=8;
-parameter KV_NUM_WRITE=4;
+parameter KV_NUM_READ=9;
+parameter KV_NUM_WRITE=5;
 parameter ECC_NUM_DWORDS = 12;
 parameter MLDSA_NUM_DWORDS = 8;
 
 parameter KV_ENTRY_FOR_ECC_SIGNING = 7;
 parameter KV_ENTRY_FOR_MLDSA_SIGNING = 8;
 parameter PCR_HASH_NUM_DWORDS = 16;
+
+localparam KV_STANDARD_SLOT_LOW            = 0;
+localparam KV_STANDARD_SLOT_HI             = 15;
+localparam KV_OCP_LOCK_SLOT_LOW            = 16;
+localparam KV_OCP_LOCK_SLOT_HI             = 23;
+
+localparam OCP_LOCK_RT_OBF_KEY_KV_SLOT  = 16; // Stores the runtime MEK obf key (derived from devid chain)
+localparam OCP_LOCK_HEK_SEED_KV_SLOT    = 22; // Destination for deobf HEK seed, also for derived HEK
+                                              // TODO -- do we need to be prescriptive about this, now that RT_OBF_KEY is used for MEK decryption instead of HEK?
+localparam OCP_LOCK_KEY_RELEASE_KV_SLOT = 23; // Stores the fully decrypted MEK
+localparam OCP_LOCK_HEK_NUM_DWORDS      = 8;  // 256b HEK Seed -- used to define the write-size from DOE
+localparam OCP_LOCK_MEK_NUM_DWORDS      = 16; // 512b MEK -- used to define the entry size fetched from KV
+
+localparam KV_WRITE_IDX_HMAC      = 0;
+localparam KV_WRITE_IDX_MLKEM     = 1;
+localparam KV_WRITE_IDX_ECC       = 2;
+localparam KV_WRITE_IDX_DOE       = 3;
+localparam KV_WRITE_IDX_AES       = 4;
+
+localparam KV_DEST_IDX_HMAC_KEY   = 0;
+localparam KV_DEST_IDX_HMAC_BLOCK = 1;
+localparam KV_DEST_IDX_MLDSA_SEED = 2;
+localparam KV_DEST_IDX_ECC_PKEY   = 3;
+localparam KV_DEST_IDX_ECC_SEED   = 4;
+localparam KV_DEST_IDX_AES_KEY    = 5;
+localparam KV_DEST_IDX_MLKEM_SEED = 6;
+localparam KV_DEST_IDX_MLKEM_MSG  = 7;
+localparam KV_DEST_IDX_DMA_DATA   = 8;
+    
+// FIXME is this the correct set of KV permissions?
+// HEK seed (deobfuscated) is used as context for SP 800-108 KDF when deriving
+// the HEK
+localparam OCP_LOCK_HEK_SEED_DEST_VALID = (1 << KV_DEST_IDX_HMAC_BLOCK);
 
 typedef struct packed {
     logic   [KV_ADDR_W-1:0] addr;
@@ -91,6 +124,22 @@ typedef struct packed {
     logic [MLDSA_NUM_DWORDS-1:0][31:0]      pcr_mldsa_signing_seed;
 } pcr_signing_t;
 
+typedef struct packed {
+    logic                       ocp_lock_in_progress;
+    logic [KV_NUM_READ-1:0]     kv_read_dest;
+    logic [KV_ENTRY_ADDR_W-1:0] kv_key_entry;
+} kv_read_filter_metrics_t;
+
+typedef struct packed {
+    logic                       ocp_lock_in_progress;
+    logic                       kv_data0_present;
+    logic [KV_ENTRY_ADDR_W-1:0] kv_data0_entry;
+    logic                       kv_data1_present;
+    logic [KV_ENTRY_ADDR_W-1:0] kv_data1_entry;
+    logic [KV_NUM_WRITE-1:0]    kv_write_src; // TODO module param?
+    logic [KV_ENTRY_ADDR_W-1:0] kv_write_entry;
+    logic                       aes_decrypt_ecb_op;
+} kv_write_filter_metrics_t;
 endpackage
 
 `endif

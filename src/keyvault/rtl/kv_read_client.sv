@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 //`include "kv_defines.svh"
+`include "caliptra_prim_assert.sv"
 
 module kv_read_client 
     import kv_defines_pkg::*;
@@ -31,6 +32,9 @@ module kv_read_client
     //client control register
     input kv_read_ctrl_reg_t read_ctrl_reg,
 
+    //access filtering rule metrics
+    input var kv_read_filter_metrics_t read_metrics,
+
     //interface with kv
     output kv_read_t kv_read,
     input kv_rd_resp_t kv_resp,
@@ -45,12 +49,27 @@ module kv_read_client
     output logic read_done
 );
 
+logic validated_read_en;
+logic read_allow;
 logic [DATA_OFFSET_W-1:0] read_offset;
 logic [DATA_OFFSET_W:0] num_dwords;
 logic write_pad;
 logic [31:0] pad_data;
 
 assign num_dwords = DATA_WIDTH/32;
+
+kv_read_rule_check kv_read_rules
+(
+    .clk         (clk                  ),
+    .rst_b       (rst_b                ),
+
+    .read_en_i   (read_ctrl_reg.read_en),
+    .read_done   (read_done            ),
+    .read_en_o   (validated_read_en    ), // Delayed from read_en_i to start read client FSM in sync with rule check result
+
+    .read_metrics(read_metrics         ),
+    .read_allow  (read_allow           )
+);
 
 //read fsm
 kv_fsm #(
@@ -63,7 +82,8 @@ kv_read_fsm
     .clk(clk),
     .rst_b(rst_b),
     .zeroize(zeroize),
-    .start(read_ctrl_reg.read_en),
+    .start(validated_read_en),
+    .allow(read_allow),
     .last (kv_resp.last),
     .pcr_hash_extend(read_ctrl_reg.pcr_hash_extend),
     .num_dwords(num_dwords),
@@ -90,9 +110,12 @@ always_ff @(posedge clk or negedge rst_b) begin
         error_code <= KV_SUCCESS;
     end
     else begin
-        error_code <= read_ctrl_reg.read_en & kv_resp.error ? KV_READ_FAIL : 
-                      read_ctrl_reg.read_en & ~kv_resp.error ? KV_SUCCESS : error_code;
+        error_code <= validated_read_en & ~read_allow ? KV_READ_FAIL :
+                      validated_read_en & kv_resp.error ? KV_READ_FAIL : 
+                      validated_read_en & ~kv_resp.error ? KV_SUCCESS : error_code;
     end
 end
+
+`CALIPTRA_ASSERT_KNOWN(READ_METRICS_X,  read_metrics, clk, !rst_b)
 
 endmodule

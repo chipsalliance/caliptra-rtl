@@ -12,6 +12,18 @@ targets:
     files: 
       - $COMPILE_ROOT/rtl/doe_defines_pkg.sv
 ---
+provides: [doe_coverage]  
+schema_version: 2.4.0
+requires:
+  - keyvault
+targets:
+  tb:
+    directories: 
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/doe_cov_if.sv
+      - $COMPILE_ROOT/coverage/doe_cov_bind.sv
+---
 provides: [doe_ctrl]
 schema_version: 2.4.0
 requires:

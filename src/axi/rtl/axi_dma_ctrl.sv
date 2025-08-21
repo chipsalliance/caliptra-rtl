@@ -19,6 +19,7 @@
 module axi_dma_ctrl
 import axi_pkg::*;
 import soc_ifc_pkg::*;
+import kv_defines_pkg::*;
 #(
     parameter AW = 64,
     parameter DW = 32,         // Data Width
@@ -38,6 +39,10 @@ import soc_ifc_pkg::*;
     // Internal Signaling
     input logic mbox_lock,
     input logic sha_lock,
+    input logic debugUnlock_or_scan_mode_switch,
+    input logic ocp_lock_in_progress,
+    input logic [63:0] key_release_addr,
+    input logic [15:0] key_release_size,
 
     // Mailbox SRAM INF
     output logic             mb_dv,
@@ -55,6 +60,10 @@ import soc_ifc_pkg::*;
     output soc_ifc_req_t     aes_req_data,
     input  logic [DW-1:0]    aes_rdata,
     input  logic             aes_err,
+
+    // kv interface
+    output kv_read_t    kv_read,
+    input  kv_rd_resp_t kv_rd_resp,
 
     // AXI Manager Read INF
     axi_dma_req_if.src    r_req_if,
@@ -270,9 +279,25 @@ import soc_ifc_pkg::*;
     logic [AXI_LEN_BC_WIDTH-1:0] wr_req_byte_count;       // byte-count calculated for the current read request
 
     logic [31:0] bytes_remaining; // Decrements with arrival of beat at DESTINATION.
+    logic [31:0] rd_fifo_bytes_remaining; // Decrements with arrival of data into FIFO
     logic all_bytes_transferred;
     logic axi_error;
     logic mb_lock_dropped, mb_lock_error;
+
+    // KeyVault signals
+    kv_read_ctrl_reg_t        kv_read_ctrl_reg;
+    kv_read_filter_metrics_t  kv_read_metrics;
+    logic                     kv_read_en;
+    logic                     kv_read_once;
+    logic                     kv_data_write_en;
+//    logic [$clog2(OCP_LOCK_MEK_NUM_DWORDS)-1:0] kv_data_write_offset;
+    logic [31:0]              kv_data_write_data;
+    kv_error_code_e           kv_data_error_code;
+    logic                     kv_data_kv_ready;
+    logic                     kv_data_read_done;
+    logic                     kv_read_error;           // KV read operation error
+    logic                     kv_premature_done_error; // KV read done before expected key size read
+    logic                     kv_any_error; // Any KV read error  
 
 
     // --------------------------------------- //
@@ -339,7 +364,10 @@ import soc_ifc_pkg::*;
                 end
             end
             DMA_WAIT_DATA: begin
-                if (all_bytes_transferred && (axi_error || mb_lock_error || aes_error)) begin
+                // KV error occurs prior to any data movement, so DMA can transfer immediately to ERROR state
+                // without waiting for AXI transfer to gracefully end
+                if ((all_bytes_transferred && (axi_error || mb_lock_error || aes_error)) ||
+                    (kv_any_error)) begin
                     ctrl_fsm_ns = DMA_ERROR;
                 end
                 else if (all_bytes_transferred) begin
@@ -416,60 +444,80 @@ import soc_ifc_pkg::*;
 
     always_comb begin
         cmd_inv_rd_route    = 1'b0; // There are no unassigned values from the 2-bit field, all individual configs are legal
-        cmd_inv_wr_route    = 1'b0; // There are no unassigned values from the 2-bit field, all individual configs are legal
+        cmd_inv_wr_route    = !(hwif_out.ctrl.wr_route.value inside {axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE ,
+                                                                     axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX    ,
+                                                                     axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO,
+                                                                     axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD  ,
+                                                                     axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT}) ||
+                              ((hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT) &&
+                               !ocp_lock_in_progress);
         // Some COMBINATIONS of routes are disallowed
         case({hwif_out.ctrl.rd_route.value, hwif_out.ctrl.wr_route.value}) inside
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE)}:    cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE)}:    cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)}:       cmd_inv_route_combo = 0;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)}:       cmd_inv_route_combo = 0;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO)}:   cmd_inv_route_combo = 0;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO)}:   cmd_inv_route_combo = 0;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 1;
+
+            {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE),
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT)}:   cmd_inv_route_combo = 0;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE)}:    cmd_inv_route_combo = 0;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE)}:    cmd_inv_route_combo = 0;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)}:       cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)}:       cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO)}:   cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO)}:   cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 1;
+
+            {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX),
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT)}:   cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE)}:    cmd_inv_route_combo = 0;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE)}:    cmd_inv_route_combo = 0;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)}:       cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)}:       cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO)}:   cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO)}:   cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 1;
+
+            {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO),
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT)}:   cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE)}:    cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE)}:    cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)}:       cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)}:       cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO)}:   cmd_inv_route_combo = 1;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO)}:   cmd_inv_route_combo = 1;
 
             {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR),
-             2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 0;
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD)}:     cmd_inv_route_combo = 0;
+
+            {2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR),
+             3'(axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT)}:   cmd_inv_route_combo = 1;
+
+            default:                                                   cmd_inv_route_combo = 1;
         endcase
         cmd_inv_aes_route_combo = hwif_out.ctrl.aes_mode_en.value && (
                                     hwif_out.ctrl.rd_route.value != 2'(axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR) ||  
-                                    hwif_out.ctrl.wr_route.value != 2'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD));
+                                    hwif_out.ctrl.wr_route.value != 3'(axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD));
         cmd_inv_aes_block_size = hwif_out.ctrl.aes_mode_en.value && hwif_out.block_size.size.value != '0;
         cmd_inv_aes_fixed      = hwif_out.ctrl.aes_mode_en.value && (hwif_out.ctrl.rd_fixed.value || hwif_out.ctrl.wr_fixed.value);
         cmd_inv_byte_count  = |hwif_out.byte_count.count.value[BW-1:0] ||
@@ -477,12 +525,17 @@ import soc_ifc_pkg::*;
                               (hwif_out.byte_count.count.value > DMA_MAX_XFER_SIZE) ||
                               (hwif_out.byte_count.count.value > CPTRA_MBOX_SIZE_BYTES &&
                                ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) ||
-                                (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX)));
+                                (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX))) ||
+                              ((hwif_out.byte_count.count.value != 32'(key_release_size)) &&
+                               (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT)) ||
+                              ((hwif_out.byte_count.count.value > (OCP_LOCK_MEK_NUM_DWORDS << 2))  &&
+                               (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT));
         // power of 2 and word-aligned
         cmd_inv_block_size  = |(hwif_out.block_size.size.value & (hwif_out.block_size.size.value-1)) ||
                               |hwif_out.block_size.size.value[BW-1:0];
         cmd_inv_rd_fixed    = hwif_out.ctrl.rd_fixed.value && hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE;
-        cmd_inv_wr_fixed    = hwif_out.ctrl.wr_fixed.value && hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE;
+        cmd_inv_wr_fixed    = hwif_out.ctrl.wr_fixed.value && hwif_out.ctrl.wr_route.value inside {axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE,
+                                                                                                   axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT};
         cmd_inv_mbox_lock   = !mbox_lock && ((hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX) || (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX));
         cmd_inv_sha_lock    = !sha_lock && (1'b0/*addr decode? NOTE: Direct-access to sha accelerator not implemented. Disable this check.*/);
         cmd_parse_error     = cmd_inv_rd_route    ||
@@ -504,6 +557,7 @@ import soc_ifc_pkg::*;
         // An address is invalid if:
         //   * improperly aligned
         //   * MSB bits are set (out of address range)
+        //   * Mismatches key_release_addr for KEYVAULT wr_route
         if (AW < 32) begin
             always_comb begin
                 cmd_inv_src_addr    = |src_addr[BW-1:0] ||
@@ -511,7 +565,8 @@ import soc_ifc_pkg::*;
                                       |hwif_out.src_addr_h.addr_h.value;
                 cmd_inv_dst_addr    = |dst_addr[BW-1:0] ||
                                       |hwif_out.dst_addr_l.addr_l.value[31:AW] ||
-                                      |hwif_out.dst_addr_h.addr_h.value;
+                                      |hwif_out.dst_addr_h.addr_h.value ||
+                                     (|(64'(dst_addr) ^ key_release_addr) && (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT));
             end
         end
         else if (AW < 64) begin
@@ -519,13 +574,15 @@ import soc_ifc_pkg::*;
                 cmd_inv_src_addr    = |src_addr[BW-1:0] ||
                                       |hwif_out.src_addr_h.addr_h.value[31:AW-32];
                 cmd_inv_dst_addr    = |dst_addr[BW-1:0] ||
-                                      |hwif_out.dst_addr_h.addr_h.value[31:AW-32];
+                                      |hwif_out.dst_addr_h.addr_h.value[31:AW-32] ||
+                                     (|(64'(dst_addr) ^ key_release_addr) && (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT));
             end
         end
         else begin
             always_comb begin
                 cmd_inv_src_addr    = |src_addr[BW-1:0];
-                cmd_inv_dst_addr    = |dst_addr[BW-1:0];
+                cmd_inv_dst_addr    = |dst_addr[BW-1:0] ||
+                                     (|(64'(dst_addr) ^ key_release_addr) && (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT));
             end
         end
     endgenerate
@@ -538,6 +595,8 @@ import soc_ifc_pkg::*;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_sha_lock_sts      .hwset = 1'b0; // SHA accelerator direct-mode not enabled; sha locking should be checked by API user (i.e. FW) instead of in HW
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_oflow_sts    .hwset = (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO) &&  fifo_w_valid && !fifo_w_ready;
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_fifo_uflow_sts    .hwset = (hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO) && !fifo_r_valid &&  fifo_r_ready;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_kv_rd_sts         .hwset = kv_read_error;
+    always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_kv_rd_large_sts   .hwset = kv_premature_done_error;
 
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_txn_done_sts      .hwset = ctrl_fsm_ps inside {DMA_DONE,DMA_ERROR};
     always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_fifo_empty_sts    .hwset =  fifo_empty && !fifo_empty_r;
@@ -733,6 +792,54 @@ import soc_ifc_pkg::*;
         mb_data.soc_req = 1'b0;
     end
 
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            kv_read_en <= 1'b0;
+        end
+        else if (!kv_read_once && 
+                 hwif_out.ctrl.go.value &&
+                 (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT) &&
+                 (!cmd_parse_error)) begin
+            kv_read_en <= 1'b1;
+        end
+        else if (kv_data_read_done) begin
+            kv_read_en <= 1'b0;
+        end
+    end
+
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            kv_read_once <= 1'b0;
+        end
+        else if (kv_read_en) begin
+            kv_read_once <= 1'b1;
+        end
+        else if (ctrl_fsm_ps == DMA_IDLE) begin
+            kv_read_once <= 1'b0;
+        end
+    end
+
+    // KeyVault Error Detection - Separate Signals for Better Observability
+    always_comb begin
+        // KV read operation error (existing functionality)
+        kv_read_error = kv_read_en && (kv_data_error_code != KV_SUCCESS) && (ctrl_fsm_ps == DMA_WAIT_DATA);
+
+        // KV premature completion error (new functionality)
+        kv_premature_done_error = kv_data_read_done && 
+                                 (ctrl_fsm_ps == DMA_WAIT_DATA) && 
+                                 (rd_fifo_bytes_remaining != 32'h0);
+
+        // Combined error signal for FSM transitions
+        kv_any_error = kv_read_error || kv_premature_done_error;
+    end 
+
+    always_comb begin
+        kv_read_ctrl_reg.read_en         = kv_read_en && kv_data_kv_ready;
+        kv_read_ctrl_reg.pcr_hash_extend = '0;
+        kv_read_ctrl_reg.read_entry      = OCP_LOCK_KEY_RELEASE_KV_SLOT;
+        kv_read_ctrl_reg.rsvd            = '0;
+    end
+
     always_comb begin
         rd_req_hshake        = r_req_if.valid && r_req_if.ready;
         wr_req_hshake        = w_req_if.valid && w_req_if.ready;
@@ -839,6 +946,18 @@ import soc_ifc_pkg::*;
         end
     end
 
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            rd_fifo_bytes_remaining <= '0;
+        end
+        else if (ctrl_fsm_ps == DMA_IDLE && hwif_out.ctrl.go.value) begin
+            rd_fifo_bytes_remaining <= hwif_out.byte_count.count;
+        end
+        else if (fifo_w_valid && fifo_w_ready) begin
+            rd_fifo_bytes_remaining <= rd_fifo_bytes_remaining - BC;
+        end
+    end
+
     always_comb begin
         if (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO) begin
             fifo_w_data  = req_data.wdata;
@@ -847,6 +966,10 @@ import soc_ifc_pkg::*;
         else if (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX) begin
             fifo_w_data  = mb_rdata;
             fifo_w_valid = mb_dv && !mb_hold;
+        end
+        else if (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT) begin
+            fifo_w_data  = kv_data_write_data;
+            fifo_w_valid = kv_data_write_en && |(rd_fifo_bytes_remaining); // FIXME no backpressure on this signal, FIFO must accept every assertion
         end
         else begin
             fifo_w_data  = r_data_i;
@@ -891,6 +1014,8 @@ import soc_ifc_pkg::*;
     always_comb r_data_mask = {DW{hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO}};
     always_comb hwif_in.read_data.rdata.next = rd_route_data & r_data_mask;
 
+
+    // Runtime Errors
     always_ff @(posedge clk or negedge rst_n) begin
         if (!rst_n) begin
             axi_error <= 1'b0;
@@ -976,9 +1101,18 @@ import soc_ifc_pkg::*;
                 // After writing 4 words
                 if (aes_cif_write_block_done) begin
                     aes_init_done_next = 1'b1;
-                    if (!aes_init_done) begin
+                    // If transfer is > 4 DWORDs we need to push 
+                    // more content into AES before we start
+                    // reading data out.
+                    if (!aes_init_done && (bytes_remaining > 0)) begin
                         aes_fsm_ns = AES_WAIT_INPUT_READY;
                     end else begin
+                        // If the transfer is =< 4DWORDs the "init" transfer
+                        // is the last transfer and we need to indicate
+                        // to AES_READ_OUTPUT this is the last transfer.
+                        if(!aes_init_done && (bytes_remaining == 0)) begin
+                            aes_to_axi_last_transfer_next = 1'b1;
+                        end
                         aes_fsm_ns = AES_WAIT_OUTPUT_VALID;
                     end
                 end
@@ -990,6 +1124,8 @@ import soc_ifc_pkg::*;
             end
             AES_READ_OUTPUT: begin
                 if (aes_cif_read_block_done) begin
+                    // Final transfer and read out of AES is done so go into
+                    // AES_ERROR or AES_DONE state
                     if (aes_to_axi_last_transfer) begin
                         if(aes_error) begin
                             aes_fsm_ns = AES_ERROR;
@@ -997,19 +1133,27 @@ import soc_ifc_pkg::*;
                             aes_fsm_ns = AES_DONE;
                         end
                     end
+                    // At this point we have transerted all data into 
+                    // AES but we still have one more block to read out of 
+                    // AES that we "buffered" into the AES on the first set of 
+                    // writes into AES. This allows us to read that last bit
+                    // of data out of AES and the next time around we will
+                    // transition into AES_ERROR or AES_DONE. This only
+                    // happens when the size of the transfer is > 4 DWORDs
+                    // anything smaller and there is not buffering of data
+                    // since the payload is too small.
                     else if(bytes_remaining == '0) begin 
                         aes_to_axi_last_transfer_next = 1'b1;
                         aes_fsm_ns = AES_WAIT_OUTPUT_VALID;
-                    end else if (aes_to_axi_last_transfer) begin
-                        if(aes_error) begin
-                            aes_fsm_ns = AES_ERROR;
-                        end else begin
-                            aes_fsm_ns = AES_DONE;
-                        end
                     end
+                    // When we are at the last block of data transfered into
+                    // the AES we need to update the byte count in the AES if
+                    // we are in GCM mode. 
                     else if(bytes_remaining > 0 && bytes_remaining < 16 && hwif_out.ctrl.aes_gcm_mode.value) begin
                         aes_fsm_ns = AES_WAIT_IDLE;
                     end
+                    // Typical transfer into AES is done and we are streaming
+                    // another 4 DWORDs into the AES.
                     else begin
                         aes_fsm_ns = AES_WRITE_BLOCK;
                     end
@@ -1192,6 +1336,46 @@ import soc_ifc_pkg::*;
     end
 
     // --------------------------------------- //
+    // KeyVault Read Client                    //
+    // --------------------------------------- //
+    always_comb begin
+        kv_read_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
+        kv_read_metrics.kv_read_dest         = KV_NUM_READ'(1<<KV_DEST_IDX_DMA_DATA);
+        kv_read_metrics.kv_key_entry         = kv_read_ctrl_reg.read_entry;
+    end
+
+    //Read Key (as data)
+    kv_read_client #(
+        .DATA_WIDTH(OCP_LOCK_MEK_NUM_DWORDS*32), // NOTE: key_release_size does not override this! But we only transfer FIFO contents in specified DW count to endpoint. This is a static size for KV reads.
+        .PAD(0)
+    )
+    dma_data_kv_read
+    (
+        .clk    (clk        ),
+        .rst_b  (rst_n      ),
+        .zeroize(ctrl_fsm_ps == DMA_IDLE || hwif_out.ctrl.flush.value || debugUnlock_or_scan_mode_switch),
+
+        //client control register
+        .read_ctrl_reg(kv_read_ctrl_reg),
+
+        //access filtering rule metrics
+        .read_metrics(kv_read_metrics),
+
+        //interface with kv
+        .kv_read(kv_read),
+        .kv_resp(kv_rd_resp),
+
+        //interface with client
+        .write_en    (kv_data_write_en    ),
+        .write_offset(/*kv_data_write_offset*/), // TODO use this?
+        .write_data  (kv_data_write_data  ),
+
+        .error_code(kv_data_error_code),
+        .kv_ready  (kv_data_kv_ready  ),
+        .read_done (kv_data_read_done )
+    );
+
+    // --------------------------------------- //
     // Data FIFO                               //
     // --------------------------------------- //
     caliptra_prim_fifo_sync #(
@@ -1199,12 +1383,13 @@ import soc_ifc_pkg::*;
       .Pass             (1'b0), // if == 1 allow requests to pass through empty FIFO
       .Depth            (FIFO_BC/BC),
       .OutputZeroIfEmpty(1'b1), // if == 1 always output 0 when FIFO is empty
+      .resetOnClear     (1), // Reset FIFO when clr_i set
       .Secure           (1'b0)  // use prim count for pointers; no secret data transmitted via DMA on AXI, no hardened counters
     ) i_fifo (
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
       // synchronous clear / flush port
-      .clr_i   (ctrl_fsm_ps == DMA_IDLE && hwif_out.ctrl.flush.value),
+      .clr_i   (ctrl_fsm_ps == DMA_IDLE), // TODO clear with debugUnlock_or_scan_mode_switch while allowing AXI to end gracefully?
       // write port
       .wvalid_i(fifo_w_valid  ),
       .wready_o(fifo_w_ready  ),
@@ -1239,12 +1424,13 @@ import soc_ifc_pkg::*;
       .Pass             (1'b0), // if == 1 allow requests to pass through empty FIFO
       .Depth             (AES_FIFO_BC/BC),
       .OutputZeroIfEmpty(1'b1), // if == 1 always output 0 when FIFO is empty
+      .resetOnClear     (1), // Reset FIFO when clr_i set
       .Secure           (1'b0)  // use prim count for pointers; no secret data transmitted via DMA on AXI, no hardened counters
     ) i_aes_fifo (
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
       // synchronous clear / flush port
-      .clr_i   (aes_fsm_ps == AES_IDLE),
+      .clr_i   (ctrl_fsm_ps == DMA_IDLE), 
       // write port
       .wvalid_i(aes_fifo_w_valid  ),
       .wready_o(aes_fifo_w_ready  ),
