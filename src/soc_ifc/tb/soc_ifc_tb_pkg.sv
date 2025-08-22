@@ -33,6 +33,8 @@ package soc_ifc_tb_pkg;
   logic [63:0] strap_ss_external_staging_area_base_addr_tb;
   logic [63:0] strap_ss_otp_fc_base_addr_tb;
   logic [63:0] strap_ss_uds_seed_base_addr_tb;
+  logic [63:0] strap_ss_key_release_base_addr_tb;
+  logic [15:0] strap_ss_key_release_key_size_tb;
   logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb;
   logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb;
   logic [31:0] strap_ss_strap_generic_0_tb;
@@ -42,6 +44,7 @@ package soc_ifc_tb_pkg;
   logic [31:0] strap_ss_caliptra_dma_axi_user_tb;
   logic        ss_debug_intent_tb;
   logic        subsystem_mode_tb;
+  logic        ocp_lock_en_tb;
 
   // ================================================================================ 
   // Type declarations 
@@ -109,6 +112,7 @@ package soc_ifc_tb_pkg;
 
   // The whole thing could probably be done slickly using enums but dictionaries 
   // are easier to use and lookup stuff. To be updated if overhead is too high. 
+  // FIXME why are most of the SS straps not included?
 
   word_addr_t _wide_register_dict [string] = {
     "CPTRA_FW_EXTENDED_ERROR_INFO"          : 8, 
@@ -132,6 +136,7 @@ package soc_ifc_tb_pkg;
     "FUSE_IDEVID_CERT_ATTR"                 : 24, 
     "FUSE_IDEVID_MANUF_HSM_ID"              : 4, 
     "FUSE_SOC_MANIFEST_SVN"                 : 4,
+    "FUSE_HEK_SEED"                         : 8,
     "INTERNAL_OBF_KEY"                      : 8,
     "SS_STRAP_GENERIC"                      : 4 ,
     "SS_SOC_DBG_UNLOCK_LEVEL"               : 2, 
@@ -208,25 +213,30 @@ package soc_ifc_tb_pkg;
     "FUSE_PQC_KEY_TYPE"                             : SOCIFC_BASE + `SOC_IFC_REG_FUSE_PQC_KEY_TYPE,                                    // 0x38c 
     "FUSE_SOC_MANIFEST_SVN"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0,                              // 0x390 [4]
     "FUSE_SOC_MANIFEST_MAX_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN,                            // 0x3a0
+    // 0x3a4..0x3bc
+    "FUSE_HEK_SEED"                                 : SOCIFC_BASE + `CLP_SOC_IFC_REG_FUSE_HEK_SEED_0,                                  // 0x3c0 [8] Obfuscated Hardware Epoch Key Seed
+    // 0x3e0..0x4fc
     "SS_CPTRA_BASE_ADDR_L"                    : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L,                               // 0x500
     "SS_CPTRA_BASE_ADDR_H"                    : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_H,                               // 0x504
     "SS_MCI_BASE_ADDR_L"                      : SOCIFC_BASE + `SOC_IFC_REG_SS_MCI_BASE_ADDR_L,                                    // 0x508
     "SS_MCI_BASE_ADDR_H"                      : SOCIFC_BASE + `SOC_IFC_REG_SS_MCI_BASE_ADDR_H,                                    // 0x50c
     "SS_RECOVERY_IFC_BASE_ADDR_L"             : SOCIFC_BASE + `SOC_IFC_REG_SS_RECOVERY_IFC_BASE_ADDR_L,                           // 0x510
     "SS_RECOVERY_IFC_BASE_ADDR_H"             : SOCIFC_BASE + `SOC_IFC_REG_SS_RECOVERY_IFC_BASE_ADDR_H,                           // 0x514
-    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"    : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L,                           // 0x510
-    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"    : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H,                           // 0x514
     "SS_OTP_FC_BASE_ADDR_L"                   : SOCIFC_BASE + `SOC_IFC_REG_SS_OTP_FC_BASE_ADDR_L,                                 // 0x518
     "SS_OTP_FC_BASE_ADDR_H"                   : SOCIFC_BASE + `SOC_IFC_REG_SS_OTP_FC_BASE_ADDR_H,                                 // 0x51c
     "SS_UDS_SEED_BASE_ADDR_L"                 : SOCIFC_BASE + `SOC_IFC_REG_SS_UDS_SEED_BASE_ADDR_L,                               // 0x520
-    "SS_UDS_BASE_ADDR_H"                      : SOCIFC_BASE + `SOC_IFC_REG_SS_UDS_SEED_BASE_ADDR_H,                               // 0x524
+    "SS_UDS_SEED_BASE_ADDR_H"                 : SOCIFC_BASE + `SOC_IFC_REG_SS_UDS_SEED_BASE_ADDR_H,                               // 0x524
     "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : SOCIFC_BASE + `SOC_IFC_REG_SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET, // 0x528
     "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : SOCIFC_BASE + `SOC_IFC_REG_SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES,        // 0x52c
     "SS_DEBUG_INTENT"                               : SOCIFC_BASE + `SOC_IFC_REG_SS_DEBUG_INTENT,                                       // 0x530
     "SS_CPTRA_DMA_AXI_USER"                   : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER,                              // 0x534
-    "SS_CPTRA_STAGING_AREA_BASE_ADDR_L"       : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L,                  // 0x538
-    "SS_CPTRA_STAGING_AREA_BASE_ADDR_H"       : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H,                  // 0x53c
-    // 0x540..0x59c
+    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"    : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L,                  // 0x538
+    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"    : SOCIFC_BASE + `SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H,                  // 0x53c
+    "SS_KEY_RELEASE_BASE_ADDR_L"              : SOCIFC_BASE + `SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_L,                            // 0x540
+    "SS_KEY_RELEASE_BASE_ADDR_H"              : SOCIFC_BASE + `SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_H,                            // 0x544
+    "SS_KEY_RELEASE_SIZE"                     : SOCIFC_BASE + `SOC_IFC_REG_SS_KEY_RELEASE_SIZE,                                   // 0x548
+    "SS_OCP_LOCK_CTRL"                        : SOCIFC_BASE + `SOC_IFC_REG_SS_OCP_LOCK_CTRL,                                      // 0x54c
+    // 0x550..0x59c
     "SS_STRAP_GENERIC"                              : SOCIFC_BASE + `SOC_IFC_REG_SS_STRAP_GENERIC_0,                                    // 0x5a0 [4]
     // 0x5b0..0x5bc
     "SS_DBG_SERVICE_REG_REQ"                        : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ,                                 // 0x5c0
@@ -321,8 +331,9 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h0134, addr_max: SOCIFC_BASE + 16'h013c},
     '{addr_min: SOCIFC_BASE + 16'h0174, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0294, addr_max: SOCIFC_BASE + 16'h02b0},
-    '{addr_min: SOCIFC_BASE + 16'h03a4, addr_max: SOCIFC_BASE + 16'h04fc},
-    '{addr_min: SOCIFC_BASE + 16'h0540, addr_max: SOCIFC_BASE + 16'h059c},
+    '{addr_min: SOCIFC_BASE + 16'h03a4, addr_max: SOCIFC_BASE + 16'h03bc},
+    '{addr_min: SOCIFC_BASE + 16'h03e0, addr_max: SOCIFC_BASE + 16'h04fc},
+    '{addr_min: SOCIFC_BASE + 16'h0550, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
     '{addr_min: SOCIFC_BASE + 16'h0650, addr_max: SOCIFC_BASE + 16'h07fc},
@@ -350,7 +361,7 @@ package soc_ifc_tb_pkg;
   };
 
   dword_t _soc_register_initval_ss_dict [string] = {
-    "CPTRA_HW_CONFIG"                      : 32'h0000_0030  // LMS Acc Cap bit is set
+    "CPTRA_HW_CONFIG"                      : 32'h0000_0030  // LMS Acc Cap bit is set, Subsystem Mode bit is set, OCP LOCK EN bit overridden in init_regs
   };
 
 
@@ -373,13 +384,14 @@ package soc_ifc_tb_pkg;
     "FUSE_PQC_KEY_TYPE"                                : 32'h3,          // field 1:0
     "FUSE_SOC_MANIFEST_SVN"                            : 32'hffff_ffff, 
     "FUSE_SOC_MANIFEST_MAX_SVN"                        : 32'hff,         // field 7:0
+    "FUSE_HEK_SEED"                                    : 32'hffff_ffff,
     "CPTRA_HW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          
     "CPTRA_FW_ERROR_"                                  : 32'hffff_ffff,  // FATAL, NON_FATAL, ENC                          
     "CPTRA_FW_EXTENDED_ERROR_INFO"                     : 32'hffff_ffff,
     "CPTRA_RESET_REASON"                               : 32'h2,          // field WARM_RESET 
     "CPTRA_FUSE_WR_DONE"                               : 32'h1,          // field 0 
     "CPTRA_HW_REV_ID"                                  : 32'hffff_ffff,  // field SOC_STEPPING_ID, CPTRA_GENERATION
-    "CPTRA_HW_CONFIG"                                  : 32'h0000_003F,  // All existing bits are sticky
+    "CPTRA_HW_CONFIG"                                  : 32'h0000_007F,  // All existing bits are sticky
     "CPTRA_FUSE_VALID_AXI_USER"                        : 32'hffff_ffff,
     "CPTRA_FUSE_AXI_USER_LOCK"                         : 32'h1,
     "CPTRA_TIMER_CONFIG"                               : 32'hffff_ffff,                           
@@ -402,8 +414,6 @@ package soc_ifc_tb_pkg;
     "SS_MCI_BASE_ADDR_H"                               : 32'hffff_ffff,
     "SS_RECOVERY_IFC_BASE_ADDR_L"                      : 32'hffff_ffff,
     "SS_RECOVERY_IFC_BASE_ADDR_H"                      : 32'hffff_ffff,
-    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"             : 32'hffff_ffff,
-    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"             : 32'hffff_ffff,
     "SS_OTP_FC_BASE_ADDR_L"                            : 32'hffff_ffff,
     "SS_OTP_FC_BASE_ADDR_H"                            : 32'hffff_ffff,
     "SS_UDS_SEED_BASE_ADDR_L"                          : 32'hffff_ffff,
@@ -412,16 +422,23 @@ package soc_ifc_tb_pkg;
     "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : 32'hffff_ffff,
     "SS_DEBUG_INTENT"                                  : 32'h1,
     "SS_CPTRA_DMA_AXI_USER"                            : 32'hffff_ffff,
+    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"             : 32'hffff_ffff,
+    "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"             : 32'hffff_ffff,
+    "SS_KEY_RELEASE_BASE_ADDR_L"                       : 32'hffff_ffff,
+    "SS_KEY_RELEASE_BASE_ADDR_H"                       : 32'hffff_ffff,
+    "SS_KEY_RELEASE_SIZE"                              : 32'h0000_ffff,
     "SS_STRAP_GENERIC"                                 : 32'hffff_ffff
   };
 
 
   // mask bits that reflect which fields can be modified  
   dword_t _soc_register_mask_dict [string] = {
-    "CPTRA_HW_CONFIG"                                  : (`SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK    |
-                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_RSVD_EN_MASK     |                                                  
-                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK  |
-                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK  ),
+    "CPTRA_HW_CONFIG"                                  : (`SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK          |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_FUSE_GRANULARITY_MASK  |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_RSVD_EN_MASK           |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK        |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK),
     "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK             |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_IDEVID_CSR_READY_MASK   |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK       |
@@ -479,6 +496,8 @@ package soc_ifc_tb_pkg;
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK), 
+    "SS_KEY_RELEASE_SIZE"                              : `SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_MASK,
+    "SS_OCP_LOCK_CTRL"                                 : `SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK,
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
@@ -615,8 +634,6 @@ package soc_ifc_tb_pkg;
 
   function string get_ss_name(input int ss_code);
 
-    logic [2:0] ss_code_3bit; 
-
     foreach (_security_state_dict[ss_name]) begin
       if (_security_state_dict[ss_name] == ss_code[2:0]) 
         return ss_name; 
@@ -651,6 +668,9 @@ package soc_ifc_tb_pkg;
         "SS_OTP_FC_BASE_ADDR_H"                   : return strap_ss_otp_fc_base_addr_tb[63:32];
         "SS_UDS_SEED_BASE_ADDR_L"                 : return strap_ss_uds_seed_base_addr_tb[31:0];
         "SS_UDS_BASE_ADDR_H"                      : return strap_ss_uds_seed_base_addr_tb[63:32];                             
+        "SS_KEY_RELEASE_BASE_ADDR_L"              : return strap_ss_key_release_base_addr_tb[31:0];
+        "SS_KEY_RELEASE_BASE_ADDR_H"              : return strap_ss_key_release_base_addr_tb[63:32];
+        "SS_KEY_RELEASE_SIZE"                     : return dword_t'(strap_ss_key_release_key_size_tb);
         "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : return strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb;
         "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : return strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb;
         "SS_CPTRA_DMA_AXI_USER"                   : return strap_ss_caliptra_dma_axi_user_tb;
@@ -850,6 +870,7 @@ package soc_ifc_tb_pkg;
             //       a function call since there could be a significant delay 
             // _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
             // $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
+            // NOTE. Reg SS_OCP_LOCK_CTRL is now also reset on the fw update domain and must be handled.
 
             tmp_data = _exp_register_data_dict["CPTRA_RESET_REASON"]; 
             tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK)  |
@@ -1064,7 +1085,8 @@ package soc_ifc_tb_pkg;
           end
 
           "CPTRA_CAP_LOCK": begin
-            exp_data = ahb_indata & get_mask(addr_name) | axi_rodata;
+            $display("CPTRA_CAP_LOCK = 0x%08x", curr_data);
+            exp_data = curr_data[`SOC_IFC_REG_CPTRA_CAP_LOCK_LOCK_LOW] ? curr_data : (ahb_indata & get_mask(addr_name) | axi_rodata);
           end
 
           "CPTRA_HW_CAPABILITIES": begin
@@ -1117,17 +1139,20 @@ package soc_ifc_tb_pkg;
           "SS_MCI_BASE_ADDR_H"                            : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_RECOVERY_IFC_BASE_ADDR_L"                   : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_RECOVERY_IFC_BASE_ADDR_H"                   : exp_data = fuses_locked ? curr_data : axi_indata;
-          "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"          : exp_data = fuses_locked ? curr_data : axi_indata;
-          "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"          : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_OTP_FC_BASE_ADDR_L"                         : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_OTP_FC_BASE_ADDR_H"                         : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_UDS_SEED_BASE_ADDR_L"                       : exp_data = fuses_locked ? curr_data : axi_indata;
-          "SS_UDS_BASE_ADDR_H"                            : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_UDS_SEED_BASE_ADDR_H"                       : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"    : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_DEBUG_INTENT"                               : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_CPTRA_DMA_AXI_USER"                         : exp_data = fuses_locked ? curr_data : axi_indata;
-          
+          "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"          : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"          : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_KEY_RELEASE_BASE_ADDR_L"                    : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_KEY_RELEASE_BASE_ADDR_H"                    : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_KEY_RELEASE_SIZE"                           : exp_data = fuses_locked ? curr_data : axi_indata;
+
           "SS_DBG_SERVICE_REG_REQ"                  : begin
             ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
             //$display("ss_debug_intent = 0x%08x", ss_debug_intent);
@@ -1136,6 +1161,13 @@ package soc_ifc_tb_pkg;
             //$display("mask = 0x%08x", get_mask(addr_name));
             //$display("curr_data = 0x%08x", curr_data);
             exp_data = ss_debug_intent ? axi_indata & get_mask(addr_name) | ahb_indata & get_mask(addr_name) : curr_data;
+          end
+
+          "SS_OCP_LOCK_CTRL": begin
+              if (subsystem_mode_tb && ocp_lock_en_tb)
+                  exp_data = curr_data[`SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_LOW] ? curr_data : (ahb_indata & get_mask(addr_name) | axi_rodata);
+              else
+                  exp_data = curr_data;
           end
           
           //"SS_DBG_SERVICE_REG_RSP_PROD_UNLOCK"                  : begin
@@ -1182,6 +1214,8 @@ package soc_ifc_tb_pkg;
       // SS_* registers are straps that get their initial values from 
       // input wires to soc_ifc and can be written until CPTRA_FUSE_WR_DONE 
       // is set. After, they are locked for writes similar to fuses.
+      else if (rkey inside {"SS_DEBUG_INTENT", "SS_DBG_SERVICE_REG_REQ", "SS_OCP_LOCK_CTRL"})
+        continue;
       else if (rkey.substr(0,1) == "SS")
         fuse_regs.push_back(rkey);
     end 
@@ -1211,7 +1245,9 @@ package soc_ifc_tb_pkg;
       // SS_* registers are straps that get their initial values from 
       // input wires to soc_ifc and can be written until CPTRA_FUSE_WR_DONE 
       // is set. After, they are locked for writes similar to fuses.
-      if (rkey.substr(0,1) == "SS")
+      if (rkey inside {"SS_DEBUG_INTENT", "SS_DBG_SERVICE_REG_REQ", "SS_OCP_LOCK_CTRL"})
+        continue;
+      else if (rkey.substr(0,1) == "SS")
         ss_strap_regs.push_back(rkey); 
       
     end 
@@ -1263,18 +1299,19 @@ package soc_ifc_tb_pkg;
   endfunction // get_intrblk_regnames_minus_incr
 
 
-  function automatic strq_t get_soc_regnames_minus_fuse();
-
-    strq_t soc_regs; 
-
-    foreach (_soc_register_dict[rkey]) begin
-      if ((rkey.substr(0,3) != "FUSE") || (rkey.substr(0,1) != "SS"))
-        soc_regs.push_back(rkey); 
-    end 
-
-    return soc_regs;
-
-  endfunction // get_soc_regnames_minus_fuse
+  // NOTE the logic below is wrong, and this is unused
+//  function automatic strq_t get_soc_regnames_minus_fuse();
+//
+//    strq_t soc_regs; 
+//
+//    foreach (_soc_register_dict[rkey]) begin
+//      if ((rkey.substr(0,3) != "FUSE") || (rkey.substr(0,1) != "SS"))
+//        soc_regs.push_back(rkey); 
+//    end 
+//
+//    return soc_regs;
+//
+//  endfunction // get_soc_regnames_minus_fuse
 
 
   function automatic strq_t get_soc_regnames_minus_intr();
@@ -1299,7 +1336,7 @@ package soc_ifc_tb_pkg;
       if (str_startswith(rkey, "INTR_BRF") || 
           str_startswith(rkey, "SHA_ACC_INTR_BRF") || 
           str_startswith(rkey, "FUSE") ||
-          str_startswith(rkey, "SS")) 
+          (str_startswith(rkey, "SS") && !(rkey inside {"SS_DEBUG_INTENT", "SS_DBG_SERVICE_REG_REQ", "SS_OCP_LOCK_CTRL"}))) 
           continue;
       soc_regs.push_back(rkey); 
     end 
@@ -1686,6 +1723,14 @@ package soc_ifc_tb_pkg;
         end
         _soc_register_initval_dict.delete(rname);
       end
+    end
+
+    if (subsystem_mode_tb === 1'bX) begin
+        $fatal("subsystem_mode_tb is not set yet!");
+    end
+    else if (subsystem_mode_tb === 1'b1) begin
+        _soc_register_initval_ss_dict["CPTRA_HW_CONFIG"] = dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) | get_initval("CPTRA_HW_CONFIG");
+        $display("Update CPTRA_HW_CONFIG initval to 0x%x", get_initval("CPTRA_HW_CONFIG"));
     end
 
     // foreach (_soc_register_initval_dict[rname]) 
