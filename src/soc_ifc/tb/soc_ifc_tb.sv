@@ -262,11 +262,6 @@ module soc_ifc_tb
 
   logic         mailbox_data_avail_tb;
 
-  always_comb begin
-    subsystem_mode_tb = dut.soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en;
-    $display("Subsystem Mode updated: 0x%0x", subsystem_mode_tb);
-  end
-
 
   typedef enum logic {
     read = 0,
@@ -504,9 +499,9 @@ module soc_ifc_tb
 
   WordTransaction pulse_trig_trans = new(); 
 
-  RegScoreboard sb = new();  // scoreboard for checking register operations 
+  RegScoreboard sb = new();  // scoreboard for checking register operations
 
-  SocRegisters socregs = new(); // allows for initialization of soc-registers 
+  SocRegisters socregs = new(); // allows for initialization of soc-registers
 
 
   // Tie-offs
@@ -614,7 +609,6 @@ module soc_ifc_tb
   always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
   always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
   always_comb update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
-  always_comb update_CPTRA_HW_CONFIG();
 
 
   //----------------------------------------------------------------
@@ -837,7 +831,7 @@ module soc_ifc_tb
       strap_ss_strap_generic_3_tb = '0;
       ocp_lock_en_tb = $urandom_range(1,0);
 
-
+      update_CPTRA_HW_CONFIG();
     end
   endtask // init_sim
 

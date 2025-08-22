@@ -26,6 +26,11 @@ package soc_ifc_tb_pkg;
   localparam SHAACC_BASE = `CLP_SHA512_ACC_CSR_BASE_ADDR;
   localparam ADDR_WIDTH = 32; // SHould be 18; will let APB & AHB bus widths truncate as needed
   localparam AXI_USER_WIDTH = 32;
+  `ifdef CALIPTRA_MODE_SUBSYSTEM
+  localparam subsystem_mode_tb = 1'b1;
+  `else
+  localparam subsystem_mode_tb = 1'b0;
+  `endif
 
   logic [63:0] strap_ss_caliptra_base_addr_tb;
   logic [63:0] strap_ss_mci_base_addr_tb;
@@ -43,7 +48,6 @@ package soc_ifc_tb_pkg;
   logic [31:0] strap_ss_strap_generic_3_tb;
   logic [31:0] strap_ss_caliptra_dma_axi_user_tb;
   logic        ss_debug_intent_tb;
-  logic        subsystem_mode_tb;
   logic        ocp_lock_en_tb;
 
   // ================================================================================ 
@@ -679,11 +683,11 @@ package soc_ifc_tb_pkg;
       endcase
     end
     else if (str_startswith(addr_name, "CPTRA_HW_CONFIG")) begin
-      if (subsystem_mode_tb == 1) begin// subsystem mode
+      if (subsystem_mode_tb === 1) begin// subsystem mode
         $display("Subsytem mode: 0x%0x", subsystem_mode_tb);
         return _soc_register_initval_ss_dict[addr_name];
       end
-      else begin // passive mode
+      else if (subsystem_mode_tb === 0) begin // passive mode
         $display("Passive mode: 0x%0x", subsystem_mode_tb);
         return _soc_register_initval_passive_dict[addr_name];
       end
@@ -814,6 +818,10 @@ package soc_ifc_tb_pkg;
 
     begin
       exp_cptra_hw_config = get_initval("CPTRA_HW_CONFIG");
+      if (subsystem_mode_tb && ocp_lock_en_tb === 1'b1) begin
+        _soc_register_initval_ss_dict["CPTRA_HW_CONFIG"] = (ocp_lock_en_tb ? dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) : dword_t'(0)) | exp_cptra_hw_config;
+      end
+
       update_exp_regval("CPTRA_HW_CONFIG", exp_cptra_hw_config, SET_DIRECT);
       $display("TB INFO. Updated expected value of CPTRA_HW_CONFIG = 0x%0x", _exp_register_data_dict["CPTRA_HW_CONFIG"]);
     end
@@ -1723,14 +1731,6 @@ package soc_ifc_tb_pkg;
         end
         _soc_register_initval_dict.delete(rname);
       end
-    end
-
-    if (subsystem_mode_tb === 1'bX) begin
-        $fatal("subsystem_mode_tb is not set yet!");
-    end
-    else if (subsystem_mode_tb === 1'b1) begin
-        _soc_register_initval_ss_dict["CPTRA_HW_CONFIG"] = dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) | get_initval("CPTRA_HW_CONFIG");
-        $display("Update CPTRA_HW_CONFIG initval to 0x%x", get_initval("CPTRA_HW_CONFIG"));
     end
 
     // foreach (_soc_register_initval_dict[rname]) 
