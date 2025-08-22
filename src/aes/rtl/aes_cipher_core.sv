@@ -781,7 +781,7 @@ module aes_cipher_core import aes_pkg::*;
   /////////////
 
   // The output of the last round is not stored into the state register but forwarded directly.
-  assign state_o = add_round_key_out;
+  assign state_o =  out_valid_o ? add_round_key_out : '{default: '{default: '0}};
 
   ////////////////
   // Assertions //

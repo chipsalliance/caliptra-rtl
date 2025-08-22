@@ -189,8 +189,9 @@ module sha256_core(
   //----------------------------------------------------------------
   assign ready = ready_flag;
 
-  assign digest = {H0_reg, H1_reg, H2_reg, H3_reg,
-                   H4_reg, H5_reg, H6_reg, H7_reg};
+  assign digest = digest_valid_reg ? 
+                  {H0_reg, H1_reg, H2_reg, H3_reg,
+                   H4_reg, H5_reg, H6_reg, H7_reg} : 256'b0;
 
   assign digest_valid = digest_valid_reg;
 
