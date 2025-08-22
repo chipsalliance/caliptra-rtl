@@ -919,6 +919,14 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_fuse_soc_manifest_max_svn;
   logic [31:0]   full_addr_fuse_soc_manifest_max_svn = `CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN;
 
+  logic          hit_fuse_uds_seed[0:3];
+  logic [3:0]    bus_fuse_uds_seed[0:3];
+  logic [31:0]   full_addr_fuse_uds_seed[0:3];
+  assign         full_addr_fuse_uds_seed[0] = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_0;
+  assign         full_addr_fuse_uds_seed[1] = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_1;
+  assign         full_addr_fuse_uds_seed[2] = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_2;
+  assign         full_addr_fuse_uds_seed[3] = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_3;
+
   logic          hit_SS_CALIPTRA_BASE_ADDR_L;
   logic [3:0]    bus_SS_CALIPTRA_BASE_ADDR_L;
   logic [31:0]   full_addr_SS_CALIPTRA_BASE_ADDR_L = `CLP_SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L;
@@ -982,6 +990,22 @@ interface soc_ifc_cov_if
   logic          hit_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
   logic [3:0]    bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
   logic [31:0]   full_addr_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = `CLP_SOC_IFC_REG_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
+
+  logic          hit_SS_KEY_RELEASE_BASE_ADDR_L;
+  logic [3:0]    bus_SS_KEY_RELEASE_BASE_ADDR_L;
+  logic [31:0]   full_addr_SS_KEY_RELEASE_BASE_ADDR_L = `CLP_SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_L;
+
+  logic          hit_SS_KEY_RELEASE_BASE_ADDR_H;
+  logic [3:0]    bus_SS_KEY_RELEASE_BASE_ADDR_H;
+  logic [31:0]   full_addr_SS_KEY_RELEASE_BASE_ADDR_H = `CLP_SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_H;
+
+  logic          hit_SS_KEY_RELEASE_SIZE;
+  logic [3:0]    bus_SS_KEY_RELEASE_SIZE;
+  logic [31:0]   full_addr_SS_KEY_RELEASE_SIZE = `CLP_SOC_IFC_REG_SS_KEY_RELEASE_SIZE;
+
+  logic          hit_SS_OCP_LOCK_CTRL;
+  logic [3:0]    bus_SS_OCP_LOCK_CTRL;
+  logic [31:0]   full_addr_SS_OCP_LOCK_CTRL = `CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL;
 
   logic          hit_SS_STRAP_GENERIC[0:3];
   logic [3:0]    bus_SS_STRAP_GENERIC[0:3];
@@ -1780,6 +1804,18 @@ interface soc_ifc_cov_if
   assign hit_fuse_soc_manifest_max_svn = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_manifest_max_svn[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_soc_manifest_max_svn = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_manifest_max_svn}};
 
+  assign hit_fuse_uds_seed[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[0][18-1:0]);
+  assign bus_fuse_uds_seed[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[0]}};
+
+  assign hit_fuse_uds_seed[1] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[1][18-1:0]);
+  assign bus_fuse_uds_seed[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[1]}};
+
+  assign hit_fuse_uds_seed[2] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[2][18-1:0]);
+  assign bus_fuse_uds_seed[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[2]}};
+
+  assign hit_fuse_uds_seed[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[3][18-1:0]);
+  assign bus_fuse_uds_seed[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[3]}};
+
   assign hit_SS_CALIPTRA_BASE_ADDR_L = (soc_ifc_reg_req_data.addr == full_addr_SS_CALIPTRA_BASE_ADDR_L[AXI_ADDR_WIDTH-1:0]);
   assign bus_SS_CALIPTRA_BASE_ADDR_L = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_CALIPTRA_BASE_ADDR_L}};
 
@@ -1827,6 +1863,18 @@ interface soc_ifc_cov_if
 
   assign hit_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = (soc_ifc_reg_req_data.addr == full_addr_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H[AXI_ADDR_WIDTH-1:0]);
   assign bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H}};
+
+  assign hit_SS_KEY_RELEASE_BASE_ADDR_L = (soc_ifc_reg_req_data.addr == full_addr_SS_KEY_RELEASE_BASE_ADDR_L[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_KEY_RELEASE_BASE_ADDR_L = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_KEY_RELEASE_BASE_ADDR_L}};
+
+  assign hit_SS_KEY_RELEASE_BASE_ADDR_H = (soc_ifc_reg_req_data.addr == full_addr_SS_KEY_RELEASE_BASE_ADDR_H[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_KEY_RELEASE_BASE_ADDR_H = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_KEY_RELEASE_BASE_ADDR_H}};
+
+  assign hit_SS_KEY_RELEASE_SIZE = (soc_ifc_reg_req_data.addr == full_addr_SS_KEY_RELEASE_SIZE[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_KEY_RELEASE_SIZE = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_KEY_RELEASE_SIZE}};
+
+  assign hit_SS_OCP_LOCK_CTRL = (soc_ifc_reg_req_data.addr == full_addr_SS_OCP_LOCK_CTRL[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_OCP_LOCK_CTRL = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_OCP_LOCK_CTRL}};
 
   assign hit_SS_STRAP_GENERIC[0] = (soc_ifc_reg_req_data.addr == full_addr_SS_STRAP_GENERIC[0][18-1:0]);
   assign bus_SS_STRAP_GENERIC[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_STRAP_GENERIC[0]}};
@@ -3213,6 +3261,30 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP fuse_uds_seed [0:3] -----------------------
+  covergroup soc_ifc_fuse_uds_seed_cg (ref logic [3:0] bus_event[0:3]) @(posedge clk);
+    fuse_uds_seed0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[0];
+    bus_fuse_uds_seed0_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_uds_seed1_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[1];
+    bus_fuse_uds_seed1_cp : coverpoint bus_event[1] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_uds_seed2_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[2];
+    bus_fuse_uds_seed2_cp : coverpoint bus_event[2] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_uds_seed3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[3];
+    bus_fuse_uds_seed3_cp : coverpoint bus_event[3] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
   // ----------------------- COVERGROUP SS_CALIPTRA_BASE_ADDR_L -----------------------
   covergroup soc_ifc_SS_CALIPTRA_BASE_ADDR_L_cg (ref logic [3:0] bus_event) @(posedge clk);
     SS_CALIPTRA_BASE_ADDR_L_cp : coverpoint i_soc_ifc_reg.field_storage.SS_CALIPTRA_BASE_ADDR_L;
@@ -3352,6 +3424,42 @@ interface soc_ifc_cov_if
   covergroup soc_ifc_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cg (ref logic [3:0] bus_event) @(posedge clk);
     SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cp : coverpoint i_soc_ifc_reg.field_storage.SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H;
     bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP SS_KEY_RELEASE_BASE_ADDR_L -----------------------
+  covergroup soc_ifc_SS_KEY_RELEASE_BASE_ADDR_L_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_KEY_RELEASE_BASE_ADDR_L_cp : coverpoint i_soc_ifc_reg.field_storage.SS_KEY_RELEASE_BASE_ADDR_L;
+    bus_SS_KEY_RELEASE_BASE_ADDR_L_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP SS_KEY_RELEASE_BASE_ADDR_H -----------------------
+  covergroup soc_ifc_SS_KEY_RELEASE_BASE_ADDR_H_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_KEY_RELEASE_BASE_ADDR_H_cp : coverpoint i_soc_ifc_reg.field_storage.SS_KEY_RELEASE_BASE_ADDR_H;
+    bus_SS_KEY_RELEASE_BASE_ADDR_H_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP SS_KEY_RELEASE_SIZE -----------------------
+  covergroup soc_ifc_SS_KEY_RELEASE_SIZE_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_KEY_RELEASE_SIZE_cp : coverpoint i_soc_ifc_reg.field_storage.SS_KEY_RELEASE_SIZE;
+    bus_SS_KEY_RELEASE_SIZE_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP SS_OCP_LOCK_CTRL -----------------------
+  covergroup soc_ifc_SS_OCP_LOCK_CTRL_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_OCP_LOCK_CTRL_cp : coverpoint i_soc_ifc_reg.field_storage.SS_OCP_LOCK_CTRL;
+    bus_SS_OCP_LOCK_CTRL_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -3987,6 +4095,7 @@ interface soc_ifc_cov_if
   soc_ifc_fuse_pqc_key_type_cg fuse_pqc_key_type_cg = new(bus_fuse_pqc_key_type);
   soc_ifc_fuse_soc_manifest_svn_cg fuse_soc_manifest_svn_cg = new(bus_fuse_soc_manifest_svn);
   soc_ifc_fuse_soc_manifest_max_svn_cg fuse_soc_manifest_max_svn_cg = new(bus_fuse_soc_manifest_max_svn);
+  soc_ifc_fuse_uds_seed_cg fuse_uds_seed_cg = new(bus_fuse_uds_seed);
   soc_ifc_SS_CALIPTRA_BASE_ADDR_L_cg SS_CALIPTRA_BASE_ADDR_L_cg = new(bus_SS_CALIPTRA_BASE_ADDR_L);
   soc_ifc_SS_CALIPTRA_BASE_ADDR_H_cg SS_CALIPTRA_BASE_ADDR_H_cg = new(bus_SS_CALIPTRA_BASE_ADDR_H);
   soc_ifc_SS_MCI_BASE_ADDR_L_cg SS_MCI_BASE_ADDR_L_cg = new(bus_SS_MCI_BASE_ADDR_L);
@@ -4003,6 +4112,10 @@ interface soc_ifc_cov_if
   soc_ifc_SS_CALIPTRA_DMA_AXI_USER_cg SS_CALIPTRA_DMA_AXI_USER_cg = new(bus_SS_CALIPTRA_DMA_AXI_USER);
   soc_ifc_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L_cg SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L_cg = new(bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L);
   soc_ifc_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cg SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H_cg = new(bus_SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H);
+  soc_ifc_SS_KEY_RELEASE_BASE_ADDR_L_cg SS_KEY_RELEASE_BASE_ADDR_L_cg = new(bus_SS_KEY_RELEASE_BASE_ADDR_L);
+  soc_ifc_SS_KEY_RELEASE_BASE_ADDR_H_cg SS_KEY_RELEASE_BASE_ADDR_H_cg = new(bus_SS_KEY_RELEASE_BASE_ADDR_H);
+  soc_ifc_SS_KEY_RELEASE_SIZE_cg SS_KEY_RELEASE_SIZE_cg = new(bus_SS_KEY_RELEASE_SIZE);
+  soc_ifc_SS_OCP_LOCK_CTRL_cg SS_OCP_LOCK_CTRL_cg = new(bus_SS_OCP_LOCK_CTRL);
   soc_ifc_SS_STRAP_GENERIC_cg SS_STRAP_GENERIC_cg = new(bus_SS_STRAP_GENERIC);
   soc_ifc_SS_DBG_SERVICE_REG_REQ_cg SS_DBG_SERVICE_REG_REQ_cg = new(bus_SS_DBG_SERVICE_REG_REQ);
   soc_ifc_SS_DBG_SERVICE_REG_RSP_cg SS_DBG_SERVICE_REG_RSP_cg = new(bus_SS_DBG_SERVICE_REG_RSP);

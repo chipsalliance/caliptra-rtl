@@ -84,6 +84,7 @@ soc_regs_txt = """
     fuse_pqc_key_type
     fuse_soc_manifest_svn 4
     fuse_soc_manifest_max_svn
+    fuse_uds_seed 4
     SS_CALIPTRA_BASE_ADDR_L
     SS_CALIPTRA_BASE_ADDR_H
     SS_MCI_BASE_ADDR_L
@@ -100,6 +101,10 @@ soc_regs_txt = """
     SS_CALIPTRA_DMA_AXI_USER
     SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
     SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
+    SS_KEY_RELEASE_BASE_ADDR_L
+    SS_KEY_RELEASE_BASE_ADDR_H
+    SS_KEY_RELEASE_SIZE
+    SS_OCP_LOCK_CTRL
     SS_STRAP_GENERIC 4
     SS_DBG_SERVICE_REG_REQ
     SS_DBG_SERVICE_REG_RSP
