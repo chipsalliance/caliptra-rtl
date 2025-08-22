@@ -878,7 +878,6 @@ package soc_ifc_tb_pkg;
             //       a function call since there could be a significant delay 
             // _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
             // $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
-            // NOTE. Reg SS_OCP_LOCK_CTRL is now also reset on the fw update domain and must be handled.
 
             tmp_data = _exp_register_data_dict["CPTRA_RESET_REASON"]; 
             tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK)  |
