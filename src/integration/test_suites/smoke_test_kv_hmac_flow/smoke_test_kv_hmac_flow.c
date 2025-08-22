@@ -222,7 +222,7 @@ void main() {
     //inject hmac512_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
     hmac_zeroize();
 
     SEND_STDOUT_CTRL(0xff); //End the test
