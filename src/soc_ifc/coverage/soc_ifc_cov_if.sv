@@ -919,13 +919,17 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_fuse_soc_manifest_max_svn;
   logic [31:0]   full_addr_fuse_soc_manifest_max_svn = `CLP_SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN;
 
-  logic          hit_fuse_uds_seed[0:3];
-  logic [3:0]    bus_fuse_uds_seed[0:3];
-  logic [31:0]   full_addr_fuse_uds_seed[0:3];
-  assign         full_addr_fuse_uds_seed[0] = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_0;
-  assign         full_addr_fuse_uds_seed[1] = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_1;
-  assign         full_addr_fuse_uds_seed[2] = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_2;
-  assign         full_addr_fuse_uds_seed[3] = `CLP_SOC_IFC_REG_FUSE_UDS_SEED_3;
+  logic          hit_fuse_hek_seed[0:7];
+  logic [3:0]    bus_fuse_hek_seed[0:7];
+  logic [31:0]   full_addr_fuse_hek_seed[0:7];
+  assign         full_addr_fuse_hek_seed[0] = `CLP_SOC_IFC_REG_FUSE_HEK_SEED_0;
+  assign         full_addr_fuse_hek_seed[1] = `CLP_SOC_IFC_REG_FUSE_HEK_SEED_1;
+  assign         full_addr_fuse_hek_seed[2] = `CLP_SOC_IFC_REG_FUSE_HEK_SEED_2;
+  assign         full_addr_fuse_hek_seed[3] = `CLP_SOC_IFC_REG_FUSE_HEK_SEED_3;
+  assign         full_addr_fuse_hek_seed[4] = `CLP_SOC_IFC_REG_FUSE_HEK_SEED_4;
+  assign         full_addr_fuse_hek_seed[5] = `CLP_SOC_IFC_REG_FUSE_HEK_SEED_5;
+  assign         full_addr_fuse_hek_seed[6] = `CLP_SOC_IFC_REG_FUSE_HEK_SEED_6;
+  assign         full_addr_fuse_hek_seed[7] = `CLP_SOC_IFC_REG_FUSE_HEK_SEED_7;
 
   logic          hit_SS_CALIPTRA_BASE_ADDR_L;
   logic [3:0]    bus_SS_CALIPTRA_BASE_ADDR_L;
@@ -1804,17 +1808,29 @@ interface soc_ifc_cov_if
   assign hit_fuse_soc_manifest_max_svn = (soc_ifc_reg_req_data.addr == full_addr_fuse_soc_manifest_max_svn[AXI_ADDR_WIDTH-1:0]);
   assign bus_fuse_soc_manifest_max_svn = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_soc_manifest_max_svn}};
 
-  assign hit_fuse_uds_seed[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[0][18-1:0]);
-  assign bus_fuse_uds_seed[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[0]}};
+  assign hit_fuse_hek_seed[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_hek_seed[0][18-1:0]);
+  assign bus_fuse_hek_seed[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_hek_seed[0]}};
 
-  assign hit_fuse_uds_seed[1] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[1][18-1:0]);
-  assign bus_fuse_uds_seed[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[1]}};
+  assign hit_fuse_hek_seed[1] = (soc_ifc_reg_req_data.addr == full_addr_fuse_hek_seed[1][18-1:0]);
+  assign bus_fuse_hek_seed[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_hek_seed[1]}};
 
-  assign hit_fuse_uds_seed[2] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[2][18-1:0]);
-  assign bus_fuse_uds_seed[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[2]}};
+  assign hit_fuse_hek_seed[2] = (soc_ifc_reg_req_data.addr == full_addr_fuse_hek_seed[2][18-1:0]);
+  assign bus_fuse_hek_seed[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_hek_seed[2]}};
 
-  assign hit_fuse_uds_seed[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[3][18-1:0]);
-  assign bus_fuse_uds_seed[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[3]}};
+  assign hit_fuse_hek_seed[3] = (soc_ifc_reg_req_data.addr == full_addr_fuse_hek_seed[3][18-1:0]);
+  assign bus_fuse_hek_seed[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_hek_seed[3]}};
+
+  assign hit_fuse_hek_seed[4] = (soc_ifc_reg_req_data.addr == full_addr_fuse_hek_seed[4][18-1:0]);
+  assign bus_fuse_hek_seed[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_hek_seed[4]}};
+
+  assign hit_fuse_hek_seed[5] = (soc_ifc_reg_req_data.addr == full_addr_fuse_hek_seed[5][18-1:0]);
+  assign bus_fuse_hek_seed[5] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_hek_seed[5]}};
+
+  assign hit_fuse_hek_seed[6] = (soc_ifc_reg_req_data.addr == full_addr_fuse_hek_seed[6][18-1:0]);
+  assign bus_fuse_hek_seed[6] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_hek_seed[6]}};
+
+  assign hit_fuse_hek_seed[7] = (soc_ifc_reg_req_data.addr == full_addr_fuse_hek_seed[7][18-1:0]);
+  assign bus_fuse_hek_seed[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_hek_seed[7]}};
 
   assign hit_SS_CALIPTRA_BASE_ADDR_L = (soc_ifc_reg_req_data.addr == full_addr_SS_CALIPTRA_BASE_ADDR_L[AXI_ADDR_WIDTH-1:0]);
   assign bus_SS_CALIPTRA_BASE_ADDR_L = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_CALIPTRA_BASE_ADDR_L}};
@@ -3261,25 +3277,45 @@ interface soc_ifc_cov_if
     }
   endgroup
 
-  // ----------------------- COVERGROUP fuse_uds_seed [0:3] -----------------------
-  covergroup soc_ifc_fuse_uds_seed_cg (ref logic [3:0] bus_event[0:3]) @(posedge clk);
-    fuse_uds_seed0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[0];
-    bus_fuse_uds_seed0_cp : coverpoint bus_event[0] {
+  // ----------------------- COVERGROUP fuse_hek_seed [0:7] -----------------------
+  covergroup soc_ifc_fuse_hek_seed_cg (ref logic [3:0] bus_event[0:7]) @(posedge clk);
+    fuse_hek_seed0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_hek_seed[0];
+    bus_fuse_hek_seed0_cp : coverpoint bus_event[0] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_uds_seed1_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[1];
-    bus_fuse_uds_seed1_cp : coverpoint bus_event[1] {
+    fuse_hek_seed1_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_hek_seed[1];
+    bus_fuse_hek_seed1_cp : coverpoint bus_event[1] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_uds_seed2_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[2];
-    bus_fuse_uds_seed2_cp : coverpoint bus_event[2] {
+    fuse_hek_seed2_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_hek_seed[2];
+    bus_fuse_hek_seed2_cp : coverpoint bus_event[2] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
-    fuse_uds_seed3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[3];
-    bus_fuse_uds_seed3_cp : coverpoint bus_event[3] {
+    fuse_hek_seed3_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_hek_seed[3];
+    bus_fuse_hek_seed3_cp : coverpoint bus_event[3] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_hek_seed4_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_hek_seed[4];
+    bus_fuse_hek_seed4_cp : coverpoint bus_event[4] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_hek_seed5_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_hek_seed[5];
+    bus_fuse_hek_seed5_cp : coverpoint bus_event[5] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_hek_seed6_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_hek_seed[6];
+    bus_fuse_hek_seed6_cp : coverpoint bus_event[6] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    fuse_hek_seed7_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_hek_seed[7];
+    bus_fuse_hek_seed7_cp : coverpoint bus_event[7] {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -4095,7 +4131,7 @@ interface soc_ifc_cov_if
   soc_ifc_fuse_pqc_key_type_cg fuse_pqc_key_type_cg = new(bus_fuse_pqc_key_type);
   soc_ifc_fuse_soc_manifest_svn_cg fuse_soc_manifest_svn_cg = new(bus_fuse_soc_manifest_svn);
   soc_ifc_fuse_soc_manifest_max_svn_cg fuse_soc_manifest_max_svn_cg = new(bus_fuse_soc_manifest_max_svn);
-  soc_ifc_fuse_uds_seed_cg fuse_uds_seed_cg = new(bus_fuse_uds_seed);
+  soc_ifc_fuse_hek_seed_cg fuse_hek_seed_cg = new(bus_fuse_hek_seed);
   soc_ifc_SS_CALIPTRA_BASE_ADDR_L_cg SS_CALIPTRA_BASE_ADDR_L_cg = new(bus_SS_CALIPTRA_BASE_ADDR_L);
   soc_ifc_SS_CALIPTRA_BASE_ADDR_H_cg SS_CALIPTRA_BASE_ADDR_H_cg = new(bus_SS_CALIPTRA_BASE_ADDR_H);
   soc_ifc_SS_MCI_BASE_ADDR_L_cg SS_MCI_BASE_ADDR_L_cg = new(bus_SS_MCI_BASE_ADDR_L);

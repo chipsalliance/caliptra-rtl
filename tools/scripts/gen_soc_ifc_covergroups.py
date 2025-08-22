@@ -84,7 +84,7 @@ soc_regs_txt = """
     fuse_pqc_key_type
     fuse_soc_manifest_svn 4
     fuse_soc_manifest_max_svn
-    fuse_uds_seed 4
+    fuse_hek_seed 8
     SS_CALIPTRA_BASE_ADDR_L
     SS_CALIPTRA_BASE_ADDR_H
     SS_MCI_BASE_ADDR_L
