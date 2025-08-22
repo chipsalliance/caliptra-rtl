@@ -166,7 +166,7 @@ The following tables describe the interface signals.
 
 Adams-Bridge SRAM interface is used to connect the necessary SRAM instances for Adams-Bridge.
 There are 8 SRAMs, 2 of which have 2 banks. Each SRAM has a parameterized data width and depth used to calculate the addr width.
-The full set of wires is encapsulated in the mldsa_mem_if construct mldsa_memory_export at the Caliptra boundary.
+The full set of wires is encapsulated in the abr_mem_if construct abr_memory_export at the Caliptra boundary.
 
 The table below details the interface required for each SRAM. Driver direction is from the perspective of Caliptra.
 
