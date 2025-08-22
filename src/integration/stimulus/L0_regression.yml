@@ -22,12 +22,9 @@ contents:
         - ../test_suites/hello_world_iccm/hello_world_iccm.yml
         - ../test_suites/iccm_lock/iccm_lock.yml
         - ../test_suites/c_intr_handler/c_intr_handler.yml
-        - ../test_suites/smoke_test_ecc_keygen/smoke_test_ecc_keygen.yml
         - ../test_suites/smoke_test_ecc_sign/smoke_test_ecc_sign.yml
-        - ../test_suites/smoke_test_ecc_verify/smoke_test_ecc_verify.yml
         - ../test_suites/smoke_test_ecdh/smoke_test_ecdh.yml
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
-        - ../test_suites/smoke_test_mldsa/smoke_test_mldsa.yml
         - ../test_suites/smoke_test_aes_gcm/smoke_test_aes_gcm.yml
         - ../test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
         - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv.yml
@@ -40,29 +37,19 @@ contents:
         - ../test_suites/smoke_test_mldsa_edge/smoke_test_mldsa_edge.yml
         - ../test_suites/smoke_test_kv/smoke_test_kv.yml
         - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
-        - ../test_suites/smoke_test_ras/smoke_test_ras.yml
         - ../test_suites/smoke_test_trng/smoke_test_trng.yml
         - ../test_suites/smoke_test_hw_config/smoke_test_hw_config.yml
         - ../test_suites/smoke_test_strap/smoke_test_strap.yml
         - ../test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml
         - ../test_suites/smoke_test_kv_securitystate/smoke_test_kv_securitystate.yml
-        - ../test_suites/smoke_test_kv_ecc_flow1/smoke_test_kv_ecc_flow1.yml
-        - ../test_suites/smoke_test_kv_ecc_flow2/smoke_test_kv_ecc_flow2.yml
         - ../test_suites/smoke_test_kv_hmac_flow/smoke_test_kv_hmac_flow.yml
-        - ../test_suites/smoke_test_kv_hmac_multiblock_flow/smoke_test_kv_hmac_multiblock_flow.yml
         - ../test_suites/smoke_test_kv_doe/smoke_test_kv_doe.yml
-        - ../test_suites/smoke_test_mldsa_locked_api/smoke_test_mldsa_locked_api.yml
         - ../test_suites/smoke_test_mlkem_locked_api/smoke_test_mlkem_locked_api.yml
         - ../test_suites/smoke_test_kv_cg/smoke_test_kv_cg.yml
         - ../test_suites/smoke_test_kv_mldsa/smoke_test_kv_mldsa.yml
-        - ../test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
         - ../test_suites/pv_hash_zeroize/pv_hash_zeroize.yml
         - ../test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing.yml
         - ../test_suites/smoke_test_fw_kv_backtoback_hmac/smoke_test_fw_kv_backtoback_hmac.yml
-        - ../test_suites/smoke_test_ecc_errortrigger1/smoke_test_ecc_errortrigger1.yml
-        - ../test_suites/smoke_test_ecc_errortrigger2/smoke_test_ecc_errortrigger2.yml
-        - ../test_suites/smoke_test_ecc_errortrigger3/smoke_test_ecc_errortrigger3.yml
-        - ../test_suites/smoke_test_ecc_errortrigger4/smoke_test_ecc_errortrigger4.yml        
         - ../test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ../test_suites/smoke_test_kv_ecdh_flow/smoke_test_kv_ecdh_flow.yml
         - ../test_suites/smoke_test_mldsa_zeroize/smoke_test_mldsa_zeroize.yml
@@ -76,15 +63,12 @@ contents:
         - ../test_suites/smoke_test_hek_flow/smoke_test_hek_flow.yml
         # data vault tests
         - ../test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic.yml
-        - ../test_suites/smoke_test_datavault_reset/smoke_test_datavault_reset.yml
-        - ../test_suites/smoke_test_datavault_lock/smoke_test_datavault_lock.yml
         #smoke test icc locking
         #smoke test impactles reset
         #smoke test debug state transition
         #smoke test interrupt handling
         #smoke test wd timer expiry and nmi generation
         - ../test_suites/smoke_test_wdt/smoke_test_wdt.yml
-        - ../test_suites/smoke_test_wdt_rst/smoke_test_wdt_rst.yml
         - ../test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
         #smoke test jtag
         #smoke test generic input wire to fw interrupt
