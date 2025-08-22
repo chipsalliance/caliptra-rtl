@@ -5,6 +5,9 @@ name: Verilator
 on:
   push:
     branches: ["main", "dev-goog", "dev-msft"]
+    paths-ignore:
+      - '.github/workflow_metadata/**'
+
   workflow_call:
     inputs:
       run_vltr:
