@@ -18,6 +18,7 @@
 #include "printf.h"
 #include "aes.h"
 #include "keyvault.h"
+#include "caliptra_rtl_lib.h"
 #include <stdint.h>
 #include <string.h>
 

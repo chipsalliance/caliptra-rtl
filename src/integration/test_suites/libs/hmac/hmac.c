@@ -423,3 +423,68 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
         }
     }
 }
+
+
+void hmac512_flow_csr(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init){
+    uint8_t offset;
+    volatile uint32_t * reg_ptr;
+    uint8_t fail_cmd = 0x1;
+
+    uint32_t hmac_tag   [16];
+
+
+    // wait for HMAC to be ready
+    while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
+
+    // Load key from hw_data and write to HMAC core
+    VPRINTF(LOW, "Load Key data to HMAC\n");
+    reg_ptr         = (uint32_t*) CLP_HMAC_REG_HMAC512_KEY_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_KEY_15) {
+        *reg_ptr++ = key.data[offset++];
+    }
+
+    reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_31) {
+        *reg_ptr++ = block.data[offset++];
+    }
+
+    // Program LFSR_SEED
+    reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11) {
+        *reg_ptr++ = lfsr_seed.data[offset++];
+    }
+
+    // Enable HMAC core
+    if (init) {
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW) |
+                                                (HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK));
+    }
+    else {
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW) |
+                                                (HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK));
+    }
+
+    // wait for HMAC process to be done
+    wait_for_hmac_intr();
+
+    printf("Load TAG data from HMAC\n");
+    reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {
+        hmac_tag[offset] = *reg_ptr;
+        if (hmac_tag[offset] != tag.data[offset]) {
+            VPRINTF(LOW, "At offset [%d], hmac_tag data mismatch!\n", offset);
+            VPRINTF(LOW, "Actual   data: 0x%x\n", hmac_tag[offset]);
+            VPRINTF(LOW, "Expected data: 0x%x\n", tag.data[offset]);
+            VPRINTF(LOW, "%c", fail_cmd);
+            while(1);
+        }
+        reg_ptr++;
+        offset++;
+    }
+}

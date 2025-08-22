@@ -117,6 +117,7 @@ The following table shows the memory map address ranges for each of the IP block
 | SHA256                              | 10        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
 | ML-DSA                              | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
 | AES                                 | 15        | 4 KiB        | 0x1001_1000   | 0x1001_1FFF |
+| SHA3                                | 16        | 4 KiB        | 0x1004_0000   | 0x1004_0FFF |
 
 #### Peripherals subsystem
 
@@ -629,14 +630,15 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
 
 * Symmetric cryptographic primitives
     * De-obfuscation engine
-     * SHA512/384 (based on NIST FIPS 180-4 [2])
-     * SHA256 (based on NIST FIPS 180-4 [2])
-     * HMAC512 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
+    * SHA512/384 (based on NIST FIPS 180-4 [2])
+    * SHA256 (based on NIST FIPS 180-4 [2])
+    * HMAC512 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
+    * SHA3 (based on [NIST FIPS 202](https://doi.org/10.6028/NIST.FIPS.202) [17])
 * Public-key cryptography
-     * NIST Secp384r1 Deterministic Digital Signature Algorithm (based on FIPS-186-4  [11] and RFC 6979 [7])
+    * NIST Secp384r1 Deterministic Digital Signature Algorithm (based on FIPS-186-4 [11] and RFC 6979 [7])
 * Key vault
-     * Key slots
-     * Key slot management
+    * Key slots
+    * Key slot management
 
 The high-level architecture of Caliptra cryptographic subsystem is shown in the following figure.
 
@@ -867,6 +869,167 @@ In this architecture, the SHA256 interface and controller are implemented in RIS
 | Single block          | 761                 | 1.90                  | 525,624             |
 | Double block          | 1355                | 3.39                  | 295,203             |
 | 1 KiB message         | 8761                | 21.90                 | 45,657              |
+
+## SHA3
+
+The SHA3 HWIP performs the hash functions, whose purpose is to check the integrity of the received message.
+It supports various SHA3 hashing functions including SHA3 Extended Output Function (XOF) known as SHAKE functions.
+The details of the operation are described in the [SHA3 specification, FIPS 202](https://csrc.nist.gov/publications/detail/fips/202/final) known as _sponge construction_.
+It has been adapted from OpenTitan and you can find documentation describing the functionality of the KMAC block it was derived from [here](https://opentitan.org/book/hw/ip/kmac/index.html).
+
+The SHA3 HWIP implements a defense mechanism to deter SCA attacks.
+It is expected to protect against 1st-order SCA attacks by implementing masked storage and [Domain-Oriented Masking (DOM)](https://eprint.iacr.org/2017/395.pdf) inside the Keccak function.
+The countermeasure is disabled by default but can be enabled through the 'EnMasking` compile-time Verilog parameter.
+
+### Features
+- Support for SHA3-224, 256, 384, 512, SHAKE[128, 256] and cSHAKE[128, 256]
+- Support byte-granularity on input message
+- Support arbitrary output length for SHAKE, cSHAKE
+- Support customization input string S, and function-name N up to 36 bytes total
+- 64b x 10 depth Message FIFO
+- Performance (at 100 MHz):
+  - SHA3-224: 2.93 B/cycle, 2.34 Gbit/s - 1.19 B/cycle, 952 Mbit/s (DOM)
+  - SHA3-512: 1.47 B/cycle, 1.18 Gbit/s - 0.59 B/cycle, 472 Mbit/s (DOM)
+
+### Design Details
+
+#### Keccak Round
+
+A Keccak round implements the Keccak_f function described in the SHA3 specification.
+Keccak round logic in SHA3 HWIP not only supports 1600 bit internal states but also all possible values {25, 50, 100, 200, 400, 800, 1600} based on a parameter `Width`.
+Keccak permutations in the specification allow arbitrary number of rounds.
+This module, however, supports Keccak_f which always runs `12 + 2*L` rounds, where $$ L = log_2 {( {Width \over 25} )} $$ .
+For instance, 200 bits of internal state run 18 rounds.
+SHA3 instantiates the Keccak round module with 1600 bit.
+
+![](./images/sha3-keccak-round.svg)
+
+Keccak round logic has two phases inside.
+Theta, Rho, Pi functions are executed at the 1st phase.
+Chi and Iota functions run at the 2nd phase.
+If the compile-time Verilog parameter `EnMasking` is not set, i.e., if masking is not enabled, the first phase and the second phase run at the same cycle.
+
+To balance circuit area and SCA hardening, the Chi function uses 800 instead 1600 DOM multipliers but the multipliers are fully pipelined.
+The Chi and Iota functions are thus separately applied to the two halves of the state and the 2nd phase takes in total three clock cycles to complete.
+In the first clock cycle of the 2nd phase, the first stage of Chi is computed for the first lane halves of the state.
+In the second clock cycle, the new first lane halves are output and written to state register.
+At the same time, the first stage of Chi is computed for the second lane halves.
+In the third clock cycle, the new second lane halves are output and written to the state register.
+
+#### Padding for Keccak
+
+Padding logic supports SHA3/SHAKE/cSHAKE algorithms.
+cSHAKE needs the extra inputs for the Function-name `N` and the Customization string `S`.
+Other than that, SHA3, SHAKE, and cSHAKE share similar datapath inside the padding module except the last part added next to the end of the message.
+SHA3 adds `2'b 10`, SHAKE adds `4'b 1111`, cSHAKE adds `2'b00` then `pad10*1()` follows.
+All are little-endian values.
+
+Interface between this padding logic and the MSG_FIFO follows the conventional FIFO interface.
+So `prim_fifo_*` can talk to the padding logic directly.
+This module talks to Keccak round logic with a more memory-like interface.
+The interface has an additional address signal on top of the valid, ready, and data signals.
+
+![](./images/sha3-padding.svg)
+
+The hashing process begins when the software issues the start command to `CMD` .
+If cSHAKE is enabled, the padding logic expands the prefix value (`N || S` above) into a block size.
+The block size is determined by the `CFG_SHADOWED.kstrength`.
+If the value is 128, the block size will be 168 bytes.
+If it is 256, the block size will be 136 bytes.
+The expanded prefix value is transmitted to the Keccak round logic.
+After sending the block size, the padding logic triggers the Keccak round logic to run a full 24 rounds.
+
+If the mode is not cSHAKE, or cSHAKE mode and the prefix block has been processed, the padding logic accepts the incoming message bitstream and forward the data to the Keccak round logic in a block granularity.
+The padding logic controls the data flow and makes the Keccak logic to run after sending a block size.
+
+After the software writes the message bitstream, it should issue the Process command into `CMD` register.
+The padding logic, after receiving the Process command, appends proper ending bits with respect to the `CFG_SHADOWED.mode` value.
+The logic writes 0 up to the block size to the Keccak round logic then ends with 1 at the end of the block.
+
+![](./images/sha3-padding-fsm.svg)
+
+After the Keccak round completes the last block, the padding logic asserts an `absorbed` signal to notify the software.
+At this point, the software is able to read the digest in `STATE` memory region.
+If the output length is greater than the Keccak block rate in SHAKE and cSHAKE mode, the software may run the Keccak round manually by issuing Run command to `CMD` register.
+
+The software completes the operation by issuing Done command after reading the digest.
+The padding logic clears internal variables and goes back to Idle state.
+
+#### Message FIFO
+
+The SHA3 HWIP has a compile-time configurable depth message FIFO inside.
+The message FIFO receives incoming message bitstream regardless of its byte position in a word.
+Then it packs the partial message bytes into the internal 64 bit data width.
+After packing the data, the logic stores the data into the FIFO until the internal SHA3 engine consumes the data.
+
+##### FIFO Depth calculation
+
+The depth of the message FIFO is chosen to cover the throughput of the software or other producers such as DMA engine.
+The size of the message FIFO is enough to hold the incoming data while the SHA3 engine is processing the previous block.
+Default design parameters assume the system characteristics as below:
+
+- `kmac_pkg::RegLatency`: The register write takes 5 cycles.
+- `kmac_pkg::Sha3Latency`: Keccak round latency takes 96 cycles, which is the masked version of the Keccak round.
+
+##### Empty and Full status
+
+Under normal operating conditions, the SHA3 engine will process data a lot faster than software can push it to the Message FIFO.
+The Message FIFO depth observable from `STATUS.fifo_depth` will remain **0** while the `STATUS.fifo_empty` status bit is lowered for one clock cycle whenever software provides new data.
+
+After the SHA3 engine starts popping the data again, the Message FIFO will eventually run empty again and the `fifo_empty` status interrupt will fire.
+Note that the `fifo_empty` status interrupt will not fire if i) one of the hardware application interfaces is using the SHA3 block, ii) the SHA3 core is not in the `Absorb` state, or iii) after software has written the `Process` command.
+
+If software pushes data to the Message FIFO while it is full, the write operation is blocked until there is again space in the FIFO.
+This means the processor is effectively stalled.
+If the SHA3 engine is currently running and software fills up the Message FIFO, the resulting stall won't take more than 100 clock cycles.
+The stall mechanism prevents data loss and the upper bound on the wait time avoids software needing to poll the `STATUS.fifo_depth` field before writing data.
+
+### Programmer's guide
+
+The software can update the SHA3 configurations only when the IP is in the idle state.
+The software should check `STATUS.sha3_idle` before updating the configurations.
+The software must first program `CFG_SHADOWED.msg_endianness` and `CFG_SHADOWED.state_endianness` at the initialization stage.
+These determine the byte order of incoming messages (msg_endianness) and the Keccak state output (state_endianness).
+
+#### Software Initiated SHA3 process
+
+This section describes the expected software process to run the SHA3 HWIP.
+At first, the software configures `CFG_SHADOWED.kmac_en` for the operation.
+If SHA3 is enabled, the software should configure `CFG_SHADOWED.mode` to cSHAKE and `CFG_SHADOWED.kstrength` to 128 or 256 bit security strength.
+The software also updates `PREFIX` registers if cSHAKE mode is used.
+Current design does not convert cSHAKE mode to SHAKE even if `PREFIX` is empty string.
+It is the software's responsibility to change the `CFG_SHADOWED.mode` to SHAKE in case of empty `PREFIX`.
+The SHA3 HWIP uses `PREFIX` registers as it is.
+It means that the software should update `PREFIX` with encoded values.
+
+After configuring, the software notifies the SHA3 engine to accept incoming messages by issuing Start command into `CMD`.
+If Start command is not issued, the incoming message is discarded.
+
+After the software pushes all messages, it issues Process command to `CMD` for SHA3 engine to complete the sponge absorbing process.
+SHA3 hashing engine pads the incoming message as defined in the SHA3 specification.
+
+After the SHA3 engine completes the sponge absorbing step, it generates `kmac_done` interrupt.
+Or the software can poll the `STATUS.squeeze` bit until it becomes 1.
+In this stage, the software may run the Keccak round manually.
+
+If the desired digest length is greater than the Keccak rate, the software issues Run command for the Keccak round logic to run one full round after the software reads the current available Keccak state.
+At this stage, SHA3 does not raise an interrupt when the Keccak round completes the software initiated manual run.
+The software should check `STATUS.squeeze` register field for the readiness of `STATE` value.
+
+After the software reads all the digest values, it issues Done command to `CMD` register to clear the internal states.
+Done command clears the Keccak state, FSM in SHA3, and a few internal variables.
+
+#### Endianness
+
+This SHA3 HWIP operates in little-endian.
+Internal SHA3 hashing engine receives in 64-bit granularity.
+The data written to SHA3 is assumed to be little endian.
+
+The software may write/read the data in big-endian order if `CFG_SHADOWED.msg_endianness` or `CFG_SHADOWED.state_endianness` is set.
+If the endianness bit is 1, the data is assumed to be big-endian.
+So, the internal logic byte-swap the data.
+For example, when the software writes `0xDEADBEEF` with endianness as 1, the logic converts it to `0xEFBEADDE` then writes into MSG_FIFO.
+
 
 ## HMAC512/HMAC384
 
@@ -1381,7 +1544,7 @@ LMS parameters are shown in the following table:
 | w         | The width (in bits) of the Winternitz coefficients.                    | {1, 2, 4, 8}        |
 | p         | The number of n-byte string elements that make up the LM-OTS signature.| {265, 133, 67, 34}  |
 | H         | A cryptographic hash function.                                         | SHA256              |
-| h         | The height of the tree.	                                        	| {5, 10, 15, 20, 25} |
+| h         | The height of the tree.                                                | {5, 10, 15, 20, 25} |
 
 - SHA256 is used for n=32 and SHA256/192 is used for n=24.
 - SHAKE256 is not supported in this architecture.
@@ -2427,10 +2590,11 @@ The following terminology is used in this document.
 9. Coron, J.-S.: Resistance against differential power analysis for elliptic curve cryptosystems. In: Ko¸c, C¸ .K., Paar, C. (eds.) CHES 1999. LNCS, vol. 1717, pp. 292–302.
 10. Schindler, W., Wiemers, A.: Efficient side-channel attacks on scalar blinding on elliptic curves with special structure. In: NISTWorkshop on ECC Standards (2015).
 11. National Institute of Standards and Technology, "Digital Signature Standard (DSS)", Federal Information Processing Standards Publication (FIPS PUB) 186-4, July 2013.
-12. NIST SP 800-90A, Rev 1: "Recommendation for Random Number Generation Using Deterministic Random Bit Generators", 2012. |
+12. NIST SP 800-90A, Rev 1: "Recommendation for Random Number Generation Using Deterministic Random Bit Generators", 2012.
 13. CHIPS Alliance, “RISC-V VeeR EL2 Programmer’s Reference Manual” \[Online\] Available at https://github.com/chipsalliance/Cores-VeeR-EL2/blob/main/docs/RISC-V_VeeR_EL2_PRM.pdf.
 14. “The RISC-V Instruction Set Manual, Volume I: User-Level ISA, Document Version 20191213”, Editors Andrew Waterman and Krste Asanovi ́c, RISC-V Foundation, December 2019. Available at https://riscv.org/technical/specifications/.
 15. “The RISC-V Instruction Set Manual, Volume II: Privileged Architecture, Document Version 20211203”, Editors Andrew Waterman, Krste Asanovi ́c, and John Hauser, RISC-V International, December 2021. Available at https://riscv.org/technical/specifications/.
-16. NIST SP 800-56A, Rev 3: "Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography", 2018, |
+16. NIST SP 800-56A, Rev 3: "Recommendation for Pair-Wise Key-Establishment Schemes Using Discrete Logarithm Cryptography", 2018.
+17. NIST FIPS 202: "SHA-3 Standard: Permutation-Based Hash and Extendable-Output Functions", 2015. Available at: [https://csrc.nist.gov/pubs/fips/202/final](https://doi.org/10.6028/NIST.FIPS.202).
 
 <sup>[1]</sup> _Caliptra.**  **Spanish for “root cap” and describes the deepest part of the root_

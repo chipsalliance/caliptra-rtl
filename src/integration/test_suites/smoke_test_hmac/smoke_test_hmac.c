@@ -137,6 +137,9 @@ void main() {
                                     0xC8F518D4,
                                     0xF3AA1BD4};                              
 
+    
+    SEND_STDOUT_CTRL(0x7F); // Switch to MANUF device lifecycle state
+                                    
 
     // Entry message
     VPRINTF(LOW, "----------------------------------\n");
@@ -195,6 +198,14 @@ void main() {
         hmac512_tag.data[i] = expected512_tag[i];
 
     hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, FALSE);
+    hmac_zeroize();
+
+    hmac512_key.kv_intf = FALSE;
+    hmac512_key.data_size = 16;
+    for (int i = 0; i < hmac512_key.data_size; i++)
+        hmac512_key.data[i] = 0x12345678;
+
+    hmac512_flow_csr(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
     hmac_zeroize();
 
     // Write 0xff to STDOUT for TB to terminate test.

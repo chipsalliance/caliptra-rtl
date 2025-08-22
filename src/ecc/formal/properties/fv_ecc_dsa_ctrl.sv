@@ -444,7 +444,7 @@ module fv_ecc_dsa_ctrl_m
         endproperty
         no_valid_a:  assert property(disable iff(!reset_n || fv_zeroize || fv_error_set)no_valid_p);
 
-        // TODO: ready and valid together
+    
         
 /////////////////////////////////////////////////////////////////////////////////////
 // ---------------------------------BEGIN----------------------------------------- //

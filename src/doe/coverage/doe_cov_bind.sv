@@ -11,26 +11,10 @@
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
 // limitations under the License.
-//
 
-#ifndef DOE_H
-  #define DOE_H
 
-#include "stdint.h"
-
-#define DOE_HEK_DES 22
-
-/* --------------- symbols/typedefs --------------- */
-enum doe_cmd_e {
-    DOE_IDLE = 0,
-    DOE_UDS = 1,
-    DOE_FE = 2,
-    DOE_CLEAR_OBF_SECRETS = 3,
-    DOE_HEK = 4
-};
-
-/* --------------- Function Prototypes --------------- */
-void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_hek, uint32_t kv_dest_uds, uint32_t kv_dest_fe, uint32_t kv_dest_hek);
-void doe_clear_secrets();
-
-#endif
+module doe_cov_bind;
+    `ifdef FCOV
+    bind doe_ctrl doe_cov_if i_doe_cov_if(.*);
+    `endif
+endmodule

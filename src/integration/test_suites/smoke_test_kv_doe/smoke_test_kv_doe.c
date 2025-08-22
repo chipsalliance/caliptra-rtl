@@ -57,7 +57,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
     const uint32_t iv_data_uds[]  = {0x2eb94297,0x77285196,0x3dd39a1e,0xb95d438f};
     const uint32_t iv_data_fe[]   = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d};
-    const uint32_t iv_data_hek[]  = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d}; // TODO unique value
+    const uint32_t iv_data_hek[]  = {0x3e8b1c72,0xa459d6f0,0x5c27b9ae,0xf02d4389};
 
 /* CDI HMAC512 test vector
     KEY =   dff9f0021e1ab0bda2781e1a709cafdb341953bdbd6836d9c1ea520a6043041daf7218b19ce98302a5f8f95a6b51f5c1219a09d73819e2ba0d2c4b932489c586
@@ -325,9 +325,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 //******************************************************************
 // DOE(IV_OBF, IV_FE)
 //****************************************************************** 
-void kv_doe(uint8_t doe_fe_dest_id){
+void kv_doe(uint8_t doe_uds_dest_id, uint8_t doe_fe_dest_id, uint8_t doe_hek_dest_id){
 
-    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, (uint32_t) doe_fe_dest_id);
+    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
 
     VPRINTF(LOW,"doe_fe kv id = %x\n", doe_fe_dest_id);
 
@@ -589,6 +589,7 @@ void main(){
 
     uint8_t doe_uds_dest_id;
     uint8_t doe_fe_dest_id;
+    uint8_t doe_hek_dest_id;
     uint8_t cdi_idevid_id;
     uint8_t idevid_ecc_seed_id;
     uint8_t idevid_mldsa_seed_id;
@@ -604,7 +605,7 @@ void main(){
     if(rst_count == 0) {
         VPRINTF(LOW, "1st FE flow + warm reset\n");
         
-        kv_doe(doe_fe_dest_id);
+        kv_doe(doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
         
         //issue zeroize
         ecc_zeroize();
@@ -620,7 +621,7 @@ void main(){
     else if(rst_count == 1) {
         VPRINTF(LOW, "2nd FE flow + warm reset\n");
 
-        kv_doe(doe_fe_dest_id);
+        kv_doe(doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
         
         //Issue timed warm reset :TODO
         rst_count++;
@@ -636,7 +637,7 @@ void main(){
 
         VPRINTF(LOW, "doe_fe_dest_id = 0x%x\n",doe_fe_dest_id);
 
-        kv_doe(doe_fe_dest_id);
+        kv_doe(doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
 
         SEND_STDOUT_CTRL(0xff); //End the test
     }
