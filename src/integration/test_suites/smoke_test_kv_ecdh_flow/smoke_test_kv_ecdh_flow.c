@@ -53,9 +53,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
     // HMAC_BLOCK = e7f1293c6f23a53289143df1399e784cb71180e3830c3869fd725fe78f0b6480559d6344edc1aaf64b7d0701e78672d2
     // HMAC_TAG   = 1947aa97a847975f1022e42b0cc924e20d0f94821f1ceaeb151cc3341ae1b3f5a63ed1237907dfc73fa79bf0f7d8845d8429fe6441702dc604acf14670c3a580
 
-void kv_ecc_flow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint8_t sharedkey_kv_id){
-    ecc_io seed;
-    ecc_io nonce;
+void kv_ecc_flow(uint8_t privkey_kv_id, uint8_t sharedkey_kv_id){
     ecc_io iv;
     ecc_io privkey;
     ecc_io pubkey_x;
@@ -63,38 +61,12 @@ void kv_ecc_flow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint8_t sharedkey_kv
     ecc_io pubkey_x_dh;
     ecc_io pubkey_y_dh;
     ecc_io sharedkey_dh;
-
-    seed.kv_intf = TRUE;
-    seed.kv_id = seed_kv_id;
-
-    nonce.kv_intf = FALSE;
-    for (int i = 0; i < ECC_INPUT_SIZE; i++)
-        nonce.data[i] = ecc_nonce[i];
-    
-    iv.kv_intf = FALSE;
-    for (int i = 0; i < ECC_INPUT_SIZE; i++)
-        iv.data[i] = rand() % 0xffffffff;
     
     privkey.kv_intf = TRUE;
     privkey.kv_id = privkey_kv_id;
 
-    pubkey_x.kv_intf = FALSE;
-    for (int i = 0; i < ECC_INPUT_SIZE; i++)
-        pubkey_x.data[i] = expected_pubkey_x[i];
-    
-    pubkey_y.kv_intf = FALSE;
-    for (int i = 0; i < ECC_INPUT_SIZE; i++)
-        pubkey_y.data[i] = expected_pubkey_y[i];
-
-    //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW, "Inject SEED into KV ID %d\n", seed_kv_id);
-    lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
-
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
-    cptra_intr_rcv.ecc_notif = 0;
-    VPRINTF(LOW, "Stored ECC Privkey into KV ID %d\n", privkey_kv_id);
-
-    ecc_zeroize();
+    //inject privkey to kv key reg (in RTL)
+    lsu_write_32(STDOUT, (privkey_kv_id << 8) | 0xaa); 
 
     pubkey_x_dh.kv_intf = FALSE;
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
@@ -192,13 +164,12 @@ void main(){
 
     srand(time);
 
-    uint8_t seed_kv_id = rand() % 0x8; 
     uint8_t privkey_kv_id = rand() % 0x17;
     uint8_t sharedkey_kv_id = rand() % 0x17;
     uint8_t hmac_tag_kv_id = rand() % 0x17;
 
     /* RUN ECDH to generate a shared key */
-    kv_ecc_flow(seed_kv_id, privkey_kv_id, sharedkey_kv_id);
+    kv_ecc_flow(privkey_kv_id, sharedkey_kv_id);
     
     // AES_KEY = e7f1293c6f23a53289143df1399e784cb71180e3830c3869fd725fe78f0b6480
     const char plaintext_str_ECB0[]  = "2ea4ca977176ebb032748adee0bafd06e7dff005c5693781e9304ef63013153bf0173c4b62916cb686c11e9632abbc4f31cb6297a018e2d50c9752a6bbde1f3b78b7ba66f9fc1828b262380f8821fa5dbc8fc44985e9b77a533bb43edfa2ca45";
