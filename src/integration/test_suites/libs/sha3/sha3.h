@@ -30,6 +30,9 @@
 #define KMAC_CFG_SHADOWED_MODE_VALUE_SHA3   (0x0)
 #define KMAC_CFG_SHADOWED_MODE_VALUE_SHAKE  (0x2)
 #define KMAC_CFG_SHADOWED_MODE_VALUE_CSHAKE (0x3)
+#define KMAC_CFG_SHADOWED_MSG_ENDIANNESS_INDEX (8)
+#define KMAC_CFG_SHADOWED_MSG_ENDIANNESS_LITTLE (0x0)
+#define KMAC_CFG_SHADOWED_MSG_ENDIANNESS_BIG    (0x1)
 
 // Command register definitions.
 #define KMAC_CMD_REG_OFFSET (0x18)
@@ -178,6 +181,11 @@ typedef enum dif_kmac_mode_cshake {
 
 #define DIGEST_LEN_CSHAKE_MAX 4
 
+typedef enum dif_kmac_msg_endianness {
+  kDifKmacMsgEndiannessLittle = KMAC_CFG_SHADOWED_MSG_ENDIANNESS_LITTLE,
+  kDifKmacMsgEndiannessBig    = KMAC_CFG_SHADOWED_MSG_ENDIANNESS_BIG,
+} dif_kmac_msg_endianness_t;
+
 /**
  * A KMAC operation state context.
  */
@@ -296,11 +304,12 @@ void dif_kmac_function_name_init(
  * @param kmac A KMAC handle.
  * @param operation_state A KMAC operation state context.
  * @param mode The SHA-3 mode of operation.
+ * @param msg_endianness Endianness of bytes written to message FIFO.
  * @return The result of the operation.
  */
 void dif_kmac_mode_sha3_start(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
-    dif_kmac_mode_sha3_t mode);
+    dif_kmac_mode_sha3_t mode, const dif_kmac_msg_endianness_t msg_endianness);
 
 /**
  * Start a SHAKE operation.
@@ -312,11 +321,12 @@ void dif_kmac_mode_sha3_start(
  * @param kmac A KMAC handle.
  * @param operation_state A KMAC operation state context.
  * @param mode The mode of operation.
+ * @param msg_endianness Endianness of bytes written to message FIFO.
  * @return The result of the operation.
  */
 void dif_kmac_mode_shake_start(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
-    dif_kmac_mode_shake_t mode);
+    dif_kmac_mode_shake_t mode, const dif_kmac_msg_endianness_t msg_endianness);
 
 /**
  * Start a cSHAKE operation.
@@ -330,12 +340,13 @@ void dif_kmac_mode_shake_start(
  * @param mode The mode of operation.
  * @param n Function name (optional).
  * @param s Customization string (optional).
+ * @param msg_endianness Endianness of bytes written to message FIFO.
  * @return The result of the operation.
  */
 void dif_kmac_mode_cshake_start(
     uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
     dif_kmac_mode_cshake_t mode, const dif_kmac_function_name_t *n,
-    const dif_kmac_customization_string_t *s);
+    const dif_kmac_customization_string_t *s, const dif_kmac_msg_endianness_t msg_endianness);
 
 /**
  * Absorb bytes from the message provided.
