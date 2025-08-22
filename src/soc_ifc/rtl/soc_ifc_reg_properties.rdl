@@ -22,7 +22,6 @@
 
     default hw = na;
     signal {activelow; async; cpuif_reset; field_reset;} cptra_rst_b;
-    signal {activelow; async;} core_only_rst_b;
     signal {activelow; async;} cptra_pwrgood;
 
     //signal to indicate request is coming from soc side

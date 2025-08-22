@@ -498,7 +498,6 @@ always_comb soc_ifc_reg_req_hold = 1'b0;
 //Read and Write permissions are controlled within this block
 always_comb soc_ifc_reg_error = soc_ifc_reg_read_error | soc_ifc_reg_write_error;
 
-always_comb soc_ifc_reg_hwif_in.core_only_rst_b = cptra_uc_rst_b;
 always_comb soc_ifc_reg_hwif_in.cptra_rst_b = cptra_noncore_rst_b;
 always_comb soc_ifc_reg_hwif_in.cptra_pwrgood = cptra_pwrgood;
 always_comb soc_ifc_reg_hwif_in.soc_req = soc_ifc_reg_req_data.soc_req;
