@@ -51,9 +51,9 @@ void main() {
     VPRINTF(LOW,"\nUsing random seed = %u\n\n", (uint32_t) MY_RANDOM_SEED);
     srand((uint32_t) MY_RANDOM_SEED);
 
-    printf("----------------------------------\n");
-    printf(" Run HMAC 384 to generate a key in KV !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Run HMAC 384 to generate a key in KV !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -190,14 +190,14 @@ void main() {
 
     //inject hmac384_key to kv key reg (in RTL)
     uint8_t key384_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
-    printf("%c", key384_inject_cmd);
+    SEND_STDOUT_CTRL(key384_inject_cmd);
 
     hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
     hmac_zeroize();
 
-    printf("----------------------------------\n");
-    printf(" Reseed AES entropy interface \n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Reseed AES entropy interface \n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     // After reseeding the state of the Trivium stream cipher primitive with
     // the seed below, it will produce the following key stream:
@@ -217,11 +217,11 @@ void main() {
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_7, 0xEB4814D1);
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0xE843DB60);
 
-    printf("----------------------------------\n");
-    printf(" Run AES using key in KV\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Run AES using key in KV\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
-    aes_flow_t aes_input;
+    aes_flow_t aes_input = {0};
     aes_input.data_src_mode = AES_DATA_DIRECT;
     aes_input.dma_transfer_data = (dma_transfer_data_t){0};
     
@@ -242,7 +242,7 @@ void main() {
     uint32_t tag[4]; 
     uint32_t tag_length;
 
-    aes_key_t aes_key;
+    aes_key_t aes_key = {0};
 
     const char key_str[] = "b6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc";
 
@@ -298,10 +298,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE2
     VPRINTF(LOW, "Test Case 2 - CBC\n");
@@ -318,10 +318,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //Non-full block plaintext
     hex_to_uint32_array(plaintext_str, plaintext, &plaintext_length);
@@ -341,10 +341,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE4
     VPRINTF(LOW, "Test Case 4 - OFB\n");
@@ -361,10 +361,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE5
     VPRINTF(LOW, "Test Case 5 - CTR\n");
@@ -381,10 +381,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE6
     VPRINTF(LOW, "Test Case 6 - GCM 256\n");
@@ -404,10 +404,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE7
     VPRINTF(LOW, "Test Case 7 - GCM 128\n");
@@ -427,10 +427,10 @@ void main() {
     aes_input.tag = tag;
     aes_input.iv = iv;
     //Run ENC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
     op = AES_DEC;
     //Run DEC
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
 
     //End Test

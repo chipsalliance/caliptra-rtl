@@ -142,7 +142,7 @@ void main() {
             doe_status_int = *doe_status;
             doe_status_int = doe_status_int & (DOE_REG_DOE_STATUS_VALID_MASK | DOE_REG_DOE_STATUS_READY_MASK) ;
         }
-        printf("DOE Status %d \n", doe_status_int);
+        VPRINTF(LOW, "DOE Status %d \n", doe_status_int);
 
         //Set KV locks
         *key_ctrl1 = 0x00000003;

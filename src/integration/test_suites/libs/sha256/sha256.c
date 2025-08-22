@@ -21,7 +21,7 @@
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 void wait_for_sha256_intr(uint32_t notif, uint32_t error){
-    printf("SHA256 flow in progress...\n");
+    VPRINTF(LOW, "SHA256 flow in progress...\n");
     while(((cptra_intr_rcv.sha256_error & error) != error) || ((cptra_intr_rcv.sha256_notif & notif) != notif)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during SHA256 operation to allow ISR to execute and show idle time in sims
@@ -29,16 +29,18 @@ void wait_for_sha256_intr(uint32_t notif, uint32_t error){
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    if (error)
-        printf("Received SHA256 err intr with status = %d\n", cptra_intr_rcv.sha256_error);
-    else
-        printf("Received SHA256 notif intr with status = %d\n", cptra_intr_rcv.sha256_notif);
+    if (error) {
+        VPRINTF(ERROR, "Received SHA256 err intr with status = %d\n", cptra_intr_rcv.sha256_error);
+    }
+    else {
+        VPRINTF(LOW, "Received SHA256 notif intr with status = %d\n", cptra_intr_rcv.sha256_notif);
+    }
     cptra_intr_rcv.sha256_notif &= ~notif;
     cptra_intr_rcv.sha256_error &= ~error;
 }
 
 void sha256_zeroize(){
-    printf("SHA256 zeroize flow.\n");
+    VPRINTF(LOW, "SHA256 zeroize flow.\n");
     lsu_write_32(CLP_SHA256_REG_SHA256_CTRL, (1 << SHA256_REG_SHA256_CTRL_ZEROIZE_LOW) & SHA256_REG_SHA256_CTRL_ZEROIZE_MASK);
 }
 
@@ -69,15 +71,15 @@ void sha256_flow(sha256_io block, uint8_t mode, uint8_t wntz_mode, uint8_t wntz_
     // wait for SHA to be valid
     wait_for_sha256_intr(SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK, 0);
     reg_ptr = (uint32_t *) CLP_SHA256_REG_SHA256_DIGEST_0;
-    printf("Load DIGEST data from SHA256\n");
+    VPRINTF(LOW, "Load DIGEST data from SHA256\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_SHA256_REG_SHA256_DIGEST_7) {
         sha256_digest[offset] = *reg_ptr;
         if (sha256_digest[offset] != digest.data[offset]) {
-            printf("At offset [%d], sha_digest data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", sha256_digest[offset]);
-            printf("Expected data: 0x%x\n", digest.data[offset]);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], sha_digest data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", sha256_digest[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", digest.data[offset]);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -104,12 +106,12 @@ void sha256_error_flow(sha256_io block, uint8_t mode, uint8_t next, uint8_t wntz
 
     // init and next triggers error1 bit. Check to make sure correct error arg is given
     if (next & (error == SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK)) {
-        printf("Error1 is expected when init and next are asserted at the same time. Check args given to sha256_error_flow()\n");
-        printf("%c", fail_cmd);
+        VPRINTF(LOW, "Error1 is expected when init and next are asserted at the same time. Check args given to sha256_error_flow()\n");
+        SEND_STDOUT_CTRL(fail_cmd);
     }
     else if (~next & (error == SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK)) {
-        printf("Error0 is expected for invalid wntz_mode or w. Check args given to sha256_error_flow()\n");
-        printf("%c", fail_cmd);
+        VPRINTF(LOW, "Error0 is expected for invalid wntz_mode or w. Check args given to sha256_error_flow()\n");
+        SEND_STDOUT_CTRL(fail_cmd);
     }
 
     // Enable SHA256 core 

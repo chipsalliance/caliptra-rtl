@@ -84,8 +84,10 @@ module caliptra_top_tb_services
 
     output logic [0:`CLP_OBF_UDS_DWORDS-1][31:0] cptra_uds_tb,
     output logic [0:`CLP_OBF_FE_DWORDS-1] [31:0] cptra_fe_tb,
+    output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb,
     output logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0] cptra_hek_tb,
-    output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb
+
+    output logic axi_error_inj_en
 
 );
 
@@ -176,6 +178,7 @@ module caliptra_top_tb_services
     logic                       inject_ecc_privkey;
     logic                       inject_mldsa_seed;
     logic                       inject_mlkem_kv;
+    logic                       inject_aes_seed;
     logic                       inject_kv16_zero_key;
     logic                       inject_kv23_small_rand_key;
     logic                       inject_kv23_rand_length_key;
@@ -184,6 +187,7 @@ module caliptra_top_tb_services
     logic                       check_pcr_mldsa_signing;
     logic                       inject_single_msg_for_ecc_mldsa;
     logic [4:0]                 mlkem_kv_write_slot;
+    logic                       unlock_security_state;
 
     // Decode:
     //  [0] - Single bit, ICCM Error Injection
@@ -326,7 +330,7 @@ module caliptra_top_tb_services
     //         8'h1         - Kill the simulation with a Failed status
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
-    //         8'h7F        - Do nothing
+    //         8'h7F        - Switch to MANUF device lifecycle state
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
     //         8'h88        - Toggle recovery interface emulation in AXI complex
     //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
@@ -349,16 +353,21 @@ module caliptra_top_tb_services
     //         8'h9c        - Inject invalid privkey/dh_key into ECC
     //         8'h9d        - Inject invalid pubkey_x into ECC
     //         8'h9e        - Inject invalid pubkey_y into ECC
-    //         8'h9f        - Unused
+    //         8'h9f        - Inject AES key into KV
     //         8'ha0: 8'ha7 - Inject HMAC384_KEY to kv_key register
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
-    //         8'ha9: 8'haf - Inject HMAC512_KEY to kv_key register
+    //         8'ha9        - Inject HMAC512_KEY to kv_key register
+    //         8'haa: 8'haf - Unused
     //         8'hb0        - Inject HMAC512_BLOCK to kv_key register
     //         8'hb1        - Inject MLKEM SEED to keyvault
     //         8'hb2        - Inject MLKEM MSG to keyvault
     //         8'hb3        - Check MLKEM KV result against shared key test vector
     //         8'hb4        - Inject MLKEM zeroize during KV access
-    //         8'hb5:bf     - Unused
+    //         8'hb5        - Turn on Assertion using $asserton
+    //         8'hb6        - Turn off Assertion using $assertoff
+    //         8'hb7        - AXI Error Injection Enabled
+    //         8'hb8        - AXI Error Injection Disabled
+    //         8'hb9:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hc8        - Inject key 0x0 into slot 16 for AES 
     //         8'hc9        - Inject key smaller than key_release_size into KV23
@@ -580,9 +589,9 @@ module caliptra_top_tb_services
                     if(((WriteData[7:0] & 8'hf8) == 8'h80) && mailbox_write) begin
                         //$system("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/ecdsa_secp384r1.exe");
                         inject_ecc_seed <= 1'b1;
-                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                        if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b10000;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b10000;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -594,7 +603,7 @@ module caliptra_top_tb_services
                         inject_ecc_privkey <= 1'b1;
                         if (slot_id == KV_ENTRY_FOR_ECC_SIGNING) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1000;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1000;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -603,7 +612,7 @@ module caliptra_top_tb_services
                         inject_mldsa_seed <= 1'b1;
                         if (slot_id == KV_ENTRY_FOR_MLDSA_SIGNING) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b100;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b100;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -614,7 +623,7 @@ module caliptra_top_tb_services
                         inject_ecc_privkey <= 1'b1;
                         if (slot_id == KV_ENTRY_FOR_ECC_SIGNING) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1000;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1000;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -625,7 +634,7 @@ module caliptra_top_tb_services
                         inject_mldsa_seed <= 1'b1;
                         if (slot_id == KV_ENTRY_FOR_MLDSA_SIGNING) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b100;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b100;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -636,7 +645,7 @@ module caliptra_top_tb_services
                     else if(((WriteData[7:0]) == 8'ha8) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -647,7 +656,7 @@ module caliptra_top_tb_services
                         inject_hmac_key <= 1'b1;
                         if (((WriteData[7:0] & 8'h07) == slot_id)) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -655,11 +664,11 @@ module caliptra_top_tb_services
                         end
                     end
                     //inject valid hmac_key dest and hmac512_key value to key reg
-                    else if((WriteData[7:0] > 8'ha8) && (WriteData[7:0] <= 8'haf) && mailbox_write) begin
+                    else if((WriteData[7:0] == 8'ha9) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
-                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                        if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 5'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -747,9 +756,9 @@ module caliptra_top_tb_services
                     //inject valid hmac_block dest and hmac512_block value to key reg
                     else if((WriteData[7:0] == 8'hb0) && mailbox_write) begin
                         inject_hmac_block <= 1'b1;
-                        if (slot_id == 4) begin
+                        if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 6'h2;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'h2;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -802,6 +811,17 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mlkem_msg_random[dword_i][31 : 0];
                         end
                     end
+                    else if((WriteData[7:0] == 8'h9f) && mailbox_write) begin
+                        inject_aes_seed <= 1'b1;
+                        if ((WriteData[12:8] == slot_id)) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b0010_0000;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'hAAAA_5555;
+                        end
+                    end
                     else begin
                         inject_ecc_seed <= '0;
                         inject_ecc_privkey <= '0;
@@ -810,6 +830,7 @@ module caliptra_top_tb_services
                         inject_random_data <= '0;
                         inject_hmac_block <= '0;
                         inject_mlkem_kv <= 1'b0;
+                        inject_aes_seed <= '0;
                         inject_kv16_zero_key <= '0;
                         inject_kv23_small_rand_key <= '0;
                         inject_kv23_rand_length_key <= '0;
@@ -954,6 +975,8 @@ module caliptra_top_tb_services
             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
         else
             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+            
+            unlock_security_state = 1'b0; // Default to not unlocking security state
     end
 `endif
     always @(negedge clk) begin
@@ -972,6 +995,16 @@ module caliptra_top_tb_services
         else if(assert_ss_tran && (cycleCnt == cycleCnt_ff + 'd100)) begin
             security_state.debug_locked <= 1'b0;
             assert_ss_tran <= 'b0;
+        end
+
+        if ((WriteData[7:0] == 8'h7F) && mailbox_write) begin
+            security_state.device_lifecycle <= DEVICE_MANUFACTURING;
+            unlock_security_state <= 1'b1; // Force unlock security state
+            force `CPTRA_TOP_PATH.unlock_caliptra_security_state = 1'b1; // Force unlock security state
+        end
+        else if (unlock_security_state) begin
+            unlock_security_state <= 1'b0; // Reset unlock security state
+            release `CPTRA_TOP_PATH.unlock_caliptra_security_state; // Release force unlock security state
         end
     end
 
@@ -1294,6 +1327,10 @@ endgenerate //IV_NO
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
         end
+        else if ((WriteData[7:0] == 8'hb5) && mailbox_write) begin
+            scan_mode <= 1'b1;
+            assert_scan_mode <= 'b0;
+        end
         else if (assert_scan_mode_doe_done && (`CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.kv_doe_fsm_ps == 'h5)) begin
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
@@ -1304,6 +1341,15 @@ endgenerate //IV_NO
         end
     end
     
+    always@(negedge clk) begin
+        if ((WriteData[7:0] == 8'hb5) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_CTRL.CMD.value = 2'b1;
+            cycleCnt_ff <= cycleCnt;
+        end
+        else if(cycleCnt == cycleCnt_ff + 'd5) begin
+            release `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_CTRL.CMD.value;
+        end
+    end
     
     always@(negedge clk) begin
         if((WriteData[7:0] == 8'hf2) && mailbox_write) begin
@@ -1388,6 +1434,36 @@ endgenerate //IV_NO
         end
     end
 
+    always@(posedge clk) begin
+        if((WriteData[7:0] == 8'hb5) && mailbox_write) begin
+        `ifdef CLP_ASSERT_ON
+            `ifndef VERILATOR
+                $display("Turning ON assertions using $asserton");
+                $asserton;
+            `endif
+        `endif
+        end
+        else if((WriteData[7:0] == 8'hb6) && mailbox_write) begin
+        `ifdef CLP_ASSERT_ON
+            `ifndef VERILATOR
+                $display("Turning OFF assertion using $assertoff");
+                $assertoff;
+            `endif
+        `endif
+        end
+    end
+
+    always@(posedge clk or negedge cptra_rst_b) begin
+        if(!cptra_rst_b) begin
+            axi_error_inj_en <= 1'b0;
+        end else if((WriteData[7:0] == 8'hb7) && mailbox_write) begin
+            $display("AXI Err Injection Enabled");
+            axi_error_inj_en <= 1'b1;
+        end else if((WriteData[7:0] == 8'hb8) && mailbox_write) begin
+            $display("AXI Err Injection Disabled");
+            axi_error_inj_en <= 1'b0;
+        end
+    end
 
     logic inject_mlkem_zeroize_kv_read;
     logic inject_zeroize_to_mlkem;
@@ -2860,6 +2936,7 @@ keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
 axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 aes_cov_bind i_aes_cov_bind();
+doe_cov_bind i_doe_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */
