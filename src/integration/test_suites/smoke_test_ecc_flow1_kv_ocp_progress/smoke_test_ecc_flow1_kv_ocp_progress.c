@@ -50,9 +50,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With ECC flow !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With ECC flow !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     srand(time);
     uint8_t ocp_progress_bit;
@@ -242,9 +242,9 @@ void main(){
             sign_s.data[i] = expected_sign_s[i];
 
         //inject seed to kv key reg (in RTL)
-        printf("Inject SEED into KV\n");
+        VPRINTF(LOW, "Inject SEED into KV\n");
         uint8_t seed_inject_cmd = 0xac; //0x80 + (seed_kv_id & 0x7); //TODO: change
-        printf("%c", seed_inject_cmd);
+        SEND_STDOUT_CTRL(seed_inject_cmd);
 
         ocp_progress_bit = 1; //rand() % 2;
         if (ocp_progress_bit) {
@@ -264,8 +264,8 @@ void main(){
         ecc_zeroize();
 
     } else {
-        VPRINTF(LOW, "This test is supported only in SS_MODE\n");
+        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
     }
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 }

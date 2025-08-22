@@ -50,9 +50,9 @@ void main() {
     uint32_t actual_sharedkey[MLKEM_SHAREDKEY_SIZE];
     uint8_t ocp_progress_bit;
 
-    printf("----------------------------\n");
-    printf(" Running MLKEM Smoke Test !!\n");
-    printf("----------------------------\n");
+    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF(LOW, " Running MLKEM Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------\n");
 
     srand(time);
 
@@ -65,7 +65,7 @@ void main() {
     if (ocp_lock_mode) {
         seed.kv_intf = TRUE;
         seed.kv_id = (rand() % 2) + 22;
-        VPRINTF(LOW, "Running mldsa with seed kv_id = 0x%x\n", seed.kv_id);
+        VPRINTF(LOW, "Running mlkem with seed kv_id = 0x%x\n", seed.kv_id);
         msg.kv_intf = TRUE;
         msg.kv_id = 21;
         shared_key.kv_intf = TRUE;
@@ -99,9 +99,9 @@ void main() {
         cptra_intr_rcv.abr_notif = 0;
     }
     else {
-        VPRINTF(LOW, "This test is supported only in SS_MODE\n");
+        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
     }
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

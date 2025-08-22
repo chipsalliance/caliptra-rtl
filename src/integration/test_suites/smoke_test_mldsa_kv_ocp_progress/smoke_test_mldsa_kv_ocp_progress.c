@@ -90,9 +90,9 @@ void mldsa_seed_read_flow(mldsa_io seed) {
 }
 
 void main() {
-    printf("---------------------------------\n");
-    printf(" KV Smoke Test With MLDSA flow !!\n");
-    printf("---------------------------------\n");
+    VPRINTF(LOW, "---------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With MLDSA flow !!\n");
+    VPRINTF(LOW, "---------------------------------\n");
 
 
     srand(time);
@@ -111,7 +111,7 @@ void main() {
 
         //inject mldsa seed to kv key reg (in RTL)
         uint8_t key_inject_cmd = 0xab;
-        printf("%c", key_inject_cmd);
+        SEND_STDOUT_CTRL(key_inject_cmd);
 
         ocp_progress_bit = rand() % 2;
         if (ocp_progress_bit) {
@@ -127,11 +127,11 @@ void main() {
         cptra_intr_rcv.abr_notif = 0;
     }
     else {
-        VPRINTF(LOW, "This test is supported only in SS_MODE\n");
+        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
     }
 
-    printf("%c",0xff); //End the test
-    
+    SEND_STDOUT_CTRL(0xff); //End the test
+
 }
 
 

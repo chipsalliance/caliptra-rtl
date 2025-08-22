@@ -87,9 +87,9 @@ void doe_flow(const enum doe_cmd_e cmd, uint8_t doe_dest_id) {
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With DOE flow    !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With DOE flow    !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     volatile uint8_t doe_dest_id;
     volatile uint8_t ocp_progress_bit;
@@ -124,19 +124,19 @@ void main(){
             doe_flow(DOE_UDS, doe_dest_id);
 
             if (error_flag) {
-                printf("%c", 0xf6); //Issue warm reset
+                SEND_STDOUT_CTRL(0xf5); //Issue cold reset
             } else {
                 doe_dest_id = rand() % 2 + 22;
                 doe_flow(DOE_FE, doe_dest_id);
                 if (error_flag) {
-                    printf("%c", 0xf6); //Issue warm reset
+                    SEND_STDOUT_CTRL(0xf5); //Issue cold reset
                 } else {
                     doe_dest_id = rand() % 2 + 22;
                     doe_flow(DOE_HEK, doe_dest_id);
                     if (error_flag) {
-                        printf("%c", 0xf6); //Issue warm reset
+                        SEND_STDOUT_CTRL(0xf5); //Issue cold reset
                     } else {
-                        printf("%c", 0xff); //End the test
+                        SEND_STDOUT_CTRL(0xff); //End the test
                     }
                 }
             }
@@ -149,14 +149,14 @@ void main(){
             doe_flow(DOE_FE, doe_dest_id);
 
             if (error_flag) {
-                printf("%c", 0xf6); //Issue warm reset
+                SEND_STDOUT_CTRL(0xf5); //Issue cold reset
             } else {
                 doe_dest_id = rand() % 2 + 22;
                 doe_flow(DOE_HEK, doe_dest_id);
                 if (error_flag) {
-                    printf("%c", 0xf6); //Issue warm reset
+                    SEND_STDOUT_CTRL(0xf5); //Issue cold reset
                 } else {
-                    printf("%c", 0xff); //End the test
+                    SEND_STDOUT_CTRL(0xff); //End the test
                 }
             }
         }
@@ -167,14 +167,14 @@ void main(){
 
             doe_flow(DOE_HEK, doe_dest_id);
             if (error_flag) {
-                printf("%c", 0xf6); //Issue warm reset
+                SEND_STDOUT_CTRL(0xf5); //Issue cold reset
             }
         }
 
     }
     else {
-        VPRINTF(LOW, "This test is supported only in SS_MODE\n");
+        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
     }
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 }

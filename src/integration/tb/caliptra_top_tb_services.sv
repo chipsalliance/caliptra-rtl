@@ -915,7 +915,7 @@ module caliptra_top_tb_services
             mlkem_kv_check_dis <= 1'b1;
         end
         else begin
-            mlkem_kv_check_dis <= ~((WriteData[7:0] == 8'hb3) && mailbox_write) | `CPTRA_TOP_PATH.soc_ifc_top1.ss_ocp_lock_in_progress;
+            mlkem_kv_check_dis <= ~((WriteData[7:0] == 8'hb3) && mailbox_write) | (`CPTRA_TOP_PATH.soc_ifc_top1.ss_ocp_lock_in_progress & (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_sharedkey_write_ctrl_reg.write_entry == 23));
         end
     end
 

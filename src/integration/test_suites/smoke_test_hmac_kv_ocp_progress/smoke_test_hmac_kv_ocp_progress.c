@@ -42,22 +42,6 @@ volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0; /
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
-/* HMAC384 test vector
-    KEY = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
-    BLOCK = 4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440
-    LFSR_SEED = C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504
-    TAG = b6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc4c5df61d5b3297b4fb68dab9f1b582c2
-*/
-
-/* HMAC512 test vector
-    KEY = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
-    BLOCK = 4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440
-    LFSR_SEED = random
-    TAG = 637edc6e01dce7e6742a99451aae82df23da3e92439e590e43e761b33e910fb8ac2878ebd5803f6f0b61dbce5e251ff8789a4722c1be65aea45fd464e89f8f5b
-*/
-
-
-
 void main() {
     hmac_io hmac384_key;
     hmac_io hmac384_block;
@@ -110,9 +94,9 @@ void main() {
 
     srand(time);
 
-    uint8_t hmackey_kv_id       = (rand() % 2) + 22; //0x12; //2
-    uint8_t hmacblock_kv_id     = 0x10; //(rand() % ((22-16)+1)) + 16; //0x13; //1
-    uint8_t tag_kv_id           = 0x17; //(rand() % ((22-16)+1)) + 16; //0x14; //0x17
+    uint8_t hmackey_kv_id       = (rand() % 2) + 22;
+    uint8_t hmacblock_kv_id     = 0x10;
+    uint8_t tag_kv_id           = 0x17;
 
     //Call interrupt init
     init_interrupts();
@@ -179,8 +163,6 @@ void main() {
 
 
             //inject hmac384_key to kv key reg (in RTL)
-            // uint8_t key384_inject_cmd = 0x9f; //0xa0 + (hmac384_key.kv_id & 0x7);
-            // printf("%c", key384_inject_cmd);
             lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa9);
             lsu_write_32(STDOUT, 0xaa);
 
@@ -202,10 +184,8 @@ void main() {
             hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, exp_failure);
             hmac_zeroize();
 
-            // printf("%c",0xff); //End the test
-
-            VPRINTF(LOW, "Issue warm reset\n");
-            printf("%c", 0xf6);
+            VPRINTF(LOW, "Issue cold reset\n");
+            SEND_STDOUT_CTRL(0xf5);
         }
         else if (rst_count == 2) {
 
@@ -244,10 +224,6 @@ void main() {
                                             0xa45fd464,
                                             0xe89f8f5b}; 
 
-            // hmac_io hmac512_key;
-            // hmac_io hmac512_block;
-            // hmac_io hmac512_lfsr_seed;
-            // hmac_io hmac512_tag;
             hmackey_kv_id       = (rand() % 2) + 22;
             VPRINTF(LOW, "Running hmac with key kv_id = 0x%x\n", hmackey_kv_id);
             hmac512_key.kv_intf = TRUE;
@@ -272,8 +248,6 @@ void main() {
 
 
             //inject hmac512_key to kv key reg (in RTL)
-            // uint8_t key512_inject_cmd = 0x9f; //0xa8 + (hmac512_key.kv_id & 0x7); //TODO: update
-            // printf("%c", key512_inject_cmd);
             lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9);
             lsu_write_32(STDOUT, 0xaa);
 
@@ -298,11 +272,9 @@ void main() {
             hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, exp_failure);
             hmac_zeroize();
 
-            // VPRINTF(LOW, "Issue warm reset\n");
-            // printf("%c", 0xf6);
         }
     } else {
-        VPRINTF(LOW, "This test is supported only in SS_MODE\n");
+        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
     }
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 }
