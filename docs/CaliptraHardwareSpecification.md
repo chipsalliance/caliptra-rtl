@@ -1590,7 +1590,7 @@ Please refer to the [Adams-bridge specification](https://github.com/chipsallianc
 ### Address map
 Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
 
-## Adams Bridge - Dilithium (ML-KEM)
+## Adams Bridge - Kyber (ML-KEM)
 
 Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
 
