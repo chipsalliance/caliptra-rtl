@@ -367,7 +367,8 @@ module caliptra_top_tb_services
     //         8'hb6        - Turn off Assertion using $assertoff
     //         8'hb7        - AXI Error Injection Enabled
     //         8'hb8        - AXI Error Injection Disabled
-    //         8'hb9:bf     - Unused
+    //         8'hb9        - Enable scan mode and run DOE back to back
+    //         8'hba:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hc8        - Inject key 0x0 into slot 16 for AES 
     //         8'hc9        - Inject key smaller than key_release_size into KV23
@@ -1327,7 +1328,7 @@ endgenerate //IV_NO
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
         end
-        else if ((WriteData[7:0] == 8'hb5) && mailbox_write) begin
+        else if ((WriteData[7:0] == 8'hb9) && mailbox_write) begin
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
         end
@@ -1342,7 +1343,7 @@ endgenerate //IV_NO
     end
     
     always@(negedge clk) begin
-        if ((WriteData[7:0] == 8'hb5) && mailbox_write) begin
+        if ((WriteData[7:0] == 8'hb9) && mailbox_write) begin
             force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_CTRL.CMD.value = 2'b1;
             cycleCnt_ff <= cycleCnt;
         end
