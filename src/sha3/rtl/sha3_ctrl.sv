@@ -298,7 +298,7 @@ always_comb intr_kmac_done_edge = intr_kmac_done & (!intr_kmac_done_reg);
 always_comb intr_fifo_empty_edge = intr_fifo_empty & (!intr_fifo_empty_reg);
 
 // Assign error/interrupt signals
-assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = intr_kmac_err_edge;
+assign hwif_in.intr_block_rf.error_internal_intr_r.sha3_error_sts.hwset = intr_kmac_err_edge;
 assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0;
 assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0;
 assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0;
