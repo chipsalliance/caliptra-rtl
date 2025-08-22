@@ -105,7 +105,7 @@ void main() {
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = doe_hek_dest_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 
     SEND_STDOUT_CTRL(0xff); //End the test
     

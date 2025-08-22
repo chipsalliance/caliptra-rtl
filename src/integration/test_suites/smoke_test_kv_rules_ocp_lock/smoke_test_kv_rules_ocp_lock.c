@@ -72,7 +72,7 @@ void hmac_test(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = tag_kv_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 
 }
 
