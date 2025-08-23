@@ -497,7 +497,7 @@ module soc_ifc_tb
 
   event pulse_trig_event;
 
-  WordTransaction pulse_trig_trans = new(); 
+  WordTransaction pulse_trig_trans = new();
 
   RegScoreboard sb = new();  // scoreboard for checking register operations
 
@@ -604,11 +604,25 @@ module soc_ifc_tb
   // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES, SS_CPTRA_DMA_AXI_USER
   //----------------------------------------------------------------
 
-  always_comb update_CPTRA_SECURITY_STATE(scan_mode, security_state.debug_locked, security_state.device_lifecycle);
-  always_comb update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
-  always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
-  always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
-  always_comb update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
+  // default clocking used in $changed call
+  default clocking default_clk @(posedge clk_tb); endclocking
+  initial begin
+      wait(socregs != null);
+      socregs.wait_setup_done();
+      $display("SocRegisters finished executing new()");
+      fork
+        forever @($changed({scan_mode,security_state.debug_locked,security_state.device_lifecycle}))
+          update_CPTRA_SECURITY_STATE(scan_mode, security_state.debug_locked, security_state.device_lifecycle);
+        forever @($changed({ready_for_fuses,`REG_HIER_BOOT_FSM_PS}))
+          update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
+        forever @($changed(generic_input_wires1_q))
+          update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
+        forever @($changed(generic_input_wires0_q))
+          update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
+        forever @($changed({gen_input_wire_toggle,security_state.debug_locked}))
+          update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
+      join_none
+  end
 
 
   //----------------------------------------------------------------
@@ -831,7 +845,10 @@ module soc_ifc_tb
       strap_ss_strap_generic_3_tb = '0;
       ocp_lock_en_tb = $urandom_range(1,0);
 
+      while(ocp_lock_en_tb === 'hX);
+
       update_CPTRA_HW_CONFIG();
+      update_SS_STRAPS();
     end
   endtask // init_sim
 

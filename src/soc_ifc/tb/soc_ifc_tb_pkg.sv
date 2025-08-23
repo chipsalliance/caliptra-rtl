@@ -244,7 +244,7 @@ package soc_ifc_tb_pkg;
     "SS_STRAP_GENERIC"                              : SOCIFC_BASE + `SOC_IFC_REG_SS_STRAP_GENERIC_0,                                    // 0x5a0 [4]
     // 0x5b0..0x5bc
     "SS_DBG_SERVICE_REG_REQ"                        : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ,                                 // 0x5c0
-    "SS_DBG_SERVICE_REG_RSP"                  : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP,                           // 0x5c4
+    "SS_DBG_SERVICE_REG_RSP"                        : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP,                           // 0x5c4
     "SS_SOC_DBG_UNLOCK_LEVEL"                       : SOCIFC_BASE + `SOC_IFC_REG_SS_SOC_DBG_UNLOCK_LEVEL_0,                              // 0x5c8 [2]
     "SS_GENERIC_FW_EXEC_CTRL"                       : SOCIFC_BASE + `SOC_IFC_REG_SS_GENERIC_FW_EXEC_CTRL_0,                              // 0x5d0 [4]
     // 0x5e0..0x5fc           
@@ -485,21 +485,22 @@ package soc_ifc_tb_pkg;
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_PROD_DBG_UNLOCK_IN_PROGRESS_MASK  |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
-                                                          `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK), 
+                                                          `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
+                                                          `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK),
     "SS_DBG_SERVICE_REG_RSP_PROD_UNLOCK"         : (`SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_PROD_DBG_UNLOCK_SUCCESS_MASK      |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_PROD_DBG_UNLOCK_FAIL_MASK         |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_PROD_DBG_UNLOCK_IN_PROGRESS_MASK  |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
-                                                          `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK), 
+                                                          `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK),
     "SS_DBG_SERVICE_REG_RSP_MANUF_UNLOCK"        : (`SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_SUCCESS_MASK     | 
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_FAIL_MASK        |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_MANUF_DBG_UNLOCK_IN_PROGRESS_MASK |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_SUCCESS_MASK          |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_FAIL_MASK             |
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_UDS_PROGRAM_IN_PROGRESS_MASK      |
-                                                          `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK), 
+                                                          `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK),
     "SS_KEY_RELEASE_SIZE"                              : `SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_MASK,
     "SS_OCP_LOCK_CTRL"                                 : `SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK,
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
@@ -655,9 +656,8 @@ package soc_ifc_tb_pkg;
 
 
   function dword_t get_initval(string addr_name);
-    if (str_startswith(addr_name, "SS_") && 
-        !str_contains(addr_name, "SS_GENERIC_FW_EXEC_CTRL") && 
-        !str_contains(addr_name, "SS_DBG_SERVICE_REG")) begin
+    if (reg_is_ss_strap(addr_name) ||
+        addr_name == "SS_DEBUG_INTENT") begin
       //$display("SS string match");
       case (addr_name)
         "SS_CPTRA_BASE_ADDR_L"                    : return strap_ss_caliptra_base_addr_tb[31:0];
@@ -671,20 +671,20 @@ package soc_ifc_tb_pkg;
         "SS_OTP_FC_BASE_ADDR_L"                   : return strap_ss_otp_fc_base_addr_tb[31:0];
         "SS_OTP_FC_BASE_ADDR_H"                   : return strap_ss_otp_fc_base_addr_tb[63:32];
         "SS_UDS_SEED_BASE_ADDR_L"                 : return strap_ss_uds_seed_base_addr_tb[31:0];
-        "SS_UDS_BASE_ADDR_H"                      : return strap_ss_uds_seed_base_addr_tb[63:32];                             
+        "SS_UDS_SEED_BASE_ADDR_H"                 : return strap_ss_uds_seed_base_addr_tb[63:32];
         "SS_KEY_RELEASE_BASE_ADDR_L"              : return strap_ss_key_release_base_addr_tb[31:0];
         "SS_KEY_RELEASE_BASE_ADDR_H"              : return strap_ss_key_release_base_addr_tb[63:32];
         "SS_KEY_RELEASE_SIZE"                     : return dword_t'(strap_ss_key_release_key_size_tb);
         "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : return strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb;
         "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : return strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb;
         "SS_CPTRA_DMA_AXI_USER"                   : return strap_ss_caliptra_dma_axi_user_tb;
-        "SS_DEBUG_INTENT"                         : return ss_debug_intent_tb;
+        "SS_DEBUG_INTENT"                         : return dword_t'(ss_debug_intent_tb);
         default: return '0;
       endcase
     end
     else if (str_startswith(addr_name, "CPTRA_HW_CONFIG")) begin
       if (subsystem_mode_tb === 1) begin// subsystem mode
-        $display("Subsytem mode: 0x%0x", subsystem_mode_tb);
+        $display("Subsystem mode: 0x%0x", subsystem_mode_tb);
         return _soc_register_initval_ss_dict[addr_name];
       end
       else if (subsystem_mode_tb === 0) begin // passive mode
@@ -819,14 +819,24 @@ package soc_ifc_tb_pkg;
     begin
       exp_cptra_hw_config = get_initval("CPTRA_HW_CONFIG");
       if (subsystem_mode_tb && ocp_lock_en_tb === 1'b1) begin
-        _soc_register_initval_ss_dict["CPTRA_HW_CONFIG"] = (ocp_lock_en_tb ? dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) : dword_t'(0)) | exp_cptra_hw_config;
+        exp_cptra_hw_config |= ocp_lock_en_tb ? dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) : dword_t'(0);
+        _soc_register_initval_ss_dict["CPTRA_HW_CONFIG"] = exp_cptra_hw_config;
+        update_exp_regval("CPTRA_HW_CONFIG", exp_cptra_hw_config, SET_DIRECT);
       end
 
-      update_exp_regval("CPTRA_HW_CONFIG", exp_cptra_hw_config, SET_DIRECT);
-      $display("TB INFO. Updated expected value of CPTRA_HW_CONFIG = 0x%0x", _exp_register_data_dict["CPTRA_HW_CONFIG"]);
+      $display("TB INFO. Updated expected value of CPTRA_HW_CONFIG = 0x%0x.", _exp_register_data_dict["CPTRA_HW_CONFIG"]);
     end
 
   endfunction // update_CPTRA_HW_CONFIG
+
+  function automatic void update_SS_STRAPS();
+      strq_t ss_straps_q = get_ss_strap_regnames();
+      add_to_strq(ss_straps_q, "SS_DEBUG_INTENT");
+      foreach (ss_straps_q[ix]) begin
+          update_exp_regval(ss_straps_q[ix], get_initval(ss_straps_q[ix]), SET_DIRECT);
+          $display("TB INFO. Updated expected value of %s = 0x%0x", ss_straps_q[ix], _exp_register_data_dict[ss_straps_q[ix]]);
+      end
+  endfunction // update_SS_STRAPS
 
 
   function void update_exp_regval(string addr_name, dword_t indata, access_t modify, string pfx="DEFAULT");
@@ -1211,6 +1221,20 @@ package soc_ifc_tb_pkg;
   endfunction // get_soc_regnames
 
 
+  function automatic bit reg_is_ss_strap(string rkey);
+      if (!str_startswith(rkey, "SS"))
+        return 1'b0;
+      else if (str_startswith(rkey, "SS_DBG_SERVICE_REG_RSP") ||
+               str_startswith(rkey, "SS_SOC_DBG_UNLOCK_LEVEL") ||
+               str_startswith(rkey, "SS_GENERIC_FW_EXEC_CTRL"))
+        return 1'b0;
+      else if (rkey inside {"SS_DEBUG_INTENT", "SS_DBG_SERVICE_REG_REQ", "SS_OCP_LOCK_CTRL"})
+        return 1'b0;
+      else
+        return 1'b1;
+  endfunction
+
+
   function automatic strq_t get_fuse_regnames();
 
     strq_t fuse_regs; 
@@ -1221,9 +1245,7 @@ package soc_ifc_tb_pkg;
       // SS_* registers are straps that get their initial values from 
       // input wires to soc_ifc and can be written until CPTRA_FUSE_WR_DONE 
       // is set. After, they are locked for writes similar to fuses.
-      else if (rkey inside {"SS_DEBUG_INTENT", "SS_DBG_SERVICE_REG_REQ", "SS_OCP_LOCK_CTRL"})
-        continue;
-      else if (rkey.substr(0,1) == "SS")
+      else if (reg_is_ss_strap(rkey))
         fuse_regs.push_back(rkey);
     end 
 
@@ -1252,10 +1274,8 @@ package soc_ifc_tb_pkg;
       // SS_* registers are straps that get their initial values from 
       // input wires to soc_ifc and can be written until CPTRA_FUSE_WR_DONE 
       // is set. After, they are locked for writes similar to fuses.
-      if (rkey inside {"SS_DEBUG_INTENT", "SS_DBG_SERVICE_REG_REQ", "SS_OCP_LOCK_CTRL"})
-        continue;
-      else if (rkey.substr(0,1) == "SS")
-        ss_strap_regs.push_back(rkey); 
+      if (reg_is_ss_strap(rkey))
+        ss_strap_regs.push_back(rkey);
       
     end 
 
@@ -1343,8 +1363,8 @@ package soc_ifc_tb_pkg;
       if (str_startswith(rkey, "INTR_BRF") || 
           str_startswith(rkey, "SHA_ACC_INTR_BRF") || 
           str_startswith(rkey, "FUSE") ||
-          (str_startswith(rkey, "SS") && !(rkey inside {"SS_DEBUG_INTENT", "SS_DBG_SERVICE_REG_REQ", "SS_OCP_LOCK_CTRL"}))) 
-          continue;
+          reg_is_ss_strap(rkey)) 
+        continue;
       soc_regs.push_back(rkey); 
     end 
 
@@ -1461,8 +1481,8 @@ package soc_ifc_tb_pkg;
     int s1_len = s1.len();
     int s2_len = s2.len();
 
-    $display(s1);
-    $display(s2);
+//    $display(s1);
+//    $display(s2);
 
     for (int i = 0; i <= s1_len - s2_len; i++) begin
       string sub = s1.substr(i, s2_len-1);
@@ -1632,11 +1652,13 @@ package soc_ifc_tb_pkg;
     // once these static vars have been set, assoicated modifier functions should have no effect
     static int widereg_expanded = 0; 
     static int imap_built = 0; 
+    static bit setup_done = 0;
     // static int fuses_locked = 0; 
     static string security_state_name = "UNDEFINED2"; 
     static int undef_addr_built = 0; 
 
     extern function new();
+    extern task     wait_setup_done();
     extern function lock_fuses();
     extern function unlock_fuses();
     extern function void build_inverse_addr_map();
@@ -1662,8 +1684,14 @@ package soc_ifc_tb_pkg;
     end 
 
     reset_exp_data();
+    setup_done = 1'b1;
  
   endfunction  // new 
+
+
+  task SocRegisters::wait_setup_done();
+      wait(setup_done == 1'b1);
+  endtask
 
 
   function SocRegisters::lock_fuses();
