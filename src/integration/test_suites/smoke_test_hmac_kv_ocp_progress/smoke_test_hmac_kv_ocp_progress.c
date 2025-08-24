@@ -254,9 +254,6 @@ void main() {
             ocp_progress_bit = rand() % 2;
             if (ocp_progress_bit) {
                 // Enable OCP LOCK mode
-                lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG, SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
-                
-                #define CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
                 VPRINTF(LOW,"OCP lock in progress\n");
                 lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
                 if (hmackey_kv_id == 22){ exp_failure = FALSE; }
@@ -264,7 +261,6 @@ void main() {
             } else {
                 VPRINTF(LOW,"OCP lock not in progress\n");
                 lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 0);
-                #undef CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
                 exp_failure = FALSE; //Expect success in this case
             }
 
