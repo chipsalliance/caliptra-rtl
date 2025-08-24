@@ -18,8 +18,11 @@
 // ----------
 // Test to make sure SHA acc is not accessible over SoC AXI interface
 
+`include "config_defines.svh"
+
 module soc_ifc_axi_sha_acc_dis_tb
     import soc_ifc_pkg::*;
+    import kv_defines_pkg::*;
     import axi_pkg::*;
     ();
 
@@ -35,8 +38,10 @@ module soc_ifc_axi_sha_acc_dis_tb
   parameter AHB_HTRANS_NONSEQ    = 2;
   parameter AHB_HTRANS_SEQ       = 3;
 
-  parameter AHB_ADDR_WIDTH       = 19;
+  parameter AHB_ADDR_WIDTH       = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 19
   parameter AHB_DATA_WIDTH       = 32;
+
+  parameter AXI_ADDR_WIDTH       = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 19;
 
 
   parameter integer AW = 32;
@@ -93,18 +98,24 @@ module soc_ifc_axi_sha_acc_dis_tb
  assign aes_rdata = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
  assign aes_error = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected 
 
+ // Not verified in this bench
+ kv_read_t    kv_read;
+ kv_rd_resp_t kv_rd_resp = '{error:1'b0,
+                             last: 1'b0,
+                             read_data: KV_DATA_W'(0)};
+
 
 
   
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  axi_if #(.AW(SOC_IFC_ADDR_W), .DW(SOC_IFC_DATA_W), .IW(`CALIPTRA_AXI_ID_WIDTH), .UW(SOC_IFC_USER_W)) axi_sub_if(clk_tb, cptra_rst_b_tb);
-  axi_if #(.AW(SOC_IFC_ADDR_W), .DW(SOC_IFC_DATA_W), .IW(`CALIPTRA_AXI_ID_WIDTH), .UW(SOC_IFC_USER_W)) axi_mgr_if(clk_tb, cptra_rst_b_tb);
+  axi_if #(.AW(AXI_ADDR_WIDTH), .DW(SOC_IFC_DATA_W), .IW(`CALIPTRA_AXI_ID_WIDTH), .UW(SOC_IFC_USER_W)) axi_sub_if(clk_tb, cptra_rst_b_tb);
+  axi_if #(.AW(AXI_ADDR_WIDTH), .DW(SOC_IFC_DATA_W), .IW(`CALIPTRA_AXI_ID_WIDTH), .UW(SOC_IFC_USER_W)) axi_mgr_if(clk_tb, cptra_rst_b_tb);
 
   soc_ifc_top #(
-    .AXI_ADDR_WIDTH(SOC_IFC_ADDR_W),
-    .AXI_ID_WIDTH(8),
+    .AXI_ADDR_WIDTH(AXI_ADDR_WIDTH),
+    .AXI_ID_WIDTH  (8             ),
     .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH)
     ) dut (
     .clk(clk_tb),
@@ -175,6 +186,9 @@ module soc_ifc_axi_sha_acc_dis_tb
 
     .rv_ecc_sts(rv_ecc_sts_t'{default:1'b0}),
 
+    // Clear KeyVault secrets
+    .debugUnlock_or_scan_mode_switch(1'b0),
+
     .clear_obf_secrets(1'b0),
     .scan_mode(1'b0),
     .cptra_obf_key(256'h0),
@@ -185,6 +199,11 @@ module soc_ifc_axi_sha_acc_dis_tb
     .cptra_obf_uds_seed_vld(1'b0),
     .cptra_obf_uds_seed(512'h0),
     .obf_uds_seed(),
+    .obf_hek_seed(),
+
+    // kv interface
+    .kv_read   (kv_read   ),
+    .kv_rd_resp(kv_rd_resp),
 
     .strap_ss_caliptra_base_addr(64'h0),
     .strap_ss_mci_base_addr(64'h0),
@@ -192,6 +211,8 @@ module soc_ifc_axi_sha_acc_dis_tb
     .strap_ss_external_staging_area_base_addr(64'h0),
     .strap_ss_otp_fc_base_addr(64'h0),
     .strap_ss_uds_seed_base_addr(64'h0),
+    .strap_ss_key_release_base_addr(64'h0),
+    .strap_ss_key_release_key_size(16'h0),
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(0),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes(0),
     .strap_ss_strap_generic_0(0),
@@ -205,6 +226,12 @@ module soc_ifc_axi_sha_acc_dis_tb
     .ss_dbg_manuf_enable(),
     .ss_soc_dbg_unlock_level(),
     .ss_generic_fw_exec_ctrl(),
+
+    // Subsystem mode OCP LOCK status
+    .ss_ocp_lock_en(1'b0),
+    .ss_ocp_lock_in_progress(),
+    .ss_key_release_key_size(),
+
     .nmi_vector(),
     .nmi_intr(),
     .iccm_lock(),
