@@ -437,7 +437,7 @@ module ecc_dsa_ctrl
         end
 
         for (int dword=0; dword < 12; dword++)begin
-            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.we = (sharedkey_we_reg & ~(dest_keyvault | kv_seed_data_present)) & !zeroize_reg;
+            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.we = (sharedkey_we_reg & ~(dest_keyvault | kv_key_data_present)) & !zeroize_reg;
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.next = read_reg[11-dword];  
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.hwclr = zeroize_reg;
         end
