@@ -56,6 +56,10 @@
           continue; 
         end
       end
+
+      // Exclude certain non-strap Subsystem-only regs. Covered in separate tests.
+      del_from_strq(soc_regnames, "SS_DBG_SERVICE_REG_REQ");
+      del_from_strq(soc_regnames, "SS_DBG_SERVICE_REG_RSP");
       
       repeat (5) @(posedge clk_tb);
 

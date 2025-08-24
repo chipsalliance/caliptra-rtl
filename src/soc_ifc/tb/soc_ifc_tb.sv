@@ -41,6 +41,7 @@ module soc_ifc_tb
   import mbox_pkg::*;
   import soc_ifc_tb_pkg::*;
   import axi_pkg::*;
+  import kv_defines_pkg::*;
   ();
 
 
@@ -98,14 +99,14 @@ module soc_ifc_tb
   parameter MBOX_FE_ADDR          = SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0;
   parameter MBOX_FUSE_DONE_ADDR   = SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_WR_DONE;
 
-  parameter AHB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18 
+  parameter AHB_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 19 
   parameter AHB_DATA_WIDTH = `CALIPTRA_AHB_HDATA_SIZE; // 32 
   //TODO: Delete APB parameters
   parameter APB_ADDR_WIDTH = 18; 
   parameter APB_DATA_WIDTH = 32; 
   parameter APB_USER_WIDTH = 32; 
 
-  parameter AXI_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 18;
+  parameter AXI_ADDR_WIDTH = `CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC); // 19;
   parameter AXI_DATA_WIDTH = `CALIPTRA_AXI_DATA_WIDTH; // 32
   parameter AXI_ID_WIDTH   = `CALIPTRA_AXI_ID_WIDTH; // 32
   parameter AXI_USER_WIDTH = `CALIPTRA_AXI_USER_WIDTH; // 32
@@ -184,6 +185,12 @@ module soc_ifc_tb
  logic [SOC_IFC_DATA_W-1:0] aes_rdata;
  logic aes_error; 
 
+ // Not verified in this bench
+ kv_read_t    kv_read;
+ kv_rd_resp_t kv_rd_resp = '{error:1'b0,
+                             last: 1'b0,
+                             read_data: KV_DATA_W'(0)};
+
 
  assign aes_input_ready = '0; 
  assign aes_output_valid = '0; 
@@ -196,19 +203,24 @@ module soc_ifc_tb
   logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
   logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
   logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed;
+  logic [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed;
 
 /*
   logic [63:0] strap_ss_caliptra_base_addr;
   logic [63:0] strap_ss_mci_base_addr;
   logic [63:0] strap_ss_recovery_ifc_base_addr;
+  logic [63:0] strap_ss_external_staging_area_base_addr;
   logic [63:0] strap_ss_otp_fc_base_addr;
   logic [63:0] strap_ss_uds_seed_base_addr;
+  logic [63:0] strap_ss_key_release_base_addr;
+  logic [15:0] strap_ss_key_release_key_size;
   logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
   logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes;
   logic [31:0] strap_ss_strap_generic_0;
   logic [31:0] strap_ss_strap_generic_1;
   logic [31:0] strap_ss_strap_generic_2;
   logic [31:0] strap_ss_strap_generic_3;
+  logic [31:0] strap_ss_caliptra_dma_axi_user;
   logic        ss_debug_intent;
   logic       cptra_ss_debug_intent;
 
@@ -249,11 +261,6 @@ module soc_ifc_tb
   bit            reg_sva_off = 1'b1;  // Enable only during register assertion checks
 
   logic         mailbox_data_avail_tb;
-
-  always_comb begin
-    subsystem_mode_tb = dut.soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en;
-    $display("Subsystem Mode updated: 0x%0x", subsystem_mode_tb);
-  end
 
 
   typedef enum logic {
@@ -332,15 +339,6 @@ module soc_ifc_tb
              .mailbox_data_avail(mailbox_data_avail_tb),
              .mailbox_flow_done(),
 
-             .aes_input_ready,
-             .aes_output_valid,
-             .aes_status_idle,
-             .aes_req_dv,
-             .aes_req_hold,
-             .aes_req_data,
-             .aes_rdata,
-             .aes_error, 
-
              .recovery_data_avail(1'b0),
              .recovery_image_activated(1'b0),
              
@@ -385,6 +383,9 @@ module soc_ifc_tb
 
              .rv_ecc_sts(rv_ecc_sts_t'{default:1'b0}),
 
+             // Clear KeyVault secrets
+             .debugUnlock_or_scan_mode_switch(1'b0),
+
              .clear_obf_secrets(clear_obf_secrets), 
              .scan_mode(scan_mode), 
              .cptra_obf_key('0),
@@ -395,6 +396,20 @@ module soc_ifc_tb
              .cptra_obf_uds_seed_vld(cptra_uds_vld_tb),
              .cptra_obf_uds_seed(cptra_uds_tb),
              .obf_uds_seed(obf_uds_seed),
+             .obf_hek_seed(obf_hek_seed),
+
+             .aes_input_ready,
+             .aes_output_valid,
+             .aes_status_idle,
+             .aes_req_dv,
+             .aes_req_hold,
+             .aes_req_data,
+             .aes_rdata,
+             .aes_error, 
+
+             // kv interface
+             .kv_read   (kv_read   ),
+             .kv_rd_resp(kv_rd_resp),
 
              .strap_ss_caliptra_base_addr(strap_ss_caliptra_base_addr_tb),
              .strap_ss_mci_base_addr(strap_ss_mci_base_addr_tb),
@@ -402,6 +417,8 @@ module soc_ifc_tb
              .strap_ss_external_staging_area_base_addr(strap_ss_external_staging_area_base_addr_tb),
              .strap_ss_otp_fc_base_addr(strap_ss_otp_fc_base_addr_tb),
              .strap_ss_uds_seed_base_addr(strap_ss_uds_seed_base_addr_tb),
+             .strap_ss_key_release_base_addr(strap_ss_key_release_base_addr_tb),
+             .strap_ss_key_release_key_size (strap_ss_key_release_key_size_tb),
              .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb),
              .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes(strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb),
              .strap_ss_strap_generic_0(strap_ss_strap_generic_0_tb),
@@ -416,6 +433,11 @@ module soc_ifc_tb
              .ss_soc_dbg_unlock_level(),
 
              .ss_generic_fw_exec_ctrl(),
+
+             // Subsystem mode OCP LOCK status
+             .ss_ocp_lock_en(ocp_lock_en_tb),
+             .ss_ocp_lock_in_progress(),
+             .ss_key_release_key_size(),
 
              .nmi_vector(),
              .nmi_intr(),
@@ -475,11 +497,11 @@ module soc_ifc_tb
 
   event pulse_trig_event;
 
-  WordTransaction pulse_trig_trans = new(); 
+  WordTransaction pulse_trig_trans = new();
 
-  RegScoreboard sb = new();  // scoreboard for checking register operations 
+  RegScoreboard sb = new();  // scoreboard for checking register operations
 
-  SocRegisters socregs = new(); // allows for initialization of soc-registers 
+  SocRegisters socregs = new(); // allows for initialization of soc-registers
 
 
   // Tie-offs
@@ -582,12 +604,25 @@ module soc_ifc_tb
   // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES, SS_CPTRA_DMA_AXI_USER
   //----------------------------------------------------------------
 
-  always_comb update_CPTRA_SECURITY_STATE(scan_mode, security_state.debug_locked, security_state.device_lifecycle);
-  always_comb update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
-  always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
-  always_comb update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
-  always_comb update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
-  always_comb update_CPTRA_HW_CONFIG();
+  // default clocking used in $changed call
+  default clocking default_clk @(posedge clk_tb); endclocking
+  initial begin
+      wait(socregs != null);
+      socregs.wait_setup_done();
+      $display("SocRegisters finished executing new()");
+      fork
+        forever @($changed({scan_mode,security_state.debug_locked,security_state.device_lifecycle}))
+          update_CPTRA_SECURITY_STATE(scan_mode, security_state.debug_locked, security_state.device_lifecycle);
+        forever @($changed({ready_for_fuses,`REG_HIER_BOOT_FSM_PS}))
+          update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
+        forever @($changed(generic_input_wires1_q))
+          update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
+        forever @($changed(generic_input_wires0_q))
+          update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
+        forever @($changed({gen_input_wire_toggle,security_state.debug_locked}))
+          update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
+      join_none
+  end
 
 
   //----------------------------------------------------------------
@@ -800,14 +835,20 @@ module soc_ifc_tb
       strap_ss_external_staging_area_base_addr_tb = '0;
       strap_ss_otp_fc_base_addr_tb = '0;
       strap_ss_uds_seed_base_addr_tb = '0;
+      strap_ss_key_release_base_addr_tb = '0;
+      strap_ss_key_release_key_size_tb = '0;
       strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb = '0;
       strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb = '0;
       strap_ss_strap_generic_0_tb = '0;
       strap_ss_strap_generic_1_tb = '0;
       strap_ss_strap_generic_2_tb = '0;
       strap_ss_strap_generic_3_tb = '0;
+      ocp_lock_en_tb = $urandom_range(1,0);
 
+      while(ocp_lock_en_tb === 'hX);
 
+      update_CPTRA_HW_CONFIG();
+      update_SS_STRAPS();
     end
   endtask // init_sim
 
@@ -1340,6 +1381,8 @@ module soc_ifc_tb
           strap_ss_external_staging_area_base_addr_tb = {$urandom, $urandom};
           strap_ss_otp_fc_base_addr_tb = {$urandom, $urandom};
           strap_ss_uds_seed_base_addr_tb = {$urandom, $urandom};
+          strap_ss_key_release_base_addr_tb = {$urandom, $urandom};
+          strap_ss_key_release_key_size_tb = $urandom_range(65535,0);
           strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb = $urandom;
           strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb = $urandom;
           strap_ss_strap_generic_0_tb = $urandom;
