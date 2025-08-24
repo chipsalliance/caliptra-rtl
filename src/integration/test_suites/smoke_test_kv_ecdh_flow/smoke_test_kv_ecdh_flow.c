@@ -90,7 +90,7 @@ void kv_ecc_flow(uint8_t seed_kv_id, uint8_t privkey_kv_id, uint8_t sharedkey_kv
     VPRINTF(LOW, "Inject SEED into KV ID %d\n", seed_kv_id);
     lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
 
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
+    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
     VPRINTF(LOW, "Stored ECC Privkey into KV ID %d\n", privkey_kv_id);
 
@@ -143,7 +143,7 @@ void kv_hmac512_flow(uint8_t block_id, uint8_t tag_id){
     hmac512_tag.kv_id = tag_id;
     VPRINTF(LOW,"hmac tag kv id = %x\n", hmac512_tag.kv_id);
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
     hmac_zeroize();
 }
 

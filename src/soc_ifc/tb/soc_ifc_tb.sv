@@ -191,7 +191,6 @@ module soc_ifc_tb
                              last: 1'b0,
                              read_data: KV_DATA_W'(0)};
 
-
  assign aes_input_ready = '0; 
  assign aes_output_valid = '0; 
  assign aes_status_idle = '0; 
