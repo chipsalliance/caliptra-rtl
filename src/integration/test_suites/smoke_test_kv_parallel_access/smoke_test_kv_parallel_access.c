@@ -47,8 +47,7 @@ volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-    
-void aes_ECB_run(uint8_t aes_key_id){
+void prepare_aes_ECB(uint8_t aes_key_id){
     aes_flow_t aes_input;
     aes_input.data_src_mode = AES_DATA_DIRECT;
     aes_input.dma_transfer_data = (dma_transfer_data_t){0};
@@ -96,7 +95,6 @@ void aes_ECB_run(uint8_t aes_key_id){
     aes_input.ciphertext = ciphertext;
     aes_input.iv = iv;     
 
-    uint8_t fail_cmd = 0x1;
     uint32_t partial_text_len = aes_input.text_len%16;
     uint32_t num_blocks_text = (partial_text_len == 0) ? aes_input.text_len/16 : aes_input.text_len/16 +1;
     uint32_t length;
@@ -130,46 +128,76 @@ void aes_ECB_run(uint8_t aes_key_id){
 
     aes_wait_idle();
 
-    //Write the key
-    if (!aes_input.key.kv_intf) {
-        // Load key from hw_data and write to AES
-        VPRINTF(LOW, "Load Key data to AES\n");
-        for (int j = 0; j < 8; j++) {
-            lsu_write_32(CLP_AES_REG_KEY_SHARE0_0 + j * 4, aes_input.key.key_share0[j]);
-            lsu_write_32(CLP_AES_REG_KEY_SHARE1_0 + j * 4, aes_input.key.key_share1[j]);
-        }
-    }
-
-    aes_wait_idle();
-
     for (int j = 0; j < 4; j++) {
         lsu_write_32((CLP_AES_REG_IV_0 + j * 4), aes_input.iv[j]);
     }
 
-    if (aes_input.text_len > 0) { 
-        // For Data Block I=0,...,N-1
-        num_blocks_text = 1;
-        for (int i = 0; i < num_blocks_text; i++) {
-            
-            // Wait for INPUT_READY
-            while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
-
-            // Write Input Data Block.
-            VPRINTF(LOW, "Write AES Input Data Block %d\n", i);
-            for (int j = 0; j < 4; j++) {
-            if (op == AES_ENC) {
-                VPRINTF(LOW, "Write In Data: 0x%x\n", aes_input.plaintext[j+i*4]);
-                lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j+i*4]);
-            } else if (op == AES_DEC) {
-                VPRINTF(LOW, "Write In Data: 0x%x\n", aes_input.ciphertext[j+i*4]);
-                lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.ciphertext[j+i*4]);
-            }
-            }                      
-        
-        }
-    }
+    while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
 
 }
+
+void aes_ECB_run(){
+    // Write Input Data Block.
+    for (int j = 0; j < 4; j++) {
+        lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), 0);
+    } 
+}
+
+enum Engine {
+    ECC,
+    MLDSA,
+    MLKEM,
+    AES,
+    HMAC,
+    DOE,
+    NUM_ENGINES
+};
+
+
+uint8_t is_high_latency(enum Engine e) {
+    return (e == ECC || e == MLDSA || e == MLKEM);
+}
+
+// Stub for your hardware operations
+void run_engine(enum Engine eng) {
+    switch (eng) {
+        case ECC:
+            lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
+                        ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
+            break;
+        case MLDSA:
+            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+            break;
+        case MLKEM:
+            lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
+            break;
+        case AES:
+            aes_ECB_run();
+            break;
+        case HMAC:
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+            break;
+        case DOE:
+            lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
+            break;
+        default:
+            break;
+    }
+}
+
+const char* engine_name(enum Engine e) {
+    switch (e) {
+        case ECC:   return "ECC";
+        case MLDSA: return "MLDSA";
+        case MLKEM: return "MLKEM";
+        case AES:   return "AES";
+        case HMAC:  return "HMAC";
+        case DOE:   return "DOE";
+        default:    return "UNKNOWN";
+    }
+}
+
 
 void main(){
 
@@ -179,6 +207,9 @@ void main(){
 
     //Call interrupt init
     init_interrupts();
+
+    /* Intializes random number generator */ 
+    srand(time);
 
     uint8_t doe_fe_dest_id = 1;
     uint8_t hmac_key_id = 2;
@@ -200,9 +231,8 @@ void main(){
     }
 
     VPRINTF(LOW,"ECC Preparation **************\n");
-    //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW,"   Inject randomized PRIVKEY into KV slot and MSG into SHA512 digest\n");
-    SEND_STDOUT_CTRL( 0x91);
+    // Inject randomized PRIVKEY into KV slot and MSG into SHA512 digest
+    SEND_STDOUT_CTRL(0x91);
     
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
     
@@ -211,16 +241,7 @@ void main(){
     uint32_t hmac512_block   [HMAC512_BLOCK_SIZE];
     uint32_t hmac512_lfsr_seed [HMAC512_LFSR_SEED_SIZE];
 
-    for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
-        hmac512_block[i] = 0;
-    
-    for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
-        hmac512_lfsr_seed[i] = rand() % 0xffffffff;
-
-    write_hmac_reg((uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_0, hmac512_block, HMAC512_BLOCK_SIZE);
-    write_hmac_reg((uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0, hmac512_lfsr_seed, HMAC512_LFSR_SEED_SIZE);
-
-    VPRINTF(LOW,"   Set HMAC TAG destination to KV slot = %x\n", hmac_tag_id);
+    // Set HMAC TAG destination to KV slot
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL, HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
                                                 HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
                                                 ((hmac_tag_id << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) & HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK));
@@ -228,7 +249,7 @@ void main(){
     //inject hmac512_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac_key_id << 8) | 0xa9); 
 
-    VPRINTF(LOW,"   Load Key data to HMAC from KV slot = %x\n", hmac_key_id);
+    // Load Key data to HMAC from KV slot
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
                                                     ((hmac_key_id << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
 
@@ -253,76 +274,63 @@ void main(){
     while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_IDLE_MASK) == 0);
     //inject aes key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (aes_key_id << 8) | 0x9f); //Inject AES key vectors into KV 10
+    prepare_aes_ECB(aes_key_id);
 
 
     if ((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK) != 0){
-        VPRINTF(ERROR,"\nFATAL error is already set.\n");
-        SEND_STDOUT_CTRL( 0x1);
+        VPRINTF(LOW,"\nFATAL error is already set.\n");
+        VPRINTF(LOW,"%c", 0x1);
         while(1);
     }
 
-    switch (rst_count){
-        case 0:
-            VPRINTF(LOW,"Running ECC and HMAC core\n");
-            lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
-                        ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
-            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-            break;
-        case 1:
-            VPRINTF(LOW,"Running ECC and MLDSA core\n");
-            lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
-                        ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
-            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
-            break;
-        case 2:
-            VPRINTF(LOW,"Running MLKEM and HMAC core\n");
-            lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
-            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-            break;
-        case 3:
-            VPRINTF(LOW,"Running MLKEM and DOE core\n");
-            lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
-            lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
-            break;
-        case 4:
-            VPRINTF(LOW,"Running HMAC and DOE core\n");
-            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-            lsu_write_32(CLP_DOE_REG_DOE_CTRL, DOE_UDS << DOE_REG_DOE_CTRL_CMD_LOW);
-            break;
-        case 5:
-            VPRINTF(LOW,"Running AES and MLDSA core\n");
-            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);            
-            aes_ECB_run(aes_key_id);
-            break;
-        case 6:
-            VPRINTF(LOW,"Running AES and ECC core\n");
-            lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
-                        ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
-            
-            aes_ECB_run(aes_key_id);
-            break;
-        default:
-            SEND_STDOUT_CTRL(0xff); //End the test
+    uint8_t num_engines = 2; //(rand() % 2) + 2;
+
+    enum Engine engines[NUM_ENGINES] = {ECC, MLDSA, MLKEM, AES, HMAC, DOE};
+    for (int i = NUM_ENGINES - 1; i > 0; i--) {
+        int j = rand() % (i + 1);
+        enum Engine tmp = engines[i];
+        engines[i] = engines[j];
+        engines[j] = tmp;
+    }
+
+    // Pick the first N engines
+    enum Engine chosen[3];
+    for (int i = 0; i < num_engines; i++) {
+        chosen[i] = engines[i];
+    }
+    //avoid running MLKEM and MLDSA parallelly
+    if ((chosen[0] == MLKEM && chosen[1] == MLDSA) || (chosen[0] == MLDSA && chosen[1] == MLKEM)) {
+        chosen[1] = engines[3];
+    }
+                
+    VPRINTF(LOW, "Running %d engines: ", num_engines);
+    for (int i = 0; i < num_engines; i++) {
+        VPRINTF(LOW,"%s%s", engine_name(chosen[i]), (i == num_engines - 1) ? "\n" : ", ");
+    }
+
+    // Step 1: Run high-latency engines first
+    for (int i = 0; i < num_engines; i++) {
+        if (is_high_latency(chosen[i])) {
+            run_engine(chosen[i]);
+        }
+    }
+
+    // Step 2: Run the rest
+    for (int i = 0; i < num_engines; i++) {
+        if (!is_high_latency(chosen[i])) {
+            run_engine(chosen[i]);
+        }
     }
     
     if ((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK) == 0){
-        VPRINTF(ERROR,"\nParallel Crypto error is not detected for test: %0d\n", rst_count);
-        SEND_STDOUT_CTRL( 0x1);
+        VPRINTF(LOW,"\nParallel Crypto error is not detected\n");
+        SEND_STDOUT_CTRL(0x1);
         while(1);
     }
     else {
-        VPRINTF(LOW,"\nParallel Crypto is successfully detected for test: %0d\n", rst_count);
+        VPRINTF(LOW,"\nParallel Crypto is successfully detected\n");
     }
 
-    if (rst_count < 6){
-        rst_count++;
-        //Issue cold reset
-        SEND_STDOUT_CTRL(0xf5);
-    }
-    else
-        SEND_STDOUT_CTRL(0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 
 }

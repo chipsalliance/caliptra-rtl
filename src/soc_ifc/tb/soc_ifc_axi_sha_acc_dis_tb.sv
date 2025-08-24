@@ -91,12 +91,12 @@ module soc_ifc_axi_sha_acc_dis_tb
  logic [SOC_IFC_DATA_W-1:0] aes_rdata;
  logic aes_error;
 
- assign aes_input_ready = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_output_valid = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_status_idle = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_req_hold = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_rdata = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_error = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected 
+ assign aes_input_ready = '0; 
+ assign aes_output_valid = '0; 
+ assign aes_status_idle = '0; 
+ assign aes_req_hold = '0; 
+ assign aes_rdata = '0; 
+ assign aes_error = '0; 
 
  // Not verified in this bench
  kv_read_t    kv_read;

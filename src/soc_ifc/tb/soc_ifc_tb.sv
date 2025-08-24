@@ -192,12 +192,12 @@ module soc_ifc_tb
                              read_data: KV_DATA_W'(0)};
 
 
- assign aes_input_ready = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_output_valid = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_status_idle = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_req_hold = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_rdata = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected
- assign aes_error = '0; // FIXME - when doing AES val either connect or remove fixme and keep unconnected 
+ assign aes_input_ready = '0; 
+ assign aes_output_valid = '0; 
+ assign aes_status_idle = '0; 
+ assign aes_req_hold = '0; 
+ assign aes_rdata = '0; 
+ assign aes_error = '0; 
 
   // obfuscation, uds and field entropy for observation
   logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
