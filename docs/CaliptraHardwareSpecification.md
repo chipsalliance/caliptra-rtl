@@ -115,7 +115,7 @@ The following table shows the memory map address ranges for each of the IP block
 | Data Vault                          | 5         | 8 KiB        | 0x1001_C000   | 0x1001_DFFF |
 | SHA512                              | 6         | 32 KiB       | 0x1002_0000   | 0x1002_7FFF |
 | SHA256                              | 10        | 32 KiB       | 0x1002_8000   | 0x1002_FFFF |
-| ML-DSA                              | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
+| ABR (MLDSA/MLKEM)                   | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
 | AES                                 | 15        | 4 KiB        | 0x1001_1000   | 0x1001_1FFF |
 | SHA3                                | 16        | 4 KiB        | 0x1004_0000   | 0x1004_0FFF |
 
@@ -192,8 +192,8 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 | Mailbox (Notifications)                             | 20               | 7                                               |
 | SHA512 Accelerator (Errors)                         | 23               | 8                                               |
 | SHA512 Accelerator (Notifications)                  | 24               | 7                                               |
-| MLDSA (Errors)                                      | 23               | 8                                               |
-| MLDSA (Notifications)                               | 24               | 7                                               |
+| ABR (MLDSA/MLKEM) (Errors)                          | 23               | 8                                               |
+| ABR (MLDSA/MLKEM) (Notifications)                   | 24               | 7                                               |
 | AXI DMA (Errors)                                    | 25               | 8                                               |
 | AXI DMA (Notifications)                             | 26               | 7                                               |
 
@@ -1588,7 +1588,14 @@ The address map for LMS accelerator integrated into SHA256 is shown here: [sha25
 Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
 
 ### Address map
-Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.mldsa_reg)
+Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
+
+## Adams Bridge - Kyber (ML-KEM)
+
+Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
+
+### Address map
+Address map of ML-KEM accelerator is shown here:  [ML-KEM\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
 
 ## AES
 
@@ -2407,7 +2414,7 @@ The destination valid field is programmed by FW in the cryptographic block gener
 | Clear\[2\]                | cptra_rst_b       | If unlocked, setting the clear bit causes KV to clear the associated entry. The clear bit is reset after entry is cleared.                                                                              |
 | Copy\[3\]                 | cptra_rst_b       | ENHANCEMENT: Setting the copy bit causes KV to copy the key to the entry written to Copy Dest field.                                                                                                    |
 | Copy Dest\[8:4\]          | cptra_rst_b       | ENHANCEMENT: Destination entry for the copy function.                                                                                                                                                   |
-| Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set.  <br>\[0\] - HMAC KEY  <br>\[1\] - HMAC BLOCK  <br>\[2\] - MLDSA SEED  <br>\[3\] - ECC PRIVKEY  <br>\[4\] - ECC SEED  <br>\[5\] - AES KEY <br>\[7:6\] - RSVD |
+| Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set.  <br>\[0\] - HMAC KEY  <br>\[1\] - HMAC BLOCK  <br>\[2\] - MLDSA SEED  <br>\[3\] - ECC PRIVKEY  <br>\[4\] - ECC SEED  <br>\[5\] - AES KEY <br>\[6\] - MLKEM SEED <br>\[7\] - MLKEM MSG <br>\[8\] - AXI DMA DATA |
 | last_dword\[20:19\] | hard_reset_b      | Store the offset of the last valid dword, used to indicate the last cycle for read operations.                                                                                                          |
 
 ### Key vault cryptographic functional block 
@@ -2445,7 +2452,10 @@ The following tables describe read, write, and status values for key vault block
 | ecc_pkey_dest_valid\[9\]   | ECC PKEY is a valid destination. |
 | ecc_seed_dest_valid\[10\]  | ECC SEED is a valid destination. |
 | aes_key_dest_valid\[11\]   | AES KEY is a valid destination. |
-| rsvd\[31:12\]              | Reserved field |
+| mlkem_seed_dest_valid\[12\]| MLKEM SEED is a valid destination. |
+| mlkem_msg_dest_valid\[13\] | MLKEM MSG is a valid destination. |
+| dma_data_dest_valid\[14\]  | DMA DATA is a valid destination. |
+| rsvd\[31:15\]              | Reserved field |
 
 | KV Status Reg | Description |
 | :------------ | :---------------------------------------------------------------------------------------------------------------------------------------------- |

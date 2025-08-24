@@ -317,7 +317,7 @@ module soc_ifc_reg (
         end
         decoded_reg_strb.fuse_soc_manifest_max_svn = cpuif_req_masked & (cpuif_addr == 12'h3a0);
         for(int i0=0; i0<8; i0++) begin
-            decoded_reg_strb.fuse_hek_seed[i0] = cpuif_req_masked & (cpuif_addr == 12'h3a4 + i0*12'h4);
+            decoded_reg_strb.fuse_hek_seed[i0] = cpuif_req_masked & (cpuif_addr == 12'h3c0 + i0*12'h4);
         end
         decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_L = cpuif_req_masked & (cpuif_addr == 12'h500);
         decoded_reg_strb.SS_CALIPTRA_BASE_ADDR_H = cpuif_req_masked & (cpuif_addr == 12'h504);
@@ -4552,8 +4552,8 @@ module soc_ifc_reg (
         field_combo.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.next = next_c;
         field_combo.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.load_next = load_next_c;
     end
-    always_ff @(posedge clk or negedge hwif_in.core_only_rst_b) begin
-        if(~hwif_in.core_only_rst_b) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
             field_storage.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value <= 1'h0;
         end else if(field_combo.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.load_next) begin
             field_storage.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value <= field_combo.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.next;

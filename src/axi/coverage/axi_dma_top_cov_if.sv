@@ -107,26 +107,7 @@ interface axi_dma_top_cov_if
     logic [3:0] aes_fsm_ps;
     logic wr_aes_ceil_req_byte_count;
 
-    assign cmd_inv_rd_route = axi_dma_top.i_axi_dma_ctrl.cmd_inv_rd_route;
-    assign cmd_inv_wr_route = axi_dma_top.i_axi_dma_ctrl.cmd_inv_wr_route;
-    assign cmd_inv_route_combo = axi_dma_top.i_axi_dma_ctrl.cmd_inv_route_combo;
-    assign cmd_inv_src_addr = axi_dma_top.i_axi_dma_ctrl.cmd_inv_src_addr;
-    assign cmd_inv_dst_addr = axi_dma_top.i_axi_dma_ctrl.cmd_inv_dst_addr;
-    assign cmd_inv_byte_count = axi_dma_top.i_axi_dma_ctrl.cmd_inv_byte_count;
-    assign cmd_inv_block_size = axi_dma_top.i_axi_dma_ctrl.cmd_inv_block_size;
-    assign cmd_inv_rd_fixed = axi_dma_top.i_axi_dma_ctrl.cmd_inv_rd_fixed;
-    assign cmd_inv_wr_fixed = axi_dma_top.i_axi_dma_ctrl.cmd_inv_wr_fixed;
-    assign cmd_inv_mbox_lock = axi_dma_top.i_axi_dma_ctrl.cmd_inv_mbox_lock;
-    assign cmd_inv_sha_lock = axi_dma_top.i_axi_dma_ctrl.cmd_inv_sha_lock;
-
     assign aes_fsm_ps = axi_dma_top.i_axi_dma_ctrl.aes_fsm_ps;
-    assign axi_error = axi_dma_top.i_axi_dma_ctrl.axi_error;
-    assign mb_lock_error = axi_dma_top.i_axi_dma_ctrl.mb_lock_error;
-    assign aes_error = axi_dma_top.i_axi_dma_ctrl.aes_error;
-    assign cmd_parse_error = axi_dma_top.i_axi_dma_ctrl.cmd_parse_error;
-    assign cmd_inv_aes_route_combo = axi_dma_top.i_axi_dma_ctrl.cmd_inv_aes_route_combo;
-    assign cmd_inv_aes_block_size = axi_dma_top.i_axi_dma_ctrl.cmd_inv_aes_block_size;
-    assign cmd_inv_aes_fixed = axi_dma_top.i_axi_dma_ctrl.cmd_inv_aes_fixed;
     assign wr_aes_ceil_req_byte_count = axi_dma_top.i_axi_dma_ctrl.wr_aes_ceil_req_byte_count;
 
 
