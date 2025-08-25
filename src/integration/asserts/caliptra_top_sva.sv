@@ -78,6 +78,7 @@ module caliptra_top_sva
   localparam SHA512_DIG_NUM_DWORDS    = 16;   //`SHA512_PATH.DIG_NUM_DWORDS;
   localparam SHA512_BLOCK_NUM_DWORDS  = 32;   //`SHA512_PATH.BLOCK_NUM_DWORDS;
   localparam MLDSA_SEED_NUM_DWORDS    = 8;   //`ABR_PATH.SEED_NUM_DWORDS;
+  localparam MLKEM_SHAREDKEY_NUM_DWORDS = 8; 
   localparam HMAC_KEY_NUM_DWORDS      = 12;   //`HMAC_PATH.KEY_NUM_DWORDS
   localparam HMAC_TAG_NUM_DWORDS      = 12;   //`HMAC_PATH.TAG_NUM_DWORDS
   localparam HMAC_BLOCK_NUM_DWORDS    = 32;   //`HMAC_PATH.BLOCK_NUM_DWORDS
@@ -205,39 +206,139 @@ module caliptra_top_sva
   endgenerate
 
   generate
+    for (genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+      //mlkem shared key write
+      if (dword < MLKEM_SHAREDKEY_NUM_DWORDS) begin
+          kv_mlkem_sharedkey_w_flow:       assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
+                                                )
+                                    else $display("SVA ERROR: MLKEM sharedkey mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);                    
+
+          kv_mlkem_sharedkey_w_std_to_std_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_read[2].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
+                                                )
+                                    else $display("SVA ERROR: MLKEM sharedkey mismatch for STD to STD flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);
+
+          kv_mlkem_sharedkey_lock_to_lock_nonkv23_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_read[2].read_entry >= KV_OCP_LOCK_SLOT_LOW) & ((`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> `ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
+                                                )
+                                    else $display("SVA ERROR: MLKEM sharedkey mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);
+`ifndef VERILATOR
+          kv_mlkem_sharedkey_lock_to_lock_kv23_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_read[2].read_entry >= KV_OCP_LOCK_SLOT_LOW) & ((`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value,16))
+                                                )
+                                    else $display("SVA ERROR: MLKEM sharedkey mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);
+
+          kv_mlkem_sharedkey_w_lock_to_std_illegal_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_read[2].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                                )
+                                    else $display("SVA ERROR: Unexpected MLKEM sharedkey write to illegal slot in LOCK to STD flow in OCP LOCK mode!");
+
+          kv_mlkem_sharedkey_w_std_to_lock_illegal_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_read[2].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                                )
+                                    else $display("SVA ERROR: Unexpected MLKEM sharedkey write to illegal slot in STD to LOCK flow in OCP LOCK mode!");
+          
+`endif
+      end
+    end
+  endgenerate
+
+  generate
     for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
       if (dword < MLDSA_SEED_NUM_DWORDS) begin
       //mldsa seed read
       kv_mldsa_seed_r_flow:   assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            $rose(`ABR_PATH.kv_mldsa_seed_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`ABR_PATH.kv_read[0].read_entry].last_dword.value + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_read[0].read_entry][dword].data.value == `ABR_PATH.mldsa_seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword])
+                                            $rose(`ABR_PATH.kv_mldsa_seed_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`ABR_PATH.kv_read[0].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ABR_PATH.kv_read[0].read_entry == 23)) ? (`ABR_PATH.mldsa_seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_read[0].read_entry][dword].data.value == `ABR_PATH.mldsa_seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword])
                                             )
                                 else $display("SVA ERROR: MLDSA seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_read[0].read_entry][dword].data.value, `ABR_PATH.mldsa_seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword]);
       end
 
       //hmac block read
+      //If ocp_lock_in_progress = 1 && kv_read_entry == 23, block is not read
+      //If ocp_lock_in_progress = 0, block is read from any slot
       kv_hmac_block_r_flow:     assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            $rose(`HMAC_PATH.kv_block_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].last_dword.value + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword].data.value == `HMAC_PATH.block_reg[dword])
+                                            $rose(`HMAC_PATH.kv_block_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`HMAC_PATH.block_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword].data.value == `HMAC_PATH.block_reg[dword])
                                             )
                                 else $display("SVA ERROR: HMAC384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword].data.value, `HMAC_PATH.block_reg[dword]);
 
       //hmac key read
+      //If ocp_lock_in_progress = 1 && kv_read_entry == 23, key is not read
+      //If ocp_lock_in_progress = 0, key is read from any slot
       if (dword < HMAC_KEY_NUM_DWORDS) begin
         kv_hmac_key_r_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`HMAC_PATH.kv_key_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value == `HMAC_PATH.key_reg[dword])
+                                              $fell(`HMAC_PATH.kv_key_write_en) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`HMAC_PATH.key_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value == `HMAC_PATH.key_reg[dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 key mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value, `HMAC_PATH.key_reg[dword]);
       end
 
       //hmac tag write
+      //If KV entry != 23 && hmac reads key/block/lfsr seed from non-23 KV slot, tag is written (std_to_std or lock_to_lock)
+      //If KV entry != 23 && hmac reads key/block/lfsr seed from KV23 && ocp_lock_in_progress = 1, tag is not written
+      //If KV entry == 23 && ocp_lock_in_progress = 0, tag is written
+      //If KV entry == 23 && ocp_lock_in_progress = 1, tag is not written
+      /*
+      If ocp_lock_in_progress = 1:
+      Key read (input)       Block read (input)      Tag write (output)      Allowed?
+      -------------------------------------------------------------------------------------------------------------
+      STD                    STD                     STD                     Yes
+      LOCK                   LOCK                    LOCK (!= KV23)          Yes
+      LOCK                   LOCK                    LOCK (== KV23)          No
+      STD                    LOCK                    STD                     No
+      LOCK                   STD                     LOCK                    No
+      STD                    STD                     LOCK                    No
+      LOCK                   LOCK                    STD                     No
+
+      If ocp_lock_in_progress = 0:
+      hmac key/block can be read from any KV entry, tag is written to any KV entry
+      */
       if (dword < HMAC_TAG_NUM_DWORDS) begin
         kv_hmac_tag_w_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `HMAC_PATH.kv_write_done |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
+                                              (`HMAC_PATH.kv_write_done & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 tag mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);                    
+
+        kv_hmac_tag_w_std_to_std_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: HMAC384 tag mismatch for STD to STD flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);
+        kv_hmac_tag_w_lock_to_lock_nonkv23_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & ((`HMAC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> `HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: HMAC384 tag mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);
+`ifndef VERILATOR
+        kv_hmac_tag_w_lock_to_lock_kv23_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> ~`HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value,16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected HMAC384 tag write to KV23 in LOCK to LOCK flow in OCP LOCK mode!");
+
+        kv_hmac_tag_w_std_to_lock_illegal_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value,16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected HMAC384 tag write to illegal slot in STD to LOCK flow in OCP LOCK mode!");
+
+        kv_hmac_tag_w_lock_to_std_illegal_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value,16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected HMAC384 tag write to illegal slot in LOCK to STD flow in OCP LOCK mode!");
+
+
+`endif
       end
       
       // ECC
@@ -245,20 +346,53 @@ module caliptra_top_sva
         //ecc privkey read
         kv_ecc_privkey_r_flow:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`ECC_PATH.kv_privkey_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              $fell(`ECC_PATH.kv_privkey_write_en) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.privkey_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey read mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value, `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         kv_ecc_seed_r_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`ECC_PATH.kv_seed_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              $fell(`ECC_PATH.kv_seed_write_en) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value, `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         //ecc privkey write
         kv_ecc_privkey_w_flow:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              (`ECC_PATH.kv_write_done && (`ECC_PATH.kv_write_error == 0)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              (`ECC_PATH.kv_write_done && (`ECC_PATH.kv_write_error == 0) & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey write mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+
+        kv_ecc_privkey_w_std_to_std_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ECC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: ECC privkey mismatch for STD to STD flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+        
+        kv_ecc_privkey_w_lock_to_lock_nonkv23_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> `ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: ECC privkey mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+`ifndef VERILATOR
+        kv_ecc_privkey_w_lock_to_lock_kv23_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected ECC privkey write to KV23 in LOCK to LOCK flow in OCP LOCK mode!");
+
+        kv_ecc_privkey_w_std_to_lock_illegal_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected ECC privkey write to illegal slot in STD to LOCK flow in OCP LOCK mode!");
+
+        kv_ecc_privkey_w_lock_to_std_illegal_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected ECC privkey write to illegal slot in LOCK to STD flow in OCP LOCK mode!");
+
+`endif
+
 
         //ecc sign r
         pcr_ecc_sign_r:    assert property (
@@ -870,6 +1004,39 @@ module caliptra_top_sva
                                     else $display("SVA ERROR: KV client %0d data is unknown", client);
     end
   endgenerate
+
+  //KV read error check
+  //If ocp_lock_in_progress = 1, kv23 read is not allowed. Other slots can be read
+  //If ocp_lock_in_progress = 0, kv23 read is allowed
+  // localparam KV_SUCCESS = 0; //TODO: resolve pkg warning during build
+  // localparam KV_READ_FAIL = 1;
+  // localparam KV_WRITE_FAIL = 2;
+
+  hmac_key_kv23_read_error_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            ($fell(`HMAC_PATH.kv_key_write_en) & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  `KEYVAULT_PATH.kv_read[0].read_entry == 23) |-> /*(`KEYVAULT_PATH.kv_rd_resp[0].error == 1'b1)*/ (`HMAC_PATH.hmac_key_kv_read.error_code == 1)
+                                            )
+                            else $display("SVA ERROR: KV read error not set for KV23 read when ocp_lock_in_progress = 1");
+
+  hmac_key_kv_others_read_error_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            ($fell(`HMAC_PATH.kv_key_write_en) & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  (`KEYVAULT_PATH.kv_read[0].read_entry != 23) & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].dest_valid.value[0])) |-> /*(`KEYVAULT_PATH.kv_rd_resp[0].error == 1'b0)*/ (`HMAC_PATH.hmac_key_kv_read.error_code == 0)
+                                            )
+                            else $display("SVA ERROR: KV read error set when ocp_lock_in_progress = 1 for non-KV23 read");
+
+  hmac_block_kv23_read_error_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            ($rose(`HMAC_PATH.kv_block_done) & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  `KEYVAULT_PATH.kv_read[1].read_entry == 23) |-> /*(`KEYVAULT_PATH.kv_rd_resp[0].error == 1'b1)*/ (`HMAC_PATH.hmac_block_kv_read.error_code == 1)
+                                            )
+                            else $display("SVA ERROR: KV read error not set for KV23 read when ocp_lock_in_progress = 1");
+
+  hmac_block_kv_others_read_error_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            ($rose(`HMAC_PATH.kv_block_done) &`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  `KEYVAULT_PATH.kv_read[1].read_entry != 23 & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].dest_valid.value[1])) |-> /*(`KEYVAULT_PATH.kv_rd_resp[1].error == 1'b0)*/ (`HMAC_PATH.hmac_block_kv_read.error_code == 0)
+                                            )
+                            else $display("SVA ERROR: KV read error set when ocp_lock_in_progress = 1 for non-KV23 read");
+
+                            
   
   //WDT checks:
   cascade_wdt_t1_pet: assert property (

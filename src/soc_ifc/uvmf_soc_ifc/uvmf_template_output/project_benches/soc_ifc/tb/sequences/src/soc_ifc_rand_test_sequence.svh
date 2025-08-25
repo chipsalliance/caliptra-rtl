@@ -119,7 +119,11 @@ class soc_ifc_rand_test_sequence extends soc_ifc_bench_sequence_base;
                              IDX_SOC_IFC_ENV_MBOX_TOP_RAND_DELAY_LARGE,
                              IDX_SOC_IFC_ENV_MBOX_TOP_DLEN_VIOLATION,
                              IDX_SOC_IFC_ENV_MBOX_TOP_REG_AXS_INV_LARGE,
-                             IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT});
+                             IDX_SOC_IFC_ENV_MBOX_TOP_MULTI_AGENT,
+                             IDX_SOC_IFC_ENV_RST_WARM,
+                             IDX_SOC_IFC_ENV_RST_COLD,
+                             IDX_SOC_IFC_ENV_MBOX_RST_WARM_RAND_MEDIUM,
+                             IDX_SOC_IFC_ENV_MBOX_RST_COLD_RAND_MEDIUM});
   }
   // FIXME we're also running multiple iterations of this testcase in the regression.
   //       What is the criteria for iteration count WITHIN the sequence?

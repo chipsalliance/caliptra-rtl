@@ -66,7 +66,7 @@ void kv_ecc_flow(uint8_t privkey_kv_id, uint8_t sharedkey_kv_id){
     privkey.kv_id = privkey_kv_id;
 
     //inject privkey to kv key reg (in RTL)
-    lsu_write_32(STDOUT, (privkey_kv_id << 8) | 0xaa); 
+    lsu_write_32(STDOUT, (privkey_kv_id << 8) | 0xad); 
 
     pubkey_x_dh.kv_intf = FALSE;
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
@@ -115,7 +115,7 @@ void kv_hmac512_flow(uint8_t block_id, uint8_t tag_id){
     hmac512_tag.kv_id = tag_id;
     VPRINTF(LOW,"hmac tag kv id = %x\n", hmac512_tag.kv_id);
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
     hmac_zeroize();
 }
 

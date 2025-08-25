@@ -231,7 +231,7 @@ void main(){
     VPRINTF(LOW, "Inject SEED into KV\n");
     lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
 
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
+    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);

@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 #include "caliptra_defines.h"
+#include "caliptra_rtl_lib.h"
 #include "caliptra_isr.h"
 #include "riscv-csr.h"
 #include "veer-csr.h"

@@ -705,7 +705,6 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic cptra_rst_b;
-        logic core_only_rst_b;
         logic cptra_pwrgood;
         logic soc_req;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t CPTRA_HW_ERROR_FATAL;

@@ -5254,7 +5254,7 @@ package soc_ifc_reg_uvm;
                 this.fuse_hek_seed[i0].configure(this);
                 
                 this.fuse_hek_seed[i0].build();
-                this.default_map.add_reg(this.fuse_hek_seed[i0], 'h3a4 + i0*'h4);
+                this.default_map.add_reg(this.fuse_hek_seed[i0], 'h3c0 + i0*'h4);
             end
             this.SS_CALIPTRA_BASE_ADDR_L = new("SS_CALIPTRA_BASE_ADDR_L");
             this.SS_CALIPTRA_BASE_ADDR_L.configure(this);

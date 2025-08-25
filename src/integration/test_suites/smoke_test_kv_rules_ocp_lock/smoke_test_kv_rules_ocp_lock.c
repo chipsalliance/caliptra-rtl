@@ -72,7 +72,7 @@ void hmac_test(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = tag_kv_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 
 }
 
@@ -163,13 +163,13 @@ void main() {
     if (ocp_lock_mode){
         uint8_t kv_slot0, kv_slot1, kv_slot2;
 
-        uint8_t op = rand() % 4;
+        uint8_t op = 3; //rand() % 4;
         kv_slot0 = rand() % 24;
         if (kv_slot0 < 16){
             do {
                 kv_slot1 = rand() % 16;
             } while (kv_slot1 == kv_slot0);
-            kv_slot2 = 16 + rand() % 8;
+            kv_slot2 = 16 + rand() % 7;
         }
         else {
             do {

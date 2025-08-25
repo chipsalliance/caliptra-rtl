@@ -209,7 +209,7 @@ reg {
             [br]These bits are only writable for Caliptra firmware.
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
-    field {sw=rw; swwel=true; hw=r; resetsignal=core_only_rst_b; } LOCK_IN_PROGRESS = 1'b0;
+    field {sw=rw; swwel=true; hw=r; resetsignal=cptra_pwrgood; } LOCK_IN_PROGRESS = 1'b0;
 } SS_OCP_LOCK_CTRL;
 
 reg {

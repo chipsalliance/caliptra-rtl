@@ -947,37 +947,37 @@
 #define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_LOW                                      (0)
 #define GENERIC_AND_FUSE_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_MASK                                     (0xff)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_0                                       (0x303a4)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_0                                       (0x303c0)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_0
-#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_0                                                        (0x3a4)
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_0                                                        (0x3c0)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_1                                       (0x303a8)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_1                                       (0x303c4)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_1
-#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_1                                                        (0x3a8)
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_1                                                        (0x3c4)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_2                                       (0x303ac)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_2                                       (0x303c8)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_2
-#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_2                                                        (0x3ac)
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_2                                                        (0x3c8)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_3                                       (0x303b0)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_3                                       (0x303cc)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_3
-#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_3                                                        (0x3b0)
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_3                                                        (0x3cc)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_4                                       (0x303b4)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_4                                       (0x303d0)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_4
-#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_4                                                        (0x3b4)
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_4                                                        (0x3d0)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_5                                       (0x303b8)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_5                                       (0x303d4)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_5
-#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_5                                                        (0x3b8)
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_5                                                        (0x3d4)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_6                                       (0x303bc)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_6                                       (0x303d8)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_6
-#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_6                                                        (0x3bc)
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_6                                                        (0x3d8)
 #endif
-#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_7                                       (0x303c0)
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_7                                       (0x303dc)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_7
-#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_7                                                        (0x3c0)
+#define GENERIC_AND_FUSE_REG_FUSE_HEK_SEED_7                                                        (0x3dc)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_CALIPTRA_BASE_ADDR_L                               (0x30500)
 #ifndef GENERIC_AND_FUSE_REG_SS_CALIPTRA_BASE_ADDR_L

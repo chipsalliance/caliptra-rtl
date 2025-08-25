@@ -145,4 +145,4 @@ reg {
             [br]Caliptra Access: -
             [br]SOC Access:      WL-S";
     Fuse seed[32]=0;
-} fuse_hek_seed[8];
+} fuse_hek_seed[8] @0x3C0;

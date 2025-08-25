@@ -9063,28 +9063,28 @@
 `define SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN_SVN_MASK                                              (32'hff)
 `endif
 `ifndef SOC_IFC_REG_FUSE_HEK_SEED_0
-`define SOC_IFC_REG_FUSE_HEK_SEED_0                                                                 (32'h3a4)
+`define SOC_IFC_REG_FUSE_HEK_SEED_0                                                                 (32'h3c0)
 `endif
 `ifndef SOC_IFC_REG_FUSE_HEK_SEED_1
-`define SOC_IFC_REG_FUSE_HEK_SEED_1                                                                 (32'h3a8)
+`define SOC_IFC_REG_FUSE_HEK_SEED_1                                                                 (32'h3c4)
 `endif
 `ifndef SOC_IFC_REG_FUSE_HEK_SEED_2
-`define SOC_IFC_REG_FUSE_HEK_SEED_2                                                                 (32'h3ac)
+`define SOC_IFC_REG_FUSE_HEK_SEED_2                                                                 (32'h3c8)
 `endif
 `ifndef SOC_IFC_REG_FUSE_HEK_SEED_3
-`define SOC_IFC_REG_FUSE_HEK_SEED_3                                                                 (32'h3b0)
+`define SOC_IFC_REG_FUSE_HEK_SEED_3                                                                 (32'h3cc)
 `endif
 `ifndef SOC_IFC_REG_FUSE_HEK_SEED_4
-`define SOC_IFC_REG_FUSE_HEK_SEED_4                                                                 (32'h3b4)
+`define SOC_IFC_REG_FUSE_HEK_SEED_4                                                                 (32'h3d0)
 `endif
 `ifndef SOC_IFC_REG_FUSE_HEK_SEED_5
-`define SOC_IFC_REG_FUSE_HEK_SEED_5                                                                 (32'h3b8)
+`define SOC_IFC_REG_FUSE_HEK_SEED_5                                                                 (32'h3d4)
 `endif
 `ifndef SOC_IFC_REG_FUSE_HEK_SEED_6
-`define SOC_IFC_REG_FUSE_HEK_SEED_6                                                                 (32'h3bc)
+`define SOC_IFC_REG_FUSE_HEK_SEED_6                                                                 (32'h3d8)
 `endif
 `ifndef SOC_IFC_REG_FUSE_HEK_SEED_7
-`define SOC_IFC_REG_FUSE_HEK_SEED_7                                                                 (32'h3c0)
+`define SOC_IFC_REG_FUSE_HEK_SEED_7                                                                 (32'h3dc)
 `endif
 `ifndef SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L
 `define SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L                                                         (32'h500)
