@@ -541,29 +541,29 @@ void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_
     srand(time);
 
     do {
-        *fe_id = rand() % 0x17;   // FE kv id
+        *fe_id = rand() % 24;   // FE kv id
     } while(*fe_id == 0);
 
     do {
-        *cdi_idevid_id = rand() % 0x17; 
+        *cdi_idevid_id = rand() % 24; 
     } while((*cdi_idevid_id == 0) | 
             (*cdi_idevid_id == *fe_id));
     
     do {
-        *cdi_ldevid_id = rand() % 0x17;
+        *cdi_ldevid_id = rand() % 24;
     } while((*cdi_ldevid_id == 0) | 
             (*cdi_ldevid_id == *fe_id) | 
             (*cdi_ldevid_id == *cdi_idevid_id));
 
     do {
-        *ecc_seed_id = rand() % 0x17;
+        *ecc_seed_id = rand() % 24;
     } while((*ecc_seed_id == 0) | 
             (*ecc_seed_id == *fe_id) | 
             (*ecc_seed_id == *cdi_idevid_id) | 
             (*ecc_seed_id == *cdi_ldevid_id));
 
     do {
-        *mldsa_seed_id = rand() % 0x17;
+        *mldsa_seed_id = rand() % 24;
     } while((*mldsa_seed_id == 0) | 
             (*mldsa_seed_id == *fe_id) | 
             (*mldsa_seed_id == *cdi_idevid_id) | 
@@ -571,7 +571,7 @@ void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_
             (*mldsa_seed_id == *ecc_seed_id));
 
     do {
-        *privkey_id = rand() % 0x17;
+        *privkey_id = rand() % 24;
     } while((*privkey_id == 0) | 
             (*privkey_id == *fe_id) | 
             (*privkey_id == *cdi_idevid_id) | 
