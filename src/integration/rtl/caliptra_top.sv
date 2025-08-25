@@ -257,6 +257,8 @@ module caliptra_top
     wire sha512_notif_intr;
     wire sha256_error_intr;
     wire sha256_notif_intr;
+    wire sha3_error_intr;
+    wire sha3_notif_intr;
     wire abr_error_intr;
     wire abr_notif_intr;
     wire soc_ifc_error_intr;
@@ -490,14 +492,14 @@ always_comb begin
     intr[`VEER_INTR_VEC_RSVD0_NOTIF  -1]          = 1'b0;
     intr[`VEER_INTR_VEC_RSVD1_ERROR  -1]          = 1'b0;
     intr[`VEER_INTR_VEC_RSVD1_NOTIF  -1]          = 1'b0;
-    intr[`VEER_INTR_VEC_RSVD2_ERROR  -1]          = 1'b0;
-    intr[`VEER_INTR_VEC_RSVD2_NOTIF  -1]          = 1'b0;
+    intr[`VEER_INTR_VEC_SHA3_ERROR   -1]          = sha3_error_intr;
+    intr[`VEER_INTR_VEC_SHA3_NOTIF   -1]          = sha3_notif_intr;
     intr[`VEER_INTR_VEC_SOC_IFC_ERROR-1]          = soc_ifc_error_intr;
     intr[`VEER_INTR_VEC_SOC_IFC_NOTIF-1]          = soc_ifc_notif_intr;
     intr[`VEER_INTR_VEC_SHA_ERROR    -1]          = sha_error_intr;
     intr[`VEER_INTR_VEC_SHA_NOTIF    -1]          = sha_notif_intr;
-    intr[`VEER_INTR_VEC_ABR_ERROR  -1]          = abr_error_intr;
-    intr[`VEER_INTR_VEC_ABR_NOTIF  -1]          = abr_notif_intr;
+    intr[`VEER_INTR_VEC_ABR_ERROR    -1]          = abr_error_intr;
+    intr[`VEER_INTR_VEC_ABR_NOTIF    -1]          = abr_notif_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_ERROR-1]          = dma_error_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_NOTIF-1]          = dma_notif_intr;
     intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;
@@ -984,9 +986,8 @@ sha3_ctrl #(
     .hrdata_o       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA3].hrdata),
     .busy_o         ( ),
 
-    // Interrupt TODO
-    .error_intr( ),
-    .notif_intr( ),
+    .error_intr(sha3_error_intr),
+    .notif_intr(sha3_notif_intr),
 
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );

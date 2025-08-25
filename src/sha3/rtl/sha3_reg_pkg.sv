@@ -95,26 +95,26 @@ package sha3_reg_pkg;
 
     typedef struct packed{
         logic hwset;
-    } sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t;
+    } sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__sha3_error_sts_enable_d9cec3d3_next_cfb72aff_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t;
+    } sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t;
+    } sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
         logic hwset;
-    } sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t;
+    } sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t;
 
     typedef struct packed{
-        sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error0_sts_enable_528ccada_next_b1018582_resetsignal_939e99d4__in_t error0_sts;
-        sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t error1_sts;
-        sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t error2_sts;
-        sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t error3_sts;
-    } sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t;
+        sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__sha3_error_sts_enable_d9cec3d3_next_cfb72aff_resetsignal_939e99d4__in_t sha3_error_sts;
+        sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__error1_sts_enable_938cafef_next_f460eb81_resetsignal_939e99d4__in_t error1_sts;
+        sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__error2_sts_enable_0dacf7a6_next_4b5b9e74_resetsignal_939e99d4__in_t error2_sts;
+        sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__error3_sts_enable_fc3af94b_next_c3125d40_resetsignal_939e99d4__in_t error3_sts;
+    } sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__in_t;
 
     typedef struct packed{
         logic hwset;
@@ -130,7 +130,7 @@ package sha3_reg_pkg;
     } sha3_reg__notif_intr_t_notif_cmd_done_sts_1c68637e_notif_msg_fifo_empty_sts_df694e73__in_t;
 
     typedef struct packed{
-        sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__in_t error_internal_intr_r;
+        sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__in_t error_internal_intr_r;
         sha3_reg__notif_intr_t_notif_cmd_done_sts_1c68637e_notif_msg_fifo_empty_sts_df694e73__in_t notif_internal_intr_r;
     } sha3_reg__intr_block_t__in_t;
 
@@ -200,7 +200,7 @@ package sha3_reg_pkg;
 
     typedef struct packed{
         logic intr;
-    } sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t;
+    } sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__out_t;
 
     typedef struct packed{
         logic intr;
@@ -209,7 +209,7 @@ package sha3_reg_pkg;
     typedef struct packed{
         sha3_reg__global_intr_t_agg_sts_dd3dcf0a__out_t error_global_intr_r;
         sha3_reg__global_intr_t_agg_sts_e6399b4a__out_t notif_global_intr_r;
-        sha3_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378__out_t error_internal_intr_r;
+        sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2__out_t error_internal_intr_r;
         sha3_reg__notif_intr_t_notif_cmd_done_sts_1c68637e_notif_msg_fifo_empty_sts_df694e73__out_t notif_internal_intr_r;
     } sha3_reg__intr_block_t__out_t;
 

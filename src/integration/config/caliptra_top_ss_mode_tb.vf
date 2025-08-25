@@ -632,6 +632,7 @@ ${CALIPTRA_ROOT}/src/csrng/rtl/csrng.sv
 ${CALIPTRA_ROOT}/src/sha3/rtl/ot_sha3_pkg.sv
 ${CALIPTRA_ROOT}/src/sha3/rtl/kmac_pkg.sv
 ${CALIPTRA_ROOT}/src/sha3/rtl/kmac_reg_pkg.sv
+${CALIPTRA_ROOT}/src/sha3/rtl/sha3_param_pkg.sv
 ${CALIPTRA_ROOT}/src/sha3/rtl/sha3_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/sha3/rtl/ot_keccak_2share.sv
 ${CALIPTRA_ROOT}/src/sha3/rtl/ot_keccak_round.sv

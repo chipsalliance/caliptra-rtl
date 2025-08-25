@@ -8968,8 +8968,8 @@
 #define CLP_SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                      (0x10040404)
 #ifndef SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R
 #define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                          (0x404)
-#define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_LOW                                            (0)
-#define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_MASK                                           (0x1)
+#define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_SHA3_ERROR_EN_LOW                                        (0)
+#define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_SHA3_ERROR_EN_MASK                                       (0x1)
 #define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR1_EN_LOW                                            (1)
 #define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR1_EN_MASK                                           (0x2)
 #define SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR2_EN_LOW                                            (2)
@@ -9000,8 +9000,8 @@
 #define CLP_SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                                (0x10040414)
 #ifndef SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R
 #define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                                    (0x414)
-#define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_LOW                                     (0)
-#define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK                                    (0x1)
+#define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_SHA3_ERROR_STS_LOW                                 (0)
+#define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_SHA3_ERROR_STS_MASK                                (0x1)
 #define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_LOW                                     (1)
 #define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK                                    (0x2)
 #define SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_LOW                                     (2)
@@ -9020,8 +9020,8 @@
 #define CLP_SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                    (0x1004041c)
 #ifndef SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R
 #define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                        (0x41c)
-#define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR0_TRIG_LOW                                        (0)
-#define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR0_TRIG_MASK                                       (0x1)
+#define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_SHA3_ERROR_TRIG_LOW                                    (0)
+#define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_SHA3_ERROR_TRIG_MASK                                   (0x1)
 #define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR1_TRIG_LOW                                        (1)
 #define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR1_TRIG_MASK                                       (0x2)
 #define SHA3_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR2_TRIG_LOW                                        (2)
@@ -9037,9 +9037,9 @@
 #define SHA3_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_MSG_FIFO_EMPTY_TRIG_LOW                          (1)
 #define SHA3_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_MSG_FIFO_EMPTY_TRIG_MASK                         (0x2)
 #endif
-#define CLP_SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R                                                  (0x10040500)
-#ifndef SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R
-#define SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R                                                      (0x500)
+#define CLP_SHA3_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_R                                              (0x10040500)
+#ifndef SHA3_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_R
+#define SHA3_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_R                                                  (0x500)
 #endif
 #define CLP_SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R                                                  (0x10040504)
 #ifndef SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R
@@ -9057,11 +9057,11 @@
 #ifndef SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
 #define SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                              (0x580)
 #endif
-#define CLP_SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R                                             (0x10040600)
-#ifndef SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R
-#define SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R                                                 (0x600)
-#define SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R_PULSE_LOW                                       (0)
-#define SHA3_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R_PULSE_MASK                                      (0x1)
+#define CLP_SHA3_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_INCR_R                                         (0x10040600)
+#ifndef SHA3_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_INCR_R
+#define SHA3_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_INCR_R                                             (0x600)
+#define SHA3_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_INCR_R_PULSE_LOW                                   (0)
+#define SHA3_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_INCR_R_PULSE_MASK                                  (0x1)
 #endif
 #define CLP_SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R                                             (0x10040604)
 #ifndef SHA3_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R
