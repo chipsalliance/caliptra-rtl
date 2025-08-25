@@ -87,7 +87,7 @@ void main() {
     // for (uint16_t i = 0; i < 2; i++){
     //     printf("%d\n", i);
     // }
-    printf("Dummy print\n");
+    VPRINTF(LOW, "Dummy print\n");
     __asm__ volatile ("csrwi    %0, %1" \
                     : /* output: none */        \
                     : "i" (0x7c6), "i" (0x03)  /* input : immediate  */ \

@@ -22,7 +22,7 @@
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 void wait_for_sha512_intr(){
-    printf("SHA512 flow in progress...\n");
+    VPRINTF(LOW, "SHA512 flow in progress...\n");
     while((cptra_intr_rcv.sha512_error == 0) & (cptra_intr_rcv.sha512_notif == 0)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during SHA512 operation to allow ISR to execute and show idle time in sims
@@ -30,8 +30,8 @@ void wait_for_sha512_intr(){
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    //printf("Received SHA512 error intr with status = %d\n", cptra_intr_rcv.sha512_error);
-    printf("Received SHA512 notif intr with status = %d\n", cptra_intr_rcv.sha512_notif);
+    //VPRINTF(LOW, "Received SHA512 error intr with status = %d\n", cptra_intr_rcv.sha512_error);
+    VPRINTF(LOW, "Received SHA512 notif intr with status = %d\n", cptra_intr_rcv.sha512_notif);
 }
 
 void sha_init(enum sha512_mode_e mode) {
@@ -77,7 +77,7 @@ void sha_gen_hash_start() {
 
 
 void sha512_zeroize(){
-    printf("SHA512 zeroize flow.\n");
+    VPRINTF(LOW, "SHA512 zeroize flow.\n");
     lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, (1 << SHA512_REG_SHA512_CTRL_ZEROIZE_LOW) & SHA512_REG_SHA512_CTRL_ZEROIZE_MASK);
 }
 
@@ -106,15 +106,15 @@ void sha512_flow(sha512_io block, uint8_t mode, sha512_io digest){
     wait_for_sha512_intr();
 
     reg_ptr = (uint32_t *) CLP_SHA512_REG_SHA512_DIGEST_0;
-    printf("Load DIGEST data from SHA512\n");
+    VPRINTF(LOW, "Load DIGEST data from SHA512\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_15) {
         sha512_digest[offset] = *reg_ptr;
         if (sha512_digest[offset] != digest.data[offset]) {
-            printf("At offset [%d], sha_digest data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", sha512_digest[offset]);
-            printf("Expected data: 0x%x\n", digest.data[offset]);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], sha_digest data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", sha512_digest[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", digest.data[offset]);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -156,15 +156,15 @@ void sha512_restore_flow(sha512_io block, uint8_t mode, sha512_io restore_digest
     wait_for_sha512_intr();
 
     reg_ptr = (uint32_t *) CLP_SHA512_REG_SHA512_DIGEST_0;
-    printf("Load DIGEST data from SHA512\n");
+    VPRINTF(LOW, "Load DIGEST data from SHA512\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_15) {
         sha512_digest[offset] = *reg_ptr;
         if (sha512_digest[offset] != digest.data[offset]) {
-            printf("At offset [%d], sha_digest data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", sha512_digest[offset]);
-            printf("Expected data: 0x%x\n", digest.data[offset]);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], sha_digest data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", sha512_digest[offset]);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", digest.data[offset]);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;

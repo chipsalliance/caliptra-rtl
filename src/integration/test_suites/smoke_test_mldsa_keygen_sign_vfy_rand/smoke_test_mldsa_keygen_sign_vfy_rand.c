@@ -32,21 +32,21 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" Running MLDSA Random Smoke Test !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Running MLDSA Random Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
 
     //--------------------------------------------------------------
-    printf("%c", 0xdc); //inject msg, sig, pk for verifying
+    SEND_STDOUT_CTRL(0xdc); //inject msg, sig, pk for verifying
 
     // wait for MLDSA to be ready
-    printf("Waiting for mldsa status ready in keygen+sign\n");
+    VPRINTF(LOW, "Waiting for mldsa status ready in keygen+sign\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-    printf("\nMLDSA KEYGEN_SIGN\n");
+    VPRINTF(LOW, "\nMLDSA KEYGEN_SIGN\n");
     // Enable MLDSA keygen sign
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
@@ -57,13 +57,13 @@ void main() {
     cptra_intr_rcv.abr_notif = 0;
 
     //--------------------------------------------------------------
-    printf("%c", 0xdb); //inject msg, sig, pk for verifying
+    SEND_STDOUT_CTRL(0xdb); //inject msg, sig, pk for verifying
 
     // wait for MLDSA to be ready
-    printf("Waiting for mldsa status ready in verify\n");
+    VPRINTF(LOW, "Waiting for mldsa status ready in verify\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-    printf("\nMLDSA VERIFY\n");
+    VPRINTF(LOW, "\nMLDSA VERIFY\n");
     // Enable MLDSA Verify
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
 
@@ -73,7 +73,7 @@ void main() {
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 
 }
 

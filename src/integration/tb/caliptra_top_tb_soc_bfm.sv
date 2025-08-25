@@ -255,7 +255,7 @@ import caliptra_top_tb_pkg::*; #(
         end
 
         for (int dword = 0; dword < `CLP_CSR_HMAC_KEY_DWORDS; dword++) begin
-            cptra_csr_hmac_key[dword] = '1; //FIXME
+            cptra_csr_hmac_key[dword] = 32'h0b0b0b0b;
         end
 
         // Run the test stimulus

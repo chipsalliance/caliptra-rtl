@@ -17,7 +17,6 @@
 // Description:
 //     Provides function declarations for use by external test files, so
 //     that the ISR functionality may behave like a library.
-//     TODO:
 //     This header file includes inline function definitions for event and
 //     test specific interrupt service behavior, so it should be copied and
 //     modified for each test.
@@ -42,27 +41,27 @@ void init_interrupts(void);
 
 // These inline functions are used to insert event-specific functionality into the
 // otherwise generic ISR that gets laid down by the parameterized macro "nonstd_swerv_isr"
-inline void service_doe_error_intr() {printf("ERROR");}
-inline void service_doe_notif_intr() {printf("ERROR");}
-inline void service_ecc_error_intr   () {printf("ERROR");}
-inline void service_ecc_notif_intr   () {printf("ERROR");}
-inline void service_hmac_error_intr  () {printf("ERROR");}
-inline void service_hmac_notif_intr  () {printf("ERROR");}
+inline void service_doe_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_doe_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_ecc_error_intr   () {VPRINTF(ERROR, "ERROR");}
+inline void service_ecc_notif_intr   () {VPRINTF(ERROR, "ERROR");}
+inline void service_hmac_error_intr  () {VPRINTF(ERROR, "ERROR");}
+inline void service_hmac_notif_intr  () {VPRINTF(ERROR, "ERROR");}
 
-inline void service_kv_error_intr    () {printf("ERROR");}
-inline void service_kv_notif_intr    () {printf("ERROR");}
-inline void service_sha512_error_intr() {printf("ERROR");}
-inline void service_sha512_notif_intr() {printf("ERROR");}
-inline void service_sha256_error_intr() {printf("ERROR");}
-inline void service_sha256_notif_intr() {printf("ERROR");}
-inline void service_soc_ifc_error_intr  () {printf("ERROR");}
-inline void service_soc_ifc_notif_intr  () {printf("ERROR");}
-inline void service_sha512_acc_error_intr() {printf("ERROR");}
-inline void service_sha512_acc_notif_intr() {printf("ERROR");}
-inline void service_abr_error_intr() {printf("ERROR");}
-inline void service_abr_notif_intr() {printf("ERROR");}
-inline void service_axi_dma_error_intr() {printf("ERROR");}
-inline void service_axi_dma_notif_intr() {printf("ERROR");}
+inline void service_kv_error_intr    () {VPRINTF(ERROR, "ERROR");}
+inline void service_kv_notif_intr    () {VPRINTF(ERROR, "ERROR");}
+inline void service_sha512_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_sha512_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_sha256_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_sha256_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_soc_ifc_error_intr  () {VPRINTF(ERROR, "ERROR");}
+inline void service_soc_ifc_notif_intr  () {VPRINTF(ERROR, "ERROR");}
+inline void service_sha512_acc_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_sha512_acc_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_abr_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_abr_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_axi_dma_error_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_axi_dma_notif_intr() {VPRINTF(ERROR, "ERROR");}
 
 
 #endif //CALIPTRA_ISR_H

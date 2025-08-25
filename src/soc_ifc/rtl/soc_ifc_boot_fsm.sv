@@ -98,7 +98,6 @@ always_comb arc_BOOT_DONE_BOOT_FWRST = (boot_fsm_ps == BOOT_DONE) & fw_update_rs
 //advance to boot wait when reset starts to propagate
 always_comb arc_BOOT_FWRST_BOOT_WAIT = ~synch_uc_rst_b;
 
-// TODO: Capture BootFSM_BrkPoint only at the point of cold or warm reset exit
 // Move to BOOT_DONE state when
 // a fixed time is met AND
 // if the BootFSM breakpoint is asserted and the BootFSM continue is not set, stay put in WAIT state

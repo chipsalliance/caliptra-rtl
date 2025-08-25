@@ -76,7 +76,7 @@ void main() {
     set_mit0(mitb0, mie_timer0_en);
     
     //VPRINTF(LOW,"Rand UDS\n");
-    printf("Rand UDS\n");
+    VPRINTF(LOW, "Rand UDS\n");
 
     //Start UDS and store in KV3
     SEND_STDOUT_CTRL(0xec);
@@ -101,7 +101,7 @@ void main() {
     SEND_STDOUT_CTRL(0xf2);
     set_mit0(mitb0, mie_timer0_en);
     
-    printf("Rand FE\n");
+    VPRINTF(LOW, "Rand FE\n");
 
     //Start FE and store in KV7
     SEND_STDOUT_CTRL(0xed);

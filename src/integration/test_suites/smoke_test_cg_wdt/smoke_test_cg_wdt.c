@@ -60,9 +60,9 @@ void main() {
     //uint32_t mie_machinetimer_en = 0x00000080;
     //uint32_t mie_external_int_en = 0x00000800;
 
-    printf("----------------------------------\n");
-    printf(" CLK GATING + WDT smoke test !!\n"   );
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " CLK GATING + WDT smoke test !!\n"   );
+    VPRINTF(LOW, "----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();

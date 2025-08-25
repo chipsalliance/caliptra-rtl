@@ -39,9 +39,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 /* --------------- Function Definitions --------------- */
 void main() {
 
-    printf("----------------------------------\n");
-    printf(" ROM to TAP Mailbox flow test\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " ROM to TAP Mailbox flow test\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     // Initialize interrupts (if any)
     init_interrupts();
@@ -121,17 +121,17 @@ void main() {
         };
     }
 
-    printf("----------------------------------\n");
-    printf(" JTAG mailbox flow success!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " JTAG mailbox flow success!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //clear tap mode
     lsu_write_32(CLP_MBOX_CSR_TAP_MODE,0);
     soc_ifc_clear_execute_reg();
 
-    printf("----------------------------------\n");
-    printf(" TAP to ROM mailbox flow test 1\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " TAP to ROM mailbox flow test 1\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Poll status until fsm is in EXECUTE UC
     state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
@@ -177,9 +177,9 @@ void main() {
 
     soc_ifc_set_mbox_status_field(status);
 
-    printf("----------------------------------\n");
-    printf(" TAP to ROM mailbox flow test 2\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " TAP to ROM mailbox flow test 2\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     //Poll status until fsm is in EXECUTE UC
     state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;

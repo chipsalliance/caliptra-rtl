@@ -43,9 +43,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 */
 
 void main() {
-    printf("----------------------------------\n");
-    printf(" Running ECC Smoke Test !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Running ECC Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -251,12 +251,12 @@ void main() {
     for (int i = 0; i < 12; i++)
         sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
 
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
+    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
 

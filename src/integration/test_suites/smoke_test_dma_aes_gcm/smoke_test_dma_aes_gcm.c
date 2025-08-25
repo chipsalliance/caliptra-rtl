@@ -37,10 +37,11 @@ volatile uint32_t  fail      __attribute__((section(".dccm.persistent"))) = 0;
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(void) {
-    aes_flow_t aes_input;
+    aes_flow_t aes_input = {0};
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_GCM;
     aes_key_len_e key_len;
+    aes_endian_e endian_mode; // AES_LITTLE_ENDIAN or AES_BIG_ENDIAN
 
 
     const char key_str3[] = "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308";
@@ -67,7 +68,9 @@ void main(void) {
     uint32_t tag[4]; 
     uint32_t tag_length;
 
-    aes_key_t aes_key;
+    aes_key_t aes_key = {0};
+
+    endian_mode = AES_LITTLE_ENDIAN;
 
     VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
 
@@ -108,7 +111,7 @@ void main(void) {
 
 
 
-    aes_flow(op, mode, key_len, aes_input);
+    aes_flow(op, mode, key_len, aes_input, endian_mode);
 
     SEND_STDOUT_CTRL( 0xff);
     while(1);

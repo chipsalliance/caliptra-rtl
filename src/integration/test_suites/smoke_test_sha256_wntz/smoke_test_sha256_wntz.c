@@ -275,7 +275,7 @@ void main() {
     
     if ((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0){
         VPRINTF(LOW, "Wrong command is not detected\n");
-        printf("%c", 0x1);
+        SEND_STDOUT_CTRL(0x1);
     }
 
 
@@ -289,7 +289,7 @@ void main() {
     
     if ((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0){
         VPRINTF(LOW, "Wrong command is not detected\n");
-        printf("%c", 0x1);
+        SEND_STDOUT_CTRL(0x1);
     }
 
     //SVA in place to check init and next in same cycle

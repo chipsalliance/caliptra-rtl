@@ -34,51 +34,51 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 void main(){
     volatile uint32_t * reg_ptr;
 
-    printf("-----------------------------------\n");
-    printf(" Randomized PCR ECC Signing flow !!\n");
-    printf("-----------------------------------\n");
+    VPRINTF(LOW, "-----------------------------------\n");
+    VPRINTF(LOW, " Randomized PCR ECC Signing flow !!\n");
+    VPRINTF(LOW, "-----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
 
     //inject seed to kv key reg (in RTL)
-    printf("Inject randomized PRIVKEY into KV slot and MSG into SHA512 digest\n");
-    printf("%c", 0x91);
+    VPRINTF(LOW, "Inject randomized PRIVKEY into KV slot and MSG into SHA512 digest\n");
+    SEND_STDOUT_CTRL(0x91);
     
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     // Enable ECC PCR SIGNING core
-    printf("\nECC PCR SIGNING\n");
+    VPRINTF(LOW, "\nECC PCR SIGNING\n");
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
     // wait for ECC SIGNING process to be done
-    printf("ECC flow in progress...\n");
+    VPRINTF(LOW, "ECC flow in progress...\n");
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
     
     // Read the data back from ECC register
-    printf("Load SIGN_R data from ECC\n");
+    VPRINTF(LOW, "Load SIGN_R data from ECC\n");
     reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
-        printf("%x", *reg_ptr);
+        VPRINTF(LOW, "%x", *reg_ptr);
         reg_ptr++;
     }
-    printf("\n");
+    VPRINTF(LOW, "\n");
 
-    printf("Load SIGN_S data from ECC\n");
+    VPRINTF(LOW, "Load SIGN_S data from ECC\n");
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
-        printf("%x", *reg_ptr); 
+        VPRINTF(LOW, "%x", *reg_ptr); 
         reg_ptr++;
     }
-    printf("\n");
+    VPRINTF(LOW, "\n");
     
-    printf("Check the signing results\n");
-    printf("%c", 0x92);
+    VPRINTF(LOW, "Check the signing results\n");
+    SEND_STDOUT_CTRL(0x92);
 
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 }

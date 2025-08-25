@@ -466,9 +466,9 @@ const uint32_t mldsa_verify_res [] = {
 };
 
 void main() {
-    printf("----------------------------\n");
-    printf(" Running MLDSA Smoke Test !!\n");
-    printf("----------------------------\n");
+    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF(LOW, " Running MLDSA Smoke Test !!\n");
+    VPRINTF(LOW, "----------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -517,6 +517,6 @@ void main() {
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }

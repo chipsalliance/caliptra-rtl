@@ -48,7 +48,7 @@ void end_sim_if_uart_disabled() {
 
 void uart_tx(uint8_t data) {
   uint32_t status, tx_full, wdata;
-  printf("uart_tx >> Sending 0x%x\n", data);
+  VPRINTF(LOW, "uart_tx >> Sending 0x%x\n", data);
   // Check the TX fifo is not full
   do {
     status = lsu_read_32(CLP_UART_STATUS);
@@ -71,7 +71,7 @@ uint8_t uart_rx() {
 
   // read the data
   data = lsu_read_32(CLP_UART_RDATA);
-  printf("uart_rx << Receiving 0x%x\n", data);
+  VPRINTF(LOW, "uart_rx << Receiving 0x%x\n", data);
   rdata = data & 0xff;
   return rdata;
 }
@@ -100,7 +100,7 @@ void enable_uart() {
   // Fclk  = fixed frequency of the IP
   nco = baud_rate << 20;
   nco = nco / ip_frequency;
-  printf("nco = %d\n", nco);
+  VPRINTF(LOW, "nco = %d\n", nco);
 
   ctrl = ((nco & 0xffff) << UART_CTRL_NCO_LOW) | UART_CTRL_TX_MASK |
          UART_CTRL_RX_MASK;
@@ -125,7 +125,7 @@ int run_loopback_test() {
     rxdata = uart_rx();
 
     if (rxdata != txdata) {
-      printf("run_loopback_test: Got: 0x%x Want: 0x%x\n", rxdata, txdata);
+      VPRINTF(LOW, "run_loopback_test: Got: 0x%x Want: 0x%x\n", rxdata, txdata);
       error += 1;
     }
   }
@@ -136,16 +136,16 @@ int run_loopback_test() {
 void main() {
   int error;
 
-  printf("---------------------------\n");
-  printf(" UART Smoke Test \n");
-  printf("---------------------------\n");
+  VPRINTF(LOW, "---------------------------\n");
+  VPRINTF(LOW, " UART Smoke Test \n");
+  VPRINTF(LOW, "---------------------------\n");
 
   end_sim_if_uart_disabled();
   enable_uart();
 
   error += run_loopback_test();
-  if (error > 0) printf("Error: %d\n", error);
+  if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
 
   // End the sim in failure
-  if (error > 0) printf("%c", 0x1);
+  if (error > 0) SEND_STDOUT_CTRL(0x1);
 }

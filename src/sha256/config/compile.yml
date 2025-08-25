@@ -52,6 +52,7 @@ schema_version: 2.4.0
 requires: 
   - sha256_ctrl
   - caliptra_top_defines
+  - caliptra_top_reg_defines
   - sha256_coverage
 targets:
   tb:

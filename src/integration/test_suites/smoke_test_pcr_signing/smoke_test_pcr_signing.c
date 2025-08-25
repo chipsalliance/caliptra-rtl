@@ -44,9 +44,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" Smoke Test With PCR Signing flow !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Smoke Test With PCR Signing flow !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -160,15 +160,15 @@ void main(){
         sign_s.data[i] = expected_sign_s[i];
 
     //inject seed to kv key reg (in RTL)
-    printf("Inject PRIVKEY into KV slot 7\n");
+    VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
     uint8_t privkey_inject_cmd = 0x88 + 0x7;
-    printf("%c", privkey_inject_cmd);
+    SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-    printf("Inject MSG into SHA512 digest\n");
-    printf("%c", 0x90);
+    VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+    SEND_STDOUT_CTRL(0x90);
 
     ecc_pcr_signing_flow(iv, sign_r, sign_s);
     cptra_intr_rcv.ecc_notif = 0;
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
 }

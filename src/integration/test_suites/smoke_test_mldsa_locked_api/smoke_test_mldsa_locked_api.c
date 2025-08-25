@@ -65,9 +65,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
 };
 
 void main() {
-    printf("--------------------------------------------\n");
-    printf(" KV Smoke Test With MLDSA Locked API flow !!\n");
-    printf("--------------------------------------------\n");
+    VPRINTF(LOW, "--------------------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With MLDSA Locked API flow !!\n");
+    VPRINTF(LOW, "--------------------------------------------\n");
 
     /* Intializes random number generator */  //TODO    
     srand(time);
@@ -89,15 +89,15 @@ void main() {
     for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
         msg[i] = rand() % 0xffffffff;
 
-    printf("inject random mldsa seed to kv key reg (in RTL)\n");
-    printf("%c", 0x93);
+    VPRINTF(LOW, "inject random mldsa seed to kv key reg (in RTL)\n");
+    SEND_STDOUT_CTRL(0x93);
 
     uint16_t offset;
     volatile uint32_t * reg_ptr;
     volatile uint32_t * status_ptr;
     uint8_t fail_cmd = 0x1;
     
-    printf("Waiting for mldsa status ready in keygen\n");
+    VPRINTF(LOW, "Waiting for mldsa status ready in keygen\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
@@ -130,19 +130,19 @@ void main() {
 
     status_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_STATUS;
 
-    printf("\nMLDSA KEYGEN + SIGNING\n");
+    VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
-    printf("Try to Load Locked SIGN data from MLDSA\n");
+    VPRINTF(LOW, "Try to Load Locked SIGN data from MLDSA\n");
     while (*status_ptr == 0){
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_SIGN_SIZE) {
             if ((*reg_ptr != 0) & (*status_ptr == 0)) {
-                printf("At offset [%d], mldsa_sign data mismatch!\n", offset);
-                printf("Actual   data: 0x%x\n", *reg_ptr);
-                printf("Expected data: 0x%x\n", 0);
-                printf("%c", fail_cmd);
+                VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
             reg_ptr++;
@@ -154,34 +154,34 @@ void main() {
     wait_for_mldsa_intr();
 
     // Read the data back from MLDSA register
-    printf("Try to Load Locked PRIVKEY data from MLDSA\n");
+    VPRINTF(LOW, "Try to Load Locked PRIVKEY data from MLDSA\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_PRIVKEY_SIZE) {
         if (*reg_ptr != 0) {
-            printf("At offset [%d], mldsa_privkey data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("Expected data: 0x%x\n", 0);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], mldsa_privkey data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
         offset++;
     }
 
-    printf("MLDSA zeroize flow.\n");
+    VPRINTF(LOW, "MLDSA zeroize flow.\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, (1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
 
     // Read the data back from MLDSA register
-    printf("Try to Load zeroized PRIVKEY data from MLDSA\n");
+    VPRINTF(LOW, "Try to Load zeroized PRIVKEY data from MLDSA\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_PRIVKEY_SIZE) {
         if (*reg_ptr != 0) {
-            printf("At offset [%d], mldsa_privkey data mismatch!\n", offset);
-            printf("Actual   data: 0x%x\n", *reg_ptr);
-            printf("Expected data: 0x%x\n", 0);
-            printf("%c", fail_cmd);
+            VPRINTF(ERROR, "At offset [%d], mldsa_privkey data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+            SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         reg_ptr++;
@@ -190,7 +190,7 @@ void main() {
 
     cptra_intr_rcv.abr_notif = 0;
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
 

@@ -57,7 +57,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
     const uint32_t iv_data_uds[]  = {0x2eb94297,0x77285196,0x3dd39a1e,0xb95d438f};
     const uint32_t iv_data_fe[]   = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d};
-    const uint32_t iv_data_hek[]  = {0x14451624,0x6a752c32,0x9056d884,0xdaf3c89d}; // TODO unique value
+    const uint32_t iv_data_hek[]  = {0x3e8b1c72,0xa459d6f0,0x5c27b9ae,0xf02d4389};
 
 /* CDI HMAC512 test vector
     KEY =   dff9f0021e1ab0bda2781e1a709cafdb341953bdbd6836d9c1ea520a6043041daf7218b19ce98302a5f8f95a6b51f5c1219a09d73819e2ba0d2c4b932489c586
@@ -325,9 +325,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 //******************************************************************
 // DOE(IV_OBF, IV_FE)
 //****************************************************************** 
-void kv_doe(uint8_t doe_fe_dest_id){
+void kv_doe(uint8_t doe_uds_dest_id, uint8_t doe_fe_dest_id, uint8_t doe_hek_dest_id){
 
-    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, (uint32_t) doe_fe_dest_id);
+    doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
 
     VPRINTF(LOW,"doe_fe kv id = %x\n", doe_fe_dest_id);
 
@@ -361,7 +361,7 @@ void kv_hmac512(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     hmac512_tag.kv_id = tag_id;
     VPRINTF(LOW,"hmac tag kv id = %x\n", hmac512_tag.kv_id);
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 }
 
 //******************************************************************
@@ -399,7 +399,7 @@ void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_i
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = ecc_seed_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 
     uint32_t idevid_mldsa_key[] = {0x69646576, 0x69645F6D, 0x6C647361, 0x5F6B6579,
                                 0x80000000, 0x00000000, 0x00000000, 0x00000000,
@@ -421,7 +421,7 @@ void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_i
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = mldsa_seed_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 }
 
 void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
@@ -463,7 +463,7 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
         pubkey_y.data[i] = ecc_pubkey_y[i];
 
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y);
+    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
     //******************************************************************
@@ -489,7 +489,7 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
         sign_s.data[i] = ecc_sign_s[i];
     
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 }
 
@@ -583,12 +583,13 @@ void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_
 
 void main(){
 
-    printf("----------------------------------\n");
-    printf(" KV Smoke Test With DOE flow    !!\n");
-    printf("----------------------------------\n");
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " KV Smoke Test With DOE flow    !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
 
     uint8_t doe_uds_dest_id;
     uint8_t doe_fe_dest_id;
+    uint8_t doe_hek_dest_id;
     uint8_t cdi_idevid_id;
     uint8_t idevid_ecc_seed_id;
     uint8_t idevid_mldsa_seed_id;
@@ -604,7 +605,7 @@ void main(){
     if(rst_count == 0) {
         VPRINTF(LOW, "1st FE flow + warm reset\n");
         
-        kv_doe(doe_fe_dest_id);
+        kv_doe(doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
         
         //issue zeroize
         ecc_zeroize();
@@ -615,29 +616,29 @@ void main(){
 
         //Issue warm reset
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 1) {
         VPRINTF(LOW, "2nd FE flow + warm reset\n");
 
-        kv_doe(doe_fe_dest_id);
+        kv_doe(doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
         
         //Issue timed warm reset :TODO
         rst_count++;
-        printf("%c",0xf6);
+        SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 2){
         VPRINTF(LOW, "3rd FE flow + Cold reset\n");
         rst_count++;
-        printf("%c",0xf5); //Issue cold reset and see lock_FE_flow getting reset
+        SEND_STDOUT_CTRL(0xf5); //Issue cold reset and see lock_FE_flow getting reset
     }
     else if(rst_count == 3) {
         VPRINTF(LOW, "4th FE flow after cold reset\n");
 
-        printf("doe_fe_dest_id = 0x%x\n",doe_fe_dest_id);
+        VPRINTF(LOW, "doe_fe_dest_id = 0x%x\n",doe_fe_dest_id);
 
-        kv_doe(doe_fe_dest_id);
+        kv_doe(doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
 
-        printf("%c",0xff); //End the test
+        SEND_STDOUT_CTRL(0xff); //End the test
     }
 }

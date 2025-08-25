@@ -473,9 +473,9 @@ const uint32_t mldsa_verify_res [] = {
 };
 
 void main() {
-    printf("-------------------------------------\n");
-    printf(" Running MLDSA with invalid verify !!\n");
-    printf("-------------------------------------\n");
+    VPRINTF(LOW, "-------------------------------------\n");
+    VPRINTF(LOW, " Running MLDSA with invalid verify !!\n");
+    VPRINTF(LOW, "-------------------------------------\n");
 
     /* Intializes random number generator */
     srand(time);
@@ -519,7 +519,7 @@ void main() {
     uint32_t select_input_random = rand() % 4;
 
     if(select_input_random == 0) {
-        printf("\n Manipulating the message\n");
+        VPRINTF(LOW, "\n Manipulating the message\n");
 
         // Select a random coefficient to make invalid
         uint32_t msg_random_index = rand() % (MLDSA87_MSG_SIZE * 32);
@@ -531,10 +531,10 @@ void main() {
         // Flip the bit using XOR
         msg[msg_dword_index] ^= mask;
 
-        printf("flip bit [%x] to msg dword %x!\n", msg_bit_offset, msg_dword_index);
+        VPRINTF(LOW, "flip bit [%x] to msg dword %x!\n", msg_bit_offset, msg_dword_index);
     }
     else if(select_input_random == 1) {
-        printf("\n Manipulating the public key\n");
+        VPRINTF(LOW, "\n Manipulating the public key\n");
 
         // Select a random coefficient to make invalid
         uint32_t pubkey_random_index = rand() % (MLDSA87_PUBKEY_SIZE * 32);
@@ -546,10 +546,10 @@ void main() {
         // Flip the bit using XOR
         pubkey[pubkey_dword_index] ^= mask;
 
-        printf("flip bit [%x] to public key dword %x!\n", pubkey_bit_offset, pubkey_dword_index);
+        VPRINTF(LOW, "flip bit [%x] to public key dword %x!\n", pubkey_bit_offset, pubkey_dword_index);
     }
     else if(select_input_random == 2) {
-        printf("\n Manipulating the signature\n");
+        VPRINTF(LOW, "\n Manipulating the signature\n");
 
         // Select a random coefficient to make invalid
         uint32_t sign_random_index = rand() % (MLDSA87_SIGN_SIZE * 32);
@@ -561,10 +561,10 @@ void main() {
         // Flip the bit using XOR
         sign[sign_dword_index] ^= mask;
 
-        printf("flip bit [%x] to signature dword %x!\n", sign_bit_offset, sign_dword_index);
+        VPRINTF(LOW, "flip bit [%x] to signature dword %x!\n", sign_bit_offset, sign_dword_index);
     }
     else if(select_input_random == 3) {
-        printf("\n Manipulating the h section of signature\n");
+        VPRINTF(LOW, "\n Manipulating the h section of signature\n");
 
         // Select a random coefficient to make invalid
         uint32_t h_random_index = rand() % 21; // omega+k+1(additional byte)=75+8+1=84 bytes = 21 Dwords
@@ -576,7 +576,7 @@ void main() {
         // Flip the bit using XOR
         sign[h_dword_index] ^= mask;
 
-        printf("flip bit [%x] to signature dword %x!\n", h_bit_offset, h_dword_index);
+        VPRINTF(LOW, "flip bit [%x] to signature dword %x!\n", h_bit_offset, h_dword_index);
     }
 
     /* VERIFY OPERATION*/
@@ -606,7 +606,7 @@ void main() {
     }
 
     // Enable MLDSA VERIFYING core
-    printf("\nMLDSA VERIFYING\n");
+    VPRINTF(LOW, "\nMLDSA VERIFYING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
     
     // wait for MLDSA VERIFYING process to be done
@@ -614,13 +614,13 @@ void main() {
 
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_VERIFY_RES_0;
     // Read the data back from MLDSA register
-    printf("Load VERIFY_RES data from MLDSA\n");
+    VPRINTF(LOW, "Load VERIFY_RES data from MLDSA\n");
     offset = 0;
     uint16_t mismatch = 0;
     while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
         if (*reg_ptr != verify_res[offset]) {
-            // printf("Actual   data: 0x%x\n", *reg_ptr);
-            // printf("Expected data: 0x%x\n", verify_res[offset]);
+            // VPRINTF(LOW, "Actual   data: 0x%x\n", *reg_ptr);
+            // VPRINTF(LOW, "Expected data: 0x%x\n", verify_res[offset]);
             mismatch++;
         }
         reg_ptr++;
@@ -628,15 +628,15 @@ void main() {
     }
 
     if (mismatch == 0){
-        printf("mldsa_verify mismatch is not detected!\n");
-        printf("%c", fail_cmd);
+        VPRINTF(ERROR, "mldsa_verify mismatch is not detected!\n");
+        SEND_STDOUT_CTRL(fail_cmd);
         while(1);
     }
 
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    printf("%c",0xff); //End the test
+    SEND_STDOUT_CTRL(0xff); //End the test
     
 }
 
