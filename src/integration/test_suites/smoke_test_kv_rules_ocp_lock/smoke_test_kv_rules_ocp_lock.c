@@ -153,18 +153,11 @@ void main() {
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
     VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
-    
-    // #ifdef CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
-    //     ocp_lock_mode = SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK;
-    // #else
-    //     ocp_lock_mode = 0;
-    // #endif
-
     if (ocp_lock_mode){
         uint8_t kv_slot0, kv_slot1, kv_slot2;
 
-        uint8_t op = 3; //rand() % 4;
-        kv_slot0 = rand() % 24;
+        uint8_t op = rand() % 4;
+        kv_slot0 = rand() % 23; // a non-23 slot
         if (kv_slot0 < 16){
             do {
                 kv_slot1 = rand() % 16;
@@ -173,7 +166,7 @@ void main() {
         }
         else {
             do {
-                kv_slot1 = 16 + rand() % 8;
+                kv_slot1 = 16 + rand() % 7;
             } while (kv_slot1 == kv_slot0);
             kv_slot2 = rand() % 16;
         }
