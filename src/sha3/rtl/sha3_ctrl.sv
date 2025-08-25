@@ -119,7 +119,9 @@ always_ff @(posedge clk or negedge reset_n) begin
   if(!reset_n) begin
     ahb_size <= '0;
   end else begin
-    ahb_size <= hsize_i;
+      if(hready_i & hsel_i) begin 
+            ahb_size <= hsize_i;
+      end
   end
 end
 
