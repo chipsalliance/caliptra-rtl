@@ -635,7 +635,7 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
                         end
                     end
-                    else if((WriteData[7:0] == 8'haa) && mailbox_write) begin
+                    else if((WriteData[7:0] == 8'had) && mailbox_write) begin
                         inject_ecc_privkey <= 1'b1;
                         if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
