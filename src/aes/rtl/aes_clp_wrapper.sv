@@ -22,6 +22,9 @@
 // 
 //======================================================================
 
+`include "caliptra_reg_field_defines.svh"
+`include "kv_macros.svh"
+
 module aes_clp_wrapper
   import aes_pkg::*;
   import kv_defines_pkg::*;
