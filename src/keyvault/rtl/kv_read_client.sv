@@ -110,7 +110,11 @@ always_ff @(posedge clk or negedge rst_b) begin
         error_code <= KV_SUCCESS;
     end
     else begin
-        error_code <= validated_read_en & ~read_allow ? KV_READ_FAIL :
+        // On first beat of kv read, latch any error conditions.
+        // On subsequent beats of kv read, preserve any error that was previously
+        // flagged or decode new error conditions
+        error_code <= validated_read_en && |write_offset && (error_code != KV_SUCCESS) ? error_code :
+                      validated_read_en & ~read_allow ? KV_READ_FAIL :
                       validated_read_en & kv_resp.error ? KV_READ_FAIL : 
                       validated_read_en & ~kv_resp.error ? KV_SUCCESS : error_code;
     end
