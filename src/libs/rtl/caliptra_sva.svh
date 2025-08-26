@@ -57,4 +57,8 @@
 `define CALIPTRA_ASSERT_MUTEX(assert_name, sig, clk = `CALIPTRA_ASSERT_DEFAULT_CLK, rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
     `CALIPTRA_ASSERT(assert_name, $onehot0(sig), clk, rst)
 
+// Assert that a vector of signals is stable (does not change value)
+`define CALIPTRA_ASSERT_STABLE(assert_name, sig, clk = `CALIPTRA_ASSERT_DEFAULT_CLK, rst = `CALIPTRA_ASSERT_DEFAULT_RST) \
+    `CALIPTRA_ASSERT(assert_name, $stable(sig), clk, rst)
+
 `endif
