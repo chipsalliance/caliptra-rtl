@@ -19,6 +19,7 @@
 #include "keyvault.h"
 #include <stdint.h>
 #include <string.h>
+#include "caliptra_rtl_lib.h"
 
 // Function wrapper for lsu_write_32 with endianness support
 void aes_lsu_write_32(uint32_t addr, uint32_t data, aes_endian_e endian_mode) {
@@ -511,22 +512,24 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         }
     }
 
+    VPRINTF(LOW, "Read and Compare GCM TAG\n");
     //compare output data to expected tag
     // Read Output Data Block I
     for (int j = 0; j < 4; j++) {
       tag[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
       VPRINTF(MEDIUM, "TAG: 0x%x\n", tag[j]);
-                if(aes_input.aes_expect_err == FALSE){
-      if (tag[j] != expected_tag[j]) {
-        VPRINTF(FATAL,"At offset [%d], tag data mismatch!\n", j);
-        VPRINTF(FATAL,"Actual   data: 0x%x\n", tag[j]);
-        VPRINTF(FATAL,"Expected data: 0x%x\n", aes_input.tag[j]);
-        SEND_STDOUT_CTRL(fail_cmd);
-        while(1);
-      }
+      if(aes_input.aes_expect_err == FALSE){
+        if (tag[j] != expected_tag[j]) {
+          VPRINTF(FATAL,"At offset [%d], tag data mismatch!\n", j);
+          VPRINTF(FATAL,"Actual   data: 0x%x\n", tag[j]);
+          VPRINTF(FATAL,"Expected data: 0x%x\n", aes_input.tag[j]);
+          SEND_STDOUT_CTRL(fail_cmd);
+          while(1);
+        }
       }
     }
   }
+  VPRINTF(LOW, "AES Operation Complete\n");
 
   // Disable autostart. Note the control register is shadowed and thus needs to be written twice.
   aes_ctrl = 0x1 << AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_LOW;
