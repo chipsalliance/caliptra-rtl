@@ -665,7 +665,7 @@ void main() {
 
 
     VPRINTF(LOW, "------------------------------------------\n");
-    VPRINTF(LOW, " Running MLKEM Error Trigger Smoke Test !!\n");
+    VPRINTF(LOW, " Running MLKEM errortrigger Smoke Test !!\n");
     VPRINTF(LOW, "------------------------------------------\n");
 
     /* Intializes random number generator */

@@ -300,12 +300,13 @@ module sha512
 
     for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
       block_reg[dword] = hwif_out.SHA512_BLOCK[dword].BLOCK.value;
-      hwif_in.SHA512_BLOCK[dword].BLOCK.we = zeroize_reg? 0 : 
+      hwif_in.SHA512_BLOCK[dword].BLOCK.we = zeroize_reg ? 0 : 
                                              gen_hash_ip ? gen_hash_block_write_en & (gen_hash_block_write_offset == dword) :
                                              (kv_src_write_en & (kv_src_write_offset == dword));
       hwif_in.SHA512_BLOCK[dword].BLOCK.next = gen_hash_ip ? gen_hash_block_write_data : kv_src_write_data;
-      hwif_in.SHA512_BLOCK[dword].BLOCK.hwclr = (zeroize_reg & ~block_reg_lock[dword]) | kv_read_data_present_reset;
-      hwif_in.SHA512_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
+      hwif_in.SHA512_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_read_data_present_reset;
+      //lock the block during gen hash operation
+      hwif_in.SHA512_BLOCK[dword].BLOCK.swwel = gen_hash_ip ? '1 : block_reg_lock[dword];
     end
     //Set valid when fsm is done
     hwif_in.SHA512_VAULT_RD_STATUS.ERROR.next = kv_src_error;
@@ -372,8 +373,7 @@ always_comb begin
     end
     else begin
       //Lock the block for any keyvault data
-      block_reg_lock_nxt[dword] = (gen_hash_ip) ? '1 : 
-                                  (kv_src_write_en & (kv_src_write_offset == dword)) ? '1 : block_reg_lock[dword];
+      block_reg_lock_nxt[dword] =  (kv_src_write_en & (kv_src_write_offset == dword)) ? '1 :  block_reg_lock[dword];
     end
   end
 end
@@ -532,6 +532,10 @@ pv_gen_hash1
   .pv_read(gen_hash_pv_read),
   .pv_rd_resp(pv_rd_resp)
 );
+
+`CALIPTRA_ASSERT_STABLE(ERR_SHA_KEY_RD_CTRL_NOT_STABLE, kv_read_ctrl_reg, clk, (!reset_n || ready_reg) )
+`CALIPTRA_ASSERT_STABLE(ERR_SHA_WR_CTRL_NOT_STABLE, kv_write_ctrl_reg, clk, (!reset_n || ready_reg) )
+`CALIPTRA_ASSERT_STABLE(ERR_SHA_BLOCK_NOT_STABLE, block_reg, clk, (!reset_n || ready_reg) )
 
 endmodule // sha512
 
