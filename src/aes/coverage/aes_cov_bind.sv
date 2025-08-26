@@ -20,6 +20,6 @@ module aes_cov_bind;
         .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
         .CIF_DATA_WIDTH(32) // FIXME hardcoded value?
         )
-        i_soc_ifc_cov_if (.*);
+        i_aes_cov_if (.*);
     `endif
 endmodule

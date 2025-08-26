@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 ---
-seed: 1
+seed: ${PLAYBOOK_RANDOM_SEED}
 plusargs:
   - +CLP_OCP_LOCK_EN
 testname: smoke_test_hek_flow

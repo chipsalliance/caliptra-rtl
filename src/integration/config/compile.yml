@@ -153,6 +153,7 @@ requires:
   - abr_coverage
   - axi_dma_coverage
   - aes_coverage
+  - doe_coverage
 targets:
   dpi_compile:
     directories:

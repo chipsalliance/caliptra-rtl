@@ -7,7 +7,7 @@
 
 `include "caliptra_prim_module_name_macros.svh"
 
-`ifndef PRIM_DEFAULT_IMPL
+`ifndef CALIPTRA_PRIM_DEFAULT_IMPL
   `define CALIPTRA_PRIM_DEFAULT_IMPL caliptra_prim_pkg::ImplGeneric
 `endif
 

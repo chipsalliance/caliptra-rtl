@@ -356,7 +356,7 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG_NO_CP_NONCORE_RST(this.SS_KEY_RELEASE_BASE_ADDR_L                               )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_KEY_RELEASE_BASE_ADDR_H                               )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_KEY_RELEASE_SIZE                                      )
-                                                              `FLD____CP_NONCORE_RST(this.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS                        )
+                                                              `FLD_NO_CP_NONCORE_RST(this.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS                        )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET        )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES               )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_DEBUG_INTENT                                          )

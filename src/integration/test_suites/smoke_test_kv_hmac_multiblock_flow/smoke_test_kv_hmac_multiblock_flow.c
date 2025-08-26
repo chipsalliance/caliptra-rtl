@@ -244,12 +244,12 @@ void main() {
     uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
     SEND_STDOUT_CTRL(key_inject_cmd);
 
-    hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE);
-    hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE);
+    hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE, FALSE);
+    hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE, FALSE);
     hmac_zeroize();
 
     //sign with the generated key
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();

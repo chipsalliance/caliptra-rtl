@@ -25,7 +25,7 @@ module fv_key_stable_top_m
 
     default clocking default_clk @(posedge clk); endclocking
 
-//TODO: hmac top should keep the key stable for signle computation. Check with assertion 
+
 logic [383:0] hmac_key;
 logic hmac_init;
 
