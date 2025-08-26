@@ -328,8 +328,8 @@ module caliptra_top
     crypto_state_t aes_state, aes_next_state;
     crypto_state_t ecc_state, ecc_next_state;
 
-    always_ff @(posedge clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b)
+    always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
+        if (!cptra_noncore_rst_b)
             aes_state <= IDLE;
         else
             aes_state <= aes_next_state;
@@ -346,8 +346,8 @@ module caliptra_top
 
     always_comb aes_busy_filtered = (aes_state == DONE) ? aes_busy : 1'b0;
 
-    always_ff @(posedge clk or negedge cptra_rst_b) begin
-        if (!cptra_rst_b)
+    always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
+        if (!cptra_noncore_rst_b)
             ecc_state <= IDLE;
         else
             ecc_state <= ecc_next_state;

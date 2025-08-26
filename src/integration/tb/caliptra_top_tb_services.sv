@@ -360,7 +360,8 @@ module caliptra_top_tb_services
     //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
     //         8'hab        - Inject MLDSA SEED to kv_key22/23 register
     //         8'hac        - Inject ECC seed to kv_key22/23 register
-    //         8'had: 8'haf - Unused
+    //         8'had        - Inject ECC_PRIVKEY to kv_key register
+    //         8'hae: 8'haf - Unused
     //         8'hb0        - Inject HMAC512_BLOCK to kv_key register
     //         8'hb1        - Inject MLKEM SEED to keyvault
     //         8'hb2        - Inject MLKEM MSG to keyvault
@@ -632,6 +633,17 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_privkey_random[dword_i][31 : 0];
+                        end
+                    end
+                    else if((WriteData[7:0] == 8'had) && mailbox_write) begin
+                        inject_ecc_privkey <= 1'b1;
+                        if (WriteData[12:8] == slot_id) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1000;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
                         end
                     end
                     else if((WriteData[7:0] == 8'h93) && mailbox_write) begin
