@@ -606,7 +606,7 @@ void main(){
     if(rst_count == 0) {
         VPRINTF(LOW, "1st FE flow + warm reset\n");
         
-        kv_doe(doe_fe_dest_id);
+        kv_doe(doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
         
         //issue zeroize
         ecc_zeroize();
