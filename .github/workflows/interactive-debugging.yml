@@ -152,6 +152,7 @@ jobs:
           cd /tmp/
           git clone -b "${OPENOCD_VERSION}" https://github.com/antmicro/openocd
           cd openocd
+          git config --file=.gitmodules submodule.src/jtag/drivers/libjaylink.url https://github.com/syntacore/libjaylink.git
           ./bootstrap
           ./configure --prefix=/opt/openocd --enable-remote-bitbang \
             CC="sccache gcc" CXX="sccache g++" \
