@@ -19,6 +19,7 @@
 #include "riscv-csr.h"
 #include "printf.h"
 #include "mldsa.h"
+#include <stdlib.h>
 
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
