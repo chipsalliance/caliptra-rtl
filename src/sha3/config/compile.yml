@@ -12,6 +12,7 @@ targets:
       - $COMPILE_ROOT/rtl/ot_sha3_pkg.sv
       - $COMPILE_ROOT/rtl/kmac_pkg.sv
       - $COMPILE_ROOT/rtl/kmac_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/sha3_param_pkg.sv
       - $COMPILE_ROOT/rtl/sha3_reg_pkg.sv
       - $COMPILE_ROOT/rtl/ot_keccak_2share.sv
       - $COMPILE_ROOT/rtl/ot_keccak_round.sv
