@@ -1124,17 +1124,19 @@ module caliptra_top_tb_services
     end
 
     always @(negedge clk) begin
-        if (inject_makehint_failure && `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintgen_enable)
-            force `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum = 'd80; //> OMEGA => makehint fails
-        else  release `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum; 
-
-        if (inject_normcheck_failure && `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.check_enable && (`CPTRA_TOP_PATH.abr_inst.norm_check_inst.mode == normcheck_mode_random))
-            force `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid = 'b1;
-        else release `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid;
-        
-        if (inject_mldsa_timeout)
+        // Hintsum: force if makehint failure (with enable) OR mldsa timeout
+        if ((inject_makehint_failure && `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintgen_enable) || inject_mldsa_timeout)
             force `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum = 'd80;
-        else release `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum;
+        else if (!inject_makehint_failure && !inject_mldsa_timeout)  // Only release when both are clear
+            release `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum;
+
+        // Invalid: force only for normcheck with specific conditions
+        if (inject_normcheck_failure && 
+            `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.check_enable && 
+            (`CPTRA_TOP_PATH.abr_inst.norm_check_inst.mode == normcheck_mode_random))
+            force `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid = 1'b1;
+        else if (!inject_normcheck_failure)
+            release `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid;
     end
 
     `ifndef VERILATOR

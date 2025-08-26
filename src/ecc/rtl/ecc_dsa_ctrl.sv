@@ -1001,4 +1001,17 @@ always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_pri
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, !reset_n)
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, !reset_n)
 
+//keyvault signals should be stable during engine operation
+//Assertions get disabled during reset or when the engine is idle
+`CALIPTRA_ASSERT_STABLE(ERR_ECC_PRIVKEY_RD_CTRL_NOT_STABLE, kv_privkey_read_ctrl_reg, clk, (!reset_n || ecc_ready_reg) )
+`CALIPTRA_ASSERT_STABLE(ERR_ECC_SEED_RD_CTRL_NOT_STABLE, kv_seed_read_ctrl_reg, clk, (!reset_n || ecc_ready_reg) )
+//write happens while engine is not idle, so hwclr triggers the writen en to de-assert
+//instead confirming that entry and dest valid fields are stable
+//`CALIPTRA_ASSERT_STABLE(ERR_ECC_WR_CTRL_NOT_STABLE, kv_write_ctrl_reg, clk, (!reset_n || ecc_ready_reg) )
+`CALIPTRA_ASSERT_STABLE(ERR_ECC_WR_CTRL_ENTRY_NOT_STABLE, kv_write_ctrl_reg.write_entry, clk, (!reset_n || ecc_ready_reg) )
+`CALIPTRA_ASSERT_STABLE(ERR_ECC_WR_CTRL_DEST_NOT_STABLE, kv_write_ctrl_reg.write_dest_vld, clk, (!reset_n || ecc_ready_reg) )
+
+`CALIPTRA_ASSERT_STABLE(ERR_ECC_PRIVKEY_NOT_STABLE, privkey_reg, clk, (!reset_n || ecc_ready_reg) )
+`CALIPTRA_ASSERT_STABLE(ERR_ECC_SEED_NOT_STABLE, seed_reg, clk, (!reset_n || ecc_ready_reg) )
+
 endmodule

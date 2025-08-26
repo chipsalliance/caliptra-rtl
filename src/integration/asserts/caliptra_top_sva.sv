@@ -185,25 +185,36 @@ module caliptra_top_sva
                                           )
                             else $display("SVA ERROR: AHB address not valid in keyvault");
 
-  generate 
-    for(genvar entry=0; entry < KV_NUM_KEYS; entry++) begin
-      for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-        KV_debug_value0:         assert property (
-                                                  @(posedge `SVA_RDC_CLK)
-                                                  disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-                                                  $rose(~`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 0) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value == CLP_DEBUG_MODE_KV_0)
-                                                )
-                                  else $display("SVA ERROR: KV not flushed with correct debug values");
-
-        KV_debug_value1:         assert property (
-                                                  @(posedge `SVA_RDC_CLK)
-                                                  disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-                                                  $rose(~`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value == CLP_DEBUG_MODE_KV_1)
-                                                )
-                                  else $display("SVA ERROR: KV not flushed with correct debug values");
+  // Single comprehensive function that handles both debug modes
+  function automatic logic check_all_kv_debug_values();
+    logic sel_value = `KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value;
+    logic [31:0] expected_value = sel_value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
+    
+    for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+      for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+        if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
+          $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", 
+                   entry, dword, expected_value, 
+                   `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
+          return 1'b0;
+        end
       end
     end
-  endgenerate
+    return 1'b1;
+  endfunction
+
+  // Single assertion covering both debug modes
+  KV_debug_comprehensive: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
+    
+    ($rose(~`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || 
+           `SOC_IFC_TOP_PATH.cptra_error_fatal || 
+           `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && 
+           `KEYVAULT_PATH.cptra_pwrgood) |=> 
+    check_all_kv_debug_values()
+  )
+  else $display("SVA ERROR: KV debug flush comprehensive check failed");
 
   generate
     for (genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
@@ -812,40 +823,47 @@ module caliptra_top_sva
       else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata0_bank[%0d] is not zero", i);
     end
   endgenerate
-  generate
-    begin: MLDSA_mem_zeroize_check
-      // Check bank0 memory: even addresses from the private key memory
-      for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin: bank0_zero_check
-        ZERO_MLDSA_sk_mem_bank0_zero: assert property (
-            @(posedge `SVA_RDC_CLK)
-            $rose(`ABR_PATH.zeroize_mem_done) |-> 
-            (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] == 0)
-        )
-        else $display("SVA ERROR: [MLDSA zeroize] SK bank0 at index %0d is not zero", dword);
-      end
   
-      // Check bank1 memory: odd addresses from the private key memory
-      for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin: bank1_zero_check
-        ZERO_MLDSA_sk_mem_bank1_zero: assert property (
-            @(posedge `SVA_RDC_CLK)
-            $rose(`ABR_PATH.zeroize_mem_done) |-> 
-            (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] == 0)
-        )
-        else $display("SVA ERROR: [MLDSA zeroize] SK bank1 at index %0d is not zero", dword);
+  // Function to check all SK memory banks are zero
+  function automatic logic check_mldsa_sk_memory_zero();
+    // Check bank0 memory (even addresses)
+    for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
+      if (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] != 0) begin
+        $display("SVA ERROR: [MLDSA zeroize] SK bank0 at index %0d is not zero: %h", 
+                 dword, `ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword]);
+        return 1'b0;
       end
-
-      // Assertion to check that `ABR_PATH.zeroize_mem_done` transitions from low to high 
-      // when (`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) is active
-      ZEROIZE_MEM_DONE_TRANSITION: assert property (
-        @(posedge `SVA_RDC_CLK)
-        $rose(`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |=> 
-        ( !`ABR_PATH.zeroize_mem_done )[*0:$] ##1 
-        $rose(`ABR_PATH.zeroize_mem_done)
-      )
-      else $display("SVA ERROR: [MLDSA zeroize] zeroize_mem_done did not rise when expected");
-
     end
-  endgenerate
+    
+    // Check bank1 memory (odd addresses)  
+    for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
+      if (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] != 0) begin
+        $display("SVA ERROR: [MLDSA zeroize] SK bank1 at index %0d is not zero: %h", 
+                 dword, `ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword]);
+        return 1'b0;
+      end
+    end
+    
+    return 1'b1;
+  endfunction
+
+  // Consolidated zeroization assertions
+  MLDSA_sk_memory_zero_comprehensive: assert property (
+    @(posedge `SVA_RDC_CLK)
+    $rose(`ABR_PATH.zeroize_mem_done) |-> check_mldsa_sk_memory_zero()
+  )
+  else $display("SVA ERROR: [MLDSA zeroize] SK memory zeroization verification failed");
+
+  // Assertion to check that `ABR_PATH.zeroize_mem_done` transitions from low to high 
+  // when (`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) is active
+  ZEROIZE_MEM_DONE_TRANSITION: assert property (
+    @(posedge `SVA_RDC_CLK)
+    $rose(`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |=> 
+    ( !`ABR_PATH.zeroize_mem_done )[*0:$] ##1 
+    $rose(`ABR_PATH.zeroize_mem_done)
+  )
+  else $display("SVA ERROR: [MLDSA zeroize] zeroize_mem_done did not rise when expected");
+
 
   
 
