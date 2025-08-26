@@ -550,6 +550,12 @@ hmac_result_kv_write
 
 always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_ready;
 
+`CALIPTRA_ASSERT_STABLE(ERR_HMAC_KEY_RD_CTRL_NOT_STABLE, kv_key_read_ctrl_reg, clk, (!reset_n || core_ready) )
+`CALIPTRA_ASSERT_STABLE(ERR_HMAC_BLOCK_RD_CTRL_NOT_STABLE, kv_block_read_ctrl_reg, clk, (!reset_n || core_ready) )
+`CALIPTRA_ASSERT_STABLE(ERR_HMAC_WR_CTRL_NOT_STABLE, kv_write_ctrl_reg, clk, (!reset_n || core_ready) )
+`CALIPTRA_ASSERT_STABLE(ERR_HMAC_KEY_NOT_STABLE, key_reg, clk, (!reset_n || core_ready) )
+`CALIPTRA_ASSERT_STABLE(ERR_HMAC_BLOCK_NOT_STABLE, block_reg, clk, (!reset_n || core_ready) )
+
 endmodule // hmac
 
 //======================================================================
