@@ -522,7 +522,7 @@ void main() {
         VPRINTF(LOW, "Waiting for mldsa status ready\n");
         while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST INVALID s1/s2\n");
+        VPRINTF(LOW, "\nTEST INVALID s1/s2\n");
 
         
         // Select a random coefficient to make invalid
@@ -577,7 +577,7 @@ void main() {
         VPRINTF(LOW, "Waiting for mldsa status ready\n");
         while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST PCR WITH INVALID KEYGEN COMMAND\n");
+        VPRINTF(LOW, "\nTEST PCR WITH INVALID KEYGEN COMMAND\n");
 
         //inject mldsa seed to kv key reg (in RTL)
         VPRINTF(LOW, "MLDSA: Inject SEED into KV slot 8\n");
@@ -608,7 +608,7 @@ void main() {
         VPRINTF(LOW, "Waiting for mldsa status ready\n");
         while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST PCR WITH INVALID VERIFY COMMAND\n");
+        VPRINTF(LOW, "\nTEST PCR WITH INVALID VERIFY COMMAND\n");
 
         //inject mldsa seed to kv key reg (in RTL)
         VPRINTF(LOW, "MLDSA: Inject SEED into KV slot 8\n");
@@ -637,9 +637,9 @@ void main() {
     else if(rst_count == 3) {
         // wait for MLDSA to be ready
         VPRINTF(LOW, "Waiting for mldsa status ready\n");
-        while((lsu_read_32(CLP_MLDSA_REG_MLDSA_STATUS) & MLDSA_REG_MLDSA_STATUS_READY_MASK) == 0);
+        while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST INVALID HINT\n");
+        VPRINTF(LOW, "\nTEST INVALID HINT\n");
 
         uint8_t invalid_hint = rand() % 75 + 1; // +1 for the additional 00
         uint8_t dword_index = invalid_hint / 4;
@@ -654,25 +654,25 @@ void main() {
 
 
         // Program MLDSA MSG
-        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
+        write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
 
         // Program MLDSA PUBKEY
-        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_PUBKEY_BASE_ADDR, pubkey, MLDSA87_PUBKEY_SIZE);
+        write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_PUBKEY_BASE_ADDR, pubkey, MLDSA87_PUBKEY_SIZE);
 
         // Program MLDSA SIGNATURE
-        write_mldsa_reg((uint32_t*) CLP_MLDSA_REG_MLDSA_SIGNATURE_BASE_ADDR, sign, MLDSA87_SIGN_SIZE);
+        write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR, sign, MLDSA87_SIGN_SIZE);
 
         // Enable MLDSA VERIFYING core
         VPRINTF(LOW, "\nMLDSA VERIFYING\n");
-        lsu_write_32(CLP_MLDSA_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
+        lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
 
         // wait for MLDSA KEYGEN process to be done
         wait_for_mldsa_intr();
-        reg_ptr = (uint32_t *) CLP_MLDSA_REG_MLDSA_VERIFY_RES_0;
+        reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_VERIFY_RES_0;
         // Read the data back from MLDSA register
         VPRINTF(LOW, "Load VERIFY_RES data from MLDSA\n");
         offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_MLDSA_REG_MLDSA_VERIFY_RES_15) {
+        while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
             if (*reg_ptr != 0) {
                 VPRINTF(ERROR, "At offset [%d], mldsa_verify_res data mismatch!\n", offset);
                 VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
