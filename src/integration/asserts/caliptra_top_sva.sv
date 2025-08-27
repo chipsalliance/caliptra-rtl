@@ -54,6 +54,9 @@
 `define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
 `define ABR_RAMS_PATH       `SERVICES_PATH.abr_mem_top_inst
 `define ABR_TOP_PATH        `CPTRA_TOP_PATH.abr_inst
+// the name 'aes_inst' is used for the top 2 layers of AES core hierarchy :/
+`define AES_CLP_PATH        `CPTRA_TOP_PATH.aes_inst
+`define AES_PATH            `AES_CLP_PATH.aes_inst
 
 `define SVA_RDC_CLK `CPTRA_TOP_PATH.rdc_clk_cg
 `define CPTRA_FW_UPD_RST_WINDOW `SOC_IFC_TOP_PATH.i_soc_ifc_boot_fsm.fw_update_rst_window
@@ -72,6 +75,7 @@ module caliptra_top_sva
   import doe_defines_pkg::*;
   import kv_defines_pkg::*;
   import axi_dma_reg_pkg::*;
+  import keymgr_pkg::*;
   ();
 
   //TODO: pass these parameters from their architecture into here
@@ -267,7 +271,7 @@ module caliptra_top_sva
       //mldsa seed read
       kv_mldsa_seed_r_flow:   assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            $rose(`ABR_PATH.kv_mldsa_seed_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`ABR_PATH.kv_read[0].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ABR_PATH.kv_read[0].read_entry == 23)) ? (`ABR_PATH.mldsa_seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_read[0].read_entry][dword].data.value == `ABR_PATH.mldsa_seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword])
+                                            $rose(`ABR_PATH.kv_mldsa_seed_done) && (`ABR_PATH.kv_mldsa_seed_error == 0) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`ABR_PATH.kv_read[0].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ABR_PATH.kv_read[0].read_entry == 23)) ? (`ABR_PATH.mldsa_seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_read[0].read_entry][dword].data.value == `ABR_PATH.mldsa_seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword])
                                             )
                                 else $display("SVA ERROR: MLDSA seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_read[0].read_entry][dword].data.value, `ABR_PATH.mldsa_seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword]);
       end
@@ -277,7 +281,7 @@ module caliptra_top_sva
       //If ocp_lock_in_progress = 0, block is read from any slot
       kv_hmac_block_r_flow:     assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            $rose(`HMAC_PATH.kv_block_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`HMAC_PATH.block_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword].data.value == `HMAC_PATH.block_reg[dword])
+                                            $rose(`HMAC_PATH.kv_block_done) && (`HMAC_PATH.kv_block_error == 0) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`HMAC_PATH.block_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword].data.value == `HMAC_PATH.block_reg[dword])
                                             )
                                 else $display("SVA ERROR: HMAC384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword].data.value, `HMAC_PATH.block_reg[dword]);
 
@@ -287,7 +291,7 @@ module caliptra_top_sva
       if (dword < HMAC_KEY_NUM_DWORDS) begin
         kv_hmac_key_r_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`HMAC_PATH.kv_key_write_en) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`HMAC_PATH.key_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value == `HMAC_PATH.key_reg[dword])
+                                              $rose(`HMAC_PATH.kv_key_done) && (`HMAC_PATH.kv_key_error == 0) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].last_dword.value + 1))|->  (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`HMAC_PATH.key_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value == `HMAC_PATH.key_reg[dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 key mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value, `HMAC_PATH.key_reg[dword]);
       end
@@ -357,12 +361,12 @@ module caliptra_top_sva
         //ecc privkey read
         kv_ecc_privkey_r_flow:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`ECC_PATH.kv_privkey_write_en) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.privkey_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              $fell(`ECC_PATH.kv_privkey_write_en) && (`ECC_PATH.kv_privkey_error == 0) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.privkey_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey read mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value, `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         kv_ecc_seed_r_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`ECC_PATH.kv_seed_write_en) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              $fell(`ECC_PATH.kv_seed_write_en) && (`ECC_PATH.kv_seed_error == 0) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value, `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         //ecc privkey write
@@ -421,6 +425,56 @@ module caliptra_top_sva
       end
     end
   endgenerate
+
+
+  ////////////////////////
+  // AES 
+
+  `ifndef VERILATOR
+  // Helper function to compare new key with old key
+  function automatic logic dw_all_different_or_all_same (input logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] op0,
+                                                         input logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] op1);
+      logic same_flag = 1'b0;
+      logic diff_flag = 1'b0;
+      foreach (op0[dw])
+          if (op0[dw] == op1[dw]) begin
+              same_flag = 1'b1;
+//              $display("[%t] [%m] SAME op0[%d]=0x%x op1[%d]=0x%x", $time, dw, op0[dw], dw, op1[dw]);
+          end
+      foreach (op0[dw])
+          if (op0[dw] != op1[dw]) begin
+              diff_flag = 1'b1;
+//              $display("[%t] [%m] DIFF op0[%d]=0x%x op1[%d]=0x%x", $time, dw, op0[dw], dw, op1[dw]);
+          end
+      return same_flag ^ diff_flag;
+  endfunction
+
+  // Enforce that every time AES reads new key from KV it either matches the old key in entirety or
+  // differs from old key in entirety
+  property aes_new_key_fully_overwrites_old_key;
+      logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] keymgr_key_prev;
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      ($past(`AES_CLP_PATH.keymgr_key.valid) && !`AES_CLP_PATH.keymgr_key.valid, keymgr_key_prev = $past(`AES_CLP_PATH.keymgr_key.key[0])) ##0
+      (!`AES_CLP_PATH.keymgr_key.valid)[*0:$] ##1
+      `AES_CLP_PATH.keymgr_key.valid
+      |->
+      (dw_all_different_or_all_same(keymgr_key_prev, `AES_CLP_PATH.keymgr_key.key[0]) == 1);
+  endproperty
+  AES_KV_rd_full_key: assert property (aes_new_key_fully_overwrites_old_key)
+                      else $display("SVA ERROR: AES core partially read new key into keyvault and kept partial old key!");
+
+  // AES core contains a local reg that buffers the key when reading from KeyVault.
+  // Enforce that this reg is cleared to 0 when reading in a new key.
+  AES_KV_rd_reg_clr:  assert property (
+                                      @(posedge `SVA_RDC_CLK)
+                                      (`AES_CLP_PATH.aes_key_kv_read.write_en && `AES_CLP_PATH.aes_key_kv_read.write_offset == 0)
+                                      |=>
+                                      // dword 0 is written with new value
+                                      // Check that dwords 1:MAX are cleared to 0
+                                      (~|`AES_CLP_PATH.kv_key_reg[(keymgr_pkg::KeyWidth/32)-1:1])
+                                      )
+                      else $display("SVA ERROR: AES local reg stage for KeyVault not cleared");
+  `endif
 
 
 `ifdef CALIPTRA_MODE_SUBSYSTEM

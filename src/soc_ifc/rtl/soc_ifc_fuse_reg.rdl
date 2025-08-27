@@ -142,7 +142,7 @@ reg {
 reg {
     name = "OCP LOCK HEK";
     desc = "Obfuscated HEK (Hard Epoch Key) seed. Tied to device ownership transfers in OCP LOCK.
-            [br]Caliptra Access: -
-            [br]SOC Access:      WL-S";
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
     Fuse seed[32]=0;
 } fuse_hek_seed[8] @0x3C0;
