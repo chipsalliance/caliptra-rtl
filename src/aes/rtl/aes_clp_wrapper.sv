@@ -512,6 +512,7 @@ genvar g_dword;
 genvar g_byte;
 generate
   for (g_dword = 0; g_dword < keymgr_pkg::KeyWidth/32; g_dword++) begin
+    logic [$bits(kv_key_write_offset)-1:0] local_g_dword = 3'(g_dword);
     for (g_byte = 0; g_byte < 4; g_byte++) begin
       always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
@@ -519,9 +520,9 @@ generate
         end else if(debugUnlock_or_scan_mode_switch) begin
           kv_key_reg[g_dword][g_byte] <= '0;
         // zeroize the buffered KeyVault value when reading in a new key
-        end else if (kv_key_write_en && (kv_key_write_offset <  g_dword)) begin
+        end else if (kv_key_write_en && (kv_key_write_offset <  local_g_dword)) begin
           kv_key_reg[g_dword][g_byte] <= 0;
-        end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
+        end else if (kv_key_write_en && (kv_key_write_offset == local_g_dword)) begin
           kv_key_reg[g_dword][g_byte] <= kv_key_write_data[3-g_byte];
         end
       end
