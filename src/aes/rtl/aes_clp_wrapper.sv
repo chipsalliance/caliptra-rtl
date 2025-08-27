@@ -512,7 +512,8 @@ genvar g_dword;
 genvar g_byte;
 generate
   for (g_dword = 0; g_dword < keymgr_pkg::KeyWidth/32; g_dword++) begin
-    logic [$bits(kv_key_write_offset)-1:0] local_g_dword = 3'(g_dword);
+    logic [$bits(kv_key_write_offset)-1:0] local_g_dword;
+    assign local_g_dword = 3'(g_dword);
     for (g_byte = 0; g_byte < 4; g_byte++) begin
       always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
