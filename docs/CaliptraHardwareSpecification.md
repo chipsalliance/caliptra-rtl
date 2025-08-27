@@ -2533,7 +2533,7 @@ Changes are made to support OCP LOCK flows defined for SSD applications. Specifi
 **CALIPTRA_OCP_LOCK_EN** constant-value input strap, with a bit in **CPTRA_HW_CONFIG** register:
 - Enables HEK DOE
 - Enables CALIPTRA_IN_OCP_LOCK to be set
-**CLP_DV_REG_NONSTICKYGENERICSCRATCHREG_0**: LSB of this register presents if HEK seed is in permanent mode, meaning that all HEK seeds are used amd there is no valid HEK seed.
+**CLP_DV_REG_NONSTICKYGENERICSCRATCHREG_0**: The least significant bit (LSB) of this register indicates whether the HEK seed is in permanent mode, meaning all HEK seeds have been used and no valid HEK seed remains.
 
 **NOTE:** CALIPTRA_OCP_LOCK_EN is strap pin and needs to be driven  with a constant value by the integrator. 
 
