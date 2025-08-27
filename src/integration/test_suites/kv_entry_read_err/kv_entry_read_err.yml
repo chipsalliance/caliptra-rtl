@@ -1,0 +1,3 @@
+---
+seed: 1
+testname: kv_entry_read_err
