@@ -425,8 +425,16 @@ module caliptra_top_sva
                                                          input logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] op1);
       logic same_flag = 1'b0;
       logic diff_flag = 1'b0;
-      foreach (op0[dw]) if (op0[dw] == op1[dw]) begin same_flag = 1'b1; $display("[%t] [%m] SAME op0[%d]=0x%x op1[%d]=0x%x", $time, dw, op0[dw], dw, op1[dw]); end
-      foreach (op0[dw]) if (op0[dw] != op1[dw]) begin diff_flag = 1'b1; $display("[%t] [%m] DIFF op0[%d]=0x%x op1[%d]=0x%x", $time, dw, op0[dw], dw, op1[dw]); end
+      foreach (op0[dw])
+          if (op0[dw] == op1[dw]) begin
+              same_flag = 1'b1;
+//              $display("[%t] [%m] SAME op0[%d]=0x%x op1[%d]=0x%x", $time, dw, op0[dw], dw, op1[dw]);
+          end
+      foreach (op0[dw])
+          if (op0[dw] != op1[dw]) begin
+              diff_flag = 1'b1;
+//              $display("[%t] [%m] DIFF op0[%d]=0x%x op1[%d]=0x%x", $time, dw, op0[dw], dw, op1[dw]);
+          end
       return same_flag ^ diff_flag;
   endfunction
 
