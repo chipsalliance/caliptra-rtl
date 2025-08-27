@@ -404,7 +404,13 @@ import kv_defines_pkg::*;
     assign all_bytes_transferred = ctrl_fsm_ps == DMA_WAIT_DATA &&
                                    bytes_remaining == 0 &&
                                    wr_resp_pending == 0 &&
-                                   wr_bytes_requested == hwif_out.byte_count.count;
+                                   wr_bytes_requested == hwif_out.byte_count.count &&
+                                   (aes_fsm_ps == AES_IDLE || aes_fsm_ps == AES_DONE || aes_fsm_ps == AES_ERROR); // Interlock with AES FSM due to DMA FSM going
+                                                                                                                  // to "DONE" before AES FSM with 1 DWORD 
+                                                                                                                  // because AES FSM is still reading the 
+                                                                                                                  // other 3 DWORDs from the AES while the DMA 
+                                                                                                                  // has already completed the AXI write 
+                                                                                                                  // transaction.
 
 
 
