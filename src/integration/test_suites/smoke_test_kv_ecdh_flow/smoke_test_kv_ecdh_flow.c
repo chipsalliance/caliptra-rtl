@@ -22,6 +22,7 @@
 #include "ecc.h"
 #include "aes.h"
 #include "hmac.h"
+#include <stdlib.h>
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
