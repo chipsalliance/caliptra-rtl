@@ -54,6 +54,9 @@
 `define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
 `define ABR_RAMS_PATH       `SERVICES_PATH.abr_mem_top_inst
 `define ABR_TOP_PATH        `CPTRA_TOP_PATH.abr_inst
+// the name 'aes_inst' is used for the top 2 layers of AES core hierarchy :/
+`define AES_CLP_PATH        `CPTRA_TOP_PATH.aes_inst
+`define AES_PATH            `AES_CLP_PATH.aes_inst
 
 `define SVA_RDC_CLK `CPTRA_TOP_PATH.rdc_clk_cg
 `define CPTRA_FW_UPD_RST_WINDOW `SOC_IFC_TOP_PATH.i_soc_ifc_boot_fsm.fw_update_rst_window
@@ -72,6 +75,7 @@ module caliptra_top_sva
   import doe_defines_pkg::*;
   import kv_defines_pkg::*;
   import axi_dma_reg_pkg::*;
+  import keymgr_pkg::*;
   ();
 
   //TODO: pass these parameters from their architecture into here
@@ -410,6 +414,48 @@ module caliptra_top_sva
       end
     end
   endgenerate
+
+
+  ////////////////////////
+  // AES 
+
+  `ifndef VERILATOR
+  // Helper function to compare new key with old key
+  function automatic logic dw_all_different_or_all_same (input logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] op0,
+                                                         input logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] op1);
+      logic same_flag = 1'b0;
+      logic diff_flag = 1'b0;
+      foreach (op0[dw]) if (op0[dw] == op1[dw]) begin same_flag = 1'b1; $display("[%t] [%m] SAME op0[%d]=0x%x op1[%d]=0x%x", $time, dw, op0[dw], dw, op1[dw]); end
+      foreach (op0[dw]) if (op0[dw] != op1[dw]) begin diff_flag = 1'b1; $display("[%t] [%m] DIFF op0[%d]=0x%x op1[%d]=0x%x", $time, dw, op0[dw], dw, op1[dw]); end
+      return same_flag ^ diff_flag;
+  endfunction
+
+  // Enforce that every time AES reads new key from KV it either matches the old key in entirety or
+  // differs from old key in entirety
+  property aes_new_key_fully_overwrites_old_key;
+      logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] keymgr_key_prev;
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      ($past(`AES_CLP_PATH.keymgr_key.valid) && !`AES_CLP_PATH.keymgr_key.valid, keymgr_key_prev = $past(`AES_CLP_PATH.keymgr_key.key[0])) ##0
+      (!`AES_CLP_PATH.keymgr_key.valid)[*0:$] ##1
+      `AES_CLP_PATH.keymgr_key.valid
+      |->
+      (dw_all_different_or_all_same(keymgr_key_prev, `AES_CLP_PATH.keymgr_key.key[0]) == 1);
+  endproperty
+  AES_KV_rd_full_key: assert property (aes_new_key_fully_overwrites_old_key)
+                      else $display("SVA ERROR: AES core partially read new key into keyvault and kept partial old key!");
+
+  // AES core contains a local reg that buffers the key when reading from KeyVault.
+  // Enforce that this reg is cleared to 0 when reading in a new key.
+  AES_KV_rd_reg_clr:  assert property (
+                                      @(posedge `SVA_RDC_CLK)
+                                      (`AES_CLP_PATH.aes_key_kv_read.write_en && `AES_CLP_PATH.aes_key_kv_read.write_offset == 0)
+                                      |=>
+                                      // dword 0 is written with new value
+                                      // Check that dwords 1:MAX are cleared to 0
+                                      (~|`AES_CLP_PATH.kv_key_reg[(keymgr_pkg::KeyWidth/32)-1:1])
+                                      )
+                      else $display("SVA ERROR: AES local reg stage for KeyVault not cleared");
+  `endif
 
 
 `ifdef CALIPTRA_MODE_SUBSYSTEM
