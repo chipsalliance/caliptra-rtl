@@ -2527,8 +2527,7 @@ Data vault is a set of generic scratch pad registers with specific lock function
 
 ### 1.1 Overview
 Changes are made to support OCP LOCK flows defined for SSD applications. Specification is published here:   
-https://chipsalliance.github.io/Caliptra/ocp-lock/specification/HEAD  
-caliptra-sw/rom/dev at main-2.x · chipsalliance/caliptra-sw
+[OCP L.O.C.K. Specification](https://chipsalliance.github.io/Caliptra/ocp-lock/specification/HEAD)
 
 ### 3 HW config register bit and macro
 **CALIPTRA_OCP_LOCK_EN** constant-value input strap, with a bit in **CPTRA_HW_CONFIG** register:
