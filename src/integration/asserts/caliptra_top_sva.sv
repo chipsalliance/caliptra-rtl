@@ -1115,7 +1115,7 @@ module caliptra_top_sva
   //KV read error check
   //If ocp_lock_in_progress = 1, kv23 read is not allowed. Other slots can be read
   //If ocp_lock_in_progress = 0, kv23 read is allowed
-  // localparam 0 = 0; //TODO: resolve pkg warning during build
+  // localparam KV_SUCCESS = 0; //TODO: resolve pkg warning during build
   // localparam KV_READ_FAIL = 1;
   // localparam KV_WRITE_FAIL = 2;
 
