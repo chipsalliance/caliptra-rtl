@@ -245,13 +245,15 @@ void main(void) {
     // Define all test cases with randomized dword lengths
     test_config_t test_cases[] = {
         // GCM Tests
-        {AES_ENC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Encrypt GCM image via AXI DMA (Little Endian)", 8},
         {AES_ENC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Encrypt GCM image via AXI DMA (Little Endian)", 1},
-        {AES_DEC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Decrypt GCM image via AXI DMA (Little Endian)", 5}
+        {AES_ENC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Encrypt GCM image via AXI DMA (Little Endian)", 2},
+        {AES_DEC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Decrypt GCM image via AXI DMA (Little Endian)", 3},
+        {AES_ENC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Encrypt GCM image via AXI DMA (Little Endian)", 4},
+        {AES_ENC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Encrypt GCM image via AXI DMA (Little Endian)", 5},
+        {AES_DEC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Decrypt GCM image via AXI DMA (Little Endian)", 6},
+        {AES_DEC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Decrypt GCM image via AXI DMA (Little Endian)", 7},
+        {AES_DEC, AES_GCM, AES_256, AES_LITTLE_ENDIAN, "AXI DMA Decrypt GCM image via AXI DMA (Little Endian)", 8}
 
-        // TODO - FIX THIS>
-        // {AES_ENC, AES_GCM, AES_256, AES_BIG_ENDIAN, "AES DMA Encrypt GCM image big endian via AXI DMA", get_random_dword_length()},
-        // {AES_DEC, AES_GCM, AES_256, AES_BIG_ENDIAN, "AES DMA Decrypt GCM image big endian via AXI DMA", get_random_dword_length()}
     };
 
     int num_tests = sizeof(test_cases) / sizeof(test_config_t);
