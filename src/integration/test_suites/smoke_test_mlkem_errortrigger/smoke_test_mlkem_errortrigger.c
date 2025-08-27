@@ -19,6 +19,7 @@
 #include "riscv-csr.h"
 #include "printf.h"
 #include "mlkem.h"
+#include <stdlib.h>
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -665,7 +666,7 @@ void main() {
 
 
     VPRINTF(LOW, "------------------------------------------\n");
-    VPRINTF(LOW, " Running MLKEM Error Trigger Smoke Test !!\n");
+    VPRINTF(LOW, " Running MLKEM errortrigger Smoke Test !!\n");
     VPRINTF(LOW, "------------------------------------------\n");
 
     /* Intializes random number generator */

@@ -122,6 +122,7 @@ hmac_ctrl #(
      .busy_o     (),
      .error_intr (),
      .notif_intr (),
+     .ocp_lock_in_progress(1'b0),
      .debugUnlock_or_scan_mode_switch('0)
 );
  

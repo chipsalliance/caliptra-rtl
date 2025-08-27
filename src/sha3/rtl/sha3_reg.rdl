@@ -262,9 +262,9 @@ addrmap sha3_reg {
         name = "SHA3/SHAKE component error code register";
         desc = "SHA3 Error Code";
         field {
-            desc = "If the error_internal_intr_r.error0_sts interrupt occurs, this register has information on the error cause.
+            desc = "If the error_internal_intr_r.sha3_error_sts interrupt occurs, this register has information on the error cause.
             Bits 31:24 contain the error code for the encoding, and bits 23:0 contain additional debug information.
-            This register does *not* get cleared when the error_internal_intr_r.error0_sts interrupt state gets cleared.";
+            This register does *not* get cleared when the error_internal_intr_r.sha3_error_sts interrupt state gets cleared.";
             sw = r;
             reset = 0x0;
             enum err_code_type{
@@ -357,7 +357,7 @@ addrmap sha3_reg {
         // TODO add error events
         field {desc = "Enable bit for Event 0. 
                         If enabled, interrupt will be asserted 
-                        if there is a SHAKE configuration error.";} error0_en = 1'b0;
+                        if there is a SHAKE configuration error.";} sha3_error_en = 1'b0;
         field {desc = "Enable bit for Event 1";} error1_en = 1'b0;
         field {desc = "Enable bit for Event 2";} error2_en = 1'b0;
         field {desc = "Enable bit for Event 3";} error3_en = 1'b0;
@@ -393,7 +393,7 @@ addrmap sha3_reg {
         default woclr = true;
         default level intr;
 
-        field {desc = "Interrupt Event 0 status bit; Used to indicate SHA3 error.";} error0_sts = 1'b0;
+        field {desc = "Interrupt Event 0 status bit; Used to indicate SHA3 error.";} sha3_error_sts = 1'b0;
         field {desc = "Interrupt Event 1 status bit";} error1_sts = 1'b0;
         field {desc = "Interrupt Event 2 status bit";} error2_sts = 1'b0;
         field {desc = "Interrupt Event 3 status bit";} error3_sts = 1'b0;
@@ -461,7 +461,7 @@ addrmap sha3_reg {
         default singlepulse = true;
 
         // Instantiate triggers bit-by-bit.
-        field {desc = "Interrupt Trigger 0 bit";} error0_trig = 1'b0;
+        field {desc = "Interrupt Trigger 0 bit";} sha3_error_trig = 1'b0;
         field {desc = "Interrupt Trigger 1 bit";} error1_trig = 1'b0;
         field {desc = "Interrupt Trigger 2 bit";} error2_trig = 1'b0;
         field {desc = "Interrupt Trigger 3 bit";} error3_trig = 1'b0;
@@ -549,7 +549,7 @@ addrmap sha3_reg {
         notif_intr_trig_t notif_intr_trig_r;     /* SW sets notification bit for interrupt testing */                    //
                                                                                                                          //
         // Align this set of registers; number of counters is based on peripheral event requirements                     //
-        intr_count_t      error0_intr_count_r @0x100;  /* Per error */                                                   //
+        intr_count_t      sha3_error_intr_count_r @0x100;  /* Per error */                                               //
         intr_count_t      error1_intr_count_r;         /* Per error */                                                   //
         intr_count_t      error2_intr_count_r;         /* Per error */                                                   //
         intr_count_t      error3_intr_count_r;         /* Per error */                                                   //
@@ -560,7 +560,7 @@ addrmap sha3_reg {
         // to be implemented (requiring 2*32 32-bit registers starting at                                                //
         // offset 0x100), and still allowing the entire regfile to fit                                                   //
         // inside a 1024-byte space.                                                                                     //
-        intr_count_incr_t error0_intr_count_incr_r @0x200;             /* Per error count incrementor pulse */           //
+        intr_count_incr_t sha3_error_intr_count_incr_r @0x200;         /* Per error count incrementor pulse */           //
         intr_count_incr_t error1_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
         intr_count_incr_t error2_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
         intr_count_incr_t error3_intr_count_incr_r;                    /* Per error count incrementor pulse */           //
@@ -568,25 +568,25 @@ addrmap sha3_reg {
         /* ------------------------------------------------------------------------------------------------------------- */
 
         /* ---- Reset assignment for Error Events ---- */
-        error_internal_intr_r.error0_sts -> resetsignal = error_reset_b;
+        error_internal_intr_r.sha3_error_sts -> resetsignal = error_reset_b;
         error_internal_intr_r.error1_sts -> resetsignal = error_reset_b;
         error_internal_intr_r.error2_sts -> resetsignal = error_reset_b;
         error_internal_intr_r.error3_sts -> resetsignal = error_reset_b;
-        error0_intr_count_r.cnt          -> resetsignal = error_reset_b;
+        sha3_error_intr_count_r.cnt      -> resetsignal = error_reset_b;
         error1_intr_count_r.cnt          -> resetsignal = error_reset_b;
         error2_intr_count_r.cnt          -> resetsignal = error_reset_b;
         error3_intr_count_r.cnt          -> resetsignal = error_reset_b;
         // TODO: Use this same reset for the error incrementor pulse too?
 
         /* ---- Interrupt Event Dynamic Assignments ---- */
-        error_internal_intr_r.error0_sts -> enable = error_intr_en_r.error0_en;
+        error_internal_intr_r.sha3_error_sts -> enable = error_intr_en_r.sha3_error_en;
         error_internal_intr_r.error1_sts -> enable = error_intr_en_r.error1_en;
         error_internal_intr_r.error2_sts -> enable = error_intr_en_r.error2_en;
         error_internal_intr_r.error3_sts -> enable = error_intr_en_r.error3_en;
         notif_internal_intr_r.notif_cmd_done_sts -> enable = notif_intr_en_r.notif_cmd_done_en;
         notif_internal_intr_r.notif_msg_fifo_empty_sts -> enable = notif_intr_en_r.notif_msg_fifo_empty_en;
 
-        error_internal_intr_r.error0_sts -> next   = error_intr_trig_r.error0_trig;
+        error_internal_intr_r.sha3_error_sts -> next   = error_intr_trig_r.sha3_error_trig;
         error_internal_intr_r.error1_sts -> next   = error_intr_trig_r.error1_trig;
         error_internal_intr_r.error2_sts -> next   = error_intr_trig_r.error2_trig;
         error_internal_intr_r.error3_sts -> next   = error_intr_trig_r.error3_trig;
@@ -606,11 +606,11 @@ addrmap sha3_reg {
         // NOTE: This method relies upon a counter that is set using the same events that trigger an interrupt,
         // then immediately self-clearing, which results in a pulse. Must be configured to be sensitive to
         // the interrupt trigger events for each event. The output pulse is then used to increment the ACTUAL counter
-        error0_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.error0_sts -> hwset; // Capture both firmware and hardware triggered events
-        error0_intr_count_incr_r.pulse -> next = error_internal_intr_r.error0_sts -> next;  // Increment coincides with rising edge of interrupt sts bit
-        error0_intr_count_incr_r.pulse -> we = error_internal_intr_r.error0_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
-        error0_intr_count_incr_r.pulse -> decr = error0_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
-        error0_intr_count_r.cnt        -> incr = error0_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
+        sha3_error_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.sha3_error_sts -> hwset; // Capture both firmware and hardware triggered events
+        sha3_error_intr_count_incr_r.pulse -> next = error_internal_intr_r.sha3_error_sts -> next;  // Increment coincides with rising edge of interrupt sts bit
+        sha3_error_intr_count_incr_r.pulse -> we = error_internal_intr_r.sha3_error_sts -> next;  // Generate a pulse from SW trigger, if set, or default to use the hwset input
+        sha3_error_intr_count_incr_r.pulse -> decr = sha3_error_intr_count_incr_r.pulse; // Auto-clear to generate pulse output
+        sha3_error_intr_count_r.cnt        -> incr = sha3_error_intr_count_incr_r.pulse; // Increment coincides with rising edge of interrupt sts bit
 
         error1_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.error1_sts -> hwset; // Capture both firmware and hardware triggered events
         error1_intr_count_incr_r.pulse -> next = error_internal_intr_r.error1_sts -> next;  // Increment coincides with rising edge of interrupt sts bit

@@ -154,7 +154,7 @@ void main() {
     uint8_t key384_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
     SEND_STDOUT_CTRL(key384_inject_cmd);
 
-    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
     hmac_zeroize();
 
 
@@ -222,7 +222,7 @@ void main() {
     //inject hmac512_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
     hmac_zeroize();
 
     SEND_STDOUT_CTRL(0xff); //End the test

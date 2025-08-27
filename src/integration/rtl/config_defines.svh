@@ -78,14 +78,14 @@
   `define VEER_INTR_VEC_RSVD0_NOTIF   14
   `define VEER_INTR_VEC_RSVD1_ERROR   15
   `define VEER_INTR_VEC_RSVD1_NOTIF   16
-  `define VEER_INTR_VEC_RSVD2_ERROR   17
-  `define VEER_INTR_VEC_RSVD2_NOTIF   18
+  `define VEER_INTR_VEC_SHA3_ERROR    17
+  `define VEER_INTR_VEC_SHA3_NOTIF    18
   `define VEER_INTR_VEC_SOC_IFC_ERROR 19
   `define VEER_INTR_VEC_SOC_IFC_NOTIF 20
   `define VEER_INTR_VEC_SHA_ERROR     21
   `define VEER_INTR_VEC_SHA_NOTIF     22
-  `define VEER_INTR_VEC_ABR_ERROR   23
-  `define VEER_INTR_VEC_ABR_NOTIF   24
+  `define VEER_INTR_VEC_ABR_ERROR     23
+  `define VEER_INTR_VEC_ABR_NOTIF     24
   `define VEER_INTR_VEC_AXI_DMA_ERROR 25
   `define VEER_INTR_VEC_AXI_DMA_NOTIF 26
   // Used to tie-off unused upper intr bits
@@ -106,6 +106,6 @@
   `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
 
   `define CALIPTRA_ICG           cptra_clk_gate
-  
+
 `endif
 

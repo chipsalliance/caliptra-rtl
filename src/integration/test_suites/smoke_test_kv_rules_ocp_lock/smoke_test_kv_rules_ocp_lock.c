@@ -72,7 +72,7 @@ void hmac_test(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = tag_kv_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
 
 }
 
@@ -150,31 +150,23 @@ void main() {
     init_interrupts();
 
     // Enable OCP LOCK mode
-    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG, SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
     VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
-
-    
-    // #ifdef CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
-    //     ocp_lock_mode = SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK;
-    // #else
-    //     ocp_lock_mode = 0;
-    // #endif
 
     if (ocp_lock_mode){
         uint8_t kv_slot0, kv_slot1, kv_slot2;
 
         uint8_t op = rand() % 4;
-        kv_slot0 = rand() % 24;
+        kv_slot0 = rand() % 23; // a non-23 slot
         if (kv_slot0 < 16){
             do {
                 kv_slot1 = rand() % 16;
             } while (kv_slot1 == kv_slot0);
-            kv_slot2 = 16 + rand() % 8;
+            kv_slot2 = 16 + rand() % 7;
         }
         else {
             do {
-                kv_slot1 = 16 + rand() % 8;
+                kv_slot1 = 16 + rand() % 7;
             } while (kv_slot1 == kv_slot0);
             kv_slot2 = rand() % 16;
         }

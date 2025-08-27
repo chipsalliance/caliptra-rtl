@@ -78,6 +78,7 @@ module caliptra_top_sva
   localparam SHA512_DIG_NUM_DWORDS    = 16;   //`SHA512_PATH.DIG_NUM_DWORDS;
   localparam SHA512_BLOCK_NUM_DWORDS  = 32;   //`SHA512_PATH.BLOCK_NUM_DWORDS;
   localparam MLDSA_SEED_NUM_DWORDS    = 8;   //`ABR_PATH.SEED_NUM_DWORDS;
+  localparam MLKEM_SHAREDKEY_NUM_DWORDS = 8; 
   localparam HMAC_KEY_NUM_DWORDS      = 12;   //`HMAC_PATH.KEY_NUM_DWORDS
   localparam HMAC_TAG_NUM_DWORDS      = 12;   //`HMAC_PATH.TAG_NUM_DWORDS
   localparam HMAC_BLOCK_NUM_DWORDS    = 32;   //`HMAC_PATH.BLOCK_NUM_DWORDS
@@ -184,22 +185,78 @@ module caliptra_top_sva
                                           )
                             else $display("SVA ERROR: AHB address not valid in keyvault");
 
-  generate 
-    for(genvar entry=0; entry < KV_NUM_KEYS; entry++) begin
-      for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-        KV_debug_value0:         assert property (
-                                                  @(posedge `SVA_RDC_CLK)
-                                                  disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-                                                  $rose(~`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 0) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value == CLP_DEBUG_MODE_KV_0)
-                                                )
-                                  else $display("SVA ERROR: KV not flushed with correct debug values");
+  // Single comprehensive function that handles both debug modes
+  function automatic logic check_all_kv_debug_values();
+    logic sel_value = `KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value;
+    logic [31:0] expected_value = sel_value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
+    
+    for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+      for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+        if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
+          $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", 
+                   entry, dword, expected_value, 
+                   `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
+          return 1'b0;
+        end
+      end
+    end
+    return 1'b1;
+  endfunction
 
-        KV_debug_value1:         assert property (
-                                                  @(posedge `SVA_RDC_CLK)
-                                                  disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-                                                  $rose(~`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && (`KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value == 1) && `KEYVAULT_PATH.cptra_pwrgood |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value == CLP_DEBUG_MODE_KV_1)
+  // Single assertion covering both debug modes
+  KV_debug_comprehensive: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
+    
+    ($rose(~`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || 
+           `SOC_IFC_TOP_PATH.cptra_error_fatal || 
+           `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && 
+           `KEYVAULT_PATH.cptra_pwrgood) |=> 
+    check_all_kv_debug_values()
+  )
+  else $display("SVA ERROR: KV debug flush comprehensive check failed");
+
+  generate
+    for (genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+      //mlkem shared key write
+      if (dword < MLKEM_SHAREDKEY_NUM_DWORDS) begin
+          kv_mlkem_sharedkey_w_flow:       assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
                                                 )
-                                  else $display("SVA ERROR: KV not flushed with correct debug values");
+                                    else $display("SVA ERROR: MLKEM sharedkey mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);                    
+
+          kv_mlkem_sharedkey_w_std_to_std_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_read[2].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
+                                                )
+                                    else $display("SVA ERROR: MLKEM sharedkey mismatch for STD to STD flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);
+
+          kv_mlkem_sharedkey_lock_to_lock_nonkv23_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_read[2].read_entry >= KV_OCP_LOCK_SLOT_LOW) & ((`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> `ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
+                                                )
+                                    else $display("SVA ERROR: MLKEM sharedkey mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);
+`ifndef VERILATOR
+          kv_mlkem_sharedkey_lock_to_lock_kv23_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_read[2].read_entry >= KV_OCP_LOCK_SLOT_LOW) & ((`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value,16))
+                                                )
+                                    else $display("SVA ERROR: MLKEM sharedkey mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);
+
+          kv_mlkem_sharedkey_w_lock_to_std_illegal_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_read[2].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                                )
+                                    else $display("SVA ERROR: Unexpected MLKEM sharedkey write to illegal slot in LOCK to STD flow in OCP LOCK mode!");
+
+          kv_mlkem_sharedkey_w_std_to_lock_illegal_flow: assert property (
+                                                @(posedge `SVA_RDC_CLK)
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_read[2].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                                )
+                                    else $display("SVA ERROR: Unexpected MLKEM sharedkey write to illegal slot in STD to LOCK flow in OCP LOCK mode!");
+          
+`endif
       end
     end
   endgenerate
@@ -210,34 +267,89 @@ module caliptra_top_sva
       //mldsa seed read
       kv_mldsa_seed_r_flow:   assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            $rose(`ABR_PATH.kv_mldsa_seed_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`ABR_PATH.kv_read[0].read_entry].last_dword.value + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_read[0].read_entry][dword].data.value == `ABR_PATH.mldsa_seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword])
+                                            $rose(`ABR_PATH.kv_mldsa_seed_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`ABR_PATH.kv_read[0].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ABR_PATH.kv_read[0].read_entry == 23)) ? (`ABR_PATH.mldsa_seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_read[0].read_entry][dword].data.value == `ABR_PATH.mldsa_seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword])
                                             )
                                 else $display("SVA ERROR: MLDSA seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_read[0].read_entry][dword].data.value, `ABR_PATH.mldsa_seed_reg[(MLDSA_SEED_NUM_DWORDS-1) - dword]);
       end
 
       //hmac block read
+      //If ocp_lock_in_progress = 1 && kv_read_entry == 23, block is not read
+      //If ocp_lock_in_progress = 0, block is read from any slot
       kv_hmac_block_r_flow:     assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            $rose(`HMAC_PATH.kv_block_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].last_dword.value + 1)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword].data.value == `HMAC_PATH.block_reg[dword])
+                                            $rose(`HMAC_PATH.kv_block_done) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`HMAC_PATH.block_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword].data.value == `HMAC_PATH.block_reg[dword])
                                             )
                                 else $display("SVA ERROR: HMAC384 block mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[1].read_entry][dword].data.value, `HMAC_PATH.block_reg[dword]);
 
       //hmac key read
+      //If ocp_lock_in_progress = 1 && kv_read_entry == 23, key is not read
+      //If ocp_lock_in_progress = 0, key is read from any slot
       if (dword < HMAC_KEY_NUM_DWORDS) begin
         kv_hmac_key_r_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`HMAC_PATH.kv_key_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value == `HMAC_PATH.key_reg[dword])
+                                              $fell(`HMAC_PATH.kv_key_write_en) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`HMAC_PATH.key_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value == `HMAC_PATH.key_reg[dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 key mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value, `HMAC_PATH.key_reg[dword]);
       end
 
       //hmac tag write
+      //If KV entry != 23 && hmac reads key/block/lfsr seed from non-23 KV slot, tag is written (std_to_std or lock_to_lock)
+      //If KV entry != 23 && hmac reads key/block/lfsr seed from KV23 && ocp_lock_in_progress = 1, tag is not written
+      //If KV entry == 23 && ocp_lock_in_progress = 0, tag is written
+      //If KV entry == 23 && ocp_lock_in_progress = 1, tag is not written
+      /*
+      If ocp_lock_in_progress = 1:
+      Key read (input)       Block read (input)      Tag write (output)      Allowed?
+      -------------------------------------------------------------------------------------------------------------
+      STD                    STD                     STD                     Yes
+      LOCK                   LOCK                    LOCK (!= KV23)          Yes
+      LOCK                   LOCK                    LOCK (== KV23)          No
+      STD                    LOCK                    STD                     No
+      LOCK                   STD                     LOCK                    No
+      STD                    STD                     LOCK                    No
+      LOCK                   LOCK                    STD                     No
+
+      If ocp_lock_in_progress = 0:
+      hmac key/block can be read from any KV entry, tag is written to any KV entry
+      */
       if (dword < HMAC_TAG_NUM_DWORDS) begin
         kv_hmac_tag_w_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              `HMAC_PATH.kv_write_done |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
+                                              (`HMAC_PATH.kv_write_done & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 tag mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);                    
+
+        kv_hmac_tag_w_std_to_std_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: HMAC384 tag mismatch for STD to STD flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);
+        kv_hmac_tag_w_lock_to_lock_nonkv23_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & ((`HMAC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> `HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: HMAC384 tag mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);
+`ifndef VERILATOR
+        kv_hmac_tag_w_lock_to_lock_kv23_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> ~`HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value,16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected HMAC384 tag write to KV23 in LOCK to LOCK flow in OCP LOCK mode!");
+
+        kv_hmac_tag_w_std_to_lock_illegal_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value,16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected HMAC384 tag write to illegal slot in STD to LOCK flow in OCP LOCK mode!");
+
+        kv_hmac_tag_w_lock_to_std_illegal_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value,16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected HMAC384 tag write to illegal slot in LOCK to STD flow in OCP LOCK mode!");
+
+
+`endif
       end
       
       // ECC
@@ -245,20 +357,53 @@ module caliptra_top_sva
         //ecc privkey read
         kv_ecc_privkey_r_flow:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`ECC_PATH.kv_privkey_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              $fell(`ECC_PATH.kv_privkey_write_en) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.privkey_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey read mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value, `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         kv_ecc_seed_r_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`ECC_PATH.kv_seed_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              $fell(`ECC_PATH.kv_seed_write_en) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value, `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         //ecc privkey write
         kv_ecc_privkey_w_flow:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              (`ECC_PATH.kv_write_done && (`ECC_PATH.kv_write_error == 0)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              (`ECC_PATH.kv_write_done && (`ECC_PATH.kv_write_error == 0) & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey write mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+
+        kv_ecc_privkey_w_std_to_std_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ECC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: ECC privkey mismatch for STD to STD flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+        
+        kv_ecc_privkey_w_lock_to_lock_nonkv23_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> `ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              )
+                                  else $display("SVA ERROR: ECC privkey mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
+`ifndef VERILATOR
+        kv_ecc_privkey_w_lock_to_lock_kv23_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected ECC privkey write to KV23 in LOCK to LOCK flow in OCP LOCK mode!");
+
+        kv_ecc_privkey_w_std_to_lock_illegal_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected ECC privkey write to illegal slot in STD to LOCK flow in OCP LOCK mode!");
+
+        kv_ecc_privkey_w_lock_to_std_illegal_flow: assert property (
+                                              @(posedge `SVA_RDC_CLK)
+                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                              )
+                                  else $display("SVA ERROR: Unexpected ECC privkey write to illegal slot in LOCK to STD flow in OCP LOCK mode!");
+
+`endif
+
 
         //ecc sign r
         pcr_ecc_sign_r:    assert property (
@@ -394,139 +539,174 @@ module caliptra_top_sva
   `endif
 
   `ifndef VERILATOR
-  //MLDSA data checks
-  generate
-    begin: MLDSA_keygen_data_check
-      for (genvar dword = 0; dword < PRIVKEY_REG_NUM_DWORDS; dword++) begin
-        MLDSA_privkey_0_31_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_PATH.abr_scratch_reg.raw[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[dword][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[dword][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[dword][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[dword][31:24]}))
-        )
-        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`ABR_PATH.abr_scratch_reg.raw[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[dword][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[dword][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[dword][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[dword][31:24]}, dword);
-      end
+  // MLDSA Checks
 
-      for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
-        MLDSA_privkey_even_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][31:24]}))
-        )
-        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+(2*dword)][31:24]}, PRIVKEY_REG_NUM_DWORDS+(2*dword));
-      end
+  // Helper function for byte swapping
+  function automatic logic [31:0] byte_swap(logic [31:0] data);
+    return {data[7:0], data[15:8], data[23:16], data[31:24]};
+  endfunction
 
-      for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
-        MLDSA_privkey_odd_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] == {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][31:24]}))
-        )
-        else $display("SVA ERROR: [MLDSA keygen] SK output %h does not match expected SK %h at index %h",`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword], {`SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][7:0], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][15:8], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][23:16], `SERVICES_PATH.mldsa_test_vector.privkey[PRIVKEY_REG_NUM_DWORDS+1+(2*dword)][31:24]}, PRIVKEY_REG_NUM_DWORDS+1+(2*dword));
-      end
-
-      for (genvar dword = 0; dword < 8; dword++) begin
-        MLDSA_pubkey_0_7_data_check: assert property (
-          @(posedge `SVA_RDC_CLK)
-          disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-          (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_PATH.abr_scratch_reg.raw[dword] == {`SERVICES_PATH.mldsa_test_vector.pubkey[dword][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][31:24]}))
-        )
-        else $display("SVA ERROR: [MLDSA keygen] PK output %h does not match expected PK %h at index %h", `ABR_PATH.abr_scratch_reg.raw[dword], {`SERVICES_PATH.mldsa_test_vector.pubkey[dword][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[dword][31:24]}, dword);
+  // Function to check all private key data (registers + memory banks)
+  function automatic logic check_mldsa_privkey();
+    // Check scratch registers (0 to PRIVKEY_REG_NUM_DWORDS-1)
+    for (int dword = 0; dword < PRIVKEY_REG_NUM_DWORDS; dword++) begin
+      logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.privkey[dword]);
+      if (`ABR_PATH.abr_scratch_reg.raw[dword] != expected) begin
+        $display("SVA ERROR: [MLDSA keygen] SK register %h does not match expected %h at index %h", 
+                 `ABR_PATH.abr_scratch_reg.raw[dword], expected, dword);
+        return 1'b0;
       end
     end
-  endgenerate
-  generate
-    begin: MLDSA_pubkey_data_check
-      for (genvar i = 0; i < 64; i++) begin
-        for (genvar j = 0; j < 10; j++) begin
-          MLDSA_pubkey_8_647_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-            (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][31:24]}))
-          )
-          else $display("SVA ERROR: [MLDSA keygen] PK output %h does not match expected PK %h at index %0d %0d", `ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][7:0], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][15:8], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][23:16], `SERVICES_PATH.mldsa_test_vector.pubkey[i*10+8+j][31:24]}, i, j);
+    
+    // Check even memory bank (bank0)
+    for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
+      int idx = PRIVKEY_REG_NUM_DWORDS + (2*dword);
+      logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.privkey[idx]);
+      if (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] != expected) begin
+        $display("SVA ERROR: [MLDSA keygen] SK bank0 %h does not match expected %h at index %h",
+                 `ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword], expected, idx);
+        return 1'b0;
+      end
+    end
+    
+    // Check odd memory bank (bank1)
+    for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
+      int idx = PRIVKEY_REG_NUM_DWORDS + 1 + (2*dword);
+      logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.privkey[idx]);
+      if (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] != expected) begin
+        $display("SVA ERROR: [MLDSA keygen] SK bank1 %h does not match expected %h at index %h",
+                 `ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword], expected, idx);
+        return 1'b0;
+      end
+    end
+    
+    return 1'b1;
+  endfunction
+
+  // Function to check all public key data (registers + memory)
+  function automatic logic check_mldsa_pubkey();
+    // Check first 8 dwords in scratch registers
+    for (int dword = 0; dword < 8; dword++) begin
+      logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.pubkey[dword]);
+      if (`ABR_PATH.abr_scratch_reg.raw[dword] != expected) begin
+        $display("SVA ERROR: [MLDSA keygen] PK register %h does not match expected %h at index %h", 
+                 `ABR_PATH.abr_scratch_reg.raw[dword], expected, dword);
+        return 1'b0;
+      end
+    end
+    
+    // Check public key memory (64x10 array)
+    for (int i = 0; i < 64; i++) begin
+      for (int j = 0; j < 10; j++) begin
+        int idx = i*10 + 8 + j;
+        logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.pubkey[idx]);
+        logic [31:0] actual = {`ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][(j*4)+3],
+                               `ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][(j*4)+2],
+                               `ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][(j*4)+1],
+                               `ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][(j*4)+0]};
+        if (actual != expected) begin
+          $display("SVA ERROR: [MLDSA keygen] PK memory %h does not match expected %h at index %0d %0d", 
+                   actual, expected, i, j);
+          return 1'b0;
         end
       end
     end
-  endgenerate
-  generate
-    begin: MLDSA_signature_data_check
-      for (genvar dword = 0; dword < SIGNATURE_H_NUM_DWORDS; dword++) begin
-        MLDSA_signature_16_36_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
-            (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS+dword] == {`SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][7:0], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][15:8], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][23:16], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][31:24]}))
-        )
-        else $display("SVA ERROR: [MLDSA signing] Signature output %h does not match expected signature %h at index %h",`ABR_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS+dword], {`SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][7:0], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][15:8], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][23:16], `SERVICES_PATH.mldsa_test_vector.signature[(SIGNATURE_NUM_DWORDS-1)-((SIGNATURE_H_NUM_DWORDS-1)-dword)][31:24]}, SIGNATURE_C_NUM_DWORDS+dword);
-      end
+    
+    return 1'b1;
+  endfunction
 
-      for (genvar dword = 0; dword < SIGNATURE_C_NUM_DWORDS; dword++) begin
-        MLDSA_signature_0_15_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
-            (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_PATH.signature_reg.raw[dword] == {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}))
-        )
-        else $display("SVA ERROR: [MLDSA signing] Signature output %h does not match expected signature %h at index %h",`ABR_PATH.signature_reg.raw[dword], {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}, dword);
+  // Function to check signature data
+  function automatic logic check_mldsa_signature();
+    // Check signature C portion (0 to SIGNATURE_C_NUM_DWORDS-1)
+    for (int dword = 0; dword < SIGNATURE_C_NUM_DWORDS; dword++) begin
+      logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.signature[dword]);
+      if (`ABR_PATH.signature_reg.raw[dword] != expected) begin
+        $display("SVA ERROR: [MLDSA signing] Signature C %h does not match expected %h at index %h",
+                 `ABR_PATH.signature_reg.raw[dword], expected, dword);
+        return 1'b0;
       end
     end
-  endgenerate
-  generate
-    begin: MLDSA_sig_z_data_check
-      for (genvar i = 0; i < 224; i++) begin
-        for (genvar j = 0; j < 5; j++) begin
-          MLDSA_sig_37_1135_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
-            (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> (`ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}))
-          )
-          else $display("SVA ERROR: [MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", `ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}, i, j);
+    
+    // Check signature H portion (SIGNATURE_C_NUM_DWORDS to SIGNATURE_C_NUM_DWORDS+SIGNATURE_H_NUM_DWORDS-1)
+    for (int dword = 0; dword < SIGNATURE_H_NUM_DWORDS; dword++) begin
+      int sig_idx = (SIGNATURE_NUM_DWORDS-1) - ((SIGNATURE_H_NUM_DWORDS-1) - dword);
+      logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.signature[sig_idx]);
+      if (`ABR_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS + dword] != expected) begin
+        $display("SVA ERROR: [MLDSA signing] Signature H %h does not match expected %h at index %h",
+                 `ABR_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS + dword], expected, SIGNATURE_C_NUM_DWORDS + dword);
+        return 1'b0;
+      end
+    end
+    
+    // Check signature Z portion in memory (224x5 array)
+    for (int i = 0; i < 224; i++) begin
+      for (int j = 0; j < 5; j++) begin
+        int sig_idx = i*5+16+j;
+        logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.signature[sig_idx]);
+        logic [31:0] actual = {`ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][(j*4)+3],
+                               `ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][(j*4)+2],
+                               `ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][(j*4)+1],
+                               `ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][(j*4)+0]};
+        
+        if (actual != expected) begin
+          $display("SVA ERROR: [MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", 
+                   actual, expected, i, j);
+          return 1'b0;
         end
       end
     end
-  endgenerate
-  generate
-    begin: MLDSA_verify_data_check
-      for (genvar dword = 0; dword < VERIFY_RES_NUM_DWORDS; dword++) begin
-        MLDSA_verify_res_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-            ((`SERVICES_PATH.mldsa_verify && `ABR_PATH.abr_status_done) |=> (`ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword] == {`SERVICES_PATH.mldsa_test_vector.verify_res[(VERIFY_RES_NUM_DWORDS-1)-dword][7:0], `SERVICES_PATH.mldsa_test_vector.verify_res[(VERIFY_RES_NUM_DWORDS-1)-dword][15:8], `SERVICES_PATH.mldsa_test_vector.verify_res[(VERIFY_RES_NUM_DWORDS-1)-dword][23:16], `SERVICES_PATH.mldsa_test_vector.verify_res[(VERIFY_RES_NUM_DWORDS-1)-dword][31:24]}))
-        )
-        else $display("SVA ERROR: [MLDSA verify] Verify output %h does not match expected verify res %h at index %h",`ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword], {`SERVICES_PATH.mldsa_test_vector.verify_res[(VERIFY_RES_NUM_DWORDS-1)-dword][7:0], `SERVICES_PATH.mldsa_test_vector.verify_res[(VERIFY_RES_NUM_DWORDS-1)-dword][15:8], `SERVICES_PATH.mldsa_test_vector.verify_res[(VERIFY_RES_NUM_DWORDS-1)-dword][23:16], `SERVICES_PATH.mldsa_test_vector.verify_res[(VERIFY_RES_NUM_DWORDS-1)-dword][31:24]}, dword);
+
+    return 1'b1;
+  endfunction
+
+  // Function to check all MLDSA verify results at once  
+  function automatic logic check_mldsa_verify_results();
+    for (int dword = 0; dword < VERIFY_RES_NUM_DWORDS; dword++) begin
+      logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.verify_res[dword]);
+      
+      if (`ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword] != expected) begin
+        $display("SVA ERROR: [MLDSA verify] Verify output %h does not match expected verify res %h at index %h",
+                 `ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword], expected, dword);
+        return 1'b0;
       end
     end
-  endgenerate
+    return 1'b1;
+  endfunction
 
-  generate
-    begin: PCR_MLDSA_Signing
-      //MLDSA_signature_data_check
-      for (genvar dword = 0; dword < SIGNATURE_C_NUM_DWORDS; dword++) begin
-        PCR_MLDSA_signature_0_15_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            (`SERVICES_PATH.check_pcr_mldsa_signing |->  (`ABR_PATH.signature_reg.enc.c[dword] == {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}))
-        )
-        else $display("SVA ERROR: [PCR MLDSA signing] Signature output %h does not match expected signature %h at index %h",`ABR_PATH.signature_reg.enc.c[dword], {`SERVICES_PATH.mldsa_test_vector.signature[dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[dword][31:24]}, dword);
-      end
+  // Consolidated assertions
+  MLDSA_keygen_privkey_comprehensive: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+    (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> 
+     check_mldsa_privkey())
+  )
+  else $display("SVA ERROR: [MLDSA keygen] Private key verification failed");
 
-      for (genvar dword = 0; dword < SIGNATURE_H_NUM_DWORDS; dword++) begin
-        PCR_MLDSA_signature_16_36_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-            (`SERVICES_PATH.check_pcr_mldsa_signing |-> (`ABR_PATH.signature_reg.enc.h[dword] == {`SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][31:24]}))
-        )
-        else $display("SVA ERROR: [PCR MLDSA signing] Signature output %h does not match expected signature %h at index %h",`ABR_PATH.signature_reg.enc.h[dword], {`SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][7:0], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][15:8], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][23:16], `SERVICES_PATH.mldsa_test_vector.signature[SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword][31:24]}, SIGNATURE_C_NUM_DWORDS+SIGNATURE_Z_NUM_DWORDS+dword);
-      end
+  MLDSA_keygen_pubkey_comprehensive: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+    (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> 
+     check_mldsa_pubkey())
+  )
+  else $display("SVA ERROR: [MLDSA keygen] Public key verification failed");
 
-     //MLDSA_sig_z_data_check
-      for (genvar i = 0; i < 224; i++) begin
-        for (genvar j = 0; j < 5; j++) begin
-          PCR_MLDSA_sig_37_1135_data_check: assert property (
-            @(posedge `SVA_RDC_CLK)
-           (`SERVICES_PATH.check_pcr_mldsa_signing |-> (`ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][j*4+3:j*4] == {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}))
-          )
-          else $display("SVA ERROR: [PCR MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", `ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][j*4+3:j*4], {`SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][7:0], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][15:8], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][23:16], `SERVICES_PATH.mldsa_test_vector.signature[i*5+16+j][31:24]}, i, j);
-        end
-      end
-    end
-  endgenerate
+  MLDSA_signature_comprehensive: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
+    (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing || `SERVICES_PATH.check_pcr_mldsa_signing) && `ABR_PATH.abr_status_done) |=> 
+     check_mldsa_signature())
+  )
+  else $display("SVA ERROR: [MLDSA signing] Signature verification failed");
+
+  MLDSA_verify_comprehensive: assert property (
+    @(posedge `SVA_RDC_CLK iff (`SERVICES_PATH.mldsa_verify || `ABR_PATH.abr_status_done))
+    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+    ((`SERVICES_PATH.mldsa_verify && `ABR_PATH.abr_status_done) |=> 
+     check_mldsa_verify_results())
+  )
+  else $display("SVA ERROR: [MLDSA verify] Verification result check failed");
+
+
   // MLDSA Scan, Debug and Zeroization Assertions
   generate
     // Check abr_scratch_reg (accessed via its raw field) word-by-word using MLDSA_PRIVKEY_REG_NUM_DWORDS
@@ -643,40 +823,47 @@ module caliptra_top_sva
       else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata0_bank[%0d] is not zero", i);
     end
   endgenerate
-  generate
-    begin: MLDSA_mem_zeroize_check
-      // Check bank0 memory: even addresses from the private key memory
-      for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin: bank0_zero_check
-        ZERO_MLDSA_sk_mem_bank0_zero: assert property (
-            @(posedge `SVA_RDC_CLK)
-            $rose(`ABR_PATH.zeroize_mem_done) |-> 
-            (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] == 0)
-        )
-        else $display("SVA ERROR: [MLDSA zeroize] SK bank0 at index %0d is not zero", dword);
-      end
   
-      // Check bank1 memory: odd addresses from the private key memory
-      for (genvar dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin: bank1_zero_check
-        ZERO_MLDSA_sk_mem_bank1_zero: assert property (
-            @(posedge `SVA_RDC_CLK)
-            $rose(`ABR_PATH.zeroize_mem_done) |-> 
-            (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] == 0)
-        )
-        else $display("SVA ERROR: [MLDSA zeroize] SK bank1 at index %0d is not zero", dword);
+  // Function to check all SK memory banks are zero
+  function automatic logic check_mldsa_sk_memory_zero();
+    // Check bank0 memory (even addresses)
+    for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
+      if (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] != 0) begin
+        $display("SVA ERROR: [MLDSA zeroize] SK bank0 at index %0d is not zero: %h", 
+                 dword, `ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword]);
+        return 1'b0;
       end
-
-      // Assertion to check that `ABR_PATH.zeroize_mem_done` transitions from low to high 
-      // when (`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) is active
-      ZEROIZE_MEM_DONE_TRANSITION: assert property (
-        @(posedge `SVA_RDC_CLK)
-        $rose(`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |=> 
-        ( !`ABR_PATH.zeroize_mem_done )[*0:$] ##1 
-        $rose(`ABR_PATH.zeroize_mem_done)
-      )
-      else $display("SVA ERROR: [MLDSA zeroize] zeroize_mem_done did not rise when expected");
-
     end
-  endgenerate
+    
+    // Check bank1 memory (odd addresses)  
+    for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
+      if (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] != 0) begin
+        $display("SVA ERROR: [MLDSA zeroize] SK bank1 at index %0d is not zero: %h", 
+                 dword, `ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword]);
+        return 1'b0;
+      end
+    end
+    
+    return 1'b1;
+  endfunction
+
+  // Consolidated zeroization assertions
+  MLDSA_sk_memory_zero_comprehensive: assert property (
+    @(posedge `SVA_RDC_CLK)
+    $rose(`ABR_PATH.zeroize_mem_done) |-> check_mldsa_sk_memory_zero()
+  )
+  else $display("SVA ERROR: [MLDSA zeroize] SK memory zeroization verification failed");
+
+  // Assertion to check that `ABR_PATH.zeroize_mem_done` transitions from low to high 
+  // when (`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) is active
+  ZEROIZE_MEM_DONE_TRANSITION: assert property (
+    @(posedge `SVA_RDC_CLK)
+    $rose(`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |=> 
+    ( !`ABR_PATH.zeroize_mem_done )[*0:$] ##1 
+    $rose(`ABR_PATH.zeroize_mem_done)
+  )
+  else $display("SVA ERROR: [MLDSA zeroize] zeroize_mem_done did not rise when expected");
+
 
   
 
@@ -870,6 +1057,39 @@ module caliptra_top_sva
                                     else $display("SVA ERROR: KV client %0d data is unknown", client);
     end
   endgenerate
+
+  //KV read error check
+  //If ocp_lock_in_progress = 1, kv23 read is not allowed. Other slots can be read
+  //If ocp_lock_in_progress = 0, kv23 read is allowed
+  // localparam KV_SUCCESS = 0; //TODO: resolve pkg warning during build
+  // localparam KV_READ_FAIL = 1;
+  // localparam KV_WRITE_FAIL = 2;
+
+  hmac_key_kv23_read_error_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            ($fell(`HMAC_PATH.kv_key_write_en) & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  `KEYVAULT_PATH.kv_read[0].read_entry == 23) |-> /*(`KEYVAULT_PATH.kv_rd_resp[0].error == 1'b1)*/ (`HMAC_PATH.hmac_key_kv_read.error_code == 1)
+                                            )
+                            else $display("SVA ERROR: KV read error not set for KV23 read when ocp_lock_in_progress = 1");
+
+  hmac_key_kv_others_read_error_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            ($fell(`HMAC_PATH.kv_key_write_en) & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  (`KEYVAULT_PATH.kv_read[0].read_entry != 23) & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].dest_valid.value[0])) |-> /*(`KEYVAULT_PATH.kv_rd_resp[0].error == 1'b0)*/ (`HMAC_PATH.hmac_key_kv_read.error_code == 0)
+                                            )
+                            else $display("SVA ERROR: KV read error set when ocp_lock_in_progress = 1 for non-KV23 read");
+
+  hmac_block_kv23_read_error_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            ($rose(`HMAC_PATH.kv_block_done) & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  `KEYVAULT_PATH.kv_read[1].read_entry == 23) |-> /*(`KEYVAULT_PATH.kv_rd_resp[0].error == 1'b1)*/ (`HMAC_PATH.hmac_block_kv_read.error_code == 1)
+                                            )
+                            else $display("SVA ERROR: KV read error not set for KV23 read when ocp_lock_in_progress = 1");
+
+  hmac_block_kv_others_read_error_check: assert property (
+                                            @(posedge `SVA_RDC_CLK)
+                                            ($rose(`HMAC_PATH.kv_block_done) &`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  `KEYVAULT_PATH.kv_read[1].read_entry != 23 & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].dest_valid.value[1])) |-> /*(`KEYVAULT_PATH.kv_rd_resp[1].error == 1'b0)*/ (`HMAC_PATH.hmac_block_kv_read.error_code == 0)
+                                            )
+                            else $display("SVA ERROR: KV read error set when ocp_lock_in_progress = 1 for non-KV23 read");
+
+                            
   
   //WDT checks:
   cascade_wdt_t1_pet: assert property (

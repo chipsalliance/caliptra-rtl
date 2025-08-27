@@ -88,7 +88,7 @@ void main() {
     if (rst_count == 1) {
     
     //VPRINTF(LOW,"Rand UDS\n");
-    VPRINTF(LOW, "Rand UDS\n");
+    printf("Rand UDS\n");
 
     //Start UDS and store in KV3
     SEND_STDOUT_CTRL(0xec);
@@ -167,7 +167,7 @@ void main() {
     }
     else if (rst_count == 4) {
         SEND_STDOUT_CTRL(0xec); //Generate rand UDS vector
-        SEND_STDOUT_CTRL(0xb5); //Running DOE when scan_mode is enbaled
+        SEND_STDOUT_CTRL(0xb9); //Running DOE when scan_mode is enbaled
 
         if ((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK) == 0){
             VPRINTF(ERROR,"\nParallel Crypto error is not detected\n");

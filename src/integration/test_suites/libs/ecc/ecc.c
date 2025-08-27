@@ -41,7 +41,7 @@ void ecc_zeroize(){
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
 }
 
-void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y){
+void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, BOOL check_result){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -100,6 +100,16 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
     // Enable ECC KEYGEN core
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
 
+    //Try to modify keyvault controls during operation
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, (ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                    ((!seed.kv_id << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+
+    // Try to overwrite ECC SEED
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SEED_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SEED_11) {
+        *reg_ptr++ = 0;
+    }
+
     // wait for ECC KEYGEN process to be done
     wait_for_ecc_intr();
     
@@ -127,37 +137,39 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
         }
     }
 
-    // Read the data back from ECC register
-    VPRINTF(LOW, "Load PUBKEY_X data from ECC\n");
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
-        ecc_pubkey_x[offset] = *reg_ptr;
-        if (ecc_pubkey_x[offset] != pubkey_x.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], ecc_pubkey_x data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_pubkey_x[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey_x.data[offset]);
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        } 
-        reg_ptr++;
-        offset++;
-    }
-
-    VPRINTF(LOW, "Load PUBKEY_Y data from ECC\n");
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
-        ecc_pubkey_y[offset] = *reg_ptr;
-        if (ecc_pubkey_y[offset] != pubkey_y.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], ecc_pubkey_y data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_pubkey_y[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey_y.data[offset]);
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
+    if (check_result == TRUE) {
+        // Read the data back from ECC register
+        VPRINTF(LOW, "Load PUBKEY_X data from ECC\n");
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
+            ecc_pubkey_x[offset] = *reg_ptr;
+            if (ecc_pubkey_x[offset] != pubkey_x.data[offset]) {
+                VPRINTF(ERROR, "At offset [%d], ecc_pubkey_x data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_pubkey_x[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey_x.data[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            } 
+            reg_ptr++;
+            offset++;
         }
-        reg_ptr++;
-        offset++;
+
+        VPRINTF(LOW, "Load PUBKEY_Y data from ECC\n");
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
+            ecc_pubkey_y[offset] = *reg_ptr;
+            if (ecc_pubkey_y[offset] != pubkey_y.data[offset]) {
+                VPRINTF(ERROR, "At offset [%d], ecc_pubkey_y data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_pubkey_y[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey_y.data[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+            reg_ptr++;
+            offset++;
+        }
     }
     
 }
@@ -228,6 +240,16 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
     // Enable ECC SHAREDKEY core
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
 
+    //Try to modify keyvault controls during operation
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                                                  ((!privkey.kv_id << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
+
+    // Try to overwrite ECC PRIVKEY
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
+        *reg_ptr++ = 0;
+    }
+
     // wait for ECC KEYGEN process to be done
     wait_for_ecc_intr();
     
@@ -257,7 +279,7 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
     
 }
 
-void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s){
+void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s, BOOL check_result){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -314,40 +336,52 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     VPRINTF(LOW, "\nECC SIGNING\n");
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
     
+    //Try to modify keyvault controls during operation
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                                                  ((!privkey.kv_id << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
+
+    // Try to overwrite ECC PRIVKEY
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
+        *reg_ptr++ = 0;
+    }
+
     // wait for ECC SIGNING process to be done
     wait_for_ecc_intr();
     
-    // Read the data back from ECC register
-    VPRINTF(LOW, "Load SIGN_R data from ECC\n");
-    reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
-        ecc_sign_r[offset] = *reg_ptr;
-        if (ecc_sign_r[offset] != sign_r.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_r[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", sign_r.data[offset]);
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
+    if (check_result == TRUE) {
+        // Read the data back from ECC register
+        VPRINTF(LOW, "Load SIGN_R data from ECC\n");
+        reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
+            ecc_sign_r[offset] = *reg_ptr;
+            if (ecc_sign_r[offset] != sign_r.data[offset]) {
+                VPRINTF(ERROR, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_r[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", sign_r.data[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+            reg_ptr++;
+            offset++;
         }
-        reg_ptr++;
-        offset++;
-    }
 
-    VPRINTF(LOW, "Load SIGN_S data from ECC\n");
-    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
-        ecc_sign_s[offset] = *reg_ptr;
-        if (ecc_sign_s[offset] != sign_s.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_s[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", sign_s.data[offset]);
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        } 
-        reg_ptr++;
-        offset++;
+        VPRINTF(LOW, "Load SIGN_S data from ECC\n");
+        reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
+            ecc_sign_s[offset] = *reg_ptr;
+            if (ecc_sign_s[offset] != sign_s.data[offset]) {
+                VPRINTF(ERROR, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", ecc_sign_s[offset]);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", sign_s.data[offset]);
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            } 
+            reg_ptr++;
+            offset++;
+        }
     }
 
 }
@@ -446,6 +480,17 @@ void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s){
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
+
+    //Try to modify keyvault controls during operation
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                                                  ((0xFF << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
+
+    // Try to overwrite ECC PRIVKEY
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
+        *reg_ptr++ = 0;
+    }
+
     // wait for ECC SIGNING process to be done
     wait_for_ecc_intr();
     

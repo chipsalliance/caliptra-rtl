@@ -29,7 +29,7 @@ inline void doe_set_ctrl(const enum doe_cmd_e cmd, uint32_t kv_dest) {
  * @param iv_data_uds Init Vector for UDS. Pointer to 4-entry array of 32-bit values
  * @param iv_data_fe Init Vector for Field Entropy. Pointer to 4-entry array of 32-bit values
  */
-void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_hek, uint32_t kv_dest_fe) {
+void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_hek, uint32_t kv_dest_uds, uint32_t kv_dest_fe, uint32_t kv_dest_hek) {
     uint8_t offset;
     uint32_t* reg_ptr;
 
@@ -45,7 +45,7 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_
 
     //start UDS and store in KV0
     VPRINTF(MEDIUM,"DOE: Starting UDS Deobfuscation flow\n");
-    doe_set_ctrl(DOE_UDS, 0);
+    doe_set_ctrl(DOE_UDS, kv_dest_uds);
 
     // Check that UDS flow is done
     while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
@@ -76,10 +76,8 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_
     }
 
     if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) {
-        //start HEK and store in KV22
-        // FIXME -- DOE should force result to KV22?
         VPRINTF(MEDIUM,"DOE: Starting HEK Deobfuscation flow\n");
-        doe_set_ctrl(DOE_HEK, DOE_HEK_DES); // FIXME magic number
+        doe_set_ctrl(DOE_HEK, kv_dest_hek);
 
         // Check that HEK flow is done
         while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);

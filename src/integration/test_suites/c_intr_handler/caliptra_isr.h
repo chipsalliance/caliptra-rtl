@@ -17,7 +17,6 @@
 // Description:
 //     Provides function declarations for use by external test files, so
 //     that the ISR functionality may behave like a library.
-//     TODO:
 //     This header file includes inline function definitions for event and
 //     test specific interrupt service behavior, so it should be copied and
 //     modified for each test.
