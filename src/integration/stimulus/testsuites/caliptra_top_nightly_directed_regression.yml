@@ -29,6 +29,8 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecdh/smoke_test_ecdh.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_short_1_dword/smoke_test_dma_aes_gcm_short_1_dword.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_long/smoke_test_dma_aes_gcm_long.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_short_dword/smoke_test_dma_aes_gcm_short_dword.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_non_gcm_en_dec/smoke_test_dma_aes_gcm_non_gcm_en_dec.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_rd_enc_axi_err/smoke_test_dma_aes_gcm_rd_enc_axi_err.yml

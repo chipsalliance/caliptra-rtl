@@ -139,7 +139,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   uint32_t length;
   uint32_t num_bytes;
   uint32_t masked = 0;
-  uint32_t read_payload[100];
+  uint32_t read_payload[aes_input.text_len/4];
   uint8_t  gcm_mode = mode == AES_GCM;
   uint8_t  src_fixed = 0;
   uint8_t  dst_fixed = 0;
