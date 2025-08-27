@@ -100,6 +100,16 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
     // Enable ECC KEYGEN core
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
 
+    //Try to modify keyvault controls during operation
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, (ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                    ((!seed.kv_id << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+
+    // Try to overwrite ECC SEED
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SEED_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SEED_11) {
+        *reg_ptr++ = 0;
+    }
+
     // wait for ECC KEYGEN process to be done
     wait_for_ecc_intr();
     
@@ -230,6 +240,16 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
     // Enable ECC SHAREDKEY core
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
 
+    //Try to modify keyvault controls during operation
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                                                  ((!privkey.kv_id << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
+
+    // Try to overwrite ECC PRIVKEY
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
+        *reg_ptr++ = 0;
+    }
+
     // wait for ECC KEYGEN process to be done
     wait_for_ecc_intr();
     
@@ -316,6 +336,16 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     VPRINTF(LOW, "\nECC SIGNING\n");
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
     
+    //Try to modify keyvault controls during operation
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                                                  ((!privkey.kv_id << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
+
+    // Try to overwrite ECC PRIVKEY
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
+        *reg_ptr++ = 0;
+    }
+
     // wait for ECC SIGNING process to be done
     wait_for_ecc_intr();
     
@@ -450,6 +480,17 @@ void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s){
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
+
+    //Try to modify keyvault controls during operation
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                                                  ((0xFF << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
+
+    // Try to overwrite ECC PRIVKEY
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
+        *reg_ptr++ = 0;
+    }
+
     // wait for ECC SIGNING process to be done
     wait_for_ecc_intr();
     

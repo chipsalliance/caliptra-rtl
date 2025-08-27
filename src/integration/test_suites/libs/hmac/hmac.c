@@ -133,6 +133,13 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
                                                 (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
     }
 
+    // Try to toggle key vault controls during operation
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
+                                                    ((!key.kv_id << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_EN_MASK |
+                                                    ((!block.kv_id << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK));
+
+
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
@@ -267,6 +274,12 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
         lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
     }
+
+    // Try to toggle key vault controls during operation
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
+                                                    ((!key.kv_id << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_EN_MASK |
+                                                    ((!block.kv_id << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK));
 
     // wait for HMAC process to be done
     wait_for_hmac_intr();
@@ -404,6 +417,12 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
     }
 
+    // Try to toggle key vault controls during operation
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
+                                                    ((!key.kv_id << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_EN_MASK |
+                                                    ((!block.kv_id << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK));
+
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
@@ -468,6 +487,13 @@ void hmac512_flow_csr(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag
                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW) |
                                                 (HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK));
     }
+
+    
+    // Try to toggle key vault controls during operation
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
+                                                    ((!key.kv_id << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_EN_MASK |
+                                                    ((!block.kv_id << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK));
 
     // wait for HMAC process to be done
     wait_for_hmac_intr();

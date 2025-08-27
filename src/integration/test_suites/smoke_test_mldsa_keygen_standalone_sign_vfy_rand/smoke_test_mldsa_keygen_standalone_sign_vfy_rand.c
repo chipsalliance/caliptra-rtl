@@ -53,6 +53,8 @@ void main() {
     // // wait for MLDSA KEYGEN process to be done
     wait_for_mldsa_intr();
 
+    SEND_STDOUT_CTRL(0xd8); //clear mldsa checking
+
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
@@ -70,6 +72,8 @@ void main() {
     // // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
+    SEND_STDOUT_CTRL(0xd8); //clear mldsa checking
+
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
@@ -86,6 +90,8 @@ void main() {
 
     // // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
+
+    SEND_STDOUT_CTRL(0xd8); //clear mldsa checking
 
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;

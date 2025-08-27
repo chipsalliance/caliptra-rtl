@@ -64,7 +64,7 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
 
     //Program mlkem seed
     if(seed.kv_intf){
-        // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
+        // Program MLKEM_SEED Read
         lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
@@ -96,7 +96,11 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     // Enable MLKEM KEYGEN flow
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
 
-    // // wait for MLKEM KEYGEN process to be done
+    // Try to program MLKEM_SEED Read
+    lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
+                                                    ((!seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
+
+    // wait for MLKEM KEYGEN process to be done
     wait_for_mlkem_intr();
     
     // Read the data back from MLKEM register
@@ -149,7 +153,7 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
 
     //Program mlkem seed
     if(seed.kv_intf){
-        // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
+        // Program MLKEM_SEED Read
         lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
@@ -213,6 +217,10 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     // Enable MLKEM KEYGEN flow
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
 
+    // Try to program MLKEM_SEED Read
+    lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
+                                                    ((!seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
+
     // // wait for MLKEM KEYGEN process to be done
     wait_for_mlkem_intr();
     
@@ -273,7 +281,7 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
     if(msg.kv_intf){
         // Program keyvault msg read
         lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
-                                                          ((msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
+                                                        ((msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
 
         VPRINTF(LOW, "[MLKEM Encaps] Try to Overwrite msg\n");
         reg_ptr = (uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR;
@@ -311,6 +319,9 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
     VPRINTF(LOW, "[MLKEM Encaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
 
+    // Try to program keyvault msg read
+    lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
+                                                    ((!msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
 
@@ -445,6 +456,9 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
     VPRINTF(LOW, "[MLKEM Encaps] Sending Command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
 
+    // Try to program keyvault msg read
+    lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
+                                                    ((!msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
 
@@ -669,7 +683,7 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
 
     //Program mlkem seed
     if(seed.kv_intf){
-        // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
+        // Program MLKEM_SEED Read 
         lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
@@ -718,6 +732,10 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
     // Enable MLKEM KEYGEN DECAPS flow
     VPRINTF(LOW, "[MLKEM KeyGen Decaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN_DECAPS);
+
+    // Try to program MLKEM_SEED Read 
+    lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
+                                                    ((!seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
     // wait for MLKEM DECAPS process to be done
     wait_for_mlkem_intr();
@@ -779,7 +797,7 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
 
     //Program mlkem seed
     if(seed.kv_intf){
-        // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
+        // Program MLKEM_SEED Read 
         lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
@@ -828,6 +846,10 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
     // Enable MLKEM KEYGEN DECAPS flow
     VPRINTF(LOW, "[MLKEM KeyGen Decaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN_DECAPS);
+
+    // Try to program MLKEM_SEED Read 
+    lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
+                                                    ((seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
     // wait for MLKEM DECAPS process to be done
     wait_for_mlkem_intr();

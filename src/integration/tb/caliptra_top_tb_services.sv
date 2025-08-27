@@ -382,7 +382,7 @@ module caliptra_top_tb_services
     //         8'hd5        - Inject randomized HEK test vector
     //         8'hd6        - Inject mldsa timeout
     //         8'hd7        - Inject normcheck or makehint failure during mldsa signing 1st loop. Failure type is selected randomly
-    //         8'hd8        - Unused
+    //         8'hd8        - Clear MLDSA checking
     //         8'hd9        - Perform mldsa keygen
     //         8'hda        - Perform mldsa signing
     //         8'hdb        - Perform mldsa verify
@@ -1123,23 +1123,20 @@ module caliptra_top_tb_services
         end
     end
 
-    always_ff @(negedge clk) begin
-        if (inject_makehint_failure && `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintgen_enable) begin
-            force `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum = 'd80; //> OMEGA => makehint fails
-            force `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid = 'b0;
-        end
-        else if (inject_makehint_failure) begin
-            force `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid = 'b0;
-        end       
-        else if (inject_normcheck_failure && `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.check_enable && (`CPTRA_TOP_PATH.abr_inst.norm_check_inst.mode == normcheck_mode_random))
-            force `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid = 'b1;
-        else begin
-            release `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid;
-            release `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum;
-        end
-        
-        if (inject_mldsa_timeout)
+    always @(negedge clk) begin
+        // Hintsum: force if makehint failure (with enable) OR mldsa timeout
+        if ((inject_makehint_failure && `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintgen_enable) || inject_mldsa_timeout)
             force `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum = 'd80;
+        else if (!inject_makehint_failure && !inject_mldsa_timeout)  // Only release when both are clear
+            release `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum;
+
+        // Invalid: force only for normcheck with specific conditions
+        if (inject_normcheck_failure && 
+            `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.check_enable && 
+            (`CPTRA_TOP_PATH.abr_inst.norm_check_inst.mode == normcheck_mode_random))
+            force `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid = 1'b1;
+        else if (!inject_normcheck_failure)
+            release `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid;
     end
 
     `ifndef VERILATOR
@@ -1177,7 +1174,7 @@ module caliptra_top_tb_services
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b1;
         end
-        else begin
+        else if ((WriteData[7:0] == 8'hd8) && mailbox_write) begin
             mldsa_keygen <= 'b0;
             mldsa_signing <= 'b0;
             mldsa_verify <= 'b0;

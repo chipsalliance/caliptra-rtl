@@ -626,4 +626,8 @@ u_caliptra_prim_trivium
     .err_o()
 );
 
+`CALIPTRA_ASSERT_STABLE(ERR_AES_KEY_RD_CTRL_NOT_STABLE, kv_key_read_ctrl_reg, clk, (!reset_n || status_idle_o) )
+`CALIPTRA_ASSERT_STABLE(ERR_AES_WR_CTRL_NOT_STABLE, kv_write_ctrl_reg, clk, (!reset_n || status_idle_o) )
+`CALIPTRA_ASSERT_STABLE(ERR_AES_KEY_NOT_STABLE, kv_key_reg, clk, (!reset_n || status_idle_o) )
+
 endmodule
