@@ -218,7 +218,7 @@ package soc_ifc_tb_pkg;
     "FUSE_SOC_MANIFEST_SVN"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0,                              // 0x390 [4]
     "FUSE_SOC_MANIFEST_MAX_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN,                            // 0x3a0
     // 0x3a4..0x3bc
-    "FUSE_HEK_SEED"                                 : SOCIFC_BASE + `CLP_SOC_IFC_REG_FUSE_HEK_SEED_0,                                  // 0x3c0 [8] Obfuscated Hardware Epoch Key Seed
+    "FUSE_HEK_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_HEK_SEED_0,                                  // 0x3c0 [8] Obfuscated Hardware Epoch Key Seed
     // 0x3e0..0x4fc
     "SS_CPTRA_BASE_ADDR_L"                    : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L,                               // 0x500
     "SS_CPTRA_BASE_ADDR_H"                    : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_H,                               // 0x504
