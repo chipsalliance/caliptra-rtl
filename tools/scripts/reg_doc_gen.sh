@@ -23,6 +23,7 @@ src/ecc/rtl/ecc_reg.rdl \
 submodules/adams-bridge/src/abr_top/rtl/abr_reg.rdl \
 src/sha512/rtl/sha512_reg.rdl \
 src/sha256/rtl/sha256_reg.rdl \
+src/sha3/rtl/kmac_reg.rdl \
 src/sha3/rtl/sha3_reg.rdl \
 src/soc_ifc/rtl/mbox_csr.rdl \
 src/soc_ifc/rtl/sha512_acc_csr.rdl \
@@ -47,6 +48,7 @@ src/ecc/rtl/ecc_reg.rdl \
 submodules/adams-bridge/src/abr_top/rtl/abr_reg.rdl \
 src/sha512/rtl/sha512_reg.rdl \
 src/sha256/rtl/sha256_reg.rdl \
+src/sha3/rtl/kmac_reg.rdl \
 src/sha3/rtl/sha3_reg.rdl \
 src/soc_ifc/rtl/mbox_csr.rdl \
 src/soc_ifc/rtl/sha512_acc_csr.rdl \
