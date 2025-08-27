@@ -215,16 +215,24 @@ interface ecc_top_cov_if
             bins slot_23 = {1'b1, 23};
         }
 
-        kv_write_entry_cp: coverpoint {kv_write_ctrl_reg.write_en, kv_write_metrics.kv_write_entry} 
-        iff (~ready) {
+        kv_write_entry_kg_cp: coverpoint {kv_write_ctrl_reg.write_en, kv_write_metrics.kv_write_entry} 
+        iff (keygen_process) {
             bins fw = {1'b0, [0:$]};
             bins lower_slots = {1'b1, [0:15]};
             bins upper_slots = {1'b1, [16:22]};
             bins slot_23 = {1'b1, 23};
         }
 
-        ocp_lock_X_kv_read_entry0: cross ocp_lock_in_progress_cp, kv_write_entry_cp, kv_read_entry_0_cp;
-        ocp_lock_X_kv_read_entry1: cross ocp_lock_in_progress_cp, kv_write_entry_cp, kv_read_entry_1_cp;
+        kv_write_entry_ecdh_cp: coverpoint {kv_write_ctrl_reg.write_en, kv_write_metrics.kv_write_entry} 
+        iff (sharedkey_process) {
+            bins fw = {1'b0, [0:$]};
+            bins lower_slots = {1'b1, [0:15]};
+            bins upper_slots = {1'b1, [16:22]};
+            bins slot_23 = {1'b1, 23};
+        }
+
+        ocp_lock_X_kv_read_entry0: cross ocp_lock_in_progress_cp, kv_write_entry_kg_cp, kv_read_entry_0_cp;
+        ocp_lock_X_kv_read_entry1: cross ocp_lock_in_progress_cp, kv_write_entry_ecdh_cp, kv_read_entry_1_cp;
     endgroup  
 
     ecc_top_cov_grp ecc_top_cov_grp1 = new();
