@@ -1162,7 +1162,7 @@ package soc_ifc_tb_pkg;
           "SS_UDS_SEED_BASE_ADDR_H"                       : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"    : exp_data = fuses_locked ? curr_data : axi_indata;
-          "SS_DEBUG_INTENT"                               : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_DEBUG_INTENT"                               : exp_data =                curr_data             ;
           "SS_CPTRA_DMA_AXI_USER"                         : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"          : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"          : exp_data = fuses_locked ? curr_data : axi_indata;
