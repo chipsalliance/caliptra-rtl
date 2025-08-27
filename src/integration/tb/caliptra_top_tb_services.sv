@@ -3032,7 +3032,7 @@ sha256_ctrl_cov_bind i_sha256_ctrl_cov_bind();
 hmac_ctrl_cov_bind i_hmac_ctrl_cov_bind();
 hmac_drbg_cov_bind i_hmac_drbg_cov_bind();
 ecc_top_cov_bind i_ecc_top_cov_bind();
-abr_top_cov_bind i_abr_top_cov_bind();
+clp_abr_top_cov_bind i_clp_abr_top_cov_bind();
 keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
 axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
