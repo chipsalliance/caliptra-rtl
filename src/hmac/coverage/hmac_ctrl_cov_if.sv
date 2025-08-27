@@ -100,7 +100,7 @@ interface hmac_ctrl_cov_if
         }
 
         kv_write_entry_cp: coverpoint {kv_write_ctrl_reg.write_en, kv_write_metrics.kv_write_entry}
-        iff (~ready) {
+        iff (init | next) {
             bins fw = {1'b0, [0:$]};
             bins lower_slots = {1'b1, [0:15]};
             bins upper_slots = {1'b1, [16:22]};
