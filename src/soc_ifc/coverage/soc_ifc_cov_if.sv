@@ -39,6 +39,7 @@ interface soc_ifc_cov_if
     import soc_ifc_reg_pkg::*;
     import axi_pkg::*;
     import axi_dma_reg_pkg::*;
+    import kv_defines_pkg::*;
     #(
          parameter AXI_ADDR_WIDTH = 18
         ,parameter AXI_DATA_WIDTH = 32
