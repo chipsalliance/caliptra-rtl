@@ -1168,7 +1168,7 @@ package soc_ifc_tb_pkg;
           "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"          : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_KEY_RELEASE_BASE_ADDR_L"                    : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_KEY_RELEASE_BASE_ADDR_H"                    : exp_data = fuses_locked ? curr_data : axi_indata;
-          "SS_KEY_RELEASE_SIZE"                           : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_KEY_RELEASE_SIZE"                           : exp_data = fuses_locked ? curr_data : axi_indata & get_mask(addr_name);
 
           "SS_DBG_SERVICE_REG_REQ"                  : begin
             ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
