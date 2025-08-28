@@ -35,39 +35,19 @@
     begin
       print_banner("\nExecuting task ss_strap_reg_pwron_test", "="); 
 
-      set_security_state_byname(ss_name); 
-      sim_dut_init();
-
       tc_ctr = tc_ctr + 1;
       $display("Current security state = 0b%03b", security_state);
 
       ss_strap_soc_rw_regnames = get_ss_strap_regnames();
   
-      foreach (ss_strap_soc_rw_regnames[ix]) begin
-        //$display("Current ss_strap: %s", ss_strap_soc_rw_regnames[ix]);
-        //$display(ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_RSP");
-        if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_REQ") || // Writeable by SOC
-            (ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_RSP") || // Writeable by Caliptra
-            (ss_strap_soc_rw_regnames[ix] == "SS_DEBUG_INTENT")) begin ////||
-          $display("Found %s", ss_strap_soc_rw_regnames[ix]);
-          ss_strap_soc_rw_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
-          continue; 
+      foreach (_soc_register_dict[rkey]) begin
+        if (str_startswith(rkey, "SS_GENERIC_FW_EXEC_CTRL")) begin 
+          add_to_strq(ss_strap_soc_rw_regnames, rkey); // Add to rw queue for appropriate testing
+          add_to_strq(ss_strap_soc_ro_regnames, rkey); // Add to ro queue for appropriate testing
         end
       end 
-  
-      // SS_DBG_SERVICE_REG_RSP is not getting deleted in the above loop. 
-      // Deleting it explicitly for now
-      del_from_strq(ss_strap_soc_rw_regnames, "SS_DBG_SERVICE_REG_RSP"); // SS_DBG_SERVICE_REG_RSP
-
-      // SS_SOC_DBG_UNLOCK_LEVEL can be written only when SS_DEBUG_INTENT = 1 (TAPJTAG mode)/
-      delm_from_strq(ss_strap_soc_rw_regnames, "SS_SOC_DBG_UNLOCK_LEVEL");
-  
-      foreach (ss_strap_soc_rw_regnames[ix]) begin
-        if (str_startswith(ss_strap_soc_rw_regnames[ix], "SS_GENERIC_FW_EXEC_CTRL")) begin 
-          add_to_strq(ss_strap_soc_ro_regnames, ss_strap_soc_rw_regnames[ix]); // Add to ro queue for appropriate testing
-          continue; 
-        end
-      end
+      add_to_strq(ss_strap_soc_ro_regnames, "SS_OCP_LOCK_CTRL");
+      add_to_strq(ss_strap_soc_ro_regnames, "SS_DEBUG_INTENT");
 
 
       $display ("0a. Checking Power-on values\n"); 
@@ -169,42 +149,18 @@
 
       transaction = new(); 
 
-      set_security_state_byname("RANDOM");
-      sim_dut_init();
-
       tc_ctr = tc_ctr + 1;
 
       ss_strap_soc_rw_regnames = get_ss_strap_regnames();
   
-      foreach (ss_strap_soc_rw_regnames[ix]) begin
-        //$display("Current ss_strap: %s", ss_strap_soc_rw_regnames[ix]);
-        //$display(ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_RSP");
-        if ((ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_REQ") || // Writeable by SOC
-            (ss_strap_soc_rw_regnames[ix] == "SS_DBG_SERVICE_REG_RSP") || // Writeable by Caliptra
-            (ss_strap_soc_rw_regnames[ix] == "SS_DEBUG_INTENT")) begin //||
-            //(ss_strap_soc_rw_regnames[ix] == "SS_CALIPTRA_DMA_AXI_USER")) begin //writeable only by TAP
-          $display("Found %s", ss_strap_soc_rw_regnames[ix]);
-          ss_strap_soc_rw_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
-          continue; 
-        end
-      end 
-  
-      // SS_DBG_SERVICE_REG_RSP is not getting deleted in the above loop. 
-      // Deleting it explicitly for now
-      del_from_strq(ss_strap_soc_rw_regnames, "SS_DBG_SERVICE_REG_RSP"); // SS_DBG_SERVICE_REG_RSP
-
-      // SS_SOC_DBG_UNLOCK_LEVEL can be written only when SS_DEBUG_INTENT = 1 (TAPJTAG mode)/
-      delm_from_strq(ss_strap_soc_rw_regnames, "SS_SOC_DBG_UNLOCK_LEVEL");
-  
-      foreach (ss_strap_soc_rw_regnames[ix]) begin
-        if (str_startswith(ss_strap_soc_rw_regnames[ix], "SS_GENERIC_FW_EXEC_CTRL")) begin 
-          add_to_strq(ss_strap_soc_ro_regnames, ss_strap_soc_rw_regnames[ix]); // Add to ro queue for appropriate testing
+      foreach (_soc_register_dict[rkey]) begin
+        if (str_startswith(rkey, "SS_GENERIC_FW_EXEC_CTRL")) begin 
+          add_to_strq(ss_strap_soc_ro_regnames, rkey); // Add to ro queue for appropriate testing
           continue; 
         end
       end
-
-      // SS_GENERIC_FW_EXEC_CTRL can only be written by Calitpra
-      delm_from_strq(ss_strap_soc_rw_regnames, "SS_GENERIC_FW_EXEC_CTRL"); 
+      add_to_strq(ss_strap_soc_ro_regnames, "SS_OCP_LOCK_CTRL");
+      add_to_strq(ss_strap_soc_ro_regnames, "SS_DEBUG_INTENT");
 
       tphase = "1";
       print_banner("\nPhase 1. Initialize registers after cold boot, overwrite and check");

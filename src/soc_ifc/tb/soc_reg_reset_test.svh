@@ -152,41 +152,6 @@
       fuse_regnames = get_fuse_regnames();
       soc_regnames = get_soc_regnames_minus_fuse_intr();
 
-      //foreach (fuse_regnames[ix]) begin
-        //$display("Initial set of fuses: %s", fuse_regnames[ix]);
-      //end
-
-      foreach (fuse_regnames[ix]) begin
-        $display("CUrrent fuse: %s", fuse_regnames[ix]);
-        $display(fuse_regnames[ix] == "SS_DBG_SERVICE_REG_RSP");
-        if ((fuse_regnames[ix] == "SS_DBG_SERVICE_REG_REQ") || // Writeable by SOC
-            (fuse_regnames[ix] == "SS_DBG_SERVICE_REG_RSP") || // Writeable by Caliptra
-            (fuse_regnames[ix] == "SS_DEBUG_INTENT")) begin //writeable only by TAP
-          //$display("Found %s", fuse_regnames[ix]);
-          fuse_regnames.delete(ix);  // Writeable only when SS_DBG_INTENT = 1
-          continue; 
-        end
-      end 
-
-      // SS_DBG_SERVICE_REG_RSP is not getting deleted in the above loop. 
-      // Deleting it explicitly for now
-      del_from_strq(fuse_regnames, "SS_DBG_SERVICE_REG_RSP"); // SS_DBG_SERVICE_REG_RSP
-
-      foreach (fuse_regnames[ix]) begin
-        if ((fuse_regnames[ix] == "SS_GENERIC_FW_EXEC_CTRL") || 
-            (fuse_regnames[ix] == "SS_SOC_DBG_UNLOCK_LEVEL")) begin // ||
-            //(fuse_regnames[ix] == "CPTRA_CAP_LOCK") ||
-            //(fuse_regnames[ix] == "CPTRA_FW_CAPABILITIES") ||
-            //(fuse_regnames[ix] == "CPTRA_HW_CAPABILITIES")) begin
-          fuse_regnames.delete(ix);  // SOC read-only
-          continue; 
-        end
-      end
-
-      //foreach (fuse_regnames[ix]) begin
-      //  $display("Final set of fuses: %s", fuse_regnames[ix]);
-      ////end
-
       foreach (soc_regnames[ix]) begin
         if ((soc_regnames[ix] == "CPTRA_FUSE_WR_DONE") || (soc_regnames[ix] == "CPTRA_TRNG_STATUS") || 
             (soc_regnames[ix] == "CPTRA_TRNG_DATA")) begin 
