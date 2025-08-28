@@ -895,7 +895,7 @@ module soc_ifc_tb
         error = 0;
         $display("AXI txn was successful");
       end 
-      $display("AXN txn tcheck");
+      $display("AXI txn tcheck");
       if (error & (rw == read) & (exp_txn_sts == PASS)) begin //read     
         $error("AXI Read error");
       end
@@ -1381,7 +1381,9 @@ module soc_ifc_tb
           strap_ss_otp_fc_base_addr_tb = {$urandom, $urandom};
           strap_ss_uds_seed_base_addr_tb = {$urandom, $urandom};
           strap_ss_key_release_base_addr_tb = {$urandom, $urandom};
-          strap_ss_key_release_key_size_tb = $urandom_range(65535,0);
+          assert(std::randomize(strap_ss_key_release_key_size_tb) with { strap_ss_key_release_key_size_tb[1:0] ==  2'b00;
+                                                                         strap_ss_key_release_key_size_tb      <= 16'h40; })
+          else $error("TB ERROR. Failed to randomize strap_ss_key_release_key_size_tb");
           strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb = $urandom;
           strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb = $urandom;
           strap_ss_strap_generic_0_tb = $urandom;
@@ -1921,12 +1923,12 @@ module soc_ifc_tb
           debug_unlock_manuf_test();
 
         end else if (soc_ifc_testname == "ss_strap_reg_pwron_test") begin
-          set_security_state('{device_lifecycle: DEVICE_MANUFACTURING, debug_locked: DEBUG_LOCKED});
+          set_security_state_byname("RANDOM");
           sim_dut_init(.drive_straps(1'b1));
           ss_strap_reg_pwron_test();
 
         end else if (soc_ifc_testname == "ss_strap_reg_wrmrst_test") begin
-          set_security_state('{device_lifecycle: DEVICE_MANUFACTURING, debug_locked: DEBUG_LOCKED});
+          set_security_state_byname("RANDOM");
           sim_dut_init(.drive_straps(1'b1));
           ss_strap_reg_wrmrst_test();
 
