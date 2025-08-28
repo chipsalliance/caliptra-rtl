@@ -15,31 +15,66 @@ addrmap kmac_reg {
     * Register definitive definitions
     * ----------------------- */
 
-    /* ---- SHA3 KMAC FIXME ---- */
     reg {
-        name = "SHA3/SHAKE component name register type definition";
-        desc = "Two 32-bit read-only registers representing the name
-                of SHA3/SHAKE component.";
+        name = "SHA3/SHAKE component interrupt state register";
+        field {
+            sw = rw;
+            onwrite = woclr;
+            reset = 0x0;
+            desc = "SHA3/SHAKE done interrupt";
+        } KMAC_DONE[0:0];
+        field {
+            sw = r;
+            reset = 0x0;
+            desc = "FIFO empty interrupt";
+        } FIFO_EMPTY[1:1];
+        field {
+            sw = rw;
+            onwrite = woclr;
+            reset = 0x0;
+            desc = "SHA3/SHAKE error interrupt";
+        } KMAC_ERR[2:2];
+    } INTR_STATE @0x00;
 
-        default sw = r;
-        default hw = w;
-        field {desc = "Name field";} NAME[32];
 
-    } FIXME1 @0x00000000;
-
-
-
-    /* ---- SHA3 Component Version ---- */
     reg {
-        name = "SHA3/SHAKE component version register type definition";
-        desc = "Two 32-bit read-only registers representing the version
-                of SHA3/SHAKE component.";
+        name = "SHA3/SHAKE component interrupt enable register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE done interrupt";
+        } KMAC_DONE[0:0];
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "FIFO empty interrupt";
+        } FIFO_EMPTY[1:1];
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE error interrupt";
+        } KMAC_ERR[2:2];
+    } INTR_ENABLE @0x04;
 
-        default sw = r;
-        default hw = w;
-        field {desc = "Version field";} VERSION[32];
 
-    } FIXME2 @0x00000008;
+    reg {
+        name = "SHA3/SHAKE component interrupt test register";
+        field {
+            sw = w;
+            reset = 0x0;
+            desc = "SHA3/SHAKE done interrupt";
+        } KMAC_DONE[0:0];
+        field {
+            sw = w;
+            reset = 0x0;
+            desc = "FIFO empty interrupt";
+        } FIFO_EMPTY[1:1];
+        field {
+            sw = w;
+            reset = 0x0;
+            desc = "SHA3/SHAKE error interrupt";
+        } KMAC_ERR[2:2];
+    } INTR_TEST @0x08;
 
 
     reg {
@@ -54,7 +89,7 @@ addrmap kmac_reg {
             reset = 0x0;
             desc = "Write 1 to trigger one alert event of this kind.";
         } FATAL_FAULT_ERR[1:1];
-    } ALERT_TEST @ 0x1C;
+    } ALERT_TEST @ 0x0C;
 
     reg {
         name = "SHA3/SHAKE component Write enable for CFG_SHADOWED register";
@@ -64,7 +99,7 @@ addrmap kmac_reg {
             desc = "Configuration enable.";
             reset = 0x1;
         } en[0:0];
-    } CFG_REGWEN @0x20;
+    } CFG_REGWEN @0x10;
 
     reg {
         name = "SHA3/SHAKE component Configuration register";
@@ -82,8 +117,8 @@ addrmap kmac_reg {
             sw = rw;
             reset = 0x0;
             desc = "Hashing Strength, Protected by CFG_REGWEN.en
-            bit field to select the security strength of SHA3 hashing engine. 
-            If mode field is set to SHAKE, only 128 and 256 strength can be selected. 
+            bit field to select the security strength of SHA3 hashing engine.
+            If mode field is set to SHAKE, only 128 and 256 strength can be selected.
             Other value will result error when hashing starts.";
             enum kstrength_type{
                 // | Value | Name | Description |
@@ -147,11 +182,11 @@ addrmap kmac_reg {
             };
         } state_endianness[9:9];
 
-    } external CFG_SHADOWED @ 0x24;
+    } external CFG_SHADOWED @ 0x14;
 
     reg {
         name = "SHA3/SHAKE component command register";
-        default hw = r; 
+        default hw = r;
         field {
             sw = rw;
             reset = 0x0;
@@ -193,10 +228,10 @@ addrmap kmac_reg {
             SW may process the error based on ERR_CODE, then let FSM back to the reset state.
             Always return 0 for SW reads.";
         } err_processed[10:10];
-    } CMD @ 0x28;
+    } CMD @ 0x18;
 
     reg {
-        default hw = w; 
+        default hw = w;
         name = "SHA3/SHAKE component status register";
         field {
             sw = r;
@@ -255,10 +290,109 @@ addrmap kmac_reg {
             SHA3 operation needs to be restarted by re-writing the Control Register.";
         } ALERT_RECOV_CTRL_UPDATE_ERR[17:17];
 
-    } STATUS @ 0x2C;
+    } STATUS @ 0x1C;
 
     reg {
-        default hw = w; 
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_0 @0x20;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_1 @0x24;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_2 @0x28;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_3 @0x2C;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_4 @0x30;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_5 @0x34;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_6 @0x38;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_7 @0x3C;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_8 @0x40;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_9 @0x44;
+
+    reg {
+        name = "SHA3/SHAKE component prefix register";
+        field {
+            sw = rw;
+            reset = 0x0;
+            desc = "SHA3/SHAKE 32-bit chunk of Encoded NS Prefix";
+        } PREFIX[32];
+    } PREFIX_10 @0x48;
+
+    reg {
+        default hw = w;
         name = "SHA3/SHAKE component error code register";
         desc = "SHA3 Error Code";
         field {
@@ -299,7 +433,7 @@ addrmap kmac_reg {
 
             };
         } ERR_CODE[31:0];
-    } ERR_CODE @ 0xD0;
+    } ERR_CODE @ 0x4C;
 
     mem {
         name = "SHA3/SHAKE component Keccak State memory";
