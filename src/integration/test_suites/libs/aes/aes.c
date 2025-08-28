@@ -123,6 +123,20 @@ void hex_to_uint32_array_with_endianess(const char *hex_str, uint32_t *array, ui
     }
 }
 
+void copy_data_with_endianness(const uint32_t* src, uint32_t* dst, uint32_t len, aes_endian_e endian_mode) {
+    for (uint32_t i = 0; i < len; i++) {
+        if (endian_mode == AES_BIG_ENDIAN) {
+            // Apply byte swapping for big endian
+            dst[i] = ((src[i] & 0xFF000000) >> 24) |
+                     ((src[i] & 0x00FF0000) >> 8)  |
+                     ((src[i] & 0x0000FF00) << 8)  |
+                     ((src[i] & 0x000000FF) << 24);
+        } else {
+            dst[i] = src[i];
+        }
+    }
+}
+
 void aes_wait_idle(){
   while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_IDLE_MASK) == 0);
 }
@@ -253,8 +267,14 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
       VPRINTF(LOW, "Write AES AAD Block %d\n", i);
       for (int j = 0; j < 4; j++) {
-        VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.aad[j+i*4]);
-        aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.aad[j+i*4], endian_mode);
+        if(((i*4) +j) < (aes_input.aad_len >> 2)) {
+            VPRINTF(MEDIUM, "Write In Data: 0x%x aad DWORD: %d\n", aes_input.aad[j+i*4], ((i*4) +j));
+            aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.aad[j+i*4], endian_mode);
+        }
+        else {
+            VPRINTF(MEDIUM, "Padding AAD with 0s AAD DWORD: %d", ((i*4) +j));
+            aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), 0x0, endian_mode);
+        }
       }
     }
   }
