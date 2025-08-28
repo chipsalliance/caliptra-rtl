@@ -1084,7 +1084,7 @@ import kv_defines_pkg::*;
             end
             AES_WAIT_INPUT_READY: begin
                 if (aes_input_ready) begin
-                    if((!aes_init_done || bytes_remaining < 4) && hwif_out.ctrl.aes_gcm_mode.value) begin
+                    if((!aes_init_done || bytes_remaining < 16) && hwif_out.ctrl.aes_gcm_mode.value) begin
                         aes_fsm_ns = AES_WAIT_IDLE;
                     end
                     else begin
