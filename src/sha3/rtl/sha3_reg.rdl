@@ -136,10 +136,9 @@ addrmap sha3_reg {
             sw = rw;
             reset = 0x0;
             desc = "Protected by CFG_REGWEN.en
-            If 1 then each individual multi-byte value, regardless of its alignment, 
-            written to MSG_FIFO will be added to the message in big-endian byte order. 
-            If 0, each value will be added to the message in little-endian byte order. 
-            A message written to MSG_FIFO one byte at a time will not be affected by this setting. 
+            If 1 then each individual multi-byte value, regardless of its alignment,
+            written to STATE will be added to the message in big-endian byte order.
+            If 0, each value will be added to the message in little-endian byte order.
             From a hardware perspective byte swaps are performed on a TL-UL word granularity.";
             enum state_endian_type {
                 LITTLE_ENDIAN = 0x0;
