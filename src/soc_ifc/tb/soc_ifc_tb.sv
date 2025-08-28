@@ -895,7 +895,7 @@ module soc_ifc_tb
         error = 0;
         $display("AXI txn was successful");
       end 
-      $display("AXN txn tcheck");
+      $display("AXI txn tcheck");
       if (error & (rw == read) & (exp_txn_sts == PASS)) begin //read     
         $error("AXI Read error");
       end
