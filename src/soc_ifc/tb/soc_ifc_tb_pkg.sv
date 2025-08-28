@@ -431,7 +431,8 @@ package soc_ifc_tb_pkg;
     "SS_KEY_RELEASE_BASE_ADDR_L"                       : 32'hffff_ffff,
     "SS_KEY_RELEASE_BASE_ADDR_H"                       : 32'hffff_ffff,
     "SS_KEY_RELEASE_SIZE"                              : 32'h0000_ffff,
-    "SS_STRAP_GENERIC"                                 : 32'hffff_ffff
+    "SS_STRAP_GENERIC"                                 : 32'hffff_ffff,
+    "SS_OCP_LOCK_CTRL"                                 : `SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK
   };
 
 
@@ -678,6 +679,10 @@ package soc_ifc_tb_pkg;
         "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : return strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb;
         "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : return strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb;
         "SS_CPTRA_DMA_AXI_USER"                   : return strap_ss_caliptra_dma_axi_user_tb;
+        "SS_STRAP_GENERIC0"                       : return strap_ss_strap_generic_0_tb;
+        "SS_STRAP_GENERIC1"                       : return strap_ss_strap_generic_1_tb;
+        "SS_STRAP_GENERIC2"                       : return strap_ss_strap_generic_2_tb;
+        "SS_STRAP_GENERIC3"                       : return strap_ss_strap_generic_3_tb;
         "SS_DEBUG_INTENT"                         : return dword_t'(ss_debug_intent_tb);
         default: return '0;
       endcase
