@@ -2525,109 +2525,139 @@ Data vault is a set of generic scratch pad registers with specific lock function
 
 ## OCP LOCK Hardware Architecture
 
-### 1.1 Overview
-Changes are made to support OCP LOCK flows defined for SSD applications. Specification is published here:   
-[OCP L.O.C.K. Specification](https://chipsalliance.github.io/Caliptra/ocp-lock/specification/HEAD)
+### Overview
+The following hardware and ROM/FW enhancements support the OCP L.O.C.K. (a.k.a. **OCP LOCK**) flows defined for SSD applications. The specification is available here:  
+[OCP LOCK Spec](https://chipsalliance.github.io/Caliptra/ocp-lock/specification/HEAD)
 
-### 3 HW config register bit and macro
-**`ss_ocp_lock_en`** constant-value input strap, with a bit in **CPTRA_HW_CONFIG** register, called `OCP_LOCK_MODE_en`:
-- Enables HEK DOE
-- Enables `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` to be set by Caliptra ROM
-<!-- **CLP_DV_REG_NONSTICKYGENERICSCRATCHREG_0**: The least significant bit (LSB) of this register indicates whether the HEK seed is in permanent mode, meaning all HEK seeds have been used and no valid HEK seed remains. -->
+---
 
-**NOTE:** `ss_ocp_lock_en` is strap pin and needs to be driven  with a constant value by the integrator. 
+### Additional Registers, Straps, and Macros for OCP LOCK
 
-### 4 HW “mode” register bit
-**`SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`**
-- KeyVault slots 0-15: Standard use-cases
-- KeyVault slots 16-23: Standard use-cases
-- Write-1-to-lock
-- ROM must set this after performing LOCK derivations (HEK, EPK, etc)
-- `ss_ocp_lock_en` + CALIPTRA_MODE_SUBSYSTEM macro is the write-enable for this bit
-- Prevents interactions between slots (STANDARD slots) and (LOCK slots)
-- Enables Key Release operation
-- Enables AES write to KV23
+- **`SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`**  
+  A status/control bit used to enforce the new KeyVault (KV) rules required by OCP LOCK. See the dedicated section below for details on the behaviors it enables.
 
-### 5.3 Add AES Write Path
-Decrypted Keys (or “unwrapped”/ “ready” keys, e.g. MPK) may be written to KV slots.  
-**MEK** must be written to KV slot 23. Enforced in HW by detecting AES-ECB decrypt operation with KvSlots16 (MDK) as key.
+- **`ss_ocp_lock_en`** (constant-value input strap) with a corresponding bit in **`CPTRA_HW_CONFIG`** register named **`OCP_LOCK_MODE_en`**:
+  - Enables Caliptra ROM to perform OCP LOCK operations (e.g., using DOE for HEK de-obfuscation).
+  - Allows the ROM to set `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`.
+  - `ss_ocp_lock_en` is a strap pin and **must be driven with a constant value by the integrator**.
+  - `CPTRA_HW_CONFIG` register samples this strap and store its value in `OCP_LOCK_MODE_en` bit
 
-### 5.7 Add KeyVault access rules and filtering logic if `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set
-- ROM is responsible for choosing dest slot for HEK seed
-- INSTEAD, Slot 23 PREVENTED as destination for all DOE operations
-  - Slot 23 (place for MEK) restricted so ONLY AES can write to it (when OCP LOCK in progress)
-  - Slot 22 also used to store full derived HEK, which overwrites HEK seed (ROM requirement)
-  - Locked for writes until warm reset (ROM requirement, must lock after each reset)
-  - Locked for copying until warm reset (ROM requirement, must lock after each reset)
-- There must not be a way from KV0-15 to KV16-23 if OCP parameter and `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`, which is set only by ROM, are high.
-- IF (OCP LOCK mode enabled) THEN (KV23 shall never be used as input to other crypto operations, only as source for Key Release). Prevents known values propagating to other KV slots.
-- IF (OCP LOCK mode enabled) AND (AES-ECB decrypt operation) AND (key = KV16) THEN (dest = KV23)  
-  ELSE (dest=FW) << Preventing AES writes to other KV slots is important to avoid malicious firmware getting known values into KV.
+- **HEK seed fuse register**  
+  Holds the **obfuscated HEK seed** that is later de-obfuscated by DOE.
 
-**KeyVault gains intelligence:**
-- Track which crypto made most recent read request.
-- On Write, compute if the write destination is legal for the read.
-- RULE: No cryptos with KV access operate in parallel. KV won’t track this, but caliptra_top enforces via HW_ERROR
+- **MEK address and size straps**  
+  Writable until `FUSE_WR_DONE`, then locked (same as other straps).
+  - **Address strap** (`strap_ss_key_release_base_addr`): full destination address for MEK. Firmware can derive the SFR base from this value as needed.
+  - **Size strap** (`strap_ss_key_release_key_size`): byte-count (DWORD count preferred by HW) of the MEK to program to the destination address.
 
-### HEK seed fuse register
-Used as input to HEK seed deobfuscation operation
+Refer to the [Caliptra Integration Spec](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md) for more details about macros and strap pins.
 
-### 7 HEK Seed Deobfuscation
-Hardware path from Ratchet Fuse Register (Obf HEK Seed) as input to DOE (with OBF_KEY), with output stored to KV slot 9.
-- Slot 9 is locked for write on DOE operation.
-- Slot 9 is locked for use immediately after being used to derive HEK (which is placed into a slot 10-14).
+---
 
-### 8 Input Straps for MEK address and size
-Writable until FUSE_WR_DONE, then locked, same as other straps.  
-Input addr strap is full address to MEK – FW can derive SFR_BASE from this strap as needed.
-Input size strap indicates byte-count (dword-count preferred by HW) of MEK to program to MEK address.
+### `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` Register Bit
 
-### 9 Key Release
-Hardware path allowing KV slot 23 to be written to SoC using DMA block.
-- Only permitted when `ss_ocp_lock_en` (synth macro) is set and if CALIPTRA_OCP_LOCK_PROGRESS_REG (sticky w1set bit set by Caliptra ROM) are set.
+**When/How it is set**
+- Set by **Caliptra ROM** after performing OCP LOCK-related derivations (HEK, MDK, EPK, etc.).
+- Can be set **iff** (`ss_ocp_lock_en` **AND** `CALIPTRA_MODE_SUBSYSTEM`) are asserted.
 
-### 11 RAS/Security Hardening
-- Flush the DMA FIFO so secrets can’t be leaked over scan chain.
-- AES KV interface flush – based on scan/debug mode.
-- AES KV write-path – track the requested decode size so HW can determine when to write final result to KV.
-- Check key_size input to DMA, error out if > 512b.
-- Address potential hang when key_size != key_vault read num DW from DMA.
-  - When reading from KV, if key_size is smaller than KV entry, drop extra data on the floor (don’t push to FIFO)
-- KV filtering rules.
-- Assertion ensuring LOCK_EN can only be set when caliptra in SS mode.
-- DMA KV read error should result on the first transfer cycle from KV to DMA and DMA will immediately go into DMA_ERROR state without sending an AXI transfer.
+**Enforcements/Effects**
+- Reserves **KeyVault slots 0–15** for *standard* use-cases.
+- Reserves **KeyVault slots 16–23** for *OCP LOCK* use-cases.
+- Blocks interactions between *standard* slots and *LOCK* slots.
+- Enables **Key Release via DMA**.
+- Enables **AES crypto engine writes to KV slot 23**.
 
-**SECURITY CONCERN:** Runtime firmware is able to place any arbitrary data into the KeyVault using the AES datapath.
-- Steps:
-  - Encrypt arbitrary data using AES engine with FW API.
-  - Recover output encrypted data.
-  - Trigger decrypt operation with KeyVault write.
-  - Provide input data as data_in.
-  - Data is decrypted and placed in specified KV slot.
-- Mitigations:
-  - Disable AES KV write path entirely when not in OCP Lock.
-  - In OCP LOCK, force all AES KV writes to slot 23, and only with
-    - Harden the KV write en from AES so it can’t be modified mid-transfer only for OCP_LOCK_IN_PROGRESS,
-    - DOE output can NEVER go to KV23,
-    - AES should use the clear signal (from the reg clear trigger request) to clobber buffered KV write context,
-    - Add DMA to parallel op check and fatal error.
+> **Note:** If `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is `1`, it also implies `ss_ocp_lock_en` and `CALIPTRA_MODE_SUBSYSTEM` are also `1`.
 
-### ROM and Firmware Guidance
-- New DOE error status bit for KV write failure
-  - ROM must check this bit after performing any DOE flow to ensure KV value was written.
-- HEK DOE flow is locked, similar to other DOE flows, after being run. ROM MUST run HEK DOE flow, even for non-LOCK context, to lock the flow from being run. Reset by hard_reset, similar to other DOE flows.
-- Derive the RT deobf Key to slot 16, lock for writes.
-- Check OCP LOCK en, derive the HEK to slot 22, lock for writes.
-  - Must do this prior to setting OCP_LOCK_IN_PROGRESS because HEK derivation requires HEK seed (slot 22) and some standard CDI derivatives (from standard KV slots).
-- Check OCP LOCK en, ROM MUST set OCP_LOCK_IN_PROGRESS for each ROM (i.e. after any type of reset).
-- Never attempt to write anything to slot 23 other than MEK (output from AES).
-  - DOE will flag an error and hang if attempting write to 23 when ocp lock in progress.
-- Deobf HEK seed may only be used as HMAC input.
-- Rules for DMA programming with KV – size and dest addr.
-- KV filtering rules – lock/std crossover blocked.
-- New AES API (how to interact with KV, changes to dataout, new use-case for OUTPUT_LOST).
-- Read and confirm valid values for KEY_RELEASE_BASE_ADDR and KEY_RELEASE_KEY_SIZE.
-- Obfuscated MEK is a vulnerability – if malicious firmware gains access to the obfuscated MEK it can successfully derive the MEK to KV23 and release it to the SSD controller without requiring any other security inputs (Access Keys, MPK, EPK, etc). Firmware must clear it from memory immediately after use.
+---
+
+### AES Write Path
+
+- **MEK** is the final OCP LOCK key. It is **decrypted and stored in KV23**. After decryption, MEK may be transferred to its destination **via DMA**.
+- OCP LOCK requires both the **AES write path** and a **DMA path** to the MEK destination.
+- **Hardware enforcement:** MEK is written to **KV slot 23**. HW recognizes the MEK generation request if there is an **AES-ECB decrypt** operation with **KV slot 16 (MDK)** as the AES-ECB key and routes the result accordingly.
+
+---
+
+### KeyVault Access Rules & Filtering (when `LOCK_IN_PROGRESS` is set)
+
+- **KV23 (MEK destination)**: **write-restricted to AES only**.
+- **KV22 (HEK)**: **locked for writes until warm reset** (ROM requirement).
+- **KV16 (MDK)**: **locked for writes until warm reset** (ROM requirement).
+- If OCP LOCK mode is enabled:
+  - **KV23 must not be used** as input to other crypto operations—**only** as a **Key Release** source.
+  - **AES-ECB decrypt** with **key = KV16** **must** have **dest = KV23**; otherwise the destination is **FW**.  
+    *Rationale:* Prevents malicious FW from writing known values into other KV slots via AES.
+- **Additional KV behaviors**
+  - On write, HW validates that the **destination** is legal for the **source/read**.
+  - **No parallel crypto operations** with KV access. KV does not track this; Caliptra enforces via additional HW logic and signals violations via **`HW_ERROR`** at caliptra top level design.
+
+---
+
+### HEK Seed De‑obfuscation
+
+- Executed by **Caliptra ROM** using DOE.
+- **Path:** Ratchet Fuse Register (**obfuscated HEK seed**) → **DOE** (with `OBF_KEY`) → **KV slot 22** (de-obfuscated seed).
+- **KV22** is **locked for use immediately after** it is consumed to derive **HEK**.
+
+---
+
+### Key Release
+
+Hardware path allowing **KV23 (MEK)** to be written to the SoC via the **DMA block**:
+- Allowed **only** when `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` (sticky **W1SET**) is set by Caliptra ROM.
+- Destination and size are defined by the straps:
+  - `strap_ss_key_release_base_addr`
+  - `strap_ss_key_release_key_size`
+
+---
+
+### Additional Security Hardening Specific to OCP LOCK Enhancements
+
+**Scan/Debug Protections**
+- Flush **DMA FIFOs** to prevent leakage of secrets via scan chain.
+- Flush **AES ↔ KV** interface.
+
+**AES/KV/DMA Robustness**
+- **AES → KV write path:** Track requested **decode size** so HW can determine when to commit the final result to KV.
+- Validate **DMA `key_size`**; **error** if `key_size > 512b`.
+- Avoid hangs when **`key_size` != KV read DWORD count**:
+  - On KV reads, if `key_size` is **smaller** than the KV entry, **drop extra data** (do not push to FIFO).
+- **DMA KV read error**: Must be raised on the **first transfer cycle** from KV to DMA; DMA transitions immediately to **`DMA_ERROR`** without issuing an AXI transfer.
+- **KV write enable sourced from AES** (during OCP LOCK) so it **cannot** be modified mid-transfer.
+- **Enable AES ↔ KV write path** only if `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set.
+
+---
+
+### Caliptra ROM & Firmware Guidance
+
+- **DOE error status (KV write failure):**  
+  Introduce a new status bit; ROM must check it after any DOE flow to ensure the KV write succeeded.
+- **HEK DOE flow**:  
+  Must be locked after execution (like other DOE flows). ROM must run the HEK DOE flow even in non-LOCK contexts to lock it. Reset only by hard reset.
+- **Derivations & locking**:
+  - Derive the MDK to **KV16**, then **lock writes**.
+  - If OCP LOCK is enabled, derive **HEK** to **KV22**, then **lock writes**.
+    - Perform this **before** setting `OCP_LOCK_IN_PROGRESS` since HEK derivation depends on the **HEK seed (KV22)** and **standard CDI derivatives** (from standard KV slots).
+- **Setting lock state:**  
+  If OCP LOCK is enabled, ROM **MUST** set `OCP_LOCK_IN_PROGRESS` **after any type of reset**.
+- **KV23 usage constraints:**  
+  Never attempt to write anything to **KV23** except **MEK** (produced by AES).
+  - DOE will flag an error and **stall** if a write to **KV23** is attempted while OCP LOCK is in progress.
+- **DMA programming with KV:**  
+  Follow the rules for **size** and **destination address**.
+- **KV filtering rules:**  
+  Standard ↔ LOCK **crossovers are blocked**.
+- **AES API updates:**  
+  Adjust for KV interactions, `dataout` behavior, and the **`OUTPUT_LOST`** use-case.
+- **Strap validation:**  
+  Read and confirm valid values for:
+  - `KEY_RELEASE_BASE_ADDR`
+  - `KEY_RELEASE_KEY_SIZE`
+- **Firmware must clear any obfuscated MEK from memory immediately after use.**
+
+
+
 
 ## Cryptographic blocks fatal and non-fatal errors
 
