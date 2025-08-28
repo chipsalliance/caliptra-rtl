@@ -8,6 +8,7 @@
 #include "sha3.h"
 #include "printf.h"
 #include "string.h"
+#include "caliptra_reg.h"
 
 /**
  * Calculate the rate (r) in bits from the given security level.
@@ -26,7 +27,7 @@ static uint32_t calculate_rate_bits(uint32_t security_level) {
 
 void dif_kmac_poll_status(const uintptr_t kmac, uint32_t flag) {
   while (1) {
-    uint32_t reg = lsu_read_32(kmac + KMAC_STATUS_REG_OFFSET);
+    uint32_t reg = lsu_read_32(kmac + KMAC_STATUS);
     if (reg & (0x1u << flag)) {
       break;
     }
@@ -155,8 +156,8 @@ void dif_kmac_mode_sha3_start(
   }
 
   // Hardware must be idle to start an operation.
-  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS_REG_OFFSET);
-  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_INDEX)) == 0) {
+  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS);
+  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_LOW)) == 0) {
     VPRINTF(ERROR, "dif_kmac_sha3_start: ERROR hardware must be idle.\n");
     while(1);
     return;
@@ -167,18 +168,18 @@ void dif_kmac_mode_sha3_start(
 
   // Configure SHA-3 mode with the given strength.
   // Must be written twice because it is a shadow register.
-  uint32_t config_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) |
-                        (KMAC_CFG_SHADOWED_MODE_VALUE_SHA3 << KMAC_CFG_SHADOWED_MODE_INDEX);
-  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, config_reg);
-  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, config_reg);
-  config_reg = lsu_read_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET);
+  uint32_t config_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_LOW) |
+                        (KMAC_CFG_SHADOWED_MODE_VALUE_SHA3 << KMAC_CFG_SHADOWED_MODE_LOW);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED, config_reg);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED, config_reg);
+  config_reg = lsu_read_32(kmac + KMAC_CFG_SHADOWED);
 
   // Issue start command.
-  lsu_write_32(kmac + KMAC_CMD_REG_OFFSET,
-               (KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_INDEX));
+  lsu_write_32(kmac + KMAC_CMD,
+               (KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_LOW));
 
   // Poll until the status register is in the 'absorb' state.
-  dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_INDEX);
+  dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_LOW);
 }
 
 void dif_kmac_mode_shake_start(
@@ -208,8 +209,8 @@ void dif_kmac_mode_shake_start(
   }
 
   // Hardware must be idle to start an operation.
-  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS_REG_OFFSET);
-  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_INDEX)) == 0) {
+  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS);
+  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_LOW)) == 0) {
     VPRINTF(ERROR, "dif_kmac_shake_start: ERROR hardware must be idle.\n");
     while(1);
     return;
@@ -220,15 +221,15 @@ void dif_kmac_mode_shake_start(
   operation_state->offset = 0;
 
   // Configure SHAKE mode with the given strength.
-  uint32_t cfg_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) |
-                        (KMAC_CFG_SHADOWED_MODE_VALUE_SHAKE << KMAC_CFG_SHADOWED_MODE_INDEX);
-  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
-  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
+  uint32_t cfg_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_LOW) |
+                        (KMAC_CFG_SHADOWED_MODE_VALUE_SHAKE << KMAC_CFG_SHADOWED_MODE_LOW);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED, cfg_reg);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED, cfg_reg);
 
   // Issue start command.
-  lsu_write_32(kmac + KMAC_CMD_REG_OFFSET, KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_INDEX);
+  lsu_write_32(kmac + KMAC_CMD, KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_LOW);
 
-  dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_INDEX);
+  dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_LOW);
 }
 
 void dif_kmac_mode_cshake_start(
@@ -277,8 +278,8 @@ void dif_kmac_mode_cshake_start(
   }
 
   // Hardware must be idle to start an operation.
-  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS_REG_OFFSET);
-  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_INDEX)) == 0) {
+  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS);
+  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_LOW)) == 0) {
     VPRINTF(ERROR, "dif_kmac_mode_cshake_start: ERROR hardware must be idle.\n");
     while (1);
     return;
@@ -289,9 +290,9 @@ void dif_kmac_mode_cshake_start(
   operation_state->offset = 0;
 
   // Configure cSHAKE mode with the given strength.
-  uint32_t cfg_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_INDEX) | (KMAC_CFG_SHADOWED_MODE_VALUE_CSHAKE << KMAC_CFG_SHADOWED_MODE_INDEX);
-  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
-  lsu_write_32(kmac + KMAC_CFG_SHADOWED_REG_OFFSET, cfg_reg);
+  uint32_t cfg_reg = (kstrength << KMAC_CFG_SHADOWED_KSTRENGTH_LOW) | (KMAC_CFG_SHADOWED_MODE_VALUE_CSHAKE << KMAC_CFG_SHADOWED_MODE_LOW);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED, cfg_reg);
+  lsu_write_32(kmac + KMAC_CFG_SHADOWED, cfg_reg);
 
   // Calculate PREFIX register values.
   uint32_t prefix_regs[11] = {0};
@@ -314,23 +315,23 @@ void dif_kmac_mode_cshake_start(
   }
 
   // Write PREFIX register values.
-  lsu_write_32(kmac + KMAC_PREFIX_0_REG_OFFSET, prefix_regs[0]);
-  lsu_write_32(kmac + KMAC_PREFIX_1_REG_OFFSET, prefix_regs[1]);
-  lsu_write_32(kmac + KMAC_PREFIX_2_REG_OFFSET, prefix_regs[2]);
-  lsu_write_32(kmac + KMAC_PREFIX_3_REG_OFFSET, prefix_regs[3]);
-  lsu_write_32(kmac + KMAC_PREFIX_4_REG_OFFSET, prefix_regs[4]);
-  lsu_write_32(kmac + KMAC_PREFIX_5_REG_OFFSET, prefix_regs[5]);
-  lsu_write_32(kmac + KMAC_PREFIX_6_REG_OFFSET, prefix_regs[6]);
-  lsu_write_32(kmac + KMAC_PREFIX_7_REG_OFFSET, prefix_regs[7]);
-  lsu_write_32(kmac + KMAC_PREFIX_8_REG_OFFSET, prefix_regs[8]);
-  lsu_write_32(kmac + KMAC_PREFIX_9_REG_OFFSET, prefix_regs[9]);
-  lsu_write_32(kmac + KMAC_PREFIX_10_REG_OFFSET, prefix_regs[10]);
+  lsu_write_32(kmac + KMAC_PREFIX_0, prefix_regs[ 0]);
+  lsu_write_32(kmac + KMAC_PREFIX_1, prefix_regs[ 1]);
+  lsu_write_32(kmac + KMAC_PREFIX_2, prefix_regs[ 2]);
+  lsu_write_32(kmac + KMAC_PREFIX_3, prefix_regs[ 3]);
+  lsu_write_32(kmac + KMAC_PREFIX_4, prefix_regs[ 4]);
+  lsu_write_32(kmac + KMAC_PREFIX_5, prefix_regs[ 5]);
+  lsu_write_32(kmac + KMAC_PREFIX_6, prefix_regs[ 6]);
+  lsu_write_32(kmac + KMAC_PREFIX_7, prefix_regs[ 7]);
+  lsu_write_32(kmac + KMAC_PREFIX_8, prefix_regs[ 8]);
+  lsu_write_32(kmac + KMAC_PREFIX_9, prefix_regs[ 9]);
+  lsu_write_32(kmac + KMAC_PREFIX_10,prefix_regs[10]);
 
   // Issue start command.
-  uint32_t cmd_reg = KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_INDEX;
-  lsu_write_32(kmac + KMAC_CMD_REG_OFFSET, cmd_reg);
+  uint32_t cmd_reg = KMAC_CMD_CMD_VALUE_START << KMAC_CMD_CMD_LOW;
+  lsu_write_32(kmac + KMAC_CMD, cmd_reg);
 
-  dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_INDEX);
+  dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_ABSORB_LOW);
 }
 
 static void msg_fifo_write(
@@ -340,16 +341,15 @@ static void msg_fifo_write(
   // will not be byte swapped in big-endian mode.
   uint32_t *aligned_data;
   for (; len != 0 && ((uintptr_t)data) % sizeof(uint32_t); --len) {
-    lsu_write_8(kmac + KMAC_MSG_FIFO_REG_OFFSET, *data++);
+    lsu_write_8(CLP_KMAC_MSG_FIFO_BASE_ADDR, *data++);
   }
   for (; len >= sizeof(uint32_t); len -= sizeof(uint32_t)) {
     aligned_data = (uint32_t *) data;
-    lsu_write_32(kmac + KMAC_MSG_FIFO_REG_OFFSET,
-                        *aligned_data);
+    lsu_write_32(CLP_KMAC_MSG_FIFO_BASE_ADDR, *aligned_data);
     data += sizeof(uint32_t);
   }
   for (; len != 0; --len) {
-    lsu_write_8(kmac + KMAC_MSG_FIFO_REG_OFFSET, *data++);
+    lsu_write_8(CLP_KMAC_MSG_FIFO_BASE_ADDR, *data++);
   }
 }
 
@@ -375,8 +375,8 @@ void dif_kmac_absorb(
   }
 
   // Poll until the status register is in the 'absorb' state.
-  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS_REG_OFFSET);
-  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_ABSORB_INDEX)) == 0) {
+  uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS);
+  if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_ABSORB_LOW)) == 0) {
     VPRINTF(ERROR, "dif_kmac_absorb: ERROR hardware must be absorbing.\n");
     while(1);
     return;
@@ -389,12 +389,12 @@ void dif_kmac_absorb(
   uint32_t status;
   while (len > 0) {
     // Read the status register.
-    status = lsu_read_32(kmac + KMAC_STATUS_REG_OFFSET);
+    status = lsu_read_32(kmac + KMAC_STATUS);
 
     // Calculate the remaining space in the message FIFO based on the
     // `FIFO_DEPTH` status field.
     size_t free_entries = KMAC_PARAM_NUM_ENTRIES_MSG_FIFO - (
-                            (status & KMAC_STATUS_FIFO_DEPTH_MASK) >> KMAC_STATUS_FIFO_DEPTH_INDEX
+                            (status & KMAC_STATUS_FIFO_DEPTH_MASK) >> KMAC_STATUS_FIFO_DEPTH_LOW
                           );
     size_t max_len = free_entries * KMAC_PARAM_NUM_BYTES_MSG_FIFO_ENTRY;
     size_t write_len = (len < max_len) ? len : max_len;
@@ -438,17 +438,16 @@ void dif_kmac_squeeze(
       int len = 1 + (d > 0xFF) + (d > 0xFFFF) + (d > 0xFFFFFF);
       int shift = (len - 1) * 8;
       while (shift >= 8) {
-        lsu_write_8(kmac + KMAC_MSG_FIFO_REG_OFFSET,
-                           (uint8_t)(d >> shift));
+        lsu_write_8(CLP_KMAC_MSG_FIFO_BASE_ADDR, (uint8_t)(d >> shift));
         shift -= 8;
       }
-      lsu_write_8(kmac + KMAC_MSG_FIFO_REG_OFFSET, (uint8_t)d);
-      lsu_write_8(kmac + KMAC_MSG_FIFO_REG_OFFSET, (uint8_t)len);
+      lsu_write_8(CLP_KMAC_MSG_FIFO_BASE_ADDR, (uint8_t)d);
+      lsu_write_8(CLP_KMAC_MSG_FIFO_BASE_ADDR, (uint8_t)len);
     }
     operation_state->squeezing = true;
 
     // Issue squeeze command.
-    lsu_write_32(kmac + KMAC_CMD_REG_OFFSET, KMAC_CMD_CMD_VALUE_PROCESS << KMAC_CMD_CMD_INDEX);
+    lsu_write_32(kmac + KMAC_CMD, KMAC_CMD_CMD_VALUE_PROCESS << KMAC_CMD_CMD_LOW);
   }
 
   // If the operation has a fixed length output then the total number of bytes
@@ -485,24 +484,24 @@ void dif_kmac_squeeze(
       }
 
       // Issue run command to generate more state.
-      lsu_write_32(kmac + KMAC_CMD_REG_OFFSET, KMAC_CMD_CMD_VALUE_RUN << KMAC_CMD_CMD_INDEX);
+      lsu_write_32(kmac + KMAC_CMD, KMAC_CMD_CMD_VALUE_RUN << KMAC_CMD_CMD_LOW);
       operation_state->offset = 0;
       continue;
     }
 
     // Poll the status register until in the 'squeeze' state.
-    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_SQUEEZE_INDEX);
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_SQUEEZE_LOW);
 
-    uint32_t offset =
-        KMAC_STATE_REG_OFFSET +
+    uint32_t address =
+        CLP_KMAC_STATE_BASE_ADDR +
         operation_state->offset * sizeof(uint32_t);
     for (size_t i = 0; i < n; ++i) {
       // Read both shares from state register and combine using XOR.
-      uint32_t share0 = lsu_read_32(kmac + offset);
+      uint32_t share0 = lsu_read_32(address);
       uint32_t share1 =
-          lsu_read_32(kmac + offset + kDifKmacStateShareOffset);
+          lsu_read_32(address + kDifKmacStateShareOffset);
       *out++ = share0 ^ share1;
-      offset += sizeof(uint32_t);
+      address += sizeof(uint32_t);
     }
     operation_state->offset += n;
     len -= n;
@@ -513,15 +512,14 @@ void dif_kmac_squeeze(
     // This is only useful for testing that capacity is not leaked during
     // sideloaded KMAC operations.
     if (capacity != 0) {
-      uint32_t capacity_offset =
-          KMAC_STATE_REG_OFFSET +
+      uint32_t capacity_address =
+          CLP_KMAC_STATE_BASE_ADDR +
           operation_state->r * sizeof(uint32_t);
       for (int i = 0; i < kDifKmacStateWords - operation_state->r; ++i) {
-        uint32_t share0 = lsu_read_32(kmac + capacity_offset);
-        uint32_t share1 = lsu_read_32(
-            kmac + capacity_offset + kDifKmacStateShareOffset);
+        uint32_t share0 = lsu_read_32(capacity_address);
+        uint32_t share1 = lsu_read_32(capacity_address + kDifKmacStateShareOffset);
         *capacity++ = share0 ^ share1;
-        capacity_offset += sizeof(uint32_t);
+        capacity_address += sizeof(uint32_t);
       }
     }
   }
@@ -543,14 +541,14 @@ void dif_kmac_end(
     return;
   }
   while (true) {
-    uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS_REG_OFFSET);
-    if (kmac_status & (0x1U << KMAC_STATUS_SHA3_SQUEEZE_INDEX)) {
+    uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS);
+    if (kmac_status & (0x1U << KMAC_STATUS_SHA3_SQUEEZE_LOW)) {
       break;
     }
   }
 
   // Issue done command.
-  lsu_write_32(kmac + KMAC_CMD_REG_OFFSET, KMAC_CMD_CMD_VALUE_DONE << KMAC_CMD_CMD_INDEX);
+  lsu_write_32(kmac + KMAC_CMD, KMAC_CMD_CMD_VALUE_DONE << KMAC_CMD_CMD_LOW);
 
   // Reset operation state.
   operation_state->squeezing = false;
