@@ -195,9 +195,11 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
   lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
 
-  // Try to program KEY Read during engine operation
-  lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |
+  if (!aes_input.key.kv_expect_err){
+    // Try to program KEY Read during engine operation
+    lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |
                                                   ((!aes_input.key.kv_id << AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+  }
 
   if (mode == AES_GCM) {
     aes_wait_idle();
@@ -357,7 +359,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         if (aes_input.aes_err_inj.sideload_corrupt) {
           lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
           lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
-          VPRINTF(LOW, "ATTEMPT TO FLIP SIDELOAD BIT")
+          VPRINTF(LOW, "ATTEMPT TO FLIP SIDELOAD BIT\n")
         }
 
         if( !aes_input.key_o.kv_intf ) {
