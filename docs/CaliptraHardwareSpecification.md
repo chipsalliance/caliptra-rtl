@@ -2530,35 +2530,36 @@ Changes are made to support OCP LOCK flows defined for SSD applications. Specifi
 [OCP L.O.C.K. Specification](https://chipsalliance.github.io/Caliptra/ocp-lock/specification/HEAD)
 
 ### 3 HW config register bit and macro
-**CALIPTRA_OCP_LOCK_EN** constant-value input strap, with a bit in **CPTRA_HW_CONFIG** register:
+**`ss_ocp_lock_en`** constant-value input strap, with a bit in **CPTRA_HW_CONFIG** register, called `OCP_LOCK_MODE_en`:
 - Enables HEK DOE
-- Enables CALIPTRA_IN_OCP_LOCK to be set
-**CLP_DV_REG_NONSTICKYGENERICSCRATCHREG_0**: The least significant bit (LSB) of this register indicates whether the HEK seed is in permanent mode, meaning all HEK seeds have been used and no valid HEK seed remains.
+- Enables `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` to be set by Caliptra ROM
+<!-- **CLP_DV_REG_NONSTICKYGENERICSCRATCHREG_0**: The least significant bit (LSB) of this register indicates whether the HEK seed is in permanent mode, meaning all HEK seeds have been used and no valid HEK seed remains. -->
 
-**NOTE:** CALIPTRA_OCP_LOCK_EN is strap pin and needs to be driven  with a constant value by the integrator. 
+**NOTE:** `ss_ocp_lock_en` is strap pin and needs to be driven  with a constant value by the integrator. 
 
 ### 4 HW “mode” register bit
-**CALIPTRA_OCP_LOCK_PROGRESS_REG**
+**`SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`**
 - KeyVault slots 0-15: Standard use-cases
 - KeyVault slots 16-23: Standard use-cases
 - Write-1-to-lock
 - ROM must set this after performing LOCK derivations (HEK, EPK, etc)
-- CALITPRA_OCP_LOCK_EN + CALIPTRA_MODE_SUBSYSTEM macro is the write-enable for this bit
+- `ss_ocp_lock_en` + CALIPTRA_MODE_SUBSYSTEM macro is the write-enable for this bit
 - Prevents interactions between slots (STANDARD slots) and (LOCK slots)
 - Enables Key Release operation
+- Enables AES write to KV23
 
 ### 5.3 Add AES Write Path
 Decrypted Keys (or “unwrapped”/ “ready” keys, e.g. MPK) may be written to KV slots.  
 **MEK** must be written to KV slot 23. Enforced in HW by detecting AES-ECB decrypt operation with KvSlots16 (MDK) as key.
 
-### 5.7 Add KeyVault access rules and filtering logic
+### 5.7 Add KeyVault access rules and filtering logic if `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set
 - ROM is responsible for choosing dest slot for HEK seed
 - INSTEAD, Slot 23 PREVENTED as destination for all DOE operations
   - Slot 23 (place for MEK) restricted so ONLY AES can write to it (when OCP LOCK in progress)
   - Slot 22 also used to store full derived HEK, which overwrites HEK seed (ROM requirement)
   - Locked for writes until warm reset (ROM requirement, must lock after each reset)
   - Locked for copying until warm reset (ROM requirement, must lock after each reset)
-- There must not be a way from KV0-16 to KV10-15 or from KV10-15 to KV9-0 if OCP parameter and OCP_LOCK_PROGRESS_REG, which is set only by ROM, are high.
+- There must not be a way from KV0-15 to KV16-23 if OCP parameter and `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`, which is set only by ROM, are high.
 - IF (OCP LOCK mode enabled) THEN (KV23 shall never be used as input to other crypto operations, only as source for Key Release). Prevents known values propagating to other KV slots.
 - IF (OCP LOCK mode enabled) AND (AES-ECB decrypt operation) AND (key = KV16) THEN (dest = KV23)  
   ELSE (dest=FW) << Preventing AES writes to other KV slots is important to avoid malicious firmware getting known values into KV.
@@ -2582,12 +2583,8 @@ Input addr strap is full address to MEK – FW can derive SFR_BASE from this str
 Input size strap indicates byte-count (dword-count preferred by HW) of MEK to program to MEK address.
 
 ### 9 Key Release
-Hardware path allowing KV slot 15 to be written to SoC using DMA block.
-- Only permitted when CALIPTRA_OCP_LOCK_EN (synth macro) is set and if CALIPTRA_OCP_LOCK_PROGRESS_REG (sticky w1set bit set by Caliptra ROM) are set.
-
-**TODO:**
-- Add DMA rd_route for KV slot 15; no path to read other KV slots.
-  - Destination address should not be programmable, but will be derived from stable input (strap for the SSD controller SFR).
+Hardware path allowing KV slot 23 to be written to SoC using DMA block.
+- Only permitted when `ss_ocp_lock_en` (synth macro) is set and if CALIPTRA_OCP_LOCK_PROGRESS_REG (sticky w1set bit set by Caliptra ROM) are set.
 
 ### 11 RAS/Security Hardening
 - Flush the DMA FIFO so secrets can’t be leaked over scan chain.
