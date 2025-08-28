@@ -421,7 +421,7 @@ package soc_ifc_tb_pkg;
     "SS_OTP_FC_BASE_ADDR_L"                            : 32'hffff_ffff,
     "SS_OTP_FC_BASE_ADDR_H"                            : 32'hffff_ffff,
     "SS_UDS_SEED_BASE_ADDR_L"                          : 32'hffff_ffff,
-    "SS_UDS_BASE_ADDR_H"                               : 32'hffff_ffff,
+    "SS_UDS_SEED_BASE_ADDR_H"                          : 32'hffff_ffff,
     "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : 32'hffff_ffff,
     "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : 32'hffff_ffff,
     "SS_DEBUG_INTENT"                                  : 32'h1,
