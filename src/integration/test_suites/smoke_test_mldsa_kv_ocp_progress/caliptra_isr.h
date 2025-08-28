@@ -60,6 +60,7 @@ typedef struct {
     uint32_t abr_notif;
     uint32_t axi_dma_error;
     uint32_t axi_dma_notif;
+} caliptra_intr_received_s;
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 //////////////////////////////////////////////////////////////////////////////
