@@ -39,7 +39,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * AXI Manager DMA AES feature for OCP L.O.C.K. support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
 * [AES Big Endian mode](#aes-endian)
 * [External Staging Area](./CaliptraIntegrationSpecification.md#external-staging-area)
-**TODO:EMRE**
+* [OCP LOCK Support](#ocp-lock-hardware-architecture)
 
 ## Boot FSM
 
