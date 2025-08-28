@@ -22,6 +22,9 @@
 // 
 //======================================================================
 
+`include "caliptra_reg_field_defines.svh"
+`include "kv_macros.svh"
+
 module aes_clp_wrapper
   import aes_pkg::*;
   import kv_defines_pkg::*;
@@ -143,7 +146,7 @@ keymgr_pkg::hw_key_req_t keymgr_key;
 assign error_intr = '0; // Unused
 assign notif_intr = '0;  // Unused 
 
-assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle);
+assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle) & ~kv_key_ready & ~kv_write_ready;
 assign status_idle_o = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
 
 
@@ -509,13 +512,19 @@ genvar g_dword;
 genvar g_byte;
 generate
   for (g_dword = 0; g_dword < keymgr_pkg::KeyWidth/32; g_dword++) begin
+    logic [$bits(kv_key_write_offset)-1:0] local_g_dword;
+    assign local_g_dword = 3'(g_dword);
     for (g_byte = 0; g_byte < 4; g_byte++) begin
       always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
           kv_key_reg[g_dword][g_byte] <= '0;
         end else if(debugUnlock_or_scan_mode_switch) begin
           kv_key_reg[g_dword][g_byte] <= '0;
-        end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
+        // zeroize the buffered KeyVault value when reading in a new key
+        // On the first beat, the least-sig dword is set, all other dwords set to 0
+        end else if (kv_key_write_en && |local_g_dword && (kv_key_write_offset <  local_g_dword)) begin
+          kv_key_reg[g_dword][g_byte] <= 0;
+        end else if (kv_key_write_en && (kv_key_write_offset == local_g_dword)) begin
           kv_key_reg[g_dword][g_byte] <= kv_key_write_data[3-g_byte];
         end
       end
