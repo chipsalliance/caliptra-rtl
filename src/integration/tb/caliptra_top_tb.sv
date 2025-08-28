@@ -296,7 +296,7 @@ caliptra_top caliptra_top_dut (
     .ss_soc_dbg_unlock_level(),
 
     // Subsystem mode firmware execution control
-    .ss_generic_fw_exec_ctrl(/),
+    .ss_generic_fw_exec_ctrl(),
 
     .generic_input_wires (generic_input_wires ),
     .generic_output_wires(                    ),
