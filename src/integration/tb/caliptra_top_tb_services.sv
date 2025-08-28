@@ -379,8 +379,9 @@ module caliptra_top_tb_services
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
     //         8'hcb        - Inject key 0x0 into all slots for AES
-    //         8'hcc        - KV Error checking
-    //         8'hcd: 8'hd4 - Unused
+    //         8'hcc        - Inject key into slot 16 for AES
+    //         8'hcd        - KV Error checking
+    //         8'hce: 8'hd4 - Unused
     //         8'hd5        - Inject randomized HEK test vector
     //         8'hd6        - Inject mldsa timeout
     //         8'hd7        - Inject normcheck or makehint failure during mldsa signing 1st loop. Failure type is selected randomly
@@ -762,7 +763,7 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'h0;
                         end
                     end
-                    // inject key for AES into all key slots
+                    // inject key for AES into slot 16 key slots
                     else if((WriteData[7:0] == 8'hcc) && mailbox_write) begin
                         if (slot_id == 16) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
@@ -883,7 +884,7 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'hAAAA_5555;
                         end
                     end
-                    else if ((WriteData[7:0] == 8'hcc) && mailbox_write && ~inject_kv_error_check) begin
+                    else if ((WriteData[7:0] == 8'hcd) && mailbox_write && ~inject_kv_error_check) begin
                         inject_kv_error_check <= 1'b1;
                         //write to every entry with dest valid 0's
                         //reads will result in errors
@@ -894,7 +895,7 @@ module caliptra_top_tb_services
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '1;
                     end
-                    else if ((WriteData[7:0] == 8'hcc) && mailbox_write && inject_kv_error_check) begin
+                    else if ((WriteData[7:0] == 8'hcd) && mailbox_write && inject_kv_error_check) begin
                         inject_kv_error_check <= 1'b0;
                     end
                     else begin
