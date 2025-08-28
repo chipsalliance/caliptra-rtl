@@ -8880,31 +8880,53 @@
 #define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_ERROR_MASK                                             (0x3fc)
 #endif
 #define CLP_KMAC_BASE_ADDR                                                                          (0x10040000)
-#define CLP_KMAC_FIXME1                                                                             (0x10040000)
-#ifndef KMAC_FIXME1
-#define KMAC_FIXME1                                                                                 (0x0)
+#define CLP_KMAC_INTR_STATE                                                                         (0x10040000)
+#ifndef KMAC_INTR_STATE
+#define KMAC_INTR_STATE                                                                             (0x0)
+#define KMAC_INTR_STATE_KMAC_DONE_LOW                                                               (0)
+#define KMAC_INTR_STATE_KMAC_DONE_MASK                                                              (0x1)
+#define KMAC_INTR_STATE_FIFO_EMPTY_LOW                                                              (1)
+#define KMAC_INTR_STATE_FIFO_EMPTY_MASK                                                             (0x2)
+#define KMAC_INTR_STATE_KMAC_ERR_LOW                                                                (2)
+#define KMAC_INTR_STATE_KMAC_ERR_MASK                                                               (0x4)
 #endif
-#define CLP_KMAC_FIXME2                                                                             (0x10040008)
-#ifndef KMAC_FIXME2
-#define KMAC_FIXME2                                                                                 (0x8)
+#define CLP_KMAC_INTR_ENABLE                                                                        (0x10040004)
+#ifndef KMAC_INTR_ENABLE
+#define KMAC_INTR_ENABLE                                                                            (0x4)
+#define KMAC_INTR_ENABLE_KMAC_DONE_LOW                                                              (0)
+#define KMAC_INTR_ENABLE_KMAC_DONE_MASK                                                             (0x1)
+#define KMAC_INTR_ENABLE_FIFO_EMPTY_LOW                                                             (1)
+#define KMAC_INTR_ENABLE_FIFO_EMPTY_MASK                                                            (0x2)
+#define KMAC_INTR_ENABLE_KMAC_ERR_LOW                                                               (2)
+#define KMAC_INTR_ENABLE_KMAC_ERR_MASK                                                              (0x4)
 #endif
-#define CLP_KMAC_ALERT_TEST                                                                         (0x1004001c)
+#define CLP_KMAC_INTR_TEST                                                                          (0x10040008)
+#ifndef KMAC_INTR_TEST
+#define KMAC_INTR_TEST                                                                              (0x8)
+#define KMAC_INTR_TEST_KMAC_DONE_LOW                                                                (0)
+#define KMAC_INTR_TEST_KMAC_DONE_MASK                                                               (0x1)
+#define KMAC_INTR_TEST_FIFO_EMPTY_LOW                                                               (1)
+#define KMAC_INTR_TEST_FIFO_EMPTY_MASK                                                              (0x2)
+#define KMAC_INTR_TEST_KMAC_ERR_LOW                                                                 (2)
+#define KMAC_INTR_TEST_KMAC_ERR_MASK                                                                (0x4)
+#endif
+#define CLP_KMAC_ALERT_TEST                                                                         (0x1004000c)
 #ifndef KMAC_ALERT_TEST
-#define KMAC_ALERT_TEST                                                                             (0x1c)
+#define KMAC_ALERT_TEST                                                                             (0xc)
 #define KMAC_ALERT_TEST_RECOV_OPERATION_ERR_LOW                                                     (0)
 #define KMAC_ALERT_TEST_RECOV_OPERATION_ERR_MASK                                                    (0x1)
 #define KMAC_ALERT_TEST_FATAL_FAULT_ERR_LOW                                                         (1)
 #define KMAC_ALERT_TEST_FATAL_FAULT_ERR_MASK                                                        (0x2)
 #endif
-#define CLP_KMAC_CFG_REGWEN                                                                         (0x10040020)
+#define CLP_KMAC_CFG_REGWEN                                                                         (0x10040010)
 #ifndef KMAC_CFG_REGWEN
-#define KMAC_CFG_REGWEN                                                                             (0x20)
+#define KMAC_CFG_REGWEN                                                                             (0x10)
 #define KMAC_CFG_REGWEN_EN_LOW                                                                      (0)
 #define KMAC_CFG_REGWEN_EN_MASK                                                                     (0x1)
 #endif
-#define CLP_KMAC_CFG_SHADOWED                                                                       (0x10040024)
+#define CLP_KMAC_CFG_SHADOWED                                                                       (0x10040014)
 #ifndef KMAC_CFG_SHADOWED
-#define KMAC_CFG_SHADOWED                                                                           (0x24)
+#define KMAC_CFG_SHADOWED                                                                           (0x14)
 #define KMAC_CFG_SHADOWED_KSTRENGTH_LOW                                                             (1)
 #define KMAC_CFG_SHADOWED_KSTRENGTH_MASK                                                            (0xe)
 #define KMAC_CFG_SHADOWED_MODE_LOW                                                                  (4)
@@ -8914,17 +8936,17 @@
 #define KMAC_CFG_SHADOWED_STATE_ENDIANNESS_LOW                                                      (9)
 #define KMAC_CFG_SHADOWED_STATE_ENDIANNESS_MASK                                                     (0x200)
 #endif
-#define CLP_KMAC_CMD                                                                                (0x10040028)
+#define CLP_KMAC_CMD                                                                                (0x10040018)
 #ifndef KMAC_CMD
-#define KMAC_CMD                                                                                    (0x28)
+#define KMAC_CMD                                                                                    (0x18)
 #define KMAC_CMD_CMD_LOW                                                                            (0)
 #define KMAC_CMD_CMD_MASK                                                                           (0x3f)
 #define KMAC_CMD_ERR_PROCESSED_LOW                                                                  (10)
 #define KMAC_CMD_ERR_PROCESSED_MASK                                                                 (0x400)
 #endif
-#define CLP_KMAC_STATUS                                                                             (0x1004002c)
+#define CLP_KMAC_STATUS                                                                             (0x1004001c)
 #ifndef KMAC_STATUS
-#define KMAC_STATUS                                                                                 (0x2c)
+#define KMAC_STATUS                                                                                 (0x1c)
 #define KMAC_STATUS_SHA3_IDLE_LOW                                                                   (0)
 #define KMAC_STATUS_SHA3_IDLE_MASK                                                                  (0x1)
 #define KMAC_STATUS_SHA3_ABSORB_LOW                                                                 (1)
@@ -8942,9 +8964,53 @@
 #define KMAC_STATUS_ALERT_RECOV_CTRL_UPDATE_ERR_LOW                                                 (17)
 #define KMAC_STATUS_ALERT_RECOV_CTRL_UPDATE_ERR_MASK                                                (0x20000)
 #endif
-#define CLP_KMAC_ERR_CODE                                                                           (0x100400d0)
+#define CLP_KMAC_PREFIX_0                                                                           (0x10040020)
+#ifndef KMAC_PREFIX_0
+#define KMAC_PREFIX_0                                                                               (0x20)
+#endif
+#define CLP_KMAC_PREFIX_1                                                                           (0x10040024)
+#ifndef KMAC_PREFIX_1
+#define KMAC_PREFIX_1                                                                               (0x24)
+#endif
+#define CLP_KMAC_PREFIX_2                                                                           (0x10040028)
+#ifndef KMAC_PREFIX_2
+#define KMAC_PREFIX_2                                                                               (0x28)
+#endif
+#define CLP_KMAC_PREFIX_3                                                                           (0x1004002c)
+#ifndef KMAC_PREFIX_3
+#define KMAC_PREFIX_3                                                                               (0x2c)
+#endif
+#define CLP_KMAC_PREFIX_4                                                                           (0x10040030)
+#ifndef KMAC_PREFIX_4
+#define KMAC_PREFIX_4                                                                               (0x30)
+#endif
+#define CLP_KMAC_PREFIX_5                                                                           (0x10040034)
+#ifndef KMAC_PREFIX_5
+#define KMAC_PREFIX_5                                                                               (0x34)
+#endif
+#define CLP_KMAC_PREFIX_6                                                                           (0x10040038)
+#ifndef KMAC_PREFIX_6
+#define KMAC_PREFIX_6                                                                               (0x38)
+#endif
+#define CLP_KMAC_PREFIX_7                                                                           (0x1004003c)
+#ifndef KMAC_PREFIX_7
+#define KMAC_PREFIX_7                                                                               (0x3c)
+#endif
+#define CLP_KMAC_PREFIX_8                                                                           (0x10040040)
+#ifndef KMAC_PREFIX_8
+#define KMAC_PREFIX_8                                                                               (0x40)
+#endif
+#define CLP_KMAC_PREFIX_9                                                                           (0x10040044)
+#ifndef KMAC_PREFIX_9
+#define KMAC_PREFIX_9                                                                               (0x44)
+#endif
+#define CLP_KMAC_PREFIX_10                                                                          (0x10040048)
+#ifndef KMAC_PREFIX_10
+#define KMAC_PREFIX_10                                                                              (0x48)
+#endif
+#define CLP_KMAC_ERR_CODE                                                                           (0x1004004c)
 #ifndef KMAC_ERR_CODE
-#define KMAC_ERR_CODE                                                                               (0xd0)
+#define KMAC_ERR_CODE                                                                               (0x4c)
 #endif
 #define CLP_KMAC_STATE_BASE_ADDR                                                                    (0x10040400)
 #define CLP_KMAC_STATE_END_ADDR                                                                     (0x100404ff)
