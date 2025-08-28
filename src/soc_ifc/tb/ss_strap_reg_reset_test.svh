@@ -35,9 +35,6 @@
     begin
       print_banner("\nExecuting task ss_strap_reg_pwron_test", "="); 
 
-      set_security_state_byname(ss_name); 
-      sim_dut_init();
-
       tc_ctr = tc_ctr + 1;
       $display("Current security state = 0b%03b", security_state);
 
@@ -151,9 +148,6 @@
       print_banner("\nExecuting task ss_strap_reg_wrmrst_test", "="); 
 
       transaction = new(); 
-
-      set_security_state_byname("RANDOM");
-      sim_dut_init();
 
       tc_ctr = tc_ctr + 1;
 

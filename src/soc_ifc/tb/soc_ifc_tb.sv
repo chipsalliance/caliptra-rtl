@@ -1923,12 +1923,12 @@ module soc_ifc_tb
           debug_unlock_manuf_test();
 
         end else if (soc_ifc_testname == "ss_strap_reg_pwron_test") begin
-          set_security_state('{device_lifecycle: DEVICE_MANUFACTURING, debug_locked: DEBUG_LOCKED});
+          set_security_state_byname("RANDOM");
           sim_dut_init(.drive_straps(1'b1));
           ss_strap_reg_pwron_test();
 
         end else if (soc_ifc_testname == "ss_strap_reg_wrmrst_test") begin
-          set_security_state('{device_lifecycle: DEVICE_MANUFACTURING, debug_locked: DEBUG_LOCKED});
+          set_security_state_byname("RANDOM");
           sim_dut_init(.drive_straps(1'b1));
           ss_strap_reg_wrmrst_test();
 
