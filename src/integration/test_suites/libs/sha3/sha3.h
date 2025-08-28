@@ -18,53 +18,21 @@
 #define KMAC_PARAM_NUM_ENTRIES_MSG_FIFO (10)
 #define KMAC_PARAM_NUM_BYTES_MSG_FIFO_ENTRY (8)
 
-// Shadowed config regsiter definitions.
-#define KMAC_CFG_SHADOWED_REG_OFFSET (0x14)
-#define KMAC_CFG_SHADOWED_KSTRENGTH_INDEX (1)
+// Shadowed config register values.
 #define KMAC_CFG_SHADOWED_KSTRENGTH_VALUE_L128 (0x0)
 #define KMAC_CFG_SHADOWED_KSTRENGTH_VALUE_L224 (0x1)
 #define KMAC_CFG_SHADOWED_KSTRENGTH_VALUE_L256 (0x2)
 #define KMAC_CFG_SHADOWED_KSTRENGTH_VALUE_L384 (0x3)
 #define KMAC_CFG_SHADOWED_KSTRENGTH_VALUE_L512 (0x4)
-#define KMAC_CFG_SHADOWED_MODE_INDEX (4)
 #define KMAC_CFG_SHADOWED_MODE_VALUE_SHA3   (0x0)
 #define KMAC_CFG_SHADOWED_MODE_VALUE_SHAKE  (0x2)
 #define KMAC_CFG_SHADOWED_MODE_VALUE_CSHAKE (0x3)
 
-// Command register definitions.
-#define KMAC_CMD_REG_OFFSET (0x18)
-#define KMAC_CMD_CMD_INDEX (0)
+// Command register values.
 #define KMAC_CMD_CMD_VALUE_START   (0x1d)
 #define KMAC_CMD_CMD_VALUE_PROCESS (0x2e)
 #define KMAC_CMD_CMD_VALUE_RUN     (0x31)
 #define KMAC_CMD_CMD_VALUE_DONE    (0x16)
-
-// Status register definitions.
-#define KMAC_STATUS_REG_OFFSET (0x1c)
-#define KMAC_STATUS_SHA3_IDLE_INDEX    (0)
-#define KMAC_STATUS_SHA3_ABSORB_INDEX  (1)
-#define KMAC_STATUS_SHA3_SQUEEZE_INDEX (2)
-#define KMAC_STATUS_FIFO_DEPTH_INDEX   (8)
-#define KMAC_STATUS_FIFO_DEPTH_MASK    (0x1F00)
-
-// Prefix registers.
-#define KMAC_PREFIX_0_REG_OFFSET  (0x20)
-#define KMAC_PREFIX_1_REG_OFFSET  (0x24)
-#define KMAC_PREFIX_2_REG_OFFSET  (0x28)
-#define KMAC_PREFIX_3_REG_OFFSET  (0x2c)
-#define KMAC_PREFIX_4_REG_OFFSET  (0x30)
-#define KMAC_PREFIX_5_REG_OFFSET  (0x34)
-#define KMAC_PREFIX_6_REG_OFFSET  (0x38)
-#define KMAC_PREFIX_7_REG_OFFSET  (0x3c)
-#define KMAC_PREFIX_8_REG_OFFSET  (0x40)
-#define KMAC_PREFIX_9_REG_OFFSET  (0x44)
-#define KMAC_PREFIX_10_REG_OFFSET (0x48)
-
-// Keccak state memory register definitions.
-#define KMAC_STATE_REG_OFFSET (0x400)
-
-// Message FIFO register definitions.
-#define KMAC_MSG_FIFO_REG_OFFSET (0x800)
 
 /**
  * Maximum lengths supported by the KMAC unit.

@@ -41,7 +41,9 @@ addrmap clp #(
 
     abr_reg abr_reg @ 0x1003_0000;
 
-    sha3_reg sha3 @ 0x1004_0000;
+    kmac_reg kmac @ 0x1004_0000;
+
+    sha3_reg sha3 @ 0x1004_1000;
 
     csrng csrng_reg @ 0x2000_2000;
 

@@ -6988,6 +6988,118 @@
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_ERROR_LOW                                              (2)
 `define ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_ERROR_MASK                                             (32'h3fc)
 `endif
+`ifndef KMAC_INTR_STATE
+`define KMAC_INTR_STATE                                                                             (32'h0)
+`define KMAC_INTR_STATE_KMAC_DONE_LOW                                                               (0)
+`define KMAC_INTR_STATE_KMAC_DONE_MASK                                                              (32'h1)
+`define KMAC_INTR_STATE_FIFO_EMPTY_LOW                                                              (1)
+`define KMAC_INTR_STATE_FIFO_EMPTY_MASK                                                             (32'h2)
+`define KMAC_INTR_STATE_KMAC_ERR_LOW                                                                (2)
+`define KMAC_INTR_STATE_KMAC_ERR_MASK                                                               (32'h4)
+`endif
+`ifndef KMAC_INTR_ENABLE
+`define KMAC_INTR_ENABLE                                                                            (32'h4)
+`define KMAC_INTR_ENABLE_KMAC_DONE_LOW                                                              (0)
+`define KMAC_INTR_ENABLE_KMAC_DONE_MASK                                                             (32'h1)
+`define KMAC_INTR_ENABLE_FIFO_EMPTY_LOW                                                             (1)
+`define KMAC_INTR_ENABLE_FIFO_EMPTY_MASK                                                            (32'h2)
+`define KMAC_INTR_ENABLE_KMAC_ERR_LOW                                                               (2)
+`define KMAC_INTR_ENABLE_KMAC_ERR_MASK                                                              (32'h4)
+`endif
+`ifndef KMAC_INTR_TEST
+`define KMAC_INTR_TEST                                                                              (32'h8)
+`define KMAC_INTR_TEST_KMAC_DONE_LOW                                                                (0)
+`define KMAC_INTR_TEST_KMAC_DONE_MASK                                                               (32'h1)
+`define KMAC_INTR_TEST_FIFO_EMPTY_LOW                                                               (1)
+`define KMAC_INTR_TEST_FIFO_EMPTY_MASK                                                              (32'h2)
+`define KMAC_INTR_TEST_KMAC_ERR_LOW                                                                 (2)
+`define KMAC_INTR_TEST_KMAC_ERR_MASK                                                                (32'h4)
+`endif
+`ifndef KMAC_ALERT_TEST
+`define KMAC_ALERT_TEST                                                                             (32'hc)
+`define KMAC_ALERT_TEST_RECOV_OPERATION_ERR_LOW                                                     (0)
+`define KMAC_ALERT_TEST_RECOV_OPERATION_ERR_MASK                                                    (32'h1)
+`define KMAC_ALERT_TEST_FATAL_FAULT_ERR_LOW                                                         (1)
+`define KMAC_ALERT_TEST_FATAL_FAULT_ERR_MASK                                                        (32'h2)
+`endif
+`ifndef KMAC_CFG_REGWEN
+`define KMAC_CFG_REGWEN                                                                             (32'h10)
+`define KMAC_CFG_REGWEN_EN_LOW                                                                      (0)
+`define KMAC_CFG_REGWEN_EN_MASK                                                                     (32'h1)
+`endif
+`ifndef KMAC_CFG_SHADOWED
+`define KMAC_CFG_SHADOWED                                                                           (32'h14)
+`define KMAC_CFG_SHADOWED_KSTRENGTH_LOW                                                             (1)
+`define KMAC_CFG_SHADOWED_KSTRENGTH_MASK                                                            (32'he)
+`define KMAC_CFG_SHADOWED_MODE_LOW                                                                  (4)
+`define KMAC_CFG_SHADOWED_MODE_MASK                                                                 (32'h30)
+`define KMAC_CFG_SHADOWED_MSG_ENDIANNESS_LOW                                                        (8)
+`define KMAC_CFG_SHADOWED_MSG_ENDIANNESS_MASK                                                       (32'h100)
+`define KMAC_CFG_SHADOWED_STATE_ENDIANNESS_LOW                                                      (9)
+`define KMAC_CFG_SHADOWED_STATE_ENDIANNESS_MASK                                                     (32'h200)
+`endif
+`ifndef KMAC_CMD
+`define KMAC_CMD                                                                                    (32'h18)
+`define KMAC_CMD_CMD_LOW                                                                            (0)
+`define KMAC_CMD_CMD_MASK                                                                           (32'h3f)
+`define KMAC_CMD_ERR_PROCESSED_LOW                                                                  (10)
+`define KMAC_CMD_ERR_PROCESSED_MASK                                                                 (32'h400)
+`endif
+`ifndef KMAC_STATUS
+`define KMAC_STATUS                                                                                 (32'h1c)
+`define KMAC_STATUS_SHA3_IDLE_LOW                                                                   (0)
+`define KMAC_STATUS_SHA3_IDLE_MASK                                                                  (32'h1)
+`define KMAC_STATUS_SHA3_ABSORB_LOW                                                                 (1)
+`define KMAC_STATUS_SHA3_ABSORB_MASK                                                                (32'h2)
+`define KMAC_STATUS_SHA3_SQUEEZE_LOW                                                                (2)
+`define KMAC_STATUS_SHA3_SQUEEZE_MASK                                                               (32'h4)
+`define KMAC_STATUS_FIFO_DEPTH_LOW                                                                  (8)
+`define KMAC_STATUS_FIFO_DEPTH_MASK                                                                 (32'h1f00)
+`define KMAC_STATUS_FIFO_EMPTY_LOW                                                                  (14)
+`define KMAC_STATUS_FIFO_EMPTY_MASK                                                                 (32'h4000)
+`define KMAC_STATUS_FIFO_FULL_LOW                                                                   (15)
+`define KMAC_STATUS_FIFO_FULL_MASK                                                                  (32'h8000)
+`define KMAC_STATUS_ALERT_FATAL_FAULT_LOW                                                           (16)
+`define KMAC_STATUS_ALERT_FATAL_FAULT_MASK                                                          (32'h10000)
+`define KMAC_STATUS_ALERT_RECOV_CTRL_UPDATE_ERR_LOW                                                 (17)
+`define KMAC_STATUS_ALERT_RECOV_CTRL_UPDATE_ERR_MASK                                                (32'h20000)
+`endif
+`ifndef KMAC_PREFIX_0
+`define KMAC_PREFIX_0                                                                               (32'h20)
+`endif
+`ifndef KMAC_PREFIX_1
+`define KMAC_PREFIX_1                                                                               (32'h24)
+`endif
+`ifndef KMAC_PREFIX_2
+`define KMAC_PREFIX_2                                                                               (32'h28)
+`endif
+`ifndef KMAC_PREFIX_3
+`define KMAC_PREFIX_3                                                                               (32'h2c)
+`endif
+`ifndef KMAC_PREFIX_4
+`define KMAC_PREFIX_4                                                                               (32'h30)
+`endif
+`ifndef KMAC_PREFIX_5
+`define KMAC_PREFIX_5                                                                               (32'h34)
+`endif
+`ifndef KMAC_PREFIX_6
+`define KMAC_PREFIX_6                                                                               (32'h38)
+`endif
+`ifndef KMAC_PREFIX_7
+`define KMAC_PREFIX_7                                                                               (32'h3c)
+`endif
+`ifndef KMAC_PREFIX_8
+`define KMAC_PREFIX_8                                                                               (32'h40)
+`endif
+`ifndef KMAC_PREFIX_9
+`define KMAC_PREFIX_9                                                                               (32'h44)
+`endif
+`ifndef KMAC_PREFIX_10
+`define KMAC_PREFIX_10                                                                              (32'h48)
+`endif
+`ifndef KMAC_ERR_CODE
+`define KMAC_ERR_CODE                                                                               (32'h4c)
+`endif
 `ifndef SHA3_SHA3_NAME_0
 `define SHA3_SHA3_NAME_0                                                                            (32'h0)
 `endif
