@@ -1,5 +1,5 @@
 ---
-seed: 1064770983 #1
+seed: ${PLAYBOOK_RANDOM_SEED}
 testname: smoke_test_mlkem_kv_ocp_progress
 plusargs:
   - +CLP_OCP_LOCK_EN
