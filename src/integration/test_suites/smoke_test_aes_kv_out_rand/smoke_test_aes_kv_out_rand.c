@@ -116,7 +116,6 @@ void main(void) {
         
         aes_key.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
         if (aes_key.kv_intf == TRUE) {
-            // Weight aes_key.kv_id to hit 16 15% of the time
             rand_val = xorshift32() % 100;  // 0-99
             if (rand_val < 10) {
                 // 10% chance: use ID 16
