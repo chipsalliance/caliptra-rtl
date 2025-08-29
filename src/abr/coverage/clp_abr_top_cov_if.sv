@@ -218,7 +218,7 @@ interface clp_abr_top_cov_if
 
     endgroup
 
-    covergroup abr_ocp_lock_cov_grp @(posedge clk);
+    covergroup clp_abr_ocp_lock_cov_grp @(posedge clk);
 
         ocp_lock_in_progress_cp: coverpoint ocp_lock_in_progress;
 
@@ -267,9 +267,9 @@ interface clp_abr_top_cov_if
         ocp_lock_X_kv_read_entry_mldsa: cross ocp_lock_in_progress_cp, kv_read_entry_mldsa_cp;
     endgroup  
 
-    abr_ocp_lock_cov_grp abr_ocp_lock_cov_grp1 = new();
+    clp_abr_ocp_lock_cov_grp clp_abr_ocp_lock_cov_grp1 = new();
 
-    clp_abr_top_cov_grp abr_top_cov_grp1 = new();
+    clp_abr_top_cov_grp clp_abr_top_cov_grp1 = new();
 
 endinterface
 
