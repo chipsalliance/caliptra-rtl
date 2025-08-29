@@ -220,9 +220,7 @@ void main() {
             hmac512_key.data[i] = key512_data[i];
 
         hmac512_block.kv_intf = (rand() % 2) ? TRUE : FALSE;
-        do {
-            hmac512_block.kv_id = rand() % 24;
-        } while (hmac512_block.kv_id == hmac512_key.kv_id);
+        hmac512_block.kv_id = rand() % 24;
         for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
             hmac512_block.data[i] = block[i];
 
