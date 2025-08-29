@@ -63,6 +63,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
           ,[2049:4096] :/ 20
           ,[4097:16384] :/ 5
           ,[16385:65536] :/ 2
+      };
 // Disable large transfer sizes since Subsystem mode defines a smaller mbox, per
 // - CPTRA_MBOX_SIZE_BYTES
 // - CLP_MBOX_SRAM_END_ADDR (from caliptra_reg_defines.svh)
@@ -71,7 +72,6 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
 `ifdef CALIPTRA_MODE_SUBSYSTEM
       dma_xfer_type inside {MBOX2AXI,AXI2MBOX} -> xfer_size <= MBOX_DIR_MEM_SIZE;
 `endif
-      };
       (xfer_size <= max_checked_xfer_size) || (xfer_size > MAX_SIZE_TO_CHECK);
       solve dma_xfer_type before xfer_size;
   }
