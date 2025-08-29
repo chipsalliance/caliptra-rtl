@@ -325,7 +325,7 @@ void main() {
             //inject hmac_block to kv key reg (in RTL)
             lsu_write_32(STDOUT, (hmac384_block.kv_id << 8) | 0xb0);
 
-            ocp_progress_bit = 1; //rand() % 2;
+            ocp_progress_bit = rand() % 2;
             if (ocp_progress_bit) {
                 // Enable OCP LOCK mode
                 VPRINTF(LOW,"OCP lock in progress\n");
@@ -344,10 +344,10 @@ void main() {
             hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, exp_failure);
             hmac_zeroize();
 
-            // VPRINTF(LOW, "Issue cold reset\n");
-            // SEND_STDOUT_CTRL(0xf5);
+            VPRINTF(LOW, "Issue cold reset\n");
+            SEND_STDOUT_CTRL(0xf5);
         }
-        else if (rst_count == 20) {
+        else if (rst_count == 2) {
 
             VPRINTF(LOW, "----------------------------------\n");
             VPRINTF(LOW, " KV Smoke Test With hmac512 flow !!\n");
