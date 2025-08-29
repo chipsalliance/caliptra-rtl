@@ -56,13 +56,20 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   // sizes
   constraint transfer_size_c {
       xfer_size dist {
-          [1:4] :/ 500,
-          [5:64] :/ 1000,
-          [65:256] :/ 500,
-          [257:2048] :/ 200,
-          [2049:4096] :/ 20,
-          [4097:16384] :/ 5,
-          [16385:65536] :/ 2
+          [1:4] :/ 500
+          ,[5:64] :/ 1000
+          ,[65:256] :/ 500
+          ,[257:2048] :/ 200
+          ,[2049:4096] :/ 20
+// Disable these transfer sizes since Subsystem mode defines a smaller mbox, per
+// - CPTRA_MBOX_SIZE_BYTES
+// - CLP_MBOX_SRAM_END_ADDR (from caliptra_reg_defines.svh)
+// - MBOX_DIR_END_ADDR
+// - MBOX_DIR_MEM_SIZE
+`ifndef CALIPTRA_MODE_SUBSYSTEM
+          ,[4097:16384] :/ 5
+          ,[16385:65536] :/ 2
+`endif
       };
       (xfer_size <= max_checked_xfer_size) || (xfer_size > MAX_SIZE_TO_CHECK);
       solve dma_xfer_type before xfer_size;
@@ -102,6 +109,9 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
       src_is_fifo -> use_rd_fixed;
       dst_is_fifo -> use_wr_fixed;
       solve test_block_size before src_is_fifo;
+      solve test_block_size before dst_is_fifo;
+      solve test_block_size before use_rd_fixed;
+      solve test_block_size before use_wr_fixed;
   };
 
   constraint fixed_access_c {
@@ -118,18 +128,24 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   // addresses
   // src unused for AHB2AXI, still calculate it...
   constraint src_addr_c {
-       src_is_fifo ->  src_offset inside {[0:AXI_FIFO_SIZE_BYTES-1]};
-      !src_is_fifo ->  src_offset inside {[0:AXI_SRAM_SIZE_BYTES-1]};
-      !src_is_fifo -> (src_offset + xfer_size*4) <= AXI_SRAM_SIZE_BYTES;
+      dma_xfer_type == MBOX2AXI                 ->  src_offset inside {[0:MBOX_DIR_END_ADDR]};
+      dma_xfer_type == MBOX2AXI                 -> (src_offset + xfer_size*4) <= MBOX_DIR_MEM_SIZE
+      dma_xfer_type != MBOX2AXI &&  src_is_fifo ->  src_offset inside {[0:AXI_FIFO_SIZE_BYTES-1]};
+      dma_xfer_type != MBOX2AXI && !src_is_fifo ->  src_offset inside {[0:AXI_SRAM_SIZE_BYTES-1]};
+      dma_xfer_type != MBOX2AXI && !src_is_fifo -> (src_offset + xfer_size*4) <= AXI_SRAM_SIZE_BYTES;
       src_offset[1:0] == 2'b0;
+      solve dma_xfer_type before src_offset;
   };
 
   // dst unused for AXI2AHB, still calculate it...
   constraint dst_addr_c {
-       dst_is_fifo ->  dst_offset inside {[0:AXI_FIFO_SIZE_BYTES-1]};
-      !dst_is_fifo ->  dst_offset inside {[0:AXI_SRAM_SIZE_BYTES-1]};
-      !dst_is_fifo -> (dst_offset + xfer_size*4) <= AXI_SRAM_SIZE_BYTES;
+      dma_xfer_type == AXI2MBOX                 ->  dst_offset inside {[0:MBOX_DIR_END_ADDR]};
+      dma_xfer_type == AXI2MBOX                 -> (dst_offset + xfer_size*4) <= MBOX_DIR_MEM_SIZE;
+      dma_xfer_type != AXI2MBOX &&  dst_is_fifo ->  dst_offset inside {[0:AXI_FIFO_SIZE_BYTES-1]};
+      dma_xfer_type != AXI2MBOX && !dst_is_fifo ->  dst_offset inside {[0:AXI_SRAM_SIZE_BYTES-1]};
+      dma_xfer_type != AXI2MBOX && !dst_is_fifo -> (dst_offset + xfer_size*4) <= AXI_SRAM_SIZE_BYTES;
       dst_offset[1:0] == 2'b0;
+      solve dma_xfer_type before dst_offset;
       solve block_size before dst_offset;
   };
 
