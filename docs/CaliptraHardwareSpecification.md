@@ -40,6 +40,9 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * [AES Big Endian mode](#aes-endian)
 * [External Staging Area](./CaliptraIntegrationSpecification.md#external-staging-area)
 * [OCP LOCK Support](#ocp-lock-hardware-architecture)
+* [SHA3](#sha3)
+* [ML-KEM](#adams-bridge-kyber-ml-kem)
+
 
 ## Boot FSM
 
@@ -1591,7 +1594,7 @@ Please refer to the [Adams-bridge specification](https://github.com/chipsallianc
 ### Address map
 Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
 
-## Adams Bridge - Kyber (ML-KEM)
+## Adams Bridge Kyber ML-KEM
 
 Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
 
@@ -2541,6 +2544,7 @@ The following hardware and ROM/FW enhancements support the OCP L.O.C.K. (a.k.a. 
   - Allows the ROM to set `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`.
   - `ss_ocp_lock_en` is a strap pin and **must be driven with a constant value by the integrator**.
   - `CPTRA_HW_CONFIG` register samples this strap and store its value in `OCP_LOCK_MODE_en` bit
+  - This bit isn't reflected to CPTRA_HW_CONFIG unless CALIPTRA_MODE_SUBSYSTEM is defined
 
 - **HEK seed fuse register**  
   Holds the **obfuscated HEK seed** that is later de-obfuscated by DOE.
@@ -2598,7 +2602,7 @@ Refer to the [Caliptra Integration Spec](https://github.com/chipsalliance/calipt
 
 - Executed by **Caliptra ROM** using DOE.
 - **Path:** Ratchet Fuse Register (**obfuscated HEK seed**) → **DOE** (with `OBF_KEY`) → **KV slot 22** (de-obfuscated seed).
-- **KV22** is **locked for use immediately after** it is consumed to derive **HEK**.
+- **KV22** is **locked for writes immediately after** it is consumed to derive **HEK**. Note that Caliptra ROM the one needs to lock it for writes.
 
 ---
 
@@ -2619,43 +2623,13 @@ Hardware path allowing **KV23 (MEK)** to be written to the SoC via the **DMA blo
 - Flush **AES ↔ KV** interface.
 
 **AES/KV/DMA Robustness**
-- **AES → KV write path:** Track requested **decode size** so HW can determine when to commit the final result to KV.
+- **AES → KV write path:** The key can't be written to KeyVault unless key_size bytes are decrypted by AES.
 - Validate **DMA `key_size`**; **error** if `key_size > 512b`.
 - Avoid hangs when **`key_size` != KV read DWORD count**:
   - On KV reads, if `key_size` is **smaller** than the KV entry, **drop extra data** (do not push to FIFO).
 - **DMA KV read error**: Must be raised on the **first transfer cycle** from KV to DMA; DMA transitions immediately to **`DMA_ERROR`** without issuing an AXI transfer.
 - **KV write enable sourced from AES** (during OCP LOCK) so it **cannot** be modified mid-transfer.
 - **Enable AES ↔ KV write path** only if `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set.
-
----
-
-### Caliptra ROM & Firmware Guidance
-
-- **DOE error status (KV write failure):**  
-  Introduce a new status bit; ROM must check it after any DOE flow to ensure the KV write succeeded.
-- **HEK DOE flow**:  
-  Must be locked after execution (like other DOE flows). ROM must run the HEK DOE flow even in non-LOCK contexts to lock it. Reset only by hard reset.
-- **Derivations & locking**:
-  - Derive the MDK to **KV16**, then **lock writes**.
-  - If OCP LOCK is enabled, derive **HEK** to **KV22**, then **lock writes**.
-    - Perform this **before** setting `OCP_LOCK_IN_PROGRESS` since HEK derivation depends on the **HEK seed (KV22)** and **standard CDI derivatives** (from standard KV slots).
-- **Setting lock state:**  
-  If OCP LOCK is enabled, ROM **MUST** set `OCP_LOCK_IN_PROGRESS` **after any type of reset**.
-- **KV23 usage constraints:**  
-  Never attempt to write anything to **KV23** except **MEK** (produced by AES).
-  - DOE will flag an error and **stall** if a write to **KV23** is attempted while OCP LOCK is in progress.
-- **DMA programming with KV:**  
-  Follow the rules for **size** and **destination address**.
-- **KV filtering rules:**  
-  Standard ↔ LOCK **crossovers are blocked**.
-- **AES API updates:**  
-  Adjust for KV interactions, `dataout` behavior, and the **`OUTPUT_LOST`** use-case.
-- **Strap validation:**  
-  Read and confirm valid values for:
-  - `KEY_RELEASE_BASE_ADDR`
-  - `KEY_RELEASE_KEY_SIZE`
-- **Firmware must clear any obfuscated MEK from memory immediately after use.**
-
 
 
 

@@ -221,7 +221,7 @@ The table below details the interface required for each SRAM. Driver direction i
 |  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sample on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
-|  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sample on cold reset. Used in Subsystem mode only. Indicates that the SoC enables OCP LOCK features of Caliptra |
+|  ss_ocp_lock_en                                           | 1   | Input | Synchronous to clk | Sample on cold reset. Used in Subsystem mode only. Indicates that the SoC enables OCP LOCK features of Caliptra |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | Enables unlock of the debug interface in the Manufacturing security state, for Subsystem mode only. |
 |  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | Enables unlock of the debug interface in the Production security state, for Subsystem mode only. |
 |  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | Enables SoC processors to execute firmware once authenticated by Caliptra. |
@@ -956,6 +956,33 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 ||
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
+
+## OCP LOCK Caliptra ROM & Firmware Guidance
+
+- **DOE error status (KV write failure):**  
+  Introduce a new status bit; ROM must check it after any DOE flow to ensure the KV write succeeded.
+- **HEK DOE flow**:  
+  Must be locked after execution (like other DOE flows). ROM must run the HEK DOE flow even in non-LOCK contexts to lock it. Reset only by hard reset.
+- **Derivations & locking**:
+  - Derive the MDK to **KV16**, then **lock writes**.
+  - If OCP LOCK is enabled, derive **HEK** to **KV22**, then **lock writes**.
+    - Perform this **before** setting `OCP_LOCK_IN_PROGRESS` since HEK derivation depends on the **HEK seed (KV22)** and **standard CDI derivatives** (from standard KV slots).
+- **Setting lock state:**  
+  If OCP LOCK is enabled, ROM **MUST** set `OCP_LOCK_IN_PROGRESS` **after any type of reset**.
+- **KV23 usage constraints:**  
+  Never attempt to write anything to **KV23** except **MEK** (produced by AES).
+  - DOE will flag an error and **stall** if a write to **KV23** is attempted while OCP LOCK is in progress.
+- **DMA programming with KV:**  
+  Follow the rules for **size** and **destination address**.
+- **KV filtering rules:**  
+  Standard ↔ LOCK **crossovers are blocked**.
+- **AES API updates:**  
+  Adjust for KV interactions, `dataout` behavior, and the **`OUTPUT_LOST`** use-case.
+- **Strap validation:**  
+  Read and confirm valid values for:
+  - `KEY_RELEASE_BASE_ADDR`
+  - `KEY_RELEASE_KEY_SIZE`
+- **Firmware must clear any obfuscated MEK from memory immediately after use.**
 
 ## Integrator RTL modification requirements
 
