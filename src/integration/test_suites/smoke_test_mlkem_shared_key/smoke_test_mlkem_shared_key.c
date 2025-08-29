@@ -141,7 +141,7 @@ void main() {
 
     //First - run end to end flow through API
     //Generate encaps key
-    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
+    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk, FALSE);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
     //Generate shared key and ciphertext

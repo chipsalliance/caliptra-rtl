@@ -842,9 +842,6 @@ module soc_ifc_tb
       strap_ss_strap_generic_1_tb = '0;
       strap_ss_strap_generic_2_tb = '0;
       strap_ss_strap_generic_3_tb = '0;
-      ocp_lock_en_tb = $urandom_range(1,0);
-
-      while(ocp_lock_en_tb === 'hX);
 
       update_CPTRA_HW_CONFIG();
       update_SS_STRAPS();
@@ -1821,6 +1818,10 @@ module soc_ifc_tb
 
     generic_input_wires0 = 32'h0; 
     generic_input_wires1 = 32'h0; 
+
+    ocp_lock_en_tb = $urandom_range(1,0);
+
+    while(ocp_lock_en_tb === 'hX);
 
     $write("PLAYBOOK_RANDOM_SEED = %s\n", getenv("PLAYBOOK_RANDOM_SEED"));
 
