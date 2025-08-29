@@ -186,10 +186,6 @@ void run_sha3_test(uintptr_t kmac) {
     }
     dif_kmac_squeeze(kmac, &operation_state, out, test.digest_len, /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
-
-    // Wait for the hardware engine to actually finish. On FPGA, it may take
-    // a while until the DONE command gets actually executed (see SecCmdDelay
-    // SystemVerilog parameter).
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     for (int j = 0; j < test.digest_len; ++j) {
@@ -230,10 +226,6 @@ void run_sha3_alignment_test(uintptr_t kmac) {
     uint32_t out;
     dif_kmac_squeeze(kmac, &operation_state, &out, sizeof(uint32_t), /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
-
-    // Wait for the hardware engine to actually finish. On FPGA, it may take
-    // a while until the DONE command gets actually executed (see SecCmdDelay
-    // SystemVerilog parameter).
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     if (out != kExpect) {
@@ -257,10 +249,6 @@ void run_sha3_alignment_test(uintptr_t kmac) {
     uint32_t out;
     dif_kmac_squeeze(kmac, &operation_state, &out, sizeof(uint32_t), /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
-
-    // Wait for the hardware engine to actually finish. On FPGA, it may take
-    // a while until the DONE command gets actually executed (see SecCmdDelay
-    // SystemVerilog parameter).
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     if (out != kExpect) {
@@ -295,10 +283,6 @@ void run_shake_test(uintptr_t kmac) {
     }
     dif_kmac_squeeze(kmac, &operation_state, out, test.digest_len, /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
-
-    // Wait for the hardware engine to actually finish. On FPGA, it may take
-    // a while until the DONE command gets actually executed (see SecCmdDelay
-    // SystemVerilog parameter).
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     for (int j = 0; j < test.digest_len; ++j) {
