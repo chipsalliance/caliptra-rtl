@@ -31,7 +31,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
     VPRINTF(LOW, "---------------------------------\n");
-    VPRINTF(LOW, " Read KV entries and expect error !!\n");
+    VPRINTF(LOW, " Read KV entries and expect not success !!\n");
     VPRINTF(LOW, "---------------------------------\n");
 
     int num_keys = 24;
