@@ -140,7 +140,7 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     
 }
 
-void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint32_t encaps_key[MLKEM_EK_SIZE], uint32_t decaps_key[MLKEM_DK_SIZE]) {
+void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint32_t encaps_key[MLKEM_EK_SIZE], uint32_t decaps_key[MLKEM_DK_SIZE], BOOL exp_failure) {
     uint16_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -171,6 +171,11 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
 
         // Check that MLKEM SEED is loaded
         while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_MASK) == 0);
+
+        if (exp_failure == TRUE) {
+            while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) == 0);
+            VPRINTF(LOW, "[MLKEM KeyGen] Received expected err for MLKEM seed read from KV\n");
+        }
 
         VPRINTF(LOW, "[MLKEM KeyGen] Check that SEED_D api has 0s\n");
         reg_ptr = (uint32_t*) CLP_ABR_REG_MLKEM_SEED_D_0;
@@ -262,7 +267,7 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     }
 }
 
-void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32_t entropy[ABR_ENTROPY_SIZE], uint32_t ciphertext[MLKEM_CIPHERTEXT_SIZE], mlkem_shared_key shared_key)
+void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32_t entropy[ABR_ENTROPY_SIZE], uint32_t ciphertext[MLKEM_CIPHERTEXT_SIZE], mlkem_shared_key shared_key, BOOL exp_failure)
 {
     uint16_t offset;
     volatile uint32_t * reg_ptr;
@@ -290,6 +295,11 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
         }
 
         while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK) == 0);
+
+        if (exp_failure == TRUE) {
+            while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) == 0);
+            VPRINTF(LOW, "[MLKEM Encaps] Received expected err for MLKEM msg read from KV\n");
+        }
 
         VPRINTF(LOW, "[MLKEM Encaps] Check that MSG api has 0s\n");
         reg_ptr = (uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR;
