@@ -82,7 +82,20 @@ inline void service_doe_notif_intr() {
     }
 }
 
-inline void service_ecc_error_intr() {return;}
+inline void service_ecc_error_intr() {
+    uint32_t * reg = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {
+        *reg = ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK;
+        cptra_intr_rcv.ecc_error |= ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK;
+    }
+    if (sts == 0) {
+        VPRINTF(ERROR,"bad ecc_error_intr sts:%x\n", sts);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }  
+}
 inline void service_ecc_notif_intr() {
     uint32_t * reg = (uint32_t *) (CLP_ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;

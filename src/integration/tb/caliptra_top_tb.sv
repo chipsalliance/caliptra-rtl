@@ -254,7 +254,7 @@ caliptra_top caliptra_top_dut (
     .BootFSM_BrkPoint(BootFSM_BrkPoint),
 
     .recovery_data_avail(recovery_data_avail),
-    .recovery_image_activated(1'b0/*TODO*/),
+    .recovery_image_activated(1'b0),
 
     //SoC Interrupts
     .cptra_error_fatal    (cptra_error_fatal    ),
@@ -270,7 +270,7 @@ caliptra_top caliptra_top_dut (
     .itrng_valid           (1'b0),
 `endif
 
-    // Subsystem mode straps TODO
+    // Subsystem mode straps, tested in subsystem bench
     .strap_ss_caliptra_base_addr                            (64'hba5e_ba11),
     .strap_ss_mci_base_addr                                 (64'h0),
     .strap_ss_recovery_ifc_base_addr                        (64'h0),
@@ -292,23 +292,23 @@ caliptra_top caliptra_top_dut (
     .ss_ocp_lock_en                                         (ss_ocp_lock_en),
 
     // Subsystem mode debug outputs
-    .ss_dbg_manuf_enable    (/*TODO*/),
-    .ss_soc_dbg_unlock_level(/*TODO*/),
+    .ss_dbg_manuf_enable    (),
+    .ss_soc_dbg_unlock_level(),
 
     // Subsystem mode firmware execution control
-    .ss_generic_fw_exec_ctrl(/*TODO*/),
+    .ss_generic_fw_exec_ctrl(),
 
     .generic_input_wires (generic_input_wires ),
     .generic_output_wires(                    ),
 
     // RISC-V Trace Ports
-    .trace_rv_i_insn_ip     (), // TODO
-    .trace_rv_i_address_ip  (), // TODO
-    .trace_rv_i_valid_ip    (), // TODO
-    .trace_rv_i_exception_ip(), // TODO
-    .trace_rv_i_ecause_ip   (), // TODO
-    .trace_rv_i_interrupt_ip(), // TODO
-    .trace_rv_i_tval_ip     (), // TODO
+    .trace_rv_i_insn_ip     (),
+    .trace_rv_i_address_ip  (),
+    .trace_rv_i_valid_ip    (),
+    .trace_rv_i_exception_ip(),
+    .trace_rv_i_ecause_ip   (),
+    .trace_rv_i_interrupt_ip(),
+    .trace_rv_i_tval_ip     (),
 
     .security_state(security_state),
     .scan_mode     (scan_mode)
