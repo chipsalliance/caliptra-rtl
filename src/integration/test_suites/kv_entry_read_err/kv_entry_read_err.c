@@ -31,12 +31,12 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
     VPRINTF(LOW, "---------------------------------\n");
-    VPRINTF(LOW, " Read KV entries and expect error !!\n");
+    VPRINTF(LOW, " Read KV entries and expect not success !!\n");
     VPRINTF(LOW, "---------------------------------\n");
 
     int num_keys = 24;
 
-    SEND_STDOUT_CTRL(0xcc); //Enable kv error injection mode
+    SEND_STDOUT_CTRL(0xcd); //Enable kv error injection mode
 
     VPRINTF(LOW, "Testing ECC KV reads\n");
     for (int i = 0; i < num_keys; i++) {
@@ -182,7 +182,7 @@ void main() {
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
     }
 
-    SEND_STDOUT_CTRL(0xcc); //Disable kv error injection mode
+    SEND_STDOUT_CTRL(0xcd); //Disable kv error injection mode
 
     SEND_STDOUT_CTRL(0xff); //End the test
     

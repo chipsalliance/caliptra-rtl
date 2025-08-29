@@ -39,6 +39,7 @@ interface soc_ifc_cov_if
     import soc_ifc_reg_pkg::*;
     import axi_pkg::*;
     import axi_dma_reg_pkg::*;
+    import kv_defines_pkg::*;
     #(
          parameter AXI_ADDR_WIDTH = 18
         ,parameter AXI_DATA_WIDTH = 32
@@ -119,6 +120,9 @@ interface soc_ifc_cov_if
     // RV ECC Status Interface
     input rv_ecc_sts_t rv_ecc_sts,
 
+    // Clear KeyVault secrets
+    input logic debugUnlock_or_scan_mode_switch,
+
     //Obfuscated UDS and FE
     input logic clear_obf_secrets,
     input logic scan_mode,
@@ -130,6 +134,21 @@ interface soc_ifc_cov_if
     input logic                                 cptra_obf_uds_seed_vld,
     input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed,
     input logic [`CLP_OBF_UDS_DWORDS-1:0][31:0] obf_uds_seed,
+    input logic [OCP_LOCK_HEK_NUM_DWORDS-1:0][31:0] obf_hek_seed,
+
+    input logic aes_input_ready,
+    input logic aes_output_valid,
+    input logic aes_status_idle,
+    input logic aes_req_dv,
+    input logic aes_req_hold,
+    input soc_ifc_req_t aes_req_data,
+    input logic [SOC_IFC_DATA_W-1:0] aes_rdata,
+    input logic aes_error,
+
+    // kv interface
+    input  kv_read_t    kv_read,
+    input  kv_rd_resp_t kv_rd_resp,
+
 
     // Subsystem mode straps
     input logic [63:0] strap_ss_caliptra_base_addr,
@@ -138,6 +157,8 @@ interface soc_ifc_cov_if
     input logic [63:0] strap_ss_external_staging_area_base_addr,
     input logic [63:0] strap_ss_otp_fc_base_addr,
     input logic [63:0] strap_ss_uds_seed_base_addr,
+    input logic [63:0] strap_ss_key_release_base_addr,
+    input logic [15:0] strap_ss_key_release_key_size,
     input logic [31:0] strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset,
     input logic [31:0] strap_ss_num_of_prod_debug_unlock_auth_pk_hashes,
     input logic [31:0] strap_ss_strap_generic_0,
@@ -154,6 +175,11 @@ interface soc_ifc_cov_if
 
     // Subsystem mode firmware execution control
     input logic [127:0] ss_generic_fw_exec_ctrl,
+
+    // Subsystem mode OCP LOCK status
+    input  logic         ss_ocp_lock_en,
+    input  logic         ss_ocp_lock_in_progress,
+    input  logic [15:0]  ss_key_release_key_size,
 
     // NMI Vector 
     input logic [31:0] nmi_vector,
@@ -258,11 +284,30 @@ interface soc_ifc_cov_if
         cptra_obf_uds_seed_vld_cp: coverpoint cptra_obf_uds_seed_vld;
         cptra_obf_uds_seed_cp: coverpoint cptra_obf_uds_seed;
         obf_uds_seed_cp: coverpoint obf_uds_seed;
+        obf_hek_seed_cp: coverpoint obf_hek_seed;
+        aes_input_ready_cp: coverpoint aes_input_ready;
+        aes_output_valid_cp: coverpoint aes_output_valid;
+        aes_status_idle_cp: coverpoint aes_status_idle;
+        aes_req_dv_cp: coverpoint aes_req_dv;
+        aes_req_hold_cp: coverpoint aes_req_hold;
+        aes_req_data_cp: coverpoint aes_req_data;
+        aes_rdata_cp: coverpoint aes_rdata;
+        aes_error_cp: coverpoint aes_error;
+
+        kv_read_read_entry_cp:   coverpoint kv_read.read_entry;
+        kv_read_read_offset_cp:  coverpoint kv_read.read_offset;
+        kv_rd_resp_error_cp:     coverpoint kv_rd_resp.error;
+        kv_rd_resp_last_cp:      coverpoint kv_rd_resp.last;
+        kv_rd_resp_read_data_cp: coverpoint kv_rd_resp.read_data;
+
         strap_ss_caliptra_base_addr_cp: coverpoint strap_ss_caliptra_base_addr;
         strap_ss_mci_base_addr_cp: coverpoint strap_ss_mci_base_addr;
         strap_ss_recovery_ifc_base_addr_cp: coverpoint strap_ss_recovery_ifc_base_addr;
+        strap_ss_external_staging_area_base_addr_cp: coverpoint strap_ss_external_staging_area_base_addr;
         strap_ss_otp_fc_base_addr_cp: coverpoint strap_ss_otp_fc_base_addr;
         strap_ss_uds_seed_base_addr_cp: coverpoint strap_ss_uds_seed_base_addr;
+        strap_ss_key_release_base_addr_cp: coverpoint strap_ss_key_release_base_addr;
+        strap_ss_key_release_key_size_cp: coverpoint strap_ss_key_release_key_size;
         strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_cp: coverpoint strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset;
         strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_cp: coverpoint strap_ss_num_of_prod_debug_unlock_auth_pk_hashes;
         strap_ss_caliptra_dma_axi_user_cp: coverpoint strap_ss_caliptra_dma_axi_user;
@@ -275,6 +320,9 @@ interface soc_ifc_cov_if
         ss_dbg_manuf_enable_cp: coverpoint ss_dbg_manuf_enable;
         ss_soc_dbg_unlock_level_cp: coverpoint ss_soc_dbg_unlock_level;
         ss_generic_fw_exec_ctrl_cp: coverpoint ss_generic_fw_exec_ctrl;
+        ss_ocp_lock_en_cp: coverpoint ss_ocp_lock_en;
+        ss_ocp_lock_in_progress_cp: coverpoint ss_ocp_lock_in_progress;
+        ss_key_release_key_size_cp: coverpoint ss_key_release_key_size;
         iccm_lock_cp: coverpoint iccm_lock;
         iccm_axs_blocked_cp: coverpoint iccm_axs_blocked;
 

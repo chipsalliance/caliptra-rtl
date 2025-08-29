@@ -40,9 +40,10 @@
 
         ss_strap_soc_rw_regnames = get_ss_strap_regnames();
 
-        foreach (ss_strap_soc_rw_regnames[ix]) begin
-          if (str_startswith(ss_strap_soc_rw_regnames[ix], "SS_SOC_DBG_UNLOCK_LEVEL")) begin 
-            add_to_strq(ss_soc_dbg_unlock_level_regnames, ss_strap_soc_rw_regnames[ix]); // Add to queue for appropriate testing
+        foreach (_soc_register_dict[rkey]) begin
+          if (str_startswith(rkey, "SS_SOC_DBG_UNLOCK_LEVEL")) begin 
+            add_to_strq(ss_strap_soc_rw_regnames,         rkey); // Add to queue for appropriate testing
+            add_to_strq(ss_soc_dbg_unlock_level_regnames, rkey); // Add to queue for appropriate testing
             continue; 
           end
         end

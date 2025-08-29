@@ -247,12 +247,49 @@ void main(){
         SEND_STDOUT_CTRL(seed_inject_cmd);
 
         ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, FALSE);
+        cptra_intr_rcv.ecc_error = 0;
         cptra_intr_rcv.ecc_notif = 0;
 
-        ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
-        cptra_intr_rcv.ecc_notif = 0;
+        //If reading from 23, check that it failed
+        if(seed_kv_id == 23){
+            if((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) >> 2) == 0) {
+                VPRINTF(FATAL, "KV Read Error is not detected!\n");
+                SEND_STDOUT_CTRL(0x1);
+                while(1);
+            }
+            else{
+                VPRINTF(LOW,"KV_READ_FAIL is successfully set\n");
+            }
+        }
+
+        //Check that keyvault write to slot 23 failed
+        if((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> 2) == 0) {
+            VPRINTF(FATAL, "KV Write Error is not detected!\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+        else{
+            VPRINTF(LOW,"KV_WRITE_FAIL is successfully set\n");
+        }
 
         ecc_zeroize();
+
+        ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
+        cptra_intr_rcv.ecc_error = 0;
+        cptra_intr_rcv.ecc_notif = 0;
+
+        //Check that keyvault read from slot 23 failed
+        if((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) >> 2) == 0) {
+            VPRINTF(FATAL, "KV Write Error is not detected!\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+        else{
+            VPRINTF(LOW,"KV_WRITE_FAIL is successfully set\n");
+        }
+
+        ecc_zeroize();
+        
     } else {
         VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
     }

@@ -62,7 +62,7 @@ package soc_ifc_pkg;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
     parameter MBOX_DIR_START_ADDR     = `CLP_MBOX_SRAM_BASE_ADDR - SOC_IFC_REG_OFFSET;
-    parameter MBOX_DIR_END_ADDR       = MBOX_DIR_START_ADDR + CPTRA_MBOX_SIZE_BYTES - 1 - SOC_IFC_REG_OFFSET; // Can't use RDL since MBOX size is paramaterizable
+    parameter MBOX_DIR_END_ADDR       = `CLP_MBOX_SRAM_END_ADDR  - SOC_IFC_REG_OFFSET;
     parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR + 1 - MBOX_DIR_START_ADDR;
 
 
