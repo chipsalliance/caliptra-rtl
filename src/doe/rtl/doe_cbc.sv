@@ -205,7 +205,7 @@ assign hwif_in.DOE_CTRL.CMD_EXT.hwclr = flow_done | clear_obf_secrets;
 
 assign doe_cmd_reg.cmd = doe_cmd_e'({hwif_out.DOE_CTRL.CMD_EXT.value,hwif_out.DOE_CTRL.CMD.value});
 // OCP LOCK flow for HEK deobf requires output be stored in a predetermined slot.
-// ROM will be responsible for configuring this properly.
+// ROM is responsible for configuring this properly.
 assign doe_cmd_reg.dest_sel = hwif_out.DOE_CTRL.DEST.value;
 
 //FW can do this to clear the obfuscation related secrets
