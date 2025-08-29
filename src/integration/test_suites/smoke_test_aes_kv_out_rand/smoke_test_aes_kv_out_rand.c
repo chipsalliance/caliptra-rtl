@@ -97,14 +97,39 @@ void main(void) {
 
         aes_key_o.kv_intf = TRUE;
         aes_key_o.kv_expect_err = FALSE;
-        aes_key_o.kv_id = xorshift32() % 24; //KV slot 0-23
+        uint32_t rand_val = xorshift32() % 100;  // 0-99
+        if (rand_val < 10) {
+            // 10% chance: use ID 16
+            aes_key_o.kv_id = 16;
+        } else if(rand_val < 20) {
+            // 10% chance: use ID 23
+            aes_key_o.kv_id = 23;
+        }else {
+            // 80% chance: randomly select from remaining 22 IDs (0-15, 17-22)
+            while(aes_key_o.kv_id == 16 || aes_key_o.kv_id == 23) {
+                aes_key_o.kv_id = xorshift32() % 24 ;
+            }
+        }
         aes_key_o.dest_valid = (dest_valid_t){0}; // Clear all destinations
         aes_key_o.dest_valid.dma_data = 1; // Only allow DMA access
             
         
         aes_key.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
         if (aes_key.kv_intf == TRUE) {
-            aes_key.kv_id = xorshift32() % 24;
+            // Weight aes_key.kv_id to hit 16 15% of the time
+            rand_val = xorshift32() % 100;  // 0-99
+            if (rand_val < 10) {
+                // 10% chance: use ID 16
+                aes_key.kv_id = 16;
+            } else if(rand_val < 20) {
+                // 10% chance: use ID 23
+                aes_key.kv_id = 23;
+            }else {
+                // 80% chance: randomly select from remaining 22 IDs (0-15, 17-22)
+                while(aes_key.kv_id == 16 || aes_key.kv_id == 23) {
+                    aes_key.kv_id = xorshift32() % 24 ;
+                }
+            }
         }
 
 
