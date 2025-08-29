@@ -90,7 +90,7 @@ void main(void) {
     VPRINTF(LOW, "OCP Lock Status: 0x%x, Lock In Progress: %d\n", lock_status, lock_in_progress);
             
 
-    for(int i = 0; i < 20; i++) {
+    for(int i = 0; i < 50; i++) {
         VPRINTF(LOW, "START TEST %d\n", i);
         aes_key_o.kv_intf = TRUE;
         aes_key_o.kv_expect_err = FALSE;

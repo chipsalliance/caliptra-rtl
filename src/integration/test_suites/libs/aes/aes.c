@@ -123,6 +123,20 @@ void hex_to_uint32_array_with_endianess(const char *hex_str, uint32_t *array, ui
     }
 }
 
+void copy_data_with_endianness(const uint32_t* src, uint32_t* dst, uint32_t len, aes_endian_e endian_mode) {
+    for (uint32_t i = 0; i < len; i++) {
+        if (endian_mode == AES_BIG_ENDIAN) {
+            // Apply byte swapping for big endian
+            dst[i] = ((src[i] & 0xFF000000) >> 24) |
+                     ((src[i] & 0x00FF0000) >> 8)  |
+                     ((src[i] & 0x0000FF00) << 8)  |
+                     ((src[i] & 0x000000FF) << 24);
+        } else {
+            dst[i] = src[i];
+        }
+    }
+}
+
 void aes_wait_idle(){
   while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_IDLE_MASK) == 0);
 }
@@ -255,8 +269,14 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
       VPRINTF(LOW, "Write AES AAD Block %d\n", i);
       for (int j = 0; j < 4; j++) {
-        VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.aad[j+i*4]);
-        aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.aad[j+i*4], endian_mode);
+        if(((i*4) +j) < ((aes_input.aad_len >> 2) + partial_aad_len)) {
+            VPRINTF(MEDIUM, "Write In Data: 0x%x aad DWORD: %d\n", aes_input.aad[j+i*4], ((i*4) +j));
+            aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.aad[j+i*4], endian_mode);
+        }
+        else {
+            VPRINTF(MEDIUM, "Padding AAD with 0s AAD DWORD: %d", ((i*4) +j));
+            aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), 0x0, endian_mode);
+        }
       }
     }
   }
@@ -558,72 +578,83 @@ void populate_kv_slot_aes(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t ove
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }   
-    const char plaintext_str[]   = "062c4cc774e213be68663bc0e933787ee2caae3afa443ee67defaa89121ca261736e6ebbb8609d3568e6b723c9bc330f0ca00eca39659172b473b9362dd33ca5";
-    const char iv_str[] = "123dead523095826abcde2957083415b"; // 16 bytes IV for AES
-    const char iv_ctr_str[] = "123dead523095826"; // 8 bytes IV for AES CTR
-    uint32_t iv[4];
+
+    // Pre-converted uint32_t arrays (no more hex string conversion needed)
+    // Original: "062c4cc774e213bec03b66688e3378e9e2caae3afa446ee67def9a89121ca261736e6ebb609d35b8e667b7230f33bcc90cea0c0c3916597336b9b4d32ca553"
+    uint32_t plaintext_data[] = {0xc74c2c06, 0xbe13e274, 0xc03b6668, 0x7e7833e9, 0x3aaecae2, 0xe63e44fa, 0x89aaef7d, 0x61a21c12, 0xbb6e6e73, 0x359d60b8, 0x23b7e668, 0x0f33bcc9, 0xca0ea00c, 0x72916539, 0x36b973b4, 0xa53cd32d}; // 16 dwords
+    // Original: "123dead5230958269cde2a5ba7041835"
+    uint32_t iv_data[] = {0xd5ea3d12, 0x26580923, 0x95e2cdab, 0x5b418370}; // 4 dwords
+    // Original: "123dead526580923"
+    uint32_t iv_ctr_data[] = {0xd5ea3d12, 0x26580923, 0x00000000, 0x00000000}; // 2 dwords + 2 dwords padding
+    // Original: "bc623095823dafe190993814fedbac4258395063234564534423ad23fcef9ad423"
+    uint32_t key_data[] = {0x953062bc, 0xe1af3d82, 0x14839990, 0x42acdbfe, 0x63503958, 0x53644523, 0xfcad2321, 0x4423daef}; // 8 dwords
+    // Original: "7f4363949e2ffeea53c83dcc03052b3b3"
+    uint32_t tag_data[] = {0x9463437f, 0xfe2f26e9, 0x33dcc853, 0xb3220503}; // 4 dwords
+    // Original: "77f2817a9e46515255532b89fc59c5d70ed554f747f32b8ed461b8e152cd30acac36e16bd9b327f6091684313aa6c683464cc93a6ff43d5c579a8cc63ac5b"
+    uint32_t ciphertext_GCM[] = {0x7a81f277, 0x5251469e, 0x2b335525, 0x99c5fc89, 0xfd54d70e, 0xf747f32b, 0xb8e1d46f, 0x30accd52, 0x6bc1be36, 0xd27b34f9, 0x09021f68, 0xa6b8313a, 0x934cc683, 0xd543ffa6, 0x8a9cc57d, 0xac5b63ab}; // 16 dwords
+    // Original: "f0a5eb3c5d1f06225d1e2b7b6e4bd9b4dd345ba3535c16a9eb0d31cb2f6d8dbed8dc28c92656293c39b43982a8b8c25b882e5253dc7c13ec2d228f95ad5a5a7"
+    uint32_t ciphertext_ECB[] = {0x3ceba5f0, 0x22061f5d, 0xb72ce1d3, 0xb4d94b6e, 0xa35b34dd, 0xa9165c53, 0xcb310deb, 0xbe8d6d2f, 0x92ca28dc, 0x293c5611, 0x8239b439, 0x5b2c8b8a, 0x3d25882e, 0x3ec11dc7, 0x9df228d2, 0x7a5ad5a5}; // 16 dwords
+    // Original: "caa1e4240ac31d5cd30aaca63cebc5f342d7c377a68a47a6ed077e39c635622d29286ea8eb9b9eeeb0eff321c2470c842408ef9852aa5dc8226c653c6bccc1169"
+    uint32_t ciphertext_CBC[] = {0x24e4a1ca, 0x5cd21dc3, 0xa83aac0a, 0xf3c5eb6c, 0x77c3d742, 0xaf478aa6, 0x397e07ed, 0x2d6235c6, 0xa86e2829, 0xee60eeb9, 0x2f21faf3, 0x90c84702, 0xf98ee038, 0x8dc5aa52, 0xc2653c22, 0x6911c6bc}; // 16 dwords
+    // Original: "2386abd46d5c7342d4aabf1a6f0b04b8a5a1e4c271f70ee176b1cdf8a2d55f6518906cc377041d26934194a79bd4bd164bb6a171b92e37360376637aae0f135e8"
+    uint32_t ciphertext_CFB[] = {0xd4ab8623, 0x42735c6d, 0x1abfaad4, 0xb8040b6f, 0xc2e4a1a5, 0xe10ef771, 0xf8cdb176, 0x565fd52a, 0x73cc9018, 0x2d610477, 0x79a14934, 0xbe16d4bd, 0xa71ab6b4, 0x6073e92b, 0x66ac6737, 0xe835e0f1}; // 16 dwords
+    // Original: "23a42c6343e01582637c05325eb01c1848c7091f8bec3c8aadea25cef2c4ebb30dea0fd3a661d08083f38e8bf07739192843a622d238503607dd3a0d36a1baf6c"
+    uint32_t ciphertext_OFB[] = {0x632ca423, 0x8215e043, 0x32057c63, 0x181cb05e, 0x1f09c748, 0x8a3cec8b, 0xce25eaad, 0xb3ebc4f2, 0xd30fea0d, 0x880d61a6, 0x8ebaf323, 0x8b19f077, 0x22a6843f, 0x365038d2, 0xd3a07dd3, 0x6caf1b6a}; // 16 dwords
+    // Original: "e1c460f06fa47a18ea69cdc3e022b5bc8a3bfab67870189c8e173b0ce6fb904e7e36769776b237ff87f4a6e1c22b6c4e186b3af9cd070a14850405fd0ec5a13da"
+    uint32_t ciphertext_CTR[] = {0xf060c4e1, 0x187aa46f, 0xc3cd69ea, 0xbcb522e0, 0xb6fa3b8a, 0x9c187078, 0x0c3b178e, 0x4e90fbe6, 0x9776367e, 0x8737ff2b, 0xe1a6a3f4, 0x4e6c2bc2, 0xf93a6b18, 0x0a14cd07, 0xe7fd0485, 0xda3a15c5}; // 16 dwords
+    
+    uint32_t *iv;
     uint32_t iv_length;
 
-    const char key_str[] = "bc623095823dafe190998314fedbac4258395063234564532123adfcefda2344";
-    uint32_t key[8];
+    uint32_t *key;
     uint32_t key_size;
     
-    const char tag_str[] = "7F436394E9262FFE53C8DC33030522B3";
-    uint32_t tag[4]; 
+    uint32_t *tag; 
     uint32_t tag_length;
-
-
-    
-    
-    
-    const char ciphertext_str_GCM[]  = "77F2817A9E4651522555332B89FCC5990ED754FD2BF347F76FD4E1B852CDAC3036BEC16BF9347BD2681F02093A31B8A683C64C93A6FF43D57DC59C8AAB635BAC";
-    const char ciphertext_str_ECB[]  = "F0A5EB3C5D1F0622D3E12CB76E4BD9B4DD345BA3535C16A9EB0D31CB2F6D8DBEDC28CA9211563C2939B439828A8B2C5B2E88253DC71DC13ED228F29DA5D55A7A";
-    const char ciphertext_str_CBC[]  = "CAA1E424C31DD25C0AAC3AA86CEBC5F342D7C377A68A47AFED077E39C635622D29286EA8B9EE60EEF3FA212F0247C89038E08EF952AAC58D223C65C2BCC61169";
-    const char ciphertext_str_CFB[]  = "2386ABD46D5C7342D4AABF1A6F0B04B8A5A1E4C271F70EE176B1CDF82AD55F561890CC737704612D3449A179BDD416BEB4B61AA72BE973603767AC66F1E035E8";
-    const char ciphertext_str_OFB[]  = "23A42C6343E01582637C05325EB01C1848C7091F8BEC3C8AADEA25CEF2C4EBB30DEA0FD3A6610D8823F3BA8E77F0198B3F84A622D2385036D37DA0D36A1BAF6C";
-    const char ciphertext_str_CTR[]  = "E1C460F06FA47A18EA69CDC3E022B5BC8A3BFAB67870189C8E173B0CE6FB904E7E3676972BFF3787F4A3A6E1C22B6C4E186B3AF907CD140A8504FDE7C5153ADA";
 
     aes_op_e op = AES_DEC;
     aes_key_len_e key_len = AES_256;
     aes_flow_t aes_input = {0};
 
-    uint32_t plaintext[32]; //arbitrary length here
-    uint32_t plaintext_length;
-    uint32_t ciphertext[32]; //arbitrary length here
-    uint32_t ciphertext_length;
+    uint32_t *plaintext; // Changed to pointer for direct assignment
+    uint32_t plaintext_length = 16 * 4; // 16 dwords from plaintext_data
+    uint32_t *ciphertext; // Changed to pointer for direct assignment
+    uint32_t ciphertext_length = 16 * 4; // 16 dwords for all cipher modes
        
     if (encrypt) {
         op = AES_ENC;
     }   
 
+    // Direct pointer assignments (no more memcpy calls)
     if (mode == AES_CTR) {
-        hex_to_uint32_array(iv_ctr_str, iv, &iv_length);
+        iv = iv_ctr_data;
+        iv_length = 2; // 2 dwords for CTR mode
     } else if (mode != AES_ECB) {
-        hex_to_uint32_array(iv_str, iv, &iv_length);
+        iv = iv_data;
+        iv_length = 4; // 4 dwords for other modes
     }
 
-    hex_to_uint32_array(plaintext_str, plaintext, &plaintext_length);
+    plaintext = plaintext_data;
 
+    // Direct pointer assignment instead of memcpy for ciphertext
     if(mode == AES_GCM) {
-        hex_to_uint32_array(ciphertext_str_GCM, ciphertext, &ciphertext_length);
-        hex_to_uint32_array(tag_str, tag, &tag_length);
+        ciphertext = ciphertext_GCM;
+        tag = tag_data;
+        tag_length = 4; // 4 dwords for GCM tag
     } else if (mode == AES_ECB) {
-        hex_to_uint32_array(ciphertext_str_ECB, ciphertext, &ciphertext_length);
+        ciphertext = ciphertext_ECB;
     } else if (mode == AES_CBC) {
-        hex_to_uint32_array(ciphertext_str_CBC, ciphertext, &ciphertext_length);
+        ciphertext = ciphertext_CBC;
     } else if (mode == AES_CFB) {
-        hex_to_uint32_array(ciphertext_str_CFB, ciphertext, &ciphertext_length);
+        ciphertext = ciphertext_CFB;
     } else if (mode == AES_OFB) {
-        hex_to_uint32_array(ciphertext_str_OFB, ciphertext, &ciphertext_length);
+        ciphertext = ciphertext_OFB;
     } else if (mode == AES_CTR) {
-        hex_to_uint32_array(ciphertext_str_CTR, ciphertext, &ciphertext_length);
+        ciphertext = ciphertext_CTR;
     }
 
-
-
-    hex_to_uint32_array(key_str, key, &key_size);
-    key_len = key_size == 32 ? AES_256 :
-              key_size == 16 ? AES_128 : AES_192;  
+    key = key_data;
+    key_len =AES_256 ; 
 
     for (int i = 0; i < 8; i++) {
         aes_key.key_share0[i] = key[i];
