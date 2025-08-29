@@ -163,7 +163,7 @@ uint8_t tag_kv_id;
 
 void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id) 
 {
-    key_kv_intf_bit = (rand() % 2);
+    key_kv_intf_bit = (xorshift32() % 2);
     if (key_kv_intf_bit == 1) {
         hmac384_key.kv_intf = TRUE;
         hmac384_key.kv_id = hmackey_kv_id;
@@ -178,7 +178,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     //--------------------------------------------------      
 
-    block_kv_intf_bit = (rand() % 2);
+    block_kv_intf_bit = (xorshift32() % 2);
     if (block_kv_intf_bit == 1) {
         hmac384_block.kv_intf = TRUE;
         hmac384_block.kv_id = hmacblock_kv_id;
@@ -199,7 +199,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
         hmac384_lfsr_seed.data[i] = lfsr_seed_data[i];
     //--------------------------------------------------
 
-    tag_kv_intf_bit = (rand() % 2);
+    tag_kv_intf_bit = (xorshift32() % 2);
     if (tag_kv_intf_bit == 1) {
         hmac384_tag.kv_intf = TRUE;
         hmac384_tag.kv_id = tag_kv_id;
@@ -223,7 +223,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
 
 void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id) 
 {
-    key_kv_intf_bit = (rand() % 2);
+    key_kv_intf_bit = (xorshift32() % 2);
     if (key_kv_intf_bit == 1) {
         hmac512_key.kv_intf = TRUE;
         hmac512_key.kv_id = hmackey_kv_id;
@@ -238,7 +238,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     //--------------------------------------------------      
 
-    block_kv_intf_bit = (rand() % 2);
+    block_kv_intf_bit = (xorshift32() % 2);
     if (block_kv_intf_bit == 1) {
         hmac512_block.kv_intf = TRUE;
         hmac512_block.kv_id = hmacblock_kv_id;
@@ -259,7 +259,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
         hmac512_lfsr_seed.data[i] = lfsr_seed_data[i];
     //--------------------------------------------------
 
-    tag_kv_intf_bit = (rand() % 2);
+    tag_kv_intf_bit = (xorshift32() % 2);
     if (tag_kv_intf_bit == 1) {
         hmac512_tag.kv_intf = TRUE;
         hmac512_tag.kv_id = tag_kv_id;
@@ -290,13 +290,13 @@ void main() {
     srand(time);
 
     //Randomize slots to upper slots
-    hmackey_kv_id       = (rand() % 8) + 16;
+    hmackey_kv_id       = (xorshift32() % 8) + 16;
 
     do {
-        hmacblock_kv_id     = (rand() % 8) + 16;
+        hmacblock_kv_id     = (xorshift32() % 8) + 16;
     } while (hmacblock_kv_id == hmackey_kv_id);
 
-    tag_kv_id           = (rand() % 8) + 16;
+    tag_kv_id           = (xorshift32() % 8) + 16;
 
     //Call interrupt init
     init_interrupts();
@@ -325,7 +325,7 @@ void main() {
             //inject hmac_block to kv key reg (in RTL)
             lsu_write_32(STDOUT, (hmac384_block.kv_id << 8) | 0xb0);
 
-            ocp_progress_bit = rand() % 2;
+            ocp_progress_bit = xorshift32() % 2;
             if (ocp_progress_bit) {
                 // Enable OCP LOCK mode
                 VPRINTF(LOW,"OCP lock in progress\n");
@@ -354,13 +354,13 @@ void main() {
             VPRINTF(LOW, "----------------------------------\n");
 
             //Randomize slots to upper slots
-            hmackey_kv_id       = (rand() % 8) + 16;
+            hmackey_kv_id       = (xorshift32() % 8) + 16;
             
             do {
-                hmacblock_kv_id     = (rand() % 8) + 16;
+                hmacblock_kv_id     = (xorshift32() % 8) + 16;
             } while (hmacblock_kv_id == hmackey_kv_id);
 
-            tag_kv_id           = (rand() % 8) + 16;
+            tag_kv_id           = (xorshift32() % 8) + 16;
 
             VPRINTF(LOW, "Running hmac with key kv_id = 0x%x, block kv_id = 0x%x, tag kv_id = 0x%x\n", hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
             set_kv_intf_hmac512(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
@@ -372,7 +372,7 @@ void main() {
             //inject hmac_block to kv key reg (in RTL)
             lsu_write_32(STDOUT, (hmac512_block.kv_id << 8) | 0xb0);
 
-            ocp_progress_bit = rand() % 2;
+            ocp_progress_bit = xorshift32() % 2;
             if (ocp_progress_bit) {
                 // Enable OCP LOCK mode
                 VPRINTF(LOW,"OCP lock in progress\n");
