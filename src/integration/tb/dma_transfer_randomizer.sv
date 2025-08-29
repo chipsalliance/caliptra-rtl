@@ -129,7 +129,7 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   // src unused for AHB2AXI, still calculate it...
   constraint src_addr_c {
       dma_xfer_type == MBOX2AXI                 ->  src_offset inside {[0:MBOX_DIR_END_ADDR]};
-      dma_xfer_type == MBOX2AXI                 -> (src_offset + xfer_size*4) <= MBOX_DIR_MEM_SIZE
+      dma_xfer_type == MBOX2AXI                 -> (src_offset + xfer_size*4) <= MBOX_DIR_MEM_SIZE;
       dma_xfer_type != MBOX2AXI &&  src_is_fifo ->  src_offset inside {[0:AXI_FIFO_SIZE_BYTES-1]};
       dma_xfer_type != MBOX2AXI && !src_is_fifo ->  src_offset inside {[0:AXI_SRAM_SIZE_BYTES-1]};
       dma_xfer_type != MBOX2AXI && !src_is_fifo -> (src_offset + xfer_size*4) <= AXI_SRAM_SIZE_BYTES;
