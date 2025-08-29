@@ -293,7 +293,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           (uint32_t)(aes_input.dma_transfer_data.dst_addr & 0xFFFFFFFF));
         
         if(aes_input.aes_dma_err == TRUE) {
-          VPRINTF(LOW, "Injecting DMA error\n");
+          VPRINTF(LOW, "Injecting DMA err\n");
           while(src_fixed == 0 && dst_fixed == 0 && block_size == 0) {
             src_fixed = xorshift32()%2;
             dst_fixed = xorshift32()%2;
@@ -303,7 +303,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         }
 
         if(aes_input.aes_collision_err == TRUE) {
-          VPRINTF(LOW, "Injecting AES collision error\n");
+          VPRINTF(LOW, "Injecting AES collision err\n");
           soc_ifc_axi_dma_send_axi_to_axi_no_wait(aes_input.dma_transfer_data.src_addr, src_fixed, aes_input.dma_transfer_data.dst_addr, dst_fixed,  aes_input.text_len, block_size, 1, gcm_mode);
           for (size_t i = 0; i < 100; i++)
           {

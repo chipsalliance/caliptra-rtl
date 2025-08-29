@@ -235,7 +235,7 @@ void main(void) {
 
     aes_input.aes_collision_err = TRUE;
     aes_input.aes_expect_err = TRUE;
-    VPRINTF(LOW, "AES collision error injection enabled\n");
+    VPRINTF(LOW, "AES collision err injection enabled\n");
 
     // ===========================================================================
     // Sending image over to AXI SRAM for usage during DMA AES calculation
