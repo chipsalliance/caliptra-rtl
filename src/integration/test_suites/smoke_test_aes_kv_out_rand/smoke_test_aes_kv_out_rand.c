@@ -92,6 +92,9 @@ void main(void) {
 
     for(int i = 0; i < 50; i++) {
         VPRINTF(LOW, "START TEST %d\n", i);
+        aes_key_o = (aes_key_o_t){0};
+        aes_key = (aes_key_t){0};
+
         aes_key_o.kv_intf = TRUE;
         aes_key_o.kv_expect_err = FALSE;
         aes_key_o.kv_id = xorshift32() % 24; //KV slot 0-23
