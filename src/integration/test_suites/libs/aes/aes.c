@@ -269,7 +269,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
       VPRINTF(LOW, "Write AES AAD Block %d\n", i);
       for (int j = 0; j < 4; j++) {
-        if(((i*4) +j) < (aes_input.aad_len >> 2)) {
+        if(((i*4) +j) < ((aes_input.aad_len >> 2) + partial_aad_len)) {
             VPRINTF(MEDIUM, "Write In Data: 0x%x aad DWORD: %d\n", aes_input.aad[j+i*4], ((i*4) +j));
             aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.aad[j+i*4], endian_mode);
         }
