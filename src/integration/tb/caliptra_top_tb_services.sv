@@ -374,7 +374,8 @@ module caliptra_top_tb_services
     //         8'hb7        - AXI Error Injection Enabled
     //         8'hb8        - AXI Error Injection Disabled
     //         8'hb9        - Enable scan mode and run DOE back to back
-    //         8'hba:bf     - Unused
+    //         8'hba        - Enable scan mode with KV write
+    //         8'hbb:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hc8        - Inject key 0x0 into slot 16 for AES 
     //         8'hc9        - Inject key smaller than key_release_size into KV23
@@ -1386,6 +1387,7 @@ endgenerate //IV_NO
 
     logic assert_scan_mode;
     logic assert_scan_mode_doe_done;
+    logic assert_scan_mode_kv_write;
     always @(negedge clk) begin
         //Enable scan mode
         if ((WriteData[7:0] == 8'hef) && mailbox_write) begin
@@ -1404,6 +1406,18 @@ endgenerate //IV_NO
         else if ((WriteData[7:0] == 8'hb9) && mailbox_write) begin
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
+        end
+        else if ((WriteData[7:0] == 8'hba) && mailbox_write) begin
+            assert_scan_mode_kv_write <= 1'b1;
+        end
+        else if (assert_scan_mode_kv_write) begin
+            for (int client = 0; client < KV_NUM_WRITE; client++)begin
+                if (`CPTRA_TOP_PATH.key_vault1.kv_write[client].write_en) begin
+                    scan_mode <= 1'b1;
+                    assert_scan_mode <= 'b0;
+                    assert_scan_mode_kv_write <= 'b0;
+                end
+            end
         end
         else if (assert_scan_mode_doe_done && (`CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.kv_doe_fsm_ps == 'h5)) begin
             scan_mode <= 1'b1;
