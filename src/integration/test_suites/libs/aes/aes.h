@@ -113,5 +113,6 @@ void aes_wait_idle();
 void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t aes_input, aes_endian_e endian_mode);
 void aes_zeroize();
 void populate_kv_slot_aes(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t override_text_length, uint32_t expected_key[16], uint8_t encrypt, aes_mode_e mode);
+void copy_data_with_endianness(const uint32_t* src, uint32_t* dst, uint32_t len, aes_endian_e endian_mode);
 
 #endif

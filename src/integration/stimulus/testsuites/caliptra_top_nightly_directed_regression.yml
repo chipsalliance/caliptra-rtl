@@ -16,6 +16,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256_wntz/smoke_test_sha256_wntz.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha256_wntz_rand/smoke_test_sha256_wntz_rand.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha3/smoke_test_sha3.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha3_regs/smoke_test_sha3_regs.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cshake/smoke_test_cshake.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml
@@ -29,6 +30,8 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecdh/smoke_test_ecdh.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_short_1_dword/smoke_test_dma_aes_gcm_short_1_dword.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_long/smoke_test_dma_aes_gcm_long.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_short_dword/smoke_test_dma_aes_gcm_short_dword.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_non_gcm_en_dec/smoke_test_dma_aes_gcm_non_gcm_en_dec.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_rd_enc_axi_err/smoke_test_dma_aes_gcm_rd_enc_axi_err.yml
@@ -75,6 +78,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma/smoke_test_dma.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hek_flow/smoke_test_hek_flow.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/kv_entry_read_err/kv_entry_read_err.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms24/fw_test_lms24.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms32/fw_test_lms32.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h5/fw_test_lms_n24_w1_h5.yml

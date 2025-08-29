@@ -57,9 +57,18 @@
         end
       end
 
-      // Exclude certain non-strap Subsystem-only regs. Covered in separate tests.
+      // Exclude non-strap Subsystem-only regs since they are behind the fuse_valid_user
+      // gated address region. Covered in separate tests.
+      del_from_strq(soc_regnames, "SS_DEBUG_INTENT");
+      del_from_strq(soc_regnames, "SS_OCP_LOCK_CTRL");
       del_from_strq(soc_regnames, "SS_DBG_SERVICE_REG_REQ");
       del_from_strq(soc_regnames, "SS_DBG_SERVICE_REG_RSP");
+      del_from_strq(soc_regnames, "SS_SOC_DBG_UNLOCK_LEVEL0");
+      del_from_strq(soc_regnames, "SS_SOC_DBG_UNLOCK_LEVEL1");
+      del_from_strq(soc_regnames, "SS_GENERIC_FW_EXEC_CTRL0");
+      del_from_strq(soc_regnames, "SS_GENERIC_FW_EXEC_CTRL1");
+      del_from_strq(soc_regnames, "SS_GENERIC_FW_EXEC_CTRL2");
+      del_from_strq(soc_regnames, "SS_GENERIC_FW_EXEC_CTRL3");
       
       repeat (5) @(posedge clk_tb);
 

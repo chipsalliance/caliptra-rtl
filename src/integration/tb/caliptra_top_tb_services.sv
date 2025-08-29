@@ -179,6 +179,7 @@ module caliptra_top_tb_services
     logic                       inject_mldsa_seed;
     logic                       inject_mlkem_kv;
     logic                       inject_aes_seed;
+    logic                       inject_kv_error_check = 0;
     logic                       inject_kv16_zero_key;
     logic                       inject_kv23_small_rand_key;
     logic                       inject_kv23_rand_length_key;
@@ -378,7 +379,9 @@ module caliptra_top_tb_services
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
     //         8'hcb        - Inject key 0x0 into all slots for AES
-    //         8'hcb: 8'hd4 - Unused
+    //         8'hcc        - Inject key into slot 16 for AES
+    //         8'hcd        - KV Error checking
+    //         8'hce: 8'hd4 - Unused
     //         8'hd5        - Inject randomized HEK test vector
     //         8'hd6        - Inject mldsa timeout
     //         8'hd7        - Inject normcheck or makehint failure during mldsa signing 1st loop. Failure type is selected randomly
@@ -760,7 +763,7 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'h0;
                         end
                     end
-                    // inject key for AES into all key slots
+                    // inject key for AES into slot 16 key slots
                     else if((WriteData[7:0] == 8'hcc) && mailbox_write) begin
                         if (slot_id == 16) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
@@ -880,6 +883,20 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = 32'hAAAA_5555;
                         end
+                    end
+                    else if ((WriteData[7:0] == 8'hcd) && mailbox_write && ~inject_kv_error_check) begin
+                        inject_kv_error_check <= 1'b1;
+                        //write to every entry with dest valid 0's
+                        //reads will result in errors
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 'd0;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '1;
+                    end
+                    else if ((WriteData[7:0] == 8'hcd) && mailbox_write && inject_kv_error_check) begin
+                        inject_kv_error_check <= 1'b0;
                     end
                     else begin
                         inject_ecc_seed <= '0;
@@ -1489,6 +1506,35 @@ endgenerate //IV_NO
             release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value;
         end
     end
+
+    genvar g_client, g_entry;
+    generate
+        for (g_client = 0; g_client < KV_NUM_READ; g_client++) begin : gen_kv_client_loop
+            for (g_entry = 0; g_entry < KV_NUM_KEYS; g_entry++) begin : gen_kv_entry_loop
+                always@(posedge clk) begin
+                    if (inject_kv_error_check) begin
+                    // If we see a key being read, set the dest valid bit
+                    if ((`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_offset == 'd1) && 
+                        (`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_entry == g_entry)) begin
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client] = 1'b1;
+                    end 
+                     // If dest valid bit is set and we are done reading, clear it
+                    else if (`CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_CTRL[g_entry].dest_valid[g_client] &&
+                             ((`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_offset == '0) ||
+                              (`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_entry != g_entry))) begin
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client] = 1'b0;
+                    // Otherwise, release the forces
+                    end else begin
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client];
+                    end
+                end
+            end
+        end
+    end
+    endgenerate
 
     always@(posedge clk) begin
         if((WriteData[7:0] == 8'hb5) && mailbox_write) begin
@@ -2987,7 +3033,7 @@ sha256_ctrl_cov_bind i_sha256_ctrl_cov_bind();
 hmac_ctrl_cov_bind i_hmac_ctrl_cov_bind();
 hmac_drbg_cov_bind i_hmac_drbg_cov_bind();
 ecc_top_cov_bind i_ecc_top_cov_bind();
-abr_top_cov_bind i_abr_top_cov_bind();
+clp_abr_top_cov_bind i_clp_abr_top_cov_bind();
 keyvault_cov_bind i_keyvault_cov_bind();
 pcrvault_cov_bind i_pcrvault_cov_bind();
 axi_dma_top_cov_bind i_axi_dma_top_cov_bind();

@@ -190,7 +190,7 @@ void run_sha3_test(uintptr_t kmac) {
     // Wait for the hardware engine to actually finish. On FPGA, it may take
     // a while until the DONE command gets actually executed (see SecCmdDelay
     // SystemVerilog parameter).
-    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_INDEX);
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     for (int j = 0; j < test.digest_len; ++j) {
       if (out[j] != test.digest[j]) {
@@ -234,7 +234,7 @@ void run_sha3_alignment_test(uintptr_t kmac) {
     // Wait for the hardware engine to actually finish. On FPGA, it may take
     // a while until the DONE command gets actually executed (see SecCmdDelay
     // SystemVerilog parameter).
-    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_INDEX);
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     if (out != kExpect) {
       VPRINTF(ERROR, "mismatch at alignment %u got 0x%u want 0x%x", i, out, kExpect);
@@ -261,7 +261,7 @@ void run_sha3_alignment_test(uintptr_t kmac) {
     // Wait for the hardware engine to actually finish. On FPGA, it may take
     // a while until the DONE command gets actually executed (see SecCmdDelay
     // SystemVerilog parameter).
-    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_INDEX);
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     if (out != kExpect) {
       VPRINTF(ERROR, "mismatch got 0x%u want 0x%x", out, kExpect);
@@ -299,7 +299,7 @@ void run_shake_test(uintptr_t kmac) {
     // Wait for the hardware engine to actually finish. On FPGA, it may take
     // a while until the DONE command gets actually executed (see SecCmdDelay
     // SystemVerilog parameter).
-    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_INDEX);
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     for (int j = 0; j < test.digest_len; ++j) {
       if (out[j] != test.digest[j]) {
@@ -323,11 +323,11 @@ void main() {
   init_interrupts();
 
   VPRINTF(LOW, "Running SHA3 test.\n");
-  run_sha3_test(CLP_SHA3_BASE_ADDR);
+  run_sha3_test(CLP_KMAC_BASE_ADDR);
   VPRINTF(LOW, "Running SHA3 allignment test.\n");
-  run_sha3_alignment_test(CLP_SHA3_BASE_ADDR);
+  run_sha3_alignment_test(CLP_KMAC_BASE_ADDR);
   VPRINTF(LOW, "Running SHAKE test.\n");
-  run_shake_test(CLP_SHA3_BASE_ADDR);
+  run_shake_test(CLP_KMAC_BASE_ADDR);
 
   // Write 0xff to STDOUT for TB to terminate test.
   SEND_STDOUT_CTRL(0xff);
