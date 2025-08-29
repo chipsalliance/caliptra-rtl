@@ -280,8 +280,22 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           aes_input.aes_expect_err = TRUE;
         }
 
-        soc_ifc_axi_dma_send_axi_to_axi_w_error_expected(aes_input.dma_transfer_data.src_addr, src_fixed, aes_input.dma_transfer_data.dst_addr, dst_fixed,  aes_input.text_len, block_size, 1, gcm_mode, (aes_input.aes_expect_err == TRUE));
-
+        if(aes_input.aes_collision_err == TRUE) {
+          VPRINTF(LOW, "Injecting AES collision error\n");
+          soc_ifc_axi_dma_send_axi_to_axi_no_wait(aes_input.dma_transfer_data.src_addr, src_fixed, aes_input.dma_transfer_data.dst_addr, dst_fixed,  aes_input.text_len, block_size, 1, gcm_mode);
+          for (size_t i = 0; i < 100; i++)
+          {
+            //-- send AES Read
+            aes_ctrl = lsu_read_32(CLP_AES_REG_STATUS);
+            //write shadowed ctrl twice
+            lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+            lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+          }
+          soc_ifc_axi_dma_wait_idle_w_error_expected(0, 1);
+        } else {
+          soc_ifc_axi_dma_send_axi_to_axi_w_error_expected(aes_input.dma_transfer_data.src_addr, src_fixed, aes_input.dma_transfer_data.dst_addr, dst_fixed,  aes_input.text_len, block_size, 1, gcm_mode, (aes_input.aes_expect_err == TRUE));
+        }
+        
         soc_ifc_axi_dma_read_ahb_payload(aes_input.dma_transfer_data.dst_addr, 0, read_payload, aes_input.text_len, 0);
 
         // Compare to cypher text
