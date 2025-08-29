@@ -1,2 +1,4 @@
 src/integration/docs/caliptra_reg_html/
 src/soc_ifc/docs/caliptra_top_reg_html/
+src/integration/test_suites/libs/tcp_server/tcp_server.h.gch
+src/integration/test_suites/libs/jtagdpi/jtagdpi.h.gch

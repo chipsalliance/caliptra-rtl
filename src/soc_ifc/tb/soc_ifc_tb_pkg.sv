@@ -218,7 +218,7 @@ package soc_ifc_tb_pkg;
     "FUSE_SOC_MANIFEST_SVN"                         : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_SVN_0,                              // 0x390 [4]
     "FUSE_SOC_MANIFEST_MAX_SVN"                     : SOCIFC_BASE + `SOC_IFC_REG_FUSE_SOC_MANIFEST_MAX_SVN,                            // 0x3a0
     // 0x3a4..0x3bc
-    "FUSE_HEK_SEED"                                 : SOCIFC_BASE + `CLP_SOC_IFC_REG_FUSE_HEK_SEED_0,                                  // 0x3c0 [8] Obfuscated Hardware Epoch Key Seed
+    "FUSE_HEK_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_HEK_SEED_0,                                      // 0x3c0 [8] Obfuscated Hardware Epoch Key Seed
     // 0x3e0..0x4fc
     "SS_CPTRA_BASE_ADDR_L"                    : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L,                               // 0x500
     "SS_CPTRA_BASE_ADDR_H"                    : SOCIFC_BASE + `SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_H,                               // 0x504
@@ -421,7 +421,7 @@ package soc_ifc_tb_pkg;
     "SS_OTP_FC_BASE_ADDR_L"                            : 32'hffff_ffff,
     "SS_OTP_FC_BASE_ADDR_H"                            : 32'hffff_ffff,
     "SS_UDS_SEED_BASE_ADDR_L"                          : 32'hffff_ffff,
-    "SS_UDS_BASE_ADDR_H"                               : 32'hffff_ffff,
+    "SS_UDS_SEED_BASE_ADDR_H"                          : 32'hffff_ffff,
     "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : 32'hffff_ffff,
     "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : 32'hffff_ffff,
     "SS_DEBUG_INTENT"                                  : 32'h1,
@@ -431,7 +431,8 @@ package soc_ifc_tb_pkg;
     "SS_KEY_RELEASE_BASE_ADDR_L"                       : 32'hffff_ffff,
     "SS_KEY_RELEASE_BASE_ADDR_H"                       : 32'hffff_ffff,
     "SS_KEY_RELEASE_SIZE"                              : 32'h0000_ffff,
-    "SS_STRAP_GENERIC"                                 : 32'hffff_ffff
+    "SS_STRAP_GENERIC"                                 : 32'hffff_ffff,
+    "SS_OCP_LOCK_CTRL"                                 : `SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK
   };
 
 
@@ -678,6 +679,10 @@ package soc_ifc_tb_pkg;
         "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : return strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset_tb;
         "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"        : return strap_ss_num_of_prod_debug_unlock_auth_pk_hashes_tb;
         "SS_CPTRA_DMA_AXI_USER"                   : return strap_ss_caliptra_dma_axi_user_tb;
+        "SS_STRAP_GENERIC0"                       : return strap_ss_strap_generic_0_tb;
+        "SS_STRAP_GENERIC1"                       : return strap_ss_strap_generic_1_tb;
+        "SS_STRAP_GENERIC2"                       : return strap_ss_strap_generic_2_tb;
+        "SS_STRAP_GENERIC3"                       : return strap_ss_strap_generic_3_tb;
         "SS_DEBUG_INTENT"                         : return dword_t'(ss_debug_intent_tb);
         default: return '0;
       endcase
@@ -1162,13 +1167,13 @@ package soc_ifc_tb_pkg;
           "SS_UDS_SEED_BASE_ADDR_H"                       : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET" : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES"    : exp_data = fuses_locked ? curr_data : axi_indata;
-          "SS_DEBUG_INTENT"                               : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_DEBUG_INTENT"                               : exp_data =                curr_data             ;
           "SS_CPTRA_DMA_AXI_USER"                         : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L"          : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H"          : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_KEY_RELEASE_BASE_ADDR_L"                    : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_KEY_RELEASE_BASE_ADDR_H"                    : exp_data = fuses_locked ? curr_data : axi_indata;
-          "SS_KEY_RELEASE_SIZE"                           : exp_data = fuses_locked ? curr_data : axi_indata;
+          "SS_KEY_RELEASE_SIZE"                           : exp_data = fuses_locked ? curr_data : axi_indata & get_mask(addr_name);
 
           "SS_DBG_SERVICE_REG_REQ"                  : begin
             ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
