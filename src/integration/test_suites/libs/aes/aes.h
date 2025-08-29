@@ -104,6 +104,7 @@ typedef struct {
   dma_transfer_data_t dma_transfer_data;
   BOOL aes_expect_err;
   BOOL aes_dma_err;
+  BOOL aes_collision_err;
 } aes_flow_t;
 
 void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_size);
