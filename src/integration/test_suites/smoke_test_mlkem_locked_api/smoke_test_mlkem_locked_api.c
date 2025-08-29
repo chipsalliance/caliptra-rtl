@@ -107,7 +107,7 @@ void main() {
     lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors
 
     //Generate vectors
-    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
+    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk, FALSE);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 

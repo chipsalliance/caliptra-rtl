@@ -679,7 +679,7 @@ void main() {
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    mlkem_encaps_check(ek, msg, abr_entropy, ciphertext, shared_key);
+    mlkem_encaps_check(ek, msg, abr_entropy, ciphertext, shared_key, FALSE);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
     
@@ -688,7 +688,7 @@ void main() {
     cptra_intr_rcv.abr_notif = 0;
     
     //Generate vectors for keygen decaps check
-    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
+    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk, FALSE);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 

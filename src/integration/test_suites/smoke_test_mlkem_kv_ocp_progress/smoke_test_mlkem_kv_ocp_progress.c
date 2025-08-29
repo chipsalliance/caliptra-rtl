@@ -20,6 +20,7 @@
 #include "printf.h"
 #include "mlkem.h"
 #include <stdlib.h>
+#include "caliptra_rtl_lib.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -42,6 +43,7 @@ uint32_t abr_entropy[ABR_ENTROPY_SIZE] = {0x3401CEFA,0xE20A7376,0x49073AC1,0xA35
 
 void main() {
 
+    BOOL exp_failure = FALSE;
     mlkem_seed seed;
     mlkem_msg msg;
     mlkem_shared_key shared_key;
@@ -65,7 +67,7 @@ void main() {
 
     if (ocp_lock_mode) {
         seed.kv_intf = TRUE;
-        seed.kv_id = (rand() % 2) + 22;
+        seed.kv_id = (xorshift32() % 2) + 22;
         VPRINTF(LOW, "Running mlkem with seed kv_id = 0x%x\n", seed.kv_id);
         msg.kv_intf = TRUE;
         msg.kv_id = 21;
@@ -78,22 +80,31 @@ void main() {
         lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors into KV 0
         lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV 1
 
-        ocp_progress_bit = rand() % 2;
+        ocp_progress_bit = xorshift32() % 2;
         if (ocp_progress_bit) {
             VPRINTF(LOW,"OCP lock in progress\n");
             lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
+            if (seed.kv_id != 23){ 
+                exp_failure = FALSE;
+            }
+            else {
+                exp_failure = TRUE;
+            } //Expect failure in this case
         } else {
             VPRINTF(LOW,"OCP lock not in progress\n");
         }
 
         //Generate vectors
-        mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk); //Read from KV23
+        mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk, exp_failure); //Read from KV23
         mlkem_zeroize();
         cptra_intr_rcv.abr_notif = 0;
 
         mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey); //write to KV23
         mlkem_zeroize();
         cptra_intr_rcv.abr_notif = 0;
+
+        lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors into KV 0
+        lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV 1
 
         mlkem_keygen_decaps_check(seed, actual_ciphertext, abr_entropy, shared_key); //read/write from/to KV23
         mlkem_zeroize();

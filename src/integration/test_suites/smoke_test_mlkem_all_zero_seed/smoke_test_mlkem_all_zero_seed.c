@@ -487,7 +487,7 @@ void main() {
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
-    mlkem_encaps_check(ek, msg, abr_entropy, ciphertext, shared_key);
+    mlkem_encaps_check(ek, msg, abr_entropy, ciphertext, shared_key, FALSE);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
     
