@@ -66,7 +66,7 @@ void main() {
 
     if (ocp_lock_mode) {
         seed.kv_intf = TRUE;
-        seed.kv_id = (rand() % 2) + 22;
+        seed.kv_id = (xorshift32() % 2) + 22;
         VPRINTF(LOW, "Running mlkem with seed kv_id = 0x%x\n", seed.kv_id);
         msg.kv_intf = TRUE;
         msg.kv_id = 21;
@@ -79,7 +79,7 @@ void main() {
         lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors into KV 0
         lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV 1
 
-        ocp_progress_bit = rand() % 2;
+        ocp_progress_bit = xorshift32() % 2;
         if (ocp_progress_bit) {
             VPRINTF(LOW,"OCP lock in progress\n");
             lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
