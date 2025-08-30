@@ -41,6 +41,8 @@ Simulation:
    - `Version 2021.2.1` of AHB models
  - Avery AXI VIP
    - `Version 2025.1` of axixactor
+ - ARM AXI Protocol Checker
+   - `BP063-BU-01000-r0p1-00rel0` Axi4PC.sv must be acquired from the ARM website
  - UVM installation
    - `Version 1.1d`
  - Mentor Graphics UVM-Frameworks
@@ -157,6 +159,10 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 
 ## **Verilog File Lists** ##
 Verilog file lists are generated via VCS and included in the config directory for each unit. New files added to the design must be included in the vf list. They can be included manually or by using VCS to regenerate the vf file. File lists define the compilation sources (including all dependencies) required to build and simulate a given module or testbench, and should be used by integrators for simulation, lint, and synthesis.
+
+Important: Users must download the [ARM AXI4 Protocol Checker](https://developer.arm.com/downloads/view/BP063) from ARM, as it is a dependency
+for the Avery AXI VIP. These files contain proprietary materials and therefore are not included in the
+caliptra-rtl GitHub repository.
 
 ## **Scripts Description** ##
 
