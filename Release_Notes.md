@@ -26,6 +26,7 @@ _*Last Update: 2025/08/29*_
 - OCP L.O.C.K. 1.0-rc1 Support
 - AES DMA
 - External Mu mode for ML-DSA 87 signing
+- Mailbox size reduced to 16KB in subsystem mode
 - Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
 
 ## Previous Releases ##
