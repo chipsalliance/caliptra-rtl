@@ -113,7 +113,7 @@ void main(void) {
             }
         }
 
-        // Checking CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R -- CIF bit is set
+        // Checking CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R -- CIF bit is set
         reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
         if (reg & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_MASK) {
             VPRINTF(LOW, "NMI Detected: AXI DMA CIF Err Status=0x%08X matches expected value\n", reg);
