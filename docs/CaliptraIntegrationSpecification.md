@@ -986,7 +986,7 @@ As described in the Caliptra Hardware Specification, when operating in OCP LOCK 
   - Firmware shall execute the clear operation after any AES operation used to generate or load the MEK.
 - **Strap validation:**  
   Read and confirm valid values for:
-  - `KEY_RELEASE_BASE_ADDR`
+  - [SS_KEY_RELEASE_BASE_ADDR](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.SS_KEY_RELEASE_BASE_ADDR_L)
   - [KEY_RELEASE_KEY_SIZE](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.SS_KEY_RELEASE_SIZE)
 - **Firmware must clear any obfuscated MEK from memory immediately after use.**
 

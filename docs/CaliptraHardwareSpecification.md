@@ -2582,7 +2582,7 @@ Refer to the [Caliptra Integration Spec](https://github.com/chipsalliance/calipt
 
 - **MEK** is the final OCP LOCK key. It is **decrypted and stored in KV23**. After decryption, MEK may be transferred to its destination (as specified by the input strap) **via AXI DMA**.
 - OCP LOCK requires both the **AES write path** and a **DMA path** to the MEK destination.
-- **Hardware enforcement:** MEK is written to **KV slot 23**. HW recognizes the MEK generation request if there is an **AES-ECB decrypt** operation with **KV slot 16 (MDK)** as the AES-ECB key and routes the result accordingly.
+- **Hardware enforcement:** MEK is written to **KV23**. Hardware recognizes the MEK generation request if there is an **AES-ECB decrypt** operation with **KV16 (MDK)** as the AES-ECB key and routes the result accordingly. In this case, output of the decrypted plaintext via the AES dataout register API is blocked. Any Key Vault write operation requested for the AES output that does not meet these requirements results in a Key Vault write failure status.
 
 ---
 
@@ -2596,7 +2596,7 @@ Refer to the [Caliptra Integration Spec](https://github.com/chipsalliance/calipt
   - **AES-ECB decrypt** with **key = KV16** **must** have **dest = KV23**; otherwise the destination is **FW**.  
     *Rationale:* Prevents malicious FW from writing known values into other KV slots via AES.
 - **Additional KV behaviors**
-  - On write, HW validates that the **destination** is legal for the **source/read**.
+  - On write, hardware validates that the **destination** is legal for the **source/read**. If not valid, the Key Vault write operation returns a failing status.
   - **No parallel crypto operations** permitted for cryptographic blocks with access to Key Vault. KV does not track this; Caliptra enforces this rule by evaluating each block's busy status indicator and signaling violations through the [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL) register and corresponding interrupt at Caliptra top level design.
 
 ---
