@@ -98,6 +98,9 @@ with the provided Makefile for compiling test C programs.
 Required for simulation:<BR>
 `CALIPTRA_WORKSPACE`: Defines the absolute path to the directory where the Verilator "scratch" output directory will be created. Recommended to define as the absolute path to the directory that contains a subdirectory "chipsalliance" which, in turn, contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
 `CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Recommended to define as `${CALIPTRA_WORKSPACE}/chipsalliance/caliptra-rtl`.<BR>
+`CALIPTRA_AXI4PC_DIR`: Path to the directory that contains the ARM AXI4 Protocol Checker file. This file must be acquired from the Arm website by integrators, as it contains copyrighted materials.<BR>
+`CALIPTRA_PRIM_ROOT`: Set to $CALIPTRA_ROOT/src/caliptra_prim_generic for simulation. See integration specification for technology specific instructions.
+`CALIPTRA_PRIM_MODULE_PREFIX`: Set to caliptra_prim_generic for simulation. See integration specification for technology specific instructions.
 
 Required for Firmware (i.e. Test suites) makefile:<BR>
   `TESTNAME`: Contains the name of one of the tests listed inside the `src/integration/test_suites` folder; only used for `caliptra_top_tb` tests<BR>
