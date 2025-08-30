@@ -568,6 +568,9 @@ void main() {
         offset++;
     }
     
+    mldsa_zeroize();
+    cptra_intr_rcv.abr_notif = 0;
+
     // **********************************************
     // Injecting norm check failure into verifying
     // **********************************************

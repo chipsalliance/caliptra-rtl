@@ -314,7 +314,7 @@ reg {
                    [br][lb]15:8[rb] Patch version
                    [br][lb] 7:4[rb] Minor version
                    [br][lb] 3:0[rb] Major version";
-           sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=0x0002;
+           sw=r; resetsignal = cptra_rst_b;} CPTRA_GENERATION[16]=0x0012;
     field {sw=r; hw=w; resetsignal = cptra_rst_b;} SOC_STEPPING_ID[16]=0;
 } CPTRA_HW_REV_ID;
 reg {
@@ -330,12 +330,12 @@ reg {
             [br]Caliptra Access: RO
             [br]SOC Access:      RO";
     // No storage, i.e. no resetsignal
-    field {sw=r; hw=w;} iTRNG_en;
+    field {desc = "Internal TRNG enabled"; sw=r; hw=w;} iTRNG_en;
     field {desc = "Fuse row granularity. 0: 64-bits 1: 32-bits"; sw=r; hw=w;} Fuse_Granularity;
-    field {sw=r; hw=w;} RSVD_en[2];
-    field {sw=r; hw=w;} LMS_acc_en;
-    field {sw=r; hw=w;} SUBSYSTEM_MODE_en;
-    field {sw=r; hw=w;} OCP_LOCK_MODE_en;
+    field {desc = "RESERVED"; sw=r; hw=w;} RSVD_en[2];
+    field {desc = "LMS accelerator available"; sw=r; hw=w;} LMS_acc_en;
+    field {desc = "Caliptra configured in Subsystem Mode"; sw=r; hw=w;} SUBSYSTEM_MODE_en;
+    field {desc = "Caliptra configured to operate in OCP LOCK Mode"; sw=r; hw=w;} OCP_LOCK_MODE_en;
 } CPTRA_HW_CONFIG;
 
 //Timer1
