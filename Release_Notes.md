@@ -14,7 +14,19 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/04/29*_
+_*Last Update: 2025/08/29*_
+
+### Rev 2p1-rc1 ###
+
+#### Rev 2p1-rc1 release date: 2025/08/29 ###
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Adams Bridge with ML-DSA 87 and ML-KEM 1024 ([v2.0-RC1 Release Notes](https://github.com/chipsalliance/adams-bridge/blob/0925a0eab876a6ac65566226fed76643ab2832c3/Release_Notes.md))
+- OCP L.O.C.K. 1.0-rc1 Support
+- Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
+
+## Previous Releases ##
 
 ### Rev 2p0 ###
 
@@ -24,8 +36,6 @@ _*Last Update: 2025/04/29*_
 - Bug fixes:
   - [BUG FIX] fix missing V update in DRBG corner case
   - [BUG FIX] Subsystem Mode only: TAP mailbox lock priority
-
-## Previous Releases ##
 
 ### Rev 2p0-rc1 ###
 

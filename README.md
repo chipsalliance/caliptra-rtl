@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2025/04/29*_
+_*Last Update: 2025/08/29*_
 
 ## **Release Consumption and Integration** ##
 Prior official releases are available at: https://github.com/chipsalliance/caliptra-rtl/releases<br>
@@ -114,6 +114,7 @@ caliptra-rtl
 |   |-- Caliptra_TestPlan.xlsx
 |   `-- images
 |-- src
+|   |-- abr
 |   |-- aes
 |   |-- ahb_lite_bus
 |   |-- axi
@@ -136,6 +137,7 @@ caliptra-rtl
 |   |-- mldsa
 |   |-- pcrvault
 |   |-- riscv_core
+|   |-- sha3
 |   |-- sha256
 |   |-- sha512
 |   |-- sha512_masked
@@ -340,8 +342,8 @@ These three programs are designed to be run within the context of a UVM simulati
 ## **NOTES** ##
 
 * Register documentation is auto-rendered at the GitHub page
-  * [v2.1 internal registers](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
-  * [v2.1 external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)
+  * [v2.1 internal registers](https://chipsalliance.github.io/caliptra-rtl/v2_1/internal-regs)
+  * [v2.1 external registers](https://chipsalliance.github.io/caliptra-rtl/v2_1/external-regs)
   * [v2.0 internal registers](https://chipsalliance.github.io/caliptra-rtl/v2_0/internal-regs)
   * [v2.0 external registers](https://chipsalliance.github.io/caliptra-rtl/v2_0/external-regs)
   * [v1.1 internal registers](https://chipsalliance.github.io/caliptra-rtl/v1_1/internal-regs)
