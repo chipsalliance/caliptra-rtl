@@ -34,6 +34,11 @@ volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+#ifdef MY_RANDOM_SEED
+    unsigned rand_seed = (unsigned) MY_RANDOM_SEED;
+#else
+    unsigned rand_seed = 0;
+#endif
 
 /* HMAC384 test vector
     KEY = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
@@ -55,6 +60,9 @@ void main() {
     VPRINTF(LOW, "----------------------------------\n");
     VPRINTF(LOW, " KV Smoke Test With hmac384 flow !!\n");
     VPRINTF(LOW, "----------------------------------\n");
+
+    /* Intializes random number generator */
+    srand(rand_seed);
 
     //Call interrupt init
     init_interrupts();
@@ -119,40 +127,30 @@ void main() {
                                     0xfb68dab9,
                                     0xf1b582c2}; 
 
-    uint8_t hmackey_kv_id       = 0x2;
-    uint8_t hmacblock_kv_id     = 0x1;
-    uint8_t store_to_kv         = 0x1;
-    uint8_t tag_kv_id           = 0x0;
-
     hmac_io hmac384_key;
     hmac_io hmac384_block;
     hmac_io hmac384_lfsr_seed;
     hmac_io hmac384_tag;
 
     hmac384_key.kv_intf = TRUE;
-    hmac384_key.kv_id = hmackey_kv_id;
+    hmac384_key.kv_id = rand() % 24;
 
     hmac384_block.kv_intf = TRUE;
-    hmac384_block.kv_id = hmacblock_kv_id;
-    hmac384_block.data_size = 32;
-    for (int i = 0; i < hmac384_block.data_size; i++)
+    hmac384_block.kv_id = rand() % 24;
+    for (int i = 0; i < HMAC384_BLOCK_SIZE; i++)
         hmac384_block.data[i] = block[i];
 
-    hmac384_lfsr_seed.kv_intf = FALSE;
-    hmac384_lfsr_seed.data_size = 12;
-    for (int i = 0; i < hmac384_lfsr_seed.data_size; i++)
+    for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
         hmac384_lfsr_seed.data[i] = hmac384_lfsr_seed_data[i];
 
     hmac384_tag.kv_intf = TRUE;
-    hmac384_tag.kv_id = tag_kv_id;
-    hmac384_tag.data_size = 12;
-    for (int i = 0; i < hmac384_tag.data_size; i++)
+    hmac384_tag.kv_id = rand() % 24;
+    for (int i = 0; i < HMAC384_TAG_SIZE; i++)
         hmac384_tag.data[i] = hmac384_expected_tag[i];
 
 
     //inject hmac384_key to kv key reg (in RTL)
-    uint8_t key384_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
-    SEND_STDOUT_CTRL(key384_inject_cmd);
+    lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
 
     hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
     hmac_zeroize();
@@ -162,6 +160,22 @@ void main() {
     VPRINTF(LOW, " KV Smoke Test With hmac512 flow !!\n");
     VPRINTF(LOW, "----------------------------------\n");
 
+    uint32_t key512_data[] = {0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b,
+                           0x0b0b0b0b};
     //this is a random lfsr_seed
     uint32_t hmac512_lfsr_seed_data[12] =  {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -198,32 +212,44 @@ void main() {
     hmac_io hmac512_lfsr_seed;
     hmac_io hmac512_tag;
 
-    hmac512_key.kv_intf = TRUE;
-    hmac512_key.kv_id = 4;
+    for(int i = 0; i < 10; i++) {
+        VPRINTF(LOW, "START TEST %d\n", i);
+        hmac512_key.kv_intf = (rand() % 2) ? TRUE : FALSE;
+        hmac512_key.kv_id = rand() % 24;
+        for (int i = 0; i < HMAC512_KEY_SIZE; i++)
+            hmac512_key.data[i] = key512_data[i];
 
-    hmac512_block.kv_intf = FALSE;
-    hmac512_block.kv_id = hmacblock_kv_id;
-    hmac512_block.data_size = 32;
-    for (int i = 0; i < hmac512_block.data_size; i++)
-        hmac512_block.data[i] = block[i];
+        hmac512_block.kv_intf = (rand() % 2) ? TRUE : FALSE;
+        hmac512_block.kv_id = rand() % 24;
+        for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
+            hmac512_block.data[i] = block[i];
 
-    hmac512_lfsr_seed.kv_intf = FALSE;
-    hmac512_lfsr_seed.data_size = 12;
-    for (int i = 0; i < hmac512_lfsr_seed.data_size; i++)
-        hmac512_lfsr_seed.data[i] = hmac512_lfsr_seed_data[i];
+        for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
+            hmac512_lfsr_seed.data[i] = hmac512_lfsr_seed_data[i];
 
-    hmac512_tag.kv_intf = TRUE;
-    hmac512_tag.kv_id = tag_kv_id;
-    hmac512_tag.data_size = 16;
-    for (int i = 0; i < hmac512_tag.data_size; i++)
-        hmac512_tag.data[i] = hmac512_expected_tag[i];
+        hmac512_tag.kv_intf = (rand() % 2) ? TRUE : FALSE;
+        hmac512_tag.kv_id = rand() % 24;
+        if (!hmac512_tag.kv_intf && (hmac512_key.kv_intf || hmac512_block.kv_intf)){
+            for (int i = 0; i < HMAC512_TAG_SIZE; i++)
+                hmac512_tag.data[i] = 0;
+        }
+        else {
+            for (int i = 0; i < HMAC512_TAG_SIZE; i++)
+                hmac512_tag.data[i] = hmac512_expected_tag[i];
+        }
 
+        //inject hmac512_key to kv key reg (in RTL)
+        lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
+        //inject hmac512_block to kv key reg (in RTL)
+        lsu_write_32(STDOUT, (hmac512_block.kv_id << 8) | 0xb0); 
 
-    //inject hmac512_key to kv key reg (in RTL)
-    lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
+        VPRINTF(LOW, "Key KV ID: %d, KV Intf: %d\n", hmac512_key.kv_id, hmac512_key.kv_intf);
+        VPRINTF(LOW, "Block KV ID: %d, KV Intf: %d\n", hmac512_block.kv_id, hmac512_block.kv_intf);
+        VPRINTF(LOW, "Tag KV ID: %d, KV Intf: %d\n", hmac512_tag.kv_id, hmac512_tag.kv_intf);
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
-    hmac_zeroize();
+        hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
+        hmac_zeroize();
+    }
 
     SEND_STDOUT_CTRL(0xff); //End the test
     

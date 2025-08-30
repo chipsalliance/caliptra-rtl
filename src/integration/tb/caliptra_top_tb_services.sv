@@ -355,7 +355,8 @@ module caliptra_top_tb_services
     //         8'h9d        - Inject invalid pubkey_x into ECC
     //         8'h9e        - Inject invalid pubkey_y into ECC
     //         8'h9f        - Inject AES key into KV
-    //         8'ha0: 8'ha7 - Inject HMAC384_KEY to kv_key register
+    //         8'ha0        - Inject HMAC384_KEY to kv_key register
+    //         8'ha1: 8'ha7 - Unused
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9        - Inject HMAC512_KEY to kv_key register
     //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
@@ -373,7 +374,8 @@ module caliptra_top_tb_services
     //         8'hb7        - AXI Error Injection Enabled
     //         8'hb8        - AXI Error Injection Disabled
     //         8'hb9        - Enable scan mode and run DOE back to back
-    //         8'hba:bf     - Unused
+    //         8'hba        - Enable scan mode with KV write
+    //         8'hbb:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
     //         8'hc8        - Inject key 0x0 into slot 16 for AES 
     //         8'hc9        - Inject key smaller than key_release_size into KV23
@@ -571,7 +573,7 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   ecc_privkey_tb   = 512'h_F274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17_00000000000000000000000000000000;
     logic [0:15][31:0]   hmac384_key_tb   = 512'h_0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b_00000000000000000000000000000000;
     logic [0:15][31:0]   hmac512_key_tb   = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b;
-    logic [0:15][31:0]   hmac512_block_tb = 512'h_e7f1293c6f23a53289143df1399e784cb71180e3830c3869fd725fe78f0b6480559d6344edc1aaf64b7d0701e78672d2_00000000000000000000000000000000;
+    logic [0:15][31:0]   hmac512_block_tb = 512'h_e7f1293c6f23a53289143df1399e784cb71180e3830c3869fd725fe78f0b6480559d6344edc1aaf64b7d0701e78672d2_55555555555555555555555555555555;
     logic [0:15][31:0]   mldsa_seed_tb    = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
     logic [0:15][31:0]   aes256_key_tb    = 512'hbc623095823dafe190998314fedbac4258395063234564532123adfcefda2344_0000000000000000000000000000000000000000000000000000000000000000;
     logic [0:15][31:0]   ecc_privkey_random;
@@ -671,9 +673,9 @@ module caliptra_top_tb_services
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '0;
                     end
                     //inject valid hmac_key dest and hmac384_key value to key reg
-                    else if((WriteData[7:0] >= 8'ha0) && (WriteData[7:0] < 8'ha8) && mailbox_write) begin
+                    else if((WriteData[7:0] == 8'ha0) && mailbox_write) begin
                         inject_hmac_key <= 1'b1;
-                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                        if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
@@ -786,7 +788,7 @@ module caliptra_top_tb_services
                         inject_hmac_block <= 1'b1;
                         if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'h2;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'h3;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -1385,6 +1387,7 @@ endgenerate //IV_NO
 
     logic assert_scan_mode;
     logic assert_scan_mode_doe_done;
+    logic assert_scan_mode_kv_write;
     always @(negedge clk) begin
         //Enable scan mode
         if ((WriteData[7:0] == 8'hef) && mailbox_write) begin
@@ -1403,6 +1406,18 @@ endgenerate //IV_NO
         else if ((WriteData[7:0] == 8'hb9) && mailbox_write) begin
             scan_mode <= 1'b1;
             assert_scan_mode <= 'b0;
+        end
+        else if ((WriteData[7:0] == 8'hba) && mailbox_write) begin
+            assert_scan_mode_kv_write <= 1'b1;
+        end
+        else if (assert_scan_mode_kv_write) begin
+            for (int client = 0; client < KV_NUM_WRITE; client++)begin
+                if (`CPTRA_TOP_PATH.key_vault1.kv_write[client].write_en) begin
+                    scan_mode <= 1'b1;
+                    assert_scan_mode <= 'b0;
+                    assert_scan_mode_kv_write <= 'b0;
+                end
+            end
         end
         else if (assert_scan_mode_doe_done && (`CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.kv_doe_fsm_ps == 'h5)) begin
             scan_mode <= 1'b1;
