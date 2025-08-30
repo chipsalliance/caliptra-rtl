@@ -39,6 +39,10 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * AXI Manager DMA AES feature for OCP L.O.C.K. support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
 * [AES Big Endian mode](#aes-endian)
 * [External Staging Area](./CaliptraIntegrationSpecification.md#external-staging-area)
+* [OCP LOCK Support](#ocp-lock-hardware-architecture)
+* [SHA3](#sha3)
+* [ML-KEM](#adams-bridge-kyber-ml-kem)
+
 
 ## Boot FSM
 
@@ -1590,7 +1594,7 @@ Please refer to the [Adams-bridge specification](https://github.com/chipsallianc
 ### Address map
 Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
 
-## Adams Bridge - Kyber (ML-KEM)
+## Adams Bridge Kyber ML-KEM
 
 Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
 
@@ -2520,6 +2524,117 @@ Data vault is a set of generic scratch pad registers with specific lock function
 * 4B scratchpad registers that are lockable but cleared on cold reset (8 registers)
 * 4B scratchpad registers that are lockable but cleared on warm reset (10 registers)
 * 4B scratchpad registers that are cleared on warm reset (8 registers)
+
+
+## OCP LOCK Hardware Architecture
+
+### Overview
+The following hardware and ROM/FW enhancements support the OCP L.O.C.K. (a.k.a. **OCP LOCK**) flows defined for SSD applications. The specification is available here:  
+[OCP LOCK Spec](https://chipsalliance.github.io/Caliptra/ocp-lock/specification/HEAD)
+
+---
+
+### Additional Registers, Straps, and Macros for OCP LOCK
+
+- **`SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`**  
+  A status/control bit used to enforce the new KeyVault (KV) rules required by OCP LOCK. Write-1-to-set, meaning that, once-enabled, OCP LOCK functionality will persist until the register is cleared by a cold reset. See the dedicated section below for details on the behaviors this register enables.
+
+- **`ss_ocp_lock_en`** (constant-value input strap) with a corresponding bit in **`CPTRA_HW_CONFIG`** register named **`OCP_LOCK_MODE_en`**:
+  - Enables Caliptra ROM to perform OCP LOCK operations (e.g., using DOE for HEK seed de-obfuscation, Key Release via AXI DMA).
+  - Allows the ROM to set `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`.
+  - `ss_ocp_lock_en` is a strap pin and **must be driven with a constant value by the integrator**.
+  - `CPTRA_HW_CONFIG` register samples this strap and store its value in `OCP_LOCK_MODE_en` bit
+  - This bit is only reflected in CPTRA_HW_CONFIG if CALIPTRA_MODE_SUBSYSTEM is defined
+
+- **HEK seed fuse register**  
+  Holds the **obfuscated HEK seed**. ROM is responsible for performing the operation to de-obfuscate the HEK seed.
+
+- **Key release address and size straps**  
+  Writable until `FUSE_WR_DONE`, then locked (same as fuses and other subsystem-mode straps).
+  - **Address strap** (`strap_ss_key_release_base_addr`): full destination address for key release; in OCP LOCK this is the destination for the MEK to be written. Firmware can derive the SFR base from this value as needed.
+  - **Size strap** (`strap_ss_key_release_key_size`): byte-count (dword-aligned count is required by HW) of the key to program to the destination address via the key release operation. Strap input values are forced to a dword value by hardware. If control firmware updates this value (prior to FUSE_WR_DONE being set), it must use a dword-aligned value.
+
+Refer to the [Caliptra Integration Spec](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraIntegrationSpecification.md) for more details about macros and strap pins.
+
+---
+
+### `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` Register Bit
+
+**When/How it is set**
+- Set by **Caliptra ROM** after performing OCP LOCK-related derivations (HEK, MDK, etc.).
+- Can be set **iff** (`ss_ocp_lock_en` is set to 1 **AND** `CALIPTRA_MODE_SUBSYSTEM` is defined).
+ - Once set, a value of 1 persists until the register is cleared by cold reset.
+ 
+**Enforcements/Effects**
+- Reserves **KeyVault slots 0–15** for *standard* use-cases.
+- Reserves **KeyVault slots 16–23** for *OCP LOCK* use-cases.
+  - Key Vault slot 16 (KV16) is reserved for holding the MDK
+  - Key Vault slot 23 (KV23) is reserved for holding the MEK
+- Blocks interactions between *standard* slots and *LOCK* slots. This means that any crypto operation that uses a Key Vault input value (e.g. for Key, Block, Seed inputs) may not write the output to a Key Vault from a different region. E.g., When `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set, HMAC may not perform an operation that uses Key Vault slot 8 as BLOCK input and writes the output TAG to Key Vault slot 17.
+- Enables **Key Release via AXI DMA**.
+- Enables **AES engine to write output to Key Vault, which must use KV23**.
+
+> **Note:** If `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is `1`, it also implies `ss_ocp_lock_en` and `CALIPTRA_MODE_SUBSYSTEM` are also `1`.
+
+---
+
+### AES Write Path
+
+- **MEK** is the final OCP LOCK key. It is **decrypted and stored in KV23**. After decryption, MEK may be transferred to its destination (as specified by the input strap) **via AXI DMA**.
+- OCP LOCK requires both the **AES write path** and a **DMA path** to the MEK destination.
+- **Hardware enforcement:** MEK is written to **KV23**. Hardware recognizes the MEK generation request if there is an **AES-ECB decrypt** operation with **KV16 (MDK)** as the AES-ECB key and routes the result accordingly. In this case, output of the decrypted plaintext via the AES dataout register API is blocked. Any Key Vault write operation requested for the AES output that does not meet these requirements results in a Key Vault write failure status.
+
+---
+
+### KeyVault Access Rules & Filtering (when `LOCK_IN_PROGRESS` is set)
+
+- **KV23 (MEK destination)**: **write-restricted to AES only**.
+- **KV22 (HEK)**: **locked for writes until warm reset** (ROM requirement).
+- **KV16 (MDK)**: **locked for writes until warm reset** (ROM requirement).
+- If OCP LOCK mode is enabled:
+  - **KV23 must not be used** as input to other crypto operations—**only** as a **Key Release** source.
+  - **AES-ECB decrypt** with **key = KV16** **must** have **dest = KV23**; otherwise the destination is **FW**.  
+    *Rationale:* Prevents malicious FW from writing known values into other KV slots via AES.
+- **Additional KV behaviors**
+  - On write, hardware validates that the **destination** is legal for the **source/read**. If not valid, the Key Vault write operation returns a failing status.
+  - **No parallel crypto operations** permitted for cryptographic blocks with access to Key Vault. KV does not track this; Caliptra enforces this rule by evaluating each block's busy status indicator and signaling violations through the [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL) register and corresponding interrupt at Caliptra top level design.
+
+---
+
+### HEK Seed De‑obfuscation
+
+- Executed by **Caliptra ROM**. The DOE supports a HEK deobfuscation command that may be executed only once during a boot cycle. If Caliptra ROM does not run this flow to produce the HEK seed, it should run the flow with a dummy Key Vault slot to lock against future erroneous uses.
+- **Hardware-supported HEK seed Deobfuscation Path:** Ratchet Fuse Register (**obfuscated HEK seed**) → **DOE** (with `OBF_KEY`) → **KV slot 22** (de-obfuscated seed).
+- Caliptra ROM shall lock **KV22** for writes immediately it has derived the **HEK** into that slot.
+
+---
+
+### Key Release
+
+Caliptra's AXI DMA supports a hardware path to write **KV23 (MEK)** to the SoC via the AXI manager interface. The following rules constrain this operation:
+- Allowed **only** when `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` (sticky **W1SET**) is set by Caliptra ROM.
+- Destination and size must match the values from the straps:
+  - `strap_ss_key_release_base_addr`
+  - `strap_ss_key_release_key_size`
+
+---
+
+### Additional Security Hardening Specific to OCP LOCK Enhancements
+
+**Scan/Debug Protections**
+- Flush **DMA FIFOs** to prevent leakage of secrets via scan chain.
+- Flush **AES ↔ KV** interface.
+
+**AES/KV/DMA Robustness**
+- **AES → KV write path:** The key can't be written to KeyVault unless key_size bytes are decrypted by AES.
+- Validate **DMA `key_size`**; **error** if `key_size > 512b`.
+- Avoid hangs when **`key_size` != KV read DWORD count**:
+  - On KV reads, if `key_size` is **smaller** than the KV entry, **drop extra data** (do not push to FIFO).
+- **DMA KV read error**: Raised on the **first transfer cycle** from KV to DMA; DMA transitions immediately to **`DMA_ERROR`** without issuing an AXI transfer.
+- **KV write enable sourced from AES** (during OCP LOCK) so it **cannot** be modified mid-transfer.
+- **Enable AES ↔ KV write path** only if `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set.
+
+
 
 ## Cryptographic blocks fatal and non-fatal errors
 
