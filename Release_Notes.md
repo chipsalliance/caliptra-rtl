@@ -24,6 +24,8 @@ _*Last Update: 2025/08/29*_
 - Caliptra testplan: see docs/ folder
 - Adams Bridge with ML-DSA 87 and ML-KEM 1024 ([v2.0-RC1 Release Notes](https://github.com/chipsalliance/adams-bridge/blob/0925a0eab876a6ac65566226fed76643ab2832c3/Release_Notes.md))
 - OCP L.O.C.K. 1.0-rc1 Support
+- AES DMA
+- External Mu mode for ML-DSA 87 signing
 - Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
 
 ## Previous Releases ##
