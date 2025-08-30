@@ -957,31 +957,37 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
 
-## OCP LOCK Caliptra ROM & Firmware Guidance
+## OCP LOCK Caliptra ROM & Firmware Requirements
+
+The following rules outline additional steps that are divided between Caliptra ROM and Caliptra Runtime firmware to ensure secure operation protocol compliance to OCP L.O.C.K.
+As described in the Caliptra Hardware Specification, when operating in OCP LOCK mode Key Vault slot 16 (KV16) is designated for holding the MDK and Key Vault slot 23 (KV23) is designated for holding the MEK.
 
 - **DOE error status (KV write failure):**  
   Introduce a new status bit; ROM must check it after any DOE flow to ensure the KV write succeeded.
 - **HEK DOE flow**:  
   Must be locked after execution (like other DOE flows). ROM must run the HEK DOE flow even in non-LOCK contexts to lock it. Reset only by hard reset.
 - **Derivations & locking**:
-  - Derive the MDK to **KV16**, then **lock writes**.
-  - If OCP LOCK is enabled, derive **HEK** to **KV22**, then **lock writes**.
-    - Perform this **before** setting `OCP_LOCK_IN_PROGRESS` since HEK derivation depends on the **HEK seed (KV22)** and **standard CDI derivatives** (from standard KV slots).
+  - Derive the MDK to **KV16**, then set the **lock_wr** control bit of KV16.
+  - If OCP LOCK is enabled, derive **HEK** to **KV22**, then set the **lock_wr** control bit of KV23.
+    - Perform this **before** setting `OCP_LOCK_IN_PROGRESS` since HEK derivation depends on the **HEK seed** and **standard CDI derivatives** (from standard KV slots).
 - **Setting lock state:**  
-  If OCP LOCK is enabled, ROM **MUST** set `OCP_LOCK_IN_PROGRESS` **after any type of reset**.
+  If OCP LOCK is enabled, ROM **MUST** set `OCP_LOCK_IN_PROGRESS` before transitioning to the First Mutable Code (FMC) image.
 - **KV23 usage constraints:**  
   Never attempt to write anything to **KV23** except **MEK** (produced by AES).
-  - DOE will flag an error and **stall** if a write to **KV23** is attempted while OCP LOCK is in progress.
+  - DOE will flag an error and **stall** if a write to **KV23** is attempted while OCP LOCK is enabled. Note that this differs from other cryptographic engines, which use the SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS bit to enforce the respective ruleset. This is because HEK seed deobfuscation is performed by the ROM prior to setting LOCK_IN_PROGRESS.
 - **DMA programming with KV:**  
-  Follow the rules for **size** and **destination address**.
+  The programmed byte count must match the value on the input strap_ss_key_release_key_size strap.  The programmed destination address must match the value on the input strap_ss_key_release_base_addr. Violation of either of these rules will trigger a command decode error in the DMA.
 - **KV filtering rules:**  
-  Standard ↔ LOCK **crossovers are blocked**.
+  Cryptographic operations attempting to read from a Standard Key Vault slot and write a result to a LOCK Key Vault slot will fail (the same rule holds for the LOCK Key Vault slot → Standard Key Vault slot path). The error status is reported as a Key Vault Write failure in the respective cryptographic engine's register block.
 - **AES API updates:**  
-  Adjust for KV interactions, `dataout` behavior, and the **`OUTPUT_LOST`** use-case.
+  - Similar to all cryptographic core operations in Caliptra, firmware must set both the Key Vault Read Control and Key Vault Write Control registers prior to beginning the AES operation.
+  - When AES operation parameters match the configuration for which output data is written to KV23, result data is masked from being presented on the `dataout` register. Also, the STATUS.OUTPUT_LOST register bit will be asserted to reflect that output data has been blocked.
+  - AES operations used to decrypt Key Content into KV23 must be performed using automatic mode; manual operation is not supported for this process.
+  - Firmware shall execute the clear operation after any AES operation used to generate or load the MEK.
 - **Strap validation:**  
   Read and confirm valid values for:
   - `KEY_RELEASE_BASE_ADDR`
-  - `KEY_RELEASE_KEY_SIZE`
+  - [KEY_RELEASE_KEY_SIZE](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.SS_KEY_RELEASE_SIZE)
 - **Firmware must clear any obfuscated MEK from memory immediately after use.**
 
 ## Integrator RTL modification requirements
