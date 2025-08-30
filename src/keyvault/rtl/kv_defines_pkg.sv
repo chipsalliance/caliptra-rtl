@@ -37,9 +37,8 @@ localparam KV_STANDARD_SLOT_HI             = 15;
 localparam KV_OCP_LOCK_SLOT_LOW            = 16;
 localparam KV_OCP_LOCK_SLOT_HI             = 23;
 
-localparam OCP_LOCK_RT_OBF_KEY_KV_SLOT  = 16; // Stores the runtime MEK obf key (derived from devid chain)
+localparam OCP_LOCK_RT_OBF_KEY_KV_SLOT  = 16; // Stores the runtime MEK obf key (derived from devid chain). aka MDK
 localparam OCP_LOCK_HEK_SEED_KV_SLOT    = 22; // Destination for deobf HEK seed, also for derived HEK
-                                              // TODO -- do we need to be prescriptive about this, now that RT_OBF_KEY is used for MEK decryption instead of HEK?
 localparam OCP_LOCK_KEY_RELEASE_KV_SLOT = 23; // Stores the fully decrypted MEK
 localparam OCP_LOCK_HEK_NUM_DWORDS      = 8;  // 256b HEK Seed -- used to define the write-size from DOE
 localparam OCP_LOCK_MEK_NUM_DWORDS      = 16; // 512b MEK -- used to define the entry size fetched from KV
@@ -60,7 +59,6 @@ localparam KV_DEST_IDX_MLKEM_SEED = 6;
 localparam KV_DEST_IDX_MLKEM_MSG  = 7;
 localparam KV_DEST_IDX_DMA_DATA   = 8;
     
-// FIXME is this the correct set of KV permissions?
 // HEK seed (deobfuscated) is used as context for SP 800-108 KDF when deriving
 // the HEK
 localparam OCP_LOCK_HEK_SEED_DEST_VALID = (1 << KV_DEST_IDX_HMAC_BLOCK);
@@ -136,7 +134,7 @@ typedef struct packed {
     logic [KV_ENTRY_ADDR_W-1:0] kv_data0_entry;
     logic                       kv_data1_present;
     logic [KV_ENTRY_ADDR_W-1:0] kv_data1_entry;
-    logic [KV_NUM_WRITE-1:0]    kv_write_src; // TODO module param?
+    logic [KV_NUM_WRITE-1:0]    kv_write_src;
     logic [KV_ENTRY_ADDR_W-1:0] kv_write_entry;
     logic                       aes_decrypt_ecb_op;
 } kv_write_filter_metrics_t;

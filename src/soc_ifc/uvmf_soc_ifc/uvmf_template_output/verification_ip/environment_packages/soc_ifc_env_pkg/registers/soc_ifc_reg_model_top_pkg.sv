@@ -1433,7 +1433,7 @@ package soc_ifc_reg_model_top_pkg;
         foreach (soc_ifc_reg_rm.fuse_uds_seed[ii])                  uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_uds_seed[ii].seed                                  , soc_ifc_reg_secret_cb);
         foreach (soc_ifc_reg_rm.fuse_field_entropy[ii])             uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_field_entropy[ii].seed                             , soc_ifc_reg_secret_cb);
         foreach (soc_ifc_reg_rm.fuse_vendor_pk_hash[ii])            uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_vendor_pk_hash[ii].hash                            , soc_ifc_reg_fuse_cb);
-                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_ecc_revocation.ecc_revocation                      , soc_ifc_reg_fuse_cb); // FIXME back to single-element
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_ecc_revocation.ecc_revocation                      , soc_ifc_reg_fuse_cb);
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_fmc_key_manifest_svn.svn                           , soc_ifc_reg_fuse_cb);
         foreach (soc_ifc_reg_rm.fuse_runtime_svn[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_runtime_svn[ii].svn                                , soc_ifc_reg_fuse_cb);
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_anti_rollback_disable.dis                          , soc_ifc_reg_fuse_cb);

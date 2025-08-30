@@ -456,9 +456,6 @@ logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
 // Key size is in bytes
 always_comb kv_wr_num_dwords = ($clog2(CLP_AES_KV_WR_DW/32)+1)'(key_release_key_size>>2);
 
-// ============== AES Checks, conditions, HW rules for RAS TODO ============= //
-// * swizzle result data?                                                     //
-// ================================ END TODO ================================ //
 always_comb begin
     kv_write_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
     kv_write_metrics.kv_data0_present     = aes2caliptra.kv_key_in_use; // TODO -- what if FW toggles sideload while op is in progress?
