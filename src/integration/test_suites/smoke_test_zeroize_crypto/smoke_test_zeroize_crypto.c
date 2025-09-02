@@ -122,8 +122,7 @@ void main() {
     uint32_t check_data;
 
     //inject hmac_key to kv key reg (in RTL)
-    uint8_t key_inject_cmd = 0xa0 + (hmackey_kv_id & 0x7);
-    SEND_STDOUT_CTRL(key_inject_cmd);
+    lsu_write_32(STDOUT, (hmackey_kv_id << 8) | 0xa0);
 
     // wait for HMAC to be ready
     while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);

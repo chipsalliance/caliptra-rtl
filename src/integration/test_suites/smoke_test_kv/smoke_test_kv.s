@@ -93,8 +93,8 @@ _start:
     //-------
     //inject hmac_key to kv key reg (in RTL)
     li x3, STDOUT
-    li x5, 0xa1
-    sb x5, 0(x3)
+    li x5, 0x01a0
+    sw x5, 0(x3)
 
     // Program CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL
     // Read key from KEY 1
