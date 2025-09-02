@@ -94,7 +94,15 @@ void main(void) {
     if (mcause != 0) {
         
         fail = 0;
-        VPRINTF(LOW, "NMI Detected: Came from interrupt! mcause=0x%08X\n", mcause);
+        if((mcause & 0xF0000000) == 0xF0000000) {
+            VPRINTF(LOW, "mcause=0x%08X indicates that test hit an exception\n", mcause);
+            VPRINTF(LOW, "NMI Occurred!");
+        }
+        else {
+            VPRINTF(LOW, "mcause=0x%08X NMI was expected - 0xFXXX_XXXX\n", mcause);
+            fail = 1;
+        }
+
         // Checking for DMA Error
         for(int i = 0; i < 50; i++) {
             reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
