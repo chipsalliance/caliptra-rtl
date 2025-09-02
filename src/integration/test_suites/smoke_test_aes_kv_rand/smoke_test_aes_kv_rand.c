@@ -189,8 +189,7 @@ void main() {
 
 
     //inject hmac384_key to kv key reg (in RTL)
-    uint8_t key384_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
-    SEND_STDOUT_CTRL(key384_inject_cmd);
+    lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
 
     hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
     hmac_zeroize();

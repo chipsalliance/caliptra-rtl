@@ -57,6 +57,8 @@ void main(){
 
     srand(time);
     uint8_t ocp_progress_bit;
+    BOOL kv_status_success;
+    BOOL expect_kv_status_success;
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -246,30 +248,36 @@ void main(){
         uint8_t seed_inject_cmd = 0xac; //0x80 + (seed_kv_id & 0x7);
         SEND_STDOUT_CTRL(seed_inject_cmd);
 
+        ocp_progress_bit = rand() % 2;
+        if (ocp_progress_bit) {
+            // Enable OCP LOCK mode
+            VPRINTF(LOW,"OCP lock in progress\n");
+            lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
+        } else {
+            VPRINTF(LOW,"OCP lock not in progress\n");
+        }
+
         ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, FALSE);
         cptra_intr_rcv.ecc_error = 0;
         cptra_intr_rcv.ecc_notif = 0;
 
         //If reading from 23, check that it failed
-        if(seed_kv_id == 23){
-            if((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) >> 2) == 0) {
-                VPRINTF(FATAL, "KV Read Error is not detected!\n");
-                SEND_STDOUT_CTRL(0x1);
-                while(1);
-            }
-            else{
-                VPRINTF(LOW,"KV_READ_FAIL is successfully set\n");
-            }
-        }
+        expect_kv_status_success = !((seed_kv_id == 23) & ocp_progress_bit);
+        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) >> ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_LOW) == 0;
 
-        //Check that keyvault write to slot 23 failed
-        if((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> 2) == 0) {
-            VPRINTF(FATAL, "KV Write Error is not detected!\n");
+        if(expect_kv_status_success != kv_status_success) {
+            VPRINTF(FATAL, "ERROR: Unexpected KV read status!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
-        else{
-            VPRINTF(LOW,"KV_WRITE_FAIL is successfully set\n");
+
+        expect_kv_status_success = !((privkey_kv_id == 23) & ocp_progress_bit);
+        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> ECC_REG_ECC_KV_WR_PKEY_STATUS_ERROR_LOW) == 0;
+
+        if(expect_kv_status_success != kv_status_success) {
+            VPRINTF(FATAL, "ERROR: Unexpected KV write status!\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
         }
 
         ecc_zeroize();
@@ -278,14 +286,22 @@ void main(){
         cptra_intr_rcv.ecc_error = 0;
         cptra_intr_rcv.ecc_notif = 0;
 
-        //Check that keyvault read from slot 23 failed
-        if((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) >> 2) == 0) {
-            VPRINTF(FATAL, "KV Write Error is not detected!\n");
+        expect_kv_status_success = !((privkey_kv_id == 23) & ocp_progress_bit);
+        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) >> ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_LOW) == 0;
+
+        if(expect_kv_status_success != kv_status_success) {
+            VPRINTF(FATAL, "ERROR: Unexpected KV read status!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
-        else{
-            VPRINTF(LOW,"KV_WRITE_FAIL is successfully set\n");
+
+        expect_kv_status_success = !((sharedkey_kv_id == 23) & ocp_progress_bit);
+        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> ECC_REG_ECC_KV_WR_PKEY_STATUS_ERROR_LOW) == 0; 
+
+        if(expect_kv_status_success != kv_status_success) {
+            VPRINTF(FATAL, "ERROR: Unexpected KV write status!\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
         }
 
         ecc_zeroize();

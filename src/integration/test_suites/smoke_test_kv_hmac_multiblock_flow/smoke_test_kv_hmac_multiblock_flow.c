@@ -241,8 +241,7 @@ void main() {
         sign_s.data[i] = expected_sign_s[i];
 
     //inject hmac384_key to kv key reg (in RTL)
-    uint8_t key_inject_cmd = 0xa0 + (hmac384_key.kv_id & 0x7);
-    SEND_STDOUT_CTRL(key_inject_cmd);
+    lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
 
     hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE, FALSE);
     hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE, FALSE);
