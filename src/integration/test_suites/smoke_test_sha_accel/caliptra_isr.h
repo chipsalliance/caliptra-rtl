@@ -80,6 +80,8 @@ inline void service_sha512_error_intr() {VPRINTF(ERROR, "ERROR");}
 inline void service_sha512_notif_intr() {VPRINTF(ERROR, "ERROR");}
 inline void service_sha256_error_intr() {VPRINTF(ERROR, "ERROR");}
 inline void service_sha256_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_sha3_error_intr  () {VPRINTF(ERROR, "ERROR");}
+inline void service_sha3_notif_intr  () {VPRINTF(ERROR, "ERROR");}
 inline void service_soc_ifc_error_intr  () {VPRINTF(ERROR, "ERROR");}
 inline void service_soc_ifc_notif_intr  () {VPRINTF(ERROR, "ERROR");}
 inline void service_sha512_acc_error_intr() {VPRINTF(ERROR, "ERROR");}

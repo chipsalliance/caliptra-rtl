@@ -87,6 +87,8 @@ inline void service_sha256_error_intr() {return;}
 inline void service_sha256_notif_intr() {return;
 }
 
+inline void service_sha3_error_intr() {return;}
+inline void service_sha3_notif_intr() {return;}
 
 inline void service_soc_ifc_error_intr() {return;
 }
