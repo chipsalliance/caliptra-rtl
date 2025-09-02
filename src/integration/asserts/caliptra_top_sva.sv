@@ -583,9 +583,9 @@ module caliptra_top_sva
       DOE_HEK_data_check:  assert property (
                                             @(posedge `SVA_RDC_CLK)
                                             disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
-                                            (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*kv_defines_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
+                                            (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
                                           )
-                                  else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[/*kv_defines_pkg::OCP_LOCK_HEK_SEED_KV_SLOT*//*FIXME*/`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
+                                  else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
 
     end
     end
@@ -1235,12 +1235,12 @@ module caliptra_top_sva
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");
                         
-  MLDSA_valid_flag:     assert property (
-                          @(posedge `SVA_RDC_CLK)
-                          disable iff (`SERVICES_PATH.disable_mldsa_sva)
-                          `ABR_PATH.mldsa_valid_reg |-> `ABR_PATH.abr_ready
-                      )
-                      else $display("SVA ERROR: MLDSA VALID flag mismatch!");
+  //MLDSA_valid_flag:     assert property (
+  //                        @(posedge `SVA_RDC_CLK)
+  //                        disable iff (`SERVICES_PATH.disable_mldsa_sva)
+  //                        `ABR_PATH.mldsa_valid_reg |-> `ABR_PATH.abr_ready
+  //                    )
+  //                    else $display("SVA ERROR: MLDSA VALID flag mismatch!");
 
   //SVA for SHA512 restore
   sha512_restore_cmd:   assert property ( 

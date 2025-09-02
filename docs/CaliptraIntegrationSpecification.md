@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Integration Specification</p>
 
-<p style="text-align: center;">Version 2.0</p>
+<p style="text-align: center;">Version 2.1</p>
 
 <div style="page-break-after: always"></div>
 
@@ -211,6 +211,8 @@ The table below details the interface required for each SRAM. Driver direction i
 |  strap_ss_external_staging_area_base_addr                 | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_otp_fc_base_addr                                | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_uds_seed_base_addr                              | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_key_release_base_addr                           | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. This is the full destination address for MEK generated via OCP LOCK flow. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_key_release_key_size                            | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. This is the size of MEK generated via OCP LOCK flow. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset  | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_num_of_prod_debug_unlock_auth_pk_hashes         | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_caliptra_dma_axi_user                           | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
@@ -218,7 +220,8 @@ The table below details the interface required for each SRAM. Driver direction i
 |  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sample on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
+|  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
+|  ss_ocp_lock_en                                           | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC enables OCP LOCK features of Caliptra. Must be tied to a constant value. For example, driving this input from a programmable register or from a package pin is not permitted. |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | Enables unlock of the debug interface in the Manufacturing security state, for Subsystem mode only. |
 |  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | Enables unlock of the debug interface in the Production security state, for Subsystem mode only. |
 |  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | Enables SoC processors to execute firmware once authenticated by Caliptra. |
@@ -379,8 +382,8 @@ The following table describes the allocation of functionality to strap\_ss\_stra
 
 | N          | Name               | Description                                                                                                                 |
 | :--------- | :---------         | :---------                                                                                                                  |
-| 0          | RESERVED           | No allocated function.                                                                                                      |
-| 1          | RESERVED           | No allocated function.                                                                                                      |
+| 0          | strap_ss_strap_generic_0           | Provides the Caliptra ROM with a 32-bit pointer that encodes the location of the fuse controller's status register and the bit position of the idle indicator. Upper 16 bits: Bit index of the IDLE_BIT_STATUS within SOC_OTP_CTRL_STATUS. Lower 16 bits: Offset address of SOC_OTP_CTRL_STATUS within the SOC_IFC_REG space, relative to SOC_OTP_CTRL_BASE_ADDR.|
+| 1          | strap_ss_strap_generic_1           | Provides the Caliptra ROM with a 32-bit pointer to the fuse controller’s command register (CMD), enabling ROM-level control or triggering of fuse operations. |
 | 2          | RESERVED           | No allocated function.                                                                                                      |
 | 3          | RESERVED           | No allocated function.                                                                                                      |
 
@@ -953,6 +956,39 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | sha512_masked_core        | "masked_carry" is read before being assigned. Synthesized result may not match simulation | 295, 312 ||
 | ecc_montgomerymultiplier  | Netlist for always_ff block does not contain flip flop                                    | 274, 326 |Output width is smaller than internal signals, synthesis optimizes away the extra internal flops with no loads|
 | Multiple modules          | Signed to unsigned conversion occurs                                                      |          ||
+
+## OCP LOCK Caliptra ROM & Firmware Requirements
+
+The following rules outline additional steps that are divided between Caliptra ROM and Caliptra Runtime firmware to ensure secure operation protocol compliance to OCP L.O.C.K.
+As described in the Caliptra Hardware Specification, when operating in OCP LOCK mode Key Vault slot 16 (KV16) is designated for holding the MDK and Key Vault slot 23 (KV23) is designated for holding the MEK.
+
+- **DOE error status (KV write failure):**  
+  Introduce a new status bit; ROM must check it after any DOE flow to ensure the KV write succeeded.
+- **HEK DOE flow**:  
+  Must be locked after execution (like other DOE flows). ROM must run the HEK DOE flow even in non-LOCK contexts to lock it. Reset only by hard reset.
+- **Derivations & locking**:
+  - Derive the MDK to **KV16**, then set the **lock_wr** control bit of KV16.
+  - If OCP LOCK is enabled, derive **HEK** to **KV22**, then set the **lock_wr** control bit of KV23.
+    - Perform this **before** setting `OCP_LOCK_IN_PROGRESS` since HEK derivation depends on the **HEK seed** and **standard CDI derivatives** (from standard KV slots).
+- **Setting lock state:**  
+  If OCP LOCK is enabled, ROM **MUST** set `OCP_LOCK_IN_PROGRESS` before transitioning to the First Mutable Code (FMC) image.
+- **KV23 usage constraints:**  
+  Never attempt to write anything to **KV23** except **MEK** (produced by AES).
+  - DOE will flag an error and **stall** if a write to **KV23** is attempted while OCP LOCK is enabled. Note that this differs from other cryptographic engines, which use the SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS bit to enforce the respective ruleset. This is because HEK seed deobfuscation is performed by the ROM prior to setting LOCK_IN_PROGRESS.
+- **DMA programming with KV:**  
+  The programmed byte count must match the value on the input strap_ss_key_release_key_size strap.  The programmed destination address must match the value on the input strap_ss_key_release_base_addr. Violation of either of these rules will trigger a command decode error in the DMA.
+- **KV filtering rules:**  
+  Cryptographic operations attempting to read from a Standard Key Vault slot and write a result to a LOCK Key Vault slot will fail (the same rule holds for the LOCK Key Vault slot → Standard Key Vault slot path). The error status is reported as a Key Vault Write failure in the respective cryptographic engine's register block.
+- **AES API updates:**  
+  - Similar to all cryptographic core operations in Caliptra, firmware must set both the Key Vault Read Control and Key Vault Write Control registers prior to beginning the AES operation.
+  - When AES operation parameters match the configuration for which output data is written to KV23, result data is masked from being presented on the `dataout` register. Also, the STATUS.OUTPUT_LOST register bit will be asserted to reflect that output data has been blocked.
+  - AES operations used to decrypt Key Content into KV23 must be performed using automatic mode; manual operation is not supported for this process.
+  - Firmware shall execute the clear operation after any AES operation used to generate or load the MEK.
+- **Strap validation:**  
+  Read and confirm valid values for:
+  - [SS_KEY_RELEASE_BASE_ADDR](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.SS_KEY_RELEASE_BASE_ADDR_L)
+  - [KEY_RELEASE_KEY_SIZE](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.SS_KEY_RELEASE_SIZE)
+- **Firmware must clear any obfuscated MEK from memory immediately after use.**
 
 ## Integrator RTL modification requirements
 
