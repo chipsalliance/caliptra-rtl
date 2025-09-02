@@ -263,7 +263,7 @@ void main(){
 
         //If reading from 23, check that it failed
         expect_kv_status_success = !((seed_kv_id == 23) & ocp_progress_bit);
-        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) >> 2) == 0;
+        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) >> ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_LOW) == 0;
 
         if(expect_kv_status_success != kv_status_success) {
             VPRINTF(FATAL, "ERROR: Unexpected KV read status!\n");
@@ -272,7 +272,7 @@ void main(){
         }
 
         expect_kv_status_success = !((privkey_kv_id == 23) & ocp_progress_bit);
-        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> 2) == 0;
+        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> ECC_REG_ECC_KV_WR_PKEY_STATUS_ERROR_LOW) == 0;
 
         if(expect_kv_status_success != kv_status_success) {
             VPRINTF(FATAL, "ERROR: Unexpected KV write status!\n");
@@ -287,7 +287,7 @@ void main(){
         cptra_intr_rcv.ecc_notif = 0;
 
         expect_kv_status_success = !((privkey_kv_id == 23) & ocp_progress_bit);
-        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) >> 2) == 0;
+        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) >> ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_LOW) == 0;
 
         if(expect_kv_status_success != kv_status_success) {
             VPRINTF(FATAL, "ERROR: Unexpected KV read status!\n");
@@ -296,7 +296,7 @@ void main(){
         }
 
         expect_kv_status_success = !((sharedkey_kv_id == 23) & ocp_progress_bit);
-        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> 2) == 0; 
+        kv_status_success = (lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> ECC_REG_ECC_KV_WR_PKEY_STATUS_ERROR_LOW) == 0; 
 
         if(expect_kv_status_success != kv_status_success) {
             VPRINTF(FATAL, "ERROR: Unexpected KV write status!\n");
