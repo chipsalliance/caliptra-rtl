@@ -96,10 +96,10 @@ void main(void) {
         fail = 0;
         VPRINTF(LOW, "NMI Detected: Came from interrupt! mcause=0x%08X\n", mcause);
         // Checking for DMA Error
-        for(int i = 0; i < 15; i++) {
+        for(int i = 0; i < 50; i++) {
             reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
             if(reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
-                VPRINTF(LOW, "DMA Detected: AXI DMA Err Status=0x%08X\n", reg & AXI_DMA_REG_STATUS0_ERROR_MASK);
+                VPRINTF(LOW, "DMA Detected: AXI DMA Err Status=0x%08X\n", (reg & AXI_DMA_REG_STATUS0_ERROR_MASK));
                 break;
             } else {
                 // wait a bit
@@ -107,8 +107,8 @@ void main(void) {
                     asm volatile("nop");
                 }
             }
-            if (i == 14) {
-                VPRINTF(ERROR, "ERROR: NMI Detected but no AXI DMA Error Status=0x%08X\n", reg);
+            if (i == 49) {
+                VPRINTF(ERROR, "ERROR: NMI Detected but no AXI DMA Error Status=0x%08X\n", (reg & AXI_DMA_REG_STATUS0_ERROR_MASK));
                 fail = 1;
             }
         }

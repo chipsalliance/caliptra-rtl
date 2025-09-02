@@ -14,7 +14,7 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2025/04/29*_
+_*Last Update: 2025/08/29*_
 
 ## **Release Consumption and Integration** ##
 Prior official releases are available at: https://github.com/chipsalliance/caliptra-rtl/releases<br>
@@ -41,6 +41,8 @@ Simulation:
    - `Version 2021.2.1` of AHB models
  - Avery AXI VIP
    - `Version 2025.1` of axixactor
+ - ARM AXI Protocol Checker
+   - `BP063-BU-01000-r0p1-00rel0` Axi4PC.sv must be acquired from the ARM website
  - UVM installation
    - `Version 1.1d`
  - Mentor Graphics UVM-Frameworks
@@ -96,6 +98,9 @@ with the provided Makefile for compiling test C programs.
 Required for simulation:<BR>
 `CALIPTRA_WORKSPACE`: Defines the absolute path to the directory where the Verilator "scratch" output directory will be created. Recommended to define as the absolute path to the directory that contains a subdirectory "chipsalliance" which, in turn, contains the Project repository root (called "Caliptra" or "caliptra-rtl")<BR>
 `CALIPTRA_ROOT`: Defines the absolute path to the Project repository root (called "Caliptra" or "caliptra-rtl"). Recommended to define as `${CALIPTRA_WORKSPACE}/chipsalliance/caliptra-rtl`.<BR>
+`CALIPTRA_AXI4PC_DIR`: Path to the directory that contains the ARM AXI4 Protocol Checker file. This file must be acquired from the Arm website by integrators, as it contains copyrighted materials.<BR>
+`CALIPTRA_PRIM_ROOT`: Set to $CALIPTRA_ROOT/src/caliptra_prim_generic for simulation. See integration specification for technology specific instructions.
+`CALIPTRA_PRIM_MODULE_PREFIX`: Set to caliptra_prim_generic for simulation. See integration specification for technology specific instructions.
 
 Required for Firmware (i.e. Test suites) makefile:<BR>
   `TESTNAME`: Contains the name of one of the tests listed inside the `src/integration/test_suites` folder; only used for `caliptra_top_tb` tests<BR>
@@ -114,6 +119,7 @@ caliptra-rtl
 |   |-- Caliptra_TestPlan.xlsx
 |   `-- images
 |-- src
+|   |-- abr
 |   |-- aes
 |   |-- ahb_lite_bus
 |   |-- axi
@@ -136,6 +142,7 @@ caliptra-rtl
 |   |-- mldsa
 |   |-- pcrvault
 |   |-- riscv_core
+|   |-- sha3
 |   |-- sha256
 |   |-- sha512
 |   |-- sha512_masked
@@ -155,6 +162,10 @@ The "Integration" sub-component contains the top-level fileset for Caliptra. `sr
 
 ## **Verilog File Lists** ##
 Verilog file lists are generated via VCS and included in the config directory for each unit. New files added to the design must be included in the vf list. They can be included manually or by using VCS to regenerate the vf file. File lists define the compilation sources (including all dependencies) required to build and simulate a given module or testbench, and should be used by integrators for simulation, lint, and synthesis.
+
+Important: Users must download the [ARM AXI4 Protocol Checker](https://developer.arm.com/downloads/view/BP063) from ARM, as it is a dependency
+for the Avery AXI VIP. These files contain proprietary materials and therefore are not included in the
+caliptra-rtl GitHub repository.
 
 ## **Scripts Description** ##
 
@@ -340,8 +351,8 @@ These three programs are designed to be run within the context of a UVM simulati
 ## **NOTES** ##
 
 * Register documentation is auto-rendered at the GitHub page
-  * [v2.1 internal registers](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
-  * [v2.1 external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)
+  * [v2.1 internal registers](https://chipsalliance.github.io/caliptra-rtl/v2_1/internal-regs)
+  * [v2.1 external registers](https://chipsalliance.github.io/caliptra-rtl/v2_1/external-regs)
   * [v2.0 internal registers](https://chipsalliance.github.io/caliptra-rtl/v2_0/internal-regs)
   * [v2.0 external registers](https://chipsalliance.github.io/caliptra-rtl/v2_0/external-regs)
   * [v1.1 internal registers](https://chipsalliance.github.io/caliptra-rtl/v1_1/internal-regs)
