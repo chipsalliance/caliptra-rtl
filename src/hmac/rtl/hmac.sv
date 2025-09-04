@@ -512,9 +512,9 @@ always_comb num_dwords = mode_reg ? 'd16 : 'd12;
 always_comb begin
     kv_write_metrics.ocp_lock_in_progress = ocp_lock_in_progress;
     kv_write_metrics.kv_data0_present     = kv_key_data_present;
-    kv_write_metrics.kv_data0_entry       = kv_key_read_ctrl_reg.read_entry; // FIXME latch this at start-time
+    kv_write_metrics.kv_data0_entry       = kv_key_read_ctrl_reg.read_entry; // Stable after start-time due to SWWE
     kv_write_metrics.kv_data1_present     = kv_block_data_present;
-    kv_write_metrics.kv_data1_entry       = kv_block_read_ctrl_reg.read_entry; // FIXME latch this at start-time
+    kv_write_metrics.kv_data1_entry       = kv_block_read_ctrl_reg.read_entry; // Stable after start-time due to SWWE
     kv_write_metrics.kv_write_src         = KV_NUM_WRITE'(1 << KV_WRITE_IDX_HMAC);
     kv_write_metrics.kv_write_entry       = kv_write_ctrl_reg.write_entry;
     kv_write_metrics.aes_decrypt_ecb_op   = 1'b0;
