@@ -891,8 +891,8 @@ package soc_ifc_tb_pkg;
         if ((addr_name == "INTERNAL_FW_UPDATE_RESET") &  (indata[0] == 1'b1)) begin
             // NOTE. The expected value of  INTERNAL_ICCM_LOCK must be updated outside of package, or at least outside of 
             //       a function call since there could be a significant delay 
-            // _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
-            // $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
+            _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
+            $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
 
             tmp_data = _exp_register_data_dict["CPTRA_RESET_REASON"]; 
             tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK)  |
@@ -1135,8 +1135,8 @@ package soc_ifc_tb_pkg;
             if (exp_data[0]) begin  // write-one to clear
             // NOTE. The expected value of  INTERNAL_ICCM_LOCK must be updated outside of package, or at least outside of 
             //       a function call since there could be a significant delay
-            //  _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
-            //  $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
+             _exp_register_data_dict["INTERNAL_ICCM_LOCK"] = '0;  
+             $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also reset INTERNAL_ICCM_LOCK"); 
 
               _exp_register_data_dict["CPTRA_RESET_REASON"] = 32'h1;  //TODO. Ignoring warm reset for now 
               $display ("-- CPTRA_RESET_REASON is now %d", _exp_register_data_dict["CPTRA_RESET_REASON"]); 

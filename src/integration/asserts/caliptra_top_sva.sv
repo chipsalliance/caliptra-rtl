@@ -378,31 +378,31 @@ module caliptra_top_sva
 
         kv_ecc_privkey_w_std_to_std_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ECC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              (`ECC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ECC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey mismatch for STD to STD flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         
         kv_ecc_privkey_w_lock_to_lock_nonkv23_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> `ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              (`ECC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> `ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `ECC_PATH.kv_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
 `ifndef VERILATOR
         kv_ecc_privkey_w_lock_to_lock_kv23_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                              (`ECC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
                                               )
                                   else $display("SVA ERROR: Unexpected ECC privkey write to KV23 in LOCK to LOCK flow in OCP LOCK mode!");
 
         kv_ecc_privkey_w_std_to_lock_illegal_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                              (`ECC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ECC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
                                               )
                                   else $display("SVA ERROR: Unexpected ECC privkey write to illegal slot in STD to LOCK flow in OCP LOCK mode!");
 
         kv_ecc_privkey_w_lock_to_std_illegal_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                              (`ECC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ECC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ECC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`ECC_PATH.ecc_privkey_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, 16))
                                               )
                                   else $display("SVA ERROR: Unexpected ECC privkey write to illegal slot in LOCK to STD flow in OCP LOCK mode!");
 
