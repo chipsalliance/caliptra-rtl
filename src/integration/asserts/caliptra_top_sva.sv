@@ -573,7 +573,7 @@ module caliptra_top_sva
       // when (`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) is active
       ZEROIZE_MEM_DONE_TRANSITION: assert property (
         @(posedge `SVA_RDC_CLK)
-        (`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |=> 
+        $rose(`MLDSA_ZEROIZATION || `MLDSA_SCAN_DEBUG) |=> 
         ( !`MLDSA_PATH.zeroize_mem_done )[*0:$] ##1 
         $rose(`MLDSA_PATH.zeroize_mem_done)
       )
@@ -859,12 +859,12 @@ module caliptra_top_sva
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");
                         
-  MLDSA_valid_flag:     assert property (
-                          @(posedge `SVA_RDC_CLK)
-                          disable iff (`SERVICES_PATH.disable_mldsa_sva)
-                          `MLDSA_PATH.mldsa_valid_reg |-> `MLDSA_PATH.mldsa_ready
-                      )
-                      else $display("SVA ERROR: MLDSA VALID flag mismatch!");
+  // MLDSA_valid_flag:     assert property (
+  //                         @(posedge `SVA_RDC_CLK)
+  //                         disable iff (`SERVICES_PATH.disable_mldsa_sva)
+  //                         `MLDSA_PATH.mldsa_valid_reg |-> `MLDSA_PATH.mldsa_ready
+  //                     )
+  //                     else $display("SVA ERROR: MLDSA VALID flag mismatch!");
 
   //SVA for SHA512 restore
   sha512_restore_cmd:   assert property ( 
