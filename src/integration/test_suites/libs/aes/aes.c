@@ -313,7 +313,9 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
             lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
             lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
           }
-          soc_ifc_axi_dma_wait_idle_w_error_expected(0, 1);
+          VPRINTF(FATAL, "AES collision error must result in NMI, and firmware reset\n");
+          SEND_STDOUT_CTRL(fail_cmd);
+          while(1);
         } else {
           soc_ifc_axi_dma_send_axi_to_axi_w_error_expected(aes_input.dma_transfer_data.src_addr, src_fixed, aes_input.dma_transfer_data.dst_addr, dst_fixed,  aes_input.text_len, block_size, 1, gcm_mode, (aes_input.aes_expect_err == TRUE));
         }
