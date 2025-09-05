@@ -1,0 +1,3 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+testname: smoke_test_mldsa_externalmu_keygen_sign_vfy_rand
