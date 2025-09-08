@@ -701,7 +701,7 @@ module caliptra_top_tb_services
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].dest_valid.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].dest_valid.next = 6'h2;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].last_dword.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].last_dword.next = 'd11;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[16].last_dword.next = 'd15;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[16][dword_i].data.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[16][dword_i].data.next = hmac512_block_tb[dword_i][31 : 0];
                     end
@@ -790,7 +790,7 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'h3;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_block_tb[dword_i][31 : 0];
                         end
