@@ -535,6 +535,8 @@ void main() {
     // mldsa_zeroize();
     // cptra_intr_rcv.mldsa_notif = 0;
     mldsa_keyload_error_flow(seed);
+    mldsa_zeroize();
+    
     mldsa_keygen_signing_flow(seed, msg, sign_rnd, entropy, sign);
     mldsa_zeroize();
     cptra_intr_rcv.mldsa_notif = 0;

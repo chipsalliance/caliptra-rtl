@@ -433,7 +433,7 @@ module ecc_dsa_ctrl
         end
 
         for (int dword=0; dword < 12; dword++)begin
-            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.we = (sharedkey_we_reg & ~(dest_keyvault | kv_seed_data_present)) & !zeroize_reg;
+            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.we = (sharedkey_we_reg & ~(dest_keyvault | kv_key_data_present)) & !zeroize_reg;
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.next = read_reg[11-dword];  
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.hwclr = zeroize_reg;
         end
@@ -486,6 +486,30 @@ module ecc_dsa_ctrl
         hwif_in.ecc_kv_rd_seed_ctrl.read_en.hwclr = ~kv_seed_ready;
         hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = ~kv_write_ready;
     end
+
+    // Software write-enables to prevent KV reg manipulation mid-operation
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = !kv_key_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = !kv_key_data_present && ecc_ready_reg;
+
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = !kv_seed_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = !kv_seed_data_present && ecc_ready_reg;
+
+    // KV write control must be written before ECC core operation begins, even though
+    // output isn't written to KV until the end of the operation.
+    // Prevent partial-key attacks by blocking register modifications during core execution.
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = ecc_ready_reg;
 
     //keyvault control reg macros for assigning to struct
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)
@@ -943,5 +967,6 @@ module ecc_dsa_ctrl
 always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, !reset_n)
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, !reset_n)
-
+    `CALIPTRA_ASSERT_NEVER(ECC_KV_PRIVKEY_OP_NOT_IDLE, kv_privkey_read_ctrl_reg.read_en & !ecc_ready_reg , clk, !reset_n)
+    `CALIPTRA_ASSERT_NEVER(ECC_KV_SEED_OP_NOT_IDLE, kv_seed_read_ctrl_reg.read_en & !ecc_ready_reg , clk, !reset_n)
 endmodule

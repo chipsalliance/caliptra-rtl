@@ -254,6 +254,17 @@ always_comb begin
   hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
 end
 
+// Software write-enables to prevent KV reg manipulation mid-operation
+logic status_idle;
+assign status_idle = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
+
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_en.swwe         = status_idle && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_entry.swwe      = status_idle && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = status_idle && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.rsvd.swwe            = status_idle && kv_key_ready;
+
+`CALIPTRA_ASSERT_NEVER(AES_KV_OP_NOT_IDLE, kv_key_read_ctrl_reg.read_en & !status_idle , clk, !reset_n)
+
 //keyault FSM
 //keyvault control reg macros for assigning to struct
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, AES_KV_RD_KEY_CTRL)
@@ -267,7 +278,7 @@ aes_key_kv_read
 (
     .clk(clk),
     .rst_b(reset_n),
-    .zeroize('0), //FIXME needed?
+    .zeroize(debugUnlock_or_scan_mode_switch), 
 
     //client control register
     .read_ctrl_reg(kv_key_read_ctrl_reg),
@@ -294,11 +305,19 @@ genvar g_dword;
 genvar g_byte;
 generate
   for (g_dword = 0; g_dword < keymgr_pkg::KeyWidth/32; g_dword++) begin
+    logic [$bits(kv_key_write_offset)-1:0] local_g_dword;
+    assign local_g_dword = 3'(g_dword);
     for (g_byte = 0; g_byte < 4; g_byte++) begin
       always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
           kv_key_reg[g_dword][g_byte] <= '0;
-        end else if (kv_key_write_en && (kv_key_write_offset == g_dword)) begin
+        end else if(debugUnlock_or_scan_mode_switch) begin
+          kv_key_reg[g_dword][g_byte] <= '0;
+        // zeroize the buffered KeyVault value when reading in a new key
+        // On the first beat, the least-sig dword is set, all other dwords set to 0
+        end else if (kv_key_write_en && |local_g_dword && (kv_key_write_offset <  local_g_dword)) begin
+          kv_key_reg[g_dword][g_byte] <= 0;
+        end else if (kv_key_write_en && (kv_key_write_offset == local_g_dword)) begin
           kv_key_reg[g_dword][g_byte] <= kv_key_write_data[3-g_byte];
         end
       end
@@ -312,7 +331,7 @@ always_ff @(posedge clk or negedge reset_n) begin
     keymgr_key.valid <= '0;
     keymgr_key.key <= '0;
   end
-  else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL)) begin //new request, invalidate old key
+  else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL) || debugUnlock_or_scan_mode_switch) begin //new request, invalidate old key
     keymgr_key.valid <= '0;
     keymgr_key.key[0] <= '0;
     keymgr_key.key[1] <= '0;

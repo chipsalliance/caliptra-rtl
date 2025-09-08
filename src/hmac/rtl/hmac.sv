@@ -116,7 +116,8 @@ module hmac
   //KV Read Data Present
   logic kv_key_data_present, kv_key_data_present_set;
   logic [BLOCK_NUM_DWORDS-1:0] block_reg_lock, block_reg_lock_nxt;
-  logic kv_data_present, kv_data_present_set, kv_data_present_reset;
+  logic kv_block_data_present, kv_block_data_present_set;
+  logic kv_data_present, kv_data_present_reset;
 
   logic dest_keyvault;
   kv_error_code_e kv_key_error, kv_block_error, kv_write_error;
@@ -200,7 +201,7 @@ module hmac
           ready_reg       <= '0;
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
-          kv_data_present <= '0;
+          kv_block_data_present <= '0;
         end
       else if (zeroize_reg)
         begin
@@ -210,7 +211,7 @@ module hmac
           ready_reg       <= '0;
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
-          kv_data_present <= '0;
+          kv_block_data_present <= '0;
         end
       else
         begin
@@ -226,8 +227,8 @@ module hmac
           block_reg_lock <= block_reg_lock_nxt;
           kv_key_data_present <= kv_key_data_present_set ? '1 :
                                  kv_data_present_reset ? '0 : kv_key_data_present;
-          kv_data_present <= kv_data_present_set ? '1 :
-                             kv_data_present_reset ? '0 : kv_data_present;
+          kv_block_data_present <= kv_block_data_present_set ? '1 :
+                                   kv_data_present_reset ? '0 : kv_block_data_present;
         end
     end // reg_update
 
@@ -327,6 +328,33 @@ always_comb begin
   end
 end
 
+// Software write-enables to prevent KV reg manipulation mid-operation
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.swwe         = !kv_key_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_entry.swwe      = !kv_key_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = !kv_key_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.rsvd.swwe            = !kv_key_data_present && core_ready;
+
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe         = !kv_block_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe      = !kv_block_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.swwe = !kv_block_data_present && core_ready;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe            = !kv_block_data_present && core_ready;
+
+// KV write control must be written before HMAC core operation begins, even though
+// output isn't written to KV until the end of the operation.
+// Prevent partial-key attacks by blocking register modifications during core execution.
+always_comb hwif_in.HMAC512_KV_WR_CTRL.write_en.swwe              = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.write_entry.swwe           = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.swwe = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe    = core_ready;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe                  = core_ready;
+
+`CALIPTRA_ASSERT_NEVER(EHMAC_KV_KEY_OP_NOT_IDLE, kv_key_read_ctrl_reg.read_en & !core_ready , clk, !reset_n)
+`CALIPTRA_ASSERT_NEVER(HMAC_KV_BLOCK_OP_NOT_IDLE, kv_block_read_ctrl_reg.read_en & !core_ready , clk, !reset_n)
+
 //keyvault control reg macros for assigning to struct
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC512_KV_RD_KEY_CTRL)
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_block_read_ctrl_reg, HMAC512_KV_RD_BLOCK_CTRL)
@@ -334,7 +362,8 @@ end
 
 //Force result into KV reg whenever source came from KV
 always_comb kv_key_data_present_set = kv_key_read_ctrl_reg.read_en;
-always_comb kv_data_present_set = kv_key_read_ctrl_reg.read_en | kv_block_read_ctrl_reg.read_en;
+always_comb kv_block_data_present_set = kv_block_read_ctrl_reg.read_en;
+always_comb kv_data_present = kv_key_data_present | kv_block_data_present;
 always_comb kv_data_present_reset = kv_data_present & core_tag_we;
 
 // Register block

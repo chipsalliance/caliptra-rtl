@@ -100,6 +100,20 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
     // Enable ECC KEYGEN core
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
 
+    //Try to program ECC SEED after engine started
+    if(seed.kv_intf){
+        // Program ECC_SEED Read with 12 dwords from seed_kv_id
+        lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, (ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
+                                                    ((seed.kv_id << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
+    }
+    //Try to program kv dest incorrectly
+    if (!privkey.kv_intf){
+        // set privkey DEST to write
+        lsu_write_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, (ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
+                                                       ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK |
+                                                       ((0 << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) & ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK)));
+    }
+
     // wait for ECC KEYGEN process to be done
     wait_for_ecc_intr();
     
@@ -228,6 +242,23 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
     // Enable ECC SHAREDKEY core
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
 
+    //Try to program ECC PRIVKEY after engine started
+    if(privkey.kv_intf){
+        // Program PRIVKEY Read with 12 dwords from pkey_kv_id
+        lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                                                    ((privkey.kv_id << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
+    }
+    //Try to program kv dest incorrectly
+    if (!sharedkey.kv_intf){
+        // set privkey DEST to write
+        lsu_write_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, (ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
+                                                    ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK |
+                                                    ECC_REG_ECC_KV_WR_PKEY_CTRL_HMAC_BLOCK_DEST_VALID_MASK |
+                                                    ECC_REG_ECC_KV_WR_PKEY_CTRL_HMAC_KEY_DEST_VALID_MASK |
+                                                    ECC_REG_ECC_KV_WR_PKEY_CTRL_AES_KEY_DEST_VALID_MASK |
+                                                    ((0 << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) & ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK)));
+    }
+
     // wait for ECC KEYGEN process to be done
     wait_for_ecc_intr();
     
@@ -314,6 +345,13 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     printf("\nECC SIGNING\n");
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
     
+    //Try to program ECC PRIVKEY after engine started
+    if (privkey.kv_intf){
+        // Program ECC_PRIVKEY Read with 12 dwords from privkey_kv_id
+        lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                                                    ((privkey.kv_id << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
+    }
+
     // wait for ECC SIGNING process to be done
     wait_for_ecc_intr();
     
