@@ -19,6 +19,7 @@
 #include "riscv-csr.h"
 #include "printf.h"
 #include "ecc.h"
+#include "caliptra_rtl_lib.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -169,9 +170,9 @@ void main(){
     /* Intializes random number generator */  //TODO    
     srand(time);
 
-    uint8_t seed_kv_id = rand() % 24;
-    uint8_t privkey_kv_id = rand() % 24;
-    uint8_t sharedkey_kv_id = rand() % 24;
+    uint8_t seed_kv_id = xorshift32() % 24;
+    uint8_t privkey_kv_id = xorshift32() % 24;
+    uint8_t sharedkey_kv_id = xorshift32() % 24;
 
     ecc_io seed;
     ecc_io nonce;
