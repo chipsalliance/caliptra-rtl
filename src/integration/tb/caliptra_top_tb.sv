@@ -176,7 +176,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 // JTAG DPI
 jtagdpi #(
     .Name           ("jtag0"),
-    .ListenPort     (5000)
+    .ListenPort     (63224)
 ) jtagdpi (
     .clk_i          (core_clk),
     .rst_ni         (cptra_rst_b),
