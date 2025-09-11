@@ -19,6 +19,7 @@
 #include "riscv-csr.h"
 #include "printf.h"
 #include "ecc.h"
+#include "caliptra_rtl_lib.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -29,6 +30,12 @@ volatile uint32_t  intr_count = 0;
 #endif
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
+
+#ifdef MY_RANDOM_SEED
+    unsigned time = (unsigned) MY_RANDOM_SEED;
+#else
+    unsigned time = 0;
+#endif
 
 /* ECC test vector:
     MSG      = C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D
@@ -160,9 +167,12 @@ void main(){
     //Call interrupt init
     init_interrupts();
 
-    uint8_t seed_kv_id = 0x1;
-    uint8_t privkey_kv_id = 0x2;
-    uint8_t sharedkey_kv_id = 0x7;
+    /* Intializes random number generator */  //TODO    
+    srand(time);
+
+    uint8_t seed_kv_id = xorshift32() % 24;
+    uint8_t privkey_kv_id = xorshift32() % 24;
+    uint8_t sharedkey_kv_id = xorshift32() % 24;
 
     ecc_io seed;
     ecc_io nonce;

@@ -25,6 +25,7 @@
 #include "doe.h"
 #include "mldsa.h"
 #include <stdlib.h>
+#include "caliptra_rtl_lib.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -356,7 +357,7 @@ void kv_hmac512(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
 
     hmac512_lfsr_seed.kv_intf = FALSE;
     for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
-        hmac512_lfsr_seed.data[i] = rand() % 0xffffffff;
+        hmac512_lfsr_seed.data[i] = xorshift32() % 0xffffffff;
 
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = tag_id;
@@ -395,7 +396,7 @@ void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_i
 
     hmac512_lfsr_seed.kv_intf = FALSE;
     for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
-        hmac512_lfsr_seed.data[i] = rand() % 0xffffffff;
+        hmac512_lfsr_seed.data[i] = xorshift32() % 0xffffffff;
 
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = ecc_seed_id;
@@ -417,7 +418,7 @@ void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_i
 
     hmac512_lfsr_seed.kv_intf = FALSE;
     for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
-        hmac512_lfsr_seed.data[i] = rand() % 0xffffffff;
+        hmac512_lfsr_seed.data[i] = xorshift32() % 0xffffffff;
 
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = mldsa_seed_id;
@@ -451,7 +452,7 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
     
     iv.kv_intf = FALSE;
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
-        iv.data[i] = rand() % 0xffffffff;
+        iv.data[i] = xorshift32() % 0xffffffff;
 
     privkey.kv_intf = TRUE;
     privkey.kv_id = privkey_id;
@@ -480,7 +481,7 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
     
     iv.kv_intf = FALSE;
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
-        iv.data[i] = rand() % 0xffffffff;
+        iv.data[i] = xorshift32() % 0xffffffff;
 
     sign_r.kv_intf = FALSE;
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
@@ -507,7 +508,7 @@ void kv_mldsa(uint8_t seed_id){
     seed.kv_id = seed_id;
 
     for (int i = 0; i < MLDSA87_ENTROPY_SIZE; i++)
-        entropy[i] = rand() % 0xffffffff;
+        entropy[i] = xorshift32() % 0xffffffff;
 
     for (int i = 0; i < MLDSA87_PUBKEY_SIZE; i++)
         pubkey[i] = mldsa_pubkey[MLDSA87_PUBKEY_SIZE-1-i];
@@ -526,7 +527,7 @@ void kv_mldsa(uint8_t seed_id){
         msg[i] = msg_tbs[MLDSA87_MSG_SIZE-1-i];
 
     for (int i = 0; i < MLDSA87_ENTROPY_SIZE; i++)
-        entropy[i] = rand() % 0xffffffff;
+        entropy[i] = xorshift32() % 0xffffffff;
 
     for (int i = 0; i < MLDSA87_SIGN_SIZE; i++)
         sign[i] = mldsa_sign[MLDSA87_SIGN_SIZE-1-i];
@@ -536,45 +537,55 @@ void kv_mldsa(uint8_t seed_id){
     cptra_intr_rcv.abr_notif = 0;
 }
 
-void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_id, uint8_t *mldsa_seed_id, uint8_t *privkey_id, uint8_t *cdi_ldevid_id){
+void random_generator(uint8_t *uds_id, uint8_t *fe_id, uint8_t *hek_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_id, uint8_t *mldsa_seed_id, uint8_t *privkey_id, uint8_t *cdi_ldevid_id){
 
     /* Intializes random number generator */  //TODO    
     srand(time);
 
     do {
-        *fe_id = rand() % 24;   // FE kv id
-    } while(*fe_id == 0);
+        *fe_id = xorshift32() % 24;   // FE kv id
+    } while(*fe_id == *uds_id);
 
     do {
-        *cdi_idevid_id = rand() % 24; 
-    } while((*cdi_idevid_id == 0) | 
-            (*cdi_idevid_id == *fe_id));
-    
+        *hek_id = xorshift32() % 24; 
+    } while((*hek_id == *uds_id) | 
+            (*hek_id == *fe_id));
+ 
     do {
-        *cdi_ldevid_id = rand() % 24;
-    } while((*cdi_ldevid_id == 0) | 
+        *cdi_idevid_id = xorshift32() % 24; 
+    } while((*cdi_idevid_id == *uds_id) | 
+            (*cdi_idevid_id == *fe_id) | 
+            (*cdi_idevid_id == *hek_id));
+
+    do {
+        *cdi_ldevid_id = xorshift32() % 24;
+    } while((*cdi_ldevid_id == *uds_id) | 
             (*cdi_ldevid_id == *fe_id) | 
+            (*cdi_ldevid_id == *hek_id) | 
             (*cdi_ldevid_id == *cdi_idevid_id));
 
     do {
-        *ecc_seed_id = rand() % 24;
-    } while((*ecc_seed_id == 0) | 
+        *ecc_seed_id = xorshift32() % 24;
+    } while((*ecc_seed_id == *uds_id) | 
             (*ecc_seed_id == *fe_id) | 
+            (*ecc_seed_id == *hek_id) | 
             (*ecc_seed_id == *cdi_idevid_id) | 
             (*ecc_seed_id == *cdi_ldevid_id));
 
     do {
-        *mldsa_seed_id = rand() % 24;
-    } while((*mldsa_seed_id == 0) | 
+        *mldsa_seed_id = xorshift32() % 24;
+    } while((*mldsa_seed_id == *uds_id) | 
             (*mldsa_seed_id == *fe_id) | 
+            (*mldsa_seed_id == *hek_id) | 
             (*mldsa_seed_id == *cdi_idevid_id) | 
             (*mldsa_seed_id == *cdi_ldevid_id)  | 
             (*mldsa_seed_id == *ecc_seed_id));
 
     do {
-        *privkey_id = rand() % 24;
-    } while((*privkey_id == 0) | 
+        *privkey_id = xorshift32() % 24;
+    } while((*privkey_id == *uds_id) | 
             (*privkey_id == *fe_id) | 
+            (*privkey_id == *hek_id) | 
             (*privkey_id == *cdi_idevid_id) | 
             (*privkey_id == *cdi_ldevid_id) |
             //(*privkey_id == *ecc_seed_id) |
@@ -600,8 +611,7 @@ void main(){
     //Call interrupt init
     init_interrupts();
 
-    doe_uds_dest_id = 0;
-    random_generator(&doe_fe_dest_id, &cdi_idevid_id, &idevid_ecc_seed_id, &idevid_mldsa_seed_id, &idevid_ecc_privkey_id, &cdi_ldevid_id);
+    random_generator(&doe_uds_dest_id, &doe_fe_dest_id, &doe_hek_dest_id, &cdi_idevid_id, &idevid_ecc_seed_id, &idevid_mldsa_seed_id, &idevid_ecc_privkey_id, &cdi_ldevid_id);
     
     if(rst_count == 0) {
         VPRINTF(LOW, "1st FE flow + warm reset\n");
@@ -636,7 +646,9 @@ void main(){
     else if(rst_count == 3) {
         VPRINTF(LOW, "4th FE flow after cold reset\n");
 
+        VPRINTF(LOW, "doe_uds_dest_id = 0x%x\n",doe_uds_dest_id);
         VPRINTF(LOW, "doe_fe_dest_id = 0x%x\n",doe_fe_dest_id);
+        VPRINTF(LOW, "doe_hek_dest_id = 0x%x\n",doe_hek_dest_id);
         VPRINTF(LOW, "cdi_idevid_id = 0x%x\n",cdi_idevid_id);
         VPRINTF(LOW, "idevid_ecc_seed_id = 0x%x\n",idevid_ecc_seed_id);
         VPRINTF(LOW, "idevid_mldsa_seed_id = 0x%x\n",idevid_mldsa_seed_id);
