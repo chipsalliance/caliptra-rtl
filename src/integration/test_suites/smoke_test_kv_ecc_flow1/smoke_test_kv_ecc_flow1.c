@@ -30,6 +30,12 @@ volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+#ifdef MY_RANDOM_SEED
+    unsigned time = (unsigned) MY_RANDOM_SEED;
+#else
+    unsigned time = 0;
+#endif
+
 /* ECC test vector:
     MSG      = C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D
     PRIVKEY  = F274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17
@@ -160,9 +166,12 @@ void main(){
     //Call interrupt init
     init_interrupts();
 
-    uint8_t seed_kv_id = 0x1;
-    uint8_t privkey_kv_id = 0x2;
-    uint8_t sharedkey_kv_id = 0x7;
+    /* Intializes random number generator */  //TODO    
+    srand(time);
+
+    uint8_t seed_kv_id = rand() % 24;
+    uint8_t privkey_kv_id = rand() % 24;
+    uint8_t sharedkey_kv_id = rand() % 24;
 
     ecc_io seed;
     ecc_io nonce;
