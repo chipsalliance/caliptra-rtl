@@ -68,8 +68,9 @@ interface keyvault_cov_if
         debug: coverpoint cptra_in_debug_scan_mode; //debugUnlock_or_scan_mode_switch;
 
         //Note: Bit transitions and values for lock_wr, lock_use and clear are covered
-        //in UVM reg coverage. This coverpoint bins the 32-bit lock/clear bus so that
-        //they can be used to cross with other signals
+        //in UVM reg coverage. This coverpoint bins the lock/clear bus so that
+        //they can be used to cross with other signals. Intention is to cover scenarios of debug/scan/clear_secrets events
+        //while key_ctrl regs have multiple lock/clear bits set and the appropriate entries are cleared.
         lock_wr: coverpoint key_ctrl_lock_wr {
             wildcard bins zero         = {24'b???????????????????????1} iff ($countones(key_ctrl_lock_wr) > 1);
             wildcard bins one          = {24'b??????????????????????1?} iff ($countones(key_ctrl_lock_wr) > 1);
