@@ -61,9 +61,11 @@ void hmac_test(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id
 
     hmac512_key.kv_intf = TRUE;
     hmac512_key.kv_id = hmackey_kv_id;
+    hmac512_key.exp_kv_err = FALSE;
 
     hmac512_block.kv_intf = TRUE;
     hmac512_block.kv_id = hmacblock_kv_id;
+    hmac512_block.exp_kv_err = FALSE;
 
     hmac512_lfsr_seed.data_size = HMAC512_LFSR_SEED_SIZE;
     for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
@@ -72,7 +74,7 @@ void hmac_test(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = tag_kv_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
 
 }
 
@@ -117,6 +119,7 @@ void mlkem_test(uint8_t seed_kv_id, uint8_t sharedkey_kv_id){
     seed.kv_id = seed_kv_id;
     shared_key.kv_intf = TRUE;
     shared_key.kv_id = sharedkey_kv_id;
+    shared_key.exp_kv_err = FALSE;
 
     for (int i = 0; i < ABR_ENTROPY_SIZE; i++)
         abr_entropy[i] = rand() % 0xffffffff;

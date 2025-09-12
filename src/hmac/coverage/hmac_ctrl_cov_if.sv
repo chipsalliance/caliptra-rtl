@@ -85,26 +85,26 @@ interface hmac_ctrl_cov_if
 
         kv_read_entry_0_cp: coverpoint {kv_write_metrics.kv_data0_present, kv_write_metrics.kv_data0_entry} 
         iff (init | next) {
-            bins fw = {1'b0, [0:$]};
-            bins lower_slots = {1'b1, [0:15]};
-            bins upper_slots = {1'b1, [16:22]};
-            bins slot_23 = {1'b1, 23};
+            bins fw = {[0:23]}; //{1'b0, [0:$]};
+            bins lower_slots = {[32:47]}; //{1'b1, [0:15]};
+            bins upper_slots = {[48:54]}; //{1'b1, [16:22]};
+            bins slot_23 = {55}; //{1'b1, 23};
         }
 
         kv_read_entry_1_cp: coverpoint {kv_write_metrics.kv_data1_present, kv_write_metrics.kv_data1_entry} 
         iff (init | next) {
-            bins fw = {1'b0, [0:$]};
-            bins lower_slots = {1'b1, [0:15]};
-            bins upper_slots = {1'b1, [16:22]};
-            bins slot_23 = {1'b1, 23};
+            bins fw = {[0:23]}; //{1'b0, [0:$]};
+            bins lower_slots = {[32:47]}; //{1'b1, [0:15]};
+            bins upper_slots = {[48:54]}; //{1'b1, [16:22]};
+            bins slot_23 = {55}; //{1'b1, 23};
         }
 
         kv_write_entry_cp: coverpoint {kv_write_ctrl_reg.write_en, kv_write_metrics.kv_write_entry}
         iff (init | next) {
-            bins fw = {1'b0, [0:$]};
-            bins lower_slots = {1'b1, [0:15]};
-            bins upper_slots = {1'b1, [16:22]};
-            bins slot_23 = {1'b1, 23};
+            bins fw = {[0:23]}; //{1'b0, [0:$]};
+            bins lower_slots = {[32:47]}; //{1'b1, [0:15]};
+            bins upper_slots = {[48:54]}; //{1'b1, [16:22]};
+            bins slot_23 = {55}; //{1'b1, 23};
         }
 
         ocp_lock_X_kv_entry: cross ocp_lock_in_progress_cp, kv_write_entry_cp, kv_read_entry_0_cp, kv_read_entry_1_cp;

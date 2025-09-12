@@ -44,7 +44,7 @@ void write_hmac_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size)
     }
 }
 
-void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL exp_failure){
+void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -69,8 +69,8 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
         // Check that HMAC KEY is loaded
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
-        if (exp_failure == TRUE) {
-            if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK) == 1) {
+        if (key.exp_kv_err == TRUE) {
+            if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK) != 0) {
                 VPRINTF(LOW, "Received expected err for HMAC key read from KV while OCP lock in progress\n");
             }
             else {
@@ -106,6 +106,17 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
 
         // Check that HMAC BLOCK is loaded
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
+
+        if (block.exp_kv_err == TRUE) {
+            if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_ERROR_MASK) != 0) {
+                VPRINTF(LOW, "Received expected err for HMAC block read from KV while OCP lock in progress\n");
+            }
+            else {
+                VPRINTF(ERROR, "Received unexpected success for HMAC block read from KV while OCP lock in progress\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
     }
     else{
         reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_0;
@@ -155,21 +166,14 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
-    if (tag.kv_intf){
-        // wait for HMAC process - check dest done
-        if (exp_failure == FALSE) {
+    // Check results if no kv error expected
+    if ((key.exp_kv_err == FALSE) && (block.exp_kv_err == FALSE)) {
+        if (tag.kv_intf){
+            // wait for HMAC process - check dest done
             VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
             while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
         }
         else {
-            VPRINTF(LOW, "Expecting hmac to not finish, so not waiting for KV write status\n");
-            for (uint8_t i = 0; i < 100; i++) {
-                __asm__ volatile ("nop"); // Sleep loop as "nop"
-            }
-        }
-    }
-    else{
-        if (exp_failure == FALSE) {
             VPRINTF(LOW, "Load TAG data from HMAC\n");
             reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
             offset = 0;
@@ -186,16 +190,10 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
                 offset++;
             }
         }
-        else {
-            VPRINTF(LOW, "Expecting hmac to not finish, so not reading tag data\n");
-            for (uint8_t i = 0; i < 100; i++) {
-                __asm__ volatile ("nop"); // Sleep loop as "nop"
-            }
-        }
     }
 }
 
-void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL exp_failure){
+void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -220,8 +218,8 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
         // Check that HMAC KEY is loaded
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
-        if (exp_failure == TRUE) {
-            if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK) == 1) {
+        if (key.exp_kv_err == TRUE) {
+            if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK) != 0) {
                 VPRINTF(LOW, "Received expected err for HMAC key read from KV while OCP lock in progress\n");
             }
             else {
@@ -229,9 +227,7 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
-
         }
-
     }
     else{
         // Load key from hw_data and write to HMAC core
@@ -243,7 +239,6 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
         }
     }
 
-    
     if (block.kv_intf){
         // Program HMAC_BLOCK
         lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_EN_MASK |
@@ -257,6 +252,17 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
 
         // Check that HMAC BLOCK is loaded
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
+
+        if (block.exp_kv_err == TRUE) {
+            if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_ERROR_MASK) != 0) {
+                VPRINTF(LOW, "Received expected err for HMAC block read from KV while OCP lock in progress\n");
+            }
+            else {
+                VPRINTF(ERROR, "Received unexpected success for HMAC block read from KV while OCP lock in progress\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
     }
     else{
         reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_0;
@@ -308,25 +314,12 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
-    if (tag.kv_intf){
-        if (exp_failure == TRUE) {
-            VPRINTF(LOW, "Expecting hmac to not finish, so not waiting for KV write status\n");
-            for (uint8_t i = 0; i < 100; i++) {
-                __asm__ volatile ("nop"); // Sleep loop as "nop"
-            }
-        }
-        else{
+    // Check results if no kv error expected
+    if ((key.exp_kv_err == FALSE) && (block.exp_kv_err == FALSE)) {
+        if (tag.kv_intf){
             // wait for HMAC process - check dest done
             VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
             while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
-        }
-    }
-    else{
-        if (exp_failure == TRUE) {
-            VPRINTF(LOW, "Expecting hmac to not finish, so not reading tag data\n");
-            for (uint8_t i = 0; i < 100; i++) {
-                __asm__ volatile ("nop"); // Sleep loop as "nop"
-            }
         }
         else {
             // Load TAG data from HMAC
@@ -375,6 +368,16 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
         // Check that HMAC KEY is loaded
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
+        if (key.exp_kv_err == TRUE) {
+            if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK) != 0) {
+                VPRINTF(LOW, "Received expected err for HMAC key read from KV while OCP lock in progress\n");
+            }
+            else {
+                VPRINTF(ERROR, "Received unexpected success for HMAC key read from KV while OCP lock in progress\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
     }
     else{
         // Load key from hw_data and write to HMAC core
@@ -400,6 +403,17 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
 
         // Check that HMAC BLOCK is loaded
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
+
+        if (block.exp_kv_err == TRUE) {
+            if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_ERROR_MASK) != 0) {
+                VPRINTF(LOW, "Received expected err for HMAC block read from KV while OCP lock in progress\n");
+            }
+            else {
+                VPRINTF(ERROR, "Received unexpected success for HMAC block read from KV while OCP lock in progress\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
     }
     else{
         reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_0;
