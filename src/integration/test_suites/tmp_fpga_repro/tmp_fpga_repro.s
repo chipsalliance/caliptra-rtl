@@ -59,10 +59,10 @@ _start:
 
     // Setup for failing code (acquire lock, init a0, s6, sp)
     la sp, STACK
-    li a0, 0x30030130
-    li s6, 0x30040000
-    li t0, CLP_MBOX_CSR_MBOX_LOCK 
+    li a0, CLP_SOC_IFC_REG_CPTRA_RSVD_REG_0
+    li s6, CLP_MBOX_SRAM_BASE_ADDR
 
+    li t0, CLP_MBOX_CSR_MBOX_LOCK 
 _rd_mbox_lock:
     lw t5, 0(t0)
     bnez t5, _rd_mbox_lock
