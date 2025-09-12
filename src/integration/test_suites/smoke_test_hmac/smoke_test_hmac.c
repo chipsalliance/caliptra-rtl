@@ -178,7 +178,7 @@ void main() {
         hmac384_tag.data[i] = expected384_tag[i];
 
 
-    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE, FALSE);
+    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE);
     hmac_zeroize();
 
 
@@ -197,7 +197,7 @@ void main() {
     for (int i = 0; i < hmac512_tag.data_size; i++)
         hmac512_tag.data[i] = expected512_tag[i];
 
-    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, FALSE);
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
     hmac_zeroize();
 
     hmac512_key.kv_intf = FALSE;

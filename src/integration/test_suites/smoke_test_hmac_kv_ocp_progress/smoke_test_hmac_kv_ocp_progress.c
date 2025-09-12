@@ -26,7 +26,6 @@
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
-volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0; //0
 uint8_t key_kv_intf_bit, block_kv_intf_bit, tag_kv_intf_bit;
 
 #ifdef CPT_VERBOSITY
@@ -168,6 +167,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (key_kv_intf_bit == 1) {
         hmac384_key.kv_intf = TRUE;
         hmac384_key.kv_id = hmackey_kv_id;
+        hmac384_key.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC384 Key KV interface enabled\n");
     }
     else {
@@ -183,6 +183,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (block_kv_intf_bit == 1) {
         hmac384_block.kv_intf = TRUE;
         hmac384_block.kv_id = hmacblock_kv_id;
+        hmac384_block.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC384 Block KV interface enabled\n");
     }
     else {
@@ -204,13 +205,14 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (tag_kv_intf_bit == 1) {
         hmac384_tag.kv_intf = TRUE;
         hmac384_tag.kv_id = tag_kv_id;
+        hmac384_tag.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC384 Tag KV interface enabled\n");
     }
     else {
         hmac384_tag.kv_intf = FALSE;
         hmac384_tag.data_size = 12;
 
-        if (key_kv_intf_bit == 0 || block_kv_intf_bit == 0) {
+        if (key_kv_intf_bit == 1 || block_kv_intf_bit == 1) {
             for (int i = 0; i < hmac384_tag.data_size; i++)
                 hmac384_tag.data[i] = 0; //If either key or block is from FW interface, expected tag is 0
         }
@@ -228,6 +230,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (key_kv_intf_bit == 1) {
         hmac512_key.kv_intf = TRUE;
         hmac512_key.kv_id = hmackey_kv_id;
+        hmac512_key.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC512 Key KV interface enabled\n");
     }
     else {
@@ -243,6 +246,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (block_kv_intf_bit == 1) {
         hmac512_block.kv_intf = TRUE;
         hmac512_block.kv_id = hmacblock_kv_id;
+        hmac512_block.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC512 Block KV interface enabled\n");
     }
     else {
@@ -264,13 +268,14 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (tag_kv_intf_bit == 1) {
         hmac512_tag.kv_intf = TRUE;
         hmac512_tag.kv_id = tag_kv_id;
+        hmac512_tag.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC512 Tag KV interface enabled\n");
     }
     else {
         hmac512_tag.kv_intf = FALSE;
         hmac512_tag.data_size = 12;
 
-        if (key_kv_intf_bit == 0 || block_kv_intf_bit == 0) {
+        if (key_kv_intf_bit == 1 || block_kv_intf_bit == 1) {
             for (int i = 0; i < hmac512_tag.data_size; i++)
                 hmac512_tag.data[i] = 0; //If either key or block is from FW interface, expected tag is 0
         }
@@ -283,118 +288,98 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
 }
 
 void main() {
-    
-    uint8_t store_to_kv         = 0x1;
+
     uint8_t ocp_progress_bit;
-    BOOL exp_failure = FALSE;
 
     srand(time);
 
     //Randomize slots to upper slots
-    hmackey_kv_id       = (xorshift32() % 8) + 16;
+    hmackey_kv_id = (xorshift32() % 8) + 16;
 
     do {
         hmacblock_kv_id     = (xorshift32() % 8) + 16;
     } while (hmacblock_kv_id == hmackey_kv_id);
 
-    tag_kv_id           = (xorshift32() % 8) + 16;
+    tag_kv_id = (xorshift32() % 8) + 16;
 
     //Call interrupt init
     init_interrupts();
-    rst_count++;
 
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
     VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
     if (ocp_lock_mode) {
 
-
-        if (rst_count == 1) {
-
-            VPRINTF(LOW, "----------------------------------\n");
-            VPRINTF(LOW, " KV Smoke Test With hmac384 flow !!\n");
-            VPRINTF(LOW, "----------------------------------\n");
-            //this is a random lfsr_seed 
-
-            VPRINTF(LOW, "Running hmac with key kv_id = 0x%x, block kv_id = 0x%x, tag kv_id = 0x%x\n", hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
-
-            set_kv_intf_hmac384(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
-
-            //inject hmac384_key to kv key reg (in RTL)
-            lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa9);
-            // lsu_write_32(STDOUT, 0xaa);
-            //inject hmac_block to kv key reg (in RTL)
-            lsu_write_32(STDOUT, (hmac384_block.kv_id << 8) | 0xb0);
-
-            ocp_progress_bit = xorshift32() % 2;
-            if (ocp_progress_bit) {
-                // Enable OCP LOCK mode
-                VPRINTF(LOW,"OCP lock in progress\n");
-                lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-                if (hmackey_kv_id != 23){ 
-                    exp_failure = FALSE; 
-                }
-                else {
-                    exp_failure = TRUE;
-                } //Expect failure when key is read from kv23 since reads to kv23 are not allowed when OCP lock is in progress
-            } else {
-                VPRINTF(LOW,"OCP lock not in progress\n");
-                exp_failure = FALSE; //Expect success in this case
+        ocp_progress_bit = xorshift32() % 2;
+        if (ocp_progress_bit) {
+            // Enable OCP LOCK mode
+            VPRINTF(LOW,"OCP lock in progress\n");
+            lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
+            if (hmackey_kv_id == 23){ 
+                hmac384_key.exp_kv_err = TRUE; 
             }
-
-            hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, exp_failure);
-            hmac_zeroize();
-
-            VPRINTF(LOW, "Issue cold reset\n");
-            SEND_STDOUT_CTRL(0xf5);
-        }
-        else if (rst_count == 2) {
-
-            VPRINTF(LOW, "----------------------------------\n");
-            VPRINTF(LOW, " KV Smoke Test With hmac512 flow !!\n");
-            VPRINTF(LOW, "----------------------------------\n");
-
-            //Randomize slots to upper slots
-            hmackey_kv_id       = (xorshift32() % 8) + 16;
-            
-            do {
-                hmacblock_kv_id     = (xorshift32() % 8) + 16;
-            } while (hmacblock_kv_id == hmackey_kv_id);
-
-            tag_kv_id           = (xorshift32() % 8) + 16;
-
-            VPRINTF(LOW, "Running hmac with key kv_id = 0x%x, block kv_id = 0x%x, tag kv_id = 0x%x\n", hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
-            set_kv_intf_hmac512(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
-
-
-            //inject hmac512_key to kv key reg (in RTL)
-            lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9);
-            // lsu_write_32(STDOUT, 0xaa);
-            //inject hmac_block to kv key reg (in RTL)
-            lsu_write_32(STDOUT, (hmac512_block.kv_id << 8) | 0xb0);
-
-            ocp_progress_bit = xorshift32() % 2;
-            if (ocp_progress_bit) {
-                // Enable OCP LOCK mode
-                VPRINTF(LOW,"OCP lock in progress\n");
-                lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-                if (hmackey_kv_id != 23){ 
-                    exp_failure = FALSE; 
-                }
-                else {
-                    exp_failure = TRUE;
-                } //Expect failure in this case
-            } else {
-                VPRINTF(LOW,"OCP lock not in progress\n");
-                lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 0);
-                exp_failure = FALSE; //Expect success in this case
+            if (hmacblock_kv_id == 23){ 
+                hmac384_block.exp_kv_err = TRUE; 
             }
-
-            VPRINTF(LOW,"Trig hmac 512 flow\n");
-            hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, exp_failure);
-            hmac_zeroize();
-
         }
+
+        VPRINTF(LOW, "----------------------------------\n");
+        VPRINTF(LOW, " KV Smoke Test With hmac384 flow !!\n");
+        VPRINTF(LOW, "----------------------------------\n");
+
+        VPRINTF(LOW, "Running hmac with key kv_id = 0x%x, block kv_id = 0x%x, tag kv_id = 0x%x\n", hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
+
+        set_kv_intf_hmac384(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
+
+        //inject hmac384_key to kv key reg (in RTL)
+        lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa9);
+        // lsu_write_32(STDOUT, 0xaa);
+        //inject hmac_block to kv key reg (in RTL)
+        lsu_write_32(STDOUT, (hmac384_block.kv_id << 8) | 0xb0);
+
+        hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
+        hmac_zeroize();
+
+        VPRINTF(LOW, "----------------------------------\n");
+        VPRINTF(LOW, " KV Smoke Test With hmac512 flow !!\n");
+        VPRINTF(LOW, "----------------------------------\n");
+
+        //Randomize slots to upper slots
+        hmackey_kv_id = (xorshift32() % 8) + 16;
+        
+        do {
+            hmacblock_kv_id = (xorshift32() % 8) + 16;
+        } while (hmacblock_kv_id == hmackey_kv_id);
+
+        tag_kv_id = (xorshift32() % 8) + 16;
+
+        VPRINTF(LOW, "Running hmac with key kv_id = 0x%x, block kv_id = 0x%x, tag kv_id = 0x%x\n", hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
+        set_kv_intf_hmac512(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
+
+
+        //inject hmac512_key to kv key reg (in RTL)
+        lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9);
+        // lsu_write_32(STDOUT, 0xaa);
+        //inject hmac_block to kv key reg (in RTL)
+        lsu_write_32(STDOUT, (hmac512_block.kv_id << 8) | 0xb0);
+
+        ocp_progress_bit = xorshift32() % 2;
+        if (ocp_progress_bit) {
+            // Enable OCP LOCK mode
+            VPRINTF(LOW,"OCP lock in progress\n");
+            lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
+            if (hmackey_kv_id == 23){ 
+                hmac512_key.exp_kv_err = TRUE; 
+            }
+            if (hmacblock_kv_id == 23){ 
+                hmac512_block.exp_kv_err = TRUE; 
+            }
+        }
+
+        VPRINTF(LOW,"Trig hmac 512 flow\n");
+        hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+        hmac_zeroize();
+
     } else {
         VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
     }
