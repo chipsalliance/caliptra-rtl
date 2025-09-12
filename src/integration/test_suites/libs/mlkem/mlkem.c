@@ -399,7 +399,7 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
             else {
                 VPRINTF(LOW, "[MLKEM Encaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if (msg.exp_kv_err == FALSE) {
+            if ((msg.kv_intf == TRUE) && (msg.exp_kv_err == FALSE)) {
                 lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
             }
         }
@@ -562,7 +562,7 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
             else {
                 VPRINTF(LOW, "[MLKEM Encaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if (msg.exp_kv_err == FALSE) {
+            if ((msg.kv_intf == TRUE) && (msg.exp_kv_err == FALSE)) {
                 lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
             }
         }
@@ -664,7 +664,6 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
             else {
                 VPRINTF(LOW, "[MLKEM Decaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
         }
 
         VPRINTF(LOW, "[MLKEM Decaps] KV used, check Shared Key is 0\n");
@@ -771,7 +770,6 @@ void mlkem_decaps_flow(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[M
             else {
                 VPRINTF(LOW, "[MLKEM Decaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
         }
     }
     else if(!shared_key.kv_intf){
@@ -909,7 +907,7 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
             else {
                 VPRINTF(LOW, "[MLKEM KeyGen Decaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if (seed.exp_kv_err == FALSE) {
+            if ((seed.kv_intf == TRUE) && (seed.exp_kv_err == FALSE)) {
                 lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
             }
         }
@@ -1056,7 +1054,7 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
             else {
                 VPRINTF(LOW, "[MLKEM KeyGen Decaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if (seed.exp_kv_err == FALSE) {
+            if ((seed.kv_intf == TRUE) && (seed.exp_kv_err == FALSE)) {
                 lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
             }
         }
