@@ -348,10 +348,12 @@ void kv_hmac512(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
 
     hmac512_key.kv_intf = TRUE;
     hmac512_key.kv_id = key_id; // UDS from DOE
+    hmac512_key.exp_kv_err = FALSE;
     VPRINTF(LOW,"hmac key kv id = %x\n", hmac512_key.kv_id);
 
     hmac512_block.kv_intf = TRUE;
     hmac512_block.kv_id = block_id;  // FE from DOE
+    hmac512_block.exp_kv_err = FALSE;
     VPRINTF(LOW,"hmac block kv id = %x\n", hmac512_block.kv_id);
 
     hmac512_lfsr_seed.kv_intf = FALSE;
@@ -362,7 +364,7 @@ void kv_hmac512(uint8_t key_id, uint8_t block_id, uint8_t tag_id){
     hmac512_tag.kv_id = tag_id;
     VPRINTF(LOW,"hmac tag kv id = %x\n", hmac512_tag.kv_id);
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
 }
 
 //******************************************************************
@@ -379,6 +381,7 @@ void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_i
 
     hmac512_key.kv_intf = TRUE;
     hmac512_key.kv_id = key_id;
+    hmac512_key.exp_kv_err = FALSE;
 
     uint32_t idevid_ecc_key[] = {0x69646576, 0x69645F65, 0x63635F6B, 0x65798000,
                                 0x00000000, 0x00000000, 0x00000000, 0x00000000,
@@ -400,7 +403,7 @@ void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_i
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = ecc_seed_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
 
     uint32_t idevid_mldsa_key[] = {0x69646576, 0x69645F6D, 0x6C647361, 0x5F6B6579,
                                 0x80000000, 0x00000000, 0x00000000, 0x00000000,
@@ -422,7 +425,7 @@ void domain_separation(uint8_t key_id, uint8_t ecc_seed_id, uint8_t mldsa_seed_i
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = mldsa_seed_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
 }
 
 void kv_ecc(uint8_t seed_id, uint8_t privkey_id){

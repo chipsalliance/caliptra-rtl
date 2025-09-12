@@ -90,6 +90,7 @@ void main() {
 
     hmac512_key.kv_intf = TRUE;
     hmac512_key.kv_id = hmac512_key_kv_id;
+    hmac512_key.exp_kv_err = FALSE;
     VPRINTF(LOW,"hmac512_key_kv_id = 0x%x\n", hmac512_key_kv_id);
 
     //inject hmac512_key to kv key reg (in RTL)
@@ -97,6 +98,7 @@ void main() {
 
     hmac512_block.kv_intf = TRUE;
     hmac512_block.kv_id = doe_hek_dest_id;
+    hmac512_block.exp_kv_err = FALSE;
 
     hmac512_lfsr_seed.data_size = HMAC512_LFSR_SEED_SIZE;
     for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
@@ -105,7 +107,7 @@ void main() {
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = doe_hek_dest_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
+    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
 
     SEND_STDOUT_CTRL(0xff); //End the test
     
