@@ -568,18 +568,12 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
         }
     }
     else if(!msg.kv_intf & !shared_key.kv_intf){
-        VPRINTF(LOW, "[MLKEM Encaps] Check Shared Key\n");
+        // Read the shared key from MLKEM register
+        VPRINTF(LOW, "[MLKEM Encaps] Read Shared Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
-            actual_data = *reg_ptr;
-            if (actual_data != shared_key.data[offset]) {
-                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", shared_key.data[offset]);
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
-            }
+            shared_key_o[offset] = *reg_ptr;
             reg_ptr++;
             offset++;
         }
