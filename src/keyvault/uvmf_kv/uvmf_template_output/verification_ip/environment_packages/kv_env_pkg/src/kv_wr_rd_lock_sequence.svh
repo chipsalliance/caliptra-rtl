@@ -122,35 +122,48 @@ class kv_wr_rd_lock_sequence #(
         end
         
         //Write to all entries, random offsets
-        for (write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
-            write_id = $urandom_range(0,3);
-            case(write_id)
-                HMAC: begin
-                    repeat(10) begin
-                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_entry",write_entry);
-                        hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
-                    end
+        fork
+            begin
+                for (write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
+                    write_id = $urandom_range(0,3);
+                    case(write_id)
+                        HMAC: begin
+                            repeat(10) begin
+                                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq", "local_write_entry",write_entry);
+                                hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
+                            end
+                        end
+                        MLDSA: begin
+                            repeat(10) begin
+                                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_mlkem_write_agent.sequencer.mlkem_write_seq", "local_write_entry",write_entry);
+                                mlkem_write_seq.start(configuration.kv_mlkem_write_agent_config.sequencer);
+                            end
+                        end
+                        ECC: begin
+                            repeat(10) begin
+                                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_ecc_write_agent.sequencer.ecc_write_seq", "local_write_entry",write_entry);
+                                ecc_write_seq.start(configuration.kv_ecc_write_agent_config.sequencer);
+                            end
+                        end
+                        DOE: begin
+                            repeat(10) begin
+                                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_doe_write_agent.sequencer.doe_write_seq", "local_write_entry",write_entry);
+                                doe_write_seq.start(configuration.kv_doe_write_agent_config.sequencer);
+                            end
+                        end
+                    endcase
                 end
-                MLDSA: begin
-                    repeat(10) begin
-                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_mlkem_write_agent.sequencer.mlkem_write_seq", "local_write_entry",write_entry);
-                        mlkem_write_seq.start(configuration.kv_mlkem_write_agent_config.sequencer);
-                    end
+            end
+            begin
+                //Set each CTRL reg with random lock data
+                for(int write_entry2 = 0; write_entry2 < KV_NUM_KEYS; write_entry2++) begin
+                    // Construct the transaction
+                    lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
+                    reg_model.kv_reg_rm.KEY_CTRL[write_entry2].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+                    assert(sts == UVM_IS_OK) else `uvm_error("AHB_LOCK_SET", $sformatf("Failed when writing to KEY_CTRL[%d]",write_entry2))
                 end
-                ECC: begin
-                    repeat(10) begin
-                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_ecc_write_agent.sequencer.ecc_write_seq", "local_write_entry",write_entry);
-                        ecc_write_seq.start(configuration.kv_ecc_write_agent_config.sequencer);
-                    end
-                end
-                DOE: begin
-                    repeat(10) begin
-                        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null, "uvm_test_top.environment.kv_doe_write_agent.sequencer.doe_write_seq", "local_write_entry",write_entry);
-                        doe_write_seq.start(configuration.kv_doe_write_agent_config.sequencer);
-                    end
-                end
-            endcase
-        end
+            end
+        join
 
         //Read from all entries and offsets
         for (read_entry = 0; read_entry < KV_NUM_KEYS; read_entry++) begin
