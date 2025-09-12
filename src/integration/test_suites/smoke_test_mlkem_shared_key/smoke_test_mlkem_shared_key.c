@@ -135,13 +135,14 @@ void main() {
     }
     kv_shared_key.kv_intf = TRUE;
     kv_shared_key.kv_id = 2;
+    kv_shared_key.exp_kv_err = FALSE;
     for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
         kv_shared_key.data[i] = 0;
     }
 
     //First - run end to end flow through API
     //Generate encaps key
-    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk, FALSE);
+    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
     //Generate shared key and ciphertext
@@ -247,10 +248,11 @@ void main() {
 
     hmac_block.kv_intf = TRUE;
     hmac_block.kv_id = kv_shared_key.kv_id;
+    hmac_block.exp_kv_err = FALSE;
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = 3;
     hmac512_tag.data_size = 16;
-    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, FALSE);
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
     hmac_zeroize();
 
     //Use SK in AES to generate ciphertext, compare agains the one generated before

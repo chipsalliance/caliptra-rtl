@@ -163,12 +163,13 @@ void main() {
     for (int i = 0; i < hmac384_tag.data_size; i++)
         hmac384_tag.data[i] = hmac_tag[i];
     
-    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
     hmac_zeroize();
 
     //Run again, but put the tag in keyvault
     hmac384_key.kv_intf = TRUE;
     hmac384_key.kv_id = hmackey_kv_id;
+    hmac384_key.exp_kv_err = FALSE;
 
     hmac384_block.kv_intf = FALSE;
     hmac384_block.kv_id = 0;
@@ -191,7 +192,7 @@ void main() {
     //inject hmac384_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
 
-    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
     hmac_zeroize();
 
     VPRINTF(LOW, "----------------------------------\n");

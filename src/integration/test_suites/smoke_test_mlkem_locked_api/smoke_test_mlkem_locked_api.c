@@ -91,6 +91,7 @@ void main() {
 
     shared_key.kv_intf = TRUE;
     shared_key.kv_id = 2;
+    shared_key.exp_kv_err = FALSE;
     
     uint16_t offset;
     volatile uint32_t * reg_ptr;
@@ -99,15 +100,17 @@ void main() {
 
     seed.kv_intf = TRUE;
     seed.kv_id = 8;
+    seed.exp_kv_err = FALSE;
 
     msg.kv_intf = TRUE;
     msg.kv_id = 2;
+    msg.exp_kv_err = FALSE;
 
     lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors
     lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors
 
     //Generate vectors
-    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk, FALSE);
+    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 

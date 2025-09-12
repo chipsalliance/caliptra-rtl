@@ -196,15 +196,18 @@ void main() {
 
     hmac384_key.kv_intf = TRUE;
     hmac384_key.kv_id = hmackey_kv_id;
+    hmac384_key.exp_kv_err = FALSE;
 
     hmac_block1.kv_intf = FALSE;
     hmac_block1.kv_id = hmacblock_kv_id;
+    hmac_block1.exp_kv_err = FALSE;
     hmac_block1.data_size = 32;
     for (int i = 0; i < hmac_block1.data_size; i++)
         hmac_block1.data[i] = block1[i];
 
     hmac_block2.kv_intf = FALSE;
     hmac_block2.kv_id = hmacblock_kv_id;
+    hmac_block2.exp_kv_err = FALSE;
     hmac_block2.data_size = 32;
     for (int i = 0; i < hmac_block2.data_size; i++)
         hmac_block2.data[i] = block2[i];
@@ -243,8 +246,8 @@ void main() {
     //inject hmac384_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
 
-    hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE, FALSE);
-    hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE, FALSE);
+    hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE);
     hmac_zeroize();
 
     //sign with the generated key

@@ -134,9 +134,11 @@ void main() {
 
     hmac384_key.kv_intf = TRUE;
     hmac384_key.kv_id = rand() % 24;
+    hmac384_key.exp_kv_err = FALSE;
 
     hmac384_block.kv_intf = TRUE;
     hmac384_block.kv_id = rand() % 24;
+    hmac384_block.exp_kv_err = FALSE;
     for (int i = 0; i < HMAC384_BLOCK_SIZE; i++)
         hmac384_block.data[i] = block[i];
 
@@ -152,7 +154,7 @@ void main() {
     //inject hmac384_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
 
-    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, FALSE);
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
     hmac_zeroize();
 
 
@@ -216,11 +218,13 @@ void main() {
         VPRINTF(LOW, "START TEST %d\n", i);
         hmac512_key.kv_intf = (rand() % 2) ? TRUE : FALSE;
         hmac512_key.kv_id = rand() % 24;
+        hmac512_key.exp_kv_err = FALSE;
         for (int i = 0; i < HMAC512_KEY_SIZE; i++)
             hmac512_key.data[i] = key512_data[i];
 
         hmac512_block.kv_intf = (rand() % 2) ? TRUE : FALSE;
         hmac512_block.kv_id = rand() % 24;
+        hmac512_block.exp_kv_err = FALSE;
         for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
             hmac512_block.data[i] = block[i];
 
@@ -247,7 +251,7 @@ void main() {
         VPRINTF(LOW, "Block KV ID: %d, KV Intf: %d\n", hmac512_block.kv_id, hmac512_block.kv_intf);
         VPRINTF(LOW, "Tag KV ID: %d, KV Intf: %d\n", hmac512_tag.kv_id, hmac512_tag.kv_intf);
 
-        hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, FALSE);
+        hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
         hmac_zeroize();
     }
 
