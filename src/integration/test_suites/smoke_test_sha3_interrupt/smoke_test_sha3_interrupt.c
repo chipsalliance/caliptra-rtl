@@ -87,7 +87,7 @@ void main() {
     lsu_write_32(CLP_KMAC_CMD, KMAC_CMD_CMD_VALUE_PROCESS << KMAC_CMD_CMD_LOW);
 
     if (cptra_intr_rcv.sha3_error | KMAC_INTR_ENABLE_KMAC_ERR_MASK) {
-        VPRINTF(LOW, "Successfully received KMAC error.\n");
+        VPRINTF(LOW, "Successfully received expected interrupt for KMAC which is not a notification.\n");
     } else {
         VPRINTF(LOW, "ERROR: expected KMAC error interrupt.\n");
         // Write 0x1 to STDOUT for TB to fail test.
