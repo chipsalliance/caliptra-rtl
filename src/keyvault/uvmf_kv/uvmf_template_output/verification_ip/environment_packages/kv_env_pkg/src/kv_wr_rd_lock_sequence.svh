@@ -114,16 +114,21 @@ class kv_wr_rd_lock_sequence #(
             `uvm_error("KV_WR_RD_LOCK", "kv_rst_agent_config.sequencer is null!")
 
         //Set each CTRL reg with random lock data
-        for(write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
-            // Construct the transaction
-            lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
-            reg_model.kv_reg_rm.KEY_CTRL[write_entry].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
-            assert(sts == UVM_IS_OK) else `uvm_error("AHB_LOCK_SET", $sformatf("Failed when writing to KEY_CTRL[%d]",write_entry))
-        end
-        
+        // for(write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
+        //     // Construct the transaction
+        //     lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
+        //     reg_model.kv_reg_rm.KEY_CTRL[write_entry].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+        //     assert(sts == UVM_IS_OK) else `uvm_error("AHB_LOCK_SET", $sformatf("Failed when writing to KEY_CTRL[%d]",write_entry))
+        // end
+        `uvm_info("TOP", "Starting agent writes", UVM_MEDIUM)
         //Write to all entries, random offsets
         fork
             begin
+                configuration.kv_hmac_write_agent_config .wait_for_num_clocks(5);
+                configuration.kv_mlkem_write_agent_config.wait_for_num_clocks(5);
+                configuration.kv_ecc_write_agent_config  .wait_for_num_clocks(5);
+                configuration.kv_doe_write_agent_config  .wait_for_num_clocks(5);
+                
                 for (write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
                     write_id = $urandom_range(0,3);
                     case(write_id)
@@ -166,6 +171,7 @@ class kv_wr_rd_lock_sequence #(
         join
 
         //Read from all entries and offsets
+        `uvm_info("TOP", "Starting agent reads", UVM_MEDIUM)
         for (read_entry = 0; read_entry < KV_NUM_KEYS; read_entry++) begin
             read_id = $urandom_range(0,5);
             for (read_offset = 0; read_offset < KV_NUM_DWORDS; read_offset++) begin
@@ -219,6 +225,7 @@ class kv_wr_rd_lock_sequence #(
         // fork
 
         //Issue and wait for reset
+        `uvm_info("TOP", "Starting poweron", UVM_MEDIUM)
         if(configuration.kv_rst_agent_config.sequencer != null)
             kv_rst_agent_poweron_seq.start(configuration.kv_rst_agent_config.sequencer);
         else
@@ -227,6 +234,7 @@ class kv_wr_rd_lock_sequence #(
         begin
             repeat(20) begin
             //Set each CTRL reg with random lock data
+            `uvm_info("TOP", "Standalone writes to ctrl regs", UVM_MEDIUM)
             for(int write_entry_temp = 0; write_entry_temp < KV_NUM_KEYS; write_entry_temp++) begin
                     lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
                     reg_model.kv_reg_rm.KEY_CTRL[write_entry_temp].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
@@ -241,6 +249,7 @@ class kv_wr_rd_lock_sequence #(
             end //repeat
         end
         begin
+            `uvm_info("TOP", "Queuing writes", UVM_MEDIUM)
             queue_writes();
             //Wait for these writes to finish before setting next CTRL reg to avoid collision (test trying to write to CTRL and predictor trying to read from CTRL)
             configuration.kv_hmac_write_agent_config.wait_for_num_clocks(100);
@@ -255,6 +264,7 @@ class kv_wr_rd_lock_sequence #(
             begin
                 repeat(20) begin
                 //Set each CTRL reg with random lock data
+                `uvm_info("TOP", "Standalone writes to ctrl regs 2", UVM_MEDIUM)
                 for(int write_entry_temp = 0; write_entry_temp < KV_NUM_KEYS; write_entry_temp++) begin
                         lock_data = $urandom_range(1,7); //Can set one of lock_wr, lock_use, clear or all together
                         reg_model.kv_reg_rm.KEY_CTRL[write_entry_temp].write(sts, lock_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
@@ -270,6 +280,7 @@ class kv_wr_rd_lock_sequence #(
             end
             begin
                 repeat(20) begin
+                    `uvm_info("TOP", "Write to clear secrets", UVM_MEDIUM)
                     std::randomize(clear_secrets_data); //wren, debug_value0/1
 
                     reg_model.kv_reg_rm.CLEAR_SECRETS.write(sts, clear_secrets_data, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
@@ -282,6 +293,7 @@ class kv_wr_rd_lock_sequence #(
                 end //repeat
             end
             begin
+                `uvm_info("TOP", "Queuing writes", UVM_MEDIUM)
                 queue_writes();
                 //Wait for these writes to finish before setting next CTRL reg to avoid collision (test trying to write to CTRL and predictor trying to read from CTRL)
                 configuration.kv_hmac_write_agent_config.wait_for_num_clocks(100);

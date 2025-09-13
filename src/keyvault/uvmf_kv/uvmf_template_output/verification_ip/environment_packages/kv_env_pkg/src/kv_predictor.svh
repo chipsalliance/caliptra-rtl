@@ -866,6 +866,8 @@ class kv_predictor #(
           key_ctrl_lock_wr[entry] = 'b1;
         end
 
+        `uvm_info("KNU_AHB", $sformatf("Inside AHB write, key_ctrl_lock_wr[%0d] = %h, kv_reg_data = %h, data_active = %h", entry, key_ctrl_lock_wr[entry], kv_reg_data, data_active[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].lock_wr.get_lsb_pos()]), UVM_MEDIUM)
+
         //Once set, keep lock_use set until a reset is issued. AHB txn with lock_use = 0 should not have any effect on the reg
         if (data_active[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].lock_use.get_lsb_pos()]) begin
           key_ctrl_lock_use[entry] = 'b1;
@@ -974,6 +976,7 @@ endclass
     //kv_predictor takes care of #1. #2 and #3 should be done is custom AHB reg predictor which we don't have
     //As a workaround, setting a val_ctrl reg when clear happens. Until a write occurs on that entry, this bit will remain set
     //During every read, we check val_ctrl[entry] bit. If 1, return 0s, resp.err = 1 and last dword = 0 to mimic design
+    `uvm_info("[KNU_DBG]", $sformatf("lock_use during read = %d, client_dest_valid = %d, val_ctrl_data = %h, val_ctrl_derived_data = %h for received entry = %h", lock_use, client_dest_valid, val_ctrl_data[t_received.read_entry], val_ctrl_derived_data[t_received.read_entry], t_received.read_entry), UVM_LOW)
     if (lock_use || !client_dest_valid || val_ctrl_data[t_received.read_entry] || val_ctrl_derived_data[t_received.read_entry]) begin
       t_expected.read_data = 'h0;
       t_expected.error = 'b1;
@@ -993,6 +996,7 @@ endclass
     t_expected.last = (last_dword_written[t_received.read_entry] == t_received.read_offset); 
     t_expected.read_entry = t_received.read_entry;
     t_expected.read_offset = t_received.read_offset;
+    `uvm_info("KNU_DBG", $sformatf("expected last = %h, received last = %h, last_dword_written = %h, received offset = %h", t_expected.last, t_received.last, last_dword_written[t_received.read_entry], t_received.read_offset), UVM_MEDIUM)
   endfunction
 
   function void kv_predictor::populate_expected_kv_write_txn (ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
