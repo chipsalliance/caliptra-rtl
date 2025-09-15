@@ -202,7 +202,6 @@ interface clp_abr_top_cov_if
         pcr_sign_cp: coverpoint pcr_sign_mode;
         pcr_sign_input_invalid_cp: coverpoint pcr_sign_input_invalid;
 
-        errorXmldsa_cmd: cross error_flag_cp, mldsa_cmd_cp;
         readyXpcr_sign: cross ready_cp, pcr_sign_cp;
         pcr_signXmldsa_cmd: cross pcr_sign_cp, mldsa_cmd_cp {
             ignore_bins illegal_crosses = binsof(mldsa_cmd_cp.illegal_values);

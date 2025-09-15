@@ -109,6 +109,21 @@ module caliptra_top_sva
   localparam MLDSA_SIGN_RND_NUM_DWORDS  = 8; 
 
 
+  //Create a flopped version of hmac kv_data_present to be used to disable tag write OCP SVAs in case result is not expected to go to KV
+  logic hmac_kv_data_present_f;
+
+  always_ff @(posedge `SVA_RDC_CLK or negedge `SVA_RST) begin
+    if (!`SVA_RST) begin
+      hmac_kv_data_present_f <= 0;
+    end
+    else begin
+      if (`HMAC_PATH.kv_data_present)
+        hmac_kv_data_present_f <= 1;
+      else if (`HMAC_PATH.kv_write_done)
+        hmac_kv_data_present_f <= 0;
+    end
+  end
+
   //TODO: add disable condition based on doe cmd reg
   DOE_lock_uds_set:        assert property (
                                             @(posedge `SVA_RDC_CLK)
@@ -325,29 +340,34 @@ module caliptra_top_sva
 
         kv_hmac_tag_w_std_to_std_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
+                                              disable iff (!hmac_kv_data_present_f)
                                               (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 tag mismatch for STD to STD flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);
         kv_hmac_tag_w_lock_to_lock_nonkv23_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
+                                              disable iff (!hmac_kv_data_present_f)
                                               (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & ((`HMAC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> `HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 tag mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);
 `ifndef VERILATOR
         kv_hmac_tag_w_lock_to_lock_kv23_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
+                                              disable iff (!hmac_kv_data_present_f)
                                               (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT) |-> ~`HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value,16))
                                               )
                                   else $display("SVA ERROR: Unexpected HMAC384 tag write to KV23 in LOCK to LOCK flow in OCP LOCK mode!");
 
         kv_hmac_tag_w_std_to_lock_illegal_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
+                                              disable iff (!hmac_kv_data_present_f)
                                               (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value,16))
                                               )
                                   else $display("SVA ERROR: Unexpected HMAC384 tag write to illegal slot in STD to LOCK flow in OCP LOCK mode!");
 
         kv_hmac_tag_w_lock_to_std_illegal_flow: assert property (
                                               @(posedge `SVA_RDC_CLK)
+                                              disable iff (!hmac_kv_data_present_f)
                                               (`HMAC_PATH.kv_write_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`HMAC_PATH.kv_read[0].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`HMAC_PATH.kv_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`HMAC_PATH.hmac_result_kv_write.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value,16))
                                               )
                                   else $display("SVA ERROR: Unexpected HMAC384 tag write to illegal slot in LOCK to STD flow in OCP LOCK mode!");
