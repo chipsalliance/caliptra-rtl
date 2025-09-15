@@ -66,37 +66,32 @@ void init_interrupts(void);
 // These inline functions are used to insert event-specific functionality into the
 // otherwise generic ISR that gets laid down by the parameterized macro "nonstd_veer_isr"
 inline void service_doe_error_intr() {return;}
-inline void service_doe_notif_intr() {return;
-}
+inline void service_doe_notif_intr() {return;}
 
 inline void service_ecc_error_intr() {return;}
-inline void service_ecc_notif_intr() {return;
-}
+inline void service_ecc_notif_intr() {return;}
 
 inline void service_hmac_error_intr() {return;}
-inline void service_hmac_notif_intr() {return;
-}
+inline void service_hmac_notif_intr() {return;}
 
 inline void service_kv_error_intr() {return;}
 inline void service_kv_notif_intr() {return;}
+
 inline void service_sha512_error_intr() {return;}
-inline void service_sha512_notif_intr() {return;
-}
+inline void service_sha512_notif_intr() {return;}
 
 inline void service_sha256_error_intr() {return;}
 inline void service_sha256_notif_intr() {return;
 }
 
+inline void service_sha3_error_intr() {return;}
+inline void service_sha3_notif_intr() {return;}
 
-inline void service_soc_ifc_error_intr() {return;
-}
-
-inline void service_soc_ifc_notif_intr () {return;
-}
+inline void service_soc_ifc_error_intr() {return;}
+inline void service_soc_ifc_notif_intr () {return;}
 
 inline void service_sha512_acc_error_intr() {return;}
-inline void service_sha512_acc_notif_intr() {return;
-}
+inline void service_sha512_acc_notif_intr() {return;}
 
 inline void service_abr_error_intr() {
     uint32_t * reg = (uint32_t *) (CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);

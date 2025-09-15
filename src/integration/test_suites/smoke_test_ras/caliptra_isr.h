@@ -79,12 +79,15 @@ inline void service_hmac_notif_intr() {return;}
 
 inline void service_kv_error_intr() {return;}
 inline void service_kv_notif_intr() {return;}
+
 inline void service_sha512_error_intr() {return;}
 inline void service_sha512_notif_intr() {return;}
 
 inline void service_sha256_error_intr() {return;}
 inline void service_sha256_notif_intr() {return;}
 
+inline void service_sha3_error_intr() {return;}
+inline void service_sha3_notif_intr() {return;}
 
 inline void service_soc_ifc_error_intr() {
     uint32_t * reg = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);

@@ -177,6 +177,8 @@ inline void service_sha256_notif_intr() {
     }
 }
 
+inline void service_sha3_error_intr() {return;}
+inline void service_sha3_notif_intr() {return;}
 
 inline void service_soc_ifc_error_intr() {
     volatile uint32_t * reg = (volatile uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);

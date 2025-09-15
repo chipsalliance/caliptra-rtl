@@ -66,8 +66,10 @@ static void nonstd_veer_isr_sha512_error  (void) __attribute__ ((interrupt ("mac
 static void nonstd_veer_isr_sha512_notif  (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_sha256_error  (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_sha256_notif  (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_veer_isr_abr_error   (void) __attribute__ ((interrupt ("machine")));
-static void nonstd_veer_isr_abr_notif   (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_sha3_error    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_sha3_notif    (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_abr_error     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_abr_notif     (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_soc_ifc_error (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_soc_ifc_notif (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_sha512_acc_error (void) __attribute__ ((interrupt ("machine")));
@@ -94,14 +96,14 @@ static void (* const nonstd_veer_isr_13) (void) = std_rv_nop_machine          ; 
 static void (* const nonstd_veer_isr_14) (void) = std_rv_nop_machine          ;    // from the param'd
 static void (* const nonstd_veer_isr_15) (void) = std_rv_nop_machine          ;    // macro "nonstd_veer_isr"
 static void (* const nonstd_veer_isr_16) (void) = std_rv_nop_machine          ;    // below
-static void (* const nonstd_veer_isr_17) (void) = std_rv_nop_machine          ;    //        |
-static void (* const nonstd_veer_isr_18) (void) = std_rv_nop_machine          ;    //        |
+static void (* const nonstd_veer_isr_17) (void) = nonstd_veer_isr_sha3_error  ;    //        |
+static void (* const nonstd_veer_isr_18) (void) = nonstd_veer_isr_sha3_notif  ;    //        |
 static void (* const nonstd_veer_isr_19) (void) = nonstd_veer_isr_soc_ifc_error;   //        |
 static void (* const nonstd_veer_isr_20) (void) = nonstd_veer_isr_soc_ifc_notif;   //        |
 static void (* const nonstd_veer_isr_21) (void) = nonstd_veer_isr_sha512_acc_error;//        |
 static void (* const nonstd_veer_isr_22) (void) = nonstd_veer_isr_sha512_acc_notif;//        | 
-static void (* const nonstd_veer_isr_23) (void) = nonstd_veer_isr_abr_error ;    //        |
-static void (* const nonstd_veer_isr_24) (void) = nonstd_veer_isr_abr_notif ;    //        |
+static void (* const nonstd_veer_isr_23) (void) = nonstd_veer_isr_abr_error   ;    //        |
+static void (* const nonstd_veer_isr_24) (void) = nonstd_veer_isr_abr_notif   ;    //        |
 static void (* const nonstd_veer_isr_25) (void) = nonstd_veer_isr_axi_dma_error;   //        |
 static void (* const nonstd_veer_isr_26) (void) = nonstd_veer_isr_axi_dma_notif;   // -------'
 static void (* const nonstd_veer_isr_27) (void) = std_rv_nop_machine; // --------.
@@ -175,7 +177,7 @@ void init_interrupts(void) {
     volatile uint32_t * const sha512_reg     = (uint32_t*) CLP_SHA512_REG_BASE_ADDR;
     volatile uint32_t * const sha256_reg     = (uint32_t*) CLP_SHA256_REG_BASE_ADDR;
     volatile uint32_t * const sha512_acc_csr = (uint32_t*) CLP_SHA512_ACC_CSR_BASE_ADDR;
-    volatile uint32_t * const abr_reg      = (uint32_t*) CLP_ABR_REG_BASE_ADDR;
+    volatile uint32_t * const abr_reg        = (uint32_t*) CLP_ABR_REG_BASE_ADDR;
     volatile uint32_t * const axi_dma_reg    = (uint32_t*) CLP_AXI_DMA_REG_BASE_ADDR;
     volatile uint32_t * const mtime_l        = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L;
     volatile uint32_t * const mtime_h        = (uint32_t*) CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_H;
@@ -234,14 +236,14 @@ void init_interrupts(void) {
     meipls[VEER_INTR_VEC_RSVD0_NOTIF     ] = VEER_INTR_PRIO_RSVD0_NOTIF     ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_RSVD1_ERROR     ] = VEER_INTR_PRIO_RSVD1_ERROR     ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_RSVD1_NOTIF     ] = VEER_INTR_PRIO_RSVD1_NOTIF     ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_RSVD2_ERROR     ] = VEER_INTR_PRIO_RSVD2_ERROR     ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_RSVD2_NOTIF     ] = VEER_INTR_PRIO_RSVD2_NOTIF     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SHA3_ERROR      ] = VEER_INTR_PRIO_SHA3_ERROR      ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_SHA3_NOTIF      ] = VEER_INTR_PRIO_SHA3_NOTIF      ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SOC_IFC_ERROR   ] = VEER_INTR_PRIO_SOC_IFC_ERROR   ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SOC_IFC_NOTIF   ] = VEER_INTR_PRIO_SOC_IFC_NOTIF   ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA512_ACC_ERROR] = VEER_INTR_PRIO_SHA512_ACC_ERROR; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA512_ACC_NOTIF] = VEER_INTR_PRIO_SHA512_ACC_NOTIF; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_ABR_ERROR     ] = VEER_INTR_PRIO_ABR_ERROR     ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_ABR_NOTIF     ] = VEER_INTR_PRIO_ABR_NOTIF     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_ABR_ERROR       ] = VEER_INTR_PRIO_ABR_ERROR       ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_ABR_NOTIF       ] = VEER_INTR_PRIO_ABR_NOTIF       ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_AXI_DMA_ERROR   ] = VEER_INTR_PRIO_AXI_DMA_ERROR   ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_AXI_DMA_NOTIF   ] = VEER_INTR_PRIO_AXI_DMA_NOTIF   ; __asm__ volatile ("fence");
     for (uint8_t undef = VEER_INTR_VEC_MAX_ASSIGNED+1; undef <= RV_PIC_TOTAL_INT; undef++) {
@@ -311,6 +313,20 @@ void init_interrupts(void) {
     sha256_reg[SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
     sha256_reg[SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
                                                                              SHA256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+
+    // SHA3
+    lsu_write_32(CLP_SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,
+                 SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                 SHA3_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK);
+    lsu_write_32(CLP_SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R,
+                 SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_SHA3_ERROR_EN_MASK);
+    lsu_write_32(CLP_SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R,
+                 SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK |
+                 SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MSG_FIFO_EMPTY_EN_MASK);
+    lsu_write_32(CLP_KMAC_INTR_ENABLE,
+                 KMAC_INTR_ENABLE_KMAC_DONE_MASK |
+                 KMAC_INTR_ENABLE_FIFO_EMPTY_MASK |
+                 KMAC_INTR_ENABLE_KMAC_ERR_MASK);
 
     // ABR
     abr_reg[ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK;
@@ -672,7 +688,7 @@ static void nonstd_veer_isr_0 (void) {
 // context switches (which is critical in an ISR) relative to regular function
 // calls
 #define stringify(text) #text
-#define nonstd_veer_isr(name) static void nonstd_veer_isr_##name (void) {                           \
+#define nonstd_veer_isr(name) static void nonstd_veer_isr_##name (void) {                             \
     SEND_STDOUT_CTRL(0xfb); /*FIXME*/                                                                 \
                                                                                                       \
     /* Print msg before enabling nested interrupts so it                                              \
@@ -688,11 +704,11 @@ static void nonstd_veer_isr_0 (void) {
     uint_xlen_t prev_mie;                                                                             \
     __asm__ volatile ("csrr    %0, %1"                                                                \
                       : "=r" (meicidpl)  /* output : register */                                      \
-                      : "i" (VEER_CSR_MEICIDPL) /* input : immediate */                              \
+                      : "i" (VEER_CSR_MEICIDPL) /* input : immediate */                               \
                       : /* clobbers: none */);                                                        \
     __asm__ volatile ("csrr    %0, %1"                                                                \
                       : "=r" (prev_meicurpl)  /* output : register */                                 \
-                      : "i" (VEER_CSR_MEICURPL) /* input : immediate */                              \
+                      : "i" (VEER_CSR_MEICURPL) /* input : immediate */                               \
                       : /* clobbers: none */);                                                        \
     prev_mepc    = csr_read_mepc();                                                                   \
     prev_mstatus = csr_read_mstatus();                                                                \
@@ -701,7 +717,7 @@ static void nonstd_veer_isr_0 (void) {
     /* Set the priority threshold to current priority */                                              \
     __asm__ volatile ("csrw    %0, %1"                                                                \
                       : /* output: none */                                                            \
-                      : "i" (VEER_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */            \
+                      : "i" (VEER_CSR_MEICURPL), "r" (meicidpl)  /* input : immediate  */             \
                       : /* clobbers: none */);                                                        \
                                                                                                       \
     /* Reenable interrupts (nesting) */                                                               \
@@ -724,12 +740,14 @@ static void nonstd_veer_isr_0 (void) {
      * service_sha512_notif_intr                                                                      \
      * service_sha256_error_intr                                                                      \
      * service_sha256_notif_intr                                                                      \
+     * service_sha3_error_intr                                                                        \
+     * service_sha3_notif_intr                                                                        \
      * service_soc_ifc_error_intr                                                                     \
      * service_soc_ifc_notif_intr                                                                     \
      * service_sha512_acc_error_intr                                                                  \
-     * service_sha512_acc_notif_intr
-     * service_abr_error_intr                                                                       \
-     * service_abr_notif_intr                                                                       \
+     * service_sha512_acc_notif_intr                                                                  \
+     * service_abr_error_intr                                                                         \
+     * service_abr_notif_intr                                                                         \
      * service_axi_dma_error_intr                                                                     \
      * service_axi_dma_notif_intr                                                                     \
      */                                                                                               \
@@ -741,7 +759,7 @@ static void nonstd_veer_isr_0 (void) {
     /* Restore Context from Stack */                                                                  \
     __asm__ volatile ("csrw    %0, %1"                                                                \
                       : /* output: none */                                                            \
-                      : "i" (VEER_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */       \
+                      : "i" (VEER_CSR_MEICURPL), "r" (prev_meicurpl)  /* input : immediate  */        \
                       : /* clobbers: none */);                                                        \
     csr_write_mepc(prev_mepc);                                                                        \
     csr_set_bits_mstatus(prev_mstatus & (MSTATUS_MPIE_BIT_MASK | MSTATUS_MPP_BIT_MASK));              \
@@ -780,6 +798,10 @@ nonstd_veer_isr(sha512_notif)
 nonstd_veer_isr(sha256_error)
 // Non-Standard Vectored Interrupt Handler (SHA256 Notification = vector 12)
 nonstd_veer_isr(sha256_notif)
+// Non-Standard Vectored Interrupt Handler (SHA3 Error = vector 17)
+nonstd_veer_isr(sha3_error)
+// Non-Standard Vectored Interrupt Handler (SHA3 Notification = vector 18)
+nonstd_veer_isr(sha3_notif)
 // Non-Standard Vectored Interrupt Handler (SOC_IFC Error = vector 19)
 nonstd_veer_isr(soc_ifc_error)
 // Non-Standard Vectored Interrupt Handler (SOC_IFC Notification = vector 20)
