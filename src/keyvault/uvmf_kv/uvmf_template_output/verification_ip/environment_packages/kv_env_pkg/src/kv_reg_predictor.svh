@@ -116,7 +116,6 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             kv_reg_ctrl_data = kv_reg_ctrl.get_mirrored_value();
             //Append dest valid to it
             kv_reg_ctrl_data = {kv_reg_ctrl_data[31:22], last_dword, write_dest_valid, kv_reg_ctrl_data[8:0]};
-            `uvm_info("KV_REG_PRED_KNU", $sformatf("kv_reg_ctrl_data after append = %h", kv_reg_ctrl_data), UVM_LOW)
             rw_ctrl.data = kv_reg_ctrl_data;
 
             //-----------------------------------------------
@@ -182,13 +181,13 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
 
             //TODO: Revisit lock and clear condition
             //TODO: Can write to regs during debug mode. Remove check after updating sequences
-            `uvm_info("KV_REG_PRED", $sformatf("OUTSIDE, lock_wr = %0d, lock_use = %0d, clear_secrets_wren = %0d, val_reg_data = %h, val_ctrl_data = %h", lock_wr, lock_use, clear_secrets_data[0], val_reg_data, val_ctrl_data), UVM_LOW)
+            `uvm_info("KV_REG_PRED", $sformatf("OUTSIDE, lock_wr = %0d, lock_use = %0d, clear_secrets_wren = %0d, val_reg_data = %h, val_ctrl_data = %h", lock_wr, lock_use, clear_secrets_data[0], val_reg_data, val_ctrl_data), UVM_FULL)
             if (!lock_wr && !lock_use && !(clear_secrets_data[0] && val_reg_data[2]) /*&& !val_reg_data[0]*/) begin
-                `uvm_info("KV_REG_PRED", "Writing to KEY_ENTRY", UVM_LOW)
+                `uvm_info("KV_REG_PRED", "Writing to KEY_ENTRY", UVM_FULL)
                 super.write(tr);
 
                 if ((rw.addr >= `KV_REG_KEY_ENTRY_0_0) && (rw.addr <= `KV_REG_KEY_ENTRY_23_15)) begin //Only update KEY_CTRL if it's a KEY_ENTRY write
-                `uvm_info("KV_REG_PRED", "Updating KEY_CTRL", UVM_LOW)
+                `uvm_info("KV_REG_PRED", "Updating KEY_CTRL", UVM_FULL)
                 
                 //-----------------------------------------------
                 //Predict ctrl reg data so it gets updated in reg model
@@ -206,15 +205,15 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
                 end
             end
             else begin
-                `uvm_info("KV_REG_PRED", "Skipping write to KEY_ENTRY", UVM_LOW)
-                `uvm_info("KV_REG_PRED", $sformatf("lock_wr = %0d, lock_use = %0d, clear_secrets_data = %0d, val_reg_data = %b", lock_wr, lock_use, clear_secrets_data[0], val_reg_data), UVM_LOW)
+                `uvm_info("KV_REG_PRED", "Skipping write to KEY_ENTRY", UVM_FULL)
+                `uvm_info("KV_REG_PRED", $sformatf("lock_wr = %0d, lock_use = %0d, clear_secrets_data = %0d, val_reg_data = %b", lock_wr, lock_use, clear_secrets_data[0], val_reg_data), UVM_FULL)
             end
             
             //-----------------------------------------------
             //Clear secrets wren bit back to 0 (single pulse behv) - do this if clear_secrets reg is not being written to in the same cycle
             //-----------------------------------------------
             if(val_reg_data[1]) begin
-                `uvm_info("KV_REG_PRED", "Clear_secrets bit is reset after a single pulse", UVM_LOW)
+                `uvm_info("KV_REG_PRED", "Clear_secrets bit is reset after a single pulse", UVM_FULL)
                 clear_secrets_item = new;
                 clear_secrets_item.element_kind = UVM_REG;
                 clear_secrets_item.element = clear_secrets_reg;
