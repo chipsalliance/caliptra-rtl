@@ -35,9 +35,6 @@ void main() {
     VPRINTF(LOW, " SHA3 smoke test for registers!\n"   );
     VPRINTF(LOW, "----------------------------------\n");
 
-    // Call interrupt init
-    init_interrupts();
-
     uint32_t read_val;
 
     ///////////////////////////

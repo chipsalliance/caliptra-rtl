@@ -150,9 +150,6 @@ void main(void) {
   VPRINTF(LOW, " cSHAKE smoke test!\n"                 );
   VPRINTF(LOW, "----------------------------------\n");
 
-  // Call interrupt init
-  init_interrupts();
-
   run_cshake_test(CLP_KMAC_BASE_ADDR);
 
   // Write 0xff to STDOUT for TB to terminate test.
