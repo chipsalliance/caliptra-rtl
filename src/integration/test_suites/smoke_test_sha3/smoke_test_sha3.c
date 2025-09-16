@@ -303,6 +303,9 @@ void main() {
   VPRINTF(LOW, " SHA3 smoke test!\n"                 );
   VPRINTF(LOW, "----------------------------------\n");
 
+  // Call interrupt init
+  init_interrupts();
+
   VPRINTF(LOW, "Running SHA3 test.\n");
   run_sha3_test(CLP_KMAC_BASE_ADDR);
   VPRINTF(LOW, "Running SHA3 allignment test.\n");
