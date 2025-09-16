@@ -115,7 +115,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //Read CTRL reg data
             kv_reg_ctrl_data = kv_reg_ctrl.get_mirrored_value();
             //Append dest valid to it
-            kv_reg_ctrl_data = {kv_reg_ctrl_data[31:21], last_dword, write_dest_valid, kv_reg_ctrl_data[8:0]};
+            kv_reg_ctrl_data = {kv_reg_ctrl_data[31:22], last_dword, write_dest_valid, kv_reg_ctrl_data[8:0]};
             rw_ctrl.data = kv_reg_ctrl_data;
 
             //-----------------------------------------------
@@ -181,7 +181,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
 
             //TODO: Revisit lock and clear condition
             //TODO: Can write to regs during debug mode. Remove check after updating sequences
-            `uvm_info("KV_REG_PRED", $sformatf("OUTSIDE, lock_wr = %0d, lock_use = %0d, clear_secrets_wren = %0d, val_reg_data = %b", lock_wr, lock_use, clear_secrets_data[0], val_reg_data), UVM_FULL)
+            `uvm_info("KV_REG_PRED", $sformatf("OUTSIDE, lock_wr = %0d, lock_use = %0d, clear_secrets_wren = %0d, val_reg_data = %h, val_ctrl_data = %h", lock_wr, lock_use, clear_secrets_data[0], val_reg_data, val_ctrl_data), UVM_FULL)
             if (!lock_wr && !lock_use && !(clear_secrets_data[0] && val_reg_data[2]) /*&& !val_reg_data[0]*/) begin
                 `uvm_info("KV_REG_PRED", "Writing to KEY_ENTRY", UVM_FULL)
                 super.write(tr);
