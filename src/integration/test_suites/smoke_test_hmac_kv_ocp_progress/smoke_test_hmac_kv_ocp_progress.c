@@ -172,7 +172,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac384_key.kv_intf = FALSE;
-        hmac384_key.data_size = 12;
+        hmac384_key.data_size = HMAC384_KEY_SIZE;
         for (int i = 0; i < hmac384_key.data_size; i++)
             hmac384_key.data[i] = key384_data[i];
         VPRINTF(LOW, "HMAC384 Key FW interface enabled\n");
@@ -188,7 +188,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac384_block.kv_intf = FALSE;
-        hmac384_block.data_size = 32;
+        hmac384_block.data_size = HMAC384_BLOCK_SIZE;
         for (int i = 0; i < hmac384_block.data_size; i++)
             hmac384_block.data[i] = block_data[i];
         VPRINTF(LOW, "HMAC384 Block FW interface enabled\n");
@@ -196,7 +196,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     //--------------------------------------------------
 
     hmac384_lfsr_seed.kv_intf = FALSE;
-    hmac384_lfsr_seed.data_size = 12;
+    hmac384_lfsr_seed.data_size = HMAC384_LFSR_SEED_SIZE;
     for (int i = 0; i < hmac384_lfsr_seed.data_size; i++)
         hmac384_lfsr_seed.data[i] = lfsr_seed_data[i];
     //--------------------------------------------------
@@ -210,7 +210,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac384_tag.kv_intf = FALSE;
-        hmac384_tag.data_size = 12;
+        hmac384_tag.data_size = HMAC384_TAG_SIZE;
 
         if (key_kv_intf_bit == 1 || block_kv_intf_bit == 1) {
             for (int i = 0; i < hmac384_tag.data_size; i++)
@@ -235,7 +235,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac512_key.kv_intf = FALSE;
-        hmac512_key.data_size = 16;
+        hmac512_key.data_size = HMAC512_KEY_SIZE;
         for (int i = 0; i < hmac512_key.data_size; i++)
             hmac512_key.data[i] = key512_data[i];
         VPRINTF(LOW, "HMAC512 Key FW interface enabled\n");
@@ -251,7 +251,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac512_block.kv_intf = FALSE;
-        hmac512_block.data_size = 32;
+        hmac512_block.data_size = HMAC512_BLOCK_SIZE;
         for (int i = 0; i < hmac512_block.data_size; i++)
             hmac512_block.data[i] = block_data[i];
         VPRINTF(LOW, "HMAC512 Block FW interface enabled\n");
@@ -259,7 +259,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     //--------------------------------------------------
 
     hmac512_lfsr_seed.kv_intf = FALSE;
-    hmac512_lfsr_seed.data_size = 12;
+    hmac512_lfsr_seed.data_size = HMAC512_LFSR_SEED_SIZE;
     for (int i = 0; i < hmac512_lfsr_seed.data_size; i++)
         hmac512_lfsr_seed.data[i] = lfsr_seed_data[i];
     //--------------------------------------------------
@@ -273,7 +273,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac512_tag.kv_intf = FALSE;
-        hmac512_tag.data_size = 16;
+        hmac512_tag.data_size = HMAC512_TAG_SIZE;
 
         if (key_kv_intf_bit == 1 || block_kv_intf_bit == 1) {
             for (int i = 0; i < hmac512_tag.data_size; i++)
