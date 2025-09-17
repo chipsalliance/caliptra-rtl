@@ -294,13 +294,13 @@ void main() {
     srand(time);
 
     //Randomize slots to upper slots
-    hmackey_kv_id = (xorshift32() % 8) + 16;
+    hmackey_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
 
     do {
-        hmacblock_kv_id     = (xorshift32() % 8) + 16;
+        hmacblock_kv_id     = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
     } while (hmacblock_kv_id == hmackey_kv_id);
 
-    tag_kv_id = (xorshift32() % 8) + 16;
+    tag_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
 
     //Call interrupt init
     init_interrupts();
@@ -315,10 +315,10 @@ void main() {
             // Enable OCP LOCK mode
             VPRINTF(LOW,"OCP lock in progress\n");
             lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-            if (hmackey_kv_id == 23){ 
+            if (hmackey_kv_id == KV_OCP_LOCK_SLOT_HI){ 
                 hmac384_key.exp_kv_err = TRUE; 
             }
-            if (hmacblock_kv_id == 23){ 
+            if (hmacblock_kv_id == KV_OCP_LOCK_SLOT_HI){ 
                 hmac384_block.exp_kv_err = TRUE; 
             }
         }
@@ -345,13 +345,13 @@ void main() {
         VPRINTF(LOW, "----------------------------------\n");
 
         //Randomize slots to upper slots
-        hmackey_kv_id = (xorshift32() % 8) + 16;
+        hmackey_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
         
         do {
-            hmacblock_kv_id = (xorshift32() % 8) + 16;
+            hmacblock_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
         } while (hmacblock_kv_id == hmackey_kv_id);
 
-        tag_kv_id = (xorshift32() % 8) + 16;
+        tag_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
 
         VPRINTF(LOW, "Running hmac with key kv_id = 0x%x, block kv_id = 0x%x, tag kv_id = 0x%x\n", hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
         set_kv_intf_hmac512(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
@@ -368,10 +368,10 @@ void main() {
             // Enable OCP LOCK mode
             VPRINTF(LOW,"OCP lock in progress\n");
             lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-            if (hmackey_kv_id == 23){ 
+            if (hmackey_kv_id == KV_OCP_LOCK_SLOT_HI){ 
                 hmac512_key.exp_kv_err = TRUE; 
             }
-            if (hmacblock_kv_id == 23){ 
+            if (hmacblock_kv_id == KV_OCP_LOCK_SLOT_HI){ 
                 hmac512_block.exp_kv_err = TRUE; 
             }
         }
