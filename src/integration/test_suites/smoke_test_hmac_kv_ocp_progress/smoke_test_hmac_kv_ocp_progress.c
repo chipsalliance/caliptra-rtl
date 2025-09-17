@@ -235,7 +235,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac512_key.kv_intf = FALSE;
-        hmac512_key.data_size = 12;
+        hmac512_key.data_size = 16;
         for (int i = 0; i < hmac512_key.data_size; i++)
             hmac512_key.data[i] = key512_data[i];
         VPRINTF(LOW, "HMAC512 Key FW interface enabled\n");
@@ -273,7 +273,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac512_tag.kv_intf = FALSE;
-        hmac512_tag.data_size = 12;
+        hmac512_tag.data_size = 16;
 
         if (key_kv_intf_bit == 1 || block_kv_intf_bit == 1) {
             for (int i = 0; i < hmac512_tag.data_size; i++)
@@ -332,7 +332,7 @@ void main() {
         set_kv_intf_hmac384(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
 
         //inject hmac384_key to kv key reg (in RTL)
-        lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa9);
+        lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
         // lsu_write_32(STDOUT, 0xaa);
         //inject hmac_block to kv key reg (in RTL)
         lsu_write_32(STDOUT, (hmac384_block.kv_id << 8) | 0xb0);
