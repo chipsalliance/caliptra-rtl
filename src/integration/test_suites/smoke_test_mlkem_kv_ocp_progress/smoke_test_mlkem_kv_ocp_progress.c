@@ -133,9 +133,10 @@ void main() {
             msg.exp_kv_err = FALSE;
             shared_key.exp_kv_err = FALSE;
             //determine again if shared key should fail
-            if ((shared_key.kv_id == 23) ||                   //can't write to 23
+            if (ocp_progress_bit && 
+                ((shared_key.kv_id == 23) ||                   //can't write to 23
                 (msg.kv_id < 16 && shared_key.kv_id >= 16) || //can't write from lower to upper
-                (msg.kv_id >= 16 && shared_key.kv_id < 16)) { //can't write from upper to lower 
+                (msg.kv_id >= 16 && shared_key.kv_id < 16))) { //can't write from upper to lower 
                 shared_key.exp_kv_err = TRUE;
             }
             lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV
