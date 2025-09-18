@@ -315,10 +315,10 @@ void main() {
             // Enable OCP LOCK mode
             VPRINTF(LOW,"OCP lock in progress\n");
             lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-            if (hmackey_kv_id == KV_OCP_LOCK_SLOT_HI){ 
+            if (hmackey_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 hmac384_key.exp_kv_err = TRUE; 
             }
-            if (hmacblock_kv_id == KV_OCP_LOCK_SLOT_HI){ 
+            if (hmacblock_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 hmac384_block.exp_kv_err = TRUE; 
             }
         }
@@ -368,10 +368,10 @@ void main() {
             // Enable OCP LOCK mode
             VPRINTF(LOW,"OCP lock in progress\n");
             lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-            if (hmackey_kv_id == KV_OCP_LOCK_SLOT_HI){ 
+            if (hmackey_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 hmac512_key.exp_kv_err = TRUE; 
             }
-            if (hmacblock_kv_id == KV_OCP_LOCK_SLOT_HI){ 
+            if (hmacblock_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 hmac512_block.exp_kv_err = TRUE; 
             }
         }
