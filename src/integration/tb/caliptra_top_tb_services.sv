@@ -103,6 +103,7 @@ module caliptra_top_tb_services
     localparam PRIVKEY_NUM_DWORDS = 1224;
     localparam PRIVKEY_REG_NUM_DWORDS = 32;
     localparam PRIVKEY_REG_RHO_NUM_DWORDS = 8;
+    localparam PUBKEY_NUM_DWORDS = 648;
     localparam SIGNATURE_H_NUM_DWORDS = 21;
     localparam VERIFY_RES_NUM_DWORDS = 16;
 
@@ -279,12 +280,12 @@ module caliptra_top_tb_services
     sha256_wntz_test_vector_t sha256_wntz_test_vector;
 
     typedef struct packed {
-        logic [0:7][31:0] seed;
-        logic [0:647][31:0] pubkey;
-        logic [0:1223][31:0] privkey;
-        logic [0:15][31:0] msg;
+        logic [0:SEED_NUM_DWORDS-1][31:0] seed;
+        logic [0:PUBKEY_NUM_DWORDS-1][31:0] pubkey;
+        logic [0:PRIVKEY_NUM_DWORDS-1][31:0] privkey;
+        logic [0:MSG_NUM_DWORDS-1][31:0] msg;
         logic [0:1156][31:0] signature;
-        logic [0:15][31:0] verify_res;
+        logic [0:VERIFY_RES_NUM_DWORDS-1][31:0] verify_res;
         logic [0:7][31:0] sign_rnd;
     } mldsa_test_vector_t;
 
@@ -1282,7 +1283,7 @@ module caliptra_top_tb_services
     always @(negedge clk) begin
         if (sha3_pubkey) begin
             if (sha3_input_ready) begin
-                if (sha3_input_counter < (648/2)) begin
+                if (sha3_input_counter < (PUBKEY_NUM_DWORDS/2)) begin
                     force `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_valid = 1'b1;
                     sha3_input_data = {
                         mldsa_test_vector.pubkey[(sha3_input_counter*2)+1][ 7: 0],
@@ -1305,7 +1306,7 @@ module caliptra_top_tb_services
             end
         end else if (sha3_message) begin
             if (sha3_input_ready) begin
-                if (sha3_input_counter < (16/2)) begin
+                if (sha3_input_counter < (MSG_NUM_DWORDS/2)) begin
                     force `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_valid = 1'b1;
                     sha3_input_data = {
                         mldsa_test_vector.msg[(sha3_input_counter*2)+1][ 7: 0],
