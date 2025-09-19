@@ -173,7 +173,7 @@ void run_sha3_test(uintptr_t kmac) {
     VPRINTF(LOW, "run_sha3_test: processing test with index %d\n", i);
     sha3_test_t test = sha3_tests[i];
 
-    dif_kmac_mode_sha3_start(kmac, &operation_state, test.mode);
+    dif_kmac_mode_sha3_start(kmac, &operation_state, test.mode, kDifKmacMsgEndiannessLittle);
     if (test.message_len > 0) {
       dif_kmac_absorb(kmac, &operation_state, test.message,
                       test.message_len, NULL);
@@ -186,10 +186,6 @@ void run_sha3_test(uintptr_t kmac) {
     }
     dif_kmac_squeeze(kmac, &operation_state, out, test.digest_len, /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
-
-    // Wait for the hardware engine to actually finish. On FPGA, it may take
-    // a while until the DONE command gets actually executed (see SecCmdDelay
-    // SystemVerilog parameter).
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     for (int j = 0; j < test.digest_len; ++j) {
@@ -223,17 +219,13 @@ void run_sha3_alignment_test(uintptr_t kmac) {
     }
     memcpy(&buffer[i], kMsg, kSize);
 
-    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode);
+    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode, kDifKmacMsgEndiannessLittle);
     dif_kmac_absorb(kmac, &operation_state, &buffer[i], kSize, NULL);
 
     // Checking the first 32-bits of the digest is sufficient.
     uint32_t out;
     dif_kmac_squeeze(kmac, &operation_state, &out, sizeof(uint32_t), /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
-
-    // Wait for the hardware engine to actually finish. On FPGA, it may take
-    // a while until the DONE command gets actually executed (see SecCmdDelay
-    // SystemVerilog parameter).
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     if (out != kExpect) {
@@ -246,7 +238,7 @@ void run_sha3_alignment_test(uintptr_t kmac) {
 
   // Run a SHA-3 test case using multiple absorb calls.
   {
-    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode);
+    dif_kmac_mode_sha3_start(kmac, &operation_state, kMode, kDifKmacMsgEndiannessLittle);
     dif_kmac_absorb(kmac, &operation_state, &kMsg[0], 1, NULL);
     dif_kmac_absorb(kmac, &operation_state, &kMsg[1], 2, NULL);
     dif_kmac_absorb(kmac, &operation_state, &kMsg[3], 5, NULL);
@@ -257,10 +249,6 @@ void run_sha3_alignment_test(uintptr_t kmac) {
     uint32_t out;
     dif_kmac_squeeze(kmac, &operation_state, &out, sizeof(uint32_t), /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
-
-    // Wait for the hardware engine to actually finish. On FPGA, it may take
-    // a while until the DONE command gets actually executed (see SecCmdDelay
-    // SystemVerilog parameter).
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     if (out != kExpect) {
@@ -282,7 +270,7 @@ void run_shake_test(uintptr_t kmac) {
     VPRINTF(LOW, "run_shake_test: processing test with index %d\n", i);
     shake_test_t test = shake_tests[i];
 
-    dif_kmac_mode_shake_start(kmac, &operation_state, test.mode);
+    dif_kmac_mode_shake_start(kmac, &operation_state, test.mode, kDifKmacMsgEndiannessLittle);
     if (test.message_len > 0) {
       dif_kmac_absorb(kmac, &operation_state, test.message, test.message_len, NULL);
     }
@@ -295,10 +283,6 @@ void run_shake_test(uintptr_t kmac) {
     }
     dif_kmac_squeeze(kmac, &operation_state, out, test.digest_len, /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(kmac, &operation_state);
-
-    // Wait for the hardware engine to actually finish. On FPGA, it may take
-    // a while until the DONE command gets actually executed (see SecCmdDelay
-    // SystemVerilog parameter).
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     for (int j = 0; j < test.digest_len; ++j) {
@@ -318,6 +302,9 @@ void main() {
   VPRINTF(LOW, "----------------------------------\n");
   VPRINTF(LOW, " SHA3 smoke test!\n"                 );
   VPRINTF(LOW, "----------------------------------\n");
+
+  // Call interrupt init
+  init_interrupts();
 
   VPRINTF(LOW, "Running SHA3 test.\n");
   run_sha3_test(CLP_KMAC_BASE_ADDR);

@@ -152,7 +152,20 @@ inline void service_soc_ifc_notif_intr () {return;}
 inline void service_sha512_acc_error_intr() {return;}
 inline void service_sha512_acc_notif_intr() {return;}
 
-inline void service_abr_error_intr() {return;}
+inline void service_abr_error_intr() {
+    uint32_t * reg = (uint32_t *) (CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {
+        *reg = ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK;
+        cptra_intr_rcv.abr_error |= ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK;
+    }
+    if (sts == 0) {
+        VPRINTF(ERROR,"bad abr_error_intr sts:%x\n", sts);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+}
 inline void service_abr_notif_intr() {
     uint32_t * reg = (uint32_t *) (CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
