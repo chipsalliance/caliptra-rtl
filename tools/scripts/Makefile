@@ -294,7 +294,7 @@ verilator: program.hex verilator-build
 
 vcs: program.hex vcs-build
 	cp $(TEST_GEN_FILES) $(BUILD_DIR)
-	./simv.caliptra_top_tb
+	./simv.caliptra_top_tb -cm line+cond+fsm+tgl+branch
 
 ############ TEST build ###############################
 
