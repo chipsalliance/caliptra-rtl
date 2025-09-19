@@ -105,13 +105,13 @@ void main() {
         if (ocp_progress_bit) {
             VPRINTF(LOW,"OCP lock in progress\n");
             lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-            if (seed.kv_id == KV_OCP_LOCK_SLOT_HI){ 
+            if (seed.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 seed.exp_kv_err = TRUE;
             }
-            if (msg.kv_id == KV_OCP_LOCK_SLOT_HI){ 
+            if (msg.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 msg.exp_kv_err = TRUE;
             }
-            if ((shared_key.kv_id == KV_OCP_LOCK_SLOT_HI) ||                   //can't write to 23
+            if ((shared_key.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT) ||                   //can't write to 23
                 (msg.kv_id < KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id >= KV_OCP_LOCK_SLOT_LOW) || //can't write from lower to upper
                 (msg.kv_id >= KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id < KV_OCP_LOCK_SLOT_LOW)) { //can't write from upper to lower 
                 shared_key.exp_kv_err = TRUE;
@@ -134,7 +134,7 @@ void main() {
             shared_key.exp_kv_err = FALSE;
             //determine again if shared key should fail
             if (ocp_progress_bit && 
-                ((shared_key.kv_id == KV_OCP_LOCK_SLOT_HI) ||                   //can't write to 23
+                ((shared_key.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT) ||                   //can't write to 23
                 (msg.kv_id < KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id >= KV_OCP_LOCK_SLOT_LOW) || //can't write from lower to upper
                 (msg.kv_id >= KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id < KV_OCP_LOCK_SLOT_LOW))) { //can't write from upper to lower 
                 shared_key.exp_kv_err = TRUE;
@@ -147,7 +147,7 @@ void main() {
 
         shared_key.exp_kv_err = FALSE;
         if (ocp_progress_bit) {
-            if ((shared_key.kv_id == KV_OCP_LOCK_SLOT_HI) ||                    //can't write to 23
+            if ((shared_key.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT) ||                    //can't write to 23
                 (seed.kv_id < KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id >= KV_OCP_LOCK_SLOT_LOW) || //can't write from lower to upper
                 (seed.kv_id >= KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id < KV_OCP_LOCK_SLOT_LOW)) { //can't write from upper to lower 
                 shared_key.exp_kv_err = TRUE;
