@@ -167,7 +167,6 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (key_kv_intf_bit == 1) {
         hmac384_key.kv_intf = TRUE;
         hmac384_key.kv_id = hmackey_kv_id;
-        hmac384_key.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC384 Key KV interface enabled\n");
     }
     else {
@@ -183,7 +182,6 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (block_kv_intf_bit == 1) {
         hmac384_block.kv_intf = TRUE;
         hmac384_block.kv_id = hmacblock_kv_id;
-        hmac384_block.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC384 Block KV interface enabled\n");
     }
     else {
@@ -230,7 +228,6 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (key_kv_intf_bit == 1) {
         hmac512_key.kv_intf = TRUE;
         hmac512_key.kv_id = hmackey_kv_id;
-        hmac512_key.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC512 Key KV interface enabled\n");
     }
     else {
@@ -246,7 +243,6 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (block_kv_intf_bit == 1) {
         hmac512_block.kv_intf = TRUE;
         hmac512_block.kv_id = hmacblock_kv_id;
-        hmac512_block.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC512 Block KV interface enabled\n");
     }
     else {
