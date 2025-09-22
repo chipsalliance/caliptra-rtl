@@ -16,6 +16,7 @@
 module clp_abr_top_cov_bind;
     `ifdef FCOV
     bind abr_top clp_abr_top_cov_if i_clp_abr_top_cov_if(.*);
-    bind abr_top abr_top_cov_if i_abr_top_cov_if(.*);
+    //put this back when the two cover if's are distinct
+    //bind abr_top abr_top_cov_if i_abr_top_cov_if(.*);
     `endif
 endmodule
