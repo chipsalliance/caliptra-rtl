@@ -22,6 +22,7 @@
 #include <stdlib.h>
 #include "printf.h"
 #include "hmac.h"
+#include "caliptra_rtl_lib.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -133,11 +134,11 @@ void main() {
     hmac_io hmac384_tag;
 
     hmac384_key.kv_intf = TRUE;
-    hmac384_key.kv_id = rand() % 24;
+    hmac384_key.kv_id = xorshift32() % 24;
     hmac384_key.exp_kv_err = FALSE;
 
     hmac384_block.kv_intf = TRUE;
-    hmac384_block.kv_id = rand() % 24;
+    hmac384_block.kv_id = xorshift32() % 24;
     hmac384_block.exp_kv_err = FALSE;
     for (int i = 0; i < HMAC384_BLOCK_SIZE; i++)
         hmac384_block.data[i] = block[i];
@@ -146,7 +147,7 @@ void main() {
         hmac384_lfsr_seed.data[i] = hmac384_lfsr_seed_data[i];
 
     hmac384_tag.kv_intf = TRUE;
-    hmac384_tag.kv_id = rand() % 24;
+    hmac384_tag.kv_id = xorshift32() % 24;
     for (int i = 0; i < HMAC384_TAG_SIZE; i++)
         hmac384_tag.data[i] = hmac384_expected_tag[i];
 
@@ -216,14 +217,14 @@ void main() {
 
     for(int i = 0; i < 10; i++) {
         VPRINTF(LOW, "START TEST %d\n", i);
-        hmac512_key.kv_intf = (rand() % 2) ? TRUE : FALSE;
-        hmac512_key.kv_id = rand() % 24;
+        hmac512_key.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
+        hmac512_key.kv_id = xorshift32() % 24;
         hmac512_key.exp_kv_err = FALSE;
         for (int i = 0; i < HMAC512_KEY_SIZE; i++)
             hmac512_key.data[i] = key512_data[i];
 
-        hmac512_block.kv_intf = (rand() % 2) ? TRUE : FALSE;
-        hmac512_block.kv_id = rand() % 24;
+        hmac512_block.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
+        hmac512_block.kv_id = xorshift32() % 24;
         hmac512_block.exp_kv_err = FALSE;
         for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
             hmac512_block.data[i] = block[i];
@@ -231,8 +232,8 @@ void main() {
         for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
             hmac512_lfsr_seed.data[i] = hmac512_lfsr_seed_data[i];
 
-        hmac512_tag.kv_intf = (rand() % 2) ? TRUE : FALSE;
-        hmac512_tag.kv_id = rand() % 24;
+        hmac512_tag.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
+        hmac512_tag.kv_id = xorshift32() % 24;
         if (!hmac512_tag.kv_intf && (hmac512_key.kv_intf || hmac512_block.kv_intf)){
             for (int i = 0; i < HMAC512_TAG_SIZE; i++)
                 hmac512_tag.data[i] = 0;
