@@ -91,9 +91,7 @@ void main() {
         shared_key.kv_intf = TRUE;
         shared_key.kv_id = (xorshift32() % 24);
         shared_key.exp_kv_err = FALSE;
-        while ((shared_key.kv_id == seed.kv_id) || (shared_key.kv_id == msg.kv_id)) {
-            shared_key.kv_id = (xorshift32() % 24);
-        }
+        //removed overlap check, allow read and write to same slot
         VPRINTF(LOW, "Running mlkem with shared_key kv_id = 0x%x\n", shared_key.kv_id);
         for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
             shared_key.data[i] = 0;
