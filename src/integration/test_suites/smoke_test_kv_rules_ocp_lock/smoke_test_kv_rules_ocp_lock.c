@@ -119,7 +119,7 @@ void mlkem_test(uint8_t seed_kv_id, uint8_t sharedkey_kv_id){
     seed.kv_id = seed_kv_id;
     shared_key.kv_intf = TRUE;
     shared_key.kv_id = sharedkey_kv_id;
-    shared_key.exp_kv_err = FALSE;
+    shared_key.exp_kv_err = TRUE;
 
     for (int i = 0; i < ABR_ENTROPY_SIZE; i++)
         abr_entropy[i] = rand() % 0xffffffff;
