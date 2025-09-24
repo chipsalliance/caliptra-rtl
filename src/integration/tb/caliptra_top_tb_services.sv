@@ -34,7 +34,7 @@
 `include "caliptra_reg_field_defines.svh"
 
 
-module caliptra_top_tb_services 
+module caliptra_top_tb_services
     import soc_ifc_pkg::*;
     import kv_defines_pkg::*;
     import caliptra_top_tb_pkg::*;
@@ -103,6 +103,7 @@ module caliptra_top_tb_services
     localparam PRIVKEY_NUM_DWORDS = 1224;
     localparam PRIVKEY_REG_NUM_DWORDS = 32;
     localparam PRIVKEY_REG_RHO_NUM_DWORDS = 8;
+    localparam PUBKEY_NUM_DWORDS = 648;
     localparam SIGNATURE_H_NUM_DWORDS = 21;
     localparam VERIFY_RES_NUM_DWORDS = 16;
 
@@ -166,10 +167,10 @@ module caliptra_top_tb_services
     int                         rst_cyclecnt = 0;
     int                         wait_time_to_rst;
 
-    logic                       cold_rst; 
-    logic                       warm_rst; 
+    logic                       cold_rst;
+    logic                       warm_rst;
     logic                       timed_warm_rst;
-    logic                       prandom_warm_rst; 
+    logic                       prandom_warm_rst;
     logic                       cold_rst_done;
 
     logic                       inject_hmac_key;
@@ -280,12 +281,12 @@ module caliptra_top_tb_services
     sha256_wntz_test_vector_t sha256_wntz_test_vector;
 
     typedef struct packed {
-        logic [0:7][31:0] seed;
-        logic [0:647][31:0] pubkey;
-        logic [0:1223][31:0] privkey;
-        logic [0:15][31:0] msg;
+        logic [0:SEED_NUM_DWORDS-1][31:0] seed;
+        logic [0:PUBKEY_NUM_DWORDS-1][31:0] pubkey;
+        logic [0:PRIVKEY_NUM_DWORDS-1][31:0] privkey;
+        logic [0:MSG_NUM_DWORDS-1][31:0] msg;
         logic [0:1156][31:0] signature;
-        logic [0:15][31:0] verify_res;
+        logic [0:VERIFY_RES_NUM_DWORDS-1][31:0] verify_res;
         logic [0:7][31:0] sign_rnd;
     } mldsa_test_vector_t;
 
@@ -319,7 +320,7 @@ module caliptra_top_tb_services
 // Upwards name referencing per 23.8 of IEEE 1800-2017
 `define DEC `CPTRA_TOP_PATH.rvtop.veer.dec
 
-`define LMEM mbox_ram1.ram 
+`define LMEM mbox_ram1.ram
 
    //=========================================================================-
    // STDOUT and Trace Logic
@@ -342,15 +343,15 @@ module caliptra_top_tb_services
     //         8'h8d        - Disable FIFO in caliptra_top_tb_axi_complex to auto-write data
     //         8'h8e        - Flush the FIFO in caliptra_top_tb_axi_complex
     //         8'h8f        - Toggle random delays in AXI complex (FIFO and SRAM endpoints)
-    //         8'h90        - Issue PCR signing with fixed vector   
+    //         8'h90        - Issue PCR signing with fixed vector
     //         8'h91        - Issue PCR ECC signing with randomized vector
     //         8'h92        - Check PCR ECC signing with randomized vector
-    //         8'h93        - Issue PCR MLDSA signing with randomized vector   
+    //         8'h93        - Issue PCR MLDSA signing with randomized vector
     //         8'h94        - Check PCR MLDSA signing with randomized vector
     //         8'h97        - Inject invalid dh_key into ECC
-    //         8'h98        - Inject invalid zero sign_r into ECC 
+    //         8'h98        - Inject invalid zero sign_r into ECC
     //         8'h99        - Inject zeroize into HMAC
-    //         8'h9a        - Inject invalid zero sign_s into ECC 
+    //         8'h9a        - Inject invalid zero sign_s into ECC
     //         8'h9b        - Inject zeroize during keyvault read
     //         8'h9c        - Inject invalid privkey/dh_key into ECC
     //         8'h9d        - Inject invalid pubkey_x into ECC
@@ -378,13 +379,17 @@ module caliptra_top_tb_services
     //         8'hba        - Enable scan mode with KV write
     //         8'hbb:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
-    //         8'hc8        - Inject key 0x0 into slot 16 for AES 
+    //         8'hc8        - Inject key 0x0 into slot 16 for AES
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
     //         8'hcb        - Inject key 0x0 into all slots for AES
     //         8'hcc        - Inject key into slot 16 for AES
     //         8'hcd        - KV Error checking
-    //         8'hce: 8'hd4 - Unused
+    //         8'hce: 8'hcf - Unused
+    //         8'hd0        - SHA3 public key injection
+    //         8'hd1        - SHA3 message injection
+    //         8'hd2        - MLDSA keygen+signing without injecting message
+    //         8'hd3        - MLDSA verification without injecting message
     //         8'hd5        - Inject randomized HEK test vector
     //         8'hd6        - Inject mldsa timeout
     //         8'hd7        - Inject normcheck or makehint failure during mldsa signing 1st loop. Failure type is selected randomly
@@ -585,14 +590,14 @@ module caliptra_top_tb_services
     logic [7:0] min_dwords ;
     logic [7:0] max_dwords ;
     logic [3:0] random_key_size ;
-    
+
     always_comb ecc_privkey_random = {ecc_test_vector.privkey, 128'h_00000000000000000000000000000000};
     always_comb mldsa_seed_random = change_endian({256'h0, mldsa_test_vector.seed});
     always_comb mlkem_seed_random = {mlkem_test_vector.seed_z,mlkem_test_vector.seed_d};
     always_comb mlkem_msg_random = {256'h0,mlkem_test_vector.msg};
 
     genvar dword_i, slot_id;
-    generate 
+    generate
         for (slot_id=0; slot_id < 24; slot_id++) begin : inject_slot_loop
             for (dword_i=0; dword_i < 16; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
@@ -738,9 +743,9 @@ module caliptra_top_tb_services
                         release_kv_inject_flags <= '0;
                         if (slot_id == 23 && dword_i < random_key_size) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b100000000; // DMA 
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b100000000; // DMA
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = random_key_size - 1; 
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = random_key_size - 1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
                         end
@@ -749,15 +754,15 @@ module caliptra_top_tb_services
                     else if((WriteData[7:0] == 8'hca) && mailbox_write) begin
                         // Generate random key size with bounds checking
                         min_dwords = (key_release_size_val >> 2); // Convert bytes to dwords
-                        max_dwords = 8'h40; 
+                        max_dwords = 8'h40;
                         random_key_size =  min_dwords + ($urandom() % (max_dwords - min_dwords + 1));
                         inject_kv23_rand_length_key <= '1;
                         release_kv_inject_flags <= '0;
                         if (slot_id == 23 && dword_i < random_key_size) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b100000000; // DMA 
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 9'b100000000; // DMA
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = random_key_size - 1; 
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = random_key_size - 1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
                         end
@@ -938,13 +943,13 @@ module caliptra_top_tb_services
                         inject_kv23_small_rand_key <= '0;
                         inject_kv23_rand_length_key <= '0;
                         if (release_kv_inject_flags) begin
-                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
-                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
-                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we;
-                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next;
-                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we;
-                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next;
-                        end 
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next;
+                    end
                         else begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b0;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = '0;
@@ -959,7 +964,7 @@ module caliptra_top_tb_services
             end // inject_dword_loop
         end // inject_slot_loop
     endgenerate
-    
+
     //Keyvault check for MLKEM
     logic mlkem_kv_check_dis;
     logic [4:0] kv_entry_id;
@@ -1089,7 +1094,7 @@ module caliptra_top_tb_services
             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
         else
             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
-            
+
             unlock_security_state = 1'b0; // Default to not unlocking security state
     end
 `endif
@@ -1131,7 +1136,7 @@ module caliptra_top_tb_services
             inject_single_msg_for_ecc_mldsa <= 'b0; //reset
     end
 
-    
+
 
     always_ff @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
@@ -1143,24 +1148,24 @@ module caliptra_top_tb_services
             normcheck_mode_random <= $urandom_range(0,2);
             disable_mldsa_sva <= 1'b0;
         end
-        else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin            
+        else if (((WriteData[7:0] == 8'hd7) && mailbox_write)) begin
             if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.mldsa_verifying_process) begin
                 inject_normcheck_failure    <= 1'b1;
                 normcheck_mode_random       <= 'h0;
-                inject_makehint_failure     <= 1'b0; 
-                disable_mldsa_sva           <= 1'b1;  
+                inject_makehint_failure     <= 1'b0;
+                disable_mldsa_sva           <= 1'b1;
                 $display("Verify: Injecting normcheck failure with mode = %h\n", normcheck_mode_random);
             end
             else if (random_mldsa_failure_injection) begin
                 inject_makehint_failure     <= 1'b1;
-                inject_normcheck_failure    <= 1'b0;  
+                inject_normcheck_failure    <= 1'b0;
                 disable_mldsa_sva           <= 1'b1;
                 $display("Injecting makehint failure\n");
             end
             else begin
                 inject_makehint_failure     <= 1'b0;
-                inject_normcheck_failure    <= 1'b1;   
-                disable_mldsa_sva           <= 1'b1;             
+                inject_normcheck_failure    <= 1'b1;
+                disable_mldsa_sva           <= 1'b1;
                 $display("Injecting normcheck failure with mode = %h\n", normcheck_mode_random);
             end
         end
@@ -1186,8 +1191,8 @@ module caliptra_top_tb_services
             release `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum;
 
         // Invalid: force only for normcheck with specific conditions
-        if (inject_normcheck_failure && 
-            `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.check_enable && 
+        if (inject_normcheck_failure &&
+            `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.check_enable &&
             (`CPTRA_TOP_PATH.abr_inst.norm_check_inst.mode == normcheck_mode_random))
             force `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid = 1'b1;
         else if (!inject_normcheck_failure)
@@ -1196,6 +1201,7 @@ module caliptra_top_tb_services
 
     `ifndef VERILATOR
     logic mldsa_keygen, mldsa_signing, mldsa_verify, mldsa_keygen_signing;
+    logic sha3_pubkey, sha3_message, mldsa_keygen_signing_nomsg, mldsa_verify_nomsg;
 
     always @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
@@ -1203,12 +1209,70 @@ module caliptra_top_tb_services
             mldsa_signing <= 'b0;
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b0;
+            sha3_pubkey <= 'b0;
+            sha3_message <= 'b0;
+            mldsa_keygen_signing_nomsg <= 'b0;
+            mldsa_verify_nomsg <= 'b0;
+        end
+        else if ((WriteData[7:0] == 8'hd0) && mailbox_write) begin
+            mldsa_keygen <= 'b0;
+            mldsa_signing <= 'b0;
+            mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b0;
+            sha3_pubkey <= 'b1;
+            sha3_message <= 'b0;
+            mldsa_keygen_signing_nomsg <= 'b0;
+            mldsa_verify_nomsg <= 'b0;
+        end
+        else if ((WriteData[7:0] == 8'hd1) && mailbox_write) begin
+            mldsa_keygen <= 'b0;
+            mldsa_signing <= 'b0;
+            mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b0;
+            sha3_pubkey <= 'b0;
+            sha3_message <= 'b1;
+            mldsa_keygen_signing_nomsg <= 'b0;
+            mldsa_verify_nomsg <= 'b0;
+        end
+        else if ((WriteData[7:0] == 8'hd2) && mailbox_write) begin
+            mldsa_keygen <= 'b0;
+            mldsa_signing <= 'b0;
+            mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b0;
+            sha3_pubkey <= 'b0;
+            sha3_message <= 'b0;
+            mldsa_keygen_signing_nomsg <= 'b1;
+            mldsa_verify_nomsg <= 'b0;
+        end
+        else if ((WriteData[7:0] == 8'hd3) && mailbox_write) begin
+            mldsa_keygen <= 'b0;
+            mldsa_signing <= 'b0;
+            mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b0;
+            sha3_pubkey <= 'b0;
+            sha3_message <= 'b0;
+            mldsa_keygen_signing_nomsg <= 'b0;
+            mldsa_verify_nomsg <= 'b1;
+        end
+        else if ((WriteData[7:0] == 8'hd8) && mailbox_write) begin
+            mldsa_keygen <= 'b0;
+            mldsa_signing <= 'b0;
+            mldsa_verify <= 'b0;
+            mldsa_keygen_signing <= 'b0;
+            sha3_pubkey <= 'b0;
+            sha3_message <= 'b0;
+            mldsa_keygen_signing_nomsg <= 'b0;
+            mldsa_verify_nomsg <= 'b0;
         end
         else if ((WriteData[7:0] == 8'hd9) && mailbox_write) begin
             mldsa_keygen <= 'b1;
             mldsa_signing <= 'b0;
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b0;
+            sha3_pubkey <= 'b0;
+            sha3_message <= 'b0;
+            mldsa_keygen_signing_nomsg <= 'b0;
+            mldsa_verify_nomsg <= 'b0;
         end
         //unlock debug mode
         else if ((WriteData[7:0] == 8'hda) && mailbox_write) begin
@@ -1216,24 +1280,94 @@ module caliptra_top_tb_services
             mldsa_signing <= 'b1;
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b0;
+            sha3_pubkey <= 'b0;
+            sha3_message <= 'b0;
+            mldsa_keygen_signing_nomsg <= 'b0;
+            mldsa_verify_nomsg <= 'b0;
         end
         else if((WriteData[7:0] == 8'hdb) && mailbox_write) begin
             mldsa_keygen <= 'b0;
             mldsa_signing <= 'b0;
             mldsa_verify <= 'b1;
             mldsa_keygen_signing <= 'b0;
+            sha3_pubkey <= 'b0;
+            sha3_message <= 'b0;
+            mldsa_keygen_signing_nomsg <= 'b0;
+            mldsa_verify_nomsg <= 'b0;
         end
         else if((WriteData[7:0] == 8'hdc) && mailbox_write) begin
             mldsa_keygen <= 'b0;
             mldsa_signing <= 'b0;
             mldsa_verify <= 'b0;
             mldsa_keygen_signing <= 'b1;
+            sha3_pubkey <= 'b0;
+            sha3_message <= 'b0;
+            mldsa_keygen_signing_nomsg <= 'b0;
+            mldsa_verify_nomsg <= 'b0;
         end
-        else if ((WriteData[7:0] == 8'hd8) && mailbox_write) begin
-            mldsa_keygen <= 'b0;
-            mldsa_signing <= 'b0;
-            mldsa_verify <= 'b0;
-            mldsa_keygen_signing <= 'b0;
+    end
+
+    logic [31:0] sha3_input_counter;
+    logic [63:0] sha3_input_data;
+
+    logic sha3_input_ready;
+    always @(posedge clk) begin
+        sha3_input_ready <= `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_ready;
+    end
+
+
+    always @(negedge clk) begin
+        if (sha3_pubkey) begin
+            if (sha3_input_ready) begin
+                if (sha3_input_counter < (PUBKEY_NUM_DWORDS/2)) begin
+                    force `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_valid = 1'b1;
+                    sha3_input_data = {
+                        mldsa_test_vector.pubkey[(sha3_input_counter*2)+1][ 7: 0],
+                        mldsa_test_vector.pubkey[(sha3_input_counter*2)+1][15: 8],
+                        mldsa_test_vector.pubkey[(sha3_input_counter*2)+1][23:16],
+                        mldsa_test_vector.pubkey[(sha3_input_counter*2)+1][31:24],
+                        mldsa_test_vector.pubkey[(sha3_input_counter*2)  ][ 7: 0],
+                        mldsa_test_vector.pubkey[(sha3_input_counter*2)  ][15: 8],
+                        mldsa_test_vector.pubkey[(sha3_input_counter*2)  ][23:16],
+                        mldsa_test_vector.pubkey[(sha3_input_counter*2)  ][31:24]
+                    };
+                    force `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_data = sha3_input_data;
+                    force `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_mask = 64'hFFFF_FFFF_FFFF_FFFF;
+                    sha3_input_counter <= sha3_input_counter + 1;
+                end else begin
+                    release `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_valid;
+                    release `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_data;
+                    release `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_mask;
+                end
+            end
+        end else if (sha3_message) begin
+            if (sha3_input_ready) begin
+                if (sha3_input_counter < (MSG_NUM_DWORDS/2)) begin
+                    force `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_valid = 1'b1;
+                    sha3_input_data = {
+                        mldsa_test_vector.msg[(sha3_input_counter*2)+1][ 7: 0],
+                        mldsa_test_vector.msg[(sha3_input_counter*2)+1][15: 8],
+                        mldsa_test_vector.msg[(sha3_input_counter*2)+1][23:16],
+                        mldsa_test_vector.msg[(sha3_input_counter*2)+1][31:24],
+                        mldsa_test_vector.msg[(sha3_input_counter*2)  ][ 7: 0],
+                        mldsa_test_vector.msg[(sha3_input_counter*2)  ][15: 8],
+                        mldsa_test_vector.msg[(sha3_input_counter*2)  ][23:16],
+                        mldsa_test_vector.msg[(sha3_input_counter*2)  ][31:24]
+                    };
+                    force `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_data = sha3_input_data;
+                    force `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_mask = 64'hFFFF_FFFF_FFFF_FFFF;
+                    sha3_input_counter <= sha3_input_counter + 1;
+                end else begin
+                    release `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_valid;
+                    release `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_data;
+                    release `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_mask;
+                end
+            end
+        end else begin
+            sha3_input_counter <= 'b0;
+            release `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_valid;
+            release `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_data;
+            release `CPTRA_TOP_PATH.sha3.u_sha_inst.mux2fifo_mask;
         end
     end
 
@@ -1242,7 +1376,7 @@ module caliptra_top_tb_services
         //MLDSA keygen - inject seed
         for (mldsa_dword = 0; mldsa_dword < SEED_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
-                if (mldsa_keygen | mldsa_keygen_signing) begin
+                if (mldsa_keygen | mldsa_keygen_signing | mldsa_keygen_signing_nomsg) begin
                     force `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.we = 'b1;
                     force `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.next = {mldsa_test_vector.seed[mldsa_dword][7:0], mldsa_test_vector.seed[mldsa_dword][15:8], mldsa_test_vector.seed[mldsa_dword][23:16], mldsa_test_vector.seed[mldsa_dword][31:24]};
                 end
@@ -1315,7 +1449,7 @@ module caliptra_top_tb_services
         //MLDSA verify - inject pk
         for (mldsa_dword = 0; mldsa_dword < 4; mldsa_dword++) begin
             always @(negedge clk) begin
-                if (mldsa_verify) begin
+                if (mldsa_verify | mldsa_verify_nomsg) begin
                     force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_scratch_reg.mldsa_enc.rho[mldsa_dword] = {mldsa_test_vector.pubkey[((mldsa_dword*2)+1)][7:0], mldsa_test_vector.pubkey[((mldsa_dword*2)+1)][15:8], mldsa_test_vector.pubkey[((mldsa_dword*2)+1)][23:16], mldsa_test_vector.pubkey[((mldsa_dword*2)+1)][31:24],
                                                                                                         mldsa_test_vector.pubkey[(mldsa_dword*2)][7:0], mldsa_test_vector.pubkey[(mldsa_dword*2)][15:8], mldsa_test_vector.pubkey[(mldsa_dword*2)][23:16], mldsa_test_vector.pubkey[(mldsa_dword*2)][31:24]};
 
@@ -1328,7 +1462,7 @@ module caliptra_top_tb_services
         for (genvar a = 0; a < 64; a++) begin
             for (genvar b = 0; b < 10; b++) begin
                 always @(negedge clk) begin
-                    if (mldsa_verify) begin
+                    if (mldsa_verify | mldsa_verify_nomsg) begin
                         force abr_mem_top_inst.abr_pk_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.pubkey[a*10+8+b][7:0], mldsa_test_vector.pubkey[a*10+8+b][15:8], mldsa_test_vector.pubkey[a*10+8+b][23:16], mldsa_test_vector.pubkey[a*10+8+b][31:24]};
                     end
                     else begin
@@ -1341,7 +1475,7 @@ module caliptra_top_tb_services
         //MLDSA verify - inject signature
         for (mldsa_dword = 0; mldsa_dword < VERIFY_RES_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
-                if (mldsa_verify) begin
+                if (mldsa_verify | mldsa_verify_nomsg) begin
                     force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.signature_reg.enc.c[mldsa_dword] = {mldsa_test_vector.signature[mldsa_dword][7:0], mldsa_test_vector.signature[mldsa_dword][15:8], mldsa_test_vector.signature[mldsa_dword][23:16], mldsa_test_vector.signature[mldsa_dword][31:24]};
                 end
                 else begin
@@ -1351,7 +1485,7 @@ module caliptra_top_tb_services
         end
         for (mldsa_dword = 0; mldsa_dword < SIGNATURE_H_NUM_DWORDS; mldsa_dword++) begin
             always @(negedge clk) begin
-                if (mldsa_verify) begin
+                if (mldsa_verify | mldsa_verify_nomsg) begin
                     force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.signature_reg.enc.h[mldsa_dword] = {mldsa_test_vector.signature[1136+mldsa_dword][7:0], mldsa_test_vector.signature[1136+mldsa_dword][15:8], mldsa_test_vector.signature[1136+mldsa_dword][23:16], mldsa_test_vector.signature[1136+mldsa_dword][31:24]};
                 end
                 else begin
@@ -1362,7 +1496,7 @@ module caliptra_top_tb_services
         for (genvar a = 0; a < 224; a++) begin
             for (genvar b = 0; b < 5; b++) begin
                 always @(negedge clk) begin
-                    if (mldsa_verify) begin
+                    if (mldsa_verify | mldsa_verify_nomsg) begin
                         force abr_mem_top_inst.abr_sig_z_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.signature[a*5+16+b][7:0], mldsa_test_vector.signature[a*5+16+b][15:8], mldsa_test_vector.signature[a*5+16+b][23:16], mldsa_test_vector.signature[a*5+16+b][31:24]};
                     end
                     else begin
@@ -1464,7 +1598,7 @@ endgenerate //IV_NO
             scan_mode <= 1'b0;
         end
     end
-    
+
     always@(negedge clk) begin
         if ((WriteData[7:0] == 8'hb9) && mailbox_write) begin
             force `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_CTRL.CMD.value = 2'b1;
@@ -1474,7 +1608,7 @@ endgenerate //IV_NO
             release `CPTRA_TOP_PATH.doe.doe_inst.i_doe_reg.field_storage.DOE_CTRL.CMD.value;
         end
     end
-    
+
     always@(negedge clk) begin
         if((WriteData[7:0] == 8'hf2) && mailbox_write) begin
             force `CPTRA_TOP_PATH.soc_ifc_top1.clk_gating_en = 1;
@@ -1494,7 +1628,7 @@ endgenerate //IV_NO
             en_jtag_access <= 'b0;
         end
     end
-    
+
     logic inject_zeroize_to_hmac;
     logic inject_zeroize_to_hmac_cmd;
     logic [3 : 0] inject_zeroize_to_hmac_cnt;
@@ -1540,7 +1674,7 @@ endgenerate //IV_NO
             inject_zeroize_kv_read <= 1'b1;
         end
         else if (inject_zeroize_kv_read) begin
-            if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mldsa_seed_write_en & 
+            if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mldsa_seed_write_en &
                 (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mldsa_seed_write_offset == 3)) begin
                 inject_zeroize_to_mldsa <= 1'b1;
             end
@@ -1565,26 +1699,26 @@ endgenerate //IV_NO
                 logic dest_valid_release_local;
                 always@(posedge clk) begin
                     if (inject_kv_error_check) begin
-                        // If we see a key being read, set the dest valid bit
-                        if ((`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_offset == 'd1) && 
-                            (`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_entry == g_entry)) begin
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client] = 1'b1;
+                    // If we see a key being read, set the dest valid bit
+                    if ((`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_offset == 'd1) && 
+                        (`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_entry == g_entry)) begin
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client] = 1'b1;
                             dest_valid_release_local <= 1'b0;
-                        end 
-                         // If dest valid bit is set and we are done reading, clear it
-                        else if (`CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_CTRL[g_entry].dest_valid[g_client] &&
-                                 ((`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_offset == '0) ||
-                                  (`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_entry != g_entry))) begin
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client] = 1'b0;
+                    end 
+                     // If dest valid bit is set and we are done reading, clear it
+                    else if (`CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_CTRL[g_entry].dest_valid[g_client] &&
+                             ((`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_offset == '0) ||
+                              (`CPTRA_TOP_PATH.key_vault1.kv_read[g_client].read_entry != g_entry))) begin
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we = 1'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client] = 1'b0;
                             dest_valid_release_local <= 1'b0;
-                        // Otherwise, release the forces
-                        end else begin
+                    // Otherwise, release the forces
+                    end else begin
                             if (dest_valid_release_local) begin
-                                release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we;
-                                release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client];
-                            end
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we;
+                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client];
+                    end
                             else begin
                                 force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.we = 1'b0;
                                 force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[g_entry].dest_valid.next[g_client] = 1'b0;
@@ -1594,10 +1728,10 @@ endgenerate //IV_NO
                     end
                     else begin
                         dest_valid_release_local <= 1'b1;
-                    end
                 end
             end
         end
+    end
     endgenerate
 
     always@(posedge clk) begin
@@ -1642,11 +1776,11 @@ endgenerate //IV_NO
             inject_mlkem_zeroize_kv_read <= 1'b1;
         end
         else if (inject_mlkem_zeroize_kv_read) begin
-            if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_seed_write_en & 
+            if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_seed_write_en &
                 (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_seed_write_offset == 3)) begin
                 inject_zeroize_to_mlkem <= 1'b1;
             end
-            else if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_msg_write_en & 
+            else if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_msg_write_en &
                 (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_msg_write_offset == 3)) begin
                 inject_zeroize_to_mlkem <= 1'b1;
             end
@@ -1695,7 +1829,7 @@ endgenerate //IV_NO
 
     logic pcr_vault_needs_release;
 
-    generate 
+    generate
         for (genvar dword = 0; dword < 12; dword++) begin
             always@(posedge clk or negedge cptra_rst_b) begin
                 if (~cptra_rst_b) begin
@@ -1731,7 +1865,7 @@ endgenerate //IV_NO
         if (!UVM_TB) begin
             fd_r = $fopen(file_name, "r");
             if (fd_r == 0) $error("Cannot open file %s for reading", file_name);
-           
+
             //Get values from file
             void'($fgets(line_read, fd_r));
             void'($sscanf(line_read, "%h", sha256_wntz_test_vector.sha256_wntz_block_tb));
@@ -1835,7 +1969,7 @@ endgenerate //IV_NO
         void'($fgets(line, fd));
         void'($fgets(line, fd));
         read_line(fd, 392, ek);
-        read_line(fd, 792, dk);  
+        read_line(fd, 792, dk);
         $fclose(fd);
         // 2) write the python‐readable input file
         input_fname = "ml-kem/tv/encap_ext_input.txt";
@@ -1860,7 +1994,7 @@ endgenerate //IV_NO
         void'($fgets(line, fd));
         void'($fgets(line, fd));
         read_line(fd, 8, sharedkey);
-        read_line(fd, 392, ciphertext);  
+        read_line(fd, 392, ciphertext);
         $fclose(fd);
 
         //Assign to test vector struct
@@ -1892,7 +2026,7 @@ endgenerate //IV_NO
         sign_infile = "sign_output.hex";
         verify_outfile = "verify_input.hex";
         verify_infile = "verify_output.hex";
-        
+
         //---------------------------
         //Keygen
         //---------------------------
@@ -1941,7 +2075,7 @@ endgenerate //IV_NO
         mldsa_test_vector.signature = {mldsa_test_vector.signature[0:1156], 8'h00};
 
         mldsa_test_vector.sign_rnd = 'h0;
-        
+
         //---------------------------
         //Verify
         //---------------------------
@@ -1952,7 +2086,7 @@ endgenerate //IV_NO
         $fwrite(fd_r, "%h", mldsa_test_vector.pubkey);
         $fclose(fd_r);
         $system("./test_dilithium5 verify_input.hex verify_output.hex");
-        
+
         fd_r = $fopen(verify_infile, "r");
         if (fd_r == 0)
             $error("Can't open file %s", verify_infile);
@@ -2003,7 +2137,7 @@ endgenerate //IV_NO
             void'($sscanf(line_read, "%h", ecc_test_vector.nonce));
             void'($fgets(line_read, fd_r));
             void'($sscanf(line_read, "%h", ecc_test_vector.R));
-            void'($fgets(line_read, fd_r)); 
+            void'($fgets(line_read, fd_r));
             void'($sscanf(line_read, "%h", ecc_test_vector.S));
             void'($fgets(line_read, fd_r));
             void'($sscanf(line_read, "%h", ecc_test_vector.IV));
@@ -2023,7 +2157,7 @@ endgenerate //IV_NO
     always_comb ecc_random_msg = {ecc_test_vector.hashed_msg, 128'h00000000000000000000000000000000};
     always_comb mldsa_random_msg = change_endian(mldsa_test_vector.msg);  //swap the endian
 
-    generate 
+    generate
         for (genvar dword = 0; dword < 16; dword++) begin
             always@(posedge clk) begin
                 if((WriteData[7:0] == 8'h90) && mailbox_write) begin
@@ -2060,7 +2194,7 @@ endgenerate //IV_NO
 
     always@(negedge clk) begin
 
-        if((WriteData[7:0] == 8'hf5) && mailbox_write) begin 
+        if((WriteData[7:0] == 8'hf5) && mailbox_write) begin
             cold_rst <= 'b1;
             rst_cyclecnt <= cycleCnt;
         end
@@ -2086,7 +2220,7 @@ endgenerate //IV_NO
             assert_hard_rst_flag <= cold_rst_done ? 'b0 : 'b1;
             deassert_hard_rst_flag <= 'b0;
             deassert_rst_flag <= 'b0;
-            
+
 
             if(cycleCnt == rst_cyclecnt + 'd10) begin
                 assert_hard_rst_flag <= 'b0;
@@ -2106,7 +2240,7 @@ endgenerate //IV_NO
         else if(warm_rst) begin
             assert_rst_flag <= 'b1;
             deassert_rst_flag <= 'b0;
-            
+
 
             if(cycleCnt == rst_cyclecnt + 'd10) begin
                 assert_rst_flag <= 'b0;
@@ -2348,20 +2482,20 @@ endgenerate //IV_NO
     // IFU Initiator monitor
     always @(posedge clk) begin
         if ($test$plusargs("CLP_BUS_LOGS"))
-        $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt, 
-                        `CPTRA_TOP_PATH.ic_haddr, `CPTRA_TOP_PATH.ic_hburst, `CPTRA_TOP_PATH.ic_hmastlock, 
-                        `CPTRA_TOP_PATH.ic_hprot, `CPTRA_TOP_PATH.ic_hsize, `CPTRA_TOP_PATH.ic_htrans, 
-                        `CPTRA_TOP_PATH.ic_hwrite, `CPTRA_TOP_PATH.ic_hrdata[63:32], `CPTRA_TOP_PATH.ic_hrdata[31:0], 
+        $fstrobe(ifu_p, "%10d : 0x%0h %h %b %h %h %h %b 0x%08h_%08h %b %b\n", cycleCnt,
+                        `CPTRA_TOP_PATH.ic_haddr, `CPTRA_TOP_PATH.ic_hburst, `CPTRA_TOP_PATH.ic_hmastlock,
+                        `CPTRA_TOP_PATH.ic_hprot, `CPTRA_TOP_PATH.ic_hsize, `CPTRA_TOP_PATH.ic_htrans,
+                        `CPTRA_TOP_PATH.ic_hwrite, `CPTRA_TOP_PATH.ic_hrdata[63:32], `CPTRA_TOP_PATH.ic_hrdata[31:0],
                         `CPTRA_TOP_PATH.ic_hready, `CPTRA_TOP_PATH.ic_hresp);
     end
 
     // LSU Initiator monitor
     always @(posedge clk) begin
         if ($test$plusargs("CLP_BUS_LOGS"))
-        $fstrobe(lsu_p, "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt, 
-                        `CPTRA_TOP_PATH.initiator_inst.haddr, `CPTRA_TOP_PATH.initiator_inst.hsize, `CPTRA_TOP_PATH.initiator_inst.htrans, 
-                        `CPTRA_TOP_PATH.initiator_inst.hwrite, `CPTRA_TOP_PATH.initiator_inst.hrdata[63:32], `CPTRA_TOP_PATH.initiator_inst.hrdata[31:0], 
-                        `CPTRA_TOP_PATH.initiator_inst.hwdata[63:32], `CPTRA_TOP_PATH.initiator_inst.hwdata[31:0], 
+        $fstrobe(lsu_p, "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b\n", cycleCnt,
+                        `CPTRA_TOP_PATH.initiator_inst.haddr, `CPTRA_TOP_PATH.initiator_inst.hsize, `CPTRA_TOP_PATH.initiator_inst.htrans,
+                        `CPTRA_TOP_PATH.initiator_inst.hwrite, `CPTRA_TOP_PATH.initiator_inst.hrdata[63:32], `CPTRA_TOP_PATH.initiator_inst.hrdata[31:0],
+                        `CPTRA_TOP_PATH.initiator_inst.hwdata[63:32], `CPTRA_TOP_PATH.initiator_inst.hwdata[31:0],
                         `CPTRA_TOP_PATH.initiator_inst.hready, `CPTRA_TOP_PATH.initiator_inst.hresp);
     end
 
@@ -2371,10 +2505,10 @@ endgenerate //IV_NO
         for (sl_i = 0; sl_i < `CALIPTRA_AHB_SLAVES_NUM; sl_i = sl_i + 1) begin: gen_responder_inf_monitor
             always @(posedge clk) begin
                 if ($test$plusargs("CLP_BUS_LOGS"))
-                $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt, 
-                        `CPTRA_TOP_PATH.responder_inst[sl_i].haddr, `CPTRA_TOP_PATH.responder_inst[sl_i].hsize, `CPTRA_TOP_PATH.responder_inst[sl_i].htrans, 
-                        `CPTRA_TOP_PATH.responder_inst[sl_i].hwrite, `CPTRA_TOP_PATH.responder_inst[sl_i].hrdata[63:32], `CPTRA_TOP_PATH.responder_inst[sl_i].hrdata[31:0], 
-                        `CPTRA_TOP_PATH.responder_inst[sl_i].hwdata[63:32], `CPTRA_TOP_PATH.responder_inst[sl_i].hwdata[31:0], 
+                $fstrobe(sl_p[sl_i], "%10d : 0x%0h %h %h %b 0x%08h_%08h 0x%08h_%08h %b %b %b %b\n", cycleCnt,
+                        `CPTRA_TOP_PATH.responder_inst[sl_i].haddr, `CPTRA_TOP_PATH.responder_inst[sl_i].hsize, `CPTRA_TOP_PATH.responder_inst[sl_i].htrans,
+                        `CPTRA_TOP_PATH.responder_inst[sl_i].hwrite, `CPTRA_TOP_PATH.responder_inst[sl_i].hrdata[63:32], `CPTRA_TOP_PATH.responder_inst[sl_i].hrdata[31:0],
+                        `CPTRA_TOP_PATH.responder_inst[sl_i].hwdata[63:32], `CPTRA_TOP_PATH.responder_inst[sl_i].hwdata[31:0],
                         `CPTRA_TOP_PATH.responder_inst[sl_i].hready, `CPTRA_TOP_PATH.responder_inst[sl_i].hreadyout, `CPTRA_TOP_PATH.responder_inst[sl_i].hresp, `CPTRA_TOP_PATH.responder_inst[sl_i].hsel);
             end
         end
@@ -2432,14 +2566,14 @@ endgenerate //IV_NO
         if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,`RV_DCCM_EADR - `RV_DCCM_SADR);
         hex_file_is_empty = $system("test -s iccm.hex");
         if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,`RV_ICCM_EADR - `RV_ICCM_SADR);
-       
+
         `ifdef CALIPTRA_TOP_TB
         $display("Initializing AXI SRAM with random data");
         if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
             initialize_caliptra_axi_sram();
         end
         `endif
-        
+
         if ($test$plusargs("CLP_BUS_LOGS")) begin
             tp = $fopen("trace_port.csv","w");
             el = $fopen("exec.log","w");
@@ -2523,7 +2657,7 @@ caliptra_veer_sram_export veer_sram_export_inst (
 );
 
 //SRAM for mbox (preload raw data here)
-caliptra_sram 
+caliptra_sram
 #(
     .DATA_WIDTH(CPTRA_MBOX_DATA_W),
     .DEPTH     (CPTRA_MBOX_DEPTH )
@@ -2540,7 +2674,7 @@ dummy_mbox_preloader
 );
 // Actual Mailbox RAM -- preloaded with data from
 // dummy_mbox_preloader with ECC bits appended
-caliptra_sram 
+caliptra_sram
 #(
     .DATA_WIDTH(CPTRA_MBOX_DATA_AND_ECC_W),
     .DEPTH     (CPTRA_MBOX_DEPTH         )
@@ -2612,7 +2746,7 @@ caliptra_sram #(
 //dma_transfer_if dma_xfer_if;
 
 `ifndef VERILATOR
-// Testcase generator instance 
+// Testcase generator instance
 dma_transfer_randomizer dma_xfers[];
 
 dma_testcase_generator i_dma_gen (
@@ -2651,7 +2785,7 @@ task static preload_mbox;
 
     // Slam
     $display("MBOX pre-load from %h to %h", 0, CPTRA_MBOX_DEPTH);
-    
+
     for (addr = 0; addr < CPTRA_MBOX_DEPTH; addr++) begin
         ecc_data.data = {dummy_mbox_preloader.ram[addr][3],
                          dummy_mbox_preloader.ram[addr][2],
@@ -2865,7 +2999,7 @@ task static dump_memory_contents;
     bit [7:0] data;
     string outfile;
 
-    int bank, indx; 
+    int bank, indx;
 
     int of;
 
@@ -2948,7 +3082,7 @@ task static dump_memory_contents;
         endcase
 
         case (mem_type)
-            MEMTYPE_LMEM: begin 
+            MEMTYPE_LMEM: begin
                             if ((addr & 'hF) == 0) begin
                                 $fwrite(of, "%0x:\t%x ", addr, data);
                             end
@@ -2977,34 +3111,34 @@ task static dump_memory_contents;
 endtask
 
 `ifdef CALIPTRA_TOP_TB
-// Initialize AXI SRAM with random data 
+// Initialize AXI SRAM with random data
 task initialize_caliptra_axi_sram;
-    
+
     integer addr, byte_idx;
     reg [7:0] random_byte;
-    
+
     begin
 
         if (!UVM_TB) begin
-        
+
             $display("Starting Caliptra SRAM initialization with random data (64K addresses, 4 bytes per address)...");
-            
+
             // Loop through all addresses (64K) and all bytes per address (4 for 32-bit data)
             for (addr = 0; addr < AXI_SRAM_DEPTH; addr = addr + 1) begin
                 // For each address, initialize all bytes
                 for (byte_idx = 0; byte_idx < 4; byte_idx = byte_idx + 1) begin
                     random_byte = $random & 8'hFF;  // Generate random byte (8 bits)
-                    
+
                     // Direct assignment
                     `CALIPTRA_TOP.tb_axi_complex_i.i_axi_sram.i_sram.ram[addr][byte_idx] = random_byte;
                 end
-                
+
                 // Progress reporting every 12.5% (8192 addresses)
                 if (addr % (AXI_SRAM_DEPTH/8) == 0) begin
                     $display("  SRAM initialization progress: %0d%% (addr: 0x%x)", (addr * 100) / AXI_SRAM_DEPTH, addr);
                 end
             end
-            
+
             $display("Caliptra SRAM initialization complete!");
         end
     end

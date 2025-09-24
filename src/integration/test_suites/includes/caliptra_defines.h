@@ -29,6 +29,14 @@
 #define KV_NUM_PCR                0x00000008
 #define KV_NUM_DWORDS             0x00000010
 
+#define KV_STANDARD_SLOT_LOW            0
+#define KV_STANDARD_SLOT_HI             15
+#define KV_OCP_LOCK_SLOT_LOW            16
+#define KV_OCP_LOCK_SLOT_HI             23
+#define KV_OCP_LOCK_MDK_KV_SLOT         16
+#define KV_OCP_LOCK_HEK_SEED_KV_SLOT    22
+#define KV_OCP_LOCK_KEY_RELEASE_KV_SLOT 23
+
 
 /* ---- DOE ---- */
 

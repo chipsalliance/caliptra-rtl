@@ -167,12 +167,11 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (key_kv_intf_bit == 1) {
         hmac384_key.kv_intf = TRUE;
         hmac384_key.kv_id = hmackey_kv_id;
-        hmac384_key.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC384 Key KV interface enabled\n");
     }
     else {
         hmac384_key.kv_intf = FALSE;
-        hmac384_key.data_size = 12;
+        hmac384_key.data_size = HMAC384_KEY_SIZE;
         for (int i = 0; i < hmac384_key.data_size; i++)
             hmac384_key.data[i] = key384_data[i];
         VPRINTF(LOW, "HMAC384 Key FW interface enabled\n");
@@ -183,12 +182,11 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (block_kv_intf_bit == 1) {
         hmac384_block.kv_intf = TRUE;
         hmac384_block.kv_id = hmacblock_kv_id;
-        hmac384_block.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC384 Block KV interface enabled\n");
     }
     else {
         hmac384_block.kv_intf = FALSE;
-        hmac384_block.data_size = 32;
+        hmac384_block.data_size = HMAC384_BLOCK_SIZE;
         for (int i = 0; i < hmac384_block.data_size; i++)
             hmac384_block.data[i] = block_data[i];
         VPRINTF(LOW, "HMAC384 Block FW interface enabled\n");
@@ -196,7 +194,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     //--------------------------------------------------
 
     hmac384_lfsr_seed.kv_intf = FALSE;
-    hmac384_lfsr_seed.data_size = 12;
+    hmac384_lfsr_seed.data_size = HMAC384_LFSR_SEED_SIZE;
     for (int i = 0; i < hmac384_lfsr_seed.data_size; i++)
         hmac384_lfsr_seed.data[i] = lfsr_seed_data[i];
     //--------------------------------------------------
@@ -210,7 +208,7 @@ void set_kv_intf_hmac384(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac384_tag.kv_intf = FALSE;
-        hmac384_tag.data_size = 12;
+        hmac384_tag.data_size = HMAC384_TAG_SIZE;
 
         if (key_kv_intf_bit == 1 || block_kv_intf_bit == 1) {
             for (int i = 0; i < hmac384_tag.data_size; i++)
@@ -230,12 +228,11 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (key_kv_intf_bit == 1) {
         hmac512_key.kv_intf = TRUE;
         hmac512_key.kv_id = hmackey_kv_id;
-        hmac512_key.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC512 Key KV interface enabled\n");
     }
     else {
         hmac512_key.kv_intf = FALSE;
-        hmac512_key.data_size = 12;
+        hmac512_key.data_size = HMAC512_KEY_SIZE;
         for (int i = 0; i < hmac512_key.data_size; i++)
             hmac512_key.data[i] = key512_data[i];
         VPRINTF(LOW, "HMAC512 Key FW interface enabled\n");
@@ -246,12 +243,11 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     if (block_kv_intf_bit == 1) {
         hmac512_block.kv_intf = TRUE;
         hmac512_block.kv_id = hmacblock_kv_id;
-        hmac512_block.exp_kv_err = FALSE;
         VPRINTF(LOW, "HMAC512 Block KV interface enabled\n");
     }
     else {
         hmac512_block.kv_intf = FALSE;
-        hmac512_block.data_size = 32;
+        hmac512_block.data_size = HMAC512_BLOCK_SIZE;
         for (int i = 0; i < hmac512_block.data_size; i++)
             hmac512_block.data[i] = block_data[i];
         VPRINTF(LOW, "HMAC512 Block FW interface enabled\n");
@@ -259,7 +255,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     //--------------------------------------------------
 
     hmac512_lfsr_seed.kv_intf = FALSE;
-    hmac512_lfsr_seed.data_size = 12;
+    hmac512_lfsr_seed.data_size = HMAC512_LFSR_SEED_SIZE;
     for (int i = 0; i < hmac512_lfsr_seed.data_size; i++)
         hmac512_lfsr_seed.data[i] = lfsr_seed_data[i];
     //--------------------------------------------------
@@ -273,7 +269,7 @@ void set_kv_intf_hmac512(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t
     }
     else {
         hmac512_tag.kv_intf = FALSE;
-        hmac512_tag.data_size = 12;
+        hmac512_tag.data_size = HMAC512_TAG_SIZE;
 
         if (key_kv_intf_bit == 1 || block_kv_intf_bit == 1) {
             for (int i = 0; i < hmac512_tag.data_size; i++)
@@ -294,13 +290,13 @@ void main() {
     srand(time);
 
     //Randomize slots to upper slots
-    hmackey_kv_id = (xorshift32() % 8) + 16;
+    hmackey_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
 
     do {
-        hmacblock_kv_id     = (xorshift32() % 8) + 16;
+        hmacblock_kv_id     = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
     } while (hmacblock_kv_id == hmackey_kv_id);
 
-    tag_kv_id = (xorshift32() % 8) + 16;
+    tag_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
 
     //Call interrupt init
     init_interrupts();
@@ -315,10 +311,10 @@ void main() {
             // Enable OCP LOCK mode
             VPRINTF(LOW,"OCP lock in progress\n");
             lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-            if (hmackey_kv_id == 23){ 
+            if (hmackey_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 hmac384_key.exp_kv_err = TRUE; 
             }
-            if (hmacblock_kv_id == 23){ 
+            if (hmacblock_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 hmac384_block.exp_kv_err = TRUE; 
             }
         }
@@ -332,7 +328,7 @@ void main() {
         set_kv_intf_hmac384(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
 
         //inject hmac384_key to kv key reg (in RTL)
-        lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa9);
+        lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
         // lsu_write_32(STDOUT, 0xaa);
         //inject hmac_block to kv key reg (in RTL)
         lsu_write_32(STDOUT, (hmac384_block.kv_id << 8) | 0xb0);
@@ -345,13 +341,13 @@ void main() {
         VPRINTF(LOW, "----------------------------------\n");
 
         //Randomize slots to upper slots
-        hmackey_kv_id = (xorshift32() % 8) + 16;
+        hmackey_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
         
         do {
-            hmacblock_kv_id = (xorshift32() % 8) + 16;
+            hmacblock_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
         } while (hmacblock_kv_id == hmackey_kv_id);
 
-        tag_kv_id = (xorshift32() % 8) + 16;
+        tag_kv_id = (xorshift32() % 8) + KV_OCP_LOCK_SLOT_LOW;
 
         VPRINTF(LOW, "Running hmac with key kv_id = 0x%x, block kv_id = 0x%x, tag kv_id = 0x%x\n", hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
         set_kv_intf_hmac512(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
@@ -368,10 +364,10 @@ void main() {
             // Enable OCP LOCK mode
             VPRINTF(LOW,"OCP lock in progress\n");
             lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 1);
-            if (hmackey_kv_id == 23){ 
+            if (hmackey_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 hmac512_key.exp_kv_err = TRUE; 
             }
-            if (hmacblock_kv_id == 23){ 
+            if (hmacblock_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 hmac512_block.exp_kv_err = TRUE; 
             }
         }

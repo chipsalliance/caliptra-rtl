@@ -38,7 +38,7 @@ void main() {
 
     //Call interrupt init
     init_interrupts();
-    
+
     //--------------------------------------------------------------
     SEND_STDOUT_CTRL(0xd9); //inject keygen seed
 
