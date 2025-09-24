@@ -182,6 +182,36 @@ module ahb_lite_address_decoder #(
     assign hsel_o               = hsel_o_int;
     assign hinitiatorready_o    = hinitiator_ready_int_q;
 
+    // Assert that all AHB interfaces default to ready state, both out of
+    // reset and while idle.
+    // This demonstrates that there is no functional problem associated with the VeeR
+    // core bug that was reported and fixed in:
+    // https://github.com/chipsalliance/Cores-VeeR-EL2/pull/141
+    generate
+        for (genvar rspr_ii=0; rspr_ii < NUM_RESPONDERS; rspr_ii++) begin: rspr_ready_loop
+            `ifdef CALIPTRA_INTERNAL_TRNG
+                localparam logic LOCAL_ASSERT_RSPR_RDY = 1'b1;
+            `else
+                // CSRNG/Entopy_src ahb interfaces are tied to 0 when not enabled
+                localparam logic LOCAL_ASSERT_RSPR_RDY = !(rspr_ii inside {`CALIPTRA_SLAVE_SEL_CSRNG,
+                                                                           `CALIPTRA_SLAVE_SEL_ENTROPY_SRC});
+            `endif
+            if (LOCAL_ASSERT_RSPR_RDY) begin: rspr_ready_do_assert
+                `CALIPTRA_ASSERT(AHB_RSPR_RST_READY           , $rose(hreset_n)        |-> (hreadyout_i[rspr_ii] == 1'b1), hclk, !hreset_n)
+                // ICCM DMA and DCCM DMA are the same physical AHB endpoint, but with different offsets
+                // so hready deasserts simultaneously for both
+                if (rspr_ii inside {`CALIPTRA_SLAVE_SEL_DDMA,`CALIPTRA_SLAVE_SEL_IDMA}) begin: rspr_ready_rv_dma_merge
+                    `CALIPTRA_ASSERT(AHB_RSPR_DFLT_READY, !pending_hsel[`CALIPTRA_SLAVE_SEL_DDMA] && !pending_hsel[`CALIPTRA_SLAVE_SEL_IDMA] |-> (hreadyout_i[rspr_ii] == 1'b1), hclk, !hreset_n)
+                end
+                else begin: rspr_ready_normal
+                    `CALIPTRA_ASSERT(AHB_RSPR_DFLT_READY, !pending_hsel[rspr_ii] |-> (hreadyout_i[rspr_ii] == 1'b1), hclk, !hreset_n)
+                end
+            end
+        end
+    endgenerate
+    `CALIPTRA_ASSERT(AHB_INTR_RST_READY , $rose(hreset_n) |-> (hinitiatorready_o == 1'b1), hclk, !hreset_n)
+    `CALIPTRA_ASSERT(AHB_INTR_DFLT_READY, ~|pending_hsel  |-> (hinitiatorready_o == 1'b1), hclk, !hreset_n)
+
 //Coverage
 `ifndef VERILATOR
 `ifdef FCOV

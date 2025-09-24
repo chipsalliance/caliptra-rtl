@@ -618,6 +618,15 @@ import caliptra_top_tb_pkg::*; #(
 `define RV_DDMA_RESP_INST `CPTRA_TOP_PATH.responder_inst[`CALIPTRA_SLAVE_SEL_DDMA]
 task force_ahb_dma_read(input logic [31:0] address);
     while(`RV_INST.dma_hsel) @(posedge core_clk);
+
+    // Disable DMA-related hreadyout assertions before forcing signals
+`ifdef CLP_ASSERT_ON
+    `ifndef VERILATOR
+    $assertoff(0, `CPTRA_TOP_PATH.ahb_lite_bus_i.u_ahb_lite_address_decoder.rspr_ready_loop[`CALIPTRA_SLAVE_SEL_DDMA].rspr_ready_do_assert.rspr_ready_rv_dma_merge.AHB_RSPR_DFLT_READY);
+    $assertoff(0, `CPTRA_TOP_PATH.ahb_lite_bus_i.u_ahb_lite_address_decoder.rspr_ready_loop[`CALIPTRA_SLAVE_SEL_IDMA].rspr_ready_do_assert.rspr_ready_rv_dma_merge.AHB_RSPR_DFLT_READY);
+    `endif // VERILATOR
+`endif // CLP_ASSERT_ON
+
     force `RV_IDMA_RESP_INST.hreadyout = 1'b0;
     force `RV_DDMA_RESP_INST.hreadyout = 1'b0;
 
@@ -635,8 +644,13 @@ task force_ahb_dma_read(input logic [31:0] address);
     // Wait for response to be provided
     do @(posedge core_clk); while(!`RV_INST.dma_hreadyout);
     $display("[%t] AHB DMA FORCE READ: Address 0x%x Data 0x%x Resp 0x%x", $time, address, `RV_INST.dma_hrdata, `RV_INST.dma_hresp);
-    if (`RV_INST.dma_hresp) 
+    if (`RV_INST.dma_hresp)
         rv_dma_resp_error = 1'b1;
+
+    force `RV_INST.dma_hsel = 1'b0; // Reset to the expected value before releasing force
+    force `RV_IDMA_RESP_INST.hreadyout = `RV_INST.dma_hreadyout; // Reset to the expected value before releasing force
+    force `RV_DDMA_RESP_INST.hreadyout = `RV_INST.dma_hreadyout; // Reset to the expected value before releasing force
+
     release `RV_IDMA_RESP_INST.hreadyout;
     release `RV_DDMA_RESP_INST.hreadyout;
 
@@ -647,6 +661,14 @@ task force_ahb_dma_read(input logic [31:0] address);
     release `RV_INST.dma_hwdata;
     release `RV_INST.dma_hsel;
     release `RV_INST.dma_hreadyin;
+
+    // Re-enable DMA-related hreadyout assertions after releasing signals
+`ifdef CLP_ASSERT_ON
+    `ifndef VERILATOR
+    $asserton(0, `CPTRA_TOP_PATH.ahb_lite_bus_i.u_ahb_lite_address_decoder.rspr_ready_loop[`CALIPTRA_SLAVE_SEL_DDMA].rspr_ready_do_assert.rspr_ready_rv_dma_merge.AHB_RSPR_DFLT_READY);
+    $asserton(0, `CPTRA_TOP_PATH.ahb_lite_bus_i.u_ahb_lite_address_decoder.rspr_ready_loop[`CALIPTRA_SLAVE_SEL_IDMA].rspr_ready_do_assert.rspr_ready_rv_dma_merge.AHB_RSPR_DFLT_READY);
+    `endif // VERILATOR
+`endif // CLP_ASSERT_ON
 endtask
 
 task force_ahb_dma_loop_read(input logic [31:0] start_addr, input logic [19:0] count);
