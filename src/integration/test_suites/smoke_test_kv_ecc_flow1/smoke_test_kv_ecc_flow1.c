@@ -55,6 +55,32 @@ void main(){
     VPRINTF(LOW, " KV Smoke Test With ECC flow !!\n");
     VPRINTF(LOW, "----------------------------------\n");
 
+    uint32_t ecc_seed[] =          {0x8FA8541C,
+                                    0x82A392CA,
+                                    0x74F23ED1,
+                                    0xDBFD7354,
+                                    0x1C596639,
+                                    0x1B97EA73,
+                                    0xD744B0E3,
+                                    0x4B9DF59E,
+                                    0xD0158063,
+                                    0xE39C09A5,
+                                    0xA055371E,
+                                    0xDF7A5441};
+
+    uint32_t ecc_privkey[] =       {0xF274F69D,
+                                    0x163B0C9F,
+                                    0x1FC3EBF4,
+                                    0x292AD1C4,
+                                    0xEB3CEC1C,
+                                    0x5A7DDE6F,
+                                    0x80C14292,
+                                    0x934C2055,
+                                    0xE087748D,
+                                    0x0A169C77,
+                                    0x2483ADEE,
+                                    0x5EE70E17};
+
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
                                     0x6ED56C1C,
@@ -170,10 +196,6 @@ void main(){
     /* Intializes random number generator */  //TODO    
     srand(time);
 
-    uint8_t seed_kv_id = xorshift32() % 24;
-    uint8_t privkey_kv_id = xorshift32() % 24;
-    uint8_t sharedkey_kv_id = xorshift32() % 24;
-
     ecc_io seed;
     ecc_io nonce;
     ecc_io iv;
@@ -189,60 +211,68 @@ void main(){
     ecc_io sharedkey_dh;
 
 
-    pubkey_x_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
         pubkey_x_dh.data[i] = ecc_pubkey_x_dh[i];  
 
-    pubkey_y_dh.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
         pubkey_y_dh.data[i] = ecc_pubkey_y_dh[i];  
 
-    sharedkey_dh.kv_intf = TRUE;
-    sharedkey_dh.kv_id = sharedkey_kv_id;
+    sharedkey_dh.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
+    sharedkey_dh.kv_id = xorshift32() % 24;
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
+        sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
 
-    privkey_dh.kv_intf = TRUE;
-    privkey_dh.kv_id = privkey_kv_id;
+    privkey_dh.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
+    privkey_dh.kv_id = xorshift32() % 24;
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
+        privkey_dh.data[i] = ecc_privkey_dh[i];
 
-    seed.kv_intf = TRUE;
-    seed.kv_id = seed_kv_id;
+    seed.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
+    seed.kv_id = xorshift32() % 24;
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
+        seed.data[i] = ecc_seed[i];
 
-    nonce.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
         nonce.data[i] = ecc_nonce[i];
     
-    iv.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
         iv.data[i] = ecc_iv[i];
     
-    msg.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
         msg.data[i] = ecc_msg[i];
 
-    privkey.kv_intf = TRUE;
-    privkey.kv_id = privkey_kv_id;
+    privkey.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
+    privkey.kv_id = xorshift32() % 24;
+    if (!privkey.kv_intf && seed.kv_intf){
+        for (int i = 0; i < ECC_INPUT_SIZE; i++)
+            privkey.data[i] = 0;
+    }
+    else {
+        for (int i = 0; i < ECC_INPUT_SIZE; i++)
+            privkey.data[i] = ecc_privkey[i];
+    }
 
-    pubkey_x.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
         pubkey_x.data[i] = expected_pubkey_x[i];
     
-    pubkey_y.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
         pubkey_y.data[i] = expected_pubkey_y[i];
     
-    sign_r.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
         sign_r.data[i] = expected_sign_r[i];
     
-    sign_s.kv_intf = FALSE;
-    for (int i = 0; i < 12; i++)
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
         sign_s.data[i] = expected_sign_s[i];
 
     //inject seed to kv key reg (in RTL)
     VPRINTF(LOW, "Inject SEED into KV\n");
-    lsu_write_32(STDOUT, (seed_kv_id << 8) | 0x80);
+    lsu_write_32(STDOUT, (seed.kv_id << 8) | 0x80);
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
+
+    for (int i = 0; i < ECC_INPUT_SIZE; i++)
+        privkey.data[i] = ecc_privkey[i];
 
     ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
