@@ -662,7 +662,7 @@ task force_ahb_dma_read(input logic [31:0] address);
     release `RV_INST.dma_hsel;
     release `RV_INST.dma_hreadyin;
 
-    #1ps
+    #1ps;
 
     // Re-enable DMA-related hreadyout assertions after releasing signals
 `ifdef CLP_ASSERT_ON
