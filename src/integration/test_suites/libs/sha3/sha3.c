@@ -344,16 +344,33 @@ static void msg_fifo_write(
   // improve performance. Note: the parts of the message copied a byte at a time
   // will not be byte swapped in big-endian mode.
   uint32_t *aligned_data;
-  for (; len != 0 && ((uintptr_t)data) % sizeof(uint32_t); --len) {
-    lsu_write_8(CLP_KMAC_MSG_FIFO_BASE_ADDR, *data++);
+  uint16_t *half_word;
+  if (len >= sizeof(uint8_t) && ((uintptr_t)data) % sizeof(uint16_t)) {
+    lsu_write_8(CLP_KMAC_MSG_FIFO_BASE_ADDR, *data);
+    len -= sizeof(uint8_t);
+    data += sizeof(uint8_t);
+  }
+  if (len >= sizeof(uint16_t) && ((uintptr_t)data) % sizeof(uint32_t)) {
+    half_word = (uint16_t *) data;
+    lsu_write_16(CLP_KMAC_MSG_FIFO_BASE_ADDR, *half_word);
+    len -= sizeof(uint16_t);
+    data += sizeof(uint16_t);
   }
   for (; len >= sizeof(uint32_t); len -= sizeof(uint32_t)) {
     aligned_data = (uint32_t *) data;
     lsu_write_32(CLP_KMAC_MSG_FIFO_BASE_ADDR, *aligned_data);
     data += sizeof(uint32_t);
   }
-  for (; len != 0; --len) {
-    lsu_write_8(CLP_KMAC_MSG_FIFO_BASE_ADDR, *data++);
+  if (len >= sizeof(uint16_t)) {
+    half_word = (uint16_t *) data;
+    lsu_write_16(CLP_KMAC_MSG_FIFO_BASE_ADDR, *half_word);
+    len -= sizeof(uint16_t);
+    data += sizeof(uint16_t);
+  }
+  if (len >= sizeof(uint8_t)) {
+    lsu_write_8(CLP_KMAC_MSG_FIFO_BASE_ADDR, *data);
+    len -= sizeof(uint8_t);
+    data += sizeof(uint8_t);
   }
 }
 
