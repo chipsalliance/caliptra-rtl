@@ -880,10 +880,7 @@ The SHA3 HWIP performs the hash functions, whose purpose is to check the integri
 It supports various SHA3 hashing functions including SHA3 Extended Output Function (XOF) known as SHAKE functions.
 The details of the operation are described in the [SHA3 specification, FIPS 202](https://csrc.nist.gov/publications/detail/fips/202/final) known as _sponge construction_.
 It has been adapted from OpenTitan and you can find documentation describing the functionality of the KMAC block it was derived from [here](https://opentitan.org/book/hw/ip/kmac/index.html).
-
-The SHA3 HWIP implements a defense mechanism to deter SCA attacks.
-It is expected to protect against 1st-order SCA attacks by implementing masked storage and [Domain-Oriented Masking (DOM)](https://eprint.iacr.org/2017/395.pdf) inside the Keccak function.
-The countermeasure is disabled by default but can be enabled through the 'EnMasking` compile-time Verilog parameter.
+In the current use cases of the SHA3 HW IP, either (a) messages are not considered secret (External Mu), or (b) SCA hardening would not be meaningful (HPKE in OCP L.O.C.K.), hence there are no SCA requirements.
 
 ### Features
 - Support for SHA3-224, 256, 384, 512, SHAKE[128, 256] and cSHAKE[128, 256]
@@ -911,9 +908,9 @@ SHA3 instantiates the Keccak round module with 1600 bit.
 Keccak round logic has two phases inside.
 Theta, Rho, Pi functions are executed at the 1st phase.
 Chi and Iota functions run at the 2nd phase.
-If the compile-time Verilog parameter `EnMasking` is not set, i.e., if masking is not enabled, the first phase and the second phase run at the same cycle.
+The first phase and the second phase run in the same cycle.
 
-To balance circuit area and SCA hardening, the Chi function uses 800 instead 1600 DOM multipliers but the multipliers are fully pipelined.
+To save circuit area, the Chi function uses 800 instead 1600 DOM multipliers but the multipliers are fully pipelined.
 The Chi and Iota functions are thus separately applied to the two halves of the state and the 2nd phase takes in total three clock cycles to complete.
 In the first clock cycle of the 2nd phase, the first stage of Chi is computed for the first lane halves of the state.
 In the second clock cycle, the new first lane halves are output and written to state register.
@@ -929,7 +926,7 @@ SHA3 adds `2'b 10`, SHAKE adds `4'b 1111`, cSHAKE adds `2'b00` then `pad10*1()` 
 All are little-endian values.
 
 Interface between this padding logic and the MSG_FIFO follows the conventional FIFO interface.
-So `prim_fifo_*` can talk to the padding logic directly.
+So `caliptra_prim_fifo_*` can talk to the padding logic directly.
 This module talks to Keccak round logic with a more memory-like interface.
 The interface has an additional address signal on top of the valid, ready, and data signals.
 
@@ -973,7 +970,7 @@ The size of the message FIFO is enough to hold the incoming data while the SHA3 
 Default design parameters assume the system characteristics as below:
 
 - `kmac_pkg::RegLatency`: The register write takes 5 cycles.
-- `kmac_pkg::Sha3Latency`: Keccak round latency takes 96 cycles, which is the masked version of the Keccak round.
+- `kmac_pkg::Sha3Latency`: Keccak round latency takes 24 cycles.
 
 ##### Empty and Full status
 
