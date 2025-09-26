@@ -1908,7 +1908,7 @@ endgenerate //IV_NO
         write_file(fd, 8, seed_d);
         $fclose(fd);
         // 3) invoke the python generator
-        cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt",input_fname);
+        cmd = $sformatf("python ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt",input_fname);
         $display("## Running: %s", cmd);
         if ($system(cmd) != 0) $error("External Python script failed");
         // 4) read back ek and dk from the output file
@@ -1933,7 +1933,7 @@ endgenerate //IV_NO
         write_file(fd, 392, ek);
         $fclose(fd);
         // 3) invoke the python generator
-        cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", input_fname);
+        cmd = $sformatf("python ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", input_fname);
         $display("## Running: %s", cmd);
         if ($system(cmd) != 0) $error("External Python script failed");
         // 4) read back ek and dk from the output file
