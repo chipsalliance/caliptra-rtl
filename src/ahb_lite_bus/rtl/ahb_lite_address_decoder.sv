@@ -209,8 +209,8 @@ module ahb_lite_address_decoder #(
             end
         end
     endgenerate
-    `CALIPTRA_ASSERT(AHB_INTR_RST_READY , $rose(hreset_n) |-> (hinitiatorready_o == 1'b1), hclk, !hreset_n)
-    `CALIPTRA_ASSERT(AHB_INTR_DFLT_READY, ~|pending_hsel  |-> (hinitiatorready_o == 1'b1), hclk, !hreset_n)
+    `CALIPTRA_ASSERT(AHB_INTR_RST_READY , $rose(hreset_n)                     |-> (hinitiatorready_o == 1'b1), hclk, !hreset_n)
+    `CALIPTRA_ASSERT(AHB_INTR_DFLT_READY, ~|pending_hsel && ~access_blocked_o |-> (hinitiatorready_o == 1'b1), hclk, !hreset_n)
 
 //Coverage
 `ifndef VERILATOR
