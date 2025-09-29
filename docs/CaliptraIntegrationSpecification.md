@@ -873,8 +873,8 @@ For additional information, see [Caliptra assets and threats](https://github.com
 
 *Table 19: SoC integration requirements*
 
-| Category | Requirement | Definition of done | Rationale |
-| :--------- | :--------- | :--------- | :--------- |
+| Category | Requirement | Rationale |
+| :--------- | :--------- | :--------- |
 | Obfuscation Key                  | SoC backend flows shall generate obfuscation key with appropriate NIST compliance as dictated in the Caliptra RoT specification.                                                                                                                                               | Required by UDS and Field Entropy threat model    |
 | Obfuscation Key                  | If not driven through PUF, SoC backend flows shall ECO the obfuscation key before tapeout.                                                                                                                                                                                     | Required by UDS and Field Entropy threat model    |
 | Obfuscation Key                  | Rotation of the obfuscation key (if not driven through PUF) between silicon steppings of a given product (for example, A0 vs. B0 vs. PRQ stepping) is dependent on company-specific policies.                                                                                  | Required by UDS and Field Entropy threat model    |
