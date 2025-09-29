@@ -908,8 +908,8 @@ For additional information, see [Caliptra assets and threats](https://github.com
 
 *Table 19: SoC integration requirements*
 
-| Category | Requirement | Definition of done | Rationale |
-| :--------- | :--------- | :--------- | :--------- |
+| Category | Requirement | Rationale |
+| :--------- | :--------- | :--------- |
 | Device Keys                      | SoC backend flows shall generate obfuscation and CSR HMAC key with appropriate NIST compliance as dictated in the Caliptra RoT specification.                                                                                                                                                                        | Required by UDS and Field Entropy threat model    |
 | Device Keys                      | SoC backend flows shall ECO the obfuscation and CSR HMAC signing keys before tapeout.                                                                                                                                                                                                                                | Required by Caliptra threat model |
 | Device Keys*                     | SoC backend flows should rotate obfuscation and CSR HMAC signing keys for each project.                                                                                                                                                                                                                              | Required by Caliptra threat model |
