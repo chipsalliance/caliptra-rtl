@@ -85,6 +85,8 @@ module aes_clp_wrapper
   input  logic debugUnlock_or_scan_mode_switch
 );
 
+localparam AES_KV_KEY_DW_WIDTH = $clog2(keymgr_pkg::KeyWidth/32);
+
 caliptra_tlul_pkg::tl_h2d_t adapter_to_aes_tl;
 caliptra_tlul_pkg::tl_d2h_t aes_to_adapter_tl;
 
@@ -130,7 +132,7 @@ logic kv_key_ready, kv_key_done;
 logic [KV_ENTRY_ADDR_W-1:0] kv_key_present_slot;
 
 logic kv_key_write_en;
-logic [2:0] kv_key_write_offset;
+logic [AES_KV_KEY_DW_WIDTH-1:0] kv_key_write_offset;
 logic [3:0][7:0] kv_key_write_data;
 
 kv_write_ctrl_reg_t kv_write_ctrl_reg;
@@ -517,9 +519,9 @@ generate
           kv_key_reg[g_dword][g_byte] <= '0;
         // zeroize the buffered KeyVault value when reading in a new key
         // On the first beat, the least-sig dword is set, all other dwords set to 0
-        end else if (kv_key_write_en && (g_dword > 0) && (kv_key_write_offset < 3'(g_dword))) begin
+        end else if (kv_key_write_en && (g_dword > 0) && (kv_key_write_offset < AES_KV_KEY_DW_WIDTH'(g_dword))) begin
           kv_key_reg[g_dword][g_byte] <= 0;
-        end else if (kv_key_write_en && (kv_key_write_offset == 3'(g_dword))) begin
+        end else if (kv_key_write_en && (kv_key_write_offset == AES_KV_KEY_DW_WIDTH'(g_dword))) begin
           kv_key_reg[g_dword][g_byte] <= kv_key_write_data[3-g_byte];
         end
       end
