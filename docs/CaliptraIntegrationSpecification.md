@@ -103,7 +103,7 @@ The following tables describe the interface signals.
 | rid     | IW   | Output | Synchronous to clk | R channel read response id signal |
 | ruser   | UW   | Output | Synchronous to clk | R channel read response user signal |
 | rlast   | 1    | Output | Synchronous to clk | R channel read response last beat signal |
-| rvalid  | 1    | Output | Synchronous to clk | R channel valid handhsake signal |
+| rvalid  | 1    | Output | Synchronous to clk | R channel valid handshake signal |
 | rready  | 1    | Input  | Synchronous to clk | R channel ready handshake signal |
 | awaddr  | AW   | Input  | Synchronous to clk | AW channel address |
 | awburst | 2    | Input  | Synchronous to clk | AW channel burst encoding |
@@ -112,18 +112,18 @@ The following tables describe the interface signals.
 | awuser  | UW   | Input  | Synchronous to clk | AW channel user signal. Identifies the requester for mailbox and fuse access. See AXI_USER details for more information. |
 | awid    | IW   | Input  | Synchronous to clk | AW channel id signal |
 | awlock  | 1    | Input  | Synchronous to clk | AW channel lock signal |
-| awvalid | 1    | Input  | Synchronous to clk | AW channel valid handhsake signal |
+| awvalid | 1    | Input  | Synchronous to clk | AW channel valid handshake signal |
 | awready | 1    | Output | Synchronous to clk | AW channel ready handshake signal |
 | wdata   | DW   | Input  | Synchronous to clk | W channel write data |
 | wuser   | UW   | Input  | Synchronous to clk | W channel write user |
 | wstrb   | DW/8 | Input  | Synchronous to clk | W channel write strobe. Byte enable. |
 | wlast   | 1    | Input  | Synchronous to clk | W channel write last beat signal |
-| wvalid  | 1    | Input  | Synchronous to clk | W channel valid handhsake signal |
+| wvalid  | 1    | Input  | Synchronous to clk | W channel valid handshake signal |
 | wready  | 1    | Output | Synchronous to clk | W channel ready handshake signal |
 | bresp   | 2    | Output | Synchronous to clk | B channel write response encoding |
 | bid     | IW   | Output | Synchronous to clk | B channel write response id signal |
 | buser   | UW   | Output | Synchronous to clk | B channel write response user signal |
-| bvalid  | 1    | Output | Synchronous to clk | B channel valid handhsake signal |
+| bvalid  | 1    | Output | Synchronous to clk | B channel valid handshake signal |
 | bready  | 1    | Input  | Synchronous to clk | B channel ready handshake signal |
 
 *Table 6: Mailbox notifications*
@@ -536,7 +536,7 @@ The following figure shows the receiver protocol flow.
 When Caliptra sets the tap_mode register, the mailbox will transition from RDY_FOR_DATA to EXECUTE_TAP instead of EXECUTE_SOC.
 This will pass control of the mailbox to the TAP. TAP will follow the **Receiving data from the mailbox** protocol detailed above.
 
-When TAP acquires the mailbox lock, the mailbox will transition from RDY_FOR_DATA_to EXECUTE_UC. This transition results in the assertion of the internal interrupt signal `uc_mailbox_data_avail` to UC.
+When TAP acquires the mailbox lock, the mailbox will transition from RDY_FOR_DATA to EXECUTE_UC. This transition results in the assertion of the internal interrupt signal `uc_mailbox_data_avail` to UC.
 This will pass control of the mailbox to the UC. UC will follow the **Receiving data from the mailbox** protocol detailed above.
 
 ## Mailbox arbitration
@@ -664,7 +664,7 @@ See the Hardware specification for additional details.
 
 # TRNG REQ HW API
 
-For SoCs integrating Caliptra core without Subsystem (i.e., passive mode) that choose not to instantiate Caliptra’s internal TRNG, Caliptra provides a TRNQ REQ HW API.
+For SoCs integrating Caliptra core without Subsystem (i.e., passive mode) that choose not to instantiate Caliptra’s internal TRNG, Caliptra provides a TRNG REQ HW API.
 
 **While the use of this API is convenient for early enablement, the current
 Caliptra hardware is unable to provide the same security guarantees with an
@@ -678,7 +678,7 @@ TRNG if ROM glitch protection is important.**
 
 Having an interface that is separate from the SoC mailbox ensures that this request is not intercepted by any SoC firmware agents (which communicate with SoC mailbox). It is a requirement for FIPS compliance that this TRNG HW API is always handled by SoC hardware gasket logic (and not some SoC ROM or firmware code). SoC implementations of this gasket logic must guarantee that only one AXI agent has access to the Caliptra TRNG REQ HW API.
 
-Access to TRNG DATA register is controlled by TRNG VALID AXI USER. SoC can program the TRNG VALID AXI USER and lock the register using TRNG\_AXI\_USER\_LOCK[LOCK]. This ensures that TRNG DATA register is read-writeable by only the AXI USER programmed into the TRNG\_VALID\_AXI\_USER register. If the CPTRA\_TNRG\_AXI\_USER\_LOCK.LOCK is set to ‘0, then any agent can write to the TRNG DATA register. If the lock is set to ‘1, only an agent whose AXI USER matches TRNG\_VALID\_AXI\_USER can write to TRNG DATA. It is strongly recommended that these AXI USER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable FW or ROM patches are absorbed. If integrators do not use these registers to filter agent access to the TRNG REQ HW API, then the SoC implementation must allow no more than one AXI agent in total to access Caliptra's SoC interface.
+Access to TRNG DATA register is controlled by TRNG VALID AXI USER. SoC can program the TRNG VALID AXI USER and lock the register using TRNG\_AXI\_USER\_LOCK[LOCK]. This ensures that TRNG DATA register is read-writeable by only the AXI USER programmed into the TRNG\_VALID\_AXI\_USER register. If the CPTRA\_TRNG\_AXI\_USER\_LOCK.LOCK is set to ‘0, then any agent can write to the TRNG DATA register. If the lock is set to ‘1, only an agent whose AXI USER matches TRNG\_VALID\_AXI\_USER can write to TRNG DATA. It is strongly recommended that these AXI USER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable FW or ROM patches are absorbed. If integrators do not use these registers to filter agent access to the TRNG REQ HW API, then the SoC implementation must allow no more than one AXI agent in total to access Caliptra's SoC interface.
 
 The ROM and firmware currently time out on the TRNG interface after 250,000
 attempts to read a DONE bit. This bit is set in the architectural registers, as
@@ -1263,7 +1263,7 @@ For violations in Sl No 3 and 4, the schematic for the crossing is shown in the 
 
 ![](./images/entropy_RDC.png)
 
-In the preceding schematic, an RDC crossing violation is identified at the *data_q* flop, which is located on the right-hand side of the figure. The analysis for *prim_packer_fifo_bypass* is elaborated here, with the same scenario applying to *prim_packer_fifo_recon*.
+In the preceding schematic, an RDC crossing violation is identified at the *data_q* flop, which is located on the right-hand side of the figure. The analysis for *prim_packer_fifo_bypass* is elaborated here, with the same scenario applying to *prim_packer_fifo_precon*.
 
 The fifo load and wr_data equations are as follows:
 
