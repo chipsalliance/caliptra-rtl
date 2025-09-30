@@ -322,7 +322,7 @@ reg {
     desc = "Caliptra FW revision ID
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
-    field {sw=rw; hw=r; swwel = soc_req; resetsignal = cptra_rst_b;} REV_ID[32]=0;
+    field {sw=rw; hw=r; swwel = soc_req; resetsignal = cptra_pwrgood;} REV_ID[32]=0;
 } CPTRA_FW_REV_ID[2];
 reg {
     name = "Caliptra HW Config";

@@ -3235,8 +3235,8 @@ module soc_ifc_reg (
             field_combo.CPTRA_FW_REV_ID[i0].REV_ID.next = next_c;
             field_combo.CPTRA_FW_REV_ID[i0].REV_ID.load_next = load_next_c;
         end
-        always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-            if(~hwif_in.cptra_rst_b) begin
+        always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+            if(~hwif_in.cptra_pwrgood) begin
                 field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value <= 32'h0;
             end else if(field_combo.CPTRA_FW_REV_ID[i0].REV_ID.load_next) begin
                 field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value <= field_combo.CPTRA_FW_REV_ID[i0].REV_ID.next;

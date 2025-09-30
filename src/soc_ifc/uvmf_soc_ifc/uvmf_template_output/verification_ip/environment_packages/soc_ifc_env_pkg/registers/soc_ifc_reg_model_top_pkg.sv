@@ -304,7 +304,7 @@ package soc_ifc_reg_model_top_pkg;
             foreach(this.CPTRA_GENERIC_OUTPUT_WIRES[ii])      `REG____CP_NONCORE_RST(this.CPTRA_GENERIC_OUTPUT_WIRES[ii]           )
                                                               `FLD____CP_NONCORE_RST(this.CPTRA_HW_REV_ID.CPTRA_GENERATION         )
                                                               `FLD____CP_NONCORE_RST(this.CPTRA_HW_REV_ID.SOC_STEPPING_ID          )
-            foreach(this.CPTRA_FW_REV_ID[ii])                 `REG____CP_NONCORE_RST(this.CPTRA_FW_REV_ID[ii]                      )
+            foreach(this.CPTRA_FW_REV_ID[ii])                 `REG_NO_CP_NONCORE_RST(this.CPTRA_FW_REV_ID[ii]                      )
                                                               `REG____CP_NONCORE_RST(this.CPTRA_HW_CONFIG                          )
                                                               `REG____CP_NONCORE_RST(this.CPTRA_WDT_TIMER1_EN                      )
                                                               `REG____CP_NONCORE_RST(this.CPTRA_WDT_TIMER1_CTRL                    )
