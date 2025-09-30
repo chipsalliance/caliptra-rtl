@@ -395,6 +395,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_RESET_REASON"                               : 32'h2,          // field WARM_RESET 
     "CPTRA_FUSE_WR_DONE"                               : 32'h1,          // field 0 
     "CPTRA_HW_REV_ID"                                  : 32'hffff_ffff,  // field SOC_STEPPING_ID, CPTRA_GENERATION
+    "CPTRA_FW_REV_ID"                                  : 32'hffff_ffff,
     "CPTRA_HW_CONFIG"                                  : 32'h0000_007F,  // All existing bits are sticky
     "CPTRA_FUSE_VALID_AXI_USER"                        : 32'hffff_ffff,
     "CPTRA_FUSE_AXI_USER_LOCK"                         : 32'h1,
