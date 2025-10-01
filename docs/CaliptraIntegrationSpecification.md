@@ -377,8 +377,8 @@ The following table describes the allocation of functionality to strap\_ss\_stra
 
 | N          | Name               | Description                                                                                                                 |
 | :--------- | :---------         | :---------                                                                                                                  |
-| 0          | RESERVED           | No allocated function.                                                                                                      |
-| 1          | RESERVED           | No allocated function.                                                                                                      |
+| 0          | strap_ss_strap_generic_0           | Provides the Caliptra ROM with a 32-bit pointer that encodes the location of the fuse controller's status register and the bit position of the idle indicator. Upper 16 bits: Bit index of the IDLE_BIT_STATUS within SOC_OTP_CTRL_STATUS. Lower 16 bits: Offset address of SOC_OTP_CTRL_STATUS within the SOC_IFC_REG space, relative to SOC_OTP_CTRL_BASE_ADDR.                                                                                                      |
+| 1          | strap_ss_strap_generic_1           | Provides the Caliptra ROM with a 32-bit pointer to the fuse controller’s command register (CMD), enabling ROM-level control or triggering of fuse operations.                                                                                                      |
 | 2          | RESERVED           | No allocated function.                                                                                                      |
 | 3          | RESERVED           | No allocated function.                                                                                                      |
 
