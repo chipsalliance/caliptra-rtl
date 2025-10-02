@@ -165,8 +165,8 @@ inline void service_sha3_error_intr() {
     if (kmac_sts & KMAC_INTR_STATE_KMAC_ERR_MASK) {
         *kmac_reg = KMAC_INTR_STATE_KMAC_ERR_MASK;
         cptra_intr_rcv.sha3_error |= KMAC_INTR_STATE_KMAC_ERR_MASK;
-        if (sha3_sts & SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_SHA3_ERROR_EN_MASK) {
-            *sha3_reg = SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_SHA3_ERROR_EN_MASK;
+        if (sha3_sts & SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_SHA3_ERROR_STS_MASK) {
+            *sha3_reg = SHA3_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_SHA3_ERROR_STS_MASK;
         } else {
             VPRINTF(ERROR, "SHA3 and KMAC interrupts out of sync for SHA3_ERROR.\n");
             SEND_STDOUT_CTRL(0x1);
@@ -177,7 +177,7 @@ inline void service_sha3_error_intr() {
     } else if (kmac_sts & KMAC_INTR_STATE_FIFO_EMPTY_MASK) {
         // This will be handled by a notification interrupt.
     } else {
-        VPRINTF(ERROR, "bad sha3_error_intr sts:%x\n", kmac_sts);
+        VPRINTF(ERROR, "bad sha3_error_intr sts:%x,%x\n", kmac_sts, sha3_sts);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -188,22 +188,24 @@ inline void service_sha3_notif_intr() {
     uint32_t sha3_sts = *sha3_reg;
     uint32_t *kmac_reg = (uint32_t *) (CLP_KMAC_INTR_STATE);
     uint32_t kmac_sts = *kmac_reg;
+    uint32_t *kmac_test_reg = (uint32_t *) (CLP_KMAC_INTR_TEST);
     /* Write 1 to Clear the pending interrupt */
     if (kmac_sts & KMAC_INTR_STATE_KMAC_DONE_MASK) {
         *kmac_reg = KMAC_INTR_STATE_KMAC_DONE_MASK;
         cptra_intr_rcv.sha3_notif |= KMAC_INTR_STATE_KMAC_DONE_MASK;
-        if (sha3_sts & SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK) {
-            *sha3_reg = SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
+        if (sha3_sts & SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
+            *sha3_reg = SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
         } else {
             VPRINTF(ERROR, "SHA3 and KMAC interrupts out of sync for CMD_DONE.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
     } else if (kmac_sts & KMAC_INTR_STATE_FIFO_EMPTY_MASK) {
-        // Cannot be cleared.
+        // Cannot be cleared except if it triggerd by a test.
+        *kmac_test_reg = 0;
         cptra_intr_rcv.sha3_notif |= KMAC_INTR_STATE_FIFO_EMPTY_MASK;
-        if (sha3_sts & SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MSG_FIFO_EMPTY_EN_MASK) {
-            *sha3_reg = SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MSG_FIFO_EMPTY_EN_MASK;
+        if (sha3_sts & SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MSG_FIFO_EMPTY_STS_MASK) {
+            *sha3_reg = SHA3_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MSG_FIFO_EMPTY_STS_MASK;
         } else {
             VPRINTF(ERROR, "SHA3 and KMAC interrupts out of sync for MSG_FIFO_EMPTY.\n");
             SEND_STDOUT_CTRL(0x1);
@@ -212,7 +214,7 @@ inline void service_sha3_notif_intr() {
     } else if (kmac_sts & KMAC_INTR_STATE_KMAC_ERR_MASK) {
         // This will be handled by an error interrupt.
     } else {
-        VPRINTF(ERROR,"bad sha3_notif_intr sts:%x\n", kmac_sts);
+        VPRINTF(ERROR,"bad sha3_notif_intr sts:%x,%x\n", kmac_sts, sha3_sts);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
