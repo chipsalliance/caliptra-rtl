@@ -156,10 +156,10 @@ hmac_io hmac512_tag;
 void set_kv_intf_hmac(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t tag_kv_id) 
 {
     key_kv_intf_bit = (xorshift32() % 2);
+    hmac_key.exp_kv_err = FALSE; 
     if (key_kv_intf_bit == 1) {
         hmac_key.kv_intf = TRUE;
         hmac_key.kv_id = hmackey_kv_id;
-        hmac_key.exp_kv_err = FALSE; 
         VPRINTF(LOW, "HMAC Key KV interface enabled\n");
     }
     else {
@@ -171,10 +171,10 @@ void set_kv_intf_hmac(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t ta
     //--------------------------------------------------      
 
     block_kv_intf_bit = (xorshift32() % 2);
+    hmac_block.exp_kv_err = FALSE; 
     if (block_kv_intf_bit == 1) {
         hmac_block.kv_intf = TRUE;
         hmac_block.kv_id = hmacblock_kv_id;
-        hmac_block.exp_kv_err = FALSE; 
         VPRINTF(LOW, "HMAC Block KV interface enabled\n");
     }
     else {
@@ -190,11 +190,10 @@ void set_kv_intf_hmac(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t ta
     //--------------------------------------------------
 
     tag_kv_intf_bit = (xorshift32() % 2);
+    hmac512_tag.exp_kv_err = FALSE;
     if (tag_kv_intf_bit == 1) {
         hmac512_tag.kv_intf = TRUE;
         hmac512_tag.kv_id = tag_kv_id;
-        hmac512_tag.exp_kv_err = FALSE;
-
         VPRINTF(LOW, "HMAC Tag KV interface enabled\n");
     }
     else {
@@ -273,6 +272,9 @@ void main() {
                 if ((hmac_block.kv_intf == TRUE) && (hmacblock_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT)){ 
                     hmac_block.exp_kv_err = TRUE;
                 }
+                // if ((hmac512_tag.kv_intf == TRUE) && (tag_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT)){ 
+                //     hmac512_tag.exp_kv_err = TRUE;
+                // }
             }
             else {
                 VPRINTF(LOW,"Regular mode\n");
@@ -335,6 +337,11 @@ void main() {
                         else{
                             VPRINTF(LOW,"KV_WRITE_FAIL is successfully set\n");
                         }
+                    }
+                    else if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> 2) != 0) {
+                        VPRINTF(FATAL, "Unexpected KV_WRITE_FAIL is detected!\n");
+                        SEND_STDOUT_CTRL(0x1);
+                        while(1);
                     }
                 }
             }
