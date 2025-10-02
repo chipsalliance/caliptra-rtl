@@ -329,7 +329,7 @@ void main() {
             if (hmac512_tag.kv_intf == TRUE){
                 if ((hmac_key.exp_kv_err == FALSE) && (hmac_block.exp_kv_err == FALSE)) {
                     if (hmac512_tag.exp_kv_err == TRUE){
-                        if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> 2) == 0) {
+                        if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) == 0) {
                             VPRINTF(FATAL, "KV_WRITE_FAIL is not detected!\n");
                             SEND_STDOUT_CTRL(0x1);
                             while(1);
@@ -338,7 +338,7 @@ void main() {
                             VPRINTF(LOW,"KV_WRITE_FAIL is successfully set\n");
                         }
                     }
-                    else if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> 2) != 0) {
+                    else if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) != 0) {
                         VPRINTF(FATAL, "Unexpected KV_WRITE_FAIL is detected!\n");
                         SEND_STDOUT_CTRL(0x1);
                         while(1);
