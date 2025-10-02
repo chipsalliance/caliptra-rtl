@@ -272,9 +272,9 @@ void main() {
                 if ((hmac_block.kv_intf == TRUE) && (hmacblock_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT)){ 
                     hmac_block.exp_kv_err = TRUE;
                 }
-                // if ((hmac512_tag.kv_intf == TRUE) && (tag_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT)){ 
-                //     hmac512_tag.exp_kv_err = TRUE;
-                // }
+                if ((hmac512_tag.kv_intf == TRUE) && (tag_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT)){ 
+                    hmac512_tag.exp_kv_err = TRUE;
+                }
             }
             else {
                 VPRINTF(LOW,"Regular mode\n");
@@ -286,16 +286,10 @@ void main() {
             int region_tag = (hmac512_tag.kv_intf == TRUE) ? get_region(hmac512_tag.kv_id) : -2;
 
             if (region_key >= 0 && region_block >= 0 && region_tag >= 0) {
-                // if (region_key != region_block){
-                //     hmac_block.exp_kv_err = TRUE;
-                // }
                 if (!(region_key == region_tag && region_block == region_tag)) {
                     hmac512_tag.exp_kv_err = TRUE;
                 }
             }
-            // else if (region_key >= 0 && region_block >= 0 && region_key != region_block) {
-            //     hmac_block.exp_kv_err = TRUE;
-            // }
             else if (region_key >= 0 && region_tag >= 0 && region_key != region_tag) {
                 hmac512_tag.exp_kv_err = TRUE;
             }
