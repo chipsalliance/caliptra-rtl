@@ -2413,8 +2413,8 @@ The destination valid field is programmed by FW in the cryptographic block gener
 | Lock wr\[0\]              | core_only_rst_b   | Setting the lock wr field prevents the entry from being written by the microcontroller. Keys are always locked. After a lock is set, it cannot be reset until cptra_rst_b is de-asserted.               |
 | Lock use\[1\]             | core_only_rst_b   | Setting the lock use field prevents the entry from being used in any cryptographic blocks. After the lock is set, it cannot be reset until cptra_rst_b is de-asserted.                                  |
 | Clear\[2\]                | cptra_rst_b       | If unlocked, setting the clear bit causes KV to clear the associated entry. The clear bit is reset after entry is cleared.                                                                              |
-| Copy\[3\]                 | cptra_rst_b       | ENHANCEMENT: Setting the copy bit causes KV to copy the key to the entry written to Copy Dest field.                                                                                                    |
-| Copy Dest\[8:4\]          | cptra_rst_b       | ENHANCEMENT: Destination entry for the copy function.                                                                                                                                                   |
+| rsvd0\[3\]                 |       |                                                                                                     |
+| rsvd1\[8:4\]          |       |                                                                                                                                                    |
 | Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set.  <br>\[0\] - HMAC KEY  <br>\[1\] - HMAC BLOCK  <br>\[2\] - MLDSA SEED  <br>\[3\] - ECC PRIVKEY  <br>\[4\] - ECC SEED  <br>\[5\] - AES KEY <br>\[6\] - MLKEM SEED <br>\[7\] - MLKEM MSG <br>\[8\] - AXI DMA DATA |
 | last_dword\[20:19\] | hard_reset_b      | Store the offset of the last valid dword, used to indicate the last cycle for read operations.                                                                                                          |
 
@@ -2483,12 +2483,12 @@ The AES algorithm is described as follows:
 
 ### Key vault de-obfuscation block operation
 
-A de-obfuscation engine (DOE) is used in conjunction with AES cryptography to de-obfuscate the UDS and field entropy.  
+A de-obfuscation engine (DOE) is used in conjunction with AES cryptography to de-obfuscate the UDS and field entropy and HEK seed.  
 
-1. The obfuscation key is driven to the AES key. The data to be decrypted (either obfuscated UDS or obfuscated field entropy) is fed into the AES data. 
-2. An FSM manually drives the AES engine and writes the decrypted data back to the key vault. 
-3. FW programs the DOE with the requested function (UDS or field entropy de-obfuscation), and the destination for the result. 
-4. After de-obfuscation is complete, FW can clear out the UDS and field entropy values from any flops until cptra\_pwrgood de-assertion.  
+1. The obfuscation key is wired to DOE engine. The data to be decrypted (either obfuscated UDS, obfuscated field entropy, or obfuscated HEK seed) is fed into the DOE data.
+2. An FSM manually drives the DOE engine and writes the decrypted data back to the key vault. 
+3. FW programs the DOE with the requested function (UDS, field entropy, or HEK seed de-obfuscation), and the destination for the result. 
+4. After de-obfuscation is complete, FW can clear out the UDS, field entropy, and HEK seed values from any flops until cptra\_pwrgood de-assertion.  
 
 The following tables describe DOE register and control fields.
 
@@ -2500,12 +2500,13 @@ The following tables describe DOE register and control fields.
 
 | DOE Ctrl Fields  | Reset        | Description                                                                                                                                  |
 | :--------------- | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
-| COMMAND\[1:0\]   | Cptra_rst_b  | 2’b00 Idle <br>2’b01 Run UDS flow  <br>2’b10 Run FE flow  <br>2’b11 Clear Obf Secrets                                                                   |
-| DEST\[4:2\]      | Cptra_rst_b  | Destination register for the result of the de-obfuscation flow. Field entropy writes into DEST and DEST+1  <br>Key entry only, can’t go to PCR . |
+| CMD\[1:0\]       | Cptra_rst_b  | 2’b00 Idle <br>2’b01 Run UDS flow  <br>2’b10 Run FE flow  <br>2’b11 Clear Obf Secrets                                                            |
+| DEST\[6:2\]      | Cptra_rst_b  | Destination register for the result of the de-obfuscation flow. Field entropy writes into DEST and DEST+1  <br>Key entry only, can’t go to PCR . |
+| CMD_EXT\[8:7\]   | Cptra_rst_b  | 2’b00 Idle (or running a standard, non-extended command) <br>2’b01 Run OCP LOCK HEK seed flow <br>2’b10 RESERVED <br>2’b11 RESERVED              |
 
 ### Key vault de-obfuscation flow 
 
-1. ROM loads IV into DOE. ROM writes to the DOE control register the destination for the de-obfuscated result and sets the appropriate bit to run UDS and/or the field entropy flow. 
+1. ROM loads IV into DOE. ROM writes to the DOE control register the destination for the de-obfuscated result and sets the appropriate bit to run UDS, field entropy, and/or HEK seed flow. 
 2. DOE state machine takes over and loads the Caliptra obfuscation key into the key register. 
 3. Next, either the obfuscated UDS or field entropy are loaded into the block register 4 DWORDS at a time. 
 4. Results are written to the KV entry specified in the DEST field of the DOE control register. 
