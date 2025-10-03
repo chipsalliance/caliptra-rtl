@@ -99,7 +99,7 @@ void ecc_test(uint8_t seed_kv_id, uint8_t privkey_kv_id){
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
 
     //wait for privkey generation
-    while (((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> 2) == 0) & (cptra_intr_rcv.ecc_error == 0) & (cptra_intr_rcv.ecc_notif == 0)){
+    while (((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> ECC_REG_ECC_KV_WR_PKEY_STATUS_ERROR_LOW) == 0) & (cptra_intr_rcv.ecc_error == 0) & (cptra_intr_rcv.ecc_notif == 0)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during ECC operation to allow ISR to execute and show idle time in sims
         for (uint16_t slp = 0; slp < 100; slp++) {
@@ -177,7 +177,7 @@ void main() {
 
         VPRINTF(LOW,"Running HMAC core before enabling OCP LOCK\n");
         hmac_test(kv_slot0, kv_slot1, kv_slot2);
-        if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> 2) != 0) {
+        if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) != 0) {
             VPRINTF(FATAL, "KV_WRITE_FAIL is set!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
@@ -191,7 +191,7 @@ void main() {
                 VPRINTF(LOW,"Running HMAC core by reading from different segment\n");
                 enable_ocp_lock();
                 hmac_test(kv_slot0, kv_slot1, kv_slot2);
-                if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> 2) == 0) {
+                if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) == 0) {
                     VPRINTF(FATAL, "KV_WRITE_FAIL is not detected!\n");
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
@@ -206,7 +206,7 @@ void main() {
                 VPRINTF(LOW,"Running HMAC core and writing to different segment\n");
                 enable_ocp_lock();
                 hmac_test(kv_slot0, kv_slot1, kv_slot2);
-                if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> 2) == 0) {
+                if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) == 0) {
                     VPRINTF(FATAL, "KV_WRITE_FAIL is not detected!\n");
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
@@ -222,7 +222,7 @@ void main() {
                 enable_ocp_lock();
                 ecc_test(kv_slot0, kv_slot2);
                 
-                if((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> 2) == 0) {
+                if((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> ECC_REG_ECC_KV_WR_PKEY_STATUS_ERROR_LOW) == 0) {
                     VPRINTF(FATAL, "KV Write Error is not detected!\n");
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
@@ -238,7 +238,7 @@ void main() {
                 enable_ocp_lock();
                 mlkem_test(kv_slot0, kv_slot2);
                 
-                if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS) >> 2) == 0) {
+                if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS) >> ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_ERROR_LOW) == 0) {
                     VPRINTF(FATAL, "KV Write Error is not detected!\n");
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
