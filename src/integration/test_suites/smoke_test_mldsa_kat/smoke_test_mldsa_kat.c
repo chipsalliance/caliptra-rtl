@@ -85,6 +85,7 @@ void main() {
 
 
     seed.kv_intf = FALSE;
+    seed.exp_kv_err = FALSE;
     for (int i = 0; i < 8; i++)
         seed.data[i] = ((mldsa_seed[i]<<24) & 0xff000000) |
                     ((mldsa_seed[i]<< 8) & 0x00ff0000) |

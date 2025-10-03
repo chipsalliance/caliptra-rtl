@@ -101,6 +101,7 @@ void main() {
     if (rst_count==1){
 
         seed.kv_intf = TRUE;
+        seed.exp_kv_err = FALSE;
         seed.kv_id = 8; //KV_ENTRY_FOR_MLDSA_SIGNING
 
         for (int i = 0; i < MLDSA87_SIGN_RND_SIZE; i++)
