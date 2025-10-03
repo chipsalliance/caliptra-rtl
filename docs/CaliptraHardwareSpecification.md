@@ -2500,9 +2500,9 @@ The following tables describe DOE register and control fields.
 
 | DOE Ctrl Fields  | Reset        | Description                                                                                                                                  |
 | :--------------- | :----------- | :------------------------------------------------------------------------------------------------------------------------------------------- |
-| CMD\[1:0\]       | Cptra_rst_b  | 2’b00 Idle (or running a standard, non-extended command) <br>2’b01 Run OCP LOCK HEK seed flow <br>2’b10 RESERVED <br>2’b11 RESERVED                                                                   |
+| CMD\[1:0\]       | Cptra_rst_b  | 2’b00 Idle <br>2’b01 Run UDS flow  <br>2’b10 Run FE flow  <br>2’b11 Clear Obf Secrets                                                            |
 | DEST\[6:2\]      | Cptra_rst_b  | Destination register for the result of the de-obfuscation flow. Field entropy writes into DEST and DEST+1  <br>Key entry only, can’t go to PCR . |
-| CMD_EXT\[8:7\]   | Cptra_rst_b  | 2’b00 Idle <br>2’b01 Run UDS flow  <br>2’b10 Run FE flow  <br>2’b11 Clear Obf Secrets                                                                   |
+| CMD_EXT\[8:7\]   | Cptra_rst_b  | 2’b00 Idle (or running a standard, non-extended command) <br>2’b01 Run OCP LOCK HEK seed flow <br>2’b10 RESERVED <br>2’b11 RESERVED              |
 
 ### Key vault de-obfuscation flow 
 
