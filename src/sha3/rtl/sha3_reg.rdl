@@ -406,12 +406,12 @@ addrmap sha3_reg {
         default precedence = hw;
         default hw = w;
         default hwset = true;
+        default sw = rw;
+        default woclr = true;
         default level intr;
 
         field {desc = "SHA3 cmd_done indicate 
             1. SHA3 absorbing has been completed, 1st rate of digest is ready.";
-                sw = rw;
-                onwrite = woclr;
         } notif_cmd_done_sts = 1'b0;
         field {desc = "MSG_FIFO Empty Interrupt status bit.
             This interrupt is raised only if the message FIFO is actually writable by software, i.e., if all of the following conditions are met:
@@ -420,7 +420,6 @@ addrmap sha3_reg {
             For the interrupt to be raised, the message FIFO must also have been full previously.
             Otherwise, the hardware empties the FIFO faster than software can fill it 
             and there is no point in interrupting the software to inform it about the message FIFO being empty.";
-               sw = r;
         } notif_msg_fifo_empty_sts = 1'b0;
     };
 
