@@ -82,8 +82,8 @@ addrmap sha3_reg {
             sw = rw;
             reset = 0x0;
             desc = "Hashing Strength, Protected by CFG_REGWEN.en
-            bit field to select the security strength of SHA3 hashing engine. 
-            If mode field is set to SHAKE, only 128 and 256 strength can be selected. 
+            bit field to select the security strength of SHA3 hashing engine.
+            If mode field is set to SHAKE, only 128 and 256 strength can be selected.
             Other value will result error when hashing starts.";
             enum kstrength_type{
                 // | Value | Name | Description |
@@ -105,7 +105,7 @@ addrmap sha3_reg {
             sw = rw;
             reset = 0x0;
             desc = "Keccak hashing mode, Protected by CFG_REGWEN.en
-            This module supports SHA3 main hashing algorithm and the part of its derived functions, 
+            This module supports SHA3 main hashing algorithm and the part of its derived functions,
             SHAKE with limitations. This field is to select the mode.";
             enum sha3_mode_type{
                 // | Value | Name | Description |
@@ -151,7 +151,7 @@ addrmap sha3_reg {
 
     reg {
         name = "SHA3/SHAKE component command register";
-        default hw = r; 
+        default hw = r;
         field {
             sw = rw;
             reset = 0x0;
@@ -196,7 +196,7 @@ addrmap sha3_reg {
     } CMD @ 0x28;
 
     reg {
-        default hw = w; 
+        default hw = w;
         name = "SHA3/SHAKE component status register";
         field {
             sw = r;
@@ -410,7 +410,7 @@ addrmap sha3_reg {
         default woclr = true;
         default level intr;
 
-        field {desc = "SHA3 cmd_done indicate 
+        field {desc = "SHA3 cmd_done indicate
             1. SHA3 absorbing has been completed, 1st rate of digest is ready.";
         } notif_cmd_done_sts = 1'b0;
         field {desc = "MSG_FIFO Empty Interrupt status bit.
