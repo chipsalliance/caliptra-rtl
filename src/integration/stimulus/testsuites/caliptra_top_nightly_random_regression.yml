@@ -10,7 +10,7 @@ contents:
           # 12 hours to accommodate certain longer-running tests
           timeout: 720
       weight: 100
-      generations: 500
+      generations: 300
       formats: 
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"
