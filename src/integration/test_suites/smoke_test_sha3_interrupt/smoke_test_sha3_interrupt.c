@@ -28,6 +28,9 @@ volatile uint32_t  intr_count       = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+// Essentially a retry count to check whether the interrupt is fired.
+#define INTERRUPT_TIMEOUT (100)
+
 void main() {
     dif_kmac_operation_state_t operation_state;
     uint32_t digest;
@@ -51,7 +54,7 @@ void main() {
     dif_kmac_squeeze(CLP_KMAC_BASE_ADDR, &operation_state, &digest, sizeof(uint32_t), /*processed=*/NULL, /*capacity=*/NULL);
     dif_kmac_end(CLP_KMAC_BASE_ADDR, &operation_state);
 
-    if (cptra_intr_rcv.sha3_notif | KMAC_INTR_STATE_KMAC_DONE_MASK) {
+    if (cptra_intr_rcv.sha3_notif & KMAC_INTR_STATE_KMAC_DONE_MASK) {
         VPRINTF(LOW, "Successfully received command done interrupt.\n");
     } else {
         VPRINTF(LOW, "ERROR: expected KMAC DONE interrupt.\n");
@@ -63,32 +66,38 @@ void main() {
     //////////////////////////////////
     // Enable FIFO empty interrupt. //
     //////////////////////////////////
+    // Currently we cannot fill the FIFO using just 32-bit writes, so test the empty interrupt using the interrupt test register.
     lsu_write_32(CLP_KMAC_INTR_ENABLE, KMAC_INTR_ENABLE_FIFO_EMPTY_MASK);
-
-    // Get SHA3 block into the absorbing state.
-    dif_kmac_mode_sha3_start(CLP_KMAC_BASE_ADDR, &operation_state, kDifKmacModeSha3Len224, kDifKmacMsgEndiannessLittle);
-    // Fill up message FIFO.
-    for (int i = 0; i < 2*KMAC_PARAM_NUM_ENTRIES_MSG_FIFO*KMAC_PARAM_NUM_BYTES_MSG_FIFO_ENTRY; ++i) {
-        lsu_write_32(CLP_KMAC_MSG_FIFO_BASE_ADDR, 0);
+    lsu_write_32(CLP_KMAC_INTR_TEST, KMAC_INTR_TEST_FIFO_EMPTY_MASK);
+    // Check that the FIFO empty interrupt has been triggered.
+    for (int i = 0; i < INTERRUPT_TIMEOUT; ++i) {
+        if (cptra_intr_rcv.sha3_notif & KMAC_INTR_STATE_FIFO_EMPTY_MASK) {
+            VPRINTF(LOW, "Successfully received message FIFO empty interrupt.\n");
+            break;
+        }
     }
-    // Hopefully this will trigger the empty FIFO when it happens.
-    while ((cptra_intr_rcv.sha3_notif | KMAC_INTR_STATE_FIFO_EMPTY_MASK) == 0) {
+    if (!(cptra_intr_rcv.sha3_notif & KMAC_INTR_STATE_FIFO_EMPTY_MASK)) {
+        VPRINTF(LOW, "ERROR: expected KMAC empty interrupt.\n");
+        // Write 0x1 to STDOUT for TB to fail test.
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
     }
-    VPRINTF(LOW, "Successfully received message FIFO empty interrupt.\n");
-    dif_kmac_squeeze(CLP_KMAC_BASE_ADDR, &operation_state, &digest, sizeof(uint32_t), /*processed=*/NULL, /*capacity=*/NULL);
-    dif_kmac_end(CLP_KMAC_BASE_ADDR, &operation_state);
 
     /////////////////////////////
     // Enable error interrupt. //
     /////////////////////////////
-    lsu_write_32(CLP_KMAC_INTR_ENABLE, KMAC_INTR_ENABLE_FIFO_EMPTY_MASK);
+    lsu_write_32(CLP_KMAC_INTR_ENABLE, KMAC_INTR_ENABLE_KMAC_ERR_MASK);
 
     // Send process command before start, which should cause an error.
     lsu_write_32(CLP_KMAC_CMD, KMAC_CMD_CMD_VALUE_PROCESS << KMAC_CMD_CMD_LOW);
 
-    if (cptra_intr_rcv.sha3_error | KMAC_INTR_ENABLE_KMAC_ERR_MASK) {
-        VPRINTF(LOW, "Successfully received expected interrupt for KMAC which is not a notification.\n");
-    } else {
+    for (int i = 0; i < INTERRUPT_TIMEOUT; ++i) {
+        if (cptra_intr_rcv.sha3_error & KMAC_INTR_ENABLE_KMAC_ERR_MASK) {
+            VPRINTF(LOW, "Successfully received expected interrupt for KMAC which is not a notification.\n");
+            break;
+        }
+    }
+    if (!(cptra_intr_rcv.sha3_error & KMAC_INTR_ENABLE_KMAC_ERR_MASK)) {
         VPRINTF(LOW, "ERROR: expected KMAC error interrupt.\n");
         // Write 0x1 to STDOUT for TB to fail test.
         SEND_STDOUT_CTRL(0x1);

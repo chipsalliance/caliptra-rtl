@@ -565,7 +565,7 @@ package sha3_reg_uvm;
             this.notif_cmd_done_sts = new("notif_cmd_done_sts");
             this.notif_cmd_done_sts.configure(this, 1, 0, "W1C", 1, 'h0, 1, 1, 0);
             this.notif_msg_fifo_empty_sts = new("notif_msg_fifo_empty_sts");
-            this.notif_msg_fifo_empty_sts.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+            this.notif_msg_fifo_empty_sts.configure(this, 1, 1, "W1C", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_cmd_done_sts_bit_cg[bt]) notif_cmd_done_sts_bit_cg[bt] = new();
                 foreach(notif_msg_fifo_empty_sts_bit_cg[bt]) notif_msg_fifo_empty_sts_bit_cg[bt] = new();
