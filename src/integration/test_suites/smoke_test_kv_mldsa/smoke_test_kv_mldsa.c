@@ -504,6 +504,7 @@ void main() {
     uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], entropy[MLDSA87_ENTROPY_SIZE], privkey[MLDSA87_PRIVKEY_SIZE], pubkey[MLDSA87_PUBKEY_SIZE], msg[MLDSA87_MSG_SIZE], sign[MLDSA87_SIGN_SIZE], verify_res[MLDSA_VERIFY_RES_SIZE];
 
     seed.kv_intf = TRUE;
+    seed.exp_kv_err = FALSE;
     seed.kv_id = 6;
 
     for (int i = 0; i < MLDSA87_SIGN_RND_SIZE; i++)
@@ -527,9 +528,8 @@ void main() {
     for (int i = 0; i < MLDSA_VERIFY_RES_SIZE; i++)
         verify_res[i] = mldsa_verify_res[MLDSA_VERIFY_RES_SIZE-1-i];
 
-    //inject mldsa seed to kv key reg (in RTL)
-    uint8_t key_inject_cmd = 0xc0 + (seed.kv_id & 0x7);
-    SEND_STDOUT_CTRL(key_inject_cmd);
+    //Inject MLDSA SEED vectors into KV
+    lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xc0);
 
     // mldsa_keygen_flow(seed, entropy, privkey, pubkey);
     // mldsa_zeroize();

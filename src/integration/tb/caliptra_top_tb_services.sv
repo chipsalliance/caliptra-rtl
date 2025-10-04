@@ -378,7 +378,8 @@ module caliptra_top_tb_services
     //         8'hb9        - Enable scan mode and run DOE back to back
     //         8'hba        - Enable scan mode with KV write
     //         8'hbb:bf     - Unused
-    //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
+    //         8'hc0:       - Inject MLDSA_SEED to kv_key register
+    //         8'hc1: 8'hc7 - Unused
     //         8'hc8        - Inject key 0x0 into slot 16 for AES
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
@@ -829,10 +830,10 @@ module caliptra_top_tb_services
                         end
                     end
                     //inject valid mldsa seed dest and mldsa_seed value to key reg
-                    else if(((WriteData[7:0] & 8'hf8) == 8'hc0) && mailbox_write) begin
+                    else if((WriteData[7:0] == 8'hc0) && mailbox_write) begin
                         inject_mldsa_seed <= 1'b1;
                         release_kv_inject_flags <= '0;
-                        if (((WriteData[7:0] & 8'h07) == slot_id)) begin
+                        if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b0000_0100;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;

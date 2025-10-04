@@ -508,6 +508,7 @@ void kv_mldsa(uint8_t seed_id){
     //******************************************************************     
 
     seed.kv_intf = TRUE;
+    seed.exp_kv_err = FALSE;
     seed.kv_id = seed_id;
 
     for (int i = 0; i < MLDSA87_ENTROPY_SIZE; i++)

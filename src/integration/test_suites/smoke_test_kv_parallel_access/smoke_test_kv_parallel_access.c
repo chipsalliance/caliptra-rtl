@@ -256,8 +256,7 @@ void main(){
     
     VPRINTF(LOW,"MLDSA Preparation **************\n");
     //inject mldsa seed to kv key reg (in RTL)
-    uint8_t mldsa_seed_inject_cmd = 0xc0 + (mldsa_seed_id & 0x7);
-    SEND_STDOUT_CTRL( mldsa_seed_inject_cmd);
+    lsu_write_32(STDOUT, (mldsa_seed_id << 8) | 0xc0);
 
     lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((mldsa_seed_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
@@ -265,7 +264,6 @@ void main(){
     VPRINTF(LOW,"MLKEM Preparation **************\n");
     //inject mldsa seed to kv key reg (in RTL)
     lsu_write_32(STDOUT, (mlkem_seed_id << 8) | 0xb1);
-    SEND_STDOUT_CTRL( mlkem_seed_id);
 
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((mlkem_seed_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));

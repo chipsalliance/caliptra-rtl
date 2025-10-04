@@ -247,31 +247,55 @@ module caliptra_top_sva
 
           kv_mlkem_sharedkey_w_std_to_std_flow: assert property (
                                                 @(posedge `SVA_RDC_CLK)
-                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_read[2].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> `ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & 
+                                                ((`ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data0_present & `ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data0_entry <= KV_STANDARD_SLOT_HI) |
+                                                 (`ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data1_present & `ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data1_entry <= KV_STANDARD_SLOT_HI)) &
+                                                (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> 
+                                                `ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & 
+                                                (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
                                                 )
                                     else $display("SVA ERROR: MLKEM sharedkey mismatch for STD to STD flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);
 
           kv_mlkem_sharedkey_lock_to_lock_nonkv23_flow: assert property (
                                                 @(posedge `SVA_RDC_CLK)
-                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_read[2].read_entry >= KV_OCP_LOCK_SLOT_LOW) & ((`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> `ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & 
+                                                ((`ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data0_present & `ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data0_entry >= KV_OCP_LOCK_SLOT_LOW) |
+                                                 (`ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data1_present & `ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data1_entry >= KV_OCP_LOCK_SLOT_LOW)) &
+                                                ((`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) & 
+                                                 (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry != OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> 
+                                                 `ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & 
+                                                 (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value == `ABR_PATH.mlkem_sharedkey_data[dword])
                                                 )
                                     else $display("SVA ERROR: MLKEM sharedkey mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);
 `ifndef VERILATOR
-          kv_mlkem_sharedkey_lock_to_lock_kv23_flow: assert property (
+          kv_mlkem_sharedkey_kv23_flow: assert property (
                                                 @(posedge `SVA_RDC_CLK)
-                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_read[2].read_entry >= KV_OCP_LOCK_SLOT_LOW) & ((`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value,16))
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & 
+                                                ((`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) |-> 
+                                                ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & 
+                                                $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value,16))
                                                 )
                                     else $display("SVA ERROR: MLKEM sharedkey mismatch for LOCK to LOCK flow in OCP LOCK mode!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, `ABR_PATH.mlkem_sharedkey_data[dword]);
 
           kv_mlkem_sharedkey_w_lock_to_std_illegal_flow: assert property (
                                                 @(posedge `SVA_RDC_CLK)
-                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_read[2].read_entry >= KV_OCP_LOCK_SLOT_LOW) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & 
+                                                ((`ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data0_present & `ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data0_entry >= KV_OCP_LOCK_SLOT_LOW) |
+                                                 (`ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data1_present & `ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data1_entry >= KV_OCP_LOCK_SLOT_LOW)) &
+                                                (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry <= KV_STANDARD_SLOT_HI) |-> 
+                                                ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & 
+                                                $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, 16))
                                                 )
                                     else $display("SVA ERROR: Unexpected MLKEM sharedkey write to illegal slot in LOCK to STD flow in OCP LOCK mode!");
 
           kv_mlkem_sharedkey_w_std_to_lock_illegal_flow: assert property (
                                                 @(posedge `SVA_RDC_CLK)
-                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & (`ABR_PATH.kv_read[1].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_read[2].read_entry <= KV_STANDARD_SLOT_HI) & (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, 16))
+                                                (`ABR_PATH.kv_mlkem_sharedkey_done & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) & 
+                                                ((`ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data0_present & `ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data0_entry <= KV_STANDARD_SLOT_HI) |
+                                                 (`ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data1_present & `ABR_PATH.kv_mlkem_sharedkey_write_metrics.kv_data1_entry <= KV_STANDARD_SLOT_HI)) &
+                                                (`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry >= KV_OCP_LOCK_SLOT_LOW) |-> 
+                                                ~`ABR_PATH.kv_mlkem_sharedkey_write_inst.kv_write_rules.write_allow & 
+                                                $stable($past(`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ABR_PATH.kv_mlkem_sharedkey_write_ctrl_reg.write_entry][dword].data.value, 16))
                                                 )
                                     else $display("SVA ERROR: Unexpected MLKEM sharedkey write to illegal slot in STD to LOCK flow in OCP LOCK mode!");
           

@@ -385,6 +385,7 @@ void main() {
     uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE], entropy[MLDSA87_ENTROPY_SIZE], privkey[MLDSA87_PRIVKEY_SIZE], msg[MLDSA87_MSG_SIZE], sign[MLDSA87_SIGN_SIZE];
 
     seed.kv_intf = FALSE;
+    seed.exp_kv_err = FALSE;
     for (int i = 0; i < MLDSA87_SEED_SIZE; i++)
         seed.data[i] = mldsa_seed[i];
 

@@ -196,6 +196,7 @@ uint32_t mldsa_privkey[] = {
 
 mldsa_io mldsa_seed = {
     .kv_intf = FALSE,
+    .exp_kv_err = FALSE,
     .data = {
         0x9340000a, 0x675fd127, 0x37071d12, 0x3fcee4d5, 0xa243fe28, 0x0768f0d4, 0x46768a85, 0x2d5cf89c
     }
