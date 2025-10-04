@@ -215,7 +215,7 @@ void main() {
     hmac_io hmac512_lfsr_seed;
     hmac_io hmac512_tag;
 
-    for(int i = 0; i < 10; i++) {
+    for(int i = 0; i < 20; i++) {
         VPRINTF(LOW, "START TEST %d\n", i);
         hmac512_key.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
         hmac512_key.kv_id = xorshift32() % 24;
@@ -243,6 +243,13 @@ void main() {
                 hmac512_tag.data[i] = hmac512_expected_tag[i];
         }
 
+        // --- Force values in the first iteration --
+        if (i < 3) {
+            hmac512_key.kv_id     = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
+            hmac512_block.kv_id   = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
+            hmac512_tag.kv_id     = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
+        }
+
         //inject hmac512_key to kv key reg (in RTL)
         lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
         //inject hmac512_block to kv key reg (in RTL)
@@ -254,6 +261,8 @@ void main() {
 
         hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
         hmac_zeroize();
+        cptra_intr_rcv.hmac_error = 0;
+        cptra_intr_rcv.hmac_notif = 0;
     }
 
     SEND_STDOUT_CTRL(0xff); //End the test
