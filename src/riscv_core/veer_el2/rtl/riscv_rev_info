@@ -1,5 +1,8 @@
-commit c5c004589ee0a308b63278ee609e1597f61a4143
-Author: Karol Gugala <kgugala@antmicro.com>
-Date:   Tue Jan 14 14:36:27 2025 +0100
+commit 7f7b0cbb5f13f6a2589918a7628c38b439969b30 (HEAD -> 2.0-ahb-fix)
+Author: Robert Szczepanski <rszczepanski@antmicro.com>
+Date:   Fri Apr 4 10:45:45 2025 +0200
 
-    This commit is tagged as release 2.0 as requested by Microsoft. Updated docs
+    Prefix design file names when prefixing VeeR macros
+
+NOTE: This commit is from the 2.0-ahb-fix branch as part of the Pull Request:
+https://github.com/chipsalliance/Cores-VeeR-EL2/pull/423
