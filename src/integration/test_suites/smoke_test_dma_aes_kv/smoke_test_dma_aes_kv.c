@@ -134,7 +134,6 @@ void main(void) {
             if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_byte_count_kv))    { fail = 1; } // Can only be tested after IN PROGRESS has been set
             if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_wr_fixed_kv))      { fail = 1; } // Can only be tested after IN PROGRESS has been set
         }
-        SEND_STDOUT_CTRL(0xff);
 
         VPRINTF(FATAL, "Enable random delays in AXI\n");
         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
