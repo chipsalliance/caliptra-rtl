@@ -626,8 +626,10 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
     uint64_t dst_addr;
     uint32_t rd_route;
     uint32_t wr_route;
+    uint8_t tmp_val;
     uint8_t  rd_fixed;
     uint8_t  wr_fixed;
+    uint8_t aes_mode;
     uint32_t byte_count;
     uint16_t block_size;
 
@@ -637,6 +639,7 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
         dst_addr = 0x4000; // MBOX base address
     } else if (err_type == cmd_inv_dst_addr) {
         dst_addr = AXI_SRAM_BASE_ADDR + 0x4000 + 0x3; // SRAM address
+
     } else if (err_type == cmd_inv_dst_addr_kv) {
         uint64_t forbidden_addr = lsu_read_32(CLP_SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_H);
         forbidden_addr = (forbidden_addr << 32) |
@@ -653,7 +656,7 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
 
     if(err_type == cmd_inv_rd_fixed) {
         rd_route = axi_dma_rd_route_DISABLE;
-    } else if (err_type == cmd_inv_route_combo) {
+    } else if (err_type == cmd_inv_route_combo || err_type == cmd_inv_wr_fixed || err_type == cmd_inv_aes_route_combo) {
         rd_route = axi_dma_rd_route_AHB_FIFO;
     } else if (err_type == cmd_inv_mbox_lock) {
         rd_route = axi_dma_rd_route_MBOX;
@@ -665,12 +668,10 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
         rd_route = axi_dma_rd_route_AXI_WR; // Default to valid route
     }
 
-    if(err_type == cmd_inv_wr_fixed) {
+    if(err_type == cmd_inv_wr_fixed || err_type == cmd_inv_mbox_lock || err_type == cmd_inv_aes_route_combo) {
         wr_route = axi_dma_wr_route_DISABLE;
-    } else if (err_type == cmd_inv_route_combo) {
+    } else if (err_type == cmd_inv_route_combo  || err_type == cmd_inv_rd_fixed) {
         wr_route = axi_dma_wr_route_AHB_FIFO;
-    } else if (err_type == cmd_inv_mbox_lock) {
-        wr_route = axi_dma_wr_route_DISABLE;
     } else if (err_type == cmd_inv_wr_route_kv || err_type == cmd_inv_byte_count_kv || err_type == cmd_inv_dst_addr_kv || err_type == cmd_inv_wr_fixed_kv || err_type ==  cmd_inv_route_combo_kv || err_type == cmd_inv_byte_count_kv_large) {
         wr_route = axi_dma_wr_route_KEYVAULT; // Invalid becasue OCP LOCK IN PROGRESS not set
     } else if (err_type == cmd_inv_wr_route_invld_range) {
@@ -679,8 +680,13 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
     } else {
         wr_route = axi_dma_wr_route_AXI_RD; // Default to valid route
     }
-    rd_fixed   = err_type == cmd_inv_rd_fixed;
-    wr_fixed   = err_type == cmd_inv_wr_fixed || err_type == cmd_inv_wr_fixed_kv;
+
+
+    if(err_type == cmd_inv_aes_fixed){
+        tmp_val = rand() % 1;
+    }
+    rd_fixed   = err_type == cmd_inv_rd_fixed || (err_type == cmd_inv_aes_fixed && tmp_val == 0);
+    wr_fixed   = err_type == cmd_inv_wr_fixed || err_type == cmd_inv_wr_fixed_kv || (err_type == cmd_inv_aes_fixed && tmp_val == 1);
     if (err_type == cmd_inv_byte_count) {
         byte_count = 0x43; // Invalid byte count
     } else if (err_type == cmd_inv_byte_count_kv) {
@@ -694,16 +700,21 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
     } else {
         byte_count = 0x40; // Default valid byte count
     }
-    block_size = (err_type == cmd_inv_block_size) ? 0x13 : 0x00;
+    block_size = (err_type == cmd_inv_block_size)     ? 0x13 : 
+                 (err_type == cmd_inv_aes_block_size) ? 0x4  : 0x00;
 
-    VPRINTF(HIGH, "param: src_addr   0x%x 0x%x\n", (uint32_t) (src_addr >> 32) , (uint32_t) (src_addr & 0xffffffff));
-    VPRINTF(HIGH, "param: dst_addr   0x%x 0x%x\n", (uint32_t) (dst_addr >> 32) , (uint32_t) (dst_addr & 0xffffffff));
-    VPRINTF(HIGH, "param: rd_route   0x%x\n"     , rd_route  );
-    VPRINTF(HIGH, "param: wr_route   0x%x\n"     , wr_route  );
-    VPRINTF(HIGH, "param: rd_fixed   0x%x\n"     , rd_fixed  );
-    VPRINTF(HIGH, "param: wr_fixed   0x%x\n"     , wr_fixed  );
-    VPRINTF(HIGH, "param: byte_count 0x%x\n"     , byte_count);
-    VPRINTF(HIGH, "param: block_size 0x%x\n"     , block_size);
+    aes_mode = (err_type == cmd_inv_aes_route_combo) || (err_type == cmd_inv_aes_block_size) || (err_type == cmd_inv_aes_fixed); 
+
+    VPRINTF(LOW, "param: err_type   0x%x\n"     , err_type  );
+    VPRINTF(LOW, "param: src_addr   0x%x 0x%x\n", (uint32_t) (src_addr >> 32) , (uint32_t) (src_addr & 0xffffffff));
+    VPRINTF(LOW, "param: dst_addr   0x%x 0x%x\n", (uint32_t) (dst_addr >> 32) , (uint32_t) (dst_addr & 0xffffffff));
+    VPRINTF(LOW, "param: rd_route   0x%x\n"     , rd_route  );
+    VPRINTF(LOW, "param: wr_route   0x%x\n"     , wr_route  );
+    VPRINTF(LOW, "param: rd_fixed   0x%x\n"     , rd_fixed  );
+    VPRINTF(LOW, "param: wr_fixed   0x%x\n"     , wr_fixed  );
+    VPRINTF(LOW, "param: aes_mode   0x%x\n"     , aes_mode  );
+    VPRINTF(LOW, "param: byte_count 0x%x\n"     , byte_count);
+    VPRINTF(LOW, "param: block_size 0x%x\n"     , block_size);
 
     // Disable txn_done interrupt since we'll poll it
     reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
@@ -718,10 +729,11 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
     lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_H, (dst_addr >> 32) & 0xffffffff);
     lsu_write_32(CLP_AXI_DMA_REG_BYTE_COUNT, byte_count);
     lsu_write_32(CLP_AXI_DMA_REG_BLOCK_SIZE, (uint32_t) block_size);
-    reg = (AXI_DMA_REG_CTRL_GO_MASK)                      |
-          (rd_route << AXI_DMA_REG_CTRL_RD_ROUTE_LOW)     |
-          (wr_route << AXI_DMA_REG_CTRL_WR_ROUTE_LOW)     |
-          (rd_fixed ? AXI_DMA_REG_CTRL_RD_FIXED_MASK : 0) |
+    reg = (AXI_DMA_REG_CTRL_GO_MASK)                            |
+          (rd_route << AXI_DMA_REG_CTRL_RD_ROUTE_LOW)           |
+          (wr_route << AXI_DMA_REG_CTRL_WR_ROUTE_LOW)           |
+          (aes_mode  ? AXI_DMA_REG_CTRL_AES_MODE_EN_MASK : 0)   |
+          (rd_fixed ? AXI_DMA_REG_CTRL_RD_FIXED_MASK : 0)       |
           (wr_fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0);
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
 
