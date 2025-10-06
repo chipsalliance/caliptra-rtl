@@ -135,7 +135,7 @@ ifdef debug
 endif
 
 ifdef coverage
-COVERAGE_ARGS = -cm line+cond+fsm+tgl+branch+assert
+COVERAGE_ARGS = -cm line+cond+fsm+tgl+branch+assert -cm_hier $(CALIPTRA_ROOT)/src/integration/coverage/config/caliptra_top_tb_cm_hier.cfg
 endif
 
 # RK
