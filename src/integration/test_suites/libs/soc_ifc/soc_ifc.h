@@ -71,6 +71,7 @@ enum err_inj_type {
     cmd_inv_wr_route_invld_range    ,
     cmd_inv_route_combo ,
     cmd_inv_route_combo_kv ,
+    cmd_inv_aes_route_combo ,
     cmd_inv_src_addr    ,
     cmd_inv_dst_addr    ,
     cmd_inv_dst_addr_kv ,
@@ -80,7 +81,9 @@ enum err_inj_type {
     cmd_inv_rd_fixed    ,
     cmd_inv_wr_fixed    ,
     cmd_inv_wr_fixed_kv ,
+    cmd_inv_aes_fixed  ,
     cmd_inv_block_size,
+    cmd_inv_aes_block_size,
     cmd_inv_mbox_lock
 //    cmd_inv_sha_lock
 };
