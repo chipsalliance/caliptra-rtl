@@ -161,8 +161,7 @@ void main(void) {
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_aes_fixed  )) { fail = 1; }
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_mbox_lock  )) { fail = 1; }
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_wr_route_invld_range)) { fail = 1; }
-        SEND_STDOUT_CTRL(0xFF);
-
+    
         // ===========================================================================
         // If reset was executed, try to run another simple DMA test to check for life
         // ===========================================================================
