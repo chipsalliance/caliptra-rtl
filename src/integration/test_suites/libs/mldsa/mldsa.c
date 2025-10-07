@@ -109,8 +109,8 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     // // wait for MLDSA KEYGEN process to be done
     wait_for_mldsa_intr();
     
-    //Only check the result if the seed was not read from KV or no error was expected
-    if (seed.kv_intf == FALSE || seed.exp_kv_err == FALSE) {
+    //Only check the PRIVKEY result if the seed was not read from KV
+    if (seed.kv_intf == FALSE) {
         // Read the data back from MLDSA register
         VPRINTF(LOW, "Load PRIVKEY data from MLDSA\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
@@ -130,7 +130,7 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     }
 
     // Read the data back from MLDSA register
-    //Only check the result if the seed was not read from KV or no error was expected
+    //Only check the PUBKEY result if the seed was not read from KV or no error was expected
     if (seed.kv_intf == FALSE || seed.exp_kv_err == FALSE) {
         VPRINTF(LOW, "Load PUBKEY data from MLDSA\n");
         reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_PUBKEY_BASE_ADDR;
