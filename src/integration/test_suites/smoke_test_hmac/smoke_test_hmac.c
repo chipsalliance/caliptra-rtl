@@ -29,7 +29,28 @@ volatile uint32_t  intr_count       = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+uint32_t block1[32] =   {0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000};
 
+uint32_t block2[32] =   {0x80000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000000,
+                         0x00000000,0x00000000,0x00000000,0x00000800};
+
+uint32_t tag2[16] =     {0xae8abbdf,0xb0df008f,0x9c0d7dff,0x39c68ee9,
+                         0xf199bf1a,0x31295434,0x6fd8d261,0xc21a7f02,
+                         0x586c64ee,0xf6be4644,0xec3ce81b,0xa8ffdbf3,
+                         0x1c3bbd1d,0xd623fe89,0x027e3e25,0x93b0edd8};
 void main() {
 
     //this is the key 384-bit
@@ -158,23 +179,19 @@ void main() {
     hmac_io hmac512_tag;
 
     hmac384_key.kv_intf = FALSE;
-    hmac384_key.data_size = 12;
-    for (int i = 0; i < hmac384_key.data_size; i++)
+    for (int i = 0; i < HMAC384_KEY_SIZE; i++)
         hmac384_key.data[i] = key384_data[i];
 
     hmac_block.kv_intf = FALSE;
-    hmac_block.data_size = 32;
-    for (int i = 0; i < hmac_block.data_size; i++)
+    for (int i = 0; i < HMAC384_BLOCK_SIZE; i++)
         hmac_block.data[i] = block_data[i];
 
     hmac_lfsr_seed.kv_intf = FALSE;
-    hmac_lfsr_seed.data_size = 12;
-    for (int i = 0; i < hmac_lfsr_seed.data_size; i++)
+    for (int i = 0; i < HMAC384_LFSR_SEED_SIZE; i++)
         hmac_lfsr_seed.data[i] = lfsr_seed_data[i];
 
     hmac384_tag.kv_intf = FALSE;
-    hmac384_tag.data_size = 12;
-    for (int i = 0; i < hmac384_tag.data_size; i++)
+    for (int i = 0; i < HMAC384_TAG_SIZE; i++)
         hmac384_tag.data[i] = expected384_tag[i];
 
 
@@ -188,24 +205,38 @@ void main() {
     VPRINTF(LOW, "----------------------------------\n");
 
     hmac512_key.kv_intf = FALSE;
-    hmac512_key.data_size = 16;
-    for (int i = 0; i < hmac512_key.data_size; i++)
+    for (int i = 0; i < HMAC512_KEY_SIZE; i++)
         hmac512_key.data[i] = key512_data[i];
 
     hmac512_tag.kv_intf = FALSE;
-    hmac512_tag.data_size = 16;
-    for (int i = 0; i < hmac512_tag.data_size; i++)
+    for (int i = 0; i < HMAC512_TAG_SIZE; i++)
         hmac512_tag.data[i] = expected512_tag[i];
 
     hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
     hmac_zeroize();
 
     hmac512_key.kv_intf = FALSE;
-    hmac512_key.data_size = 16;
-    for (int i = 0; i < hmac512_key.data_size; i++)
+    for (int i = 0; i < HMAC512_KEY_SIZE; i++)
         hmac512_key.data[i] = 0x12345678;
 
     hmac512_flow_csr(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
+    hmac_zeroize();
+
+    hmac512_key.kv_intf = FALSE;
+    for (int i = 0; i < HMAC512_KEY_SIZE; i++)
+        hmac512_key.data[i] = key512_data[i];
+    hmac_block.kv_intf = FALSE;
+    for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
+        hmac_block.data[i] = block1[i];
+    hmac_block.exp_kv_err = TRUE; // just to avoid checking the results. TODO: remove this
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
+    hmac_block.kv_intf = FALSE;
+    for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
+        hmac_block.data[i] = block2[i];
+    hmac512_tag.kv_intf = FALSE;
+    for (int i = 0; i < HMAC512_TAG_SIZE; i++)
+        hmac512_tag.data[i] = tag2[i];        
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, FALSE);
     hmac_zeroize();
 
     // Write 0xff to STDOUT for TB to terminate test.
