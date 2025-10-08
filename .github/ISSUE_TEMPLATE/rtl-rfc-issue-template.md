@@ -22,11 +22,11 @@ assignees: ''
 [edit] The motivation and justification for the change, including why it is important to include in a specific Caliptra release version.
 
 ## Implementation Tradeoffs
-[edit] Details of various implementations being considered. Explain why the proposed change can not be handled outside of Caliptra.
+[edit] Details of various implementations being considered. Explain why the proposed change can not be handled outside of Caliptra.<BR>
 [optional - if available] Links to any development work already completed and accompanying test results.
 
 ## Implementation Timeline
-[edit] A realistic estimate for completion. May include multiple milestones if a large change requires many Pull Requests.
+[edit] A realistic estimate for completion. May include multiple milestones if a large change requires many Pull Requests.<BR>
 [edit] Which MAJOR.MINOR release is this intended for inclusion?
 
 ## [optional - for hw/fw changes] Test Plan
