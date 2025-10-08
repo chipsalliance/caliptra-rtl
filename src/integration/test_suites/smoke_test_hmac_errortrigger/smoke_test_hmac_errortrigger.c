@@ -20,6 +20,7 @@
 #include <stdint.h>
 #include "printf.h"
 #include "hmac.h"
+#include "caliptra_rtl_lib.h"
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -32,8 +33,15 @@ volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+#ifdef MY_RANDOM_SEED
+    unsigned time = (unsigned) MY_RANDOM_SEED;
+#else
+    unsigned time = 0;
+#endif
 
 void main() {
+
+    srand(time);
 
     //Call interrupt init
     init_interrupts();
@@ -44,8 +52,12 @@ void main() {
     VPRINTF(LOW, "----------------------------------\n");
 
     volatile uint32_t * reg_ptr;
-    uint8_t key_slot = 5;
+    uint8_t key_slot = xorshift32() % 24;
     uint8_t key_inject_cmd;
+    uint8_t offset;
+    uint8_t fail_cmd = 0x1;
+
+    VPRINTF(LOW, "Key KV ID: %d\n", key_slot);
 
     if(rst_count == 0) {
         VPRINTF(LOW, " ***** HMAC512 key_zero_error !!\n");
@@ -137,6 +149,69 @@ void main() {
             while(1);
         }
         hmac_zeroize();
+        //Issue warm reset
+        rst_count++;
+        SEND_STDOUT_CTRL(0xf6);
+    }
+    if(rst_count == 3) {
+        VPRINTF(LOW, " ***** HMAC ZEROIZE !!\n");
+        
+        //inject hmac512_key to kv key reg (in RTL)
+        lsu_write_32(STDOUT, (key_slot << 8) | 0xa9); 
+
+        // wait for HMAC to be ready
+        while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
+
+        // Program KEY Read from key_kv_id
+        lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
+                                                        ((key_slot << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+
+        // Check that HMAC KEY is loaded
+        while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) == 0);
+
+        // Enable HMAC core zeroize
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK);
+        // wait for HMAC process to be done
+        while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
+
+        // Load TAG data from HMAC
+        VPRINTF(LOW, "Load TAG data from HMAC\n");
+        reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {
+            if (*reg_ptr != 0) {
+                VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+            reg_ptr++;
+            offset++;
+        }
+
+        // Enable HMAC core zeroize
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK);
+        // wait for HMAC process to be done
+        while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
+
+        // Load TAG data from HMAC
+        VPRINTF(LOW, "Load TAG data from HMAC\n");
+        reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
+        offset = 0;
+        while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {
+            if (*reg_ptr != 0) {
+                VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+            reg_ptr++;
+            offset++;
+        }
     }
     // Write 0xff to STDOUT for TB to terminate test.
     SEND_STDOUT_CTRL( 0xff);
