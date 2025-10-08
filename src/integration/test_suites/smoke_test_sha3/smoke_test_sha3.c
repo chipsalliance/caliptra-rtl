@@ -205,7 +205,11 @@ void run_sha3_test(uintptr_t kmac) {
 void run_sha3_alignment_test(uintptr_t kmac) {
   // Examples taken from NIST FIPS-202 Algorithm Test Vectors:
   // https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/sha3/sha-3bytetestvectors.zip
-  const char kMsg[] = {0xa7, 0x48, 0x47, 0x93, 0x0a, 0x03, 0xab, 0xee, 0xa4, 0x73, 0xe1, 0xf3, 0xdc, 0x30, 0xb8, 0x88, 0x15};
+  const char kMsg[] = {0xa7, 0x48, 0x47, 0x93,
+                       0x0a, 0x03, 0xab, 0xee,
+                       0xa4, 0x73, 0xe1, 0xf3,
+                       0xdc, 0x30, 0xb8, 0x88,
+                       0x15};
   const size_t kSize = sizeof(kMsg) / sizeof(char);
   const uint32_t kExpect = 0x29f9a6db;
   const dif_kmac_mode_sha3_t kMode = kDifKmacModeSha3Len384;
