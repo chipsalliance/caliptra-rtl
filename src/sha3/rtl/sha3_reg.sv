@@ -964,6 +964,9 @@ module sha3_reg (
         end else if(hwif_in.intr_block_rf.notif_internal_intr_r.notif_msg_fifo_empty_sts.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
+        end else if(decoded_reg_strb.intr_block_rf.notif_internal_intr_r && decoded_req_is_wr) begin // SW write 1 clear
+            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_msg_fifo_empty_sts.value & ~(decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
+            load_next_c = '1;
         end
         field_combo.intr_block_rf.notif_internal_intr_r.notif_msg_fifo_empty_sts.next = next_c;
         field_combo.intr_block_rf.notif_internal_intr_r.notif_msg_fifo_empty_sts.load_next = load_next_c;

@@ -72,8 +72,8 @@ void main() {
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
     VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
-    //1 in 4 tests will get data from FW
-    read_from_kv = ((xorshift32() % 4) == 0) ? TRUE : FALSE;
+    //3 in 4 tests will get data from KV
+    read_from_kv = ((xorshift32() % 4) == 0) ? FALSE : TRUE;
     //1 in 2 tests will set ocp lock in progress
     ocp_progress_bit = xorshift32() % 2;
 

@@ -705,16 +705,16 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
 
     aes_mode = (err_type == cmd_inv_aes_route_combo) || (err_type == cmd_inv_aes_block_size) || (err_type == cmd_inv_aes_fixed); 
 
-    VPRINTF(LOW, "param: err_type   0x%x\n"     , err_type  );
-    VPRINTF(LOW, "param: src_addr   0x%x 0x%x\n", (uint32_t) (src_addr >> 32) , (uint32_t) (src_addr & 0xffffffff));
-    VPRINTF(LOW, "param: dst_addr   0x%x 0x%x\n", (uint32_t) (dst_addr >> 32) , (uint32_t) (dst_addr & 0xffffffff));
-    VPRINTF(LOW, "param: rd_route   0x%x\n"     , rd_route  );
-    VPRINTF(LOW, "param: wr_route   0x%x\n"     , wr_route  );
-    VPRINTF(LOW, "param: rd_fixed   0x%x\n"     , rd_fixed  );
-    VPRINTF(LOW, "param: wr_fixed   0x%x\n"     , wr_fixed  );
-    VPRINTF(LOW, "param: aes_mode   0x%x\n"     , aes_mode  );
-    VPRINTF(LOW, "param: byte_count 0x%x\n"     , byte_count);
-    VPRINTF(LOW, "param: block_size 0x%x\n"     , block_size);
+    VPRINTF(HIGH, "param: err_type   0x%x\n"     , err_type  );
+    VPRINTF(HIGH, "param: src_addr   0x%x 0x%x\n", (uint32_t) (src_addr >> 32) , (uint32_t) (src_addr & 0xffffffff));
+    VPRINTF(HIGH, "param: dst_addr   0x%x 0x%x\n", (uint32_t) (dst_addr >> 32) , (uint32_t) (dst_addr & 0xffffffff));
+    VPRINTF(HIGH, "param: rd_route   0x%x\n"     , rd_route  );
+    VPRINTF(HIGH, "param: wr_route   0x%x\n"     , wr_route  );
+    VPRINTF(HIGH, "param: rd_fixed   0x%x\n"     , rd_fixed  );
+    VPRINTF(HIGH, "param: wr_fixed   0x%x\n"     , wr_fixed  );
+    VPRINTF(HIGH, "param: aes_mode   0x%x\n"     , aes_mode  );
+    VPRINTF(HIGH, "param: byte_count 0x%x\n"     , byte_count);
+    VPRINTF(HIGH, "param: block_size 0x%x\n"     , block_size);
 
     // Disable txn_done interrupt since we'll poll it
     reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
