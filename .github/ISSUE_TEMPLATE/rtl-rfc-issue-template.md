@@ -2,7 +2,7 @@
 name: RTL RFC Issue Template
 about: Template for Caliptra contributors to file an RFC proposing development of
   features, modifications, or fixes for approval.
-title: "[RFC] {Feature, Bug, Update, Tools, etc} : {RFC title here}"
+title: "[RFC] {Feature, Bug Fix, Update, Tools, Specification, etc} : {RFC title here}"
 labels: RFC
 assignees: ''
 
@@ -11,25 +11,29 @@ assignees: ''
 # [edit] Title for contribution proposal
 [edit] Abstract
 
-## Rationale
-[edit] The motivation and justification for the change.
-
 ## Scope
 [edit] What parts of the project will be affected.
-* Overview of anticipated changes to specifications or other documentation (e.g. impacts to Trademark Compliance)
-* Overview of changes to security posture per FIPS 140-3
+* [edit] Overview of anticipated changes to specifications or other documentation (e.g. impacts to Trademark Compliance)
+* [edit] Overview of changes to security posture per FIPS 140-3
+* [edit] Expected impact to area or memory consumption
+* [edit] Expected impact to timing, CDC, RDC
+
+## Rationale
+[edit] The motivation and justification for the change, including why it is important to include in a specific Caliptra release version.
 
 ## Implementation Tradeoffs
-[edit] Details of various implementations being considered.
+[edit] Details of various implementations being considered. Explain why the proposed change can not be handled outside of Caliptra.
+[optional - if available] Links to any development work already completed and accompanying test results.
 
 ## Implementation Timeline
-[edit] A realistic estimate for completion.
+[edit] A realistic estimate for completion. May include multiple milestones if a large change requires many Pull Requests.
+[edit] Which MAJOR.MINOR release is this intended for inclusion?
 
-## [optional - hw/fw changes] Test Plan
+## [optional - for hw/fw changes] Test Plan
 [edit] Required for any hardware changes to ensure quality, certifiability, maintainability.
 
 ### Testbench development
-[edit] Describe new testbenches or modifications to existing testbenches to validate feature
+[edit] Describe new testbenches or modifications to existing testbenches to validate feature.
 
 ### Test suite
 | Test Title | TB | Description | Randomization | Pass Metrics |
