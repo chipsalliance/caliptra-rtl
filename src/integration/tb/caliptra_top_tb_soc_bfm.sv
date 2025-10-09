@@ -208,7 +208,7 @@ import caliptra_top_tb_pkg::*; #(
 
     initial begin
         cptra_pwrgood = 1'b0;
-        BootFSM_BrkPoint = 1'b1; //Set to 1 even before anything starts
+        BootFSM_BrkPoint = $urandom_range(1,0); //Set before anything starts (drive like a const strap)
         cptra_rst_b = 1'b0;
         assert_rst_flag_from_fatal = 1'b0;
         m_axi_bfm_if.rst_mgr();
@@ -323,6 +323,9 @@ import caliptra_top_tb_pkg::*; #(
                         $display("\n  >>> SoC: Ready for Fuses deasserted after polling %d times\n", poll_count);
                         $display ("SoC: Writing BootGo register\n");
                         m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_BOOTFSM_GO), .data(32'h00000001), .resp(wresp), .resp_user(buser));
+                    end
+                    else begin
+                        $display("SoC: Breakpoint not set; skipping BOOTFSM_GO step\n");
                     end
 
                     $display ("CLP: ROM Flow in progress...\n");
