@@ -98,7 +98,7 @@ import el2_pkg::*;
 
    assign mem_export_local.clk = clk;
 
-   assign mem_export      .clk                = mem_export_local.clk;
+   assign mem_export      .clk                = clk;
 
    assign mem_export      .iccm_clken         = mem_export_local.iccm_clken;
    assign mem_export      .iccm_wren_bank     = mem_export_local.iccm_wren_bank;
@@ -174,8 +174,13 @@ if (pt.ICCM_ENABLE) begin : iccm
                    );
 end
 else  begin
-   assign  iccm_rd_data    = '0 ;
+   assign iccm_rd_data     = '0 ;
    assign iccm_rd_data_ecc = '0 ;
+   assign mem_export_local.iccm_addr_bank = '0;
+   assign mem_export_local.iccm_bank_wr_data = '0;
+   assign mem_export_local.iccm_bank_wr_ecc = '0;
+   assign mem_export_local.iccm_clken = '0;
+   assign mem_export_local.iccm_wren_bank = '0;
 end
 
 
