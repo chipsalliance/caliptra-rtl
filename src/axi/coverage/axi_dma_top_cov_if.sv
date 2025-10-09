@@ -622,12 +622,21 @@ interface axi_dma_top_cov_if
 
         ocp_lock_in_progress_cp: coverpoint ocp_lock_in_progress;
 
+        wr_route_cp: coverpoint wr_route {
+            bins disabled = {axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE};
+            bins axi_rd   = {axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD};
+            bins ahb_fifo = {axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO};
+            bins mbox     = {axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX};
+            bins keyvault = {axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT};
+            illegal_bins invalid_values = {[5:7]};
+        }
+
         // Cross coverage: Route combination with OCP lock status
-        route_ocp_lock_cross: cross wr_route, ocp_lock_in_progress_cp iff (dma_xfer_start_pulse) {
+        route_ocp_lock_cross: cross wr_route_cp, ocp_lock_in_progress_cp iff (dma_xfer_start_pulse) {
             // Only interested in KEYVAULT route combinations
-            bins keyvault_with_lock = binsof(wr_route) intersect {axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT} &&
+            bins keyvault_with_lock = binsof(wr_route_cp) intersect {axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT} &&
                                      binsof(ocp_lock_in_progress_cp) intersect {1};
-            bins keyvault_without_lock = binsof(wr_route) intersect {axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT} &&
+            bins keyvault_without_lock = binsof(wr_route_cp) intersect {axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT} &&
                                         binsof(ocp_lock_in_progress_cp) intersect {0};
         }
 
