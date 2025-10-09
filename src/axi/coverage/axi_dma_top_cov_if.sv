@@ -105,10 +105,8 @@ interface axi_dma_top_cov_if
     logic        dma_xfer_start_pulse;
 
     logic [3:0] aes_fsm_ps;
-    logic wr_aes_ceil_req_byte_count;
 
     assign aes_fsm_ps = axi_dma_top.i_axi_dma_ctrl.aes_fsm_ps;
-    assign wr_aes_ceil_req_byte_count = axi_dma_top.i_axi_dma_ctrl.wr_aes_ceil_req_byte_count;
 
 
     assign w_valid = axi_dma_top.w_valid;
@@ -150,7 +148,7 @@ interface axi_dma_top_cov_if
         if (!rst_n) begin
             dma_xfer_start_pulse <= 0;
         end
-        else if (ctrl_fsm_ps == DMA_IDLE && ctrl_fsm_ns == DMA_WAIT_DATA) begin
+        else if (ctrl_fsm_ps == DMA_IDLE && ctrl_fsm_ns != DMA_IDLE) begin
             dma_xfer_start_pulse <= 1;
         end
         else begin
@@ -414,19 +412,22 @@ interface axi_dma_top_cov_if
         // Each coverpoint only hits when that specific cmd_inv signal is the ONLY one active
         //-------------------------------------------------------------
 
-        cmd_inv_rd_route_in_error: coverpoint (
-            cmd_inv_rd_route && 
-            !cmd_inv_wr_route && !cmd_inv_route_combo && 
-            !cmd_inv_aes_route_combo && !cmd_inv_aes_block_size && !cmd_inv_aes_fixed && 
-            !cmd_inv_src_addr && !cmd_inv_dst_addr && !cmd_inv_byte_count && !cmd_inv_block_size && 
-            !cmd_inv_rd_fixed && !cmd_inv_wr_fixed && !cmd_inv_mbox_lock && !cmd_inv_sha_lock
-        ) iff (ctrl_fsm_ps == DMA_ERROR) {
-            bins rd_route_error_only = {1};
-        }
+        // Not included since tied to 0 in design
+        //cmd_inv_rd_route_in_error: coverpoint (
+        //    cmd_inv_rd_route && 
+        //    !cmd_inv_wr_route && !cmd_inv_route_combo && 
+        //    !cmd_inv_aes_route_combo && !cmd_inv_aes_block_size && !cmd_inv_aes_fixed && 
+        //    !cmd_inv_src_addr && !cmd_inv_dst_addr && !cmd_inv_byte_count && !cmd_inv_block_size && 
+        //    !cmd_inv_rd_fixed && !cmd_inv_wr_fixed && !cmd_inv_mbox_lock && !cmd_inv_sha_lock
+        //) iff (ctrl_fsm_ps == DMA_ERROR) {
+        //    bins rd_route_error_only = {1};
+        //}
 
+        // Don't include cmd_inv_route_combo because this could be asserted as
+        // well.
         cmd_inv_wr_route_in_error: coverpoint (
             cmd_inv_wr_route && 
-            !cmd_inv_rd_route && !cmd_inv_route_combo && 
+            !cmd_inv_rd_route && 
             !cmd_inv_aes_route_combo && !cmd_inv_aes_block_size && !cmd_inv_aes_fixed && 
             !cmd_inv_src_addr && !cmd_inv_dst_addr && !cmd_inv_byte_count && !cmd_inv_block_size && 
             !cmd_inv_rd_fixed && !cmd_inv_wr_fixed && !cmd_inv_mbox_lock && !cmd_inv_sha_lock
@@ -786,7 +787,7 @@ interface axi_dma_top_cov_if
         }
 
         // 11. wr_aes_ceil_req_byte_count in DMA_WAIT_DATA with AES mode
-        wr_aes_ceil_req_dma_wait: coverpoint (wr_aes_ceil_req_byte_count && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && 
+        wr_aes_ceil_req_dma_wait: coverpoint (axi_dma_top.i_axi_dma_ctrl.wr_aes_ceil_req_byte_count < 16 && axi_dma_top.i_axi_dma_ctrl.w_req_if.valid && axi_dma_top.i_axi_dma_ctrl.wr_sel_req_byte_count < axi_dma_top.i_axi_dma_ctrl.wr_align_req_byte_count  && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && 
                                               ctrl_fsm_ps == DMA_WAIT_DATA) {
             bins wr_aes_ceil_dma_wait = {1};
         }

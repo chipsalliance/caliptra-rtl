@@ -49,8 +49,8 @@ interface keyvault_cov_if
     endgenerate
 
     //CLEAR_SECRETS
-    assign clear_secrets_wr = kv.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values;
-    assign clear_secrets_sel = kv.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value;
+    assign clear_secrets_wr = kv.kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values.value;
+    assign clear_secrets_sel = kv.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value;
 
     //Crypto interface write_en
     generate
@@ -187,7 +187,7 @@ interface keyvault_cov_if
         // clearXcore_rst:     cross clear, core_only_rst_b;
 
         //Cover simultaneous locks/clear settings
-        lock_wrXlock_useXclearXclear_secrets: cross lock_wr, lock_use, clear, cp_clear_secrets_wr, cp_clear_secrets_sel;
+        lock_wrXlock_useXclearXclear_secrets: cross lock_wr, lock_use, clear;
         
         //Cross with crypto write. There's no cross with read since reads are async
         //Due to this, at any given time, all signals are by default crossed with read IF

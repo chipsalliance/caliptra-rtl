@@ -43,6 +43,7 @@ typedef uint8_t BOOL;
 
 typedef struct {
   BOOL      kv_intf;
+  BOOL      exp_kv_err;
   uint8_t   kv_id;
   uint32_t  data[MLDSA87_SEED_SIZE];
 } mldsa_io;

@@ -260,7 +260,7 @@ void main(){
 
     sharedkey_dh.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
     sharedkey_dh.kv_id = xorshift32() % 24;
-    if (!sharedkey_dh.kv_intf && privkey.kv_intf){
+    if (!sharedkey_dh.kv_intf && privkey_dh.kv_intf){
         for (int i = 0; i < ECC_INPUT_SIZE; i++)
             sharedkey_dh.data[i] = 0;
     }
@@ -272,6 +272,11 @@ void main(){
     //inject seed to kv key reg (in RTL)
     VPRINTF(LOW, "Inject SEED into KV\n");
     lsu_write_32(STDOUT, (seed.kv_id << 8) | 0x80);
+
+    VPRINTF(LOW, "seed.kv_id: 0x%x, seed.kv_id :0x%d\n",seed.kv_id, seed.kv_intf);
+    VPRINTF(LOW, "privkey.kv_id: 0x%x, privkey.kv_id :0x%d\n",privkey.kv_id, privkey.kv_intf);
+    VPRINTF(LOW, "privkey_dh.kv_id: 0x%x, privkey_dh.kv_id :0x%d\n",privkey_dh.kv_id, privkey_dh.kv_intf);
+    VPRINTF(LOW, "sharedkey_dh.kv_id: 0x%x, sharedkey_dh.kv_id :0x%d\n",sharedkey_dh.kv_id, sharedkey_dh.kv_intf);
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
