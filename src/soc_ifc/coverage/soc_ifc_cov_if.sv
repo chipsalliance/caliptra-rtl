@@ -233,11 +233,16 @@ interface soc_ifc_cov_if
   assign dma_ctrl_fsm_ps = dma_ctrl_fsm_e'(`AXI_DMA_CTRL.ctrl_fsm_ps);
 
   logic uc_rd, uc_wr, soc_rd, soc_wr;
+  logic [63:0] generic_input_wires_flat;
+  logic [63:0] generic_output_wires_flat;
 
   assign uc_rd = uc_req_dv & ~uc_req.write;
   assign uc_wr = uc_req_dv & uc_req.write;
   assign soc_rd = soc_req_dv & ~soc_req.write;
   assign soc_wr = soc_req_dv & soc_req.write;
+
+  assign generic_input_wires_flat  = {generic_input_wires [1],generic_input_wires [0]};
+  assign generic_output_wires_flat = {generic_output_wires[1],generic_output_wires[0]};
 
     covergroup soc_ifc_top_cov_grp @(posedge clk);
         //IO
@@ -261,8 +266,26 @@ interface soc_ifc_cov_if
         cptra_error_non_fatal_cp: coverpoint cptra_error_non_fatal;
         trng_req_cp: coverpoint trng_req;
         BootFSM_BrkPoint_cp: coverpoint BootFSM_BrkPoint;
-        generic_input_wires_cp: coverpoint generic_input_wires;
-        generic_output_wires_cp: coverpoint generic_output_wires;
+        generic_input_wires_cp: coverpoint generic_input_wires_flat {
+            bins byte0_active  = generic_input_wires_cp with (|(item & (64'hFF <<  0)));
+            bins byte1_active  = generic_input_wires_cp with (|(item & (64'hFF <<  8)));
+            bins byte2_active  = generic_input_wires_cp with (|(item & (64'hFF << 16)));
+            bins byte3_active  = generic_input_wires_cp with (|(item & (64'hFF << 24)));
+            bins byte4_active  = generic_input_wires_cp with (|(item & (64'hFF << 32)));
+            bins byte5_active  = generic_input_wires_cp with (|(item & (64'hFF << 40)));
+            bins byte6_active  = generic_input_wires_cp with (|(item & (64'hFF << 48)));
+            bins byte7_active  = generic_input_wires_cp with (|(item & (64'hFF << 56)));
+        }
+        generic_output_wires_cp: coverpoint generic_output_wires_flat {
+            bins byte0_active  = generic_output_wires_cp with (|(item & (64'hFF <<  0)));
+            bins byte1_active  = generic_output_wires_cp with (|(item & (64'hFF <<  8)));
+            bins byte2_active  = generic_output_wires_cp with (|(item & (64'hFF << 16)));
+            bins byte3_active  = generic_output_wires_cp with (|(item & (64'hFF << 24)));
+            bins byte4_active  = generic_output_wires_cp with (|(item & (64'hFF << 32)));
+            bins byte5_active  = generic_output_wires_cp with (|(item & (64'hFF << 40)));
+            bins byte6_active  = generic_output_wires_cp with (|(item & (64'hFF << 48)));
+            bins byte7_active  = generic_output_wires_cp with (|(item & (64'hFF << 56)));
+        }
         nmi_vector_cp: coverpoint nmi_vector;
         nmi_intr_cp: coverpoint nmi_intr;
         soc_ifc_error_intr_cp: coverpoint soc_ifc_error_intr;
@@ -318,11 +341,47 @@ interface soc_ifc_cov_if
         ss_debug_intent_cp: coverpoint ss_debug_intent;
         cptra_ss_debug_intent_cp: coverpoint cptra_ss_debug_intent;
         ss_dbg_manuf_enable_cp: coverpoint ss_dbg_manuf_enable;
-        ss_soc_dbg_unlock_level_cp: coverpoint ss_soc_dbg_unlock_level;
-        ss_generic_fw_exec_ctrl_cp: coverpoint ss_generic_fw_exec_ctrl;
+        ss_soc_dbg_unlock_level_cp: coverpoint ss_soc_dbg_unlock_level {
+            wildcard bins bit0   = {64'b???????????????????????????????????????????????????????????????1};
+            wildcard bins bit1   = {64'b??????????????????????????????????????????????????????????????1?};
+            wildcard bins bit2   = {64'b?????????????????????????????????????????????????????????????1??};
+            wildcard bins bit3   = {64'b????????????????????????????????????????????????????????????1???};
+            wildcard bins bit4   = {64'b???????????????????????????????????????????????????????????1????};
+            wildcard bins bit5   = {64'b??????????????????????????????????????????????????????????1?????};
+            wildcard bins bit6   = {64'b?????????????????????????????????????????????????????????1??????};
+            wildcard bins bit7   = {64'b????????????????????????????????????????????????????????1???????};
+            bins byte1_active  = ss_soc_dbg_unlock_level_cp with (|(item & (64'hFF       <<  8)));
+            bins byte2_active  = ss_soc_dbg_unlock_level_cp with (|(item & (64'hFF       << 16)));
+            bins byte3_active  = ss_soc_dbg_unlock_level_cp with (|(item & (64'hFF       << 24)));
+            bins dword1_active = ss_soc_dbg_unlock_level_cp with (|(item & (64'hFFFFFFFF << 32)));
+        }
+        ss_generic_fw_exec_ctrl_cp: coverpoint ss_generic_fw_exec_ctrl {
+            bins byte0_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<   0)));
+            bins byte1_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<   8)));
+            bins byte2_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  16)));
+            bins byte3_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  24)));
+            bins byte4_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  32)));
+            bins byte5_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  40)));
+            bins byte6_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  48)));
+            bins byte7_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  56)));
+            bins byte8_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  64)));
+            bins byte9_active  = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  72)));
+            bins byte10_active = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  80)));
+            bins byte11_active = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  88)));
+            bins byte12_active = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF <<  96)));
+            bins byte13_active = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF << 104)));
+            bins byte14_active = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF << 112)));
+            bins byte15_active = ss_generic_fw_exec_ctrl_cp with (|(item & (128'hFF << 120)));
+        }
         ss_ocp_lock_en_cp: coverpoint ss_ocp_lock_en;
         ss_ocp_lock_in_progress_cp: coverpoint ss_ocp_lock_in_progress;
-        ss_key_release_key_size_cp: coverpoint ss_key_release_key_size;
+        ss_key_release_key_size_cp: coverpoint ss_key_release_key_size {
+            bins zero = {0};
+            bins lt40 = {[1:39]};
+            bins eq40 = {40};
+            bins gt40 = {[41:65535]};
+            illegal_bins not_aligned_to_4 = ss_key_release_key_size_cp with (item[1:0] != 2'b00);
+        }
         iccm_lock_cp: coverpoint iccm_lock;
         iccm_axs_blocked_cp: coverpoint iccm_axs_blocked;
 

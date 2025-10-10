@@ -399,7 +399,7 @@ always_comb soc_req.soc_req = 1'b1;
 ahb_slv_sif #(
     .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
     .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
-    .CLIENT_DATA_WIDTH(32)
+    .CLIENT_DATA_WIDTH(SOC_IFC_DATA_W)
 )
 i_ahb_slv_sif_soc_ifc (
     //AMBA AHB Lite INF
@@ -432,7 +432,7 @@ i_ahb_slv_sif_soc_ifc (
 always_comb uc_req.user = '1;
 always_comb uc_req.id = '1;
 always_comb uc_req.soc_req = 1'b0;
-always_comb uc_req.wstrb = {AHB_DATA_WIDTH/8{1'b1}};
+always_comb uc_req.wstrb = {SOC_IFC_DATA_W/8{1'b1}};
 
 //mailbox_arb
 //This module contains the arbitration logic between SoC and Caliptra uC requests
