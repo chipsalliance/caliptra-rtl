@@ -74,7 +74,7 @@ if [[ -z ${CALIPTRA_ROOT:+"empty"} ]]; then
     exit 1
 fi
 
-exclude_dir='{uvmf*,.git,cmark,caliptra_reg_html,caliptra_top_reg_html,sha256,sha512,sha512_masked,doe,fw_test_*,__pycache__,templates,docs}'
+exclude_dir='{uvmf*,.git,cmark,caliptra_reg_html,caliptra_top_reg_html,sha256,sha512,sha512_masked,doe,fw_test_*,__pycache__,templates,docs,ISSUE_TEMPLATE}'
 exclude_suffix='*.{tcl,txt,js,htm,html,json,vf,yml,woff,rsp,rdl,bashrc,waiver,cfg,hex,rc,exe,pdf,png,hvp,svg,log}'
 exclude_regs='*_reg*.{sv,rdl}'
 exclude_csr='*_csr*.*'
