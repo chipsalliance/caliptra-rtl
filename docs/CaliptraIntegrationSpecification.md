@@ -350,8 +350,6 @@ Caliptra firmware internally has the capability to force release the mailbox bas
 Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either cptra_pwrgood signal deassertion or cptra\_noncore\_rst\_b deassertion – refer to interface table for list of straps.
 In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. These must be programmed by SoC FW at the same time as Caliptra [Fuses](#fuses) per [Caliptra Spec](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#subsystem-pre-fw-load-boot-flow). Once written and locked, the values of these straps persist until a cold reset.
 
-
-
 ### Obfuscation key
 
 SoC drives the key at the tape-in time of the SoC using an Engineering Change Order (ECO) and must be protected from common knowledge. For a given SoC construction, this can be driven using a PUF too.
