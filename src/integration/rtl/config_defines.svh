@@ -23,6 +23,9 @@
 // Uncomment if fuse granularity 32 bits.
 //`define CALIPTRA_FUSE_GRANULARITY_32
 
+// Uncomment if using caliptra in SS mode
+//  `define CALIPTRA_MODE_SUBSYSTEM
+
   `define CALIPTRA_AHB_SLAVES_NUM      5'd17 // Number of slaves AHB
   `define CALIPTRA_AHB_MASTERS_NUM     4'd1 // Number of masters AHB
   `define CALIPTRA_AHB_HADDR_SIZE      32 // bit-width AHB address haddr
