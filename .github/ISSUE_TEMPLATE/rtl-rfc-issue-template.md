@@ -2,7 +2,7 @@
 name: RTL RFC Issue Template
 about: Template for Caliptra contributors to file an RFC proposing development of
   features, modifications, or fixes for approval.
-title: "[RFC] {Feature, Bug Fix, Update, Tools, Specification, etc} : {RFC title here}"
+title: "[RFC] {RFC title here}"
 labels: RFC
 assignees: ''
 
