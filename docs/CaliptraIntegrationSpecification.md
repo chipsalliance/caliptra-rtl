@@ -265,6 +265,14 @@ After all fuses are written, the fuse done register at the end of the fuse addre
 
 Although fuse values (and the fuse done register) persist across a warm reset, SoC is still required to perform a write to the fuse done register while in the BOOT\_FUSE state in order to complete the bringup from reset. See [Boot FSM](#boot-fsm) for further details.
 
+**Note**: Starting in Caliptra 2.0 subsystem strap and other configuration registers have been added to the fuse region. Subsystem [straps](#straps) are expected to be programmed during the same time as fuses per [Caliptra spec](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#subsystem-pre-fw-load-boot-flow). The following SS registers in the fuse region are not straps, are intended for internal use in Caliptra, and cannot be written by any SoC agents; therefore, categorizing them under the FUSE range has no effect:
+
+- `SS_DBG_SERVICE_REG_RSP`
+- `SS_SOC_DBG_UNLOCK_LEVEL`
+- `SS_GENERIC_FW_EXEC_CTRL`
+
+The remaining register `SS_DBG_SERVICE_REG_REQ` is initialized by the same SoC agent as fuses and is the only agent that can make subsystem debug service requests. 
+
 ## Interface rules
 
 The following figure shows the reset rules and timing for cold boot flows.
@@ -340,7 +348,7 @@ Caliptra firmware internally has the capability to force release the mailbox bas
 ### Straps
 
 Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either cptra_pwrgood signal deassertion or cptra\_noncore\_rst\_b deassertion – refer to interface table for list of straps.
-In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. Once written and locked, the values of these straps persist until a cold reset.
+In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. These must be programmed by SoC FW at the same time as Caliptra [Fuses](#fuses) per [Caliptra Spec](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#subsystem-pre-fw-load-boot-flow). Once written and locked, the values of these straps persist until a cold reset.
 
 ### Obfuscation key
 
