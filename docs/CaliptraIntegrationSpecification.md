@@ -1211,6 +1211,7 @@ The following set of constraints and assumptions must be provided before running
     - The AES Core State Machine is assumed to be in the IDLE state
         - aes_inst.aes_inst.u_aes_core.u_aes_control.gen_fsm[0].gen_fsm_p.u_aes_control_fsm_i.u_aes_control_fsm.aes_ctrl_cs[5:0] = 6'b1001
 6. Constrain the RDC false paths as per *Table 23*.
+7. *cptra_rst_b* must not be asserted in a way that does not ALSO reset any cores that rely on the integrity of the PCR registers. Alternatively, if the PCR registers hold active measurement values for firmware running on a core external to Caliptra, then asserting *cptra_rst_b* must also be synchronized with the reset of that core. Do not simply connect *cptra_rst_b* to an internal strap or software controlled register. If this requirement is not satisfied, then the integrity of measurements in the PCR registers can be entirely bypassed. Similar requirements apply to the power supply signals of Caliptra (*cptra_pwrgood*).
 
 
 ## RDC violations and waivers
