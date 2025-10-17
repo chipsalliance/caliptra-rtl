@@ -629,7 +629,7 @@ interface axi_dma_top_cov_if
             bins ahb_fifo = {axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO};
             bins mbox     = {axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX};
             bins keyvault = {axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT};
-            illegal_bins invalid_values = {[5:7]};
+            /*illegal_bins*/bins invalid_values = {[5:7]}; // Illegal bins, but still possible by error-injection test cases so mark these values as regular bins
         }
 
         // Cross coverage: Route combination with OCP lock status
