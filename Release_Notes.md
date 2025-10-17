@@ -14,7 +14,22 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/08/29*_
+_*Last Update: 2025/10/12*_
+
+### Rev 2p1 ###
+
+#### Rev 2p1 release date: 2025/10/12 ###
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Adams Bridge with ML-DSA 87 and ML-KEM 1024 ([v2.0 Release Notes](https://github.com/chipsalliance/adams-bridge/blob/v2.0/Release_Notes.md))
+- OCP L.O.C.K. 1.0-rc1 Support
+- AES DMA
+- External Mu mode for ML-DSA 87 signing
+- Mailbox size reduced to 16KB in subsystem mode
+- Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
+
+## Previous Releases ##
 
 ### Rev 2p1-rc1 ###
 
@@ -28,8 +43,6 @@ _*Last Update: 2025/08/29*_
 - External Mu mode for ML-DSA 87 signing
 - Mailbox size reduced to 16KB in subsystem mode
 - Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
-
-## Previous Releases ##
 
 ### Rev 2p0 ###
 
