@@ -351,6 +351,8 @@ These three programs are designed to be run within the context of a UVM simulati
 ## **NOTES** ##
 
 * Register documentation is auto-rendered at the GitHub page
+  * [main internal registers](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs)
+  * [main external registers](https://chipsalliance.github.io/caliptra-rtl/main/external-regs)
   * [v2.1 internal registers](https://chipsalliance.github.io/caliptra-rtl/v2_1/internal-regs)
   * [v2.1 external registers](https://chipsalliance.github.io/caliptra-rtl/v2_1/external-regs)
   * [v2.0 internal registers](https://chipsalliance.github.io/caliptra-rtl/v2_0/internal-regs)
