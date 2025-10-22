@@ -7,16 +7,16 @@ This document defines additional guidelines and conventions that are specific to
 ## Git Conventions
 
 ### Commit conventions
-The Git documentation provides some guidance on preparing good quality commit messages.
+The Git documentation provides some guidance on preparing good quality commit messages here:<BR>
 https://git-scm.com/docs/SubmittingPatches#describe-changes
 
 Main points:
   - Imperative mood, present tense for subject line
   - Capitalized first-word of subject line
-  - Use a prefix for the commit area
+  - Prefix for the commit area (defined below)
   - 50-character subject line
   - 72-character line breaks in the body
-  - Should tell "what" and "why"
+  - Tell "what" and "why"
     - e.g. "Fix bug in UVM testbench causing AXI transaction mismatch"
     - e.g. "Update FSM transitions based on XYZ to resolve missed error states"
 
