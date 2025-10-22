@@ -7,7 +7,7 @@ This document defines additional guidelines and conventions that are specific to
 ## Git Conventions
 
 ### Commit conventions
-The Git documentation provides some guidance on preparing good quality commit messages here:<BR>
+Git documentation provides some guidance on preparing good quality commit messages here:<BR>
 https://git-scm.com/docs/SubmittingPatches#describe-changes
 
 Main points:
