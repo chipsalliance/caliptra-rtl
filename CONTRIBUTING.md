@@ -13,14 +13,16 @@ https://git-scm.com/docs/SubmittingPatches#describe-changes
 Main points:
   - Imperative mood, present tense for subject line
   - Capitalized first-word of subject line
-  - Prefix for the commit area (defined below)
   - 50-character subject line
   - 72-character line breaks in the body
   - Tell "what" and "why"
     - e.g. "Fix bug in UVM testbench causing AXI transaction mismatch"
     - e.g. "Update FSM transitions based on XYZ to resolve missed error states"
+  - NOTE: Prefixes are recommended for each commit in Git documentation. In caliptra-rtl, the prefix is mandated for Pull Request titles, but not for individual commits within a feature branch due to the use of squash-and-merge strategy.
 
 ### Pull Request Conventions
+
+caliptra-rtl repository uses a squash strategy to merge changes from a Pull Request to the destination branch. This means that the title of the PR becomes the header of the commit in the destination branch's history. To improve debug, triage, readability, and preparation of change-lists, it is imperative that these commit headers be concise, meaningful, and consistent. The following conventions are used:
   - Title of the Pull Request should match conventions for an individual commit subject line, as shown above (imperative mood, etc).
   - Title:
     - First word of Pull Request Title is in [BRACKETS] and tells which area the commit affects (e.g. RTL, RDL, DOC, VAL, ENV, etc).
