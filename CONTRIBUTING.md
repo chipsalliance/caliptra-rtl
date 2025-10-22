@@ -34,6 +34,6 @@ caliptra-rtl repository uses a squash strategy to merge changes from a Pull Requ
       - UVM (A subset of VAL, but demonstrates that the commit only impacts UVM testbenches)
       - DOC (Only documentation files are affected, i.e. .md, .png, .jpg, .xlsx, .html)
       - ENV (compile.yml, *.vf file lists, any GH workflow file, tools/scripts/* changes, etc).
-  - Pull Request Comment/Description:
-    - Should include one bullet point for each item that is touched (i.e., 1 bullet for each bug fixed, 1 bullet for each feature addition, 1 bullet for each TB modification, 1 bullet for each documentation update, etc).
-    - Should include one line for each GitHub issue that is resolved by the PR. That line should follow the format:<BR>`Resolves #<issue number>`<BR>This format causes GitHub to automatically close the issue upon Pull Request merge.
+  - Pull Request Description:
+    - Include one bullet point for each item that is touched (i.e., 1 bullet for each bug fixed, 1 bullet for each feature addition, 1 bullet for each TB modification, 1 bullet for each documentation update, etc).
+    - Include one line for each GitHub issue that is resolved by the PR. That line should follow the format:<BR>`Resolves #<issue number>`<BR>This format causes GitHub to automatically close the issue upon Pull Request merge.
