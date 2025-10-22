@@ -22,7 +22,7 @@ Main points:
 
 ### Pull Request Conventions
 
-caliptra-rtl repository uses a squash strategy to merge changes from a Pull Request to the destination branch. This means that the title of the PR becomes the header of the commit in the destination branch's history. To improve debug, triage, readability, and preparation of change-lists, it is imperative that these commit headers be concise, meaningful, and consistent. The following conventions are used:
+Caliptra RTL repository uses a squash strategy to merge changes from a Pull Request to the destination branch. This means that the title of the PR becomes the header of the commit in the destination branch's history. To improve debug, triage, readability, and preparation of change-lists, it is imperative that these commit headers be concise, meaningful, and consistent. The following conventions are used:
   - Title of the Pull Request should match conventions for an individual commit subject line, as shown above (imperative mood, etc).
   - Title:
     - First word of Pull Request Title is in [BRACKETS] and tells which area the commit affects (e.g. RTL, RDL, DOC, VAL, ENV, etc).
