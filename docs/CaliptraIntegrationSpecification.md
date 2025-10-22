@@ -1214,6 +1214,8 @@ The following set of constraints and assumptions must be provided before running
         - entropy_src.u_reg.u_ahb_slv_sif.dv
         - aes_inst.ahb_slv_sif_inst.dv
         - aes_inst.aes_clp_reg_inst.s_cpuif_req
+        - sha3.hsel_i
+        - aes_inst.aes_cif_req_dv
     - The AES Core State Machine is assumed to be in the IDLE state
         - aes_inst.aes_inst.u_aes_core.u_aes_control.gen_fsm[0].gen_fsm_p.u_aes_control_fsm_i.u_aes_control_fsm.aes_ctrl_cs[5:0] = 6'b1001
 6. Constrain the RDC false paths as per *Table 23*.
