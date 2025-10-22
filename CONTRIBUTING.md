@@ -34,6 +34,9 @@ caliptra-rtl repository uses a squash strategy to merge changes from a Pull Requ
       - UVM (A subset of VAL, but demonstrates that the commit only impacts UVM testbenches)
       - DOC (Only documentation files are affected, i.e. .md, .png, .jpg, .xlsx, .html)
       - ENV (compile.yml, *.vf file lists, any GH workflow file, tools/scripts/* changes, etc).
+  - Title should be concise and capture highest-impact items. Pull Requests should ideally contain only the necessary changes for a single feature, fix, testcase, documentation area, or other area. However, RTL changes should always be accompanied by appropriate verification collateral and relevant documentation. In this case, the RTL change should be described in the Title, as this is the most meaningful change, while verification and documentation updates are implicit to the proposed changes. In some cases, multiple features may need to be compressed into a single Pull Request. In this circumstance, the title should capture the most impactful changes as concisely as possible as a comma-separated list.
+  - Example Title:
+    - `[RTL] Update Adams Bridge to v2.0, apply lint fixes, coverage updates`
   - Pull Request Description:
     - Include one bullet point for each item that is touched (i.e., 1 bullet for each bug fixed, 1 bullet for each feature addition, 1 bullet for each TB modification, 1 bullet for each documentation update, etc).
     - Include one line for each GitHub issue that is resolved by the PR. That line should follow the format:<BR>`Resolves #<issue number>`<BR>This format causes GitHub to automatically close the issue upon Pull Request merge.
