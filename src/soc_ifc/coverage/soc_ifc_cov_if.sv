@@ -380,7 +380,9 @@ interface soc_ifc_cov_if
             bins lt40 = {[1:39]};
             bins eq40 = {40};
             bins gt40 = {[41:65535]};
-            illegal_bins not_aligned_to_4 = ss_key_release_key_size_cp with (item[1:0] != 2'b00);
+            // RTL allows reg-writes to set non-aligned values, but this violates the documented requirements and produces undefined behavior.
+            // NOTE: If hardware is updated to enforce alignment on reg-writes, this should be changed to illegal_bins
+            bins not_aligned_to_4 = ss_key_release_key_size_cp with (item[1:0] != 2'b00);
         }
         iccm_lock_cp: coverpoint iccm_lock;
         iccm_axs_blocked_cp: coverpoint iccm_axs_blocked;
