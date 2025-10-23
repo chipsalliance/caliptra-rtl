@@ -1300,6 +1300,24 @@ The target foundry technology node is an industry standard, advanced technology 
 
 *ROM area is not accounted for in the above table.*
 
+| **IP Name** | **AMD reported Sequential Cell Count** |
+| :--------- | :--------- |
+| Adams Bridge    | 276786 |
+| AES             | 8955   |
+| DOE             | 3240   |
+| ECC             | 54002  |
+| Entropy source  | 7035   |
+| HMAC            | 15010  |
+| Key Vault       | 13219  |
+| RISCV           | 24944  |
+| SHA 256         | 2569   |
+| SHA 512         | 6213   |
+| SOC IF          | 17476  |
+
+| **IP Name** | **AMD reported Unloaded Registers Count** |
+| :--------- | :--------- |
+| Adams Bridge    | 664048 |
+
 NOTE: RTL2Syn formality is not run as of now, we will update the results once we have run the flow.
 
 # Recommended LINT rules
