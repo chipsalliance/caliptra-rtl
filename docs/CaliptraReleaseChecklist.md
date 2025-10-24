@@ -18,7 +18,7 @@ Caliptra RTL releases may be created for new major, minor, or patch versions, as
 
 Pre-release versions are denoted with the alphanumeric key `rc<incrementing numeric key>` to indicate that the version is a release candidate. Release candidates are tagged to indicate that feature and validation effort has reached a finalized state, and the final release is pending further review. An example release candidate tag is: `v2.2.0-rc3`
 
-Modifications may also be applied to the documentation of a patch release by opening pull requests to the `patch_v<MAJOR>.<MINOR>` branch. Whenever a release receives updates to the documentation, with no other modifications, this is considered a new "build" from a versioning perspective. Semantic versioning specifies that build metadata can be indicated in a release version by appending build data to the version with the following format: `<MAJOR>.<MINOR>.<PATCH>+<build_identifier>`
+Modifications may also be applied to the documentation of a patch release by opening pull requests to the `patch_v<MAJOR>.<MINOR>` branch. When a release receives updates to the documentation (with no other modifications) this is considered a new "build" from a versioning perspective. Semantic versioning specifies that build metadata can be included in a release version by appending build data to the version. The format for appending build information is: `<MAJOR>.<MINOR>.<PATCH>+<build_identifier>`
 In caliptra-rtl releases, the `build_identifier` is always an alphanumeric key that begins with a 0-indexed numerical value. The full format of the build identifier is: `<incrementing_numeric_key>.<alphanumeric_descriptor>`
 The only supported value for `<alphanumeric_descriptor>` is the keyword `doc`.
 
