@@ -20,7 +20,7 @@ module caliptra_prim_flop_2sync #(
   logic [Width-1:0] d_o;
   logic [Width-1:0] intq;
 
-`ifdef CALIPTRA_SIMULATION
+`ifdef SIMULATION
 
   caliptra_prim_cdc_rand_delay #(
     .DataWidth(Width),
@@ -32,11 +32,11 @@ module caliptra_prim_flop_2sync #(
     .prev_data_i(intq),
     .dst_data_o(d_o)
   );
-`else // !`ifdef CALIPTRA_SIMULATION
+`else // !`ifdef SIMULATION
   logic unused_sig;
   assign unused_sig = EnablePrimCdcRand;
   always_comb d_o = d_i;
-`endif // !`ifdef CALIPTRA_SIMULATION
+`endif // !`ifdef SIMULATION
 
   caliptra_prim_flop #(
     .Width(Width),
