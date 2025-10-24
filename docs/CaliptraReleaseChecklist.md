@@ -16,6 +16,25 @@ This document provides the signoff checklist that is used when finalizing any Ca
 
 Caliptra RTL releases may be created for new major, minor, or patch versions, as described in the [semantic versioning specification](https://semver.org/spec/v2.0.0.html). The version number is reflected in the CPTRA_HW_REV_ID register. Steps described in this document are followed for each of these releases.
 
+Pre-release candidates are denoted with the alphanumeric key `rc<incrementing numeric key>`. Release candidates are tagged to indicate that feature and validation effort has reached a finalized state, and the final release is pending further review. An example release candidate tag is:
+```
+v2.2.0-rc3
+```
+
+Modifications may also be applied to the documentation of a patch release by opening pull requests to the `patch_v<MAJOR>.<MINOR>` branch. Whenever a release receives updates to the documentation, with no other modifications, this is considered a new "build" from a versioning perspective. Semantic versioning specifies that build metadata can be indicated in a release version by appending build data to the version with the following format:
+```
+<MAJOR>.<MINOR>.<PATCH>+<build_identifier>
+```
+In caliptra-rtl releases, the `build_identifier` is always an alphanumeric key that begins with a 0-indexed numerical value. The full format of the build identifier is:
+```
+<incrementing numeric key>.<alphanumeric descriptor>
+```
+The only supported value for `<alphanumeric descriptor>` is the keyword `doc`.
+
+For example, a series of documentation updates to the 2.0.2 release of caliptra-rtl would be tagged as: `v2.0.2+0.doc`, `v2.0.2+1.doc`, ... , `v2.0.2+12.doc`.
+
+Documentation updates will only be applied to the latest patch release. That is, documentation updates to produce `v2.0.2+3.doc` will NOT be applied to any `v2.0.1` release. A newer patch release will inherit all documentation updates from prior patch releases, and may then be subsequently targeted for additional documentation updates.
+
 ## Branches
 
 Each major and minor release is created as a tag on the branch `main` of the caliptra-rtl repository. The tag is created using GitHub's repository release tagging feature, which also generates a zip file containing all of the code and documentation for that release. After tagging the release, any subsequent commits to `main` are pursuant to development efforts on future release versions, so the tagged release must be used to download the official release code.
