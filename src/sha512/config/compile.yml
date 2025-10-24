@@ -38,6 +38,14 @@ targets:
     files:
       - $COMPILE_ROOT/tb/sha512_ctrl_32bit_tb.sv
     tops: [sha512_ctrl_32bit_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
 ---
 provides: [sha512_coverage]  
 schema_version: 2.4.0
