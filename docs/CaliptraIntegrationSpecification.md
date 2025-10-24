@@ -1300,6 +1300,8 @@ The target foundry technology node is an industry standard, advanced technology 
 
 *ROM area is not accounted for in the above table.*
 
+*Table 28: Hierarchical Cell Count*
+
 | **IP Name** | **AMD reported Sequential Cell Count** |
 | :--------- | :--------- |
 | Adams Bridge    | 276786 |
@@ -1312,7 +1314,9 @@ The target foundry technology node is an industry standard, advanced technology 
 | RISCV           | 24944  |
 | SHA 256         | 2569   |
 | SHA 512         | 6213   |
-| SOC IF          | 17476  |
+| SOC IFC         | 17476  |
+
+*Table 29: Adams Bridge Unloaded Registers Count*
 
 | **IP Name** | **AMD reported Unloaded Registers Count** |
 | :--------- | :--------- |
@@ -1328,7 +1332,7 @@ A standardized set of lint rules is used to sign off on each release. The lint p
 
 The following terminology is used in this document.
 
-*Table 28: Terminology*
+*Table 30: Terminology*
 
 | Abbreviation | Description                                                                                      |
 | :--------- | :--------- |
