@@ -14,7 +14,7 @@ This document provides the signoff checklist that is used when finalizing any Ca
 
 ## Versioning
 
-Caliptra RTL releases may be created for new major, minor, or patch versions, as described in the [semantic versioning specification](https://semver.org/spec/v2.0.0.html). The version number is reflected in the CPTRA_HW_REV_ID register. Steps described in this document are followed for each of these releases.
+Caliptra RTL releases may be created for new major, minor, or patch versions, as described in the [semantic versioning specification](https://semver.org/spec/v2.0.0.html). The version number is reflected in the [CPTRA_HW_REV_ID](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_REV_ID) register. Steps described in this document are followed for each of these releases.
 
 Pre-release versions are denoted with the alphanumeric key `rc<incrementing_numeric_value>` to indicate that the version is a release candidate. Release candidates are tagged to indicate that feature and validation effort has reached a finalized state, and the final release is pending further review. An example release candidate tag is: `v2.2.0-rc3`
 
