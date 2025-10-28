@@ -14,7 +14,17 @@ This document provides the signoff checklist that is used when finalizing any Ca
 
 ## Versioning
 
-Caliptra RTL releases may be created for new major, minor, or patch versions, as described in the [semantic versioning specification](https://semver.org/spec/v2.0.0.html). The version number is reflected in the CPTRA_HW_REV_ID register. Steps described in this document are followed for each of these releases.
+Caliptra RTL releases may be created for new major, minor, or patch versions, as described in the [semantic versioning specification](https://semver.org/spec/v2.0.0.html). The version number is reflected in the [CPTRA_HW_REV_ID](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_REV_ID) register. Steps described in this document are followed for each of these releases.
+
+Pre-release versions are denoted with the alphanumeric key `rc<incrementing_numeric_value>` to indicate that the version is a release candidate. Release candidates are tagged to indicate that feature and validation effort has reached a finalized state, and the final release is pending further review. An example release candidate tag is: `v2.2.0-rc3`
+
+Modifications may also be applied to the documentation of a patch release by opening pull requests to the `patch_v<MAJOR>.<MINOR>` branch. When a release receives updates to the documentation (with no other modifications) this is considered a new "build" from a versioning perspective. Semantic versioning specifies that build metadata can be included in a release version by appending build data to the version. The format for appending build information is: `<MAJOR>.<MINOR>.<PATCH>+<build_identifier>`.
+In caliptra-rtl releases, the `build_identifier` is always an alphanumeric key that begins with a 1-indexed numeric value. The full format of the build identifier is: `<incrementing_numeric_value>.<alphanumeric_descriptor>`.
+The only supported value for `<alphanumeric_descriptor>` is the keyword `doc`.
+
+For example, a series of documentation updates to the 2.0.2 release of caliptra-rtl would be tagged as: `v2.0.2+1.doc`, `v2.0.2+2.doc`, ... , `v2.0.2+12.doc`.
+
+Documentation updates are only applied to the latest patch release. That is, documentation updates to produce `v2.0.2+3.doc` are not applied to any `v2.0.1` release. A newer patch release inherits all documentation updates from prior patch releases, and may then be subsequently targeted for additional documentation updates. Thus, there is no guarantee that documentation from a given build is applicable to a prior patch release, as patch updates may have modified the area described in the documentation.
 
 ## Branches
 
