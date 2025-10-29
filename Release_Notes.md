@@ -14,7 +14,27 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/07/30*_
+_*Last Update: 2025/10/28*_
+
+### Rev 2.0.2 ###
+
+#### Rev 2.0.2 release date: 2025/10/31 ###
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Enhancements:
+    - Clarified language in several documents
+    - Added documentation for a process to apply documentation updates to patch releases
+    - Added KeyVault software write-enable hardening
+    - Upgraded Adams-Bridge to v1.0.3
+    - Documented Fuse Controller use-case for generic strap pins
+- Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
+- Bug fixes:
+  - [BUG FIX] Fixed zeroization logic in adams-bridge [#203](https://github.com/chipsalliance/adams-bridge/issues/203)
+  - [BUG FIX] Fixed KeyVault hardening for software write-enable [#1035](https://github.com/chipsalliance/caliptra-rtl/issues/1035)
+  - [BUG FIX] Upgraded VeeR core to resolve bug in AXI-to-AHB bridge logic [#1055](https://github.com/chipsalliance/caliptra-rtl/issues/1055)
+
+## Previous Releases ##
 
 ### Rev 2.0.1 ###
 
@@ -33,8 +53,6 @@ _*Last Update: 2025/07/30*_
   - [BUG FIX] Fix ECDH pubkey check (#921)
   - [BUG FIX] Corrected a few instances of incorrectly-named ASSERT macro calls
   - [BUG FIX] Fix variable message byte drop bug in Adams Bridge [#145](https://github.com/chipsalliance/adams-bridge/issues/145)
-
-## Previous Releases ##
 
 ### Rev 2p0 ###
 
