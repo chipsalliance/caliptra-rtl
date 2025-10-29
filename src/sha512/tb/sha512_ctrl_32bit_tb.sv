@@ -1014,13 +1014,13 @@ module sha512_ctrl_32bit_tb
     //source the correct vector file for the mode set below
     test_mode = MODE_SHA_384;
 
-    fin  = $fopen("/proj/pso/ravthaku/fips_vectors/keypair/16dec2024/SHA2-384.txt","r");
+    fin  = $fopen("../stimulus/acvp/SHA2-384.txt","r");
     if (fin == 0)
     begin
       $display("ERROR: Input file not found");
       $stop;
     end
-    fout = $fopen("/proj/pso/ravthaku/fips_vectors/keypair/16dec2024/SHA2-384_digest.txt","w");
+    fout = $fopen("../stimulus/acvp/SHA2-384_digest.txt","w");
     if (fout == 0)
     begin
       $display("ERROR: Output file not found");
