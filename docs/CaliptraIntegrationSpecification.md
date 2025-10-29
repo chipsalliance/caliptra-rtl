@@ -166,6 +166,12 @@ The following tables describe the interface signals.
 
 Adams-Bridge SRAM interface is used to connect the necessary SRAM instances for Adams-Bridge.
 There are 8 SRAMs, 2 of which have 2 banks. Each SRAM has a parameterized data width and depth used to calculate the addr width.
+
+All memories are modeled as 1 read 1 write port RAMs with a flopped read data.
+See abr_1r1w_ram.sv and abr_1r1w_be_ram.sv for examples.
+Strobe width describes the number of bits enabled by each strobe. All strobed memories are byte enabled in the design.
+See [ABR Memory requirement](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md#memory-requirement) for more details.
+
 The full set of wires is encapsulated in the mldsa_mem_if construct mldsa_memory_export at the Caliptra boundary.
 
 The table below details the interface required for each SRAM. Driver direction is from the perspective of Caliptra.
