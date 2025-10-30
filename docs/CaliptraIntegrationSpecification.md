@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Integration Specification</p>
 
-<p style="text-align: center;">Version 2.0.1</p>
+<p style="text-align: center;">Version 2.0.2</p>
 
 <div style="page-break-after: always"></div>
 
@@ -68,6 +68,7 @@ The following table describes integration parameters.
 | TECH_SPECIFIC_ICG           | config_defines.svh   | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_ICG macro) to be used in place of the native Caliptra clock gate module. |
 | USER_EC_RV_ICG              | config_defines.svh   | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
 | TECH_SPECIFIC_EC_RV_ICG     | config_defines.svh   | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_EC_RV_ICG macro) to be used in place of the native RISC-V core clock gate module. |
+| CALIPTRA_AXI_DMA_ADDR_WIDTH | config_defines.svh   | Defines the address width for the Caliptra AXI Manager interface, driven by Caliptra's DMA assist block. The address width value assigned to this macro should match the address width that is expected at the integrator's SoC AXI interconnect. |
 | CALIPTRA_PRIM_ROOT          | environment variable | The integrator needs to set this environment variable to the path to technology specific modules for synthesis. Defaults to $CALIPTRA_ROOT/src/caliptra_prim_generic. |
 | CALIPTRA_PRIM_MODULE_PREFIX | environment variable | The integrator needs to set this environment variable to specify the module name prefix for technology specific modules for synthesus. Defaults to 'caliptra_prim_generic'. |
 
@@ -165,6 +166,12 @@ The following tables describe the interface signals.
 
 Adams-Bridge SRAM interface is used to connect the necessary SRAM instances for Adams-Bridge.
 There are 8 SRAMs, 2 of which have 2 banks. Each SRAM has a parameterized data width and depth used to calculate the addr width.
+
+All memories are modeled as 1 read 1 write port RAMs with a flopped read data.
+See abr_1r1w_ram.sv and abr_1r1w_be_ram.sv for examples.
+Strobe width describes the number of bits enabled by each strobe. All strobed memories are byte enabled in the design.
+See [ABR Memory requirement](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md#memory-requirement) for more details.
+
 The full set of wires is encapsulated in the mldsa_mem_if construct mldsa_memory_export at the Caliptra boundary.
 
 The table below details the interface required for each SRAM. Driver direction is from the perspective of Caliptra.
@@ -227,7 +234,7 @@ The table below details the interface required for each SRAM. Driver direction i
 
 | Signal name | Width | Driver  | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :--------- | :--------- | :--------- | :--------- | :--------- |
-| cptra_obf_key | 256 | Input Strap | Asynchronous | Obfuscation key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected unless PUF is driving this. The key is latched by Caliptra on caliptra powergood deassertion. It is cleared after its use and can only re-latched on a power cycle (powergood deassertion to assertion). |
+| cptra_obf_key | 256 | Input Strap | Asynchronous | Obfuscation key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected unless PUF is driving this. The key is latched by Caliptra upon first deassertion of the warm reset following caliptra powergood assertion. It is not resampled during subsequent warm resets, therefore the value is only captured upon a cold boot. It is cleared after its use and can only re-latched on a power cycle (powergood deassertion to assertion). |
 | cptra_csr_hmac_key | 512 | Input Strap | Asynchronous | CSR HMAC key is driven by SoC at integration time. Ideally this occurs just before tape-in and the knowledge of this key must be protected. The key is latched by Caliptra on caliptra powergood assertion during DEVICE_MANUFACTURING lifecycle state. |
 | cptra_obf_field_entropy_vld | 1 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Valid signal used to sample cptra_obf_field_entropy if it is driven by wires from the fuse controller. |
 | cptra_obf_field_entropy | 256 | Input | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0. Fuse controller can optionally drive the field entropy value over wires through this interface. The value is sampled after warm reset if the valid cptra_obf_field_entropy_vld is asserted. |
@@ -258,6 +265,14 @@ Fuses may only be written during the BOOT_FUSE state of the Boot FSM and require
 After all fuses are written, the fuse done register at the end of the fuse address space must be set to 1 to lock the fuse writes and to proceed with the boot flow.
 
 Although fuse values (and the fuse done register) persist across a warm reset, SoC is still required to perform a write to the fuse done register while in the BOOT\_FUSE state in order to complete the bringup from reset. See [Boot FSM](#boot-fsm) for further details.
+
+**Note**: Starting in Caliptra 2.0 subsystem strap and other configuration registers have been added to the fuse region. Subsystem [straps](#straps) are expected to be programmed during the same time as fuses per [Caliptra spec](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#subsystem-pre-fw-load-boot-flow). The following SS registers in the fuse region are not straps, are intended for internal use in Caliptra, and cannot be written by any SoC agents; therefore, categorizing them under the FUSE range has no effect:
+
+- `SS_DBG_MANUF_SERVICE_REG_RSP`
+- `SS_SOC_DBG_UNLOCK_LEVEL`
+- `SS_GENERIC_FW_EXEC_CTRL`
+
+The remaining register `SS_DBG_MANUF_SERVICE_REG_REQ` is initialized by the same SoC agent as fuses and is the only agent that can make subsystem debug service requests.
 
 ## Interface rules
 
@@ -333,8 +348,8 @@ Caliptra firmware internally has the capability to force release the mailbox bas
 
 ### Straps
 
-Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either cptra_pwrgood signal deassertion or cptra\_noncore\_rst\_b deassertion – refer to interface table for list of straps.
-In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. Once written and locked, the values of these straps persist until a cold reset.
+Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either cptra_pwrgood signal assertion (cold reset exit) or cptra\_noncore\_rst\_b deassertion (warm reset exit)  – refer to interface table for list of straps.
+In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. These must be programmed by SoC FW at the same time as Caliptra [Fuses](#fuses) per [Caliptra Spec](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#subsystem-pre-fw-load-boot-flow). Once written and locked, the values of these straps persist until a cold reset.
 
 ### Obfuscation key
 

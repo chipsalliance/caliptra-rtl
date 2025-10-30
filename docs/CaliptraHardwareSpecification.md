@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
-<p style="text-align: center;">Revision 2.0.1</p>
+<p style="text-align: center;">Revision 2.0.2</p>
 
 <div style="page-break-after: always"></div>
 
@@ -278,6 +278,8 @@ Debug mode values may be set by integrators in the Caliptra configuration files.
 | Field Entropy Debug Value   | All 0x1       |
 | Key Vault Debug Value 0     | All 0xA       |
 | Key Vault Debug Value 1     | All 0x5       |
+
+Note: When entering debug or scan mode, all crypto engines are zeroized. Before starting any crypto operation in these modes, the status registers of all crypto engines must be checked to confirm they are ready. Failing to do so may trigger a fatal error caused by concurrent crypto operations.
 
 ## Clock gating
 
