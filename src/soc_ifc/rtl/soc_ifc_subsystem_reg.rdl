@@ -114,6 +114,7 @@ reg {
             [br]SOC Access:      RWL-S";
     strap addr_h[32]=32'h0;
 } SS_UDS_SEED_BASE_ADDR_H;
+
 reg {
     name = "Subsystem Production Debug Unlock Authentication Public Key Hash Offset";
     desc = "Provides an offset in the destination register bank at which a set of Public Key Hashes may be found. The number of hashes available at this offset is indicated by
@@ -224,13 +225,21 @@ reg {
 reg {
     name = "SUBSYSTEM DEBUG SERVICE REG REQUEST";
     desc = "JTAG in debug/manuf mode or SOC can write to this register for ROM/FW defined skips or services.
-            [br]This register is used to support Subsystem flows, and is disabled in Caliptra passive mode.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW
-            [br]TAP Access [in debug/manuf mode]: RW";
-    field {desc="Manufacturing debug unlock request. Only writable when lifecycle state is MANUFACTURING and DEBUG_INTENT strap is set to 1."; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_REQ = 1'b0;
-    field {desc="Production debug unlock request. Only writable when lifecycle state is PRODUCTION and DEBUG_INTENT strap is set to 1."      ; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_REQ = 1'b0;
-    field {desc="UDS programming request."                                                                                                   ; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_REQ = 1'b0;
+            [br]This register is used to support Subsystem flows, and is disabled in Caliptra passive mode.";
+    field {desc="Manufacturing debug unlock request. Only writable when lifecycle state
+                 is MANUFACTURING and DEBUG_INTENT strap is set to 1.
+                 [br]Caliptra Access: RW
+                 [br]SOC Access:      RW
+                 [br]TAP Access [in debug/manuf mode]: RW"; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} MANUF_DBG_UNLOCK_REQ = 1'b0;
+    field {desc="Production debug unlock request. Only writable when lifecycle state
+                 is PRODUCTION and DEBUG_INTENT strap is set to 1.
+                 [br]Caliptra Access: RW
+                 [br]SOC Access:      RW
+                 [br]TAP Access [in debug/manuf mode]: RW"; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} PROD_DBG_UNLOCK_REQ = 1'b0;
+    field {desc="UDS programming request.
+                 [br]Caliptra Access: RO
+                 [br]SOC Access:      RO
+                 [br]TAP Access [in debug/manuf mode]: RW"; sw=rw; hw=rw; swwe=true; we=true; resetsignal = cptra_rst_b;} UDS_PROGRAM_REQ = 1'b0;
     field {desc="RSVD"                                                                                                                       ; sw=r ; hw= w;                                               } RSVD[29];
 } SS_DBG_SERVICE_REG_REQ @0x5c0;
 
