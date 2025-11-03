@@ -256,6 +256,14 @@ VERILATOR_RUN_ARGS ?= ""
 # Add testbench lib include paths
 CFLAGS += $(TB_DPI_INCS)
 
+############# VCS Compile options #############
+VCS_COMP_OPTS += +lint=IA_CHECKFAIL
+VCS_COMP_OPTS += -assert svaext
+VCS_COMP_OPTS += +define+SIMULATION
+VCS_COMP_OPTS += +define+CLP_ASSERT_ON
+VCS_COMP_OPTS += -noinherit_timescale=1ns/1ps
+VCS_COMP_OPTS += $(TB_DEFS)
+
 # Targets
 all: clean verilator
 
@@ -285,8 +293,8 @@ verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_VERILATOR_SRCS) $(TBD
 	touch verilator-build
 
 vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
-	vlogan -full64 -sverilog -kdb -incr_vlogan +lint=IA_CHECKFAIL -assert svaext \
-	  +define+CLP_ASSERT_ON $(TB_DEFS) -noinherit_timescale=1ns/1ps \
+	vlogan -full64 -sverilog -kdb -incr_vlogan \
+	  $(VCS_COMP_OPTS) \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf
 	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 $(COVERAGE_ARGS) \
 	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb +dpi -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)

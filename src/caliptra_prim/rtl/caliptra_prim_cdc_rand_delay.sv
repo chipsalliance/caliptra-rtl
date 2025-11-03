@@ -24,7 +24,7 @@ module caliptra_prim_cdc_rand_delay #(
     input logic [DataWidth-1:0]   src_data_i,
     output logic [DataWidth-1:0]  dst_data_o
 );
-`ifdef CALIPTRA_SIMULATION
+`ifdef SIMULATION
   if (Enable) begin : gen_enable
 
     // This controls dst_data_o: any bit with its data_sel set uses prev_data_i, others use
@@ -61,7 +61,7 @@ module caliptra_prim_cdc_rand_delay #(
   end else begin : gen_no_enable
     assign dst_data_o = src_data_i;
   end
-`else  // CALIPTRA_SIMULATION
+`else  // SIMULATION
     assign dst_data_o = src_data_i;
-`endif  // CALIPTRA_SIMULATION
+`endif  // SIMULATION
 endmodule

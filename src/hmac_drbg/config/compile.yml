@@ -25,6 +25,14 @@ targets:
     tops: [hmac_drbg_tb]
   sim:
     pre_exec: 'echo "[PRE-EXEC] Copying HMAC_DRBG vector generator to $(pwd)" && cp $COMPILE_ROOT/tb/hmac_drbg_ref.py .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
 ---
 provides: [hmac_drbg_coverage]  
 schema_version: 2.4.0

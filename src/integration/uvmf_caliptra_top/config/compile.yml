@@ -65,6 +65,7 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
         # Define this for caliptra_sva to know how to report assert errors
         - +define+UVM
         - +define+UVMF_CALIPTRA_TOP
@@ -148,6 +149,7 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
         # Define this for caliptra_sva to know how to report assert errors
         - +define+UVM
         - +define+UVMF_CALIPTRA_TOP

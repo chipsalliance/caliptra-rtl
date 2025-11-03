@@ -34,6 +34,14 @@ targets:
     files:
       - $COMPILE_ROOT/tb/sha256_ctrl_tb.sv
     tops: [sha256_ctrl_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
 ---
 provides: [sha256_coverage]  
 schema_version: 2.4.0
@@ -69,6 +77,7 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'

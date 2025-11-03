@@ -42,13 +42,13 @@
 // to the behavioral flop. An assertion is added to ensure equivalence between the
 // caliptra_prim_sparse_fsm_flop output and the behavioral flop output in that case.
 `define CALIPTRA_PRIM_FLOP_SPARSE_FSM(__name, __d, __q, __type, __resval = `CALIPTRA_PRIM_FLOP_RESVAL, __clk = `CALIPTRA_PRIM_FLOP_CLK, __rst_n = `CALIPTRA_PRIM_FLOP_RST, __alert_trigger_sva_en = 1) \
-  `ifdef CALIPTRA_SIMULATION                                   \
-    caliptra_prim_sparse_fsm_flop #(                           \
+  `ifdef SIMULATION                                   \
+    caliptra_prim_sparse_fsm_flop #(                  \
       .StateEnumT(__type),                            \
       .Width($bits(__type)),                          \
       .ResetValue($bits(__type)'(__resval)),          \
       .EnableAlertTriggerSVA(__alert_trigger_sva_en), \
-      .CustomForceName(`CALIPTRA_PRIM_STRINGIFY(__q))          \
+      .CustomForceName(`CALIPTRA_PRIM_STRINGIFY(__q)) \
     ) __name (                                        \
       .clk_i   ( __clk   ),                           \
       .rst_ni  ( __rst_n ),                           \
@@ -58,7 +58,7 @@
     `CALIPTRA_PRIM_FLOP_A(__d, __q, __resval, __clk, __rst_n)  \
     `CALIPTRA_ASSERT(``__name``_A, __q === ``__name``.state_o) \
   `else                                               \
-    caliptra_prim_sparse_fsm_flop #(                           \
+    caliptra_prim_sparse_fsm_flop #(                  \
       .StateEnumT(__type),                            \
       .Width($bits(__type)),                          \
       .ResetValue($bits(__type)'(__resval)),          \
