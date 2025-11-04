@@ -286,7 +286,19 @@ addrmap sha3_reg {
             | 0x08  | ErrSwCmdSequence | Incorrect command sequence |
             | 0xC1  | ErrFatalError | Fatal error occurred |
             | 0xC2  | ErrPackerIntegrity | Counter integrity failure inside MsgFifo.Packer |
-            | 0xC3  | ErrmsgFifoIntegrity | Counter integrity failure inside MsgFifo.Fifo |
+            | 0xC3  | ErrMsgFifoIntegrity | Counter integrity failure inside MsgFifo.Fifo |
+
+            Some values present in err_code_e in kmac_pkg.sv are not listed here because they are only used when EnMasking or EnFullKmac are set to one.
+            Both EnMasking and EnFullKmac are set to zero (and therefore disabled) in the sha3_ctrl module.
+            The error codes that cannot happen are:
+            - ErrKeyNotValid:
+              Is only output when the kmac_app module enters the state StKeyMgrErrKeyNotValid, which requires EnFullKmac to be one.
+            - ErrWaitTimerExpired:
+              Is only output in the kmac_entropy module, which requires EnMasking to be one in the kmac module.
+            - ErrIncorrectEntropyMode:
+              Also only output in the kmac_entropy module, which requires EnMasking to be one in the kmac module.
+            - ErrSwHashingWithoutEntropyReady:
+              Requires err_entropy_ready in the kmac_errchk module to be one, which only happens when EnMasking is one.
             ";
             sw = r;
             reset = 0x0;
