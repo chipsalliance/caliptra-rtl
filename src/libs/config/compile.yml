@@ -21,6 +21,8 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
+      - $COMPILE_ROOT/rtl/caliptra_dynamic_cg.sv
+      - $COMPILE_ROOT/rtl/caliptra_static_cg.sv
       - $COMPILE_ROOT/rtl/caliptra_sva.svh
       - $COMPILE_ROOT/rtl/caliptra_macros.svh
       - $COMPILE_ROOT/rtl/caliptra_sram.sv
