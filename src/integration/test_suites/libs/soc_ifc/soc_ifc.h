@@ -142,7 +142,7 @@ void soc_ifc_sha_accel_wr_mode(enum sha_accel_mode_e mode);
 void soc_ifc_sha_accel_execute();
 void soc_ifc_sha_accel_poll_status();
 void soc_ifc_sha_accel_clr_lock();
-void soc_ifc_w1clr_sha_lock_field();
+void soc_ifc_w1clr_sha_lock_field(uint32_t);
 
 // AXI DMA Functions
 uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size);
