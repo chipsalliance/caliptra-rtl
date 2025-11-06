@@ -500,6 +500,10 @@ interface soc_ifc_cov_if
       AXItoSHAxREG: cross AXItoSHA_ip_cp, REG_ip_cp;
   endgroup
 
+  covergroup soc_ifc_regs_grp @(posedge clk iff cptra_rst_b);
+    dcls_error_cp: coverpoint i_soc_ifc_reg.hwif_out.CPTRA_HW_ERROR_FATAL.dcls_error.value[0];
+  endgroup
+
     soc_ifc_top_cov_grp soc_ifc_top_cov_grp1 = new();
     soc_ifc_arb_cov_grp soc_ifc_arb_cov_grp1 = new();
     soc_ifc_boot_fsm_cov_grp soc_ifc_boot_fsm_cov_grp1 = new();

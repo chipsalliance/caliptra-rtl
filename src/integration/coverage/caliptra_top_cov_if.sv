@@ -14,8 +14,9 @@
 
 `ifndef VERILATOR
 
-interface caliptra_top_cov_if   
-    import soc_ifc_pkg::*;  
+interface caliptra_top_cov_if
+    import soc_ifc_pkg::*;
+    import el2_mubi_pkg::*;
     (
     input logic clk,
     //SoC AXI Interface
@@ -26,9 +27,11 @@ interface caliptra_top_cov_if
     input logic cptra_pwrgood,
     input logic scan_mode,
     input security_state_t security_state,
-    input logic cptra_error_fatal
+    input logic cptra_error_fatal,
+    input el2_mubi_t lockstep_err_injection_en,
+    input el2_mubi_t disable_corruption_detection
 );
-    
+
     logic clk_gating_en;
     logic cpu_halt_status;
     logic wdt_timer1_en;
@@ -108,6 +111,13 @@ interface caliptra_top_cov_if
         enXcore_asleepXnmi:         cross enXcore_asleep, nmi;
         enXcore_asleepXaxi:         cross enXcore_asleep, axi_any_txn;
         enXcore_asleepXgeneric:     cross enXcore_asleep, generic;
+
+        //-----------------------------------------
+        // DCLS coverpoints
+        //-----------------------------------------
+        dcls_error_injected: coverpoint mubi_check_true(lockstep_err_injection_en);
+        dcls_error_detection_disabled: coverpoint mubi_check_true(disable_corruption_detection);
+        dcls_error_injXdis: cross dcls_error_injected, dcls_error_detection_disabled;
     endgroup
 
     covergroup generic_input_wires_cg(input logic generic_bit) @(posedge clk);

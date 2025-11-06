@@ -70,6 +70,8 @@
 module caliptra_top_sva
   import doe_defines_pkg::*;
   import kv_defines_pkg::*;
+  import el2_mubi_pkg::*;
+  #(`include "el2_param.vh")
   ();
 
   //TODO: pass these parameters from their architecture into here
@@ -938,5 +940,53 @@ module caliptra_top_sva
                                       `HMAC_DRBG_PATH.valid |-> (`HMAC_DRBG_PATH.drbg < `HMAC_DRBG_PATH.HMAC_DRBG_PRIME)
                                       )
                           else $display("SVA ERROR: drbg >= HMAC_DRBG_PRIME when valid is high"); 
+
+
+  // SVA for DCLS
+  wire dcls_err = `SOC_IFC_TOP_PATH.i_soc_ifc_reg.hwif_out
+                .CPTRA_HW_ERROR_FATAL.dcls_error.value[0];
+
+  sequence dcls_injected;
+      mubi_check_false(`CPTRA_TOP_PATH.lockstep_err_injection_en)
+      ##1
+      mubi_check_true(`CPTRA_TOP_PATH.lockstep_err_injection_en);
+  endsequence
+
+  dcls_error_injection: assert property (
+    @(posedge `SVA_CLK)
+    ~dcls_err
+    and mubi_check_false(`CPTRA_TOP_PATH.disable_corruption_detection)
+    and dcls_injected
+        |=> $rose(dcls_err)
+  ) else $display("SVA ERROR: DCLS error injection did not cause CPTRA_HW_ERROR_FATAL.dcls_error");
+
+  dcls_error_detection_disable: assert property (
+    @(posedge `SVA_CLK)
+    ~dcls_err
+    and mubi_check_true(`CPTRA_TOP_PATH.disable_corruption_detection)
+    and dcls_injected
+        |=> $stable(dcls_err)
+  ) else $display("SVA ERROR: DCLS error injection caused CPTRA_HW_ERROR_FATAL.dcls_error despite DCLS error detection being disabled");
+
+  dcls_error_cptra_fatal_intr: assert property (
+    @(posedge `SVA_CLK)
+    $rose(dcls_err)
+    and $past(`CPTRA_TOP_PATH.cptra_error_fatal, 1) == 0
+        |-> $rose(`CPTRA_TOP_PATH.cptra_error_fatal)
+  ) else $display("SVA ERROR: DCLS error did not raise `cptra_error_fatal`");
+
+  `define SHADOW_CORE_TRACE_ASSERT(clk, trace_in, trace_out)                                                              \
+    shadow_core_``trace_in``_assert: assert property (                                                                   \
+      @(posedge clk)                                                                                                  \
+      ##(pt.LOCKSTEP_DELAY+1) `CPTRA_TOP_PATH.trace_out == $past(`CPTRA_TOP_PATH.trace_in, pt.LOCKSTEP_DELAY+1)       \
+    ) else $display("SVA ERROR: DCLS ``trace_out`` differs from ``trace_in`` after %0d cycles", pt.LOCKSTEP_DELAY+1)
+
+  `SHADOW_CORE_TRACE_ASSERT(`SVA_CLK, trace_rv_i_insn_ip, shadow_core_trace_rv_i_insn_ip);
+  `SHADOW_CORE_TRACE_ASSERT(`SVA_CLK, trace_rv_i_address_ip, shadow_core_trace_rv_i_address_ip);
+  `SHADOW_CORE_TRACE_ASSERT(`SVA_CLK, trace_rv_i_valid_ip, shadow_core_trace_rv_i_valid_ip);
+  `SHADOW_CORE_TRACE_ASSERT(`SVA_CLK, trace_rv_i_exception_ip, shadow_core_trace_rv_i_exception_ip);
+  `SHADOW_CORE_TRACE_ASSERT(`SVA_CLK, trace_rv_i_ecause_ip, shadow_core_trace_rv_i_ecause_ip);
+  `SHADOW_CORE_TRACE_ASSERT(`SVA_CLK, trace_rv_i_interrupt_ip, shadow_core_trace_rv_i_interrupt_ip);
+  `SHADOW_CORE_TRACE_ASSERT(`SVA_CLK, trace_rv_i_tval_ip, shadow_core_trace_rv_i_tval_ip);
 
 endmodule
