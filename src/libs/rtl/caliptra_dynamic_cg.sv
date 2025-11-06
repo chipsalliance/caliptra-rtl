@@ -12,6 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+//======================================================================
+// Clock Enable Logic Truth Table
+//======================================================================
+// This truth table describes the clock state based on control signals.
+// The logic is evaluated in priority order from top to bottom.
+//
+// +---------+--------------+---------+-----------+---------+-------------------+
+// | rst_b_i | debug_mode_i | clk_off | dyn_cg_en | active  | Clock State       |
+// +---------+--------------+---------+-----------+---------+-------------------+
+// |    0    |      X       |    X    |     X     |    X    | ENABLED           | Reset or Debug mode
+// |    1    |      1       |    X    |     X     |    X    | ENABLED           |
+// +---------+--------------+---------+-----------+---------+-------------------+
+// |    1    |      0       |    1    |     X     |    X    | DISABLED          | Clock forced off
+// +---------+--------------+---------+-----------+---------+-------------------+
+// |    1    |      0       |    0    |     1     |    0    | GATED (inactive)  | Dynamic CG enabled
+// |    1    |      0       |    0    |     1     |    1    | ENABLED (active)  |
+// +---------+--------------+---------+-----------+---------+-------------------+
+// |    1    |      0       |    0    |     0     |    X    | ENABLED           | Dynamic CG disabled
+// +---------+--------------+---------+-----------+---------+-------------------+
+//
+// Priority Logic:
+//   1. (!rst_b_i || debug_mode_i)  → Clock ENABLED (always running for reset/debug)
+//   2. clk_off_i                   → Clock DISABLED (forced off for power savings)
+//   3. dyn_cg_en_i                 → Clock GATED/ENABLED based on activity
+//   4. Default                     → Clock ENABLED (always running)
+//======================================================================
 
 module caliptra_dynamic_cg (
     input logic clk_i,
@@ -20,7 +46,7 @@ module caliptra_dynamic_cg (
     input logic rst_b_i,
     input logic active_i,
 
-    input logic test_en_i,
+    input logic debug_mode_i,
 
     output logic clk_cg_o
 );
@@ -28,18 +54,14 @@ module caliptra_dynamic_cg (
 
     logic en;
   
-    assign en = !rst_b_i ?  1'b1 :
-                clk_off_i ? 1'b0 :
-                dyn_cg_en_i ? active_i: 1'b1; 
-
-
-
+    assign en = !rst_b_i || debug_mode_i ?  1'b1 :
+                               clk_off_i ? 1'b0 :
+                             dyn_cg_en_i ? active_i: 1'b1; 
 
     `CALIPTRA_ICG caliptra_icg (
         .clk(clk_i),
         .en,
         .clk_cg(clk_cg_o)
-
     );
 
 

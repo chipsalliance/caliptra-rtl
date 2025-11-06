@@ -13,12 +13,35 @@
 // limitations under the License.
 
 
+//======================================================================
+// Clock Enable Logic Truth Table
+//======================================================================
+// This truth table describes the clock state based on control signals.
+// The logic is evaluated in priority order from top to bottom.
+//
+// +---------+--------------+---------+-------------------+
+// | rst_b_i | debug_mode_i | clk_off | Clock State       |
+// +---------+--------------+---------+-------------------+
+// |    0    |      X       |    X    | ENABLED           | Reset or Debug mode
+// |    1    |      1       |    X    | ENABLED           |
+// +---------+--------------+---------+-------------------+
+// |    1    |      0       |    1    | DISABLED          | Clock forced off
+// +---------+--------------+---------+-------------------+
+// |    1    |      0       |    0    | ENABLED           | Normal operation
+// +---------+--------------+---------+-------------------+
+//
+// Priority Logic:
+//   1. (!rst_b_i || debug_mode_i)  → Clock ENABLED (always running for reset/debug)
+//   2. clk_off_i                   → Clock DISABLED (forced off for power savings)
+//   3. Default                     → Clock ENABLED (always running)
+//======================================================================
+
 module caliptra_static_cg (
     input logic clk_i,
     input logic clk_off_i,
     input logic rst_b_i,
 
-    input logic test_en_i,
+    input logic debug_mode_i,
 
     output logic clk_cg_o
 );
@@ -26,8 +49,8 @@ module caliptra_static_cg (
 
     logic en;
 
-    assign en = !rst_b_i ?  1'b1 :
-                clk_off_i ? 1'b0 : 1'b1;
+    assign en = !rst_b_i || debug_mode_i ?  1'b1 :
+                               clk_off_i ? 1'b0 : 1'b1;
 
 
 
