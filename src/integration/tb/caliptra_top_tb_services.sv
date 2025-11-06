@@ -350,7 +350,8 @@ module caliptra_top_tb_services
     //         8'hb4        - Inject MLKEM zeroize during KV access
     //         8'hb5:bf     - Unused
     //         8'hc0: 8'hc7 - Inject MLDSA_SEED to kv_key register
-    //         8'hc8: 8'hd5 - Unused
+    //         8'hc8        - DCLS services
+    //         8'hc9: 8'hd5 - Unused
     //         8'hd6        - Inject mldsa timeout
     //         8'hd7        - Inject normcheck or makehint failure during mldsa signing 1st loop. Failure type is selected randomly
     //         8'hd8        - Unused
@@ -883,7 +884,30 @@ module caliptra_top_tb_services
             inject_single_msg_for_ecc_mldsa <= 'b0; //reset
     end
 
-    
+    // DCLS services
+    // WriteData[15:8]:
+    //   8'h0: Release all injections
+    //   8'h1: Force inject corruption error to the shadow core
+    //   8'h2: Release corruption error injection
+    //   8'h3: Force disable corruption detection
+    //   8'h4: Release disable corruption detection signal
+    always_ff @(negedge clk) begin
+        if ((WriteData[7:0] == 8'hc8) && mailbox_write) begin
+            automatic int cmd = WriteData[15:8];
+            if (cmd == 8'h0) begin
+                release `CPTRA_TB_TOP_NAME.lockstep_err_injection_en;
+                release `CPTRA_TB_TOP_NAME.disable_corruption_detection;
+            end else if (cmd == 8'h1) begin
+                force `CPTRA_TB_TOP_NAME.lockstep_err_injection_en = el2_mubi_pkg::El2MuBiTrue;
+            end else if (cmd == 8'h2) begin
+                release `CPTRA_TB_TOP_NAME.lockstep_err_injection_en;
+            end else if (cmd == 8'h3) begin
+                force `CPTRA_TB_TOP_NAME.disable_corruption_detection = el2_mubi_pkg::El2MuBiTrue;
+            end else if (cmd == 8'h4) begin
+                release `CPTRA_TB_TOP_NAME.disable_corruption_detection;
+            end
+        end
+    end
 
     always_ff @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
