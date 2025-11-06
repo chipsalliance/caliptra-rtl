@@ -1,0 +1,64 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+
+// Field templates for power management controls
+field pm_dyn_cg_en_field {
+    name = "Dynamic Clock Gating Enable";
+    desc = "Enables dynamic clock gating for the block.
+            [br]
+            [b]1:[/b] Dynamic clock gating enabled (clocks gated when idle)
+            [br]
+            [b]0:[/b] Dynamic clock gating disabled (clocks controlled by block reset and clk_off)
+            [br]
+            [b]Note:[/b] Dynamic clock gating only takes effect when clk_off = 0.";
+    sw = rw;
+    hw = r;
+    reset = 1'b0;
+};
+
+field pm_clk_off_field {
+    name = "Clock Off Control";
+    desc = "Controls the clock supply to the block.
+            [br]
+            [b]1:[/b] Clock forced off
+            [br]
+            [b]0:[/b] Clock enabled (controlled by dyn_cg_en if dynamic gating is supported and enabled)
+            [br]
+            [b]Note:[/b] Reset and debug mode to block will override this control and turn on the clock.
+            [br]
+            [b]Note:[/b] When set to 1, this overrides dyn_cg_en and completely disables the clock.";
+    sw = rw;
+    hw = r;
+    reset = 1'b0;
+};
+
+
+addrmap cptra_pm_reg {
+    desc="address map for Caliptra Power Management registers";
+    littleendian = true;
+    default hw = na;
+    signal {activelow; async; cpuif_reset; field_reset;} cptra_rst_b;
+    default resetsignal=cptra_rst_b;
+
+    reg {
+        name="AES_PM_CTRL";
+        desc="AES Power Management Control
+            [br]
+            This register controls the power management features for the block";
+        pm_clk_off_field   clk_off[0:0];
+        pm_dyn_cg_en_field dyn_cg_en[1:1];
+    } aes_pm_ctrl;
+
+};

@@ -10,6 +10,7 @@ files:
   - src/doe/config/compile.yml
   - src/hmac/config/compile.yml
   - src/soc_ifc/config/compile.yml
+  - src/pm/config/compile.yml
   - src/hmac_drbg/config/compile.yml
   - src/ecc/config/compile.yml
   - src/keyvault/config/compile.yml

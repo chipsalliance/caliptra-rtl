@@ -1,0 +1,44 @@
+---
+provides: [cptra_pm_pkg]
+schema_version: 2.4.0
+#requires:
+#  - caliptra_prim
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/cptra_pm_reg_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/cptra_pm_reg_pkg.sv
+#---
+#provides: [cptra_pm_coverage]
+#schema_version: 2.4.0
+#requires:
+#  - libs
+#  - cptra_pm_pkg
+#targets:
+#  tb:
+#    directories: 
+#      - $COMPILE_ROOT/coverage
+#    files:
+#      - $COMPILE_ROOT/coverage/cptra_pm_cov_if.sv
+#      - $COMPILE_ROOT/coverage/cptra_pm_cov_bind.sv
+---
+provides: [pm]
+schema_version: 2.4.0
+requires:
+  - libs
+  - cptra_pm_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/cptra_pm_top.sv
+      - $COMPILE_ROOT/rtl/cptra_pm_reg.sv
+    tops: [cptra_pm_top]
+  rtl_lint:
+    directories: []
+    waiver_files: []
+    tops: [cptra_pm_top]
