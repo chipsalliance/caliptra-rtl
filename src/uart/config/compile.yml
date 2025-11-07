@@ -37,4 +37,5 @@ global:
       default:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
         - '-noinherit_timescale=1ns/1ps'

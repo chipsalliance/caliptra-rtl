@@ -4,11 +4,11 @@
 // pragma uvmf custom header begin
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
-//----------------------------------------------------------------------                     
-//               
+//----------------------------------------------------------------------
+//
 // Description: This top level module instantiates all synthesizable
 //    static content.  This and tb_top.sv are the two top level modules
-//    of the simulation.  
+//    of the simulation.
 //
 //    This module instantiates the following:
 //        DUT: The Design Under Test
@@ -26,10 +26,10 @@ module hdl_top;
 import ECC_parameters_pkg::*;
 import uvmf_base_pkg_hdl::*;
 
-  // pragma attribute hdl_top partition_module_xrtl                                            
+  // pragma attribute hdl_top partition_module_xrtl
 // pragma uvmf custom clock_generator begin
   bit clk;
-  // Instantiate a clk driver 
+  // Instantiate a clk driver
   // tbx clkgen
   initial begin
     clk = 0;
@@ -46,18 +46,26 @@ import uvmf_base_pkg_hdl::*;
   // Instantiate a rst driver
   // tbx clkgen
   initial begin
-    rst = 0; 
+    rst = 0;
     #200ns;
-    rst =  1; 
+    rst =  1;
   end
 // pragma uvmf custom reset_generator end
 
   // pragma uvmf custom module_item_additional begin
+    import kv_defines_pkg::*;
+    import kv_defines_pkg::*;
     wire transaction_flag_out_monitor_top;
     wire [31:0] hrdata_top;
     wire hreadyout_top;
     wire [1:0] op_top;
     wire [2:0] test_top;
+
+    kv_rd_resp_t [1:0] kv_rd_resp_stub = '{kv_rd_resp_t'(0), kv_rd_resp_t'(0)};
+    kv_wr_resp_t       kv_wr_resp_stub = kv_wr_resp_t'(0);
+
+    //PCR Signing
+    pcr_signing_t pcr_signing_data_stub = pcr_signing_t'(0);
   // pragma uvmf custom module_item_additional end
 
   // Instantiate the signal bundle, monitor bfm and driver bfm for each interface.
@@ -113,7 +121,18 @@ import uvmf_base_pkg_hdl::*;
 
       .hresp_o          (ECC_out_agent_bus.hresp),
       .hreadyout_o      (ECC_out_agent_bus.hreadyout),
-      .hrdata_o         (ECC_out_agent_bus.hrdata), 
+      .hrdata_o         (ECC_out_agent_bus.hrdata),
+
+      // KV interface
+      .kv_read(),
+      .kv_write(),
+      .kv_rd_resp(kv_rd_resp_stub),
+      .kv_wr_resp(kv_wr_resp_stub),
+
+      //PCR Signing
+      .pcr_signing_data(pcr_signing_data_stub),
+
+      .ocp_lock_in_progress(1'b0),
       .busy_o           (),
       .error_intr       (),
       .notif_intr       (),
@@ -123,14 +142,14 @@ import uvmf_base_pkg_hdl::*;
   ecc_top_cov_bind i_ecc_top_cov_bind();
   // pragma uvmf custom dut_instantiation end
 
-  initial begin      // tbx vif_binding_block 
+  initial begin      // tbx vif_binding_block
     import uvm_pkg::uvm_config_db;
     // The monitor_bfm and driver_bfm for each interface is placed into the uvm_config_db.
     // They are placed into the uvm_config_db using the string names defined in the parameters package.
     // The string names are passed to the agent configurations by test_top through the top level configuration.
     // They are retrieved by the agents configuration class for use by the agent.
-    uvm_config_db #( virtual ECC_in_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , ECC_in_agent_BFM , ECC_in_agent_mon_bfm ); 
-    uvm_config_db #( virtual ECC_out_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , ECC_out_agent_BFM , ECC_out_agent_mon_bfm ); 
+    uvm_config_db #( virtual ECC_in_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , ECC_in_agent_BFM , ECC_in_agent_mon_bfm );
+    uvm_config_db #( virtual ECC_out_monitor_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , ECC_out_agent_BFM , ECC_out_agent_mon_bfm );
     uvm_config_db #( virtual ECC_in_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , ECC_in_agent_BFM , ECC_in_agent_drv_bfm  );
   end
 

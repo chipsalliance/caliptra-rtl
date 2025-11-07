@@ -221,6 +221,7 @@ global:
         - +define+CALIPTRA_TOP_TB
         - +define+CLP_ASSERT_ON
         - +define+ABR_ASSERT_ON
+        - +define+SIMULATION
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'
@@ -265,6 +266,7 @@ global:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
         - +define+ABR_ASSERT_ON
+        - +define+SIMULATION
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
 
@@ -300,6 +302,7 @@ global:
         - '+define+CALIPTRA_TOP_TB'
         - '+define+CLP_ASSERT_ON'
         - '+define+ABR_ASSERT_ON'
+        - +define+SIMULATION
         - '-noinherit_timescale=1ns/1ps'
       elab:
         # Suppress "Bit Size Exceeded" warning.
