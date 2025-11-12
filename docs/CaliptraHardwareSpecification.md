@@ -24,7 +24,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
     * Caliptra uC may use internally in mailbox mode or via the Caliptra AXI DMA assist engine in streaming mode
     * SHA Accelerator adds new SHA save/restore functionality
 * Adams Bridge Dilithium/ML-DSA (refer to [Adams bridge spec](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md))
-* Subsystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/Caliptra%202.0%20Subsystem%20Specification%201.pdf) for details)
+* Subsystem mode support (refer to [Subsystem Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSIntegrationSpecification.md) for details)
     * ECDH hardware support
     * HMAC512 hardware support
     * AXI Manager with DMA support (refer to [DMA Specification](https://github.com/chipsalliance/caliptra-ss/blob/main/docs/CaliptraSSHardwareSpecification.md#caliptra-core-axi-manager--dma-assist))
