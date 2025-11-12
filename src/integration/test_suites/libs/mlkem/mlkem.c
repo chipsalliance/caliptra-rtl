@@ -310,6 +310,11 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
             *reg_ptr++ = 0;
         }
+        VPRINTF(LOW, "[MLKEM Encaps] Try to Overwrite msg through MLDSA privkey\n");
+        reg_ptr = (uint32_t*) (CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR + 4768);
+        while (reg_ptr <= (uint32_t*) (CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR + 4800)) {
+            *reg_ptr++ = 0;
+        }
 
         while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK) == 0);
 
@@ -465,6 +470,11 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
         VPRINTF(LOW, "[MLKEM Encaps] Try to Overwrite msg\n");
         reg_ptr = (uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR;
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
+            *reg_ptr++ = 0;
+        }
+        VPRINTF(LOW, "[MLKEM Encaps] Try to Overwrite msg through MLDSA privkey\n");
+        reg_ptr = (uint32_t*) (CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR + 4768);
+        while (reg_ptr <= (uint32_t*) (CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR + 4800)) {
             *reg_ptr++ = 0;
         }
 
