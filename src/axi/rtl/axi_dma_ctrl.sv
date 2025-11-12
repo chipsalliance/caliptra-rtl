@@ -793,6 +793,7 @@ import kv_defines_pkg::*;
                                                                                                           SOC_IFC_ADDR_W'(r_req_if.addr);
         mb_data.wdata   = rd_route_data;
         mb_data.wstrb   = '1;
+        mb_data.user    = SOC_IFC_USER_W'(0);
         mb_data.id      = '1;
         mb_data.write   = hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX;
         mb_data.soc_req = 1'b0;

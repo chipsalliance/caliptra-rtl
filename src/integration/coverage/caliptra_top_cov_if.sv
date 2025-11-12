@@ -89,7 +89,16 @@ interface caliptra_top_cov_if
         debug:              coverpoint security_state.debug_locked;
         fatal_error:        coverpoint cptra_error_fatal;
         nmi:                coverpoint nmi_int;
-        generic:            coverpoint generic_input_wires;
+        generic:            coverpoint generic_input_wires {
+            bins byte0_active  = generic with (|(item & (64'hFF <<  0)));
+            bins byte1_active  = generic with (|(item & (64'hFF <<  8)));
+            bins byte2_active  = generic with (|(item & (64'hFF << 16)));
+            bins byte3_active  = generic with (|(item & (64'hFF << 24)));
+            bins byte4_active  = generic with (|(item & (64'hFF << 32)));
+            bins byte5_active  = generic with (|(item & (64'hFF << 40)));
+            bins byte6_active  = generic with (|(item & (64'hFF << 48)));
+            bins byte7_active  = generic with (|(item & (64'hFF << 56)));
+        }
 
         enXcore_asleep:             cross cg_en, core_asleep_value {
             ignore_bins b0 = enXcore_asleep with ((cg_en == 0) && (core_asleep_value == 1));
@@ -110,10 +119,10 @@ interface caliptra_top_cov_if
         enXcore_asleepXgeneric:     cross enXcore_asleep, generic;
     endgroup
 
-    covergroup generic_input_wires_cg(input logic generic_bit) @(posedge clk);
+    covergroup generic_input_wires_cg(input int index) @(posedge clk);
         option.per_instance = 1;
-        value:      coverpoint generic_bit;
-        transition: coverpoint generic_bit {
+        value:      coverpoint generic_input_wires[index];
+        transition: coverpoint generic_input_wires[index] {
             bins bin01 = (0 => 1);
             bins bin10 = (1 => 0);
         }
@@ -123,13 +132,13 @@ interface caliptra_top_cov_if
     // WDT_cov_grp WDT_cov_grp1 = new();
     caliptra_top_cov_grp caliptra_top_cov_grp1 = new();
     
-    generic_input_wires_cg giw_cg[64];
+//    generic_input_wires_cg giw_cg[64];
     //foreach(giw_cg[i]) giw_cg[i] = new(generic_input_wires[i]);
-    initial begin
-        for(int i = 0; i < 64; i++) begin
-            giw_cg[i] = new(generic_input_wires[i]);
+    generate
+        for(genvar i = 0; i < 64; i++) begin: GIW_LOOP
+            generic_input_wires_cg giw_cg = new(i);
         end
-    end
+    endgenerate
 
 endinterface
 

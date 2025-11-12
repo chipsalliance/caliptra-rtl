@@ -129,7 +129,7 @@ module skidbuffer #(
                 // }}}
                 // Verilator lint_on  UNUSED
                 // }}}
-        end else begin : LOGIC
+        end else begin : BUF_STAGE
                 // We'll start with skid buffer itself
                 // {{{
                 reg                     r_valid;

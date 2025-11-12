@@ -118,7 +118,7 @@ module caliptra_prim_fifo_sync #(
             storage[0] <= wdata_i;
           end
 
-      end else begin : gen_depth_eq1_reset
+      end else begin : gen_depth_eq1_no_reset
 
         always_ff @(posedge clk_i)
           if (fifo_incr_wptr) begin

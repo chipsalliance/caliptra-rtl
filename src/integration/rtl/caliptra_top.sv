@@ -321,48 +321,48 @@ module caliptra_top
     logic crypto_error;
 
     typedef enum logic [1:0] {
-        IDLE,
-        INITIAL,
-        DONE
+        CRYPTO_IDLE,
+        CRYPTO_INITIAL,
+        CRYPTO_DONE
     } crypto_state_t;
     crypto_state_t aes_state, aes_next_state;
     crypto_state_t ecc_state, ecc_next_state;
 
     always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
         if (!cptra_noncore_rst_b)
-            aes_state <= IDLE;
+            aes_state <= CRYPTO_IDLE;
         else
             aes_state <= aes_next_state;
     end
 
     always_comb begin
         case (aes_state)
-            IDLE:     aes_next_state = aes_busy ? INITIAL : IDLE;
-            INITIAL:  aes_next_state = aes_busy ? INITIAL : DONE;
-            DONE:     aes_next_state = DONE;
-            default:  aes_next_state = IDLE;
+            CRYPTO_IDLE:     aes_next_state = aes_busy ? CRYPTO_INITIAL : CRYPTO_IDLE;
+            CRYPTO_INITIAL:  aes_next_state = aes_busy ? CRYPTO_INITIAL : CRYPTO_DONE;
+            CRYPTO_DONE:     aes_next_state = CRYPTO_DONE;
+            default:  aes_next_state = CRYPTO_IDLE;
         endcase
     end
 
-    always_comb aes_busy_filtered = (aes_state == DONE) ? aes_busy : 1'b0;
+    always_comb aes_busy_filtered = (aes_state == CRYPTO_DONE) ? aes_busy : 1'b0;
 
     always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
         if (!cptra_noncore_rst_b)
-            ecc_state <= IDLE;
+            ecc_state <= CRYPTO_IDLE;
         else
             ecc_state <= ecc_next_state;
     end
 
     always_comb begin
         case (ecc_state)
-            IDLE:     ecc_next_state = ecc_busy ? INITIAL : IDLE;
-            INITIAL:  ecc_next_state = ecc_busy ? INITIAL : DONE;
-            DONE:     ecc_next_state = DONE;
-            default:  ecc_next_state = IDLE;
+            CRYPTO_IDLE:     ecc_next_state = ecc_busy ? CRYPTO_INITIAL : CRYPTO_IDLE;
+            CRYPTO_INITIAL:  ecc_next_state = ecc_busy ? CRYPTO_INITIAL : CRYPTO_DONE;
+            CRYPTO_DONE:     ecc_next_state = CRYPTO_DONE;
+            default:  ecc_next_state = CRYPTO_IDLE;
         endcase
     end
 
-    always_comb ecc_busy_filtered = (ecc_state == DONE) ? ecc_busy : 1'b0;
+    always_comb ecc_busy_filtered = (ecc_state == CRYPTO_DONE) ? ecc_busy : 1'b0;
 
     always_comb crypto_error =  (hmac_busy & ecc_busy_filtered)         |
                                 (hmac_busy & abr_busy)                  |

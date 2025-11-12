@@ -97,8 +97,8 @@ HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecc_secp384r1.exe \
 	          $(CALIPTRA_ROOT)/src/doe/tb/doe_test_gen.py \
 	          $(CALIPTRA_ROOT)/src/sha256/tb/sha256_wntz_test_gen.py \
-	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 \
-	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/mldsa_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug
+	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 \
+	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug
 
 # Separate OFILE variable since this is not used to build remote images
 # (i.e. FMC or RunTime)
@@ -132,6 +132,10 @@ ifdef debug
   $(error Unsupported Verilator trace format '$(VERILATOR_TRACE)')
  endif
  RIVIERA_DEBUG = +access +r
+endif
+
+ifdef coverage
+COVERAGE_ARGS = -cm line+cond+fsm+tgl+branch+assert -cm_hier $(CALIPTRA_ROOT)/src/integration/coverage/config/caliptra_top_tb_cm_hier.cfg
 endif
 
 # RK
@@ -252,6 +256,14 @@ VERILATOR_RUN_ARGS ?= ""
 # Add testbench lib include paths
 CFLAGS += $(TB_DPI_INCS)
 
+############# VCS Compile options #############
+VCS_COMP_OPTS += +lint=IA_CHECKFAIL
+VCS_COMP_OPTS += -assert svaext
+VCS_COMP_OPTS += +define+SIMULATION
+VCS_COMP_OPTS += +define+CLP_ASSERT_ON
+VCS_COMP_OPTS += -noinherit_timescale=1ns/1ps
+VCS_COMP_OPTS += $(TB_DEFS)
+
 # Targets
 all: clean verilator
 
@@ -281,10 +293,10 @@ verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_VERILATOR_SRCS) $(TBD
 	touch verilator-build
 
 vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
-	vlogan -full64 -sverilog -kdb -incr_vlogan +lint=IA_CHECKFAIL -assert svaext \
-	  +define+CLP_ASSERT_ON $(TB_DEFS) -noinherit_timescale=1ns/1ps \
+	vlogan -full64 -sverilog -kdb -incr_vlogan \
+	  $(VCS_COMP_OPTS) \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf
-	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 \
+	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 $(COVERAGE_ARGS) \
 	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb +dpi -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)
 
 ############ TEST Simulation ###############################
@@ -294,7 +306,7 @@ verilator: program.hex verilator-build
 
 vcs: program.hex vcs-build
 	cp $(TEST_GEN_FILES) $(BUILD_DIR)
-	./simv.caliptra_top_tb
+	./simv.caliptra_top_tb $(COVERAGE_ARGS)
 
 ############ TEST build ###############################
 

@@ -138,4 +138,7 @@ void main () {
             while(1);
         };
     }
+
+    // Ready for Runtime (just for signal coverage)
+    soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK);
 }

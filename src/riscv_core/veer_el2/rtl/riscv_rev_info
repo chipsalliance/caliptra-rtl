@@ -1,8 +1,7 @@
-commit 7f7b0cbb5f13f6a2589918a7628c38b439969b30 (HEAD -> 2.0-ahb-fix)
-Author: Robert Szczepanski <rszczepanski@antmicro.com>
-Date:   Fri Apr 4 10:45:45 2025 +0200
+commit 8d9457af9f7966506c871aba1ae4ff8a2a4e17b0 (HEAD -> 2.0-patches, origin/2.0-patches)
+Author: Karol Gugala <kgugala@antmicro.com>
+Date:   Wed Oct 8 19:31:52 2025 +0200
 
-    Prefix design file names when prefixing VeeR macros
+    CI: bump riscv_dv_matrix_include.py
 
-NOTE: This commit is from the 2.0-ahb-fix branch as part of the Pull Request:
-https://github.com/chipsalliance/Cores-VeeR-EL2/pull/423
+    Signed-off-by: Karol Gugala <kgugala@antmicro.com>
