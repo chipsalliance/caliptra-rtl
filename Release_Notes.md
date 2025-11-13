@@ -14,7 +14,18 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/10/12*_
+_*Last Update: 2025/11/17*_
+
+### Rev 2p1p1 ###
+
+#### Rev 2p1p1 release date: 2025/11/17 ###
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Bug fixes:
+  - [BUG FIX] Adams Bridge: issue #1118
+
+## Previous Releases ##
 
 ### Rev 2p1 ###
 
@@ -29,7 +40,6 @@ _*Last Update: 2025/10/12*_
 - Mailbox size reduced to 16KB in subsystem mode
 - Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
 
-## Previous Releases ##
 
 ### Rev 2p1-rc1 ###
 
