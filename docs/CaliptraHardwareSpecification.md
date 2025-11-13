@@ -1587,6 +1587,7 @@ The address map for LMS accelerator integrated into SHA256 is shown here: [sha25
 ## Adams Bridge - Dilithium (ML-DSA)
 
 Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
+Adams Bridge version registers are not up to date. See issue [#241](https://github.com/chipsalliance/adams-bridge/issues/241) for details.
 
 ### Address map
 Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
@@ -1594,6 +1595,7 @@ Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference
 ## Adams Bridge Kyber ML-KEM
 
 Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
+Adams Bridge version registers are not up to date. See issue [#241](https://github.com/chipsalliance/adams-bridge/issues/241) for details.
 
 ### Address map
 Address map of ML-KEM accelerator is shown here:  [ML-KEM\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
