@@ -350,9 +350,8 @@ ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_param_pkg.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_ctrl.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac.sv
-${CALIPTRA_ROOT}/src/hmac/rtl/hmac_core.v
+${CALIPTRA_ROOT}/src/hmac/rtl/hmac_core.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_reg.sv
-${CALIPTRA_ROOT}/src/hmac/rtl/hmac_lfsr.sv
 ${CALIPTRA_ROOT}/src/hmac_drbg/rtl/hmac_drbg.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_defines_pkg.sv
@@ -392,6 +391,7 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_piso_multi.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_piso.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_sample_buffer.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_msg_buffer.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_rd_lat_buffer.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_ahb_defines_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_ahb_slv_sif.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_masked_AND.sv
