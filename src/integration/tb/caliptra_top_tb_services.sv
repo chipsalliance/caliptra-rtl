@@ -150,6 +150,8 @@ module caliptra_top_tb_services
     logic [31:0]                prev_mailbox_data;
     logic                       mailbox_data_val;
     int                         commit_count;
+    // Add buffer variable (declare at module/class level)
+    string console_buffer = "";
 
     logic                       wb_valid;
     logic [4:0]                 wb_dest;
@@ -2399,20 +2401,29 @@ endgenerate //IV_NO
             dump_memory_contents(MEMTYPE_ICCM, `RV_ICCM_SADR, `RV_ICCM_EADR);
             $finish;
         end
-        // console Monitor
-        if( mailbox_data_val & mailbox_write) begin
-            if (prev_mailbox_data[7:0] inside {8'h0A,8'h0D}) begin
-                $fwrite(fd,"%0t - ", $time);
-                if (!UVM_TB) $write("%0t - ", $time);
+
+
+        // Modified console Monitor with buffering
+        if (mailbox_data_val & mailbox_write) begin
+            // Write to file character-by-character (immediate)
+            if (prev_mailbox_data[7:0] inside {8'h0A, 8'h0D}) begin
+                $fwrite(fd, "%0t - ", $time);
             end
-            $fwrite(fd,"%c", WriteData[7:0]);
-            // Prints get lost in sim.log amidst a flurry of UVM_INFO
-            // messages....  best to just omit and send to console.log
-            if (!UVM_TB) begin
-                $write("%c", WriteData[7:0]);
-            end
-            if (WriteData[7:0] inside {8'h0A,8'h0D}) begin // CR/LF
+            $fwrite(fd, "%c", WriteData[7:0]);
+            if (WriteData[7:0] inside {8'h0A, 8'h0D}) begin // CR/LF
                 $fflush(fd);
+            end
+            
+            // Buffer for console output (only for non-UVM testbench)
+            if (!UVM_TB) begin
+                // Add character to buffer
+                console_buffer = {console_buffer, string'(WriteData[7:0])};
+                
+                // Write complete line when CR/LF is detected
+                if (WriteData[7:0] inside {8'h0A, 8'h0D}) begin
+                    $write("%0t - %s", $time, console_buffer);
+                    console_buffer = "";  // Clear buffer for next line
+                end
             end
         end
         // Disable this for UVM simulations since control is delegated to
