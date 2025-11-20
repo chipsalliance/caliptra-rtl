@@ -726,14 +726,17 @@ el2_veer_wrapper rvtop (
     end
 
     always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
-        if (~cptra_noncore_rst_b) begin
-            cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; //Setting the default value to be debug locked and in production mode
+        if (~cptra_noncore_rst_b) begin //Setting the default value to be debug locked and in production mode
+            cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; 
             cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
         end
-        else if (unlock_caliptra_security_state) begin 
+        else if (unlock_caliptra_security_state) begin //capture the new value at reset or when unlocked
             cptra_security_state_Latched_d <= security_state;
-        end 
-        cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
+            cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
+        end else begin //hold the previous value when locked
+            cptra_security_state_Latched_d <= cptra_security_state_Latched_d;
+            cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
+        end
     end
 
     always_ff @(posedge clk or negedge cptra_pwrgood) begin
