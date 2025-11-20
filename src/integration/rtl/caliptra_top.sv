@@ -653,9 +653,7 @@ el2_veer_wrapper rvtop (
         else if (unlock_caliptra_security_state) begin 
             cptra_security_state_Latched_d <= security_state;
         end 
-        else begin
-            cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
-        end
+        cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
     end
 
     always_ff @(posedge clk or negedge cptra_pwrgood) begin
