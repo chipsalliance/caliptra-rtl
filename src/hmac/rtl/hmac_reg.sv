@@ -985,7 +985,7 @@ module hmac_reg (
         end
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
-                field_storage.HMAC512_LFSR_SEED[i0].LFSR_SEED.value <= 32'h3cabffb0;
+                field_storage.HMAC512_LFSR_SEED[i0].LFSR_SEED.value <= 32'h0;
             end else if(field_combo.HMAC512_LFSR_SEED[i0].LFSR_SEED.load_next) begin
                 field_storage.HMAC512_LFSR_SEED[i0].LFSR_SEED.value <= field_combo.HMAC512_LFSR_SEED[i0].LFSR_SEED.next;
             end
