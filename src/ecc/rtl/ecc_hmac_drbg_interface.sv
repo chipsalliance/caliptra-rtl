@@ -95,6 +95,7 @@ module ecc_hmac_drbg_interface#(
     logic [63 : 0]          counter_reg;
     logic [REG_SIZE-1 : 0]  counter_nonce;
     logic [REG_SIZE-1 : 0]  counter_nonce_reg;
+    logic [REG_SIZE-1 : 0]  sca_entropy, sca_entropy_reg;
 
     localparam [1 : 0] KEYGEN_CMD       = 2'b00;
     localparam [1 : 0] SIGN_CMD         = 2'b01;
@@ -138,6 +139,26 @@ module ecc_hmac_drbg_interface#(
         .drbg(hmac_drbg_result)
         );
 
+    genvar i;
+    generate 
+        for (i=0; i < 12; i++) begin : gen_lfsr
+            caliptra_prim_lfsr
+            #(
+            .LfsrType("FIB_XNOR"),
+            .LfsrDw(32),
+            .StateOutDw(32)
+            ) caliptra_prim_lfsr_inst_i
+            (
+            .clk_i(clk),
+            .rst_ni(reset_n),
+            .seed_en_i(hmac_drbg_init),
+            .seed_i(sca_entropy[i*32 +: 32]),
+            .lfsr_en_i(1'b1),
+            .entropy_i('0),
+            .state_o(hmac_lfsr_seed[i*32 +: 32])
+            );
+        end
+    endgenerate
 
     //----------------------------------------------------------------
     // hmac_drbg_interface_logic
@@ -150,13 +171,13 @@ module ecc_hmac_drbg_interface#(
     always_comb 
     begin : hmac_drbg_entropy_input
         unique case (state_reg)
-            LFSR_ST:        hmac_drbg_entropy = IV;
-            LAMBDA_ST:      hmac_drbg_entropy = IV;
-            SCALAR_RND_ST:  hmac_drbg_entropy = IV;
-            MASKING_RND_ST: hmac_drbg_entropy = IV;
+            LFSR_ST:        hmac_drbg_entropy = sca_entropy_reg;
+            LAMBDA_ST:      hmac_drbg_entropy = sca_entropy_reg;
+            SCALAR_RND_ST:  hmac_drbg_entropy = sca_entropy_reg;
+            MASKING_RND_ST: hmac_drbg_entropy = sca_entropy_reg;
             KEYGEN_ST:      hmac_drbg_entropy = keygen_seed;
             SIGN_ST:        hmac_drbg_entropy = privKey;
-            default:        hmac_drbg_entropy = '0;
+            default:        hmac_drbg_entropy = sca_entropy_reg;
         endcase
     end // hmac_drbg_entropy_input
 
@@ -213,7 +234,7 @@ module ecc_hmac_drbg_interface#(
             scalar_rnd_reg <= '0;
             masking_rnd_reg <= '0;
             drbg_reg <= '0;
-            lfsr_seed_reg <= '0;
+            //lfsr_seed_reg <= '0; // without zeroize to make it more complex
         end
         else
             if (hmac_done_edge) begin
@@ -229,7 +250,6 @@ module ecc_hmac_drbg_interface#(
                         scalar_rnd_reg <= '0;
                         masking_rnd_reg <= '0;
                         drbg_reg <= '0;
-                        lfsr_seed_reg <= '0;
                     end
                 endcase
             end
@@ -265,6 +285,7 @@ module ecc_hmac_drbg_interface#(
             hmac_drbg_valid_last <= hmac_drbg_valid;
     end //ff_hamc_valid
 
+    // without zeroize to make it more complex
     always_ff @(posedge clk or negedge reset_n) 
     begin : counter_reg_update
         if (!reset_n)
@@ -273,20 +294,20 @@ module ecc_hmac_drbg_interface#(
             counter_reg       <= counter_reg + 1;
     end // counter_reg_update
 
+    // without zeroize to make it more complex
     always_ff @(posedge clk or negedge reset_n) 
-    begin : counter_nonce_update
-        if (!reset_n)
+    begin
+        if (!reset_n) begin
             counter_nonce_reg       <= '0;
-        else if (zeroize)
-            counter_nonce_reg       <= '0;
-        else if (en) begin
+            sca_entropy_reg         <= '0;
+        end else if (en && (state_reg == IDLE_ST)) begin
             counter_nonce_reg       <= counter_nonce;
+            sca_entropy_reg         <= sca_entropy;
         end
-    end // counter_nonce_update
+    end
 
     always_comb counter_nonce = {counter_reg, counter_reg, counter_reg, counter_reg, counter_reg, counter_reg};
-    always_comb hmac_lfsr_seed = lfsr_seed_reg ^ counter_nonce;
-
+    always_comb sca_entropy = IV ^ lfsr_seed_reg ^ counter_nonce;
     //----------------------------------------------------------------
     // FSM_flow
     //

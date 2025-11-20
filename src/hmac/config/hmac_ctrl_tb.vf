@@ -145,9 +145,8 @@ ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_param_pkg.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_ctrl.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac.sv
-${CALIPTRA_ROOT}/src/hmac/rtl/hmac_core.v
+${CALIPTRA_ROOT}/src/hmac/rtl/hmac_core.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_reg.sv
-${CALIPTRA_ROOT}/src/hmac/rtl/hmac_lfsr.sv
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/hmac/coverage/hmac_ctrl_cov_if.sv
 ${CALIPTRA_ROOT}/src/hmac/coverage/hmac_ctrl_cov_bind.sv

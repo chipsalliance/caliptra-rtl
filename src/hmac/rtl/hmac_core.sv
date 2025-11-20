@@ -24,23 +24,23 @@
 module hmac_core
 (
       // Clock and reset.
-      input wire            clk,
-      input wire            reset_n,
-      input wire            zeroize,
+      input logic            clk,
+      input logic            reset_n,
+      input logic            zeroize,
       
       // Control.
-      input wire            init_cmd,
-      input wire            next_cmd,
-      input wire            mode_cmd,
-      output wire           ready,
-      output wire           tag_valid,
+      input logic            init_cmd,
+      input logic            next_cmd,
+      input logic            mode_cmd,
+      output logic           ready,
+      output logic           tag_valid,
 
       // Data ports.
-      input wire [383 : 0]  lfsr_seed,
+      input logic [383 : 0]  lfsr_seed,
 
-      input wire [511 : 0]  key,
-      input wire [1023 : 0] block_msg,
-      output wire [511 : 0] tag
+      input logic [511 : 0]  key,
+      input logic [1023 : 0] block_msg,
+      output logic [511 : 0] tag
     );
 
 
@@ -51,6 +51,7 @@ module hmac_core
   localparam bit [1023:0] OPAD       = 1024'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
   localparam bit [639:0]  HMAC384_FINAL_PAD  = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
   localparam bit [511:0]  HMAC512_FINAL_PAD  = 512'h80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600;
+  localparam bit [191:0]  ENTROPY_PAD  = 192'h800000000000000000000000000000000000000000000340;
 
   localparam [2 : 0] CTRL_IDLE   = 3'd0;
   localparam [2 : 0] CTRL_IPAD   = 3'd1;
@@ -62,43 +63,46 @@ module hmac_core
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
 
-  reg [2 : 0] hmac_ctrl_reg;
-  reg [2 : 0] hmac_ctrl_new;
-  reg         hmac_ctrl_we;
-  reg [2 : 0] hmac_ctrl_last;
+  logic [2 : 0] hmac_ctrl_reg;
+  logic [2 : 0] hmac_ctrl_new;
+  logic         hmac_ctrl_we;
+  logic [2 : 0] hmac_ctrl_last;
 
-  reg         ready_flag;
-  reg         digest_valid_reg; 
-  reg         digest_valid_new;
-  reg         digest_valid_we;
+  logic         ready_flag;
+  logic         digest_valid_reg; 
+  logic         digest_valid_new;
+  logic         digest_valid_we;
 
-  reg [1023:0] key_opadded;
-  reg [1023:0] key_ipadded;
-  reg [1023:0] HMAC_padded;
+  logic [1023:0] key_opadded;
+  logic [1023:0] key_ipadded;
+  logic [1023:0] HMAC_padded;
 
-  reg         first_round; 
-  reg         IPAD_ready;
-  reg         OPAD_ready;
-  reg         HMAC_ready;
-  reg [1:0]   mode_reg;
-  //----------------------------------------------------------------
-  // Wires.
-  //----------------------------------------------------------------
-  reg             H1_init;
-  reg             H1_next;
-  reg  [1023 : 0] H1_block;
-  wire            H1_ready;
-  wire [511 : 0]  H1_digest;
-  wire            H1_digest_valid;
+  logic         first_round; 
+  logic         IPAD_ready;
+  logic         OPAD_ready;
+  logic         HMAC_ready;
+  logic [1:0]   mode_reg;
 
-  reg             H2_init;
-  reg             H2_next;
-  reg  [1023 : 0] H2_block;
-  wire            H2_ready;
-  wire [511 : 0]  H2_digest;
-  wire            H2_digest_valid;
+  logic             H1_init;
+  logic             H1_next;
+  logic  [1023 : 0] H1_block;
+  logic             H1_ready;
+  logic  [511 : 0]  H1_digest;
+  logic             H1_digest_valid;
 
-  wire [383 : 0]  entropy;
+  logic             H2_init;
+  logic             H2_next;
+  logic  [1023 : 0] H2_block;
+  logic             H2_ready;
+  logic  [511 : 0]  H2_digest;
+  logic             H2_digest_valid;
+
+  logic             set_entropy;
+  logic  [383 : 0]  entropy;
+  logic  [1023: 0]  entropy_block;
+  logic  [383 : 0]  entropy_digest;
+  logic  [383 : 0]  lfsr_entropy;
+  logic  [63 : 0]   counter_reg;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -150,18 +154,21 @@ module hmac_core
   genvar i;
   generate 
       for (i=0; i < 12; i++) begin : gen_lfsr
-          hmac_lfsr #(
-              .REG_SIZE(32)
-              )
-              lfsr_inst_i
-              (
-              .clk(clk),
-              .reset_n(reset_n),
-              .zeroize(zeroize),
-              .en(init_cmd),
-              .seed(lfsr_seed[i*32 +: 32]),
-              .rnd(entropy[i*32 +: 32])
-              );
+        caliptra_prim_lfsr
+        #(
+          .LfsrType("FIB_XNOR"),
+          .LfsrDw(32),
+          .StateOutDw(32)
+        ) caliptra_prim_lfsr_inst_i
+        (
+          .clk_i(clk),
+          .rst_ni(reset_n),
+          .seed_en_i(init_cmd),
+          .seed_i(lfsr_entropy[i*32 +: 32]),
+          .lfsr_en_i(1'b1),
+          .entropy_i('0),
+          .state_o(entropy[i*32 +: 32])
+        );
       end
   endgenerate
   //----------------------------------------------------------------
@@ -171,7 +178,7 @@ module hmac_core
   // All registers are positive edge triggered with asynchronous
   // active low reset. All registers have write enable.
   //----------------------------------------------------------------
-  always @ (posedge clk or negedge reset_n)
+  always_ff @(posedge clk or negedge reset_n)
     begin : reg_update
       if (!reset_n)
         begin
@@ -195,12 +202,11 @@ module hmac_core
           if (hmac_ctrl_we)
             hmac_ctrl_reg <= hmac_ctrl_new;
 
-
         end
     end // reg_update
 
 
-  always @ (posedge clk or negedge reset_n)
+  always_ff @(posedge clk or negedge reset_n)
     begin
       if (!reset_n)
         mode_reg <= '0;
@@ -211,7 +217,27 @@ module hmac_core
           mode_reg <= {1'b1, mode_cmd};  //hashing algorithm mode: 00 for SHA512/224, 01 for SHA512/256, 10 for SHA384, 11 for SHA512
       end
     end
-          
+
+  // without zeroize to make it more complex
+  always_ff @(posedge clk or negedge reset_n) begin
+    if (!reset_n) begin
+      entropy_digest <= '0;
+    end
+    else if (set_entropy) begin
+      entropy_digest <= H2_digest[383:0];
+    end
+  end
+  
+  //without zeroize to make it more complex
+  always_ff @(posedge clk or negedge reset_n) begin
+    if (!reset_n)
+      counter_reg <= '0;
+    else
+      counter_reg <= counter_reg + 1;
+  end
+
+  always_comb lfsr_entropy = entropy_digest ^ lfsr_seed;
+  always_comb entropy_block = {entropy_digest, lfsr_seed, counter_reg, ENTROPY_PAD};
 
   //----------------------------------------------------------------
   // state_logic
@@ -220,7 +246,7 @@ module hmac_core
   // round processing.
   //----------------------------------------------------------------
 
- always @*
+ always_comb
     begin : state_fsm
       IPAD_ready = H1_ready;
       OPAD_ready = H1_ready & H2_ready;
@@ -248,8 +274,12 @@ module hmac_core
               begin
                 H1_init = 1;
                 H1_next = 0;
+                H2_init = 1;
+                H2_next = 0;
                 IPAD_ready = 0;
               end
+
+            H2_block = entropy_block;
           end
 
         CTRL_OPAD:
@@ -263,7 +293,7 @@ module hmac_core
                 OPAD_ready = 0;
               end
 
-            H1_block = block_msg;  
+            H1_block = block_msg;
           end
 
         CTRL_HMAC:
@@ -293,13 +323,15 @@ module hmac_core
   //
   // Logic for the state machine controlling the core behaviour.
   //----------------------------------------------------------------
-  always @*
+  always_comb
     begin : hmac_ctrl_fsm
       ready_flag       = 0;
       digest_valid_new = 0;
       digest_valid_we  = 0;
       hmac_ctrl_new    = CTRL_IDLE;
       hmac_ctrl_we     = 0;
+
+      set_entropy = 0;
 
       unique case (hmac_ctrl_reg)
         CTRL_IDLE:
@@ -332,6 +364,7 @@ module hmac_core
               begin
                 hmac_ctrl_new   = CTRL_OPAD;
                 hmac_ctrl_we    = 1;
+                set_entropy = 1;
               end
           end
         
