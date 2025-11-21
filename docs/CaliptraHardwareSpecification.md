@@ -614,6 +614,52 @@ Caliptra’s JTAG/TAP should be implemented as a TAP EP. JTAG is open if the deb
 
 Note: If the debug security state switches to debug mode anytime, the security assets and keys are still flushed even though JTAG is not open.
 
+The following table details the alias addresses for registers in soc ifc that are accessible through JTAG.
+Debug Locked registers are a subset of registers accessible when debug intent is set, when debug is unlocked, or the lifecycle state is DEVICE_MANUFACTURING.
+Debug Unlocked registers are accessible when debug is unlocked, or the lifecycle state is DEVICE_MANUFACTURING.
+
+| Register Name                             | JTAG Address | Accessibility | Debug Locked | Debug Unlocked |
+|-------------------------------------------|--------------|---------------|--------------|----------------|
+| MBOX_LOCK                                 | 7’h75        | RO            | YES          | YES            |
+| MBOX_CMD                                  | 7’h76        | RW            | YES          | YES            |
+| MBOX_DLEN                                 | 7’h50        | RW            | YES          | YES            |
+| MBOX_DOUT                                 | 7’h51        | RO            | YES          | YES            |
+| MBOX_DIN                                  | 7’h62        | WO            | YES          | YES            |
+| MBOX_STATUS                               | 7’h52        | RW            | YES          | YES            |
+| MBOX_EXECUTE                              | 7’h77        | WO            | YES          | YES            |
+| BOOT_STATUS                               | 7’h53        | RO            | YES          | YES            |
+| CPTRA_HW_ERRROR_ENC                       | 7’h54        | RO            | YES          | YES            |
+| CPTRA_FW_ERROR_ENC                        | 7’h55        | RO            | YES          | YES            |
+| SS_UDS_SEED_BASE_ADDR_L                   | 7’h56        | RO            |              | YES            |
+| SS_UDS_SEED_BASE_ADDR_H                   | 7’h57        | RO            |              | YES            |
+| HW_FATAL_ERROR                            | 7’h58        | RO            | YES          | YES            |
+| FW_FATAL_ERROR                            | 7’h59        | RO            | YES          | YES            |
+| HW_NON_FATAL_ERROR                        | 7’h5a        | RO            | YES          | YES            |
+| FW_NON_FATAL_ERROR                        | 7’h5b        | RO            | YES          | YES            |
+| CPTRA_DBG_MANUF_SERVICE_REG               | 7’h60        | RW            | YES          | YES            |
+| BOOTFSM_GO                                | 7’h61        | RW            | YES          | YES            |
+| SS_DEBUG_INTENT                           | 7’h63        | RW            |              | YES            |
+| SS_CALIPTRA_BASE_ADDR_L                   | 7’h64        | RW            |              | YES            |
+| SS_CALIPTRA_BASE_ADDR_H                   | 7’h65        | RW            |              | YES            |
+| SS_MCI_BASE_ADDR_L                        | 7’h66        | RW            |              | YES            |
+| SS_MCI_BASE_ADDR_H                        | 7’h67        | RW            |              | YES            |
+| SS_RECOVERY_IFC_BASE_ADDR_L               | 7’h68        | RW            |              | YES            |
+| SS_RECOVERY_IFC_BASE_ADDR_H               | 7’h69        | RW            |              | YES            |
+| SS_OTP_FC_BASE_ADDR_L                     | 7’h6A        | RW            |              | YES            |
+| SS_OTP_FC_BASE_ADDR_H                     | 7’h6B        | RW            |              | YES            |
+| SS_STRAP_GENERIC_0                        | 7’h6C        | RW            |              | YES            |
+| SS_STRAP_GENERIC_1                        | 7’h6D        | RW            |              | YES            |
+| SS_STRAP_GENERIC_2                        | 7’h6E        | RW            |              | YES            |
+| SS_STRAP_GENERIC_3                        | 7’h6F        | RW            |              | YES            |
+| SS_DBG_SERVICE_REG_REQ                    | 7’h70        | RW            | YES          | YES            |
+| SS_DBG_SERVICE_REG_RSP                    | 7’h71        | RO            | YES          | YES            |
+| SS_DBG_UNLOCK_LEVEL0                      | 7’h72        | RW            |              | YES            |
+| SS_DBG_UNLOCK_LEVEL1                      | 7’h73        | RW            |              | YES            |
+| SS_STRAP_CALIPTRA_DMA_AXI_USER            | 7’h74        | RW            |              | YES            |
+| EXTERNAL_STAGING_AREA_BASE_ADDR_L         | 7’h78        | RW            |              | YES            |
+| EXTERNAL_STAGING_AREA_BASE_ADDR_H         | 7’h79        | RW            |              | YES            |
+
+
 *Figure 16: JTAG implementation*
 
 ![](./images/JTAG_implementation.png)
