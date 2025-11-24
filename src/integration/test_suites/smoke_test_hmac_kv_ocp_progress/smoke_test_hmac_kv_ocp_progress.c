@@ -275,26 +275,28 @@ void main() {
                 if ((hmac512_tag.kv_intf == TRUE) && (tag_kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT)){ 
                     hmac512_tag.exp_kv_err = TRUE;
                 }
+
+                int region_key = (hmac_key.kv_intf == TRUE) ? get_region(hmac_key.kv_id) : -2;
+                int region_block = (hmac_block.kv_intf == TRUE) ? get_region(hmac_block.kv_id) : -2;
+                int region_tag = (hmac512_tag.kv_intf == TRUE) ? get_region(hmac512_tag.kv_id) : -2;
+
+                if (region_key >= 0 && region_block >= 0 && region_tag >= 0) {
+                    if (!(region_key == region_tag && region_block == region_tag)) {
+                        hmac512_tag.exp_kv_err = TRUE;
+                    }
+                }
+                else if (region_key >= 0 && region_tag >= 0 && region_key != region_tag) {
+                    hmac512_tag.exp_kv_err = TRUE;
+                }
+                else if (region_block >= 0 && region_tag >= 0 && region_block != region_tag) {
+                    hmac512_tag.exp_kv_err = TRUE;
+                }
+
+
             }
             else {
                 VPRINTF(LOW,"Regular mode\n");
                 lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, 0);
-            }
-
-            int region_key = (hmac_key.kv_intf == TRUE) ? get_region(hmac_key.kv_id) : -2;
-            int region_block = (hmac_block.kv_intf == TRUE) ? get_region(hmac_block.kv_id) : -2;
-            int region_tag = (hmac512_tag.kv_intf == TRUE) ? get_region(hmac512_tag.kv_id) : -2;
-
-            if (region_key >= 0 && region_block >= 0 && region_tag >= 0) {
-                if (!(region_key == region_tag && region_block == region_tag)) {
-                    hmac512_tag.exp_kv_err = TRUE;
-                }
-            }
-            else if (region_key >= 0 && region_tag >= 0 && region_key != region_tag) {
-                hmac512_tag.exp_kv_err = TRUE;
-            }
-            else if (region_block >= 0 && region_tag >= 0 && region_block != region_tag) {
-                hmac512_tag.exp_kv_err = TRUE;
             }
 
             hmac384_tag.kv_intf = hmac512_tag.kv_intf;
