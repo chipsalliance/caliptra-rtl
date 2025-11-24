@@ -630,24 +630,24 @@ Debug Unlocked registers are accessible when debug is unlocked, or the lifecycle
 
 | Register Name                             | JTAG Address | Accessibility | Debug Locked | Debug Unlocked |
 |-------------------------------------------|--------------|---------------|--------------|----------------|
-| MBOX_LOCK                                 | 7’h75        | RO            | YES          | YES            |
-| MBOX_CMD                                  | 7’h76        | RW            | YES          | YES            |
-| MBOX_DLEN                                 | 7’h50        | RW            | YES          | YES            |
-| MBOX_DOUT                                 | 7’h51        | RO            | YES          | YES            |
-| MBOX_DIN                                  | 7’h62        | WO            | YES          | YES            |
-| MBOX_STATUS                               | 7’h52        | RW            | YES          | YES            |
-| MBOX_EXECUTE                              | 7’h77        | WO            | YES          | YES            |
-| BOOT_STATUS                               | 7’h53        | RO            | YES          | YES            |
+| mbox_lock                                 | 7’h75        | RO            | YES          | YES            |
+| mbox_cmd                                  | 7’h76        | RW            | YES          | YES            |
+| mbox_dlen                                 | 7’h50        | RW            | YES          | YES            |
+| mbox_dataout                              | 7’h51        | RO            | YES          | YES            |
+| mbox_datain                               | 7’h62        | WO            | YES          | YES            |
+| mbox_status                               | 7’h52        | RW            | YES          | YES            |
+| mbox_execute                              | 7’h77        | WO            | YES          | YES            |
+| CPTRA_BOOT_STATUS                         | 7’h53        | RO            | YES          | YES            |
 | CPTRA_HW_ERRROR_ENC                       | 7’h54        | RO            | YES          | YES            |
 | CPTRA_FW_ERROR_ENC                        | 7’h55        | RO            | YES          | YES            |
 | SS_UDS_SEED_BASE_ADDR_L                   | 7’h56        | RO            |              | YES            |
 | SS_UDS_SEED_BASE_ADDR_H                   | 7’h57        | RO            |              | YES            |
-| HW_FATAL_ERROR                            | 7’h58        | RO            | YES          | YES            |
-| FW_FATAL_ERROR                            | 7’h59        | RO            | YES          | YES            |
-| HW_NON_FATAL_ERROR                        | 7’h5a        | RO            | YES          | YES            |
-| FW_NON_FATAL_ERROR                        | 7’h5b        | RO            | YES          | YES            |
+| CPTRA_HW_ERROR_FATAL                      | 7’h58        | RO            | YES          | YES            |
+| CPTRA_FW_ERROR_FATAL                      | 7’h59        | RO            | YES          | YES            |
+| CPTRA_HW_ERROR_NON_FATAL                  | 7’h5a        | RO            | YES          | YES            |
+| CPTRA_FW_ERROR_NON_FATAL                  | 7’h5b        | RO            | YES          | YES            |
 | CPTRA_DBG_MANUF_SERVICE_REG               | 7’h60        | RW            | YES          | YES            |
-| BOOTFSM_GO                                | 7’h61        | RW            | YES          | YES            |
+| CPTRA_BOOTFSM_GO                          | 7’h61        | RW            | YES          | YES            |
 | SS_DEBUG_INTENT                           | 7’h63        | RW            |              | YES            |
 | SS_CALIPTRA_BASE_ADDR_L                   | 7’h64        | RW            |              | YES            |
 | SS_CALIPTRA_BASE_ADDR_H                   | 7’h65        | RW            |              | YES            |
@@ -666,8 +666,8 @@ Debug Unlocked registers are accessible when debug is unlocked, or the lifecycle
 | SS_DBG_UNLOCK_LEVEL0                      | 7’h72        | RW            |              | YES            |
 | SS_DBG_UNLOCK_LEVEL1                      | 7’h73        | RW            |              | YES            |
 | SS_STRAP_CALIPTRA_DMA_AXI_USER            | 7’h74        | RW            |              | YES            |
-| EXTERNAL_STAGING_AREA_BASE_ADDR_L         | 7’h78        | RW            |              | YES            |
-| EXTERNAL_STAGING_AREA_BASE_ADDR_H         | 7’h79        | RW            |              | YES            |
+| SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L      | 7’h78        | RW            |              | YES            |
+| SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H      | 7’h79        | RW            |              | YES            |
 
 
 *Figure 16: JTAG implementation*
