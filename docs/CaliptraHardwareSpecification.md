@@ -647,6 +647,21 @@ Caliptra’s JTAG/TAP should be implemented as a TAP EP. JTAG is open if the deb
 
 Note: If the debug security state switches to debug mode anytime, the security assets and keys are still flushed even though JTAG is not open.
 
+The following table details the alias addresses for registers in soc ifc that are accessible through JTAG.
+These registers are accessible when debug is unlocked, or the lifecycle state is DEVICE_MANUFACTURING.
+
+| Register Name                             | JTAG Address | Accessibility |
+|-------------------------------------------|--------------|---------------|
+| mbox_dlen                                 | 7’h50        | RO            |
+| mbox_dataout                              | 7’h51        | RO            |
+| mbox_status                               | 7’h52        | RO            |
+| CPTRA_BOOT_STATUS                         | 7’h53        | RO            |
+| CPTRA_HW_ERRROR_ENC                       | 7’h54        | RO            |
+| CPTRA_FW_ERROR_ENC                        | 7’h55        | RO            |
+| CPTRA_DBG_MANUF_SERVICE_REG               | 7’h60        | RW            |
+| CPTRA_BOOTFSM_GO                          | 7’h61        | RW            |
+
+
 *Figure 16: JTAG implementation*
 
 ![](./images/JTAG_implementation.png)
