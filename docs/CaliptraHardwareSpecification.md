@@ -652,9 +652,9 @@ These registers are accessible when debug is unlocked, or the lifecycle state is
 
 | Register Name                             | JTAG Address | Accessibility |
 |-------------------------------------------|--------------|---------------|
-| mbox_dlen                                 | 7’h50        | RW            |
+| mbox_dlen                                 | 7’h50        | RO            |
 | mbox_dataout                              | 7’h51        | RO            |
-| mbox_status                               | 7’h52        | RW            |
+| mbox_status                               | 7’h52        | RO            |
 | CPTRA_BOOT_STATUS                         | 7’h53        | RO            |
 | CPTRA_HW_ERRROR_ENC                       | 7’h54        | RO            |
 | CPTRA_FW_ERROR_ENC                        | 7’h55        | RO            |
