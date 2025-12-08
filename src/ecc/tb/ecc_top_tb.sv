@@ -462,7 +462,9 @@ module ecc_top_tb
   // Perform a single point multiplication block test.
   //----------------------------------------------------------------
   task ecc_keygen_test(input [7 : 0]  tc_number,
-                       input test_vector_t test_vector);
+                       input test_vector_t test_vector,
+                       input bit en_chk
+                       );
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
     operand_t       privkey;
@@ -507,21 +509,24 @@ module ecc_top_tb
       $display("pubkeyx    : 0x%96x", pubkey.x);
       $display("pubkeyy    : 0x%96x", pubkey.y);
 
-      if ((privkey == test_vector.privkey) & (pubkey == test_vector.pubkey))
+      if (en_chk == 1'b1)
         begin
-          $display("*** TC %0d keygen successful.", tc_number);
-          $display("");
-        end
-      else
-        begin
-          $display("*** ERROR: TC %0d keygen NOT successful.", tc_number);
-          $display("Expected_x: 0x%96x", test_vector.pubkey.x);
-          $display("Got:        0x%96x", pubkey.x);
-          $display("Expected_y: 0x%96x", test_vector.pubkey.y);
-          $display("Got:        0x%96x", pubkey.y);
-          $display("");
+          if ((privkey == test_vector.privkey) & (pubkey == test_vector.pubkey))
+            begin
+              $display("*** TC %0d keygen successful.", tc_number);
+              $display("");
+            end
+          else
+            begin
+              $display("*** ERROR: TC %0d keygen NOT successful.", tc_number);
+              $display("Expected_x: 0x%96x", test_vector.pubkey.x);
+              $display("Got:        0x%96x", pubkey.x);
+              $display("Expected_y: 0x%96x", test_vector.pubkey.y);
+              $display("Got:        0x%96x", pubkey.y);
+              $display("");
 
-          error_ctr = error_ctr + 1;
+              error_ctr = error_ctr + 1;
+            end
         end
     end
   endtask // ecc_keygen_test
@@ -533,7 +538,9 @@ module ecc_top_tb
   // Perform a single signing operation test.
   //----------------------------------------------------------------
   task ecc_signing_test(input [7 : 0]  tc_number,
-                        input test_vector_t test_vector);
+                        input test_vector_t test_vector,
+                        input bit en_chk
+                        );
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
     operand_t       R;
@@ -573,21 +580,24 @@ module ecc_top_tb
       $display("*** signing test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkey);
 
-      if (R == test_vector.R & S == test_vector.S)
+      if (en_chk == 1'b1)
         begin
-          $display("*** TC %0d signing successful.", tc_number);
-          $display("");
-        end
-      else
-        begin
-          $display("*** ERROR: TC %0d signing NOT successful.", tc_number);
-          $display("Expected_R: 0x%96x", test_vector.R);
-          $display("Got:        0x%96x", R);
-          $display("Expected_S: 0x%96x", test_vector.S);
-          $display("Got:        0x%96x", S);
-          $display("");
+          if (R == test_vector.R & S == test_vector.S)
+            begin
+              $display("*** TC %0d signing successful.", tc_number);
+              $display("");
+            end
+          else
+            begin
+              $display("*** ERROR: TC %0d signing NOT successful.", tc_number);
+              $display("Expected_R: 0x%96x", test_vector.R);
+              $display("Got:        0x%96x", R);
+              $display("Expected_S: 0x%96x", test_vector.S);
+              $display("Got:        0x%96x", S);
+              $display("");
 
-          error_ctr = error_ctr + 1;
+              error_ctr = error_ctr + 1;
+            end
         end
     end
   endtask // ecc_signing_test
@@ -642,6 +652,7 @@ module ecc_top_tb
         begin
           $display("*** TC %0d verifying successful.", tc_number);
           $display("");
+          resp = "true";
         end
       else
         begin
@@ -649,6 +660,7 @@ module ecc_top_tb
           $display("Expected_R: 0x%96x", test_vector.R);
           $display("Got:        0x%96x", verify_r);
           $display("");
+          resp = "false";
 
           error_ctr = error_ctr + 1;
         end
@@ -1021,8 +1033,8 @@ module ecc_top_tb
     begin  
       for (int i = 0; i < 10; i++) begin: test_vector_loop
         if ((ecc_test_to_run == "ECC_normal_test") || (ecc_test_to_run == "default")) begin
-          ecc_keygen_test(i, test_vectors[i]);
-          ecc_signing_test(i, test_vectors[i]);
+          ecc_keygen_test(i, test_vectors[i], 1'b1);
+          ecc_signing_test(i, test_vectors[i], 1'b1);
           ecc_verifying_test(i, test_vectors[i]);
         end
         else if (ecc_test_to_run == "ECC_otf_reset_test") begin
@@ -1162,6 +1174,292 @@ module ecc_top_tb
     end
   endtask // ecc_onthefly_reset_test
 
+  //----------------------------------------------------------------
+  // hash_msg_sha384()
+  //
+  // Perform a SHA2-384 hash using openssl
+  //----------------------------------------------------------------
+  string result_file = "hash_output.txt";
+  task hash_msg_sha384(input string msg,
+                       output r_t hashed_msg
+                       );
+    begin
+      string command;
+      string hash_result;
+      integer fin, result; 
+      // Build the command with output redirection
+      command = $sformatf("echo -n %s | xxd -r -p | openssl dgst -sha384 | awk '{print $2}' > %s", msg, result_file);
+
+      // Execute the command
+      $display("[hash_msg_sha384] Running command: %s", command);
+      $system(command);
+
+      // Read back the result
+      fin  = $fopen(result_file,"r");
+      if (fin == 0)
+        begin
+        $display("ERROR [hash_msg_sha384]: Hash result file not found");
+        $stop;
+      end     
+      result = $fscanf(fin, "%h",hashed_msg);
+      if (result != 1)
+      begin
+        $display("ERROR [hash_msg_sha384]: Unexpected line format or end of file");
+        $stop;
+      end
+    end
+  endtask //hash_msg_sha384
+
+  //----------------------------------------------------------------
+  // openssl_rand384()
+  //
+  // generate 384 bit random number using openssl
+  //----------------------------------------------------------------
+  string rand_res_file = "rand_output.txt";
+  task openssl_rand384(output operand_t val);
+    begin
+      string command;
+      string rand_result;
+      integer fin, result; 
+      // Build the command with output redirection
+      command = $sformatf("openssl rand -hex 48 > %s", rand_res_file);
+
+      // Execute the command
+      $display("[openssl_rand384] Running command: %s", command);
+      $system(command);
+
+      // Read back the result
+      fin  = $fopen(rand_res_file,"r");
+      if (fin == 0)
+        begin
+        $display("ERROR [openssl_rand384]: rand result file not found");
+        $stop;
+      end     
+      result = $fscanf(fin, "%h",val);
+      if (result != 1)
+      begin
+        $display("ERROR [openssl_rand384]: Unexpected line format or end of file");
+        $stop;
+      end
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // acvp_sigVer_test()
+  //
+  // Perform signatue verify on test vectors
+  //----------------------------------------------------------------
+  task acvp_sigVer_test(input int tcId,
+                   input string msg,
+                   input r_t qx,
+                   input r_t qy,
+                   input r_t r,
+                   input r_t s,
+                   output string resp_out
+                   );
+    begin
+      test_vector_t acvp_vector;
+      r_t hash_msg;
+
+      hash_msg_sha384(msg, hash_msg);
+      acvp_vector.hashed_msg  = hash_msg;
+      acvp_vector.pubkey.x    = qx;
+      acvp_vector.pubkey.y    = qy;
+      acvp_vector.R           = r;
+      acvp_vector.S           = s;
+
+      ecc_verifying_test(tcId, acvp_vector);
+      resp_out = resp;
+    end
+  endtask //acvp_sigVer_test
+
+  //----------------------------------------------------------------
+  // acvp_sigGen_test()
+  //
+  // Perform signatue generate on test vectors
+  //----------------------------------------------------------------
+  task acvp_sigGen_test(input  int           tcId,
+                   input  string        msg,
+                   input  test_vector_t test_vector,
+                   output test_vector_t resp_vector
+                   );
+    begin
+      test_vector_t intr_vector;
+      r_t hash_msg;
+
+      hash_msg_sha384(msg, hash_msg);
+
+      intr_vector.hashed_msg = hash_msg;
+      intr_vector.seed       = test_vector.seed;
+      intr_vector.nonce      = test_vector.nonce;
+      intr_vector.IV         = test_vector.IV;
+      intr_vector.privkey    = test_vector.privkey;
+      intr_vector.pubkey     = test_vector.pubkey;
+
+      ecc_signing_test(tcId, intr_vector, 1'b0);
+      resp_vector = test_vector;
+      resp_vector.R = R;
+      resp_vector.S = S;
+    end
+  endtask //acvp_sigGen_test
+
+  //----------------------------------------------------------------
+  // acvp_keyGen_test()
+  //
+  // Perform Key generate test
+  //----------------------------------------------------------------
+  task acvp_keyGen_test(input  int tcId,
+                   output test_vector_t test_vector
+                  );
+    begin
+      operand_t seed, nonce, iv;
+      test_vector_t intr_vector;
+
+      openssl_rand384(seed);
+      openssl_rand384(nonce);
+      openssl_rand384(iv);
+
+      intr_vector.seed  = seed;
+      intr_vector.nonce = nonce;
+      intr_vector.IV    = iv;
+      ecc_keygen_test(tcId, intr_vector, 1'b0);
+
+      test_vector.seed    = seed;
+      test_vector.nonce   = nonce;
+      test_vector.IV      = iv;
+      test_vector.privkey = privkey;//module level variable
+      test_vector.pubkey  = pubkey; //module level variable
+    end
+  endtask //acvp_keyGen_test
+
+  //----------------------------------------------------------------
+  // gen_outfile_name()
+  //----------------------------------------------------------------
+  task gen_outfile_name(input  string infile,
+                        output string outfile
+                       );
+    begin
+      //find the "." in file name
+      int dot_index;
+      dot_index = infile.len() - 1;
+      while (dot_index >=0 && infile.getc(dot_index) != ".")
+      begin
+        dot_index--;
+      end
+
+      if (dot_index > 0)
+      begin
+        outfile = {infile.substr(0, dot_index - 1), "_digest", infile.substr(dot_index, infile.len() - 1)};
+      end
+      else
+      begin
+        outfile = {infile, "_digest"};
+      end
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // acvp_test()
+  //----------------------------------------------------------------
+  task acvp_test();
+    begin
+
+      string acvp_test_vector_file, acvp_test_resp_file, test2run, msg, resp;
+      integer fin, fout, result, tcId, tgId, local_tgId;
+      r_t qx, qy, r, s;
+      test_vector_t intr_vector, resp_vector;
+
+      acvp_test_vector_file = ecc_test_vector_file;
+      gen_outfile_name(acvp_test_vector_file, acvp_test_resp_file);
+
+      //open vector input file
+      fin  = $fopen(acvp_test_vector_file,"r");
+      if (fin == 0)
+      begin
+        $error("Can't open file %s", acvp_test_vector_file);
+        $finish;
+      end
+
+      local_tgId = 0;
+
+      //open response output file
+      fout = $fopen(acvp_test_resp_file,"w");
+
+      while (1)
+      begin
+        result = $fscanf(fin, "%*s %s", test2run);
+        if (result != 1)
+        begin
+          $display("End of File");
+          $fclose(fin);
+          break;
+        end
+        else
+        begin
+          case (test2run)
+            //*************************************************************************
+            "sigVer":
+            begin
+              result = $fscanf(fin, "%*d %d %s %h %h %h %h", tcId, msg, qx, qy, r, s);
+              if (result != 6)
+              begin
+                $display("ERROR [acvp_sigVer_test]: Unexpected line format or end of file");
+              end
+              else
+              begin
+                acvp_sigVer_test(tcId, msg, qx, qy, r, s, resp);
+                $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"testPassed\": %s\n},\n",
+                                        tcId,               resp);
+              end
+            end
+            //*************************************************************************
+            "sigGen":
+            begin
+              result = $fscanf(fin, "%d %d %s", tgId, tcId, msg);
+              if (result != 3)
+              begin
+                $display("ERROR [acvp_sigGen_test]: Unexpected line format or end of file");
+              end
+              else
+              begin
+                if (local_tgId != tgId)
+                begin
+                  local_tgId = tgId;
+                  acvp_keyGen_test(tgId, intr_vector);//generate the key only once for a tgId
+                  //Print the public key to output file
+                  $fwrite(fout, "\"qx\": \"%0h\",\n\"qy\": \"%0h\"\n",
+                                   intr_vector.pubkey.x, intr_vector.pubkey.y);
+                end
+                acvp_sigGen_test(tcId, msg, intr_vector, resp_vector);
+                $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"r\": \"%0h\",\n    \"s\": \"%0h\"\n},\n",
+                                        tcId,              resp_vector.R,       resp_vector.S);
+              end
+            end
+            //*************************************************************************
+            "keyGen":
+            begin
+              result = $fscanf(fin, "%*d %d", tcId);
+              if (result != 1)
+              begin
+                $display("ERROR [acvp_keyGen_test]: Unexpected line format or end of file");
+              end
+              else
+              begin
+                acvp_keyGen_test(tcId, resp_vector);
+                $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"d\": \"%0h\",\n    \"qx\": \"%0h\",\n    \"qy\": \"%0h\"\n},\n",
+                                        tcId,              resp_vector.privkey, resp_vector.pubkey.x, resp_vector.pubkey.y);
+              end
+            end
+            //*************************************************************************
+          endcase
+        end
+      end
+
+      $fclose(fin);
+      $fclose(fout);
+    end
+  endtask //acvp_test
+
 
   //----------------------------------------------------------------
   // main
@@ -1190,6 +1488,9 @@ module ecc_top_tb
       ecc_test(); 
 
       display_test_results();
+      
+      //ACVP test vector files are in stimulus/acvp dir
+      acvp_test();
       
       $display("");
       $display("*** ecc simulation done. ***");

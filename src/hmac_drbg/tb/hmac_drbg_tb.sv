@@ -268,6 +268,107 @@ module hmac_drbg_tb();
   endtask // hmac384_drbg
 
   //----------------------------------------------------------------
+  // hmac384_drbg_cavp()
+  //
+  //----------------------------------------------------------------
+  task hmac384_drbg_cavp(input [383 : 0] entropy0, input [383 : 0] nonce, input int gen_cnt,
+                         input [383 : 0] lfsr_seed, input en_comp, input  [383 : 0] expected_drbg);
+    begin
+        if (!ready_tb)
+            wait(ready_tb);
+            
+        $display("The HMAC DRBG core is triggered...");
+        
+        entropy_tb = entropy0;
+        nonce_tb = nonce;
+        lfsr_seed_tb = random_gen();
+
+        $display("*** entropy   : %096x", entropy_tb);
+        $display("*** nonce     : %096x", nonce_tb);
+        $display("*** lfsr_seed : %096x", lfsr_seed);
+
+        #(1 * CLK_PERIOD);
+        init_tb = 1'b1;  
+        next_tb = 1'b0;
+        #(1 * CLK_PERIOD);
+        init_tb = 1'b0;
+        next_tb = 1'b0;
+
+        #(2 * CLK_PERIOD);
+        wait(valid_tb);
+
+        while (gen_cnt-1 != 0)
+        begin
+            lfsr_seed_tb = random_gen();
+            #(1 * CLK_PERIOD);
+            init_tb = 1'b0;
+            next_tb = 1'b1;  
+            #(1 * CLK_PERIOD);
+            init_tb = 1'b0;
+            next_tb = 1'b0;
+
+            #(2 * CLK_PERIOD);
+            wait(valid_tb);
+
+            gen_cnt = gen_cnt - 1;
+        end
+
+        $display("The HMAC DRBG core completed the execution");
+
+        if (en_comp == 1'b1)
+          begin
+            if (drbg_tb == expected_drbg)
+              begin
+                $display("*** TC %0d successful.", tc_number);
+                $display("");
+              end
+            else
+              begin
+                $display("*** ERROR: TC %0d NOT successful.", tc_number);
+                $display("Expected: 0x%096x", expected_drbg);
+                $display("Got:      0x%096x", drbg_tb);
+                $display("");
+                error_ctr = error_ctr + 1;
+              end
+          end
+
+        tc_number = tc_number+1;
+
+    end
+  endtask // hmac384_drbg_cavp  
+
+  //----------------------------------------------------------------
+  // gen_test()
+  //
+  //----------------------------------------------------------------
+  task gen_test(input [383 : 0] entropy0, input [383 : 0] nonce);
+    begin
+        if (!ready_tb)
+            wait(ready_tb);
+            
+        $display("The HMAC DRBG core is triggered...");
+        
+        entropy_tb = entropy0;
+        nonce_tb = nonce;
+
+        $display("*** entropy   : %096x", entropy_tb);
+        $display("*** nonce     : %096x", nonce_tb);
+
+        #(1 * CLK_PERIOD);
+        next_tb = 1'b1;  
+        #(1 * CLK_PERIOD);
+        next_tb = 1'b0;
+
+        #(2 * CLK_PERIOD);
+        wait(valid_tb);
+        #(2 * CLK_PERIOD);
+
+        $display("The HMAC DRBG core completed the execution");
+
+    end
+  endtask // gen_test  
+
+  //----------------------------------------------------------------
   // hmac_drbg_test()
   //
   // Main test task will perform complete NIST SP 800-90A DRBG.
@@ -326,6 +427,51 @@ module hmac_drbg_tb();
     end
   endtask // hmac_drbg_test
 
+  //----------------------------------------------------------------
+  // hmac_drbg_vect_test()
+  //
+  //----------------------------------------------------------------
+  task hmac_drbg_vect_test;
+  begin
+    int fin, fout, result, tcid, gen_cnt;
+    string en0, nonce;
+    reg [383 : 0] en0_hex, nonce_hex;
+    reg [383 : 0] seed;
+
+    $display("   -- Task for HMAC DRBG started --");
+
+    fin  = $fopen("../stimulus/acvp/hmacDRBG.txt","r");
+    if (fin == 0)
+    begin
+      $display("ERROR: Input file not found");
+      $stop;
+    end
+    fout = $fopen("../stimulus/acvp/hmacDRBG_digest.txt","w");
+    if (fout == 0)
+    begin
+      $display("ERROR: Output file not found");
+      $stop;
+    end
+
+    while (!$feof(fin))
+    begin
+      result = $fscanf(fin, "%*s %d %s %s", tcid, en0, nonce);
+      if (result != 3)
+      begin
+        $display("ERROR: Unexpected line format or end of file");
+      end
+      else
+      begin
+        en0_hex     = en0.atohex()    ;
+        nonce_hex   = nonce.atohex()  ;
+        seed = random_gen();
+        hmac384_drbg_cavp(en0_hex, nonce_hex, 1, seed, 1'b0, 0); 
+        $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"returnedBits\": \"%096h\"\n},\n", tcid, drbg_tb);
+      end//processed 1 line from file
+    end//end of file
+  end
+  endtask //hmac_drbg_vect_test
+
 
   //----------------------------------------------------------------
   // always_debug()
@@ -356,6 +502,8 @@ module hmac_drbg_tb();
       //dump_dut_state();
 
       hmac_drbg_test();
+
+      hmac_drbg_vect_test();
 
       display_test_results();
 
