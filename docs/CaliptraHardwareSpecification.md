@@ -651,13 +651,11 @@ Debug Unlocked registers are accessible when debug is unlocked, or the lifecycle
 | SS_STRAP_GENERIC_1                        | 7’h6D        | RW            |              | YES            |
 | SS_STRAP_GENERIC_2                        | 7’h6E        | RW            |              | YES            |
 | SS_STRAP_GENERIC_3                        | 7’h6F        | RW            |              | YES            |
-| SS_DBG_SERVICE_REG_REQ                    | 7’h70        | RW            | YES          | YES            |
-| SS_DBG_SERVICE_REG_RSP                    | 7’h71        | RO            | YES          | YES            |
+| SS_DBG_MANUF_SERVICE_REG_REQ              | 7’h70        | RW            | YES          | YES            |
+| SS_DBG_MANUF_SERVICE_REG_RSP              | 7’h71        | RO            | YES          | YES            |
 | SS_DBG_UNLOCK_LEVEL0                      | 7’h72        | RW            |              | YES            |
 | SS_DBG_UNLOCK_LEVEL1                      | 7’h73        | RW            |              | YES            |
 | SS_STRAP_CALIPTRA_DMA_AXI_USER            | 7’h74        | RW            |              | YES            |
-| SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L      | 7’h78        | RW            |              | YES            |
-| SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H      | 7’h79        | RW            |              | YES            |
 
 
 *Figure 16: JTAG implementation*
