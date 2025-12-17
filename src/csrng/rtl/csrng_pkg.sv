@@ -28,8 +28,8 @@ package csrng_pkg;
     CMD_STS_INVALID_ACMD         = 'h1,
     CMD_STS_INVALID_GEN_CMD      = 'h2,
     CMD_STS_INVALID_CMD_SEQ      = 'h3,
-    CMD_STS_RESEED_CNT_EXCEEDED  = 'h4,
-    CMD_STS_UNDRIVEN             = '1
+    CMD_STS_RESEED_CNT_EXCEEDED  = 'h4
+    //CMD_STS_UNDRIVEN             = 'z //unused enum
   } csrng_cmd_sts_e;
 
   typedef struct packed {
