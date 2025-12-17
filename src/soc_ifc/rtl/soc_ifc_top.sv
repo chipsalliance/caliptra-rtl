@@ -1269,7 +1269,7 @@ axi_dma_top #(
     // Component INF
     .dv      (dma_reg_req_dv  ),
     .req_data(dma_reg_req_data),
-    .hold    (dma_reg_req_hold),
+    .req_hold(dma_reg_req_hold),
     .rdata   (dma_reg_rdata   ),
     .error   (dma_reg_error   ),
 

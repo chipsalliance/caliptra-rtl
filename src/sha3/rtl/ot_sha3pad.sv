@@ -284,7 +284,7 @@ module ot_sha3pad
   // is set by the strength_i, which is `block_addr_limit`.
   logic end_of_block;
 
-  assign end_of_block = ((sent_message + 1'b1) == block_addr_limit) ? 1'b 1 : 1'b 0;
+  assign end_of_block = ((sent_message + 1'b1) == block_addr_limit);
 
 
   // Next logic and output logic ==============================================
