@@ -547,7 +547,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     logic [11:0] awlen_active;
     logic awlen_busy;
     int awlen_active_q [$];
-
+`ifndef VERILATOR
     initial begin
         forever begin
             @(posedge core_clk);
@@ -580,7 +580,7 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
             end
         end
     end
-
+`endif
     always@(posedge core_clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
             fifo_aw_hshake_count <= '0;
