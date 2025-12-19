@@ -77,12 +77,18 @@ jobs:
       - name: Install verilator
         if: steps.verilator_restore.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get install flex bison libfl2 libfl-dev help2man
+          sudo apt-get install git help2man perl python3 make autoconf g++ flex bison ccache
+          sudo apt-get install libgoogle-perftools-dev numactl perl-doc
+          sudo apt-get install libfl2
+          sudo apt-get install libfl-dev
+          sudo apt-get install zlibc zlib1g zlib1g-dev
           cd /tmp/
-          git clone -b "${VERILATOR_VERSION}" https://github.com/verilator/verilator
+          git clone -b https://github.com/verilator/verilator
           cd verilator
+          git pull
+          git checkout "${VERILATOR_VERSION}"
           autoconf
-          ./configure --prefix=/opt/verilator CXX="sccache g++"
+          ./configure --prefix=/opt/verilator CC="sccache gcc" CXX="sccache g++"
           make -j6
           sudo make install
       - name: Save verilator dir
