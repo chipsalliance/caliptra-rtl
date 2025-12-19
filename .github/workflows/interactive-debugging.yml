@@ -27,6 +27,9 @@ jobs:
       CCACHE_COMPRESS: "1"
       CCACHE_MAXSIZE: 10G
 
+      # cache bust if needed
+      CCACHE_CUSTOM_CACHE_BUSTER: fc6ba052de27
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -36,14 +39,14 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ~/.ccache
-          key: ccache-verilator-${{ runner.os }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
       - name: Restore verilator dir
         uses: actions/cache/restore@v3
         id: verilator_restore
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
       - name: Install verilator
         if: steps.verilator_restore.outputs.cache-hit != 'true'
@@ -67,14 +70,14 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
       - name: Save ccache
         if: always()
         uses: actions/cache/save@v3
         with:
           path: ~/.ccache
-          key: ccache-verilator-${{ runner.os }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
       - name: Pack Verilator
         run: |
@@ -109,14 +112,14 @@ jobs:
         uses: actions/cache/restore@v3
         with:
           path: ~/.ccache
-          key: ccache-openocd-${{ runner.os }}
+          key: openocd-${{ env.OPENOCD_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
       - name: Restore OpenOCD dir
         uses: actions/cache/restore@v3
         id: openocd_restore
         with:
           path: /opt/openocd
-          key: openocd-${{ env.OPENOCD_VERSION }}
+          key: openocd-${{ env.OPENOCD_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
       - name: Install OpenOCD
         if: steps.openocd_restore.outputs.cache-hit != 'true'
@@ -141,14 +144,14 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: /opt/openocd
-          key: openocd-${{ env.OPENOCD_VERSION }}
+          key: openocd-${{ env.OPENOCD_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
       - name: Save ccache
         if: always()
         uses: actions/cache/save@v3
         with:
           path: ~/.ccache
-          key: ccache-openocd-${{ runner.os }}
+          key: openocd-${{ env.OPENOCD_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
       - name: Pack OpenOCD
         run: |

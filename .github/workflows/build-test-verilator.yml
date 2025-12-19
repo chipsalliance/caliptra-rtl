@@ -27,7 +27,7 @@ env:
   CCACHE_MAXSIZE: 10G
 
   # cache bust if needed
-  CCACHE_CUSTOM_CACHE_BUSTER: 0c6ba052de27
+  CCACHE_CUSTOM_CACHE_BUSTER: fc6ba052de27
 
 jobs:
   build_tools:
