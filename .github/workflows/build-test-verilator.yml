@@ -156,6 +156,46 @@ jobs:
           path: ~/.ccache
           key: ccache-${{ runner.os }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
+      - name: Restore verilator dir
+        uses: actions/cache/restore@v3
+        id: verilator_restore
+        with:
+          path: /opt/verilator
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+
+      - name: Restore RISC-V Toolchain
+        uses: actions/cache/restore@v3
+        id: riscv_restore
+        with:
+          path: /opt/riscv
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+
+      - name: Delay before retry
+        if: steps.riscv_restore.outputs.cache-hit != 'true'
+        run: |
+          delay=$((RANDOM % 10 + 1))
+          echo "Cache restore failed or cache not found. Waiting ${delay} seconds before retry..."
+          sleep ${delay}
+          
+      - name: Restore RISC-V Toolchain (Retry)
+        if: steps.riscv_restore.outputs.cache-hit != 'true'
+        uses: actions/cache/restore@v3
+        id: riscv_restore_retry
+        with:
+          path: /opt/riscv
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+
+      - name: Verify RISC-V Toolchain Restored
+        run: |
+          if [ -d "/opt/riscv/bin" ] && [ -x "/opt/riscv/bin/riscv64-unknown-elf-gcc" ]; then
+            echo "✓ RISC-V GCC found"
+            /opt/riscv/bin/riscv64-unknown-elf-gcc --version | head -1
+          else
+            echo "❌ RISC-V toolchain missing"
+            ls -la /opt/riscv/bin || true
+            exit 1
+          fi
+
       - name: Setup paths
         run: |
           echo /opt/verilator/bin >> $GITHUB_PATH
