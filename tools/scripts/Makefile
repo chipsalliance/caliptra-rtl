@@ -98,7 +98,9 @@ TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecc_secp384r1.exe \
 	          $(CALIPTRA_ROOT)/src/doe/tb/doe_test_gen.py \
 	          $(CALIPTRA_ROOT)/src/sha256/tb/sha256_wntz_test_gen.py \
 	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 \
-	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug
+	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug \
+	          $(CALIPTRA_ROOT)/src/mldsa/tb/smoke_test_mldsa_vector.hex \
+		  $(CALIPTRA_ROOT)/src/integration/tb/vectors/ml_kem_fixed
 
 # Separate OFILE variable since this is not used to build remote images
 # (i.e. FMC or RunTime)
@@ -305,7 +307,7 @@ verilator: program.hex verilator-build
 	set -eo pipefail; ./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS) 2>&1 | tee verilator_sim.log
 
 vcs: program.hex vcs-build
-	cp $(TEST_GEN_FILES) $(BUILD_DIR)
+	cp -r $(TEST_GEN_FILES) $(BUILD_DIR)
 	./simv.caliptra_top_tb $(COVERAGE_ARGS)
 
 ############ TEST build ###############################
