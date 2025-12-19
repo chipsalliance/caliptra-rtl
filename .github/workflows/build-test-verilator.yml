@@ -74,7 +74,7 @@ jobs:
           git checkout "${VERILATOR_VERSION}"
 
           autoconf
-          ./configure --prefix=/opt/verilator CC="ccache gcc" CXX="ccache g++"
+          ./configure --prefix=/opt/verilator CXX="ccache g++"
           make -j6
           sudo make install
 
@@ -176,7 +176,7 @@ jobs:
           delay=$((RANDOM % 10 + 1))
           echo "Cache restore failed or cache not found. Waiting ${delay} seconds before retry..."
           sleep ${delay}
-          
+
       - name: Restore RISC-V Toolchain (Retry)
         if: steps.riscv_restore.outputs.cache-hit != 'true'
         uses: actions/cache/restore@v3
@@ -202,9 +202,6 @@ jobs:
           echo /opt/riscv/bin >> $GITHUB_PATH
 
       - name: Run Caliptra Verilator Smoke Test
-        env:
-          CC: ccache gcc
-          CXX: ccache g++
         run: |
           CALIPTRA_ROOT=$(pwd)
           ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
