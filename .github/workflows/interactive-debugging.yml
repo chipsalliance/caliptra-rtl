@@ -114,8 +114,8 @@ jobs:
       SCCACHE_GHA_CACHE_TO: sccache-openocd-10000
       SCCACHE_GHA_CACHE_FROM: sccache-openocd-
       # Change this to a new random value if you suspect the cache is corrupted
-      SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1e
-
+      SCCACHE_C_CUSTOM_CACHE_BUSTER: 0c6ba052de27
+                                     
     steps:
       - name: Restore sccache binary
         uses: actions/cache/restore@v3
