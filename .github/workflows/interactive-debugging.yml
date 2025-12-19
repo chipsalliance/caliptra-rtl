@@ -1,3 +1,4 @@
+
 # docs: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
 
 name: Interactive debugging
@@ -16,65 +17,45 @@ on:
 
 jobs:
   build_verilator:
-    name: 
     runs-on: ubuntu-22.04
     if: ${{ inputs.run_vltr == 'true' }}
 
     env:
       CARGO_INCREMENTAL: 0
-      SCCACHE_VERSION: 0.3.3
       VERILATOR_VERSION: v5.038
-      SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
-      SCCACHE_GHA_CACHE_FROM: sccache-verilator-
-      # Change this to a new random value if you suspect the cache is corrupted
-      SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1e
+      CCACHE_DIR: ~/.ccache
+      CCACHE_COMPRESS: "1"
+      CCACHE_MAXSIZE: 10G
 
     steps:
-      - name: Restore sccache binary
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+
+      - name: Restore ccache
         uses: actions/cache/restore@v3
-        id: sccache_bin_restore
         with:
-          path: ~/.cargo/bin/sccache
-          key: sccache-bin-${{ env.SCCACHE_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
-
-      - name: Install sccache
-        if: steps.sccache_bin_restore.outputs.cache-hit != 'true'
-        run: |
-          cargo install sccache --locked --version ${SCCACHE_VERSION} --no-default-features --features=gha
-
-      - name: Save sccache binary
-        uses: actions/cache/save@v3
-        if: steps.sccache_bin_restore.outputs.cache-hit != 'true'
-        with:
-          path: ~/.cargo/bin/sccache
-          key: sccache-bin-${{ env.SCCACHE_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
-
-      - name: Configure sccache
-        uses: actions/github-script@v6
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: ~/.ccache
+          key: ccache-verilator-${{ runner.os }}
 
       - name: Restore verilator dir
         uses: actions/cache/restore@v3
         id: verilator_restore
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: verilator-${{ env.VERILATOR_VERSION }}
 
       - name: Install verilator
         if: steps.verilator_restore.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get install git help2man perl python3 make autoconf g++ flex bison ccache
-          sudo apt-get install numactl perl-doc
-          sudo apt-get install libfl2
-          sudo apt-get install libfl-dev
-          sudo apt-get install zlib1g zlib1g-dev
-          cd /tmp/
-          git clone -b https://github.com/verilator/verilator
+          sudo apt-get update
+          sudo apt-get install -y \
+            git help2man perl python3 make autoconf g++ \
+            flex bison ccache numactl perl-doc libfl2 libfl-dev \
+            zlib1g zlib1g-dev
+          cd /tmp
+          git clone https://github.com/verilator/verilator.git
           cd verilator
-          git pull
           git checkout "${VERILATOR_VERSION}"
           autoconf
           ./configure --prefix=/opt/verilator CC="ccache gcc" CXX="ccache g++"
@@ -82,11 +63,18 @@ jobs:
           sudo make install
 
       - name: Save verilator dir
-        uses: actions/cache/save@v3
         if: steps.verilator_restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: verilator-${{ env.VERILATOR_VERSION }}
+
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@v3
+        with:
+          path: ~/.ccache
+          key: ccache-verilator-${{ runner.os }}
 
       - name: Pack Verilator
         run: |
@@ -99,65 +87,48 @@ jobs:
           path: /opt/*.tar.gz
           retention-days: 1
 
+
   build_openocd:
-    name: 
     runs-on: ubuntu-22.04
     if: ${{ inputs.run_vltr == 'true' }}
 
     env:
       CARGO_INCREMENTAL: 0
-      SCCACHE_VERSION: 0.3.3
-      # A custom fork is needed to allow bypassing core examination and accessing
-      # peripherals regardless of core state.
       OPENOCD_REPO: https://github.com/antmicro/openocd
       OPENOCD_VERSION: riscv-nohalt
-      SCCACHE_GHA_CACHE_TO: sccache-openocd-10000
-      SCCACHE_GHA_CACHE_FROM: sccache-openocd-
-      # Change this to a new random value if you suspect the cache is corrupted
-      SCCACHE_C_CUSTOM_CACHE_BUSTER: 0c6ba052de27
-                                     
+      CCACHE_DIR: ~/.ccache
+      CCACHE_COMPRESS: "1"
+      CCACHE_MAXSIZE: 10G
+
     steps:
-      - name: Restore sccache binary
+      - uses: actions/checkout@v3
+        with:
+          submodules: 'true'
+
+      - name: Restore ccache
         uses: actions/cache/restore@v3
-        id: sccache_bin_restore
         with:
-          path: ~/.cargo/bin/sccache
-          key: sccache-bin-${{ env.SCCACHE_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
-
-      - name: Install sccache
-        if: steps.sccache_bin_restore.outputs.cache-hit != 'true'
-        run: |
-          cargo install sccache --locked --version ${SCCACHE_VERSION} --no-default-features --features=gha
-
-      - name: Save sccache binary
-        uses: actions/cache/save@v3
-        if: steps.sccache_bin_restore.outputs.cache-hit != 'true'
-        with:
-          path: ~/.cargo/bin/sccache
-          key: sccache-bin-${{ env.SCCACHE_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
-
-      - name: Configure sccache
-        uses: actions/github-script@v6
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
+          path: ~/.ccache
+          key: ccache-openocd-${{ runner.os }}
 
       - name: Restore OpenOCD dir
         uses: actions/cache/restore@v3
         id: openocd_restore
         with:
           path: /opt/openocd
-          key: openocd-${{ env.OPENOCD_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: openocd-${{ env.OPENOCD_VERSION }}
 
       - name: Install OpenOCD
         if: steps.openocd_restore.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get install make libtool pkg-config autoconf automake texinfo
-          cd /tmp/
-          git clone -b "${OPENOCD_VERSION}" https://github.com/antmicro/openocd
+          sudo apt-get update
+          sudo apt-get install -y \
+            make libtool pkg-config autoconf automake texinfo ccache
+          cd /tmp
+          git clone -b "${OPENOCD_VERSION}" "${OPENOCD_REPO}"
           cd openocd
-          git config --file=.gitmodules submodule.src/jtag/drivers/libjaylink.url https://github.com/syntacore/libjaylink.git
+          git config --file=.gitmodules \
+            submodule.src/jtag/drivers/libjaylink.url https://github.com/syntacore/libjaylink.git
           ./bootstrap
           ./configure --prefix=/opt/openocd --enable-remote-bitbang \
             CC="ccache gcc" CXX="ccache g++" \
@@ -166,11 +137,18 @@ jobs:
           sudo make install
 
       - name: Save OpenOCD dir
-        uses: actions/cache/save@v3
         if: steps.openocd_restore.outputs.cache-hit != 'true'
+        uses: actions/cache/save@v3
         with:
           path: /opt/openocd
-          key: openocd-${{ env.OPENOCD_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: openocd-${{ env.OPENOCD_VERSION }}
+
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@v3
+        with:
+          path: ~/.ccache
+          key: ccache-openocd-${{ runner.os }}
 
       - name: Pack OpenOCD
         run: |

@@ -162,9 +162,6 @@ jobs:
           echo /opt/riscv/bin >> $GITHUB_PATH
 
       - name: Run Caliptra Verilator Smoke Test
-        env:
-          CC: ccache gcc
-          CXX: ccache g++
         run: |
           CALIPTRA_ROOT=$(pwd)
           ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
