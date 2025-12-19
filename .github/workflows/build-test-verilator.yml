@@ -88,7 +88,7 @@ jobs:
           git pull
           git checkout "${VERILATOR_VERSION}"
           autoconf
-          ./configure --prefix=/opt/verilator CC="sccache gcc" CXX="sccache g++"
+          ./configure --prefix=/opt/verilator CC="ccache gcc" CXX="ccache g++"
           make -j6
           sudo make install
       - name: Save verilator dir

@@ -77,7 +77,7 @@ jobs:
           git pull
           git checkout "${VERILATOR_VERSION}"
           autoconf
-          ./configure --prefix=/opt/verilator CC="sccache gcc" CXX="sccache g++"
+          ./configure --prefix=/opt/verilator CC="ccache gcc" CXX="ccache g++"
           make -j6
           sudo make install
 
@@ -160,7 +160,7 @@ jobs:
           git config --file=.gitmodules submodule.src/jtag/drivers/libjaylink.url https://github.com/syntacore/libjaylink.git
           ./bootstrap
           ./configure --prefix=/opt/openocd --enable-remote-bitbang \
-            CC="sccache gcc" CXX="sccache g++" \
+            CC="ccache gcc" CXX="ccache g++" \
             CFLAGS="-Wno-error=misleading-indentation -Wno-error=stringop-overflow"
           make -j6
           sudo make install
