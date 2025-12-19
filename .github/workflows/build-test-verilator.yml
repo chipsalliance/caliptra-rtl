@@ -65,7 +65,8 @@ jobs:
         run: |
           sudo apt-get install -y \
             git help2man perl python3 make autoconf g++ flex bison ccache \
-            libgoogle-perftools-dev numactl perl-doc libfl2 libfl-dev
+            numactl perl-doc libfl2 libfl-dev \
+            zlib1g zlib1g-dev
 
           cd /tmp
           git clone https://github.com/verilator/verilator
