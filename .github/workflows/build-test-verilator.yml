@@ -53,6 +53,13 @@ jobs:
           path: ~/.ccache
           key: ccache-${{ runner.os }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
 
+      - name: Save ccache
+        if: always()
+        uses: actions/cache/save@v3
+        with:
+          path: ~/.ccache
+          key: ccache-${{ runner.os }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+
       - name: Restore verilator dir
         uses: actions/cache/restore@v3
         id: verilator_restore
