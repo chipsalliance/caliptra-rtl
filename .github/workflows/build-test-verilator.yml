@@ -27,7 +27,7 @@ env:
   CCACHE_MAXSIZE: 10G
 
   # cache bust if needed
-  CCACHE_CUSTOM_CACHE_BUSTER: fc6ba052de27
+  CCACHE_CUSTOM_CACHE_BUSTER: ec6ba052de27
 
 jobs:
   build_tools:
@@ -74,7 +74,7 @@ jobs:
           git checkout "${VERILATOR_VERSION}"
 
           autoconf
-          ./configure --prefix=/opt/verilator CXX="ccache g++"
+          ./configure --prefix=/opt/verilator CC="gcc" CXX="g++"
           make -j6
           sudo make install
 
