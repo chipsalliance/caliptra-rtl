@@ -53,7 +53,7 @@ jobs:
         run: |
           sudo apt-get install -y \
             git help2man perl python3 make autoconf g++ flex bison \
-            numactl perl-doc libfl2 libfl-dev \
+            ccache numactl perl-doc libfl2 libfl-dev \
             zlib1g zlib1g-dev
 
           cd /tmp
@@ -62,7 +62,7 @@ jobs:
           git checkout "${VERILATOR_VERSION}"
 
           autoconf
-          ./configure --prefix=/opt/verilator CC="gcc" CXX="g++"
+          ./configure --prefix=/opt/verilator CC="ccache gcc" CXX="ccache g++"
           make -j6
           sudo make install
 
