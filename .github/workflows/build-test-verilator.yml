@@ -21,13 +21,8 @@ env:
   VERILATOR_VERSION: v5.038
   PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
 
-  # ccache config
-  CCACHE_DIR: ~/.ccache
-  CCACHE_COMPRESS: "1"
-  CCACHE_MAXSIZE: 10G
-
   # cache bust if needed
-  CCACHE_CUSTOM_CACHE_BUSTER: ec6ba052de27
+  CUSTOM_CACHE_BUSTER: ec6ba052de27
 
 jobs:
   build_tools:
@@ -46,32 +41,18 @@ jobs:
           path: ~/.cargo/registry/index
           key: cargo-index-${{ hashFiles('Cargo.lock') }}
 
-      - name: Restore ccache
-        uses: actions/cache/restore@v3
-        id: ccache_restore
-        with:
-          path: ~/.ccache
-          key: ccache-${{ runner.os }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
-
-      - name: Save ccache
-        if: always()
-        uses: actions/cache/save@v3
-        with:
-          path: ~/.ccache
-          key: ccache-${{ runner.os }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
-
       - name: Restore verilator dir
         uses: actions/cache/restore@v3
         id: verilator_restore
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Install verilator
         if: steps.verilator_restore.outputs.cache-hit != 'true'
         run: |
           sudo apt-get install -y \
-            git help2man perl python3 make autoconf g++ flex bison ccache \
+            git help2man perl python3 make autoconf g++ flex bison \
             numactl perl-doc libfl2 libfl-dev \
             zlib1g zlib1g-dev
 
@@ -90,7 +71,7 @@ jobs:
         if: steps.verilator_restore.outputs.cache-hit != 'true'
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Setup verilator path
         run: echo /opt/verilator/bin >> $GITHUB_PATH
@@ -100,7 +81,7 @@ jobs:
         id: riscv_restore
         with:
           path: /opt/riscv
-          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Install RISC-V Toolchain
         if: steps.riscv_restore.outputs.cache-hit != 'true'
@@ -114,11 +95,10 @@ jobs:
         if: steps.riscv_restore.outputs.cache-hit != 'true'
         with:
           path: /opt/riscv
-          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Setup riscv path
         run: echo /opt/riscv/bin >> $GITHUB_PATH
-
 
   build_matrix:
     name: Build Smoke Test matrix
@@ -157,25 +137,19 @@ jobs:
         with:
           submodules: 'true'
 
-      - name: Restore ccache
-        uses: actions/cache/restore@v3
-        with:
-          path: ~/.ccache
-          key: ccache-${{ runner.os }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
-
       - name: Restore verilator dir
         uses: actions/cache/restore@v3
         id: verilator_restore
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Restore RISC-V Toolchain
         uses: actions/cache/restore@v3
         id: riscv_restore
         with:
           path: /opt/riscv
-          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Delay before retry
         if: steps.riscv_restore.outputs.cache-hit != 'true'
@@ -190,7 +164,7 @@ jobs:
         id: riscv_restore_retry
         with:
           path: /opt/riscv
-          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CCACHE_CUSTOM_CACHE_BUSTER }}
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Verify RISC-V Toolchain Restored
         run: |
