@@ -22,7 +22,7 @@ env:
   PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
 
   # cache bust if needed
-  CUSTOM_CACHE_BUSTER: dc6ba052de27
+  CUSTOM_CACHE_BUSTER: cc6ba052de27
 
 jobs:
   build_tools:
