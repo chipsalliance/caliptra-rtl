@@ -22,7 +22,7 @@ env:
   PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
 
   # cache bust if needed
-  CUSTOM_CACHE_BUSTER: ec6ba052de27
+  CUSTOM_CACHE_BUSTER: dc6ba052de27
 
 jobs:
   build_tools:
@@ -53,7 +53,7 @@ jobs:
         run: |
           sudo apt-get install -y \
             git help2man perl python3 make autoconf g++ flex bison \
-            ccache numactl perl-doc libfl2 libfl-dev \
+            numactl perl-doc libfl2 libfl-dev \
             zlib1g zlib1g-dev
 
           cd /tmp
@@ -62,7 +62,7 @@ jobs:
           git checkout "${VERILATOR_VERSION}"
 
           autoconf
-          ./configure --prefix=/opt/verilator CC="ccache gcc" CXX="ccache g++"
+          ./configure --prefix=/opt/verilator CC="gcc" CXX="g++"
           make -j6
           sudo make install
 
