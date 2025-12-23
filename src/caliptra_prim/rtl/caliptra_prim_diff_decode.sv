@@ -156,7 +156,8 @@ module caliptra_prim_diff_decode #(
             sigint_o = 1'b0;
           end
         end
-        default : ;
+        default : begin
+        end
       endcase
     end
 

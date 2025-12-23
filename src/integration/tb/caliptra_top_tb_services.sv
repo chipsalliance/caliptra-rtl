@@ -1096,7 +1096,7 @@ module caliptra_top_tb_services
         else
             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
 
-            unlock_security_state = 1'b0; // Default to not unlocking security state
+        unlock_security_state = 1'b0; // Default to not unlocking security state
     end
 `endif
     always @(negedge clk) begin
@@ -1186,14 +1186,14 @@ module caliptra_top_tb_services
 
     always @(negedge clk) begin
         // Hintsum: force if makehint failure (with enable) OR mldsa timeout
-        if ((inject_makehint_failure && `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintgen_enable) || inject_mldsa_timeout)
+        if ((inject_makehint_failure && `CPTRA_TOP_PATH.abr_inst.makehint_inst.mem_rd_data_valid) || inject_mldsa_timeout)
             force `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum = 'd80;
         else if (!inject_makehint_failure && !inject_mldsa_timeout)  // Only release when both are clear
             release `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum;
 
         // Invalid: force only for normcheck with specific conditions
         if (inject_normcheck_failure &&
-            `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.check_enable &&
+            `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.norm_check_enable &&
             (`CPTRA_TOP_PATH.abr_inst.norm_check_inst.mode == normcheck_mode_random))
             force `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid = 1'b1;
         else if (!inject_normcheck_failure)
@@ -2406,10 +2406,13 @@ endgenerate //IV_NO
 
     end
 
+    logic [31:0] timeout1, timeout2;
     always @(negedge clk) begin
         if((WriteData[7:0] == 8'hea) && mailbox_write) begin
-            force `CPTRA_TOP_PATH.soc_ifc_top1.timer1_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
-            force `CPTRA_TOP_PATH.soc_ifc_top1.timer2_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
+            timeout1 = $urandom_range(32'h0000_0001,32'h0000_0FFF);
+            timeout2 = $urandom_range(32'h0000_0001,32'h0000_0FFF);
+            force `CPTRA_TOP_PATH.soc_ifc_top1.timer1_timeout_period = {32'h0000_0000, timeout1};
+            force `CPTRA_TOP_PATH.soc_ifc_top1.timer2_timeout_period = {32'h0000_0000, timeout2};
         end
         //Use 'hF1 code to reset these values in the test
     end

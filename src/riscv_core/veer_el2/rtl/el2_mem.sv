@@ -161,6 +161,18 @@ else  begin
    assign   ictag_debug_rd_data  = '0 ;
    assign   ic_debug_rd_data  = '0 ;
    assign   ic_eccerr      = '0;
+   assign   ic_parerr      = '0;
+   assign   mem_export_local.ic_b_sb_wren = '0;
+   assign   mem_export_local.ic_b_sb_bit_en_vec = '0;
+   assign   mem_export_local.ic_sb_wr_data = '0;
+   assign   mem_export_local.ic_rw_addr_bank_q = '0;
+   assign   mem_export_local.ic_bank_way_clken_final = '0;
+   assign   mem_export_local.ic_bank_way_clken_final_up = '0;
+   assign   mem_export_local.ic_tag_clken_final = '0;
+   assign   mem_export_local.ic_tag_wren_q = '0;
+   assign   mem_export_local.ic_tag_wren_biten_vec = '0;
+   assign   mem_export_local.ic_tag_wr_data = '0;
+   assign   mem_export_local.ic_rw_addr_q = '0;
 end // else: !if( pt.ICACHE_ENABLE )
 
 

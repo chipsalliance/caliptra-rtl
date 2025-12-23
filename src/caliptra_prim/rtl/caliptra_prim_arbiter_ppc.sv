@@ -124,7 +124,7 @@ module caliptra_prim_arbiter_ppc #(
       idx_o = '0;
       for (int unsigned i = 0 ; i < N ; i++) begin
         if (winner[i]) begin
-          idx_o = i[IdxW-1:0];
+          idx_o = i;
         end
       end
     end

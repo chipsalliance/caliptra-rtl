@@ -588,7 +588,7 @@ assign use_fa_plus = (~bht_dir_f[0] & ~fetch_start_f[0] & ~btb_rd_pc4_f);
 
    if(!pt.BTB_FULLYA) begin
 
-      if(pt.BTB_BTAG_FOLD) begin : btbfold
+      if(pt.BTB_BTAG_FOLD) begin : btbfold_en
          el2_btb_tag_hash_fold #(.pt(pt)) rdtagf  (.hash(fetch_rd_tag_f[pt.BTB_BTAG_SIZE-1:0]),
                                                     .pc({ifc_fetch_addr_f[pt.BTB_ADDR_HI+pt.BTB_BTAG_SIZE+pt.BTB_BTAG_SIZE:pt.BTB_ADDR_HI+1]}));
          el2_btb_tag_hash_fold #(.pt(pt)) rdtagp1f(.hash(fetch_rd_tag_p1_f[pt.BTB_BTAG_SIZE-1:0]),
@@ -822,7 +822,10 @@ end // if (!pt.BTB_FULLYA)
                     .dout(btb_used[pt.BTB_SIZE-1:0]));
 
 end // block: fa
-
+else begin
+   assign ifu_bp_fa_index_f[1] = '0;
+   assign ifu_bp_fa_index_f[0] = '0;
+end
 
    //-----------------------------------------------------------------------------
    // BHT

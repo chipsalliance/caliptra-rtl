@@ -205,17 +205,18 @@ module caliptra_top_sva
                             else $display("SVA ERROR: AHB address not valid in keyvault");
 
   // Single comprehensive function that handles both debug modes
+  //Adding a check because verilator is calling this function and the below display call happens
+  //This ensures that the function was called appropriately
   function automatic logic check_all_kv_debug_values();
     logic sel_value = `KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value;
     logic [31:0] expected_value = sel_value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
-    
-    for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
-      for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-        if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
-          $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", 
-                   entry, dword, expected_value, 
-                   `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
-          return 1'b0;
+    if ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && `KEYVAULT_PATH.cptra_pwrgood) begin
+      for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+        for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+          if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
+            $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", entry, dword, expected_value, `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
+            return 1'b0;
+          end
         end
       end
     end
@@ -226,13 +227,8 @@ module caliptra_top_sva
   KV_debug_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK)
     disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-    
-    ($rose(~`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || 
-           `SOC_IFC_TOP_PATH.cptra_error_fatal || 
-           `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && 
-           `KEYVAULT_PATH.cptra_pwrgood) |=> 
-    check_all_kv_debug_values()
-  )
+    ($rose( ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked) || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && 
+           `KEYVAULT_PATH.cptra_pwrgood) |=> check_all_kv_debug_values()))
   else $display("SVA ERROR: KV debug flush comprehensive check failed");
 
   generate

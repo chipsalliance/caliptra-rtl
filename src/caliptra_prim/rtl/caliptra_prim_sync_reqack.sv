@@ -96,7 +96,8 @@ module caliptra_prim_sync_reqack #(
         end
         //VCS coverage off
         // pragma coverage off
-        default: ;
+        default: begin
+        end
         //VCS coverage on
         // pragma coverage on
       endcase
@@ -148,7 +149,8 @@ module caliptra_prim_sync_reqack #(
         end
         //VCS coverage off
         // pragma coverage off
-        default: ;
+        default: begin
+        end
         //VCS coverage on
         // pragma coverage on
       endcase
@@ -250,7 +252,8 @@ module caliptra_prim_sync_reqack #(
         //VCS coverage off
         // pragma coverage off
 
-        default: ;
+        default: begin
+        end
 
         //VCS coverage on
         // pragma coverage on
@@ -294,7 +297,8 @@ module caliptra_prim_sync_reqack #(
         //VCS coverage off
         // pragma coverage off
 
-        default: ;
+        default: begin
+        end
 
         //VCS coverage on
         // pragma coverage on
