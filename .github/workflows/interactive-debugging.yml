@@ -44,7 +44,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            git help2man perl python3 make autoconf g++ \
+            git help2man perl python3 make autoconf clang \
             flex bison numactl perl-doc libfl2 libfl-dev \
             zlib1g zlib1g-dev
           cd /tmp
@@ -52,7 +52,7 @@ jobs:
           cd verilator
           git checkout "${VERILATOR_VERSION}"
           autoconf
-          ./configure --prefix=/opt/verilator CC="gcc" CXX="g++"
+          ./configure --prefix=/opt/verilator CC="gcc" CXX="clang++"
           make -j6
           sudo make install
 
@@ -195,7 +195,7 @@ jobs:
           export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
           mkdir run
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop DEBUG_UNLOCKED=1 \
-            OBJCACHE="" CC=gcc CXX=g++ LINK=g++
+            OBJCACHE=""
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=infinite_loop
 
       - name: Test core register access
@@ -287,7 +287,7 @@ jobs:
           export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
           mkdir run
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop DEBUG_UNLOCKED=1 FORCE_CPU_RESET=1 \
-            OBJCACHE="" CC=gcc CXX=g++ LINK=g++
+            OBJCACHE=""
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=infinite_loop
 
       - name: Test peripheral access with core in reset
@@ -311,7 +311,7 @@ jobs:
           export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
           rm -rf run/*
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop DEBUG_UNLOCKED=1 \
-            OBJCACHE="" CC=gcc CXX=g++ LINK=g++
+            OBJCACHE=""
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=infinite_loop
 
       - name: Test JTAG access with clock gating
@@ -347,7 +347,7 @@ jobs:
           export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
           rm -rf run/*
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=infinite_loop \
-            OBJCACHE="" CC=gcc CXX=g++ LINK=g++
+            OBJCACHE=""
           make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=infinite_loop
 
       - name: Test JTAG access locked
