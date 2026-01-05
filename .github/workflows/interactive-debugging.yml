@@ -273,6 +273,10 @@ jobs:
             tar -zxvf openocd.tar.gz
           popd
 
+      - name: Install ccache
+        run: |
+          sudo apt-get install -y git ccache
+
       - name: Setup path
         run: |
           echo /opt/riscv/bin:/opt/verilator/bin:/opt/openocd/bin >> $GITHUB_PATH
