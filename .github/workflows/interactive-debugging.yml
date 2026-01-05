@@ -52,7 +52,7 @@ jobs:
           cd verilator
           git checkout "${VERILATOR_VERSION}"
           autoconf
-          ./configure
+          ./configure --prefix=/opt/verilator
           make -j6
           sudo make install
 
