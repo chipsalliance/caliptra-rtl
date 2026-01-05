@@ -52,7 +52,7 @@ jobs:
           cd verilator
           git checkout "${VERILATOR_VERSION}"
           autoconf
-          ./configure --prefix=/opt/verilator
+          ./configure --prefix=/opt/verilator CXX="ccache g++"
           make -j6
           sudo make install
 
