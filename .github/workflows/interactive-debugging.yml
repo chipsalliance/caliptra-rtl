@@ -25,7 +25,7 @@ jobs:
       VERILATOR_VERSION: v5.038
 
       # cache bust if needed
-      CUSTOM_CACHE_BUSTER: cd6ba052de27
+      CUSTOM_CACHE_BUSTER: ce6ba052de27
 
     steps:
       - uses: actions/checkout@v3
