@@ -22,7 +22,7 @@ jobs:
 
     env:
       CARGO_INCREMENTAL: 0
-      VERILATOR_VERSION: v5.038
+      VERILATOR_VERSION: v5.044
 
       # cache bust if needed
       CUSTOM_CACHE_BUSTER: ce6ba052de27
