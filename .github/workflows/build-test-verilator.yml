@@ -52,7 +52,7 @@ jobs:
         if: steps.verilator_restore.outputs.cache-hit != 'true'
         run: |
           sudo apt-get install -y \
-            git help2man perl python3 make autoconf clang flex bison \
+            git help2man perl python3 make autoconf g++ flex bison ccache \
             numactl perl-doc libfl2 libfl-dev \
             zlib1g zlib1g-dev
 
@@ -62,7 +62,7 @@ jobs:
           git checkout "${VERILATOR_VERSION}"
 
           autoconf
-          ./configure --prefix=/opt/verilator CC="gcc" CXX="clang++""
+          ./configure
           make -j6
           sudo make install
 
@@ -176,6 +176,10 @@ jobs:
             ls -la /opt/riscv/bin || true
             exit 1
           fi
+
+      - name: Install ccache
+        run: |
+          sudo apt-get install -y git ccache 
 
       - name: Setup paths
         run: |

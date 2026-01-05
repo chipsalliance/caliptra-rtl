@@ -44,7 +44,7 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y \
-            git help2man perl python3 make autoconf clang \
+            git help2man perl python3 make autoconf g++ ccache\
             flex bison numactl perl-doc libfl2 libfl-dev \
             zlib1g zlib1g-dev
           cd /tmp
@@ -52,7 +52,7 @@ jobs:
           cd verilator
           git checkout "${VERILATOR_VERSION}"
           autoconf
-          ./configure --prefix=/opt/verilator CC="gcc" CXX="clang++"
+          ./configure
           make -j6
           sudo make install
 
