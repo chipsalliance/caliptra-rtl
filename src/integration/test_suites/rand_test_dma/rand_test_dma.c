@@ -507,6 +507,9 @@ void main(void) {
                         soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size, 0, 0); // block_size to be updated with random value based on parameters
                         soc_ifc_axi_dma_wait_idle(0);
                         if (test_block_size) {
+                            if (inject_rst && (rst_done==0)) {
+                                while(1); // Wait for reset to deassert the recovery emulation logic so that TB doesn't advance to the next enqueued block_size value
+                            }
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
                     } else {
@@ -532,6 +535,9 @@ void main(void) {
                         soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, use_rd_fixed, dst_addr, use_wr_fixed, (transfer_size)*4, block_size, 0, 0);
                         soc_ifc_axi_dma_wait_idle(0);
                         if (test_block_size) {
+                            if (inject_rst && (rst_done==0)) {
+                                while(1); // Wait for reset to deassert the recovery emulation logic so that TB doesn't advance to the next enqueued block_size value
+                            }
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
 
@@ -608,6 +614,9 @@ void main(void) {
                         soc_ifc_axi_dma_read_mbox_payload_no_wait(src_addr, dst_offset, use_rd_fixed, transfer_size*4, block_size);
                         soc_ifc_axi_dma_wait_idle(0);
                         if (test_block_size) {
+                            if (inject_rst && (rst_done==0)) {
+                                while(1); // Wait for reset to deassert the recovery emulation logic so that TB doesn't advance to the next enqueued block_size value
+                            }
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
                     } else {
@@ -627,6 +636,9 @@ void main(void) {
                         soc_ifc_axi_dma_read_mbox_payload_no_wait(src_addr, dst_offset, use_rd_fixed, transfer_size*4, block_size);
                         soc_ifc_axi_dma_wait_idle(0);
                         if (test_block_size) {
+                            if (inject_rst && (rst_done==0)) {
+                                while(1); // Wait for reset to deassert the recovery emulation logic so that TB doesn't advance to the next enqueued block_size value
+                            }
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
 
@@ -704,6 +716,9 @@ void main(void) {
                         soc_ifc_axi_dma_read_ahb_payload(src_addr, use_rd_fixed, read_payload, transfer_size*4, block_size);
                         soc_ifc_axi_dma_wait_idle(0);
                         if (test_block_size) {
+                            if (inject_rst && (rst_done==0)) {
+                                while(1); // Wait for reset to deassert the recovery emulation logic so that TB doesn't advance to the next enqueued block_size value
+                            }
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
                     } else {
@@ -734,6 +749,12 @@ void main(void) {
                             // Clear auto-write
                             VPRINTF(LOW, "Disable FIFO to auto-write\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
+                        }
+                        if (test_block_size) {
+                            if (inject_rst && (rst_done==0)) {
+                                while(1); // Wait for reset to deassert the recovery emulation logic so that TB doesn't advance to the next enqueued block_size value
+                            }
+                            SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
 
                     }
@@ -768,11 +789,18 @@ void main(void) {
                     break;
             }
 
+            // This should be highly unusual (due to short TB timing on random reset injection), but wait for the reset before
+            // proceeding if it has not already been asserted for this iteration.
+            if (inject_rst && (rst_done==0)) {
+                VPRINTF(MEDIUM, "Rst wait...\n");
+                while(1);
+            }
+
             // Calculate address for the next transfer
             // Need to move past: transfer_type (4 bytes) + transfer_size (4 bytes) + payload (transfer_size*4 bytes) + gap (4 bytes)
             dccm_addr = payload_start_addr - 4;
 
-            // CUrrent iteration complete. Reset rst_done
+            // Current iteration complete. Reset rst_done
             rst_done = 0;
 
             next_transfer_dccm_addr = dccm_addr;
