@@ -1,3 +1,4 @@
+
 # docs: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
 
 name: Verilator
@@ -16,21 +17,19 @@ on:
 
 env:
   CARGO_INCREMENTAL: 0
-  SCCACHE_VERSION: 0.3.3
   RISCV_VERSION: v12.1.0
-  VERILATOR_VERSION: v5.012
+  VERILATOR_VERSION: v5.044
   PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
-  SCCACHE_GHA_CACHE_TO: sccache-verilator-10000
-  SCCACHE_GHA_CACHE_FROM: sccache-verilator-
-  # Change this to a new random value if you suspect the cache is corrupted
-  SCCACHE_C_CUSTOM_CACHE_BUSTER: f3e6951f0c1e
+
+  # cache bust if needed
+  CUSTOM_CACHE_BUSTER: ce6ba052de27
 
 jobs:
   build_tools:
     name: Build Tools
     runs-on: ubuntu-22.04
     if: ${{ inputs.run_vltr == 'true' }}
-    
+
     steps:
       - uses: actions/checkout@v3
         with:
@@ -38,88 +37,68 @@ jobs:
 
       - name: Restore Cargo index
         uses: actions/cache/restore@v3
-        id: cargo_index_restore
         with:
           path: ~/.cargo/registry/index
-          key: cargo-index-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}-${{ hashFiles('Cargo.lock') }}
+          key: cargo-index-${{ hashFiles('Cargo.lock') }}
 
-      - name: Restore sccache binary
-        uses: actions/cache/restore@v3
-        id: sccache_bin_restore
-        with:
-          path: ~/.cargo/bin/sccache
-          key: sccache-bin-${{ env.SCCACHE_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
-
-      - name: Install sccache
-        if: steps.sccache_bin_restore.outputs.cache-hit != 'true'
-        run: |
-          cargo install sccache --locked --version ${SCCACHE_VERSION} --no-default-features --features=gha
-      - name: Save sccache binary
-        uses: actions/cache/save@v3
-        if: steps.sccache_bin_restore.outputs.cache-hit != 'true'
-        with:
-          path: ~/.cargo/bin/sccache
-          key: sccache-bin-${{ env.SCCACHE_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
-
-      - name: Configure sccache
-        uses: actions/github-script@v6
-        with:
-          script: |
-            core.exportVariable('ACTIONS_CACHE_URL', process.env.ACTIONS_CACHE_URL || '');
-            core.exportVariable('ACTIONS_RUNTIME_TOKEN', process.env.ACTIONS_RUNTIME_TOKEN || '');
       - name: Restore verilator dir
         uses: actions/cache/restore@v3
         id: verilator_restore
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Install verilator
         if: steps.verilator_restore.outputs.cache-hit != 'true'
         run: |
-          sudo apt-get install flex bison libfl2 libfl-dev help2man
-          cd /tmp/
-          git clone -b "${VERILATOR_VERSION}" https://github.com/verilator/verilator
+          sudo apt-get install -y \
+            git help2man perl python3 make autoconf g++ flex bison ccache \
+            numactl perl-doc libfl2 libfl-dev \
+            zlib1g zlib1g-dev
+
+          cd /tmp
+          git clone https://github.com/verilator/verilator
           cd verilator
+          git checkout "${VERILATOR_VERSION}"
+
           autoconf
-          ./configure --prefix=/opt/verilator CXX="sccache g++"
+          ./configure --prefix=/opt/verilator CXX="ccache g++"
           make -j6
           sudo make install
+
       - name: Save verilator dir
         uses: actions/cache/save@v3
         if: steps.verilator_restore.outputs.cache-hit != 'true'
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Setup verilator path
-        run: |
-          echo /opt/verilator/bin >> $GITHUB_PATH
+        run: echo /opt/verilator/bin >> $GITHUB_PATH
 
-      - name: Restore Risc V Toolchain
+      - name: Restore RISC-V Toolchain
         uses: actions/cache/restore@v3
         id: riscv_restore
         with:
           path: /opt/riscv
-          key: riscv-${{ env.RISCV_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
-      - name: Install Risc V Toolchain
+      - name: Install RISC-V Toolchain
         if: steps.riscv_restore.outputs.cache-hit != 'true'
         run: |
-          # Building from source takes around 6.65 GB of disk and download size
-          wget -O toolchain.tar.gz https://github.com/chipsalliance/caliptra-tools/releases/download/gcc-v12.1.0/riscv64-unknown-elf.gcc-12.1.0.tar.gz
-          tar -xzf toolchain.tar.gz -C /opt/
+          wget -O toolchain.tar.gz \
+            https://github.com/chipsalliance/caliptra-tools/releases/download/gcc-v12.1.0/riscv64-unknown-elf.gcc-12.1.0.tar.gz
+          tar -xzf toolchain.tar.gz -C /opt
 
       - name: Save riscv dir
         uses: actions/cache/save@v3
         if: steps.riscv_restore.outputs.cache-hit != 'true'
         with:
           path: /opt/riscv
-          key: riscv-${{ env.RISCV_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Setup riscv path
-        run: |
-          echo /opt/riscv/bin >> $GITHUB_PATH
+        run: echo /opt/riscv/bin >> $GITHUB_PATH
 
   build_matrix:
     name: Build Smoke Test matrix
@@ -127,19 +106,20 @@ jobs:
     needs: build_tools
     if: ${{ inputs.run_vltr == 'true' }}
     outputs:
-      test_names: ${{ steps.output-matrix.outputs.test_names  }}
+      test_names: ${{ steps.output-matrix.outputs.test_names }}
     env:
       EXCLUDE_TESTS: "smoke_test_clk_gating, smoke_test_cg_wdt, smoke_test_mbox_cg, smoke_test_kv_cg, smoke_test_doe_cg, smoke_test_dma, smoke_test_wdt_rst"
+
     steps:
       - uses: actions/checkout@v3
+
       - name: Install deps
-        run: |
-          sudo apt-get update -qy && sudo apt-get install -qy --no-install-recommends \
-            python3-minimal python3-yaml
+        run: sudo apt-get update -qy && sudo apt-get install -qy python3-minimal python3-yaml
+
       - name: Build matrix
         id: output-matrix
-        run: |
-          echo "test_names=$(python3 .github/scripts/build_tests_matrix.py)" >> $GITHUB_OUTPUT
+        run: echo "test_names=$(python3 .github/scripts/build_tests_matrix.py)" >> $GITHUB_OUTPUT
+
 
   build_and_test:
     name: Verilator
@@ -150,41 +130,27 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        test_name: ${{fromJSON(needs.build_matrix.outputs.test_names)}}
+        test_name: ${{ fromJSON(needs.build_matrix.outputs.test_names) }}
 
     steps:
       - uses: actions/checkout@v3
         with:
           submodules: 'true'
 
-      - name: Restore Cargo index
-        uses: actions/cache/restore@v3
-        id: cargo_index_restore
-        with:
-          path: ~/.cargo/registry/index
-          key: cargo-index-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}-${{ hashFiles('Cargo.lock') }}
-
-      - name: Restore sccache binary
-        uses: actions/cache/restore@v3
-        id: sccache_bin_restore
-        with:
-          path: ~/.cargo/bin/sccache
-          key: sccache-bin-${{ env.SCCACHE_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
-
       - name: Restore verilator dir
         uses: actions/cache/restore@v3
         id: verilator_restore
         with:
           path: /opt/verilator
-          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: verilator-${{ env.VERILATOR_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
-      - name: Restore Risc V Toolchain
+      - name: Restore RISC-V Toolchain
         uses: actions/cache/restore@v3
         id: riscv_restore
         with:
           path: /opt/riscv
-          key: riscv-${{ env.RISCV_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
-      
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
+
       - name: Delay before retry
         if: steps.riscv_restore.outputs.cache-hit != 'true'
         run: |
@@ -192,51 +158,32 @@ jobs:
           echo "Cache restore failed or cache not found. Waiting ${delay} seconds before retry..."
           sleep ${delay}
 
-      - name: Restore Risc V Toolchain (Retry)
+      - name: Restore RISC-V Toolchain (Retry)
         if: steps.riscv_restore.outputs.cache-hit != 'true'
         uses: actions/cache/restore@v3
         id: riscv_restore_retry
         with:
           path: /opt/riscv
-          key: riscv-${{ env.RISCV_VERSION }}-${{ env.SCCACHE_C_CUSTOM_CACHE_BUSTER }}
+          key: riscv-${{ env.RISCV_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
       - name: Verify RISC-V Toolchain Restored
         run: |
-          echo "Cache restore results:"
-          echo "  First attempt cache-hit: ${{ steps.riscv_restore.outputs.cache-hit }}"
-          echo "  Retry attempt cache-hit: ${{ steps.riscv_restore_retry.outputs.cache-hit }}"
-          
-          # Check if either restore succeeded
-          if [[ "${{ steps.riscv_restore.outputs.cache-hit }}" == "true" ]] || \
-             [[ "${{ steps.riscv_restore_retry.outputs.cache-hit }}" == "true" ]]; then
-            echo "✓ Cache restore reported success"
+          if [ -d "/opt/riscv/bin" ] && [ -x "/opt/riscv/bin/riscv64-unknown-elf-gcc" ]; then
+            echo "✓ RISC-V GCC found"
+            /opt/riscv/bin/riscv64-unknown-elf-gcc --version | head -1
           else
-            echo "⚠ WARNING: Neither cache restore reported success"
-          fi
-          
-          # Verify the toolchain files actually exist
-          if [ -d "/opt/riscv/bin" ]; then
-            echo "✓ RISC-V directory exists at /opt/riscv/bin"
-            if [ -f "/opt/riscv/bin/riscv64-unknown-elf-gcc" ]; then
-              echo "✓ RISC-V GCC compiler found"
-              /opt/riscv/bin/riscv64-unknown-elf-gcc --version | head -1
-            else
-              echo "❌ ERROR: riscv64-unknown-elf-gcc not found in /opt/riscv/bin/"
-              ls -la /opt/riscv/bin/ | head -20
-              exit 1
-            fi
-          else
-            echo "❌ ERROR: RISC-V toolchain directory not found at /opt/riscv"
-            echo "Cache restore failed. This job depends on the build_tools job completing successfully."
+            echo "❌ RISC-V toolchain missing"
+            ls -la /opt/riscv/bin || true
             exit 1
           fi
 
-      - name: Setup verilator path
+      - name: Install ccache
+        run: |
+          sudo apt-get install -y git ccache 
+
+      - name: Setup paths
         run: |
           echo /opt/verilator/bin >> $GITHUB_PATH
-
-      - name: Setup riscv path
-        run: |
           echo /opt/riscv/bin >> $GITHUB_PATH
 
       - name: Run Caliptra Verilator Smoke Test
@@ -246,20 +193,24 @@ jobs:
           export CALIPTRA_AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
           export CALIPTRA_PRIM_ROOT=$CALIPTRA_ROOT/src/caliptra_prim_generic
           export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
+
           cd tools/scripts
-          make verilator CALIPTRA_ROOT=$CALIPTRA_ROOT ADAMSBRIDGE_ROOT=$ADAMSBRIDGE_ROOT CALIPTRA_PRIM_ROOT=$CALIPTRA_PRIM_ROOT CALIPTRA_PRIM_MODULE_PREFIX=$CALIPTRA_PRIM_MODULE_PREFIX TESTNAME=${{ matrix.test_name  }} | tee output.log
-          # Search the last 30 lines of the output for "TESTCASE PASSED"
+          make verilator \
+            CALIPTRA_ROOT=$CALIPTRA_ROOT \
+            ADAMSBRIDGE_ROOT=$ADAMSBRIDGE_ROOT \
+            CALIPTRA_PRIM_ROOT=$CALIPTRA_PRIM_ROOT \
+            CALIPTRA_PRIM_MODULE_PREFIX=$CALIPTRA_PRIM_MODULE_PREFIX \
+            TESTNAME=${{ matrix.test_name }} | tee output.log
+
           tail -n 30 output.log | grep "TESTCASE PASSED"
-          # grep will return 0 if the search term is found, and 1 otherwise
-          # A non-zero value will cause the github action to fail.
-          exit $?
+
 
   verify_test_results:
     name: Verify Verilator Test Results
     runs-on: ubuntu-22.04
     needs: build_and_test
-    # Force to run even if the build_and_test job is skipped for any reason
     if: ${{ !cancelled() }}
+
     steps:
       - name: Print Verilator Aggregated Result
         run: |

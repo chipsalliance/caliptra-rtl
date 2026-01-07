@@ -283,7 +283,7 @@ module aes_ghash
   // the section "Details on the data formats" in the header for details.
   always_comb begin
     for (int unsigned i = 0; i < 16; i++) begin
-      ghash_in_valid[15-i] = num_valid_bytes_i > i[4:0] ? ghash_in[15-i] : 8'b0;
+      ghash_in_valid[15-i] = num_valid_bytes_i > i ? ghash_in[15-i] : 8'b0;
     end
   end
 

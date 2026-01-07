@@ -247,9 +247,9 @@ interface clp_abr_top_cov_if
     endgenerate
 
     // OR-reduce the flags: if any instance meets the condition, the corresponding signal is 1.
-    assign enc_unit_equal   = (|eq_flags) & (abr_top.sigencode_z_inst.state != abr_top.sigencode_z_inst.IDLE);
-    assign enc_unit_less    = (|less_flags) & (abr_top.sigencode_z_inst.state != abr_top.sigencode_z_inst.IDLE);
-    assign enc_unit_greater = (|greater_flags) & (abr_top.sigencode_z_inst.state != abr_top.sigencode_z_inst.IDLE);
+    assign enc_unit_equal   = (|eq_flags) & (abr_top.sigencode_z_inst.state != abr_top.sigencode_z_inst.SIGENCODE_IDLE);
+    assign enc_unit_less    = (|less_flags) & (abr_top.sigencode_z_inst.state != abr_top.sigencode_z_inst.SIGENCODE_IDLE);
+    assign enc_unit_greater = (|greater_flags) & (abr_top.sigencode_z_inst.state != abr_top.sigencode_z_inst.SIGENCODE_IDLE);
     // Sign_z to cover the aggregated conditions
     covergroup clp_mldsa_sign_z_enc_agg_cg @(posedge clk);
         coverpoint enc_unit_equal {
@@ -291,11 +291,11 @@ interface clp_abr_top_cov_if
 
     // OR-reduce each set of flags and ensure the FSM is not in IDLE.
     // (Assuming abr_top.skencode_inst.state and its IDLE constant are accessible.)
-    assign skenc_state0_agg    = (|skenc_state0_flags)    & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.IDLE);
-    assign skenc_state1_agg    = (|skenc_state1_flags)    & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.IDLE);
-    assign skenc_state2_agg    = (|skenc_state2_flags)    & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.IDLE);
-    assign skenc_state_mq1_agg = (|skenc_state_mq1_flags) & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.IDLE);
-    assign skenc_state_mq2_agg = (|skenc_state_mq2_flags) & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.IDLE);
+    assign skenc_state0_agg    = (|skenc_state0_flags)    & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.SKENC_IDLE);
+    assign skenc_state1_agg    = (|skenc_state1_flags)    & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.SKENC_IDLE);
+    assign skenc_state2_agg    = (|skenc_state2_flags)    & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.SKENC_IDLE);
+    assign skenc_state_mq1_agg = (|skenc_state_mq1_flags) & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.SKENC_IDLE);
+    assign skenc_state_mq2_agg = (|skenc_state_mq2_flags) & (abr_top.skencode_inst.main_state != abr_top.skencode_inst.SKENC_IDLE);
 
     // Now create a covergroup that samples these aggregated flags.
     covergroup clp_mldsa_skencode_agg_cg @(posedge clk);

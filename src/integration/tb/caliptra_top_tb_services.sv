@@ -1096,7 +1096,7 @@ module caliptra_top_tb_services
         else
             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
 
-            unlock_security_state = 1'b0; // Default to not unlocking security state
+        unlock_security_state = 1'b0; // Default to not unlocking security state
     end
 `endif
     always @(negedge clk) begin
@@ -1186,14 +1186,14 @@ module caliptra_top_tb_services
 
     always @(negedge clk) begin
         // Hintsum: force if makehint failure (with enable) OR mldsa timeout
-        if ((inject_makehint_failure && `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintgen_enable) || inject_mldsa_timeout)
+        if ((inject_makehint_failure && `CPTRA_TOP_PATH.abr_inst.makehint_inst.mem_rd_data_valid) || inject_mldsa_timeout)
             force `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum = 'd80;
         else if (!inject_makehint_failure && !inject_mldsa_timeout)  // Only release when both are clear
             release `CPTRA_TOP_PATH.abr_inst.makehint_inst.hintsum;
 
         // Invalid: force only for normcheck with specific conditions
         if (inject_normcheck_failure &&
-            `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.check_enable &&
+            `CPTRA_TOP_PATH.abr_inst.norm_check_inst.norm_check_ctrl_inst.norm_check_enable &&
             (`CPTRA_TOP_PATH.abr_inst.norm_check_inst.mode == normcheck_mode_random))
             force `CPTRA_TOP_PATH.abr_inst.norm_check_inst.invalid = 1'b1;
         else if (!inject_normcheck_failure)
@@ -1922,9 +1922,12 @@ endgenerate //IV_NO
 
     endtask
 
+    
     task mlkem_testvector_generator();
-        int fd;
+        int fd, fd_py;
         string input_fname, output_fname, cmd, line;
+        string py_script;
+
         bit [31:0] seed_d[];
         bit [31:0] seed_z[];
         bit [31:0] ek[];
@@ -1933,86 +1936,151 @@ endgenerate //IV_NO
         bit [31:0] ciphertext[];
         bit [31:0] sharedkey[];
 
-        seed_d = new[8];
-        seed_z = new[8];
-        msg    = new[8];
-        ek     = new[392];
-        dk     = new[792];
+        seed_d     = new[8];
+        seed_z     = new[8];
+        msg        = new[8];
+        ek         = new[392];
+        dk         = new[792];
         ciphertext = new[392];
-        sharedkey = new[8];
+        sharedkey  = new[8];
 
-        //randomize the inputs
-        for (int i = 0; i < 8; i++) begin
-            seed_d[i] = $urandom();
-            seed_z[i] = $urandom();
-            msg[i] = $urandom();
+        // --- If-else based on presence of the Python generator ---
+        py_script = "ml-kem/random_test_ml_kem.py";
+        fd_py = $fopen(py_script, "r"); // open for read to test existence
+
+        if (fd_py != 0) begin
+            // --------------------
+            // Python path (original flow)
+            // --------------------
+            $fclose(fd_py);
+
+            // 1) Randomize the inputs
+            for (int i = 0; i < 8; i++) begin
+                seed_d[i] = $urandom();
+                seed_z[i] = $urandom();
+                msg[i]    = $urandom();
+            end
+
+            // 2) Write the python-readable KEYGEN input file
+            input_fname = "ml-kem/tv/keygen_ext_input.txt";
+            fd = $fopen(input_fname, "w");
+            if (fd == 0) $error("Cannot open %s for writing", input_fname);
+            // line1: operation code
+            $fwrite(fd, "1\n");
+            // line2-3: z, d as hex strings
+            write_file(fd, 8, seed_z);
+            write_file(fd, 8, seed_d);
+            $fclose(fd);
+
+            // 3) Invoke the python generator for KEYGEN
+            cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt", input_fname);
+            $display("## Running: %s", cmd);
+            if ($system(cmd) != 0) $error("External Python script failed");
+
+            // 4) Read back EK and DK from the output file
+            output_fname = "ml-kem/tv/keygen_ext_output.txt";
+            fd = $fopen(output_fname, "r");
+            if (fd == 0) $error("Cannot open %s for reading", output_fname);
+            // skip lines 1–3 (op, z, d)
+            void'($fgets(line, fd));
+            void'($fgets(line, fd));
+            void'($fgets(line, fd));
+            read_line(fd, 392, ek);
+            read_line(fd, 792, dk);
+            $fclose(fd);
+
+            // 5) Write the python-readable ENCAP input file
+            input_fname = "ml-kem/tv/encap_ext_input.txt";
+            fd = $fopen(input_fname, "w");
+            if (fd == 0) $error("Cannot open %s for writing", input_fname);
+            // line1: operation code
+            $fwrite(fd, "2\n");
+            // line2-3: msg, ek as hex strings
+            write_file(fd, 8, msg);
+            write_file(fd, 392, ek);
+            $fclose(fd);
+
+            // 6) Invoke the python generator for ENCAP
+            cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", input_fname);
+            $display("## Running: %s", cmd);
+            if ($system(cmd) != 0) $error("External Python script failed");
+
+            // 7) Read back sharedkey and ciphertext from the output file
+            output_fname = "ml-kem/tv/encap_ext_output.txt";
+            fd = $fopen(output_fname, "r");
+            if (fd == 0) $error("Cannot open %s for reading", output_fname);
+            // skip lines 1–3 (op, msg, ek)
+            void'($fgets(line, fd));
+            void'($fgets(line, fd));
+            void'($fgets(line, fd));
+            read_line(fd, 8,   sharedkey);
+            read_line(fd, 392, ciphertext);
+            $fclose(fd);
+
+        end else begin
+            // --------------------
+            // No Python file — fallback to fixed files
+            // --------------------
+            $display("## Python generator not found (%s). Using fixed input/output files.", py_script);
+
+            // KEYGEN fixed input: line1 op, line2 z (8), line3 d (8)
+            input_fname = "ml_kem_fixed/keygen_ext_fixed_input.txt";
+            fd = $fopen(input_fname, "r");
+            if (fd == 0) $error("Cannot open %s for reading", input_fname);
+            void'($fgets(line, fd));            // skip op
+            read_line(fd, 8, seed_z);           // z
+            read_line(fd, 8, seed_d);           // d
+            $fclose(fd);
+
+            // KEYGEN fixed output: line1 op, line2 z, line3 d, then ek (392), dk (792)
+            output_fname = "ml_kem_fixed/keygen_ext_fixed_output.txt";
+            fd = $fopen(output_fname, "r");
+            if (fd == 0) $error("Cannot open %s for reading", output_fname);
+            void'($fgets(line, fd));            // skip op
+            void'($fgets(line, fd));            // skip z echo
+            void'($fgets(line, fd));            // skip d echo
+            read_line(fd, 392, ek);             // ek
+            read_line(fd, 792, dk);             // dk
+            $fclose(fd);
+
+            // ENCAP fixed input: line1 op, line2 msg (8), line3 ek (392)
+            input_fname = "ml_kem_fixed/encap_ext_fixed_input.txt";
+            fd = $fopen(input_fname, "r");
+            if (fd == 0) $error("Cannot open %s for reading", input_fname);
+            void'($fgets(line, fd));            // skip op
+            read_line(fd, 8,   msg);            // msg
+            read_line(fd, 392, ek);             // ek (overwrites if different from keygen output)
+            $fclose(fd);
+
+            // ENCAP fixed output: line1 op, line2 msg, line3 ek, then sharedkey (8), ciphertext (392)
+            output_fname = "ml_kem_fixed/encap_ext_fixed_output.txt";
+            fd = $fopen(output_fname, "r");
+            if (fd == 0) $error("Cannot open %s for reading", output_fname);
+            void'($fgets(line, fd));            // skip op
+            void'($fgets(line, fd));            // skip msg echo
+            void'($fgets(line, fd));            // skip ek echo
+            read_line(fd, 8,   sharedkey);      // sharedkey
+            read_line(fd, 392, ciphertext);     // ciphertext
+            $fclose(fd);
+
         end
-        //Generate EK and DK
-        input_fname = "ml-kem/tv/keygen_ext_input.txt";
-        fd = $fopen(input_fname, "w");
-        if (fd == 0) $error("Cannot open %s for writing", input_fname);
-        // line1: operation code
-        $fwrite(fd, "1\n");
-        // line2-3: z, d as hex strings
-        write_file(fd, 8, seed_z);
-        write_file(fd, 8, seed_d);
-        $fclose(fd);
-        // 3) invoke the python generator
-        cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt",input_fname);
-        $display("## Running: %s", cmd);
-        if ($system(cmd) != 0) $error("External Python script failed");
-        // 4) read back ek and dk from the output file
-        output_fname = "ml-kem/tv/keygen_ext_output.txt";
-        fd = $fopen(output_fname, "r");
-        if (fd == 0) $error("Cannot open %s for reading", output_fname);
-        // skip lines 1–3 (op, z, d)
-        void'($fgets(line, fd));
-        void'($fgets(line, fd));
-        void'($fgets(line, fd));
-        read_line(fd, 392, ek);
-        read_line(fd, 792, dk);
-        $fclose(fd);
-        // 2) write the python‐readable input file
-        input_fname = "ml-kem/tv/encap_ext_input.txt";
-        fd = $fopen(input_fname, "w");
-        if (fd == 0) $error("Cannot open %s for writing", input_fname);
-        // line1: operation code
-        $fwrite(fd, "2\n");
-        // line2-3: z, d as hex strings
-        write_file(fd, 8, msg);
-        write_file(fd, 392, ek);
-        $fclose(fd);
-        // 3) invoke the python generator
-        cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", input_fname);
-        $display("## Running: %s", cmd);
-        if ($system(cmd) != 0) $error("External Python script failed");
-        // 4) read back ek and dk from the output file
-        output_fname = "ml-kem/tv/encap_ext_output.txt";
-        fd = $fopen(output_fname, "r");
-        if (fd == 0) $error("Cannot open %s for reading", output_fname);
-        // skip lines 1–3 (op, m, ek)
-        void'($fgets(line, fd));
-        void'($fgets(line, fd));
-        void'($fgets(line, fd));
-        read_line(fd, 8, sharedkey);
-        read_line(fd, 392, ciphertext);
-        $fclose(fd);
 
-        //Assign to test vector struct
+        // Assign to test vector struct
         for (int i = 0; i < 8; i++) begin
-            mlkem_test_vector.seed_d[i] = seed_d[i];
-            mlkem_test_vector.seed_z[i] = seed_z[i];
-            mlkem_test_vector.msg[i] = msg[i];
+            mlkem_test_vector.seed_d[i]    = seed_d[i];
+            mlkem_test_vector.seed_z[i]    = seed_z[i];
+            mlkem_test_vector.msg[i]       = msg[i];
             mlkem_test_vector.sharedkey[i] = sharedkey[i];
         end
         for (int i = 0; i < 392; i++) begin
-            mlkem_test_vector.ek[i] = ek[i];
+            mlkem_test_vector.ek[i]         = ek[i];
             mlkem_test_vector.ciphertext[i] = ciphertext[i];
         end
         for (int i = 0; i < 792; i++) begin
             mlkem_test_vector.dk[i] = dk[i];
         end
     endtask
+
 
     task mldsa_input_hex_gen(); //mode = CTRL.value-1
         int fd_r;
@@ -2338,10 +2406,13 @@ endgenerate //IV_NO
 
     end
 
+    logic [31:0] timeout1, timeout2;
     always @(negedge clk) begin
         if((WriteData[7:0] == 8'hea) && mailbox_write) begin
-            force `CPTRA_TOP_PATH.soc_ifc_top1.timer1_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
-            force `CPTRA_TOP_PATH.soc_ifc_top1.timer2_timeout_period = {32'h0000_0000, $urandom_range(32'h0000_0001,32'h0000_0FFF)};
+            timeout1 = $urandom_range(32'h0000_0001,32'h0000_0FFF);
+            timeout2 = $urandom_range(32'h0000_0001,32'h0000_0FFF);
+            force `CPTRA_TOP_PATH.soc_ifc_top1.timer1_timeout_period = {32'h0000_0000, timeout1};
+            force `CPTRA_TOP_PATH.soc_ifc_top1.timer2_timeout_period = {32'h0000_0000, timeout2};
         end
         //Use 'hF1 code to reset these values in the test
     end
