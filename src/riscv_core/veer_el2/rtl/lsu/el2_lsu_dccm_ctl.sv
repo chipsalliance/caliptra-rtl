@@ -243,6 +243,13 @@ import el2_pkg::*;
       assign stbuf_fwddata_m[63:0]   = {stbuf_fwddata_hi_m[31:0], stbuf_fwddata_lo_m[31:0]};
       assign stbuf_fwdbyteen_m[7:0]  = {stbuf_fwdbyteen_hi_m[3:0], stbuf_fwdbyteen_lo_m[3:0]};
 
+      //Tie Off for Lint
+      assign dccm_data_ecc_hi_r = '0;
+      assign dccm_data_ecc_lo_r = '0;
+      assign dccm_rdata_hi_r = '0;
+      assign dccm_rdata_lo_r = '0;
+      assign lsu_ld_data_r = '0;
+
       for (genvar i=0; i<8; i++) begin: GenLoop
          assign lsu_rdata_corr_m[(8*i)+7:8*i] = stbuf_fwdbyteen_m[i] ? stbuf_fwddata_m[(8*i)+7:8*i] :
                                                                        (addr_in_pic_m ? picm_rd_data_m[(8*i)+7:8*i] : ({8{addr_in_dccm_m}} & dccm_rdata_corr_m[(8*i)+7:8*i]));

@@ -205,7 +205,7 @@ import el2_pkg::*;
    assign ahb_htrans_in[1:0]  = {2{ahb_hsel}} & ahb_htrans[1:0];
    assign ahb_hrdata[63:0]    = buf_rdata[63:0];
 
-   if (CHECK_RANGES) begin
+   if (CHECK_RANGES) begin: GenCheckRanges
        // Miscellaneous signals
        logic                    ahb_addr_in_dccm, ahb_addr_in_iccm, ahb_addr_in_pic;
        logic                    ahb_addr_in_dccm_region_nc, ahb_addr_in_iccm_region_nc, ahb_addr_in_pic_region_nc;

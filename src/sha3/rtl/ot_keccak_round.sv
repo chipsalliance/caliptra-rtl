@@ -489,7 +489,7 @@ module ot_keccak_round
           // ICEBOX(#18029): handle If Width is not integer divisable by DInWidth
           // Currently it is not allowed to have partial write
           // Please see the Assertion `WidthDivisableByDInWidth_A`
-          if (addr_i == i[DInAddr-1:0]) begin
+          if (addr_i == i) begin
             storage_d[j][i*DInWidth+:DInWidth] =
               storage[j][i*DInWidth+:DInWidth] ^ data_i[j];
           end else begin

@@ -3822,7 +3822,7 @@ module entropy_src_reg_top #(
   // Read data return
   always_comb begin
     reg_rdata_next = '0;
-    unique case (addr_hit)
+    unique case (addr_hit) inside
       57'h000000000000001: begin
         reg_rdata_next[0] = intr_state_es_entropy_valid_qs;
         reg_rdata_next[1] = intr_state_es_health_test_failed_qs;
@@ -4131,6 +4131,9 @@ module entropy_src_reg_top #(
 
       57'h100000000000000: begin
         reg_rdata_next[8:0] = main_sm_state_qs;
+      end
+      default: begin
+
       end
     endcase
   end

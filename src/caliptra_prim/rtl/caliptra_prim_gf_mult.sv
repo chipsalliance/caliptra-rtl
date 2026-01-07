@@ -147,7 +147,7 @@ module caliptra_prim_gf_mult #(
     logic [Width-1:0] operand
   );
     logic [Width-1:0] mult_out;
-    mult_out = operand[Width-1] ? (operand << 1) ^ IPoly : (operand << 1);
+    mult_out = operand[Width-1] ? Width'(operand << 1) ^ IPoly : Width'(operand << 1);
     return mult_out;
   endfunction
 

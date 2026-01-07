@@ -2383,7 +2383,7 @@ module csrng_reg_top #(
   // Read data return
   always_comb begin
     reg_rdata_next = '0;
-    unique case (addr_hit)
+    unique case (addr_hit) inside
       24'h000001: begin
         reg_rdata_next[0] = intr_state_cs_cmd_req_done_qs;
         reg_rdata_next[1] = intr_state_cs_entropy_req_qs;
@@ -2527,6 +2527,10 @@ module csrng_reg_top #(
 
       24'h800000: begin
         reg_rdata_next[7:0] = main_sm_state_qs;
+      end
+
+      default: begin
+        
       end
     endcase
   end
