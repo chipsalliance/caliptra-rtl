@@ -48,25 +48,25 @@ For information on the Caliptra Core, see the [High level architecture](https://
 
 The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of this flow involves signaling to the SoC that Caliptra is awake and ready for fuses. After fuses are populated and the SoC indicates that it is done downloading fuses, Caliptra can wake up the rest of the IP by de-asserting the internal reset.
 
-The following figure shows the initial power-on arc of the Mailbox Boot FSM.
+The following figure shows the state transitions and associated actions in Caliptra's boot state machine.
 
-*Figure 1: Mailbox Boot FSM state diagram*
+*Figure: Caliptra Boot FSM state diagram*
 
-![](./images/HW_mbox_boot_fsm.png)
+![](./images/Caliptra_boot_fsm.png)
 
 The Boot FSM first waits for the SoC to assert cptra\_pwrgood and de-assert cptra\_rst\_b. In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
 
-BOOT\_DONE enables Caliptra reset de-assertion through a two flip-flop synchronizer.
+Once in the BOOT\_DONE state, Caliptra de-asserts resets through a two flip-flop synchronizer.
 
-## FW update reset (Impactless FW update)
+### FW update reset (Impactless FW update)
 
-When a firmware update is initiated, Runtime FW writes to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_fw\_rst\_b pin and all AHB targets are still active. All registers within the targets and ICCM/DCCM memories are intact after the reset. Reset is deasserted synchronously after a programmable number of cycles; the minimum allowed number of wait cycles is 5, which is also the default configured value. Reset de-assertion is done through a two flip-flop synchronizer. Since ICCM is locked during runtime, the boot FSM unlocks it when the RISC-V reset is asserted. Following FW update reset deassertion, normal boot flow updates the ICCM with the new FW from the mailbox SRAM. The boot flow is modified as shown in the following figure.
-
-*Figure 2: Mailbox Boot FSM state diagram for FW update reset*
-
-![](./images/mbox_boot_fsm_FW_update_reset.png)
+When a firmware update is initiated, Runtime FW writes to fw\_update\_reset register to trigger the FW update reset. When this register is written, only the RISC-V core is reset using cptra\_uc\_rst\_b pin and all AHB targets are still active. All registers within the targets and ICCM/DCCM memories are intact after the reset. Reset is deasserted synchronously after a programmable number of cycles; the minimum allowed number of wait cycles is 5, which is also the default configured value. Reset de-assertion is done through a two flip-flop synchronizer. Since ICCM is locked during runtime, the boot FSM unlocks it when the RISC-V reset is asserted. Following FW update reset deassertion, normal boot flow updates the ICCM with the new FW from the mailbox SRAM.
 
 Impactless firmware updates may be initiated by writing to the fw\_update\_reset register after Caliptra comes out of global reset and enters the BOOT\_DONE state. In the BOOT\_FWRST state, only the reset to the RISC-V core is asserted and the wait timer is initialized. After the timer expires, the FSM advances from the BOOT\_WAIT to BOOT\_DONE state where the reset is deasserted and ICCM is unlocked.
+
+### Breakpoints for Debug
+
+Integrators may connect a breakpoint input to Caliptra, which is intended to connect to a chip GPIO pin. When asserted, this pin causes the Caliptra boot FSM to follow a modified arc. Instead of transitioning immediately to the BOOT_DONE state upon completion of fuse programming, the state machine transitions from BOOT_FUSE to BOOT_WAIT. Here, the state machine halts until the Caliptra register [CPTRA_BOOTFSM_GO](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_BOOTFSM_GO) is set, either by AXI or TAP access.
 
 ## RISC-V core
 
@@ -219,7 +219,7 @@ For more details regarding the register interface to control the WDT, see the [r
 
 The following figure shows the two timers.
 
-*Figure 3: Caliptra Watchdog Timer*
+*Figure: Caliptra Watchdog Timer*
 
 ![](./images/WDT.png)
 
@@ -352,7 +352,7 @@ The following applies to the clock gating feature:
 
 The following figure shows the timing information for clock gating.
 
-*Figure 10: Clock gating timing*
+*Figure: Clock gating timing*
 
 ![](./images/clock_gating_timing.png)
 
@@ -366,19 +366,19 @@ The block is instantiated based on a design parameter chosen at integration time
 
 The following figure shows the integrated TRNG block.
 
-*Figure 11: Integrated TRNG block*
+*Figure: Integrated TRNG block*
 
 ![](./images/integrated_TRNG.png)
 
 The following figure shows the CSRNG block.
 
-*Figure 12: CSRNG block*
+*Figure: CSRNG block*
 
 ![](./images/CSRNG_block.png)
 
 The following figure shows the entropy source block.
 
-*Figure 13: Entropy source block*
+*Figure: Entropy source block*
 
 ![](./images/entropy_source_block.png)
 
@@ -442,7 +442,7 @@ These are the top level signals defined in caliptra\_top.
 
 The following figure shows the top level signals defined in caliptra\_top.
 
-*Figure 14: caliptra\_top signals*
+*Figure: caliptra\_top signals*
 
 ![](./images/caliptra_top_signals.png)
 
@@ -463,7 +463,7 @@ The following table provides descriptions of the entropy source signals.
 
 The following figure shows the entropy source signals.
 
-*Figure 15: Entropy source signals*
+*Figure: Entropy source signals*
 
 ![](./images/entropy_source_signals.png)
 
@@ -670,7 +670,7 @@ Debug Unlocked registers are accessible when debug is unlocked, or the lifecycle
 | SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H      | 7’h79        | RW            |              | YES            |
 
 
-*Figure 16: JTAG implementation*
+*Figure: JTAG implementation*
 
 ![](./images/JTAG_implementation.png)
 
@@ -692,7 +692,7 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
 
 The high-level architecture of Caliptra cryptographic subsystem is shown in the following figure.
 
-*Figure 17: Caliptra cryptographic subsystem*
+*Figure: Caliptra cryptographic subsystem*
 
 ![](./images/Crypto-2p0.png)
 
@@ -717,7 +717,7 @@ The message should be padded before feeding to the hash core. The input message 
 
 The total size should be equal to 128 bits short of a multiple of 1024 since the goal is to have the formatted message size as a multiple of 1024 bits (N x 1024). The following figure shows the SHA512 input formatting.
 
-*Figure 18: SHA512 input formatting*
+*Figure: SHA512 input formatting*
 
 ![](./images/SHA512_input.png)
 
@@ -729,7 +729,7 @@ The SHA512 core performs 80 iterative operations to process the hash value of th
 
 The SHA512 architecture has the finite-state machine as shown in the following figure.
 
-*Figure 19: SHA512 FSM*
+*Figure: SHA512 FSM*
 
 ![](./images/SHA512_fsm.png)
 
@@ -758,7 +758,7 @@ The SHA512 address map is shown here: [sha512\_reg — clp Reference (chipsallia
 
 The following pseudocode demonstrates how the SHA512 interface can be implemented.
 
-*Figure 20: SHA512 pseudocode*
+*Figure: SHA512 pseudocode*
 
 ![](./images/SHA512_pseudo.png)
 
@@ -836,7 +836,7 @@ The total size should be equal to 64 bits, short of a multiple of 512 because th
 
 The following figure shows SHA256 input formatting.
 
-*Figure 21: SHA256 input formatting*
+*Figure: SHA256 input formatting*
 
 ![](./images/SHA256_input.png)
 
@@ -848,7 +848,7 @@ The SHA256 core performs 64 iterative operations to process the hash value of th
 
 The SHA256 architecture has the finite-state machine as shown in the following figure.
 
-*Figure 22: SHA256 FSM*
+*Figure: SHA256 FSM*
 
 ![](./images/SHA256_fsm.png)
 
@@ -882,7 +882,7 @@ The SHA256 address map is shown here: [sha256\_reg — clp Reference (chipsallia
 
 The following pseudocode demonstrates how the SHA256 interface can be implemented.
 
-*Figure 23: SHA256 pseudocode*
+*Figure: SHA256 pseudocode*
 
 ![](./images/SHA256_pseudo.png)
 
@@ -1104,25 +1104,25 @@ The message should be padded before feeding to the HMAC core. Internally, the i\
 
 The total size should be equal to 128 bits, short of a multiple of 1024 because the goal is to have the formatted message size as a multiple of 1024 bits (N x 1024).
 
-*Figure 24: HMAC input formatting*
+*Figure: HMAC input formatting*
 
 ![](./images/HMAC_input.png)
 
 The following figures show examples of input formatting for different message lengths.
 
-*Figure 25: Message length of 1023 bits*
+*Figure: Message length of 1023 bits*
 
 ![](./images/msg_1023.png)
 
 When the message is 1023 bits long, padding is given in the next block along with message size.
 
-*Figure 26: 1 bit padding*
+*Figure: 1 bit padding*
 
 ![](./images/1_bit.png)
 
 When the message size is 895 bits, a padding of ‘1’ is also considered valid, followed by the message size.
 
-*Figure 27: Multi block message*
+*Figure: Multi block message*
 
 ![](./images/msg_multi_block.png)
 
@@ -1133,13 +1133,13 @@ Messages with a length greater than 1024 bits are broken down into N 1024-bit bl
 
 The HMAC512 core performs the sha2-512 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
 
-*Figure 28: HMAC-SHA-512-256 data flow*
+*Figure: HMAC-SHA-512-256 data flow*
 
 ![](./images/HMAC_SHA_512_256.png)
 
 The HMAC384 core performs the sha2-384 function to process the hash value of the given message. The algorithm processes each block of the 1024 bits from the message, using the result from the previous block. This data flow is shown in the following figure.
 
-*Figure 29: HMAC-SHA-384-192 data flow*
+*Figure: HMAC-SHA-384-192 data flow*
 
 ![](./images/HMAC_SHA_384_192.png)
 
@@ -1147,7 +1147,7 @@ The HMAC384 core performs the sha2-384 function to process the hash value of the
 
 The HMAC architecture has the finite-state machine as shown in the following figure.
 
-*Figure 30: HMAC FSM*
+*Figure: HMAC FSM*
 
 ![](./images/HMAC_FSM.png)
 
@@ -1184,7 +1184,7 @@ The HMAC address map is shown here: [hmac\_reg — clp Reference (chipsalliance.
 
 The following pseudocode demonstrates how the HMAC interface can be implemented.
 
-*Figure 31: HMAC pseudocode*
+*Figure: HMAC pseudocode*
 
 ![](./images/HMAC_pseudo.png)
 
@@ -1306,7 +1306,7 @@ The hardware implementation also supports ECDH, 384 Bits (Prime Field), also kno
 
 Secp384r1 parameters are shown in the following figure.
 
-*Figure 32: Secp384r1 parameters*
+*Figure: Secp384r1 parameters*
 
 ![](./images/secp384r1_params.png)
 
@@ -1314,7 +1314,7 @@ Secp384r1 parameters are shown in the following figure.
 
 The ECDSA consists of three operations, shown in the following figure.
 
-*Figure 33: ECDSA operations*
+*Figure: ECDSA operations*
 
 ![](./images/ECDSA_ops.png)
 
@@ -1359,7 +1359,7 @@ In ECDH sharedkey generation, the shared key is generated by ECDH_sharedkey(priv
 
 The ECC top-level architecture is shown in the following figure.
 
-*Figure 34: ECC architecture*
+*Figure: ECC architecture*
 
 ![](./images/ECC_arch.png)
 
@@ -1398,25 +1398,25 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 
 #### KeyGen
 
-*Figure 35: KeyGen pseudocode*
+*Figure: KeyGen pseudocode*
 
 ![](./images/keygen_pseudo.png)
 
 #### Signing
 
-*Figure 36: Signing pseudocode*
+*Figure: Signing pseudocode*
 
 ![](./images/signing_pseudo.png)
 
 #### Verifying
 
-*Figure 37: Verifying pseudocode*
+*Figure: Verifying pseudocode*
 
 ![](./images/verify_pseudo.png)
 
 #### ECDH sharedkey
 
-*Figure 38: ECDH sharedkey pseudocode*
+*Figure: ECDH sharedkey pseudocode*
 
 ![](./images/sharedkey_pseudo.png)
 
@@ -1482,7 +1482,7 @@ The state machine of HMAC\_DRBG utilization is shown in the following figure, in
 2. KEYGEN PRIVKEY: Running HMAC\_DRBG with seed and nonce to generate the privkey in KEYGEN operation.
 3. SIGNING NONCE: Running HMAC\_DRBG based on RFC6979 in SIGNING operation with privkey and hashed\_msg.
 
-*Figure 39: HMAC\_DRBG utilization*
+*Figure: HMAC\_DRBG utilization*
 
 ![](./images/HMAC_DRBG_util.png)
 
@@ -1498,7 +1498,7 @@ In SCA random generator state:
 
 The data flow of the HMAC\_DRBG operation in keygen operation mode is shown in the following figure.
 
-*Figure 40: HMAC\_DRBG data flow*
+*Figure: HMAC\_DRBG data flow*
 
 ![](./images/HMAC_DRBG_data.png)
 
@@ -1508,7 +1508,7 @@ Test vector leakage assessment (TVLA) provides a robust test using a 𝑡-test. 
 
 In practice, observing a t-value greater than a specific threshold (mainly 4.5) indicates the presence of leakage. However, in ECC, due to its latency, around 5 million samples are required to be captured. This latency leads to many false positives and the TVLA threshold can be considered a higher value than 4.5. Based on the following figure from “Side-Channel Analysis and Countermeasure Design for Implementation of Curve448 on Cortex-M4” by Bisheh-Niasar et. al., the threshold can be considered equal to 7 in our case.
 
-*Figure 41: TVLA threshold as a function of the number of samples per trace*
+*Figure: TVLA threshold as a function of the number of samples per trace*
 
 ![](./images/TVLA_threshold.png)
 
@@ -1518,7 +1518,7 @@ In practice, observing a t-value greater than a specific threshold (mainly 4.5) 
 The TVLA results for performing seed/nonce-dependent leakage detection using 200,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC keygen by changing the seed/nonce after 200,000 operations.
 
 
-*Figure 42: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
+*Figure: seed/nonce-dependent leakage detection using TVLA for ECC keygen after 200,000 traces*
 
 ![](./images/tvla_keygen.png)
 
@@ -1526,13 +1526,13 @@ The TVLA results for performing seed/nonce-dependent leakage detection using 200
 
 The TVLA results for performing privkey-dependent leakage detection using 20,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the privkey after 20,000 operations.
 
-*Figure 43: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
+*Figure: privkey-dependent leakage detection using TVLA for ECC signing after 20,000 traces*
 
 ![](./images/TVLA_privekey.png)
 
 The TVLA results for performing message-dependent leakage detection using 64,000 traces is shown in the following figure. Based on this figure, there is no leakage in ECC signing by changing the message after 64,000 operations.
 
-*Figure 44: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
+*Figure: Message-dependent leakage detection using TVLA for ECC signing after 64,000 traces*
 
 ![](./images/TVLA_msg_dependent.png)
 
@@ -1569,15 +1569,15 @@ In this architecture, the ECC interface and controller are implemented in hardwa
 
 LMS cryptography is a type of hash-based digital signature scheme that was standardized by NIST in 2020. It is based on the Leighton-Micali Signature (LMS) system, which uses a Merkle tree structure to combine many one-time signature (OTS) keys into a single public key. LMS cryptography is resistant to quantum attacks and can achieve a high level of security without relying on large integer mathematics.
 
-Caliptra supports only LMS verification using a software/hardware co-design approach. Hence, the LMS accelerator reuses the SHA256 engine to speedup the Winternitz chain by removing software-hardware interface overhead. The LMS-OTS verification algorithm is shown in follwoing figure:
+Caliptra supports only LMS verification using a software/hardware co-design approach. Hence, the LMS accelerator reuses the SHA256 engine to speedup the Winternitz chain by removing software-hardware interface overhead. The LMS-OTS verification algorithm is shown in following figure:
 
-*Figure 45: LMS-OTS Verification algorithm*
+*Figure: LMS-OTS Verification algorithm*
 
 ![](./images/LMS_verifying_alg.png)
 
 The high-level architecture of LMS is shown in the following figure.
 
-*Figure 46: LMS high-level architecture*
+*Figure: LMS high-level architecture*
 
 ![](./images/LMS_high_level.png)
 
@@ -1601,7 +1601,7 @@ LMS parameters are shown in the following table:
 
 The Winternitz hash chain can be accelerated in hardware to enhance the performance of the design. For that, a configurable architecture is proposed that can reuse SHA256 engine. The LMS accelerator architecture is shown in the following figure, while H is SHA256 engine.
 
-*Figure 47: Winternitz chain architecture*
+*Figure: Winternitz chain architecture*
 
 ![](./images/LMS_wntz_arch.png)
 
@@ -1988,19 +1988,19 @@ Notes:
 To underpin the results of the formal verification flow, the hardening of the GHASH module has been analyzed on the ChipWhisperer [CW310](https://rtfm.newae.com/Targets/CW310%20Bergen%20Board/) FPGA board.
 For this analysis, power traces with the ChipWhisperer [Husky](https://rtfm.newae.com/Capture/ChipWhisperer-Husky/) scope were captured during GCM operations.
 Afterwards a Test Vector Leakage Assessment (TVLA) with the [ot-sca toolset](https://github.com/lowRISC/ot-sca) has been performed.
-The setup is illustrated in Figure 1.
+The setup is illustrated in the following Figure.
 
 ![](./images/cw310_cwhusky.jpeg)
 :--:
-**Figure 1**: Target CW310 FPGA board (left) and the CW Husky scope (right).
+**Figure**: Target CW310 FPGA board (left) and the CW Husky scope (right).
 
 ##### Setup
 
 ![](./images/GHASH_TVLA_Figure2.png)
 :--:
-**Figure 2**: Measurement setup. The main components are the target board, the scope, and the SCA framework.
+**Figure**: Measurement setup. The main components are the target board, the scope, and the SCA framework.
 
-Figure 2 gives a detailed overview of the measurement setup that has been utilized to capture the power traces.
+The prior Figure gives a detailed overview of the measurement setup that has been utilized to capture the power traces.
 The SCA evaluation framework ot-sca is the central component of the measurement setup.
 It is responsible for communicating with the penetration testing framework that runs on the target FPGA board and with the scope.
 Initially, ot-sca configures the scope (sample rate, number of samples) and the pentest framework (which input, how many encryptions, where to trigger).
@@ -2012,9 +2012,9 @@ The ot-sca framework stores the trace as well as the cipher configuration in a d
 
 ![](./images/GHASH_TVLA_Figure3.png)
 :--:
-**Figure 3**: Power trace with AES encryption rounds visible (*left*). Aligned traces when zooming in (*right*).
+**Figure**: Power trace with AES encryption rounds visible (*left*). Aligned traces when zooming in (*right*).
 
-Figure 3 depicts power traces captured during AES-GCM encryptions with the setup above.
+The prior Figure depicts power traces captured during AES-GCM encryptions with the setup above.
 As shown in the figure, the traces are nicely aligned, allowing to perform a sound evaluation.
 
 ##### Methodology
@@ -2026,9 +2026,9 @@ However, note that this test cannot provide any information whether the leakage 
 
 ![](./images/GHASH_TVLA_Figure4.png)
 :--
-**Figure 4:** TVLA plot showing leakage at around sample 1000. When increasing the number of traces (from 1000 to 10000), the leakage becomes more present. Note that the traces shown in this plot are taken from an arbitrary cryptographic hardware block and not AES.
+**Figure:** TVLA plot showing leakage at around sample 1000. When increasing the number of traces (from 1000 to 10000), the leakage becomes more present. Note that the traces shown in this plot are taken from an arbitrary cryptographic hardware block and not AES.
 
-Figure 4 shows a TVLA plot that will be used throughout this document. The red lines mark the ± *t*-test border.
+The prior Figure shows a TVLA plot that will be used throughout this document. The red lines mark the ± *t*-test border.
 
 ###### Dataset Generation for FvsR IV & Key
 
@@ -2067,24 +2067,24 @@ We start with the results for the FvsR IV & Key datasets.
 
 ![](./images/GHASH_TVLA_Figure5.png)
 :--:
-**Figure 5:** AES-GCM block diagram. Red lines mark the trigger windows for each analysis step.
+**Figure:** AES-GCM block diagram. Red lines mark the trigger windows for each analysis step.
 
-As shown in Figure 5, we focus on analyzing (*i*) the generation of the hash subkey H, (*ii*) the encryption of the initial counter block S, (*iii*) the processing of the AAD blocks, (*iv*) the plaintext blocks, and (*v*) the tag generation. Each measurement is conducted with (*a*) masks off and (*b*) masks on to analyze the effectiveness of the masking countermeasure.
+As shown in the prior Figure, we focus on analyzing (*i*) the generation of the hash subkey H, (*ii*) the encryption of the initial counter block S, (*iii*) the processing of the AAD blocks, (*iv*) the plaintext blocks, and (*v*) the tag generation. Each measurement is conducted with (*a*) masks off and (*b*) masks on to analyze the effectiveness of the masking countermeasure.
 
 ###### i) SCA Evaluation of Generating the Hash Subkey H
 
 ![](./images/GHASH_TVLA_Figure6ab.png)
 :--:
-| **Figure 6a:** Masking Off - 100k traces - **Figure 6b:** Masking On - 1M traces |
+| **Figure:** Masking Off - 100k traces - **Figure:** Masking On - 1M traces |
 
 ###### Interpretation
 
-The AES encryption is clearly visible in the form of 12 distinct peaks in the power traces shown Figures 6a and 6b.
+The AES encryption is clearly visible in the form of 12 distinct peaks in the power traces shown in the prior set of Figures.
 The 12 peaks correspond to first the loading of the key and the all-zero block into the AES cipher core, followed by the initial round and the 10 full AES rounds (AES-128).
 They spread over approximately 470 samples which corresponds to the 56 target clock cycles a full AES-128 encryption takes.
 
-If the masking is turned off (Figure 6a), first and second-order leakage is clearly visible throughout the operation.
-If the masking is on (Figure 6b), there is first-order leakage 1) at the beginning as well as 2) at the end of the operation.
+If the masking is turned off (set of graphs), first and second-order leakage is clearly visible throughout the operation.
+If the masking is on (set of graphs), there is first-order leakage 1) at the beginning as well as 2) at the end of the operation.
 
 1. The leakage at the beginning of the operation is due to incrementing the IV/CTR value (inc32 function in GCM spec) which spreads across the first two AES rounds.
    This produces first-order leakage as the inc32 function implementation isn’t masked.
@@ -2094,24 +2094,24 @@ If the masking is on (Figure 6b), there is first-order leakage 1) at the beginni
    The leakage is most likely due to how the FPGA implementation tool maps the flip flops of the hash subkey register shares to the available FPGA logic slices: if flip flops of the different shares get mapped to the same logic slice, the carry-chain and other muxing logic present in the logic slice can combine the various inputs thereby causing SCA leakage despite these logic outputs not being used.
    We’ve observed similar effects in the past and there is [research giving more insight into this and other FPGA-specific issues](https://ieeexplore.ieee.org/document/10545383).
 
-To summarize, the observed first-order leakage if masking is on (Figure 6b) is not of concern for ASIC implementations.
+To summarize, the observed first-order leakage if masking is on is not of concern for ASIC implementations.
 
 ###### ii) SCA Evaluation of Encrypting the Initial Counter Block
 
 ![](./images/GHASH_TVLA_Figure7ab.png)
 :--:
-| **Figure 7a:** Masking Off - 100k traces - **Figure 7b:** Masking On - 1M traces |
+| **Figure:** Masking Off - 100k traces - **Figure:** Masking On - 1M traces |
 
 ###### Interpretation
 
-Again, the AES encryption is clearly visible in the form of 12 peaks in the power traces shown Figures 7a and 7b.
+Again, the AES encryption is clearly visible in the form of 12 peaks in the power traces shown in the prior set of Figures.
 This AES encryption corresponds to the generation of the encrypted initial counter block S.
 The AES encryption is followed by another operation visible in the power trace: the computation of repeatedly used correction terms using the Galois-field multipliers inside GHASH.
 This operation takes 33 target clock cycles (approximately 275 samples).
 
-If the masking is turned off (Figure 7a), first and second-order leakage is clearly visible throughout both operations while being more pronounced during the GHASH operation.
+If the masking is turned off (set of graphs), first and second-order leakage is clearly visible throughout both operations while being more pronounced during the GHASH operation.
 This is because the GHASH block is smaller and thus produces less noise.
-If the masking is on (Figure 7b), there is first-order leakage 1) at the beginning as well as 2) between the two operations.
+If the masking is on (set of graphs), there is first-order leakage 1) at the beginning as well as 2) between the two operations.
 
 1. As before, the leakage at the beginning of the operation is due to incrementing the IV/CTR value (inc32 function in GCM spec) which spreads across the first two AES rounds.
    This produces first-order leakage as the inc32 function implementation isn’t masked.
@@ -2121,7 +2121,7 @@ If the masking is on (Figure 7b), there is first-order leakage 1) at the beginni
    As before, the leakage is most likely due to how the FPGA implementation tool maps the multiplexers in front of the GHASH state registers to the available FPGA logic slices: Since the multiplexers for both shares use the same control signals, the multiplexing logic can be combined even into the same look-up tables (LUTs) thereby causing SCA leakage.
    We’ve observed similar effects in the past and there is [research giving more insight into this and other FPGA-specific issues](https://ieeexplore.ieee.org/document/10545383).
 
-To summarize, the observed first-order leakage if masking is on (FIgure 7b) is not of concern for ASIC implementations.
+To summarize, the observed first-order leakage if masking is on is not of concern for ASIC implementations.
 
 ###### iii) SCA Evaluation of Processing the AAD Blocks
 
@@ -2129,28 +2129,28 @@ To summarize, the observed first-order leakage if masking is on (FIgure 7b) is n
 
 ![](./images/GHASH_TVLA_Figure8ab.png)
 :--:
-| **Figure 8a:** Masking Off - 50k traces - **Figure 8b:** Masking On - 10M traces |
+| **Figure:** Masking Off - 50k traces - **Figure:** Masking On - 10M traces |
 
 ###### Interpretation
 
 For AAD blocks, the AES cipher core is not involved.
 However, during the computation of the first AAD block, the GHASH block needs to compute an additional correction term which is used for the very first block only.
-If the masking is turned off (Figure 8a), first- and second-order leakage is clearly visible but only for the first activity block.
+If the masking is turned off (first set of graphs), first- and second-order leakage is clearly visible but only for the first activity block.
 The second activity block involves computing the additional correction terms which requires Share 1 of the encrypted initial counter block to be multiplied by Share 1 of the hash subkey.
 But since the masking is off, both these values are zero for both the fixed and the random set and hence there is no SCA leakage.
-If the masking is turned on (Figure 8b), no SCA leakage is observable which is desirable.
+If the masking is turned on (second set of graphs), no SCA leakage is observable which is desirable.
 
 ###### Processing AAD Block 1
 
 ![](./images/GHASH_TVLA_Figure9ab.png)
 :--:
-| **Figure 9a:** Masking Off - 50k traces - **Figure 9b:** Masking On - 10M traces |
+| **Figure:** Masking Off - 50k traces - **Figure:** Masking On - 10M traces |
 
 ###### Interpretation
 
 For the second AAD block (and any subsequent AAD blocks) there is only one activity block corresponding to the Galois-field multiplication.
-If masking is turned off (Figure 9a), there is both first- and second-order leakage observable.
-If the masking is turned on (Figure 9b), no SCA leakage is observable which is desirable.
+If masking is turned off (first set of graphs), there is both first- and second-order leakage observable.
+If the masking is turned on (second set of graphs), no SCA leakage is observable which is desirable.
 
 ###### iv) SCA Evaluation of Processing the PTX Blocks
 
@@ -2158,11 +2158,11 @@ If the masking is turned on (Figure 9b), no SCA leakage is observable which is d
 
 ![](./images/GHASH_TVLA_Figure10ab.png)
 :--:
-| **Figure 10a:** Masking Off - 50k traces - **Figure 10b:** Masking On - 1M traces |
+| **Figure:** Masking Off - 50k traces - **Figure:** Masking On - 1M traces |
 
 ###### Interpretation
 
-Like in [ii) SCA Evaluation of Encrypting the Initial Counter Block](#ii-sca-evaluation-of-encrypting-the-initial-counter-block) there is first-order leakage 1) at the beginning and 2) between the two operations if the masking is turned on (Figure 10b).
+Like in [ii) SCA Evaluation of Encrypting the Initial Counter Block](#ii-sca-evaluation-of-encrypting-the-initial-counter-block) there is first-order leakage 1) at the beginning and 2) between the two operations if the masking is turned on (first set of graphs).
 
 1. As before, the leakage at the beginning of the operation is due to incrementing the IV/CTR value (inc32 function in GCM spec) which spreads across the first two AES rounds.
    This produces first-order leakage as the inc32 function implementation isn’t masked.
@@ -2172,13 +2172,13 @@ Like in [ii) SCA Evaluation of Encrypting the Initial Counter Block](#ii-sca-eva
    But since the AAD and the plaintext have been chosen to be the same for all traces in the fixed and the random sets, the traces of the fixed set only produce all the same ciphertext and thus are expected to exhibit a static power signature for this step, whereas the ciphertext of the random set is randomized through the random key and IV.
    However, since the ciphertext is not secret in the context of GCM, this leakage is of no concern.
 
-To summarize, the observed first-order leakage if masking is on (FIgure 10b) is not of concern.
+To summarize, the observed first-order leakage if masking is on (second set of graphs) is not of concern.
 
 ###### Processing PTX Block 1
 
 ![](./images/GHASH_TVLA_Figure11ab.png)
 :--:
-| **Figure 11a:** Masking Off - 50k traces - **Figure 11b:** Masking On - 1M traces |
+| **Figure:** Masking Off - 50k traces - **Figure:** Masking On - 1M traces |
 
 ###### Interpretation
 
@@ -2189,7 +2189,7 @@ For the same reasons as before, this leakage is not of concern.
 
 ![](./images/GHASH_TVLA_Figure12ab.png)
 :--:
-| **Figure 12a:** Masking Off - 50k traces - **Figure 12b:** Masking On - 1M traces |
+| **Figure:** Masking Off - 50k traces - **Figure:** Masking On - 1M traces |
 
 ###### Interpretation
 
@@ -2198,12 +2198,12 @@ The generation of the final authentication tag consists of two operations.
    The GHASH state is unmasked (still masked with the encrypted initial counter block S) and Share 1 of S is added to write the final authentication tag to the data output registers readable by software.
 2) In parallel to writing the final authentication tag to the data output registers, the internal state is all cleared to random values and an additional multiplication is triggered to clear the internal state of the Galois-field multipliers and the correction term registers.
 
-If masking is turned off (Figure 12a), there is both first- and second-order leakage observable during the first activity block (tag generation) but not during the clearing operation.
-If the masking is turned on (Figure 12b), some SCA leakage is observable between the two operations, i.e., when the final authentication tag is written to the output data registers.
+If masking is turned off (first set of graphs), there is both first- and second-order leakage observable during the first activity block (tag generation) but not during the clearing operation.
+If the masking is turned on (second set of graphs), some SCA leakage is observable between the two operations, i.e., when the final authentication tag is written to the output data registers.
 This leakage is expected as both the fixed and the random data sets use a static AAD and plaintext.
 This means, the tag for the fixed data set is fixed whereas the tags for the random set get randomized through the ciphertext (random due to the random key and IV).
 
-To summarize, the observed first-order leakage if masking is on (FIgure 12b) is not of concern.
+To summarize, the observed first-order leakage if masking is on (second set of graphs) is not of concern.
 
 ##### Results – FvsR PTX & AAD
 
@@ -2214,41 +2214,41 @@ These experiments were specifically done to investigate leakage peaks identified
 
 ![](./images/GHASH_TVLA_Figure13ab.png)
 :--:
-| **Figure 13a:** Masking Off - 50k traces - **Figure 13b:** Masking On - 1M traces |
+| **Figure:** Masking Off - 50k traces - **Figure:** Masking On - 1M traces |
 
 ###### Interpretation
 
-There is no SCA leakage visible in both cases without masking (Figure 13a) and with masking turned on (Figure 13b).
+There is no SCA leakage visible in both cases without masking (first set of graphs) and with masking turned on (second set of graphs).
 This is expected as the hash subkey generation doesn’t involve the plaintext and the AAD but only the key and IV.
 Both the fixed and random set use the same static key and IV.
 
-This experiment was specifically done to check whether the leakage identified in Figure 6b and attributed to how the FPGA implementation tool maps the flip flops of the hash subkey register shares to the available FPGA logic slices.
+This experiment was specifically done to check whether the leakage identified in [i) SCA Evaluation of Generating the Hash Subkey H](#i-SCA-Evaluation-of-Generating-the-Hash-Subkey-H) and attributed to how the FPGA implementation tool maps the flip flops of the hash subkey register shares to the available FPGA logic slices.
 As expected, the leakage peak is now gone.
 
 ###### ii) SCA Evaluation of Encrypting the Initial Counter Block
 
 ![](./images/GHASH_TVLA_Figure14ab.png)
 :--:
-| **Figure 14a:** Masking Off - 50k traces - **Figure 14b:** Masking On - 1M traces |
+| **Figure:** Masking Off - 50k traces - **Figure:** Masking On - 1M traces |
 
 ###### Interpretation
 
-There is no SCA leakage visible in both cases without masking (Figure 14a) and with masking turned on (Figure 14b).
+There is no SCA leakage visible in both cases without masking (first set of graphs) and with masking turned on (second set of graphs).
 This is expected as the encryption of the initial counter block and the subsequent computation of repeatedly used correction terms doesn’t involve the plaintext and the AAD but only the key and IV.
 Both the fixed and random set use the same static key and IV.
 
-This experiment was specifically done to check whether the leakage identified in Figure 7b and attributed to how the FPGA implementation tool maps the multiplexers in front of the GHASH state registers to the available FPGA logic slices.
+This experiment was specifically done to check whether the leakage identified in [ii) SCA Evaluation of Encrypting the Initial Counter Block](#ii-SCA-Evaluation-of-Encrypting-the-Initial-Counter-Block) and attributed to how the FPGA implementation tool maps the multiplexers in front of the GHASH state registers to the available FPGA logic slices.
 As expected, the leakage peak is now gone.
 
 ###### iv) SCA Evaluation of Processing the PTX Block 0
 
 ![](./images/GHASH_TVLA_Figure15ab.png)
 :--:
-| **Figure 15a:** Masking Off - 100k traces - **Figure 15b:** Masking On - 1M traces |
+| **Figure:** Masking Off - 100k traces - **Figure:** Masking On - 1M traces |
 
 ###### Interpretation
 
-With the masking turned off (Figure 15a), there is first-order leakage 1) at the beginning of the operation and 2) throughout the entire GHASH operation.
+With the masking turned off (first set of graphs), there is first-order leakage 1) at the beginning of the operation and 2) throughout the entire GHASH operation.
 
 1. The leakage at the beginning of the operation is due to the input data (the plaintext) being written to an internal buffer register.
    The AES cipher is operated in counter mode, meaning it doesn’t encrypt the input data but the counter value (incremented IV).
@@ -2257,7 +2257,7 @@ With the masking turned off (Figure 15a), there is first-order leakage 1) at the
 2. The GHASH operation then processes this ciphertext.
    The observed leakage when the masking is off is expected.
 
-With the masking turned on (Figure 15b), the first-order leakage at the beginning of the operation remains visible. The reason for this is that the internal register buffering the previous input data is not masked.
+With the masking turned on (second set of graphs), the first-order leakage at the beginning of the operation remains visible. The reason for this is that the internal register buffering the previous input data is not masked.
 This is of no concern as the leakage is not related to key or IV.
 
 Another first-order leakage peak is visible between the AES encryption and the GHASH operation.

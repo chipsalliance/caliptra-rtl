@@ -27,7 +27,7 @@ The blocks described in this document are either obtained from open-source GitHu
 | IP/Block | GitHub URL | Documentation | Link |
 | :--------- | :--------- | :--------- |:--------- |
 | Cores-VeeR | [GitHub - chipsalliance/Cores-VeeR-EL2](https://github.com/chipsalliance/Cores-VeeR-EL2) | VeeR EL2 Programmer’s Reference Manual | [chipsalliance/Cores-VeeR-EL2 · GitHubPDF](http://cores-swerv-el2/RISC-V_SweRV_EL2_PRM.pdf%20at%20master%20%C2%B7) |
-| AHB Lite Bus | [aignacio/ahb_lite_bus: AHB Bus lite v3.0 (github.com)](https://github.com/aignacio/ahb_lite_bus) | AHB Lite Protocol<br> [Figure 1: SoC interface block diagram](#soc-interface-definition) | [ahb_lite_bus/docs at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/tree/master/docs)<br> [ahb_lite_bus/diagram_ahb_bus.png at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/blob/master/diagram_ahb_bus.png) |
+| AHB Lite Bus | [aignacio/ahb_lite_bus: AHB Bus lite v3.0 (github.com)](https://github.com/aignacio/ahb_lite_bus) | AHB Lite Protocol<br> [Figure: SoC interface block diagram](#soc-interface-definition) | [ahb_lite_bus/docs at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/tree/master/docs)<br> [ahb_lite_bus/diagram_ahb_bus.png at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/blob/master/diagram_ahb_bus.png) |
 | SHA 256 | [secworks/sha256: Hardware implementation of the SHA-256 cryptographic hash function (github.com)](https://github.com/secworks/sha256) | | |
 | SHA 512 | | | |
 | SPI Controller | <https://github.com/pulp-platform/axi_spi_master> | | |
@@ -40,7 +40,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
 
 The following figure shows the SoC interface definition.
 
-*Figure 1: SoC Interface Block Diagram*
+*Figure: SoC Interface Block Diagram*
 
 ![](./images/Caliptra_soc_interface_block.png)
 
@@ -283,7 +283,7 @@ The remaining register `SS_DBG_SERVICE_REG_REQ` is initialized by the same SoC a
 
 The following figure shows the reset rules and timing for cold boot flows.
 
-*Figure 2: Reset rules and timing diagram*
+*Figure: Reset rules and timing diagram*
 
 ![](./images/Caliptra_reset_timing.png)
 
@@ -412,11 +412,7 @@ Caliptra in turn also uses the mailbox to pass information back to the SoC. The 
 
 ## Boot FSM
 
-The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of this flow involves signaling to the SoC that Caliptra is ready for fuses. After fuses are populated and the SoC indicates that it is done downloading fuses, Caliptra can wake up the rest of the IP by deasserting the internal reset. The following figure shows the boot FSM state.
-
-*Figure 3: Mailbox Boot FSM state diagram*
-
-![](./images/Caliptra_mbox_boot_FSM.png)
+The Boot FSM detects that the SoC is bringing Caliptra out of reset. Part of this flow involves signaling to the SoC that Caliptra is ready for fuses. After fuses are populated and the SoC indicates that it is done downloading fuses, the boot FSM wakes up the rest of Caliptra by deasserting the internal reset. Refer to [CaliptraHardwareSpecification.md](./CaliptraHardwareSpecification.md#boot-fsm) for more details and diagrams.
 
 The boot FSM first waits for the SoC to assert cptra\_pwrgood and deassert cptra\_rst\_b. The SoC first provides a stable clock to Caliptra. After a minimum of 10 clock cycles have elapsed on the stable clock, the SoC asserts cptra\_pwrgood. The SoC waits for a minimum of 10 clocks after asserting cptra\_pwrgood before deasserting cptra\_rst\_b.
 In the BOOT\_FUSE state, Caliptra signals to the SoC that it is ready for fuses. After the SoC is done writing fuses, it sets the fuse done register and the FSM advances to BOOT\_DONE.
@@ -484,7 +480,7 @@ Mailboxes are generic data-passing structures with a specific protocol that defi
 
 Once LOCK is granted, the mailbox is locked until that device has concluded its operation. Caliptra has access to an internal mechanism to terminate a lock early or release the lock if the device does not proceed to use it or to recover from deadlock scenarios. The following figure shows the sender protocol flow.
 
-*Figure 4: Sender protocol flow chart*
+*Figure: Sender protocol flow chart*
 
 ![](./images/Caliptra_mbox-sender.png)
 
@@ -508,7 +504,7 @@ Caliptra will not initiate any mailbox commands that require a response from the
 
 The following figure shows the receiver protocol flow.
 
-*Figure 5: Receiver protocol flowchart*
+*Figure: Receiver protocol flowchart*
 
 ![](./images/Caliptra_mbox_receiver.png)
 
@@ -815,7 +811,7 @@ Table 7 indicates the signals contained in the memory interface. Direction is re
 
 The following figure shows the SRAM interface timing.
 
-*Figure 6: SRAM interface timing*
+*Figure: SRAM interface timing*
 
 ![](./images/Caliptra_SRAM_interface_timing.png)
 
@@ -842,9 +838,9 @@ This section describes an example implementation of integrator machine check rel
 
 This example is applicable to scenarios where an integrator may need control of or visibility into SRAM errors for purposes of reliability or functional safety. In such cases, integrators may introduce additional layers of error injection, detection, and correction logic surrounding SRAMs. The addition of such logic is transparent to the correct function of Caliptra, and removes integrator dependency on Caliptra for error logging or injection.
 
-Note that the example assumes that data and ECC codes are in non-deterministic bit-position in the exposed SRAM interface bus. Accordingly, redundant correction coding is shown in the integrator level logic (i.e., integrator\_ecc(calitpra\_data, caliptra\_ecc)). If the Caliptra data and ECC are deterministically separable at the Caliptra interface, the integrator would have discretion to store the ECC codes directly and calculate integrator ECC codes for the data alone.
+Note that the example assumes that data and ECC codes are in non-deterministic bit-position in the exposed SRAM interface bus. Accordingly, redundant correction coding is shown in the integrator level logic (i.e., integrator\_ecc(caliptra\_data, caliptra\_ecc)). If the Caliptra data and ECC are deterministically separable at the Caliptra interface, the integrator would have discretion to store the ECC codes directly and calculate integrator ECC codes for the data alone.
 
-*Figure 7: Example machine check reliability implementation*
+*Figure: Example machine check reliability implementation*
 
 ![](./images/Caliptra_machine_reliability.png)
 
@@ -1082,14 +1078,14 @@ Clock Domain Crossing (CDC) analysis is performed on the Caliptra core IP. The f
 In an unconstrained environment, several CDC violations are anticipated. CDC analysis requires the addition of constraints to identify valid synchronization mechanisms and/or static/pseudo-static signals.
 
 ## Analysis of missing synchronizers
-* All of the signals, whether single-bit or multi-bit, originate from the CalitpraClockDomain clock and their endpoint is the JTAG clock domain.
+* All of the signals, whether single-bit or multi-bit, originate from the CaliptraClockDomain clock and their endpoint is the JTAG clock domain.
 * The violations occur on the read path to the JTAG.
 * We only need to synchronize the controlling signal for this interface.
 * Inside the dmi\_wrapper, the dmi\_reg\_en and dmi\_reg\_rd\_en comes from dmi\_jtag\_to\_core\_sync, which is a 2FF synchronizer.
 
 The following code snippets and schematic diagrams illustrate the CDC violations that end at the JTAG interface.
 
-*Figure 8: Schematic diagram and code snippet showing JTAG-originating CDC violations*
+*Figure: Schematic diagram and code snippet showing JTAG-originating CDC violations*
 
 ![](./images/caliptra2.0_riscv_code_snippet.png)
 
@@ -1145,7 +1141,7 @@ The following table identifies the major reset domains in Caliptra core IP desig
 
 The reset definitions can be visually represented as shown in the following diagram.
 
-*Figure 9: Reset tree for Caliptra*
+*Figure: Reset tree for Caliptra*
 
 ![](./images/Reset_structure.png)
 
@@ -1171,7 +1167,7 @@ The resets defined in *Table 22* have the following sequencing phases, which are
 
 The reset sequencing is illustrated in the following waveform.
 
-*Figure 10: Reset sequencing waveform for Caliptra*
+*Figure: Reset sequencing waveform for Caliptra*
 
 ![](./images/reset_sequencing.png)
 
@@ -1237,7 +1233,7 @@ Considering the given constraints, three sets of crossings were identified as RD
 
 For violations in Sl No 1 and 2, the schematic for the crossing is shown in the following figure.
 
-*Figure 11: Schematic for RDC violations #1 and #2*
+*Figure: Schematic for RDC violations #1 and #2*
 
 ![](./images/halt_status_rdc.png)
 
@@ -1245,7 +1241,7 @@ This violation can be waived because if the CPU is halted, there is no way to tr
 
 For violations in Sl No 3 and 4, the schematic for the crossing is shown in the following figure.
 
-*Figure 12: Schematic for RDC violations #3 and #4*
+*Figure: Schematic for RDC violations #3 and #4*
 
 ![](./images/entropy_RDC.png)
 
