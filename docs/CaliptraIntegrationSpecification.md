@@ -360,7 +360,7 @@ In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps 
 
 SoC drives the key at the tape-in time of the SoC using an Engineering Change Order (ECO) and must be protected from common knowledge. For a given SoC construction, this can be driven using a PUF too.
 
-The key must follow the security rules defined in the[ Caliptra architectural specification](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
+The key must follow the security rules defined in the [SOC integration requirements](#soc-integration-requirements).
 
 SoC must ensure that there are no SCAN cells on the flops that latch this key internally to Caliptra.
 
@@ -368,7 +368,7 @@ SoC must ensure that there are no SCAN cells on the flops that latch this key in
 
 SoC drives the key at the tape-in time of the SoC using an Engineering Change Order (ECO) and must be protected from common knowledge.
 
-The key must follow the security rules defined in the[ Caliptra architectural specification](https://chipsalliance.github.io/Caliptra/doc/Caliptra.html).
+The key must follow the security rules defined in the [SOC integration requirements](#soc-integration-requirements).
 
 SoC must ensure that there are no SCAN cells on the flops that latch this key internally to Caliptra.
 
