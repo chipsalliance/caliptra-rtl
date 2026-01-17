@@ -30,6 +30,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     logic                          arlock;
     logic                          arvalid;
     logic                          arready;
+    logic [3:0]                    arcache;
+    logic [2:0]                    arprot;
+    logic [3:0]                    arqos;
+    logic [3:0]                    arregion;
 
     // AXI R
     logic [DW-1:0]                 rdata;
@@ -50,6 +54,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     logic                          awlock;
     logic                          awvalid;
     logic                          awready;
+    logic [3:0]                    awcache;
+    logic [2:0]                    awprot;
+    logic [3:0]                    awqos;
+    logic [3:0]                    awregion;
 
     // AXI W
     logic [DW-1:0]                 wdata;
