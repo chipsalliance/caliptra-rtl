@@ -28,12 +28,12 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     logic [UW-1:0]                 aruser;
     logic [IW-1:0]                 arid;
     logic                          arlock;
-    logic                          arvalid;
-    logic                          arready;
     logic [3:0]                    arcache;
     logic [2:0]                    arprot;
     logic [3:0]                    arqos;
     logic [3:0]                    arregion;
+    logic                          arvalid;
+    logic                          arready;
 
     // AXI R
     logic [DW-1:0]                 rdata;
@@ -52,12 +52,12 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
     logic [UW-1:0]                 awuser;
     logic [IW-1:0]                 awid;
     logic                          awlock;
-    logic                          awvalid;
-    logic                          awready;
     logic [3:0]                    awcache;
     logic [2:0]                    awprot;
     logic [3:0]                    awqos;
     logic [3:0]                    awregion;
+    logic                          awvalid;
+    logic                          awready;
 
     // AXI W
     logic [DW-1:0]                 wdata;
@@ -84,6 +84,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         output aruser,
         output arid,
         output arlock,
+        output arcache,
+        output arprot,
+        output arqos,
+        output arregion,
         output arvalid,
         input  arready,
         // R
@@ -106,6 +110,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         output awuser,
         output awid,
         output awlock,
+        output awcache,
+        output awprot,
+        output awqos,
+        output awregion,
         output awvalid,
         input  awready,
         // W
@@ -133,6 +141,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         input  aruser,
         input  arid,
         input  arlock,
+        input  arcache,
+        input  arprot,
+        input  arqos,
+        input  arregion,
         input  arvalid,
         output arready,
         // R
@@ -155,6 +167,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         input  awuser,
         input  awid,
         input  awlock,
+        input  awcache,
+        input  awprot,
+        input  awqos,
+        input  awregion,
         input  awvalid,
         output awready,
         // W
@@ -193,6 +209,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
             aruser  `EQ__ '0;
             arid    `EQ__ '0;
             arlock  `EQ__ '0;
+            arcache `EQ__ '0;
+            arprot  `EQ__ '0;
+            arqos   `EQ__ '0;
+            arregion `EQ__ '0;
             arvalid `EQ__ '0;
 
             rready  `EQ__ '0;
@@ -204,6 +224,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
             awuser  `EQ__ '0;
             awid    `EQ__ '0;
             awlock  `EQ__ '0;
+            awcache `EQ__ '0;
+            awprot  `EQ__ '0;
+            awqos   `EQ__ '0;
+            awregion `EQ__ '0;
             awvalid `EQ__ '0;
 
             wdata   `EQ__ '0;
@@ -256,6 +280,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                 aruser  `EQ__ user;
                 arid    `EQ__ id;
                 arlock  `EQ__ lock;
+                arcache `EQ__ '0;
+                arprot  `EQ__ '0;
+                arqos   `EQ__ '0;
+                arregion `EQ__ '0;
                 arvalid `EQ__ 1;
                 @(posedge clk);
             end while(!arready);
@@ -267,6 +295,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
             aruser  `EQ__ '0;
             arid    `EQ__ '0;
             arlock  `EQ__ '0;
+            arcache `EQ__ '0;
+            arprot  `EQ__ '0;
+            arqos   `EQ__ '0;
+            arregion `EQ__ '0;
             arvalid `EQ__ '0;
             data = new[len+1];
             resp = new[len+1];
@@ -361,6 +393,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                 awuser  `EQ__ user;
                 awid    `EQ__ id;
                 awlock  `EQ__ lock;
+                awcache `EQ__ '0;
+                awprot  `EQ__ '0;
+                awqos   `EQ__ '0;
+                awregion `EQ__ '0;
                 awvalid `EQ__ 1;
                 @(posedge clk);
             end while(!awready);
@@ -372,6 +408,10 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
             awuser  `EQ__ '0;
             awid    `EQ__ '0;
             awlock  `EQ__ '0;
+            awcache `EQ__ '0;
+            awprot  `EQ__ '0;
+            awqos   `EQ__ '0;
+            awregion `EQ__ '0;
             awvalid `EQ__ '0;
             fork
                 for (int beat=0; beat <= len; beat++)
