@@ -427,6 +427,10 @@ import aaxi_uvm_pkg::*;
         s_axi_if.aruser  = ports[0].ARUSER;
         s_axi_if.arid    = ports[0].ARID;
         s_axi_if.arlock  = ports[0].ARLOCK;
+        s_axi_if.arcache = ports[0].ARCACHE ;
+        s_axi_if.arprot  = ports[0].ARPROT  ;
+        s_axi_if.arqos   = ports[0].ARQOS   ;
+        s_axi_if.arregion= ports[0].ARREGION;
         s_axi_if.arvalid = ports[0].ARVALID;
         ports[0].ARREADY = s_axi_if.arready;
 
@@ -447,6 +451,10 @@ import aaxi_uvm_pkg::*;
         s_axi_if.awuser  = ports[0].AWUSER;
         s_axi_if.awid    = ports[0].AWID;
         s_axi_if.awlock  = ports[0].AWLOCK;
+        s_axi_if.awcache = ports[0].AWCACHE ;
+        s_axi_if.awprot  = ports[0].AWPROT  ;
+        s_axi_if.awqos   = ports[0].AWQOS   ;
+        s_axi_if.awregion= ports[0].AWREGION;
         s_axi_if.awvalid = ports[0].AWVALID;
         ports[0].AWREADY = s_axi_if.awready;
 
