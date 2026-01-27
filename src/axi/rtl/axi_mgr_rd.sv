@@ -129,10 +129,10 @@ module axi_mgr_rd import axi_pkg::*; #(
         m_axi_if.aruser   = axuser;
         m_axi_if.arid     = IW'(0);
         m_axi_if.arlock   = axi_ctx.lock;
-        m_axi_if.arcache  = 4'h0;
-        m_axi_if.arprot   = 3'h0;
-        m_axi_if.arqos    = 4'h0;
-        m_axi_if.arregion = 4'h0;
+        m_axi_if.arcache  = '0;
+        m_axi_if.arprot   = '0;
+        m_axi_if.arqos    = '0;
+        m_axi_if.arregion = '0;
     end
 
     always_comb axi_ctx_ready = (!txn_active || txn_final_beat) &&

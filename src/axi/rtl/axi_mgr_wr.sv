@@ -130,10 +130,10 @@ module axi_mgr_wr import axi_pkg::*; #(
         m_axi_if.awuser   = axuser;
         m_axi_if.awid     = IW'(0);
         m_axi_if.awlock   = axi_ctx.lock;
-        m_axi_if.awcache  = 4'h0;
-        m_axi_if.awprot   = 3'h0;
-        m_axi_if.awqos    = 4'h0;
-        m_axi_if.awregion = 4'h0;
+        m_axi_if.awcache  = '0;
+        m_axi_if.awprot   = '0;
+        m_axi_if.awqos    = '0;
+        m_axi_if.awregion = '0;
     end
 
     always_comb axi_ctx_ready = (!txn_active || txn_final_beat) &&
