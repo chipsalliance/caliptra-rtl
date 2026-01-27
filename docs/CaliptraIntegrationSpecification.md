@@ -478,7 +478,15 @@ Mailboxes are generic data-passing structures with a specific protocol that defi
 
 **Notes on behavior:**
 
-Once LOCK is granted, the mailbox is locked until that device has concluded its operation. Caliptra has access to an internal mechanism to terminate a lock early or release the lock if the device does not proceed to use it or to recover from deadlock scenarios. The following figure shows the sender protocol flow.
+Once LOCK is granted, the mailbox is locked until that device has concluded its operation. Caliptra has access to an internal mechanism to terminate a lock early or release the lock if the device does not proceed to use it or to recover from deadlock scenarios. If used, the force unlock mechanism has several effects:
+* Returns the mailbox FSM (indicated in the mbox_status register) to the IDLE state.
+* Resets the status field of the mbox_status register to CMD_BUSY.
+* Resets the soc_has_lock field of the mbox_status register to 0.
+* If the mailbox was in the ERROR state, internal hardware would continuously assert the error interrupt signals as described in [Caliptra mailbox errors](#Caliptra-mailbox-errors). The force unlock mechanism causes hardware to stop asserting these conditions, though any interrupts that are already asserted remain asserted and require firmware intervention to be cleared.
+
+To address these conditions, integrators may wish to add timeout handling logic to their implementation of the mailbox protocol. This timeout handling logic may determine that a pending mailbox request has been terminated by observing the deassertion of mbox_status.soc_has_lock, or by observing that mbox_status.mbox_fsm_ps indicates the IDLE state. Upon observing these conditions, SoC logic may check for any error conditions reported in [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/external-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL) or [CPTRA_HW_ERROR_NON_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/external-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_NON_FATAL), and may attempt a retry of the command depending on any SoC retry policies.
+
+The following figure shows the sender protocol flow.
 
 *Figure: Sender protocol flow chart*
 
