@@ -697,6 +697,7 @@ module mbox_csr (
     assign cpuif_rd_data = readback_data;
     assign cpuif_rd_err = readback_err;
 
+`include "caliptra_prim_assert.sv"
 `CALIPTRA_ASSERT_KNOWN(ERR_HWIF_IN, hwif_in, clk, !hwif_in.cptra_rst_b)
 
 endmodule
