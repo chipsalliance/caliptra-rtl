@@ -52,6 +52,8 @@ module csrng_cmd_stage import csrng_pkg::*; #(
   output logic                       cmd_stage_sm_err_o
 );
 
+  `include "caliptra_prim_assert.sv"
+
   // Genbits parameters.
   localparam logic[31:0] GenBitsFifoWidth = 1+128;
   localparam logic[31:0] GenBitsFifoDepth = 1;

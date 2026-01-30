@@ -64,6 +64,8 @@ module soc_ifc_arb
     input  logic soc_ifc_reg_error
     
 );
+`include "caliptra_prim_assert.sv"
+
 //track priority
 logic soc_priority;
 logic uc_has_priority;

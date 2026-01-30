@@ -31,6 +31,7 @@
 // 
 //==============================================================================
 
+`include "caliptra_macros.svh"
 module doe_cbc 
   import doe_defines_pkg::*;
   import kv_defines_pkg::*;

@@ -76,6 +76,9 @@ module sha512
         input  logic debugUnlock_or_scan_mode_switch
     );
 
+    `include "caliptra_prim_assert.sv"
+    `include "kv_macros.svh"
+
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------

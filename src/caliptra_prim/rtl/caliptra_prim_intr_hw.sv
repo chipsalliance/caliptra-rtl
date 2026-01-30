@@ -55,6 +55,8 @@ module caliptra_prim_intr_hw # (
   output logic [Width-1:0]  intr_o
 );
 
+  `include "caliptra_prim_assert.sv"
+
   logic [Width-1:0] status; // incl. test
 
   if (IntrT == "Event") begin : g_intr_event
