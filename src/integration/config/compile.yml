@@ -263,7 +263,7 @@ global:
         # coverage configuration file.
         # This warning is erroneous in some cases (particularly for
         # nested struct signals in generated reg files), and the
-        # targeted signal (with +/-node) is ultimately omitted
+        # targeted signal (with +/-node) is ultimately represented
         # correctly in the output vdb.
         - '-suppress=VCM-HFUFR'
 ---
@@ -327,7 +327,7 @@ global:
         # coverage configuration file.
         # This warning is erroneous in some cases (particularly for
         # nested struct signals in generated reg files), and the
-        # targeted signal (with +/-node) is ultimately omitted
+        # targeted signal (with +/-node) is ultimately represented
         # correctly in the output vdb.
         - '-suppress=VCM-HFUFR'
 
@@ -400,6 +400,6 @@ global:
         # coverage configuration file.
         # This warning is erroneous in some cases (particularly for
         # nested struct signals in generated reg files), and the
-        # targeted signal (with +/-node) is ultimately omitted
+        # targeted signal (with +/-node) is ultimately represented
         # correctly in the output vdb.
         - '-suppress=VCM-HFUFR'
