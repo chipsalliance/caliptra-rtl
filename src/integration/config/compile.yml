@@ -130,6 +130,7 @@ global:
     vcs:
       default:
         - '+define+CALIPTRA_MODE_SUBSYSTEM'
+        - '+define+CALIPTRA_INTERNAL_TRNG'
         - '-assert svaext'
 ---
 provides: [caliptra_top_tb_pkg]
@@ -258,7 +259,13 @@ global:
         # coverage on.
         # We don't want coverage on these, so disable the warning.
         - '-suppress=VCM-BSZEX'
-
+        # Suppress warning about unmatched wildcard patterns in
+        # coverage configuration file.
+        # This warning is erroneous in some cases (particularly for
+        # nested struct signals in generated reg files), and the
+        # targeted signal (with +/-node) is ultimately represented
+        # correctly in the output vdb.
+        - '-suppress=VCM-HFUFR'
 ---
 provides: [caliptra_top_trng_tb]
 schema_version: 2.4.0
@@ -315,6 +322,14 @@ global:
         - +define+SIMULATION
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
+      elab:
+        # Suppress warning about unmatched wildcard patterns in
+        # coverage configuration file.
+        # This warning is erroneous in some cases (particularly for
+        # nested struct signals in generated reg files), and the
+        # targeted signal (with +/-node) is ultimately represented
+        # correctly in the output vdb.
+        - '-suppress=VCM-HFUFR'
 
 ---  
 provides: [caliptra_top_ss_mode_tb]
@@ -368,6 +383,7 @@ global:
       default:
         - '-assert svaext'
         - '+define+CALIPTRA_MODE_SUBSYSTEM'
+        - '+define+CALIPTRA_INTERNAL_TRNG'
         - '+define+CALIPTRA_TOP_TB'
         - '+define+CLP_ASSERT_ON'
         - '+define+ABR_ASSERT_ON'
@@ -380,3 +396,10 @@ global:
         # coverage on.
         # We don't want coverage on these, so disable the warning.
         - '-suppress=VCM-BSZEX'
+        # Suppress warning about unmatched wildcard patterns in
+        # coverage configuration file.
+        # This warning is erroneous in some cases (particularly for
+        # nested struct signals in generated reg files), and the
+        # targeted signal (with +/-node) is ultimately represented
+        # correctly in the output vdb.
+        - '-suppress=VCM-HFUFR'
