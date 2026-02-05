@@ -17,6 +17,8 @@
 // AHB Lite Address Decoder
 // -------------------------------------------------------------
 
+`include "caliptra_prim_assert.sv"
+
 module ahb_lite_address_decoder #(
     parameter AHB_LITE_ADDR_WIDTH   = 32,
     parameter AHB_LITE_DATA_WIDTH   = 32,
