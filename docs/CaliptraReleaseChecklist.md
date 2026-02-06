@@ -24,7 +24,7 @@ The only supported values for `<alphanumeric_descriptor>` are the keywords `doc`
 
 As a few examples:
 - A series of documentation updates to the 2.0.2 release of caliptra-rtl would be tagged as: `v2.0.2+1.doc`, `v2.0.2+2.doc`, ... , `v2.0.2+12.doc`.
-- A series of documentation and validation updates to the 2.1.1 release of caliptra-rtl might be tagged as: `v2.1.1+1.doc`, `v2.1.1+2.val`, ... , `v2.1.1+3.doc`.
+- A series of documentation and validation updates to the 2.1.1 release of caliptra-rtl might be tagged as: `v2.1.1+1.doc`, `v2.1.1+2.val`, ... , `v2.1.1+17.doc`.
 
 Non-RTL updates are only applied to the latest patch release. That is, documentation updates to produce `v2.0.2+3.doc` are not applied to any `v2.0.1` release. A newer patch release inherits all documentation updates from prior patch releases, and may then be subsequently targeted for additional documentation updates. Thus, there is no guarantee that documentation from a given build is applicable to a prior patch release, as patch updates may have modified the area described in the documentation.
 
