@@ -538,7 +538,7 @@ always_ff @(posedge clk or negedge rst_b) begin
         dlen_in_dws <= latch_dlen_in_dws ? dlen_in_dws_nxt : dlen_in_dws;                    
         mbox_protocol_error <= mbox_protocol_error_nxt;
         //enable ecc for mbox protocol, direct reads, or SHA direct reads
-        sram_rd_ecc_en <= mbox_protocol_sram_rd | (dir_req_dv_q & ~sha_sram_req_dv & ~req_data_write) | (dma_sram_req_dv_q & ~dma_sram_req_write) | sha_sram_req_dv;
+        sram_rd_ecc_en <= mbox_protocol_sram_rd | (dir_req_dv_q & ~sha_sram_req_dv & ~dma_sram_req_dv_q & ~req_data_write) | (dma_sram_req_dv_q & ~dma_sram_req_write) | sha_sram_req_dv;
     end
 end
 
