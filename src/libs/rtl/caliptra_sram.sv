@@ -33,7 +33,7 @@ module caliptra_sram #(
     //storage element
     logic [7:0] ram [DEPTH][NUM_BYTES-1:0];
 
-    initial rdata_o = '{default:0};
+    initial rdata_o = {DATA_WIDTH{1'bX}};
     always @(posedge clk_i) begin
         if (cs_i & we_i) begin
             for (int i = 0; i < NUM_BYTES; i++) begin
@@ -44,6 +44,9 @@ module caliptra_sram #(
             for (int i = 0; i < NUM_BYTES; i++) begin
                 rdata_o[i*8 +: 8] <= ram[addr_i][i];
             end
+        end
+        else begin
+            rdata_o <= {DATA_WIDTH{1'bX}};
         end
     end
 
