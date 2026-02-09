@@ -31,6 +31,16 @@ package soc_ifc_tb_pkg;
   `else
   localparam subsystem_mode_tb = 1'b0;
   `endif
+  `ifdef CALIPTRA_INTERNAL_TRNG
+  localparam itrng_tb = 1'b1;
+  `else
+  localparam itrng_tb = 1'b0;
+  `endif
+  `ifdef CALIPTRA_FUSE_GRANULARITY_32
+  localparam Fuse_Granularity_tb = 1'b1;
+  `else
+  localparam Fuse_Granularity_tb = 1'b0;
+  `endif
 
   logic [63:0] strap_ss_caliptra_base_addr_tb;
   logic [63:0] strap_ss_mci_base_addr_tb;
@@ -361,11 +371,15 @@ package soc_ifc_tb_pkg;
   };
 
   dword_t _soc_register_initval_passive_dict [string] = {
-    "CPTRA_HW_CONFIG"                      : 32'h0000_0010  // LMS Acc Cap bit is set
+    "CPTRA_HW_CONFIG"                      : (32'h0000_0010 | // LMS Acc Cap bit is set
+                                              (itrng_tb << `SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_LOW) |
+                                              (Fuse_Granularity_tb << `SOC_IFC_REG_CPTRA_HW_CONFIG_FUSE_GRANULARITY_LOW))
   };
 
   dword_t _soc_register_initval_ss_dict [string] = {
-    "CPTRA_HW_CONFIG"                      : 32'h0000_0030  // LMS Acc Cap bit is set, Subsystem Mode bit is set, OCP LOCK EN bit overridden in init_regs
+    "CPTRA_HW_CONFIG"                      : (32'h0000_0030 | // LMS Acc Cap bit is set, Subsystem Mode bit is set, OCP LOCK EN bit overridden in init_regs
+                                              (itrng_tb << `SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_LOW) |
+                                              (Fuse_Granularity_tb << `SOC_IFC_REG_CPTRA_HW_CONFIG_FUSE_GRANULARITY_LOW))
   };
 
 
