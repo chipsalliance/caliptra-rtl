@@ -886,15 +886,19 @@ For additional information, see [Caliptra assets and threats](https://github.com
 
 | Category | Requirement | Definition of done | Rationale |
 | :--------- | :--------- | :--------- | :--------- |
-| General | All [SoC integration recommmendations](#soc-integration-recommendations) shall be adhered to unless documented justification is provided and approved based on SRP review and TAC acceptance. | Statement of conformance and accompanying justification as needed | Recommendations are based on security and functional requirements, but approved alternatives may be permitted with consideration for the corresponding risk and impact |
 | Obfuscation Key                  | SoC backend flows shall generate obfuscation key with appropriate NIST compliance as dictated in the Caliptra RoT specification.                                                                                                                                               | Statement of conformance | Required by UDS and Field Entropy threat model    |
 | Obfuscation Key                  | If not driven through PUF, SoC backend flows shall ECO the obfuscation key before tapeout.                                                                                                                                                                                     | Statement of conformance | Required by UDS and Field Entropy threat model    |
 | Obfuscation Key                  | Rotation of the obfuscation key (if not driven through PUF) between silicon steppings of a given product (for example, A0 vs. B0 vs. PRQ stepping) is dependent on company-specific policies.                                                                                  | Statement of conformance | Required by UDS and Field Entropy threat model    |
 | Obfuscation Key                  | SoC shall ensure that obfuscation key is available (and wires are stable) before Caliptra reset is de-asserted.                                                                                                                                                                | Statement of conformance | Functionality and security                        |
 | Obfuscation Key                  | SoC shall implement protections for obfuscation key generation logic and protect against debug/sw/scandump visibility.<br>1. Any flops outside of Caliptra that store obfuscation key or parts of the key should be excluded from scandump.<br>2. SoC shall ensure that the obfuscation key is sent only to Caliptra through HW wires, and it is not visible anywhere outside of Caliptra. | Statement of conformance | Required for Caliptra threat model |
+| Obfuscation Key*                  | For defense in depth, it is strongly recommended that deobfuscation key flops are not on the scan chain. <br> Remove the following signals from the scan chain: <br> cptra\_scan\_mode\_Latched\_d <br> cptra\_scan\_mode\_Latched\_f <br> field\_storage.internal\_obf\_key   | Statement of conformance |   Caliptra HW threat model  |
+| Obfuscation Key*                  | SoC backend flows should not insert obfuscation key flops into the scan chain.                                                                                                                                                                                                 | Synthesis report         | Required by UDS and Field Entropy threat model    |                      |
 | CSR HMAC Key | SoC backend flows shall generate CSR signing key with appropriate NIST compliance as dictated in the Caliptra ROT specification.| Statement of conformance | Required by Caliptra threat model |
 | CSR HMAC Key | SoC backend flows shall ECO the CSR signing key before tapeout.| Statement of conformance | Required by Caliptra threat model |
+| CSR HMAC Key* | SoC backend flows should rotate CSR signing key for each project. | Statement of conformance | Required by Caliptra threat model |
+| CSR HMAC Key* | SoC backend flows should not insert CSR signing key flops into the scan chain. | Statement of conformance | Required by Caliptra threat model |
 | DFT                              | Before scan is enabled (separate signal that SoC implements on scan insertion), SoC shall set Caliptra's scan\_mode indication to '1 for 5,000 clocks to allow secrets/assets to be flushed.                                                                                                    | Statement of conformance | Required by Caliptra threat model                 |
+| DFT*                              | If connected, Caliptra’s TAP should be a TAP endpoint.                                                                                                                                                                                                                                       | Statement of conformance | Functional requirement                            |
 | Mailbox                          | SoC shall provide an access path between the mailbox and the application CPU complex on SoCs with such complexes (for example, Host CPUs and Smart NICs). See the [Sender Protocol](#sender-protocol) section for details about error conditions.                              | Statement of conformance | Required for Project Kirkland and TDISP TSM       |
 | Fuses                            | SoC shall burn non-field fuses during manufacturing. Required vs. optional fuses are listed in the architectural specification.                                                                                                                                                | Test on silicon          | Required for UDS threat model                     |
 | Fuses                            | SoC shall expose an interface for burning field fuses. Protection of this interface is the SoC vendor’s responsibility.                                                                                                                                                        | Test on silicon          | Required for Field Entropy                        |
@@ -912,8 +916,10 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | Resets and Clocks                | SoC shall ensure Caliptra's powergood is tied to SoC’s own powergood or any other reset that triggers SoC’s cold boot flow.                                                                                                                                                    | Statement of conformance | Required for Caliptra threat model                |
 | Resets and Clocks                | SoC shall ensure Caliptra clock is derived from an on-die oscillator circuit.                                                                                                                                                                                                  | Statement of conformance | Required for Caliptra threat model                |
 | Resets and Clocks                | SoC shall ensure that any programmable Caliptra clock controls are restricted to the SoC Manager.                                                                                                                                                                              | Statement of conformance | Required for Caliptra threat model                |
+| Resets and Clocks                | SoC should employ reasonable countermeasures to defend against advanced physical attacks like clock glitching. These countermeasures may be guided by common best practices as well as specific customer requirements. | Statement of conformance | Required for Caliptra threat model                |
 | TRNG                             | SoC shall provision the Caliptra embedded TRNG with an entropy source if that is used (vs. SoC-shared TRNG API support).                                                                                                                                                       | Statement of conformance | Functional                                        |
 | TRNG                             | If the TRNG is shared, then upon TRNG\_REQ, SoC shall use immutable logic or code to program Caliptra's TRNG registers.                                                                                                                                                        | Statement of conformance | Required for Caliptra threat model and Functional |
+| TRNG*                             | SoC shall either provision Caliptra with a dedicated TRNG or shared TRNG. It is highly recommended to use dedicated ITRNG.                                                                                                                                                      | Statement of conformance | Required for Caliptra threat model and Functional |
 | SRAMs                            | SoC shall ensure timing convergence with 1-cycle read path for SRAMs.                                                                                                                                                                                                          | Synthesis report         | Functional                                        |
 | SRAMs                            | SoC shall size SRAMs to account for SECDED. Exception for Adams-Bridge SRAMs that do not utilize SECDED. | Statement of conformance | Functional |
 | SRAMs                            | SoC shall write-protect fuses that characterize the SRAM. | Statement of conformance | Required for Caliptra threat model |
@@ -926,9 +932,15 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | AXI USER                         | Assigned AXI USER values must be unique for each agent on the interconnect. All SoC AXI agents that have an access path to Caliptra AXI subordinate (or any Caliptra Subsystem components, when using the Subsystem mode) via AXI must either (a) generate AXI transactions using an AXI_USER value that is unique from that used by all other AXI agents on the interconnect or (b) generate AXI transactions using an AXI_USER value that will never overlap with the configured valid AXI users, if the agent is not a valid mailbox user, valid fuse user, or valid trng user. For example, if any AXI agents utilize the AxUSER field for any type of dynamic metadata and are on the same AXI interconnect as Caliptra, all possible AxUSER values from those agents should be avoided for assigning Caliptra VALID AXI USER values. Because AXI AxUSER signals are used to identify accessing agents and enforce access rules, this rule ensures that no single agent may ever generate an AXI transaction that identifies it as originating from a different agent.  | Statement of conformance | Required for Caliptra threat model                |
 | Error reporting                  | SoC shall report Caliptra error outputs.                                                                                                                                                                                                                                       | Statement of conformance | Telemetry and monitoring                          |
 | Error reporting                  | SoC shall only recover Caliptra fatal errors via SoC power-good reset.                                                                                                                                                                                                         | Statement of conformance | Required for Caliptra threat model                |
+| TRNG AXI USER Programming rules*    | It is strongly recommended that these AXI USER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable FW or ROM patches are absorbed.                                                                    | Security                 | Required for Caliptra threat model                |
+| TRNG AXI USER Programming rules*    | It is strongly recommended that integrators set the TRNG valid AXI_USER to a non-zero value.         | Security                 | Required for Caliptra threat model                |
 | MAILBOX AXI USER programming rules | The value of CPTRA\_MBOX\_VALID\_AXI\_USER\[4:0\] register must be programmed by SoC. After it is locked, it becomes a valid AXI USER for accessing the mailbox.                                                                                                                     | Security                 | Required for Caliptra threat model                |
 | MAILBOX AXI USER programming rules | SoC logic (ROM, HW) that is using the Caliptra mailbox right out of cold reset, without first configuring the programmable mailbox AXI USER registers, must send the mailbox accesses with the default AXI USER, CPTRA\_DEF\_MBOX\_VALID\_AXI\_USER.                                  | Security                 | Required for Caliptra threat model                |
 | MAILBOX AXI USER programming rules | For CPTRA\_MBOX\_VALID\_AXI\_USER\[4:0\], the corresponding lock bits MUST be programmed to ‘1. This enables the mailbox to accept transactions from non-default AXI USERS.                                                                                                         | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER programming rules* | It is strongly recommended that mailbox AXI USER registers are either set at integration time through integration parameters or are programmed by the SoC ROM before any mutable FW or ROM patches are applied.                                                                     | Security                 | Required for Caliptra threat model                |
+| MAILBOX AXI USER Programming rules* | It is strongly recommended that integrators set the MAILBOX valid AXI_USER to non-zero values.                                                                       | Security                 | Required for Caliptra threat model                |
+| FUSE AXI USER Programming rules*    | It is strongly recommended that integrators set the FUSE valid AXI_USER to a non-zero value, due to the above uniqueness requirement.                                                                    | Security                 | Required for Caliptra threat model                |
+| FUSE AXI USER programming rules*    | Integrators should harden the valid AXI user for fuse access by setting the integration parameter, CPTRA\_FUSE\_VALID\_AXI\_USER, to the desired value in RTL, and by setting CPTRA\_SET\_FUSE\_AXI\_USER\_INTEG to 1. If set, these integration parameters take precedence over the CPTRA\_FUSE\_VALID\_AXI\_USER register. | Security                 | Required for Caliptra threat model                |
 | Manufacturing                    | SoC shall provision an IDevID certificate with fields that conform to the requirements described in [Provisioning IDevID during manufacturing](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#provisioning-idevid-during-manufacturing).                  | Statement of conformance | Functionality                                     |
 | Manufacturing                    | Caliptra relies on obfuscation for confidentiality of UDS\_SEED. It is strongly advised to implement manufacturing policies to protect UDS\_SEED as defense in depth measures. <br>1, Prevent leakage of UDS\_SEED on manufacturing floor.<br>2. Implement policies to prevent cloning (programming same UDS\_SEED into multiple devices).<br>3. Implement policies to prevent signing of spurious IDEVID certs. | Statement of conformance | Required for Caliptra threat model |
 | Chain of trust                   | SoC shall ensure all mutable code and configuration measurements are stashed into Caliptra. A statement of conformance lists what is considered mutable code and configuration vs. what is not. The statement also describes the start of the boot sequence of the SoC and how Caliptra is incorporated into it. | Statement of conformance | Required for Caliptra threat model |
@@ -936,30 +948,9 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | Implementation                   | SoC shall apply size-only constraints on cells tagged with the "u\_\_size\_only\_\_" string and shall ensure that these are not optimized in synthesis and PNR                                                                                                                 | Statement of conformance | Required for Caliptra threat model                |
 | GLS FEV                          | GLS FEV must be run to make sure netlist and RTL match and none of the countermeasures are optimized away. See the following table for example warnings from synthesis runs to resolve through FEV                                                                             | GLS simulations pass                 | Functional requirement                |
 
-## SoC integration recommendations
+\* **Note: Deviation or exemption from requirements marked with * may be permitted if documented justification is provided and approved by the SRP and TAC.**
 
-In addition to the requirements listed in *Table 19*, the following *recommendations* are expected or strongly encouraged. Deviation from these recommendations must include some documented justification from the integrator as to why they were not followed.
-
-*Table 20: SoC integration recommendations*
-
-| Category | Recommendation | Definition of done | Rationale |
-| :--------- | :--------- | :--------- | :--------- |
-| Obfuscation Key                  | For defense in depth, it is strongly recommended that deobfuscation key flops are not on the scan chain. <br> Remove the following signals from the scan chain: <br> cptra\_scan\_mode\_Latched\_d <br> cptra\_scan\_mode\_Latched\_f <br> field\_storage.internal\_obf\_key   | Statement of conformance |   Caliptra HW threat model  |
-| Obfuscation Key                  | SoC backend flows should not insert obfuscation key flops into the scan chain.                                                                                                                                                                                                 | Synthesis report         | Required by UDS and Field Entropy threat model    |                      |
-| CSR HMAC Key | SoC backend flows should rotate CSR signing key for each project. | Statement of conformance | Required by Caliptra threat model |
-| CSR HMAC Key | SoC backend flows should not insert CSR signing key flops into the scan chain. | Statement of conformance | Required by Caliptra threat model |
-| DFT                              | If connected, Caliptra’s TAP should be a TAP endpoint.                                                                                                                                                                                                                                       | Statement of conformance | Functional requirement                            |
-| Resets and Clocks                | SoC should employ reasonable countermeasures to defend against advanced physical attacks like clock glitching. These countermeasures may be guided by common best practices as well as specific customer requirements. | Statement of conformance | Required for Caliptra threat model                |
-| TRNG                             | SoC shall either provision Caliptra with a dedicated TRNG or shared TRNG. It is highly recommended to use dedicated ITRNG                                                                                                                                                      | Statement of conformance | Required for Caliptra threat model and Functional |
-| TRNG AXI USER Programming rules    | It is strongly recommended that these AXI USER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable FW or ROM patches are absorbed.                                                                    | Security                 | Required for Caliptra threat model                |
-| TRNG AXI USER Programming rules    | It is strongly recommended that integrators set the TRNG valid AXI_USER to a non-zero value, due to the uniqueness requirement in *Table 19*.         | Security                 | Required for Caliptra threat model                |
-| MAILBOX AXI USER programming rules | It is strongly recommended that mailbox AXI USER registers are either set at integration time through integration parameters or are programmed by the SoC ROM before any mutable FW or ROM patches are applied.                                                                  | Security                 | Required for Caliptra threat model                |
-| MAILBOX AXI USER Programming rules | It is strongly recommended that integrators set the MAILBOX valid AXI_USER to non-zero values, due to the uniqueness requirement in *Table 19*.                                                                    | Security                 | Required for Caliptra threat model                |
-| FUSE AXI USER Programming rules    | It is strongly recommended that integrators set the FUSE valid AXI_USER to a non-zero value, due to the above uniqueness requirement.                                                                    | Security                 | Required for Caliptra threat model                |
-| FUSE AXI USER programming rules    | Integrators should harden the valid AXI user for fuse access by setting the integration parameter, CPTRA\_FUSE\_VALID\_AXI\_USER, to the desired value in RTL, and by setting CPTRA\_SET\_FUSE\_AXI\_USER\_INTEG to 1. If set, these integration parameters take precedence over the CPTRA\_FUSE\_VALID\_AXI\_USER register. | Security                 | Required for Caliptra threat model                |
-
-
-*Table 21: Caliptra synthesis warnings for FEV evaluation*
+*Table 20: Caliptra synthesis warnings for FEV evaluation*
 
 | Module                    | Warning | Line No. | Description |
 | :--------- | :--------- | :--------- | :--------- |
@@ -1006,7 +997,7 @@ As described in the Caliptra Hardware Specification, when operating in OCP LOCK 
 
 Several files contain code that may be specific to an integrator's implementation and should be overridden. This overridable code is either configuration parameters with integrator-specific values or modules that implement process-specific functionality. Code in these files should be modified or replaced by integrators using components from the cell library of their fabrication vendor. The following table describes recommended modifications for each file.
 
-*Table 22: Caliptra integrator custom RTL file list*
+*Table 21: Caliptra integrator custom RTL file list*
 
 | File                                                                                   | Description                                                            |
 | :------------------------------------------------------------------------------------- | :--------------------------------------------------------------------- |
@@ -1126,7 +1117,7 @@ In an unconstrained environment, several RDC violations are anticipated. RDC ana
 ### Reset domains
 The following table identifies the major reset domains in Caliptra core IP design.
 
-*Table 23: Reset definitions (functional resets are marked in **bold**)*
+*Table 22: Reset definitions (functional resets are marked in **bold**)*
 
 | Reset name | Reset type | Reset polarity | Definition point | Reset generated by |
 | ---------- | ---------- | -------------- | ---------------- | ------------------ |
@@ -1151,7 +1142,7 @@ The reset definitions can be visually represented as shown in the following diag
 
 The following table shows the false paths between various reset groups.
 
-*Table 24: Reset domain crossing false paths*
+*Table 23: Reset domain crossing false paths*
 
 | Launch flop reset | Capture flop reset | Comment |
 | ------------------| ------------------ | ------- |
@@ -1176,7 +1167,7 @@ The reset sequencing is illustrated in the following waveform.
 
 The following table defines the order in which resets can get asserted. A ">>" in a cell at row X and column Y indicates that if the reset in row X is asserted, the reset in row Y is also asserted. For rest of the cells (in which symbol ">>" is not present) the preceding assumption is not true and so the paths between those resets are potential RDC violations. The black cells are ignored because they are between the same resets.
 
-*Table 25: Reset sequence ordering constraints*
+*Table 24: Reset sequence ordering constraints*
 
 ![](./images/reset_ordering.png)
 
@@ -1190,7 +1181,7 @@ The following set of constraints and assumptions must be provided before running
 2. The following debug register, which is driven from JTAG, is not toggled during functional flow.
     - u_caliptra.rvtop.veer.dbg.dmcontrol_reg[0] = 0
 3. Set *scan_mode* to 0 for functional analysis.
-4. Stamp or create functional resets for *cptra_noncore_rst_b* and *cptra_uc_rst_b* at the definition points, as mentioned in *Table 23*.
+4. Stamp or create functional resets for *cptra_noncore_rst_b* and *cptra_uc_rst_b* at the definition points, as mentioned in *Table 22*.
 5. Create funtional reset grouping - This step must be customized as per the EDA tool, which is being used for RDC analysis. The goal of this customization is to achieve the following three sequencing requirements/constraints.
     - Gate all clocks when *cptra_noncore_rst_b* is asserted. This ensures that the capture flop clock is gated while the source flop's reset is getting asserted, thereby preventing the capture flop from becoming metastable. The result is when *cptra_noncore_rst_b* is going to be asserted, the following signals are constrained to be at 1 at around that time.
         - soc_ifc_top1.i_soc_ifc_boot_fsm.rdc_clk_dis
@@ -1213,14 +1204,14 @@ The following set of constraints and assumptions must be provided before running
         - aes_inst.aes_clp_reg_inst.s_cpuif_req
     - The AES Core State Machine is assumed to be in the IDLE state
         - aes_inst.aes_inst.u_aes_core.u_aes_control.gen_fsm[0].gen_fsm_p.u_aes_control_fsm_i.u_aes_control_fsm.aes_ctrl_cs[5:0] = 6'b1001
-6. Constrain the RDC false paths as per *Table 24*.
+6. Constrain the RDC false paths as per *Table 23*.
 
 
 ## RDC violations and waivers
 
-Considering the given constraints, three sets of crossings were identified as RDC violations. All of them can be waived as explained in *Table 26*. Note that the report may differ across EDA tools due to variations in structural analysis, which can be influenced by a range of settings.
+Considering the given constraints, three sets of crossings were identified as RDC violations. All of them can be waived as explained in *Table 25*. Note that the report may differ across EDA tools due to variations in structural analysis, which can be influenced by a range of settings.
 
-*Table 26: Reset domain crossing violations*
+*Table 25: Reset domain crossing violations*
 
 | Sl no | Launch reset | Launch flop | Capture reset | Capture flop |
 | ------| ------------ | ----------- | ------------- | ------------ |
@@ -1263,7 +1254,7 @@ The following scenarios can occur.
 
 <br>
 
-*Table 27: Reset domain crossing scenarios for #3 and #4 crossing*
+*Table 26: Reset domain crossing scenarios for #3 and #4 crossing*
 
 | #Case | *es_bypass_mode* | *fw_ov_mode_entropy_insert* | *pfifo_bypass_push* | *pfifo_bypass_wdata* | Comment |
 | ------| ---------------- | --------------------------- | ------------------- | -------------------- | ------- |
@@ -1295,7 +1286,7 @@ The area is expressed in units of square microns.
 
 The target foundry technology node is an industry standard, advanced technology node as of 2025 April.
 
-*Table 28: Netlist synthesis data*
+*Table 27: Netlist synthesis data*
 
 | **IP Name** | **Combinational Area** | **Sequential Area** | **Memory Area** | **Total Area** | **Instance Count** |
 | :--------- |  :--------- | :--------- | :--------- | :--------- | :--------- |
@@ -1313,7 +1304,7 @@ A standardized set of lint rules is used to sign off on each release. The lint p
 
 The following terminology is used in this document.
 
-*Table 29: Terminology*
+*Table 28: Terminology*
 
 | Abbreviation | Description                                                                                      |
 | :--------- | :--------- |
