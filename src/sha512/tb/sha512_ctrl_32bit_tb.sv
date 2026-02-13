@@ -941,6 +941,238 @@ module sha512_ctrl_32bit_tb
   endtask // zeroize_test
 
   //----------------------------------------------------------------
+  // pad_pt()
+  //
+  //----------------------------------------------------------------
+  task pad_pt(input string pt,
+              input int pt_len,
+              output string pad_out
+            );
+  begin
+    int pad_len;
+    string padding, len_str;
+    pad_len = 256 - ((pt_len + 32) % 256);
+    padding = "8";
+    for (int i = 1; i < pad_len; i++)
+    begin
+      padding = {padding, "0"};
+    end
+    len_str = $sformatf("%032h", pt_len*4);
+    pad_out = {pt,padding,len_str};
+  end
+  endtask //pad_pt
+
+  //----------------------------------------------------------------
+  // vect_test()
+  // Input lab vectors to IP
+  //----------------------------------------------------------------
+  task vect_test(input [1:0] mode,
+                 input [1:0] ctrl_val,
+                 input [1023:0] block,
+                 output [511:0] digest
+                 );
+  begin
+
+    //$display("vect block hex in: %0h",block);
+    write_block(block);
+    //$display("vect mode: %0h, ctrl_val: %0h",mode, ctrl_val);
+    write_single_word(ADDR_CTRL, {28'h0, mode, ctrl_val});
+    #CLK_PERIOD;
+    hsel_i_tb = 0;
+
+    #(CLK_PERIOD);
+    wait_ready();
+    read_digest();
+
+    digest = digest_data;
+    //$display("digest_int: %0h", digest);
+
+  end
+  endtask //vect_test
+
+  //----------------------------------------------------------------
+  // acvp_test()
+  // Input lab vectors to IP
+  //----------------------------------------------------------------
+  task acvp_test();
+  begin
+    int fin, fout, result, pt_len;
+    string pt, sha_in, sha_blk_str, sha_blk_str_slice;
+    reg [1023:0] sha_blk_hex;
+    reg [31:0] sha_blk_hex_slice;
+    reg [1:0] ctrl_val; //1: init val, 2: next val
+    reg [511:0] digest;
+    int tcid;
+    string test_type;//AFT or MCT
+    reg [1:0] test_mode;
+
+    string seed, a, b, c, msg;
+    int msg_len;
+
+    $display("   -- Testbench for sha512 started --");
+
+    //source the correct vector file for the mode set below
+    test_mode = MODE_SHA_384;
+
+    fin  = $fopen("../stimulus/acvp/SHA2-384.txt","r");
+    if (fin == 0)
+    begin
+      $display("ERROR: Input file not found");
+      $stop;
+    end
+    fout = $fopen("../stimulus/acvp/SHA2-384_digest.txt","w");
+    if (fout == 0)
+    begin
+      $display("ERROR: Output file not found");
+      $stop;
+    end
+
+    while(1)
+    begin
+      result = $fscanf(fin, "%*d %s %d %*d %s", test_type, tcid, pt);
+      if (result != 3)
+      begin
+        $display("End of file");
+        break;
+      end
+      else
+      begin
+        if (test_type == "AFT")//AFT
+        begin
+          $display("MSG: Running AFT vector %4d", tcid);
+          pt_len = pt.len();
+          pad_pt(pt, pt_len, sha_in);
+          //convert string to hex and feed it to IP
+            for (int j = 0; j < (sha_in.len())/256; j++)
+          begin
+            //sha_blk_str = sha_in[(j*256)+:256];
+            sha_blk_str = sha_in.substr(j*256,(j*256)+255);
+            //in vcs, atohex works only on 32 bits.
+            //so slicing the 1024 bit string and performing
+            //the conversion
+            for (int k=0; k < 32; k++)
+            begin
+               sha_blk_str_slice = sha_blk_str.substr(k*8, (k*8)+7);
+               sha_blk_hex_slice = sha_blk_str_slice.atohex();
+               sha_blk_hex = {sha_blk_hex[991:0], sha_blk_hex_slice};
+            end
+            //$display("sha str in: %s",sha_blk_str);
+            //$display("sha hex in: %0h",sha_blk_hex);
+            if (j == 0) 
+            begin
+              ctrl_val = 2'd1;
+            end
+            else
+            begin
+              ctrl_val = 2'd2;
+            end
+            vect_test(test_mode, ctrl_val, sha_blk_hex, digest);
+          end//processed 1 pt input
+          $display("digest: %0h",digest);
+          //write digest to file
+          case (test_mode)
+              MODE_SHA_512:
+              begin
+                   $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"md\": \"%0h\"\n},\n", tcid, digest[511:0]);
+              end
+              MODE_SHA_384:
+              begin
+                   $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"md\": \"%0h\"\n},\n", tcid, digest[511:128]);
+              end
+          endcase
+            //$fwrite(fout, "{\n    \"tcId\": %0d,\n    \"md\": \"%0h\"\n},\n", tcid, digest[511:128]);
+          write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+        end
+        else//MCT
+        begin
+          //Standard MCT Pseudo code
+          //For j = 0 to 99
+          //A = B = C = SEED
+          //For i = 0 to 999
+          //    MSG = A || B || C
+          //    MD = SHA(MSG)
+          //    A = B
+          //    B = C
+          //    C = MD
+          //Output MD
+          //SEED = MD
+          $display("MSG: Running MCT vector");
+          seed = pt;//from text file
+          for (int ol = 0; ol < 100; ol++)
+          begin
+            a = seed;
+            b = seed;
+            c = seed;
+            for (int il = 0; il < 1000; il++)
+            begin
+              msg = {a,b,c};
+              if (il%100 == 0)
+                  $display("ol count: %3d il count: %3d", ol, il);
+
+              //perform HASHING
+              msg_len = msg.len();
+              pad_pt(msg, msg_len, sha_in);
+              //convert string to hex and feed it to IP
+              for (int j = 0; j < (sha_in.len())/256; j++)
+              begin
+                //sha_blk_str = sha_in[(j*256)+:257];
+                sha_blk_str = sha_in.substr(j*256, (j*256)+257);
+                //in vcs, atohex is working on 32 bits only.
+                //so slicing the 1024 bit string and performing
+                //the conversion
+                for (int k=0; k < 32; k++)
+                begin
+                   sha_blk_str_slice = sha_blk_str.substr(k*8, (k*8)+7);
+                   sha_blk_hex_slice = sha_blk_str_slice.atohex();
+                   sha_blk_hex = {sha_blk_hex[991:0], sha_blk_hex_slice};
+                end
+                if (j == 0) 
+                begin
+                  ctrl_val = 2'd1;
+                end
+                else
+                begin
+                  ctrl_val = 2'd2;
+                end
+                vect_test(test_mode, ctrl_val, sha_blk_hex, digest);
+              end//processed 1 pt input
+              a = b;
+              b = c;
+              case (test_mode)
+                  MODE_SHA_512:
+                begin
+                    c = $sformatf("%x", digest);
+                end
+                  MODE_SHA_384:
+                  begin
+                    c = $sformatf("%x", digest[511:128]);
+                end
+              endcase
+                //c = $sformatf("%x", digest[511:128]);
+              write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+            end//end inner loop
+            case (test_mode)
+              MODE_SHA_512:
+              begin
+                  $fwrite(fout, "{\n    \"md\": \"%0h\"\n},\n", digest);
+                  seed = $sformatf("%x", digest);
+              end
+              MODE_SHA_384:
+              begin
+                  $fwrite(fout, "{\n    \"md\": \"%0h\"\n},\n", digest[511:128]);
+                  seed = $sformatf("%x", digest[511:128]);
+              end
+            endcase
+              //$fwrite(fout, "{\n    \"md\": \"%0h\"\n},\n", digest);
+            //seed = $sformatf("%x", digest);
+          end//end outer loop
+        end
+      end//processed 1 line from file
+    end //end while
+  end
+  endtask //acvp_test 
+
+  //----------------------------------------------------------------
   // sha512_test
   // The main test functionality.
   //
@@ -972,6 +1204,7 @@ module sha512_ctrl_32bit_tb
       reset_dut();
       check_name_version();
 
+      acvp_test();
 
       // Single block test mesage.
       single_block = 1024'h6162638000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018;
@@ -1024,7 +1257,7 @@ module sha512_ctrl_32bit_tb
       zeroize_test(8'h0b, MODE_SHA_384, double_block_one, double_block_two, tc12_expected);
 
       display_test_result();
-      
+
       $display("   -- Testbench for sha512 done. --");
       $finish;
   end //sha512_test

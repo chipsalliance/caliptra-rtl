@@ -940,6 +940,130 @@ module hmac_ctrl_tb();
     end
   endtask // hmac_tests
 
+  //----------------------------------------------------------------
+  // pad_data()
+  //----------------------------------------------------------------
+  task pad_data (input  string msg,
+        output string pad_msg
+       );
+  begin
+    int msg_len, pad_len;
+    string padding, len_str;
+    msg_len = msg.len();
+    pad_len = 256 - ((msg_len + 32) % 256);
+    padding = "8";
+    for (int i = 1; i < pad_len; i++)
+    begin
+      padding = {padding, "0"};
+    end
+    len_str = $sformatf("%032h", (msg_len*4)+1024);
+    $display("msg: %s \n padding: %s \n len_str: %s", msg, padding, len_str);
+    pad_msg = {msg,padding,len_str};
+  end
+  endtask //pad_data
+
+  //----------------------------------------------------------------
+  // acvp_tests()
+  //
+  // Run test cases for acvp cert.
+  // Test cases are in text format, provided by the lab:
+  //----------------------------------------------------------------
+  task acvp_tests;
+    begin : acvp_tests_block
+      int fin, fout, result, mac_len, tcid, msg_len, pad_msg_len;
+      string key, key_32, msg, pad_msg, block_str, block_str_32;
+      reg [383:0] key_hex, digest_out;
+      reg [1023:0] block_hex;
+      reg [159:0] seed;
+
+      fin  = $fopen("../stimulus/acvp/HMAC-SHA2-384.txt","r");
+      if (fin == 0)
+      begin
+        $display("ERROR: Input file not found");
+        $stop;
+      end
+      fout = $fopen("../stimulus/acvp/HMAC-SHA2-384_digest.txt","w");
+      if (fout == 0)
+      begin
+        $display("ERROR: Output file not found");
+        $stop;
+      end
+
+      seed = random_gen();
+
+      while (1)
+      begin
+        result = $fscanf(fin, "%*d %d %d %s %s", mac_len, tcid, key, msg);
+        if (result != 4)
+        begin
+          $display("End of file");
+          break;
+        end
+        else
+        begin
+          $display("TC%01d: \n mac_len:%d \n key: %s \n msg: %s", tcid, mac_len, key, msg);
+          pad_data(msg, pad_msg);
+          $display("TC%01d: msg: %s", tcid, pad_msg);
+          pad_msg_len = pad_msg.len();
+          $display("*** TC%01d - acvp vector test started.", tcid);
+          //write Key
+          //in vcs, atohex works only on 32 bits.
+          //so slicing the 384 bit string and performing
+          //the conversion
+          for (int i=0; i<12; i++)
+          begin
+             key_32  = key.substr(i*8, (i*8)+7);
+             key_hex = {key_hex[351:0], key_32.atohex()};
+          end
+          $display("TC%01d: Key: 0x%096x", tcid, key_hex);
+          write_key(key_hex);
+          //convert string to hex and feed it to IP
+          for (int j = 0; j < pad_msg_len/256; j++)
+          begin
+            //Write Blocks
+            block_str = pad_msg.substr(pad_msg_len-(j*256)-256, pad_msg_len-(j*256)-1);
+            //in vcs, atohex works only on 32 bits.
+            //so slicing the 1024 bit string and performing
+            //the conversion
+            for (int k=0; k<32; k++)
+            begin
+               block_str_32 = block_str.substr(k*8, (k*8)+7);
+               block_hex = {block_hex[991:0], block_str_32.atohex()};
+            end
+            write_block(block_hex);
+            if (j == 0)
+            begin
+            //Write Seed
+            write_seed(seed);
+            //Init value
+            write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
+            #CLK_PERIOD;
+            hsel_i_tb       = 0;
+            end
+            else
+            begin
+            //Next value
+            write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
+            #CLK_PERIOD;
+            hsel_i_tb       = 0;
+            end
+            //Wait for done
+            #(CLK_PERIOD);
+            wait_ready();
+          end
+          //Read digest to global variable digest_data
+          read_digest();
+          digest_out = digest_data >> (384-mac_len);
+          $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"mac\": \"%0h\"\n},\n", tcid, digest_out);
+          //Zeroize
+          write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+          
+        end
+      end
+
+    end
+  endtask //acvp_tests
+
 
   //----------------------------------------------------------------
   // The main test functionality.
@@ -953,6 +1077,7 @@ module hmac_ctrl_tb();
 
       check_name_version();
       hmac_tests();
+      acvp_tests();
 
       display_test_result();
 
