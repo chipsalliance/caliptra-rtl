@@ -19,6 +19,7 @@
 #include "riscv-csr.h"
 #include "printf.h"
 #include "mlkem.h"
+#include "caliptra_rtl_lib.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -26,6 +27,12 @@ volatile uint32_t  intr_count = 0;
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
 #else
     enum printf_verbosity verbosity_g = LOW;
+#endif
+
+#ifdef MY_RANDOM_SEED
+    unsigned rand_seed = (unsigned) MY_RANDOM_SEED;
+#else
+    unsigned rand_seed = 0;
 #endif
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
@@ -50,34 +57,39 @@ void main() {
     //Call interrupt init
     init_interrupts();
 
-    seed.kv_intf = TRUE;
-    seed.kv_id = 0;
-    seed.exp_kv_err = FALSE;
-    msg.kv_intf = TRUE;
-    msg.kv_id = 1;
-    msg.exp_kv_err = FALSE;
-    shared_key.kv_intf = TRUE;
-    shared_key.kv_id = 2;
-    shared_key.exp_kv_err = FALSE;
-    for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
-        shared_key.data[i] = 0;
+    for(int i = 0; i < 5; i++) {
+        VPRINTF(LOW, "START TEST %d\n", i);
+
+        seed.kv_intf = TRUE;
+        seed.kv_id = xorshift32() % 24;
+        seed.exp_kv_err = FALSE;
+        msg.kv_intf = TRUE;
+        msg.kv_id = xorshift32() % 24;
+        msg.exp_kv_err = FALSE;
+        shared_key.kv_intf = TRUE;
+        shared_key.kv_id = xorshift32() % 24;
+        shared_key.exp_kv_err = FALSE;
+        for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
+            shared_key.data[i] = 0;
+        }
+
+        lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors into KV 0
+        lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV 1
+
+        //Generate vectors
+        mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
+        mlkem_zeroize();
+        cptra_intr_rcv.abr_notif = 0;
+
+        mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey);
+        mlkem_zeroize();
+        cptra_intr_rcv.abr_notif = 0;
+
+        mlkem_keygen_decaps_check(seed, actual_ciphertext, abr_entropy, shared_key);
+        mlkem_zeroize();
+        cptra_intr_rcv.abr_notif = 0;
+
     }
-
-    lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors into KV 0
-    lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV 1
-
-    //Generate vectors
-    mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
-    mlkem_zeroize();
-    cptra_intr_rcv.abr_notif = 0;
-
-    mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey);
-    mlkem_zeroize();
-    cptra_intr_rcv.abr_notif = 0;
-
-    mlkem_keygen_decaps_check(seed, actual_ciphertext, abr_entropy, shared_key);
-    mlkem_zeroize();
-    cptra_intr_rcv.abr_notif = 0;
 
     SEND_STDOUT_CTRL(0xff); //End the test
     
