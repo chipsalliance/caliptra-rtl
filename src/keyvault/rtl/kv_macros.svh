@@ -37,19 +37,19 @@ assign struct_name.pcr_hash_extend = ``hwif_name.``ctrl_reg_name.pcr_hash_extend
 assign struct_name.read_entry = ``hwif_name.``ctrl_reg_name.read_entry.value;\
 assign struct_name.read_en = ``hwif_name.``ctrl_reg_name.read_en.value;
 
-`define CALIPTRA_KV_READ_STATUS_ASSIGN(sig_prefix, hwif_name = hwif_in)\
+`define CALIPTRA_KV_READ_STATUS_ASSIGN(sig_prefix, hwif_name = hwif_in, zeroize)\
 assign ``hwif_name.``sig_prefix``_rd_status.ERROR.next = ``sig_prefix``_error;\
 assign ``hwif_name.``sig_prefix``_rd_status.READY.next = ``sig_prefix``_ready;\
 assign ``hwif_name.``sig_prefix``_rd_status.VALID.hwset = ``sig_prefix``_done;\
-assign ``hwif_name.``sig_prefix``_rd_status.VALID.hwclr = ``sig_prefix``_read_ctrl_reg.read_en;\
-assign ``hwif_name.``sig_prefix``_rd_ctrl.read_en.hwclr = ~``sig_prefix``_ready;
+assign ``hwif_name.``sig_prefix``_rd_status.VALID.hwclr = ``sig_prefix``_read_ctrl_reg.read_en | zeroize;\
+assign ``hwif_name.``sig_prefix``_rd_ctrl.read_en.hwclr = ~``sig_prefix``_ready | zeroize;
 
-`define CALIPTRA_KV_WRITE_STATUS_ASSIGN(sig_prefix, hwif_name = hwif_in)\
+`define CALIPTRA_KV_WRITE_STATUS_ASSIGN(sig_prefix, hwif_name = hwif_in, zeroize)\
 assign ``hwif_name.``sig_prefix``_wr_status.ERROR.next = ``sig_prefix``_error;\
 assign ``hwif_name.``sig_prefix``_wr_status.READY.next = ``sig_prefix``_ready;\
 assign ``hwif_name.``sig_prefix``_wr_status.VALID.hwset = ``sig_prefix``_done;\
-assign ``hwif_name.``sig_prefix``_wr_status.VALID.hwclr = ``sig_prefix``_write_ctrl_reg.write_en;\
-assign ``hwif_name.``sig_prefix``_wr_ctrl.write_en.hwclr = ~``sig_prefix``_ready;
+assign ``hwif_name.``sig_prefix``_wr_status.VALID.hwclr = ``sig_prefix``_write_ctrl_reg.write_en | zeroize;\
+assign ``hwif_name.``sig_prefix``_wr_ctrl.write_en.hwclr = ~``sig_prefix``_ready | zeroize;
 
 `endif
 
