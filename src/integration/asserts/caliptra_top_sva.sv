@@ -1354,4 +1354,128 @@ module caliptra_top_sva
                                       )
                           else $display("SVA ERROR: drbg >= HMAC_DRBG_PRIME when valid is high"); 
 
+  // ===========================================================================
+  // KV SWWE Lock Assertions
+  // Verify that KV write control registers (write_entry, dest_valid) are stable
+  // while the crypto engine is busy. The SWWE uses !busy_o to prevent FW from
+  // redirecting key material mid-transfer.
+  // ===========================================================================
+
+  // What: HMAC KV WR_CTRL write_entry must not change while busy
+  // Why: Prevents partial-key attack by redirecting KV write to a different slot
+  // Note: Guard with $past(busy_o) to skip the first cycle busy_o rises (FW may have just configured it)
+  HmacKvWrEntryStableWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`HMAC_PATH.busy_o) && `HMAC_PATH.busy_o |->
+      $stable(`HMAC_PATH.kv_write_ctrl_reg.write_entry))
+  else $display("SVA ERROR: HMAC KV write_entry changed while busy_o=1");
+
+  // What: HMAC KV WR_CTRL write_en must not be SW-re-enabled while busy
+  // Why: Prevents re-triggering KV write mid-operation
+  // Note: write_en.hwclr = ~kv_write_ready legitimately clears 1→0; only 0→1 is an attack
+  HmacKvWrEnNoRiseWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`HMAC_PATH.busy_o) && `HMAC_PATH.busy_o |->
+      !$rose(`HMAC_PATH.kv_write_ctrl_reg.write_en))
+  else $display("SVA ERROR: HMAC KV write_en rose while busy_o=1");
+
+  // What: ECC KV WR_PKEY_CTRL write_entry must not change while busy
+  // Why: Prevents private key slot redirection during ECC operation
+  // Note: Guard with $past(busy_o) to skip first cycle after reset and busy_o rise edge
+  EccKvWrEntryStableWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`ECC_PATH.busy_o) && `ECC_PATH.busy_o |->
+      $stable(`ECC_PATH.kv_write_ctrl_reg.write_entry))
+  else $display("SVA ERROR: ECC KV write_entry changed while busy_o=1");
+
+  // What: ECC KV WR_PKEY_CTRL write_en must not be SW-re-enabled while busy
+  // Why: Prevents re-triggering KV write mid-ECC operation
+  // Note: write_en.hwclr = ~kv_write_ready legitimately clears 1→0; only 0→1 is an attack
+  EccKvWrEnNoRiseWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`ECC_PATH.busy_o) && `ECC_PATH.busy_o |->
+      !$rose(`ECC_PATH.kv_write_ctrl_reg.write_en))
+  else $display("SVA ERROR: ECC KV write_en rose while busy_o=1");
+
+  // What: AES KV WR_CTRL write_entry must not change while busy
+  // Why: Prevents AES output key slot redirection during operation
+  // Note: Guard with $past(busy_o) to skip first cycle after reset and busy_o rise edge
+  AesKvWrEntryStableWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`AES_CLP_PATH.busy_o) && `AES_CLP_PATH.busy_o |->
+      $stable(`AES_CLP_PATH.kv_write_ctrl_reg.write_entry))
+  else $display("SVA ERROR: AES KV write_entry changed while busy_o=1");
+
+  // What: AES KV WR_CTRL write_en must not be SW-re-enabled while busy
+  // Why: Prevents re-triggering KV write mid-AES operation
+  // Note: write_en.hwclr = ~kv_write_ready legitimately clears 1→0; only 0→1 is an attack
+  AesKvWrEnNoRiseWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`AES_CLP_PATH.busy_o) && `AES_CLP_PATH.busy_o |->
+      !$rose(`AES_CLP_PATH.kv_write_ctrl_reg.write_en))
+  else $display("SVA ERROR: AES KV write_en rose while busy_o=1");
+
+  // What: SHA512 KV WR_CTRL write_entry must not change while not (ready && kv_dest_ready && !gen_hash_ip)
+  // Why: SHA512 uses a combined condition (ready_reg && kv_dest_ready && !gen_hash_ip) for SWWE
+  // Note: Guard with $past to skip first cycle after reset
+  Sha512KvWrEntryStableWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(~`SHA512_PATH.ready_reg || ~`SHA512_PATH.kv_dest_ready || `SHA512_PATH.gen_hash_ip) &&
+      (~`SHA512_PATH.ready_reg || ~`SHA512_PATH.kv_dest_ready || `SHA512_PATH.gen_hash_ip) |->
+      $stable(`SHA512_PATH.kv_write_ctrl_reg.write_entry))
+  else $display("SVA ERROR: SHA512 KV write_entry changed while engine busy");
+
+  // What: SHA512 KV WR_CTRL write_en must not be SW-re-enabled while busy
+  // Note: write_en.hwclr = ~kv_dest_ready legitimately clears 1→0; only 0→1 is an attack
+  Sha512KvWrEnNoRiseWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(~`SHA512_PATH.ready_reg || ~`SHA512_PATH.kv_dest_ready || `SHA512_PATH.gen_hash_ip) &&
+      (~`SHA512_PATH.ready_reg || ~`SHA512_PATH.kv_dest_ready || `SHA512_PATH.gen_hash_ip) |->
+      !$rose(`SHA512_PATH.kv_write_ctrl_reg.write_en))
+  else $display("SVA ERROR: SHA512 KV write_en rose while engine busy");
+
+  // ===========================================================================
+  // KV Read Client Error Code Priority Assertion
+  // Verify that kv_read_client captures read_allow failures immediately,
+  // even when the error_code already holds a value from a previous beat.
+  // ===========================================================================
+
+  // What: When validated_read_en fires with read_allow=0, error_code must be KV_READ_FAIL next cycle
+  // Why: Ensures the priority fix in kv_read_client.sv catches access violations immediately
+  // Timing: 1 cycle (error_code is registered)
+  // NOTE: Check HMAC key read client (representative of all kv_read_client instances)
+  // NOTE: Use literal 8'h01 instead of kv_defines_pkg::KV_READ_FAIL to avoid RTL/TB enum scope mismatch
+  HmacKvReadAllowErrorCapture_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      (`HMAC_PATH.hmac_key_kv_read.kv_read_rules.read_en_o &&
+       ~`HMAC_PATH.hmac_key_kv_read.kv_read_rules.read_allow) |=>
+      (`HMAC_PATH.hmac_key_kv_read.error_code == 8'h01))
+  else $display("SVA ERROR: HMAC KV read_allow=0 did not produce KV_READ_FAIL on next cycle");
+
+  // ===========================================================================
+  // KV SWWE Lock Cover Properties
+  // Verify that the SWWE lock scenarios are exercised in simulation.
+  // ===========================================================================
+
+  // Cover: HMAC KV WR_CTRL write attempted while busy
+  HmacKvWrCtrlWriteWhileBusy_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.busy_o && `HMAC_REG_PATH.decoded_reg_strb.HMAC512_KV_WR_CTRL);
+
+  // Cover: ECC KV WR_PKEY_CTRL write attempted while busy
+  EccKvWrCtrlWriteWhileBusy_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ECC_PATH.busy_o && `ECC_REG_PATH.decoded_reg_strb.ecc_kv_wr_pkey_ctrl);
+
+  // Cover: AES KV WR_CTRL write attempted while busy
+  AesKvWrCtrlWriteWhileBusy_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AES_CLP_PATH.busy_o && `AES_CLP_PATH.aes_clp_reg_inst.decoded_reg_strb.AES_KV_WR_CTRL);
+
+  // Cover: HMAC KV read_allow failure captured
+  HmacKvReadAllowFailure_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.hmac_key_kv_read.kv_read_rules.read_en_o &&
+      ~`HMAC_PATH.hmac_key_kv_read.kv_read_rules.read_allow);
+
 endmodule
