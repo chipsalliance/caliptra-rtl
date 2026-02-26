@@ -1,0 +1,44 @@
+# docs: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+
+# This workflow is triggered by the Caliptra ADO nightly pipelines pushing
+# pre-built HTML regression results to the `nightly-results-main` branch.
+# The branch contains:
+#   - directed/index.html  (results from the nightly-directed-pipeline)
+#   - random/index.html    (results from the nightly-random-pipeline)
+#   - index.html           (root landing page linking to both subdirectories)
+# This workflow deploys the full branch tree to GitHub Pages.
+
+name: Publish Regression Results
+
+on:
+  push:
+    branches: ["nightly-results-main"]
+
+permissions:
+  pages: write
+  id-token: write
+  contents: read
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-22.04
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Checkout nightly-results-main branch
+        uses: actions/checkout@v4
+
+      - name: Upload Pages artifact
+        # path: '.' deploys the full branch tree, including directed/ and random/ subdirectories
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: '.'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
