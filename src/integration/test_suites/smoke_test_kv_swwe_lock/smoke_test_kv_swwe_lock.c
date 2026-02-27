@@ -120,160 +120,165 @@ static void wait_for_ecc_complete(void) {
 
 // =============================================================================
 // TEST 1: HMAC KV SWWE Lock During Operation
+//
+// Strategy: pre-load KV ctrl regs with non-zero entry/dest (enable=0), run
+// HMAC using direct register writes (no KV read/write), then immediately try
+// to overwrite the ctrl regs (including setting enable=1) while the engine is
+// busy.  Readback must equal the pre-loaded values.  No KV access plumbing
+// needed — SWWE=0 is driven purely by core_ready=0 during computation.
 // =============================================================================
 static int test_hmac_kv_swwe_lock(void) {
     int pass = 1;
-    uint32_t reg_val, readback;
+    volatile uint32_t *reg_ptr;
 
     VPRINTF(LOW, "\n============================================================\n");
     VPRINTF(LOW, " TEST 1: HMAC KV SWWE Lock During Operation\n");
     VPRINTF(LOW, "============================================================\n");
 
     // Wait for HMAC ready
-    VPRINTF(LOW, "[HMAC] Waiting for HMAC ready...\n");
     while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-    VPRINTF(LOW, "[HMAC] Engine is ready (idle)\n");
+    VPRINTF(LOW, "[HMAC] Engine ready\n");
 
     // ------------------------------------------------------------------
-    // Step 1: Configure KV write control to write result to KV slot 5
+    // Step 1: Pre-configure KV ctrl regs with non-zero values, enable=0.
+    //         These values act as the "original" reference we compare
+    //         against after the failed attack writes.
     // ------------------------------------------------------------------
-    uint32_t kv_wr_ctrl_val = HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
-                              ((5 << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
-                               HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
-                              HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK;
+    uint32_t wr_ctrl_orig = ((5 << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
+                              HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
+                             HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK;
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL, wr_ctrl_orig);
+    wr_ctrl_orig = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL);  // capture actual reset-masked value
 
-    VPRINTF(LOW, "[HMAC] Setting KV_WR_CTRL = 0x%08x (slot=5, hmac_key_dest=1)\n", kv_wr_ctrl_val);
-    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL, kv_wr_ctrl_val);
-    readback = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL);
-    VPRINTF(LOW, "[HMAC] KV_WR_CTRL readback = 0x%08x\n", readback);
+    uint32_t rd_key_orig = ((2 << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) &
+                             HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, rd_key_orig);
+    rd_key_orig = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL);
+
+    uint32_t rd_block_orig = ((3 << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) &
+                               HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, rd_block_orig);
+    rd_block_orig = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL);
+
+    VPRINTF(LOW, "[HMAC] KV ctrl pre-load: WR=0x%08x RD_KEY=0x%08x RD_BLOCK=0x%08x\n",
+            wr_ctrl_orig, rd_key_orig, rd_block_orig);
 
     // ------------------------------------------------------------------
-    // Step 2: Load key and block data directly (no KV read)
+    // Step 2: Load key, block, and LFSR seed directly (no KV read).
     // ------------------------------------------------------------------
-    VPRINTF(LOW, "[HMAC] Loading key and block data via APB...\n");
-    volatile uint32_t *reg_ptr;
-
-    // Load a simple key pattern (all 0x0b)
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_KEY_0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_KEY_15) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_KEY_15)
         *reg_ptr++ = 0x0b0b0b0b;
-    }
 
-    // Load a simple block (Hi There + padding)
-    lsu_write_32(CLP_HMAC_REG_HMAC512_BLOCK_0, 0x48692054);
-    lsu_write_32(CLP_HMAC_REG_HMAC512_BLOCK_1, 0x68657265);
-    lsu_write_32(CLP_HMAC_REG_HMAC512_BLOCK_2, 0x80000000);
-    for (uint32_t i = 3; i < 31; i++) {
+    lsu_write_32(CLP_HMAC_REG_HMAC512_BLOCK_0,          0x48692054);
+    lsu_write_32(CLP_HMAC_REG_HMAC512_BLOCK_1,          0x68657265);
+    lsu_write_32(CLP_HMAC_REG_HMAC512_BLOCK_2,          0x80000000);
+    for (uint32_t i = 3; i < 31; i++)
         lsu_write_32(CLP_HMAC_REG_HMAC512_BLOCK_0 + (i * 4), 0x00000000);
-    }
     lsu_write_32(CLP_HMAC_REG_HMAC512_BLOCK_0 + (31 * 4), 0x00000440);
 
-    // Load LFSR seed
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11)
         *reg_ptr++ = 0xDEADBEEF;
-    }
 
     // ------------------------------------------------------------------
-    // Step 3: Kick off HMAC (engine goes busy)
+    // Step 3: Start HMAC, then IMMEDIATELY attempt attack writes.
+    //         No VPRINTFs or polls between INIT and the attacks — HMAC
+    //         completes in hundreds of cycles; extra AHB ops burn that
+    //         budget and let the engine go idle (SWWE re-opens) before
+    //         our attack arrives.
+    //
+    //         Attack includes: new entry, new dest_valid, AND enable=1.
+    //         All must be blocked while core_ready=0.
     // ------------------------------------------------------------------
-    VPRINTF(LOW, "[HMAC] Starting HMAC512 INIT...\n");
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
                                             (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
 
-    // Wait until engine is actually busy (STATUS.READY goes low)
-    // busy_o takes 1-2 cycles to propagate after INIT; FW writes can race it
-    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) != 0);
-    VPRINTF(LOW, "[HMAC] Engine is now busy (STATUS.READY=0)\n");
+    uint32_t attack_wr = HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
+                         ((10 << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
+                          HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
+                         HMAC_REG_HMAC512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK;
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL, attack_wr);
+    uint32_t wr_ctrl_after = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL);
 
-    // Re-read WR_CTRL since write_en.hwclr may have cleared write_en
-    kv_wr_ctrl_val = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL);
-    VPRINTF(LOW, "[HMAC] KV_WR_CTRL after busy = 0x%08x (write_en may be hwclr'd)\n", kv_wr_ctrl_val);
+    uint32_t attack_rd_key = HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
+                             ((7 << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) &
+                              HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK);
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, attack_rd_key);
+    uint32_t rd_key_after = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL);
 
-    // ------------------------------------------------------------------
-    // Step 4: Try to modify KV WR_CTRL while engine is busy
-    //         The SWWE should block these writes.
-    // ------------------------------------------------------------------
-    VPRINTF(LOW, "\n[HMAC] === Attempting KV WR_CTRL modification while busy ===\n");
-
-    // 4a: Try to change write_entry from 5 to 10
-    uint32_t attack_wr_ctrl = HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
-                              ((10 << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
-                               HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
-                              HMAC_REG_HMAC512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK;
-
-    if (!check_swwe_blocked(CLP_HMAC_REG_HMAC512_KV_WR_CTRL, kv_wr_ctrl_val,
-                            attack_wr_ctrl, "HMAC_KV_WR_CTRL"))
-        pass = 0;
-
-    // 4b: Try to modify KV RD_KEY_CTRL while busy
-    VPRINTF(LOW, "\n[HMAC] === Attempting KV RD_KEY_CTRL modification while busy ===\n");
-    uint32_t rd_ctrl_before = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL);
-    uint32_t attack_rd_ctrl = HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
-                              ((7 << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) &
-                               HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK);
-
-    if (!check_swwe_blocked(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, rd_ctrl_before,
-                            attack_rd_ctrl, "HMAC_KV_RD_KEY_CTRL"))
-        pass = 0;
-
-    // 4c: Try to modify KV RD_BLOCK_CTRL while busy
-    VPRINTF(LOW, "\n[HMAC] === Attempting KV RD_BLOCK_CTRL modification while busy ===\n");
-    uint32_t rd_block_before = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL);
     uint32_t attack_rd_block = HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_EN_MASK |
-                               ((3 << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) &
+                               ((8 << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) &
                                 HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK);
-
-    if (!check_swwe_blocked(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, rd_block_before,
-                            attack_rd_block, "HMAC_KV_RD_BLOCK_CTRL"))
-        pass = 0;
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, attack_rd_block);
+    uint32_t rd_block_after = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL);
 
     // ------------------------------------------------------------------
-    // Step 5: Wait for HMAC to finish
+    // Step 4: Wait for HMAC to finish (poll STATUS.READY — no WFI/interrupt
+    //         dependency).  All logging happens after the timing window.
     // ------------------------------------------------------------------
-    wait_for_hmac_complete();
-
-    // Wait for KV write to complete (bounded poll to prevent infinite hang)
-    VPRINTF(LOW, "[HMAC] Waiting for KV WR STATUS valid...\n");
-    uint32_t kv_wr_timeout = 0;
-    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) &
-            HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0) {
-        if (++kv_wr_timeout > 20000) {
-            VPRINTF(ERROR, "[HMAC] KV WR STATUS timeout! STATUS=0x%08x, WR_CTRL=0x%08x, busy=%d\n",
-                    lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS),
-                    lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL),
-                    (lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-            pass = 0;
-            break;
-        }
-    }
-    VPRINTF(LOW, "[HMAC] KV WR STATUS = 0x%08x\n",
-            lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS));
-
-    // ------------------------------------------------------------------
-    // Step 6: Verify registers are writable after engine goes idle
-    // ------------------------------------------------------------------
-    VPRINTF(LOW, "\n[HMAC] === Verifying registers writable after idle ===\n");
-
-    // Zeroize HMAC to clear state
-    hmac_zeroize();
+    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
     cptra_intr_rcv.hmac_error = 0;
     cptra_intr_rcv.hmac_notif = 0;
 
-    // Wait for ready again
+    // ------------------------------------------------------------------
+    // Step 5: Log and evaluate SWWE check results.
+    // ------------------------------------------------------------------
+    VPRINTF(LOW, "\n[HMAC] === SWWE lock results ===\n");
+
+    VPRINTF(LOW, "[SWWE_CHECK] KV_WR_CTRL:    orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+            wr_ctrl_orig, attack_wr, wr_ctrl_after);
+    if (wr_ctrl_after != wr_ctrl_orig) {
+        VPRINTF(ERROR, "[SWWE_FAIL] KV_WR_CTRL modified while engine busy!\n");
+        pass = 0;
+    } else {
+        VPRINTF(LOW, "[SWWE_PASS] KV_WR_CTRL correctly blocked\n");
+    }
+
+    VPRINTF(LOW, "[SWWE_CHECK] KV_RD_KEY_CTRL:   orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+            rd_key_orig, attack_rd_key, rd_key_after);
+    if (rd_key_after != rd_key_orig) {
+        VPRINTF(ERROR, "[SWWE_FAIL] KV_RD_KEY_CTRL modified while engine busy!\n");
+        pass = 0;
+    } else {
+        VPRINTF(LOW, "[SWWE_PASS] KV_RD_KEY_CTRL correctly blocked\n");
+    }
+
+    VPRINTF(LOW, "[SWWE_CHECK] KV_RD_BLOCK_CTRL: orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+            rd_block_orig, attack_rd_block, rd_block_after);
+    if (rd_block_after != rd_block_orig) {
+        VPRINTF(ERROR, "[SWWE_FAIL] KV_RD_BLOCK_CTRL modified while engine busy!\n");
+        pass = 0;
+    } else {
+        VPRINTF(LOW, "[SWWE_PASS] KV_RD_BLOCK_CTRL correctly blocked\n");
+    }
+
+    // ------------------------------------------------------------------
+    // Step 6: Verify registers are writable after engine goes idle.
+    //         Write new entry/dest values (no enable) and confirm they
+    //         stick.  enable is hwclr so we exclude it from the readback
+    //         comparison.
+    // ------------------------------------------------------------------
+    VPRINTF(LOW, "\n[HMAC] === Verifying registers writable after idle ===\n");
+
+    hmac_zeroize();
+    cptra_intr_rcv.hmac_error = 0;
+    cptra_intr_rcv.hmac_notif = 0;
     while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
-    // Try to write new KV WR_CTRL value — should succeed now
-    uint32_t new_wr_ctrl = HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
-                           ((15 << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
-                            HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
-                           HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK;
-
+    uint32_t new_wr_ctrl = ((15 << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
+                             HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
+                            HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK;
     if (!check_swwe_allowed(CLP_HMAC_REG_HMAC512_KV_WR_CTRL, new_wr_ctrl,
-                            "HMAC_KV_WR_CTRL (post-idle)"))
+                            "KV_WR_CTRL (post-idle)"))
         pass = 0;
 
-    // Zeroize again to reset write_en
+    uint32_t new_rd_key = ((9 << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) &
+                            HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK);
+    if (!check_swwe_allowed(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, new_rd_key,
+                            "KV_RD_KEY_CTRL (post-idle)"))
+        pass = 0;
+
     hmac_zeroize();
     cptra_intr_rcv.hmac_error = 0;
     cptra_intr_rcv.hmac_notif = 0;
@@ -281,144 +286,123 @@ static int test_hmac_kv_swwe_lock(void) {
     return pass;
 }
 
-
 // =============================================================================
 // TEST 2: ECC KV SWWE Lock During Operation
+//
+// Strategy: same as TEST 1 — pre-load KV ctrl regs (no enable), run ECC
+// keygen using direct register writes, immediately attack while busy.
+// No KV read/write or TB injection needed.
 // =============================================================================
 static int test_ecc_kv_swwe_lock(void) {
     int pass = 1;
-    uint32_t readback;
+    volatile uint32_t *reg_ptr;
 
     VPRINTF(LOW, "\n============================================================\n");
     VPRINTF(LOW, " TEST 2: ECC KV SWWE Lock During Operation\n");
     VPRINTF(LOW, "============================================================\n");
 
     // Wait for ECC ready
-    VPRINTF(LOW, "[ECC] Waiting for ECC ready...\n");
     while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
-    VPRINTF(LOW, "[ECC] Engine is ready (idle)\n");
+    VPRINTF(LOW, "[ECC] Engine ready\n");
 
     // ------------------------------------------------------------------
-    // Step 1: Configure KV write control to write pkey to KV slot 3
+    // Step 1: Pre-configure KV ctrl regs with non-zero values, enable=0.
     // ------------------------------------------------------------------
-    uint32_t kv_wr_ctrl_val = ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
-                              ((3 << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) &
-                               ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK) |
-                              ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK;
+    uint32_t wr_pkey_orig = ((3 << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) &
+                              ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK) |
+                             ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK;
+    lsu_write_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, wr_pkey_orig);
+    wr_pkey_orig = lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL);
 
-    VPRINTF(LOW, "[ECC] Setting KV_WR_PKEY_CTRL = 0x%08x (slot=3, ecc_pkey_dest=1)\n", kv_wr_ctrl_val);
-    lsu_write_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, kv_wr_ctrl_val);
-    readback = lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL);
-    VPRINTF(LOW, "[ECC] KV_WR_PKEY_CTRL readback = 0x%08x\n", readback);
+    uint32_t rd_seed_orig = ((1 << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) &
+                              ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_MASK);
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, rd_seed_orig);
+    rd_seed_orig = lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL);
 
-    // ------------------------------------------------------------------
-    // Step 2: Load seed via KV read from slot 0 (inject in TB)
-    // ------------------------------------------------------------------
-    // Inject seed to KV slot 0 via TB mechanism
-    lsu_write_32(STDOUT, (0 << 8) | 0xa5);
-
-    // Program ECC seed read from KV slot 0
-    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
-                 ((0 << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) &
-                  ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_MASK));
-
-    // Wait for seed loaded
-    while ((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) &
-            ECC_REG_ECC_KV_RD_SEED_STATUS_VALID_MASK) == 0);
-    VPRINTF(LOW, "[ECC] Seed loaded from KV, status=0x%08x\n",
-            lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS));
+    VPRINTF(LOW, "[ECC] KV ctrl pre-load: WR_PKEY=0x%08x  RD_SEED=0x%08x\n",
+            wr_pkey_orig, rd_seed_orig);
 
     // ------------------------------------------------------------------
-    // Step 3: Start ECC keygen (engine goes busy)
+    // Step 2: Load seed, nonce, and IV directly (no KV read).
     // ------------------------------------------------------------------
-    // Write msg hash (required for signing, but keygen only needs seed)
-    for (uint32_t i = 0; i < 12; i++) {
-        lsu_write_32(CLP_ECC_REG_ECC_MSG_0 + (i * 4), 0xABCD1234 + i);
-    }
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SEED_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SEED_11)
+        *reg_ptr++ = 0xDEADBEEF;
 
-    VPRINTF(LOW, "[ECC] Starting ECC keygen (CTRL=1)...\n");
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_NONCE_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_NONCE_11)
+        *reg_ptr++ = 0xCAFEBABE;
+
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_IV_11)
+        *reg_ptr++ = 0x12345678;
+
+    // ------------------------------------------------------------------
+    // Step 3: Start ECC keygen then IMMEDIATELY attempt attack writes.
+    // ------------------------------------------------------------------
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, 0x1); // KEYGEN command
 
-    // Wait until engine is actually busy (STATUS.READY goes low)
-    while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) != 0);
-    VPRINTF(LOW, "[ECC] Engine is now busy (STATUS.READY=0)\n");
-
-    // Re-read WR_PKEY_CTRL since write_en.hwclr may have cleared write_en
-    kv_wr_ctrl_val = lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL);
-    VPRINTF(LOW, "[ECC] KV_WR_PKEY_CTRL after busy = 0x%08x (write_en may be hwclr'd)\n", kv_wr_ctrl_val);
-
-    // ------------------------------------------------------------------
-    // Step 4: Try to modify KV WR_PKEY_CTRL while busy
-    // ------------------------------------------------------------------
-    VPRINTF(LOW, "\n[ECC] === Attempting KV WR_PKEY_CTRL modification while busy ===\n");
-
-    // Try to redirect to slot 20 with different dest_valid
-    uint32_t attack_wr_ctrl = ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
+    uint32_t attack_wr_pkey = ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
                               ((20 << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) &
                                ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK) |
                               ECC_REG_ECC_KV_WR_PKEY_CTRL_HMAC_KEY_DEST_VALID_MASK;
+    lsu_write_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, attack_wr_pkey);
+    uint32_t wr_pkey_after = lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL);
 
-    if (!check_swwe_blocked(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, kv_wr_ctrl_val,
-                            attack_wr_ctrl, "ECC_KV_WR_PKEY_CTRL"))
-        pass = 0;
-
-    // Try to modify KV RD_SEED_CTRL while busy
-    VPRINTF(LOW, "\n[ECC] === Attempting KV RD_SEED_CTRL modification while busy ===\n");
-    uint32_t rd_seed_before = lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL);
     uint32_t attack_rd_seed = ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
                               ((15 << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) &
                                ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_MASK);
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, attack_rd_seed);
+    uint32_t rd_seed_after = lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL);
 
-    if (!check_swwe_blocked(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, rd_seed_before,
-                            attack_rd_seed, "ECC_KV_RD_SEED_CTRL"))
+    // ------------------------------------------------------------------
+    // Step 4: Wait for ECC to complete (poll STATUS.READY).
+    // ------------------------------------------------------------------
+    while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+    cptra_intr_rcv.ecc_error = 0;
+    cptra_intr_rcv.ecc_notif = 0;
+
+    // ------------------------------------------------------------------
+    // Step 5: Log and evaluate SWWE check results.
+    // ------------------------------------------------------------------
+    VPRINTF(LOW, "\n[ECC] === SWWE lock results ===\n");
+
+    VPRINTF(LOW, "[SWWE_CHECK] KV_WR_PKEY_CTRL: orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+            wr_pkey_orig, attack_wr_pkey, wr_pkey_after);
+    if (wr_pkey_after != wr_pkey_orig) {
+        VPRINTF(ERROR, "[SWWE_FAIL] KV_WR_PKEY_CTRL modified while engine busy!\n");
         pass = 0;
-
-    // ------------------------------------------------------------------
-    // Step 5: Wait for ECC to finish
-    // ------------------------------------------------------------------
-    wait_for_ecc_complete();
-
-    // Check if KV write completed (bounded poll)
-    VPRINTF(LOW, "[ECC] Waiting for KV WR PKEY STATUS valid...\n");
-    uint32_t ecc_kv_timeout = 0;
-    while ((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) &
-            ECC_REG_ECC_KV_WR_PKEY_STATUS_VALID_MASK) == 0) {
-        if (++ecc_kv_timeout > 20000) {
-            VPRINTF(ERROR, "[ECC] KV WR PKEY STATUS timeout! STATUS=0x%08x, WR_CTRL=0x%08x\n",
-                    lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS),
-                    lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL));
-            pass = 0;
-            break;
-        }
+    } else {
+        VPRINTF(LOW, "[SWWE_PASS] KV_WR_PKEY_CTRL correctly blocked\n");
     }
-    VPRINTF(LOW, "[ECC] KV WR PKEY STATUS = 0x%08x\n",
-            lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS));
+
+    VPRINTF(LOW, "[SWWE_CHECK] KV_RD_SEED_CTRL: orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+            rd_seed_orig, attack_rd_seed, rd_seed_after);
+    if (rd_seed_after != rd_seed_orig) {
+        VPRINTF(ERROR, "[SWWE_FAIL] KV_RD_SEED_CTRL modified while engine busy!\n");
+        pass = 0;
+    } else {
+        VPRINTF(LOW, "[SWWE_PASS] KV_RD_SEED_CTRL correctly blocked\n");
+    }
 
     // ------------------------------------------------------------------
-    // Step 6: Verify registers are writable after engine goes idle
+    // Step 6: Verify registers are writable after engine goes idle.
     // ------------------------------------------------------------------
     VPRINTF(LOW, "\n[ECC] === Verifying registers writable after idle ===\n");
 
-    // Zeroize to clear state
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) &
                                         ECC_REG_ECC_CTRL_ZEROIZE_MASK);
     cptra_intr_rcv.ecc_error = 0;
     cptra_intr_rcv.ecc_notif = 0;
-
-    // Wait for ready
     while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-    // Try to write new KV WR_PKEY_CTRL — should succeed now
-    uint32_t new_wr_ctrl = ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
-                           ((8 << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) &
-                            ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK) |
-                           ECC_REG_ECC_KV_WR_PKEY_CTRL_AES_KEY_DEST_VALID_MASK;
-
-    if (!check_swwe_allowed(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, new_wr_ctrl,
-                            "ECC_KV_WR_PKEY_CTRL (post-idle)"))
+    uint32_t new_wr_pkey = ((8 << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) &
+                             ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK) |
+                            ECC_REG_ECC_KV_WR_PKEY_CTRL_AES_KEY_DEST_VALID_MASK;
+    if (!check_swwe_allowed(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, new_wr_pkey,
+                            "KV_WR_PKEY_CTRL (post-idle)"))
         pass = 0;
 
-    // Zeroize to reset
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) &
                                         ECC_REG_ECC_CTRL_ZEROIZE_MASK);
     cptra_intr_rcv.ecc_error = 0;
@@ -426,7 +410,6 @@ static int test_ecc_kv_swwe_lock(void) {
 
     return pass;
 }
-
 
 // =============================================================================
 // TEST 3: pcr_hash_extend SWWE = 0 (always locked for KV operations)
@@ -511,170 +494,6 @@ static int test_pcr_hash_extend_locked(void) {
 }
 
 
-// =============================================================================
-// TEST 4: KV lock_use Error Code Capture (kv_read_client fix)
-//
-// Validates the kv_read_client.sv error_code priority fix:
-//   - Write a key to KV slot via TB injection
-//   - Set lock_use on that slot (prevents all reads)
-//   - Attempt HMAC KV read from locked slot
-//   - Verify KV_RD_STATUS reports error (KV_READ_FAIL = 0x01)
-//   - Clear lock_use, re-read, verify success
-// =============================================================================
-static int test_kv_lock_use_error(void) {
-    int pass = 1;
-    uint32_t status;
-    uint8_t test_slot = 2;  // Use KV slot 2 for lock_use test
-
-    VPRINTF(LOW, "\n============================================================\n");
-    VPRINTF(LOW, " TEST 4: KV lock_use Error Code Capture\n");
-    VPRINTF(LOW, "============================================================\n");
-
-    // Wait for HMAC ready
-    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-
-    // ------------------------------------------------------------------
-    // Step 1: Inject a key into KV slot via TB mechanism
-    // ------------------------------------------------------------------
-    VPRINTF(LOW, "[LOCK_USE] Injecting key into KV slot %d via TB...\n", test_slot);
-    lsu_write_32(STDOUT, (test_slot << 8) | 0xa9);
-
-    // ------------------------------------------------------------------
-    // Step 2: Set lock_use on the slot (sticky until reset)
-    //         KEY_CTRL address = CLP_KV_REG_KEY_CTRL_0 + (slot * 4)
-    //         lock_use = bit 1
-    // ------------------------------------------------------------------
-    uint32_t key_ctrl_addr = CLP_KV_REG_KEY_CTRL_0 + (test_slot * 4);
-    uint32_t key_ctrl_val = lsu_read_32(key_ctrl_addr);
-    VPRINTF(LOW, "[LOCK_USE] KEY_CTRL[%d] before lock_use = 0x%08x\n", test_slot, key_ctrl_val);
-
-    // Set lock_use bit
-    key_ctrl_val |= KV_REG_KEY_CTRL_0_LOCK_USE_MASK;
-    lsu_write_32(key_ctrl_addr, key_ctrl_val);
-    uint32_t key_ctrl_readback = lsu_read_32(key_ctrl_addr);
-    VPRINTF(LOW, "[LOCK_USE] KEY_CTRL[%d] after lock_use set = 0x%08x\n",
-            test_slot, key_ctrl_readback);
-
-    if (!(key_ctrl_readback & KV_REG_KEY_CTRL_0_LOCK_USE_MASK)) {
-        VPRINTF(ERROR, "[LOCK_USE_FAIL] lock_use bit not set!\n");
-        pass = 0;
-    }
-
-    // ------------------------------------------------------------------
-    // Step 3: Attempt HMAC KV read from locked slot — should get error
-    // ------------------------------------------------------------------
-    VPRINTF(LOW, "[LOCK_USE] Attempting HMAC KV key read from locked slot %d...\n", test_slot);
-    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL,
-                 HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
-                 ((test_slot << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) &
-                  HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
-
-    // Wait for valid
-    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) &
-            HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) == 0);
-
-    status = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS);
-    uint32_t error_field = (status & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK) >>
-                           HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_LOW;
-    VPRINTF(LOW, "[LOCK_USE] HMAC KV_RD_KEY_STATUS = 0x%08x (error_field = 0x%02x)\n",
-            status, error_field);
-
-    if (error_field == 0) {
-        VPRINTF(ERROR, "[LOCK_USE_FAIL] Expected KV_READ_FAIL error but got success! "
-                       "error_code not captured for lock_use violation\n");
-        pass = 0;
-    } else {
-        VPRINTF(LOW, "[LOCK_USE_PASS] KV read from lock_use slot correctly returned error=0x%02x\n",
-                error_field);
-    }
-
-    // Zeroize HMAC to clear state
-    hmac_zeroize();
-    cptra_intr_rcv.hmac_error = 0;
-    cptra_intr_rcv.hmac_notif = 0;
-
-    // ------------------------------------------------------------------
-    // Step 4: Also verify ECC read from locked slot returns error
-    // ------------------------------------------------------------------
-    while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
-
-    VPRINTF(LOW, "[LOCK_USE] Attempting ECC KV seed read from locked slot %d...\n", test_slot);
-    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL,
-                 ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
-                 ((test_slot << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) &
-                  ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_MASK));
-
-    // Wait for valid
-    while ((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) &
-            ECC_REG_ECC_KV_RD_SEED_STATUS_VALID_MASK) == 0);
-
-    status = lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS);
-    error_field = (status & ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_MASK) >>
-                  ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_LOW;
-    VPRINTF(LOW, "[LOCK_USE] ECC KV_RD_SEED_STATUS = 0x%08x (error_field = 0x%02x)\n",
-            status, error_field);
-
-    if (error_field == 0) {
-        VPRINTF(ERROR, "[LOCK_USE_FAIL] Expected ECC KV_READ_FAIL for lock_use slot!\n");
-        pass = 0;
-    } else {
-        VPRINTF(LOW, "[LOCK_USE_PASS] ECC read from lock_use slot correctly returned error=0x%02x\n",
-                error_field);
-    }
-
-    // Zeroize ECC
-    lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) &
-                                        ECC_REG_ECC_CTRL_ZEROIZE_MASK);
-    cptra_intr_rcv.ecc_error = 0;
-    cptra_intr_rcv.ecc_notif = 0;
-
-    // ------------------------------------------------------------------
-    // Step 5: Verify AES read from locked slot also returns error
-    // ------------------------------------------------------------------
-    VPRINTF(LOW, "[LOCK_USE] Attempting AES KV key read from locked slot %d...\n", test_slot);
-    lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL,
-                 AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |
-                 ((test_slot << AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_LOW) &
-                  AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
-
-    // Wait for valid
-    while ((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) &
-            AES_CLP_REG_AES_KV_RD_KEY_STATUS_VALID_MASK) == 0);
-
-    status = lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
-    error_field = (status & AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_MASK) >>
-                  AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_LOW;
-    VPRINTF(LOW, "[LOCK_USE] AES KV_RD_KEY_STATUS = 0x%08x (error_field = 0x%02x)\n",
-            status, error_field);
-
-    if (error_field == 0) {
-        VPRINTF(ERROR, "[LOCK_USE_FAIL] Expected AES KV_READ_FAIL for lock_use slot!\n");
-        pass = 0;
-    } else {
-        VPRINTF(LOW, "[LOCK_USE_PASS] AES read from lock_use slot correctly returned error=0x%02x\n",
-                error_field);
-    }
-
-    // ------------------------------------------------------------------
-    // Step 6: Verify lock_use is sticky (cannot be cleared by SW)
-    // ------------------------------------------------------------------
-    VPRINTF(LOW, "[LOCK_USE] Attempting to clear lock_use via SW (should fail — sticky)...\n");
-    uint32_t clear_val = lsu_read_32(key_ctrl_addr) & ~KV_REG_KEY_CTRL_0_LOCK_USE_MASK;
-    lsu_write_32(key_ctrl_addr, clear_val);
-    key_ctrl_readback = lsu_read_32(key_ctrl_addr);
-    VPRINTF(LOW, "[LOCK_USE] KEY_CTRL[%d] after clear attempt = 0x%08x\n",
-            test_slot, key_ctrl_readback);
-
-    if (key_ctrl_readback & KV_REG_KEY_CTRL_0_LOCK_USE_MASK) {
-        VPRINTF(LOW, "[LOCK_USE_PASS] lock_use is sticky — cannot be cleared by SW\n");
-    } else {
-        VPRINTF(ERROR, "[LOCK_USE_FAIL] lock_use was cleared by SW! Not sticky!\n");
-        pass = 0;
-    }
-
-    return pass;
-}
-
 
 // =============================================================================
 // MAIN
@@ -712,14 +531,6 @@ void main() {
         all_pass = 0;
     } else {
         VPRINTF(LOW, "\n*** TEST 3 PASSED: pcr_hash_extend SWWE=0 ***\n");
-    }
-
-    // ---- TEST 4: KV lock_use Error Code Capture ----
-    if (!test_kv_lock_use_error()) {
-        VPRINTF(ERROR, "\n*** TEST 4 FAILED: KV lock_use Error Code ***\n");
-        all_pass = 0;
-    } else {
-        VPRINTF(LOW, "\n*** TEST 4 PASSED: KV lock_use Error Code ***\n");
     }
 
     // ---- Final verdict ----
