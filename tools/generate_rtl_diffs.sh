@@ -1,35 +1,91 @@
-!/bin/bash
-# Licensed under the Apache-2.0 license
+#!/bin/bash
+# SPDX-License-Identifier: Apache-2.0
+#
+#
+# Licensed under the Apache License, Version 2.0 (the \"License\");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an \"AS IS\" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License."
 
 # Constants
 modify_table_title="Caliptra integrator custom RTL file list"
 integration_spec_relative_path="docs/CaliptraIntegrationSpecification.md"
+upstream_repo_url="https://github.com/chipsalliance/caliptra-rtl.git"
+baseline_clone_subdir=".baseline_repo"
 
-# Check arg count
-if [ $# -lt 1 ] || [ $# -gt 3 ]
-  then
-    echo "Usage: $(basename $0) <path_to_rtl> [baseline_release_tag] [diff_output_dir]"
+# Directory for cloned baseline repo
+baseline_clone_dir=""
+
+# Parse flags and positional args
+cleanup_baseline=false
+positional_args=()
+for arg in "$@"; do
+    if [ "$arg" = "--cleanup" ]; then
+        cleanup_baseline=true
+    else
+        positional_args+=("$arg")
+    fi
+done
+
+# Check positional arg count
+if [ ${#positional_args[@]} -lt 1 ] || [ ${#positional_args[@]} -gt 3 ]; then
+    echo "Usage: $(basename $0) <path_to_rtl> [baseline_release_tag] [diff_output_dir] [--cleanup]"
     echo "  path_to_rtl             Path to the RTL repository"
     echo "  baseline_release_tag    (Optional) Release tag to diff against (lists available if not provided)"
     echo "  diff_output_dir         (Optional) Directory for diff outputs (default: rtl_diffs)"
+    echo "  --cleanup               (Optional) Remove the baseline clone after completion"
+    echo ""
+    echo "Note: The upstream repo ($upstream_repo_url) is cloned to fetch the baseline."
+    echo "      The clone is retained by default and reused on subsequent runs."
     exit -1
 fi
 
 # Get args
-rtl_path=$1
-baseline_release=$2
-diff_output_dir=${3:-rtl_diffs}
+rtl_path=${positional_args[0]}
+baseline_release=${positional_args[1]:-}
+diff_output_dir=${positional_args[2]:-rtl_diffs}
+
+# Convert diff_output_dir to absolute path early (needed for baseline clone location)
+if [[ "$diff_output_dir" != /* ]]; then
+    diff_output_dir="$(pwd)/$diff_output_dir"
+fi
 
 rtl_src_path="$rtl_path"/src
 integration_spec="$rtl_path"/"$integration_spec_relative_path"
 
-# Change to rtl_path to work with git
-pushd "$rtl_path" > /dev/null
+# Function to ensure baseline clone directory exists and is up to date
+ensure_baseline_clone() {
+    baseline_clone_dir="$diff_output_dir/$baseline_clone_subdir"
+    if [ ! -d "$baseline_clone_dir" ]; then
+        mkdir -p "$diff_output_dir"
+        echo "Cloning upstream repo for baseline comparison..."
+        echo "  Clone location: $baseline_clone_dir"
+        git clone --filter=blob:none "$upstream_repo_url" "$baseline_clone_dir"
+    else
+        echo "Updating baseline repo at: $baseline_clone_dir"
+        git -C "$baseline_clone_dir" fetch --tags
+    fi
+}
+
+# Function to validate tag exists in the cloned baseline
+validate_tag() {
+    local tag=$1
+    git -C "$baseline_clone_dir" rev-parse "$tag" >/dev/null 2>&1 && \
+    git -C "$baseline_clone_dir" tag -l | grep -q "^${tag}$"
+}
 
 # If baseline release is not provided, list available releases and prompt
 if [ -z "$baseline_release" ]; then
+    ensure_baseline_clone
     echo "Available release tags:"
-    git tag -l | sort -V
+    git -C "$baseline_clone_dir" tag -l | sort -V
     echo ""
     read -p "Enter baseline release tag (or press Enter to skip diff generation): " baseline_release
 
@@ -42,25 +98,19 @@ fi
 
 # If baseline release is specified, validate it's a valid tag
 if [ -n "$baseline_release" ]; then
-    if ! git rev-parse "$baseline_release" >/dev/null 2>&1; then
-        echo "Error: '$baseline_release' is not a valid git tag"
-        popd > /dev/null
+    ensure_baseline_clone
+    if ! validate_tag "$baseline_release"; then
+        echo "Error: '$baseline_release' is not a valid release tag."
+        echo "Available tags:"
+        git -C "$baseline_clone_dir" tag -l | sort -V
         exit -1
     fi
 
-    # Verify it's actually a tag (not just any commit)
-    if ! git tag -l | grep -q "^${baseline_release}$"; then
-        echo "Error: '$baseline_release' is not a release tag. Only release tags are allowed."
-        echo "Available tags:"
-        git tag -l | sort -V
-        popd > /dev/null
-        exit -1
-    fi
+    echo "Checking out baseline release: $baseline_release"
+    git -C "$baseline_clone_dir" checkout "$baseline_release" 2>/dev/null
 
     echo "Using baseline release: $baseline_release"
 fi
-
-popd > /dev/null
 
 echo "Generating RTL file list"
 
@@ -90,12 +140,12 @@ file_list=$(echo "$file_list" | sed "s@^/@@")
 
 # Filter out the files from the modify list
 echo "Filtering out files on exclude list"
-while read line; do
+for line in $exclude_list; do
 	# Print the files we are removing first for a sanity check
-	echo "  " $(echo "$file_list" | grep $line)
+	echo "  " $(echo "$file_list" | grep "$line")
 	# Update the list with the file removed
-	file_list=$(echo "$file_list" | grep -v $line)
-done < <(echo "$exclude_list")
+	file_list=$(echo "$file_list" | grep -v "$line")
+done
 
 # Filter out files exclusive to testing
 # Remove all UVMF files
@@ -113,9 +163,11 @@ file_list=$(echo "$file_list" | grep -v -i "/asserts/")
 # Function to generate diffs for a list of files
 # Parameters: file_list, output_dir
 # Sets global variables: diff_count, new_file_count, no_diff_count, unchanged_files
+# Per-file status is written to $output_dir/diff_details.log
 generate_diffs() {
     local file_list="$1"
     local output_dir="$2"
+    local log_file="$output_dir/diff_details.log"
 
     # Reset counters and unchanged files list
     diff_count=0
@@ -123,15 +175,23 @@ generate_diffs() {
     no_diff_count=0
     unchanged_files=""
 
-    # Create output directory
+    # Create output directory and clear any stale log from a previous run
     mkdir -p "$output_dir"
+    rm -f "$log_file"
 
-    # Must be in rtl_path for git operations
+    # Count total files to process for progress display
+    local total current=0
+    total=$(echo "$file_list" | grep -c . 2>/dev/null || true)
+    total=${total:-0}
+
     # Generate diff for each file in the list
-    while IFS= read -r file; do
+    echo "$file_list" | while IFS= read -r file; do
         if [ -z "$file" ]; then
             continue
         fi
+
+        current=$((current + 1))
+        printf "\r  Processing file %d of %d..." "$current" "$total"
 
         full_file_path="src/$file"
 
@@ -139,27 +199,35 @@ generate_diffs() {
         diff_filename=$(echo "$file" | tr '/' '_').diff
         diff_output_path="$output_dir/$diff_filename"
 
-        # Check if file exists in baseline
-        if git cat-file -e "$baseline_release:$full_file_path" 2>/dev/null; then
-            # Generate diff
-            diff_output=$(git diff "$baseline_release" -- "$full_file_path" 2>/dev/null)
+        local baseline_file="$baseline_clone_dir/$full_file_path"
+        local local_file="$rtl_path/$full_file_path"
+
+        if [ -f "$baseline_file" ]; then
+            # File exists in baseline, generate diff
+            # Use --strip-trailing-cr to ignore CRLF vs LF line ending differences
+            diff_output=$(diff -u --strip-trailing-cr "$baseline_file" "$local_file" 2>/dev/null || true)
 
             if [ -n "$diff_output" ]; then
                 echo "$diff_output" > "$diff_output_path"
-                echo "  [MODIFIED] $file"
-                diff_count=$((diff_count + 1))
+                echo "  [MODIFIED] $file" >> "$log_file"
             else
-                echo "  [NO CHANGE] $file"
-                no_diff_count=$((no_diff_count + 1))
-                unchanged_files="${unchanged_files}${file}"$'\n'
+                echo "  [NO CHANGE] $file" >> "$log_file"
             fi
         else
             # File is new (didn't exist in baseline)
-            echo "  [NEW FILE] $file"
-            git show "HEAD:$full_file_path" > "$diff_output_path" 2>/dev/null || echo "# New file: $file" > "$diff_output_path"
-            new_file_count=$((new_file_count + 1))
+            echo "  [NEW FILE] $file" >> "$log_file"
+            cat "$local_file" > "$diff_output_path" 2>/dev/null || echo "# New file: $file" > "$diff_output_path"
         fi
-    done < <(echo "$file_list")
+    done
+    printf "\n"
+
+    # Read stats from log file (needed because the while loop runs in a subshell)
+    if [ -f "$log_file" ]; then
+        diff_count=$(grep -c "\[MODIFIED\]" "$log_file" 2>/dev/null || true)
+        new_file_count=$(grep -c "\[NEW FILE\]" "$log_file" 2>/dev/null || true)
+        no_diff_count=$(grep -c "\[NO CHANGE\]" "$log_file" 2>/dev/null || true)
+        unchanged_files=$(grep "\[NO CHANGE\]" "$log_file" 2>/dev/null | sed 's/.*\[NO CHANGE\] //' || echo "")
+    fi
 
 }
 
@@ -168,24 +236,26 @@ if [ -n "$baseline_release" ]; then
     echo ""
     echo "Generating diffs against baseline release: $baseline_release"
 
-    # Convert diff_output_dir to absolute path
-    if [[ "$diff_output_dir" != /* ]]; then
-        diff_output_dir="$(pwd)/$diff_output_dir"
+    # Convert rtl_path to absolute path for local copy mode
+    if [[ "$rtl_path" != /* ]]; then
+        rtl_path="$(pwd)/$rtl_path"
+        rtl_src_path="$rtl_path/src"
     fi
-
-    # Change to rtl_path for git operations
-    pushd "$rtl_path" > /dev/null
 
     # Generate diffs for main file list
     generate_diffs "$file_list" "$diff_output_dir"
 
     # Check for deleted files (existed in baseline but not in current file list)
     deleted_file_count=0
-    # Get list of files from baseline release that match our criteria
-    baseline_files=$(git ls-tree -r --name-only "$baseline_release" | grep "^src/" | grep -E '\.(sv|svh|rdl|v|vh)$' | sed 's@^src/@@' || true)
+
+    baseline_files=$(find "$baseline_clone_dir/src" -type f \( -iname "*.sv" -o -iname "*.svh" -o -iname "*.rdl" -o -iname "*.v" -o -iname "*.vh" \) 2>/dev/null | sed "s@$baseline_clone_dir/src/@@" | sort || true)
 
     # Compare with current file list to find deleted files
-    while IFS= read -r baseline_file; do
+    # Use temp file to track count since pipe creates subshell
+    deleted_count_file=$(mktemp)
+    echo "0" > "$deleted_count_file"
+    
+    echo "$baseline_files" | while IFS= read -r baseline_file; do
         if [ -z "$baseline_file" ]; then
             continue
         fi
@@ -193,14 +263,15 @@ if [ -n "$baseline_release" ]; then
         # Check if this baseline file exists in current file list
         if ! echo "$file_list" | grep -qF "$baseline_file"; then
             # Check if file still exists in current working tree
-            if [ ! -f "src/$baseline_file" ]; then
-                echo "  [DELETED] $baseline_file"
-                deleted_file_count=$((deleted_file_count + 1))
+            if [ ! -f "$rtl_path/src/$baseline_file" ]; then
+                echo "  [DELETED] $baseline_file" >> "$diff_output_dir/diff_details.log"
+                echo "deleted" >> "$deleted_count_file"
             fi
         fi
-    done < <(echo "$baseline_files")
-
-    popd > /dev/null
+    done
+    
+    deleted_file_count=$(grep -c "deleted" "$deleted_count_file" 2>/dev/null || true)
+    rm -f "$deleted_count_file"
 
     echo ""
     echo "Diff generation complete:"
@@ -209,6 +280,7 @@ if [ -n "$baseline_release" ]; then
     echo "  Deleted files: $deleted_file_count"
     echo "  Unchanged files: $no_diff_count"
     echo "  Diff output directory: $diff_output_dir"
+    echo "  Details: $diff_output_dir/diff_details.log"
 
     # Generate diffs for expected-to-be-modified files (from integration spec table)
     echo ""
@@ -216,26 +288,29 @@ if [ -n "$baseline_release" ]; then
 
     expected_diff_dir="${diff_output_dir}_expected"
 
-    # Change to rtl_path for git operations
-    pushd "$rtl_path" > /dev/null
-
     # Check for missing expected-to-be-modified files first
-    expected_missing_count=0
-    expected_existing_list=""
-    while IFS= read -r expected_file; do
+    # Use temp files since pipe creates subshell
+    expected_stats_file=$(mktemp)
+    expected_list_file=$(mktemp)
+    
+    echo "$exclude_list" | while IFS= read -r expected_file; do
         if [ -z "$expected_file" ]; then
             continue
         fi
 
         # Check if file exists in current working tree
-        if [ ! -f "src/$expected_file" ]; then
+        if [ ! -f "$rtl_path/src/$expected_file" ]; then
             echo "  [MISSING] $expected_file"
-            expected_missing_count=$((expected_missing_count + 1))
+            echo "missing" >> "$expected_stats_file"
         else
             # Add to list of existing files to process
-            expected_existing_list="${expected_existing_list}${expected_file}"$'\n'
+            echo "$expected_file" >> "$expected_list_file"
         fi
-    done < <(echo "$exclude_list")
+    done
+    
+    expected_missing_count=$(grep -c "missing" "$expected_stats_file" 2>/dev/null || true)
+    expected_existing_list=$(cat "$expected_list_file" 2>/dev/null || echo "")
+    rm -f "$expected_stats_file" "$expected_list_file"
 
     # Generate diffs for expected-to-be-modified files that exist
     generate_diffs "$expected_existing_list" "$expected_diff_dir"
@@ -246,8 +321,6 @@ if [ -n "$baseline_release" ]; then
     expected_no_diff_count=$no_diff_count
     expected_unchanged_files="$unchanged_files"
 
-    popd > /dev/null
-
     echo ""
     echo "Expected-to-be-modified files diff generation complete:"
     echo "  Modified files: $expected_diff_count"
@@ -255,6 +328,7 @@ if [ -n "$baseline_release" ]; then
     echo "  Missing files: $expected_missing_count"
     echo "  Unchanged files: $expected_no_diff_count"
     echo "  Diff output directory: $expected_diff_dir"
+    echo "  Details: $expected_diff_dir/diff_details.log"
 
     # Warn if any expected-to-be-modified files are unchanged
     if [ $expected_no_diff_count -gt 0 ]; then
@@ -267,5 +341,12 @@ if [ -n "$baseline_release" ]; then
                 echo "  - $file"
             fi
         done
+    fi
+
+    # Clean up baseline clone directory if requested
+    if [ "$cleanup_baseline" = true ] && [ -n "$baseline_clone_dir" ] && [ -d "$baseline_clone_dir" ]; then
+        echo ""
+        echo "Cleaning up baseline clone directory: $baseline_clone_dir"
+        rm -rf "$baseline_clone_dir"
     fi
 fi
