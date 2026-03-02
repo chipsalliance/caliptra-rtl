@@ -55,8 +55,8 @@ typedef struct {
     uint32_t soc_ifc_notif;
     uint32_t sha512_acc_error;
     uint32_t sha512_acc_notif;
-    uint32_t abr_error;
-    uint32_t abr_notif;
+    uint32_t mldsa_error;
+    uint32_t mldsa_notif;
     uint32_t axi_dma_error;
     uint32_t axi_dma_notif;
 } caliptra_intr_received_s;
@@ -72,52 +72,55 @@ void init_interrupts(void);
 // These inline functions are used to insert event-specific functionality into the
 // otherwise generic ISR that gets laid down by the parameterized macro "nonstd_veer_isr"
 inline void service_doe_error_intr() {return;}
-inline void service_doe_notif_intr() {return;}
+inline void service_doe_notif_intr() {return;
+}
 
 inline void service_ecc_error_intr() {return;}
-inline void service_ecc_notif_intr() {return;}
+inline void service_ecc_notif_intr() {return;
+}
 
 inline void service_hmac_error_intr() {return;}
-inline void service_hmac_notif_intr() {return;}
+inline void service_hmac_notif_intr() {return;
+}
 
 inline void service_kv_error_intr() {return;}
 inline void service_kv_notif_intr() {return;}
-
 inline void service_sha512_error_intr() {return;}
-inline void service_sha512_notif_intr() {return;}
+inline void service_sha512_notif_intr() {return;
+}
 
 inline void service_sha256_error_intr() {return;}
-inline void service_sha256_notif_intr() {return;}
-
-inline void service_sha3_error_intr() {return;}
-inline void service_sha3_notif_intr() {return;}
+inline void service_sha256_notif_intr() {return;
+}
 
 inline void service_qspi_error_intr() {return;}
 inline void service_qspi_notif_intr() {return;}
-
 inline void service_uart_error_intr() {return;}
 inline void service_uart_notif_intr() {return;}
-
 inline void service_i3c_error_intr() {return;}
 inline void service_i3c_notif_intr() {return;}
 
-inline void service_soc_ifc_error_intr() {return;}
-inline void service_soc_ifc_notif_intr () {return;}
+inline void service_soc_ifc_error_intr() {return;
+}
+
+inline void service_soc_ifc_notif_intr () {return;
+}
 
 inline void service_sha512_acc_error_intr() {return;}
-inline void service_sha512_acc_notif_intr() {return;}
+inline void service_sha512_acc_notif_intr() {return;
+}
 
-inline void service_abr_error_intr() {return;}
-inline void service_abr_notif_intr() {
-    uint32_t * reg = (uint32_t *) (CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+inline void service_mldsa_error_intr() {return;}
+inline void service_mldsa_notif_intr() {
+    uint32_t * reg = (uint32_t *) (CLP_MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
-    if (sts & ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
-        *reg = ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
-        cptra_intr_rcv.abr_notif |= ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+    if (sts & MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
+        *reg = MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+        cptra_intr_rcv.mldsa_notif |= MLDSA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
     }
     if (sts == 0) {
-        VPRINTF(ERROR,"bad abr_notif_intr sts:%x\n", sts);
+        VPRINTF(ERROR,"bad mldsa_notif_intr sts:%x\n", sts);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }

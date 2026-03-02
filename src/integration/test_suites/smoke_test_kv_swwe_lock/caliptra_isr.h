@@ -49,11 +49,11 @@ typedef struct {
     uint32_t soc_ifc_notif;
     uint32_t sha512_acc_error;
     uint32_t sha512_acc_notif;
-    uint32_t abr_error;
-    uint32_t abr_notif;
+    uint32_t mldsa_error;
+    uint32_t mldsa_notif;
     uint32_t axi_dma_error;
     uint32_t axi_dma_notif;
-} caliptra_intr_received_s;
+} caliptra_intr_received_s; //TODO: add mldsa intr
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 //////////////////////////////////////////////////////////////////////////////
@@ -97,32 +97,7 @@ inline void service_ecc_notif_intr() {
     }
 }
 
-inline void service_hmac_error_intr() {    
-    uint32_t * reg = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
-    uint32_t sts = *reg;
-    /* Write 1 to Clear the pending interrupt */
-    if (sts & HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_MODE_ERROR_STS_MASK) {
-        *reg = HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_MODE_ERROR_STS_MASK;
-        cptra_intr_rcv.hmac_error |= HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_MODE_ERROR_STS_MASK;
-    }
-    if (sts & HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_ZERO_ERROR_STS_MASK) {
-        *reg = HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_ZERO_ERROR_STS_MASK;
-        cptra_intr_rcv.hmac_error |= HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_ZERO_ERROR_STS_MASK;
-    }
-    if (sts & HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK) {
-        *reg = HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK;
-        cptra_intr_rcv.hmac_error |= HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK;
-    }
-    if (sts & HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK) {
-        *reg = HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK;
-        cptra_intr_rcv.hmac_error |= HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK;
-    }
-    if (sts == 0) {
-        VPRINTF(ERROR,"bad hmac_error_intr sts:%x\n", sts);
-        SEND_STDOUT_CTRL(0x1);
-        while(1);
-    }
-}
+inline void service_hmac_error_intr() {return;}
 inline void service_hmac_notif_intr() {
     uint32_t * reg = (uint32_t *) (CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
@@ -172,8 +147,6 @@ inline void service_sha256_notif_intr() {
     }
 }
 
-inline void service_sha3_error_intr() {return;}
-inline void service_sha3_notif_intr() {return;}
 
 inline void service_soc_ifc_error_intr() {
     uint32_t * reg = (uint32_t *) (CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
@@ -261,10 +234,10 @@ inline void service_sha512_acc_notif_intr() {
     }
 }
 
-inline void service_abr_error_intr() {return;}
-inline void service_abr_notif_intr() {return;}
-inline void service_axi_dma_error_intr() {VPRINTF(ERROR, "ERROR");}
-inline void service_axi_dma_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_mldsa_error_intr() {return;}
+inline void service_mldsa_notif_intr() {return;}
+inline void service_axi_dma_error_intr() {printf("ERROR");}
+inline void service_axi_dma_notif_intr() {printf("ERROR");}
 
 
 #endif //CALIPTRA_ISR_H

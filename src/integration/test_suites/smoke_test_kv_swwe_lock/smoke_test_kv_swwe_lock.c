@@ -41,7 +41,6 @@
 #include <stdlib.h>
 #include "printf.h"
 #include "hmac.h"
-#include "caliptra_rtl_lib.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;

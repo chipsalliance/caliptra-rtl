@@ -44,7 +44,7 @@
 #include "riscv-csr.h"
 #include "printf.h"
 
-volatile char*    stdout           = (char *)STDOUT;
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t intr_count = 0;
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -66,14 +66,14 @@ void main() {
     // ------------------------------------------------------------------
     // Step 1: Inject a valid HMAC512 key into KV slot via TB
     //
-    // TB command 0xa9 injects hmac512_key_tb data into the slot with:
-    //   dest_valid = 8'b1  (bit 0 = HMAC_KEY read client allowed)
+    // TB commands 0xa9-0xaf inject hmac512_key_tb into the slot matched by
+    //   (cmd & 0x07) == slot_id, with:
+    //   dest_valid = 5'b1  (bit 0 = HMAC_KEY read client allowed)
     //   last_dword = 15    (16 dwords)
-    // Note: must use lsu_write_32 (not SEND_STDOUT_CTRL) because the slot
-    // number is encoded in bits [12:8] and SEND_STDOUT_CTRL truncates to char.
+    // Slot is encoded in the lower 3 bits: 0xa8 + slot = cmd byte.
     // ------------------------------------------------------------------
     VPRINTF(LOW, "[SETUP] Injecting HMAC512 key into KV slot %d via TB...\n", test_slot);
-    lsu_write_32((uintptr_t) stdout, (test_slot << 8) | 0xa9);
+    printf("%c", (uint8_t)(0xa8 + (test_slot & 0x7)));
 
     // ------------------------------------------------------------------
     // Step 2: Pre-read KEY_CTRL and prepare lock_use value
@@ -164,11 +164,11 @@ void main() {
     key_ctrl_readback = lsu_read_32(key_ctrl_addr);
 
     if (!(key_ctrl_readback & KV_REG_KEY_CTRL_0_LOCK_USE_MASK)) {
-        VPRINTF(ERROR, "[FAIL] lock_use was cleared by SW — not sticky!\n");
+        VPRINTF(ERROR, "[FAIL] lock_use was cleared by SW -- not sticky!\n");
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "[PASS] lock_use is sticky — cannot be cleared by SW\n");
+    VPRINTF(LOW, "[PASS] lock_use is sticky -- cannot be cleared by SW\n");
 
     // ------------------------------------------------------------------
     // Done
