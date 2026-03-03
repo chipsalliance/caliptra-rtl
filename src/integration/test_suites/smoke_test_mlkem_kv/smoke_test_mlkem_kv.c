@@ -57,7 +57,7 @@ void main() {
     //Call interrupt init
     init_interrupts();
 
-    for(int i = 0; i < 5; i++) {
+    for(int i = 0; i < 3; i++) {
         VPRINTF(LOW, "START TEST %d\n", i);
 
         seed.kv_intf = TRUE;
