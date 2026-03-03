@@ -2466,6 +2466,38 @@ The following tables describe read, write, and status values for key vault block
 | valid\[1\]    | Requested flow is done.                                                                                                                         |
 | error\[9:2\]  | SUCCESS - 0x0 - Key Vault flow was successful <br>KV_READ_FAIL - 0x1 - Key Vault Read flow failed <br>KV_WRITE_FAIL - 0x2 - Key Vault Write flow failed |
 
+### Key vault endianness and byte ordering
+
+The Key Vault stores each entry as an array of 16 DWORDs (32-bit words), indexed KV\[0\] through KV\[15\]. The KV read and write clients perform byte and DWORD ordering transformations so that data written by one engine can be correctly consumed by another.
+
+The KV write client has a configurable parameter, `KV_WRITE_SWAP_DWORDS`, that controls DWORD ordering when writing result data into a KV entry. When set to 1 (default), the write client reverses DWORD order so that KV\[0\] holds the most-significant DWORD: KV\[offset\] = data\[N−1−offset\]. When set to 0, DWORDs are stored sequentially: KV\[offset\] = data\[offset\]. The KV read client always reads sequentially from KV\[0\] through KV\[15\]; each engine applies its own register-level mapping.
+
+#### Per-engine endianness conventions
+
+| Engine | Native endianness | KV write SWAP\_DWORDS | KV read register mapping | Notes |
+| :----- | :---------------- | :-------------------- | :----------------------- | :---- |
+| HMAC-512 | Big-endian | 1 (default) | Sequential: BLOCK\[d\] = KV\[d\], KEY\[d\] = KV\[d\] | Block read supports PAD and HMAC auto-padding. |
+| SHA-512 | Big-endian | 1 (default) | Sequential: BLOCK\[d\] = KV\[d\] | Block read supports PAD. |
+| ECC (P-384) | Big-endian | 1 (default) | Sequential: PRIVKEY\[d\] = KV\[d\], SEED\[d\] = KV\[d\] | — |
+| AES | Little-endian | 0 | Byte swap per DWORD: key\_reg\[d\]\[b\] = KV\_data\[3−b\] | CTRL0.ENDIAN\_SWAP optionally swaps bytes in FW DATA\_IN/DATA\_OUT registers. |
+| ML-KEM | Little-endian | 0 | DWORD-reversed: SEED\_D\[d\] = KV\[N−1−d\], SEED\_Z\[i\] = KV\[2N−1−i\] | Shared key undergoes DWORD reversal in the ABR controller before the write client. |
+| ML-DSA | Little-endian | N/A (no KV write) | DWORD-reversed: SEED\[d\] = KV\[N−1−d\] | — |
+
+**Write path:** HMAC, SHA-512, and ECC produce results with the most-significant DWORD at the highest internal index; the write client reversal (SWAP\_DWORDS=1) places the most-significant DWORD at KV\[0\]. AES stores its 128-bit (4 DWORD) output sequentially. The ML-KEM shared key is pre-reversed in the ABR controller (`mlkem_sharedkey_data[d] = shared_key[SHAREDKEY_NUM_DWORDS-1-d]`), producing the same KV layout as the big-endian engines despite using SWAP\_DWORDS=0.
+
+**Read path:** Big-endian engines (HMAC, SHA-512, ECC) use sequential mapping; register\[d\] receives KV\[d\]. AES applies a per-DWORD byte swap to convert from big-endian to its little-endian internal format. ML-KEM and ML-DSA reverse the DWORD index (`SEED[d]` is written when `kv_read_offset == N-1-d`), producing a full byte reversal of the original data.
+
+#### Firmware byte-ordering rules
+
+When firmware passes data between engines via software registers (without using KV), it must perform the following transformations.
+
+| Source → Destination | Transformation | Example |
+| :--- | :--- | :--- |
+| Big-endian → big-endian | Copy DWORDs directly | HMAC tag → ECC seed |
+| Big-endian → little-endian | Reverse DWORD order: DEST\[i\] = SRC\[N−1−i\] | HMAC tag → ML-KEM seed |
+| Little-endian → AES | Reverse DWORDs and byte-swap each: AES\_KEY\[i\] = BSWAP32(src\[N−1−i\]) | ML-KEM shared key → AES key |
+| Little-endian → big-endian (non-AES) | Reverse DWORD order only: DEST\[i\] = src\[N−1−i\] | ML-KEM shared key → HMAC block |
+
 ### De-obfuscation engine
 
 To protect software intellectual property from different attacks and, particularly, for thwarting an array of supply chain threats, code obfuscation is employed. Hence, the de-obfuscation engine is implemented to decrypt the code.
