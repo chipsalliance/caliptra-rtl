@@ -2489,12 +2489,13 @@ The KV write client has a configurable parameter, `KV_WRITE_SWAP_DWORDS`, that c
 
 #### Firmware byte-ordering rules
 
-When firmware passes data between engines via software registers (without using KV), it must perform the following transformations.
+When firmware passes data between engines via software registers (without using KV), it must perform the following transformations. In this table, "big-endian" means the lowest-addressed register (index 0) holds the most-significant DWORD; "little-endian" means index 0 holds the least-significant DWORD. AES is little-endian but additionally byte-swaps each DWORD on the KV read path, so firmware must apply `BSWAP32` per DWORD when writing AES key registers directly.
 
 | Source → Destination | Transformation | Example |
 | :--- | :--- | :--- |
 | Big-endian → big-endian | Copy DWORDs directly | HMAC tag → ECC seed |
 | Big-endian → little-endian | Reverse DWORD order: DEST\[i\] = SRC\[N−1−i\] | HMAC tag → ML-KEM seed |
+| Big-endian → AES | Byte-swap each DWORD: AES\_KEY\[i\] = BSWAP32(src\[i\]) | HMAC tag → AES key |
 | Little-endian → AES | Reverse DWORDs and byte-swap each: AES\_KEY\[i\] = BSWAP32(src\[N−1−i\]) | ML-KEM shared key → AES key |
 | Little-endian → big-endian (non-AES) | Reverse DWORD order only: DEST\[i\] = src\[N−1−i\] | ML-KEM shared key → HMAC block |
 
