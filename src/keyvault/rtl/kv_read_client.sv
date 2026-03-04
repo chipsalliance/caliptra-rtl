@@ -56,6 +56,8 @@ logic [DATA_OFFSET_W:0] num_dwords;
 logic write_pad;
 logic [31:0] pad_data;
 
+logic kv_fsm_ready;
+
 assign num_dwords = DATA_WIDTH/32;
 
 kv_read_rule_check kv_read_rules
@@ -93,7 +95,7 @@ kv_read_fsm
     .write_pad(write_pad),
     .write_last(),
     .pad_data(pad_data),
-    .ready(kv_ready),
+    .ready(kv_fsm_ready),
     .done(read_done)
 );
 
@@ -119,6 +121,8 @@ always_ff @(posedge clk or negedge rst_b) begin
                       read_allow && ~kv_resp.error ? KV_SUCCESS : error_code;
     end
 end
+
+always_comb kv_ready = kv_fsm_ready & (error_code == KV_SUCCESS) & ~read_ctrl_reg.read_en;
 
 `CALIPTRA_ASSERT_KNOWN(READ_METRICS_X,  read_metrics, clk, !rst_b)
 
