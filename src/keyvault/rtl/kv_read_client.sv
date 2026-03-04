@@ -122,7 +122,7 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
 end
 
-always_comb kv_ready = kv_fsm_ready & (error_code == KV_SUCCESS) & ~read_ctrl_reg.read_en;
+always_comb kv_ready = kv_fsm_ready & (error_code == KV_SUCCESS) & ~validated_read_en;
 
 `CALIPTRA_ASSERT_KNOWN(READ_METRICS_X,  read_metrics, clk, !rst_b)
 
