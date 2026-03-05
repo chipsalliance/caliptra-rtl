@@ -65,9 +65,16 @@ void main() {
         seed.exp_kv_err = FALSE;
         msg.kv_intf = TRUE;
         msg.kv_id = xorshift32() % 24;
+        while (msg.kv_id == seed.kv_id) { //Ensure seed and msg KV IDs are different
+            msg.kv_id = xorshift32() % 24;
+        }
         msg.exp_kv_err = FALSE;
         shared_key.kv_intf = TRUE;
         shared_key.kv_id = xorshift32() % 24;
+        while (shared_key.kv_id == seed.kv_id || shared_key.kv_id == msg.kv_id) { //Ensure shared key KV ID is different from seed and msg KV IDs
+            shared_key.kv_id = xorshift32() % 24;
+        }
+
         shared_key.exp_kv_err = FALSE;
         for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
             shared_key.data[i] = 0;
