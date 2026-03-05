@@ -594,8 +594,20 @@ module caliptra_top_tb_services
 
     always_comb ecc_privkey_random = {ecc_test_vector.privkey, 128'h_00000000000000000000000000000000};
     always_comb mldsa_seed_random = change_endian({256'h0, mldsa_test_vector.seed});
-    always_comb mlkem_seed_random = {mlkem_test_vector.seed_z,mlkem_test_vector.seed_d};
-    always_comb mlkem_msg_random = {256'h0,mlkem_test_vector.msg};
+    always_comb begin //dwords swizzled
+        for (int i = 0; i < 8; i++) begin
+            mlkem_seed_random[i] = mlkem_test_vector.seed_d[7 - i];
+        end
+        for (int i = 0; i < 8; i++) begin
+            mlkem_seed_random[8 + i] = mlkem_test_vector.seed_z[7 - i];
+        end
+        for (int i = 0; i < 8; i++) begin
+            mlkem_msg_random[i] = mlkem_test_vector.msg[7 - i];
+            mlkem_msg_random[8 + i] = 32'h0;
+        end
+    end
+    //always_comb mlkem_seed_random = {mlkem_test_vector.seed_z,mlkem_test_vector.seed_d};
+    //always_comb mlkem_msg_random = {256'h0,mlkem_test_vector.msg};
 
     genvar dword_i, slot_id;
     generate
@@ -978,7 +990,7 @@ module caliptra_top_tb_services
             assign kv_entry_data[g_dword] = `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_ENTRY[kv_entry_id][g_dword].data.value;
             for (g_byte = 0; g_byte < 4; g_byte++) begin
             //KeyVault is stored big endian, so we need to reverse the order of bytes in the test vector
-            `CALIPTRA_ASSERT(KV_MLKEM_CHECK0, kv_entry_data[g_dword][g_byte*8 +: 8] == mlkem_test_vector.sharedkey[g_dword][31-(g_byte*8) -: 8], clk, mlkem_kv_check_dis);
+            `CALIPTRA_ASSERT(KV_MLKEM_CHECK0, kv_entry_data[g_dword][g_byte*8 +: 8] == mlkem_test_vector.sharedkey[8-1-g_dword][(g_byte*8) +: 8], clk, mlkem_kv_check_dis);
             end
         end
     endgenerate
