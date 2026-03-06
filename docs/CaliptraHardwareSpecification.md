@@ -1674,7 +1674,7 @@ The AES architecture inputs and outputs are described in the following table.
 | DATA_OUT                           | output          | Output block result of encryption or decryption. Stored in four 32-bit registers.       |
 | CTRL_SHADOWED.MANUAL_OPERATION     | input           | Configures the AES core to operation in manual mode.       |
 | CTRL_SHADOWED.PRNG_RESEED_RATE     | input           | Configures the rate of reseeding the internal PRNG used for masking.       |
-| CTRL_SHADOWED.SIDELOAD             | input           | When asserted, AES core will use the key from the keyvault interface.       |
+| CTRL_SHADOWED.SIDELOAD             | input           | When asserted, AES core will use the key from the key vault interface.       |
 | CTRL_SHADOWED.KEY_LEN              | input           | Configures the AES key length. Supports 128, 192, and 256-bit keys.      |
 | CTRL_SHADOWED.MODE                 | input           | Configures the AES block cipher mode.      |
 | CTRL_SHADOWED.OPERATION            | input           | Configures the AES core to operate in encryption or decryption modes.      |
@@ -2480,6 +2480,8 @@ While the crypto engine, key vault read, or key vault write blocks are active, t
 
 When a key is read from the key vault, the API register is locked and any result generated from the cryptographic block is not readable by firmware. The digest can only be sent to the key vault by appropriately programming the key vault write controls. After the cryptographic block completes its operation, the lock is cleared and the key is cleared from the API registers.
 
+Key vault read errors will prevent the crypto engine from accepting new commands. The engine will require zeroization in order to clear the error and resume normal operation.
+
 If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
 
 The following tables describe read, write, and status values for key vault blocks.
@@ -2616,7 +2618,7 @@ The following hardware and ROM/FW enhancements support the OCP L.O.C.K. (a.k.a. 
 ### Additional Registers, Straps, and Macros for OCP LOCK
 
 - **`SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`**  
-  A status/control bit used to enforce the new KeyVault (KV) rules required by OCP LOCK. Write-1-to-set, meaning that, once-enabled, OCP LOCK functionality will persist until the register is cleared by a cold reset. See the dedicated section below for details on the behaviors this register enables.
+  A status/control bit used to enforce the new key Vvult (KV) rules required by OCP LOCK. Write-1-to-set, meaning that, once-enabled, OCP LOCK functionality will persist until the register is cleared by a cold reset. See the dedicated section below for details on the behaviors this register enables.
 
 - **`ss_ocp_lock_en`** (constant-value input strap) with a corresponding bit in **`CPTRA_HW_CONFIG`** register named **`OCP_LOCK_MODE_en`**:
   - Enables Caliptra ROM to perform OCP LOCK operations (e.g., using DOE for HEK seed de-obfuscation, Key Release via AXI DMA).
@@ -2645,8 +2647,8 @@ Refer to the [Caliptra Integration Spec](https://github.com/chipsalliance/calipt
  - Once set, a value of 1 persists until the register is cleared by cold reset.
  
 **Enforcements/Effects**
-- Reserves **KeyVault slots 0–15** for *standard* use-cases.
-- Reserves **KeyVault slots 16–23** for *OCP LOCK* use-cases.
+- Reserves **key vault slots 0–15** for *standard* use-cases.
+- Reserves **key vault slots 16–23** for *OCP LOCK* use-cases.
   - Key Vault slot 16 (KV16) is reserved for holding the MDK
   - Key Vault slot 23 (KV23) is reserved for holding the MEK
 - Blocks interactions between *standard* slots and *LOCK* slots. This means that any crypto operation that uses a Key Vault input value (e.g. for Key, Block, Seed inputs) may not write the output to a Key Vault from a different region. E.g., When `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set, HMAC may not perform an operation that uses Key Vault slot 8 as BLOCK input and writes the output TAG to Key Vault slot 17.
@@ -2665,7 +2667,7 @@ Refer to the [Caliptra Integration Spec](https://github.com/chipsalliance/calipt
 
 ---
 
-### KeyVault Access Rules & Filtering (when `LOCK_IN_PROGRESS` is set)
+### Key Vault Access Rules & Filtering (when `LOCK_IN_PROGRESS` is set)
 
 - **KV23 (MEK destination)**: **write-restricted to AES only**.
 - **KV22 (HEK)**: **locked for writes until warm reset** (ROM requirement).
@@ -2705,7 +2707,7 @@ Caliptra's AXI DMA supports a hardware path to write **KV23 (MEK)** to the SoC v
 - Flush **AES ↔ KV** interface.
 
 **AES/KV/DMA Robustness**
-- **AES → KV write path:** The key can't be written to KeyVault unless key_size bytes are decrypted by AES.
+- **AES → KV write path:** The key can't be written to key vault unless key_size bytes are decrypted by AES.
 - Validate **DMA `key_size`**; **error** if `key_size > 512b`.
 - Avoid hangs when **`key_size` != KV read DWORD count**:
   - On KV reads, if `key_size` is **smaller** than the KV entry, **drop extra data** (do not push to FIFO).

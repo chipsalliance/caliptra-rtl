@@ -65,11 +65,15 @@ void main() {
     uint8_t hmac512_key_kv_id;
 
     doe_uds_dest_id = rand() % 23;
-    doe_fe_dest_id = rand() % 23;
-    doe_hek_dest_id = rand() % 23;
+    do {
+        doe_fe_dest_id = rand() % 23;
+    } while(doe_fe_dest_id == doe_uds_dest_id);
+    do {
+        doe_hek_dest_id = rand() % 23;
+    } while((doe_hek_dest_id == doe_uds_dest_id) || (doe_hek_dest_id == doe_fe_dest_id));
     do {
         hmac512_key_kv_id = rand() % 23;
-    } while(hmac512_key_kv_id == doe_hek_dest_id);
+    } while((hmac512_key_kv_id == doe_hek_dest_id) || (hmac512_key_kv_id == doe_uds_dest_id) || (hmac512_key_kv_id == doe_fe_dest_id));
     
 
     VPRINTF(LOW,"doe_uds_dest_id = 0x%x\n", doe_uds_dest_id);
