@@ -2432,6 +2432,8 @@ After programming the key vault read control, FW needs to query the associated k
 
 Similarly, after programming the key vault write control and initiating the cryptographic function that generates the key to be written, FW needs to query the associated key vault write status to confirm that the requested key was generated and written successfully.
 
+While the crypto engine, key vault read, or key vault write blocks are active, the read and write control registers are locked. After reading the status register and confirming that the operation was successful, the next key vault control can be programmed.
+
 When a key is read from the key vault, the API register is locked and any result generated from the cryptographic block is not readable by firmware. The digest can only be sent to the key vault by appropriately programming the key vault write controls. After the cryptographic block completes its operation, the lock is cleared and the key is cleared from the API registers.
 
 If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
