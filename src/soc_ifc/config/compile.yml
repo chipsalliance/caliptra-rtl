@@ -55,6 +55,8 @@ requires:
   - libs
   - axi_sub
   - axi_dma
+  # For the rst mux
+  - caliptra_prim
   # for beh_lib with rvecc_encode/decode
   - el2_veer_pkg
   - soc_ifc_pkg

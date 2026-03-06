@@ -231,8 +231,22 @@ end
 
 //protect resets during scan mode
 //utilize warm reset pin to drive reset during scan mode
-assign cptra_noncore_rst_b = scan_mode ? cptra_rst_b : cptra_noncore_rst_b_nq;
-assign cptra_uc_rst_b = scan_mode ? cptra_rst_b : cptra_uc_rst_b_nq;
+caliptra_prim_generic_rst_mux2 #(
+  .NoFpgaBufG(1'b0)
+) cptra_noncore_rst_mux (
+  .rst0_i(cptra_noncore_rst_b_nq),
+  .rst1_i(cptra_rst_b),
+  .sel_i (scan_mode),
+  .rst_o (cptra_noncore_rst_b)
+);
+caliptra_prim_generic_rst_mux2 #(
+  .NoFpgaBufG(1'b0)
+) cptra_uc_rst_mux (
+  .rst0_i(cptra_uc_rst_b_nq),
+  .rst1_i(cptra_rst_b),
+  .sel_i (scan_mode),
+  .rst_o (cptra_uc_rst_b)
+);
 
 //uC reset generation
 always_ff @(posedge clk or negedge cptra_rst_b) begin
