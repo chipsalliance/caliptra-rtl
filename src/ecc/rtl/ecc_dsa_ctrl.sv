@@ -495,12 +495,12 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o;
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o;
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = !kv_key_data_present && !busy_o;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = 0;
 
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o;
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o;
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = !kv_seed_data_present && !busy_o;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = 0;
 
     // KV write control must be written before ECC core operation begins, even though
     // output isn't written to KV until the end of the operation.
@@ -516,7 +516,7 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = !busy_o;
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = !busy_o;
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = 0;
 
     //keyvault control reg macros for assigning to struct
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)

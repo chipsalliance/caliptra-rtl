@@ -336,12 +336,12 @@ end
 always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.swwe         = !kv_key_data_present && !busy_o;
 always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_entry.swwe      = !kv_key_data_present && !busy_o;
 always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = 0; //NA for keyvault
-always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.rsvd.swwe            = !kv_key_data_present && !busy_o;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.rsvd.swwe            = 0;
 
 always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe         = !kv_block_data_present && !busy_o;
 always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe      = !kv_block_data_present && !busy_o;
 always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.swwe = 0; //NA for keyvault
-always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe            = !kv_block_data_present && !busy_o;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe            = 0;
 
 // KV write control must be written before HMAC core operation begins, even though
 // output isn't written to KV until the end of the operation.
@@ -357,7 +357,7 @@ always_comb hwif_in.HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe    = !busy_o;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = !busy_o;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = !busy_o;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.dma_data_dest_valid.swwe   = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe                  = !busy_o;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe                  = 0;
 
 //keyvault control reg macros for assigning to struct
 `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_key_read_ctrl_reg, HMAC512_KV_RD_KEY_CTRL)
