@@ -170,7 +170,7 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
     }
 
     // Verify engine did not start after KV read error
-    if ((key.exp_kv_err == TRUE) || (block.exp_kv_err == TRUE)) {
+    if (((key.kv_intf == TRUE) && (key.exp_kv_err == TRUE)) || ((block.kv_intf == TRUE) && (block.exp_kv_err == TRUE))) {
         if ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0) {
             VPRINTF(ERROR, "HMAC engine started after KV read error\n");
             SEND_STDOUT_CTRL(fail_cmd);
@@ -189,26 +189,29 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
-    if (tag.kv_intf){
-        // wait for HMAC process - check dest done
-        VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
-        while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
-    }
-    else {
-        VPRINTF(LOW, "Load TAG data from HMAC\n");
-        reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
-        offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_11) {
-            hmac_tag[offset] = *reg_ptr;
-            if (hmac_tag[offset] != tag.data[offset]) {
-                VPRINTF(LOW, "At offset [%d], hmac_tag data mismatch!\n", offset);
-                VPRINTF(LOW, "Actual   data: 0x%x\n", hmac_tag[offset]);
-                VPRINTF(LOW, "Expected data: 0x%x\n", tag.data[offset]);
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
+    // Check results if no kv error expected
+    if ((key.exp_kv_err == FALSE) && (block.exp_kv_err == FALSE)) {
+        if (tag.kv_intf){
+            // wait for HMAC process - check dest done
+            VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
+            while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
+        }
+        else {
+            VPRINTF(LOW, "Load TAG data from HMAC\n");
+            reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
+            offset = 0;
+            while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_11) {
+                hmac_tag[offset] = *reg_ptr;
+                if (hmac_tag[offset] != tag.data[offset]) {
+                    VPRINTF(LOW, "At offset [%d], hmac_tag data mismatch!\n", offset);
+                    VPRINTF(LOW, "Actual   data: 0x%x\n", hmac_tag[offset]);
+                    VPRINTF(LOW, "Expected data: 0x%x\n", tag.data[offset]);
+                    SEND_STDOUT_CTRL(fail_cmd);
+                    while(1);
+                }
+                reg_ptr++;
+                offset++;
             }
-            reg_ptr++;
-            offset++;
         }
     }
 }
@@ -340,7 +343,7 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
     }
 
     // Verify engine did not start after KV read error
-    if ((key.exp_kv_err == TRUE) || (block.exp_kv_err == TRUE)) {
+    if (((key.kv_intf == TRUE) && (key.exp_kv_err == TRUE)) || ((block.kv_intf == TRUE) && (block.exp_kv_err == TRUE))) {
         if ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0) {
             VPRINTF(ERROR, "HMAC engine started after KV read error\n");
             SEND_STDOUT_CTRL(fail_cmd);
@@ -358,27 +361,30 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
-    if (tag.kv_intf){
-        // wait for HMAC process - check dest done
-        VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
-        while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
-    }
-    else {
-        // Load TAG data from HMAC
-        VPRINTF(LOW, "Load TAG data from HMAC\n");
-        reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
-        offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {
-            hmac_tag[offset] = *reg_ptr;
-            if (hmac_tag[offset] != tag.data[offset]) {
-                VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", hmac_tag[offset]);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", tag.data[offset]);
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
+    // Check results if no kv error expected
+    if ((key.exp_kv_err == FALSE) && (block.exp_kv_err == FALSE)) {
+        if (tag.kv_intf){
+            // wait for HMAC process - check dest done
+            VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
+            while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
+        }
+        else {
+            // Load TAG data from HMAC
+            VPRINTF(LOW, "Load TAG data from HMAC\n");
+            reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
+            offset = 0;
+            while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {
+                hmac_tag[offset] = *reg_ptr;
+                if (hmac_tag[offset] != tag.data[offset]) {
+                    VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
+                    VPRINTF(ERROR, "Actual   data: 0x%x\n", hmac_tag[offset]);
+                    VPRINTF(ERROR, "Expected data: 0x%x\n", tag.data[offset]);
+                    SEND_STDOUT_CTRL(fail_cmd);
+                    while(1);
+                }
+                reg_ptr++;
+                offset++;
             }
-            reg_ptr++;
-            offset++;
         }
     }
 }
