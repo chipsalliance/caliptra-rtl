@@ -7287,8 +7287,8 @@ module soc_ifc_reg (
     // Write response
     //--------------------------------------------------------------------------
     assign cpuif_wr_ack = decoded_req & decoded_req_is_wr;
-    // Writes are always granted with no error response
-    assign cpuif_wr_err = '0;
+    // Assert write error for register hole accesses (address does not map to any register)
+    assign cpuif_wr_err = decoded_req & decoded_req_is_wr & ~(|decoded_reg_strb);
 
     //--------------------------------------------------------------------------
     // Readback
@@ -7620,7 +7620,7 @@ module soc_ifc_reg (
     always_comb begin
         automatic logic [31:0] readback_data_var;
         readback_done = decoded_req & ~decoded_req_is_wr;
-        readback_err = '0;
+        readback_err = decoded_req & ~decoded_req_is_wr & ~(|decoded_reg_strb);
         readback_data_var = '0;
         for(int i=0; i<251; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
