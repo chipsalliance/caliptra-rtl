@@ -358,8 +358,9 @@ module caliptra_top_tb_services
     //         8'h9e        - Inject invalid pubkey_y into ECC
     //         8'h9f        - Inject AES key into KV
     //         8'ha0        - Inject HMAC384_KEY to kv_key register
-    //         8'ha1: 8'ha7 - Unused
-    //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
+    //         8'ha1        - Inject zero as MLDSA_SEED/MLKEM_MSG to kv_key register (8 dwords)
+    //         8'ha2: 8'ha7 - Unused
+    //         8'ha8        - Inject zero as HMAC_KEY/MLKEM_SEED to kv_key register (16 dwords)
     //         8'ha9        - Inject HMAC512_KEY to kv_key register
     //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
     //         8'hab        - Inject MLDSA SEED to kv_key22/23 register
@@ -691,11 +692,24 @@ module caliptra_top_tb_services
                         inject_hmac_key <= 1'b1;
                         release_kv_inject_flags <= '0;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1;
+                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b0100_0001; // HMAC + MLKEM_SEED (both 16 dwords)
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '0;
+                    end
+                    //inject zero MLDSA seed / MLKEM msg to kv key reg (both 8 dwords)
+                    else if(((WriteData[7:0]) == 8'ha1) && mailbox_write) begin
+                        inject_mldsa_seed <= 1'b1;
+                        release_kv_inject_flags <= '0;
+                        if (slot_id == KV_ENTRY_FOR_MLDSA_SIGNING) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1000_0100; // MLDSA_SEED + MLKEM_MSG (both 8 dwords)
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '0;
+                        end
                     end
                     //inject valid hmac_key dest and hmac384_key value to key reg
                     else if((WriteData[7:0] == 8'ha0) && mailbox_write) begin
