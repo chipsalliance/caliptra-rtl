@@ -2574,7 +2574,7 @@ The following hardware and ROM/FW enhancements support the OCP L.O.C.K. (a.k.a. 
 ### Additional Registers, Straps, and Macros for OCP LOCK
 
 - **`SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`**  
-  A status/control bit used to enforce the new key Vvult (KV) rules required by OCP LOCK. Write-1-to-set, meaning that, once-enabled, OCP LOCK functionality will persist until the register is cleared by a cold reset. See the dedicated section below for details on the behaviors this register enables.
+  A status/control bit used to enforce the new key vault (KV) rules required by OCP LOCK. Write-1-to-set, meaning that, once-enabled, OCP LOCK functionality will persist until the register is cleared by a cold reset. See the dedicated section below for details on the behaviors this register enables.
 
 - **`ss_ocp_lock_en`** (constant-value input strap) with a corresponding bit in **`CPTRA_HW_CONFIG`** register named **`OCP_LOCK_MODE_en`**:
   - Enables Caliptra ROM to perform OCP LOCK operations (e.g., using DOE for HEK seed de-obfuscation, Key Release via AXI DMA).
