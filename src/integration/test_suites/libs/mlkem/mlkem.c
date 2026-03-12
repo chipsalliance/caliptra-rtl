@@ -110,6 +110,16 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     VPRINTF(LOW, "[MLKEM KeyGen] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
+    // Verify engine is not ready after KV read error
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     VPRINTF(LOW, "[MLKEM KeyGen] Sending command\n");
     // Enable MLKEM KEYGEN flow
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
@@ -117,16 +127,6 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     // Try to program MLKEM_SEED Read
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((!seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
-
-    // Verify engine did not start after KV read error
-    if (seed.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0) {
-            VPRINTF(ERROR, "MLKEM engine started after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
 
     // wait for MLKEM KEYGEN process to be done
     wait_for_mlkem_intr();
@@ -259,6 +259,16 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     VPRINTF(LOW, "[MLKEM KeyGen] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
+    // Verify engine is not ready after KV read error
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     VPRINTF(LOW, "[MLKEM KeyGen] Sending command\n");
     // Enable MLKEM KEYGEN flow
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
@@ -266,16 +276,6 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     // Try to program MLKEM_SEED Read
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((!seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
-
-    // Verify engine did not start after KV read error
-    if (seed.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0) {
-            VPRINTF(ERROR, "MLKEM engine started after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
 
     // wait for MLKEM KEYGEN process to be done
     wait_for_mlkem_intr();
@@ -394,6 +394,16 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
     VPRINTF(LOW, "[MLKEM Encaps] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
+   // Verify engine is not ready after KV read error
+    if (msg.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // Enable MLKEM ENCAPS flow
     VPRINTF(LOW, "[MLKEM Encaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
@@ -401,16 +411,7 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
     // Try to program keyvault msg read
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
                                                     ((!msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
-    // Verify engine did not start after KV read error
-    if (msg.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0) {
-            VPRINTF(ERROR, "MLKEM engine started after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
-
+ 
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
 
@@ -587,6 +588,16 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
 
+    // Verify engine did is not ready after KV read error
+    if (msg.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // Enable MLKEM ENCAPS flow
     VPRINTF(LOW, "[MLKEM Encaps] Sending Command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
@@ -594,15 +605,6 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
     // Try to program keyvault msg read
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
                                                     ((!msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
-    // Verify engine did not start after KV read error
-    if (msg.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0) {
-            VPRINTF(ERROR, "MLKEM engine started after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
 
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
@@ -957,6 +959,16 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
     
+    // Verify engine is not ready after KV read error
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // Enable MLKEM KEYGEN DECAPS flow
     VPRINTF(LOW, "[MLKEM KeyGen Decaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN_DECAPS);
@@ -964,16 +976,6 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
     // Try to program MLKEM_SEED Read 
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((!seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
-
-    // Verify engine did not start after KV read error
-    if (seed.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0) {
-            VPRINTF(ERROR, "MLKEM engine started after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
 
     // wait for MLKEM DECAPS process to be done
     wait_for_mlkem_intr();
@@ -1121,6 +1123,16 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
 
+    // Verify engine is not ready after KV read error
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // Enable MLKEM KEYGEN DECAPS flow
     VPRINTF(LOW, "[MLKEM KeyGen Decaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN_DECAPS);
@@ -1128,16 +1140,6 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
     // Try to program MLKEM_SEED Read 
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
-
-    // Verify engine did not start after KV read error
-    if (seed.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0) {
-            VPRINTF(ERROR, "MLKEM engine started after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
 
     // wait for MLKEM DECAPS process to be done
     wait_for_mlkem_intr();
