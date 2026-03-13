@@ -54,6 +54,7 @@
 `define MLDSA_RAMS_PATH     `SERVICES_PATH.mldsa_mem_top_inst
 `define MLDSA_TOP_PATH      `CPTRA_TOP_PATH.mldsa
 
+
 `define SVA_RDC_CLK `CPTRA_TOP_PATH.rdc_clk_cg
 `define CPTRA_FW_UPD_RST_WINDOW `SOC_IFC_TOP_PATH.i_soc_ifc_boot_fsm.fw_update_rst_window
 `ifdef UVMF_CALIPTRA_TOP
@@ -203,7 +204,7 @@ module caliptra_top_sva
       if (dword < HMAC_KEY_NUM_DWORDS) begin
         kv_hmac_key_r_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`HMAC_PATH.kv_key_write_en) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value == `HMAC_PATH.key_reg[dword])
+                                              $rose(`HMAC_PATH.kv_key_done) && (`HMAC_PATH.kv_key_error == 0) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value == `HMAC_PATH.key_reg[dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 key mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_read[0].read_entry][dword].data.value, `HMAC_PATH.key_reg[dword]);
       end
@@ -937,5 +938,82 @@ module caliptra_top_sva
                                       `HMAC_DRBG_PATH.valid |-> (`HMAC_DRBG_PATH.drbg < `HMAC_DRBG_PATH.HMAC_DRBG_PRIME)
                                       )
                           else $display("SVA ERROR: drbg >= HMAC_DRBG_PRIME when valid is high"); 
+
+  // ===========================================================================
+  // KV SWWE Lock Assertions
+  // Verify that KV write control registers (write_entry, dest_valid) are stable
+  // while the crypto engine is busy. The SWWE uses !busy_o to prevent FW from
+  // redirecting key material mid-transfer.
+  // ===========================================================================
+
+  // What: HMAC KV WR_CTRL write_entry must not change while busy
+  // Why: Prevents partial-key attack by redirecting KV write to a different slot
+  // Note: Guard with $past(busy_o) to skip the first cycle busy_o rises (FW may have just configured it)
+  HmacKvWrEntryStableWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`HMAC_PATH.busy_o) && `HMAC_PATH.busy_o |->
+      $stable(`HMAC_PATH.kv_write_ctrl_reg.write_entry))
+  else $display("SVA ERROR: HMAC KV write_entry changed while busy_o=1");
+
+  // What: HMAC KV WR_CTRL write_en must not be SW-re-enabled while busy
+  // Why: Prevents re-triggering KV write mid-operation
+  // Note: write_en.hwclr = ~kv_write_ready legitimately clears 1→0; only 0→1 is an attack
+  HmacKvWrEnNoRiseWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`HMAC_PATH.busy_o) && `HMAC_PATH.busy_o |->
+      !$rose(`HMAC_PATH.kv_write_ctrl_reg.write_en))
+  else $display("SVA ERROR: HMAC KV write_en rose while busy_o=1");
+
+  // What: ECC KV WR_PKEY_CTRL write_entry must not change while busy
+  // Why: Prevents private key slot redirection during ECC operation
+  // Note: Guard with $past(busy_o) to skip first cycle after reset and busy_o rise edge
+  EccKvWrEntryStableWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`ECC_PATH.busy_o) && `ECC_PATH.busy_o |->
+      $stable(`ECC_PATH.kv_write_ctrl_reg.write_entry))
+  else $display("SVA ERROR: ECC KV write_entry changed while busy_o=1");
+
+  // What: ECC KV WR_PKEY_CTRL write_en must not be SW-re-enabled while busy
+  // Why: Prevents re-triggering KV write mid-ECC operation
+  // Note: write_en.hwclr = ~kv_write_ready legitimately clears 1→0; only 0→1 is an attack
+  EccKvWrEnNoRiseWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(`ECC_PATH.busy_o) && `ECC_PATH.busy_o |->
+      !$rose(`ECC_PATH.kv_write_ctrl_reg.write_en))
+  else $display("SVA ERROR: ECC KV write_en rose while busy_o=1");
+
+  // What: SHA512 KV WR_CTRL write_entry must not change while not (ready && kv_dest_ready && !gen_hash_ip)
+  // Why: SHA512 uses a combined condition (ready_reg && kv_dest_ready && !gen_hash_ip) for SWWE
+  // Note: Guard with $past to skip first cycle after reset
+  Sha512KvWrEntryStableWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(~`SHA512_PATH.ready_reg || ~`SHA512_PATH.kv_dest_ready || `SHA512_PATH.gen_hash_ip) &&
+      (~`SHA512_PATH.ready_reg || ~`SHA512_PATH.kv_dest_ready || `SHA512_PATH.gen_hash_ip) |->
+      $stable(`SHA512_PATH.kv_write_ctrl_reg.write_entry))
+  else $display("SVA ERROR: SHA512 KV write_entry changed while engine busy");
+
+  // What: SHA512 KV WR_CTRL write_en must not be SW-re-enabled while busy
+  // Note: write_en.hwclr = ~kv_dest_ready legitimately clears 1→0; only 0→1 is an attack
+  Sha512KvWrEnNoRiseWhileBusy_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $past(~`SHA512_PATH.ready_reg || ~`SHA512_PATH.kv_dest_ready || `SHA512_PATH.gen_hash_ip) &&
+      (~`SHA512_PATH.ready_reg || ~`SHA512_PATH.kv_dest_ready || `SHA512_PATH.gen_hash_ip) |->
+      !$rose(`SHA512_PATH.kv_write_ctrl_reg.write_en))
+  else $display("SVA ERROR: SHA512 KV write_en rose while engine busy");
+
+  // ===========================================================================
+  // KV SWWE Lock Cover Properties
+  // Verify that the SWWE lock scenarios are exercised in simulation.
+  // ===========================================================================
+
+  // Cover: HMAC KV WR_CTRL write attempted while busy
+  HmacKvWrCtrlWriteWhileBusy_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.busy_o && `HMAC_REG_PATH.decoded_reg_strb.HMAC512_KV_WR_CTRL);
+
+  // Cover: ECC KV WR_PKEY_CTRL write attempted while busy
+  EccKvWrCtrlWriteWhileBusy_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ECC_PATH.busy_o && `ECC_REG_PATH.decoded_reg_strb.ecc_kv_wr_pkey_ctrl);
 
 endmodule

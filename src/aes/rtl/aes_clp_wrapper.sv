@@ -258,10 +258,10 @@ end
 logic status_idle;
 assign status_idle = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
 
-always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_en.swwe         = status_idle && kv_key_ready;
-always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_entry.swwe      = status_idle && kv_key_ready;
-always_comb hwif_in.AES_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = status_idle && kv_key_ready;
-always_comb hwif_in.AES_KV_RD_KEY_CTRL.rsvd.swwe            = status_idle && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_en.swwe         = !busy_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_entry.swwe      = !busy_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = 0; //NA for key vault
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.rsvd.swwe            = !busy_o && kv_key_ready;
 
 `CALIPTRA_ASSERT_NEVER(AES_KV_OP_NOT_IDLE, kv_key_read_ctrl_reg.read_en & !status_idle , clk, !reset_n)
 
