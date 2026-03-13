@@ -1630,7 +1630,7 @@ The AES architecture inputs and outputs are described in the following table.
 | DATA_OUT                           | output          | Output block result of encryption or decryption. Stored in four 32-bit registers.       |
 | CTRL_SHADOWED.MANUAL_OPERATION     | input           | Configures the AES core to operation in manual mode.       |
 | CTRL_SHADOWED.PRNG_RESEED_RATE     | input           | Configures the rate of reseeding the internal PRNG used for masking.       |
-| CTRL_SHADOWED.SIDELOAD             | input           | When asserted, AES core will use the key from the keyvault interface.       |
+| CTRL_SHADOWED.SIDELOAD             | input           | When asserted, AES core will use the key from the key vault interface.       |
 | CTRL_SHADOWED.KEY_LEN              | input           | Configures the AES key length. Supports 128, 192, and 256-bit keys.      |
 | CTRL_SHADOWED.MODE                 | input           | Configures the AES block cipher mode.      |
 | CTRL_SHADOWED.OPERATION            | input           | Configures the AES core to operate in encryption or decryption modes.      |
@@ -2432,7 +2432,11 @@ After programming the key vault read control, FW needs to query the associated k
 
 Similarly, after programming the key vault write control and initiating the cryptographic function that generates the key to be written, FW needs to query the associated key vault write status to confirm that the requested key was generated and written successfully.
 
+While the crypto engine, key vault read, or key vault write blocks are active, the read and write control registers are locked. After reading the status register and confirming that the operation was successful, the next key vault control can be programmed.
+
 When a key is read from the key vault, the API register is locked and any result generated from the cryptographic block is not readable by firmware. The digest can only be sent to the key vault by appropriately programming the key vault write controls. After the cryptographic block completes its operation, the lock is cleared and the key is cleared from the API registers.
+
+Key vault read errors will prevent the crypto engine from accepting new commands. The engine will require zeroization in order to clear the error and resume normal operation.
 
 If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
 
@@ -2465,6 +2469,39 @@ The following tables describe read, write, and status values for key vault block
 | ready\[0\]    | Key vault control is idle and ready for a command.                                                                                              |
 | valid\[1\]    | Requested flow is done.                                                                                                                         |
 | error\[9:2\]  | SUCCESS - 0x0 - Key Vault flow was successful <br>KV_READ_FAIL - 0x1 - Key Vault Read flow failed <br>KV_WRITE_FAIL - 0x2 - Key Vault Write flow failed |
+
+### Key vault endianness and byte ordering
+
+The Key Vault stores each entry as an array of 16 DWORDs (32-bit words), indexed KV\[0\] through KV\[15\]. The KV read and write clients perform byte and DWORD ordering transformations so that data written by one engine can be correctly consumed by another.
+
+The KV write client has a configurable parameter, `KV_WRITE_SWAP_DWORDS`, that controls DWORD ordering when writing result data into a KV entry. When set to 1 (default), the write client reverses DWORD order so that KV\[0\] holds the most-significant DWORD: KV\[offset\] = data\[N−1−offset\]. When set to 0, DWORDs are stored sequentially: KV\[offset\] = data\[offset\]. The KV read client always reads sequentially from KV\[0\] through KV\[15\]; each engine applies its own register-level mapping.
+
+#### Per-engine endianness conventions
+
+| Engine | Native endianness | KV write SWAP\_DWORDS | KV read register mapping | Notes |
+| :----- | :---------------- | :-------------------- | :----------------------- | :---- |
+| HMAC-512 | Big-endian | 1 (default) | Sequential: BLOCK\[d\] = KV\[d\], KEY\[d\] = KV\[d\] | Block read supports PAD and HMAC auto-padding. |
+| SHA-512 | Big-endian | 1 (default) | Sequential: BLOCK\[d\] = KV\[d\] | Block read supports PAD. |
+| ECC (P-384) | Big-endian | 1 (default) | Sequential: PRIVKEY\[d\] = KV\[d\], SEED\[d\] = KV\[d\] | — |
+| AES | Little-endian | 0 | Byte swap per DWORD: key\_reg\[d\]\[b\] = KV\_data\[3−b\] | CTRL0.ENDIAN\_SWAP optionally swaps bytes in FW DATA\_IN/DATA\_OUT registers. |
+| ML-KEM | Little-endian | 0 | DWORD-reversed: SEED\_D\[d\] = KV\[N−1−d\], SEED\_Z\[i\] = KV\[2N−1−i\] | Shared key undergoes DWORD reversal in the ABR controller before the write client. |
+| ML-DSA | Little-endian | N/A (no KV write) | DWORD-reversed: SEED\[d\] = KV\[N−1−d\] | — |
+
+**Write path:** HMAC, SHA-512, and ECC produce results with the most-significant DWORD at the highest internal index; the write client reversal (SWAP\_DWORDS=1) places the most-significant DWORD at KV\[0\]. AES stores its 128-bit (4 DWORD) output sequentially. The ML-KEM shared key is pre-reversed in the ABR controller (`mlkem_sharedkey_data[d] = shared_key[SHAREDKEY_NUM_DWORDS-1-d]`), producing the same KV layout as the big-endian engines despite using SWAP\_DWORDS=0.
+
+**Read path:** Big-endian engines (HMAC, SHA-512, ECC) use sequential mapping; register\[d\] receives KV\[d\]. AES applies a per-DWORD byte swap to convert from big-endian to its little-endian internal format. ML-KEM and ML-DSA reverse the DWORD index (`SEED[d]` is written when `kv_read_offset == N-1-d`), producing a full byte reversal of the original data.
+
+#### Firmware byte-ordering rules
+
+When firmware passes data between engines via software registers (without using KV), it must perform the following transformations. In this table, "big-endian" means the lowest-addressed register (index 0) holds the most-significant DWORD; "little-endian" means index 0 holds the least-significant DWORD. AES is little-endian but additionally byte-swaps each DWORD on the KV read path, so firmware must apply `BSWAP32` per DWORD when writing AES key registers directly.
+
+| Source → Destination | Transformation | Example |
+| :--- | :--- | :--- |
+| Big-endian → big-endian | Copy DWORDs directly | HMAC tag → ECC seed |
+| Big-endian → little-endian | Reverse DWORD order: DEST\[i\] = SRC\[N−1−i\] | HMAC tag → ML-KEM seed |
+| Big-endian → AES | Byte-swap each DWORD: AES\_KEY\[i\] = BSWAP32(src\[i\]) | HMAC tag → AES key |
+| Little-endian → AES | Reverse DWORDs and byte-swap each: AES\_KEY\[i\] = BSWAP32(src\[N−1−i\]) | ML-KEM shared key → AES key |
+| Little-endian → big-endian (non-AES) | Reverse DWORD order only: DEST\[i\] = src\[N−1−i\] | ML-KEM shared key → HMAC block |
 
 ### De-obfuscation engine
 
@@ -2537,7 +2574,7 @@ The following hardware and ROM/FW enhancements support the OCP L.O.C.K. (a.k.a. 
 ### Additional Registers, Straps, and Macros for OCP LOCK
 
 - **`SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS`**  
-  A status/control bit used to enforce the new KeyVault (KV) rules required by OCP LOCK. Write-1-to-set, meaning that, once-enabled, OCP LOCK functionality will persist until the register is cleared by a cold reset. See the dedicated section below for details on the behaviors this register enables.
+  A status/control bit used to enforce the new key vault (KV) rules required by OCP LOCK. Write-1-to-set, meaning that, once-enabled, OCP LOCK functionality will persist until the register is cleared by a cold reset. See the dedicated section below for details on the behaviors this register enables.
 
 - **`ss_ocp_lock_en`** (constant-value input strap) with a corresponding bit in **`CPTRA_HW_CONFIG`** register named **`OCP_LOCK_MODE_en`**:
   - Enables Caliptra ROM to perform OCP LOCK operations (e.g., using DOE for HEK seed de-obfuscation, Key Release via AXI DMA).
@@ -2566,8 +2603,8 @@ Refer to the [Caliptra Integration Spec](https://github.com/chipsalliance/calipt
  - Once set, a value of 1 persists until the register is cleared by cold reset.
  
 **Enforcements/Effects**
-- Reserves **KeyVault slots 0–15** for *standard* use-cases.
-- Reserves **KeyVault slots 16–23** for *OCP LOCK* use-cases.
+- Reserves **key vault slots 0–15** for *standard* use-cases.
+- Reserves **key vault slots 16–23** for *OCP LOCK* use-cases.
   - Key Vault slot 16 (KV16) is reserved for holding the MDK
   - Key Vault slot 23 (KV23) is reserved for holding the MEK
 - Blocks interactions between *standard* slots and *LOCK* slots. This means that any crypto operation that uses a Key Vault input value (e.g. for Key, Block, Seed inputs) may not write the output to a Key Vault from a different region. E.g., When `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set, HMAC may not perform an operation that uses Key Vault slot 8 as BLOCK input and writes the output TAG to Key Vault slot 17.
@@ -2586,7 +2623,7 @@ Refer to the [Caliptra Integration Spec](https://github.com/chipsalliance/calipt
 
 ---
 
-### KeyVault Access Rules & Filtering (when `LOCK_IN_PROGRESS` is set)
+### Key Vault Access Rules & Filtering (when `LOCK_IN_PROGRESS` is set)
 
 - **KV23 (MEK destination)**: **write-restricted to AES only**.
 - **KV22 (HEK)**: **locked for writes until warm reset** (ROM requirement).
@@ -2626,7 +2663,7 @@ Caliptra's AXI DMA supports a hardware path to write **KV23 (MEK)** to the SoC v
 - Flush **AES ↔ KV** interface.
 
 **AES/KV/DMA Robustness**
-- **AES → KV write path:** The key can't be written to KeyVault unless key_size bytes are decrypted by AES.
+- **AES → KV write path:** The key can't be written to key vault unless key_size bytes are decrypted by AES.
 - Validate **DMA `key_size`**; **error** if `key_size > 512b`.
 - Avoid hangs when **`key_size` != KV read DWORD count**:
   - On KV reads, if `key_size` is **smaller** than the KV entry, **drop extra data** (do not push to FIFO).
