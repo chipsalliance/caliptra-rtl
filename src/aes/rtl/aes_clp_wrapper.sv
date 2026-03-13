@@ -360,7 +360,9 @@ localparam int unsigned NumSeedChunks =
 logic [caliptra_prim_trivium_pkg::TriviumStateWidth-1:0] trivium_seed;
 logic [NumSeedChunks-1:0] trivium_seed_qe;
 logic [NumSeedChunks-1:0] trivium_seed_chunk_vld_q, trivium_seed_chunk_vld_d;
-logic trivium_seed_en;
+logic trivium_seed_en, trivium_seed_en_nq;
+// ECO: one-shot latch — block re-seeding after the first seed operation until reset
+logic trivium_seeded;
 
 // Concatenate the register values to produce the full state seed.
 assign trivium_seed = {hwif_out.ENTROPY_IF_SEED[8].ENTROPY_IF_SEED.value,
@@ -387,8 +389,9 @@ assign trivium_seed_qe = {hwif_out.ENTROPY_IF_SEED[8].ENTROPY_IF_SEED.swmod,
 // Track write operations:
 // - Perform the reseed once every register has been written at least once.
 // - Clear the tracking upon doing the reseed operation.
-assign trivium_seed_chunk_vld_d = trivium_seed_en ? '0 : trivium_seed_chunk_vld_q | trivium_seed_qe;
-assign trivium_seed_en = &trivium_seed_chunk_vld_q;
+assign trivium_seed_chunk_vld_d = trivium_seed_en_nq ? '0 : trivium_seed_chunk_vld_q | trivium_seed_qe;
+assign trivium_seed_en_nq = &trivium_seed_chunk_vld_q;
+assign trivium_seed_en = trivium_seed_en_nq & ~trivium_seeded;
 
 always_ff @(posedge clk or negedge reset_n) begin
   if (~reset_n) begin
@@ -421,5 +424,10 @@ u_caliptra_prim_trivium
     .key_o(edn_bus),
     .err_o()
 );
+
+// What: After the first Trivium reseed, seed_en must stay low until reset
+// Why: Prevent firmware from re-seeding the PRNG after initial entropy injection
+// Timing: Combinational — trivium_seeded_q is set 1 cycle after first seed_en
+`CALIPTRA_ASSERT(ERR_AES_TRIVIUM_SEEDED_TWICE, trivium_seeded |-> !trivium_seed_en, clk, !reset_n)
 
 endmodule
