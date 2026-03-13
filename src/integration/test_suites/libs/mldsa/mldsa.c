@@ -105,6 +105,16 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     VPRINTF(LOW, "Writing entropy\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
+    // Verify engine is not ready if kv read error was expected
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLDSA engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     VPRINTF(LOW, "\nMLDSA KEYGEN\n");
     // Enable MLDSA KEYGEN core
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN);
@@ -112,16 +122,6 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     // Try to program MLDSA_SEED
     lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((!seed.kv_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
-
-    // Verify engine did not start after KV read error
-    if (seed.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0) {
-            VPRINTF(ERROR, "MLDSA engine started after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
 
     // wait for MLDSA KEYGEN process to be done
     wait_for_mldsa_intr();
@@ -225,6 +225,16 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     // Write MLDSA ENTROPY
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
+    // Verify engine is not ready if kv read error was expected
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLDSA engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // Enable MLDSA KEYGEN + SIGNING core
     VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
@@ -232,17 +242,6 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     // Try to program MLDSA_SEED
     lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((!seed.kv_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
-
-
-    // Verify engine did not start after KV read error
-    if (seed.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0) {
-            VPRINTF(ERROR, "MLDSA engine started after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
 
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
@@ -426,6 +425,15 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
     VPRINTF(LOW, "Writing entropy\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
+    // Verify engine is not ready after KV read error
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLDSA engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
     // Enable MLDSA KEYGEN + SIGNING core
     VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING in ExternalMu mode\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN | 
@@ -434,17 +442,6 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
     // Try to program MLDSA_SEED Read
     lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((!seed.kv_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
-
-
-    // Verify engine did not start after KV read error
-    if (seed.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0) {
-            VPRINTF(ERROR, "MLDSA engine started after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
 
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
