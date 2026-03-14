@@ -401,6 +401,16 @@ always_ff @(posedge clk or negedge reset_n) begin
   end
 end
 
+always_ff @(posedge clk or negedge reset_n) begin
+  if (~reset_n) begin
+    trivium_seeded <= 1'b0;
+  end else if (trivium_seed_en) begin  
+    trivium_seeded <= 1'b1;
+  end else begin
+    trivium_seeded <= trivium_seeded;
+  end
+end
+
 caliptra_prim_trivium #(
   .OutputWidth(edn_pkg::ENDPOINT_BUS_WIDTH),
   .SeedType   (caliptra_prim_trivium_pkg::SeedTypeStateFull)
