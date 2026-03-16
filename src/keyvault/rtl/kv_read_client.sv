@@ -20,6 +20,7 @@ module kv_read_client
     #(
     parameter DATA_WIDTH = 512
    ,parameter HMAC = 0
+   ,parameter AES = 0
    ,parameter PAD = 0
 
    ,localparam DATA_OFFSET_W = $clog2(DATA_WIDTH/32)
@@ -122,7 +123,15 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
 end
 
-always_comb kv_ready = kv_fsm_ready & (error_code == KV_SUCCESS) & ~validated_read_en;
+//for AES kv ready can't be held for errors since AES does not have zeroize support
+//AES already handles the key material in case of errors
+generate
+    if (AES) begin : aes_kv_ready_gen
+        always_comb kv_ready = kv_fsm_ready & ~validated_read_en;
+    end else begin :non_aes_kv_ready_gen
+        always_comb kv_ready = kv_fsm_ready & (error_code == KV_SUCCESS) & ~validated_read_en;
+    end
+endgenerate
 
 `CALIPTRA_ASSERT_KNOWN(READ_METRICS_X,  read_metrics, clk, !rst_b)
 
