@@ -424,6 +424,7 @@ end
 //Read Key
 kv_read_client #(
   .DATA_WIDTH(keymgr_pkg::KeyWidth),
+  .AES(1),
   .PAD(0)
 )
 aes_key_kv_read
