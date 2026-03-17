@@ -40,6 +40,7 @@ find "$CALIPTRA_ROOT" -type f \( -name "*.sv" \
                               -o -name "*.sh" \
                               -o -name "*.py" \
                               -o -name "pr_timestamp" \) \
+                              ! -path "${CALIPTRA_ROOT}/tools/audit/*" \
                               ! -path "*.github/workflows/*" \
                               ! -path "*.git/*" | LC_COLLATE=C sort -o $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt
 sed -i "s,^$CALIPTRA_ROOT/,," $CALIPTRA_ROOT/.github/workflow_metadata/file_list.txt
