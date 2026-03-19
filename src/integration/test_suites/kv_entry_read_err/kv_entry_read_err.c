@@ -54,6 +54,12 @@ void main() {
             while(1);
         }
 
+        // Zeroize ECC engine
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+        // wait for ECC to be ready
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
         // Program ECC SEED Read
         lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, (ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
                                                       ((num_keys-1-i << ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_MASK)));
@@ -90,6 +96,9 @@ void main() {
             while(1);
         }
 
+        // Zeroize HMAC engine
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, (1 << HMAC_REG_HMAC512_CTRL_ZEROIZE_LOW) & HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK);
+
         // Program HMAC BLOCK Read
         lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, (HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_EN_MASK |
                                                       ((num_keys-1-i << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK)));
@@ -103,6 +112,7 @@ void main() {
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
+
         // Zeroize HMAC engine
         lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, (1 << HMAC_REG_HMAC512_CTRL_ZEROIZE_LOW) & HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK);
     }
@@ -139,6 +149,7 @@ void main() {
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
+
         // Zeroize ABR engine
         lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, (1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
 
@@ -162,6 +173,12 @@ void main() {
             while(1);
         }
         
+        // Zeroize ABR engine
+        lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, (1 << ABR_REG_MLKEM_CTRL_ZEROIZE_LOW) & ABR_REG_MLKEM_CTRL_ZEROIZE_MASK);
+
+        // wait for ABR to be ready
+        while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
+
         // Program MLKEM MSG Read
         lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
                                                       ((num_keys-1-i << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
@@ -175,6 +192,7 @@ void main() {
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
+
         // Zeroize ABR engine
         lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, (1 << ABR_REG_MLKEM_CTRL_ZEROIZE_LOW) & ABR_REG_MLKEM_CTRL_ZEROIZE_MASK);
 
