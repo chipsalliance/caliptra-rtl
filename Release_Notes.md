@@ -14,7 +14,20 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/11/25*_
+_*Last Update: 2026/03/19*_
+
+### Rev 2p0p4 ###
+
+#### Rev 2p0p4 release date: 2026/03/19 ###
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Bug fixes:
+  - [BUG FIX] KV write controls are not locked during kv write [#1216](https://github.com/chipsalliance/caliptra-rtl/issues/1216)
+  - [BUG FIX] KV error code is not captured mid-read [#1213](https://github.com/chipsalliance/caliptra-rtl/issues/1213)
+  - [BUG FIX] AES entropy interface could be re-seeded [#1224](https://github.com/chipsalliance/caliptra-rtl/issues/1224)
+
+## Previous Releases ##
 
 ### Rev 2.0.3 ###
 
@@ -25,8 +38,6 @@ _*Last Update: 2025/11/25*_
 - Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
 - Bug fixes:
   - [BUG FIX] Fix for security state debug not unlocking after manuf/prod dbg unlock flow (#1133)
-
-## Previous Releases ##
 
 ### Rev 2.0.2 ###
 
