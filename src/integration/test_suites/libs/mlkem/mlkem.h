@@ -55,6 +55,7 @@ typedef struct {
 typedef struct {
   BOOL      kv_intf;
   BOOL      exp_kv_err;
+  BOOL      skip_kv_check; // skip TB 0xb3 KV assertion (for custom test vectors)
   uint8_t   kv_id;
   uint32_t data[MLKEM_SHAREDKEY_SIZE];
 } mlkem_shared_key;

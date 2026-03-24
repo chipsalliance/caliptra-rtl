@@ -340,6 +340,10 @@ void main() {
                         while(1);
                     }
                 }
+                //Always clear the KV write control.
+                //If there was an error expected, KV WR stays asserted because the engine never starts
+                //Clear the KV write control so that the next test doesn't fail if it's all FW writes
+                lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL, 0);
             }
 
             hmac_zeroize();
