@@ -46,7 +46,7 @@ void main() {
     uint8_t kv_slot;
 
     VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " ABR KV Zero Error Test - rst_count = %d\n", rst_count);
+    VPRINTF(LOW, " ABR KV Zero Seed Test - rst_count = %d\n", rst_count);
     VPRINTF(LOW, "----------------------------------\n");
 
     // Setup the interrupt CSR configuration
@@ -56,7 +56,7 @@ void main() {
         //--------------------------------------------------------------
         // Test 0: MLDSA seed zero error
         //--------------------------------------------------------------
-        VPRINTF(LOW, "\n=== TEST 0: MLDSA seed zero error ===\n");
+        VPRINTF(LOW, "\n=== TEST 0: MLDSA seed zero ===\n");
 
         // Wait for MLDSA to be ready
         while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
@@ -119,7 +119,7 @@ void main() {
         //--------------------------------------------------------------
         // Test 1: MLKEM seed zero error
         //--------------------------------------------------------------
-        VPRINTF(LOW, "\n=== TEST 1: MLKEM seed zero error ===\n");
+        VPRINTF(LOW, "\n=== TEST 1: MLKEM seed zero ===\n");
 
         // Wait for MLKEM to be ready
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
@@ -184,7 +184,7 @@ void main() {
         // Write MLKEM seed via SW registers (not KV), then inject
         // all-zero msg via KV. Only msg zero error should fire.
         //--------------------------------------------------------------
-        VPRINTF(LOW, "\n=== TEST 2: MLKEM msg zero error ===\n");
+        VPRINTF(LOW, "\n=== TEST 2: MLKEM msg zero ===\n");
 
         // Wait for MLKEM to be ready
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
@@ -255,7 +255,7 @@ void main() {
     }
 
     VPRINTF(LOW, "\n----------------------------------\n");
-    VPRINTF(LOW, " ABR KV Zero Error Test PASSED\n");
+    VPRINTF(LOW, " ABR KV Zero Seed Test PASSED\n");
     VPRINTF(LOW, "----------------------------------\n");
     SEND_STDOUT_CTRL(0xff);
 }
