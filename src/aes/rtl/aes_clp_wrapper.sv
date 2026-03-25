@@ -379,26 +379,26 @@ always_comb begin
 end
 
 // Software write-enables to prevent KV reg manipulation mid-operation
-always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_en.swwe         = status_idle_o && input_ready_o && kv_key_ready;
-always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_entry.swwe      = status_idle_o && input_ready_o && kv_key_ready;
-always_comb hwif_in.AES_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = status_idle_o && input_ready_o && kv_key_ready;
-always_comb hwif_in.AES_KV_RD_KEY_CTRL.rsvd.swwe            = status_idle_o && input_ready_o && kv_key_ready;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_en.swwe         = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.read_entry.swwe      = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = 0; //NA for key vault
+always_comb hwif_in.AES_KV_RD_KEY_CTRL.rsvd.swwe            = 0;
 
 // KV write control must be written while AES engine is idle, even though
 // output isn't written to KV until the end of the operation.
 // Prevent partial-key attacks by blocking register modifications during core execution.
-always_comb hwif_in.AES_KV_WR_CTRL.write_en.swwe              = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.write_entry.swwe           = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.hmac_key_dest_valid.swwe   = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.hmac_block_dest_valid.swwe = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.aes_key_dest_valid.swwe    = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.dma_data_dest_valid.swwe   = status_idle_o && input_ready_o;
-always_comb hwif_in.AES_KV_WR_CTRL.rsvd.swwe                  = status_idle_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.write_en.swwe              = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.write_entry.swwe           = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.hmac_key_dest_valid.swwe   = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.hmac_block_dest_valid.swwe = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.aes_key_dest_valid.swwe    = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.dma_data_dest_valid.swwe   = !busy_o && input_ready_o;
+always_comb hwif_in.AES_KV_WR_CTRL.rsvd.swwe                  = 0;
 
 //keyault FSM
 //keyvault control reg macros for assigning to struct
@@ -424,6 +424,7 @@ end
 //Read Key
 kv_read_client #(
   .DATA_WIDTH(keymgr_pkg::KeyWidth),
+  .AES(1),
   .PAD(0)
 )
 aes_key_kv_read
@@ -564,7 +565,9 @@ localparam int unsigned NumSeedChunks =
 logic [caliptra_prim_trivium_pkg::TriviumStateWidth-1:0] trivium_seed;
 logic [NumSeedChunks-1:0] trivium_seed_qe;
 logic [NumSeedChunks-1:0] trivium_seed_chunk_vld_q, trivium_seed_chunk_vld_d;
-logic trivium_seed_en;
+logic trivium_seed_en, trivium_seed_en_nq;
+// ECO: one-shot latch — block re-seeding after the first seed operation until reset
+logic trivium_seeded;
 
 // Concatenate the register values to produce the full state seed.
 assign trivium_seed = {hwif_out.ENTROPY_IF_SEED[8].ENTROPY_IF_SEED.value,
@@ -591,14 +594,25 @@ assign trivium_seed_qe = {hwif_out.ENTROPY_IF_SEED[8].ENTROPY_IF_SEED.swmod,
 // Track write operations:
 // - Perform the reseed once every register has been written at least once.
 // - Clear the tracking upon doing the reseed operation.
-assign trivium_seed_chunk_vld_d = trivium_seed_en ? '0 : trivium_seed_chunk_vld_q | trivium_seed_qe;
-assign trivium_seed_en = &trivium_seed_chunk_vld_q;
+assign trivium_seed_chunk_vld_d = trivium_seed_en_nq ? '0 : trivium_seed_chunk_vld_q | trivium_seed_qe;
+assign trivium_seed_en_nq = &trivium_seed_chunk_vld_q;
+assign trivium_seed_en = trivium_seed_en_nq & ~trivium_seeded;
 
 always_ff @(posedge clk or negedge reset_n) begin
   if (~reset_n) begin
     trivium_seed_chunk_vld_q <= '0;
   end else begin
     trivium_seed_chunk_vld_q <= trivium_seed_chunk_vld_d;
+  end
+end
+
+always_ff @(posedge clk or negedge reset_n) begin
+  if (~reset_n) begin
+    trivium_seeded <= 1'b0;
+  end else if (trivium_seed_en) begin  
+    trivium_seeded <= 1'b1;
+  end else begin
+    trivium_seeded <= trivium_seeded;
   end
 end
 
@@ -625,6 +639,11 @@ u_caliptra_prim_trivium
     .key_o(edn_bus),
     .err_o()
 );
+
+// What: After the first Trivium reseed, seed_en must stay low until reset
+// Why: Prevent firmware from re-seeding the PRNG after initial entropy injection
+// Timing: Combinational — trivium_seeded_q is set 1 cycle after first seed_en
+`CALIPTRA_ASSERT(ERR_AES_TRIVIUM_SEEDED_TWICE, trivium_seeded |-> !trivium_seed_en, clk, !reset_n)
 
 `CALIPTRA_ASSERT_STABLE(ERR_AES_KEY_RD_CTRL_NOT_STABLE, kv_key_read_ctrl_reg, clk, (!reset_n || status_idle_o) )
 `CALIPTRA_ASSERT_STABLE(ERR_AES_WR_CTRL_NOT_STABLE, kv_write_ctrl_reg, clk, (!reset_n || status_idle_o) )
