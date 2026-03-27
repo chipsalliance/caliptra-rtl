@@ -366,7 +366,8 @@ module caliptra_top_tb_services
     //         8'hab        - Inject MLDSA SEED to kv_key22/23 register
     //         8'hac        - Inject ECC seed to kv_key22/23 register
     //         8'had        - Inject ECC_PRIVKEY to kv_key register
-    //         8'hae: 8'haf - Unused
+    //         8'hae        - Inject fixed MLKEM SEED (mlkem_seed_tb) to keyvault
+    //         8'haf        - Inject fixed MLKEM MSG (mlkem_msg_tb) to keyvault
     //         8'hb0        - Inject HMAC512_BLOCK to kv_key register
     //         8'hb1        - Inject MLKEM SEED to keyvault
     //         8'hb2        - Inject MLKEM MSG to keyvault
@@ -584,6 +585,11 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   hmac512_block_tb = 512'h_e7f1293c6f23a53289143df1399e784cb71180e3830c3869fd725fe78f0b6480559d6344edc1aaf64b7d0701e78672d2_55555555555555555555555555555555;
     logic [0:15][31:0]   mldsa_seed_tb    = 512'h_2d5cf89c46768a850768f0d4a243fe283fcee4d537071d12675fd1279340000a_55555555555555555555555555555555_00000000000000000000000000000000; //fixme padded with junk
     logic [0:15][31:0]   aes256_key_tb    = 512'hbc623095823dafe190998314fedbac4258395063234564532123adfcefda2344_0000000000000000000000000000000000000000000000000000000000000000;
+    // seed_z = 99E3246884181F8E1DD44E0C7629093330221FD67D9B7D6E1510B2DBAD8762F7
+    // seed_d = 49AC8B99BB1E6A8EA818261F8BE68BDEAA52897E7EC6C40B530BC760AB77DCE3
+    logic [0:15][31:0]   mlkem_seed_tb    = 512'h_E3DC77AB60C70B530BC4C67E7E8952AADE8BE68B1F2618A88E6A1EBB998BAC49_F76287ADDBB210156E7D9B7DD61F2230330929760C4ED41D8E1F18846824E399;
+    // msg = 59C5154C04AE43AAFF32700F081700389D54BEC4C37C088B1C53F66212B12C72
+    logic [0:15][31:0]   mlkem_msg_tb     = 512'h_722CB11262F6531C8B087CC3C4BE549D380017080F7032FFAA43AE044C15C559_0000000000000000000000000000000000000000000000000000000000000000;
     logic [0:15][31:0]   ecc_privkey_random;
     logic [0:15][31:0]   mldsa_seed_random;
     logic [15:0][31:0]   mlkem_seed_random;
@@ -607,8 +613,6 @@ module caliptra_top_tb_services
             mlkem_msg_random[8 + i] = 32'h0;
         end
     end
-    //always_comb mlkem_seed_random = {mlkem_test_vector.seed_z,mlkem_test_vector.seed_d};
-    //always_comb mlkem_msg_random = {256'h0,mlkem_test_vector.msg};
 
     genvar dword_i, slot_id;
     generate
@@ -927,6 +931,32 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mlkem_msg_random[dword_i][31 : 0];
+                        end
+                    end
+                    //inject fixed mlkem seed (mlkem_seed_tb) to kv key reg
+                    else if((WriteData[7:0] == 8'hae) && mailbox_write) begin
+                        inject_mlkem_kv <= 1'b1;
+                        release_kv_inject_flags <= '0;
+                        if ((WriteData[12:8] == slot_id)) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b0100_0000;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mlkem_seed_tb[dword_i][31 : 0];
+                        end
+                    end
+                    //inject fixed mlkem msg (mlkem_msg_tb) to kv key reg
+                    else if((WriteData[7:0] == 8'haf) && mailbox_write) begin
+                        inject_mlkem_kv <= 1'b1;
+                        release_kv_inject_flags <= '0;
+                        if ((WriteData[12:8] == slot_id)) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1000_0000;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mlkem_msg_tb[dword_i][31 : 0];
                         end
                     end
                     else if((WriteData[7:0] == 8'h9f) && mailbox_write) begin
