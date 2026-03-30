@@ -274,6 +274,9 @@ void main(){
 
         //If seed read failed, engine doesn't run so run again with a valid read to see that write fails
         if (!expect_kv_status_success) {
+            
+            ecc_zeroize();
+
             seed.kv_intf = FALSE;
             seed.kv_id = seed_kv_id;
 
