@@ -66,6 +66,7 @@ jobs:
                                              -o -name "*.sh" \
                                              -o -name "*.py" \
                                              -o -name "pr_timestamp" \) \
+                                             ! -path "${GITHUB_WORKSPACE}/tools/audit/*" \
                                              ! -path "*.github/workflows/*" \
                                              ! -path "*.git/*" | LC_COLLATE=C sort -o $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
             sed -i "s,^$GITHUB_WORKSPACE/,," $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
@@ -83,7 +84,7 @@ jobs:
             # in order to only traverse the feature branch commits
             # Use an explicit list of files instead of an exclusion list
             last_commit=$(git rev-parse HEAD^2)
-            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '.github/workflows' | grep -e '\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp' > /dev/null; do
+            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '.github/workflows\|tools/audit' | grep -e '\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp' > /dev/null; do
                 last_commit="$(git rev-parse ${last_commit}^)"
             done
             echo "Latest non-doc hash is ${last_commit}"
