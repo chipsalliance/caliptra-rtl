@@ -479,7 +479,15 @@ Mailboxes are generic data-passing structures with a specific protocol that defi
 
 **Notes on behavior:**
 
-Once LOCK is granted, the mailbox is locked until that device has concluded its operation. Caliptra has access to an internal mechanism to terminate a lock early or release the lock if the device does not proceed to use it or to recover from deadlock scenarios. The following figure shows the sender protocol flow.
+Once LOCK is granted, the mailbox is locked until that device has concluded its operation. Caliptra has access to an internal mechanism to terminate a lock early or release the lock if the device does not proceed to use it or to recover from deadlock scenarios. If used, the force unlock mechanism has several effects:
+* Returns the mailbox FSM (indicated in the mbox_status register) to the IDLE state.
+* Resets the status field of the mbox_status register to CMD_BUSY.
+* Resets the soc_has_lock field of the mbox_status register to 0.
+* If the mailbox was in the ERROR state, internal hardware would continuously assert the error interrupt signals as described in [Caliptra mailbox errors](#Caliptra-mailbox-errors). The force unlock mechanism causes hardware to stop asserting these conditions, though any interrupts that are already asserted remain asserted and require firmware intervention to be cleared.
+
+To address these conditions, integrators may wish to add timeout handling logic to their implementation of the mailbox protocol. This timeout handling logic may determine that a pending mailbox request has been terminated by observing the deassertion of mbox_status.soc_has_lock, or by observing that mbox_status.mbox_fsm_ps indicates the IDLE state. Upon observing these conditions, SoC logic may check for any error conditions reported in [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/external-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL) or [CPTRA_HW_ERROR_NON_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/external-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_NON_FATAL), and may attempt a retry of the command depending on any SoC retry policies.
+
+The following figure shows the sender protocol flow.
 
 *Figure: Sender protocol flow chart*
 
@@ -883,6 +891,8 @@ The following table describes SoC integration requirements.
 
 For additional information, see [Caliptra assets and threats](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-assets-and-threats).
 
+
+
 *Table 19: SoC integration requirements*
 
 | Category | Requirement | Definition of done | Rationale |
@@ -901,7 +911,7 @@ For additional information, see [Caliptra assets and threats](https://github.com
 | DFT                              | Before scan is enabled (separate signal that SoC implements on scan insertion), SoC shall set Caliptra's scan\_mode indication to '1 for 5,000 clocks to allow secrets/assets to be flushed.                                                                                                    | Statement of conformance | Required by Caliptra threat model                 |
 | DFT                              | Caliptra’s TAP should be a TAP endpoint.                                                                                                                                                                                                                                       | Statement of conformance | Functional requirement                            |
 | DFD                              | Integrators shall not connect Caliptra's exposed RISC-V trace ports to any SoC logic. These ports are unvalidated and any implications to the SoC logic due to connecting these signals have not been analyzed.                                                                | Synthesis report         | Required for Caliptra threat model                |
-| Mailbox                          | SoC shall provide an access path between the mailbox and the application CPU complex on SoCs with such complexes (for example, Host CPUs and Smart NICs). See the [Sender Protocol](#sender-protocol) section for details about error conditions.                              | Statement of conformance | Required for Project Kirkland and TDISP TSM       |
+| Mailbox                          | SoC should provide an access path between the mailbox and the application CPU complex on SoCs with such complexes (for example, Host CPUs and Smart NICs).                                                                                                                     | Statement of conformance | Required for Project Kirkland and TDISP TSM       |
 | Fuses                            | SoC shall burn non-field fuses during manufacturing. All *Caliptra Core* fuses must be implemented as described in the [fuse map table](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#fuse-map). Fuses used for *Subsystem* are optional outside of the subsystem context.                                                            | Test on silicon          | Required for UDS threat model                     |
 | Fuses                            | SoC shall expose an interface for burning field fuses. Protection of this interface is the SoC vendor’s responsibility.                                                                                                                                                        | Test on silicon          | Required for Field Entropy                        |
 | Fuses                            | SoC shall write fuse registers and fuse done via immutable logic or ROM code.                                                                                                                                                                                                  | Statement of conformance | Required for Caliptra threat model                |
