@@ -305,6 +305,7 @@ module soc_ifc_tb
 
   //bind coverage file
   soc_ifc_cov_bind i_soc_ifc_cov_bind();
+  axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 
   //----------------------------------------------------------------
   // Device Under Test.

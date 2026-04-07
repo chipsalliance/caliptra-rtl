@@ -54,6 +54,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_doe/smoke_test_kv_doe.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_cg/smoke_test_kv_cg.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_mldsa/smoke_test_kv_mldsa.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_mlkem/smoke_test_kv_mlkem.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/pv_hash_and_sign/pv_hash_and_sign.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/pv_hash_zeroize/pv_hash_zeroize.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_signing/smoke_test_pcr_signing.yml
@@ -79,6 +80,9 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma/smoke_test_dma.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hek_flow/smoke_test_hek_flow.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/kv_entry_read_err/kv_entry_read_err.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_swwe_lock/smoke_test_kv_swwe_lock.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_lock_use_mid_read/smoke_test_kv_lock_use_mid_read.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_abr_kv_zero_error/smoke_test_abr_kv_zero_error.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms24/fw_test_lms24.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms32/fw_test_lms32.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h5/fw_test_lms_n24_w1_h5.yml

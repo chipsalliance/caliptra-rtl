@@ -22,6 +22,13 @@
 #include "hmac.h"
 #include "aes.h"
 
+#define BSWAP32(x) ( \
+    (((x) << 24) & 0xFF000000U) | \
+    (((x) <<  8) & 0x00FF0000U) | \
+    (((x) >>  8) & 0x0000FF00U) | \
+    (((x) >> 24) & 0x000000FFU)   \
+)
+
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
 #ifdef CPT_VERBOSITY
@@ -100,13 +107,13 @@ void main() {
     uint32_t plaintext[32]; //arbitrary length here
     uint32_t plaintext_length;
 
-    const char ciphertext_str_mlkem[] = "08c0e3e9aeca12046dc2de8298e3771d";
-    const char ciphertext_str_hmac[] = "229a0948c4b591d546caa4c6a77fbb81";
+    const char ciphertext_str_mlkem[] = "8f20d89829b62f26c9b7a779077326f8";
+    const char ciphertext_str_hmac[] = "f07920d2c5bef205ff785a0ad0d3c0a6";
     uint32_t ciphertext_mlkem[32]; //arbitrary length here
     uint32_t ciphertext_hmac[32]; //arbitrary length here
     uint32_t ciphertext_length;
-    const char tag_str_mlkem[] = "1487b617dcecc4e37728b89e3a062f00";
-    const char tag_str_hmac[] = "1b232924e1e944d1e84c97bdd7276649";
+    const char tag_str_mlkem[] = "c29f8759cb093d6b653a41b629c4c397";
+    const char tag_str_hmac[] = "72bc58b5b699a0bdd730f3112ff891a6";
     uint32_t tag_mlkem[4]; 
     uint32_t tag_hmac[4]; 
     uint32_t tag_length;
@@ -153,15 +160,11 @@ void main() {
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
     //Use shared key in HMAC to derive new key
+    // Per spec: Little-endian → big-endian (non-AES) = Reverse DWORD order only
     hmac_block.kv_intf = FALSE;
     hmac_block.data_size = 32;
     for (int i = 0; i < 8; i++) {
-        uint32_t val = actual_sharedkey[i];
-        hmac_block.data[i] =
-            ((val >> 24) & 0x000000FF) |
-            ((val >> 8)  & 0x0000FF00) |
-            ((val << 8)  & 0x00FF0000) |
-            ((val << 24) & 0xFF000000);
+        hmac_block.data[i] = actual_sharedkey[MLKEM_SHAREDKEY_SIZE - 1 - i];
     }
 
     //pad bit
@@ -200,9 +203,10 @@ void main() {
     hex_to_uint32_array(tag_str_mlkem, tag_mlkem, &tag_length);
     hex_to_uint32_array(tag_str_hmac, tag_hmac, &tag_length);
 
+    // ML-KEM shared key → AES key: DWORD reversal + BSWAP32 per DWORD
     aes_key_mlkem.kv_intf = FALSE;
     for (int i = 0; i < 8; i++) {
-        aes_key_mlkem.key_share0[i] = actual_sharedkey[i];
+        aes_key_mlkem.key_share0[i] = BSWAP32(actual_sharedkey[MLKEM_SHAREDKEY_SIZE - 1 - i]);
         aes_key_mlkem.key_share1[i] = 0x00000000;
     }
 
@@ -218,14 +222,10 @@ void main() {
 
 
     //Use HMAC result in AES to generate ciphertext
+    // HMAC TAG registers are big-endian (TAG[0]=MSB), so just BSWAP32, no DWORD reversal
     aes_key_hmac.kv_intf = FALSE;
     for (int i = 0; i < 8; i++) {
-        uint32_t val = actual_tag[i];
-        aes_key_hmac.key_share0[i] =
-            ((val >> 24) & 0x000000FF) |
-            ((val >> 8)  & 0x0000FF00) |
-            ((val << 8)  & 0x00FF0000) |
-            ((val << 24) & 0xFF000000);
+        aes_key_hmac.key_share0[i] = BSWAP32(actual_tag[i]);
         aes_key_hmac.key_share1[i] = 0x00000000;
     }
 

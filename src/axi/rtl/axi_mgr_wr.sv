@@ -122,14 +122,18 @@ module axi_mgr_wr import axi_pkg::*; #(
     end
 
     always_comb begin
-        m_axi_if.awvalid = axi_ctx_valid && !axi_ctx_sent;
-        m_axi_if.awaddr  = axi_ctx.addr;
-        m_axi_if.awburst = axi_ctx.fixed ? AXI_BURST_FIXED : AXI_BURST_INCR;
-        m_axi_if.awsize  = BW;
-        m_axi_if.awlen   = axi_ctx.len;
-        m_axi_if.awuser  = axuser;
-        m_axi_if.awid    = IW'(0);
-        m_axi_if.awlock  = axi_ctx.lock;
+        m_axi_if.awvalid  = axi_ctx_valid && !axi_ctx_sent;
+        m_axi_if.awaddr   = axi_ctx.addr;
+        m_axi_if.awburst  = axi_ctx.fixed ? AXI_BURST_FIXED : AXI_BURST_INCR;
+        m_axi_if.awsize   = BW;
+        m_axi_if.awlen    = axi_ctx.len;
+        m_axi_if.awuser   = axuser;
+        m_axi_if.awid     = IW'(0);
+        m_axi_if.awlock   = axi_ctx.lock;
+        m_axi_if.awcache  = '0;
+        m_axi_if.awprot   = '0;
+        m_axi_if.awqos    = '0;
+        m_axi_if.awregion = '0;
     end
 
     always_comb axi_ctx_ready = (!txn_active || txn_final_beat) &&

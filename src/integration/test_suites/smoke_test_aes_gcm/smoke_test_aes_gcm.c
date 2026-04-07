@@ -123,6 +123,17 @@ void main() {
     VPRINTF(LOW, " AES-GCM smoke test !!\n"            );
     VPRINTF(LOW, "----------------------------------\n");
 
+    //Seed the entropy once
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_0, 0x30000567);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_1, 0x30000567);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_2, 0x30000567);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_3, 0x30000567);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_4, 0x30000567);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_5, 0x30000567);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_6, 0x30000567);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_7, 0x30000567);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0x30000567);
+
     //CASE1
     VPRINTF(LOW, "Test Case 1\n");
     hex_to_uint32_array(key_str1, key, &key_size);
@@ -150,6 +161,17 @@ void main() {
     aes_input.iv = iv;
 
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
+
+    //Try to write entropy again, seed assertion should fire if this isn't blocked
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_0, 0x30FF0432);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_1, 0x30FF0432);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_2, 0x30FF0432);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_3, 0x30FF0432);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_4, 0x30FF0432);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_5, 0x30FF0432);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_6, 0x30FF0432);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_7, 0x30FF0432);
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0x30FF0432);
 
     //CASE2
     VPRINTF(LOW, "Test Case 2\n");

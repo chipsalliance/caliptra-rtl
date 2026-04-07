@@ -178,6 +178,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
   //Load key from keyvault if expected
   if (aes_input.key.kv_intf && !aes_input.key.kv_reuse_key) {
+      VPRINTF(LOW, "Reading AES Key from the Key Vault\n");
       // Wait for KV read logic to be idle
       while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_MASK) == 0);
 
@@ -209,7 +210,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
   lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
 
-  if (!aes_input.key.kv_expect_err){
+  if (aes_input.key_o.kv_intf && !aes_input.key.kv_expect_err){
     // Try to program KEY Read during engine operation
     lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |
                                                   ((!aes_input.key.kv_id << AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_MASK));

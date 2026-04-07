@@ -45,6 +45,7 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
+    BOOL kv_rd_error = FALSE;
 
     uint32_t ecc_privkey  [12];
     uint32_t ecc_pubkey_x [12];
@@ -64,8 +65,14 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
             *reg_ptr++ = 0;
         }
 
-        // Check that ECC SEED is loaded
-        while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) & ECC_REG_ECC_KV_RD_SEED_STATUS_VALID_MASK) == 0);
+        // Check that ECC SEED is loaded (poll for valid or error)
+        while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) & (ECC_REG_ECC_KV_RD_SEED_STATUS_VALID_MASK | ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_MASK)) == 0);
+
+        // Check for KV read error
+        if ((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) & ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_MASK) != 0) {
+            VPRINTF(LOW, "ECC seed kv_rd_err detected, skipping engine run\n");
+            kv_rd_error = TRUE;
+        }
     }
     else{
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SEED_0;
@@ -110,9 +117,20 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
         *reg_ptr++ = 0;
     }
 
+    // Skip wait and result checking if KV read error was detected
+    if (kv_rd_error) {
+        // Verify engine did not start after KV read error
+        if ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0) {
+            VPRINTF(ERROR, "ECC engine started after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // wait for ECC KEYGEN process to be done
     wait_for_ecc_intr();
-    
+
     if (privkey.kv_intf){
         VPRINTF(LOW, "Wait for KV write\n");
         // check dest done
@@ -179,6 +197,7 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
+    BOOL kv_rd_error = FALSE;
 
     uint32_t ecc_privkey   [12];
     uint32_t ecc_sharedkey [12];
@@ -191,8 +210,14 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
         lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
                                                     ((privkey.kv_id << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK)));
 
-        // Check that ECC PKEY is loaded
-        while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_VALID_MASK) == 0);
+        // Check that ECC PKEY is loaded (poll for valid or error)
+        while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & (ECC_REG_ECC_KV_RD_PKEY_STATUS_VALID_MASK | ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_MASK)) == 0);
+
+        // Check for KV read error
+        if ((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_MASK) != 0) {
+            VPRINTF(LOW, "ECC privkey kv_rd_err detected, skipping engine run\n");
+            kv_rd_error = TRUE;
+        }
     }
     else{
         // Program ECC PRIVKEY
@@ -250,9 +275,19 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
         *reg_ptr++ = 0;
     }
 
-    // wait for ECC KEYGEN process to be done
+    // Verify engine did not start after KV read error
+    if (kv_rd_error) {
+        if ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0) {
+            VPRINTF(ERROR, "ECC engine started after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
+    // wait for ECC SHAREDKEY process to be done
     wait_for_ecc_intr();
-    
+
     if (sharedkey.kv_intf){
         VPRINTF(LOW, "Wait for KV write\n");
         // check dest done
@@ -283,6 +318,7 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
+    BOOL kv_rd_error = FALSE;
 
     uint32_t ecc_sign_r [12];
     uint32_t ecc_sign_s [12];
@@ -305,8 +341,14 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
             *reg_ptr++ = 0;
         }
 
-        // Check that ECC PRIVKEY is loaded
-        while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_VALID_MASK) == 0);
+        // Check that ECC PRIVKEY is loaded (poll for valid or error)
+        while((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & (ECC_REG_ECC_KV_RD_PKEY_STATUS_VALID_MASK | ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_MASK)) == 0);
+
+        // Check for KV read error
+        if ((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_MASK) != 0) {
+            VPRINTF(LOW, "ECC privkey kv_rd_err detected, skipping engine run\n");
+            kv_rd_error = TRUE;
+        }
     }
     else{
         // Program ECC PRIVKEY
@@ -346,9 +388,19 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
         *reg_ptr++ = 0;
     }
 
+    // Verify engine did not start after KV read error
+    if (kv_rd_error) {
+        if ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0) {
+            VPRINTF(ERROR, "ECC engine started after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // wait for ECC SIGNING process to be done
     wait_for_ecc_intr();
-    
+
     if (check_result == TRUE) {
         // Read the data back from ECC register
         VPRINTF(LOW, "Load SIGN_R data from ECC\n");

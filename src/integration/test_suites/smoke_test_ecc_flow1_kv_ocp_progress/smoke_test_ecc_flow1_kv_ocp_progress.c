@@ -212,7 +212,7 @@ void main(){
 
         seed.kv_intf = TRUE;
         seed.kv_id = seed_kv_id;
-
+        
         nonce.kv_intf = FALSE;
         for (int i = 0; i < 12; i++)
             nonce.data[i] = ecc_nonce[i];
@@ -262,7 +262,6 @@ void main(){
         cptra_intr_rcv.ecc_error = 0;
         cptra_intr_rcv.ecc_notif = 0;
 
-
         //If reading from 23, check that it failed
         expect_kv_status_success = !((seed_kv_id == 23) & ocp_progress_bit);
         kv_status_success = ((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) & ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_MASK) >> ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_LOW) == 0;
@@ -271,6 +270,19 @@ void main(){
             VPRINTF(FATAL, "ERROR: Unexpected KV read status!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
+        }
+
+        //If seed read failed, engine doesn't run so run again with a valid read to see that write fails
+        if (!expect_kv_status_success) {
+            
+            ecc_zeroize();
+
+            seed.kv_intf = FALSE;
+            seed.kv_id = seed_kv_id;
+
+            ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, FALSE);
+            cptra_intr_rcv.ecc_error = 0;
+            cptra_intr_rcv.ecc_notif = 0;
         }
 
         expect_kv_status_success = !((privkey_kv_id == 23) & ocp_progress_bit);
