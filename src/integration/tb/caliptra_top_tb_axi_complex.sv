@@ -106,10 +106,10 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
             .AWSIZE  (m_axi_if.awsize),
             .AWBURST (m_axi_if.awburst),
             .AWLOCK  (m_axi_if.awlock),
-            .AWCACHE (4'h0),
-            .AWPROT  (3'h0),
-            .AWQOS   (4'h0),
-            .AWREGION(4'h0),
+            .AWCACHE (m_axi_if.awcache),
+            .AWPROT  (m_axi_if.awprot),
+            .AWQOS   (m_axi_if.awqos),
+            .AWREGION(m_axi_if.awregion),
             .AWUSER  (m_axi_if.awuser),
             .AWVALID (m_axi_if.awvalid),
             .AWREADY (m_axi_if.awready),
@@ -136,10 +136,10 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
             .ARSIZE  (m_axi_if.arsize),
             .ARBURST (m_axi_if.arburst),
             .ARLOCK  (m_axi_if.arlock),
-            .ARCACHE (4'h0),
-            .ARPROT  (3'h0),
-            .ARQOS   (4'h0),
-            .ARREGION(4'h0),
+            .ARCACHE (m_axi_if.arcache),
+            .ARPROT  (m_axi_if.arprot),
+            .ARQOS   (m_axi_if.arqos),
+            .ARREGION(m_axi_if.arregion),
             .ARUSER  (m_axi_if.aruser),
             .ARVALID (m_axi_if.arvalid),
             .ARREADY (m_axi_if.arready),
@@ -434,6 +434,10 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     assign axi_sram_if.aruser        = m_axi_if.aruser ;
     assign axi_sram_if.arid          = m_axi_if.arid   ;
     assign axi_sram_if.arlock        = m_axi_if.arlock ;
+    assign axi_sram_if.arcache       = m_axi_if.arcache ;
+    assign axi_sram_if.arprot        = m_axi_if.arprot  ;
+    assign axi_sram_if.arqos         = m_axi_if.arqos   ;
+    assign axi_sram_if.arregion      = m_axi_if.arregion;
 
     // AXI R                                    
     assign axi_sram_if.rready        = sram_r_active ? m_axi_if.rready : '0;
@@ -450,6 +454,10 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     assign axi_sram_if.awuser        = m_axi_if.awuser ;
     assign axi_sram_if.awid          = m_axi_if.awid   ;
     assign axi_sram_if.awlock        = m_axi_if.awlock ;
+    assign axi_sram_if.awcache       = m_axi_if.awcache ;
+    assign axi_sram_if.awprot        = m_axi_if.awprot  ;
+    assign axi_sram_if.awqos         = m_axi_if.awqos   ;
+    assign axi_sram_if.awregion      = m_axi_if.awregion;
 
     // AXI W - Don't forward data when injecting errors
     logic sram_w_blocked;
@@ -601,6 +609,10 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     assign axi_fifo_if.aruser        = m_axi_if.aruser ;
     assign axi_fifo_if.arid          = m_axi_if.arid   ;
     assign axi_fifo_if.arlock        = m_axi_if.arlock ;
+    assign axi_fifo_if.arcache       = m_axi_if.arcache ;
+    assign axi_fifo_if.arprot        = m_axi_if.arprot  ;
+    assign axi_fifo_if.arqos         = m_axi_if.arqos   ;
+    assign axi_fifo_if.arregion      = m_axi_if.arregion;
 
     // AXI R                                    
     assign axi_fifo_if.rready        = fifo_r_active ? m_axi_if.rready : '0;
@@ -617,6 +629,10 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
     assign axi_fifo_if.awuser        = m_axi_if.awuser ;
     assign axi_fifo_if.awid          = m_axi_if.awid   ;
     assign axi_fifo_if.awlock        = m_axi_if.awlock ;
+    assign axi_fifo_if.awcache       = m_axi_if.awcache ;
+    assign axi_fifo_if.awprot        = m_axi_if.awprot  ;
+    assign axi_fifo_if.awqos         = m_axi_if.awqos   ;
+    assign axi_fifo_if.awregion      = m_axi_if.awregion;
 
     // AXI W - Don't forward data when injecting errors
     logic fifo_w_blocked;

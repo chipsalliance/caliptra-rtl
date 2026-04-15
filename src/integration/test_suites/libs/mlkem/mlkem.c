@@ -80,15 +80,22 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
              *reg_ptr++ = 0;
         }
 
-        // Check that MLKEM SEED is loaded
-        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_MASK) == 0);
+        // Check that MLKEM SEED is loaded (poll for valid or error)
+        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & (ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_MASK | ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK)) == 0);
 
-        if (seed.exp_kv_err == TRUE) {
-            if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) != 0) {
+        if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) != 0) {
+            if (seed.exp_kv_err == TRUE) {
                 VPRINTF(LOW, "[MLKEM KeyGen] Received expected err for MLKEM seed read from KV\n");
             }
             else {
-                VPRINTF(ERROR, "[MLKEM KeyGen] Received unexpected success for MLKEM seed read from KV\n");
+                VPRINTF(ERROR, "[MLKEM KeyGen] Received unexpected err for MLKEM seed read from KV\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
+        else {
+            if (seed.exp_kv_err == TRUE) {
+                VPRINTF(ERROR, "[MLKEM KeyGen] Expected err but received success for MLKEM seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -103,6 +110,16 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
     VPRINTF(LOW, "[MLKEM KeyGen] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
+    // Verify engine is not ready after KV read error
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     VPRINTF(LOW, "[MLKEM KeyGen] Sending command\n");
     // Enable MLKEM KEYGEN flow
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
@@ -113,7 +130,7 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
 
     // wait for MLKEM KEYGEN process to be done
     wait_for_mlkem_intr();
-    
+
     // Read the data back from MLKEM register
     VPRINTF(LOW, "[MLKEM KeyGen] Checking encaps key\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR;
@@ -130,7 +147,7 @@ void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uin
         reg_ptr++;
         offset++;
     }
-        
+    
     if(!seed.kv_intf){
         VPRINTF(LOW, "[MLKEM KeyGen] Checking decaps key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR;
@@ -180,15 +197,22 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
             *reg_ptr++ = 0;
         }
 
-        // Check that MLKEM SEED is loaded
-        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_MASK) == 0);
+        // Check that MLKEM SEED is loaded (poll for valid or error)
+        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & (ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_MASK | ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK)) == 0);
 
-        if (seed.exp_kv_err == TRUE) {
-            if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) != 0) {
+        if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) != 0) {
+            if (seed.exp_kv_err == TRUE) {
                 VPRINTF(LOW, "[MLKEM KeyGen] Received expected err for MLKEM seed read from KV\n");
             }
             else {
-                VPRINTF(ERROR, "[MLKEM KeyGen] Received unexpected success for MLKEM seed read from KV\n");
+                VPRINTF(ERROR, "[MLKEM KeyGen] Received unexpected err for MLKEM seed read from KV\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
+        else {
+            if (seed.exp_kv_err == TRUE) {
+                VPRINTF(ERROR, "[MLKEM KeyGen] Expected err but received success for MLKEM seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -235,6 +259,16 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     VPRINTF(LOW, "[MLKEM KeyGen] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
+    // Verify engine is not ready after KV read error
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     VPRINTF(LOW, "[MLKEM KeyGen] Sending command\n");
     // Enable MLKEM KEYGEN flow
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
@@ -243,9 +277,9 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
                                                     ((!seed.kv_id << ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
-    // // wait for MLKEM KEYGEN process to be done
+    // wait for MLKEM KEYGEN process to be done
     wait_for_mlkem_intr();
-    
+
     // Read the data back from MLKEM register
     VPRINTF(LOW, "[MLKEM KeyGen] Read Encaps Key\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR;
@@ -255,7 +289,7 @@ void mlkem_keygen_flow(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint
         reg_ptr++;
         offset++;
     }
-        
+    
     if(!seed.kv_intf){
         VPRINTF(LOW, "[MLKEM KeyGen] Read Decaps Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_DECAPS_KEY_BASE_ADDR;
@@ -316,14 +350,21 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
             *reg_ptr++ = 0;
         }
 
-        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK) == 0);
+        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & (ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK | ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK)) == 0);
 
-        if (msg.exp_kv_err == TRUE) {
-            if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) != 0) {
-                VPRINTF(LOW, "[MLKEM KeyGen] Received expected err for MLKEM msg read from KV\n");
+        if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) != 0) {
+            if (msg.exp_kv_err == TRUE) {
+                VPRINTF(LOW, "[MLKEM Encaps] Received expected err for MLKEM msg read from KV\n");
             }
             else {
-                VPRINTF(ERROR, "[MLKEM KeyGen] Received unexpected success for MLKEM msg read from KV\n");
+                VPRINTF(ERROR, "[MLKEM Encaps] Received unexpected err for MLKEM msg read from KV\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
+        else {
+            if (msg.exp_kv_err == TRUE) {
+                VPRINTF(ERROR, "[MLKEM Encaps] Expected err but received success for MLKEM msg read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -353,6 +394,16 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
     VPRINTF(LOW, "[MLKEM Encaps] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
+   // Verify engine is not ready after KV read error
+    if (msg.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // Enable MLKEM ENCAPS flow
     VPRINTF(LOW, "[MLKEM Encaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
@@ -360,6 +411,7 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
     // Try to program keyvault msg read
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
                                                     ((!msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
+ 
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
 
@@ -404,7 +456,7 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
             else {
                 VPRINTF(LOW, "[MLKEM Encaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if ((msg.kv_intf == TRUE) && (msg.exp_kv_err == FALSE)) {
+            if ((msg.kv_intf == TRUE) && (msg.exp_kv_err == FALSE) && (shared_key.skip_kv_check == FALSE)) {
                 lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
             }
         }
@@ -478,15 +530,22 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
             *reg_ptr++ = 0;
         }
 
-        // Check that MLKEM SEED is loaded
-        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK) == 0);
+        // Check that MLKEM MSG is loaded (poll for valid or error)
+        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & (ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK | ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK)) == 0);
 
-        if (msg.exp_kv_err == TRUE) {
-            if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) != 0) {
-                VPRINTF(LOW, "[MLKEM KeyGen] Received expected err for MLKEM msg read from KV\n");
+        if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) != 0) {
+            if (msg.exp_kv_err == TRUE) {
+                VPRINTF(LOW, "[MLKEM Encaps] Received expected err for MLKEM msg read from KV\n");
             }
             else {
-                VPRINTF(ERROR, "[MLKEM KeyGen] Received unexpected success for MLKEM msg read from KV\n");
+                VPRINTF(ERROR, "[MLKEM Encaps] Received unexpected err for MLKEM msg read from KV\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
+        else {
+            if (msg.exp_kv_err == TRUE) {
+                VPRINTF(ERROR, "[MLKEM Encaps] Expected err but received success for MLKEM msg read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -529,6 +588,16 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
 
+    // Verify engine did is not ready after KV read error
+    if (msg.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // Enable MLKEM ENCAPS flow
     VPRINTF(LOW, "[MLKEM Encaps] Sending Command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
@@ -536,6 +605,7 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
     // Try to program keyvault msg read
     lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
                                                     ((!msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
+
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
 
@@ -572,7 +642,7 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
             else {
                 VPRINTF(LOW, "[MLKEM Encaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if ((msg.kv_intf == TRUE) && (msg.exp_kv_err == FALSE)) {
+            if ((msg.kv_intf == TRUE) && (msg.exp_kv_err == FALSE) && (shared_key.skip_kv_check == FALSE)) {
                 lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
             }
         }
@@ -841,15 +911,22 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
              *reg_ptr++ = 0;
         }
 
-        // Check that MLKEM SEED is loaded
-        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_MASK) == 0);
+        // Check that MLKEM SEED is loaded (poll for valid or error)
+        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & (ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_MASK | ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK)) == 0);
 
-        if (seed.exp_kv_err == TRUE) {
-            if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) != 0) {
-                VPRINTF(LOW, "[MLKEM KeyGen] Received expected err for MLKEM seed read from KV\n");
+        if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) != 0) {
+            if (seed.exp_kv_err == TRUE) {
+                VPRINTF(LOW, "[MLKEM KeyGen Decaps] Received expected err for MLKEM seed read from KV\n");
             }
             else {
-                VPRINTF(ERROR, "[MLKEM KeyGen] Received unexpected success for MLKEM seed read from KV\n");
+                VPRINTF(ERROR, "[MLKEM KeyGen Decaps] Received unexpected err for MLKEM seed read from KV\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
+        else {
+            if (seed.exp_kv_err == TRUE) {
+                VPRINTF(ERROR, "[MLKEM KeyGen Decaps] Expected err but received success for MLKEM seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -882,6 +959,16 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
     
+    // Verify engine is not ready after KV read error
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
+    }
+
     // Enable MLKEM KEYGEN DECAPS flow
     VPRINTF(LOW, "[MLKEM KeyGen Decaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN_DECAPS);
@@ -917,7 +1004,7 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
             else {
                 VPRINTF(LOW, "[MLKEM KeyGen Decaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if ((seed.kv_intf == TRUE) && (seed.exp_kv_err == FALSE)) {
+            if ((seed.kv_intf == TRUE) && (seed.exp_kv_err == FALSE) && (shared_key.skip_kv_check == FALSE)) {
                 lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
             }
         }
@@ -988,15 +1075,22 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
              *reg_ptr++ = 0;
         }
 
-         // Check that MLKEM SEED is loaded
-         while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_MASK) == 0);
+         // Check that MLKEM SEED is loaded (poll for valid or error)
+         while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & (ABR_REG_KV_MLKEM_SEED_RD_STATUS_VALID_MASK | ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK)) == 0);
 
-        if (seed.exp_kv_err == TRUE) {
-            if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) != 0) {
-                VPRINTF(LOW, "[MLKEM KeyGen] Received expected err for MLKEM seed read from KV\n");
+        if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) != 0) {
+            if (seed.exp_kv_err == TRUE) {
+                VPRINTF(LOW, "[MLKEM KeyGen Decaps] Received expected err for MLKEM seed read from KV\n");
             }
             else {
-                VPRINTF(ERROR, "[MLKEM KeyGen] Received unexpected success for MLKEM seed read from KV\n");
+                VPRINTF(ERROR, "[MLKEM KeyGen Decaps] Received unexpected err for MLKEM seed read from KV\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
+        else {
+            if (seed.exp_kv_err == TRUE) {
+                VPRINTF(ERROR, "[MLKEM KeyGen Decaps] Expected err but received success for MLKEM seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -1027,6 +1121,16 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK |
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
+    }
+
+    // Verify engine is not ready after KV read error
+    if (seed.exp_kv_err == TRUE) {
+        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
+            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while(1);
+        }
+        return;
     }
 
     // Enable MLKEM KEYGEN DECAPS flow
@@ -1064,7 +1168,7 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
             else {
                 VPRINTF(LOW, "[MLKEM KeyGen Decaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if ((seed.kv_intf == TRUE) && (seed.exp_kv_err == FALSE)) {
+            if ((seed.kv_intf == TRUE) && (seed.exp_kv_err == FALSE) && (shared_key.skip_kv_check == FALSE)) {
                 lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
             }
         }

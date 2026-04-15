@@ -65,11 +65,15 @@ void main() {
     uint8_t hmac512_key_kv_id;
 
     doe_uds_dest_id = rand() % 23;
-    doe_fe_dest_id = rand() % 23;
-    doe_hek_dest_id = rand() % 23;
+    do {
+        doe_fe_dest_id = rand() % 23;
+    } while(doe_fe_dest_id == doe_uds_dest_id);
+    do {
+        doe_hek_dest_id = rand() % 23;
+    } while((doe_hek_dest_id == doe_uds_dest_id) || (doe_hek_dest_id == doe_fe_dest_id));
     do {
         hmac512_key_kv_id = rand() % 23;
-    } while(hmac512_key_kv_id == doe_hek_dest_id);
+    } while((hmac512_key_kv_id == doe_hek_dest_id) || (hmac512_key_kv_id == doe_uds_dest_id) || (hmac512_key_kv_id == doe_fe_dest_id));
     
 
     VPRINTF(LOW,"doe_uds_dest_id = 0x%x\n", doe_uds_dest_id);
@@ -88,26 +92,33 @@ void main() {
     hmac_io hmac512_lfsr_seed;
     hmac_io hmac512_tag;
 
-    hmac512_key.kv_intf = TRUE;
-    hmac512_key.kv_id = hmac512_key_kv_id;
-    hmac512_key.exp_kv_err = FALSE;
-    VPRINTF(LOW,"hmac512_key_kv_id = 0x%x\n", hmac512_key_kv_id);
+        hmac512_key.kv_intf = TRUE;
+        hmac512_key.kv_id = hmac512_key_kv_id;
+        hmac512_key.exp_kv_err = FALSE;
+        VPRINTF(LOW,"hmac512_key_kv_id = 0x%x\n", hmac512_key_kv_id);
 
-    //inject hmac512_key to kv key reg (in RTL)
-    lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
+        //inject hmac512_key to kv key reg (in RTL)
+        lsu_write_32(STDOUT, (hmac512_key.kv_id << 8) | 0xa9); 
 
-    hmac512_block.kv_intf = TRUE;
-    hmac512_block.kv_id = doe_hek_dest_id;
-    hmac512_block.exp_kv_err = FALSE;
+        hmac512_block.kv_intf = TRUE;
+        hmac512_block.kv_id = doe_hek_dest_id;
+        // Expect a KV error if we're not in ocp lock mode, the hek won't have been loaded into the KV due to the OCP lock protection, 
+        // so any attempt to read it should cause an error. If we are in ocp lock mode, the HEK should be loaded into the KV and readable, 
+        // so no error expected.
+        if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) {
+            hmac512_block.exp_kv_err = FALSE;
+        } else {
+            hmac512_block.exp_kv_err = TRUE;
+        }
 
-    hmac512_lfsr_seed.data_size = HMAC512_LFSR_SEED_SIZE;
-    for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
-        hmac512_lfsr_seed.data[i] = hmac512_lfsr_seed_data[i];
+        hmac512_lfsr_seed.data_size = HMAC512_LFSR_SEED_SIZE;
+        for (int i = 0; i < HMAC512_LFSR_SEED_SIZE; i++)
+            hmac512_lfsr_seed.data[i] = hmac512_lfsr_seed_data[i];
 
-    hmac512_tag.kv_intf = TRUE;
-    hmac512_tag.kv_id = doe_hek_dest_id;
+        hmac512_tag.kv_intf = TRUE;
+        hmac512_tag.kv_id = doe_hek_dest_id;
 
-    hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+        hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
 
     SEND_STDOUT_CTRL(0xff); //End the test
     
