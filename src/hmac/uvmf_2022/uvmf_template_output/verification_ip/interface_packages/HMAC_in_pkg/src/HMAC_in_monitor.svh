@@ -17,7 +17,7 @@
 //----------------------------------------------------------------------
 //
 class HMAC_in_monitor #(
-      int AHB_DATA_WIDTH = 32,
+      int AHB_DATA_WIDTH = 64,
       int AHB_ADDR_WIDTH = 32,
       bit BYPASS_HSEL = 0
       )

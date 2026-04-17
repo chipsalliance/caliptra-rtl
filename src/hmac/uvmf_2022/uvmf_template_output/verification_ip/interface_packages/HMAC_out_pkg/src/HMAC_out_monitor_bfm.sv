@@ -34,7 +34,7 @@ import HMAC_out_pkg_hdl::*;
 
 
 interface HMAC_out_monitor_bfm #(
-  int AHB_DATA_WIDTH = 32,
+  int AHB_DATA_WIDTH = 64,
   int AHB_ADDR_WIDTH = 32,
   int OUTPUT_TEXT_WIDTH = 512,
   bit BYPASS_HSEL = 0
@@ -204,37 +204,40 @@ end
       while (transaction_flag_in_monitor_i ==0) @(posedge clk_i);
       repeat(4) @(posedge clk_i);
       if (transaction_flag_in_monitor_i == 1 ) transaction_flag = 1;
-      block_temp[511:480] = hrdata_i;
+      // TAG registers are 32-bit at consecutive 4-byte addresses.
+      // With 64-bit AHB, data is in low lane ([31:0]) for addr[2]=0,
+      // high lane ([63:32]) for addr[2]=1. TAG0=0x100 (addr[2]=0), etc.
+      block_temp[511:480] = hrdata_i[31:0];   // TAG0  addr[2]=0
       repeat (2) @(posedge clk_i);
-      block_temp[479:448] = hrdata_i;
+      block_temp[479:448] = hrdata_i[63:32];  // TAG1  addr[2]=1
       repeat (2) @(posedge clk_i);
-      block_temp[447:416] = hrdata_i;
+      block_temp[447:416] = hrdata_i[31:0];   // TAG2  addr[2]=0
       repeat (2) @(posedge clk_i);
-      block_temp[415:384] = hrdata_i;
+      block_temp[415:384] = hrdata_i[63:32];  // TAG3  addr[2]=1
       repeat (2) @(posedge clk_i);
-      block_temp[383:352] = hrdata_i;
+      block_temp[383:352] = hrdata_i[31:0];   // TAG4  addr[2]=0
       repeat (2) @(posedge clk_i);
-      block_temp[351:320] = hrdata_i;
+      block_temp[351:320] = hrdata_i[63:32];  // TAG5  addr[2]=1
       repeat (2) @(posedge clk_i);
-      block_temp[319:288] = hrdata_i;
+      block_temp[319:288] = hrdata_i[31:0];   // TAG6  addr[2]=0
       repeat (2) @(posedge clk_i);
-      block_temp[287:256] = hrdata_i;
+      block_temp[287:256] = hrdata_i[63:32];  // TAG7  addr[2]=1
       repeat (2) @(posedge clk_i);
-      block_temp[255:224] = hrdata_i;
+      block_temp[255:224] = hrdata_i[31:0];   // TAG8  addr[2]=0
       repeat (2) @(posedge clk_i);
-      block_temp[223:192] = hrdata_i;
+      block_temp[223:192] = hrdata_i[63:32];  // TAG9  addr[2]=1
       repeat (2) @(posedge clk_i);
-      block_temp[191:160] = hrdata_i;
+      block_temp[191:160] = hrdata_i[31:0];   // TAG10 addr[2]=0
       repeat (2) @(posedge clk_i);
-      block_temp[159:128] = hrdata_i;
+      block_temp[159:128] = hrdata_i[63:32];  // TAG11 addr[2]=1
       repeat (2) @(posedge clk_i);
-      block_temp[127:96]  = hrdata_i;
+      block_temp[127:96]  = hrdata_i[31:0];   // TAG12 addr[2]=0
       repeat (2) @(posedge clk_i);
-      block_temp[95:64]   = hrdata_i;
+      block_temp[95:64]   = hrdata_i[63:32];  // TAG13 addr[2]=1
       repeat (2) @(posedge clk_i);
-      block_temp[63:32]   = hrdata_i;
+      block_temp[63:32]   = hrdata_i[31:0];   // TAG14 addr[2]=0
       repeat (2) @(posedge clk_i);
-      block_temp[31:0]    = hrdata_i;
+      block_temp[31:0]    = hrdata_i[63:32];  // TAG15 addr[2]=1
 
       @(posedge clk_i);
       HMAC_out_monitor_struct.result = block_temp;
