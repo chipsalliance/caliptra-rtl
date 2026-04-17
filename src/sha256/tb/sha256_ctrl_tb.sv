@@ -335,8 +335,6 @@ module sha256_ctrl_tb();
       htrans_i_tb     = AHB_HTRANS_IDLE;
       read_data = address[2] ? hrdata_o_tb[63:32] : hrdata_o_tb[31:0];
     end
-  endtask // read_word    
-    end
   endtask // read_word
 
 
