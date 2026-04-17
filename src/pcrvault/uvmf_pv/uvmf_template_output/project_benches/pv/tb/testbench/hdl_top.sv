@@ -125,7 +125,7 @@ import uvmf_base_pkg_hdl::*;
   assign pv_sha512_write_agent_bus.pv_wr_resp       = pv_wr_resp[SHA512_WRITE_IDX];
 
   pv #(
-    .AHB_ADDR_WIDTH(15), //(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_PV)),
+    .AHB_ADDR_WIDTH(13), //(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_PV)),
     .AHB_DATA_WIDTH(64) //(`CALIPTRA_AHB_HDATA_SIZE)
   )
   dut
@@ -135,7 +135,7 @@ import uvmf_base_pkg_hdl::*;
       .cptra_pwrgood (pv_rst_agent_bus.cptra_pwrgood),
       .core_only_rst_b(pv_rst_agent_bus.core_only_rst_b),
       .fw_update_rst_window(pv_rst_agent_bus.fw_update_rst_window),
-      .haddr_i       (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HADDR[14:0]),
+      .haddr_i       (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HADDR[12:0]),
       .hwdata_i      (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWDATA     ),
       .hsel_i        (1'b1),
       .hwrite_i      (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWRITE     ),
