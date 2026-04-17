@@ -58,7 +58,7 @@ import SHA512_in_pkg_hdl::*;
 `include "src/SHA512_in_macros.svh"
 
 interface SHA512_in_driver_bfm #(
-  int AHB_DATA_WIDTH = 32,
+  int AHB_DATA_WIDTH = 64,
   int AHB_ADDR_WIDTH = 32,
   bit BYPASS_HSEL = 0
   )
@@ -423,7 +423,7 @@ end
       @(posedge clk_i);
 
       hadrr_o      = 'Z;
-      hwdata_o     = word;
+      hwdata_o     = address[2] ? {word, 32'h0} : {32'h0, word};
       hwrite_o     = 0;
       htrans_o     = AHB_HTRANS_IDLE;
     end

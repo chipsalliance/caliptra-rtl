@@ -28,7 +28,7 @@ import uvmf_base_pkg_hdl::*;
 import SHA512_out_pkg_hdl::*;
 
 interface  SHA512_out_if #(
-  int AHB_DATA_WIDTH = 32,
+  int AHB_DATA_WIDTH = 64,
   int AHB_ADDR_WIDTH = 32,
   int OUTPUT_TEXT_WIDTH = 512,
   bit BYPASS_HSEL = 0

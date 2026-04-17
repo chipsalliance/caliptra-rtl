@@ -29,7 +29,7 @@
 
 `include "uvm_macros.svh"
 
-class SHA512_random_sequence #(int AHB_DATA_WIDTH = 32,
+class SHA512_random_sequence #(int AHB_DATA_WIDTH = 64,
                             int AHB_ADDR_WIDTH = 32,
                             bit BYPASS_HSEL = 0
                             ) extends SHA512_bench_sequence_base;

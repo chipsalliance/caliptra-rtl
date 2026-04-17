@@ -34,7 +34,7 @@ import SHA512_out_pkg_hdl::*;
 
 
 interface SHA512_out_monitor_bfm #(
-  int AHB_DATA_WIDTH = 32,
+  int AHB_DATA_WIDTH = 64,
   int AHB_ADDR_WIDTH = 32,
   int OUTPUT_TEXT_WIDTH = 512,
   bit BYPASS_HSEL = 0
@@ -209,38 +209,43 @@ end
         @(posedge clk_i);
       end
 
+      // Digest registers are 32-bit at consecutive 4-byte addresses.
+      // With 64-bit AHB, ahb_slv_sif places 32-bit data in the lane
+      // selected by addr[2]: low lane ([31:0]) for addr[2]=0,
+      // high lane ([63:32]) for addr[2]=1.
+      // DIGEST0=0x100 (addr[2]=0), DIGEST1=0x104 (addr[2]=1), etc.
       repeat(2) @(posedge clk_i);
-      result_temp[511 : 480] = hrdata_i;
+      result_temp[511 : 480] = hrdata_i[31:0];   // DIGEST0  addr[2]=0
       @(posedge clk_i);
-      result_temp[479 : 448] = hrdata_i;
+      result_temp[479 : 448] = hrdata_i[63:32];  // DIGEST1  addr[2]=1
       @(posedge clk_i);
-      result_temp[447 : 416] = hrdata_i;
+      result_temp[447 : 416] = hrdata_i[31:0];   // DIGEST2  addr[2]=0
       @(posedge clk_i);
-      result_temp[415 : 384] = hrdata_i;
+      result_temp[415 : 384] = hrdata_i[63:32];  // DIGEST3  addr[2]=1
       @(posedge clk_i);
-      result_temp[383 : 352] = hrdata_i;
+      result_temp[383 : 352] = hrdata_i[31:0];   // DIGEST4  addr[2]=0
       @(posedge clk_i);
-      result_temp[351 : 320] = hrdata_i;
+      result_temp[351 : 320] = hrdata_i[63:32];  // DIGEST5  addr[2]=1
       @(posedge clk_i);
-      result_temp[319 : 288] = hrdata_i;
+      result_temp[319 : 288] = hrdata_i[31:0];   // DIGEST6  addr[2]=0
       @(posedge clk_i);
-      result_temp[287 : 256] = hrdata_i;
+      result_temp[287 : 256] = hrdata_i[63:32];  // DIGEST7  addr[2]=1
       @(posedge clk_i);
-      result_temp[255 : 224] = hrdata_i;
+      result_temp[255 : 224] = hrdata_i[31:0];   // DIGEST8  addr[2]=0
       @(posedge clk_i);
-      result_temp[223 : 192] = hrdata_i;
+      result_temp[223 : 192] = hrdata_i[63:32];  // DIGEST9  addr[2]=1
       @(posedge clk_i);
-      result_temp[191 : 160] = hrdata_i;
+      result_temp[191 : 160] = hrdata_i[31:0];   // DIGEST10 addr[2]=0
       @(posedge clk_i);
-      result_temp[159 : 128] = hrdata_i;
+      result_temp[159 : 128] = hrdata_i[63:32];  // DIGEST11 addr[2]=1
       @(posedge clk_i);
-      result_temp[127 :  96] = hrdata_i;
+      result_temp[127 :  96] = hrdata_i[31:0];   // DIGEST12 addr[2]=0
       @(posedge clk_i);
-      result_temp[95  :  64] = hrdata_i;
+      result_temp[95  :  64] = hrdata_i[63:32];  // DIGEST13 addr[2]=1
       @(posedge clk_i);
-      result_temp[63  :  32] = hrdata_i;
+      result_temp[63  :  32] = hrdata_i[31:0];   // DIGEST14 addr[2]=0
       @(posedge clk_i);
-      result_temp[31  :   0] = hrdata_i;
+      result_temp[31  :   0] = hrdata_i[63:32];  // DIGEST15 addr[2]=1
       @(posedge clk_i);
     end
 

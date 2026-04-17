@@ -94,15 +94,15 @@ initial begin
 end
 
   sha512_ctrl #(
-             .AHB_DATA_WIDTH(32),
-             .AHB_ADDR_WIDTH(32)
+             .AHB_DATA_WIDTH(64),
+             .AHB_ADDR_WIDTH(15)
             )
             dut (
              .clk(SHA512_in_agent_bus.clk),
              .reset_n(SHA512_in_agent_bus.rst),
              .cptra_pwrgood(cptra_pwrgood),
 
-             .haddr_i(SHA512_in_agent_bus.hadrr),
+             .haddr_i(SHA512_in_agent_bus.hadrr[14:0]),
              .hwdata_i(SHA512_in_agent_bus.hwdata),
              .hsel_i(SHA512_in_agent_bus.hsel),
              .hwrite_i(SHA512_in_agent_bus.hwrite),

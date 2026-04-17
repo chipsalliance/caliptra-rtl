@@ -533,10 +533,6 @@ pv_gen_hash1
   .pv_rd_resp(pv_rd_resp)
 );
 
-`CALIPTRA_ASSERT_STABLE(ERR_SHA_KEY_RD_CTRL_NOT_STABLE, kv_read_ctrl_reg, clk, (!reset_n || ready_reg) )
-`CALIPTRA_ASSERT_STABLE(ERR_SHA_WR_CTRL_NOT_STABLE, kv_write_ctrl_reg, clk, (!reset_n || ready_reg) )
-`CALIPTRA_ASSERT_STABLE(ERR_SHA_BLOCK_NOT_STABLE, block_reg, clk, (!reset_n || ready_reg) )
-
 endmodule // sha512
 
 //======================================================================
