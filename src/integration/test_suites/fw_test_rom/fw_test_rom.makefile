@@ -89,9 +89,13 @@ $(TEST_DIR)/$(TESTNAME).extracted: caliptra_release_v$(today)_0-2.x.zip
 	 touch $(TEST_DIR)/$(TESTNAME).extracted
 
 # Retrieve latest build from caliptra-sw repo
-# Fail if a build from within the last 30 days is not found
+# Fail if GITHUB_TOKEN is not set or a build from within the last 30 days is not found
 caliptra_release_v$(today)_0-2.x.zip: $(TEST_DIR)/$(TESTNAME)
-	@base_url='https://github.com/chipsalliance/caliptra-sw/releases/download/'
+	@if [[ -z "$${GITHUB_TOKEN}" ]]; then
+	  echo "ERROR: GITHUB_TOKEN is not set. A GitHub PAT with repo read access is required to download caliptra-sw release assets."
+	  exit 1
+	fi
+	base_url='https://github.com/chipsalliance/caliptra-sw/releases/download/'
 	found=0
 	full_path=""
 	for days_ago in $$(seq 0 31); do
@@ -100,14 +104,14 @@ caliptra_release_v$(today)_0-2.x.zip: $(TEST_DIR)/$(TESTNAME)
 	  super_base="release_v$${test_date}_0-2.x"
 	  zipfile_base="caliptra_release_v$${test_date}_0-2.x"
 	  full_path="$${base_url}/$${super_base}/$${zipfile_base}.zip"
-	  if wget --spider --quiet $${full_path}; then
+	  if wget --spider --quiet --header="Authorization: Bearer $${GITHUB_TOKEN}" $${full_path}; then
 	    echo "Found $${full_path}";
 	    found=1
 	    break;
 	  fi
 	done
 	if [[ $${found} -eq 1 ]]; then
-	  wget --no-hsts --no-use-server-timestamps $${full_path}
+	  wget --no-hsts --no-use-server-timestamps --header="Authorization: Bearer $${GITHUB_TOKEN}" $${full_path}
 	else
 	  exit 1
 	fi
