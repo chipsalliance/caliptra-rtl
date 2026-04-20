@@ -15,7 +15,6 @@
 #
 GCC_PREFIX = riscv64-unknown-elf
 BUILD_DIR = $(CURDIR)
-today=$(shell date +%Y%m%d)
 
 # Define test name
 TESTNAME ?= fw_test_rom
@@ -56,12 +55,12 @@ clean:
 ############ TEST build ###############################
 
 # Build program.hex from RUST executable
-program.hex: vendor_pk_hash_val.hex owner_pk_hash_val.hex fw_update.hex $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME)
+program.hex: vendor_pk_hash_val.hex owner_pk_hash_val.hex fw_update.hex $(TEST_DIR)/$(TESTNAME) $(TEST_DIR)/$(TESTNAME_fw)
 	@-echo "Building program.hex from $(TESTNAME) using Crypto Test rules for pre-compiled RUST executables"
 	$(GCC_PREFIX)-objcopy -I binary -O verilog --pad-to 0xC000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME) program.hex
 	du -b $(TEST_DIR)/$(TESTNAME) | cut -f1 > $(TESTNAME).size
 
-fw_update.hex: $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME_fw)
+fw_update.hex: $(TEST_DIR)/$(TESTNAME) $(TEST_DIR)/$(TESTNAME_fw)
 	@-echo "Building fw_update.hex from $(TESTNAME_fw) using binary objcopy pre-compiled RUST package"
 	$(GCC_PREFIX)-objcopy -I binary -O verilog --pad-to 0x20000 --gap-fill 0xFF --no-change-warnings $(TEST_DIR)/$(TESTNAME_fw) fw_update.hex
 	du -b $(TEST_DIR)/$(TESTNAME_fw) | cut -f1 > fw_update.size
@@ -70,55 +69,29 @@ fw_update.hex: $(TEST_DIR)/$(TESTNAME).extracted $(TEST_DIR)/$(TESTNAME_fw)
 vendor_pk_hash_val.hex: vendor_pk_val.bin
 	sha384sum vendor_pk_val.bin | sed 's,\s\+\S\+$$,,' > vendor_pk_hash_val.hex
 
-vendor_pk_val.bin: $(TEST_DIR)/$(TESTNAME).extracted
+vendor_pk_val.bin: $(TEST_DIR)/$(TESTNAME_fw)
 	dd ibs=1 obs=1 if=$(TEST_DIR)/$(TESTNAME_fw) of=vendor_pk_val.bin skip=$(KEY_MANIFEST_ECC_PK_ROM_OFFSET) count=$(KEY_MANIFEST_PK_LENGTH)
 
 owner_pk_hash_val.hex: owner_pk_val.bin
 	sha384sum owner_pk_val.bin | sed 's,\s\+\S\+$$,,' > owner_pk_hash_val.hex
 
-owner_pk_val.bin: $(TEST_DIR)/$(TESTNAME).extracted
+owner_pk_val.bin: $(TEST_DIR)/$(TESTNAME_fw)
 	dd ibs=1 obs=1 if=$(TEST_DIR)/$(TESTNAME_fw) of=owner_pk_val.bin skip=$(OWNER_ECC_PK_ROM_OFFSET) count=$(OWNER_PK_LENGTH)
 
-# Extract compiled FW from latest retrieved release
-$(TEST_DIR)/$(TESTNAME).extracted: caliptra_release_v$(today)_0-2.x.zip
-	@7z x -o"$(TEST_DIR)" $< caliptra-rom-with-log.bin
-	 7z x -o"$(TEST_DIR)" $< image-bundle-mldsa.bin
-	 rm $<
-	 mv $(TEST_DIR)/caliptra-rom-with-log.bin $(TEST_DIR)/$(TESTNAME)
-	 mv $(TEST_DIR)/image-bundle-mldsa.bin    $(TEST_DIR)/$(TESTNAME_fw)
-	 touch $(TEST_DIR)/$(TESTNAME).extracted
+# ROM and FW binaries must already be present. For pipeline regressions, these
+# are pre-fetched by fetch_caliptra_sw_release.sh. For releases, they are
+# included in the repository.
+$(TEST_DIR)/$(TESTNAME):
+	@echo "ERROR: ROM binary not found at $@"
+	echo "For pipeline use, ensure fetch_caliptra_sw_release.sh runs before this step."
+	echo "For local use, place caliptra-rom-with-log.bin at $@"
+	exit 1
 
-# Retrieve latest build from caliptra-sw repo
-# Fail if GITHUB_TOKEN is not set or a build from within the last 30 days is not found
-caliptra_release_v$(today)_0-2.x.zip: $(TEST_DIR)/$(TESTNAME)
-	@if [[ -z "$${GITHUB_TOKEN}" ]]; then
-	  echo "ERROR: GITHUB_TOKEN is not set. A GitHub PAT with repo read access is required to download caliptra-sw release assets."
-	  exit 1
-	fi
-	base_url='https://github.com/chipsalliance/caliptra-sw/releases/download/'
-	found=0
-	full_path=""
-	for days_ago in $$(seq 0 31); do
-	  test_date=$$(date +%Y%m%d --date="$(today) -$${days_ago} days")
-	  echo "Checking date $${test_date} for package"
-	  super_base="release_v$${test_date}_0-2.x"
-	  zipfile_base="caliptra_release_v$${test_date}_0-2.x"
-	  full_path="$${base_url}/$${super_base}/$${zipfile_base}.zip"
-	  if wget --spider --quiet --header="Authorization: Bearer $${GITHUB_TOKEN}" $${full_path}; then
-	    echo "Found $${full_path}";
-	    found=1
-	    break;
-	  fi
-	done
-	if [[ $${found} -eq 1 ]]; then
-	  wget --no-hsts --no-use-server-timestamps --header="Authorization: Bearer $${GITHUB_TOKEN}" $${full_path}
-	else
-	  exit 1
-	fi
-	# Cheesy rename to satisfy makefile dependency
-	if [[ ! -f "caliptra_release_v$(today)_0-2.x.zip" ]]; then
-	  mv $${zipfile_base}.zip "caliptra_release_v$(today)_0-2.x.zip"
-	fi
+$(TEST_DIR)/$(TESTNAME_fw):
+	@echo "ERROR: FW binary not found at $@"
+	echo "For pipeline use, ensure fetch_caliptra_sw_release.sh runs before this step."
+	echo "For local use, place image-bundle-mldsa.bin at $@"
+	exit 1
 
 help:
 	@echo Make sure the environment variable RV_ROOT is set.
