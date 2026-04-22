@@ -85,6 +85,9 @@ modport responder_port
   
 
 // pragma uvmf custom interface_item_additional begin
+  // ahb_slv_sif places 32-bit read data in one lane and zeros the other.
+  // OR the lanes to recover the 32-bit value regardless of address alignment.
+  wire [31:0] hrdata_32 = hrdata[31:0] | hrdata[63:32];
 // pragma uvmf custom interface_item_additional end
 
 endinterface
