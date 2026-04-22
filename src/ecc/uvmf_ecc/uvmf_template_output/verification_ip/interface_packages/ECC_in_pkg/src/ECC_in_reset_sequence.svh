@@ -16,7 +16,7 @@
 //----------------------------------------------------------------------
 //
 class ECC_in_reset_sequence #(
-    int AHB_DATA_WIDTH = 32,
+    int AHB_DATA_WIDTH = 64,
     int AHB_ADDR_WIDTH = 32
     )
 extends ECC_in_sequence_base #(

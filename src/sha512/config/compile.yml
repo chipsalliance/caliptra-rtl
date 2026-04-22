@@ -25,7 +25,7 @@ targets:
       #- $COMPILE_ROOT/config/rtl_lint/sha512.waiver
       - $MSFT_REPO_ROOT/src/sha512/config/design_lint/sha512_ctrl/sglint_waivers
 ---
-provides: [sha512_ctrl_32bit_tb]  
+provides: [sha512_ctrl_tb]  
 schema_version: 2.4.0
 requires: 
   - sha512_ctrl
@@ -36,8 +36,8 @@ targets:
     directories: 
       - $COMPILE_ROOT/tb
     files:
-      - $COMPILE_ROOT/tb/sha512_ctrl_32bit_tb.sv
-    tops: [sha512_ctrl_32bit_tb]
+      - $COMPILE_ROOT/tb/sha512_ctrl_tb.sv
+    tops: [sha512_ctrl_tb]
 global:
   tool:
     vcs:

@@ -25,7 +25,7 @@ class SHA512_random_test extends test_top;
   endfunction
 
   virtual function void build_phase(uvm_phase phase);
-    SHA512_bench_sequence_base::type_id::set_type_override(SHA512_random_sequence#(.AHB_DATA_WIDTH(32), .AHB_ADDR_WIDTH(32), .BYPASS_HSEL(0))::get_type());
+    SHA512_bench_sequence_base::type_id::set_type_override(SHA512_random_sequence#(.AHB_DATA_WIDTH(64), .AHB_ADDR_WIDTH(32), .BYPASS_HSEL(0))::get_type());
     // Execute the build_phase of test_top AFTER all factory overrides have been created.
     super.build_phase(phase);
     // pragma uvmf custom configuration_settings_post_randomize begin

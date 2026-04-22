@@ -42,7 +42,7 @@ class HMAC_otf_reset_test extends test_top;
 
   virtual function void build_phase(uvm_phase phase );
     // UVM Factory override. Override HMAC_bench_sequence_base with HMAC_otf_reset_sequence
-    HMAC_bench_sequence_base::type_id::set_type_override(HMAC_otf_reset_sequence #(32,32,0)::get_type());
+    HMAC_bench_sequence_base::type_id::set_type_override(HMAC_otf_reset_sequence #(64,32,0)::get_type());
     super.build_phase(phase);
   endfunction : build_phase
 

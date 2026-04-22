@@ -15,7 +15,7 @@
 //
 class ECC_in_configuration #(
       int AHB_ADDR_WIDTH = 32,
-      int AHB_DATA_WIDTH = 32
+      int AHB_DATA_WIDTH = 64
       )
  extends uvmf_parameterized_agent_configuration_base #(
       .DRIVER_BFM_BIND_T(virtual ECC_in_driver_bfm #(

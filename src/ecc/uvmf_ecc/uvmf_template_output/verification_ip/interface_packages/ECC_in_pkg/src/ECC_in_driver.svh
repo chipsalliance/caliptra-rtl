@@ -17,7 +17,7 @@
 //
 class ECC_in_driver  #(
       int AHB_ADDR_WIDTH = 32,
-      int AHB_DATA_WIDTH = 32
+      int AHB_DATA_WIDTH = 64
       )
  extends uvmf_driver_base #(
                    .CONFIG_T(ECC_in_configuration  #(

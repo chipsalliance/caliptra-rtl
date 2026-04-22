@@ -245,7 +245,7 @@ import uvmf_base_pkg_hdl::*;
   assign kv_aes_write_agent_bus.kv_wr_resp         = kv_wr_resp[AES_WRITE_IDX        ];
 
   kv #(
-      .AHB_ADDR_WIDTH(15       ),
+      .AHB_ADDR_WIDTH(13       ),
       .AHB_DATA_WIDTH(64       )
   ) dut (
       .clk              (clk          ),
@@ -257,7 +257,7 @@ import uvmf_base_pkg_hdl::*;
 
       //uC AHB Lite Interface
       //from SLAVES PORT
-      .haddr_i    (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HADDR[14:0]),
+      .haddr_i    (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HADDR[12:0]),
       .hwdata_i   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWDATA     ),
       .hsel_i     (1'b1                                                                                     ),
       .hwrite_i   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HWRITE     ),

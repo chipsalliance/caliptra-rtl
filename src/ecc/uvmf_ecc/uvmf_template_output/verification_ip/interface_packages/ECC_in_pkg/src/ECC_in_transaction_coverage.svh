@@ -16,7 +16,7 @@
 //
 class ECC_in_transaction_coverage #(
       int AHB_ADDR_WIDTH = 32,
-      int AHB_DATA_WIDTH = 32
+      int AHB_DATA_WIDTH = 64
       )
  extends uvm_subscriber #(.T(ECC_in_transaction #(
                                             .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),

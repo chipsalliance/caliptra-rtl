@@ -34,7 +34,7 @@ import HMAC_in_pkg_hdl::*;
 
 
 interface HMAC_in_monitor_bfm #(
-  int AHB_DATA_WIDTH = 32,
+  int AHB_DATA_WIDTH = 64,
   int AHB_ADDR_WIDTH = 32,
   bit BYPASS_HSEL = 0
   )

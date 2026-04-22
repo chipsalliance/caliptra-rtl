@@ -15,7 +15,7 @@
 
 `include "uvm_macros.svh"
 
-class ECC_normal_sequence #(int AHB_DATA_WIDTH = 32,
+class ECC_normal_sequence #(int AHB_DATA_WIDTH = 64,
                             int AHB_ADDR_WIDTH = 32
                             ) extends ECC_bench_sequence_base;
 
