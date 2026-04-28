@@ -17,8 +17,6 @@
 // AHB Lite Address Decoder
 // -------------------------------------------------------------
 
-`include "caliptra_prim_assert.sv"
-
 module ahb_lite_address_decoder #(
     parameter AHB_LITE_ADDR_WIDTH   = 32,
     parameter AHB_LITE_DATA_WIDTH   = 32,
@@ -71,6 +69,9 @@ module ahb_lite_address_decoder #(
     input logic     [NUM_RESPONDERS-1:0][AHB_LITE_ADDR_WIDTH-1:0]   responder_end_addr_i
 
 );
+
+    `include "caliptra_sva.svh"
+    `include "config_defines.svh"
 
     localparam AHB_XFER_IDLE   = 2'b00;
     localparam AHB_XFER_BUSY   = 2'b01;

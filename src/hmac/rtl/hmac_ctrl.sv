@@ -23,6 +23,7 @@
 //======================================================================
 
 
+`include "caliptra_macros.svh"
 `include "kv_macros.svh"
 
 module hmac_ctrl 

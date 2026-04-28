@@ -6,12 +6,10 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files: 
       - $COMPILE_ROOT/rtl/kv_defines_pkg.sv
-      - $COMPILE_ROOT/rtl/kv_macros.svh
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/kv_defines_pkg.sv
-      - $COMPILE_ROOT/rtl/kv_macros.svh
 ---
 provides: [kv_uvm_pkg]
 schema_version: 2.4.0
