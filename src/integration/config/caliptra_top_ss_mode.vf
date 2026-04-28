@@ -54,8 +54,6 @@
 +incdir+${CALIPTRA_ROOT}/src/sha3/rtl
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
-${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
-${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_ahb_srom.sv
@@ -66,12 +64,9 @@ ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_2ff_sync.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/skidbuffer.v
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
-${CALIPTRA_ROOT}/src/keyvault/rtl/kv_macros.svh
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_defines_pkg.sv
-${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_macros.svh
 ${CALIPTRA_ROOT}/src/pcrvault/rtl/pv_gen_hash.sv
 ${CALIPTRA_ROOT}/src/datavault/rtl/dv_defines_pkg.sv
-${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pdef.vh
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include/el2_def.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/common_defines.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/beh_lib.sv
@@ -285,11 +280,8 @@ ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_pe_final.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_mult_dsp.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_add_sub_mod_alter.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_adder.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/rtl/abr_config_defines.svh
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/rtl/abr_params_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/rtl/abr_reg_pkg.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_sva.svh
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_macros.svh
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_1r1w_ram.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_1r1w_be_ram.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_1r1w_512x4_ram.sv

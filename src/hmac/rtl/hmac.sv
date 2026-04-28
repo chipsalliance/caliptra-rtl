@@ -20,7 +20,9 @@
 //
 //======================================================================
 //`include "kv_defines.svh"
+`include "caliptra_macros.svh"
 `include "kv_macros.svh"
+`include "caliptra_prim_assert.sv"
 
 module hmac 
        import hmac_param_pkg::*;

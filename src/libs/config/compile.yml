@@ -7,8 +7,6 @@ targets:
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/caliptra_sva.svh
-      - $COMPILE_ROOT/rtl/caliptra_macros.svh
       - $COMPILE_ROOT/rtl/caliptra_sram.sv
       - $COMPILE_ROOT/rtl/ahb_defines_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_ahb_srom.sv
@@ -21,8 +19,6 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/caliptra_sva.svh
-      - $COMPILE_ROOT/rtl/caliptra_macros.svh
       - $COMPILE_ROOT/rtl/caliptra_sram.sv
       - $COMPILE_ROOT/rtl/ahb_defines_pkg.sv
       - $COMPILE_ROOT/rtl/caliptra_ahb_srom.sv
