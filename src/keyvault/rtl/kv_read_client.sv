@@ -20,6 +20,7 @@ module kv_read_client
     #(
     parameter DATA_WIDTH = 512
    ,parameter HMAC = 0
+   ,parameter AES = 0
    ,parameter PAD = 0
 
    ,localparam DATA_OFFSET_W = $clog2(DATA_WIDTH/32)
@@ -55,6 +56,8 @@ logic [DATA_OFFSET_W-1:0] read_offset;
 logic [DATA_OFFSET_W:0] num_dwords;
 logic write_pad;
 logic [31:0] pad_data;
+
+logic kv_fsm_ready;
 
 assign num_dwords = DATA_WIDTH/32;
 
@@ -93,7 +96,7 @@ kv_read_fsm
     .write_pad(write_pad),
     .write_last(),
     .pad_data(pad_data),
-    .ready(kv_ready),
+    .ready(kv_fsm_ready),
     .done(read_done)
 );
 
@@ -113,12 +116,22 @@ always_ff @(posedge clk or negedge rst_b) begin
         // On first beat of kv read, latch any error conditions.
         // On subsequent beats of kv read, preserve any error that was previously
         // flagged or decode new error conditions
-        error_code <= validated_read_en && |write_offset && (error_code != KV_SUCCESS) ? error_code :
-                      validated_read_en & ~read_allow ? KV_READ_FAIL :
-                      validated_read_en & kv_resp.error ? KV_READ_FAIL : 
-                      validated_read_en & ~kv_resp.error ? KV_SUCCESS : error_code;
+        error_code <= validated_read_en && ~read_allow ? KV_READ_FAIL :
+                      write_en && |write_offset && (error_code != KV_SUCCESS) ? error_code :
+                      write_en && kv_resp.error ? KV_READ_FAIL : 
+                      write_en && ~kv_resp.error ? KV_SUCCESS : error_code;
     end
 end
+
+//for AES kv ready can't be held for errors since AES does not have zeroize support
+//AES already handles the key material in case of errors
+generate
+    if (AES) begin : aes_kv_ready_gen
+        always_comb kv_ready = kv_fsm_ready & ~validated_read_en;
+    end else begin :non_aes_kv_ready_gen
+        always_comb kv_ready = kv_fsm_ready & (error_code == KV_SUCCESS) & ~validated_read_en;
+    end
+endgenerate
 
 `CALIPTRA_ASSERT_KNOWN(READ_METRICS_X,  read_metrics, clk, !rst_b)
 

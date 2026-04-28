@@ -35,7 +35,7 @@ import ECC_in_pkg_hdl::*;
 
 interface ECC_in_monitor_bfm #(
   int AHB_ADDR_WIDTH = 32,
-  int AHB_DATA_WIDTH = 32
+  int AHB_DATA_WIDTH = 64
   )
 
   ( ECC_in_if  bus );

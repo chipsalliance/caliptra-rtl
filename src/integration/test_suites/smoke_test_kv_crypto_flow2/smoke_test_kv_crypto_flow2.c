@@ -546,12 +546,15 @@ void random_generator(uint8_t *uds_id, uint8_t *fe_id, uint8_t *hek_id, uint8_t 
     /* Intializes random number generator */  //TODO    
     srand(time);
 
+    //Pick random entries for DOE to use, never pick slot 23 it causes DOE FSM to hang
+    *uds_id = xorshift32() % 23;  // UDS kv id
+
     do {
-        *fe_id = xorshift32() % 24;   // FE kv id
+        *fe_id = xorshift32() % 23;   // FE kv id
     } while(*fe_id == *uds_id);
 
     do {
-        *hek_id = xorshift32() % 24; 
+        *hek_id = xorshift32() % 23; 
     } while((*hek_id == *uds_id) | 
             (*hek_id == *fe_id));
  

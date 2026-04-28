@@ -35,7 +35,7 @@ import uvmf_base_pkg_hdl::*;
 import HMAC_in_pkg_hdl::*;
 
 interface  HMAC_in_if #(
-  int AHB_DATA_WIDTH = 32,
+  int AHB_DATA_WIDTH = 64,
   int AHB_ADDR_WIDTH = 32,
   bit BYPASS_HSEL = 0
   )

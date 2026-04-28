@@ -13,7 +13,7 @@
 //
 class ECC_in_agent #(
      int AHB_ADDR_WIDTH = 32,
-     int AHB_DATA_WIDTH = 32
+     int AHB_DATA_WIDTH = 64
      )
  extends uvmf_parameterized_agent #(
                     .CONFIG_T(ECC_in_configuration #(

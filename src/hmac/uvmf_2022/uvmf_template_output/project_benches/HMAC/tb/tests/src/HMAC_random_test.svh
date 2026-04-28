@@ -42,7 +42,7 @@ class HMAC_random_test extends test_top;
 
   virtual function void build_phase(uvm_phase phase );
     // UVM Factory override. Override HMAC_bench_sequence_base with HMAC_random_sequence
-    HMAC_bench_sequence_base::type_id::set_type_override(HMAC_random_sequence #(32,32,0)::get_type());
+    HMAC_bench_sequence_base::type_id::set_type_override(HMAC_random_sequence #(64,32,0)::get_type());
     super.build_phase(phase);
   endfunction : build_phase
 

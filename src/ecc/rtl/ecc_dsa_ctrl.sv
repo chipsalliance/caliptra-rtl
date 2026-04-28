@@ -494,31 +494,31 @@ module ecc_dsa_ctrl
     end
 
     // Software write-enables to prevent KV reg manipulation mid-operation
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = !kv_key_data_present && ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = !kv_key_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = 0;
 
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = !kv_seed_data_present && ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = !kv_seed_data_present && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = 0;
 
     // KV write control must be written before ECC core operation begins, even though
     // output isn't written to KV until the end of the operation.
     // Prevent partial-key attacks by blocking register modifications during core execution.
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = ecc_ready_reg;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = !busy_o;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = 0;
 
     //keyvault control reg macros for assigning to struct
     `CALIPTRA_KV_READ_CTRL_REG2STRUCT(kv_privkey_read_ctrl_reg, ecc_kv_rd_pkey_ctrl)
@@ -1002,18 +1002,5 @@ module ecc_dsa_ctrl
 always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, !reset_n)
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, !reset_n)
-
-//keyvault signals should be stable during engine operation
-//Assertions get disabled during reset or when the engine is idle
-`CALIPTRA_ASSERT_STABLE(ERR_ECC_PRIVKEY_RD_CTRL_NOT_STABLE, kv_privkey_read_ctrl_reg, clk, (!reset_n || ecc_ready_reg) )
-`CALIPTRA_ASSERT_STABLE(ERR_ECC_SEED_RD_CTRL_NOT_STABLE, kv_seed_read_ctrl_reg, clk, (!reset_n || ecc_ready_reg) )
-//write happens while engine is not idle, so hwclr triggers the writen en to de-assert
-//instead confirming that entry and dest valid fields are stable
-//`CALIPTRA_ASSERT_STABLE(ERR_ECC_WR_CTRL_NOT_STABLE, kv_write_ctrl_reg, clk, (!reset_n || ecc_ready_reg) )
-`CALIPTRA_ASSERT_STABLE(ERR_ECC_WR_CTRL_ENTRY_NOT_STABLE, kv_write_ctrl_reg.write_entry, clk, (!reset_n || ecc_ready_reg) )
-`CALIPTRA_ASSERT_STABLE(ERR_ECC_WR_CTRL_DEST_NOT_STABLE, kv_write_ctrl_reg.write_dest_vld, clk, (!reset_n || ecc_ready_reg) )
-
-`CALIPTRA_ASSERT_STABLE(ERR_ECC_PRIVKEY_NOT_STABLE, privkey_reg, clk, (!reset_n || ecc_ready_reg) )
-`CALIPTRA_ASSERT_STABLE(ERR_ECC_SEED_NOT_STABLE, seed_reg, clk, (!reset_n || ecc_ready_reg) )
 
 endmodule

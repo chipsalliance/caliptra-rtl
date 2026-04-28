@@ -34,7 +34,7 @@ import HMAC_out_pkg_hdl::*;
 
 
 interface HMAC_out_monitor_bfm #(
-  int AHB_DATA_WIDTH = 32,
+  int AHB_DATA_WIDTH = 64,
   int AHB_ADDR_WIDTH = 32,
   int OUTPUT_TEXT_WIDTH = 512,
   bit BYPASS_HSEL = 0
@@ -78,12 +78,14 @@ end
   tri  hresp_i;
   tri  hreadyout_i;
   tri [AHB_DATA_WIDTH-1:0] hrdata_i;
+  tri [31:0] hrdata_32_i;
   tri  transaction_flag_in_monitor_i;
   assign clk_i = bus.clk;
   assign rst_i = bus.rst;
   assign hresp_i = bus.hresp;
   assign hreadyout_i = bus.hreadyout;
   assign hrdata_i = bus.hrdata;
+  assign hrdata_32_i = bus.hrdata_32;
   assign transaction_flag_in_monitor_i = bus.transaction_flag_in_monitor;
 
   // Proxy handle to UVM monitor
@@ -204,37 +206,39 @@ end
       while (transaction_flag_in_monitor_i ==0) @(posedge clk_i);
       repeat(4) @(posedge clk_i);
       if (transaction_flag_in_monitor_i == 1 ) transaction_flag = 1;
-      block_temp[511:480] = hrdata_i;
+      // ahb_slv_sif places 32-bit read data in one lane and zeros the other.
+      // hrdata_32_i (from the interface) ORs both lanes to recover the value.
+      block_temp[511:480] = hrdata_32_i;   // TAG0
       repeat (2) @(posedge clk_i);
-      block_temp[479:448] = hrdata_i;
+      block_temp[479:448] = hrdata_32_i;   // TAG1
       repeat (2) @(posedge clk_i);
-      block_temp[447:416] = hrdata_i;
+      block_temp[447:416] = hrdata_32_i;   // TAG2
       repeat (2) @(posedge clk_i);
-      block_temp[415:384] = hrdata_i;
+      block_temp[415:384] = hrdata_32_i;   // TAG3
       repeat (2) @(posedge clk_i);
-      block_temp[383:352] = hrdata_i;
+      block_temp[383:352] = hrdata_32_i;   // TAG4
       repeat (2) @(posedge clk_i);
-      block_temp[351:320] = hrdata_i;
+      block_temp[351:320] = hrdata_32_i;   // TAG5
       repeat (2) @(posedge clk_i);
-      block_temp[319:288] = hrdata_i;
+      block_temp[319:288] = hrdata_32_i;   // TAG6
       repeat (2) @(posedge clk_i);
-      block_temp[287:256] = hrdata_i;
+      block_temp[287:256] = hrdata_32_i;   // TAG7
       repeat (2) @(posedge clk_i);
-      block_temp[255:224] = hrdata_i;
+      block_temp[255:224] = hrdata_32_i;   // TAG8
       repeat (2) @(posedge clk_i);
-      block_temp[223:192] = hrdata_i;
+      block_temp[223:192] = hrdata_32_i;   // TAG9
       repeat (2) @(posedge clk_i);
-      block_temp[191:160] = hrdata_i;
+      block_temp[191:160] = hrdata_32_i;   // TAG10
       repeat (2) @(posedge clk_i);
-      block_temp[159:128] = hrdata_i;
+      block_temp[159:128] = hrdata_32_i;   // TAG11
       repeat (2) @(posedge clk_i);
-      block_temp[127:96]  = hrdata_i;
+      block_temp[127:96]  = hrdata_32_i;   // TAG12
       repeat (2) @(posedge clk_i);
-      block_temp[95:64]   = hrdata_i;
+      block_temp[95:64]   = hrdata_32_i;   // TAG13
       repeat (2) @(posedge clk_i);
-      block_temp[63:32]   = hrdata_i;
+      block_temp[63:32]   = hrdata_32_i;   // TAG14
       repeat (2) @(posedge clk_i);
-      block_temp[31:0]    = hrdata_i;
+      block_temp[31:0]    = hrdata_32_i;   // TAG15
 
       @(posedge clk_i);
       HMAC_out_monitor_struct.result = block_temp;
