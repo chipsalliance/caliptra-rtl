@@ -185,7 +185,7 @@ module caliptra_top_tb_services
     logic                       inject_kv23_small_rand_key;
     logic                       inject_kv23_rand_length_key;
     logic                       inject_random_data;
-    logic                       release_kv_inject_flags;
+    logic [1:0]                 release_kv_inject_flags;
     logic                       check_pcr_ecc_signing;
     logic                       check_pcr_mldsa_signing;
     logic                       inject_single_msg_for_ecc_mldsa;
@@ -616,6 +616,7 @@ module caliptra_top_tb_services
 
     genvar dword_i, slot_id;
     generate
+    if (!UVM_TB) begin : inject_kv_function
         for (slot_id=0; slot_id < 24; slot_id++) begin : inject_slot_loop
             for (dword_i=0; dword_i < 16; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
@@ -999,27 +1000,29 @@ module caliptra_top_tb_services
                         inject_kv16_zero_key <= '0;
                         inject_kv23_small_rand_key <= '0;
                         inject_kv23_rand_length_key <= '0;
-                        if (release_kv_inject_flags) begin
-                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
-                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
-                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we;
-                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next;
-                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we;
-                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next;
-                    end
-                        else begin
+                        if (release_kv_inject_flags == 2'b01) begin
+                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we;
+                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next;
+                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we;
+                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next;
+                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we;
+                            release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next;
+                            release_kv_inject_flags <= 2'b10;
+                        end
+                        else if (release_kv_inject_flags == 2'b00) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b0;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = '0;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b0;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = '0;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b0;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '0;
+                            release_kv_inject_flags <= 2'b01;
                         end
-                        release_kv_inject_flags <= '1;
                     end
                 end
             end // inject_dword_loop
         end // inject_slot_loop
+    end // inject_kv_function
     endgenerate
 
     //Keyvault check for MLKEM
