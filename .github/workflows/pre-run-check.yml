@@ -1,0 +1,263 @@
+# docs: https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions
+
+# This workflow implements a check that allows integrators to enforce
+# successful completion of testcases that should have been performed
+# on internal environments against the code base in the submitted branch.
+# For example, this allows internal pipelines to run proprietary toolchains
+# to sign-off on the code before allowing GitHub workflows to start.
+name: Pre Run Check
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_ref:
+        description: "Manual override for target branch to perform merge comparisons"
+        required: true
+        type: string
+        default: 'main'
+  workflow_call:
+    outputs:
+      run_vltr:
+        description: "Control parameter indicating if Verilator tests should be run or skipped"
+        value: ${{ jobs.evaluate_if_run.outputs.run_vltr }}
+
+jobs:
+  # Build the comparison hash file
+  hash_check:
+    name: Hash Check
+    runs-on: ubuntu-22.04
+    if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'workflow_dispatch') }}
+    steps:
+      - name: Echo Reason
+        run: echo "$GITHUB_EVENT_NAME"
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
+            submodules: 'true'
+
+      - name: Gen File List
+        run: |
+            # Search for all source code files, scripts, and configuration
+            # files used to build/validate Caliptra RTL.
+            # File type exclusions:
+            # - *.md
+            # - *.png
+            # - *.jpg
+            # - *.xlsx/*.xls
+            # - any files inside
+            #   - .git
+            #   - .github/workflows
+            find "$GITHUB_WORKSPACE" -type f \( -name "*.sv" \
+                                             -o -name "*.svh" \
+                                             -o -name "*.rdl" \
+                                             -o -name "*.json" \
+                                             -o -name "*.v" \
+                                             -o -name "*.vh" \
+                                             -o -name "*.rsp" \
+                                             -o -name "*.s" \
+                                             -o -name "*.c" \
+                                             -o -name "*.cpp" \
+                                             -o -name "*.h" \
+                                             -o -name "*.hex" \
+                                             -o -name "*.ld" \
+                                             -o -name "*.gdb" \
+                                             -o -name "*.yml" \
+                                             -o -name "*.sh" \
+                                             -o -name "*.py" \
+                                             -o -name "pr_timestamp" \) \
+                                             ! -path "${GITHUB_WORKSPACE}/tools/audit/*" \
+                                             ! -path "*.github/workflows/*" \
+                                             ! -path "*.git/*" | LC_COLLATE=C sort -o $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+            sed -i "s,^$GITHUB_WORKSPACE/,," $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+            echo "Found $(wc -l $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt) source code files to hash"
+            echo -e "First five files:\n>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+            head -5 $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+            echo -e ">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>"
+
+      - name: Check Timestamp
+        env:
+            TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == 'workflow_dispatch' && inputs.base_ref) }}
+        run: |
+            # Find the last commit that modified any design file (not documentation)
+            # Start the search with the second parent of the PR merge commit
+            # in order to only traverse the feature branch commits
+            # Use an explicit list of files instead of an exclusion list
+            last_commit=$(git rev-parse HEAD^2)
+            until git diff --name-only "${last_commit}^..${last_commit}" | grep -v '.github/workflows\|tools/audit' | grep -e '\.sv\|\.svh\|\.rdl\|\.json\|\.v\|\.vh\|\.rsp\|\.s\|\.c\|\.cpp\|\.h\|\.hex\|\.ld\|\.gdb\|\.yml\|\.sh\|\.py\|pr_timestamp' > /dev/null; do
+                last_commit="$(git rev-parse ${last_commit}^)"
+            done
+            echo "Latest non-doc hash is ${last_commit}"
+            echo "Checking if ${last_commit} is contained in branch 'origin/$TARGET_BR'"
+            # If the last non-doc commit is already contained in branch 'TARGET_BR', then skip the
+            # timestamp check -- as that commit would already be signed off through another PR.
+            # Otherwise, that commit would fail because it's part of a commit that was squashed into TARGET_BR
+            # much later than the original stamp commit.
+            if [[ $(git branch --remotes --list "origin/$TARGET_BR" --contains ${last_commit}) =~ "origin/$TARGET_BR" ]]; then
+                echo "Commit ${last_commit} is contained in branch '$TARGET_BR', skipping timestamp check"
+            else
+                # Compare the timestamp from the latest commit with the pr_timestamp file
+                timestamp_exp=$(bc <<< "$(git log -n1 --pretty=tformat:'%ct' ${last_commit})-3600")
+                if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp ]]; then
+                    echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp"
+                    exit 1
+                fi
+                timestamp=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_timestamp)
+                if [[ ${timestamp} -lt ${timestamp_exp} ]]; then
+                    echo "Error, submitted timestamp [${timestamp}] is outdated: it precedes the latest non-documentation commit to branch by more than an hour [${timestamp_exp}]"
+                    echo "Please rerun any internal/company proprietary testcases, which should invoke .github/scripts/stamp_repo.sh to attest to successful completion"
+                    echo "DO NOT manually run stamp_repo.sh on your branch to bypass this step - the output timestamp/hash is used to verify internal testcase sign-off is successful"
+                    exit 1
+                fi
+                echo "Submitted timestamp [${timestamp}] meets the recency requirement: [${timestamp_exp}]"
+            fi
+
+      - name: Check Hash
+        run: |
+            hash=$($GITHUB_WORKSPACE/.github/scripts/file_hash.sh $GITHUB_WORKSPACE $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt)
+            if [[ -z ${hash:+"empty"} ]]; then
+                echo "Failed to run hash script"
+                echo $hash
+                exit 1;
+            fi
+            echo "RTL hash is $hash"
+            if [[ ! -f $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash ]]; then
+                echo "Error, file not found: $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash"
+                exit 1
+            fi
+            hash_orig=$(tail -1 $GITHUB_WORKSPACE/.github/workflow_metadata/pr_hash)
+            if [[ ${hash_orig} != ${hash} ]]; then
+                echo "Error, submitted hash [${hash_orig}] does not match calculated hash [${hash}]"
+                echo "If your internal testcase completed successfully and invoked .github/scripts/stamp_repo.sh to generate this hash, please open a support issue on the caliptra-rtl repository"
+                exit 1
+            fi
+            echo "Submitted hash [${hash_orig}] matches the calculated hash: [${hash}]"
+            rm $GITHUB_WORKSPACE/.github/workflow_metadata/file_list.txt
+
+  # Check License Headers
+  # Check for microsoft employee or that all compile.yml/.vf are untouched
+  hdr_check:
+    name: License Header Check
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
+            submodules: 'true'
+
+      - name: Run Script
+        run: |
+            export CALIPTRA_ROOT=$GITHUB_WORKSPACE
+            $GITHUB_WORKSPACE/.github/scripts/license_header_check.sh
+
+  # Check RDL files for modifications
+  rdl_check:
+    name: RDL File Check
+    runs-on: ubuntu-22.04
+    if: ${{ (github.event_name == 'pull_request') || (github.event_name == 'workflow_dispatch') }}
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+        with:
+            fetch-depth: 0
+            submodules: 'true'
+
+      - name: Install peakrdl
+        run: |
+          python3 -m pip install \
+              systemrdl-compiler==1.27.3 \
+              peakrdl-systemrdl==0.3.0 \
+              peakrdl-regblock==0.21.0 \
+              peakrdl-uvm==2.3.0 \
+              peakrdl-ipxact==3.4.3 \
+              peakrdl-html==2.10.1 \
+              peakrdl-cheader==1.0.0 \
+              peakrdl==1.1.0
+
+      - name: Run Script
+        env:
+            TARGET_BR: ${{ (github.event_name == 'pull_request' && github.base_ref) || (github.event_name == 'workflow_dispatch' && inputs.base_ref) }}
+        run: |
+            export CALIPTRA_ROOT=$GITHUB_WORKSPACE
+            export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+            $GITHUB_WORKSPACE/.github/scripts/pr_rdl_check.sh "origin/$TARGET_BR"
+
+  # Verilator is always run outside of the Pull Request context.
+  # For Pull Requests, conditionally run based on evaluation of
+  # modified file set
+  evaluate_if_run:
+    name: Evaluate if Verilator Will Run
+    runs-on: ubuntu-22.04
+    outputs:
+      run_vltr: ${{ steps.do_decide.outputs.run }}
+    env:
+      DO_EVAL: ${{ github.event_name == 'pull_request' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        if: ${{ env.DO_EVAL == 'true' }}
+        with:
+          submodules: 'true'
+
+      # If only documentation files have been modified as part of a
+      # Pull Request, skip the Verilator checks
+      # Otherwise, run Verilator
+      - name: Do Git Diff
+        id: do_git_diff
+        if: ${{ env.DO_EVAL == 'true' }}
+        env:
+            SOURCE_BR:   ${{ github.event.pull_request.head.ref }}
+            SOURCE_FORK: ${{ github.event.pull_request.head.repo.fork }}
+            SOURCE_OWN:  ${{ github.event.pull_request.head.repo.owner.login }}
+            SOURCE_URL:  ${{ github.event.pull_request.head.repo.clone_url }}
+            TARGET_BR:   ${{ github.event.pull_request.base.ref }}
+        run: |
+          echo "git fetch origin $TARGET_BR"
+          if ! git fetch origin $TARGET_BR; then
+            echo "git fetch failed\!"
+            exit 1
+          fi
+          if [[ "${SOURCE_FORK}" == "true" ]]; then
+            echo "pull request is from a fork: ${SOURCE_FORK}"
+            echo "fork repository owner is ${SOURCE_OWN}"
+            echo "adding remote '${SOURCE_OWN}' at url '${SOURCE_URL}'"
+            git remote add -f ${SOURCE_OWN} ${SOURCE_URL}
+            SOURCE_REMOTE=${SOURCE_OWN}
+          else
+            SOURCE_REMOTE=origin
+          fi
+          echo "git fetch ${SOURCE_REMOTE} $SOURCE_BR"
+          if ! git fetch ${SOURCE_REMOTE} $SOURCE_BR; then
+            echo "git fetch failed\!"
+            exit 1
+          fi
+          echo "target ref for [origin/${TARGET_BR}] is $(git log -n1 --pretty=tformat:'%H' origin/${TARGET_BR} 2> /dev/null)"
+          echo "source ref for [${SOURCE_REMOTE}/${SOURCE_BR}] is $(git log -n1 --pretty=tformat:'%H' ${SOURCE_REMOTE}/${SOURCE_BR} 2> /dev/null)"
+          mods=$(git diff --name-only $(git log -n1 --pretty=tformat:'%H' "origin/${TARGET_BR}")...$(git log -n1 --pretty=tformat:'%H' "${SOURCE_REMOTE}/${SOURCE_BR}"))
+          excludes='.github/workflows/pre-run-check.yml\|.github/workflows/doc-gen.yml\|.github/workflows/pull_request.yml'
+          extensions='\.sv\b|\.svh\b|\.rdl\b|\.json\b|\.v\b|\.vh\b|\.rsp\b|\.s\b|\.c\b|\.cpp\b|\.h\b|\.hex\b|\.ld\b|\.gdb\b|\.yml\b|\.sh\b|\.py\b'
+          mod_count=$(IFS='\n' grep -v "${excludes}" <<< "${mods}" | grep -c -E "${extensions}" || true)
+          if [[ ${mod_count} -gt 0 ]]; then
+            echo "Found ${mod_count} modified source files in ${SOURCE_BR}"
+            echo " ============== modified files ============="
+            IFS='\n' grep -v "${excludes}" <<< "$mods" | grep -E "${extensions}"
+            echo "src_mods=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "Only modified files in ${SOURCE_BR} are for documentation"
+            echo " ============== modified files ============="
+            IFS='\n' grep -v "${excludes}" <<< "$mods"
+            echo "src_mods=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+      - name: Decide
+        id: do_decide
+        run: |
+          if [[ "${{ env.DO_EVAL }}" == "false" ]]; then
+            echo "run=true" >> "${GITHUB_OUTPUT}"
+          elif [[ "${{ steps.do_git_diff.outputs.src_mods }}" == "true" ]]; then
+            echo "run=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "run=false" >> "${GITHUB_OUTPUT}"
+          fi
+
