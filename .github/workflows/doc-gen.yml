@@ -6,7 +6,11 @@ on:
   workflow_dispatch:
   workflow_call:
   push:
-    branches: ["main"]
+    branches: ["main", "nightly-results-main"]
+
+concurrency:
+  group: "pages"
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -17,6 +21,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
+          ref: "main"
           submodules: 'true'
 
       - name: Install peakrdl
@@ -183,6 +188,7 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      contents: read
 
     environment:
       name: github-pages
@@ -214,6 +220,19 @@ jobs:
         with:
           name: pages_v2_1
           path: /tmp/pages-docs/v2_1
+
+      - name: Checkout nightly-results-main for regression results
+        uses: actions/checkout@v4
+        with:
+          ref: "nightly-results-main"
+          path: nightly-results
+        continue-on-error: true
+
+      - name: Stage regression results
+        run: |
+          if [ -d "nightly-results" ]; then
+            rsync -a --exclude='.git' --exclude='.github' nightly-results/ /tmp/pages-docs/
+          fi
 
       - name: Generate GitHub Pages artifacts
         uses: actions/upload-pages-artifact@v3
