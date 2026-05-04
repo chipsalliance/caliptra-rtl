@@ -231,7 +231,7 @@ jobs:
       - name: Stage regression results
         run: |
           if [ -d "nightly-results" ]; then
-            rsync -a --exclude='.git' --exclude='.github' nightly-results/ /tmp/pages-docs/
+            rsync -a --exclude='.git' --exclude='.github' nightly-results/ /tmp/pages-docs/nightly-results-main/
           fi
 
       - name: Generate GitHub Pages artifacts
