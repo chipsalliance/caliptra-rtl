@@ -1106,10 +1106,10 @@ end
 // Write enable: req & is_wr & ~lock
 logic [3:0] iccm_shadow_we;
 logic [3:0] iccm_shadow_re;
-assign iccm_shadow_we[0] = soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req & soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req_is_wr & ~iccm_region_lock;
-assign iccm_shadow_we[1] = soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req   & soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req_is_wr   & ~iccm_region_lock;
-assign iccm_shadow_we[2] = soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req  & soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req_is_wr  & ~iccm_region_lock;
-assign iccm_shadow_we[3] = soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req    & soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req_is_wr    & ~iccm_region_lock;
+assign iccm_shadow_we[0] = soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req & soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req_is_wr & ~iccm_region_lock & ~soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_we[1] = soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req   & soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req_is_wr   & ~iccm_region_lock & ~soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_we[2] = soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req  & soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req_is_wr  & ~iccm_region_lock & ~soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_we[3] = soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req    & soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req_is_wr    & ~iccm_region_lock & ~soc_ifc_reg_req_data.soc_req;
 
 // Read enable: req & ~is_wr (clears phase)
 assign iccm_shadow_re[0] = soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req & ~soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req_is_wr;

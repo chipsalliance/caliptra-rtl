@@ -203,15 +203,20 @@ reg {
 // These are external registers backed by caliptra_prim_subreg_shadow instances
 // in soc_ifc_top.sv. The 2-phase write protocol, phase-clear-on-read, and
 // error lockout are handled by the shadow subreg primitive.
+// SoC write access is blocked in RTL (external gating on soc_req).
 reg {
     name = "ICCM FMC Region Start Address";
     desc = "Start address of the FMC region within ICCM address space, used by the
             boot flow monitor to detect ROM-to-FMC firmware transitions. Programmed by
             ROM before jumping to FMC. Locked by internal_iccm_region_lock.
-            This is a shadowed register -- requires two identical writes (2-phase protocol).
-            A read clears the internal phase tracker. Storage faults are reported as fatal.
-            [br]Caliptra Access: RWL
-            [br]SOC Access:      RO";
+            [br][br]Shadow register behavior:
+            [br]- Requires two identical writes to commit (2-phase protocol).
+            [br]- A read clears the internal phase tracker (allows re-programming).
+            [br]- A mismatched second write raises an update error (fatal).
+            [br]- Continuous background comparison detects storage faults (fatal).
+            [br]- Once committed, the value is stable until reset or re-programming.
+            [br][br]Caliptra Access: RWL (locked by internal_iccm_region_lock)
+            [br]SOC Access:      None (writes rejected by hardware)";
 
     field {desc = "FMC ICCM start address (18-bit ICCM-relative)."; sw = rw;} addr[18] = 18'h0;
 } external internal_iccm_fmc_start_addr;
@@ -221,10 +226,14 @@ reg {
     desc = "End address (inclusive) of the FMC region within ICCM address space, used by
             the boot flow monitor to detect ROM-to-FMC firmware transitions. Programmed by
             ROM before jumping to FMC. Locked by internal_iccm_region_lock.
-            This is a shadowed register -- requires two identical writes (2-phase protocol).
-            A read clears the internal phase tracker. Storage faults are reported as fatal.
-            [br]Caliptra Access: RWL
-            [br]SOC Access:      RO";
+            [br][br]Shadow register behavior:
+            [br]- Requires two identical writes to commit (2-phase protocol).
+            [br]- A read clears the internal phase tracker (allows re-programming).
+            [br]- A mismatched second write raises an update error (fatal).
+            [br]- Continuous background comparison detects storage faults (fatal).
+            [br]- Once committed, the value is stable until reset or re-programming.
+            [br][br]Caliptra Access: RWL (locked by internal_iccm_region_lock)
+            [br]SOC Access:      None (writes rejected by hardware)";
 
     field {desc = "FMC ICCM end address (18-bit ICCM-relative)."; sw = rw;} addr[18] = 18'h0;
 } external internal_iccm_fmc_end_addr;
@@ -234,10 +243,14 @@ reg {
     desc = "Start address of the RT region within ICCM address space, used by the
             boot flow monitor to detect FMC-to-RT firmware transitions. Programmed by
             ROM before jumping to FMC. Locked by internal_iccm_region_lock.
-            This is a shadowed register -- requires two identical writes (2-phase protocol).
-            A read clears the internal phase tracker. Storage faults are reported as fatal.
-            [br]Caliptra Access: RWL
-            [br]SOC Access:      RO";
+            [br][br]Shadow register behavior:
+            [br]- Requires two identical writes to commit (2-phase protocol).
+            [br]- A read clears the internal phase tracker (allows re-programming).
+            [br]- A mismatched second write raises an update error (fatal).
+            [br]- Continuous background comparison detects storage faults (fatal).
+            [br]- Once committed, the value is stable until reset or re-programming.
+            [br][br]Caliptra Access: RWL (locked by internal_iccm_region_lock)
+            [br]SOC Access:      None (writes rejected by hardware)";
 
     field {desc = "RT ICCM start address (18-bit ICCM-relative)."; sw = rw;} addr[18] = 18'h0;
 } external internal_iccm_rt_start_addr;
@@ -247,10 +260,14 @@ reg {
     desc = "End address (inclusive) of the RT region within ICCM address space, used by
             the boot flow monitor to detect FMC-to-RT firmware transitions. Programmed by
             ROM before jumping to FMC. Locked by internal_iccm_region_lock.
-            This is a shadowed register -- requires two identical writes (2-phase protocol).
-            A read clears the internal phase tracker. Storage faults are reported as fatal.
-            [br]Caliptra Access: RWL
-            [br]SOC Access:      RO";
+            [br][br]Shadow register behavior:
+            [br]- Requires two identical writes to commit (2-phase protocol).
+            [br]- A read clears the internal phase tracker (allows re-programming).
+            [br]- A mismatched second write raises an update error (fatal).
+            [br]- Continuous background comparison detects storage faults (fatal).
+            [br]- Once committed, the value is stable until reset or re-programming.
+            [br][br]Caliptra Access: RWL (locked by internal_iccm_region_lock)
+            [br]SOC Access:      None (writes rejected by hardware)";
 
     field {desc = "RT ICCM end address (18-bit ICCM-relative)."; sw = rw;} addr[18] = 18'h0;
 } external internal_iccm_rt_end_addr;
@@ -262,7 +279,7 @@ reg {
             Setting this register also arms the boot flow monitor -- any ICCM fetch
             before this lock is set triggers a fatal error.
             [br]Caliptra Access: RW1S
-            [br]SOC Access:      RO";
+            [br]SOC Access:      RO (writes rejected via swwel)";
 
     field {desc = "Lock bit for ICCM region registers. Write 1 to set -- cannot be cleared by SW."; hw = r; sw = rw; onwrite = woset; swwel = soc_req; resetsignal = cptra_rst_b;} lock = 1'b0;
 } internal_iccm_region_lock;
