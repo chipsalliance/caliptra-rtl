@@ -29,5 +29,6 @@ module soc_ifc_cov_bind;
         .AXIM_USER_WIDTH(soc_ifc_pkg::CPTRA_AXI_DMA_USER_WIDTH)
         )
         i_soc_ifc_cov_if (.*);
+    bind soc_ifc_top soc_ifc_iccm_shadow_cov i_soc_ifc_iccm_shadow_cov (.*);
     `endif
 endmodule
