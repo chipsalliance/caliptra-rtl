@@ -98,14 +98,14 @@ initial begin
 end
 
 hmac_ctrl #(
-     .AHB_DATA_WIDTH(32),
-     .AHB_ADDR_WIDTH(32)
+     .AHB_DATA_WIDTH(64),
+     .AHB_ADDR_WIDTH(12)
 ) dut (
      .clk           (HMAC_in_agent_bus.clk),
      .reset_n       (HMAC_in_agent_bus.hmac_rst),
      .cptra_pwrgood (cptra_pwrgood),
      .cptra_csr_hmac_key (HMAC_in_agent_bus.csr_key),
-     .haddr_i       (HMAC_in_agent_bus.haddr),
+     .haddr_i       (HMAC_in_agent_bus.haddr[11:0]),
      .hwdata_i      (HMAC_in_agent_bus.hwdata),
      .hsel_i        (HMAC_in_agent_bus.hsel),
      .hwrite_i      (HMAC_in_agent_bus.hwrite),

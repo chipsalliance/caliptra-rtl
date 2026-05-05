@@ -224,17 +224,14 @@ targets:
         echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}"
         cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
 
-        echo "[PRE-EXEC] Checking ML-KEM python vector generator…"
-        if [[ -d "$MSFT_SCRIPTS_DIR/models/ml-kem" ]]; then
-          echo "[PRE-EXEC] Found ML-KEM python generator — copying…"
-          cp -r $MSFT_SCRIPTS_DIR/models/ml-kem .
-          mkdir -p ml-kem/tv
-        else
-          echo "[PRE-EXEC] Python generator NOT found — using fixed ML-KEM vectors"
-          cp -r $COMPILE_ROOT/../integration/tb/vectors/ml_kem_fixed .
-        fi
+        echo "[PRE-EXEC] Copying ML-KEM python vector generator to ${pwd}"
+        mkdir -p ml-kem/tv
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/random_test_ml_kem.py ml-kem/
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/ml_kem.py ml-kem/
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/Module.py ml-kem/
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/utils.py ml-kem/
 
-    post_exec: 'rm -r ./ml-kem && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+    post_exec: 'if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
                 
 global:
   tool:
@@ -300,17 +297,14 @@ targets:
         echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}"
         cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
 
-        echo "[PRE-EXEC] Checking ML-KEM python vector generator…"
-        if [[ -d "$MSFT_SCRIPTS_DIR/models/ml-kem" ]]; then
-          echo "[PRE-EXEC] Found ML-KEM python generator — copying…"
-          cp -r $MSFT_SCRIPTS_DIR/models/ml-kem .
-          mkdir -p ml-kem/tv
-        else
-          echo "[PRE-EXEC] Python generator NOT found — using fixed ML-KEM vectors"
-          cp -r $COMPILE_ROOT/../integration/tb/vectors/ml_kem_fixed .
-        fi
+        echo "[PRE-EXEC] Copying ML-KEM python vector generator to ${pwd}"
+        mkdir -p ml-kem/tv
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/random_test_ml_kem.py ml-kem/
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/ml_kem.py ml-kem/
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/Module.py ml-kem/
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/utils.py ml-kem/
 
-    post_exec: 'rm -r ./ml-kem && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+    post_exec: 'if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
 
 global:
   tool:
@@ -365,17 +359,14 @@ targets:
         echo "[PRE-EXEC] Copying mldsa directed vector to ${pwd}"
         cp $COMPILE_ROOT/../mldsa/tb/smoke_test_mldsa_vector.hex .
 
-        echo "[PRE-EXEC] Checking ML-KEM python vector generator…"
-        if [[ -d "$MSFT_SCRIPTS_DIR/models/ml-kem" ]]; then
-          echo "[PRE-EXEC] Found ML-KEM python generator — copying…"
-          cp -r $MSFT_SCRIPTS_DIR/models/ml-kem .
-          mkdir -p ml-kem/tv
-        else
-          echo "[PRE-EXEC] Python generator NOT found — using fixed ML-KEM vectors"
-          cp -r $COMPILE_ROOT/../integration/tb/vectors/ml_kem_fixed .
-        fi
+        echo "[PRE-EXEC] Copying ML-KEM python vector generator to ${pwd}"
+        mkdir -p ml-kem/tv
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/random_test_ml_kem.py ml-kem/
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/ml_kem.py ml-kem/
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/Module.py ml-kem/
+        cp $COMPILE_ROOT/../../submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem/utils.py ml-kem/
         
-    post_exec: 'rm -r ./ml-kem && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+    post_exec: 'if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
                 
 global:
   tool:

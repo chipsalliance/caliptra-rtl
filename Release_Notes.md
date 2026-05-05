@@ -14,11 +14,11 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2025/10/12*_
+_*Last Update: 2026/03/19*_
 
-### Rev 2p1 ###
+### Rev 2.1 ###
 
-#### Rev 2p1 release date: 2025/10/12 ###
+#### Rev 2.1 release date: 2025/10/12 ###
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
@@ -31,9 +31,9 @@ _*Last Update: 2025/10/12*_
 
 ## Previous Releases ##
 
-### Rev 2p1-rc1 ###
+### Rev 2.1-rc1 ###
 
-#### Rev 2p1-rc1 release date: 2025/08/29 ###
+#### Rev 2.1-rc1 release date: 2025/08/29 ###
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
@@ -44,18 +44,18 @@ _*Last Update: 2025/10/12*_
 - Mailbox size reduced to 16KB in subsystem mode
 - Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
 
-### Rev 2p0 ###
+### Rev 2.0 ###
 
-#### Rev 2p0 release date: 2025/04/29 ###
+#### Rev 2.0 release date: 2025/04/29 ###
 - Enhanced several testcases to improve coverage
 - Adams Bridge enhancement: variable message signing and data swizzling
 - Bug fixes:
   - [BUG FIX] fix missing V update in DRBG corner case
   - [BUG FIX] Subsystem Mode only: TAP mailbox lock priority
 
-### Rev 2p0-rc1 ###
+### Rev 2.0-rc1 ###
 
-#### Rev 2p0-rc1 release date: 2025/03/07 (2p0 version pending final security audits for official declaration) ###
+#### Rev 2.0-rc1 release date: 2025/03/07 (2.0 version pending final security audits for official declaration) ###
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
@@ -73,9 +73,9 @@ _*Last Update: 2025/10/12*_
 - Caliptra Core 2.0 Validation Enhancements
 - Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
 
-### Rev 1p1 ###
+### Rev 1.1 ###
 
-#### Rev 1p1 release date: 2024/07/02 ####
+#### Rev 1.1 release date: 2024/07/02 ####
 - Caliptra Hardware Specification: Updated with LMS accelerator, ECC radix changes, Key Vault updates
 - Caliptra Integration Specification updates to add clarity
 - Caliptra README updates to tool versions, simulation instructions
@@ -123,9 +123,9 @@ _*Last Update: 2025/10/12*_
 [JTAG] VeeR JTAG access only with debug unlocked; Caliptra JTAG access with debug unlocked or manufacturing [#528](https://github.com/chipsalliance/caliptra-rtl/pull/528)<br>
 [JTAG] Enable JTAG interface to be used while boot FSM is halted at breakpoint [#541](https://github.com/chipsalliance/caliptra-rtl/pull/541)
 
-### Rev 1p0 ###
+### Rev 1.0 ###
 
-#### Rev 1p0 release date: 2024/01/18 ####
+#### Rev 1.0 release date: 2024/01/18 ####
 - Caliptra Hardware Specification: Markdown conversion
 - Caliptra Integration specification update with synthesis warnings and jtag tck requirement
 - Caliptra README updates to clarify test cases and running with VCS
@@ -143,9 +143,9 @@ _*Last Update: 2025/10/12*_
 #### Bug Fixes ####
 [MBOX] Fix ICCM Uncorrectable ECC error driving hw_error_non_fatal bit for LSU reads
 
-### Rev 1p0-rc1 ###
+### Rev 1.0-rc1 ###
 
-#### Rev 1p0-rc1 release date: 2023/11/03 (1p0 version pending ROM release for official declaration) ###
+#### Rev 1.0-rc1 release date: 2023/11/03 (1.0 version pending ROM release for official declaration) ###
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
@@ -241,11 +241,11 @@ _*Last Update: 2025/10/12*_
 [RST] scan_mode should not corrupt resets<br>
 [TOP] EL2 Mem interface is not instantiated with a modport at all levels
 
-### Rev 0p8 ###
+### Rev 0.8 ###
 
-#### DISCALIMER: This is NOT A BUG-FREE MODEL YET. This is a 0p8 release model. Please see testplan document in docs folder to know the status of validation. ####
+#### DISCALIMER: This is NOT A BUG-FREE MODEL YET. This is a 0.8 release model. Please see testplan document in docs folder to know the status of validation. ####
 ##### This model is released mainly for interface, floorplan planning purposes for consumers. #####
-##### Rev 0p8 release date: 03-31-2023 #####
+##### Rev 0.8 release date: 03-31-2023 #####
 
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
@@ -284,10 +284,10 @@ _*Last Update: 2025/10/12*_
     - UVMF for multiple DUT blocks and SOC interface
     - DV complete for first cut of the boot & reset flows, Fuses, SOC registers, Crypto blocks, Key vault, PCR Vault, PCR extend, PCR signing, Mailbox
 
-### Rev Pre0p8: ###
-#### DISCLAIMER: This is NOT A BUG-FREE MODEL. This is a pre-0p8 development model that will be sync’d every week. ####
+### Rev Pre0.8: ###
+#### DISCLAIMER: This is NOT A BUG-FREE MODEL. This is a pre-0.8 development model that will be sync’d every week. ####
 #### This model is released mainly for interface, floorplan planning purposes for consumers. ####
-#### 0p8 release date = 03-31-2023 ####
+#### 0.8 release date = 03-31-2023 ####
 - Caliptra Hardware Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
@@ -352,7 +352,7 @@ _*Last Update: 2025/10/12*_
     - Nightly regression on crypto blocks on-going
     - Smoke tests for all of the above passing including bring up/boot of the caliptra IP (KV testing for ECC & SHA are pending)
     - UVMF for multiple DUT blocks and SOC interface
-    - NOTE: 0p8 release will have stress validation on SOC interface with random resets, clock gating, impactless update crossed with mailbox protocol etc.
+    - NOTE: 0.8 release will have stress validation on SOC interface with random resets, clock gating, impactless update crossed with mailbox protocol etc.
 
 
 

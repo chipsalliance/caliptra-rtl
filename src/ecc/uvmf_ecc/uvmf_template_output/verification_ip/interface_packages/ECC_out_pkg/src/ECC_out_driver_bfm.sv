@@ -59,7 +59,7 @@ import ECC_out_pkg_hdl::*;
 
 interface ECC_out_driver_bfm #(
   int AHB_ADDR_WIDTH = 32,
-  int AHB_DATA_WIDTH = 32,
+  int AHB_DATA_WIDTH = 64,
   int OUTPUT_TEXT_WIDTH = 384
   )
 

@@ -18,7 +18,7 @@
 //   three boot cycles (cold boot, warm reset, fw update reset):
 //
 //   Boot 0 (cold boot):
-//     1. Enable boot flow monitoring via TB service command (0xa1)
+//     1. Enable boot flow monitoring via TB service command (0xbb)
 //     2. Populate KV slots with correct dest_valid (mimic ROM DICE derivation)
 //     3. Copy FMC/RT functions to ICCM
 //     4. Jump to FMC (triggers ROM-to-FMC -- monitor checks dest_valid)
@@ -79,7 +79,7 @@ void rt_entry(void) __attribute__((aligned(4), section(".data_iccm1")));
 #define RT_ICCM_END_REL    0x3C7FF
 
 // TB command to enable KV boot flow monitoring
-#define TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR 0xa1
+#define TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR 0xbb
 // TB command to issue warm reset
 #define TB_CMD_WARM_RESET 0xf6
 

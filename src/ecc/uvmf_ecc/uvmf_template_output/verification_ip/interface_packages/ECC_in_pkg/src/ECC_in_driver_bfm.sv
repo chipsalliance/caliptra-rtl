@@ -59,7 +59,7 @@ import ECC_in_pkg_hdl::*;
 
 interface ECC_in_driver_bfm #(
   int AHB_ADDR_WIDTH = 32,
-  int AHB_DATA_WIDTH = 32
+  int AHB_DATA_WIDTH = 64
   )
 
   (ECC_in_if bus);
@@ -520,7 +520,7 @@ end
       
       @(posedge clk_i); 
       haddr_o     <= 'Z;
-      hwdata_o    <= word;
+      hwdata_o    <= address[2] ? {word, 32'h0} : {32'h0, word};
       hwrite_o    <= 0;
       htrans_o    <= AHB_HTRANS_IDLE;
       wait(hreadyout_i == 1'b1);

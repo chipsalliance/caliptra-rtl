@@ -18,7 +18,7 @@
 //
 class ECC_in_monitor #(
       int AHB_ADDR_WIDTH = 32,
-      int AHB_DATA_WIDTH = 32
+      int AHB_DATA_WIDTH = 64
       )
  extends uvmf_monitor_base #(
                     .CONFIG_T(ECC_in_configuration  #(

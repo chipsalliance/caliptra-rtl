@@ -100,7 +100,7 @@ TEST_GEN_FILES := $(CALIPTRA_ROOT)/src/ecc/tb/ecc_secp384r1.exe \
 	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5 \
 	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/abr_top/uvmf/Dilithium_ref/dilithium/ref/test/test_dilithium5_debug \
 	          $(CALIPTRA_ROOT)/src/mldsa/tb/smoke_test_mldsa_vector.hex \
-		  $(CALIPTRA_ROOT)/src/integration/tb/vectors/ml_kem_fixed
+	          $(CALIPTRA_ROOT)/submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem
 
 # Separate OFILE variable since this is not used to build remote images
 # (i.e. FMC or RunTime)

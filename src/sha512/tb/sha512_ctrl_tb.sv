@@ -14,7 +14,7 @@
 //
 //======================================================================
 //
-// sha512_ctrl_32bit_tb.sv
+// sha512_ctrl_tb.sv
 // --------
 // SHA512 testbench for the SHA512 AHb_lite interface controller.
 //
@@ -24,7 +24,7 @@
 `include "caliptra_reg_defines.svh"
 `include "caliptra_reg_field_defines.svh"
 
-module sha512_ctrl_32bit_tb 
+module sha512_ctrl_tb 
   import kv_defines_pkg::*;
   import pv_defines_pkg::*;
   ();
@@ -52,8 +52,9 @@ module sha512_ctrl_32bit_tb
   parameter AHB_HTRANS_NONSEQ    = 2;
   parameter AHB_HTRANS_SEQ       = 3;
 
-  parameter AHB_ADDR_WIDTH       = 32;
-  parameter AHB_DATA_WIDTH       = 32;
+  // Match caliptra_top SS-mode instantiation for coverage merge compatibility
+  parameter AHB_ADDR_WIDTH       = 15;
+  parameter AHB_DATA_WIDTH       = 64;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -97,8 +98,8 @@ module sha512_ctrl_32bit_tb
   // Device Under Test.
   //----------------------------------------------------------------
   sha512_ctrl #(
-             .AHB_DATA_WIDTH(32),
-             .AHB_ADDR_WIDTH(32)
+             .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
+             .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH)
             )
             dut (
              .clk(clk_tb),
@@ -251,7 +252,7 @@ module sha512_ctrl_32bit_tb
   task read_single_word(input [31 : 0]  address);
     begin
       hsel_i_tb       = 1;
-      haddr_i_tb      = address;
+      haddr_i_tb      = address[AHB_ADDR_WIDTH-1:0];
       hwrite_i_tb     = 0;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
@@ -262,7 +263,7 @@ module sha512_ctrl_32bit_tb
       haddr_i_tb     = 'Z;
       htrans_i_tb     = AHB_HTRANS_IDLE;
 
-      read_data = hrdata_o_tb;
+      read_data = address[2] ? hrdata_o_tb[63:32] : hrdata_o_tb[31:0];
 
     end
   endtask // read_word
@@ -277,7 +278,7 @@ module sha512_ctrl_32bit_tb
                   input [31 : 0] word);
     begin
       hsel_i_tb       = 1;
-      haddr_i_tb      = address;
+      haddr_i_tb      = address[AHB_ADDR_WIDTH-1:0];
       hwrite_i_tb     = 1;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
@@ -285,7 +286,7 @@ module sha512_ctrl_32bit_tb
       #(CLK_PERIOD);
 
       haddr_i_tb      = 'Z;
-      hwdata_i_tb     = word;
+      hwdata_i_tb     = address[2] ? {word, 32'b0} : {32'b0, word};
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
     end

@@ -75,7 +75,7 @@ void rt_entry(void) __attribute__((aligned(4), section(".data_iccm1")));
 #define RT_ICCM_END_REL    0x3C7FF
 
 // TB commands
-#define TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR 0xa1
+#define TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR 0xbb
 #define TB_CMD_WARM_RESET                  0xf6
 
 // KV KEY_CTRL register access
