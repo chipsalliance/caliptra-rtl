@@ -358,7 +358,8 @@ module caliptra_top_tb_services
     //         8'h9e        - Inject invalid pubkey_y into ECC
     //         8'h9f        - Inject AES key into KV
     //         8'ha0        - Inject HMAC384_KEY to kv_key register
-    //         8'ha1: 8'ha7 - Unused
+    //         8'ha1        - Enable KV boot phase transition enforcement
+    //         8'ha2: 8'ha7 - Unused
     //         8'ha8        - Inject zero as HMAC_KEY to kv_key register
     //         8'ha9        - Inject HMAC512_KEY to kv_key register
     //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
@@ -1775,6 +1776,16 @@ endgenerate //IV_NO
         end else if((WriteData[7:0] == 8'hb8) && mailbox_write) begin
             $display("AXI Err Injection Disabled");
             axi_error_inj_en <= 1'b0;
+        end
+    end
+
+    // Enable boot flow monitoring (TB command 0xa1)
+    // Forces the enable signal inside caliptra. In silicon this is hardwired on;
+    // in simulation it defaults off so legacy tests are unaffected.
+    always @(posedge clk) begin
+        if ((WriteData[7:0] == 8'ha1) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.boot_flow_monitor_en = 1'b1;
+            $display("TB: Boot flow monitor enabled");
         end
     end
 

@@ -115,3 +115,8 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h10/fw_test_lms_n32_w8_h10.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h15/fw_test_lms_n32_w8_h15.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h20/fw_test_lms_n32_w8_h20.yml
+        # KV boot flow monitor/enforcement tests
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke/kv_boot_flow_monitor/kv_boot_flow_monitor.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed/kv_monitor_neg/kv_monitor_neg.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed/kv_enforcement/kv_enforcement.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed/kv_iccm_region/kv_iccm_region.yml
