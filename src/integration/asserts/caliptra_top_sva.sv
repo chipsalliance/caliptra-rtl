@@ -224,9 +224,12 @@ module caliptra_top_sva
   endfunction
 
   // Single assertion covering both debug modes
+  // Disabled when key_entry_clear is active (from boot_flow_error, kv_monitor_alert,
+  // or kv_multi_write_err), which triggers hwclr that overrides the debug flush value
   KV_debug_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK)
-    disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
+    disable iff(!`KEYVAULT_PATH.cptra_pwrgood ||
+                |`KEYVAULT_PATH.key_entry_clear)
     ($rose( ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked) || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && 
            `KEYVAULT_PATH.cptra_pwrgood) |=> check_all_kv_debug_values()))
   else $display("SVA ERROR: KV debug flush comprehensive check failed");

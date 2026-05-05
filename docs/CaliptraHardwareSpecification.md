@@ -43,6 +43,9 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * [SHA3](#sha3)
 * [ML-KEM](#adams-bridge-kyber-ml-kem)
 
+## Pre-release Features
+* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement) — HW-enforced DICE key integrity monitoring and slot access control across boot phases
+
 
 ## Boot FSM
 
@@ -2595,6 +2598,171 @@ The following tables describe DOE register and control fields.
 4. Results are written to the KV entry specified in the DEST field of the DOE control register. 
 5. State machine resets the appropriate RUN bit when the de-obfuscated key is written to KV. FW can poll this register to know when the flow is complete.
 6. The clear obf secrets command flushes the obfuscation key, the obfuscated UDS, and the field entropy from the internal flops. This should be done by ROM after both de-obfuscation flows are complete.
+
+## Key vault boot flow transition enforcement
+
+The Key Vault Boot Flow Transition Enforcement feature provides hardware-enforced integrity monitoring and access control for DICE key derivation across boot phase transitions (ROM→FMC→RT). It detects ICCM code execution transitions, validates key vault state at each boundary, and atomically applies lock/clear enforcement to key slots.
+
+### Overview
+
+The feature consists of three cooperating blocks:
+
+1. **Boot Flow Monitor** (in `caliptra_top`): Detects ROM→FMC and FMC→RT transitions by observing ICCM memory bank read enables against programmed address regions.
+2. **KV Monitor** (in `kv`): Validates dest_valid permissions and crypto write counts on DICE key slots at each transition boundary.
+3. **KV Enforcement** (in `kv`): Atomically applies lock_wr, lock_use, and slot clearing at each transition.
+
+### Boot flow monitor
+
+The boot flow monitor detects firmware execution phase transitions by spying the ICCM memory interface. It compares bank-level read addresses against programmed FMC and RT region boundaries.
+
+#### ICCM region registers
+
+Four shadow-hardened registers define the FMC and RT code regions within ICCM address space:
+
+| Register | Address | Description |
+| :------- | :------ | :---------- |
+| INTERNAL_ICCM_FMC_START_ADDR | 0x30030650 | Start address of FMC region (18-bit ICCM-relative) |
+| INTERNAL_ICCM_FMC_END_ADDR | 0x30030654 | End address of FMC region (inclusive) |
+| INTERNAL_ICCM_RT_START_ADDR | 0x30030658 | Start address of RT region (18-bit ICCM-relative) |
+| INTERNAL_ICCM_RT_END_ADDR | 0x3003065C | End address of RT region (inclusive) |
+| INTERNAL_ICCM_REGION_LOCK | 0x30030660 | W1S lock — once set, address registers cannot be modified until reset |
+
+These registers use the `caliptra_prim_subreg_shadow` primitive for glitch hardening:
+- **2-phase write protocol**: Each register must be written twice with the same value to commit. A single write updates only the shadow copy; the second matching write commits to the primary register.
+- **Phase-clear-on-read**: A read operation resets the write phase to 0, preventing stale partial writes from persisting.
+- **Error lockout**: If the shadow and committed copies diverge (storage fault), all further writes are blocked until reset.
+- **Error reporting**: Storage faults assert `CPTRA_HW_ERROR_FATAL.shadow_storage_err[5]`. Phase-1/phase-0 mismatches assert `CPTRA_HW_ERROR_NON_FATAL.shadow_update_err[3]`.
+
+The effective lock for the boot flow monitor is `iccm_region_lock & iccm_all_shadows_committed` — both the lock register must be set AND all four address registers must have completed their 2-phase writes.
+
+#### Transition detection
+
+The monitor uses MuBi4-encoded signals for glitch resistance:
+
+| Signal | Encoding | Meaning |
+| :----- | :------- | :------ |
+| `boot_flow_fmc` | MuBi4True/False | CPU has begun executing from the FMC region |
+| `boot_flow_rt` | MuBi4True/False | CPU has begun executing from the RT region |
+| `boot_flow_error` | MuBi4True/False | Fatal error detected in boot flow |
+
+Transitions are one-way: once `boot_flow_fmc` becomes True, it remains True until reset. The monitor fires on the first ICCM read within the FMC region (after effective lock is set), and similarly for RT.
+
+#### Error conditions
+
+`boot_flow_error` is asserted (fatal) when any of the following occur:
+- ICCM fetch while region lock is not set or shadow registers are not committed
+- `boot_flow_rt` asserts before `boot_flow_fmc` (out-of-order transition)
+- Any boot flow MuBi4 signal enters an invalid (non-True, non-False) encoding state
+
+#### Simulation support
+
+In simulation, `boot_flow_monitor_en` defaults to 0 (disabled). The testbench overrides this signal with a `force` when testing the feature. In hardware, the monitor is always enabled.
+
+### KV monitor
+
+At each boot phase transition, the KV monitor validates that the expected DICE key slots are correctly populated. A mismatch triggers `kv_monitor_alert`, which escalates to `CPTRA_HW_ERROR_FATAL.kv_error[4]` and flushes all key entries.
+
+#### ROM→FMC checks (on `enter_fmc`)
+
+| Slot | Name | Expected dest_valid |
+| :--- | :--- | :------------------ |
+| 0 | SI_IDEV | AES_KEY |
+| 1 | SI_LDEV | AES_KEY |
+| 2 | KEY_LADDER | HMAC_KEY |
+| 6 | FMC_CDI | HMAC_KEY \| MLDSA_SEED \| ECC_SEED |
+| 7 | FMC_ECDSA | ECC_PKEY |
+| 8 | FMC_MLDSA | MLDSA_SEED |
+
+Additionally, per-slot crypto write counters verify minimum expected derivation counts:
+- Slot 6 (FMC_CDI): ≥ 4 writes (IDevID CDI + LDevID intermediate + LDevID CDI + FMC Alias CDI)
+- Slot 7 (FMC_ECDSA): ≥ 2 writes (IDevID ECC keygen + FMC Alias ECC keygen)
+- Slot 8 (FMC_MLDSA): ≥ 2 writes (IDevID MLDSA keygen + FMC Alias MLDSA keygen)
+
+Write counters are 3-bit saturating counters that reset only on hard reset (`rst_b`), persisting across warm and FW update resets.
+
+#### FMC→RT checks (on `enter_rt`)
+
+| Slot | Name | Expected dest_valid |
+| :--- | :--- | :------------------ |
+| 4 | RT_CDI | HMAC_KEY \| MLDSA_SEED \| ECC_SEED |
+| 5 | RT_ECDSA | ECC_PKEY |
+| 9 | RT_MLDSA | MLDSA_SEED |
+
+### KV enforcement
+
+Enforcement is applied continuously based on the current boot phase and atomically at transitions.
+
+#### Lock enforcement (continuous)
+
+| Condition | Slots affected | Action |
+| :-------- | :------------- | :----- |
+| `boot_flow_fmc` = True | 0, 1, 2, 6, 7, 8 | `lock_wr` asserted via hwset (HW-driven, cannot be cleared by SW) |
+| `boot_flow_rt` = True | 4, 5, 9 | `lock_wr` asserted via hwset |
+| `boot_flow_rt` = True | 6, 7, 8 | `lock_use` asserted via hwset (FMC keys cannot be used in RT) |
+
+The `lock_wr` and `lock_use` fields have `hwset` property in the register definition, allowing hardware to set them without firmware intervention. Once set, they can only be cleared by `core_only_rst_b` de-assertion.
+
+#### Slot clearing (atomic, on transition edge)
+
+| Transition | Slots cleared | Slots preserved |
+| :--------- | :------------ | :-------------- |
+| ROM→FMC (`enter_fmc`) | 3, 4, 5, 9, 10–15 | 0, 1, 2, 6, 7, 8 |
+| FMC→RT (`enter_rt`) | 3, 10–15 | 0, 1, 2, 4, 5, 6, 7, 8, 9 |
+
+Clearing destroys the key data and resets `dest_valid` and `last_dword` for the affected slots.
+
+#### Error escalation
+
+Any of the following trigger all key entries to be flushed:
+- `boot_flow_error` = MuBi4True
+- `kv_monitor_alert` (dest_valid mismatch or write count violation)
+- `kv_multi_write_err` (existing: multiple crypto engines writing simultaneously)
+
+The error is reported as `CPTRA_HW_ERROR_FATAL.kv_error[4]`, which is unmasked and always triggers an interrupt.
+
+### DOE lockdown
+
+Once the boot flow monitor detects that execution has transitioned to FMC or RT (i.e., `boot_flow_fmc` or `boot_flow_rt` is True), the DOE command register is forcibly cleared via `doe_cmd_lock`. This prevents any new de-obfuscation commands from being issued after the DICE key derivation phase is complete, closing the window for an attacker to re-derive secrets using the obfuscation key.
+
+### Error register summary
+
+| Register | Bit | Field | Trigger |
+| :------- | :-- | :---- | :------ |
+| CPTRA_HW_ERROR_FATAL | 4 | kv_error | Boot flow error OR KV monitor alert |
+| CPTRA_HW_ERROR_FATAL | 5 | shadow_storage_err | ICCM region shadow register storage fault |
+| CPTRA_HW_ERROR_NON_FATAL | 3 | shadow_update_err | ICCM region shadow register phase mismatch |
+
+### DICE slot assignments
+
+The following table documents the key vault slot assignments used by the DICE key derivation chain (defined in `kv_defines_pkg.sv`):
+
+| Slot | Constant | Purpose |
+| :--- | :------- | :------ |
+| 0 | KV_SLOT_SI_IDEV | Silicon IDevID private key |
+| 1 | KV_SLOT_SI_LDEV | Silicon LDevID private key |
+| 2 | KV_SLOT_KEY_LADDER | Key ladder intermediate |
+| 4 | KV_SLOT_RT_CDI | Runtime CDI |
+| 5 | KV_SLOT_RT_ECDSA | Runtime ECDSA private key |
+| 6 | KV_SLOT_FMC_CDI | FMC CDI (accumulates through DICE chain) |
+| 7 | KV_SLOT_FMC_ECDSA | FMC ECDSA private key |
+| 8 | KV_SLOT_FMC_MLDSA | FMC MLDSA private key |
+| 9 | KV_SLOT_RT_MLDSA | Runtime MLDSA private key |
+
+### ROM programming sequence
+
+ROM must perform the following steps before jumping to FMC:
+
+1. Complete all DICE key derivations (DOE decrypt, HMAC, ECC keygen, MLDSA keygen)
+2. Program ICCM region registers with 2-phase writes:
+   - Write `INTERNAL_ICCM_FMC_START_ADDR` twice with the same value
+   - Write `INTERNAL_ICCM_FMC_END_ADDR` twice with the same value
+   - Write `INTERNAL_ICCM_RT_START_ADDR` twice with the same value
+   - Write `INTERNAL_ICCM_RT_END_ADDR` twice with the same value
+3. Set `INTERNAL_ICCM_REGION_LOCK` (W1S) — this arms the boot flow monitor
+4. Jump to FMC entry point in ICCM
+
+The first instruction fetch from the FMC region triggers the ROM→FMC transition, at which point the KV monitor validates slot state and enforcement atomically applies locks and clears.
+
 
 ## Data vault
 

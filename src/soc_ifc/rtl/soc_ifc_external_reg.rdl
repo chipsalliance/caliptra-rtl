@@ -28,7 +28,9 @@ reg {
     rw_rw_sticky_hw dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
     rw_rw_sticky_hw nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
     rw_rw_sticky_hw crypto_err=0;       /* Crypto parallel operation error No Mask */ 
-    field {sw=r; hw=w;} rsvd[28]=28'h0;
+    rw_rw_sticky_hw kv_error=0;         /* KV boot flow monitor dest_valid mismatch */
+    rw_rw_sticky_hw shadow_storage_err=0; /* Shadow register storage fault (fatal -- register or shadow corrupted) */
+    field {sw=r; hw=w;} rsvd[26]=26'h0;
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
@@ -52,7 +54,8 @@ reg {
     rw_rw_sticky_hw mbox_prot_no_lock=0; /* SOC access while not locked */
     rw_rw_sticky_hw mbox_prot_ooo=0;     /* Register access out-of-order */
     rw_rw_sticky_hw mbox_ecc_unc=0;      /* Uncorrectable double-bit error in DCCM */
-    field {sw=r; hw=w;} rsvd[29]=29'h0;
+    rw_rw_sticky_hw shadow_update_err=0;  /* Shadow register 2-phase write mismatch (recoverable -- SW can retry) */
+    field {sw=r; hw=w;} rsvd[28]=28'h0;
 } CPTRA_HW_ERROR_NON_FATAL;
 reg {
     name = "Firmware Error Fatal";

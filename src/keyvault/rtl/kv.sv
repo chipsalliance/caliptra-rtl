@@ -19,6 +19,7 @@
 module kv 
     import kv_defines_pkg::*;
     import kv_reg_pkg::*;
+    import caliptra_prim_mubi_pkg::*;
 
     #(
      parameter AHB_ADDR_WIDTH = KV_ADDR_W
@@ -32,7 +33,14 @@ module kv
     input logic fw_update_rst_window,
     input logic cptra_in_debug_scan_mode,
     input logic debugUnlock_or_scan_mode_switch,
-    
+
+    //Boot flow signals
+    input caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc,
+    input caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt,
+    input caliptra_prim_mubi_pkg::mubi4_t boot_flow_error,
+
+    output logic kv_monitor_alert,
+
     //uC AHB Lite Interface
     //from SLAVES PORT
     input logic [AHB_ADDR_WIDTH-1:0]      haddr_i,
@@ -77,9 +85,18 @@ kv_reg__in_t kv_reg_hwif_in;
 kv_reg__out_t kv_reg_hwif_out;
 
 logic [KV_NUM_KEYS-1:0] key_entry_clear;
+logic [KV_NUM_KEYS-1:0] boot_flow_key_clear;
 
 logic [$clog2(KV_NUM_WRITE)-1:0] kv_write_cnt;
 logic kv_multi_write_err;
+
+// Per-slot crypto write counters for DICE chain integrity (slots 6, 7, 8 only).
+// Counts completed crypto-engine writes (triggered on write_offset == 0).
+// Does NOT count SW erases (KEY_CTRL.clear) or flush_keyvault.
+// Resets on rst_b (hard_reset_b domain) — persists across warm and fw update resets.
+localparam WRITE_CNT_W = 3; // 3-bit saturating counter (max 7)
+logic [WRITE_CNT_W-1:0] write_count_slot6, write_count_slot7, write_count_slot8;
+logic                    crypto_wr_slot6,   crypto_wr_slot7,   crypto_wr_slot8;
 
 ahb_slv_sif #(
     .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
@@ -146,8 +163,46 @@ end
 
 always_comb kv_multi_write_err = kv_write_cnt > 1;
 
-//Generate clear signal for each key entry 
-//don't clear when writes are locked
+// Detect crypto-engine writes to monitored slots (6, 7, 8).
+// Trigger on write_offset == 0 so we count once per complete key write,
+// not once per dword. Excludes flush_keyvault and SW erase paths.
+always_comb begin
+    crypto_wr_slot6 = '0;
+    crypto_wr_slot7 = '0;
+    crypto_wr_slot8 = '0;
+    for (int client = 0; client < KV_NUM_WRITE; client++) begin
+        crypto_wr_slot6 |= kv_write[client].write_en &
+                           (kv_write[client].write_entry == KV_SLOT_FMC_CDI) &
+                           (kv_write[client].write_offset == '0);
+        crypto_wr_slot7 |= kv_write[client].write_en &
+                           (kv_write[client].write_entry == KV_SLOT_FMC_ECDSA) &
+                           (kv_write[client].write_offset == '0);
+        crypto_wr_slot8 |= kv_write[client].write_en &
+                           (kv_write[client].write_entry == KV_SLOT_FMC_MLDSA) &
+                           (kv_write[client].write_offset == '0);
+    end
+end
+
+// Saturating write counters — reset on hard_reset_b (rst_b), persist across warm/fw update resets
+always_ff @(posedge clk or negedge rst_b) begin
+    if (~rst_b) begin
+        write_count_slot6 <= '0;
+        write_count_slot7 <= '0;
+        write_count_slot8 <= '0;
+    end
+    else begin
+        if (crypto_wr_slot6 && write_count_slot6 < {WRITE_CNT_W{1'b1}})
+            write_count_slot6 <= write_count_slot6 + 1'b1;
+        if (crypto_wr_slot7 && write_count_slot7 < {WRITE_CNT_W{1'b1}})
+            write_count_slot7 <= write_count_slot7 + 1'b1;
+        if (crypto_wr_slot8 && write_count_slot8 < {WRITE_CNT_W{1'b1}})
+            write_count_slot8 <= write_count_slot8 + 1'b1;
+    end
+end
+
+//Generate clear signal for each key entry
+//multi write error or boot flow error will trigger a clear of all entries
+//don't allow sw clear when writes are locked
 //hold the clear when writes are in progress
 generate
     for (genvar g_entry = 0; g_entry < KV_NUM_KEYS; g_entry++) begin
@@ -156,7 +211,8 @@ generate
                 key_entry_clear[g_entry] <= '0;
             end
             else begin
-                key_entry_clear[g_entry] <= kv_multi_write_err |
+                key_entry_clear[g_entry] <= kv_multi_write_err | mubi4_test_true_strict(boot_flow_error) | kv_monitor_alert |
+                                            boot_flow_key_clear[g_entry] |
                                             (kv_reg_hwif_out.KEY_CTRL[g_entry].clear.value & ~lock_wr_q[g_entry] & ~lock_use_q[g_entry]) |
                                             (key_entry_clear[g_entry] & key_entry_ctrl_we[g_entry]);
             end
@@ -186,7 +242,7 @@ always_comb begin : keyvault_ctrl
         //once lock is set, only reset can unset it
         kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = lock_wr_q[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = lock_use_q[entry];
-        //clear dest valid and last dword
+        //clear dest valid and last dword (enforcement clear is same-cycle, key_entry_clear is registered)
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = key_entry_clear[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = key_entry_clear[entry];
 
@@ -260,6 +316,94 @@ always_comb begin
     end
 end
 
+//KV Monitor and Enforcement
+
+//Flop the boot flow signals and create transition detect signals for FMC and RT transitions
+mubi4_t boot_flow_fmc_d;
+mubi4_t boot_flow_rt_d;
+logic enter_fmc, enter_rt;
+always_ff@(posedge clk or negedge core_only_rst_b) begin
+    if (~core_only_rst_b) begin
+        boot_flow_fmc_d <= MuBi4False;
+        boot_flow_rt_d <= MuBi4False;
+    end
+    else begin
+        boot_flow_fmc_d <= boot_flow_fmc;
+        boot_flow_rt_d <= boot_flow_rt;
+    end
+end
+
+// Transition detection
+always_comb begin
+    enter_fmc = mubi4_test_true_strict(boot_flow_fmc) && mubi4_test_false_strict(boot_flow_fmc_d);
+    enter_rt = mubi4_test_true_strict(boot_flow_rt) && mubi4_test_false_strict(boot_flow_rt_d);
+end
+
+//KV Monitor
+//This logic monitors the state of the keyvault at transition to FMC or RT
+//Ensures that appropriate keys are present at these transitions, triggers an alert if not
+//Check dest_valid of slots that are NOT cleared at each transition
+
+// Expected dest_valid masks for DICE key slots
+localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_AES_KEY    = (9'd1 << KV_DEST_IDX_AES_KEY);
+localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_HMAC_KEY   = (9'd1 << KV_DEST_IDX_HMAC_KEY);
+localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_CDI        = (9'd1 << KV_DEST_IDX_HMAC_KEY) |
+                                                                (9'd1 << KV_DEST_IDX_MLDSA_SEED) |
+                                                                (9'd1 << KV_DEST_IDX_ECC_SEED);
+localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_ECC_PKEY   = (9'd1 << KV_DEST_IDX_ECC_PKEY);
+localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_MLDSA_SEED = (9'd1 << KV_DEST_IDX_MLDSA_SEED);
+
+// Expected minimum crypto write counts for DICE chain integrity
+localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_SLOT6 = 3'd4; // IDevID CDI + LDEV intermediate + LDEV CDI + FMC Alias CDI
+localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_SLOT7 = 3'd2; // IDevID ECC keygen + FMC Alias ECC keygen
+localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_SLOT8 = 3'd2; // IDevID MLDSA keygen + FMC Alias MLDSA keygen
+
+always_comb begin : KV_MONITOR
+    kv_monitor_alert = '0;
+
+    // ROM-to-FMC: check dest_valid of preserved slots (0,1,2,6,7,8)
+    //             check write counters on DICE accumulator slots (6,7,8)
+    if (enter_fmc) begin
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_SI_IDEV].dest_valid.value    != KV_EXPECTED_DV_AES_KEY);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_SI_LDEV].dest_valid.value    != KV_EXPECTED_DV_AES_KEY);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_KEY_LADDER].dest_valid.value != KV_EXPECTED_DV_HMAC_KEY);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_CDI].dest_valid.value   != KV_EXPECTED_DV_CDI);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_ECDSA].dest_valid.value != KV_EXPECTED_DV_ECC_PKEY);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_MLDSA].dest_valid.value != KV_EXPECTED_DV_MLDSA_SEED);
+        // Write counter checks — detect truncated DICE chains
+        kv_monitor_alert |= (write_count_slot6 < KV_MIN_WRITES_SLOT6);
+        kv_monitor_alert |= (write_count_slot7 < KV_MIN_WRITES_SLOT7);
+        kv_monitor_alert |= (write_count_slot8 < KV_MIN_WRITES_SLOT8);
+    end
+
+    // FMC-to-RT: check dest_valid of preserved RT slots (4,5,9)
+    if (enter_rt) begin
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_RT_CDI].dest_valid.value    != KV_EXPECTED_DV_CDI);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_RT_ECDSA].dest_valid.value  != KV_EXPECTED_DV_ECC_PKEY);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_RT_MLDSA].dest_valid.value  != KV_EXPECTED_DV_MLDSA_SEED);
+    end
+end
+
+
+//KV Enforcement
+//This logic enforces that the keyvault is in the expected state at transition to FMC or RT
+//Asserts lock_wr, lock_use continuously in their appropriate layers
+//per-entry clear atomically in one cycle on each transition
+//Slot assignments from caliptra-sw KeyId: 0=UDS, 1=FE, 2=KeyLadder, 3=TMP,
+//  4=RT_CDI, 5=RT_ECDSA, 6=FMC_CDI, 7=FMC_ECDSA, 8=FMC_MLDSA, 9=RT_MLDSA, 10-12=DPE, 13-15=spare
+always_comb begin : KV_ENFORCEMENT
+    for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwset  = (mubi4_test_true_strict(boot_flow_fmc) && 
+                                                         entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA}) ||
+                                                        (mubi4_test_true_strict(boot_flow_rt) && 
+                                                         entry inside {KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA});
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwset = (mubi4_test_true_strict(boot_flow_rt) && 
+                                                         entry inside {KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA});
+        boot_flow_key_clear[entry] = (enter_fmc && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})) || 
+                                     (enter_rt && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA, 
+                                                                  KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA}));
+    end
+end
 
 always_comb kv_reg_hwif_in.hard_reset_b = cptra_pwrgood;
 always_comb kv_reg_hwif_in.reset_b = rst_b;

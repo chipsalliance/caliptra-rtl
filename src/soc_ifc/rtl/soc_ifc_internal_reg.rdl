@@ -86,6 +86,7 @@ reg {
     rw_ro_hw mask_dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
     rw_ro_hw mask_nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
     ro_ro    mask_crypto_err=0;       /* Crypto parallel operation error No Mask */
+    ro_ro    mask_kv_error=0;         /* KV boot flow monitor No Mask */
 } internal_hw_error_fatal_mask;
 reg {
     name = "Hardware Error Non-Fatal Mask";
@@ -196,6 +197,75 @@ reg {
             [br]SOC Access:      RO";
     field {desc = "Count Compare High"; sw = rw; hw = r; swwel = soc_req; resetsignal = cptra_pwrgood;} compare_h[32] = 32'h0;
 } internal_rv_mtimecmp_h;
+
+////////////////////////////////////////////////////////////////
+// ICCM Region Registers for Boot Flow Monitor
+// These are external registers backed by caliptra_prim_subreg_shadow instances
+// in soc_ifc_top.sv. The 2-phase write protocol, phase-clear-on-read, and
+// error lockout are handled by the shadow subreg primitive.
+reg {
+    name = "ICCM FMC Region Start Address";
+    desc = "Start address of the FMC region within ICCM address space, used by the
+            boot flow monitor to detect ROM-to-FMC firmware transitions. Programmed by
+            ROM before jumping to FMC. Locked by internal_iccm_region_lock.
+            This is a shadowed register -- requires two identical writes (2-phase protocol).
+            A read clears the internal phase tracker. Storage faults are reported as fatal.
+            [br]Caliptra Access: RWL
+            [br]SOC Access:      RO";
+
+    field {desc = "FMC ICCM start address (18-bit ICCM-relative)."; sw = rw;} addr[18] = 18'h0;
+} external internal_iccm_fmc_start_addr;
+
+reg {
+    name = "ICCM FMC Region End Address";
+    desc = "End address (inclusive) of the FMC region within ICCM address space, used by
+            the boot flow monitor to detect ROM-to-FMC firmware transitions. Programmed by
+            ROM before jumping to FMC. Locked by internal_iccm_region_lock.
+            This is a shadowed register -- requires two identical writes (2-phase protocol).
+            A read clears the internal phase tracker. Storage faults are reported as fatal.
+            [br]Caliptra Access: RWL
+            [br]SOC Access:      RO";
+
+    field {desc = "FMC ICCM end address (18-bit ICCM-relative)."; sw = rw;} addr[18] = 18'h0;
+} external internal_iccm_fmc_end_addr;
+
+reg {
+    name = "ICCM RT Region Start Address";
+    desc = "Start address of the RT region within ICCM address space, used by the
+            boot flow monitor to detect FMC-to-RT firmware transitions. Programmed by
+            ROM before jumping to FMC. Locked by internal_iccm_region_lock.
+            This is a shadowed register -- requires two identical writes (2-phase protocol).
+            A read clears the internal phase tracker. Storage faults are reported as fatal.
+            [br]Caliptra Access: RWL
+            [br]SOC Access:      RO";
+
+    field {desc = "RT ICCM start address (18-bit ICCM-relative)."; sw = rw;} addr[18] = 18'h0;
+} external internal_iccm_rt_start_addr;
+
+reg {
+    name = "ICCM RT Region End Address";
+    desc = "End address (inclusive) of the RT region within ICCM address space, used by
+            the boot flow monitor to detect FMC-to-RT firmware transitions. Programmed by
+            ROM before jumping to FMC. Locked by internal_iccm_region_lock.
+            This is a shadowed register -- requires two identical writes (2-phase protocol).
+            A read clears the internal phase tracker. Storage faults are reported as fatal.
+            [br]Caliptra Access: RWL
+            [br]SOC Access:      RO";
+
+    field {desc = "RT ICCM end address (18-bit ICCM-relative)."; sw = rw;} addr[18] = 18'h0;
+} external internal_iccm_rt_end_addr;
+
+reg {
+    name = "ICCM Region Lock";
+    desc = "Lock register for ICCM region address registers. Write-1-to-set; once set,
+            the four ICCM address registers cannot be modified until the next reset.
+            Setting this register also arms the boot flow monitor -- any ICCM fetch
+            before this lock is set triggers a fatal error.
+            [br]Caliptra Access: RW1S
+            [br]SOC Access:      RO";
+
+    field {desc = "Lock bit for ICCM region registers. Write 1 to set -- cannot be cleared by SW."; hw = r; sw = rw; onwrite = woset; swwel = soc_req; resetsignal = cptra_rst_b;} lock = 1'b0;
+} internal_iccm_region_lock;
 
 
 ////////////////////////////////////////////////////////////////

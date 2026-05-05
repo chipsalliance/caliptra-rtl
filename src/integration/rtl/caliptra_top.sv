@@ -24,10 +24,14 @@ module caliptra_top
     import lc_ctrl_state_pkg::*;
     import lc_ctrl_reg_pkg::*;
     import lc_ctrl_pkg::*;
+    import caliptra_prim_mubi_pkg::*;
 `ifdef CALIPTRA_INTERNAL_TRNG
     import entropy_src_pkg::*;
     import csrng_pkg::*;
 `endif
+    #(
+    `include "el2_param.vh"
+    )
     (
     input logic                        clk,
 
@@ -231,6 +235,15 @@ module caliptra_top
     el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
+    logic [17:0] iccm_fmc_start_addr;
+    logic [17:0] iccm_fmc_end_addr;
+    logic [17:0] iccm_rt_start_addr;
+    logic [17:0] iccm_rt_end_addr;
+    logic        iccm_region_lock;
+    logic        iccm_all_shadows_committed;
+    logic        iccm_region_lock_effective;
+
+    assign iccm_region_lock_effective = iccm_region_lock & iccm_all_shadows_committed;
   
     // AES status signals
     logic aes_input_ready;
@@ -319,6 +332,7 @@ module caliptra_top
     logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
     logic aes_busy_filtered, ecc_busy_filtered;
     logic crypto_error;
+    logic kv_monitor_alert;
 
     typedef enum logic [1:0] {
         CRYPTO_IDLE,
@@ -373,7 +387,7 @@ module caliptra_top
                                 (ecc_busy_filtered & aes_busy_filtered) |
                                 (abr_busy & doe_busy)                   |
                                 (abr_busy & aes_busy_filtered)          |
-                                (doe_busy & aes_busy_filtered)  ;
+                                (doe_busy & aes_busy_filtered);
             
 
 always_comb begin
@@ -518,6 +532,71 @@ always_comb begin
   el2_icache_stub.wb_dout_pre_up = '0;
   el2_icache_stub.ic_tag_data_raw_packed_pre = '0;
   el2_icache_stub.ic_tag_data_raw_pre = '0;
+end
+
+//Boot flow monitor
+//Track the boot flow from ROM to FMC and then to RT
+//Trigger keyvault monitoring and enforcement blocks on transitions
+//Errors will be flagged as fatal and flush the keyvault
+logic boot_flow_monitor_en;
+`ifdef SIMULATION
+    assign boot_flow_monitor_en = 1'b0; // Default disabled during simulation, can be overridden by testbench if needed
+`else
+    assign boot_flow_monitor_en = 1'b1; // Always enabled in hardware
+`endif
+
+caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
+caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt;
+caliptra_prim_mubi_pkg::mubi4_t boot_flow_error;
+
+logic[pt.ICCM_NUM_BANKS-1:0] iccm_read_en;
+logic[pt.ICCM_NUM_BANKS-1:0][pt.ICCM_BITS-1:0] iccm_read_addr;
+logic iccm_read_fmc;
+logic iccm_read_rt;
+
+logic iccm_read_any;
+
+always_comb begin
+    iccm_read_fmc = '0;
+    iccm_read_rt = '0;
+    iccm_read_any = '0;
+    for (int bank = 0; bank < pt.ICCM_NUM_BANKS; bank++) begin
+        iccm_read_en[bank] = el2_mem_export.iccm_clken[bank] && ~el2_mem_export.iccm_wren_bank[bank]; // Read enable when clock enabled and write enable is not asserted
+        iccm_read_addr[bank] = {el2_mem_export.iccm_addr_bank[bank],{pt.ICCM_BANK_INDEX_LO{1'b0}}}; //zero extend the bank address to get the full address
+
+        iccm_read_fmc |= iccm_read_en[bank] && (iccm_read_addr[bank] inside {[iccm_fmc_start_addr:iccm_fmc_end_addr]});
+        iccm_read_rt  |= iccm_read_en[bank] && (iccm_read_addr[bank] inside {[iccm_rt_start_addr:iccm_rt_end_addr]});
+        iccm_read_any |= iccm_read_en[bank];
+    end
+end
+
+always_ff @(posedge clk or negedge cptra_uc_rst_b) begin
+    if (!cptra_uc_rst_b) begin
+        boot_flow_fmc <= MuBi4False;
+        boot_flow_rt <= MuBi4False;
+        boot_flow_error <= MuBi4False;
+    end else begin
+        if (boot_flow_monitor_en) begin
+            // Transition from ROM to FMC is detected when the CPU starts executing from the FMC region
+            // Only active when ICCM region lock is set AND all shadow registers committed (2-phase writes complete)
+            if (iccm_region_lock_effective && mubi4_test_false_strict(boot_flow_fmc) && iccm_read_fmc) begin
+                boot_flow_fmc <= MuBi4True;
+            end
+
+            // Transition from FMC to RT is detected when the CPU starts executing from the RT region
+            if (iccm_region_lock_effective && mubi4_test_false_strict(boot_flow_rt) && iccm_read_rt) begin
+                boot_flow_rt <= MuBi4True;
+            end
+
+            // Error conditions
+            // 1. ICCM fetch while region lock is not set or shadow registers not committed
+            // 2. Boot flow signals in invalid mubi4 state
+            // 3. Transitions out of order (RT before FMC)
+            boot_flow_error <= (iccm_read_any && !iccm_region_lock_effective) ||
+                                (mubi4_test_false_strict(boot_flow_fmc) && mubi4_test_true_strict(boot_flow_rt)) ||
+                                mubi4_test_invalid(boot_flow_fmc) || mubi4_test_invalid(boot_flow_rt) || mubi4_test_invalid(boot_flow_error) ? MuBi4True : boot_flow_error;
+        end
+    end
 end
 
 el2_veer_wrapper rvtop (
@@ -1030,6 +1109,7 @@ doe_ctrl #(
     .kv_write (kv_write[KV_WRITE_IDX_DOE]),
     .kv_wr_resp (kv_wr_resp[KV_WRITE_IDX_DOE]),
     .ocp_lock_en(ss_ocp_lock_en),
+    .doe_cmd_lock(mubi4_test_true_strict(boot_flow_fmc) | mubi4_test_true_strict(boot_flow_rt)),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
 );
@@ -1206,11 +1286,15 @@ key_vault1
 
     .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode),
     .debugUnlock_or_scan_mode_switch (debug_lock_or_scan_mode_switch),
+    .boot_flow_fmc (boot_flow_fmc),
+    .boot_flow_rt (boot_flow_rt),
+    .boot_flow_error (boot_flow_error),
 
     .kv_read              (kv_read),
     .kv_write             (kv_write),
     .kv_rd_resp           (kv_rd_resp),
     .kv_wr_resp           (kv_wr_resp),
+    .kv_monitor_alert     (kv_monitor_alert),
     .pcr_ecc_signing_key  (pcr_signing_data.pcr_ecc_signing_privkey),
     .pcr_mldsa_signing_key  (pcr_signing_data.pcr_mldsa_signing_seed)
 );
@@ -1515,6 +1599,13 @@ soc_ifc_top1
     // ICCM Lock
     .iccm_lock       (iccm_lock                                    ),
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`CALIPTRA_SLAVE_SEL_IDMA]),
+    // ICCM Region Registers for Boot Flow Monitor
+    .iccm_fmc_start_addr(iccm_fmc_start_addr),
+    .iccm_fmc_end_addr  (iccm_fmc_end_addr),
+    .iccm_rt_start_addr (iccm_rt_start_addr),
+    .iccm_rt_end_addr   (iccm_rt_end_addr),
+    .iccm_region_lock   (iccm_region_lock),
+    .iccm_all_shadows_committed(iccm_all_shadows_committed),
     //uC reset
     .cptra_noncore_rst_b (cptra_noncore_rst_b),
     .cptra_uc_rst_b (cptra_uc_rst_b),
@@ -1524,6 +1615,8 @@ soc_ifc_top1
     .fw_update_rst_window(fw_update_rst_window),
     //multiple cryptos operating at once, assert fatal error
     .crypto_error(crypto_error),
+    //kv boot flow monitor dest_valid mismatch or boot_flow_error
+    .kv_error(kv_monitor_alert | mubi4_test_true_strict(boot_flow_error)),
     //caliptra uncore jtag ports
     .cptra_uncore_dmi_reg_en( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),

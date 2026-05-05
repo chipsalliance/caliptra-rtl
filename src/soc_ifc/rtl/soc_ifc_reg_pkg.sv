@@ -12,7 +12,7 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__rw_rw_sticky_hw__in_t;
 
     typedef struct packed{
-        logic [27:0] next;
+        logic [25:0] next;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t;
 
     typedef struct packed{
@@ -20,17 +20,20 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__rw_rw_sticky_hw__in_t dccm_ecc_unc;
         soc_ifc_reg__rw_rw_sticky_hw__in_t nmi_pin;
         soc_ifc_reg__rw_rw_sticky_hw__in_t crypto_err;
+        soc_ifc_reg__rw_rw_sticky_hw__in_t kv_error;
+        soc_ifc_reg__rw_rw_sticky_hw__in_t shadow_storage_err;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t rsvd;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t;
 
     typedef struct packed{
-        logic [28:0] next;
+        logic [27:0] next;
     } soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__rsvd__in_t;
 
     typedef struct packed{
         soc_ifc_reg__rw_rw_sticky_hw__in_t mbox_prot_no_lock;
         soc_ifc_reg__rw_rw_sticky_hw__in_t mbox_prot_ooo;
         soc_ifc_reg__rw_rw_sticky_hw__in_t mbox_ecc_unc;
+        soc_ifc_reg__rw_rw_sticky_hw__in_t shadow_update_err;
         soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__rsvd__in_t rsvd;
     } soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__in_t;
 
@@ -623,6 +626,30 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__internal_rv_mtime_h__in_t;
 
     typedef struct packed{
+        logic rd_ack;
+        logic [31:0] rd_data;
+        logic wr_ack;
+    } soc_ifc_reg__internal_iccm_fmc_start_addr__external__in_t;
+
+    typedef struct packed{
+        logic rd_ack;
+        logic [31:0] rd_data;
+        logic wr_ack;
+    } soc_ifc_reg__internal_iccm_fmc_end_addr__external__in_t;
+
+    typedef struct packed{
+        logic rd_ack;
+        logic [31:0] rd_data;
+        logic wr_ack;
+    } soc_ifc_reg__internal_iccm_rt_start_addr__external__in_t;
+
+    typedef struct packed{
+        logic rd_ack;
+        logic [31:0] rd_data;
+        logic wr_ack;
+    } soc_ifc_reg__internal_iccm_rt_end_addr__external__in_t;
+
+    typedef struct packed{
         logic hwset;
     } soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f__error_internal_sts_enable_d33001bb_next_52b75ffa_resetsignal_f7aac87a__in_t;
 
@@ -779,6 +806,10 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__internal_iccm_lock__in_t internal_iccm_lock;
         soc_ifc_reg__internal_rv_mtime_l__in_t internal_rv_mtime_l;
         soc_ifc_reg__internal_rv_mtime_h__in_t internal_rv_mtime_h;
+        soc_ifc_reg__internal_iccm_fmc_start_addr__external__in_t internal_iccm_fmc_start_addr;
+        soc_ifc_reg__internal_iccm_fmc_end_addr__external__in_t internal_iccm_fmc_end_addr;
+        soc_ifc_reg__internal_iccm_rt_start_addr__external__in_t internal_iccm_rt_start_addr;
+        soc_ifc_reg__internal_iccm_rt_end_addr__external__in_t internal_iccm_rt_end_addr;
         soc_ifc_reg__intr_block_t__in_t intr_block_rf;
     } soc_ifc_reg__in_t;
 
@@ -791,12 +822,15 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__rw_rw_sticky_hw__out_t dccm_ecc_unc;
         soc_ifc_reg__rw_rw_sticky_hw__out_t nmi_pin;
         soc_ifc_reg__rw_rw_sticky_hw__out_t crypto_err;
+        soc_ifc_reg__rw_rw_sticky_hw__out_t kv_error;
+        soc_ifc_reg__rw_rw_sticky_hw__out_t shadow_storage_err;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__out_t;
 
     typedef struct packed{
         soc_ifc_reg__rw_rw_sticky_hw__out_t mbox_prot_no_lock;
         soc_ifc_reg__rw_rw_sticky_hw__out_t mbox_prot_ooo;
         soc_ifc_reg__rw_rw_sticky_hw__out_t mbox_ecc_unc;
+        soc_ifc_reg__rw_rw_sticky_hw__out_t shadow_update_err;
     } soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__out_t;
 
     typedef struct packed{
@@ -1481,6 +1515,42 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__internal_rv_mtimecmp_h__out_t;
 
     typedef struct packed{
+        logic req;
+        logic req_is_wr;
+        logic [31:0] wr_data;
+        logic [31:0] wr_biten;
+    } soc_ifc_reg__internal_iccm_fmc_start_addr__external__out_t;
+
+    typedef struct packed{
+        logic req;
+        logic req_is_wr;
+        logic [31:0] wr_data;
+        logic [31:0] wr_biten;
+    } soc_ifc_reg__internal_iccm_fmc_end_addr__external__out_t;
+
+    typedef struct packed{
+        logic req;
+        logic req_is_wr;
+        logic [31:0] wr_data;
+        logic [31:0] wr_biten;
+    } soc_ifc_reg__internal_iccm_rt_start_addr__external__out_t;
+
+    typedef struct packed{
+        logic req;
+        logic req_is_wr;
+        logic [31:0] wr_data;
+        logic [31:0] wr_biten;
+    } soc_ifc_reg__internal_iccm_rt_end_addr__external__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__internal_iccm_region_lock__lock__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__internal_iccm_region_lock__lock__out_t lock;
+    } soc_ifc_reg__internal_iccm_region_lock__out_t;
+
+    typedef struct packed{
         logic intr;
     } soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t;
 
@@ -1595,6 +1665,11 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__internal_rv_mtime_h__out_t internal_rv_mtime_h;
         soc_ifc_reg__internal_rv_mtimecmp_l__out_t internal_rv_mtimecmp_l;
         soc_ifc_reg__internal_rv_mtimecmp_h__out_t internal_rv_mtimecmp_h;
+        soc_ifc_reg__internal_iccm_fmc_start_addr__external__out_t internal_iccm_fmc_start_addr;
+        soc_ifc_reg__internal_iccm_fmc_end_addr__external__out_t internal_iccm_fmc_end_addr;
+        soc_ifc_reg__internal_iccm_rt_start_addr__external__out_t internal_iccm_rt_start_addr;
+        soc_ifc_reg__internal_iccm_rt_end_addr__external__out_t internal_iccm_rt_end_addr;
+        soc_ifc_reg__internal_iccm_region_lock__out_t internal_iccm_region_lock;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
     } soc_ifc_reg__out_t;
 
