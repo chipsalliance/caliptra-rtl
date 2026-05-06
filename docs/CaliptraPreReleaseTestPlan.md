@@ -8,7 +8,7 @@ This document tracks test coverage for features under development, planned for a
 
 ### Feature Summary
 
-Hardware-enforced DICE key integrity monitoring and slot access control across ROM→FMC→RT boot phase transitions. Comprises a boot flow monitor (ICCM fetch detection), KV monitor (dest_valid/write count validation), KV enforcement (lock/clear), DOE lockdown, and ICCM region shadow registers.
+Hardware-enforced DICE key integrity monitoring and slot access control across ROM→FMC→RT boot phase transitions. Comprises a boot flow monitor (ICCM fetch detection), KV monitor (dest_valid/write count validation), KV enforcement (lock/clear), DOE lockdown, and ICCM region shadow registers with SoC write protection.
 
 ### Test Suite
 
@@ -52,6 +52,8 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | 4 | Lock without programming addresses (all=0), FMC entry at nonzero addr | boot_flow_error fires (addr mismatch) |
 | 5 | Single write only (no commit) — shadow phase stays 0 | iccm_all_shadows_committed=0; effective lock=0 |
 | 6 | Mismatched 2-phase write — different values for phase 0 and phase 1 | shadow_update_err (NON_FATAL[3]) fires |
+| 7 | SoC write attempt — write ICCM region register from SoC interface | Write rejected; register value unchanged |
+| 8 | SoC write to iccm_region_lock — attempt to set lock from SoC | Write rejected (swwel=soc_req); lock remains 0 |
 
 #### `directed/kv_monitor_neg`
 
@@ -85,6 +87,7 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 
 | Area | Description | Priority |
 | :--- | :---------- | :------- |
+| SoC write rejection | Directed test exercising SoC AXI writes to ICCM region registers (iters 7-8 above) | High |
 | Warm reset happy path | Dedicated test for warm reset → full re-derivation → monitor re-arms | Medium |
 | Glitch injection | Force MuBi4 invalid encoding on boot_flow signals | Low |
 | Multi-error interaction | boot_flow_error + kv_multi_write_err simultaneously | Low |
@@ -93,17 +96,27 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 
 ### Covergroups
 
-Location: `src/keyvault/coverage/`
+Location: `src/keyvault/coverage/kv_boot_flow_cov.sv` (KV-side) and `src/soc_ifc/coverage/soc_ifc_iccm_shadow_cov.sv` (shadow regs)
 
 Covergroups with crosses provide combinatorial coverage of the slot × transition × action state space. These complement the temporal cover properties in `kv_boot_flow_sva.sv`.
 
-| Covergroup | Sample Event | Key Crosses | Purpose |
-| :--------- | :----------- | :---------- | :------ |
-| `cg_enforcement_action` | `enter_fmc`, `enter_rt` | slot × transition × action (lock_wr, lock_use, clear, preserve) | All enforcement combos exercised |
-| `cg_monitor_check` | `enter_fmc`, `enter_rt` | slot × transition × outcome (pass/fail) | All DICE slots checked at both boundaries |
-| `cg_error_escalation` | Rising edge of any error | error_source × fatal_bit × kv_flushed | Correct escalation path per error type |
-| `cg_iccm_shadow_reg` | Shadow reg write/read strobe | register × operation × error | All registers through all operation/error paths |
-| `cg_write_counter` | Crypto write to slots 6,7,8 | slot × count_value × meets_min | Counter progression and threshold checking |
+| Covergroup | File | Sample Event | Key Crosses | Purpose |
+| :--------- | :--- | :----------- | :---------- | :------ |
+| `cg_enforcement_action` | `kv_boot_flow_cov.sv` | `enter_fmc`, `enter_rt` | transition × lock_wr_count, lock_use_count, cleared_count, alert | Enforcement combos exercised per transition |
+| `cg_monitor_check` | `kv_boot_flow_cov.sv` | `enter_fmc`, `enter_rt` | transition × pass/fail | Monitor validation at both boundaries |
+| `cg_error_escalation` | `kv_boot_flow_cov.sv` | Rising edge of any error | error_source × boot_phase | Correct escalation per error type per phase |
+| `cg_write_counter` | `kv_boot_flow_cov.sv` | Crypto write to slots 6,7,8 | slot × count_value, slot × boot_phase | Counter progression per slot |
+| `cg_iccm_shadow_reg` | `soc_ifc_iccm_shadow_cov.sv` | Shadow reg write/read strobe | register × operation, operation × committed, operation × err_update/err_storage, register × locked | All registers through all operation/error paths |
+
+### Security Enforcement
+
+| Mechanism | RTL Location | Description |
+| :-------- | :----------- | :---------- |
+| SoC write rejection (ICCM regs) | `soc_ifc_top.sv` line 1109-1112 | `iccm_shadow_we` gated by `~soc_ifc_reg_req_data.soc_req` — external registers reject SoC writes |
+| SoC write rejection (region lock) | `soc_ifc_internal_reg.rdl` | `swwel = soc_req` on `internal_iccm_region_lock.lock` field |
+| Shadow 2-phase protocol | `caliptra_prim_subreg_shadow` | Requires two identical writes to commit; mismatched second write → fatal |
+| Shadow storage fault detection | `caliptra_prim_subreg_shadow` | Continuous background comparison of primary/shadow copy → fatal on mismatch |
+| Region lock (post-commit) | `soc_ifc_top.sv` | `iccm_shadow_we` gated by `~iccm_region_lock` — no writes after ROM locks |
 
 ### Regression
 
