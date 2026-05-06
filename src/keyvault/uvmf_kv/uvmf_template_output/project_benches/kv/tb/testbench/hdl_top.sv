@@ -269,6 +269,13 @@ import uvmf_base_pkg_hdl::*;
       .hreadyout_o(uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HREADY     ),
       .hrdata_o   (uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HRDATA     ),
       .fw_update_rst_window(kv_rst_agent_bus.fw_update_rst_window),
+
+      //Boot flow signals - tied to inactive defaults for unit-level testing
+      .boot_flow_fmc (caliptra_prim_mubi_pkg::MuBi4False),
+      .boot_flow_rt  (caliptra_prim_mubi_pkg::MuBi4False),
+      .boot_flow_error(caliptra_prim_mubi_pkg::MuBi4False),
+      .kv_monitor_alert(),
+
       .kv_read (kv_read ),
       .kv_write(kv_write),
       .kv_rd_resp(kv_rd_resp),
