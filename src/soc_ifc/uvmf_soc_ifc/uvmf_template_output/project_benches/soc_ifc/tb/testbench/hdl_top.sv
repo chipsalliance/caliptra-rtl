@@ -358,6 +358,12 @@ import aaxi_uvm_pkg::*;
         .rdc_clk_dis          (                                           ), // TODO
         .fw_update_rst_window (cptra_status_agent_bus.fw_update_rst_window),
         .crypto_error         (cptra_ctrl_agent_bus.crypto_error          ),
+        .iccm_fmc_start_addr  (                                           ),
+        .iccm_fmc_end_addr    (                                           ),
+        .iccm_rt_start_addr   (                                           ),
+        .iccm_rt_end_addr     (                                           ),
+        .iccm_region_lock     (                                           ),
+        .kv_error             (1'b0                                       ),
 
         //caliptra uncore jtag ports
         .cptra_uncore_dmi_reg_en   (1'b0 ),
