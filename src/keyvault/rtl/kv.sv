@@ -95,8 +95,8 @@ logic kv_multi_write_err;
 // Does NOT count SW erases (KEY_CTRL.clear) or flush_keyvault.
 // Resets on rst_b (hard_reset_b domain) — persists across warm and fw update resets.
 localparam WRITE_CNT_W = 3; // 3-bit saturating counter (max 7)
-logic [WRITE_CNT_W-1:0] write_count_slot6, write_count_slot7, write_count_slot8;
-logic                    crypto_wr_slot6,   crypto_wr_slot7,   crypto_wr_slot8;
+logic [WRITE_CNT_W-1:0] write_count_fmc_cdi, write_count_fmc_ecdsa, write_count_fmc_mldsa;
+logic                   crypto_wr_fmc_cdi, crypto_wr_fmc_ecdsa, crypto_wr_fmc_mldsa;
 
 ahb_slv_sif #(
     .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH),
@@ -163,40 +163,40 @@ end
 
 always_comb kv_multi_write_err = kv_write_cnt > 1;
 
-// Detect crypto-engine writes to monitored slots (6, 7, 8).
-// Trigger on write_offset == 0 so we count once per complete key write,
+// Detect crypto-engine writes to monitored slots.
+// Trigger on write_offset == 0 so we count once per key write,
 // not once per dword. Excludes flush_keyvault and SW erase paths.
 always_comb begin
-    crypto_wr_slot6 = '0;
-    crypto_wr_slot7 = '0;
-    crypto_wr_slot8 = '0;
+    crypto_wr_fmc_cdi = '0;
+    crypto_wr_fmc_ecdsa = '0;
+    crypto_wr_fmc_mldsa = '0;
     for (int client = 0; client < KV_NUM_WRITE; client++) begin
-        crypto_wr_slot6 |= kv_write[client].write_en &
-                           (kv_write[client].write_entry == KV_SLOT_FMC_CDI) &
-                           (kv_write[client].write_offset == '0);
-        crypto_wr_slot7 |= kv_write[client].write_en &
-                           (kv_write[client].write_entry == KV_SLOT_FMC_ECDSA) &
-                           (kv_write[client].write_offset == '0);
-        crypto_wr_slot8 |= kv_write[client].write_en &
-                           (kv_write[client].write_entry == KV_SLOT_FMC_MLDSA) &
-                           (kv_write[client].write_offset == '0);
+        crypto_wr_fmc_cdi |= kv_write[client].write_en &
+                            (kv_write[client].write_entry == KV_SLOT_FMC_CDI) &
+                            (kv_write[client].write_offset == '0);
+        crypto_wr_fmc_ecdsa |= kv_write[client].write_en &
+                              (kv_write[client].write_entry == KV_SLOT_FMC_ECDSA) &
+                              (kv_write[client].write_offset == '0);
+        crypto_wr_fmc_mldsa |= kv_write[client].write_en &
+                              (kv_write[client].write_entry == KV_SLOT_FMC_MLDSA) &
+                              (kv_write[client].write_offset == '0);
     end
 end
 
-// Saturating write counters — reset on hard_reset_b (rst_b), persist across warm/fw update resets
-always_ff @(posedge clk or negedge rst_b) begin
-    if (~rst_b) begin
-        write_count_slot6 <= '0;
-        write_count_slot7 <= '0;
-        write_count_slot8 <= '0;
+// Saturating write counters — reset on hard reset, persist across warm/fw update resets
+always_ff @(posedge clk or negedge cptra_pwrgood) begin
+    if (~cptra_pwrgood) begin
+        write_count_fmc_cdi <= '0;
+        write_count_fmc_ecdsa <= '0;
+        write_count_fmc_mldsa <= '0;
     end
     else begin
-        if (crypto_wr_slot6 && write_count_slot6 < {WRITE_CNT_W{1'b1}})
-            write_count_slot6 <= write_count_slot6 + 1'b1;
-        if (crypto_wr_slot7 && write_count_slot7 < {WRITE_CNT_W{1'b1}})
-            write_count_slot7 <= write_count_slot7 + 1'b1;
-        if (crypto_wr_slot8 && write_count_slot8 < {WRITE_CNT_W{1'b1}})
-            write_count_slot8 <= write_count_slot8 + 1'b1;
+        if (crypto_wr_fmc_cdi && write_count_fmc_cdi < {WRITE_CNT_W{1'b1}})
+            write_count_fmc_cdi <= write_count_fmc_cdi + 1'b1;
+        if (crypto_wr_fmc_ecdsa && write_count_fmc_ecdsa < {WRITE_CNT_W{1'b1}})
+            write_count_fmc_ecdsa <= write_count_fmc_ecdsa + 1'b1;
+        if (crypto_wr_fmc_mldsa && write_count_fmc_mldsa < {WRITE_CNT_W{1'b1}})
+            write_count_fmc_mldsa <= write_count_fmc_mldsa + 1'b1;
     end
 end
 
@@ -348,15 +348,15 @@ end
 localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_AES_KEY    = (9'd1 << KV_DEST_IDX_AES_KEY);
 localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_HMAC_KEY   = (9'd1 << KV_DEST_IDX_HMAC_KEY);
 localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_CDI        = (9'd1 << KV_DEST_IDX_HMAC_KEY) |
-                                                                (9'd1 << KV_DEST_IDX_MLDSA_SEED) |
-                                                                (9'd1 << KV_DEST_IDX_ECC_SEED);
+                                                               (9'd1 << KV_DEST_IDX_MLDSA_SEED) |
+                                                               (9'd1 << KV_DEST_IDX_ECC_SEED);
 localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_ECC_PKEY   = (9'd1 << KV_DEST_IDX_ECC_PKEY);
 localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_MLDSA_SEED = (9'd1 << KV_DEST_IDX_MLDSA_SEED);
 
 // Expected minimum crypto write counts for DICE chain integrity
-localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_SLOT6 = 3'd4; // IDevID CDI + LDEV intermediate + LDEV CDI + FMC Alias CDI
-localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_SLOT7 = 3'd2; // IDevID ECC keygen + FMC Alias ECC keygen
-localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_SLOT8 = 3'd2; // IDevID MLDSA keygen + FMC Alias MLDSA keygen
+localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_FMC_CDI = 3'd4; // IDevID CDI + LDEV intermediate + LDEV CDI + FMC Alias CDI
+localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_FMC_ECDSA = 3'd2; // IDevID ECC keygen + FMC Alias ECC keygen
+localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_FMC_MLDSA = 3'd2; // IDevID MLDSA keygen + FMC Alias MLDSA keygen
 
 always_comb begin : KV_MONITOR
     kv_monitor_alert = '0;
@@ -367,13 +367,13 @@ always_comb begin : KV_MONITOR
         kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_SI_IDEV].dest_valid.value    != KV_EXPECTED_DV_AES_KEY);
         kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_SI_LDEV].dest_valid.value    != KV_EXPECTED_DV_AES_KEY);
         kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_KEY_LADDER].dest_valid.value != KV_EXPECTED_DV_HMAC_KEY);
-        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_CDI].dest_valid.value   != KV_EXPECTED_DV_CDI);
-        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_ECDSA].dest_valid.value != KV_EXPECTED_DV_ECC_PKEY);
-        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_MLDSA].dest_valid.value != KV_EXPECTED_DV_MLDSA_SEED);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_CDI].dest_valid.value    != KV_EXPECTED_DV_CDI);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_ECDSA].dest_valid.value  != KV_EXPECTED_DV_ECC_PKEY);
+        kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_MLDSA].dest_valid.value  != KV_EXPECTED_DV_MLDSA_SEED);
         // Write counter checks — detect truncated DICE chains
-        kv_monitor_alert |= (write_count_slot6 < KV_MIN_WRITES_SLOT6);
-        kv_monitor_alert |= (write_count_slot7 < KV_MIN_WRITES_SLOT7);
-        kv_monitor_alert |= (write_count_slot8 < KV_MIN_WRITES_SLOT8);
+        kv_monitor_alert |= (write_count_fmc_cdi < KV_MIN_WRITES_FMC_CDI);
+        kv_monitor_alert |= (write_count_fmc_ecdsa < KV_MIN_WRITES_FMC_ECDSA);
+        kv_monitor_alert |= (write_count_fmc_mldsa < KV_MIN_WRITES_FMC_MLDSA);
     end
 
     // FMC-to-RT: check dest_valid of preserved RT slots (4,5,9)
@@ -393,14 +393,14 @@ end
 //  4=RT_CDI, 5=RT_ECDSA, 6=FMC_CDI, 7=FMC_ECDSA, 8=FMC_MLDSA, 9=RT_MLDSA, 10-12=DPE, 13-15=spare
 always_comb begin : KV_ENFORCEMENT
     for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwset  = (mubi4_test_true_strict(boot_flow_fmc) && 
-                                                         entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA}) ||
-                                                        (mubi4_test_true_strict(boot_flow_rt) && 
-                                                         entry inside {KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA});
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwset = (mubi4_test_true_strict(boot_flow_rt) && 
-                                                         entry inside {KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA});
-        boot_flow_key_clear[entry] = (enter_fmc && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})) || 
-                                     (enter_rt && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA, 
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwset  = (mubi4_test_true_strict(boot_flow_fmc) &&
+                                                          entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA}) ||
+                                                         (mubi4_test_true_strict(boot_flow_rt) &&
+                                                          entry inside {KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA});
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwset = (mubi4_test_true_strict(boot_flow_rt) &&
+                                                          entry inside {KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA});
+        boot_flow_key_clear[entry] = (enter_fmc && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})) ||
+                                     (enter_rt && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA,
                                                                   KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA}));
     end
 end

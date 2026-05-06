@@ -38,17 +38,17 @@ module kv_boot_flow_cov
     input logic kv_monitor_alert,
 
     // Write counters
-    input logic [2:0] write_count_slot6,
-    input logic [2:0] write_count_slot7,
-    input logic [2:0] write_count_slot8,
+    input logic [2:0] write_count_fmc_cdi,
+    input logic [2:0] write_count_fmc_ecdsa,
+    input logic [2:0] write_count_fmc_mldsa,
 
     // Multi-write error
     input logic kv_multi_write_err,
 
     // Crypto write strobes (for counter sampling)
-    input logic crypto_wr_slot6,
-    input logic crypto_wr_slot7,
-    input logic crypto_wr_slot8
+    input logic crypto_wr_fmc_cdi,
+    input logic crypto_wr_fmc_ecdsa,
+    input logic crypto_wr_fmc_mldsa
 );
 
     // =========================================================================
@@ -207,23 +207,23 @@ module kv_boot_flow_cov
     // Sampled on crypto write to monitored slots (6, 7, 8)
     // =========================================================================
     logic crypto_wr_any_monitored;
-    assign crypto_wr_any_monitored = crypto_wr_slot6 | crypto_wr_slot7 | crypto_wr_slot8;
+    assign crypto_wr_any_monitored = crypto_wr_fmc_cdi | crypto_wr_fmc_ecdsa | crypto_wr_fmc_mldsa;
 
-    typedef enum logic [1:0] {SLOT6 = 0, SLOT7 = 1, SLOT8 = 2} monitored_slot_t;
+    typedef enum logic [1:0] {SLOT_FMC_CDI = 0, SLOT_FMC_ECDSA = 1, SLOT_FMC_MLDSA = 2} monitored_slot_t;
 
     monitored_slot_t wr_slot;
     always_comb begin
-        if (crypto_wr_slot6)      wr_slot = SLOT6;
-        else if (crypto_wr_slot7) wr_slot = SLOT7;
-        else                      wr_slot = SLOT8;
+        if (crypto_wr_fmc_cdi)        wr_slot = SLOT_FMC_CDI;
+        else if (crypto_wr_fmc_ecdsa) wr_slot = SLOT_FMC_ECDSA;
+        else                          wr_slot = SLOT_FMC_MLDSA;
     end
 
     logic [2:0] wr_count_at_sample;
     always_comb begin
         case (wr_slot)
-            SLOT6:   wr_count_at_sample = write_count_slot6;
-            SLOT7:   wr_count_at_sample = write_count_slot7;
-            default: wr_count_at_sample = write_count_slot8;
+            SLOT_FMC_CDI:   wr_count_at_sample = write_count_fmc_cdi;
+            SLOT_FMC_ECDSA: wr_count_at_sample = write_count_fmc_ecdsa;
+            default:        wr_count_at_sample = write_count_fmc_mldsa;
         endcase
     end
 
@@ -232,9 +232,9 @@ module kv_boot_flow_cov
         option.name = "cg_write_counter";
 
         cp_slot: coverpoint wr_slot {
-            bins slot6 = {SLOT6};
-            bins slot7 = {SLOT7};
-            bins slot8 = {SLOT8};
+            bins fmc_cdi   = {SLOT_FMC_CDI};
+            bins fmc_ecdsa = {SLOT_FMC_ECDSA};
+            bins fmc_mldsa = {SLOT_FMC_MLDSA};
         }
 
         cp_count: coverpoint wr_count_at_sample {

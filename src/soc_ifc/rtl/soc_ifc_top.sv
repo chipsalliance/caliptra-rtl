@@ -177,7 +177,6 @@ module soc_ifc_top
     output logic [17:0] iccm_rt_start_addr,
     output logic [17:0] iccm_rt_end_addr,
     output logic        iccm_region_lock,
-    output logic        iccm_all_shadows_committed,
 
     //Other blocks reset
     output logic cptra_noncore_rst_b,
@@ -1082,7 +1081,8 @@ assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 // iccm_fmc_start_addr, iccm_fmc_end_addr, iccm_rt_start_addr, iccm_rt_end_addr
 // are driven directly by the caliptra_prim_subreg_shadow .q outputs below.
-assign iccm_region_lock    = soc_ifc_reg_hwif_out.internal_iccm_region_lock.lock.value;
+logic iccm_region_lock_reg; // Raw register value — gates shadow writes
+assign iccm_region_lock_reg = soc_ifc_reg_hwif_out.internal_iccm_region_lock.lock.value;
 
 // =========================================================================
 // ICCM Region Shadow Registers (caliptra_prim_subreg_shadow)
@@ -1106,10 +1106,10 @@ end
 // Write enable: req & is_wr & ~lock
 logic [3:0] iccm_shadow_we;
 logic [3:0] iccm_shadow_re;
-assign iccm_shadow_we[0] = soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req & soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req_is_wr & ~iccm_region_lock & ~soc_ifc_reg_req_data.soc_req;
-assign iccm_shadow_we[1] = soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req   & soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req_is_wr   & ~iccm_region_lock & ~soc_ifc_reg_req_data.soc_req;
-assign iccm_shadow_we[2] = soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req  & soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req_is_wr  & ~iccm_region_lock & ~soc_ifc_reg_req_data.soc_req;
-assign iccm_shadow_we[3] = soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req    & soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req_is_wr    & ~iccm_region_lock & ~soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_we[0] = soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req & soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req_is_wr & ~iccm_region_lock_reg & ~soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_we[1] = soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req   & soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req_is_wr   & ~iccm_region_lock_reg & ~soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_we[2] = soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req  & soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req_is_wr  & ~iccm_region_lock_reg & ~soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_we[3] = soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req    & soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req_is_wr    & ~iccm_region_lock_reg & ~soc_ifc_reg_req_data.soc_req;
 
 // Read enable: req & ~is_wr (clears phase)
 assign iccm_shadow_re[0] = soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req & ~soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req_is_wr;
@@ -1117,7 +1117,9 @@ assign iccm_shadow_re[1] = soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req  
 assign iccm_shadow_re[2] = soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req  & ~soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req_is_wr;
 assign iccm_shadow_re[3] = soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req    & ~soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req_is_wr;
 
+logic iccm_all_shadows_committed;
 assign iccm_all_shadows_committed = &iccm_shadow_committed;
+assign iccm_region_lock = iccm_region_lock_reg & iccm_all_shadows_committed;
 assign shadow_storage_err = |iccm_shadow_err_storage;
 assign shadow_update_err  = |iccm_shadow_err_update;
 

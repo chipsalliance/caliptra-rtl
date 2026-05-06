@@ -73,12 +73,12 @@ module kv_boot_flow_sva
   wire [KV_NUM_KEYS-1:0] boot_flow_key_clear = `KV_PATH.boot_flow_key_clear;
 
   // Write counters
-  wire [2:0] write_count_slot6 = `KV_PATH.write_count_slot6;
-  wire [2:0] write_count_slot7 = `KV_PATH.write_count_slot7;
-  wire [2:0] write_count_slot8 = `KV_PATH.write_count_slot8;
-  wire       crypto_wr_slot6   = `KV_PATH.crypto_wr_slot6;
-  wire       crypto_wr_slot7   = `KV_PATH.crypto_wr_slot7;
-  wire       crypto_wr_slot8   = `KV_PATH.crypto_wr_slot8;
+  wire [2:0] write_count_fmc_cdi   = `KV_PATH.write_count_fmc_cdi;
+  wire [2:0] write_count_fmc_ecdsa = `KV_PATH.write_count_fmc_ecdsa;
+  wire [2:0] write_count_fmc_mldsa = `KV_PATH.write_count_fmc_mldsa;
+  wire       crypto_wr_fmc_cdi     = `KV_PATH.crypto_wr_fmc_cdi;
+  wire       crypto_wr_fmc_ecdsa   = `KV_PATH.crypto_wr_fmc_ecdsa;
+  wire       crypto_wr_fmc_mldsa   = `KV_PATH.crypto_wr_fmc_mldsa;
 
   // DOE lockdown
   wire doe_cmd_lock = mubi4_test_true_strict(mubi4_t'(boot_flow_fmc)) |
@@ -282,53 +282,53 @@ module kv_boot_flow_sva
   // ============================================================
 
   // Write counter increments on crypto write (write_offset==0), not on key_entry_clear
-  WriteCountSlot6Incr_A: assert property (
-    @(posedge clk) disable iff (!`KV_PATH.rst_b)
-    (crypto_wr_slot6 && write_count_slot6 < 3'd7) |=> (write_count_slot6 == $past(write_count_slot6) + 3'd1)
-  ) else $display("SVA ERROR: write_count_slot6 did not increment on crypto write");
+  WriteCountFmcCdiIncr_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    (crypto_wr_fmc_cdi && write_count_fmc_cdi < 3'd7) |=> (write_count_fmc_cdi == $past(write_count_fmc_cdi) + 3'd1)
+  ) else $display("SVA ERROR: write_count_fmc_cdi did not increment on crypto write");
 
-  WriteCountSlot7Incr_A: assert property (
-    @(posedge clk) disable iff (!`KV_PATH.rst_b)
-    (crypto_wr_slot7 && write_count_slot7 < 3'd7) |=> (write_count_slot7 == $past(write_count_slot7) + 3'd1)
-  ) else $display("SVA ERROR: write_count_slot7 did not increment on crypto write");
+  WriteCountFmcEcdsaIncr_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    (crypto_wr_fmc_ecdsa && write_count_fmc_ecdsa < 3'd7) |=> (write_count_fmc_ecdsa == $past(write_count_fmc_ecdsa) + 3'd1)
+  ) else $display("SVA ERROR: write_count_fmc_ecdsa did not increment on crypto write");
 
-  WriteCountSlot8Incr_A: assert property (
-    @(posedge clk) disable iff (!`KV_PATH.rst_b)
-    (crypto_wr_slot8 && write_count_slot8 < 3'd7) |=> (write_count_slot8 == $past(write_count_slot8) + 3'd1)
-  ) else $display("SVA ERROR: write_count_slot8 did not increment on crypto write");
+  WriteCountFmcMldsaIncr_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    (crypto_wr_fmc_mldsa && write_count_fmc_mldsa < 3'd7) |=> (write_count_fmc_mldsa == $past(write_count_fmc_mldsa) + 3'd1)
+  ) else $display("SVA ERROR: write_count_fmc_mldsa did not increment on crypto write");
 
   // What: Counters saturate at 7 (3'b111), never wrap
-  WriteCountSlot6Saturate_A: assert property (
-    @(posedge clk) disable iff (!`KV_PATH.rst_b)
-    (write_count_slot6 == 3'd7) |=> (write_count_slot6 == 3'd7)
-  ) else $display("SVA ERROR: write_count_slot6 wrapped past saturation");
+  WriteCountFmcCdiSaturate_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    (write_count_fmc_cdi == 3'd7) |=> (write_count_fmc_cdi == 3'd7)
+  ) else $display("SVA ERROR: write_count_fmc_cdi wrapped past saturation");
 
-  WriteCountSlot7Saturate_A: assert property (
-    @(posedge clk) disable iff (!`KV_PATH.rst_b)
-    (write_count_slot7 == 3'd7) |=> (write_count_slot7 == 3'd7)
-  ) else $display("SVA ERROR: write_count_slot7 wrapped past saturation");
+  WriteCountFmcEcdsaSaturate_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    (write_count_fmc_ecdsa == 3'd7) |=> (write_count_fmc_ecdsa == 3'd7)
+  ) else $display("SVA ERROR: write_count_fmc_ecdsa wrapped past saturation");
 
-  WriteCountSlot8Saturate_A: assert property (
-    @(posedge clk) disable iff (!`KV_PATH.rst_b)
-    (write_count_slot8 == 3'd7) |=> (write_count_slot8 == 3'd7)
-  ) else $display("SVA ERROR: write_count_slot8 wrapped past saturation");
+  WriteCountFmcMldsaSaturate_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    (write_count_fmc_mldsa == 3'd7) |=> (write_count_fmc_mldsa == 3'd7)
+  ) else $display("SVA ERROR: write_count_fmc_mldsa wrapped past saturation");
 
-  // What: Counters reset only on hard_reset_b (rst_b), NOT on core_only_rst_b
+  // What: Counters reset only on cptra_pwrgood deassertion, NOT on core_only_rst_b
   // Why: Must persist across warm and fw update resets to track cumulative DICE writes
-  WriteCountSlot6HardReset_A: assert property (
+  WriteCountFmcCdiHardReset_A: assert property (
     @(posedge clk)
-    !`KV_PATH.rst_b |-> (write_count_slot6 == 3'd0)
-  ) else $display("SVA ERROR: write_count_slot6 not zero during hard reset");
+    !`KV_PATH.cptra_pwrgood |-> (write_count_fmc_cdi == 3'd0)
+  ) else $display("SVA ERROR: write_count_fmc_cdi not zero during hard reset");
 
-  WriteCountSlot7HardReset_A: assert property (
+  WriteCountFmcEcdsaHardReset_A: assert property (
     @(posedge clk)
-    !`KV_PATH.rst_b |-> (write_count_slot7 == 3'd0)
-  ) else $display("SVA ERROR: write_count_slot7 not zero during hard reset");
+    !`KV_PATH.cptra_pwrgood |-> (write_count_fmc_ecdsa == 3'd0)
+  ) else $display("SVA ERROR: write_count_fmc_ecdsa not zero during hard reset");
 
-  WriteCountSlot8HardReset_A: assert property (
+  WriteCountFmcMldsaHardReset_A: assert property (
     @(posedge clk)
-    !`KV_PATH.rst_b |-> (write_count_slot8 == 3'd0)
-  ) else $display("SVA ERROR: write_count_slot8 not zero during hard reset");
+    !`KV_PATH.cptra_pwrgood |-> (write_count_fmc_mldsa == 3'd0)
+  ) else $display("SVA ERROR: write_count_fmc_mldsa not zero during hard reset");
 
   // ============================================================
   // Section 9: ICCM Region Register Properties
@@ -377,10 +377,10 @@ module kv_boot_flow_sva
     enter_rt && kv_monitor_alert
   );
 
-  // Cover: Write counter slot 6 reaches minimum (4)
-  WriteCountSlot6Reaches4_C: cover property (
-    @(posedge clk) disable iff (!`KV_PATH.rst_b)
-    $rose(write_count_slot6 == 3'd4)
+  // Cover: Write counter FMC CDI reaches minimum (4)
+  WriteCountFmcCdiReaches4_C: cover property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    $rose(write_count_fmc_cdi == 3'd4)
   );
 
   // Cover: boot_flow_error fires on unlocked ICCM fetch

@@ -240,11 +240,7 @@ module caliptra_top
     logic [17:0] iccm_rt_start_addr;
     logic [17:0] iccm_rt_end_addr;
     logic        iccm_region_lock;
-    logic        iccm_all_shadows_committed;
-    logic        iccm_region_lock_effective;
 
-    assign iccm_region_lock_effective = iccm_region_lock & iccm_all_shadows_committed;
-  
     // AES status signals
     logic aes_input_ready;
     logic aes_output_valid;
@@ -553,7 +549,6 @@ logic[pt.ICCM_NUM_BANKS-1:0] iccm_read_en;
 logic[pt.ICCM_NUM_BANKS-1:0][pt.ICCM_BITS-1:0] iccm_read_addr;
 logic iccm_read_fmc;
 logic iccm_read_rt;
-
 logic iccm_read_any;
 
 always_comb begin
@@ -570,32 +565,34 @@ always_comb begin
     end
 end
 
+// Synchronous soft-reset via fw_update_rst_window clears boot_flow flops cleanly
+// on posedge clk before cptra_uc_rst_b deasserts. This eliminates RDC metastability
+// from the async reset path into the cptra_noncore_rst_b domain — no downstream
+// gating required since outputs are already stable at MuBi4False before reset hits.
 always_ff @(posedge clk or negedge cptra_uc_rst_b) begin
     if (!cptra_uc_rst_b) begin
         boot_flow_fmc <= MuBi4False;
         boot_flow_rt <= MuBi4False;
         boot_flow_error <= MuBi4False;
-    end else begin
-        if (boot_flow_monitor_en) begin
-            // Transition from ROM to FMC is detected when the CPU starts executing from the FMC region
-            // Only active when ICCM region lock is set AND all shadow registers committed (2-phase writes complete)
-            if (iccm_region_lock_effective && mubi4_test_false_strict(boot_flow_fmc) && iccm_read_fmc) begin
-                boot_flow_fmc <= MuBi4True;
-            end
-
-            // Transition from FMC to RT is detected when the CPU starts executing from the RT region
-            if (iccm_region_lock_effective && mubi4_test_false_strict(boot_flow_rt) && iccm_read_rt) begin
-                boot_flow_rt <= MuBi4True;
-            end
-
-            // Error conditions
-            // 1. ICCM fetch while region lock is not set or shadow registers not committed
-            // 2. Boot flow signals in invalid mubi4 state
-            // 3. Transitions out of order (RT before FMC)
-            boot_flow_error <= (iccm_read_any && !iccm_region_lock_effective) ||
-                                (mubi4_test_false_strict(boot_flow_fmc) && mubi4_test_true_strict(boot_flow_rt)) ||
-                                mubi4_test_invalid(boot_flow_fmc) || mubi4_test_invalid(boot_flow_rt) || mubi4_test_invalid(boot_flow_error) ? MuBi4True : boot_flow_error;
+    end else if (fw_update_rst_window) begin
+        boot_flow_fmc <= MuBi4False;
+        boot_flow_rt <= MuBi4False;
+        boot_flow_error <= MuBi4False;
+    end else if (boot_flow_monitor_en) begin
+        // Transition from ROM to FMC is detected when the CPU starts executing from the FMC region
+        if (iccm_region_lock && mubi4_test_false_strict(boot_flow_fmc) && iccm_read_fmc) begin
+            boot_flow_fmc <= MuBi4True;
         end
+
+        // Transition from FMC to RT is detected when the CPU starts executing from the RT region
+        if (iccm_region_lock && mubi4_test_false_strict(boot_flow_rt) && iccm_read_rt) begin
+            boot_flow_rt <= MuBi4True;
+        end
+
+        // Error conditions
+        boot_flow_error <= (iccm_read_any && !iccm_region_lock) ||
+                            (mubi4_test_false_strict(boot_flow_fmc) && mubi4_test_true_strict(boot_flow_rt)) ||
+                            mubi4_test_invalid(boot_flow_fmc) || mubi4_test_invalid(boot_flow_rt) || mubi4_test_invalid(boot_flow_error) ? MuBi4True : boot_flow_error;
     end
 end
 
@@ -1605,7 +1602,6 @@ soc_ifc_top1
     .iccm_rt_start_addr (iccm_rt_start_addr),
     .iccm_rt_end_addr   (iccm_rt_end_addr),
     .iccm_region_lock   (iccm_region_lock),
-    .iccm_all_shadows_committed(iccm_all_shadows_committed),
     //uC reset
     .cptra_noncore_rst_b (cptra_noncore_rst_b),
     .cptra_uc_rst_b (cptra_uc_rst_b),
