@@ -28,6 +28,7 @@ jobs:
     permissions:
       pages: write
       id-token: write
+      contents: read
   post_run:
     name: Call Post Run Final
     runs-on: ubuntu-22.04
