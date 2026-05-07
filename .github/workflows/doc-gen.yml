@@ -5,6 +5,12 @@ name: Register Documentation
 on:
   workflow_dispatch:
   workflow_call:
+    inputs:
+      build_ref:
+        description: 'Git ref to check out for the main docs build (defaults to "main")'
+        required: false
+        default: 'main'
+        type: string
   push:
     branches: ["main", "nightly-results-main"]
 
@@ -21,7 +27,7 @@ jobs:
     steps:
       - uses: actions/checkout@v3
         with:
-          ref: "main"
+          ref: ${{ inputs.build_ref || 'main' }}
           submodules: 'true'
 
       - name: Install peakrdl
