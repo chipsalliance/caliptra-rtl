@@ -79,6 +79,7 @@ import aaxi_uvm_pkg::*;
 //      #5ns;
 //    end
     clk = 0;
+    #1ps; // Delay first edge to allow reset signals to settle at time 0
     forever begin
       #5ns;
       clk = ~clk;
@@ -221,6 +222,12 @@ import aaxi_uvm_pkg::*;
         #1ps cptra_rst_b_d = soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
     end
     assign cptra_rst_b_dly_assert_simult_deassert = cptra_rst_b_d | soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
+
+    // Ensure cptra_rst_b/cptra_pwrgood are 0 at elaboration (before delta 0),
+    // preventing X-triggered assertions in soc_ifc_reg.sv external ack logic.
+    // The driver BFM overrides these weak pulls once UVM configures it as INITIATOR.
+    pulldown (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b);
+    pulldown (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_pwrgood);
 
     aaxi_intf #(
         .MCB_INPUT (aaxi_pkg::AAXI_MCB_INPUT ),
