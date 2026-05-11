@@ -538,7 +538,7 @@ logic boot_flow_monitor_en;
 `ifdef SIMULATION
     assign boot_flow_monitor_en = 1'b0; // Default disabled during simulation, can be overridden by testbench if needed
 `else
-    assign boot_flow_monitor_en = 1'b1; // Always enabled in hardware
+    assign boot_flow_monitor_en = cptra_security_state_Latched.debug_locked; // Disable boot flow monitoring when debug is unlocked (fake-ROM, JTAG ICCM reads)
 `endif
 
 caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
