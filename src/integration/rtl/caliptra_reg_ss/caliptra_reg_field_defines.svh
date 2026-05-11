@@ -8504,8 +8504,12 @@
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK                                               (32'h4)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_LOW                                             (3)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK                                            (32'h8)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (4)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (32'hfffffff0)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_LOW                                               (4)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK                                              (32'h10)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_LOW                                     (5)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_MASK                                    (32'h20)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (6)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (32'hffffffc0)
 `endif
 `ifndef SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL
 `define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL                                                        (32'h4)
@@ -8515,8 +8519,10 @@
 `define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_OOO_MASK                                     (32'h2)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_LOW                                       (2)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_MASK                                      (32'h4)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_LOW                                               (3)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_MASK                                              (32'hfffffff8)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_SHADOW_UPDATE_ERR_LOW                                  (3)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_SHADOW_UPDATE_ERR_MASK                                 (32'h8)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_LOW                                               (4)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_MASK                                              (32'hfffffff0)
 `endif
 `ifndef SOC_IFC_REG_CPTRA_FW_ERROR_FATAL
 `define SOC_IFC_REG_CPTRA_FW_ERROR_FATAL                                                            (32'h8)
@@ -9382,6 +9388,8 @@
 `define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK                                  (32'h4)
 `define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_CRYPTO_ERR_LOW                                (3)
 `define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_CRYPTO_ERR_MASK                               (32'h8)
+`define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_KV_ERROR_LOW                                  (4)
+`define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_KV_ERROR_MASK                                 (32'h10)
 `endif
 `ifndef SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK
 `define SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK                                                (32'h634)
@@ -9409,6 +9417,31 @@
 `endif
 `ifndef SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H
 `define SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H                                                          (32'h64c)
+`endif
+`ifndef SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR
+`define SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR                                                    (32'h650)
+`define SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR_ADDR_LOW                                           (0)
+`define SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR_ADDR_MASK                                          (32'h3ffff)
+`endif
+`ifndef SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR
+`define SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR                                                      (32'h654)
+`define SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR_ADDR_LOW                                             (0)
+`define SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR_ADDR_MASK                                            (32'h3ffff)
+`endif
+`ifndef SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR
+`define SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR                                                     (32'h658)
+`define SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR_ADDR_LOW                                            (0)
+`define SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR_ADDR_MASK                                           (32'h3ffff)
+`endif
+`ifndef SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR
+`define SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR                                                       (32'h65c)
+`define SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR_ADDR_LOW                                              (0)
+`define SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR_ADDR_MASK                                             (32'h3ffff)
+`endif
+`ifndef SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK
+`define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK                                                       (32'h660)
+`define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_LOW                                              (0)
+`define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_MASK                                             (32'h1)
 `endif
 `ifndef SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
 `define SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (32'h800)

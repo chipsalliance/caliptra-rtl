@@ -1,0 +1,11 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["directed", "kv_monitor"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_boot_flow_monitor/smoke_test_kv_boot_flow_monitor.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_monitor_neg/directed_kv_monitor_neg.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_enforcement/directed_kv_enforcement.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_iccm_region/directed_kv_iccm_region.yml
