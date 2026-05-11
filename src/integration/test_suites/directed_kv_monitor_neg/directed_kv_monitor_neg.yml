@@ -14,4 +14,4 @@
 #
 ---
 seed: 1
-testname: kv_iccm_region
+testname: directed_kv_monitor_neg

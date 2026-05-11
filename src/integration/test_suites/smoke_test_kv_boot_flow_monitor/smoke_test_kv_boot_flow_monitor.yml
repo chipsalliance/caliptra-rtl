@@ -14,4 +14,4 @@
 #
 ---
 seed: 1
-testname: kv_monitor_neg
+testname: smoke_test_kv_boot_flow_monitor

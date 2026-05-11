@@ -14,4 +14,4 @@
 #
 ---
 seed: 1
-testname: kv_boot_flow_monitor
+testname: directed_kv_enforcement

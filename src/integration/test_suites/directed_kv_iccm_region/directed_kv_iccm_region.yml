@@ -14,4 +14,4 @@
 #
 ---
 seed: 1
-testname: kv_enforcement
+testname: directed_kv_iccm_region
