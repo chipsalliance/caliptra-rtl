@@ -133,6 +133,8 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_PRIVKEY_SIZE) {
+            *reg_ptr = 0; // Try overwrite, the register should be read-only
+
             actual_data = *reg_ptr;
             if (actual_data != privkey[offset]) {
                 VPRINTF(ERROR, "At offset [%d], mldsa_privkey data mismatch!\n", offset);
@@ -283,6 +285,16 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
     // Program MLDSA PRIVKEY
     VPRINTF(LOW, "Writing privkey\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR, privkey, MLDSA87_PRIVKEY_SIZE);
+
+    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
+    while (reg_ptr < CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR) {
+        actual_data = *reg_ptr;
+        if (actual_data) {
+            printf("MLDSA_PRIVKEY_IN at address: 0x%0x doesn't return 0 on read!\n", reg_ptr);
+            printf("%c", fail_cmd);
+        }
+        reg_ptr++;
+    }
     
     // Program MLDSA MSG
     VPRINTF(LOW, "Writing msg\n");
