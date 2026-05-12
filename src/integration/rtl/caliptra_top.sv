@@ -545,56 +545,23 @@ caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
 caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt;
 caliptra_prim_mubi_pkg::mubi4_t boot_flow_error;
 
-logic[pt.ICCM_NUM_BANKS-1:0] iccm_read_en;
-logic[pt.ICCM_NUM_BANKS-1:0][pt.ICCM_BITS-1:0] iccm_read_addr;
-logic iccm_read_fmc;
-logic iccm_read_rt;
-logic iccm_read_any;
-
-always_comb begin
-    iccm_read_fmc = '0;
-    iccm_read_rt = '0;
-    iccm_read_any = '0;
-    for (int bank = 0; bank < pt.ICCM_NUM_BANKS; bank++) begin
-        iccm_read_en[bank] = el2_mem_export.iccm_clken[bank] && ~el2_mem_export.iccm_wren_bank[bank]; // Read enable when clock enabled and write enable is not asserted
-        iccm_read_addr[bank] = {el2_mem_export.iccm_addr_bank[bank],{pt.ICCM_BANK_INDEX_LO{1'b0}}}; //zero extend the bank address to get the full address
-
-        iccm_read_fmc |= iccm_read_en[bank] && (iccm_read_addr[bank] inside {[iccm_fmc_start_addr:iccm_fmc_end_addr]});
-        iccm_read_rt  |= iccm_read_en[bank] && (iccm_read_addr[bank] inside {[iccm_rt_start_addr:iccm_rt_end_addr]});
-        iccm_read_any |= iccm_read_en[bank];
-    end
-end
-
-// Synchronous soft-reset via fw_update_rst_window clears boot_flow flops cleanly
-// on posedge clk before cptra_uc_rst_b deasserts. This eliminates RDC metastability
-// from the async reset path into the cptra_noncore_rst_b domain — no downstream
-// gating required since outputs are already stable at MuBi4False before reset hits.
-always_ff @(posedge clk or negedge cptra_uc_rst_b) begin
-    if (!cptra_uc_rst_b) begin
-        boot_flow_fmc <= MuBi4False;
-        boot_flow_rt <= MuBi4False;
-        boot_flow_error <= MuBi4False;
-    end else if (fw_update_rst_window) begin
-        boot_flow_fmc <= MuBi4False;
-        boot_flow_rt <= MuBi4False;
-        boot_flow_error <= MuBi4False;
-    end else if (boot_flow_monitor_en) begin
-        // Transition from ROM to FMC is detected when the CPU starts executing from the FMC region
-        if (iccm_region_lock && mubi4_test_false_strict(boot_flow_fmc) && iccm_read_fmc) begin
-            boot_flow_fmc <= MuBi4True;
-        end
-
-        // Transition from FMC to RT is detected when the CPU starts executing from the RT region
-        if (iccm_region_lock && mubi4_test_false_strict(boot_flow_rt) && iccm_read_rt) begin
-            boot_flow_rt <= MuBi4True;
-        end
-
-        // Error conditions
-        boot_flow_error <= (iccm_read_any && !iccm_region_lock) ||
-                            (mubi4_test_false_strict(boot_flow_fmc) && mubi4_test_true_strict(boot_flow_rt)) ||
-                            mubi4_test_invalid(boot_flow_fmc) || mubi4_test_invalid(boot_flow_rt) || mubi4_test_invalid(boot_flow_error) ? MuBi4True : boot_flow_error;
-    end
-end
+boot_flow_monitor i_boot_flow_monitor (
+    .clk                (clk),
+    .cptra_uc_rst_b     (cptra_uc_rst_b),
+    .iccm_clken         (el2_mem_export.iccm_clken),
+    .iccm_wren_bank     (el2_mem_export.iccm_wren_bank),
+    .iccm_addr_bank     (el2_mem_export.iccm_addr_bank),
+    .iccm_fmc_start_addr(iccm_fmc_start_addr),
+    .iccm_fmc_end_addr  (iccm_fmc_end_addr),
+    .iccm_rt_start_addr (iccm_rt_start_addr),
+    .iccm_rt_end_addr   (iccm_rt_end_addr),
+    .iccm_region_lock   (iccm_region_lock),
+    .boot_flow_monitor_en(boot_flow_monitor_en),
+    .fw_update_rst_window(fw_update_rst_window),
+    .boot_flow_fmc_o    (boot_flow_fmc),
+    .boot_flow_rt_o     (boot_flow_rt),
+    .boot_flow_error_o  (boot_flow_error)
+);
 
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
