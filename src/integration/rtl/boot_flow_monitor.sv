@@ -67,7 +67,7 @@ module boot_flow_monitor
         iccm_read_any = '0;
         for (int bank = 0; bank < pt.ICCM_NUM_BANKS; bank++) begin
             iccm_read_en[bank] = iccm_clken[bank] && ~iccm_wren_bank[bank];
-            iccm_read_addr[bank] = {iccm_addr_bank[bank], bank[pt.ICCM_BANK_BITS-1:0], {(pt.ICCM_BANK_INDEX_LO - pt.ICCM_BANK_BITS){1'b0}}};
+            iccm_read_addr[bank] = {iccm_addr_bank[bank], pt.ICCM_BANK_BITS'(bank), {(pt.ICCM_BANK_INDEX_LO - pt.ICCM_BANK_BITS){1'b0}}};
 
             iccm_read_fmc |= iccm_read_en[bank] && (iccm_read_addr[bank] inside {[iccm_fmc_start_addr:iccm_fmc_end_addr]});
             iccm_read_rt  |= iccm_read_en[bank] && (iccm_read_addr[bank] inside {[iccm_rt_start_addr:iccm_rt_end_addr]});
