@@ -79,7 +79,6 @@ import aaxi_uvm_pkg::*;
 //      #5ns;
 //    end
     clk = 0;
-    #1ps; // Delay first edge to allow reset signals to settle at time 0
     forever begin
       #5ns;
       clk = ~clk;
