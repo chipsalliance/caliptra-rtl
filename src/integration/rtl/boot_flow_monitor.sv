@@ -29,7 +29,7 @@ module boot_flow_monitor
         // ICCM memory interface (from el2_mem_export)
         input logic [pt.ICCM_NUM_BANKS-1:0]                                        iccm_clken,
         input logic [pt.ICCM_NUM_BANKS-1:0]                                        iccm_wren_bank,
-        input logic [pt.ICCM_NUM_BANKS-1:0][pt.ICCM_BITS-1:pt.ICCM_BANK_INDEX_LO] iccm_addr_bank,
+        input logic [pt.ICCM_NUM_BANKS-1:0][pt.ICCM_BITS-1:pt.ICCM_BANK_INDEX_LO]  iccm_addr_bank,
 
         // Region bounds (from shadow registers)
         input logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr,
@@ -66,6 +66,12 @@ module boot_flow_monitor
     // are zero-filled since ICCM is word-aligned. Region start/end addresses
     // programmed via soc_ifc must be aligned to the bank interleave granularity
     // (2^ICCM_BANK_INDEX_LO bytes) for correct matching.
+    //
+    // Note: iccm_clken includes clk_override (VeeR MCGC CSR bit 0) which forces
+    // bank clocks on without an actual read/write. Caliptra FW never writes MCGC,
+    // and boot_flow_monitor_en is deasserted in scan mode (where clk_override may
+    // be set), so false read detection from clk_override is not possible in
+    // normal operation.
     always_comb begin
         iccm_read_fmc = '0;
         iccm_read_rt  = '0;
@@ -100,13 +106,20 @@ module boot_flow_monitor
             end
 
             // Transition from FMC to RT: first fetch from RT region after lock
-            if (iccm_region_lock && mubi4_test_false_strict(boot_flow_rt_q) && iccm_read_rt) begin
+            // Gated on boot_flow_fmc_q -- an RT fetch without FMC entered is an error,
+            // not a valid transition. This prevents a transient enter_rt pulse that could
+            // trigger KV enforcement before the error is raised.
+            if (iccm_region_lock && mubi4_test_true_strict(boot_flow_fmc_q) &&
+                mubi4_test_false_strict(boot_flow_rt_q) && iccm_read_rt) begin
                 boot_flow_rt_q <= MuBi4True;
             end
 
-            // Error conditions
+            // Error conditions:
+            //   1. Any ICCM fetch before region lock is set
+            //   2. RT region fetch without FMC entered (illegal ROM->RT jump)
+            //   3. MuBi integrity check on FSM state flops
             boot_flow_error_q <= (iccm_read_any && !iccm_region_lock) ||
-                                 (mubi4_test_false_strict(boot_flow_fmc_q) && mubi4_test_true_strict(boot_flow_rt_q)) ||
+                                 (iccm_read_rt && mubi4_test_false_strict(boot_flow_fmc_q)) ||
                                  mubi4_test_invalid(boot_flow_fmc_q) || mubi4_test_invalid(boot_flow_rt_q) || mubi4_test_invalid(boot_flow_error_q)
                                  ? MuBi4True : boot_flow_error_q;
         end

@@ -2651,12 +2651,12 @@ Transitions are one-way: once `boot_flow_fmc` becomes True, it remains True unti
 
 `boot_flow_error` is asserted (fatal) when any of the following occur:
 - ICCM fetch while region lock is not set or shadow registers are not committed
-- `boot_flow_rt` asserts before `boot_flow_fmc` (out-of-order transition)
+- RT region fetch while `boot_flow_fmc` is False (illegal ROM->RT jump -- the RT transition is gated on FMC, so this fires the error without producing a transient `boot_flow_rt` pulse)
 - Any boot flow MuBi4 signal enters an invalid (non-True, non-False) encoding state
 
 #### Simulation support
 
-In simulation, `boot_flow_monitor_en` defaults to 0 (disabled). The testbench overrides this signal with a `force` when testing the feature. In hardware, the monitor is enabled when `debug_locked` is asserted (disabled when debug is unlocked to allow JTAG ICCM access and fake-ROM flows).
+In simulation, `boot_flow_monitor_en` defaults to 0 (disabled). The testbench overrides this signal with a `force` when testing the feature. In hardware, the monitor is enabled when `debug_locked` is asserted AND `scan_mode` is deasserted. The monitor is disabled when debug is unlocked (to allow JTAG ICCM access and fake-ROM flows) and during scan mode (to prevent false transitions from clock-override activity on the ICCM banks).
 
 ### KV monitor
 

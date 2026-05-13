@@ -185,19 +185,33 @@ module kv_boot_flow_sva
   // Section 3: Enforcement Timing -- Slot clears
   // What: Non-preserved slots must be cleared at each transition
   // Why: Destroys stale/temporary key material from prior boot phase
-  // Timing: boot_flow_key_clear is combinational (same cycle as enter_fmc/enter_rt)
+  // Timing: boot_flow_key_clear is combinational (same cycle as enter_fmc/enter_rt),
+  //         key_entry_clear is registered (next cycle), dest_valid.hwclr fires from
+  //         key_entry_clear so the observable clear lands 2 cycles after the transition.
   // ============================================================
+
+  // Alias key_entry_clear (registered clear that drives hwclr on dest_valid/key data)
+  wire [KV_NUM_KEYS-1:0] key_entry_clear;
+  for (genvar s = 0; s < KV_NUM_KEYS; s++) begin : gen_key_entry_clear_alias
+    assign key_entry_clear[s] = `KV_PATH.key_entry_clear[s];
+  end
 
   // At enter_fmc: slots 3,4,5,9,10,11,12,13,14,15 cleared
   generate
     for (genvar s = 0; s < KV_NUM_KEYS; s++) begin : gen_clear_fmc_check
       if (!(s inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER,
                       KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})) begin
-        // What: Non-preserved slot must be cleared on enter_fmc
-        ClearAtEnterFmc_A: assert property (
+        // Check combinational request fires same cycle
+        ClearReqAtEnterFmc_A: assert property (
           @(posedge clk) disable iff (!core_rst_n || !monitor_en)
           enter_fmc |-> boot_flow_key_clear[s]
-        ) else $display("SVA ERROR: slot %0d not cleared at enter_fmc", s);
+        ) else $display("SVA ERROR: slot %0d clear request not set at enter_fmc", s);
+
+        // Check registered key_entry_clear fires next cycle (drives hwclr)
+        ClearAtEnterFmc_A: assert property (
+          @(posedge clk) disable iff (!core_rst_n || !monitor_en)
+          enter_fmc |=> key_entry_clear[s]
+        ) else $display("SVA ERROR: slot %0d key_entry_clear not set after enter_fmc", s);
       end
     end
   endgenerate
@@ -208,24 +222,32 @@ module kv_boot_flow_sva
       if (!(s inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER,
                       KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA,
                       KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA})) begin
-        // What: Non-preserved slot must be cleared on enter_rt
-        ClearAtEnterRt_A: assert property (
+        // Check combinational request fires same cycle
+        ClearReqAtEnterRt_A: assert property (
           @(posedge clk) disable iff (!core_rst_n || !monitor_en)
           enter_rt |-> boot_flow_key_clear[s]
-        ) else $display("SVA ERROR: slot %0d not cleared at enter_rt", s);
+        ) else $display("SVA ERROR: slot %0d clear request not set at enter_rt", s);
+
+        // Check registered key_entry_clear fires next cycle (drives hwclr)
+        ClearAtEnterRt_A: assert property (
+          @(posedge clk) disable iff (!core_rst_n || !monitor_en)
+          enter_rt |=> key_entry_clear[s]
+        ) else $display("SVA ERROR: slot %0d key_entry_clear not set after enter_rt", s);
       end
     end
   endgenerate
 
   // ============================================================
-  // Section 4: Enforcement -- Same-cycle completion
-  // What: All enforcement actions (hwset/hwclr) are combinational, no multi-cycle sequencing
-  // Why: Security-critical -- a multi-cycle gap could allow a race
+  // Section 4: Enforcement -- Timing summary
+  // What: Lock enforcement is combinational (same-cycle), slot clears are registered (1-cycle)
+  // Why: lock_wr/lock_use hwset must be immediate to prevent unauthorized access;
+  //      slot clears go through registered key_entry_clear (1-cycle latency) because the
+  //      clear path must hold while writes are in progress.
   // ============================================================
 
-  // boot_flow_key_clear is purely combinational from enter_fmc/enter_rt
+  // boot_flow_key_clear is purely combinational from enter_fmc/enter_rt (|->)
+  // key_entry_clear is registered from boot_flow_key_clear (|=>)
   // lock_wr.hwset and lock_use.hwset are driven combinationally from boot_flow_fmc/boot_flow_rt
-  // These are structural properties verified by the generate blocks above (|-> not |=>)
 
   // ============================================================
   // Section 5: Error Chain -- kv_monitor_alert -> cptra_error_fatal
