@@ -44,7 +44,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * [ML-KEM](#adams-bridge-kyber-ml-kem)
 
 ## Pre-release Features
-* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement) — HW-enforced DICE key integrity monitoring and slot access control across boot phases
+* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement) -- HW-enforced DICE key integrity monitoring and slot access control across boot phases
 
 
 ## Boot FSM
@@ -755,7 +755,7 @@ The SHA512 architecture inputs and outputs are described in the following table.
 
 ### Address map
 
-The SHA512 address map is shown here: [sha512\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg)
+The SHA512 address map is shown here: [sha512\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg)
 
 ### Pseudocode
 
@@ -879,7 +879,7 @@ The SHA256 architecture inputs and outputs are described as follows.
 
 ### Address map
 
-The SHA256 address map is shown here: [sha256\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg).
+The SHA256 address map is shown here: [sha256\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg).
 
 ### Pseudocode
 
@@ -1181,7 +1181,7 @@ The HMAC architecture inputs and outputs are described in the following table.
 
 ### Address map
 
-The HMAC address map is shown here: [hmac\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg).
+The HMAC address map is shown here: [hmac\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg).
 
 ### Pseudocode
 
@@ -1393,7 +1393,7 @@ The ECC architecture inputs and outputs are described in the following table.
 
 ### Address map
 
-The ECC address map is shown here: [ecc\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg).
+The ECC address map is shown here: [ecc\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg).
 
 ### Pseudocode
 
@@ -1631,21 +1631,21 @@ The LMS accelerator integrated into SHA256 architecture inputs and outputs are d
 
 ### Address map
 
-The address map for LMS accelerator integrated into SHA256 is shown here: [sha256\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg).
+The address map for LMS accelerator integrated into SHA256 is shown here: [sha256\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg).
 
 ## Adams Bridge - Dilithium (ML-DSA)
 
 Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
 
 ### Address map
-Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
+Address map of ML-DSA accelerator is shown here:  [ML-DSA\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
 
 ## Adams Bridge Kyber ML-KEM
 
 Please refer to the [Adams-bridge specification](https://github.com/chipsalliance/adams-bridge/blob/main/docs/AdamsBridgeHardwareSpecification.md)
 
 ### Address map
-Address map of ML-KEM accelerator is shown here:  [ML-KEM\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
+Address map of ML-KEM accelerator is shown here:  [ML-KEM\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
 
 ## AES
 
@@ -1698,7 +1698,7 @@ The AES architecture inputs and outputs are described in the following table.
 
 ### Address map
 
-The AES address map is shown here: [aes\_clp\_reg — clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg).
+The AES address map is shown here: [aes\_clp\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg).
 
 ### SCA countermeasures
 
@@ -2529,10 +2529,10 @@ The KV write client has a configurable parameter, `KV_WRITE_SWAP_DWORDS`, that c
 | :----- | :---------------- | :-------------------- | :----------------------- | :---- |
 | HMAC-512 | Big-endian | 1 (default) | Sequential: BLOCK\[d\] = KV\[d\], KEY\[d\] = KV\[d\] | Block read supports PAD and HMAC auto-padding. |
 | SHA-512 | Big-endian | 1 (default) | Sequential: BLOCK\[d\] = KV\[d\] | Block read supports PAD. |
-| ECC (P-384) | Big-endian | 1 (default) | Sequential: PRIVKEY\[d\] = KV\[d\], SEED\[d\] = KV\[d\] | — |
+| ECC (P-384) | Big-endian | 1 (default) | Sequential: PRIVKEY\[d\] = KV\[d\], SEED\[d\] = KV\[d\] | -- |
 | AES | Little-endian | 0 | Byte swap per DWORD: key\_reg\[d\]\[b\] = KV\_data\[3−b\] | CTRL0.ENDIAN\_SWAP optionally swaps bytes in FW DATA\_IN/DATA\_OUT registers. |
 | ML-KEM | Little-endian | 0 | DWORD-reversed: SEED\_D\[d\] = KV\[N−1−d\], SEED\_Z\[i\] = KV\[2N−1−i\] | Shared key undergoes DWORD reversal in the ABR controller before the write client. |
-| ML-DSA | Little-endian | N/A (no KV write) | DWORD-reversed: SEED\[d\] = KV\[N−1−d\] | — |
+| ML-DSA | Little-endian | N/A (no KV write) | DWORD-reversed: SEED\[d\] = KV\[N−1−d\] | -- |
 
 **Write path:** HMAC, SHA-512, and ECC produce results with the most-significant DWORD at the highest internal index; the write client reversal (SWAP\_DWORDS=1) places the most-significant DWORD at KV\[0\]. AES stores its 128-bit (4 DWORD) output sequentially. The ML-KEM shared key is pre-reversed in the ABR controller (`mlkem_sharedkey_data[d] = shared_key[SHAREDKEY_NUM_DWORDS-1-d]`), producing the same KV layout as the big-endian engines despite using SWAP\_DWORDS=0.
 
@@ -2601,13 +2601,13 @@ The following tables describe DOE register and control fields.
 
 ## Key vault boot flow transition enforcement
 
-The Key Vault Boot Flow Transition Enforcement feature provides hardware-enforced integrity monitoring and access control for DICE key derivation across boot phase transitions (ROM→FMC→RT). It detects ICCM code execution transitions, validates key vault state at each boundary, and atomically applies lock/clear enforcement to key slots.
+The Key Vault Boot Flow Transition Enforcement feature provides hardware-enforced integrity monitoring and access control for DICE key derivation across boot phase transitions (ROM->FMC->RT). It detects ICCM code execution transitions, validates key vault state at each boundary, and atomically applies lock/clear enforcement to key slots.
 
 ### Overview
 
 The feature consists of three cooperating blocks:
 
-1. **Boot Flow Monitor** (in `caliptra_top`): Detects ROM→FMC and FMC→RT transitions by observing ICCM memory bank read enables against programmed address regions.
+1. **Boot Flow Monitor** (in `caliptra_top`): Detects ROM->FMC and FMC->RT transitions by observing ICCM memory bank read enables against programmed address regions.
 2. **KV Monitor** (in `kv`): Validates dest_valid permissions and crypto write counts on DICE key slots at each transition boundary.
 3. **KV Enforcement** (in `kv`): Atomically applies lock_wr, lock_use, and slot clearing at each transition.
 
@@ -2625,7 +2625,7 @@ Four shadow-hardened registers define the FMC and RT code regions within ICCM ad
 | INTERNAL_ICCM_FMC_END_ADDR | 0x30030654 | End address of FMC region (inclusive) |
 | INTERNAL_ICCM_RT_START_ADDR | 0x30030658 | Start address of RT region (18-bit ICCM-relative) |
 | INTERNAL_ICCM_RT_END_ADDR | 0x3003065C | End address of RT region (inclusive) |
-| INTERNAL_ICCM_REGION_LOCK | 0x30030660 | W1S lock — once set, address registers cannot be modified until reset |
+| INTERNAL_ICCM_REGION_LOCK | 0x30030660 | W1S lock -- once set, address registers cannot be modified until reset |
 
 These registers use the `caliptra_prim_subreg_shadow` primitive for glitch hardening:
 - **2-phase write protocol**: Each register must be written twice with the same value to commit. A single write updates only the shadow copy; the second matching write commits to the primary register.
@@ -2633,7 +2633,7 @@ These registers use the `caliptra_prim_subreg_shadow` primitive for glitch harde
 - **Error lockout**: If the shadow and committed copies diverge (storage fault), all further writes are blocked until reset.
 - **Error reporting**: Storage faults assert `CPTRA_HW_ERROR_FATAL.shadow_storage_err[5]`. Phase-1/phase-0 mismatches assert `CPTRA_HW_ERROR_NON_FATAL.shadow_update_err[3]`.
 
-The effective lock for the boot flow monitor is `iccm_region_lock & iccm_all_shadows_committed` — both the lock register must be set AND all four address registers must have completed their 2-phase writes.
+The effective lock for the boot flow monitor is `iccm_region_lock & iccm_all_shadows_committed` -- both the lock register must be set AND all four address registers must have completed their 2-phase writes.
 
 #### Transition detection
 
@@ -2662,7 +2662,7 @@ In simulation, `boot_flow_monitor_en` defaults to 0 (disabled). The testbench ov
 
 At each boot phase transition, the KV monitor validates that the expected DICE key slots are correctly populated. A mismatch triggers `kv_monitor_alert`, which escalates to `CPTRA_HW_ERROR_FATAL.kv_error[4]` and flushes all key entries.
 
-#### ROM→FMC checks (on `enter_fmc`)
+#### ROM->FMC checks (on `enter_fmc`)
 
 | Slot | Name | Expected dest_valid |
 | :--- | :--- | :------------------ |
@@ -2674,13 +2674,13 @@ At each boot phase transition, the KV monitor validates that the expected DICE k
 | 8 | FMC_MLDSA | MLDSA_SEED |
 
 Additionally, per-slot crypto write counters verify minimum expected derivation counts:
-- Slot 6 (FMC_CDI): ≥ 4 writes (IDevID CDI + LDevID intermediate + LDevID CDI + FMC Alias CDI)
-- Slot 7 (FMC_ECDSA): ≥ 2 writes (IDevID ECC keygen + FMC Alias ECC keygen)
-- Slot 8 (FMC_MLDSA): ≥ 2 writes (IDevID MLDSA keygen + FMC Alias MLDSA keygen)
+- Slot 6 (FMC_CDI): >= 4 writes (IDevID CDI + LDevID intermediate + LDevID CDI + FMC Alias CDI)
+- Slot 7 (FMC_ECDSA): >= 2 writes (IDevID ECC keygen + FMC Alias ECC keygen)
+- Slot 8 (FMC_MLDSA): >= 2 writes (IDevID MLDSA keygen + FMC Alias MLDSA keygen)
 
-Write counters are 3-bit saturating counters that reset only on hard reset (`rst_b`), persisting across warm and FW update resets.
+Write counters are 3-bit saturating counters that reset only on hard reset (`cptra_pwrgood`), persisting across warm and FW update resets.
 
-#### FMC→RT checks (on `enter_rt`)
+#### FMC->RT checks (on `enter_rt`)
 
 | Slot | Name | Expected dest_valid |
 | :--- | :--- | :------------------ |
@@ -2706,8 +2706,8 @@ The `lock_wr` and `lock_use` fields have `hwset` property in the register defini
 
 | Transition | Slots cleared | Slots preserved |
 | :--------- | :------------ | :-------------- |
-| ROM→FMC (`enter_fmc`) | 3, 4, 5, 9, 10–15 | 0, 1, 2, 6, 7, 8 |
-| FMC→RT (`enter_rt`) | 3, 10–15 | 0, 1, 2, 4, 5, 6, 7, 8, 9 |
+| ROM->FMC (`enter_fmc`) | 3, 4, 5, 9, 10-15 | 0, 1, 2, 6, 7, 8 |
+| FMC->RT (`enter_rt`) | 3, 10-15 | 0, 1, 2, 4, 5, 6, 7, 8, 9 |
 
 Clearing destroys the key data and resets `dest_valid` and `last_dword` for the affected slots.
 
@@ -2758,10 +2758,10 @@ ROM must perform the following steps before jumping to FMC:
    - Write `INTERNAL_ICCM_FMC_END_ADDR` twice with the same value
    - Write `INTERNAL_ICCM_RT_START_ADDR` twice with the same value
    - Write `INTERNAL_ICCM_RT_END_ADDR` twice with the same value
-3. Set `INTERNAL_ICCM_REGION_LOCK` (W1S) — this arms the boot flow monitor
+3. Set `INTERNAL_ICCM_REGION_LOCK` (W1S) -- this arms the boot flow monitor
 4. Jump to FMC entry point in ICCM
 
-The first instruction fetch from the FMC region triggers the ROM→FMC transition, at which point the KV monitor validates slot state and enforcement atomically applies locks and clears.
+The first instruction fetch from the FMC region triggers the ROM->FMC transition, at which point the KV monitor validates slot state and enforcement atomically applies locks and clears.
 
 
 ## Data vault
