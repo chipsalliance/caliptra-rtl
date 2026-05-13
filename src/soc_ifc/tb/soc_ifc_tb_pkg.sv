@@ -919,6 +919,15 @@ package soc_ifc_tb_pkg;
             iccm_shadow_phase = '0;
             foreach (iccm_shadow_staged[i]) iccm_shadow_staged[i] = '0;
         end
+        // caliptra_prim_subreg_shadow clears internal phase on read (non-SoC).
+        // SET_DIRECT is used for AHB reads, which trigger iccm_shadow_re in RTL.
+        case (addr_name)
+          "INTERNAL_ICCM_FMC_START_ADDR": iccm_shadow_phase[0] = 1'b0;
+          "INTERNAL_ICCM_FMC_END_ADDR":   iccm_shadow_phase[1] = 1'b0;
+          "INTERNAL_ICCM_RT_START_ADDR":   iccm_shadow_phase[2] = 1'b0;
+          "INTERNAL_ICCM_RT_END_ADDR":     iccm_shadow_phase[3] = 1'b0;
+          default: ;
+        endcase
         return;
       end 
 

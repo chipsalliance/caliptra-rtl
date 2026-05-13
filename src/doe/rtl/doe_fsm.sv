@@ -42,6 +42,7 @@ module doe_fsm
 
     //client control register
     input doe_cmd_reg_t doe_cmd_reg,
+    input logic         doe_cmd_lock,
     input logic         ocp_lock_en,
 
     //interface with kv
@@ -305,9 +306,9 @@ always_ff @(posedge clk or negedge hard_rst_b) begin
         lock_hek_flow <= '0;
     end
     else begin
-        lock_uds_flow <= running_uds & flow_done ? '1 : lock_uds_flow;
-        lock_fe_flow <= running_fe & flow_done ? '1 : lock_fe_flow;
-        lock_hek_flow <= running_hek & flow_done ? '1 : lock_hek_flow;
+        lock_uds_flow <= doe_cmd_lock | (running_uds & flow_done) ? '1 : lock_uds_flow;
+        lock_fe_flow <= doe_cmd_lock | (running_fe & flow_done) ? '1 : lock_fe_flow;
+        lock_hek_flow <= doe_cmd_lock | (running_hek & flow_done) ? '1 : lock_hek_flow;
     end
 end
 

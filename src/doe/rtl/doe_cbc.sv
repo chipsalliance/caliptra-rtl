@@ -242,6 +242,7 @@ doe_fsm1
 
   //client control register
   .doe_cmd_reg(doe_cmd_reg),
+  .doe_cmd_lock(doe_cmd_lock),
   .ocp_lock_en(ocp_lock_en),
 
   //interface with kv
