@@ -82,6 +82,9 @@ module kv_boot_flow_sva
   wire       crypto_wr_fmc_mldsa   = `KV_PATH.crypto_wr_fmc_mldsa;
   wire       flush_keyvault        = `KV_PATH.flush_keyvault;
 
+  // Boot flow monitor enable (disabled in legacy tests, gated by debug_locked in HW)
+  wire monitor_en = `CPTRA_TOP_PATH.boot_flow_monitor_en;
+
   // DOE lockdown
   wire doe_cmd_lock = mubi4_test_true_strict(mubi4_t'(boot_flow_fmc)) |
                       mubi4_test_true_strict(mubi4_t'(boot_flow_rt));
@@ -109,50 +112,50 @@ module kv_boot_flow_sva
   // Timing: 1 cycle — lock_wr.hwset is combinational, register captures next posedge
   // ============================================================
 
-  // At ROM→FMC: slots 0,1,2,6,7,8 get lock_wr
+  // At ROM->FMC: slots 0,1,2,6,7,8 get lock_wr
   LockWr_EnterFmc_Slot0_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_fmc |=> lock_wr_q[KV_SLOT_SI_IDEV]
   ) else $display("SVA ERROR: lock_wr not set on slot 0 after enter_fmc");
 
   LockWr_EnterFmc_Slot1_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_fmc |=> lock_wr_q[KV_SLOT_SI_LDEV]
   ) else $display("SVA ERROR: lock_wr not set on slot 1 after enter_fmc");
 
   LockWr_EnterFmc_Slot2_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_fmc |=> lock_wr_q[KV_SLOT_KEY_LADDER]
   ) else $display("SVA ERROR: lock_wr not set on slot 2 after enter_fmc");
 
   LockWr_EnterFmc_Slot6_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_fmc |=> lock_wr_q[KV_SLOT_FMC_CDI]
   ) else $display("SVA ERROR: lock_wr not set on slot 6 after enter_fmc");
 
   LockWr_EnterFmc_Slot7_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_fmc |=> lock_wr_q[KV_SLOT_FMC_ECDSA]
   ) else $display("SVA ERROR: lock_wr not set on slot 7 after enter_fmc");
 
   LockWr_EnterFmc_Slot8_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_fmc |=> lock_wr_q[KV_SLOT_FMC_MLDSA]
   ) else $display("SVA ERROR: lock_wr not set on slot 8 after enter_fmc");
 
-  // At FMC→RT: slots 4,5,9 get lock_wr
+  // At FMC->RT: slots 4,5,9 get lock_wr
   LockWr_EnterRt_Slot4_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_rt |=> lock_wr_q[KV_SLOT_RT_CDI]
   ) else $display("SVA ERROR: lock_wr not set on slot 4 after enter_rt");
 
   LockWr_EnterRt_Slot5_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_rt |=> lock_wr_q[KV_SLOT_RT_ECDSA]
   ) else $display("SVA ERROR: lock_wr not set on slot 5 after enter_rt");
 
   LockWr_EnterRt_Slot9_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_rt |=> lock_wr_q[KV_SLOT_RT_MLDSA]
   ) else $display("SVA ERROR: lock_wr not set on slot 9 after enter_rt");
 
@@ -164,17 +167,17 @@ module kv_boot_flow_sva
   // ============================================================
 
   LockUse_EnterRt_Slot6_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_rt |=> lock_use_q[KV_SLOT_FMC_CDI]
   ) else $display("SVA ERROR: lock_use not set on slot 6 after enter_rt");
 
   LockUse_EnterRt_Slot7_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_rt |=> lock_use_q[KV_SLOT_FMC_ECDSA]
   ) else $display("SVA ERROR: lock_use not set on slot 7 after enter_rt");
 
   LockUse_EnterRt_Slot8_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_rt |=> lock_use_q[KV_SLOT_FMC_MLDSA]
   ) else $display("SVA ERROR: lock_use not set on slot 8 after enter_rt");
 
@@ -192,7 +195,7 @@ module kv_boot_flow_sva
                       KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})) begin
         // What: Non-preserved slot must be cleared on enter_fmc
         ClearAtEnterFmc_A: assert property (
-          @(posedge clk) disable iff (!core_rst_n)
+          @(posedge clk) disable iff (!core_rst_n || !monitor_en)
           enter_fmc |-> boot_flow_key_clear[s]
         ) else $display("SVA ERROR: slot %0d not cleared at enter_fmc", s);
       end
@@ -207,7 +210,7 @@ module kv_boot_flow_sva
                       KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA})) begin
         // What: Non-preserved slot must be cleared on enter_rt
         ClearAtEnterRt_A: assert property (
-          @(posedge clk) disable iff (!core_rst_n)
+          @(posedge clk) disable iff (!core_rst_n || !monitor_en)
           enter_rt |-> boot_flow_key_clear[s]
         ) else $display("SVA ERROR: slot %0d not cleared at enter_rt", s);
       end
@@ -234,7 +237,7 @@ module kv_boot_flow_sva
   // ============================================================
 
   KvErrorToFatal_A: assert property (
-    @(posedge clk) disable iff (!rst_n)
+    @(posedge clk) disable iff (!rst_n || !monitor_en)
     $rose(kv_error_input) |-> ##[1:2] cptra_error_fatal
   ) else $display("SVA ERROR: cptra_error_fatal not set within 2 cycles of kv_error");
 
@@ -245,19 +248,19 @@ module kv_boot_flow_sva
   // ============================================================
 
   BootFlowFmcMonotonic_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     fmc_true |=> fmc_true
   ) else $display("SVA ERROR: boot_flow_fmc regressed from True to False");
 
   BootFlowRtMonotonic_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     rt_true |=> rt_true
   ) else $display("SVA ERROR: boot_flow_rt regressed from True to False");
 
   // What: boot_flow_rt cannot assert before boot_flow_fmc (layer ordering)
   // Why: Must pass through FMC phase before reaching RT
   BootFlowLayerOrder_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     rt_true |-> fmc_true
   ) else $display("SVA ERROR: boot_flow_rt asserted without boot_flow_fmc");
 
@@ -268,12 +271,12 @@ module kv_boot_flow_sva
   // ============================================================
 
   DoeCmdLockInFmc_A: assert property (
-    @(posedge clk) disable iff (!rst_n)
+    @(posedge clk) disable iff (!rst_n || !monitor_en)
     fmc_true |-> doe_cmd_lock
   ) else $display("SVA ERROR: doe_cmd_lock not asserted during FMC phase");
 
   DoeCmdLockInRt_A: assert property (
-    @(posedge clk) disable iff (!rst_n)
+    @(posedge clk) disable iff (!rst_n || !monitor_en)
     rt_true |-> doe_cmd_lock
   ) else $display("SVA ERROR: doe_cmd_lock not asserted during RT phase");
 
@@ -347,7 +350,7 @@ module kv_boot_flow_sva
   // What: boot_flow_error fires if any ICCM fetch occurs while ICCM_REGION_LOCK = 0
   // Why: Unprogrammed regions must not be trusted
   IccmFetchWithoutLock_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     (iccm_read_any && !iccm_region_lock) |=> mubi4_test_true_strict(mubi4_t'(boot_flow_error))
   ) else $display("SVA ERROR: boot_flow_error not set on ICCM fetch with region_lock=0");
 
@@ -371,21 +374,21 @@ module kv_boot_flow_sva
   // Section 10: Cover Properties
   // ============================================================
 
-  // Cover: Happy path — both transitions fire without monitor alert
+  // Cover: Happy path -- both transitions fire without monitor alert
   HappyPathFmcRt_C: cover property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_fmc ##[1:$] enter_rt ##1 (!kv_monitor_alert)
   );
 
-  // Cover: Monitor fires at ROM→FMC transition
+  // Cover: Monitor fires at ROM->FMC transition
   MonitorAlertAtFmc_C: cover property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_fmc && kv_monitor_alert
   );
 
-  // Cover: Monitor fires at FMC→RT transition
+  // Cover: Monitor fires at FMC->RT transition
   MonitorAlertAtRt_C: cover property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_rt && kv_monitor_alert
   );
 
@@ -397,7 +400,7 @@ module kv_boot_flow_sva
 
   // Cover: boot_flow_error fires on unlocked ICCM fetch
   BootFlowErrorOnUnlockedFetch_C: cover property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     (iccm_read_any && !iccm_region_lock)
   );
 
