@@ -90,6 +90,12 @@ package soc_ifc_tb_pkg;
     word_addr_t addr_max;
   } extent_t;
 
+  // Shadow register phase tracking for ICCM region registers.
+  // These model the 2-phase write-to-commit behavior of caliptra_prim_subreg_shadow.
+  // Index mapping: [0]=FMC_START, [1]=FMC_END, [2]=RT_START, [3]=RT_END
+  logic [3:0] iccm_shadow_phase;           // per-register phase (0=staged, 1=commit)
+  dword_t     iccm_shadow_staged [4];      // staged value from phase-0 write
+
   typedef word_addr_t word_addrq_t [$];  
 
   // ================================================================================ 
@@ -261,7 +267,11 @@ package soc_ifc_tb_pkg;
     "INTERNAL_RV_MTIME_H"                           : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_RV_MTIME_H,                                  // 0x644      mtime high  
     "INTERNAL_RV_MTIMECMP_L"                        : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_RV_MTIMECMP_L,                               // 0x648      mtimecmp low  
     "INTERNAL_RV_MTIMECMP_H"                        : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H,                               // 0x64C      mtimecmp high
-    // 0x650..0x7fc    
+    "INTERNAL_ICCM_FMC_START_ADDR"                  : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR,                         // 0x650      Shadow: FMC start addr
+    "INTERNAL_ICCM_FMC_END_ADDR"                    : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,                           // 0x654      Shadow: FMC end addr
+    "INTERNAL_ICCM_RT_START_ADDR"                   : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,                          // 0x658      Shadow: RT start addr
+    "INTERNAL_ICCM_RT_END_ADDR"                     : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,                            // 0x65c      Shadow: RT end addr
+    "INTERNAL_ICCM_REGION_LOCK"                     : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK,                            // 0x660      ICCM Region Lock
     // SoC IFC Interrupt Block Register 
     "INTR_BRF_GLOBAL_INTR_EN_R"                     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,                       // 0x800
     "INTR_BRF_ERROR_INTR_EN_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,                        // 0x804
@@ -340,7 +350,7 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h0550, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
-    '{addr_min: SOCIFC_BASE + 16'h0650, addr_max: SOCIFC_BASE + 16'h07fc},
+    '{addr_min: SOCIFC_BASE + 16'h0664, addr_max: SOCIFC_BASE + 16'h07fc},
     '{addr_min: SOCIFC_BASE + 16'h0824, addr_max: SOCIFC_BASE + 16'h08fc},
     '{addr_min: SOCIFC_BASE + 16'h0920, addr_max: SOCIFC_BASE + 16'h097c},
     '{addr_min: SOCIFC_BASE + 16'h0998, addr_max: SOCIFC_BASE + 16'h09fc}
@@ -506,6 +516,11 @@ package soc_ifc_tb_pkg;
     "SS_KEY_RELEASE_SIZE"                              : `SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_MASK,
     "SS_OCP_LOCK_CTRL"                                 : `SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK,
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
+    "INTERNAL_ICCM_FMC_START_ADDR"                     : `SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR_ADDR_MASK,
+    "INTERNAL_ICCM_FMC_END_ADDR"                       : `SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR_ADDR_MASK,
+    "INTERNAL_ICCM_RT_START_ADDR"                      : `SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR_ADDR_MASK,
+    "INTERNAL_ICCM_RT_END_ADDR"                        : `SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR_ADDR_MASK,
+    "INTERNAL_ICCM_REGION_LOCK"                        : `SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_MASK,
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
     "INTERNAL_HW_ERROR_FATAL_MASK"                     : (`SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK      | 
@@ -855,7 +870,8 @@ package soc_ifc_tb_pkg;
     string tmpstr; 
     string axi_user_suffix; 
     string axi_user_lock_regname; 
-    int axi_user_locked, owner_pk_hash_locked, fuses_locked, lock_mask, iccm_locked, cap_locked; 
+    int axi_user_locked, owner_pk_hash_locked, fuses_locked, lock_mask, iccm_locked, iccm_region_locked, cap_locked;
+    int shidx;
     string mask_name; 
 
     dword_t sscode;
@@ -899,6 +915,9 @@ package soc_ifc_tb_pkg;
             tmp_data = tmp_data & (32'hffff_ffff ^ `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK)  |
                         tmp_data & mask_shifted(1'b1, `SOC_IFC_REG_CPTRA_RESET_REASON_FW_UPD_RESET_MASK); 
             $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also sets CPTRA_RESET_REASON"); 
+            // FW update reset clears shadow register phase tracking
+            iccm_shadow_phase = '0;
+            foreach (iccm_shadow_staged[i]) iccm_shadow_staged[i] = '0;
         end
         return;
       end 
@@ -1129,6 +1148,56 @@ package soc_ifc_tb_pkg;
             exp_data = iccm_locked ? curr_data : (ahb_indata & get_mask(addr_name) | axi_rodata); 
           end 
 
+          // Shadow registers: 2-phase write-to-commit model (caliptra_prim_subreg_shadow).
+          // Phase 0 write: value staged (no output change).
+          // Phase 1 write with matching value: committed (output updates).
+          // Phase 1 write with mismatch: err_update, no commit, phase resets.
+          // AXI writes are blocked (soc_req gating). Only AHB writes accepted.
+          // Writes blocked when iccm_region_lock is set.
+          "INTERNAL_ICCM_FMC_START_ADDR",
+          "INTERNAL_ICCM_FMC_END_ADDR",
+          "INTERNAL_ICCM_RT_START_ADDR",
+          "INTERNAL_ICCM_RT_END_ADDR"                        : begin
+            case (addr_name)
+              "INTERNAL_ICCM_FMC_START_ADDR": shidx = 0;
+              "INTERNAL_ICCM_FMC_END_ADDR":   shidx = 1;
+              "INTERNAL_ICCM_RT_START_ADDR":  shidx = 2;
+              "INTERNAL_ICCM_RT_END_ADDR":    shidx = 3;
+              default:                        shidx = 0;
+            endcase
+
+            iccm_region_locked = _exp_register_data_dict["INTERNAL_ICCM_REGION_LOCK"] & get_mask("INTERNAL_ICCM_REGION_LOCK");
+
+            if (modify == SET_AXI) begin
+              // AXI writes blocked by soc_req gating in RTL
+              exp_data = curr_data;
+            end else if (iccm_region_locked) begin
+              // Writes blocked when region lock is set
+              exp_data = curr_data;
+            end else if (!iccm_shadow_phase[shidx]) begin
+              // Phase 0: stage the value, no output change
+              iccm_shadow_staged[shidx] = ahb_indata & get_mask(addr_name);
+              iccm_shadow_phase[shidx] = 1'b1;
+              exp_data = curr_data;
+            end else begin
+              // Phase 1: check if value matches staged
+              if ((ahb_indata & get_mask(addr_name)) == iccm_shadow_staged[shidx]) begin
+                // Match: commit the value
+                exp_data = ahb_indata & get_mask(addr_name);
+              end else begin
+                // Mismatch: err_update fires, no commit
+                exp_data = curr_data;
+              end
+              iccm_shadow_phase[shidx] = 1'b0;
+            end
+          end
+
+          "INTERNAL_ICCM_REGION_LOCK"                         : begin
+            // Sticky lock: once set, cannot be cleared (like INTERNAL_ICCM_LOCK)
+            iccm_region_locked = curr_data & get_mask(addr_name);
+            exp_data = iccm_region_locked ? curr_data : (ahb_indata & get_mask(addr_name) | axi_rodata);
+          end
+
           "INTERNAL_FW_UPDATE_RESET"                        : begin
             exp_data = ahb_indata & get_mask(addr_name) | axi_rodata; 
 
@@ -1142,6 +1211,9 @@ package soc_ifc_tb_pkg;
               _exp_register_data_dict["CPTRA_RESET_REASON"] = 32'h1;  //TODO. Ignoring warm reset for now 
               $display ("-- CPTRA_RESET_REASON is now %d", _exp_register_data_dict["CPTRA_RESET_REASON"]); 
               $display ("TB INFO: Cross modification - Writing '1' to INTERNAL_FW_UPDATE_RESET also sets CPTRA_RESET_REASON"); 
+              // FW update reset clears shadow register phase tracking
+              iccm_shadow_phase = '0;
+              foreach (iccm_shadow_staged[i]) iccm_shadow_staged[i] = '0;
             end
           end
 
@@ -1413,6 +1485,9 @@ package soc_ifc_tb_pkg;
         _exp_register_data_dict[rname] = get_initval(rname); 
         $display("TB DEBUG: Init value for %s: 0x%x", rname, _exp_register_data_dict[rname]);
       end
+      // Clear shadow register phase tracking
+      iccm_shadow_phase = '0;
+      foreach (iccm_shadow_staged[i]) iccm_shadow_staged[i] = '0;
     end
   endfunction // reset_exp_data
 
@@ -1446,6 +1521,9 @@ package soc_ifc_tb_pkg;
         end
       end
       $display ("** Done updating expected reg values for warm reset **");
+      // Clear shadow register phase tracking on warm reset
+      iccm_shadow_phase = '0;
+      foreach (iccm_shadow_staged[i]) iccm_shadow_staged[i] = '0;
     end 
 
   endfunction // warm_reset_exp_data();

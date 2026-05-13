@@ -23,12 +23,6 @@
 // Uncomment if fuse granularity 32 bits.
 //`define CALIPTRA_FUSE_GRANULARITY_32
 
-  // ICCM-relative byte offsets for FMC and RT regions
-  // ICCM region addresses are now programmed by ROM via soc_ifc registers:
-  //   INTERNAL_ICCM_FMC_START_ADDR, INTERNAL_ICCM_FMC_END_ADDR,
-  //   INTERNAL_ICCM_RT_START_ADDR, INTERNAL_ICCM_RT_END_ADDR
-  // Locked by INTERNAL_ICCM_REGION_LOCK before ROM jumps to FMC.
-
   `define CALIPTRA_AHB_SLAVES_NUM      5'd17 // Number of slaves AHB
   `define CALIPTRA_AHB_MASTERS_NUM     4'd1 // Number of masters AHB
   `define CALIPTRA_AHB_HADDR_SIZE      32 // bit-width AHB address haddr

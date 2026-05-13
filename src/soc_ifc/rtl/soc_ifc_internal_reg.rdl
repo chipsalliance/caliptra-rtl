@@ -212,7 +212,7 @@ reg {
             [br][br]Shadow register behavior:
             [br]- Requires two identical writes to commit (2-phase protocol).
             [br]- A read clears the internal phase tracker (allows re-programming).
-            [br]- A mismatched second write raises an update error (fatal).
+            [br]- A mismatched second write raises an update error (non-fatal).
             [br]- Continuous background comparison detects storage faults (fatal).
             [br]- Once committed, the value is stable until reset or re-programming.
             [br][br]Caliptra Access: RWL (locked by internal_iccm_region_lock)
@@ -229,7 +229,7 @@ reg {
             [br][br]Shadow register behavior:
             [br]- Requires two identical writes to commit (2-phase protocol).
             [br]- A read clears the internal phase tracker (allows re-programming).
-            [br]- A mismatched second write raises an update error (fatal).
+            [br]- A mismatched second write raises an update error (non-fatal).
             [br]- Continuous background comparison detects storage faults (fatal).
             [br]- Once committed, the value is stable until reset or re-programming.
             [br][br]Caliptra Access: RWL (locked by internal_iccm_region_lock)
@@ -246,7 +246,7 @@ reg {
             [br][br]Shadow register behavior:
             [br]- Requires two identical writes to commit (2-phase protocol).
             [br]- A read clears the internal phase tracker (allows re-programming).
-            [br]- A mismatched second write raises an update error (fatal).
+            [br]- A mismatched second write raises an update error (non-fatal).
             [br]- Continuous background comparison detects storage faults (fatal).
             [br]- Once committed, the value is stable until reset or re-programming.
             [br][br]Caliptra Access: RWL (locked by internal_iccm_region_lock)
@@ -263,7 +263,7 @@ reg {
             [br][br]Shadow register behavior:
             [br]- Requires two identical writes to commit (2-phase protocol).
             [br]- A read clears the internal phase tracker (allows re-programming).
-            [br]- A mismatched second write raises an update error (fatal).
+            [br]- A mismatched second write raises an update error (non-fatal).
             [br]- Continuous background comparison detects storage faults (fatal).
             [br]- Once committed, the value is stable until reset or re-programming.
             [br][br]Caliptra Access: RWL (locked by internal_iccm_region_lock)

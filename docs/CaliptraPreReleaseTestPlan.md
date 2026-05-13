@@ -40,6 +40,12 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | lock_wr prevents overwrite | RT | HMAC write to locked slot 4 (RT_CDI) | Write has no effect |
 | lock_use prevents read | RT | Read slot 6 (FMC_CDI) as HMAC key | KV read fails with error |
 | DOE lockdown (RT) | RT | Issue DOE command after RT entry | Command rejected |
+| Counter stable on lock_wr write | FMC | Set lock_wr on slot 6, then issue crypto write to slot 6 | write_count_fmc_cdi unchanged; key data unchanged |
+| Counter stable on lock_use write | RT | Set lock_use on slot 7, then issue crypto write to slot 7 | write_count_fmc_ecdsa unchanged |
+| Counter stable on locked slot (both) | FMC | Set lock_wr and lock_use on slot 8, then issue crypto write | write_count_fmc_mldsa unchanged |
+| Counter clears on flush | ROM | Write to slot 6 (count=1), then trigger debug unlock (flush) | write_count_fmc_cdi returns to 0 |
+| Counter clears on scan mode | ROM | Write to slots 6,7,8, then enter scan mode | All 3 counters return to 0 |
+| Counter no increment during clear | ROM | Issue key_entry_clear on slot 6 simultaneously with crypto write | write_count_fmc_cdi unchanged; slot cleared |
 
 #### `directed/kv_iccm_region`
 
@@ -70,7 +76,7 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 
 ### SVA Assertions
 
-30 assertions in `src/keyvault/rtl/kv_boot_flow_sva.sv`:
+31 assertions in `src/integration/asserts/kv_boot_flow_sva.sv`:
 
 | Category | Count | Coverage |
 | :------- | :---- | :------- |
@@ -80,7 +86,7 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | Error chain | 2 | kv_error → CPTRA_HW_ERROR_FATAL propagation |
 | Monotonicity | 3 | boot_flow_fmc/rt non-regression, layer ordering |
 | DOE lockdown | 2 | DOE_CTRL.CMD cleared in FMC and RT |
-| Write counters | 3 | Increment, saturation, hard-reset-only clear |
+| Write counters | 4 | Increment, saturation, hard-reset clear, flush clear |
 | ICCM region | 2 | Fetch-without-lock → error, W1S sticky lock |
 
 ### Coverage Gaps (Not Yet Implemented)

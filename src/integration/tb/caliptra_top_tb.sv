@@ -397,5 +397,6 @@ caliptra_top_tb_axi_complex tb_axi_complex_i (
 // SVA
 //=========================================================================-
 caliptra_top_sva sva();
+kv_boot_flow_sva kv_boot_flow_sva();
 
 endmodule

@@ -235,10 +235,10 @@ module caliptra_top
     el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
-    logic [17:0] iccm_fmc_start_addr;
-    logic [17:0] iccm_fmc_end_addr;
-    logic [17:0] iccm_rt_start_addr;
-    logic [17:0] iccm_rt_end_addr;
+    logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr;
+    logic [pt.ICCM_BITS-1:0] iccm_fmc_end_addr;
+    logic [pt.ICCM_BITS-1:0] iccm_rt_start_addr;
+    logic [pt.ICCM_BITS-1:0] iccm_rt_end_addr;
     logic        iccm_region_lock;
 
     // AES status signals
@@ -1423,7 +1423,8 @@ soc_ifc_top #(
     .AXIM_ADDR_WIDTH(`CALIPTRA_AXI_DMA_ADDR_WIDTH),
     .AXIM_DATA_WIDTH(CPTRA_AXI_DMA_DATA_WIDTH),
     .AXIM_ID_WIDTH  (CPTRA_AXI_DMA_ID_WIDTH),
-    .AXIM_USER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH)
+    .AXIM_USER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH),
+    .ICCM_ADDR_WIDTH(pt.ICCM_BITS)
     )
 soc_ifc_top1 
     (

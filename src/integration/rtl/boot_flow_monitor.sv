@@ -60,7 +60,12 @@ module boot_flow_monitor
     mubi4_t boot_flow_error_q;
 
     // ICCM fetch region detection
-    // Reconstruct full byte address from per-bank row address + bank index
+    // Reconstruct full byte address from per-bank row address + bank index.
+    // The bank index occupies bits [ICCM_BANK_INDEX_LO-1 : ICCM_BANK_INDEX_LO-ICCM_BANK_BITS]
+    // and the row address sits above that. The low bits below the bank index
+    // are zero-filled since ICCM is word-aligned. Region start/end addresses
+    // programmed via soc_ifc must be aligned to the bank interleave granularity
+    // (2^ICCM_BANK_INDEX_LO bytes) for correct matching.
     always_comb begin
         iccm_read_fmc = '0;
         iccm_read_rt  = '0;

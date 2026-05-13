@@ -91,9 +91,10 @@ logic [$clog2(KV_NUM_WRITE)-1:0] kv_write_cnt;
 logic kv_multi_write_err;
 
 // Per-slot crypto write counters for DICE chain integrity (slots 6, 7, 8 only).
-// Counts completed crypto-engine writes (triggered on write_offset == 0).
-// Does NOT count SW erases (KEY_CTRL.clear) or flush_keyvault.
-// Resets on rst_b (hard_reset_b domain) — persists across warm and fw update resets.
+// Uses key_entry_ctrl_we (already qualified by ~lock_wr, ~lock_use) gated with
+// write_offset == 0 so we count once per key write, not once per dword.
+// Cleared on flush_keyvault (debug unlock or scan mode transition).
+// Resets on rst_b (hard_reset_b domain) -- persists across warm and fw update resets.
 localparam WRITE_CNT_W = 3; // 3-bit saturating counter (max 7)
 logic [WRITE_CNT_W-1:0] write_count_fmc_cdi, write_count_fmc_ecdsa, write_count_fmc_mldsa;
 logic                   crypto_wr_fmc_cdi, crypto_wr_fmc_ecdsa, crypto_wr_fmc_mldsa;
@@ -163,29 +164,25 @@ end
 
 always_comb kv_multi_write_err = kv_write_cnt > 1;
 
-// Detect crypto-engine writes to monitored slots.
-// Trigger on write_offset == 0 so we count once per key write,
-// not once per dword. Excludes flush_keyvault and SW erase paths.
+// Detect qualified writes to monitored slots using key_entry_we[slot][0].
+// key_entry_we is already gated by lock_wr, lock_use, and debug/flush.
+// Dword 0 fires once per key write as the single-pulse trigger.
+// Exclude flush_keyvault so debug overwrites don't inflate the count.
 always_comb begin
-    crypto_wr_fmc_cdi = '0;
-    crypto_wr_fmc_ecdsa = '0;
-    crypto_wr_fmc_mldsa = '0;
-    for (int client = 0; client < KV_NUM_WRITE; client++) begin
-        crypto_wr_fmc_cdi |= kv_write[client].write_en &
-                            (kv_write[client].write_entry == KV_SLOT_FMC_CDI) &
-                            (kv_write[client].write_offset == '0);
-        crypto_wr_fmc_ecdsa |= kv_write[client].write_en &
-                              (kv_write[client].write_entry == KV_SLOT_FMC_ECDSA) &
-                              (kv_write[client].write_offset == '0);
-        crypto_wr_fmc_mldsa |= kv_write[client].write_en &
-                              (kv_write[client].write_entry == KV_SLOT_FMC_MLDSA) &
-                              (kv_write[client].write_offset == '0);
-    end
+    crypto_wr_fmc_cdi   = key_entry_we[KV_SLOT_FMC_CDI][0]   & ~flush_keyvault & ~key_entry_clear[KV_SLOT_FMC_CDI];
+    crypto_wr_fmc_ecdsa = key_entry_we[KV_SLOT_FMC_ECDSA][0] & ~flush_keyvault & ~key_entry_clear[KV_SLOT_FMC_ECDSA];
+    crypto_wr_fmc_mldsa = key_entry_we[KV_SLOT_FMC_MLDSA][0] & ~flush_keyvault & ~key_entry_clear[KV_SLOT_FMC_MLDSA];
 end
 
-// Saturating write counters — reset on hard reset, persist across warm/fw update resets
+// Saturating write counters -- reset on hard reset, cleared on flush/debug unlock,
+// persist across warm/fw update resets
 always_ff @(posedge clk or negedge cptra_pwrgood) begin
     if (~cptra_pwrgood) begin
+        write_count_fmc_cdi <= '0;
+        write_count_fmc_ecdsa <= '0;
+        write_count_fmc_mldsa <= '0;
+    end
+    else if (flush_keyvault) begin
         write_count_fmc_cdi <= '0;
         write_count_fmc_ecdsa <= '0;
         write_count_fmc_mldsa <= '0;

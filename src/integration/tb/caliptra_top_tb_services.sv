@@ -1826,9 +1826,9 @@ endgenerate //IV_NO
         end
     end
 
-    // Enable boot flow monitoring (TB command 0xa1)
-    // Forces the enable signal inside caliptra. In silicon this is hardwired on;
-    // in simulation it defaults off so legacy tests are unaffected.
+    // Enable boot flow monitoring (TB command 0xbb)
+    // Forces the enable signal inside caliptra. In silicon this is gated by
+    // debug_locked; in simulation it defaults off so legacy tests are unaffected.
     always @(posedge clk) begin
         if ((WriteData[7:0] == 8'hbb) && mailbox_write) begin
             force `CPTRA_TOP_PATH.boot_flow_monitor_en = 1'b1;

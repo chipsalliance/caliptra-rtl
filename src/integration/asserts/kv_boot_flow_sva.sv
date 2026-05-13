@@ -52,6 +52,7 @@ module kv_boot_flow_sva
   wire clk          = `SVA_CLK;
   wire rst_n        = `SVA_RST;
   wire core_rst_n   = `KV_PATH.core_only_rst_b;
+  wire noncore_rst_n = `CPTRA_TOP_PATH.cptra_noncore_rst_b;
 
   // Boot flow signals from caliptra_top
   wire [3:0] boot_flow_fmc   = `CPTRA_TOP_PATH.boot_flow_fmc;
@@ -79,6 +80,7 @@ module kv_boot_flow_sva
   wire       crypto_wr_fmc_cdi     = `KV_PATH.crypto_wr_fmc_cdi;
   wire       crypto_wr_fmc_ecdsa   = `KV_PATH.crypto_wr_fmc_ecdsa;
   wire       crypto_wr_fmc_mldsa   = `KV_PATH.crypto_wr_fmc_mldsa;
+  wire       flush_keyvault        = `KV_PATH.flush_keyvault;
 
   // DOE lockdown
   wire doe_cmd_lock = mubi4_test_true_strict(mubi4_t'(boot_flow_fmc)) |
@@ -86,7 +88,7 @@ module kv_boot_flow_sva
 
   // ICCM region signals
   wire iccm_region_lock = `CPTRA_TOP_PATH.iccm_region_lock;
-  wire iccm_read_any    = `CPTRA_TOP_PATH.iccm_read_any;
+  wire iccm_read_any    = `CPTRA_TOP_PATH.i_boot_flow_monitor.iccm_read_any;
 
   // cptra_error_fatal output
   wire cptra_error_fatal = `CPTRA_TOP_PATH.cptra_error_fatal;
@@ -281,40 +283,40 @@ module kv_boot_flow_sva
   // Why: Detects truncated DICE derivation chains
   // ============================================================
 
-  // Write counter increments on crypto write (write_offset==0), not on key_entry_clear
+  // Write counter increments on qualified crypto write, not on flush or clear
   WriteCountFmcCdiIncr_A: assert property (
     @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
-    (crypto_wr_fmc_cdi && write_count_fmc_cdi < 3'd7) |=> (write_count_fmc_cdi == $past(write_count_fmc_cdi) + 3'd1)
+    (crypto_wr_fmc_cdi && write_count_fmc_cdi < 3'd7 && !flush_keyvault) |=> (write_count_fmc_cdi == $past(write_count_fmc_cdi) + 3'd1)
   ) else $display("SVA ERROR: write_count_fmc_cdi did not increment on crypto write");
 
   WriteCountFmcEcdsaIncr_A: assert property (
     @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
-    (crypto_wr_fmc_ecdsa && write_count_fmc_ecdsa < 3'd7) |=> (write_count_fmc_ecdsa == $past(write_count_fmc_ecdsa) + 3'd1)
+    (crypto_wr_fmc_ecdsa && write_count_fmc_ecdsa < 3'd7 && !flush_keyvault) |=> (write_count_fmc_ecdsa == $past(write_count_fmc_ecdsa) + 3'd1)
   ) else $display("SVA ERROR: write_count_fmc_ecdsa did not increment on crypto write");
 
   WriteCountFmcMldsaIncr_A: assert property (
     @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
-    (crypto_wr_fmc_mldsa && write_count_fmc_mldsa < 3'd7) |=> (write_count_fmc_mldsa == $past(write_count_fmc_mldsa) + 3'd1)
+    (crypto_wr_fmc_mldsa && write_count_fmc_mldsa < 3'd7 && !flush_keyvault) |=> (write_count_fmc_mldsa == $past(write_count_fmc_mldsa) + 3'd1)
   ) else $display("SVA ERROR: write_count_fmc_mldsa did not increment on crypto write");
 
-  // What: Counters saturate at 7 (3'b111), never wrap
+  // What: Counters saturate at 7 (3'b111), never wrap -- unless cleared by flush
   WriteCountFmcCdiSaturate_A: assert property (
     @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
-    (write_count_fmc_cdi == 3'd7) |=> (write_count_fmc_cdi == 3'd7)
+    (write_count_fmc_cdi == 3'd7 && !flush_keyvault) |=> (write_count_fmc_cdi == 3'd7)
   ) else $display("SVA ERROR: write_count_fmc_cdi wrapped past saturation");
 
   WriteCountFmcEcdsaSaturate_A: assert property (
     @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
-    (write_count_fmc_ecdsa == 3'd7) |=> (write_count_fmc_ecdsa == 3'd7)
+    (write_count_fmc_ecdsa == 3'd7 && !flush_keyvault) |=> (write_count_fmc_ecdsa == 3'd7)
   ) else $display("SVA ERROR: write_count_fmc_ecdsa wrapped past saturation");
 
   WriteCountFmcMldsaSaturate_A: assert property (
     @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
-    (write_count_fmc_mldsa == 3'd7) |=> (write_count_fmc_mldsa == 3'd7)
+    (write_count_fmc_mldsa == 3'd7 && !flush_keyvault) |=> (write_count_fmc_mldsa == 3'd7)
   ) else $display("SVA ERROR: write_count_fmc_mldsa wrapped past saturation");
 
-  // What: Counters reset only on cptra_pwrgood deassertion, NOT on core_only_rst_b
-  // Why: Must persist across warm and fw update resets to track cumulative DICE writes
+  // What: Counters reset on cptra_pwrgood deassertion or flush_keyvault
+  // Why: Hard reset clears everything; flush/debug unlock invalidates keys so counters restart
   WriteCountFmcCdiHardReset_A: assert property (
     @(posedge clk)
     !`KV_PATH.cptra_pwrgood |-> (write_count_fmc_cdi == 3'd0)
@@ -329,6 +331,14 @@ module kv_boot_flow_sva
     @(posedge clk)
     !`KV_PATH.cptra_pwrgood |-> (write_count_fmc_mldsa == 3'd0)
   ) else $display("SVA ERROR: write_count_fmc_mldsa not zero during hard reset");
+
+  // What: Counters clear to 0 on flush_keyvault (debug unlock or scan mode)
+  WriteCountFlushClear_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    flush_keyvault |=> (write_count_fmc_cdi == 3'd0) &&
+                       (write_count_fmc_ecdsa == 3'd0) &&
+                       (write_count_fmc_mldsa == 3'd0)
+  ) else $display("SVA ERROR: write counters not cleared after flush_keyvault");
 
   // ============================================================
   // Section 9: ICCM Region Register Properties
@@ -348,12 +358,14 @@ module kv_boot_flow_sva
     iccm_region_lock |=> iccm_region_lock
   ) else $display("SVA ERROR: ICCM_REGION_LOCK cleared without reset");
 
-  // What: All 4 address registers and ICCM_REGION_LOCK reset to 0 on core reset
+  // What: All 4 address registers and ICCM_REGION_LOCK reset to 0 on cptra_noncore_rst_b
   // Why: ROM must reprogram regions on every boot cycle
+  // Note: Uses noncore_rst_n because the shadow registers and ICCM_REGION_LOCK
+  //       in soc_ifc_top use cptra_noncore_rst_b (they survive warm resets).
   IccmRegionLockReset_A: assert property (
     @(posedge clk)
-    !core_rst_n |-> !iccm_region_lock
-  ) else $display("SVA ERROR: ICCM_REGION_LOCK not zero during core reset");
+    !noncore_rst_n |-> !iccm_region_lock
+  ) else $display("SVA ERROR: ICCM_REGION_LOCK not zero during noncore reset");
 
   // ============================================================
   // Section 10: Cover Properties

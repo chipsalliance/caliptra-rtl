@@ -2656,7 +2656,7 @@ Transitions are one-way: once `boot_flow_fmc` becomes True, it remains True unti
 
 #### Simulation support
 
-In simulation, `boot_flow_monitor_en` defaults to 0 (disabled). The testbench overrides this signal with a `force` when testing the feature. In hardware, the monitor is always enabled.
+In simulation, `boot_flow_monitor_en` defaults to 0 (disabled). The testbench overrides this signal with a `force` when testing the feature. In hardware, the monitor is enabled when `debug_locked` is asserted (disabled when debug is unlocked to allow JTAG ICCM access and fake-ROM flows).
 
 ### KV monitor
 
