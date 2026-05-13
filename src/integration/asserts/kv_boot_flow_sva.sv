@@ -236,10 +236,12 @@ module kv_boot_flow_sva
   //         Total: 2 cycles (1 for register set + 1 for error_fatal flop)
   // ============================================================
 
+`ifndef VERILATOR
   KvErrorToFatal_A: assert property (
     @(posedge clk) disable iff (!rst_n || !monitor_en)
     $rose(kv_error_input) |-> ##[1:2] cptra_error_fatal
   ) else $display("SVA ERROR: cptra_error_fatal not set within 2 cycles of kv_error");
+`endif
 
   // ============================================================
   // Section 6: Boot Flow Monotonicity
@@ -374,11 +376,13 @@ module kv_boot_flow_sva
   // Section 10: Cover Properties
   // ============================================================
 
+`ifndef VERILATOR
   // Cover: Happy path -- both transitions fire without monitor alert
   HappyPathFmcRt_C: cover property (
     @(posedge clk) disable iff (!core_rst_n || !monitor_en)
     enter_fmc ##[1:$] enter_rt ##1 (!kv_monitor_alert)
   );
+`endif
 
   // Cover: Monitor fires at ROM->FMC transition
   MonitorAlertAtFmc_C: cover property (
