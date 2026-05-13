@@ -106,10 +106,10 @@ module kv_boot_flow_sva
   wire rt_false  = mubi4_test_false_strict(mubi4_t'(boot_flow_rt));
 
   // ============================================================
-  // Section 1: Enforcement Timing — lock_wr hwset
+  // Section 1: Enforcement Timing -- lock_wr hwset
   // What: lock_wr must be asserted on preserved slots within 1 cycle of transition
   // Why: Prevents malicious FW from overwriting DICE keys after phase transition
-  // Timing: 1 cycle — lock_wr.hwset is combinational, register captures next posedge
+  // Timing: 1 cycle -- lock_wr.hwset is combinational, register captures next posedge
   // ============================================================
 
   // At ROM->FMC: slots 0,1,2,6,7,8 get lock_wr
@@ -160,7 +160,7 @@ module kv_boot_flow_sva
   ) else $display("SVA ERROR: lock_wr not set on slot 9 after enter_rt");
 
   // ============================================================
-  // Section 2: Enforcement Timing — lock_use hwset
+  // Section 2: Enforcement Timing -- lock_use hwset
   // What: lock_use must be asserted on FMC key slots when entering RT
   // Why: Prevents RT firmware from using FMC-phase signing keys
   // Timing: 1 cycle
@@ -182,7 +182,7 @@ module kv_boot_flow_sva
   ) else $display("SVA ERROR: lock_use not set on slot 8 after enter_rt");
 
   // ============================================================
-  // Section 3: Enforcement Timing — Slot clears
+  // Section 3: Enforcement Timing -- Slot clears
   // What: Non-preserved slots must be cleared at each transition
   // Why: Destroys stale/temporary key material from prior boot phase
   // Timing: boot_flow_key_clear is combinational (same cycle as enter_fmc/enter_rt)
@@ -218,9 +218,9 @@ module kv_boot_flow_sva
   endgenerate
 
   // ============================================================
-  // Section 4: Enforcement — Same-cycle completion
+  // Section 4: Enforcement -- Same-cycle completion
   // What: All enforcement actions (hwset/hwclr) are combinational, no multi-cycle sequencing
-  // Why: Security-critical — a multi-cycle gap could allow a race
+  // Why: Security-critical -- a multi-cycle gap could allow a race
   // ============================================================
 
   // boot_flow_key_clear is purely combinational from enter_fmc/enter_rt
@@ -228,11 +228,11 @@ module kv_boot_flow_sva
   // These are structural properties verified by the generate blocks above (|-> not |=>)
 
   // ============================================================
-  // Section 5: Error Chain — kv_monitor_alert → cptra_error_fatal
+  // Section 5: Error Chain -- kv_monitor_alert -> cptra_error_fatal
   // What: cptra_error_fatal must assert within 2 cycles of kv_error_input
   // Why: BMC must see immediate HW notification of DICE integrity violation
-  // Timing: kv_error → CPTRA_HW_ERROR_FATAL.kv_error.we → unmasked_hw_error_fatal_write
-  //         → cptra_error_fatal (registered in soc_ifc_top on rdc_clk_cg, 1 cycle)
+  // Timing: kv_error -> CPTRA_HW_ERROR_FATAL.kv_error.we -> unmasked_hw_error_fatal_write
+  //         -> cptra_error_fatal (registered in soc_ifc_top on rdc_clk_cg, 1 cycle)
   //         Total: 2 cycles (1 for register set + 1 for error_fatal flop)
   // ============================================================
 
@@ -245,7 +245,7 @@ module kv_boot_flow_sva
 
   // ============================================================
   // Section 6: Boot Flow Monotonicity
-  // What: boot_flow_fmc and boot_flow_rt transition False→True only, never True→False
+  // What: boot_flow_fmc and boot_flow_rt transition False->True only, never True->False
   // Why: Layer regression would allow re-executing ROM-phase code with FMC privileges
   // ============================================================
 
@@ -356,7 +356,7 @@ module kv_boot_flow_sva
     (iccm_read_any && !iccm_region_lock) |=> mubi4_test_true_strict(mubi4_t'(boot_flow_error))
   ) else $display("SVA ERROR: boot_flow_error not set on ICCM fetch with region_lock=0");
 
-  // What: ICCM_REGION_LOCK is W1S — once set, cannot be cleared by any write (only reset)
+  // What: ICCM_REGION_LOCK is W1S -- once set, cannot be cleared by any write (only reset)
   // Why: Prevents malicious FW from unlocking region registers after ROM configures them
   IccmRegionLockSticky_A: assert property (
     @(posedge clk) disable iff (!core_rst_n)

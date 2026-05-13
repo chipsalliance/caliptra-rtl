@@ -1082,7 +1082,7 @@ assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 // iccm_fmc_start_addr, iccm_fmc_end_addr, iccm_rt_start_addr, iccm_rt_end_addr
 // are driven directly by the caliptra_prim_subreg_shadow .q outputs below.
-logic iccm_region_lock_reg; // Raw register value — gates shadow writes
+logic iccm_region_lock_reg; // Raw register value -- gates shadow writes
 assign iccm_region_lock_reg = soc_ifc_reg_hwif_out.internal_iccm_region_lock.lock.value;
 
 // =========================================================================
@@ -1095,7 +1095,7 @@ logic [3:0] iccm_shadow_err_storage;
 logic       shadow_storage_err;
 logic       shadow_update_err;
 
-// Sticky committed flags — once a successful 2-phase write occurs, committed
+// Sticky committed flags -- once a successful 2-phase write occurs, committed
 // stays set until reset. This gates the effective lock in the boot flow monitor.
 always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
     if (!cptra_noncore_rst_b)

@@ -91,8 +91,9 @@ logic [$clog2(KV_NUM_WRITE)-1:0] kv_write_cnt;
 logic kv_multi_write_err;
 
 // Per-slot crypto write counters for DICE chain integrity (slots 6, 7, 8 only).
-// Uses key_entry_we (already qualified by ~lock_wr, ~lock_use) gated with
-// write_offset == 0 so we count once per key write, not once per dword.
+// Uses key_entry_we[slot][0] as single-pulse trigger (dword 0 of each key write).
+// key_entry_we includes flush_keyvault and debug writes, so those are explicitly
+// excluded in the detection logic below.
 // Cleared on flush_keyvault (debug unlock or scan mode transition).
 // Resets on cptra_pwrgood (hard reset) -- persists across warm and fw update resets.
 localparam WRITE_CNT_W = 3; // 3-bit saturating counter (max 7)
@@ -165,9 +166,10 @@ end
 always_comb kv_multi_write_err = kv_write_cnt > 1;
 
 // Detect qualified writes to monitored slots using key_entry_we[slot][0].
-// key_entry_we is already gated by lock_wr, lock_use, and debug/flush.
+// key_entry_we is gated by lock_wr/lock_use (unless debug unlock), but also
+// fires on flush_keyvault. We exclude flush and key_entry_clear so only
+// genuine crypto engine writes increment the counter.
 // Dword 0 fires once per key write as the single-pulse trigger.
-// Exclude flush_keyvault so debug overwrites don't inflate the count.
 always_comb begin
     crypto_wr_fmc_cdi   = key_entry_we[KV_SLOT_FMC_CDI][0]   & ~flush_keyvault & ~key_entry_clear[KV_SLOT_FMC_CDI];
     crypto_wr_fmc_ecdsa = key_entry_we[KV_SLOT_FMC_ECDSA][0] & ~flush_keyvault & ~key_entry_clear[KV_SLOT_FMC_ECDSA];
@@ -367,7 +369,7 @@ always_comb begin : KV_MONITOR
         kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_CDI].dest_valid.value    != KV_EXPECTED_DV_CDI);
         kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_ECDSA].dest_valid.value  != KV_EXPECTED_DV_ECC_PKEY);
         kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_MLDSA].dest_valid.value  != KV_EXPECTED_DV_MLDSA_SEED);
-        // Write counter checks — detect truncated DICE chains
+        // Write counter checks -- detect truncated DICE chains
         kv_monitor_alert |= (write_count_fmc_cdi < KV_MIN_WRITES_FMC_CDI);
         kv_monitor_alert |= (write_count_fmc_ecdsa < KV_MIN_WRITES_FMC_ECDSA);
         kv_monitor_alert |= (write_count_fmc_mldsa < KV_MIN_WRITES_FMC_MLDSA);
