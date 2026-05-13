@@ -91,10 +91,10 @@ logic [$clog2(KV_NUM_WRITE)-1:0] kv_write_cnt;
 logic kv_multi_write_err;
 
 // Per-slot crypto write counters for DICE chain integrity (slots 6, 7, 8 only).
-// Uses key_entry_ctrl_we (already qualified by ~lock_wr, ~lock_use) gated with
+// Uses key_entry_we (already qualified by ~lock_wr, ~lock_use) gated with
 // write_offset == 0 so we count once per key write, not once per dword.
 // Cleared on flush_keyvault (debug unlock or scan mode transition).
-// Resets on rst_b (hard_reset_b domain) -- persists across warm and fw update resets.
+// Resets on cptra_pwrgood (hard reset) -- persists across warm and fw update resets.
 localparam WRITE_CNT_W = 3; // 3-bit saturating counter (max 7)
 logic [WRITE_CNT_W-1:0] write_count_fmc_cdi, write_count_fmc_ecdsa, write_count_fmc_mldsa;
 logic                   crypto_wr_fmc_cdi, crypto_wr_fmc_ecdsa, crypto_wr_fmc_mldsa;

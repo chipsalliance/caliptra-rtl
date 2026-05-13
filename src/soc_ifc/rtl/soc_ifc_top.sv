@@ -1118,6 +1118,13 @@ assign iccm_shadow_re[1] = soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req  
 assign iccm_shadow_re[2] = soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req  & ~soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req_is_wr  & ~soc_ifc_reg_req_data.soc_req;
 assign iccm_shadow_re[3] = soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req    & ~soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req_is_wr    & ~soc_ifc_reg_req_data.soc_req;
 
+// SoC read acknowledge: any SoC read must still complete the bus transaction (return 0 data)
+logic [3:0] iccm_shadow_soc_re;
+assign iccm_shadow_soc_re[0] = soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req & ~soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req_is_wr & soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_soc_re[1] = soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req   & ~soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req_is_wr   & soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_soc_re[2] = soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req  & ~soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req_is_wr  & soc_ifc_reg_req_data.soc_req;
+assign iccm_shadow_soc_re[3] = soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req    & ~soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req_is_wr    & soc_ifc_reg_req_data.soc_req;
+
 logic iccm_all_shadows_committed;
 assign iccm_all_shadows_committed = &iccm_shadow_committed;
 assign iccm_region_lock = iccm_region_lock_reg & iccm_all_shadows_committed;
@@ -1197,21 +1204,22 @@ caliptra_prim_subreg_shadow #(.DW(ICCM_ADDR_WIDTH), .SwAccess(caliptra_prim_subr
     .err_storage    (iccm_shadow_err_storage[3])
 );
 
-// External register acknowledgments — single-cycle response
-assign soc_ifc_reg_hwif_in.internal_iccm_fmc_start_addr.rd_ack = iccm_shadow_re[0];
-assign soc_ifc_reg_hwif_in.internal_iccm_fmc_start_addr.rd_data = {{(32-ICCM_ADDR_WIDTH){1'b0}}, iccm_fmc_start_addr};
+// External register acknowledgments -- single-cycle response
+// SoC reads are acknowledged (bus completes) but return zero data and do not clear shadow phase
+assign soc_ifc_reg_hwif_in.internal_iccm_fmc_start_addr.rd_ack = iccm_shadow_re[0] | iccm_shadow_soc_re[0];
+assign soc_ifc_reg_hwif_in.internal_iccm_fmc_start_addr.rd_data = iccm_shadow_soc_re[0] ? 32'h0 : {{(32-ICCM_ADDR_WIDTH){1'b0}}, iccm_fmc_start_addr};
 assign soc_ifc_reg_hwif_in.internal_iccm_fmc_start_addr.wr_ack = soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req & soc_ifc_reg_hwif_out.internal_iccm_fmc_start_addr.req_is_wr;
 
-assign soc_ifc_reg_hwif_in.internal_iccm_fmc_end_addr.rd_ack = iccm_shadow_re[1];
-assign soc_ifc_reg_hwif_in.internal_iccm_fmc_end_addr.rd_data = {{(32-ICCM_ADDR_WIDTH){1'b0}}, iccm_fmc_end_addr};
+assign soc_ifc_reg_hwif_in.internal_iccm_fmc_end_addr.rd_ack = iccm_shadow_re[1] | iccm_shadow_soc_re[1];
+assign soc_ifc_reg_hwif_in.internal_iccm_fmc_end_addr.rd_data = iccm_shadow_soc_re[1] ? 32'h0 : {{(32-ICCM_ADDR_WIDTH){1'b0}}, iccm_fmc_end_addr};
 assign soc_ifc_reg_hwif_in.internal_iccm_fmc_end_addr.wr_ack = soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req & soc_ifc_reg_hwif_out.internal_iccm_fmc_end_addr.req_is_wr;
 
-assign soc_ifc_reg_hwif_in.internal_iccm_rt_start_addr.rd_ack = iccm_shadow_re[2];
-assign soc_ifc_reg_hwif_in.internal_iccm_rt_start_addr.rd_data = {{(32-ICCM_ADDR_WIDTH){1'b0}}, iccm_rt_start_addr};
+assign soc_ifc_reg_hwif_in.internal_iccm_rt_start_addr.rd_ack = iccm_shadow_re[2] | iccm_shadow_soc_re[2];
+assign soc_ifc_reg_hwif_in.internal_iccm_rt_start_addr.rd_data = iccm_shadow_soc_re[2] ? 32'h0 : {{(32-ICCM_ADDR_WIDTH){1'b0}}, iccm_rt_start_addr};
 assign soc_ifc_reg_hwif_in.internal_iccm_rt_start_addr.wr_ack = soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req & soc_ifc_reg_hwif_out.internal_iccm_rt_start_addr.req_is_wr;
 
-assign soc_ifc_reg_hwif_in.internal_iccm_rt_end_addr.rd_ack = iccm_shadow_re[3];
-assign soc_ifc_reg_hwif_in.internal_iccm_rt_end_addr.rd_data = {{(32-ICCM_ADDR_WIDTH){1'b0}}, iccm_rt_end_addr};
+assign soc_ifc_reg_hwif_in.internal_iccm_rt_end_addr.rd_ack = iccm_shadow_re[3] | iccm_shadow_soc_re[3];
+assign soc_ifc_reg_hwif_in.internal_iccm_rt_end_addr.rd_data = iccm_shadow_soc_re[3] ? 32'h0 : {{(32-ICCM_ADDR_WIDTH){1'b0}}, iccm_rt_end_addr};
 assign soc_ifc_reg_hwif_in.internal_iccm_rt_end_addr.wr_ack = soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req & soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.req_is_wr;
 
 assign clk_gating_en = soc_ifc_reg_hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.value;

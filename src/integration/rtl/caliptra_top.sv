@@ -29,6 +29,7 @@ module caliptra_top
     import entropy_src_pkg::*;
     import csrng_pkg::*;
 `endif
+    import el2_pkg::*;
     #(
     `include "el2_param.vh"
     )
