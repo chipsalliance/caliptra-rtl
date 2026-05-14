@@ -2652,6 +2652,7 @@ Transitions are one-way: once `boot_flow_fmc` becomes True, it remains True unti
 `boot_flow_error` is asserted (fatal) when any of the following occur:
 - ICCM fetch while region lock is not set or shadow registers are not committed
 - RT region fetch while `boot_flow_fmc` is False (illegal ROM->RT jump -- the RT transition is gated on FMC, so this fires the error without producing a transient `boot_flow_rt` pulse)
+- ICCM fetch outside both the FMC and RT programmed regions after region lock is set (out-of-range execution)
 - Any boot flow MuBi4 signal enters an invalid (non-True, non-False) encoding state
 
 #### Simulation support
@@ -2706,8 +2707,8 @@ The `lock_wr` and `lock_use` fields have `hwset` property in the register defini
 
 | Transition | Slots cleared | Slots preserved |
 | :--------- | :------------ | :-------------- |
-| ROM->FMC (`enter_fmc`) | 3, 4, 5, 9, 10-15 | 0, 1, 2, 6, 7, 8 |
-| FMC->RT (`enter_rt`) | 3, 10-15 | 0, 1, 2, 4, 5, 6, 7, 8, 9 |
+| ROM->FMC (`enter_fmc`) | 3, 4, 5, 9, 10-23 | 0, 1, 2, 6, 7, 8 |
+| FMC->RT (`enter_rt`) | 3, 10-23 | 0, 1, 2, 4, 5, 6, 7, 8, 9 |
 
 Clearing destroys the key data and resets `dest_valid` and `last_dword` for the affected slots.
 

@@ -545,7 +545,7 @@ module doe_reg (
         automatic logic load_next_c;
         next_c = field_storage.DOE_CTRL.CMD.value;
         load_next_c = '0;
-        if(decoded_reg_strb.DOE_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.DOE_CTRL && decoded_req_is_wr && !(hwif_in.doe_cmd_lock)) begin // SW write
             next_c = (field_storage.DOE_CTRL.CMD.value & ~decoded_wr_biten[1:0]) | (decoded_wr_data[1:0] & decoded_wr_biten[1:0]);
             load_next_c = '1;
         end else if(hwif_in.DOE_CTRL.CMD.hwclr) begin // HW Clear
@@ -591,7 +591,7 @@ module doe_reg (
         automatic logic load_next_c;
         next_c = field_storage.DOE_CTRL.CMD_EXT.value;
         load_next_c = '0;
-        if(decoded_reg_strb.DOE_CTRL && decoded_req_is_wr) begin // SW write
+        if(decoded_reg_strb.DOE_CTRL && decoded_req_is_wr && !(hwif_in.doe_cmd_lock)) begin // SW write
             next_c = (field_storage.DOE_CTRL.CMD_EXT.value & ~decoded_wr_biten[8:7]) | (decoded_wr_data[8:7] & decoded_wr_biten[8:7]);
             load_next_c = '1;
         end else if(hwif_in.DOE_CTRL.CMD_EXT.hwclr) begin // HW Clear

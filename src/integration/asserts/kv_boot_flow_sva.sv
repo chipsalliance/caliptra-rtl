@@ -196,7 +196,7 @@ module kv_boot_flow_sva
     assign key_entry_clear[s] = `KV_PATH.key_entry_clear[s];
   end
 
-  // At enter_fmc: slots 3,4,5,9,10,11,12,13,14,15 cleared
+  // At enter_fmc: slots 3,4,5,9,10-23 cleared
   generate
     for (genvar s = 0; s < KV_NUM_KEYS; s++) begin : gen_clear_fmc_check
       if (!(s inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER,
@@ -216,7 +216,7 @@ module kv_boot_flow_sva
     end
   endgenerate
 
-  // At enter_rt: slots 3,10,11,12,13,14,15 cleared (RT slots 4,5,9 are preserved)
+  // At enter_rt: slots 3,10-23 cleared (RT slots 4,5,9 are preserved)
   generate
     for (genvar s = 0; s < KV_NUM_KEYS; s++) begin : gen_clear_rt_check
       if (!(s inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER,

@@ -201,6 +201,9 @@ assign hwif_in.DOE_STATUS.VALID.hwclr = hwif_out.DOE_CTRL.CMD.swmod || hwif_out.
 assign hwif_in.DOE_STATUS.ERROR.hwset = flow_error;
 assign hwif_in.DOE_STATUS.ERROR.hwclr = clear_obf_secrets || hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod;
 
+// Wire doe_cmd_lock to the register block swwel -- blocks SW writes to CMD/CMD_EXT
+always_comb hwif_in.doe_cmd_lock = doe_cmd_lock;
+
 assign hwif_in.DOE_CTRL.CMD.hwclr     = flow_done | clear_obf_secrets | doe_cmd_lock;
 assign hwif_in.DOE_CTRL.CMD_EXT.hwclr = flow_done | clear_obf_secrets | doe_cmd_lock;
 
@@ -242,7 +245,6 @@ doe_fsm1
 
   //client control register
   .doe_cmd_reg(doe_cmd_reg),
-  .doe_cmd_lock(doe_cmd_lock),
   .ocp_lock_en(ocp_lock_en),
 
   //interface with kv

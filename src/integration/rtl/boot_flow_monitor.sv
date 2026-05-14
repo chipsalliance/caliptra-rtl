@@ -117,9 +117,11 @@ module boot_flow_monitor
             // Error conditions:
             //   1. Any ICCM fetch before region lock is set
             //   2. RT region fetch without FMC entered (illegal ROM->RT jump)
-            //   3. MuBi integrity check on FSM state flops
+            //   3. ICCM fetch outside both FMC and RT regions after lock
+            //   4. MuBi integrity check on FSM state flops
             boot_flow_error_q <= (iccm_read_any && !iccm_region_lock) ||
                                  (iccm_read_rt && mubi4_test_false_strict(boot_flow_fmc_q)) ||
+                                 (iccm_region_lock && iccm_read_any && !iccm_read_fmc && !iccm_read_rt) ||
                                  mubi4_test_invalid(boot_flow_fmc_q) || mubi4_test_invalid(boot_flow_rt_q) || mubi4_test_invalid(boot_flow_error_q)
                                  ? MuBi4True : boot_flow_error_q;
         end

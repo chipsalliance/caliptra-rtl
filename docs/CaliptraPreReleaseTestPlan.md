@@ -55,11 +55,12 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | 1 | Warm reset -- verify all registers and lock clear to 0 | All read back as 0 |
 | 2 | FW update reset -- verify registers and lock persist | Values unchanged after reset |
 | 3 | ICCM fetch with lock=0 -- jump to ICCM without setting lock | boot_flow_error fires; kv_error set |
-| 4 | Lock without programming addresses (all=0), FMC entry at nonzero addr | boot_flow_error fires (addr mismatch) |
+| 4 | Lock without programming addresses (all=0), FMC entry at nonzero addr | boot_flow_error fires (out-of-range) |
 | 5 | Single write only (no commit) -- shadow phase stays 0 | iccm_all_shadows_committed=0; effective lock=0 |
 | 6 | Mismatched 2-phase write -- different values for phase 0 and phase 1 | shadow_update_err (NON_FATAL[3]) fires |
 | 7 | SoC write attempt -- write ICCM region register from SoC interface | Write rejected; register value unchanged |
 | 8 | SoC write to iccm_region_lock -- attempt to set lock from SoC | Write rejected (swwel=soc_req); lock remains 0 |
+| 9 | Out-of-range ICCM fetch after lock -- jump to address outside both FMC and RT regions | boot_flow_error fires; kv_error set |
 
 #### `directed/kv_monitor_neg`
 
