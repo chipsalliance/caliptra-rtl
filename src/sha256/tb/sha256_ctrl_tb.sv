@@ -1026,17 +1026,13 @@ module sha256_ctrl_tb();
 
       $display("   -- Testbench for sha256 started --");
 
-      init_sim();
-      reset_dut();
-      check_name_version();
-
-      fin  = $fopen("../stimulus/acvp/SHA2-256.txt","r");
+      fin  = $fopen("../stimulus/acvp/SHA2-256-600331.txt","r");
       if (fin == 0)
       begin
         $display("ERROR: Input file not found");
         $stop;
       end
-      fout = $fopen("../stimulus/acvp/SHA2-256_digest.txt","w");
+      fout = $fopen("../stimulus/acvp/SHA2-256-600331_digest.txt","w");
       if (fout == 0)
       begin
         $display("ERROR: Output file not found");
@@ -1047,7 +1043,7 @@ module sha256_ctrl_tb();
 
     while(1)
     begin
-      result = $fscanf(fin, "%*d %s %d %*d %s", test_type, tcid, pt);
+      result = $fscanf(fin, "%s %*d %d %*d %s", test_type, tcid, pt);
       if (result != 3)
       begin
         $display("End of file");
@@ -1088,11 +1084,13 @@ module sha256_ctrl_tb();
           case (test_mode)
             SHA224_MODE:
               begin
-                 $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"md\": \"%0h\"\n},\n", tcid, digest[255:32]);
+                 //$fwrite(fout, "{\n    \"tcId\": %0d,\n    \"md\": \"%0h\"\n},\n", tcid, digest[255:32]);
+                 $fwrite(fout, "%s %0d %056h\n", test_type, tcid, digest[255:32]);
               end
             SHA256_MODE:
               begin
-                 $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"md\": \"%0h\"\n},\n", tcid, digest[255:0]);
+                 //$fwrite(fout, "{\n    \"tcId\": %0d,\n    \"md\": \"%0h\"\n},\n", tcid, digest[255:0]);
+                 $fwrite(fout, "%s %0d %064h\n", test_type, tcid, digest[255:0]);
               end
           endcase
           write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
@@ -1168,12 +1166,14 @@ module sha256_ctrl_tb();
             case (test_mode)
             SHA224_MODE:
               begin
-                 $fwrite(fout, "{\n    \"md\": \"%0h\"\n},\n", digest[255:32]);
+                 //$fwrite(fout, "{\n    \"md\": \"%056h\"\n},\n", digest[255:32]);
+                 $fwrite(fout, "%s %0d %056h\n", test_type, tcid, digest[255:32]);
                  seed = $sformatf("%x", digest[255:32]);
               end
             SHA256_MODE:
               begin
-                 $fwrite(fout, "{\n    \"md\": \"%0h\"\n},\n", digest);
+                 //$fwrite(fout, "{\n    \"md\": \"%064h\"\n},\n", digest);
+                 $fwrite(fout, "%s %0d %064h\n", test_type, tcid, digest[255:0]);
                  seed = $sformatf("%x", digest);
               end
             endcase
