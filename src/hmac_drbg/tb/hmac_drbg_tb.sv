@@ -312,8 +312,9 @@ module hmac_drbg_tb();
   //
   //----------------------------------------------------------------
   task hmac384_drbg_multi_rounds(input [REG_SIZE-1 : 0] entropy, input [REG_SIZE-1 : 0] nonce,
-                  input [MAX_ROUND : 0][REG_SIZE-1 : 0] expected_drbg, 
-                  input [MAX_ROUND_W-1:0] num_rounds);
+                  input [MAX_ROUND : 0][REG_SIZE-1 : 0] expected_drbg,
+                  input [MAX_ROUND_W-1:0] num_rounds,
+                  input bit do_compare);
     begin
         if (!ready_tb)
             wait(ready_tb);
@@ -349,16 +350,18 @@ module hmac_drbg_tb();
           wait(valid_tb);
           $display("Received valid flag");
 
-          if (drbg_tb == expected_drbg[i]) begin
-              $display("*** TC %0d round #%0d successful.", tc_number, i);
-              $display("");
-          end
-          else begin
-              $display("*** ERROR: TC %0d round #%0d NOT successful.", tc_number, i);
-              $display("Expected: 0x%096x", expected_drbg[i]);
-              $display("Got:      0x%096x", drbg_tb);
-              $display("");
-              error_ctr = error_ctr + 1;
+          if (do_compare) begin
+              if (drbg_tb == expected_drbg[i]) begin
+                  $display("*** TC %0d round #%0d successful.", tc_number, i);
+                  $display("");
+              end
+              else begin
+                  $display("*** ERROR: TC %0d round #%0d NOT successful.", tc_number, i);
+                  $display("Expected: 0x%096x", expected_drbg[i]);
+                  $display("Got:      0x%096x", drbg_tb);
+                  $display("");
+                  error_ctr = error_ctr + 1;
+              end
           end
         end
 
@@ -384,13 +387,12 @@ module hmac_drbg_tb();
         reg [383 : 0] seed;
 
         
-        nist_entropy  = 384'h6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5;        
+        nist_entropy  = 384'h6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5;
         nist_nonce    = 384'h9a9083505bc92276aec4be312696ef7bf3bf603f4bbd381196a029f340585312313bca4a9b5b890efee42c77b1ee25fe;
         nist_expected = 384'h94ED910D1A099DAD3254E9242AE85ABDE4BA15168EAF0CA87A555FD56D10FBCA2907E3E83BA95368623B8C4686915CF9;
         seed = random_gen();
 
         hmac384_drbg(nist_entropy, nist_nonce, seed, nist_expected); 
-
 
         nist_entropy  = 384'h6B9D3DAD2E1B8C1C05B19875B6659F4DE23C3B667BF297BA9AA47740787137D896D5724E4C70A825F872C9EA60D2EDF5;
         nist_nonce    = 384'h768412320f7b0aa5812fce428dc4706b3cae50e02a64caa16a782249bfe8efc4b7ef1ccb126255d196047dfedf17a0a9;
@@ -450,7 +452,7 @@ module hmac_drbg_tb();
       // Read expected results from tb_expected.hex
       read_test_vectors(hmac_drbg_test_vector_file);
 
-      hmac384_drbg_multi_rounds(test_vector.entropy, test_vector.nonce, test_vector.drbg_outputs, test_vector.num_rounds);
+      hmac384_drbg_multi_rounds(test_vector.entropy, test_vector.nonce, test_vector.drbg_outputs, test_vector.num_rounds, 1);
 
     end
   endtask
@@ -481,7 +483,7 @@ module hmac_drbg_tb();
       // Read expected results from tb_expected.hex
       read_test_vectors("hmac_drbg_test_vector.hex");
 
-      hmac384_drbg_multi_rounds(test_vector.entropy, test_vector.nonce, test_vector.drbg_outputs, test_vector.num_rounds);
+      hmac384_drbg_multi_rounds(test_vector.entropy, test_vector.nonce, test_vector.drbg_outputs, test_vector.num_rounds, 1);
 
     end
   endtask
@@ -657,6 +659,59 @@ module hmac_drbg_tb();
   endtask
 
   //----------------------------------------------------------------
+  // acvp_test()
+  // Input lab vectors to IP
+  //----------------------------------------------------------------
+  task acvp_test();
+  begin
+    int fin, fout, result, tcid;
+    string en0, nonce;
+    reg [383 : 0] en0_hex, nonce_hex;
+    string test_type;//AFT or MCT
+
+    $display("   -- Testbench for HMAC DRBG started --");
+
+    fin  = $fopen("../stimulus/acvp/hmacDRBG-600336.txt","r");
+    if (fin == 0)
+    begin
+      $display("ERROR: Input file not found");
+      $stop;
+    end
+    fout = $fopen("../stimulus/acvp/hmacDRBG-600336_digest.txt","w");
+    if (fout == 0)
+    begin
+      $display("ERROR: Output file not found");
+      $stop;
+    end
+
+    while(1)
+    begin
+      result = $fscanf(fin, "%s %*d %d %s %s", test_type, tcid, en0, nonce);
+      if (result != 4)
+      begin
+        $display("End of file");
+        break;
+      end
+      else
+      begin
+        if (test_type == "AFT")//AFT
+        begin
+          en0_hex     = en0.atohex()    ;
+          nonce_hex   = nonce.atohex()  ;
+          hmac384_drbg_multi_rounds(en0_hex, nonce_hex, 0, 2, 0);
+          $fwrite(fout, "%s %0d %096h\n", test_type, tcid, drbg_tb);
+        end//end if
+        else
+        begin
+          $display("ERROR: Invalid Test Type");
+          $stop;
+        end//end else
+      end//processed 1 line from file
+    end //end while
+  end
+  endtask //acvp_test 
+
+  //----------------------------------------------------------------
   // always_debug()
   //
   // This always block enables to debug the state transactions
@@ -685,16 +740,19 @@ module hmac_drbg_tb();
       reset_dut();
       //dump_dut_state();
 
-      if (hmac_drbg_test_to_run == "HMAC_DRBG_directed_test") begin
+      if (hmac_drbg_test_to_run == "acvp") begin
+        acvp_test();
+      end
+      else if (hmac_drbg_test_to_run == "HMAC_DRBG_directed_test") begin
         hmac_drbg_test();
         if (hmac_drbg_test_vector_file != "")
           hmac_drbg_multi_rounds_directed_test();
+        hmac_drbg_zeroize_test();
       end
       else begin
         hmac_drbg_randomized_test();
+        hmac_drbg_zeroize_test();
       end
-
-      hmac_drbg_zeroize_test();
 
       display_test_results();
 
