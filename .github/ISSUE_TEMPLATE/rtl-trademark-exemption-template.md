@@ -10,6 +10,9 @@ assignees: ''
 ## Rationale
 Describe the rationale for the RTL change and why a Trademark requirements exemption is needed.
 
+## RTL Version
+List the RTL release this change applies to.
+
 ## Exact Code Diff
 Paste the exact code diff being submitted for exemption review.
 
