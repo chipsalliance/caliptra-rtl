@@ -2824,7 +2824,7 @@ endgenerate //IV_NO
    // SRAM instances
    //=========================================================================-
   // SRAM module
-abr_mem_top abr_mem_top_inst (
+abr_mem_top #(.MASKING_EN(1)) abr_mem_top_inst (
     .clk_i(clk),
     .abr_memory_export
 );

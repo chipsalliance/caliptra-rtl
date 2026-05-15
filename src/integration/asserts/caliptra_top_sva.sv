@@ -865,14 +865,18 @@ module caliptra_top_sva
     )
     else $display("SVA ERROR: ABR_TOP_PATH.skencode_wr_data is not zero");
 
-    // skdecode_mem_wr_data: 2-element array of MLDSA_MEM_DATA_WIDTH bits each.
-    for (genvar i = 0; i < 2; i++) begin: skdecode_mem_wr_data_check
-      ZERO_MLDSA_skdecode_mem_wr_data: assert property (
-        @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.skdecode_mem_wr_data[i] == 0))
-      )
-      else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data[%0d] is not zero", i);
-    end
+    // skdecode_mem_wr_data_a/b: split into per-bank signals
+    ZERO_MLDSA_skdecode_mem_wr_data_a: assert property (
+      @(posedge `SVA_RDC_CLK)
+      ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.skdecode_mem_wr_data_a[0] == 0))
+    )
+    else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data_a is not zero");
+
+    ZERO_MLDSA_skdecode_mem_wr_data_b: assert property (
+      @(posedge `SVA_RDC_CLK)
+      ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.skdecode_mem_wr_data_b[0] == 0))
+    )
+    else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data_b is not zero");
 
     // skdecode_rd_data: 2-element array of DATA_WIDTH bits each.
     for (genvar i = 0; i < 2; i++) begin: skdecode_rd_data_check
@@ -887,34 +891,27 @@ module caliptra_top_sva
     for (genvar i = 0; i < 2; i++) begin: abr_mem_rdata0_bank_check
       ZERO_MLDSA_abr_mem_rdata0_bank: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_rdata0_bank[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_rdata0_bank[0][i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_rdata0_bank[%0d] is not zero", i);
     end
 
-    // abr_mem_wdata: Array indexed from 1 to 3, each element is MLDSA_MEM_DATA_WIDTH bits.
+    // abr_mem_wdata: Now indexed [ABR_NUM_NTT-1:0][2:1] after SCA. Check NTT[0] instances.
     for (genvar i = 1; i < 3; i++) begin: abr_mem_wdata_check
       ZERO_MLDSA_abr_mem_wdata: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata[0][i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata[%0d] is not zero", i);
     end
 
-    // abr_mem_wdata: Array indexed from 1 to 3, each element is MLDSA_MEM_DATA_WIDTH bits.
-    for (genvar i = 3; i <= 3; i++) begin: abr_mem_masked_wdata_check
-      ZERO_MLDSA_abr_mem_wdata: assert property (
-        @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_masked_wdata[i] == 0))
-      )
-      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata[%0d] is not zero", i);
-    end
+    // abr_mem_masked_wdata: inst3 removed in SCA optimization — assertion removed
 
     // abr_mem_wdata0_bank: 2-element array of MLDSA_MEM_DATA_WIDTH bits.
     for (genvar i = 0; i < 2; i++) begin: abr_mem_wdata0_bank_check
       ZERO_MLDSA_abr_mem_wdata0_bank: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata0_bank[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata0_bank[0][i] == 0))
       )
       else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata0_bank[%0d] is not zero", i);
     end
