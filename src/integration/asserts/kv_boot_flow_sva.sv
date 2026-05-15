@@ -430,4 +430,33 @@ module kv_boot_flow_sva
     (iccm_read_any && !iccm_region_lock)
   );
 
+  // ============================================================
+  // Section 7: Write counter clearing on flush
+  // What: After flush_keyvault, all write counters must be zero
+  // Why: Prevents stale counter values from masking a truncated
+  //      DICE derivation after debug unlock or scan mode entry
+  // Timing: 1 cycle -- counters are in an always_ff with flush as sync clear
+  // ============================================================
+
+  WriteCountClearOnFlush_Cdi_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    flush_keyvault |=> (write_count_fmc_cdi == '0)
+  ) else $display("SVA FAIL: write_count_fmc_cdi not cleared after flush");
+
+  WriteCountClearOnFlush_Ecdsa_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    flush_keyvault |=> (write_count_fmc_ecdsa == '0)
+  ) else $display("SVA FAIL: write_count_fmc_ecdsa not cleared after flush");
+
+  WriteCountClearOnFlush_Mldsa_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    flush_keyvault |=> (write_count_fmc_mldsa == '0)
+  ) else $display("SVA FAIL: write_count_fmc_mldsa not cleared after flush");
+
+  // Cover: flush_keyvault fires with non-zero counters
+  FlushWithNonZeroCounters_C: cover property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    flush_keyvault && (write_count_fmc_cdi != '0)
+  );
+
 endmodule

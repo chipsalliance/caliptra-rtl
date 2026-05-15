@@ -74,7 +74,14 @@
 //     - kv_error set, FMC confirms and issues warm reset
 //
 //   Iter 7 (warm reset):
-//     - Stale kv_error from iter 6 confirmed and cleared
+//     - Program correct regions and lock
+//     - Copy out-of-range function to ICCM offset 0x3D000 (above RT_END_REL)
+//     - Jump to out-of-range address -- boot_flow_error fires (ICCM fetch
+//       outside both FMC and RT regions while lock is set)
+//     - kv_error set, FMC confirms and issues warm reset
+//
+//   Iter 8 (warm reset):
+//     - Stale kv_error from iter 7 confirmed and cleared
 //     - All scenarios passed
 
 #include "caliptra_defines.h"
@@ -84,6 +91,7 @@
 #include <stdint.h>
 #include "printf.h"
 #include "riscv_hw_if.h"
+#include "kv_boot_flow.h"
 
 volatile uint32_t* stdout = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -106,169 +114,28 @@ void fmc_entry(void) __attribute__((aligned(4), section(".data_iccm0")));
 extern uintptr_t iccm_code1_start, iccm_code1_end;
 void rt_entry(void) __attribute__((aligned(4), section(".data_iccm1")));
 
-// ICCM region addresses (absolute)
-#define FMC_ICCM_ADDR  RV_ICCM_SADR
-#define RT_ICCM_ADDR   (RV_ICCM_SADR + 0x8000)
+// Out-of-range function: placed in .data_iccm2 section at VMA 0x4003D000
+extern uintptr_t iccm_code2_start, iccm_code2_end;
+void oor_entry(void) __attribute__((aligned(4), section(".data_iccm2")));
 
-// ICCM region addresses (18-bit ICCM-relative, for region registers)
-#define FMC_ICCM_START_REL 0x00000
-#define FMC_ICCM_END_REL   0x07FFF
-#define RT_ICCM_START_REL  0x08000
-#define RT_ICCM_END_REL    0x3C7FF
+#define NUM_ITERATIONS 8
 
-// TB commands
-#define TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR 0xbb
-#define TB_CMD_WARM_RESET                  0xf6
+// Out-of-range ICCM address (above RT_END_REL=0x3C7FF)
+#define OOR_ICCM_OFFSET 0x3D000
+#define OOR_ICCM_ADDR   (RV_ICCM_SADR + OOR_ICCM_OFFSET)
 
-#define NUM_ITERATIONS 7
-
-// Shadow register error masks (bit positions from soc_ifc_external_reg.rdl)
-// These will be in caliptra_reg.h once the C header is regenerated.
-#define SHADOW_STORAGE_ERR_MASK (1 << 5)  // CPTRA_HW_ERROR_FATAL bit 5
-#define SHADOW_UPDATE_ERR_MASK  (1 << 3)  // CPTRA_HW_ERROR_NON_FATAL bit 3
-
-// KV slot assignments
-#define KV_SLOT_SI_IDEV      0
-#define KV_SLOT_SI_LDEV      1
-#define KV_SLOT_KEY_LADDER   2
-#define KV_SLOT_FMC_CDI      6
-#define KV_SLOT_FMC_ECDSA    7
-#define KV_SLOT_FMC_MLDSA    8
-#define KV_SLOT_RT_CDI       4
-#define KV_SLOT_RT_ECDSA     5
-#define KV_SLOT_RT_MLDSA     9
-
-// dest_valid bit masks
-#define DV_HMAC_KEY    HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK
-#define DV_MLDSA_SEED  HMAC_REG_HMAC512_KV_WR_CTRL_MLDSA_SEED_DEST_VALID_MASK
-#define DV_ECC_PKEY    HMAC_REG_HMAC512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK
-#define DV_ECC_SEED    HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK
-#define DV_AES_KEY     HMAC_REG_HMAC512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK
-#define DV_CDI         (DV_HMAC_KEY | DV_MLDSA_SEED | DV_ECC_SEED)
-
-// Verify a register reads back a specific value
-void check_reg(const char *name, uint32_t addr, uint32_t expected) {
-    uint32_t val = lsu_read_32(addr);
-    if (val != expected) {
-        VPRINTF(ERROR, "[FAIL] %s: got=0x%08x expected=0x%08x\n", name, val, expected);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-    VPRINTF(LOW, "  CHECK OK: %s = 0x%08x\n", name, val);
-}
-
-// Program all 4 ICCM region registers with 2-phase shadow protocol and set the lock
-void program_iccm_regions(void) {
-    // Phase 0: first write (captured in shadow staged register)
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   FMC_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,  RT_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,    RT_ICCM_END_REL);
-    // Phase 1: second write (commits shadow registers)
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   FMC_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,  RT_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,    RT_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK,    0x1);
-}
-
-// Verify all region registers are zero (after warm reset)
-void verify_regs_reset(void) {
-    check_reg("FMC_START", CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, 0);
-    check_reg("FMC_END",   CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   0);
-    check_reg("RT_START",  CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,  0);
-    check_reg("RT_END",    CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,    0);
-    check_reg("LOCK",      CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK,    0);
-}
-
-// Verify region registers have the expected programmed values
-void verify_regs_programmed(void) {
-    check_reg("FMC_START", CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
-    check_reg("FMC_END",   CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   FMC_ICCM_END_REL);
-    check_reg("RT_START",  CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,  RT_ICCM_START_REL);
-    check_reg("RT_END",    CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,    RT_ICCM_END_REL);
-    check_reg("LOCK",      CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK,    1);
-}
-
-// Verify kv_error is NOT set
-void check_no_kv_error(const char *phase) {
-    uint32_t hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
-    if (hw_err & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK) {
-        VPRINTF(ERROR, "[FAIL] %s: unexpected kv_error (0x%08x)\n", phase, hw_err);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-}
-
-// Verify kv_error IS set and W1C clear it
-void check_and_clear_kv_error(const char *phase) {
-    uint32_t hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
-    if (!(hw_err & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK)) {
-        VPRINTF(ERROR, "[FAIL] %s: expected kv_error but got 0x%08x\n", phase, hw_err);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-    VPRINTF(LOW, "  %s: kv_error confirmed (0x%08x) -- W1C clearing\n", phase, hw_err);
-    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,
-                 SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK);
-}
-
-// Run a dummy HMAC384 and write result to a KV slot with given dest_valid
-void hmac_write_kv_slot(uint8_t slot, uint32_t dest_valid_mask) {
-    uint32_t *reg;
-
-    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-
-    reg = (uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0;
-    for (int i = 0; i <= (CLP_HMAC_REG_HMAC512_KEY_11 - CLP_HMAC_REG_HMAC512_KEY_0) / 4; i++)
-        lsu_write_32((uintptr_t)(reg + i), 0xDEADBE00 + i);
-
-    reg = (uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0;
-    for (int i = 0; i <= (CLP_HMAC_REG_HMAC512_BLOCK_31 - CLP_HMAC_REG_HMAC512_BLOCK_0) / 4; i++)
-        lsu_write_32((uintptr_t)(reg + i), 0xCAFE0000 + i);
-
-    reg = (uint32_t *)CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
-    for (int i = 0; i <= (CLP_HMAC_REG_HMAC512_LFSR_SEED_11 - CLP_HMAC_REG_HMAC512_LFSR_SEED_0) / 4; i++)
-        lsu_write_32((uintptr_t)(reg + i), 0xA5A50000 + i);
-
-    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL,
-        HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
-        ((slot << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
-         HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
-        dest_valid_mask);
-
-    cptra_intr_rcv.hmac_notif = 0;
-
-    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL,
-        HMAC_REG_HMAC512_CTRL_INIT_MASK |
-        (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-
-    while (cptra_intr_rcv.hmac_notif == 0) {
-        __asm__ volatile ("wfi");
-    }
-}
-
-// Populate all ROM-phase DICE key slots with correct dest_valid and write counts
-void populate_dice_slots(void) {
-    hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
-    hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
-    hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
-    // Slot 6: 4 writes (IDevID CDI, LDEV intermediate, LDEV CDI, FMC Alias CDI)
-    hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_CDI);
-    hmac_write_kv_slot(KV_SLOT_FMC_ECDSA, DV_ECC_PKEY);
-    hmac_write_kv_slot(KV_SLOT_FMC_MLDSA, DV_MLDSA_SEED);
-    hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_HMAC_KEY);
-    hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_CDI);
-    hmac_write_kv_slot(KV_SLOT_FMC_ECDSA, DV_ECC_PKEY);
-    hmac_write_kv_slot(KV_SLOT_FMC_MLDSA, DV_MLDSA_SEED);
-    hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_CDI);
-}
-
-// Populate RT-phase key slots (called from FMC)
-void populate_rt_slots(void) {
-    hmac_write_kv_slot(KV_SLOT_RT_CDI,   DV_CDI);
-    hmac_write_kv_slot(KV_SLOT_RT_ECDSA, DV_ECC_PKEY);
-    hmac_write_kv_slot(KV_SLOT_RT_MLDSA, DV_MLDSA_SEED);
+// ============================================================
+// Out-of-range entry point -- runs from ICCM at 0x4003D000
+// (outside both FMC and RT regions). The boot flow monitor should
+// fire boot_flow_error on this fetch. If we reach here, confirm
+// the error was latched and issue warm reset to continue to iter 8.
+// ============================================================
+void oor_entry(void) {
+    VPRINTF(LOW, "OOR[7]: Reached out-of-range ICCM -- checking fault\n");
+    check_and_clear_kv_error("OOR[7] out-of-range ICCM");
+    VPRINTF(LOW, "OOR[7]: boot_flow fault confirmed -- issuing warm reset\n");
+    SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
+    while(1);
 }
 
 // ============================================================
@@ -294,25 +161,25 @@ void fmc_entry(void) {
     } else if (current_iter == 3) {
         // Iter 3: Jumped to ICCM without lock -- boot_flow_error should have fired
         check_and_clear_kv_error("FMC[3] unlocked fetch");
-        VPRINTF(LOW, "FMC[3]: boot_flow_error confirmed -- issuing warm reset\n");
+        VPRINTF(LOW, "FMC[3]: boot_flow fault confirmed -- issuing warm reset\n");
         SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
         while(1);
     } else if (current_iter == 4) {
         // Iter 4: Lock without addresses -- shadow committed=0 -> boot_flow_error
         check_and_clear_kv_error("FMC[4] no shadow commit");
-        VPRINTF(LOW, "FMC[4]: boot_flow_error confirmed -- issuing warm reset\n");
+        VPRINTF(LOW, "FMC[4]: boot_flow fault confirmed -- issuing warm reset\n");
         SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
         while(1);
     } else if (current_iter == 5) {
         // Iter 5: Single-write shadow -- committed=0 -> boot_flow_error
         check_and_clear_kv_error("FMC[5] uncommitted shadow");
-        VPRINTF(LOW, "FMC[5]: boot_flow_error confirmed -- issuing warm reset\n");
+        VPRINTF(LOW, "FMC[5]: boot_flow fault confirmed -- issuing warm reset\n");
         SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
         while(1);
     } else if (current_iter == 6) {
         // Iter 6: Mismatched shadow write -- committed=0 -> boot_flow_error
         check_and_clear_kv_error("FMC[6] mismatch shadow");
-        VPRINTF(LOW, "FMC[6]: boot_flow_error confirmed -- issuing warm reset\n");
+        VPRINTF(LOW, "FMC[6]: boot_flow fault confirmed -- issuing warm reset\n");
         SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
         while(1);
     }
@@ -391,7 +258,7 @@ void main() {
             SEND_STDOUT_CTRL(0x01);
             while(1);
         }
-        VPRINTF(LOW, "  Iter %d: stale kv_error confirmed (0x%08x) -- W1C clearing\n", iter, hw_err);
+        VPRINTF(LOW, "  Iter %d: stale kv fault confirmed (0x%08x) -- W1C clearing\n", iter, hw_err);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,
                      SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK);
     }
@@ -422,16 +289,12 @@ void main() {
         // Iter 0: Cold boot -- populate slots, program regions, lock
         // ============================================================
         VPRINTF(LOW, "ROM[0]: Copying FMC/RT code to ICCM\n");
-        {
-            uint32_t *fmc_dest = (uint32_t *)FMC_ICCM_ADDR;
-            uint32_t *code_word = (uint32_t *)&iccm_code0_start;
-            while (code_word < (uint32_t *)&iccm_code0_end)
-                *fmc_dest++ = *code_word++;
-            uint32_t *rt_dest = (uint32_t *)RT_ICCM_ADDR;
-            code_word = (uint32_t *)&iccm_code1_start;
-            while (code_word < (uint32_t *)&iccm_code1_end)
-                *rt_dest++ = *code_word++;
-        }
+        copy_to_iccm(FMC_ICCM_ADDR,
+                      (uint32_t *)&iccm_code0_start,
+                      (uint32_t *)&iccm_code0_end);
+        copy_to_iccm(RT_ICCM_ADDR,
+                      (uint32_t *)&iccm_code1_start,
+                      (uint32_t *)&iccm_code1_end);
 
         VPRINTF(LOW, "ROM[0]: Populating DICE key slots\n");
         populate_dice_slots();
@@ -479,7 +342,7 @@ void main() {
         // fires independently from lock=0, before dest_valid is checked)
         VPRINTF(LOW, "ROM[3]: Populating DICE key slots\n");
         populate_dice_slots();
-        VPRINTF(LOW, "ROM[3]: Jumping to ICCM WITHOUT lock -- expect boot_flow_error\n");
+        VPRINTF(LOW, "ROM[3]: Jumping to ICCM WITHOUT lock -- expect boot_flow fault\n");
         break;
 
     case 4:
@@ -549,9 +412,35 @@ void main() {
         // Set lock -- committed still 0 (mismatch prevented commit)
         lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK, 0x1);
         break;
+
+    case 7:
+        // ============================================================
+        // Iter 7: Out-of-range ICCM fetch
+        // Program correct regions and lock, then jump to an ICCM address
+        // outside both FMC and RT regions. The monitor should fire
+        // boot_flow_error (condition 3: locked out-of-range fetch).
+        // ============================================================
+        VPRINTF(LOW, "ROM[7]: Verifying registers cleared by warm reset\n");
+        verify_regs_reset();
+        VPRINTF(LOW, "ROM[7]: Populating DICE key slots\n");
+        populate_dice_slots();
+        VPRINTF(LOW, "ROM[7]: Programming ICCM regions\n");
+        program_iccm_regions();
+        // Copy out-of-range function to ICCM at offset 0x3D000
+        VPRINTF(LOW, "ROM[7]: Copying out-of-range code to 0x%x\n", OOR_ICCM_ADDR);
+        copy_to_iccm(OOR_ICCM_ADDR,
+                      (uint32_t *)&iccm_code2_start,
+                      (uint32_t *)&iccm_code2_end);
+        // Jump directly to the out-of-range address (not via FMC)
+        VPRINTF(LOW, "ROM[7]: Jumping to out-of-range ICCM at 0x%x\n", OOR_ICCM_ADDR);
+        {
+            void (*oor_fn)(void) = (void (*)(void))OOR_ICCM_ADDR;
+            oor_fn();
+        }
+        break;
     }
 
-    // Jump to FMC
+    // Jump to FMC (iters 0-6)
     VPRINTF(LOW, "ROM[%d]: Jumping to FMC\n", current_iter);
     void (*fmc_fn)(void) = (void (*)(void))FMC_ICCM_ADDR;
     fmc_fn();

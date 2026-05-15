@@ -40,6 +40,7 @@
 #include <stdint.h>
 #include "printf.h"
 #include "riscv_hw_if.h"
+#include "kv_boot_flow.h"
 
 volatile uint32_t* stdout = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -64,84 +65,7 @@ void fmc_entry(void) __attribute__((aligned(4), section(".data_iccm0")));
 extern uintptr_t iccm_code1_start, iccm_code1_end;
 void rt_entry(void) __attribute__((aligned(4), section(".data_iccm1")));
 
-// ICCM region addresses (absolute)
-#define FMC_ICCM_ADDR  RV_ICCM_SADR
-#define RT_ICCM_ADDR   (RV_ICCM_SADR + 0x8000)
-
-// ICCM region addresses (18-bit ICCM-relative, for region registers)
-#define FMC_ICCM_START_REL 0x00000
-#define FMC_ICCM_END_REL   0x07FFF
-#define RT_ICCM_START_REL  0x08000
-#define RT_ICCM_END_REL    0x3C7FF
-
-// TB commands
-#define TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR 0xbb
-#define TB_CMD_WARM_RESET                  0xf6
-
-// KV KEY_CTRL register access
-#define KV_KEY_CTRL(slot) (CLP_KV_REG_KEY_CTRL_0 + ((slot) * 4))
-
-// KV slot assignments
-#define KV_SLOT_SI_IDEV      0
-#define KV_SLOT_SI_LDEV      1
-#define KV_SLOT_KEY_LADDER   2
-#define KV_SLOT_TMP          3
-#define KV_SLOT_RT_CDI       4
-#define KV_SLOT_RT_ECDSA     5
-#define KV_SLOT_FMC_CDI      6
-#define KV_SLOT_FMC_ECDSA    7
-#define KV_SLOT_FMC_MLDSA    8
-#define KV_SLOT_RT_MLDSA     9
-
-// dest_valid bit masks
-#define DV_HMAC_KEY    HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK
-#define DV_MLDSA_SEED  HMAC_REG_HMAC512_KV_WR_CTRL_MLDSA_SEED_DEST_VALID_MASK
-#define DV_ECC_PKEY    HMAC_REG_HMAC512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK
-#define DV_ECC_SEED    HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK
-#define DV_AES_KEY     HMAC_REG_HMAC512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK
-#define DV_CDI         (DV_HMAC_KEY | DV_MLDSA_SEED | DV_ECC_SEED)
-
 #define NUM_ITERATIONS 8
-
-//
-// Run a dummy HMAC384 operation and write the result to a KV slot
-//
-void hmac_write_kv_slot(uint8_t slot, uint32_t dest_valid_mask) {
-    uint32_t *reg;
-
-    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-
-    reg = (uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0;
-    for (int i = 0; i <= (CLP_HMAC_REG_HMAC512_KEY_11 - CLP_HMAC_REG_HMAC512_KEY_0) / 4; i++) {
-        lsu_write_32((uintptr_t)(reg + i), 0xDEADBE00 + i);
-    }
-
-    reg = (uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0;
-    for (int i = 0; i <= (CLP_HMAC_REG_HMAC512_BLOCK_31 - CLP_HMAC_REG_HMAC512_BLOCK_0) / 4; i++) {
-        lsu_write_32((uintptr_t)(reg + i), 0xCAFE0000 + i);
-    }
-
-    reg = (uint32_t *)CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
-    for (int i = 0; i <= (CLP_HMAC_REG_HMAC512_LFSR_SEED_11 - CLP_HMAC_REG_HMAC512_LFSR_SEED_0) / 4; i++) {
-        lsu_write_32((uintptr_t)(reg + i), 0xA5A50000 + i);
-    }
-
-    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL,
-        HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
-        ((slot << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
-         HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
-        dest_valid_mask);
-
-    cptra_intr_rcv.hmac_notif = 0;
-
-    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL,
-        HMAC_REG_HMAC512_CTRL_INIT_MASK |
-        (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-
-    while (cptra_intr_rcv.hmac_notif == 0) {
-        __asm__ volatile ("wfi");
-    }
-}
 
 //
 // Populate ROM-phase KV slots for the given iteration.
@@ -268,7 +192,7 @@ void confirm_violation_and_reset(const char *phase, uint32_t iteration) {
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  iter %d %s: kv_error=1 confirmed (reg=0x%08x) -- issuing warm reset\n",
+    VPRINTF(LOW, "  iter %d %s: kv fault confirmed (reg=0x%08x) -- issuing warm reset\n",
             iteration, phase, hw_err);
 
     // Issue warm reset via TB service -- clears cptra_error_fatal
@@ -291,7 +215,7 @@ void main() {
     // W1C it so that a stale bit from the previous iteration doesn't confuse us.
     uint32_t stale_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
     if (stale_err & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK) {
-        VPRINTF(LOW, "  Clearing stale kv_error from previous iteration\n");
+        VPRINTF(LOW, "  Clearing stale kv fault from previous iteration\n");
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,
                      SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK);
     }
@@ -308,16 +232,12 @@ void main() {
     // Determine if this is first boot (need to copy ICCM) or subsequent
     if (iter == 0) {
         // First iteration: copy FMC and RT code to ICCM
-        uint32_t *fmc_dest = (uint32_t *)FMC_ICCM_ADDR;
-        uint32_t *code_word = (uint32_t *)&iccm_code0_start;
-        while (code_word < (uint32_t *)&iccm_code0_end) {
-            *fmc_dest++ = *code_word++;
-        }
-        uint32_t *rt_dest = (uint32_t *)RT_ICCM_ADDR;
-        code_word = (uint32_t *)&iccm_code1_start;
-        while (code_word < (uint32_t *)&iccm_code1_end) {
-            *rt_dest++ = *code_word++;
-        }
+        copy_to_iccm(FMC_ICCM_ADDR,
+                      (uint32_t *)&iccm_code0_start,
+                      (uint32_t *)&iccm_code0_end);
+        copy_to_iccm(RT_ICCM_ADDR,
+                      (uint32_t *)&iccm_code1_start,
+                      (uint32_t *)&iccm_code1_end);
     }
 
     // Populate ROM-phase slots with the iteration's fault injected
@@ -332,16 +252,7 @@ void main() {
     iter++;
 
     // Program ICCM region registers with 2-phase shadow protocol
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   FMC_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,  RT_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,    RT_ICCM_END_REL);
-    // Phase 1: second write commits shadow registers
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   FMC_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,  RT_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,    RT_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK,    0x1);
+    program_iccm_regions();
 
     // Jump to FMC -- if fault is at ROM-to-FMC, the monitor fires on this transition
     VPRINTF(LOW, "ROM: Jumping to FMC (iter %d)...\n", current_iter);

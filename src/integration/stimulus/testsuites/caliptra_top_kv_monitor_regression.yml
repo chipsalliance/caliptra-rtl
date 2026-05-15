@@ -9,3 +9,5 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_monitor_neg/directed_kv_monitor_neg.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_enforcement/directed_kv_enforcement.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_iccm_region/directed_kv_iccm_region.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_debug_scan_bypass/directed_kv_debug_scan_bypass.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_glitch_inject/directed_kv_glitch_inject.yml

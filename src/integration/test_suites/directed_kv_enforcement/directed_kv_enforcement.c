@@ -37,6 +37,7 @@
 #include "printf.h"
 #include "riscv_hw_if.h"
 #include "hmac.h"
+#include "kv_boot_flow.h"
 
 volatile uint32_t* stdout = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -55,172 +56,6 @@ void fmc_entry(void) __attribute__((aligned(4), section(".data_iccm0")));
 // RT function: placed in .data_iccm1 section, will be copied to RT region
 extern uintptr_t iccm_code1_start, iccm_code1_end;
 void rt_entry(void) __attribute__((aligned(4), section(".data_iccm1")));
-
-// ICCM region addresses (absolute)
-#define FMC_ICCM_ADDR  RV_ICCM_SADR            // 0x40000000
-#define RT_ICCM_ADDR   (RV_ICCM_SADR + 0x8000) // 0x40008000
-
-// ICCM region addresses (18-bit ICCM-relative, for region registers)
-#define FMC_ICCM_START_REL 0x00000
-#define FMC_ICCM_END_REL   0x07FFF
-#define RT_ICCM_START_REL  0x08000
-#define RT_ICCM_END_REL    0x3C7FF
-
-// TB command to enable KV boot flow monitoring
-#define TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR 0xbb
-
-// KV KEY_CTRL register access helpers
-#define KV_KEY_CTRL(slot) (CLP_KV_REG_KEY_CTRL_0 + ((slot) * 4))
-#define KV_LOCK_WR_MASK   KV_REG_KEY_CTRL_0_LOCK_WR_MASK
-#define KV_LOCK_USE_MASK  KV_REG_KEY_CTRL_0_LOCK_USE_MASK
-#define KV_DEST_VALID_MASK KV_REG_KEY_CTRL_0_DEST_VALID_MASK
-#define KV_DEST_VALID_LOW  KV_REG_KEY_CTRL_0_DEST_VALID_LOW
-
-// KV slot assignments
-#define KV_SLOT_SI_IDEV      0
-#define KV_SLOT_SI_LDEV      1
-#define KV_SLOT_KEY_LADDER   2
-#define KV_SLOT_TMP          3
-#define KV_SLOT_RT_CDI       4
-#define KV_SLOT_RT_ECDSA     5
-#define KV_SLOT_FMC_CDI      6
-#define KV_SLOT_FMC_ECDSA    7
-#define KV_SLOT_FMC_MLDSA    8
-#define KV_SLOT_RT_MLDSA     9
-
-// dest_valid bit masks
-#define DV_HMAC_KEY    HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK
-#define DV_MLDSA_SEED  HMAC_REG_HMAC512_KV_WR_CTRL_MLDSA_SEED_DEST_VALID_MASK
-#define DV_ECC_PKEY    HMAC_REG_HMAC512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK
-#define DV_ECC_SEED    HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK
-#define DV_AES_KEY     HMAC_REG_HMAC512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK
-#define DV_CDI         (DV_HMAC_KEY | DV_MLDSA_SEED | DV_ECC_SEED)
-
-// Number of KV entries
-#define KV_NUM_KEYS 16
-
-//
-// Verify that CPTRA_HW_ERROR_FATAL.kv_error is NOT set
-//
-void check_no_kv_error(const char *phase) {
-    uint32_t hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
-    if (hw_err & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK) {
-        VPRINTF(ERROR, "[FAIL] %s: kv_error=1 (reg=0x%08x)\n", phase, hw_err);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-    VPRINTF(LOW, "  %s: kv_error=0 -- OK\n", phase);
-}
-
-//
-// Verify lock_wr is set on the given slot
-//
-void check_lock_wr(uint8_t slot, const char *phase) {
-    uint32_t ctrl = lsu_read_32(KV_KEY_CTRL(slot));
-    if (!(ctrl & KV_LOCK_WR_MASK)) {
-        VPRINTF(ERROR, "[FAIL] %s: slot %d lock_wr not set (ctrl=0x%08x)\n", phase, slot, ctrl);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-    VPRINTF(LOW, "  %s: slot %d lock_wr=1 -- OK\n", phase, slot);
-}
-
-//
-// Verify lock_use is set on the given slot
-//
-void check_lock_use(uint8_t slot, const char *phase) {
-    uint32_t ctrl = lsu_read_32(KV_KEY_CTRL(slot));
-    if (!(ctrl & KV_LOCK_USE_MASK)) {
-        VPRINTF(ERROR, "[FAIL] %s: slot %d lock_use not set (ctrl=0x%08x)\n", phase, slot, ctrl);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-    VPRINTF(LOW, "  %s: slot %d lock_use=1 -- OK\n", phase, slot);
-}
-
-//
-// Verify a slot was cleared (dest_valid == 0)
-//
-void check_slot_cleared(uint8_t slot, const char *phase) {
-    uint32_t ctrl = lsu_read_32(KV_KEY_CTRL(slot));
-    uint32_t dv = (ctrl & KV_DEST_VALID_MASK) >> KV_DEST_VALID_LOW;
-    if (dv != 0) {
-        VPRINTF(ERROR, "[FAIL] %s: slot %d not cleared (dest_valid=0x%03x)\n", phase, slot, dv);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-    VPRINTF(LOW, "  %s: slot %d cleared (dest_valid=0) -- OK\n", phase, slot);
-}
-
-//
-// Verify DOE is locked: write a command and confirm it doesn't execute
-//
-void check_doe_locked(const char *phase) {
-    lsu_write_32(CLP_DOE_REG_DOE_CTRL,
-                 (1 << DOE_REG_DOE_CTRL_CMD_LOW) |
-                 (0 << DOE_REG_DOE_CTRL_DEST_LOW));
-    uint32_t status = lsu_read_32(CLP_DOE_REG_DOE_STATUS);
-    if (!(status & DOE_REG_DOE_STATUS_READY_MASK)) {
-        VPRINTF(ERROR, "[FAIL] %s: DOE went busy after locked cmd\n", phase);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-    if (status & DOE_REG_DOE_STATUS_VALID_MASK) {
-        VPRINTF(ERROR, "[FAIL] %s: DOE produced result after locked cmd\n", phase);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-    uint32_t ctrl = lsu_read_32(CLP_DOE_REG_DOE_CTRL);
-    if (ctrl & DOE_REG_DOE_CTRL_CMD_MASK) {
-        VPRINTF(ERROR, "[FAIL] %s: DOE cmd not cleared by hwclr\n", phase);
-        SEND_STDOUT_CTRL(0x01);
-        while(1);
-    }
-    VPRINTF(LOW, "  %s: DOE cmd rejected (ready=1 valid=0 cmd=0) -- OK\n", phase);
-}
-
-//
-// Run a dummy HMAC384 operation and write the result to a KV slot.
-// Waits for either hmac_notif or hmac_error (matching library pattern).
-//
-void hmac_write_kv_slot(uint8_t slot, uint32_t dest_valid_mask) {
-    uint32_t *reg;
-
-    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-
-    reg = (uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0;
-    for (int i = 0; i <= (CLP_HMAC_REG_HMAC512_KEY_11 - CLP_HMAC_REG_HMAC512_KEY_0) / 4; i++) {
-        lsu_write_32((uintptr_t)(reg + i), 0xDEADBE00 + i);
-    }
-
-    reg = (uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0;
-    for (int i = 0; i <= (CLP_HMAC_REG_HMAC512_BLOCK_31 - CLP_HMAC_REG_HMAC512_BLOCK_0) / 4; i++) {
-        lsu_write_32((uintptr_t)(reg + i), 0xCAFE0000 + i);
-    }
-
-    reg = (uint32_t *)CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
-    for (int i = 0; i <= (CLP_HMAC_REG_HMAC512_LFSR_SEED_11 - CLP_HMAC_REG_HMAC512_LFSR_SEED_0) / 4; i++) {
-        lsu_write_32((uintptr_t)(reg + i), 0xA5A50000 + i);
-    }
-
-    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL,
-        HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
-        ((slot << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
-         HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
-        dest_valid_mask);
-
-    cptra_intr_rcv.hmac_notif = 0;
-    cptra_intr_rcv.hmac_error = 0;
-
-    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL,
-        HMAC_REG_HMAC512_CTRL_INIT_MASK |
-        (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-
-    // Wait for either notif (success) or error (KV write rejected)
-    while ((cptra_intr_rcv.hmac_notif == 0) && (cptra_intr_rcv.hmac_error == 0)) {
-        __asm__ volatile ("wfi");
-    }
-}
 
 //
 // Test: lock_wr prevents overwrite. Attempts to write a different dest_valid
@@ -301,7 +136,7 @@ void test_lock_use_blocks_read(uint8_t slot, const char *phase) {
     // Zeroize HMAC to clear error state for subsequent operations
     hmac_zeroize();
 
-    VPRINTF(LOW, "  %s: slot %d lock_use blocked read (error=0x%02x) -- OK\n", phase, slot, err);
+    VPRINTF(LOW, "  %s: slot %d lock_use blocked read (err_code=0x%02x) -- OK\n", phase, slot, err);
 }
 
 //
@@ -336,44 +171,20 @@ void main() {
     VPRINTF(LOW, "ROM: Pre-enforcement check -- slot 0 lock_wr=0 (no premature enforcement) -- OK\n");
 
     VPRINTF(LOW, "ROM: Populating DICE key slots...\n");
-    hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
-    hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
-    hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
-    // Slot 6: 4 writes
-    hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_CDI);
-    hmac_write_kv_slot(KV_SLOT_FMC_ECDSA, DV_ECC_PKEY);
-    hmac_write_kv_slot(KV_SLOT_FMC_MLDSA, DV_MLDSA_SEED);
-    hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_HMAC_KEY);
-    hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_CDI);
-    hmac_write_kv_slot(KV_SLOT_FMC_ECDSA, DV_ECC_PKEY);
-    hmac_write_kv_slot(KV_SLOT_FMC_MLDSA, DV_MLDSA_SEED);
-    hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_CDI);
+    populate_dice_slots();
 
     // Copy FMC and RT code to ICCM
-    uint32_t *fmc_dest = (uint32_t *)FMC_ICCM_ADDR;
-    uint32_t *code_word = (uint32_t *)&iccm_code0_start;
     VPRINTF(LOW, "ROM: Copying FMC code to ICCM\n");
-    while (code_word < (uint32_t *)&iccm_code0_end) {
-        *fmc_dest++ = *code_word++;
-    }
-    uint32_t *rt_dest = (uint32_t *)RT_ICCM_ADDR;
-    code_word = (uint32_t *)&iccm_code1_start;
+    copy_to_iccm(FMC_ICCM_ADDR,
+                  (uint32_t *)&iccm_code0_start,
+                  (uint32_t *)&iccm_code0_end);
     VPRINTF(LOW, "ROM: Copying RT code to ICCM\n");
-    while (code_word < (uint32_t *)&iccm_code1_end) {
-        *rt_dest++ = *code_word++;
-    }
+    copy_to_iccm(RT_ICCM_ADDR,
+                  (uint32_t *)&iccm_code1_start,
+                  (uint32_t *)&iccm_code1_end);
 
     // Program ICCM region registers with 2-phase shadow protocol
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   FMC_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,  RT_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,    RT_ICCM_END_REL);
-    // Phase 1: second write commits shadow registers
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   FMC_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,  RT_ICCM_START_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,    RT_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK,    0x1);
+    program_iccm_regions();
 
     // Jump to FMC -- triggers ROM-to-FMC enforcement
     VPRINTF(LOW, "ROM: Jumping to FMC...\n");
@@ -425,9 +236,7 @@ void fmc_entry(void) {
 
     // Populate RT key slots (needed for FMC-to-RT transition)
     VPRINTF(LOW, "FMC: Populating RT key slots...\n");
-    hmac_write_kv_slot(KV_SLOT_RT_CDI,   DV_CDI);
-    hmac_write_kv_slot(KV_SLOT_RT_ECDSA, DV_ECC_PKEY);
-    hmac_write_kv_slot(KV_SLOT_RT_MLDSA, DV_MLDSA_SEED);
+    populate_rt_slots();
 
     // Jump to RT -- triggers FMC-to-RT enforcement
     VPRINTF(LOW, "FMC: Jumping to RT...\n");

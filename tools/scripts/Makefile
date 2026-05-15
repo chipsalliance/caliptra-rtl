@@ -72,6 +72,7 @@ COMP_LIB_NAMES := aes \
 		  mlkem \
 		  hmac \
 		  keyvault \
+		  kv_boot_flow \
 		  datavault \
 		  sha256 \
 		  sha512 \

@@ -380,7 +380,10 @@ module caliptra_top_tb_services
     //         8'hb9        - Enable scan mode and run DOE back to back
     //         8'hba        - Enable scan mode with KV write
     //         8'hbb        - Enable KV boot phase transition enforcement
-    //         8'hbc:bf     - Unused
+    //         8'hbc        - Force MuBi4 glitch on boot_flow_fmc (invalid encoding, auto-release after 5 clocks)
+    //         8'hbd        - Unused
+    //         8'hbe        - Force shadow storage bit-flip on ICCM fmc_start shadow register (auto-release after 5 clocks)
+    //         8'hbf        - Unused
     //         8'hc0:       - Inject MLDSA_SEED to kv_key register
     //         8'hc1: 8'hc7 - Unused
     //         8'hc8        - Inject key 0x0 into slot 16 for AES
@@ -1827,12 +1830,45 @@ endgenerate //IV_NO
     end
 
     // Enable boot flow monitoring (TB command 0xbb)
-    // Forces the enable signal inside caliptra. In silicon this is gated by
-    // debug_locked; in simulation it defaults off so legacy tests are unaffected.
+    // Forces the disable signal to 0, which enables monitoring.
+    // By default the boot flow monitoring is disabled in simulation so legacy tests work
     always @(posedge clk) begin
         if ((WriteData[7:0] == 8'hbb) && mailbox_write) begin
-            force `CPTRA_TOP_PATH.boot_flow_monitor_en = 1'b1;
+            force `CPTRA_TOP_PATH.sim_boot_flow_monitor_dis = 1'b0;
             $display("TB: Boot flow monitor enabled");
+        end
+    end
+
+    // MuBi4 glitch injection on boot_flow_fmc (auto-release after 5 clocks)
+    logic [63:0] mubi4_glitch_cycle;
+    initial mubi4_glitch_cycle = '0;
+    always @(posedge clk) begin
+        if ((WriteData[7:0] == 8'hbc) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.boot_flow_fmc = 4'hA;
+            mubi4_glitch_cycle <= cycleCnt;
+            $display("TB: Forced boot_flow_fmc to invalid MuBi4 (4'hA)");
+        end
+        else if (mubi4_glitch_cycle != '0 && cycleCnt == mubi4_glitch_cycle + 'd5) begin
+            release `CPTRA_TOP_PATH.boot_flow_fmc;
+            mubi4_glitch_cycle <= '0;
+            $display("TB: Released boot_flow_fmc force (auto)");
+        end
+    end
+
+    // Shadow storage bit-flip injection on ICCM fmc_start (auto-release after 5 clocks)
+    logic [63:0] shadow_flip_cycle;
+    initial shadow_flip_cycle = '0;
+    always @(posedge clk) begin
+        if ((WriteData[7:0] == 8'hbe) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.soc_ifc_top1.u_shadow_fmc_start.shadow_reg.q[0] =
+                  `CPTRA_TOP_PATH.soc_ifc_top1.u_shadow_fmc_start.committed_reg.q[0];
+            shadow_flip_cycle <= cycleCnt;
+            $display("TB: Forced shadow storage bit-flip on fmc_start");
+        end
+        else if (shadow_flip_cycle != '0 && cycleCnt == shadow_flip_cycle + 'd5) begin
+            release `CPTRA_TOP_PATH.soc_ifc_top1.u_shadow_fmc_start.shadow_reg.q[0];
+            shadow_flip_cycle <= '0;
+            $display("TB: Released shadow storage force (auto)");
         end
     end
 

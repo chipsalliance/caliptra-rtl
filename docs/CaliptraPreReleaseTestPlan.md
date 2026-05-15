@@ -14,14 +14,16 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 
 | Test | Category | Description |
 | :--- | :------- | :---------- |
-| `smoke/kv_boot_flow_monitor` | Smoke | Full DICE derivation through cold boot, warm reset, and FW update reset cycles |
-| `directed/kv_enforcement` | Directed | Verifies lock_wr, lock_use, slot clearing, DOE lockdown, and ROM callback behavior |
-| `directed/kv_iccm_region` | Directed | ICCM region register programming, locking, reset behavior, and shadow negative cases |
-| `directed/kv_monitor_neg` | Directed | Deliberate faults in dest_valid and write counts trigger monitor alerts |
+| `smoke_test_kv_boot_flow_monitor` | Smoke | Full DICE derivation through cold boot, warm reset, and FW update reset cycles |
+| `directed_kv_enforcement` | Directed | Verifies lock_wr, lock_use, slot clearing, DOE lockdown, and ROM callback behavior |
+| `directed_kv_iccm_region` | Directed | ICCM region register programming, locking, reset behavior, and shadow negative cases |
+| `directed_kv_monitor_neg` | Directed | Deliberate faults in dest_valid and write counts trigger monitor alerts |
+| `directed_kv_debug_scan_bypass` | Directed | Verifies monitor is disabled in debug unlock and scan mode (no false alerts) |
+| `directed_kv_glitch_inject` | Directed | MuBi4 invalid encoding fail-safe and shadow register bit-flip lockout |
 
 ### Test Cases
 
-#### `smoke/kv_boot_flow_monitor`
+#### `smoke_test_kv_boot_flow_monitor`
 
 | Scenario | Description | Pass Criteria |
 | :------- | :---------- | :------------ |
@@ -29,7 +31,7 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | Warm reset cycle | After RT, warm reset triggers re-derivation of all DICE keys | Monitor re-arms; transitions succeed again |
 | FW update reset | FW update reset preserves ICCM region registers; ROM skips re-derivation | ICCM lock persists; boot flow succeeds |
 
-#### `directed/kv_enforcement`
+#### `directed_kv_enforcement`
 
 | Scenario | Phase | Description | Pass Criteria |
 | :------- | :---- | :---------- | :------------ |
@@ -47,7 +49,7 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | Counter clears on scan mode | ROM | Write to slots 6,7,8, then enter scan mode | All 3 counters return to 0 |
 | Counter no increment during clear | ROM | Issue key_entry_clear on slot 6 simultaneously with crypto write | write_count_fmc_cdi unchanged; slot cleared |
 
-#### `directed/kv_iccm_region`
+#### `directed_kv_iccm_region`
 
 | Iter | Description | Pass Criteria |
 | :--- | :---------- | :------------ |
@@ -62,7 +64,7 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | 8 | SoC write to iccm_region_lock -- attempt to set lock from SoC | Write rejected (swwel=soc_req); lock remains 0 |
 | 9 | Out-of-range ICCM fetch after lock -- jump to address outside both FMC and RT regions | boot_flow_error fires; kv_error set |
 
-#### `directed/kv_monitor_neg`
+#### `directed_kv_monitor_neg`
 
 | Iter | Fault Injected | Pass Criteria |
 | :--- | :------------- | :------------ |
@@ -75,9 +77,25 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | 6 | Slot 7 write count=1 (skip FMC Alias ECC keygen) | kv_error fires at FMC transition |
 | 7 | Slot 8 write count=1 (skip FMC Alias MLDSA keygen) | kv_error fires at FMC transition |
 
+#### `directed_kv_debug_scan_bypass`
+
+| Iter | Description | Pass Criteria |
+| :--- | :---------- | :------------ |
+| 0 | Happy path DICE derivation + FMC jump, then debug unlock + warm reset | Normal FMC transition succeeds; debug unlock propagates on warm reset |
+| 1 | Boot with debug_locked=0 (from iter 0), DICE derivation + FMC jump | No kv_fault (monitor disabled in debug mode) |
+| 2 | Re-locked debug, DICE derivation, enter scan mode, FMC jump | No kv_fault (monitor disabled in scan mode) |
+
+#### `directed_kv_glitch_inject`
+
+| Iter | Description | Pass Criteria |
+| :--- | :---------- | :------------ |
+| 0 | Force boot_flow_fmc to invalid MuBi4 (4'hA), verify no spurious fault, then normal FMC jump | No kv_fault during glitch (fail-safe); normal FMC transition succeeds after release |
+| 1 | Force shadow register bit-flip on fmc_start, verify err_storage detection and write lockout | shadow_storage_err set in HW_ERROR_FATAL; writes rejected (err_storage permanent until reset) |
+| 2 | After warm reset, verify fatal bit persisted and W1C clears it | shadow_storage_err survives warm reset (pwrgood domain); W1C succeeds after err_storage cleared by reset |
+
 ### SVA Assertions
 
-31 assertions in `src/integration/asserts/kv_boot_flow_sva.sv`:
+35 assertions in `src/integration/asserts/kv_boot_flow_sva.sv`:
 
 | Category | Count | Coverage |
 | :------- | :---- | :------- |
@@ -87,19 +105,13 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | Error chain | 2 | kv_error -> CPTRA_HW_ERROR_FATAL propagation |
 | Monotonicity | 3 | boot_flow_fmc/rt non-regression, layer ordering |
 | DOE lockdown | 2 | DOE_CTRL.CMD cleared in FMC and RT |
-| Write counters | 4 | Increment, saturation, hard-reset clear, flush clear |
+| Write counters | 7 | Increment, saturation, hard-reset clear, flush clear (3 slots) |
 | ICCM region | 2 | Fetch-without-lock -> error, W1S sticky lock |
+| Cover properties | 1 | flush_keyvault with non-zero counters |
 
 ### Coverage Gaps (Not Yet Implemented)
 
-| Area | Description | Priority |
-| :--- | :---------- | :------- |
-| SoC write rejection | Directed test exercising SoC AXI writes to ICCM region registers (iters 7-8 above) | High |
-| Warm reset happy path | Dedicated test for warm reset -> full re-derivation -> monitor re-arms | Medium |
-| Glitch injection | Force MuBi4 invalid encoding on boot_flow signals | Low |
-| Multi-error interaction | boot_flow_error + kv_multi_write_err simultaneously | Low |
-| Shadow storage fault injection | Force bit-flip in shadow register to trigger err_storage lockout | Medium |
-| FW update reset with active monitor | Verify monitor state after FW update reset (region regs persist, boot_flow clears) | Medium |
+None remaining. All planned test scenarios are implemented or covered by existing tests.
 
 ### Covergroups
 

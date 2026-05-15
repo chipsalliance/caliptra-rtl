@@ -535,12 +535,19 @@ end
 //Track the boot flow from ROM to FMC and then to RT
 //Trigger keyvault monitoring and enforcement blocks on transitions
 //Errors will be flagged as fatal and flush the keyvault
+logic sim_boot_flow_monitor_dis;
 logic boot_flow_monitor_en;
 `ifdef SIMULATION
-    assign boot_flow_monitor_en = 1'b0; // Default disabled during simulation, can be overridden by testbench if needed
+    assign sim_boot_flow_monitor_dis = 1'b1;
 `else
-    assign boot_flow_monitor_en = cptra_security_state_Latched.debug_locked & ~cptra_scan_mode_Latched; // Disable boot flow monitoring when debug is unlocked or scan mode is active (clk_override can cause false ICCM read detection)
+    assign sim_boot_flow_monitor_dis = 1'b0;
 `endif
+
+// Disable boot flow monitoring when debug is unlocked or scan mode is active (clk_override can cause false ICCM read detection)
+// Default during simulation is to disable boot flow monitor as most tests don't go through the boot flow
+always_comb boot_flow_monitor_en = sim_boot_flow_monitor_dis ? '0 :
+                                   cptra_security_state_Latched.debug_locked & ~cptra_scan_mode_Latched; 
+
 
 caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
 caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt;
