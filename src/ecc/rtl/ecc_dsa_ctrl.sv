@@ -160,6 +160,11 @@ module ecc_dsa_ctrl
     logic                   hmac_init;
     logic                   hmac_ready;
     logic [REG_SIZE-1 : 0]  hmac_drbg_result;
+    logic                   hmac_ready_p384, hmac_ready_p256;
+    logic [REG_SIZE-1 : 0]  lambda_p384, lambda_p256;
+    logic [REG_SIZE-1 : 0]  scalar_rnd_p384, scalar_rnd_p256;
+    logic [REG_SIZE-1 : 0]  masking_rnd_p384, masking_rnd_p256;
+    logic [REG_SIZE-1 : 0]  hmac_drbg_result_p384, hmac_drbg_result_p256;
     logic                   hmac_busy;
 
     //interface with kv client
@@ -215,9 +220,37 @@ module ecc_dsa_ctrl
     logic error_flag_reg;
     logic error_flag_edge;
 
+    logic curve_sel;
+    logic [REG_SIZE-1 : 0] prime;
+    logic [REG_SIZE-1 : 0] group_order;
+    logic [REG_SIZE-1 : 0] E_a_MONT_c;
+    logic [REG_SIZE-1 : 0] E_b_MONT_c;
+    logic [REG_SIZE-1 : 0] E_3b_MONT_c;
+    logic [REG_SIZE-1 : 0] ONE_p_MONT_c;
+    logic [REG_SIZE-1 : 0] R2_p_MONT_c;
+    logic [REG_SIZE-1 : 0] G_X_MONT_c;
+    logic [REG_SIZE-1 : 0] G_Y_MONT_c;
+    logic [REG_SIZE-1 : 0] R2_q_MONT_c;
+    logic [REG_SIZE-1 : 0] ONE_q_MONT_c;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0] read_reg_masked;
+
     //----------------------------------------------------------------
     // Module instantiantions.
     //----------------------------------------------------------------
+    assign curve_sel       = hwif_out.ECC_CTRL.CURVE_SEL.value;
+    assign prime           = curve_sel ? PRIME_P256       : PRIME_P384;
+    assign group_order     = curve_sel ? GROUP_ORDER_P256 : GROUP_ORDER_P384;
+    assign E_a_MONT_c      = curve_sel ? E_a_MONT_P256    : E_a_MONT_P384;
+    assign E_b_MONT_c      = curve_sel ? E_b_MONT_P256    : E_b_MONT_P384;
+    assign E_3b_MONT_c     = curve_sel ? E_3b_MONT_P256   : E_3b_MONT_P384;
+    assign ONE_p_MONT_c    = curve_sel ? ONE_p_MONT_P256  : ONE_p_MONT_P384;
+    assign R2_p_MONT_c     = curve_sel ? R2_p_MONT_P256   : R2_p_MONT_P384;
+    assign G_X_MONT_c      = curve_sel ? G_X_MONT_P256    : G_X_MONT_P384;
+    assign G_Y_MONT_c      = curve_sel ? G_Y_MONT_P256    : G_Y_MONT_P384;
+    assign R2_q_MONT_c     = curve_sel ? R2_q_MONT_P256   : R2_q_MONT_P384;
+    assign ONE_q_MONT_c    = curve_sel ? ONE_q_MONT_P256  : ONE_q_MONT_P384;
+    assign read_reg_masked = curve_sel ? {128'd0, read_reg[7:0]} : read_reg;
+
     ecc_dsa_sequencer #(
         .ADDR_WIDTH(DSA_PROG_ADDR_W),
         .DATA_WIDTH(DSA_INSTRUCTION_LENGTH)
@@ -235,16 +268,13 @@ module ecc_dsa_ctrl
         .REG_SIZE(REG_SIZE),
         .RND_SIZE(RND_SIZE),
         .RADIX(MULT_RADIX),
-        .ADDR_WIDTH(DSA_OPR_ADDR_WIDTH),
-        .p_prime(PRIME),
-        .p_mu(PRIME_mu),
-        .q_grouporder(GROUP_ORDER),
-        .q_mu(GROUP_ORDER_mu)
+        .ADDR_WIDTH(DSA_OPR_ADDR_WIDTH)
         )
         ecc_arith_unit_i (
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
+        .curve_sel_i(curve_sel),
         .ecc_cmd_i(pm_cmd_reg),
         .addr_i(prog_instr.mem_addr),
         .wr_op_sel_i(prog_instr.opcode.op_sel),
@@ -258,36 +288,51 @@ module ecc_dsa_ctrl
 
     ecc_hmac_drbg_interface #(
         .REG_SIZE(REG_SIZE),
-        .GROUP_ORDER(GROUP_ORDER)
+        .GROUP_ORDER(GROUP_ORDER_P384)
         )    
         ecc_hmac_drbg_interface_i (
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
         .hmac_mode(hmac_mode),
-        .en(hmac_init),
-        .ready(hmac_ready),
+        .en(hmac_init & ~curve_sel),
+        .ready(hmac_ready_p384),
         .keygen_seed(seed_reg),
         .keygen_nonce(nonce_reg),
         .privKey(privkey_reg),
         .hashed_msg(msg_reduced_reg),
         .IV(IV_reg),
-        .lambda(lambda_reg),
-        .scalar_rnd(scalar_rnd_reg),
-        .masking_rnd(masking_rnd_reg),
-        .drbg(hmac_drbg_result)
+        .lambda(lambda_p384),
+        .scalar_rnd(scalar_rnd_p384),
+        .masking_rnd(masking_rnd_p384),
+        .drbg(hmac_drbg_result_p384)
         );
+
+    // P-256 HMAC-DRBG placeholder. Real ecc_hmac_drbg_interface_p256
+    // (HMAC-SHA-256, REG_SIZE=256) will replace this stub. Tie ready=1 and
+    // outputs=0 so the DSA FSM does not stall under CURVE_SEL=P256.
+    assign hmac_ready_p256       = 1'b1;
+    assign lambda_p256           = '0;
+    assign scalar_rnd_p256       = '0;
+    assign masking_rnd_p256      = '0;
+    assign hmac_drbg_result_p256 = '0;
+
+    assign hmac_ready       = curve_sel ? hmac_ready_p256       : hmac_ready_p384;
+    assign lambda_reg       = curve_sel ? lambda_p256           : lambda_p384;
+    assign scalar_rnd_reg   = curve_sel ? scalar_rnd_p256       : scalar_rnd_p384;
+    assign masking_rnd_reg  = curve_sel ? masking_rnd_p256      : masking_rnd_p384;
+    assign hmac_drbg_result = curve_sel ? hmac_drbg_result_p256 : hmac_drbg_result_p384;
 
     ecc_scalar_blinding #(
         .REG_SIZE(REG_SIZE),
         .RND_SIZE(RND_SIZE),
-        .RADIX(SCALAR_BLIND_RADIX),
-        .GROUP_ORDER(GROUP_ORDER)
+        .RADIX(SCALAR_BLIND_RADIX)
         )
         ecc_scalar_blinding_i(
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
+        .curve_sel_i(curve_sel),
         .en_i(scalar_sca_en),
         .data_i(scalar_in_reg),
         .rnd_i(scalar_rnd_reg[RND_SIZE-1 : 0]),
@@ -330,7 +375,7 @@ module ecc_dsa_ctrl
             privkey_we_reg <= hw_privkey_we;
             sharedkey_we_reg <= hw_sharedkey_we;
             if (secretkey_we & (dest_keyvault | kv_seed_data_present))            
-                kv_reg <= read_reg;
+                kv_reg <= read_reg_masked;
 
             kv_seed_data_present <= kv_seed_data_present_set ? '1 :
                                     kv_seed_data_present_reset ? '0 : kv_seed_data_present;
@@ -358,87 +403,87 @@ module ecc_dsa_ctrl
 
     
     always_comb begin // ecc_reg_writing
-        for (int dword=0; dword < 12; dword++)begin
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             //Key Vault has priority if enabled to drive these registers
             //don't store the private key generated in sw accessible register if it's going to keyvault
-            privkey_reg[dword] = hwif_out.ECC_PRIVKEY_IN[11-dword].PRIVKEY_IN.value;
+            privkey_reg[dword] = hwif_out.ECC_PRIVKEY_IN[REG_NUM_DWORDS-1-dword].PRIVKEY_IN.value;
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.we = (pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword))) & !zeroize_reg;
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode       ? pcr_signing_data.pcr_ecc_signing_privkey[dword] : 
                                                             kv_privkey_write_en ? kv_privkey_write_data : 
-                                                                                  read_reg[11-dword];
+                                                                                  read_reg_masked[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL);
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = ecc_ready_reg & ~kv_key_data_present;
         end 
 
-        for (int dword=0; dword < 12; dword++)begin
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             //If keyvault is not enabled, grab the sw value as usual
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = (privkey_we_reg & ~(dest_keyvault | kv_seed_data_present)) & !zeroize_reg;
-            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg[11-dword];
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.hwclr = zeroize_reg;
         end
 
-        for (int dword=0; dword < 12; dword++)begin
-            seed_reg[dword] = hwif_out.ECC_SEED[11-dword].SEED.value;
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
+            seed_reg[dword] = hwif_out.ECC_SEED[REG_NUM_DWORDS-1-dword].SEED.value;
             hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
             hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error == KV_READ_FAIL);
             hwif_in.ECC_SEED[dword].SEED.swwe  = ecc_ready_reg & ~kv_seed_data_present;
         end
 
-        for (int dword=0; dword < 12; dword++)begin
-            nonce_reg[dword] = hwif_out.ECC_NONCE[11-dword].NONCE.value;
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
+            nonce_reg[dword] = hwif_out.ECC_NONCE[REG_NUM_DWORDS-1-dword].NONCE.value;
             hwif_in.ECC_NONCE[dword].NONCE.hwclr = zeroize_reg;
         end
 
-        for (int dword=0; dword < 12; dword++)begin
-            msg_reg[dword] = hwif_out.ECC_MSG[11-dword].MSG.value;
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
+            msg_reg[dword] = hwif_out.ECC_MSG[REG_NUM_DWORDS-1-dword].MSG.value;
             hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode & !zeroize_reg;
             hwif_in.ECC_MSG[dword].MSG.next = pcr_signing_data.pcr_hash[dword];
             hwif_in.ECC_MSG[dword].MSG.hwclr = zeroize_reg;
         end
 
-        for (int dword=0; dword < 12; dword++)begin
-            pubkeyx_reg[dword] = hwif_out.ECC_PUBKEY_X[11-dword].PUBKEY_X.value;
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
+            pubkeyx_reg[dword] = hwif_out.ECC_PUBKEY_X[REG_NUM_DWORDS-1-dword].PUBKEY_X.value;
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.we = hw_pubkeyx_we & !zeroize_reg;
-            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg[11-dword];  
+            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg_masked[REG_NUM_DWORDS-1-dword];  
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.hwclr = zeroize_reg;
         end
 
-        for (int dword=0; dword < 12; dword++)begin
-            pubkeyy_reg[dword] = hwif_out.ECC_PUBKEY_Y[11-dword].PUBKEY_Y.value;
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
+            pubkeyy_reg[dword] = hwif_out.ECC_PUBKEY_Y[REG_NUM_DWORDS-1-dword].PUBKEY_Y.value;
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.we = hw_pubkeyy_we & !zeroize_reg;
-            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg[11-dword];
+            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.hwclr = zeroize_reg;
         end
 
-        for (int dword=0; dword < 12; dword++)begin
-            r_reg[dword] = hwif_out.ECC_SIGN_R[11-dword].SIGN_R.value;
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
+            r_reg[dword] = hwif_out.ECC_SIGN_R[REG_NUM_DWORDS-1-dword].SIGN_R.value;
             hwif_in.ECC_SIGN_R[dword].SIGN_R.we = hw_r_we & !zeroize_reg;
-            hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg[11-dword];
+            hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_SIGN_R[dword].SIGN_R.hwclr = zeroize_reg;
         end
 
-        for (int dword=0; dword < 12; dword++)begin
-            s_reg[dword] = hwif_out.ECC_SIGN_S[11-dword].SIGN_S.value;
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
+            s_reg[dword] = hwif_out.ECC_SIGN_S[REG_NUM_DWORDS-1-dword].SIGN_S.value;
             hwif_in.ECC_SIGN_S[dword].SIGN_S.we = hw_s_we & !zeroize_reg;
-            hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg[11-dword];
+            hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_SIGN_S[dword].SIGN_S.hwclr = zeroize_reg;
         end
 
-        for (int dword=0; dword < 12; dword++)begin 
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin 
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = hw_verify_r_we & !zeroize_reg;       
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg[11-dword];
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.hwclr = zeroize_reg;
         end
 
-        for (int dword=0; dword < 12; dword++)begin
-            IV_reg[dword] = hwif_out.ECC_IV[11-dword].IV.value;
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
+            IV_reg[dword] = hwif_out.ECC_IV[REG_NUM_DWORDS-1-dword].IV.value;
             hwif_in.ECC_IV[dword].IV.hwclr = zeroize_reg;
         end
 
-        for (int dword=0; dword < 12; dword++)begin
+        for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.we = (sharedkey_we_reg & ~(dest_keyvault | kv_key_data_present)) & !zeroize_reg;
-            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.next = read_reg[11-dword];  
+            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.next = read_reg_masked[REG_NUM_DWORDS-1-dword];  
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.hwclr = zeroize_reg;
         end
     end
@@ -451,8 +496,8 @@ module ecc_dsa_ctrl
         else if (zeroize_reg)
             msg_reduced_reg <= '0;
         else begin
-            if (msg_reg >= GROUP_ORDER)
-                msg_reduced_reg <= msg_reg - GROUP_ORDER;
+            if (msg_reg >= group_order)
+                msg_reduced_reg <= msg_reg - group_order;
             else
                 msg_reduced_reg <= msg_reg;
         end
@@ -611,15 +656,15 @@ module ecc_dsa_ctrl
             unique case (prog_instr.reg_id)
                 CONST_ZERO_ID         : write_reg = {zero_pad, ZERO_CONST};
                 CONST_ONE_ID          : write_reg = {zero_pad, ONE_CONST};
-                CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT};
-                CONST_E_b_MONT_ID     : write_reg = {zero_pad, E_b_MONT};
-                CONST_E_3b_MONT_ID    : write_reg = {zero_pad, E_3b_MONT};
-                CONST_ONE_p_MONT_ID   : write_reg = {zero_pad, ONE_p_MONT};
-                CONST_R2_p_MONT_ID    : write_reg = {zero_pad, R2_p_MONT};
-                CONST_G_X_MONT_ID     : write_reg = {zero_pad, G_X_MONT};
-                CONST_G_Y_MONT_ID     : write_reg = {zero_pad, G_Y_MONT};
-                CONST_R2_q_MONT_ID    : write_reg = {zero_pad, R2_q_MONT};
-                CONST_ONE_q_MONT_ID   : write_reg = {zero_pad, ONE_q_MONT};
+                CONST_E_a_MONT_ID     : write_reg = {zero_pad, E_a_MONT_c};
+                CONST_E_b_MONT_ID     : write_reg = {zero_pad, E_b_MONT_c};
+                CONST_E_3b_MONT_ID    : write_reg = {zero_pad, E_3b_MONT_c};
+                CONST_ONE_p_MONT_ID   : write_reg = {zero_pad, ONE_p_MONT_c};
+                CONST_R2_p_MONT_ID    : write_reg = {zero_pad, R2_p_MONT_c};
+                CONST_G_X_MONT_ID     : write_reg = {zero_pad, G_X_MONT_c};
+                CONST_G_Y_MONT_ID     : write_reg = {zero_pad, G_Y_MONT_c};
+                CONST_R2_q_MONT_ID    : write_reg = {zero_pad, R2_q_MONT_c};
+                CONST_ONE_q_MONT_ID   : write_reg = {zero_pad, ONE_q_MONT_c};
                 MSG_ID                : write_reg = {zero_pad, msg_reduced_reg};
                 PRIVKEY_ID            : write_reg = {zero_pad, privkey_reg};
                 PUBKEYX_ID            : write_reg = {zero_pad, pubkeyx_reg};
@@ -694,23 +739,23 @@ module ecc_dsa_ctrl
     
     assign error_flag_edge = error_flag & (!error_flag_reg);
 
-    assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= GROUP_ORDER));
-    assign r_output_outofrange      = signing_process & (hw_r_we & ((read_reg == 0) | (read_reg >= GROUP_ORDER)));
-    assign s_output_outofrange      = signing_process & (hw_s_we & ((read_reg == 0) | (read_reg >= GROUP_ORDER)));
+    assign privkey_input_outofrange = signing_process & ((privkey_reg == 0) | (privkey_reg >= group_order));
+    assign r_output_outofrange      = signing_process & (hw_r_we & ((read_reg == 0) | (read_reg >= group_order)));
+    assign s_output_outofrange      = signing_process & (hw_s_we & ((read_reg == 0) | (read_reg >= group_order)));
 
-    assign r_input_outofrange       = verifying_process & ((r_reg == 0) | (r_reg >= GROUP_ORDER));
-    assign s_input_outofrange       = verifying_process & ((s_reg == 0) | (s_reg >= GROUP_ORDER));
-    assign pubkeyx_input_outofrange = (verifying_process | sharedkey_process) & (pubkeyx_reg >= PRIME);
-    assign pubkeyy_input_outofrange = (verifying_process | sharedkey_process) & (pubkeyy_reg >= PRIME);
+    assign r_input_outofrange       = verifying_process & ((r_reg == 0) | (r_reg >= group_order));
+    assign s_input_outofrange       = verifying_process & ((s_reg == 0) | (s_reg >= group_order));
+    assign pubkeyx_input_outofrange = (verifying_process | sharedkey_process) & (pubkeyx_reg >= prime);
+    assign pubkeyy_input_outofrange = (verifying_process | sharedkey_process) & (pubkeyy_reg >= prime);
     assign pubkey_input_invalid     = (verifying_process | sharedkey_process) & (pk_chk_reg != 0);
 
     assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & pcr_sign_mode;
 
-    assign privkey_output_outofrange = keygen_process & (hw_privkey_we & ((read_reg == 0) | (read_reg >= GROUP_ORDER)));
-    assign pubkeyx_output_outofrange = keygen_process & (hw_pubkeyx_we & (read_reg >= PRIME));
-    assign pubkeyy_output_outofrange = keygen_process & (hw_pubkeyy_we & (read_reg >= PRIME));
+    assign privkey_output_outofrange = keygen_process & (hw_privkey_we & ((read_reg == 0) | (read_reg >= group_order)));
+    assign pubkeyx_output_outofrange = keygen_process & (hw_pubkeyx_we & (read_reg >= prime));
+    assign pubkeyy_output_outofrange = keygen_process & (hw_pubkeyy_we & (read_reg >= prime));
 
-    assign sharedkey_outofrange = sharedkey_process & (hw_sharedkey_we & (read_reg >= PRIME));
+    assign sharedkey_outofrange = sharedkey_process & (hw_sharedkey_we & (read_reg >= prime));
 
     assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | 
                         r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | 

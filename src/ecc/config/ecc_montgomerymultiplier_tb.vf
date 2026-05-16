@@ -162,6 +162,7 @@ ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_hmac_drbg_interface.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_arith_unit.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_pm_ctrl.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_pm_sequencer.sv
+${CALIPTRA_ROOT}/src/ecc/rtl/ecc_pm_sequencer_p256.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_ram_tdp_file.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_fau.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_montgomerymultiplier.sv

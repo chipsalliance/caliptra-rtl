@@ -215,6 +215,8 @@
 #define ECC_REG_ECC_CTRL_PCR_SIGN_MASK                                                              (0x8)
 #define ECC_REG_ECC_CTRL_DH_SHAREDKEY_LOW                                                           (4)
 #define ECC_REG_ECC_CTRL_DH_SHAREDKEY_MASK                                                          (0x10)
+#define ECC_REG_ECC_CTRL_CURVE_SEL_LOW                                                              (5)
+#define ECC_REG_ECC_CTRL_CURVE_SEL_MASK                                                             (0x20)
 #endif
 #define CLP_ECC_REG_ECC_STATUS                                                                      (0x10008018)
 #ifndef ECC_REG_ECC_STATUS

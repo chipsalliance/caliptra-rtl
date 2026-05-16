@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Standalone smoke test of ecc_montgomerymultiplier at REG=384/RADIX=48
+# for both NIST P-384 and P-256 constants from ecc_params_pkg.
+#
+---
+plusargs: []
+
+testname: ecc_montmul_smoke_test
+seed: 1

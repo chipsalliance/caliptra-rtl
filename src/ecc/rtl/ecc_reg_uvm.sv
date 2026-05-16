@@ -74,11 +74,13 @@ package ecc_reg_uvm;
         ecc_reg__ECC_CTRL_bit_cg ZEROIZE_bit_cg[1];
         ecc_reg__ECC_CTRL_bit_cg PCR_SIGN_bit_cg[1];
         ecc_reg__ECC_CTRL_bit_cg DH_SHAREDKEY_bit_cg[1];
+        ecc_reg__ECC_CTRL_bit_cg CURVE_SEL_bit_cg[1];
         ecc_reg__ECC_CTRL_fld_cg fld_cg;
         rand uvm_reg_field CTRL;
         rand uvm_reg_field ZEROIZE;
         rand uvm_reg_field PCR_SIGN;
         rand uvm_reg_field DH_SHAREDKEY;
+        rand uvm_reg_field CURVE_SEL;
 
         function new(string name = "ecc_reg__ECC_CTRL");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -98,11 +100,14 @@ package ecc_reg_uvm;
             this.PCR_SIGN.configure(this, 1, 3, "WO", 1, 'h0, 1, 1, 0);
             this.DH_SHAREDKEY = new("DH_SHAREDKEY");
             this.DH_SHAREDKEY.configure(this, 1, 4, "WO", 1, 'h0, 1, 1, 0);
+            this.CURVE_SEL = new("CURVE_SEL");
+            this.CURVE_SEL.configure(this, 1, 5, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(CTRL_bit_cg[bt]) CTRL_bit_cg[bt] = new();
                 foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
                 foreach(PCR_SIGN_bit_cg[bt]) PCR_SIGN_bit_cg[bt] = new();
                 foreach(DH_SHAREDKEY_bit_cg[bt]) DH_SHAREDKEY_bit_cg[bt] = new();
+                foreach(CURVE_SEL_bit_cg[bt]) CURVE_SEL_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
