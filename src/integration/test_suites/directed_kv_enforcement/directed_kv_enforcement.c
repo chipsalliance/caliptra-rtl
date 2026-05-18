@@ -234,6 +234,25 @@ void fmc_entry(void) {
     VPRINTF(LOW, "FMC: Test 4 -- DOE lockdown\n");
     check_doe_locked("FMC");
 
+    // --- Test 4b: Counter stable on lock_wr (slot 6) ---
+    // Slot 6 (FMC_CDI) has lock_wr set after enter_fmc. Attempting a crypto
+    // write must not increment write_count_fmc_cdi (verified by SVA
+    // WriteCountFmcCdiStableLocked_A; functionally by FMC-to-RT passing later).
+    VPRINTF(LOW, "FMC: Test 4b -- counter stable on locked slot 6 write\n");
+    check_lock_wr(KV_SLOT_FMC_CDI, "FMC");
+    hmac_write_kv_slot(KV_SLOT_FMC_CDI, DV_CDI);
+    hmac_zeroize();
+    check_no_kv_error("FMC post-lock_wr-slot6-write");
+    VPRINTF(LOW, "  FMC: slot 6 locked write did not increment counter -- OK\n");
+
+    // --- Test 4c: Counter stable on lock_wr+lock_use (slot 8) ---
+    VPRINTF(LOW, "FMC: Test 4c -- counter stable on locked slot 8 write\n");
+    check_lock_wr(KV_SLOT_FMC_MLDSA, "FMC");
+    hmac_write_kv_slot(KV_SLOT_FMC_MLDSA, DV_MLDSA_SEED);
+    hmac_zeroize();
+    check_no_kv_error("FMC post-lock_wr-slot8-write");
+    VPRINTF(LOW, "  FMC: slot 8 locked write did not increment counter -- OK\n");
+
     // Populate RT key slots (needed for FMC-to-RT transition)
     VPRINTF(LOW, "FMC: Populating RT key slots...\n");
     populate_rt_slots();
@@ -272,6 +291,17 @@ void rt_entry(void) {
     test_lock_use_blocks_read(KV_SLOT_FMC_CDI, "RT");
     // lock_use read failure should not cause kv_error (it's expected behavior)
     check_no_kv_error("RT post-lock_use");
+
+    // --- Test 6b: Counter stable on lock_use'd slot 7 ---
+    // Slot 7 (FMC_ECDSA) has lock_use set after enter_rt. Attempting a crypto
+    // write must not increment write_count_fmc_ecdsa (verified by SVA
+    // WriteCountFmcEcdsaStableLocked_A).
+    VPRINTF(LOW, "RT: Test 6b -- counter stable on lock_use'd slot 7 write\n");
+    check_lock_use(KV_SLOT_FMC_ECDSA, "RT");
+    hmac_write_kv_slot(KV_SLOT_FMC_ECDSA, DV_ECC_PKEY);
+    hmac_zeroize();
+    check_no_kv_error("RT post-lock_use-slot7-write");
+    VPRINTF(LOW, "  RT: slot 7 lock_use'd write did not increment counter -- OK\n");
 
     // --- Test 7: DOE still locked ---
     VPRINTF(LOW, "RT: Test 7 -- DOE lockdown persists\n");

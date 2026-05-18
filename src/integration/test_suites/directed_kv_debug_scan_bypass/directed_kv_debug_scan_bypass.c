@@ -141,6 +141,12 @@ void main() {
     if (hw_err) {
         VPRINTF(LOW, "  Clearing stale HW fault (0x%08x)\n", hw_err);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, hw_err);
+        uint32_t post = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
+        if (post) {
+            VPRINTF(ERROR, "[FAIL] W1C did not clear HW fault (0x%08x)\n", post);
+            SEND_STDOUT_CTRL(0x01);
+            while(1);
+        }
     }
 
     // --- ROM phase: Standard DICE derivation ---

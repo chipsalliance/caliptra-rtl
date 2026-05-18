@@ -81,6 +81,7 @@
 // TB service commands
 // ============================================================
 #define TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR 0xbb
+#define TB_CMD_COLD_RESET                  0xf5
 #define TB_CMD_WARM_RESET                  0xf6
 
 // ============================================================

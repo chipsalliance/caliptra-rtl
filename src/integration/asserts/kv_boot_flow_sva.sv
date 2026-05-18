@@ -342,6 +342,46 @@ module kv_boot_flow_sva
     (write_count_fmc_mldsa == 3'd7 && !flush_keyvault) |=> (write_count_fmc_mldsa == 3'd7)
   ) else $display("SVA ERROR: write_count_fmc_mldsa wrapped past saturation");
 
+  // What: Counters must not increment when the slot is locked (lock_wr or lock_use)
+  // Why: lock_wr/lock_use gates key_entry_we, so crypto_wr_* stays 0 on locked slots
+  WriteCountFmcCdiStableLocked_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    ((lock_wr_q[KV_SLOT_FMC_CDI] | lock_use_q[KV_SLOT_FMC_CDI]) && !flush_keyvault) |=>
+      (write_count_fmc_cdi == $past(write_count_fmc_cdi))
+  ) else $display("SVA ERROR: write_count_fmc_cdi changed while slot locked");
+
+  WriteCountFmcEcdsaStableLocked_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    ((lock_wr_q[KV_SLOT_FMC_ECDSA] | lock_use_q[KV_SLOT_FMC_ECDSA]) && !flush_keyvault) |=>
+      (write_count_fmc_ecdsa == $past(write_count_fmc_ecdsa))
+  ) else $display("SVA ERROR: write_count_fmc_ecdsa changed while slot locked");
+
+  WriteCountFmcMldsaStableLocked_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    ((lock_wr_q[KV_SLOT_FMC_MLDSA] | lock_use_q[KV_SLOT_FMC_MLDSA]) && !flush_keyvault) |=>
+      (write_count_fmc_mldsa == $past(write_count_fmc_mldsa))
+  ) else $display("SVA ERROR: write_count_fmc_mldsa changed while slot locked");
+
+  // What: Counters must not increment when key_entry_clear is active on the slot
+  // Why: crypto_wr_* is explicitly gated by ~key_entry_clear to prevent counting clear ops
+  WriteCountFmcCdiStableClear_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    (key_entry_clear[KV_SLOT_FMC_CDI] && !flush_keyvault) |=>
+      (write_count_fmc_cdi == $past(write_count_fmc_cdi))
+  ) else $display("SVA ERROR: write_count_fmc_cdi changed during key_entry_clear");
+
+  WriteCountFmcEcdsaStableClear_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    (key_entry_clear[KV_SLOT_FMC_ECDSA] && !flush_keyvault) |=>
+      (write_count_fmc_ecdsa == $past(write_count_fmc_ecdsa))
+  ) else $display("SVA ERROR: write_count_fmc_ecdsa changed during key_entry_clear");
+
+  WriteCountFmcMldsaStableClear_A: assert property (
+    @(posedge clk) disable iff (!`KV_PATH.cptra_pwrgood)
+    (key_entry_clear[KV_SLOT_FMC_MLDSA] && !flush_keyvault) |=>
+      (write_count_fmc_mldsa == $past(write_count_fmc_mldsa))
+  ) else $display("SVA ERROR: write_count_fmc_mldsa changed during key_entry_clear");
+
   // What: Counters reset on cptra_pwrgood deassertion or flush_keyvault
   // Why: Hard reset clears everything; flush/debug unlock invalidates keys so counters restart
   WriteCountFmcCdiHardReset_A: assert property (

@@ -28,9 +28,9 @@
 //   Each iteration:
 //     1. Populate slots (with one deliberate fault)
 //     2. Jump to FMC (or FMC jumps to RT for iterations 4-5)
-//     3. Monitor fires -> kv_error set, KV flushed
+//     3. Monitor fires -> kv_error set, all slots cleared (key_entry_clear)
 //     4. Read back CPTRA_HW_ERROR_FATAL to confirm kv_error
-//     5. Issue warm reset via TB service (clears cptra_error_fatal)
+//     5. Issue warm or cold reset (cold before iters 6,7 to clear write counters)
 //     6. After reset: W1C the sticky kv_error bit, continue to next iteration
 
 #include "caliptra_defines.h"
@@ -192,11 +192,17 @@ void confirm_violation_and_reset(const char *phase, uint32_t iteration) {
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  iter %d %s: kv fault confirmed (reg=0x%08x) -- issuing warm reset\n",
-            iteration, phase, hw_err);
 
-    // Issue warm reset via TB service -- clears cptra_error_fatal
-    SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
+    // Iterations 5 and 6 must use cold reset so that write counters (which
+    // persist across warm reset) are cleared before the write-count-negative
+    // cases in iterations 6 and 7.
+    uint32_t next_iter = iteration + 1;
+    int use_cold = (next_iter == 6 || next_iter == 7);
+
+    VPRINTF(LOW, "  iter %d %s: kv fault confirmed (reg=0x%08x) -- issuing %s reset\n",
+            iteration, phase, hw_err, use_cold ? "cold" : "warm");
+
+    SEND_STDOUT_CTRL(use_cold ? TB_CMD_COLD_RESET : TB_CMD_WARM_RESET);
     // Should not reach here
     while(1);
 }
@@ -218,6 +224,13 @@ void main() {
         VPRINTF(LOW, "  Clearing stale kv fault from previous iteration\n");
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,
                      SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK);
+        // Verify W1C took effect
+        uint32_t post_clear = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
+        if (post_clear & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK) {
+            VPRINTF(ERROR, "[FAIL] W1C did not clear kv_error (reg=0x%08x)\n", post_clear);
+            SEND_STDOUT_CTRL(0x01);
+            while(1);
+        }
     }
 
     if (iter >= NUM_ITERATIONS) {
