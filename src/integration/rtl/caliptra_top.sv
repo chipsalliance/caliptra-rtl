@@ -1081,7 +1081,7 @@ doe_ctrl #(
     .kv_write (kv_write[KV_WRITE_IDX_DOE]),
     .kv_wr_resp (kv_wr_resp[KV_WRITE_IDX_DOE]),
     .ocp_lock_en(ss_ocp_lock_en),
-    .doe_cmd_lock(mubi4_test_true_strict(boot_flow_fmc) | mubi4_test_true_strict(boot_flow_rt)),
+    .doe_cmd_lock(mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
 );
@@ -1588,7 +1588,7 @@ soc_ifc_top1
     //multiple cryptos operating at once, assert fatal error
     .crypto_error(crypto_error),
     //kv boot flow monitor dest_valid mismatch or boot_flow_error
-    .kv_error(kv_monitor_alert | mubi4_test_true_strict(boot_flow_error)),
+    .kv_error(kv_monitor_alert | mubi4_test_true_loose(boot_flow_error)),
     //caliptra uncore jtag ports
     .cptra_uncore_dmi_reg_en( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),

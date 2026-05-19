@@ -210,7 +210,7 @@ generate
                 key_entry_clear[g_entry] <= '0;
             end
             else begin
-                key_entry_clear[g_entry] <= kv_multi_write_err | mubi4_test_true_strict(boot_flow_error) | kv_monitor_alert |
+                key_entry_clear[g_entry] <= kv_multi_write_err | mubi4_test_true_loose(boot_flow_error) | kv_monitor_alert |
                                             boot_flow_key_clear[g_entry] |
                                             (kv_reg_hwif_out.KEY_CTRL[g_entry].clear.value & ~lock_wr_q[g_entry] & ~lock_use_q[g_entry]) |
                                             (key_entry_clear[g_entry] & key_entry_ctrl_we[g_entry]);
@@ -392,11 +392,11 @@ end
 //  4=RT_CDI, 5=RT_ECDSA, 6=FMC_CDI, 7=FMC_ECDSA, 8=FMC_MLDSA, 9=RT_MLDSA, 10-12=DPE, 13-15=spare
 always_comb begin : KV_ENFORCEMENT
     for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwset  = (mubi4_test_true_strict(boot_flow_fmc) &&
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwset  = (mubi4_test_true_loose(boot_flow_fmc) &&
                                                           entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA}) ||
-                                                         (mubi4_test_true_strict(boot_flow_rt) &&
+                                                         (mubi4_test_true_loose(boot_flow_rt) &&
                                                           entry inside {KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA});
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwset = (mubi4_test_true_strict(boot_flow_rt) &&
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwset = (mubi4_test_true_loose(boot_flow_rt) &&
                                                           entry inside {KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA});
         boot_flow_key_clear[entry] = (enter_fmc && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})) ||
                                      (enter_rt && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA,
