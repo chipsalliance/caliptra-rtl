@@ -137,11 +137,11 @@ always_comb uc_req.addr = uc_req_addr[KV_ADDR_W-1:0];
 always_comb uc_req_error = kv_reg_read_error | kv_reg_write_error;
 always_comb uc_req_hold = '0;
 
-//Flush the keyvault with the debug value when FW pokes the register or we detect debug mode unlocking
-//Fatal errors trigger a flush also - preemptively flushing on kv monitor errors
+// Flush the keyvault with debug value on debug/scan transitions, monitor/fatal
+// events, or an explicit FW request while already in debug/scan mode.
 always_comb flush_keyvault = debugUnlock_or_scan_mode_switch | mubi4_test_true_loose(boot_flow_error) | kv_monitor_alert |
                              (cptra_in_debug_scan_mode & kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values.value);
-                             
+
 //Pick between keyvault debug mode 0 or 1
 always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
 
@@ -201,10 +201,10 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
     end
 end
 
-//Generate clear signal for each key entry
-//multi write error or boot flow error will trigger a clear of all entries
-//don't allow sw clear when writes are locked
-//hold the clear when writes are in progress
+// Generate per-slot clear signal.
+// Multi-write errors clear all slots immediately.
+// boot_flow_key_clear and SW clear handle slot-selective clearing.
+// SW clear is blocked when lock bits are set, and clear is held while writes complete.
 generate
     for (genvar g_entry = 0; g_entry < KV_NUM_KEYS; g_entry++) begin
         always_ff@(posedge clk or negedge rst_b) begin

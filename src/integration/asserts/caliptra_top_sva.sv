@@ -220,12 +220,8 @@ module caliptra_top_sva
     return 1'b1;
   endfunction
 
-  // Per-slot debug flush assertions — each slot is only disabled when its own
-  // key_entry_clear is active (from boot_flow_error, kv_monitor_alert, or
-  // kv_multi_write_err hwclr), avoiding over-masking of unrelated slots.
-  // The trigger is level-sensitive: checks fire whenever the debug/scan/fatal
-  // condition holds, not just on $rose, so a single-cycle disable does not
-  // permanently suppress the check.
+  // Per-slot debug flush assertions.
+  // Edge-triggered on entry to debug-locked false, fatal error, or scan mode.
   generate
     for (genvar entry = 0; entry < KV_NUM_KEYS; entry++) begin : gen_kv_debug_per_slot
       KV_debug_slot: assert property (
