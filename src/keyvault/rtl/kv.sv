@@ -138,8 +138,10 @@ always_comb uc_req_error = kv_reg_read_error | kv_reg_write_error;
 always_comb uc_req_hold = '0;
 
 //Flush the keyvault with the debug value when FW pokes the register or we detect debug mode unlocking
-always_comb flush_keyvault = debugUnlock_or_scan_mode_switch | 
+//Fatal errors trigger a flush also - preemptively flushing on kv monitor errors
+always_comb flush_keyvault = debugUnlock_or_scan_mode_switch | mubi4_test_true_loose(boot_flow_error) | kv_monitor_alert |
                              (cptra_in_debug_scan_mode & kv_reg_hwif_out.CLEAR_SECRETS.wr_debug_values.value);
+                             
 //Pick between keyvault debug mode 0 or 1
 always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
 
@@ -210,7 +212,7 @@ generate
                 key_entry_clear[g_entry] <= '0;
             end
             else begin
-                key_entry_clear[g_entry] <= kv_multi_write_err | mubi4_test_true_loose(boot_flow_error) | kv_monitor_alert |
+                key_entry_clear[g_entry] <= kv_multi_write_err |
                                             boot_flow_key_clear[g_entry] |
                                             (kv_reg_hwif_out.KEY_CTRL[g_entry].clear.value & ~lock_wr_q[g_entry] & ~lock_use_q[g_entry]) |
                                             (key_entry_clear[g_entry] & key_entry_ctrl_we[g_entry]);
