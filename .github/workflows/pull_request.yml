@@ -25,9 +25,12 @@ jobs:
   doc_gen:
     uses: ./.github/workflows/doc-gen.yml
     if: ${{ (github.event_name == 'pull_request' && github.base_ref == 'main') || (github.event_name == 'push') }}
+    with:
+      build_ref: ${{ github.sha }}
     permissions:
       pages: write
       id-token: write
+      contents: read
   post_run:
     name: Call Post Run Final
     runs-on: ubuntu-22.04

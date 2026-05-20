@@ -246,7 +246,7 @@ jobs:
           else
             echo "Only modified files in ${SOURCE_BR} are for documentation"
             echo " ============== modified files ============="
-            IFS='\n' grep -v "${excludes}" <<< "$mods"
+            IFS='\n' grep -v "${excludes}" <<< "$mods" || true
             echo "src_mods=false" >> "${GITHUB_OUTPUT}"
           fi
 
