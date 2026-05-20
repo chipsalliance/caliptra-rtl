@@ -86,12 +86,11 @@ void main(void) {
         lsu_write_32(CLP_SOC_IFC_REG_SS_CALIPTRA_DMA_AXI_USER, 0xffffffff);
         // Send data through AHB interface to AXI_DMA, target the AXI SRAM
         VPRINTF(LOW, "Sending payload via AHB i/f\n");
-        soc_ifc_axi_dma_send_ahb_payload(0x21200000, 0, send_payload, 16*4, 0);
+        soc_ifc_axi_dma_send_ahb_payload(AXI_SRAM_BASE_ADDR, 0, send_payload, 16*4, 0);
         
-        // Move data from one address to another in AXI SRAM
-        // Use the block-size feature
-        VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
-        soc_ifc_axi_dma_read_ahb_payload(0x21200000, 0, read_payload, 16*4, 0);
+        // Read data back from AXI SRAM and confirm it matches
+        VPRINTF(LOW, "Reading payload via AHB i/f\n");
+        soc_ifc_axi_dma_read_ahb_payload(AXI_SRAM_BASE_ADDR, 0, read_payload, 16*4, 0);
         
         for (uint8_t ii = 0; ii < 16; ii++) {
             if (read_payload[ii] != send_payload[ii]) {
