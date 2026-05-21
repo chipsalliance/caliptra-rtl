@@ -1032,7 +1032,7 @@ module sha256_ctrl_tb();
         $display("ERROR: Input file not found");
         $stop;
       end
-      fout = $fopen("../stimulus/acvp/SHA2-256-600331_digest.txt","w");
+      fout = $fopen("../stimulus/acvp/SHA2-256_digest.txt","w");
       if (fout == 0)
       begin
         $display("ERROR: Output file not found");

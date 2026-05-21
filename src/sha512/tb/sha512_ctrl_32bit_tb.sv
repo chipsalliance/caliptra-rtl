@@ -1145,13 +1145,13 @@ module sha512_ctrl_32bit_tb
     //source the correct vector file for the mode set below
     test_mode = MODE_SHA_512;
 
-    fin  = $fopen("../stimulus/acvp/SHA2-512-600333.txt","r");
+    fin  = $fopen("../stimulus/acvp/SHA2-512_stimulus.txt","r");
     if (fin == 0)
     begin
       $display("ERROR: Input file not found");
       $stop;
     end
-    fout = $fopen("../stimulus/acvp/SHA2-512-600333_digest.txt","w");
+    fout = $fopen("../stimulus/acvp/SHA2-512_digest.txt","w");
     if (fout == 0)
     begin
       $display("ERROR: Output file not found");
