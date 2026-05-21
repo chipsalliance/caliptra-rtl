@@ -16,7 +16,7 @@
 //
 class ECC_out_transaction #(
       int AHB_ADDR_WIDTH = 32,
-      int AHB_DATA_WIDTH = 32,
+      int AHB_DATA_WIDTH = 64,
       int OUTPUT_TEXT_WIDTH = 384
       )
  extends uvmf_transaction_base;

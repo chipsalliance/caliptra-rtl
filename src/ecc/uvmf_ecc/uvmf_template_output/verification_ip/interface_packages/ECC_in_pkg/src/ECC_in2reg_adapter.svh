@@ -14,7 +14,7 @@
 //
 class ECC_in2reg_adapter #(
       int AHB_ADDR_WIDTH = 32,
-      int AHB_DATA_WIDTH = 32
+      int AHB_DATA_WIDTH = 64
       )
  extends uvm_reg_adapter;
 

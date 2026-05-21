@@ -15,7 +15,7 @@
 
 `include "uvm_macros.svh"
 
-class HMAC_random_sequence #(int AHB_DATA_WIDTH = 32,
+class HMAC_random_sequence #(int AHB_DATA_WIDTH = 64,
                             int AHB_ADDR_WIDTH = 32,
                             bit BYPASS_HSEL = 0
                             ) extends HMAC_bench_sequence_base;

@@ -365,7 +365,7 @@ package soc_ifc_tb_pkg;
   };
 
   dword_t _soc_register_initval_ss_dict [string] = {
-    "CPTRA_HW_CONFIG"                      : 32'h0000_0030  // LMS Acc Cap bit is set, Subsystem Mode bit is set, OCP LOCK EN bit overridden in init_regs
+    "CPTRA_HW_CONFIG"                      : 32'h0000_0031  // iTRNG bit is set, LMS Acc Cap bit is set, Subsystem Mode bit is set, OCP LOCK EN bit overridden in init_regs
   };
 
 

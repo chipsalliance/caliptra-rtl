@@ -91,3 +91,5 @@ For each release, the following steps are followed to ensure code functionality 
   - Update [Release_Notes](../Release_Notes.md)
   - Tag the main branch on GitHub to generate an official release
   - Generate version-specific registers documentation page in the [Register Documentation Workflow](./.github/workflows/doc-gen.yml)
+- Add ROM image
+  - If an official ROM release is available matching the target RTL release, the image will be committed to the release branch

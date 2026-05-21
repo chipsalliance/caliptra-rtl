@@ -16,7 +16,7 @@
 //
 class ECC_in_transaction #(
       int AHB_ADDR_WIDTH = 32,
-      int AHB_DATA_WIDTH = 32
+      int AHB_DATA_WIDTH = 64
       )
  extends uvmf_transaction_base;
 

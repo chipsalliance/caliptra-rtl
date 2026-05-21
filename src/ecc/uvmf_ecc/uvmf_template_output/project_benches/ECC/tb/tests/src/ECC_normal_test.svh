@@ -42,7 +42,7 @@ class ECC_normal_test extends test_top;
 
   virtual function void build_phase(uvm_phase phase );
     // UVM Factory override. Override ECC_bench_sequence_base with ECC_normal_sequence
-    ECC_bench_sequence_base::type_id::set_type_override(ECC_normal_sequence #(32,32)::get_type());
+    ECC_bench_sequence_base::type_id::set_type_override(ECC_normal_sequence #(64,32)::get_type());
     super.build_phase(phase);
   endfunction : build_phase
 

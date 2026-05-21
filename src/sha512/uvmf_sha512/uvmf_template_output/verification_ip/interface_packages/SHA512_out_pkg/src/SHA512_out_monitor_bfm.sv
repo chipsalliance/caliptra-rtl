@@ -34,7 +34,7 @@ import SHA512_out_pkg_hdl::*;
 
 
 interface SHA512_out_monitor_bfm #(
-  int AHB_DATA_WIDTH = 32,
+  int AHB_DATA_WIDTH = 64,
   int AHB_ADDR_WIDTH = 32,
   int OUTPUT_TEXT_WIDTH = 512,
   bit BYPASS_HSEL = 0
@@ -78,12 +78,14 @@ end
   tri  hresp_i;
   tri  hreadyout_i;
   tri [AHB_DATA_WIDTH-1:0] hrdata_i;
+  tri [31:0] hrdata_32_i;
   tri  read_flag_monitor_i;
   assign clk_i = bus.clk;
   assign rst_i = bus.rst;
   assign hresp_i = bus.hresp;
   assign hreadyout_i = bus.hreadyout;
   assign hrdata_i = bus.hrdata;
+  assign hrdata_32_i = bus.hrdata_32;
   assign read_flag_monitor_i = bus.read_flag_monitor;
 
   // Proxy handle to UVM monitor
@@ -209,38 +211,40 @@ end
         @(posedge clk_i);
       end
 
+      // ahb_slv_sif places 32-bit read data in one lane and zeros the other.
+      // hrdata_32_i (from the interface) ORs both lanes to recover the value.
       repeat(2) @(posedge clk_i);
-      result_temp[511 : 480] = hrdata_i;
+      result_temp[511 : 480] = hrdata_32_i;  // DIGEST0
       @(posedge clk_i);
-      result_temp[479 : 448] = hrdata_i;
+      result_temp[479 : 448] = hrdata_32_i;  // DIGEST1
       @(posedge clk_i);
-      result_temp[447 : 416] = hrdata_i;
+      result_temp[447 : 416] = hrdata_32_i;  // DIGEST2
       @(posedge clk_i);
-      result_temp[415 : 384] = hrdata_i;
+      result_temp[415 : 384] = hrdata_32_i;  // DIGEST3
       @(posedge clk_i);
-      result_temp[383 : 352] = hrdata_i;
+      result_temp[383 : 352] = hrdata_32_i;  // DIGEST4
       @(posedge clk_i);
-      result_temp[351 : 320] = hrdata_i;
+      result_temp[351 : 320] = hrdata_32_i;  // DIGEST5
       @(posedge clk_i);
-      result_temp[319 : 288] = hrdata_i;
+      result_temp[319 : 288] = hrdata_32_i;  // DIGEST6
       @(posedge clk_i);
-      result_temp[287 : 256] = hrdata_i;
+      result_temp[287 : 256] = hrdata_32_i;  // DIGEST7
       @(posedge clk_i);
-      result_temp[255 : 224] = hrdata_i;
+      result_temp[255 : 224] = hrdata_32_i;  // DIGEST8
       @(posedge clk_i);
-      result_temp[223 : 192] = hrdata_i;
+      result_temp[223 : 192] = hrdata_32_i;  // DIGEST9
       @(posedge clk_i);
-      result_temp[191 : 160] = hrdata_i;
+      result_temp[191 : 160] = hrdata_32_i;  // DIGEST10
       @(posedge clk_i);
-      result_temp[159 : 128] = hrdata_i;
+      result_temp[159 : 128] = hrdata_32_i;  // DIGEST11
       @(posedge clk_i);
-      result_temp[127 :  96] = hrdata_i;
+      result_temp[127 :  96] = hrdata_32_i;  // DIGEST12
       @(posedge clk_i);
-      result_temp[95  :  64] = hrdata_i;
+      result_temp[95  :  64] = hrdata_32_i;  // DIGEST13
       @(posedge clk_i);
-      result_temp[63  :  32] = hrdata_i;
+      result_temp[63  :  32] = hrdata_32_i;  // DIGEST14
       @(posedge clk_i);
-      result_temp[31  :   0] = hrdata_i;
+      result_temp[31  :   0] = hrdata_32_i;  // DIGEST15
       @(posedge clk_i);
     end
 

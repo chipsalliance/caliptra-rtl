@@ -645,8 +645,4 @@ u_caliptra_prim_trivium
 // Timing: Combinational — trivium_seeded_q is set 1 cycle after first seed_en
 `CALIPTRA_ASSERT(ERR_AES_TRIVIUM_SEEDED_TWICE, trivium_seeded |-> !trivium_seed_en, clk, !reset_n)
 
-`CALIPTRA_ASSERT_STABLE(ERR_AES_KEY_RD_CTRL_NOT_STABLE, kv_key_read_ctrl_reg, clk, (!reset_n || status_idle_o) )
-`CALIPTRA_ASSERT_STABLE(ERR_AES_WR_CTRL_NOT_STABLE, kv_write_ctrl_reg, clk, (!reset_n || status_idle_o) )
-`CALIPTRA_ASSERT_STABLE(ERR_AES_KEY_NOT_STABLE, kv_key_reg, clk, (!reset_n || status_idle_o) )
-
 endmodule

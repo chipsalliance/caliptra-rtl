@@ -16,7 +16,7 @@
 //
 class ECC_in_responder_sequence #(
       int AHB_ADDR_WIDTH = 32,
-      int AHB_DATA_WIDTH = 32
+      int AHB_DATA_WIDTH = 64
       )
 
   extends ECC_in_sequence_base #(

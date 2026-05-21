@@ -49,8 +49,9 @@ module hmac_ctrl_tb();
   parameter AHB_HTRANS_NONSEQ   = 2;
   parameter AHB_HTRANS_SEQ      = 3;
 
-  parameter AHB_ADDR_WIDTH = 32;
-  parameter AHB_DATA_WIDTH = 32;
+  // Match caliptra_top SS-mode instantiation for coverage merge compatibility
+  parameter AHB_ADDR_WIDTH = 12;
+  parameter AHB_DATA_WIDTH = 64;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -77,7 +78,7 @@ module hmac_ctrl_tb();
   wire          hreadyout_o_tb;
   wire [AHB_DATA_WIDTH-1:0] hrdata_o_tb;
 
-  reg [63 : 0]  read_data;
+  reg [31 : 0]  read_data;
   reg [511 : 0] digest_data;
 
   //bind coverage file
@@ -257,7 +258,7 @@ module hmac_ctrl_tb();
                   input [31 : 0] word);
     begin
       hsel_i_tb       = 1;
-      haddr_i_tb      = address;
+      haddr_i_tb      = address[AHB_ADDR_WIDTH-1:0];
       hwrite_i_tb     = 1;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
@@ -265,7 +266,7 @@ module hmac_ctrl_tb();
       #(CLK_PERIOD);
 
       haddr_i_tb      = 'Z;
-      hwdata_i_tb     = word;
+      hwdata_i_tb     = address[2] ? {word, 32'b0} : {32'b0, word};
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
     end
@@ -374,7 +375,7 @@ module hmac_ctrl_tb();
   task read_single_word(input [31 : 0]  address);
     begin
       hsel_i_tb       = 1;
-      haddr_i_tb      = address;
+      haddr_i_tb      = address[AHB_ADDR_WIDTH-1:0];
       hwrite_i_tb     = 0;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
@@ -384,7 +385,7 @@ module hmac_ctrl_tb();
       hwdata_i_tb     = 0;
       haddr_i_tb     = 'Z;
       htrans_i_tb     = AHB_HTRANS_IDLE;
-      read_data = hrdata_o_tb;
+      read_data = address[2] ? hrdata_o_tb[63:32] : hrdata_o_tb[31:0];
     end
   endtask // read_single_word
 

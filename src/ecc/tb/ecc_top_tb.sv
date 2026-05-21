@@ -86,8 +86,9 @@ module ecc_top_tb
   parameter AHB_HTRANS_NONSEQ   = 2;
   parameter AHB_HTRANS_SEQ      = 3;
 
-  parameter AHB_ADDR_WIDTH       = 32;
-  parameter AHB_DATA_WIDTH       = 32;
+  // Match caliptra_top SS-mode instantiation for coverage merge compatibility
+  parameter AHB_ADDR_WIDTH       = 15;
+  parameter AHB_DATA_WIDTH       = 64;
 
   //----------------------------------------------------------------
   // Register and Wire declarations.
@@ -122,6 +123,7 @@ module ecc_top_tb
   wire notif_intr_tb;
 
   //reg [31 : 0]  read_data;
+  reg [31 : 0]  read_data;
   reg [383: 0]  reg_read_data;
 
   int                   test_vector_cnt;
@@ -149,8 +151,8 @@ module ecc_top_tb
   // Device Under Test.
   //----------------------------------------------------------------
   ecc_top #(
-             .AHB_DATA_WIDTH(32),
-             .AHB_ADDR_WIDTH(32)
+             .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
+             .AHB_ADDR_WIDTH(AHB_ADDR_WIDTH)
             )
             dut (
              .clk(clk_tb),
@@ -296,7 +298,7 @@ module ecc_top_tb
   task wait_ready;
     begin
       read_single_word(`ECC_REG_ECC_STATUS);
-      while (hrdata_o_tb == 0)
+      while (read_data == 0)
         begin
           read_single_word(`ECC_REG_ECC_STATUS);
         end
@@ -314,7 +316,7 @@ module ecc_top_tb
                   input [31 : 0] word);
     begin
       hsel_i_tb       = 1;
-      haddr_i_tb      = address;
+      haddr_i_tb      = address[AHB_ADDR_WIDTH-1:0];
       hwrite_i_tb     = 1;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
@@ -322,7 +324,7 @@ module ecc_top_tb
       #(CLK_PERIOD);
 
       haddr_i_tb      = 'Z;
-      hwdata_i_tb     = word;
+      hwdata_i_tb     = address[2] ? {word, 32'b0} : {32'b0, word};
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
     end
@@ -362,7 +364,7 @@ module ecc_top_tb
   task read_single_word(input [31 : 0]  address);
     begin
       hsel_i_tb       = 1;
-      haddr_i_tb      = address;
+      haddr_i_tb      = address[AHB_ADDR_WIDTH-1:0];
       hwrite_i_tb     = 0;
       hready_i_tb     = 1;
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
@@ -372,6 +374,7 @@ module ecc_top_tb
       hwdata_i_tb     = 0;
       haddr_i_tb      = 'Z;
       htrans_i_tb     = AHB_HTRANS_IDLE;
+      read_data       = address[2] ? hrdata_o_tb[63:32] : hrdata_o_tb[31:0];
     end
   endtask // read_word
 
@@ -385,29 +388,29 @@ module ecc_top_tb
   task read_block(input [31 : 0] addr);
     begin
       read_single_word(addr);
-      reg_read_data[383 : 352] = hrdata_o_tb;
+      reg_read_data[383 : 352] = read_data;
       read_single_word(addr + 4*1);
-      reg_read_data[351 : 320] = hrdata_o_tb;
+      reg_read_data[351 : 320] = read_data;
       read_single_word(addr +  4*2);
-      reg_read_data[319 : 288] = hrdata_o_tb;
+      reg_read_data[319 : 288] = read_data;
       read_single_word(addr +  4*3);
-      reg_read_data[287 : 256] = hrdata_o_tb;
+      reg_read_data[287 : 256] = read_data;
       read_single_word(addr +  4*4);
-      reg_read_data[255 : 224] = hrdata_o_tb;
+      reg_read_data[255 : 224] = read_data;
       read_single_word(addr +  4*5);
-      reg_read_data[223 : 192] = hrdata_o_tb;
+      reg_read_data[223 : 192] = read_data;
       read_single_word(addr +  4*6);
-      reg_read_data[191 : 160] = hrdata_o_tb;
+      reg_read_data[191 : 160] = read_data;
       read_single_word(addr +  4*7);
-      reg_read_data[159 : 128] = hrdata_o_tb;
+      reg_read_data[159 : 128] = read_data;
       read_single_word(addr +  4*8);
-      reg_read_data[127 :  96] = hrdata_o_tb;
+      reg_read_data[127 :  96] = read_data;
       read_single_word(addr +  4*9);
-      reg_read_data[95  :  64] = hrdata_o_tb;
+      reg_read_data[95  :  64] = read_data;
       read_single_word(addr +  4*10);
-      reg_read_data[63  :  32] = hrdata_o_tb;
+      reg_read_data[63  :  32] = read_data;
       read_single_word(addr +  4*11);
-      reg_read_data[31  :   0] = hrdata_o_tb;
+      reg_read_data[31  :   0] = read_data;
     end
   endtask // read_digest
 
@@ -424,13 +427,13 @@ module ecc_top_tb
     begin
 
       read_single_word(`ECC_REG_ECC_NAME_0);
-      name0 = hrdata_o_tb;
+      name0 = read_data;
       read_single_word(`ECC_REG_ECC_NAME_1);
-      name1 = hrdata_o_tb;
+      name1 = read_data;
       read_single_word(`ECC_REG_ECC_VERSION_0);
-      version0 = hrdata_o_tb;
+      version0 = read_data;
       read_single_word(`ECC_REG_ECC_VERSION_1);
-      version1 = hrdata_o_tb;
+      version1 = read_data;
 
       $display("DUT name: %c%c%c%c%c%c%c%c",
                name0[15 :  8], name0[7  :  0],

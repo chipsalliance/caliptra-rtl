@@ -56,7 +56,7 @@ import uvmf_base_pkg_hdl::*;
     import kv_defines_pkg::*;
     import kv_defines_pkg::*;
     wire transaction_flag_out_monitor_top;
-    wire [31:0] hrdata_top;
+    wire [63:0] hrdata_64;
     wire hreadyout_top;
     wire [1:0] op_top;
     wire [2:0] test_top;
@@ -75,7 +75,7 @@ import uvmf_base_pkg_hdl::*;
   ECC_in_if  ECC_in_agent_bus(
      // pragma uvmf custom ECC_in_agent_bus_connections begin
      .clk(clk), .rst_n(rst),
-     .hrdata(hrdata_top),
+     .hrdata(hrdata_64),
      .hreadyout(hreadyout_top),
      .op(op_top),
      .test(test_top),
@@ -85,7 +85,7 @@ import uvmf_base_pkg_hdl::*;
   ECC_out_if  ECC_out_agent_bus(
      // pragma uvmf custom ECC_out_agent_bus_connections begin
      .clk(clk), .rst_n(rst),
-     .hrdata(hrdata_top),
+     .hrdata(hrdata_64),
      .hreadyout(hreadyout_top),
      .op(op_top),
      .test(test_top),
@@ -104,14 +104,14 @@ import uvmf_base_pkg_hdl::*;
   // vhdl_dut            dut_vhdl   (   .clk(clk), .rst(rst), .in_signal(verilog_to_vhdl_signal), .out_signal(vhdl_to_verilog_signal));
 
   ecc_top #(
-      .AHB_DATA_WIDTH   (32),
-      .AHB_ADDR_WIDTH   (32)
+      .AHB_DATA_WIDTH   (64),
+      .AHB_ADDR_WIDTH   (15)
   ) dut (
       .clk              (ECC_in_agent_bus.clk),
       .reset_n          (ECC_in_agent_bus.ecc_rst_n),
       .cptra_pwrgood    (),
 
-      .haddr_i          (ECC_in_agent_bus.haddr),
+      .haddr_i          (ECC_in_agent_bus.haddr[14:0]),
       .hwdata_i         (ECC_in_agent_bus.hwdata),
       .hsel_i           (ECC_in_agent_bus.hsel),
       .hwrite_i         (ECC_in_agent_bus.hwrite),
@@ -121,7 +121,7 @@ import uvmf_base_pkg_hdl::*;
 
       .hresp_o          (ECC_out_agent_bus.hresp),
       .hreadyout_o      (ECC_out_agent_bus.hreadyout),
-      .hrdata_o         (ECC_out_agent_bus.hrdata),
+      .hrdata_o         (hrdata_64),
 
       // KV interface
       .kv_read(),
