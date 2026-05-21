@@ -671,13 +671,13 @@ module hmac_drbg_tb();
 
     $display("   -- Testbench for HMAC DRBG started --");
 
-    fin  = $fopen("../stimulus/acvp/hmacDRBG-600336.txt","r");
+    fin  = $fopen("../stimulus/acvp/hmacDRBG_stim.txt","r");
     if (fin == 0)
     begin
       $display("ERROR: Input file not found");
       $stop;
     end
-    fout = $fopen("../stimulus/acvp/hmacDRBG-600336_digest.txt","w");
+    fout = $fopen("../stimulus/acvp/hmacDRBG_digest.txt","w");
     if (fout == 0)
     begin
       $display("ERROR: Output file not found");

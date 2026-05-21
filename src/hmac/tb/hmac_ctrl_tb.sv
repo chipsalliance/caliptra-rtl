@@ -942,13 +942,13 @@ module hmac_ctrl_tb();
 
       mode = HMAC512_MODE;
 
-      fin  = $fopen("../stimulus/acvp/HMAC-SHA2-512-600335.txt","r");
+      fin  = $fopen("../stimulus/acvp/HMAC-SHA2-512_stim.txt","r");
       if (fin == 0)
       begin
         $display("ERROR: Input file not found");
         $stop;
       end
-      fout = $fopen("../stimulus/acvp/HMAC-SHA2-512-600335_digest.txt","w");
+      fout = $fopen("../stimulus/acvp/HMAC-SHA2-512_digest.txt","w");
       if (fout == 0)
       begin
         $display("ERROR: Output file not found");
