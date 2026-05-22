@@ -18,6 +18,7 @@
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
 #include "printf.h"
+#include "xorshift.h"
 #include "mldsa.h"
 #include <stdlib.h>
 
@@ -105,13 +106,13 @@ void main() {
         seed.kv_id = 8; //KV_ENTRY_FOR_MLDSA_SIGNING
 
         for (int i = 0; i < MLDSA87_SIGN_RND_SIZE; i++)
-            sign_rnd[i] = rand() % 0xffffffff;
+            sign_rnd[i] = xorshift32();
 
         for (int i = 0; i < MLDSA87_ENTROPY_SIZE; i++)
-            entropy[i] = rand() % 0xffffffff;
+            entropy[i] = xorshift32();
         
         for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
-            msg[i] = rand() % 0xffffffff;
+            msg[i] = xorshift32();
 
         VPRINTF(LOW, "inject random mldsa seed to kv key reg (in RTL)\n");
         SEND_STDOUT_CTRL(0x93);
@@ -194,7 +195,7 @@ void main() {
         offset = 0;
         while ((*status_ptr == 0) & (offset < end_addr)) {
             // Try to Overwrite data in MLDSA
-            *reg_ptr = rand() % 0xffffffff;
+            *reg_ptr = xorshift32();
             if (*reg_ptr != 0) {
                 VPRINTF(ERROR, "At offset [%d], mldsa data mismatch!\n", offset);
                 VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
