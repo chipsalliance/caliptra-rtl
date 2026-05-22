@@ -23,6 +23,7 @@
 #include <stdlib.h>
 #include "printf.h"
 #include "datavault.h"
+#include "xorshift.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -37,12 +38,7 @@ volatile uint32_t  err_count __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-#ifndef MY_RANDOM_SEED
-#define MY_RANDOM_SEED 17
-#endif // MY_RANDOM_SEED
-// -- End Boilerplate --
-
-const long seed = MY_RANDOM_SEED; 
+unsigned seed = (unsigned) MY_RANDOM_SEED;
 
 const int EXPECT_LOCKED = 1;
 const int EXPECT_UNLOCKED = 0;
@@ -64,7 +60,7 @@ int wr_regs_per_pfx(widereg_t *dv_reg, uint32_t rmask, int locked) {
         if (locked)
             expdata = *tmpreg; 
 
-        wdata = (uint32_t) rand(); 
+        wdata = xorshift32();
         *tmpreg = wdata;
 
         rdata = *tmpreg;
@@ -154,7 +150,7 @@ int exercise_unlocked() {
         }
 
         if (found_unlocked) {
-            uint32_t rand_data = rand();
+            uint32_t rand_data = xorshift32();
             errs += wr_single_reg_explicit( dv_ptr, rand_data, rand_data, pos );  // unlocked registers
         }
 
@@ -227,10 +223,10 @@ int handle_1d_locking(ctrl_reg_t *dv_ctrl_ptr) {
 
         VPRINTF(LOW, "%s[%d] -LOCKS-> %s[%d]\n", ctrlgrp_ptr->pfx, j, datagrp_ptr->pfx, j);
 
-        uint32_t locked_data = rand();
+        uint32_t locked_data = xorshift32();
         errs += wr_single_reg_explicit( datagrp_ptr, locked_data, locked_data, j );     // write random
         errs += wr_single_reg_explicit( ctrlgrp_ptr, 0x1, 0x1, j );                     // lock register 
-        errs += wr_single_reg_explicit( datagrp_ptr, rand(), locked_data, j );          // attempt write random
+        errs += wr_single_reg_explicit( datagrp_ptr, xorshift32(), locked_data, j );          // attempt write random
         update_bitmap(datagrp_ptr - datagrp_head, j);                                   // mark lock bitmap
         errs += exercise_unlocked();                                                    // attempt write random to unlocked blocks
         errs += wr_single_reg_explicit( ctrlgrp_ptr, 0x0, 0x1, j );                     // attempt unlock register 
@@ -259,11 +255,8 @@ void main() {
 
     if (rst_count == 0) {
 
-        int i = rand() % 4;  // Looping through all 4 groups of control registers take too long!
-
         // CYCLE THROUGH 4 CTRL GROUP 
-        // for (int i = 0; i < 4; i++) {
-
+        for (int i = 0; i < 4; i++) {
             dv_ctrl_ptr = & dv_ctrl_regids[ctrl_data_indices[i]]; 
             VPRINTF (LOW, "\n\n** Working on new Control Group Prefix %s to Start Locking Data Registers **\n\n", dv_regs[dv_ctrl_ptr->index].pfx);
 
@@ -271,7 +264,7 @@ void main() {
                 err_count += handle_2d_locking(dv_ctrl_ptr);
             else
                 err_count += handle_1d_locking(dv_ctrl_ptr);
-        // }
+        }
 
         VPRINTF(LOW,"\n\n-- Done w/test; %d errors found -- \n", err_count);
         if (err_count != 0)  {
