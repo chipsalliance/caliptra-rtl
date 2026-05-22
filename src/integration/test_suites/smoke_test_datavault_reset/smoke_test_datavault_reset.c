@@ -21,6 +21,7 @@
 #include <stdint.h>
 #include <stdlib.h>
 #include "printf.h"
+#include "xorshift.h"
 #include "datavault.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
@@ -36,12 +37,7 @@ volatile uint32_t  err_count __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-#ifndef MY_RANDOM_SEED
-#define MY_RANDOM_SEED 17
-#endif // MY_RANDOM_SEED
-// -- End Boilerplate --
-
-const long seed = MY_RANDOM_SEED; 
+unsigned seed = (unsigned) MY_RANDOM_SEED;
 
 const int DV_WARM_RESET   = 0;
 const int DV_COLD_RESET   = 1;
@@ -50,20 +46,18 @@ uint32_t wdata_values [DV_PFX_COUNT] [DV_MAXWIDTH];
 uint32_t survived_values [DV_PFX_COUNT] [DV_MAXWIDTH]; 
 
 
-void populate_wr_exp_values(uint32_t init_val) { 
-
+void populate_wr_exp_values(uint32_t local_seed) {
     widereg_t *dvregs_ptr;
-    uint32_t curr = init_val; 
 
-    VPRINTF(LOW, "\n-- Populating write data and expected values into arrays starting w/0x%x--\n", init_val);
+    xorshift32_init(local_seed);
+    VPRINTF(LOW, "\n-- Populating random write data and expected values into arrays --\n");
 
     dvregs_ptr = dv_regs;
     
     for (int i = 0; i < DV_PFX_COUNT; i++, dvregs_ptr++) {
         for (int j = 0; j < dvregs_ptr->width; j++) {
-            wdata_values[i][j] = curr;  
+            wdata_values[i][j] = xorshift32();
             survived_values[i][j] = wdata_values[i][j] & dvregs_ptr->sticky_mask; 
-            curr += 0x10;
         }
     }
     VPRINTF(LOW, "\n-- Done with populating data --\n");
@@ -161,16 +155,14 @@ void main() {
 
 
     if (rst_count == 0) {
-
-        srand(seed);
-
         VPRINTF(LOW,"------------------------------------\n");
         VPRINTF(LOW," DV Smoke Test for Cold/Warm Reset !!\n");
         VPRINTF(LOW,"------------------------------------\n");
 
         VPRINTF(LOW,"\nINFO. Using random seed = %d\n\n", seed);
+        srand(seed);
 
-        populate_wr_exp_values(0x10000001);
+        populate_wr_exp_values(seed);
         write_dv_regs();
 
         VPRINTF(LOW,"\n-- Issue warm reset --\n"); 
@@ -181,7 +173,7 @@ void main() {
 
         VPRINTF(LOW,"** Checking warm reset survived values **\n"); 
 
-        populate_wr_exp_values(0x10000001);
+        populate_wr_exp_values(seed);
         err_count = check_reset_values(DV_WARM_RESET);
 
         if (err_count == 0) {
@@ -190,7 +182,7 @@ void main() {
             VPRINTF(LOW,"-- %d errors found in warm-reset test phase; proceeding to next phase -- \n", err_count);
         }
 
-        populate_wr_exp_values(0x20000001);
+        populate_wr_exp_values(seed + 1);
         write_dv_regs();
 
         VPRINTF(LOW,"\n** Performing a WRITE to all registers again (reporting once per prefix)**\n\n");
