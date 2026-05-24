@@ -17,6 +17,7 @@
 module mbox 
     import mbox_pkg::*;
     import mbox_csr_pkg::*;
+    import soc_ifc_pkg::*;
     #(
      parameter DMI_REG_MBOX_DLEN_ADDR = 7'h50
     ,parameter DMI_REG_MBOX_LOCK_ADDR = 7'h75
@@ -195,7 +196,10 @@ logic write_error;
 mbox_csr__in_t hwif_in;
 mbox_csr__out_t hwif_out;
 
-assign mbox_error = read_error | write_error;
+// Error from mbox_csr register hole accesses, OR from addresses outside the
+// implemented register range (filtered out by the address check on s_cpuif_req)
+assign mbox_error = read_error | write_error |
+                    (req_dv & ~dir_req_dv & (req_data_addr[MBOX_IFC_ADDR_W-1:MBOX_CSR_ADDR_WIDTH] != MBOX_REG_START_ADDR[MBOX_IFC_ADDR_W-1:MBOX_CSR_ADDR_WIDTH]));
 
 assign tap_mode = hwif_out.tap_mode.enabled.value;
 
@@ -740,7 +744,7 @@ mbox_csr1(
     .clk(clk),
     .rst('0),
 
-    .s_cpuif_req(req_dv & ~dir_req_dv),
+    .s_cpuif_req(req_dv & ~dir_req_dv & (req_data_addr[MBOX_IFC_ADDR_W-1:MBOX_CSR_ADDR_WIDTH] == MBOX_REG_START_ADDR[MBOX_IFC_ADDR_W-1:MBOX_CSR_ADDR_WIDTH])),
     .s_cpuif_req_is_wr(req_data_write),
     .s_cpuif_addr(req_data_addr[MBOX_CSR_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(req_data_wdata),
