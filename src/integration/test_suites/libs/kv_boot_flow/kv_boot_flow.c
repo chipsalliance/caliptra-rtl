@@ -17,6 +17,7 @@
 
 #include "kv_boot_flow.h"
 #include "caliptra_defines.h"
+#include "caliptra_reg.h"
 #include "riscv_hw_if.h"
 #include "printf.h"
 
@@ -283,4 +284,89 @@ void copy_to_iccm(uint32_t dest, uint32_t *lma_start, uint32_t *lma_end) {
     while (src < lma_end) {
         *dst++ = *src++;
     }
+}
+
+//
+// Read CPTRA_HW_CONFIG and SS_STRAP_GENERIC_3 to determine conditional enables.
+// Mirrors the RTL logic in soc_ifc_top.sv:
+//   stable_owner_key_en = SUBSYSTEM_MODE_en & ~OCP_LOCK_MODE_en & SS_STRAP_GENERIC_3[0]
+//   ocp_lock_mode_en = OCP_LOCK_MODE_en (only meaningful when SUBSYSTEM_MODE_en)
+//
+void compute_conditional_enables(uint32_t *stable_owner_key_en, uint32_t *ocp_lock_mode_en) {
+    uint32_t hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+    uint32_t ss_mode = (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK) != 0;
+    uint32_t ocp_lock = (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) != 0;
+    uint32_t strap3 = lsu_read_32(CLP_SOC_IFC_REG_SS_STRAP_GENERIC_3);
+    uint32_t strap3_bit0 = strap3 & 0x1;
+
+    *ocp_lock_mode_en = ocp_lock;
+    *stable_owner_key_en = ss_mode && !ocp_lock && strap3_bit0;
+
+    VPRINTF(LOW, "  Conditional enables: ss_mode=%d ocp_lock=%d strap3[0]=%d "
+            "=> stable_owner_key_en=%d ocp_lock_mode_en=%d\n",
+            ss_mode, ocp_lock, strap3_bit0, *stable_owner_key_en, *ocp_lock_mode_en);
+}
+
+//
+// Populate conditional slots for preservation testing.
+// Writes HMAC results to: slot 15 (stable owner), 16 (MDK), 22 (HEK), 23 (MEK),
+// and canary slots 10 (standard) and 17 (OCP range).
+//
+void populate_conditional_slots(void) {
+    VPRINTF(LOW, "  Populating conditional + canary slots...\n");
+    hmac_write_kv_slot(KV_SLOT_CANARY_STD,   DV_AES_KEY);
+    hmac_write_kv_slot(KV_SLOT_STABLE_OWNER, DV_AES_KEY);
+    hmac_write_kv_slot(KV_SLOT_MDK,          DV_AES_KEY);
+    hmac_write_kv_slot(KV_SLOT_CANARY_OCP,   DV_AES_KEY);
+    hmac_write_kv_slot(KV_SLOT_HEK,          DV_AES_KEY);
+    hmac_write_kv_slot(KV_SLOT_MEK,          DV_AES_KEY);
+}
+
+//
+// Verify a slot was preserved (dest_valid != 0).
+//
+void check_slot_preserved(uint8_t slot, const char *phase) {
+    uint32_t ctrl = lsu_read_32(KV_KEY_CTRL(slot));
+    uint32_t dv = (ctrl & KV_DEST_VALID_MASK) >> KV_DEST_VALID_LOW;
+    if (dv == 0) {
+        VPRINTF(FATAL, "[FAIL] %s: slot %d was cleared but should be preserved "
+                "(ctrl=0x%08x)\n", phase, slot, ctrl);
+        SEND_STDOUT_CTRL(0x01);
+        while(1);
+    }
+    VPRINTF(LOW, "  %s: slot %d preserved (dest_valid=0x%03x) -- OK\n", phase, slot, dv);
+}
+
+//
+// Check conditional slot preservation/clearing after a boot transition.
+//
+void check_conditional_slots(uint32_t stable_owner_key_en, uint32_t ocp_lock_mode_en,
+                             const char *phase) {
+    VPRINTF(LOW, "%s: Checking conditional slots (stable_owner=%d, ocp_lock=%d)\n",
+            phase, stable_owner_key_en, ocp_lock_mode_en);
+
+    // Slot 15 (Stable Owner Key)
+    if (stable_owner_key_en) {
+        check_slot_preserved(KV_SLOT_STABLE_OWNER, phase);
+    } else {
+        check_slot_cleared(KV_SLOT_STABLE_OWNER, phase);
+    }
+
+    // Slots 16 (MDK) and 22 (HEK) -- OCP Lock slots
+    if (ocp_lock_mode_en) {
+        check_slot_preserved(KV_SLOT_MDK, phase);
+        check_slot_preserved(KV_SLOT_HEK, phase);
+    } else {
+        check_slot_cleared(KV_SLOT_MDK, phase);
+        check_slot_cleared(KV_SLOT_HEK, phase);
+    }
+
+    // Slot 23 (MEK) -- ALWAYS cleared regardless of ocp_lock
+    check_slot_cleared(KV_SLOT_MEK, phase);
+
+    // Canary slots -- ALWAYS cleared
+    check_slot_cleared(KV_SLOT_CANARY_STD, phase);
+    check_slot_cleared(KV_SLOT_CANARY_OCP, phase);
+
+    VPRINTF(LOW, "%s: Conditional slot checks passed\n", phase);
 }

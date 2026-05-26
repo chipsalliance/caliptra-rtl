@@ -49,6 +49,11 @@ volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+// Conditional preservation enables (computed from register readback in ROM,
+// used by FMC and RT phases for slot verification)
+volatile uint32_t g_stable_owner_key_en = 0;
+volatile uint32_t g_ocp_lock_mode_en = 0;
+
 // FMC function: placed in .data_iccm0 section, will be copied to FMC region
 extern uintptr_t iccm_code0_start, iccm_code0_end;
 void fmc_entry(void) __attribute__((aligned(4), section(".data_iccm0")));
@@ -173,6 +178,16 @@ void main() {
     VPRINTF(LOW, "ROM: Populating DICE key slots...\n");
     populate_dice_slots();
 
+    // Compute conditional enables from register readback
+    uint32_t stable_owner_key_en, ocp_lock_mode_en;
+    compute_conditional_enables(&stable_owner_key_en, &ocp_lock_mode_en);
+    g_stable_owner_key_en = stable_owner_key_en;
+    g_ocp_lock_mode_en = ocp_lock_mode_en;
+
+    // Populate conditional + canary slots for preservation testing
+    VPRINTF(LOW, "ROM: Populating conditional slots...\n");
+    populate_conditional_slots();
+
     // Copy FMC and RT code to ICCM
     VPRINTF(LOW, "ROM: Copying FMC code to ICCM\n");
     copy_to_iccm(FMC_ICCM_ADDR,
@@ -214,9 +229,14 @@ void fmc_entry(void) {
     check_slot_cleared(KV_SLOT_RT_CDI, "FMC");
     check_slot_cleared(KV_SLOT_RT_ECDSA, "FMC");
     check_slot_cleared(KV_SLOT_RT_MLDSA, "FMC");
-    for (int i = 10; i < KV_NUM_KEYS; i++) {
+    // Slots 10-14 always cleared (slot 15 checked conditionally below)
+    for (int i = 10; i < KV_SLOT_STABLE_OWNER; i++) {
         check_slot_cleared(i, "FMC");
     }
+
+    // --- Test 2b: Conditional slot preservation ---
+    VPRINTF(LOW, "FMC: Test 2b -- conditional slot preservation\n");
+    check_conditional_slots(g_stable_owner_key_en, g_ocp_lock_mode_en, "FMC");
 
     // --- Test 3: ROM callback does not regress layer ---
     VPRINTF(LOW, "FMC: Test 3 -- ROM callback non-regression\n");
@@ -306,6 +326,10 @@ void rt_entry(void) {
     // --- Test 7: DOE still locked ---
     VPRINTF(LOW, "RT: Test 7 -- DOE lockdown persists\n");
     check_doe_locked("RT");
+
+    // --- Test 8: Conditional slot preservation at RT ---
+    VPRINTF(LOW, "RT: Test 8 -- conditional slot preservation\n");
+    check_conditional_slots(g_stable_owner_key_en, g_ocp_lock_mode_en, "RT");
 
     // All tests passed
     VPRINTF(LOW, "============================================\n");

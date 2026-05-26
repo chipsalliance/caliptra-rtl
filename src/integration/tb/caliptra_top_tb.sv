@@ -111,6 +111,11 @@ module caliptra_top_tb (
 
     logic ss_ocp_lock_en;
 
+    logic [31:0] strap_ss_strap_generic_0;
+    logic [31:0] strap_ss_strap_generic_1;
+    logic [31:0] strap_ss_strap_generic_2;
+    logic [31:0] strap_ss_strap_generic_3;
+
     ras_test_ctrl_t ras_test_ctrl;
     axi_complex_ctrl_t axi_complex_ctrl;
     logic [63:0] generic_input_wires;
@@ -157,6 +162,10 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .strap_ss_key_release_key_size,
     .strap_ss_key_release_base_addr,
     .ss_ocp_lock_en,
+    .strap_ss_strap_generic_0,
+    .strap_ss_strap_generic_1,
+    .strap_ss_strap_generic_2,
+    .strap_ss_strap_generic_3,
 
     .cptra_uds_rand  (cptra_uds_rand  ),
     .cptra_fe_rand   (cptra_fe_rand   ),
@@ -282,10 +291,10 @@ caliptra_top caliptra_top_dut (
     .strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset(32'h0),
     .strap_ss_num_of_prod_debug_unlock_auth_pk_hashes       (32'h0),
     .strap_ss_caliptra_dma_axi_user                         (32'h0),
-    .strap_ss_strap_generic_0                               (32'h0),
-    .strap_ss_strap_generic_1                               (32'h0),
-    .strap_ss_strap_generic_2                               (32'h0),
-    .strap_ss_strap_generic_3                               (32'h0),
+    .strap_ss_strap_generic_0                               (strap_ss_strap_generic_0),
+    .strap_ss_strap_generic_1                               (strap_ss_strap_generic_1),
+    .strap_ss_strap_generic_2                               (strap_ss_strap_generic_2),
+    .strap_ss_strap_generic_3                               (strap_ss_strap_generic_3),
     .ss_debug_intent                                        ( 1'b0),
 
     // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled

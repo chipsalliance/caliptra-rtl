@@ -39,6 +39,14 @@
 #define KV_SLOT_FMC_MLDSA    8
 #define KV_SLOT_RT_MLDSA     9
 
+// Conditional slots (preserved only when corresponding mode is active)
+#define KV_SLOT_STABLE_OWNER 15
+#define KV_SLOT_MDK          16   // OCP Lock RT obfuscation key
+#define KV_SLOT_HEK          22   // OCP Lock HEK seed
+#define KV_SLOT_MEK          23   // OCP Lock key release (always cleared)
+#define KV_SLOT_CANARY_STD   10   // Standard-range canary (always cleared)
+#define KV_SLOT_CANARY_OCP   17   // OCP-range canary (always cleared)
+
 // ============================================================
 // dest_valid bit masks (from HMAC KV_WR_CTRL register fields)
 // ============================================================
@@ -61,7 +69,8 @@
 #define KV_DEST_VALID_LOW  KV_REG_KEY_CTRL_0_DEST_VALID_LOW
 
 // Number of KV entries
-#define KV_NUM_KEYS 16
+#define KV_NUM_KEYS       16
+#define KV_NUM_KEYS_TOTAL 24
 
 // ============================================================
 // ICCM region addresses
@@ -139,5 +148,21 @@ void check_doe_locked(const char *phase);
 
 // Copy code from LMA storage to an ICCM destination address.
 void copy_to_iccm(uint32_t dest, uint32_t *lma_start, uint32_t *lma_end);
+
+// Read CPTRA_HW_CONFIG and SS_STRAP_GENERIC_3 to compute stable_owner_key_en
+// and ocp_lock_mode_en at runtime.
+void compute_conditional_enables(uint32_t *stable_owner_key_en, uint32_t *ocp_lock_mode_en);
+
+// Populate conditional slots: stable owner (15), OCP Lock (16, 22, 23),
+// and canary slots (10, 17) for clear verification.
+void populate_conditional_slots(void);
+
+// Check conditional slot preservation/clearing after a boot transition.
+// phase: "FMC" or "RT" for logging.
+void check_conditional_slots(uint32_t stable_owner_key_en, uint32_t ocp_lock_mode_en,
+                             const char *phase);
+
+// Verify a slot was preserved (dest_valid != 0).
+void check_slot_preserved(uint8_t slot, const char *phase);
 
 #endif // KV_BOOT_FLOW_H
