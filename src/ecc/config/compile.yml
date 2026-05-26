@@ -152,6 +152,28 @@ global:
         - +define+SIMULATION
         - '-noinherit_timescale=1ns/1ps'
 ---
+provides: [ecc_pm_ctrl_inv_latency_smoke_tb]
+schema_version: 2.4.0
+requires:
+  - ecc_top
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/rtl/ecc_params_pkg.sv
+      - $COMPILE_ROOT/rtl/ecc_pm_uop_pkg.sv
+      - $COMPILE_ROOT/tb/ecc_pm_ctrl_inv_latency_smoke_tb.sv
+    tops: [ecc_pm_ctrl_inv_latency_smoke_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
 provides: [ecc_coverage]  
 schema_version: 2.4.0
 requires: 

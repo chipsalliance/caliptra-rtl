@@ -33,6 +33,7 @@ module ecc_top_tb
 ();
 
   string      ecc_test_vector_file; // Input test vector file
+  string      ecc_p384_test_vector_file; // L5 dualcurve: optional P-384 sidecar KAT
   string      ecc_test_to_run;      // ECC tests - default, ECC_normal_test, ECC_otf_reset_test
 
   localparam ECC_CMD_KEYGEN              = 2'b01;
@@ -68,6 +69,8 @@ module ecc_top_tb
   } test_vector_t;
 
   test_vector_t [TEST_VECTOR_NUM-1:0] test_vectors;
+  // L5 dualcurve: parallel P-384 KAT array (when both curves run in one sim)
+  test_vector_t [TEST_VECTOR_NUM-1:0] p384_test_vectors;
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
@@ -128,6 +131,9 @@ module ecc_top_tb
 
   int                   test_vector_cnt;
 
+  // L2 P-256 validation: when set, OR CURVE_SEL bit into ECC_CTRL cmd writes
+  bit                   curve_sel_g = 1'b0;
+
   initial begin
     if ($value$plusargs("ECC_TEST_VECTOR_FILE=%s", ecc_test_vector_file)) begin
       $display("%m: Using ECC test vectors from file specified via plusarg: %s", ecc_test_vector_file);
@@ -141,6 +147,16 @@ module ecc_top_tb
     end else begin
       ecc_test_to_run = "default";
       $display("%m: Running default test = %s", ecc_test_to_run);
+    end
+
+    if (ecc_test_to_run == "ECC_p256_verify_test"        ||
+        ecc_test_to_run == "ECC_p256_keygen_test"        ||
+        ecc_test_to_run == "ECC_p256_sign_test"          ||
+        ecc_test_to_run == "ECC_p256_dualcurve_test"     ||
+        ecc_test_to_run == "ECC_p256_keygen_blind_test"  ||
+        ecc_test_to_run == "ECC_p256_sign_blind_test") begin
+      curve_sel_g = 1'b1;
+      $display("%m: CURVE_SEL=1 (P-256) enabled for this run");
     end
   end
 
@@ -456,12 +472,495 @@ module ecc_top_tb
   //----------------------------------------------------------------
   task trig_ECC(input [31 : 0] cmd);
     begin
-      write_single_word(`ECC_REG_ECC_CTRL, cmd);
+      write_single_word(`ECC_REG_ECC_CTRL,
+                        cmd | (curve_sel_g ? `ECC_REG_ECC_CTRL_CURVE_SEL_MASK : 32'h0));
       #(CLK_PERIOD);
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
     end
   endtask // trig_ECC
+
+
+  //----------------------------------------------------------------
+  // drbg_bypass_force / drbg_bypass_release
+  //
+  // L3/L4 helpers: drive the DSA-ctrl P-256 DRBG-placeholder nets via
+  // SV `force` so deterministic privkey / k / blinding values from the
+  // exe test-vector can be injected without requiring HMAC-DRBG-P256.
+  // Forces:
+  //   hmac_drbg_result_p256 <- {128'h0, drbg_val[255:0]}  (KEYGEN privkey
+  //                                                       or SIGN k)
+  //   lambda_p256, scalar_rnd_p256, masking_rnd_p256 <- '0  (disable all
+  //                                                          randomization
+  //                                                          for KAT-exact
+  //                                                          determinism)
+  // Release pairs with each force so subsequent ops re-take the placeholder
+  // assigns. Only meaningful under CURVE_SEL=1 (P-256).
+  //----------------------------------------------------------------
+  task drbg_bypass_force(input bit [255:0] drbg_val);
+    begin
+      // Identity-blinding variant (L3/L4): hardwires lambda=1, rnds=0
+      drbg_bypass_force_blind(drbg_val,
+                              {{(384-1){1'b0}}, 1'b1},   // lambda = 1
+                              '0,                         // scalar_rnd = 0
+                              '0);                        // masking_rnd = 0
+    end
+  endtask
+
+  // L6 variant: caller supplies non-identity blinding values to spot-check
+  // that the engine still produces the KAT-matching public outputs even with
+  // randomized internal state (proves blinding cancels at top level).
+  task drbg_bypass_force_blind(input bit [255:0] drbg_val,
+                               input bit [383:0] lambda_val,
+                               input bit [383:0] scalar_rnd_val,
+                               input bit [383:0] masking_rnd_val);
+    begin
+      force dut.ecc_dsa_ctrl_i.hmac_drbg_result_p256 = {128'h0, drbg_val};
+      force dut.ecc_dsa_ctrl_i.lambda_p256           = lambda_val;
+      force dut.ecc_dsa_ctrl_i.scalar_rnd_p256       = scalar_rnd_val;
+      force dut.ecc_dsa_ctrl_i.masking_rnd_p256      = masking_rnd_val;
+    end
+  endtask
+
+  task drbg_bypass_release();
+    begin
+      release dut.ecc_dsa_ctrl_i.hmac_drbg_result_p256;
+      release dut.ecc_dsa_ctrl_i.lambda_p256;
+      release dut.ecc_dsa_ctrl_i.scalar_rnd_p256;
+      release dut.ecc_dsa_ctrl_i.masking_rnd_p256;
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // drbg_bypass_force_p384 / drbg_bypass_release_p384
+  //
+  // P-384 variant used only for DRBG-cost measurement experiments.
+  // Forces the four real-DRBG output nets AND hmac_ready_p384=1 to
+  // short-circuit the DRBG wait; the delta vs the unforced baseline
+  // is exactly the cycles spent in HMAC-DRBG-P384.
+  //----------------------------------------------------------------
+  task drbg_bypass_force_p384(input bit [383:0] drbg_val);
+    begin
+      force dut.ecc_dsa_ctrl_i.hmac_drbg_result_p384 = drbg_val;
+      force dut.ecc_dsa_ctrl_i.lambda_p384           = {{(384-1){1'b0}}, 1'b1};
+      force dut.ecc_dsa_ctrl_i.scalar_rnd_p384       = '0;
+      force dut.ecc_dsa_ctrl_i.masking_rnd_p384      = '0;
+      force dut.ecc_dsa_ctrl_i.hmac_ready_p384       = 1'b1;
+    end
+  endtask
+
+  task drbg_bypass_release_p384();
+    begin
+      release dut.ecc_dsa_ctrl_i.hmac_drbg_result_p384;
+      release dut.ecc_dsa_ctrl_i.lambda_p384;
+      release dut.ecc_dsa_ctrl_i.scalar_rnd_p384;
+      release dut.ecc_dsa_ctrl_i.masking_rnd_p384;
+      release dut.ecc_dsa_ctrl_i.hmac_ready_p384;
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // ecc_p384_keygen_bypass_test()
+  //
+  // P-384 KEYGEN with the real HMAC-DRBG-P384 short-circuited via
+  // force. Cycle count vs P-384 baseline (ecc_normal_test KEYGEN =
+  // 717,151 cycles) isolates the DRBG-P384 contribution.
+  //----------------------------------------------------------------
+  task ecc_p384_keygen_bypass_test(input [7:0] tc_number,
+                                   input test_vector_t test_vector);
+    reg [31:0]    start_time;
+    reg [31:0]    end_time;
+    operand_t     privkey;
+    affn_point_t  pubkey;
+    begin
+      wait_ready();
+
+      $display("*** TC %0d P-384 keygen-bypass test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+
+      drbg_bypass_force_p384(test_vector.privkey);
+
+      write_block(`ECC_REG_ECC_SEED_0,  test_vector.seed);
+      write_block(`ECC_REG_ECC_NONCE_0, test_vector.nonce);
+      write_block(`ECC_REG_ECC_IV_0,    test_vector.IV);
+
+      trig_ECC(ECC_CMD_KEYGEN);
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_PRIVKEY_OUT_0); privkey  = reg_read_data;
+      read_block(`ECC_REG_ECC_PUBKEY_X_0);    pubkey.x = reg_read_data;
+      read_block(`ECC_REG_ECC_PUBKEY_Y_0);    pubkey.y = reg_read_data;
+
+      drbg_bypass_release_p384();
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** P-384 keygen-bypass processing time = %01d cycles.", end_time);
+
+      if ((privkey == test_vector.privkey) &&
+          (pubkey.x == test_vector.pubkey.x) &&
+          (pubkey.y == test_vector.pubkey.y)) begin
+        $display("*** TC %0d P-384 keygen-bypass successful.", tc_number);
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: TC %0d P-384 keygen-bypass NOT successful.", tc_number);
+        $display("Expected_priv: 0x%96x", test_vector.privkey);
+        $display("Got_priv:      0x%96x", privkey);
+        $display("Expected_x:    0x%96x", test_vector.pubkey.x);
+        $display("Got_x:         0x%96x", pubkey.x);
+        $display("Expected_y:    0x%96x", test_vector.pubkey.y);
+        $display("Got_y:         0x%96x", pubkey.y);
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // ecc_p384_keygen_bypass_test
+
+
+  //----------------------------------------------------------------
+  // ecc_p256_keygen_bypass_test()
+  //
+  // L3: P-256 KEYGEN with DRBG bypassed via SV force. The exe-generated
+  // privkey is force-injected through hmac_drbg_result_p256 so that the
+  // engine's KEYGEN scalar = privkey. Lambda/scalar_rnd/masking_rnd
+  // forced to 0 makes the blinded scalar = privkey · 1 = privkey, giving
+  // a fully deterministic privkey · G computation that must match the
+  // exe-generated public key.
+  //
+  // Pass criterion: read-back PUBKEY_X/Y (and the engine-returned privkey)
+  // equal the test_vector on the lower 256 bits (upper 128 bits already
+  // masked to 0 by the curve-aware readback).
+  //----------------------------------------------------------------
+  task ecc_p256_keygen_bypass_test(input [7:0] tc_number,
+                                   input test_vector_t test_vector);
+    reg [31:0]    start_time;
+    reg [31:0]    end_time;
+    operand_t     privkey;
+    affn_point_t  pubkey;
+    begin
+      wait_ready();
+
+      $display("*** TC %0d P-256 keygen-bypass test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+
+      drbg_bypass_force(test_vector.privkey[255:0]);
+
+      $display("*** TC %0d writing seed value %0h", tc_number, test_vector.seed);
+      write_block(`ECC_REG_ECC_SEED_0,  test_vector.seed);
+      $display("*** TC %0d writing nonce value %0h", tc_number, test_vector.nonce);
+      write_block(`ECC_REG_ECC_NONCE_0, test_vector.nonce);
+      $display("*** TC %0d writing IV value %0h",    tc_number, test_vector.IV);
+      write_block(`ECC_REG_ECC_IV_0,    test_vector.IV);
+
+      $display("*** TC %0d starting P-256 KEYGEN flow (DRBG bypassed)", tc_number);
+      trig_ECC(ECC_CMD_KEYGEN);
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_PRIVKEY_OUT_0); privkey  = reg_read_data;
+      read_block(`ECC_REG_ECC_PUBKEY_X_0);    pubkey.x = reg_read_data;
+      read_block(`ECC_REG_ECC_PUBKEY_Y_0);    pubkey.y = reg_read_data;
+
+      drbg_bypass_release();
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** P-256 keygen-bypass processing time = %01d cycles.", end_time);
+      $display("privkey    : 0x%64x", privkey[255:0]);
+      $display("pubkeyx    : 0x%64x", pubkey.x[255:0]);
+      $display("pubkeyy    : 0x%64x", pubkey.y[255:0]);
+
+      if ((privkey[255:0]  == test_vector.privkey[255:0]) &&
+          (pubkey.x[255:0] == test_vector.pubkey.x[255:0]) &&
+          (pubkey.y[255:0] == test_vector.pubkey.y[255:0])) begin
+        $display("*** TC %0d P-256 keygen-bypass successful.", tc_number);
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: TC %0d P-256 keygen-bypass NOT successful.", tc_number);
+        $display("Expected_priv: 0x%64x", test_vector.privkey[255:0]);
+        $display("Got_priv:      0x%64x", privkey[255:0]);
+        $display("Expected_x:    0x%64x", test_vector.pubkey.x[255:0]);
+        $display("Got_x:         0x%64x", pubkey.x[255:0]);
+        $display("Expected_y:    0x%64x", test_vector.pubkey.y[255:0]);
+        $display("Got_y:         0x%64x", pubkey.y[255:0]);
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // ecc_p256_keygen_bypass_test
+
+
+  //----------------------------------------------------------------
+  // ecc_p256_sign_bypass_test()
+  //
+  // L4: P-256 SIGN with DRBG bypassed via SV force. The pre-computed
+  // k = (h + r*priv) * s^-1 mod n_p256 (embedded in test_vector.privkeyB
+  // by gen_secp256r1_kat.py) is forced through hmac_drbg_result_p256 so
+  // the engine's nonce = k. privkey is written via CSR (normal SIGN
+  // input path). Result R,S must match exe-generated KAT on lower 256b.
+  //----------------------------------------------------------------
+  task ecc_p256_sign_bypass_test(input [7:0] tc_number,
+                                 input test_vector_t test_vector);
+    reg [31:0]    start_time;
+    reg [31:0]    end_time;
+    operand_t     R;
+    operand_t     S;
+    begin
+      wait_ready();
+
+      $display("*** TC %0d P-256 sign-bypass test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+
+      // privkeyB slot in the P-256 KAT carries k (the SIGN nonce).
+      drbg_bypass_force(test_vector.privkeyB[255:0]);
+
+      $display("*** TC %0d writing message value %0h", tc_number, test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_MSG_0,        test_vector.hashed_msg);
+      $display("*** TC %0d writing private key value %0h", tc_number, test_vector.privkey);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+      $display("*** TC %0d writing seed value %0h",   tc_number, test_vector.seed);
+      write_block(`ECC_REG_ECC_SEED_0,       test_vector.seed);
+      $display("*** TC %0d writing nonce value %0h",  tc_number, test_vector.nonce);
+      write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
+      $display("*** TC %0d writing IV value %0h",     tc_number, test_vector.IV);
+      write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
+
+      $display("*** TC %0d starting P-256 SIGN flow (DRBG bypassed)", tc_number);
+      trig_ECC(ECC_CMD_SIGNING);
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_SIGN_R_0); R = reg_read_data;
+      read_block(`ECC_REG_ECC_SIGN_S_0); S = reg_read_data;
+
+      drbg_bypass_release();
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** P-256 sign-bypass processing time = %01d cycles.", end_time);
+      $display("R          : 0x%64x", R[255:0]);
+      $display("S          : 0x%64x", S[255:0]);
+
+      if ((R[255:0] == test_vector.R[255:0]) &&
+          (S[255:0] == test_vector.S[255:0])) begin
+        $display("*** TC %0d P-256 sign-bypass successful.", tc_number);
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: TC %0d P-256 sign-bypass NOT successful.", tc_number);
+        $display("Expected_R: 0x%64x", test_vector.R[255:0]);
+        $display("Got_R:      0x%64x", R[255:0]);
+        $display("Expected_S: 0x%64x", test_vector.S[255:0]);
+        $display("Got_S:      0x%64x", S[255:0]);
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // ecc_p256_sign_bypass_test
+
+
+  //----------------------------------------------------------------
+  // ecc_p256_dualcurve_test()
+  //
+  // L5: dual-curve interleave in a single sim with no reset between ops.
+  // Validates the runtime CURVE_SEL flip handling (ECC_INIT_LAST re-init
+  // sequence) introduced to fix the stale-PM-RAM-constants bug.
+  //
+  // Pattern per TC i (i=0..N-1):
+  //   1. curve_sel_g=0 ; P-384 VERIFY  (uses p384_test_vectors[i])
+  //   2. curve_sel_g=1 ; P-256 VERIFY  (uses test_vectors[i])
+  //   3. curve_sel_g=0 ; P-384 VERIFY  again on same TC
+  //   4. curve_sel_g=1 ; P-256 KEYGEN-bypass (uses test_vectors[i])
+  //   5. curve_sel_g=0 ; P-384 VERIFY  again
+  //   6. curve_sel_g=1 ; P-256 SIGN-bypass   (uses test_vectors[i])
+  //
+  // Pass: every sub-op matches its KAT. Failure here means the curve
+  // switch isn't fully re-initializing engine state.
+  //----------------------------------------------------------------
+  task ecc_p256_dualcurve_test(input [7:0] tc_number,
+                               input test_vector_t p256_vec,
+                               input test_vector_t p384_vec);
+    begin
+      $display("\n*** [DUAL] TC %0d : P-384 VERIFY #A", tc_number);
+      curve_sel_g = 1'b0;
+      ecc_verifying_test(tc_number, p384_vec);
+
+      $display("\n*** [DUAL] TC %0d : P-256 VERIFY",   tc_number);
+      curve_sel_g = 1'b1;
+      ecc_verifying_test(tc_number, p256_vec);
+
+      $display("\n*** [DUAL] TC %0d : P-384 VERIFY #B", tc_number);
+      curve_sel_g = 1'b0;
+      ecc_verifying_test(tc_number, p384_vec);
+
+      $display("\n*** [DUAL] TC %0d : P-256 KEYGEN-bypass", tc_number);
+      curve_sel_g = 1'b1;
+      ecc_p256_keygen_bypass_test(tc_number, p256_vec);
+
+      $display("\n*** [DUAL] TC %0d : P-384 VERIFY #C", tc_number);
+      curve_sel_g = 1'b0;
+      ecc_verifying_test(tc_number, p384_vec);
+
+      $display("\n*** [DUAL] TC %0d : P-256 SIGN-bypass",   tc_number);
+      curve_sel_g = 1'b1;
+      ecc_p256_sign_bypass_test(tc_number, p256_vec);
+
+      // leave curve_sel_g asserted matching ecc_test() loop default
+    end
+  endtask // ecc_p256_dualcurve_test
+
+
+  //----------------------------------------------------------------
+  // ecc_p256_keygen_blind_test() / ecc_p256_sign_blind_test()
+  //
+  // L6: non-zero blinding spot-check. Same flows as the L3/L4 bypass
+  // tasks but with random non-identity values forced onto lambda /
+  // scalar_rnd / masking_rnd. Output (pubkey or R,S) must STILL match
+  // the KAT — proves blinding cancels at the top level (the engine is
+  // math-correct under randomized internal state).
+  //
+  // Constraints picked for the forced values:
+  //   lambda      : random nonzero, 256b (always < p_p256, never 0)
+  //   scalar_rnd  : random nonzero, lower 192b (matches RND_SIZE)
+  //   masking_rnd : random nonzero, 256b
+  // $urandom seed is deterministic so failures are reproducible.
+  //----------------------------------------------------------------
+  task ecc_p256_keygen_blind_test(input [7:0] tc_number,
+                                  input test_vector_t test_vector);
+    reg [31:0]    start_time, end_time;
+    operand_t     privkey;
+    affn_point_t  pubkey;
+    bit [255:0]   lam;
+    bit [191:0]   scal_rnd;
+    bit [255:0]   msk;
+    begin
+      wait_ready();
+      $display("*** TC %0d P-256 KEYGEN-blind test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      // Pseudo-random blinding values, deterministic per TC.
+      lam      = {$urandom(tc_number+32'h1), $urandom, $urandom, $urandom,
+                  $urandom, $urandom, $urandom, $urandom};
+      if (lam == '0) lam = 256'h1;
+      scal_rnd = {$urandom, $urandom, $urandom, $urandom, $urandom, $urandom};
+      msk      = {$urandom, $urandom, $urandom, $urandom,
+                  $urandom, $urandom, $urandom, $urandom};
+
+      start_time = cycle_ctr;
+      drbg_bypass_force_blind(test_vector.privkey[255:0],
+                              {128'h0, lam},
+                              {192'h0, scal_rnd},
+                              {128'h0, msk});
+
+      write_block(`ECC_REG_ECC_SEED_0,  test_vector.seed);
+      write_block(`ECC_REG_ECC_NONCE_0, test_vector.nonce);
+      write_block(`ECC_REG_ECC_IV_0,    test_vector.IV);
+
+      $display("*** TC %0d KEYGEN-blind lambda=%h scalar_rnd=%h",
+               tc_number, lam, scal_rnd);
+      trig_ECC(ECC_CMD_KEYGEN);
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_PRIVKEY_OUT_0); privkey  = reg_read_data;
+      read_block(`ECC_REG_ECC_PUBKEY_X_0);    pubkey.x = reg_read_data;
+      read_block(`ECC_REG_ECC_PUBKEY_Y_0);    pubkey.y = reg_read_data;
+
+      drbg_bypass_release();
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** P-256 KEYGEN-blind processing time = %01d cycles.", end_time);
+
+      if ((privkey[255:0]  == test_vector.privkey[255:0]) &&
+          (pubkey.x[255:0] == test_vector.pubkey.x[255:0]) &&
+          (pubkey.y[255:0] == test_vector.pubkey.y[255:0])) begin
+        $display("*** TC %0d P-256 KEYGEN-blind successful.", tc_number);
+      end
+      else begin
+        $display("*** ERROR: TC %0d P-256 KEYGEN-blind NOT successful.", tc_number);
+        $display("Expected_x: 0x%64x  Got_x: 0x%64x",
+                 test_vector.pubkey.x[255:0], pubkey.x[255:0]);
+        $display("Expected_y: 0x%64x  Got_y: 0x%64x",
+                 test_vector.pubkey.y[255:0], pubkey.y[255:0]);
+        error_ctr = error_ctr + 1;
+      end
+      $display("");
+    end
+  endtask // ecc_p256_keygen_blind_test
+
+
+  task ecc_p256_sign_blind_test(input [7:0] tc_number,
+                                input test_vector_t test_vector);
+    reg [31:0]   start_time, end_time;
+    operand_t    R, S;
+    bit [255:0]  lam;
+    bit [191:0]  scal_rnd;
+    bit [255:0]  msk;
+    begin
+      wait_ready();
+      $display("*** TC %0d P-256 SIGN-blind test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      lam      = {$urandom(tc_number+32'h2), $urandom, $urandom, $urandom,
+                  $urandom, $urandom, $urandom, $urandom};
+      if (lam == '0) lam = 256'h1;
+      scal_rnd = {$urandom, $urandom, $urandom, $urandom, $urandom, $urandom};
+      msk      = {$urandom, $urandom, $urandom, $urandom,
+                  $urandom, $urandom, $urandom, $urandom};
+
+      start_time = cycle_ctr;
+      drbg_bypass_force_blind(test_vector.privkeyB[255:0],   // k
+                              {128'h0, lam},
+                              {192'h0, scal_rnd},
+                              {128'h0, msk});
+
+      write_block(`ECC_REG_ECC_MSG_0,        test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+      write_block(`ECC_REG_ECC_SEED_0,       test_vector.seed);
+      write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
+      write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
+
+      $display("*** TC %0d SIGN-blind lambda=%h scalar_rnd=%h",
+               tc_number, lam, scal_rnd);
+      trig_ECC(ECC_CMD_SIGNING);
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_SIGN_R_0); R = reg_read_data;
+      read_block(`ECC_REG_ECC_SIGN_S_0); S = reg_read_data;
+
+      drbg_bypass_release();
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** P-256 SIGN-blind processing time = %01d cycles.", end_time);
+
+      if ((R[255:0] == test_vector.R[255:0]) &&
+          (S[255:0] == test_vector.S[255:0])) begin
+        $display("*** TC %0d P-256 SIGN-blind successful.", tc_number);
+      end
+      else begin
+        $display("*** ERROR: TC %0d P-256 SIGN-blind NOT successful.", tc_number);
+        $display("Expected_R: 0x%64x  Got_R: 0x%64x",
+                 test_vector.R[255:0], R[255:0]);
+        $display("Expected_S: 0x%64x  Got_S: 0x%64x",
+                 test_vector.S[255:0], S[255:0]);
+        error_ctr = error_ctr + 1;
+      end
+      $display("");
+    end
+  endtask // ecc_p256_sign_blind_test
 
 
   //----------------------------------------------------------------
@@ -1102,11 +1601,40 @@ module ecc_top_tb
         else if (ecc_test_to_run == "ECC_otf_reset_test") begin
           ecc_onthefly_reset_test(i, test_vectors[i]);
         end
+        else if (ecc_test_to_run == "ECC_p256_verify_test") begin
+          ecc_verifying_test(i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_p256_keygen_test") begin
+          ecc_p256_keygen_bypass_test(i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_p256_sign_test") begin
+          ecc_p256_sign_bypass_test(i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_p256_dualcurve_test") begin
+          ecc_p256_dualcurve_test(i, test_vectors[i], p384_test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_p256_keygen_blind_test") begin
+          ecc_p256_keygen_blind_test(i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_p256_sign_blind_test") begin
+          ecc_p256_sign_blind_test(i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_p384_keygen_bypass_test") begin
+          ecc_p384_keygen_bypass_test(i, test_vectors[i]);
+        end
       end
       
-      continuous_cmd_test(test_vectors[0]);
-      zeroize_test(test_vectors[1]);
-      ecc_fault_test();
+      if ((ecc_test_to_run != "ECC_p256_verify_test")        &&
+          (ecc_test_to_run != "ECC_p256_keygen_test")        &&
+          (ecc_test_to_run != "ECC_p256_sign_test")          &&
+          (ecc_test_to_run != "ECC_p256_dualcurve_test")     &&
+          (ecc_test_to_run != "ECC_p256_keygen_blind_test")  &&
+          (ecc_test_to_run != "ECC_p256_sign_blind_test")    &&
+          (ecc_test_to_run != "ECC_p384_keygen_bypass_test")) begin
+        continuous_cmd_test(test_vectors[0]);
+        zeroize_test(test_vectors[1]);
+        ecc_fault_test();
+      end
     end
   endtask // ecc_test
 
@@ -1316,6 +1844,15 @@ module ecc_top_tb
       $display("");
 
       //fname = "/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex";
+      // L5 dualcurve: when a P-384 sidecar KAT is also provided, load it
+      // FIRST into the global test_vectors[] (legacy parser), then snapshot
+      // into p384_test_vectors[], so the second (P-256) load can repopulate
+      // test_vectors[] for the normal P-256 op iteration.
+      if ($value$plusargs("ECC_P384_TEST_VECTOR_FILE=%s", ecc_p384_test_vector_file)) begin
+        $display("%m: Using P-384 sidecar KAT: %s", ecc_p384_test_vector_file);
+        read_test_vectors(ecc_p384_test_vector_file);
+        p384_test_vectors = test_vectors;
+      end
       read_test_vectors(ecc_test_vector_file);
 
       init_sim();

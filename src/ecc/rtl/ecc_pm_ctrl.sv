@@ -105,9 +105,11 @@ module ecc_pm_ctrl
     //
     // Dual-curve ROMs: two pm sequencer instances (one per curve) are
     // instantiated in parallel and their outputs muxed by curve_sel_i.
-    // Both share the same address space and section labels (INV_S, etc.);
-    // the P-256 INV/INVq sections are padded with UOP_NOP entries so all
-    // dispatcher jump targets remain curve-invariant.
+    // Both share the same address space and section labels (INV_S, etc.).
+    // The P-256 INV/INVq sections are shorter than P-384 (704 vs 1040/1044
+    // real entries); the FSM short-circuits the inversion via the curve-
+    // aware INV_E_P256 / INVq_E_P256 anchors so P-256 saves 336/340 cycles
+    // per inversion (676 cycles per sign or verify).
     //----------------------------------------------------------------
     assign prog_addr = prog_cntr;
 
@@ -286,7 +288,14 @@ module ecc_pm_ctrl
                         end
                     end
                     
-                    INV_E : begin // End of inversion mod p
+                    INV_E_P256 : begin // P-256 early-exit from inversion mod p
+                        if (curve_sel_i)
+                            prog_cntr <= CONV_S;
+                        else
+                            prog_cntr <= prog_cntr + 1;
+                    end
+
+                    INV_E : begin // End of inversion mod p (P-384)
                         prog_cntr <= CONV_S;
                     end
                     
@@ -301,7 +310,20 @@ module ecc_pm_ctrl
                         prog_cntr <= INVq_S;
                     end
 
-                    INVq_E : begin // End of inversion mod q
+                    INVq_E_P256 : begin // P-256 early-exit from inversion mod q
+                        if (curve_sel_i) begin
+                            unique case (ecc_cmd_reg)
+                                SIGN_CMD      : prog_cntr <= SIGN1_S;
+                                VER_PART0_CMD : prog_cntr <= VER0_P1_S;
+                                default       : prog_cntr <= NOP;
+                            endcase
+                        end
+                        else begin
+                            prog_cntr <= prog_cntr + 1;
+                        end
+                    end
+
+                    INVq_E : begin // End of inversion mod q (P-384)
                         unique case (ecc_cmd_reg)
                             SIGN_CMD      : prog_cntr <= SIGN1_S;
                             VER_PART0_CMD : prog_cntr <= VER0_P1_S;

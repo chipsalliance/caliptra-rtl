@@ -94,6 +94,10 @@ module ecc_dsa_ctrl
 
     localparam [RND_SIZE-1 : 0]  zero_pad               = '0;
     localparam REG_NUM_DWORDS = REG_SIZE / DATA_WIDTH;
+    // Last address of the PM-RAM curve-constants init sequence (NOP slot
+    // immediately preceding ECC_NOP). Used to dispatch to the pending
+    // operation after the curve-aware init has refreshed the PM-RAM.
+    localparam [DSA_PROG_ADDR_W-1 : 0] ECC_INIT_LAST = ECC_NOP - 1'd1;
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
@@ -131,6 +135,7 @@ module ecc_dsa_ctrl
     logic ecc_status_done_p;
 
     logic [2  : 0]          cmd_reg;
+    logic [2  : 0]          pending_cmd_reg;   // Captured cmd while re-running curve-aware init
     logic [3  : 0]          pm_cmd_reg;
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reg;
     logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1:0]  msg_reduced_reg;
@@ -221,6 +226,7 @@ module ecc_dsa_ctrl
     logic error_flag_edge;
 
     logic curve_sel;
+    logic curve_sel_active;
     logic [REG_SIZE-1 : 0] prime;
     logic [REG_SIZE-1 : 0] group_order;
     logic [REG_SIZE-1 : 0] E_a_MONT_c;
@@ -238,18 +244,20 @@ module ecc_dsa_ctrl
     // Module instantiantions.
     //----------------------------------------------------------------
     assign curve_sel       = hwif_out.ECC_CTRL.CURVE_SEL.value;
-    assign prime           = curve_sel ? PRIME_P256       : PRIME_P384;
-    assign group_order     = curve_sel ? GROUP_ORDER_P256 : GROUP_ORDER_P384;
-    assign E_a_MONT_c      = curve_sel ? E_a_MONT_P256    : E_a_MONT_P384;
-    assign E_b_MONT_c      = curve_sel ? E_b_MONT_P256    : E_b_MONT_P384;
-    assign E_3b_MONT_c     = curve_sel ? E_3b_MONT_P256   : E_3b_MONT_P384;
-    assign ONE_p_MONT_c    = curve_sel ? ONE_p_MONT_P256  : ONE_p_MONT_P384;
-    assign R2_p_MONT_c     = curve_sel ? R2_p_MONT_P256   : R2_p_MONT_P384;
-    assign G_X_MONT_c      = curve_sel ? G_X_MONT_P256    : G_X_MONT_P384;
-    assign G_Y_MONT_c      = curve_sel ? G_Y_MONT_P256    : G_Y_MONT_P384;
-    assign R2_q_MONT_c     = curve_sel ? R2_q_MONT_P256   : R2_q_MONT_P384;
-    assign ONE_q_MONT_c    = curve_sel ? ONE_q_MONT_P256  : ONE_q_MONT_P384;
-    assign read_reg_masked = curve_sel ? {128'd0, read_reg[7:0]} : read_reg;
+    // Internal datapath uses the latched curve_sel_active (see curve_sel_latch
+    // below) so SW glitches on CURVE_SEL mid-op cannot reach the datapath.
+    assign prime           = curve_sel_active ? PRIME_P256       : PRIME_P384;
+    assign group_order     = curve_sel_active ? GROUP_ORDER_P256 : GROUP_ORDER_P384;
+    assign E_a_MONT_c      = curve_sel_active ? E_a_MONT_P256    : E_a_MONT_P384;
+    assign E_b_MONT_c      = curve_sel_active ? E_b_MONT_P256    : E_b_MONT_P384;
+    assign E_3b_MONT_c     = curve_sel_active ? E_3b_MONT_P256   : E_3b_MONT_P384;
+    assign ONE_p_MONT_c    = curve_sel_active ? ONE_p_MONT_P256  : ONE_p_MONT_P384;
+    assign R2_p_MONT_c     = curve_sel_active ? R2_p_MONT_P256   : R2_p_MONT_P384;
+    assign G_X_MONT_c      = curve_sel_active ? G_X_MONT_P256    : G_X_MONT_P384;
+    assign G_Y_MONT_c      = curve_sel_active ? G_Y_MONT_P256    : G_Y_MONT_P384;
+    assign R2_q_MONT_c     = curve_sel_active ? R2_q_MONT_P256   : R2_q_MONT_P384;
+    assign ONE_q_MONT_c    = curve_sel_active ? ONE_q_MONT_P256  : ONE_q_MONT_P384;
+    assign read_reg_masked = curve_sel_active ? {128'd0, read_reg[7:0]} : read_reg;
 
     ecc_dsa_sequencer #(
         .ADDR_WIDTH(DSA_PROG_ADDR_W),
@@ -274,7 +282,7 @@ module ecc_dsa_ctrl
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
-        .curve_sel_i(curve_sel),
+        .curve_sel_i(curve_sel_active),
         .ecc_cmd_i(pm_cmd_reg),
         .addr_i(prog_instr.mem_addr),
         .wr_op_sel_i(prog_instr.opcode.op_sel),
@@ -295,7 +303,7 @@ module ecc_dsa_ctrl
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
         .hmac_mode(hmac_mode),
-        .en(hmac_init & ~curve_sel),
+        .en(hmac_init & ~curve_sel_active),
         .ready(hmac_ready_p384),
         .keygen_seed(seed_reg),
         .keygen_nonce(nonce_reg),
@@ -317,11 +325,11 @@ module ecc_dsa_ctrl
     assign masking_rnd_p256      = '0;
     assign hmac_drbg_result_p256 = '0;
 
-    assign hmac_ready       = curve_sel ? hmac_ready_p256       : hmac_ready_p384;
-    assign lambda_reg       = curve_sel ? lambda_p256           : lambda_p384;
-    assign scalar_rnd_reg   = curve_sel ? scalar_rnd_p256       : scalar_rnd_p384;
-    assign masking_rnd_reg  = curve_sel ? masking_rnd_p256      : masking_rnd_p384;
-    assign hmac_drbg_result = curve_sel ? hmac_drbg_result_p256 : hmac_drbg_result_p384;
+    assign hmac_ready       = curve_sel_active ? hmac_ready_p256       : hmac_ready_p384;
+    assign lambda_reg       = curve_sel_active ? lambda_p256           : lambda_p384;
+    assign scalar_rnd_reg   = curve_sel_active ? scalar_rnd_p256       : scalar_rnd_p384;
+    assign masking_rnd_reg  = curve_sel_active ? masking_rnd_p256      : masking_rnd_p384;
+    assign hmac_drbg_result = curve_sel_active ? hmac_drbg_result_p256 : hmac_drbg_result_p384;
 
     ecc_scalar_blinding #(
         .REG_SIZE(REG_SIZE),
@@ -332,7 +340,7 @@ module ecc_dsa_ctrl
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
-        .curve_sel_i(curve_sel),
+        .curve_sel_i(curve_sel_active),
         .en_i(scalar_sca_en),
         .data_i(scalar_in_reg),
         .rnd_i(scalar_rnd_reg[RND_SIZE-1 : 0]),
@@ -401,6 +409,19 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_STATUS.READY.next = ecc_ready_reg;
     always_comb hwif_in.ECC_STATUS.VALID.next = ecc_valid_reg;
 
+    // N-9: one-cycle pulse on P-384 -> P-256 transition to clear stale upper 128b of operand CSRs.
+    logic curve_sel_d;
+    logic curve_sel_to_p256_pulse;
+    always_ff @(posedge clk or negedge reset_n) begin : curve_sel_edge_det
+        if (!reset_n)
+            curve_sel_d <= 1'b0;
+        else if (zeroize_reg)
+            curve_sel_d <= 1'b0;
+        else
+            curve_sel_d <= curve_sel;
+    end
+    assign curve_sel_to_p256_pulse = curve_sel & ~curve_sel_d;
+
     
     always_comb begin // ecc_reg_writing
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
@@ -411,7 +432,8 @@ module ecc_dsa_ctrl
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode       ? pcr_signing_data.pcr_ecc_signing_privkey[dword] : 
                                                             kv_privkey_write_en ? kv_privkey_write_data : 
                                                                                   read_reg_masked[REG_NUM_DWORDS-1-dword];
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL);
+            // N-9: HW clears upper 4 dwords on P-384 -> P-256 transition.
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL) | (curve_sel_to_p256_pulse & (dword < 4));
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = ecc_ready_reg & ~kv_key_data_present;
         end 
 
@@ -432,14 +454,14 @@ module ecc_dsa_ctrl
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             nonce_reg[dword] = hwif_out.ECC_NONCE[REG_NUM_DWORDS-1-dword].NONCE.value;
-            hwif_in.ECC_NONCE[dword].NONCE.hwclr = zeroize_reg;
+            hwif_in.ECC_NONCE[dword].NONCE.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             msg_reg[dword] = hwif_out.ECC_MSG[REG_NUM_DWORDS-1-dword].MSG.value;
             hwif_in.ECC_MSG[dword].MSG.we = pcr_sign_mode & !zeroize_reg;
             hwif_in.ECC_MSG[dword].MSG.next = pcr_signing_data.pcr_hash[dword];
-            hwif_in.ECC_MSG[dword].MSG.hwclr = zeroize_reg;
+            hwif_in.ECC_MSG[dword].MSG.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
@@ -678,10 +700,31 @@ module ecc_dsa_ctrl
             endcase
         end
         else if (prog_instr.opcode == DSA_UOP_WR_SCALAR) begin
+            // The PM core stores the scalar in a (REG_SIZE+RND_SIZE)=576b rotate
+            // register and consumes mont_count_plain digits per ladder. For the
+            // ladder to see the scalar MSB-first across all of its bits, the
+            // operand must be left-aligned to bit (REG_SIZE+RND_SIZE)-1. That
+            // means a curve-dependent left-shift: P-384 needs <<RND_SIZE (192)
+            // so its 384b scalar lands at [575:192]; P-256 needs <<320 so its
+            // 256b scalar lands at [575:320]. Using the P-384 shift on P-256
+            // would leave the low 128 bits of u1/u2 outside the 256-cycle
+            // ladder window and drop them, yielding wrong u1*G + u2*Q.
+            // The same alignment rule applies to the SCA-blinded SCALAR_ID
+            // path (KEYGEN/SIGN/DH): scalar_out_reg = scalar + rnd*n is at
+            // most (REG_SIZE+RND_SIZE)b for P-384 (already left-aligned) but
+            // only SCA_MONT_COUNT_P256 = 448b for P-256, so it needs a
+            // <<((REG_SIZE+RND_SIZE)-SCA_MONT_COUNT_P256)=128 shift to land
+            // at [575:128] for the 448-iter P-256 ladder.
             unique case (prog_instr.reg_id)
-                SCALAR_PK_ID          : write_reg = (REG_SIZE+RND_SIZE)'(scalar_PK_reg << RND_SIZE);
-                SCALAR_G_ID           : write_reg = (REG_SIZE+RND_SIZE)'(scalar_G_reg << RND_SIZE);
-                SCALAR_ID             : write_reg = scalar_out_reg; // SCA
+                SCALAR_PK_ID          : write_reg = curve_sel_active
+                                            ? ((REG_SIZE+RND_SIZE)'(scalar_PK_reg) << ((REG_SIZE+RND_SIZE) - MONT_COUNT_P256))
+                                            : ((REG_SIZE+RND_SIZE)'(scalar_PK_reg) <<  RND_SIZE);
+                SCALAR_G_ID           : write_reg = curve_sel_active
+                                            ? ((REG_SIZE+RND_SIZE)'(scalar_G_reg)  << ((REG_SIZE+RND_SIZE) - MONT_COUNT_P256))
+                                            : ((REG_SIZE+RND_SIZE)'(scalar_G_reg)  <<  RND_SIZE);
+                SCALAR_ID             : write_reg = curve_sel_active
+                                            ? (scalar_out_reg << ((REG_SIZE+RND_SIZE) - SCA_MONT_COUNT_P256))
+                                            : scalar_out_reg; // SCA
                 default               : write_reg = '0;
             endcase
         end
@@ -770,7 +813,18 @@ module ecc_dsa_ctrl
     // perform different operations.
     // Active low and async reset.
     //----------------------------------------------------------------
-    always_ff @(posedge clk or negedge reset_n) 
+    // N-6: Latch curve_sel into curve_sel_active at command dispatch so SW glitches on CURVE_SEL mid-op cannot reach the datapath.
+    always_ff @(posedge clk or negedge reset_n)
+    begin : curve_sel_latch
+        if (!reset_n)
+            curve_sel_active <= 1'b0;
+        else if (zeroize_reg)
+            curve_sel_active <= 1'b0;
+        else if ((prog_cntr == ECC_NOP) && (cmd_reg != '0))
+            curve_sel_active <= curve_sel;
+    end
+
+    always_ff @(posedge clk or negedge reset_n)
     begin : ECDSA_FSM
         if(!reset_n) begin
             prog_cntr           <= ECC_RESET;
@@ -785,6 +839,7 @@ module ecc_dsa_ctrl
             signing_process     <= 0;
             verifying_process   <= 0;
             sharedkey_process   <= 0;
+            pending_cmd_reg     <= '0;
         end
         else if(zeroize_reg) begin
             prog_cntr           <= ECC_RESET;
@@ -799,6 +854,7 @@ module ecc_dsa_ctrl
             signing_process     <= 0;
             verifying_process   <= 0;
             sharedkey_process   <= 0;
+            pending_cmd_reg     <= '0;
         end
         else if (error_flag | error_flag_reg) begin
             prog_cntr           <= ECC_NOP;
@@ -813,6 +869,7 @@ module ecc_dsa_ctrl
             signing_process     <= 0;
             verifying_process   <= 0;
             sharedkey_process   <= 0;
+            pending_cmd_reg     <= '0;
         end
         else begin
             if (subcomponent_busy) begin //Stalled until sub-component is done
@@ -833,10 +890,18 @@ module ecc_dsa_ctrl
                         signing_process     <= 0;
                         verifying_process   <= 0;
                         sharedkey_process   <= 0;
-                        // Waiting for new valid command 
+                        // Waiting for new valid command.
+                        // Bug-fix: PM-RAM curve constants are loaded only by the
+                        // ECC_RESET init sequence (addr 0..11). To support runtime
+                        // CURVE_SEL switching, every operation re-runs the init
+                        // sequence so the PM holds the constants matching the
+                        // current curve_sel. The command is latched into
+                        // pending_cmd_reg and dispatched at the end of init
+                        // (addr ECC_NOP-1).
                         unique case (cmd_reg)
                             KEYGEN : begin  // keygen
-                                prog_cntr <= DSA_KG_S;
+                                prog_cntr <= ECC_RESET;
+                                pending_cmd_reg <= KEYGEN;
                                 ecc_valid_reg <= 0;
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 2'b00;
@@ -844,7 +909,8 @@ module ecc_dsa_ctrl
                             end   
 
                             SIGN : begin  // signing
-                                prog_cntr <= DSA_SGN_S;
+                                prog_cntr <= ECC_RESET;
+                                pending_cmd_reg <= SIGN;
                                 ecc_valid_reg <= 0;
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 2'b01;
@@ -852,14 +918,16 @@ module ecc_dsa_ctrl
                             end                                   
 
                             VERIFY : begin  // verifying
-                                prog_cntr <= DSA_VER_S;
+                                prog_cntr <= ECC_RESET;
+                                pending_cmd_reg <= VERIFY;
                                 ecc_valid_reg <= 0;
                                 scalar_G_sel <= 1;
                                 verifying_process <= 1;
                             end
 
                             SHARED_KEY : begin  // DH shared_key
-                                prog_cntr <= DH_SHARED_S;
+                                prog_cntr <= ECC_RESET;
+                                pending_cmd_reg <= SHARED_KEY;
                                 ecc_valid_reg <= 0;
                                 scalar_G_sel <= 1;
                                 hmac_mode <= 2'b10;
@@ -874,6 +942,24 @@ module ecc_dsa_ctrl
                         pm_cmd_reg  <= '0;
                         hmac_init   <= 0;
                     end                
+
+                    // Last init address (PM-RAM curve constants now loaded for
+                    // current curve_sel). Dispatch to the operation that was
+                    // latched in ECC_NOP, or fall through to ECC_NOP if this is
+                    // the reset/zeroize init path (pending_cmd_reg==0).
+                    ECC_INIT_LAST : begin
+                        unique case (pending_cmd_reg)
+                            KEYGEN     : prog_cntr <= DSA_KG_S;
+                            SIGN       : prog_cntr <= DSA_SGN_S;
+                            VERIFY     : prog_cntr <= DSA_VER_S;
+                            SHARED_KEY : prog_cntr <= DH_SHARED_S;
+                            default    : prog_cntr <= prog_cntr + 1;  // -> ECC_NOP
+                        endcase
+                        pending_cmd_reg <= '0;
+                        pm_cmd_reg      <= prog_instr.opcode.pm_cmd;
+                        hmac_init       <= prog_instr.opcode.hmac_drbg_en;
+                        scalar_sca_en   <= prog_instr.opcode.sca_en;
+                    end
 
                     DSA_KG_E : begin // end of keygen
                         prog_cntr <= ECC_NOP;
