@@ -473,6 +473,114 @@ interface soc_ifc_cov_if
 
     endgroup
 
+    // -----------------------------------------------------------------------
+    // ICCM Hash --> PCR4 Coverage
+    // -----------------------------------------------------------------------
+
+    // Bin the ICCM byte count into meaningful size categories
+    logic [31:0] iccm_num_bytes_wr;
+    assign iccm_num_bytes_wr = i_sha512_acc_top.iccm_num_bytes_wr;
+
+    // ICCM hash control signals
+    logic iccm_mode;
+    logic iccm_mode_done;
+    logic iccm_hash_dv;
+    logic iccm_lock_i;
+    logic iccm_unlock_i;
+    logic iccm_pcr_dest_done;
+    logic iccm_soc_has_lock;
+    logic iccm_mode_hwclr;
+
+    assign iccm_mode           = i_sha512_acc_top.iccm_mode;
+    assign iccm_mode_done      = i_sha512_acc_top.iccm_mode_done;
+    assign iccm_hash_dv        = i_sha512_acc_top.iccm_hash_dv_i;
+    assign iccm_lock_i         = i_sha512_acc_top.iccm_lock_i;
+    assign iccm_unlock_i       = i_sha512_acc_top.iccm_unlock_i;
+    assign iccm_pcr_dest_done  = i_sha512_acc_top.iccm_pcr_dest_done;
+    assign iccm_soc_has_lock   = i_sha512_acc_top.soc_has_lock;
+    assign iccm_mode_hwclr     = i_sha512_acc_top.hwif_in.MODE.ICCM_MODE.hwclr;
+
+    covergroup iccm_hash_cov_grp @(posedge clk iff cptra_rst_b);
+        option.per_instance = 1;
+
+        // ------- Coverpoints -------
+
+        // ICCM mode active
+        iccm_mode_cp: coverpoint iccm_mode;
+
+        // ICCM mode done (write-once completed)
+        iccm_mode_done_cp: coverpoint iccm_mode_done;
+
+        // ICCM data valid pulse (write captured)
+        iccm_hash_dv_cp: coverpoint iccm_hash_dv;
+
+        // ICCM lock (triggers finalization)
+        iccm_lock_cp: coverpoint iccm_lock_i;
+
+        // ICCM unlock (anti-replay reset)
+        iccm_unlock_cp: coverpoint iccm_unlock_i;
+
+        // PCR4 write completion
+        iccm_pcr_dest_done_cp: coverpoint iccm_pcr_dest_done;
+
+        // SoC has lock (security: should block iccm_mode)
+        iccm_soc_has_lock_cp: coverpoint iccm_soc_has_lock;
+
+        // ICCM_MODE hwclr (field cleared by HW)
+        iccm_mode_hwclr_cp: coverpoint iccm_mode_hwclr;
+
+        // SHA FSM state during ICCM mode
+        iccm_sha_fsm_cp: coverpoint sha_fsm_ps iff (iccm_mode) {
+            bins idle    = {SHA_IDLE};
+            bins block0  = {SHA_BLOCK_0};
+            bins blockN  = {SHA_BLOCK_N};
+            bins pad0    = {SHA_PAD0};
+            bins pad1    = {SHA_PAD1};
+            bins done    = {SHA_DONE};
+        }
+
+        // Byte count categories at finalization (sampled on iccm_lock rising)
+        iccm_byte_count_cp: coverpoint iccm_num_bytes_wr iff (iccm_lock_i & iccm_mode) {
+            bins min_write     = {[1:4]};       // 1 word
+            bins sub_block     = {[5:127]};     // < 1 SHA block
+            bins one_block     = {[128:128]};   // exactly 1 block boundary
+            bins multi_block   = {[129:1024]};  // 2-8 blocks
+            bins large_sz         = {[1025:$]};    // > 8 blocks (bulk FW load)
+        }
+
+        // Extra padding block required (exercises PAD0-->PAD1 path)
+        iccm_extra_pad_cp: coverpoint i_sha512_acc_top.extra_pad_block_required iff (iccm_mode);
+
+        // ------- Crosses -------
+
+        // Mode x FSM state: ensure all FSM states are visited in iccm_mode
+        iccm_modeXsha_fsm: cross iccm_mode_cp, iccm_sha_fsm_cp {
+            ignore_bins not_iccm = binsof(iccm_mode_cp) intersect {0};
+        }
+
+        // Byte count x extra pad: verify boundary cases trigger extra padding
+        iccm_byte_countXextra_pad: cross iccm_byte_count_cp, iccm_extra_pad_cp;
+
+        // SoC lock x iccm_mode: verify SoC is blocked from using iccm_mode
+        iccm_soc_lockXmode: cross iccm_soc_has_lock_cp, iccm_mode_cp {
+            // Security: soc_has_lock=1 with iccm_mode=1 should never persist (hwclr fires)
+            illegal_bins soc_with_iccm = binsof(iccm_soc_has_lock_cp) intersect {1} &&
+                                         binsof(iccm_mode_cp) intersect {1};
+        }
+
+        // Unlock x mode_done: verify anti-replay clears correctly
+        iccm_unlockXmode_done: cross iccm_unlock_cp, iccm_mode_done_cp;
+
+        // Lock with no prior writes (edge case: empty hash attempt)
+        iccm_lock_no_writes_cp: coverpoint (iccm_lock_i & iccm_mode & (iccm_num_bytes_wr == 0)) {
+            bins no_write_lock = {1};
+        }
+
+        // PCR dest done x mode_done: verify completion sequence
+        iccm_pcr_doneXmode_done: cross iccm_pcr_dest_done_cp, iccm_mode_done_cp;
+
+    endgroup
+
     mbox_fsm_state_e mbox_fsm_ps;
     assign mbox_fsm_ps = mbox_fsm_state_e'(i_mbox.mbox_fsm_ps);
 
@@ -613,6 +721,7 @@ interface soc_ifc_cov_if
     soc_ifc_arb_cov_grp soc_ifc_arb_cov_grp1 = new();
     soc_ifc_boot_fsm_cov_grp soc_ifc_boot_fsm_cov_grp1 = new();
     sha512_acc_cov_grp sha512_acc_cov_grp1 = new();
+    iccm_hash_cov_grp iccm_hash_cov_grp1 = new();
     mbox_cov_grp mbox_cov_grp1 = new();
     axi_dma_cov_grp axi_dma_cov_grp1 = new();
 

@@ -10027,6 +10027,8 @@
 #define SHA512_ACC_CSR_MODE_MODE_MASK                                                               (0x3)
 #define SHA512_ACC_CSR_MODE_ENDIAN_TOGGLE_LOW                                                       (2)
 #define SHA512_ACC_CSR_MODE_ENDIAN_TOGGLE_MASK                                                      (0x4)
+#define SHA512_ACC_CSR_MODE_ICCM_MODE_LOW                                                           (3)
+#define SHA512_ACC_CSR_MODE_ICCM_MODE_MASK                                                          (0x8)
 #endif
 #define CLP_SHA512_ACC_CSR_START_ADDRESS                                                            (0x3002100c)
 #ifndef SHA512_ACC_CSR_START_ADDRESS

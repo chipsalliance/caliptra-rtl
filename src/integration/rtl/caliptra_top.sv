@@ -24,10 +24,14 @@ module caliptra_top
     import lc_ctrl_state_pkg::*;
     import lc_ctrl_reg_pkg::*;
     import lc_ctrl_pkg::*;
+    import el2_pkg::*;
 `ifdef CALIPTRA_INTERNAL_TRNG
     import entropy_src_pkg::*;
     import csrng_pkg::*;
 `endif
+    #(
+    `include "el2_param.vh"
+    )
     (
     input logic                        clk,
 
@@ -231,6 +235,12 @@ module caliptra_top
     el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
+
+    // ICCM hash mode: AND-OR mux combines bank writes into single data stream
+    logic        iccm_hash_dv;
+    logic [31:0] iccm_hash_data;
+    pv_write_t   iccm_pv_write;
+    logic        iccm_unlock;
   
     // AES status signals
     logic aes_input_ready;
@@ -456,6 +466,22 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_MLDSA]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_AES]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA3]   = 1'b0;
+
+    //=========================================================================-
+    // ICCM Hash AND-OR Mux
+    // Combines per-bank write enables and data into a single stream for SHA acc
+    //=========================================================================-
+    always_comb begin
+        iccm_hash_dv   = |el2_mem_export.iccm_wren_bank;
+        iccm_hash_data = '0;
+        for (int i = 0; i < pt.ICCM_NUM_BANKS; i++) begin
+            iccm_hash_data |= el2_mem_export.iccm_wren_bank[i] ?
+                              el2_mem_export.iccm_bank_wr_data[i] : '0;
+        end
+    end
+
+    // ICCM hash PCR write is pv_write[1]; sha512_ctrl drives pv_write[0]
+    always_comb pv_write[1] = iccm_pv_write;
 
    //=========================================================================-
    // RTL instance
@@ -935,9 +961,9 @@ sha512_ctrl #(
     .hreadyout_o    (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hreadyout),
     .hrdata_o       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hrdata),
     .pv_read        (pv_read),
-    .pv_write       (pv_write),
+    .pv_write       (pv_write[0]),
     .pv_rd_resp     (pv_rd_resp),
-    .pv_wr_resp     (pv_wr_resp),
+    .pv_wr_resp     (pv_wr_resp[0]),
     .pcr_signing_hash(pcr_signing_data.pcr_hash),
 
     .error_intr(sha512_error_intr),
@@ -1240,7 +1266,9 @@ pcr_vault1
     .pv_read              (pv_read),
     .pv_write             (pv_write),
     .pv_rd_resp           (pv_rd_resp),
-    .pv_wr_resp           (pv_wr_resp)
+    .pv_wr_resp           (pv_wr_resp),
+
+    .pcr4_hwclr           (iccm_unlock)
 );
 
 dv #(
@@ -1515,6 +1543,11 @@ soc_ifc_top1
     // ICCM Lock
     .iccm_lock       (iccm_lock                                    ),
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`CALIPTRA_SLAVE_SEL_IDMA]),
+    // ICCM hash mode
+    .iccm_hash_dv    (iccm_hash_dv),
+    .iccm_hash_data  (iccm_hash_data),
+    .iccm_pv_write   (iccm_pv_write),
+    .iccm_unlock_o   (iccm_unlock),
     //uC reset
     .cptra_noncore_rst_b (cptra_noncore_rst_b),
     .cptra_uc_rst_b (cptra_uc_rst_b),

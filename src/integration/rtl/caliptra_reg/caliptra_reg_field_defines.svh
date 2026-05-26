@@ -7978,6 +7978,8 @@
 `define SHA512_ACC_CSR_MODE_MODE_MASK                                                               (32'h3)
 `define SHA512_ACC_CSR_MODE_ENDIAN_TOGGLE_LOW                                                       (2)
 `define SHA512_ACC_CSR_MODE_ENDIAN_TOGGLE_MASK                                                      (32'h4)
+`define SHA512_ACC_CSR_MODE_ICCM_MODE_LOW                                                           (3)
+`define SHA512_ACC_CSR_MODE_ICCM_MODE_MASK                                                          (32'h8)
 `endif
 `ifndef SHA512_ACC_CSR_START_ADDRESS
 `define SHA512_ACC_CSR_START_ADDRESS                                                                (32'hc)

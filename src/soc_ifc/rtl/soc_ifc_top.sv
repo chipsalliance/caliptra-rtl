@@ -22,6 +22,7 @@ module soc_ifc_top
     import mbox_pkg::*;
     import soc_ifc_reg_pkg::*;
     import kv_defines_pkg::*;
+    import pv_defines_pkg::*;
     #(
      parameter AXI_ADDR_WIDTH = 18
     ,parameter AXI_DATA_WIDTH = 32
@@ -170,6 +171,12 @@ module soc_ifc_top
     // ICCM Lock
     output logic iccm_lock,
     input  logic iccm_axs_blocked,
+
+    // ICCM hash mode
+    input  logic        iccm_hash_dv,
+    input  logic [31:0] iccm_hash_data,
+    output pv_write_t   iccm_pv_write,
+    output logic        iccm_unlock_o,
 
     //Other blocks reset
     output logic cptra_noncore_rst_b,
@@ -1073,6 +1080,7 @@ assign soc_ifc_error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr
 assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
 assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
+assign iccm_unlock_o = iccm_unlock;
 assign clk_gating_en = soc_ifc_reg_hwif_out.CPTRA_CLK_GATING_EN.clk_gating_en.value;
 
 // Interrupt output is set, for any enabled conditions, when a new write
@@ -1155,6 +1163,13 @@ i_sha512_acc_top (
     .sha_sram_req_addr(sha_sram_req_addr),
     .sha_sram_resp(sha_sram_resp),
     .sha_sram_hold(sha_sram_hold),
+
+    // ICCM hash mode
+    .iccm_hash_dv_i(iccm_hash_dv),
+    .iccm_hash_data_i(iccm_hash_data),
+    .iccm_lock_i(iccm_lock),
+    .iccm_unlock_i(iccm_unlock),
+    .iccm_pv_write_o(iccm_pv_write),
 
     .error_intr(sha_error_intr),
     .notif_intr(sha_notif_intr)

@@ -25,7 +25,7 @@ package sha512_acc_csr_uvm;
 
         virtual function void build();
             this.LOCK = new("LOCK");
-            this.LOCK.configure(this, 1, 0, "W1CRS", 0, 'h1, 1, 1, 0);
+            this.LOCK.configure(this, 1, 0, "W1CRS", 1, 'h1, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(LOCK_bit_cg[bt]) LOCK_bit_cg[bt] = new();
             end
@@ -72,9 +72,11 @@ package sha512_acc_csr_uvm;
 
         sha512_acc_csr__MODE_bit_cg MODE_bit_cg[2];
         sha512_acc_csr__MODE_bit_cg ENDIAN_TOGGLE_bit_cg[1];
+        sha512_acc_csr__MODE_bit_cg ICCM_MODE_bit_cg[1];
         sha512_acc_csr__MODE_fld_cg fld_cg;
         rand uvm_reg_field MODE;
         rand uvm_reg_field ENDIAN_TOGGLE;
+        rand uvm_reg_field ICCM_MODE;
 
         function new(string name = "sha512_acc_csr__MODE");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -90,9 +92,12 @@ package sha512_acc_csr_uvm;
             this.MODE.configure(this, 2, 0, "RW", 0, 'h0, 1, 1, 0);
             this.ENDIAN_TOGGLE = new("ENDIAN_TOGGLE");
             this.ENDIAN_TOGGLE.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            this.ICCM_MODE = new("ICCM_MODE");
+            this.ICCM_MODE.configure(this, 1, 3, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(MODE_bit_cg[bt]) MODE_bit_cg[bt] = new();
                 foreach(ENDIAN_TOGGLE_bit_cg[bt]) ENDIAN_TOGGLE_bit_cg[bt] = new();
+                foreach(ICCM_MODE_bit_cg[bt]) ICCM_MODE_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
