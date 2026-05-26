@@ -112,7 +112,7 @@ _start:
         equal4:
             addi x3, x3, 4
             addi t3, t3, 4
-            blt x3, x1, read_result_loop3
+            blt x3, x1, read_result_loop4
 
     //Release SHA lock
     li x3, CLP_SHA512_ACC_CSR_LOCK
@@ -133,7 +133,7 @@ _start:
 
     //Set to Streaming SHA512 Mode
     li x3, CLP_SHA512_ACC_CSR_MODE
-    li x1, 0x00000001
+    li x1, 0x00000005
     sw x1, 0(x3)
 
     // Load block from hw_data and write to SHA Accelerator
@@ -200,7 +200,7 @@ _start:
 
     //Set to Streaming SHA512 Mode
     li x3, CLP_SHA512_ACC_CSR_MODE
-    li x1, 0x00000001
+    li x1, 0x00000005
     sw x1, 0(x3)
 
     // Load block from hw_data and write to SHA Accelerator
