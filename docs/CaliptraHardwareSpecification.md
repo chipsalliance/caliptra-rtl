@@ -2661,7 +2661,7 @@ In simulation, `boot_flow_monitor_en` defaults to 0 (disabled). The testbench ov
 
 ### KV monitor
 
-At each boot phase transition, the KV monitor validates that the expected DICE key slots are correctly populated. A mismatch triggers `kv_monitor_alert`, which escalates to `CPTRA_HW_ERROR_FATAL.kv_error[4]` and flushes all key entries.
+At each boot phase transition, the KV monitor validates that the expected DICE key slots are correctly populated. The monitor checks **only DICE derivation key slots** (0–9) — optional feature keys (Stable Owner Key, OCP Lock keys) are excluded from monitoring because they are conditionally derived and do not participate in the DICE trust chain. A mismatch triggers `kv_monitor_alert`, which escalates to `CPTRA_HW_ERROR_FATAL.kv_error[4]` and flushes all key entries.
 
 #### ROM->FMC checks (on `enter_fmc`)
 
@@ -2705,12 +2705,59 @@ The `lock_wr` and `lock_use` fields have `hwset` property in the register defini
 
 #### Slot clearing (atomic, on transition edge)
 
-| Transition | Slots cleared | Slots preserved |
-| :--------- | :------------ | :-------------- |
-| ROM->FMC (`enter_fmc`) | 3, 4, 5, 9, 10-23 | 0, 1, 2, 6, 7, 8 |
-| FMC->RT (`enter_rt`) | 3, 10-23 | 0, 1, 2, 4, 5, 6, 7, 8, 9 |
+**DICE slots** — unconditionally cleared or preserved at each transition:
+
+| Slot | Purpose | ROM→FMC | FMC→RT |
+| :--- | :------ | :------ | :----- |
+| 0 | SI_IDEV | Preserved | Preserved |
+| 1 | SI_LDEV | Preserved | Preserved |
+| 2 | KEY_LADDER | Preserved | Preserved |
+| 3 | TMP | Cleared | Cleared |
+| 4 | RT_CDI | Cleared | Preserved |
+| 5 | RT_ECDSA | Cleared | Preserved |
+| 6 | FMC_CDI | Preserved | Preserved |
+| 7 | FMC_ECDSA | Preserved | Preserved |
+| 8 | FMC_MLDSA | Preserved | Preserved |
+| 9 | RT_MLDSA | Cleared | Preserved |
+| 10–14 | Unused | Cleared | Cleared |
+
+**Conditionally-preserved slots** — behavior depends on active mode:
+
+| Slot | Purpose | Default (no optional features) | `stable_owner_key_en` | `ocp_lock_mode_en` |
+| :--- | :------ | :----------------------------- | :-------------------- | :----------------- |
+| 15 | Stable Owner Key | Cleared | Preserved | Cleared (mutually exclusive) |
+| 16 | MDK | Cleared | Cleared | Preserved |
+| 17–21 | Unused OCP range | Cleared | Cleared | Cleared |
+| 22 | HEK seed | Cleared | Cleared | Preserved |
+| 23 | MEK | Cleared | Cleared | **Always cleared** (DMA-accessible) |
 
 Clearing destroys the key data and resets `dest_valid` and `last_dword` for the affected slots.
+
+#### Conditional slot preservation
+
+Two optional Caliptra features populate KV slots that must survive boot transitions when the feature is active, but must be cleared when inactive. These slots are **not monitored** (no dest_valid checks, no write counters) — the monitor is exclusively for DICE keys. Only the enforcement block (slot clearing) handles them conditionally.
+
+**Stable Owner Key (Slot 15)**
+
+The Stable Owner Root Key is conditionally derived by ROM when all three conditions are met:
+
+- `SUBSYSTEM_MODE_en` = 1 (Caliptra operating in subsystem mode)
+- `OCP_LOCK_MODE_en` = 0 (OCP Lock feature is not active)
+- `SS_STRAP_GENERIC[3][0]` = 1 (SoC strap enabling the stable owner key feature)
+
+The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared normally.
+
+**OCP Lock Keys (Slots 16 and 22)**
+
+When OCP Lock mode is enabled (`ocp_lock_mode_en` = 1 from the `ss_ocp_lock_en` strap), DOE populates slot 16 (MDK) and slot 22 (HEK seed) before ROM runs. FMC and RT firmware require these keys for EPK, VEK, and MEK derivation in OCP Lock flows.
+
+When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at both transitions. When inactive, they are cleared normally.
+
+**Slot 23 (MEK) is always cleared** regardless of `ocp_lock_mode_en`. MEK has `DMA_DATA` in its `dest_valid` (it is DMA-accessible for key release), making it a security risk if it persists across transitions. RT firmware re-derives MEK when needed during OCP Lock key release flows.
+
+Only the specific slots that ROM or FMC actually derive (16 and 22) are preserved — not the entire OCP Lock range (16–23). Slots 17–21 and 23 are always cleared.
+
+**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is always cleared even if `SS_STRAP_GENERIC[3][0]` = 1.
 
 #### Error escalation
 
@@ -2748,6 +2795,17 @@ The following table documents the key vault slot assignments used by the DICE ke
 | 7 | KV_SLOT_FMC_ECDSA | FMC ECDSA private key |
 | 8 | KV_SLOT_FMC_MLDSA | FMC MLDSA private key |
 | 9 | KV_SLOT_RT_MLDSA | Runtime MLDSA private key |
+
+### Conditionally-preserved slot assignments
+
+The following slots are populated by optional features and conditionally preserved by enforcement (but not monitored):
+
+| Slot | Constant | Feature | Preserved when |
+| :--- | :------- | :------ | :------------- |
+| 15 | KV_SLOT_STABLE_OWNER | Stable Owner Root Key | `stable_owner_key_en` (subsystem mode, strap[3][0]=1, OCP Lock off) |
+| 16 | OCP_LOCK_RT_OBF_KEY_KV_SLOT | MDK (runtime obfuscation key) | `ocp_lock_mode_en` |
+| 22 | OCP_LOCK_HEK_SEED_KV_SLOT | HEK seed | `ocp_lock_mode_en` |
+| 23 | OCP_LOCK_MEK_KV_SLOT | MEK (key release) | **Never** (always cleared — DMA-accessible, security risk) |
 
 ### ROM programming sequence
 
