@@ -661,6 +661,16 @@ module soc_ifc_reg (
             struct packed{
                 logic next;
                 logic load_next;
+            } SUBSYSTEM_MODE_en;
+            struct packed{
+                logic next;
+                logic load_next;
+            } OCP_LOCK_MODE_en;
+        } CPTRA_HW_CONFIG;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
             } timer1_en;
         } CPTRA_WDT_TIMER1_EN;
         struct packed{
@@ -1776,6 +1786,14 @@ module soc_ifc_reg (
                 logic [31:0] value;
             } REV_ID;
         } [2-1:0]CPTRA_FW_REV_ID;
+        struct packed{
+            struct packed{
+                logic value;
+            } SUBSYSTEM_MODE_en;
+            struct packed{
+                logic value;
+            } OCP_LOCK_MODE_en;
+        } CPTRA_HW_CONFIG;
         struct packed{
             struct packed{
                 logic value;
@@ -3385,6 +3403,46 @@ module soc_ifc_reg (
         end
         assign hwif_out.CPTRA_FW_REV_ID[i0].REV_ID.value = field_storage.CPTRA_FW_REV_ID[i0].REV_ID.value;
     end
+    // Field: soc_ifc_reg.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.value;
+        load_next_c = '0;
+        
+        // HW Write
+        next_c = hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next;
+        load_next_c = '1;
+        field_combo.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = next_c;
+        field_combo.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.load_next = load_next_c;
+    end
+
+    always_ff @(posedge clk) begin
+        if(field_combo.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.load_next) begin
+            field_storage.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.value <= field_combo.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next;
+        end
+    end
+    assign hwif_out.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.value = field_storage.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.value;
+    // Field: soc_ifc_reg.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.value;
+        load_next_c = '0;
+        
+        // HW Write
+        next_c = hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next;
+        load_next_c = '1;
+        field_combo.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = next_c;
+        field_combo.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.load_next = load_next_c;
+    end
+
+    always_ff @(posedge clk) begin
+        if(field_combo.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.load_next) begin
+            field_storage.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.value <= field_combo.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next;
+        end
+    end
+    assign hwif_out.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.value = field_storage.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.value;
     // Field: soc_ifc_reg.CPTRA_WDT_TIMER1_EN.timer1_en
     always_comb begin
         automatic logic [0:0] next_c;
@@ -7580,8 +7638,8 @@ module soc_ifc_reg (
     assign readback_array[56][1:1] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.Fuse_Granularity.next : '0;
     assign readback_array[56][3:2] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.RSVD_en.next : '0;
     assign readback_array[56][4:4] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next : '0;
-    assign readback_array[56][5:5] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next : '0;
-    assign readback_array[56][6:6] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next : '0;
+    assign readback_array[56][5:5] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? field_storage.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.value : '0;
+    assign readback_array[56][6:6] = (decoded_reg_strb.CPTRA_HW_CONFIG && !decoded_req_is_wr) ? field_storage.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.value : '0;
     assign readback_array[56][31:7] = '0;
     assign readback_array[57][0:0] = (decoded_reg_strb.CPTRA_WDT_TIMER1_EN && !decoded_req_is_wr) ? field_storage.CPTRA_WDT_TIMER1_EN.timer1_en.value : '0;
     assign readback_array[57][31:1] = '0;

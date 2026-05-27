@@ -274,6 +274,8 @@ import uvmf_base_pkg_hdl::*;
       .boot_flow_fmc (caliptra_prim_mubi_pkg::MuBi4False),
       .boot_flow_rt  (caliptra_prim_mubi_pkg::MuBi4False),
       .boot_flow_error(caliptra_prim_mubi_pkg::MuBi4False),
+      .stable_owner_key_en(1'b0),
+      .ocp_lock_mode_en(1'b0),
       .kv_monitor_alert(),
 
       .kv_read (kv_read ),

@@ -439,6 +439,8 @@ module soc_ifc_tb
              .ss_ocp_lock_in_progress(),
              .ss_key_release_key_size(),
 
+             .stable_owner_key_en(),
+
              .nmi_vector(),
              .nmi_intr(),
 

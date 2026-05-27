@@ -164,6 +164,9 @@ module soc_ifc_top
     output logic         ss_ocp_lock_in_progress,
     output logic [15:0]  ss_key_release_key_size,
 
+    // Stable owner key enable (subsystem_mode & strap_generic_3[0] & !ocp_lock)
+    output logic         stable_owner_key_en,
+
     // NMI Vector 
     output logic [31:0] nmi_vector,
     output logic nmi_intr,
@@ -777,6 +780,11 @@ always_comb soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = 1'b1;
 
 assign ss_ocp_lock_in_progress = soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
 assign ss_key_release_key_size = soc_ifc_reg_hwif_out.SS_KEY_RELEASE_SIZE.size.value;
+
+// Stable owner key enable: subsystem_mode & strap_generic_3[0] & !ocp_lock_mode_en
+assign stable_owner_key_en = soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.value &
+                             ~soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.value &
+                             soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[3].data.value[0];
 
 
 //Uncore registers only open for debug unlock or manufacturing

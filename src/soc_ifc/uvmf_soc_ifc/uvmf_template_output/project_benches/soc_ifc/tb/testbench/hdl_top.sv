@@ -340,6 +340,8 @@ import aaxi_uvm_pkg::*;
         .ss_ocp_lock_in_progress(    /*TODO*/),
         .ss_key_release_key_size(    /*TODO*/),
 
+        .stable_owner_key_en(       /*TODO*/),
+
         // NMI Vector 
         .nmi_vector(cptra_status_agent_bus.nmi_vector),
         .nmi_intr(cptra_status_agent_bus.nmi_intr),

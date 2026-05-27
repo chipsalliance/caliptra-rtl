@@ -312,6 +312,8 @@ module caliptra_top
     logic ss_ocp_lock_in_progress;
     // Key release size (used as input to AES operation)
     logic [15:0] ss_key_release_key_size;
+    // Stable owner key enable (from soc_ifc, used by KV enforcement)
+    logic stable_owner_key_en;
 
     logic [31:0] imem_haddr;
     logic imem_hsel;
@@ -1261,6 +1263,8 @@ key_vault1
     .boot_flow_fmc (boot_flow_fmc),
     .boot_flow_rt (boot_flow_rt),
     .boot_flow_error (boot_flow_error),
+    .stable_owner_key_en (stable_owner_key_en),
+    .ocp_lock_mode_en (ss_ocp_lock_en),
 
     .kv_read              (kv_read),
     .kv_write             (kv_write),
@@ -1565,6 +1569,7 @@ soc_ifc_top1
     .ss_ocp_lock_en(ss_ocp_lock_en),
     .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
     .ss_key_release_key_size(ss_key_release_key_size),
+    .stable_owner_key_en(stable_owner_key_en),
 
     // NMI Vector 
     .nmi_vector(nmi_vector),

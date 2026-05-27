@@ -69,6 +69,7 @@ localparam KV_SLOT_FMC_MLDSA = 8;
 localparam KV_SLOT_RT_CDI = 4;
 localparam KV_SLOT_RT_ECDSA = 5;
 localparam KV_SLOT_RT_MLDSA = 9;
+localparam KV_SLOT_STABLE_OWNER = 15;
     
 // HEK seed (deobfuscated) is used as context for SP 800-108 KDF when deriving
 // the HEK

@@ -1029,6 +1029,19 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic value;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__out_t SUBSYSTEM_MODE_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__out_t OCP_LOCK_MODE_en;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__out_t;
+
+    typedef struct packed{
+        logic value;
     } soc_ifc_reg__CPTRA_WDT_TIMER1_EN__timer1_en__out_t;
 
     typedef struct packed{
@@ -1598,6 +1611,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES__out_t [2-1:0]CPTRA_GENERIC_INPUT_WIRES;
         soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES__out_t [2-1:0]CPTRA_GENERIC_OUTPUT_WIRES;
         soc_ifc_reg__CPTRA_FW_REV_ID__out_t [2-1:0]CPTRA_FW_REV_ID;
+        soc_ifc_reg__CPTRA_HW_CONFIG__out_t CPTRA_HW_CONFIG;
         soc_ifc_reg__CPTRA_WDT_TIMER1_EN__out_t CPTRA_WDT_TIMER1_EN;
         soc_ifc_reg__CPTRA_WDT_TIMER1_CTRL__out_t CPTRA_WDT_TIMER1_CTRL;
         soc_ifc_reg__CPTRA_WDT_TIMER1_TIMEOUT_PERIOD__out_t [2-1:0]CPTRA_WDT_TIMER1_TIMEOUT_PERIOD;
