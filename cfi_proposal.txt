@@ -1,0 +1,103 @@
+Code Flow Integrity Monitor 
+
+Caliptra Core Gen2.x 
+
+Proposal 
+
+Overview 
+
+The code flow integrity monitor (CFIM) is a hardware state machine that enforces a ROM provided policy table. Caliptra ROM will not be allowed to jump to runtime firmware unless the CFIM block has successfully reached its terminal state, while enforcing the policy programmed in the policy table. 
+
+Implementation details 
+
+Policy ROM 
+
+Programmed alongside ROM release. 
+
+Contains policy table entries defining:  
+
+Event ID 
+
+Allowed next states 
+
+Multiplicity (loops) 
+
+Timing hints (min cycles) 
+
+Expected PC range for event? 
+
+KV slots accessed (spy the kv read requests?) 
+
+Operation types (spy the ready/done signals for each crypto engine) 
+
+Optional flags 
+
+CFIM State Machine 
+
+Generic state machine that:  
+
+Reads current state entry from Policy ROM. 
+
+Validates incoming event against allowed transitions. 
+
+Checks multiplicity and timing hints. 
+
+Checks operation types 
+
+Checks KV slots used 
+
+Advances state if valid; sets error if invalid. 
+
+Cycle counter for tracking time between events. 
+
+Loop counters per state for tracking number of iterations for a given event. 
+
+Keep a mask of crypto operations completed since last event, must match the mask in Policy ROM before advancing to the next state. 
+
+Could check for specific keyvault operations if required.  
+
+Context-aware:  
+
+Boot profile (cold/warm/update) 
+
+Lifecycle state 
+
+Debug lock status – no checks during debug unlock 
+
+Status & Control 
+
+CSR interface for:  
+
+Writing events and metadata. 
+
+Reading CFIM status, error codes, digest. 
+
+CFIM_OK asserted only when:  
+
+CFIM reaches terminal state. 
+
+All conditions satisfied. 
+
+Opens 
+
+Define policy table entry format. Including what hints in the policy table are needed to ensure valid code flow. 
+
+Number of events, boot profiles, etc. 
+
+Are cycle counters and PC checks sufficient, or do we want additional feedback? 
+
+Busy/Idle signals from peripherals 
+
+Snoop VeeR core execution signals or trace logs 
+
+Do we need additional cryptographic guarantees, some kind of hash extension based on events and state transitions 
+
+Is confirming that the expected crypto went busy enough, or do we want to port out unique signals? 
+
+Validation 
+
+Testbench needs capability to load policy table alongside ROM. 
+
+Need a straightforward way for policy table entries to be configured, perhaps a script to generate random policy table entries in a machine readable format that can also be used to inform test ROM code that checks for expected behavior from CFIM. 
+
+Test plan coverage for all CFIM success/failure paths. Formal verification? 
