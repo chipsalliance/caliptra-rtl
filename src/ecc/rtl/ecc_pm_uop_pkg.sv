@@ -154,7 +154,7 @@ localparam [PROG_ADDR_W-1 : 0] PD_E                 = PD_S + 83;
 localparam [PROG_ADDR_W-1 : 0] INV_S                = PD_E + 2;        // Inversion mod p
 localparam [PROG_ADDR_W-1 : 0] INV_E_P256           = INV_S + 703;     // P-256 early-exit: last real ST_MUL_p of INV_OUT
 localparam [PROG_ADDR_W-1 : 0] INV_E                = INV_S + 1039;    // P-384 end of inversion mod p
-localparam [PROG_ADDR_W-1 : 0] CONV_S               = INV_E + 2;       // PM result conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
+localparam [PROG_ADDR_W-1 : 0] CONV_S               = INV_E + 2;       // PM result conversion from projective Mont (X,Y,Z) to affine normal (x,y)
 localparam [PROG_ADDR_W-1 : 0] CONV_E               = CONV_S + 11;
 
 localparam [PROG_ADDR_W-1 : 0] SIGN0_S              = CONV_E + 2;     // signing proof r part0

@@ -64,6 +64,8 @@ interface ecc_top_cov_if
     logic mult_last_reduction;
     logic mult_final_subtraction;
 
+    logic curve_sel_active;
+
     kv_write_filter_metrics_t kv_write_metrics;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
@@ -119,6 +121,8 @@ interface ecc_top_cov_if
     assign pubkeyx_output_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyx_output_outofrange;
     assign pubkeyy_output_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyy_output_outofrange;
     assign sharedkey_outofrange = ecc_top.ecc_dsa_ctrl_i.sharedkey_outofrange;
+
+    assign curve_sel_active = ecc_top.ecc_dsa_ctrl_i.curve_sel_active;
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
@@ -186,6 +190,17 @@ interface ecc_top_cov_if
         error_signing_cp: cross error_flag, signing_process;
         error_verifying_cp: cross error_flag, verifying_process;
         error_sharedkey_cp: cross error_flag, sharedkey_process;
+
+        curve_active_cp: coverpoint curve_sel_active;
+        cmd_x_curve_cp: cross ecc_cmd_cp, curve_active_cp {
+            ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
+        }
+        curve_transition_cp: coverpoint {$past(curve_sel_active), curve_sel_active};
+        error_keygen_curve_cp:    cross error_flag, keygen_process,    curve_active_cp;
+        error_signing_curve_cp:   cross error_flag, signing_process,   curve_active_cp;
+        error_verifying_curve_cp: cross error_flag, verifying_process, curve_active_cp;
+        error_sharedkey_curve_cp: cross error_flag, sharedkey_process, curve_active_cp;
+        zeroize_x_curve_cp: cross zeroize, curve_active_cp;
 
         // modular operation
         add_carry_cp: cross mod_p_q, add_sub_i, add_cout0, add_cout1;

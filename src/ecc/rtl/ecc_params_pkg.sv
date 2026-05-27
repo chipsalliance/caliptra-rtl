@@ -67,16 +67,6 @@ package ecc_params_pkg;
   parameter [9 : 0] SCA_MONT_COUNT_P384 = MONT_COUNT_P384 + RND_SIZE; // 576
   parameter [9 : 0] SCA_MONT_COUNT_P256 = MONT_COUNT_P256 + RND_SIZE; // 448
 
-  //----------------------------------------------------------------
-  // Curve selector (code-readability helper).
-  // The runtime selection itself comes from the CURVE_SEL CSR field
-  // read by ecc_dsa_ctrl.sv and forwarded to the curve-aware blocks.
-  //----------------------------------------------------------------
-  typedef enum logic {
-    P384 = 1'b0,
-    P256 = 1'b1
-  } curve_e;
-
   //================================================================
   // secp384r1 (P-384) constants -- Montgomery domain unless noted.
   //================================================================

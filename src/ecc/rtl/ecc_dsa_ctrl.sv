@@ -218,6 +218,7 @@ module ecc_dsa_ctrl
     logic pubkeyy_input_outofrange;
     logic pubkey_input_invalid;
     logic pcr_sign_input_invalid;
+    logic kv_under_p256_invalid;
     logic privkey_output_outofrange, pubkeyx_output_outofrange, pubkeyy_output_outofrange;
     logic sharedkey_outofrange;
 
@@ -238,7 +239,7 @@ module ecc_dsa_ctrl
     logic [REG_SIZE-1 : 0] G_Y_MONT_c;
     logic [REG_SIZE-1 : 0] R2_q_MONT_c;
     logic [REG_SIZE-1 : 0] ONE_q_MONT_c;
-    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0] read_reg_masked;
+    logic [REG_NUM_DWORDS-1 : 0][DATA_WIDTH-1 : 0] read_reg_c;
 
     //----------------------------------------------------------------
     // Module instantiantions.
@@ -257,7 +258,7 @@ module ecc_dsa_ctrl
     assign G_Y_MONT_c      = curve_sel_active ? G_Y_MONT_P256    : G_Y_MONT_P384;
     assign R2_q_MONT_c     = curve_sel_active ? R2_q_MONT_P256   : R2_q_MONT_P384;
     assign ONE_q_MONT_c    = curve_sel_active ? ONE_q_MONT_P256  : ONE_q_MONT_P384;
-    assign read_reg_masked = curve_sel_active ? {128'd0, read_reg[7:0]} : read_reg;
+    assign read_reg_c = curve_sel_active ? {128'd0, read_reg[7:0]} : read_reg;
 
     ecc_dsa_sequencer #(
         .ADDR_WIDTH(DSA_PROG_ADDR_W),
@@ -382,8 +383,8 @@ module ecc_dsa_ctrl
         else begin
             privkey_we_reg <= hw_privkey_we;
             sharedkey_we_reg <= hw_sharedkey_we;
-            if (secretkey_we & (dest_keyvault | kv_seed_data_present))            
-                kv_reg <= read_reg_masked;
+            if (secretkey_we & (dest_keyvault | kv_seed_data_present) & ~curve_sel_active)
+                kv_reg <= read_reg_c;
 
             kv_seed_data_present <= kv_seed_data_present_set ? '1 :
                                     kv_seed_data_present_reset ? '0 : kv_seed_data_present;
@@ -409,7 +410,7 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_STATUS.READY.next = ecc_ready_reg;
     always_comb hwif_in.ECC_STATUS.VALID.next = ecc_valid_reg;
 
-    // N-9: one-cycle pulse on P-384 -> P-256 transition to clear stale upper 128b of operand CSRs.
+    // One-cycle pulse on P-384 -> P-256 transition to clear stale upper 128b of operand CSRs.
     logic curve_sel_d;
     logic curve_sel_to_p256_pulse;
     always_ff @(posedge clk or negedge reset_n) begin : curve_sel_edge_det
@@ -431,8 +432,8 @@ module ecc_dsa_ctrl
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.we = (pcr_sign_mode | (kv_privkey_write_en & (kv_privkey_write_offset == dword))) & !zeroize_reg;
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode       ? pcr_signing_data.pcr_ecc_signing_privkey[dword] : 
                                                             kv_privkey_write_en ? kv_privkey_write_data : 
-                                                                                  read_reg_masked[REG_NUM_DWORDS-1-dword];
-            // N-9: HW clears upper 4 dwords on P-384 -> P-256 transition.
+                                                                                  read_reg_c[REG_NUM_DWORDS-1-dword];
+            // HW clears upper 4 dwords on P-384 -> P-256 transition.
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL) | (curve_sel_to_p256_pulse & (dword < 4));
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = ecc_ready_reg & ~kv_key_data_present;
         end 
@@ -440,7 +441,7 @@ module ecc_dsa_ctrl
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             //If keyvault is not enabled, grab the sw value as usual
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.we = (privkey_we_reg & ~(dest_keyvault | kv_seed_data_present)) & !zeroize_reg;
-            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
+            hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.next = read_reg_c[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_PRIVKEY_OUT[dword].PRIVKEY_OUT.hwclr = zeroize_reg;
         end
 
@@ -467,34 +468,34 @@ module ecc_dsa_ctrl
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             pubkeyx_reg[dword] = hwif_out.ECC_PUBKEY_X[REG_NUM_DWORDS-1-dword].PUBKEY_X.value;
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.we = hw_pubkeyx_we & !zeroize_reg;
-            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg_masked[REG_NUM_DWORDS-1-dword];  
+            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg_c[REG_NUM_DWORDS-1-dword];  
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             pubkeyy_reg[dword] = hwif_out.ECC_PUBKEY_Y[REG_NUM_DWORDS-1-dword].PUBKEY_Y.value;
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.we = hw_pubkeyy_we & !zeroize_reg;
-            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
+            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg_c[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             r_reg[dword] = hwif_out.ECC_SIGN_R[REG_NUM_DWORDS-1-dword].SIGN_R.value;
             hwif_in.ECC_SIGN_R[dword].SIGN_R.we = hw_r_we & !zeroize_reg;
-            hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
+            hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg_c[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_SIGN_R[dword].SIGN_R.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             s_reg[dword] = hwif_out.ECC_SIGN_S[REG_NUM_DWORDS-1-dword].SIGN_S.value;
             hwif_in.ECC_SIGN_S[dword].SIGN_S.we = hw_s_we & !zeroize_reg;
-            hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
+            hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg_c[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_SIGN_S[dword].SIGN_S.hwclr = zeroize_reg;
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin 
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = hw_verify_r_we & !zeroize_reg;       
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg_masked[REG_NUM_DWORDS-1-dword];
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg_c[REG_NUM_DWORDS-1-dword];
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.hwclr = zeroize_reg;
         end
 
@@ -505,7 +506,7 @@ module ecc_dsa_ctrl
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.we = (sharedkey_we_reg & ~(dest_keyvault | kv_key_data_present)) & !zeroize_reg;
-            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.next = read_reg_masked[REG_NUM_DWORDS-1-dword];  
+            hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.next = read_reg_c[REG_NUM_DWORDS-1-dword];  
             hwif_in.ECC_DH_SHARED_KEY[dword].DH_SHARED_KEY.hwclr = zeroize_reg;
         end
     end
@@ -558,31 +559,32 @@ module ecc_dsa_ctrl
         hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = ~kv_write_ready;
     end
 
-    // Software write-enables to prevent KV reg manipulation mid-operation
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o;
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o;
+    // KV path is P-384 only; SW cannot arm KV read/write while CURVE_SEL selects P-256.
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o && !curve_sel;
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = 0;
 
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o;
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o && !curve_sel;
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = 0;
 
     // KV write control must be written before ECC core operation begins, even though
     // output isn't written to KV until the end of the operation.
     // Prevent partial-key attacks by blocking register modifications during core execution.
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = !busy_o;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = !busy_o;
+    // Also block when CURVE_SEL=P256 since P-256 has no KV path.
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = !busy_o && !curve_sel;
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = 0;
 
     //keyvault control reg macros for assigning to struct
@@ -700,21 +702,8 @@ module ecc_dsa_ctrl
             endcase
         end
         else if (prog_instr.opcode == DSA_UOP_WR_SCALAR) begin
-            // The PM core stores the scalar in a (REG_SIZE+RND_SIZE)=576b rotate
-            // register and consumes mont_count_plain digits per ladder. For the
-            // ladder to see the scalar MSB-first across all of its bits, the
-            // operand must be left-aligned to bit (REG_SIZE+RND_SIZE)-1. That
-            // means a curve-dependent left-shift: P-384 needs <<RND_SIZE (192)
-            // so its 384b scalar lands at [575:192]; P-256 needs <<320 so its
-            // 256b scalar lands at [575:320]. Using the P-384 shift on P-256
-            // would leave the low 128 bits of u1/u2 outside the 256-cycle
-            // ladder window and drop them, yielding wrong u1*G + u2*Q.
-            // The same alignment rule applies to the SCA-blinded SCALAR_ID
-            // path (KEYGEN/SIGN/DH): scalar_out_reg = scalar + rnd*n is at
-            // most (REG_SIZE+RND_SIZE)b for P-384 (already left-aligned) but
-            // only SCA_MONT_COUNT_P256 = 448b for P-256, so it needs a
-            // <<((REG_SIZE+RND_SIZE)-SCA_MONT_COUNT_P256)=128 shift to land
-            // at [575:128] for the 448-iter P-256 ladder.
+            // Left-align the scalar in the 576b PM rotate register so the ladder consumes its MSB first:
+            // SCALAR_PK/G_ID uses MONT_COUNT shift, SCALAR_ID uses SCA_MONT_COUNT shift, curve-selected.
             unique case (prog_instr.reg_id)
                 SCALAR_PK_ID          : write_reg = curve_sel_active
                                             ? ((REG_SIZE+RND_SIZE)'(scalar_PK_reg) << ((REG_SIZE+RND_SIZE) - MONT_COUNT_P256))
@@ -794,6 +783,13 @@ module ecc_dsa_ctrl
 
     assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & pcr_sign_mode;
 
+    // KV path is illegal under P-256: fire error if any KV transaction is armed while curve_sel_active=1.
+    assign kv_under_p256_invalid    = curve_sel_active & (kv_privkey_read_ctrl_reg.read_en |
+                                                          kv_seed_read_ctrl_reg.read_en   |
+                                                          kv_write_ctrl_reg.write_en      |
+                                                          dest_keyvault                   |
+                                                          kv_seed_data_present);
+
     assign privkey_output_outofrange = keygen_process & (hw_privkey_we & ((read_reg == 0) | (read_reg >= group_order)));
     assign pubkeyx_output_outofrange = keygen_process & (hw_pubkeyx_we & (read_reg >= prime));
     assign pubkeyy_output_outofrange = keygen_process & (hw_pubkeyy_we & (read_reg >= prime));
@@ -802,7 +798,7 @@ module ecc_dsa_ctrl
 
     assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | 
                         r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | 
-                        pubkey_input_invalid | pcr_sign_input_invalid |
+                        pubkey_input_invalid | pcr_sign_input_invalid | kv_under_p256_invalid |
                         privkey_output_outofrange | pubkeyx_output_outofrange | pubkeyy_output_outofrange |
                         sharedkey_outofrange;
 
@@ -813,7 +809,7 @@ module ecc_dsa_ctrl
     // perform different operations.
     // Active low and async reset.
     //----------------------------------------------------------------
-    // N-6: Latch curve_sel into curve_sel_active at command dispatch so SW glitches on CURVE_SEL mid-op cannot reach the datapath.
+    // Latch curve_sel into curve_sel_active at command dispatch so SW glitches on CURVE_SEL mid-op cannot reach the datapath.
     always_ff @(posedge clk or negedge reset_n)
     begin : curve_sel_latch
         if (!reset_n)
@@ -890,14 +886,8 @@ module ecc_dsa_ctrl
                         signing_process     <= 0;
                         verifying_process   <= 0;
                         sharedkey_process   <= 0;
-                        // Waiting for new valid command.
-                        // Bug-fix: PM-RAM curve constants are loaded only by the
-                        // ECC_RESET init sequence (addr 0..11). To support runtime
-                        // CURVE_SEL switching, every operation re-runs the init
-                        // sequence so the PM holds the constants matching the
-                        // current curve_sel. The command is latched into
-                        // pending_cmd_reg and dispatched at the end of init
-                        // (addr ECC_NOP-1).
+                        // Every new command re-runs ECC_RESET init so PM-RAM curve constants
+                        // match the current curve_sel; cmd is latched into pending_cmd_reg and dispatched at end-of-init.
                         unique case (cmd_reg)
                             KEYGEN : begin  // keygen
                                 prog_cntr <= ECC_RESET;
@@ -1131,5 +1121,14 @@ module ecc_dsa_ctrl
 always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, !reset_n)
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, !reset_n)
+
+    // curve_sel_active must not change once a command is in flight.
+    `CALIPTRA_ASSERT(ERR_ECC_CURVE_SEL_ACTIVE_STABLE_IN_FLIGHT,
+        ((prog_cntr != ECC_NOP) && $past(prog_cntr != ECC_NOP)) |-> $stable(curve_sel_active),
+        clk, !reset_n)
+
+    // No KV write traffic while CURVE_SEL=P256 (KV path is P-384 only).
+    `CALIPTRA_ASSERT(ERR_ECC_KV_BUS_SILENT_UNDER_P256,
+        curve_sel_active |-> !kv_write.write_en, clk, !reset_n)
 
 endmodule

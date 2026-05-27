@@ -299,7 +299,7 @@ module ecc_pm_ctrl
                         prog_cntr <= CONV_S;
                     end
                     
-                    CONV_E : begin // End of conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
+                    CONV_E : begin // End of conversion from projective Mont (X,Y,Z) to affine normal (x,y)
                         unique case (ecc_cmd_reg)
                             SIGN_CMD : prog_cntr <= SIGN0_S;
                             default  : prog_cntr <= NOP;
