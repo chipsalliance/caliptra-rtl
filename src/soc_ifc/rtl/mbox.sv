@@ -88,6 +88,7 @@ module mbox
 
     // Status
     output logic uc_mbox_lock,
+    output logic soc_mbox_lock,
 
     //interrupts
     output logic uc_mbox_data_avail,
@@ -141,6 +142,12 @@ logic arc_MBOX_RDY_FOR_DATA_MBOX_ERROR;
 logic arc_MBOX_EXECUTE_UC_MBOX_ERROR;
 logic arc_MBOX_EXECUTE_SOC_MBOX_ERROR;
 logic arc_MBOX_EXECUTE_TAP_MBOX_ERROR;
+logic arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT;
+//zeroization
+logic                   zeroize_active;
+logic                   zeroize_trigger;
+logic                   zeroize_done;
+logic [MBOX_ADDR_W-1:0] zeroize_addr;
 //sram
 logic [MBOX_DATA_W-1:0] sram_wdata;
 logic [MBOX_ECC_DATA_W-1:0] sram_wdata_ecc;
@@ -199,7 +206,8 @@ assign mbox_error = read_error | write_error;
 
 assign tap_mode = hwif_out.tap_mode.enabled.value;
 
-assign uc_mbox_lock = uc_has_lock;
+assign uc_mbox_lock  = uc_has_lock;
+assign soc_mbox_lock = soc_has_lock;
 
 assign req_data_uc_req = ~req_data_soc_req;
 
@@ -227,13 +235,17 @@ always_comb mask_rdata = hwif_out.mbox_dataout.dataout.swacc & ~valid_receiver;
 
 //move from idle to rdy for command when lock is acquired
 //we have a valid read, to the lock register, and it's not currently locked
-always_comb arc_MBOX_IDLE_MBOX_RDY_FOR_CMD = (mbox_fsm_ps == MBOX_IDLE) & ~hwif_out.mbox_lock.lock.value & (hwif_out.mbox_lock.lock.swmod | hwif_in.mbox_lock.lock.hwset);
+//blocked during zeroization until SRAM is cleared
+always_comb arc_MBOX_IDLE_MBOX_RDY_FOR_CMD = (mbox_fsm_ps == MBOX_IDLE) & ~hwif_out.mbox_lock.lock.value & (hwif_out.mbox_lock.lock.swmod | hwif_in.mbox_lock.lock.hwset) & ~zeroize_active;
 //move from rdy for cmd to rdy for dlen when cmd is written
 always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = (mbox_fsm_ps == MBOX_RDY_FOR_CMD) & ((hwif_out.mbox_cmd.command.swmod & valid_requester) | hwif_in.mbox_cmd.command.we);
 //move from rdy for dlen to rdy for data when dlen is written
 always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = (mbox_fsm_ps == MBOX_RDY_FOR_DLEN) & ((hwif_out.mbox_dlen.length.swmod & valid_requester) | hwif_in.mbox_dlen.length.we);
-//move from rdy for data to execute uc when SoC sets execute bit
-always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & (soc_has_lock | tap_has_lock);
+//move from rdy for data directly to idle when SoC sets execute with SoC-direct flag (bit 28)
+//used for idle memory graceful exit — no uC involvement needed
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & soc_has_lock & hwif_out.mbox_cmd.command.value[28];
+//move from rdy for data to execute uc when SoC sets execute bit (excluded when SoC-direct flag set)
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & ((soc_has_lock & ~hwif_out.mbox_cmd.command.value[28]) | tap_has_lock);
 //move from rdy for data to execute soc when uc writes to execute
 always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & uc_has_lock & ~tap_mode;
 //move from rdy for data to execute tap when uc writes to execute in tap_mode
@@ -364,7 +376,10 @@ always_comb begin : mbox_fsm_combo
             //update the write pointers to sram when accessing datain register
             inc_wrptr = (hwif_out.mbox_datain.datain.swmod & valid_requester & ~req_hold) |
                         (dmi_inc_wrptr & tap_has_lock);
-            if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC) begin
+            if (arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT) begin
+                mbox_fsm_ns = MBOX_IDLE;
+            end
+            else if (arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC) begin
                 mbox_fsm_ns = MBOX_EXECUTE_UC;
                 //reset wrptr so receiver can write response
                 rst_mbox_wrptr = 1;
@@ -542,7 +557,33 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
 end
 
-always_comb dma_sram_req_dv_q = dma_sram_req_dv & hwif_out.mbox_lock.lock.value & uc_has_lock & ~dma_sram_req_rd_phase;
+always_comb zeroize_trigger = arc_MBOX_EXECUTE_UC_MBOX_IDLE
+                            | arc_MBOX_EXECUTE_SOC_MBOX_IDLE
+                            | arc_MBOX_EXECUTE_TAP_MBOX_IDLE
+                            | arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT;
+
+always_comb zeroize_done = zeroize_active & (zeroize_addr == MBOX_ADDR_W'(MBOX_DEPTH - 1));
+
+always_ff @(posedge clk or negedge rst_b) begin
+    if (!rst_b) begin
+        zeroize_active <= 1'b0;
+        zeroize_addr   <= '0;
+    end else if (zeroize_trigger) begin
+        zeroize_active <= 1'b1;
+        zeroize_addr   <= '0;
+    end else if (zeroize_active) begin
+        if (zeroize_done) begin
+            zeroize_active <= 1'b0;
+            zeroize_addr   <= '0;
+        end else begin
+            zeroize_addr <= zeroize_addr + 1'b1;
+        end
+    end
+end
+
+always_comb dma_sram_req_dv_q = dma_sram_req_dv & hwif_out.mbox_lock.lock.value
+                                & (uc_has_lock | soc_has_lock)
+                                & ~dma_sram_req_rd_phase;
 //need to hold direct read accesses for 1 clock to get response
 //create a qualified direct request signal that is masked during the data phase
 //hold the interface to insert wait state when direct request comes
@@ -588,9 +629,10 @@ always_comb dma_sram_error = 1'b0; // TODO: ecc error?
 
 always_comb begin: mbox_sram_inf
     //read live on direct access, or when pointer has been incremented, for pre-load on read pointer reset, or ecc correction
-    mbox_sram_req_cs = dir_req_dv_q | mbox_protocol_sram_we | mbox_protocol_sram_rd;
-    mbox_sram_req_we = sram_we;
-    mbox_sram_req_addr = sram_we ? sram_waddr : sram_rdaddr;
+    //zeroization has highest priority — drives cs/we/addr while active
+    mbox_sram_req_cs = zeroize_active | dir_req_dv_q | mbox_protocol_sram_we | mbox_protocol_sram_rd;
+    mbox_sram_req_we = zeroize_active | sram_we;
+    mbox_sram_req_addr = zeroize_active ? zeroize_addr : (sram_we ? sram_waddr : sram_rdaddr);
     mbox_sram_req_wdata = sram_wdata;
     mbox_sram_req_ecc  = sram_wdata_ecc;
 
@@ -628,8 +670,9 @@ rvecc_decode ecc_decode (
 //SoC access is controlled by mailbox, each subsequent read or write increments the pointer
 //uC accesses can specify the specific read or write address, or rely on mailbox to control
 //if tap has lock or is responding to a request it can write instead
-always_comb sram_wdata = (dma_sram_req_dv_q && dma_sram_req_write )                           ? dma_sram_req_wdata : 
-                         (dmi_inc_wrptr & ((mbox_fsm_ps == MBOX_EXECUTE_TAP) | tap_has_lock)) ? dmi_reg_wdata : 
+always_comb sram_wdata = zeroize_active                                                        ? '0 :
+                         (dma_sram_req_dv_q && dma_sram_req_write )                           ? dma_sram_req_wdata :
+                         (dmi_inc_wrptr & ((mbox_fsm_ps == MBOX_EXECUTE_TAP) | tap_has_lock)) ? dmi_reg_wdata :
                                                                                                 req_data_wdata;
 
 //in ready for data state we increment the pointer each time we write
@@ -672,11 +715,11 @@ always_comb hwif_in.mbox_dataout.dataout.swwe = '0; //no sw write enable, but ne
 always_comb hwif_in.mbox_dataout.dataout.we = mbox_protocol_sram_rd_f;
 always_comb hwif_in.mbox_dataout.dataout.next = mbox_rd_valid_f ? sram_rdata_cor : '0;
 //clear the lock when moving from execute to idle
-always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_MBOX_EXECUTE_TAP_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
+always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_MBOX_EXECUTE_TAP_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK | arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT;
 //clear the mailbox status when we go back to IDLE
-always_comb hwif_in.mbox_status.status.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_MBOX_EXECUTE_TAP_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK;
-//clear the execute register when we force unlock
-always_comb hwif_in.mbox_execute.execute.hwclr = arc_FORCE_MBOX_UNLOCK;
+always_comb hwif_in.mbox_status.status.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_MBOX_EXECUTE_TAP_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK | arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT;
+//clear the execute register when we force unlock or SoC-direct graceful exit
+always_comb hwif_in.mbox_execute.execute.hwclr = arc_FORCE_MBOX_UNLOCK | arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT;
 // Set mbox_csr status fields in response to ECC errors
 always_comb hwif_in.mbox_status.ecc_single_error.hwset = sram_single_ecc_error;
 always_comb hwif_in.mbox_status.ecc_double_error.hwset = sram_double_ecc_error;
