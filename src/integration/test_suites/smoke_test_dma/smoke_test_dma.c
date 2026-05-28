@@ -529,9 +529,13 @@ void main(void) {
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer - biggest implemented size\n");
         soc_ifc_axi_dma_send_axi_to_axi_no_wait(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR+0x1000, 0, 0x100000, 0);
 
-        for (uint8_t i = 0; i < 10; i++) {
+        for (uint8_t i = 0; i < 50; i++) {
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
+
+        // To cover status1 register read and attempted write
+        VPRINTF(LOW, "Remaining bytes: 0x%x\n", lsu_read_32(CLP_AXI_DMA_REG_STATUS1));
+        lsu_write_32(CLP_AXI_DMA_REG_STATUS1, 42);
 
         // To cover writes of 0 while go/flush bits are set to 1
         lsu_write_32(CLP_AXI_DMA_REG_CTRL, 2);
