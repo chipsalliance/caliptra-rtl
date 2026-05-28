@@ -14,10 +14,21 @@
 //
 //======================================================================
 //
-// hmac_core.v
-// --------
-// working on HMAC-384 configuration
+// hmac_core.sv
+// ------------
+// HMAC-SHA-512/384 core with SCA countermeasures.
+// Single SHA-512 masked core architecture for area optimization.
 //
+// Commands:
+//   init_cmd  - SHA-init with (K xor ipad), then SHA-next with first
+//               message block. If issued together with last_cmd,
+//               continues directly to inner-digest capture, OPAD, and
+//               HMAC finalization.
+//   next_cmd  - SHA-next with one intermediate message block.
+//   last_cmd  - SHA-next with the final message block, captures the
+//               inner digest, then SHA-init with (K xor opad) and
+//               SHA-next with {inner_digest, FINAL_PAD} to produce
+//               the HMAC tag.
 //
 //======================================================================
 
@@ -27,16 +38,17 @@ module hmac_core
       input logic            clk,
       input logic            reset_n,
       input logic            zeroize,
-      
+
       // Control.
       input logic            init_cmd,
       input logic            next_cmd,
+      input logic            last_cmd,
       input logic            mode_cmd,
       output logic           ready,
       output logic           tag_valid,
 
       // Data ports.
-      input logic [383 : 0]  lfsr_seed,
+      input logic [191 : 0]  lfsr_seed,
 
       input logic [511 : 0]  key,
       input logic [1023 : 0] block_msg,
@@ -49,111 +61,94 @@ module hmac_core
   //----------------------------------------------------------------
   localparam bit [1023:0] IPAD       = 1024'h3636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636;
   localparam bit [1023:0] OPAD       = 1024'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
-  localparam bit [639:0]  HMAC384_FINAL_PAD  = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
-  localparam bit [511:0]  HMAC512_FINAL_PAD  = 512'h80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600;
-  localparam bit [191:0]  ENTROPY_PAD  = 192'h800000000000000000000000000000000000000000000340;
+  localparam bit [639:0]  HMAC384_FINAL_PAD = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
+  localparam bit [511:0]  HMAC512_FINAL_PAD = 512'h80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600;
 
-  localparam [2 : 0] CTRL_IDLE   = 3'd0;
-  localparam [2 : 0] CTRL_IPAD   = 3'd1;
-  localparam [2 : 0] CTRL_OPAD   = 3'd2;
-  localparam [2 : 0] CTRL_HMAC   = 3'd3;
-  localparam [2 : 0] CTRL_DONE   = 3'd4;
+  localparam [2 : 0] CTRL_IDLE     = 3'd0;
+  localparam [2 : 0] CTRL_IPAD     = 3'd1;
+  localparam [2 : 0] CTRL_MSG      = 3'd2;
+  localparam [2 : 0] CTRL_OPAD     = 3'd3;
+  localparam [2 : 0] CTRL_HMAC     = 3'd4;
+  localparam [2 : 0] CTRL_DONE     = 3'd5;
 
   //----------------------------------------------------------------
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
-
   logic [2 : 0] hmac_ctrl_reg;
   logic [2 : 0] hmac_ctrl_new;
   logic         hmac_ctrl_we;
   logic [2 : 0] hmac_ctrl_last;
 
   logic         ready_flag;
-  logic         digest_valid_reg; 
+  logic         digest_valid_reg;
   logic         digest_valid_new;
   logic         digest_valid_we;
 
-  logic [1023:0] key_opadded;
   logic [1023:0] key_ipadded;
+  logic [1023:0] key_opadded;
   logic [1023:0] HMAC_padded;
 
-  logic         first_round; 
+  logic         first_round;
   logic         IPAD_ready;
+  logic         MSG_ready;
   logic         OPAD_ready;
   logic         HMAC_ready;
   logic [1:0]   mode_reg;
 
-  logic             H1_init;
-  logic             H1_next;
-  logic  [1023 : 0] H1_block;
-  logic             H1_ready;
-  logic  [511 : 0]  H1_digest;
-  logic             H1_digest_valid;
+  // Latched on entry to MSG flow: 1 if the current message block is the
+  // final one (so MSG must capture inner_digest and continue to OPAD).
+  logic         is_last_block;
 
-  logic             H2_init;
-  logic             H2_next;
-  logic  [1023 : 0] H2_block;
-  logic             H2_ready;
-  logic  [511 : 0]  H2_digest;
-  logic             H2_digest_valid;
+  // Captured inner-hash digest at the final MSG -> OPAD transition; used
+  // as data into the HMAC finalization block.
+  logic [511:0] inner_digest_reg;
+  logic         inner_digest_we;
 
-  logic             set_entropy;
-  logic  [383 : 0]  entropy;
-  logic  [1023: 0]  entropy_block;
-  logic  [383 : 0]  entropy_digest;
-  logic  [383 : 0]  lfsr_entropy;
-  logic  [63 : 0]   counter_reg;
+  logic             sha_init;
+  logic             sha_next;
+  logic [1023 : 0]  sha_block;
+  logic             sha_ready;
+  logic [511 : 0]   sha_digest;
+  logic             sha_digest_valid;
+
+  // Entropy.
+  logic [191 : 0]   entropy;
+  logic [191 : 0]   lfsr_entropy;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
-  assign ready      = ready_flag;
-  assign tag        = digest_valid_reg? H2_digest : 512'b0;
-  assign tag_valid  = digest_valid_reg;
+  assign ready     = ready_flag;
+
+  assign tag       = digest_valid_reg ? sha_digest : 512'b0;
+  assign tag_valid = digest_valid_reg;
+
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  sha512_masked_core u_sha512_core_h1 
+  sha512_masked_core u_sha512_core_h1
                      (
                      .clk(clk),
                      .reset_n(reset_n),
                      .zeroize(zeroize),
 
-                     .init_cmd(H1_init),
-                     .next_cmd(H1_next),
+                     .init_cmd(sha_init),
+                     .next_cmd(sha_next),
                      .mode(mode_reg),
 
-                     .entropy(entropy[191 : 0]),
+                     .entropy(entropy),
 
-                     .block_msg(H1_block),
+                     .block_msg(sha_block),
 
-                     .ready(H1_ready),
-                     .digest(H1_digest),
-                     .digest_valid(H1_digest_valid)
+                     .ready(sha_ready),
+                     .digest(sha_digest),
+                     .digest_valid(sha_digest_valid)
                     );
 
-  sha512_masked_core u_sha512_core_h2 
-                     (
-                     .clk(clk),
-                     .reset_n(reset_n),
-                     .zeroize(zeroize),
-
-                     .init_cmd(H2_init),
-                     .next_cmd(H2_next),
-                     .mode(mode_reg),
-
-                     .entropy(entropy[383 : 192]),
-
-                     .block_msg(H2_block),
-
-                     .ready(H2_ready),
-                     .digest(H2_digest),
-                     .digest_valid(H2_digest_valid)
-                    );
-
+  // 6 LFSRs for 192-bit entropy generation.
   genvar i;
-  generate 
-      for (i=0; i < 12; i++) begin : gen_lfsr
+  generate
+      for (i = 0; i < 6; i++) begin : gen_lfsr
         caliptra_prim_lfsr
         #(
           .LfsrType("FIB_XNOR"),
@@ -171,6 +166,9 @@ module hmac_core
         );
       end
   endgenerate
+
+  assign lfsr_entropy = lfsr_seed;
+
   //----------------------------------------------------------------
   // reg_update
   //
@@ -182,15 +180,19 @@ module hmac_core
     begin : reg_update
       if (!reset_n)
         begin
-          digest_valid_reg <= 0;
-          hmac_ctrl_reg  <= CTRL_IDLE;
-          hmac_ctrl_last <= CTRL_IDLE;
+          digest_valid_reg <= 1'b0;
+          hmac_ctrl_reg    <= CTRL_IDLE;
+          hmac_ctrl_last   <= CTRL_IDLE;
+          inner_digest_reg <= '0;
+          is_last_block    <= 1'b0;
         end
       else if (zeroize)
         begin
-          digest_valid_reg <= 0;
-          hmac_ctrl_reg  <= CTRL_IDLE;
-          hmac_ctrl_last <= CTRL_IDLE;
+          digest_valid_reg <= 1'b0;
+          hmac_ctrl_reg    <= CTRL_IDLE;
+          hmac_ctrl_last   <= CTRL_IDLE;
+          inner_digest_reg <= '0;
+          is_last_block    <= 1'b0;
         end
       else
         begin
@@ -202,6 +204,17 @@ module hmac_core
           if (hmac_ctrl_we)
             hmac_ctrl_reg <= hmac_ctrl_new;
 
+          if (inner_digest_we)
+            inner_digest_reg <= sha_digest;
+
+          // Sample at IDLE: LAST is a modifier on INIT or NEXT, so any
+          // command kicked off at IDLE latches is_last_block from last_cmd.
+          // This handles all firmware patterns: INIT, INIT|LAST, NEXT,
+          // NEXT|LAST, and LAST-alone.
+          if (hmac_ctrl_reg == CTRL_IDLE) begin
+            if (init_cmd | next_cmd | last_cmd)
+              is_last_block <= last_cmd;
+          end
         end
     end // reg_update
 
@@ -214,107 +227,75 @@ module hmac_core
         mode_reg <= '0;
       else begin
         if (hmac_ctrl_reg == CTRL_IDLE)
-          mode_reg <= {1'b1, mode_cmd};  //hashing algorithm mode: 00 for SHA512/224, 01 for SHA512/256, 10 for SHA384, 11 for SHA512
+          mode_reg <= {1'b1, mode_cmd};  // SHA hashing algorithm mode: 10 for SHA-384, 11 for SHA-512
       end
     end
-
-  // without zeroize to make it more complex
-  always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n) begin
-      entropy_digest <= '0;
-    end
-    else if (set_entropy) begin
-      entropy_digest <= H2_digest[383:0];
-    end
-  end
-  
-  //without zeroize to make it more complex
-  always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n)
-      counter_reg <= '0;
-    else
-      counter_reg <= counter_reg + 1;
-  end
-
-  always_comb lfsr_entropy = entropy_digest ^ lfsr_seed;
-  always_comb entropy_block = {entropy_digest, lfsr_seed, counter_reg, ENTROPY_PAD};
 
   //----------------------------------------------------------------
   // state_logic
   //
-  // The logic needed to init as well as update the state during
-  // round processing.
+  // Mux and control for the single SHA core based on FSM state.
   //----------------------------------------------------------------
-
- always_comb
-    begin : state_fsm
-      IPAD_ready = H1_ready;
-      OPAD_ready = H1_ready & H2_ready;
-      HMAC_ready = H2_ready;
-
+  always_comb
+    begin : state_logic
       key_ipadded = {key, 512'b0} ^ IPAD;
       key_opadded = {key, 512'b0} ^ OPAD;
-      HMAC_padded = mode_reg[0]? {H1_digest, HMAC512_FINAL_PAD}: 
-                                 {H1_digest[511: 128], HMAC384_FINAL_PAD};
-      
-      H1_block = key_ipadded;
-      H2_block = key_opadded;
+      HMAC_padded = mode_reg[0] ? {inner_digest_reg, HMAC512_FINAL_PAD}
+                                : {inner_digest_reg[511:128], HMAC384_FINAL_PAD};
 
-      H1_init = 0;
-      H1_next = 0;
-      H2_init = 0;
-      H2_next = 0;
+      // Defaults
+      sha_block = key_ipadded;
+      sha_init  = 1'b0;
+      sha_next  = 1'b0;
 
-      first_round = (hmac_ctrl_reg == hmac_ctrl_last)? 1'b0 : 1'b1;
+      first_round = (hmac_ctrl_reg == hmac_ctrl_last) ? 1'b0 : 1'b1;
+      // IPAD/OPAD finish with sha_init only — digest is not yet meaningful,
+      IPAD_ready  = sha_ready;
+      MSG_ready   = sha_ready & sha_digest_valid;
+      OPAD_ready  = sha_ready;
+      HMAC_ready  = sha_ready & sha_digest_valid;
 
       unique case (hmac_ctrl_reg)
         CTRL_IPAD:
           begin
             if (first_round)
               begin
-                H1_init = 1;
-                H1_next = 0;
-                H2_init = 1;
-                H2_next = 0;
-                IPAD_ready = 0;
+                sha_init   = 1'b1;
+                IPAD_ready = 1'b0;
               end
+          end
 
-            H2_block = entropy_block;
+        CTRL_MSG:
+          begin
+            sha_block = block_msg;
+            if (first_round)
+              begin
+                sha_next  = 1'b1;
+                MSG_ready = 1'b0;
+              end
           end
 
         CTRL_OPAD:
           begin
+            sha_block = key_opadded;
             if (first_round)
               begin
-                H1_init = 0;
-                H1_next = 1;
-                H2_init = 1;
-                H2_next = 0;
-                OPAD_ready = 0;
+                sha_init   = 1'b1;
+                OPAD_ready = 1'b0;
               end
-
-            H1_block = block_msg;
           end
 
         CTRL_HMAC:
           begin
+            sha_block = HMAC_padded;
             if (first_round)
               begin
-                H2_init = 0;
-                H2_next = 1;  
-                HMAC_ready = 0;  
+                sha_next   = 1'b1;
+                HMAC_ready = 1'b0;
               end
-            
-            H2_block = HMAC_padded;
           end
 
-        default:
-          begin
-            H1_init = 0;
-            H1_next = 0;
-            H2_init = 0;
-            H2_next = 0;
-          end
+        default: ;
       endcase
     end
 
@@ -325,97 +306,92 @@ module hmac_core
   //----------------------------------------------------------------
   always_comb
     begin : hmac_ctrl_fsm
-      ready_flag       = 0;
-      digest_valid_new = 0;
-      digest_valid_we  = 0;
+      ready_flag       = 1'b0;
+      digest_valid_new = 1'b0;
+      digest_valid_we  = 1'b0;
       hmac_ctrl_new    = CTRL_IDLE;
-      hmac_ctrl_we     = 0;
-
-      set_entropy = 0;
+      hmac_ctrl_we     = 1'b0;
+      inner_digest_we  = 1'b0;
 
       unique case (hmac_ctrl_reg)
         CTRL_IDLE:
           begin
-            ready_flag = 1;
+            ready_flag = 1'b1;
 
             if (init_cmd)
               begin
-                digest_valid_new = 0;
-                digest_valid_we  = 1;
+                digest_valid_new = 1'b0;
+                digest_valid_we  = 1'b1;
                 hmac_ctrl_new    = CTRL_IPAD;
-                hmac_ctrl_we     = 1;
+                hmac_ctrl_we     = 1'b1;
               end
-
-            if (next_cmd)
+            else if (next_cmd | last_cmd)
               begin
-                digest_valid_new = 0;
-                digest_valid_we  = 1;
-                hmac_ctrl_new    = CTRL_OPAD;
-                hmac_ctrl_we     = 1;
+                digest_valid_new = 1'b0;
+                digest_valid_we  = 1'b1;
+                hmac_ctrl_new    = CTRL_MSG;
+                hmac_ctrl_we     = 1'b1;
               end
           end
-
 
         CTRL_IPAD:
-          begin
-            digest_valid_new = 0;
-            digest_valid_we  = 1;
-            if (IPAD_ready == 1)
-              begin
-                hmac_ctrl_new   = CTRL_OPAD;
-                hmac_ctrl_we    = 1;
-                set_entropy = 1;
-              end
-          end
-        
+          if (IPAD_ready)
+            begin
+              hmac_ctrl_new = CTRL_MSG;
+              hmac_ctrl_we  = 1'b1;
+            end
+
+        CTRL_MSG:
+          if (MSG_ready)
+            begin
+              if (is_last_block)
+                begin
+                  inner_digest_we = 1'b1;
+                  hmac_ctrl_new   = CTRL_OPAD;
+                end
+              else
+                begin
+                  hmac_ctrl_new   = CTRL_IDLE;
+                end
+              hmac_ctrl_we = 1'b1;
+            end
 
         CTRL_OPAD:
-          begin  
-            digest_valid_new = 0;
-            digest_valid_we  = 1;
-            if (OPAD_ready == 1)
-              begin
-                hmac_ctrl_new   = CTRL_HMAC;
-                hmac_ctrl_we    = 1;
-              end
-          end
-        
+          if (OPAD_ready)
+            begin
+              hmac_ctrl_new = CTRL_HMAC;
+              hmac_ctrl_we  = 1'b1;
+            end
 
         CTRL_HMAC:
-          begin
-            digest_valid_new = 0;
-            digest_valid_we  = 1;
-            if (HMAC_ready == 1)
-              begin
-                hmac_ctrl_new   = CTRL_DONE;
-                hmac_ctrl_we    = 1;
-              end
-          end
-
+          if (HMAC_ready)
+            begin
+              hmac_ctrl_new = CTRL_DONE;
+              hmac_ctrl_we  = 1'b1;
+            end
 
         CTRL_DONE:
           begin
-            digest_valid_new = 1;
-            digest_valid_we  = 1;
-
+            digest_valid_new = 1'b1;
+            digest_valid_we  = 1'b1;
             hmac_ctrl_new    = CTRL_IDLE;
-            hmac_ctrl_we     = 1;
+            hmac_ctrl_we     = 1'b1;
           end
 
         default:
           begin
-            ready_flag       = 0;
-            digest_valid_new = 0;
-            digest_valid_we  = 0;
+            ready_flag       = 1'b0;
+            digest_valid_new = 1'b0;
+            digest_valid_we  = 1'b0;
             hmac_ctrl_new    = CTRL_IDLE;
-            hmac_ctrl_we     = 0;
+            hmac_ctrl_we     = 1'b0;
           end
-      
+
       endcase // case (hmac_ctrl_reg)
     end // hmac_ctrl_fsm
 
 endmodule // hmac_core
 
 //======================================================================
-// EOF hmac_core.v
+// EOF hmac_core.sv
 //======================================================================

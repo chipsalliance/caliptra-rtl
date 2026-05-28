@@ -115,8 +115,8 @@ module hmac_drbg
   reg                   valid_reg;
   reg [REG_SIZE-1 : 0]  drbg_reg;
   reg                   first_round;
-  reg                   HMAC_tag_valid_last;
-  reg                   HMAC_tag_valid_edge;
+  reg                   HMAC_ready_last;
+  reg                   HMAC_ready_edge;
 
   reg [REG_SIZE-1:0]    K_reg;
   reg [REG_SIZE-1:0]    V_reg;
@@ -126,6 +126,7 @@ module hmac_drbg
   //----------------------------------------------------------------
   reg                   HMAC_init;
   reg                   HMAC_next;
+  reg                   HMAC_last;
   reg  [1023:0]         HMAC_block;
   reg  [REG_SIZE-1:0]   HMAC_key;
   logic [511:0]         HMAC512_key;
@@ -148,8 +149,9 @@ module hmac_drbg
     .zeroize(zeroize),
     .init_cmd(HMAC_init),
     .next_cmd(HMAC_next),
+    .last_cmd(HMAC_last),
     .mode_cmd(1'b0),  //hardcoded to HMAC384 mode
-    .lfsr_seed(lfsr_seed),
+    .lfsr_seed(lfsr_seed[191:0]),
     .key(HMAC512_key),
     .block_msg(HMAC_block),
     .ready(HMAC_ready),
@@ -171,17 +173,17 @@ module hmac_drbg
   always_comb
   begin : edge_detector
     first_round = (drbg_st_reg == drbg_st_reg_last)? 1'b0 : 1'b1;
-    HMAC_tag_valid_edge = HMAC_tag_valid & (!HMAC_tag_valid_last);
+    HMAC_ready_edge = HMAC_ready & (!HMAC_ready_last);
   end // edge_detector
 
   always_ff @ (posedge clk or negedge reset_n) 
   begin
     if (!reset_n)
-      HMAC_tag_valid_last <= '0;
+      HMAC_ready_last <= '0;
     else if (zeroize)
-      HMAC_tag_valid_last <= '0;
+      HMAC_ready_last <= '0;
     else 
-      HMAC_tag_valid_last <= HMAC_tag_valid;
+      HMAC_ready_last <= HMAC_ready;
   end
 
   always_ff @ (posedge clk or negedge reset_n) 
@@ -228,28 +230,32 @@ module hmac_drbg
     if (!reset_n) begin
       HMAC_init <= 0;
       HMAC_next <= 0;
+      HMAC_last <= 0;
     end
     else if (zeroize) begin
       HMAC_init <= 0;
       HMAC_next <= 0;
+      HMAC_last <= 0;
     end
     else begin
       HMAC_init <= 0;
       HMAC_next <= 0;
+      HMAC_last <= 0;
       if (first_round) begin
         unique case(drbg_st_reg)
           K10_ST:       HMAC_init <= 1;
-          K11_ST:       HMAC_next <= 1;
-          V1_ST:        HMAC_init <= 1;
+          K11_ST:    begin HMAC_next <= 1; HMAC_last <= 1; end
+          V1_ST:     begin HMAC_init <= 1; HMAC_last <= 1; end
           K20_ST:       HMAC_init <= 1;
-          K21_ST:       HMAC_next <= 1;
-          V2_ST:        HMAC_init <= 1;
-          T_ST:         HMAC_init <= 1;
-          K3_ST:        HMAC_init <= 1;
-          V3_ST:        HMAC_init <= 1;
+          K21_ST:    begin HMAC_next <= 1; HMAC_last <= 1; end
+          V2_ST:     begin HMAC_init <= 1; HMAC_last <= 1; end
+          T_ST:      begin HMAC_init <= 1; HMAC_last <= 1; end
+          K3_ST:     begin HMAC_init <= 1; HMAC_last <= 1; end
+          V3_ST:     begin HMAC_init <= 1; HMAC_last <= 1; end
           default: begin
             HMAC_init <= 0;
             HMAC_next <= 0;
+            HMAC_last <= 0;
           end 
         endcase
       end
@@ -350,14 +356,14 @@ module hmac_drbg
 
       INIT_ST:    drbg_next_st      = K10_ST;
       NEXT_ST:    drbg_next_st      = K3_ST;
-      K10_ST:     drbg_next_st      = (HMAC_tag_valid_edge)? K11_ST : K10_ST;
-      K11_ST:     drbg_next_st      = (HMAC_tag_valid_edge)? V1_ST : K11_ST;
-      V1_ST:      drbg_next_st      = (HMAC_tag_valid_edge)? K2_INIT_ST : V1_ST;
+      K10_ST:     drbg_next_st      = (HMAC_ready_edge)? K11_ST : K10_ST;
+      K11_ST:     drbg_next_st      = (HMAC_ready_edge)? V1_ST : K11_ST;
+      V1_ST:      drbg_next_st      = (HMAC_ready_edge)? K2_INIT_ST : V1_ST;
       K2_INIT_ST: drbg_next_st      = K20_ST;
-      K20_ST:     drbg_next_st      = (HMAC_tag_valid_edge)? K21_ST : K20_ST;
-      K21_ST:     drbg_next_st      = (HMAC_tag_valid_edge)? V2_ST : K21_ST;
-      V2_ST:      drbg_next_st      = (HMAC_tag_valid_edge)? T_ST : V2_ST;
-      T_ST:       drbg_next_st      = (HMAC_tag_valid_edge)? CHCK_ST : T_ST;
+      K20_ST:     drbg_next_st      = (HMAC_ready_edge)? K21_ST : K20_ST;
+      K21_ST:     drbg_next_st      = (HMAC_ready_edge)? V2_ST : K21_ST;
+      V2_ST:      drbg_next_st      = (HMAC_ready_edge)? T_ST : V2_ST;
+      T_ST:       drbg_next_st      = (HMAC_ready_edge)? CHCK_ST : T_ST;
 
       CHCK_ST:
       begin
@@ -367,8 +373,8 @@ module hmac_drbg
           drbg_next_st    = DONE_ST;
       end
 
-      K3_ST: drbg_next_st        = (HMAC_tag_valid_edge)? V3_ST : K3_ST;
-      V3_ST: drbg_next_st        = (HMAC_tag_valid_edge)? T_ST : V3_ST;
+      K3_ST: drbg_next_st        = (HMAC_ready_edge)? V3_ST : K3_ST;
+      V3_ST: drbg_next_st        = (HMAC_ready_edge)? T_ST : V3_ST;
       DONE_ST: drbg_next_st      = IDLE_ST;
       default: drbg_next_st      = IDLE_ST;
 

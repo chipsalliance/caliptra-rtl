@@ -70,6 +70,9 @@ module hmac
   reg next_reg;
   reg next_new;
 
+  reg last_reg;
+  reg last_new;
+
   reg mode_reg;
   
   reg ready_reg;
@@ -78,7 +81,7 @@ module hmac
   localparam BLOCK_SIZE       = 1024;
   localparam KEY_SIZE         = 512;
   localparam TAG_SIZE         = KEY_SIZE;
-  localparam LFSR_SEED_SIZE   = 384;
+  localparam LFSR_SEED_SIZE   = 192;
   localparam BLOCK_NUM_DWORDS = BLOCK_SIZE / DATA_WIDTH;
   localparam KEY_NUM_DWORDS   = KEY_SIZE / DATA_WIDTH;
   localparam TAG_NUM_DWORDS   = TAG_SIZE / DATA_WIDTH;
@@ -156,8 +159,8 @@ module hmac
                      key_reg[06], key_reg[07], key_reg[08], key_reg[09], key_reg[10], key_reg[11],
                      key_reg[12], key_reg[13], key_reg[14], key_reg[15]} & get_mask;
 
-  assign core_lfsr_seed = {lfsr_seed_reg[00], lfsr_seed_reg[01], lfsr_seed_reg[02], lfsr_seed_reg[03], lfsr_seed_reg[04], lfsr_seed_reg[05],
-                           lfsr_seed_reg[06], lfsr_seed_reg[07], lfsr_seed_reg[08], lfsr_seed_reg[09], lfsr_seed_reg[10], lfsr_seed_reg[11]};
+  assign core_lfsr_seed = {lfsr_seed_reg[00], lfsr_seed_reg[01], lfsr_seed_reg[02],
+                           lfsr_seed_reg[03], lfsr_seed_reg[04], lfsr_seed_reg[05]};
   
   //rising edge detect on core tag valid
   assign core_tag_we = (core_tag_valid & ~tag_valid_reg) & ~error_flag_reg;
@@ -172,6 +175,7 @@ module hmac
 
                  .init_cmd(init_reg),
                  .next_cmd(next_reg),
+                 .last_cmd(last_reg),
                  .mode_cmd(mode_reg),
 
                  .lfsr_seed(core_lfsr_seed),
@@ -250,12 +254,14 @@ always_comb begin
   hwif_in.HMAC512_CTRL.CSR_MODE.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.INIT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.NEXT.swwe = ready_reg;
+  hwif_in.HMAC512_CTRL.LAST.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.MODE.swwe = ready_reg;
 
   //assign hardware readable registers to drive hmac core
   //mask the command until kv clients are idle
   init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
   next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready;
+  last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready;
   zeroize_reg = hwif_out.HMAC512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
   mode_reg = hwif_out.HMAC512_CTRL.MODE.value;
 
@@ -323,7 +329,7 @@ end
 //release the lock once init has been seen
 always_comb begin
   for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
-    if (init_reg | next_reg) begin
+    if (init_reg | next_reg | last_reg) begin
       block_reg_lock_nxt[dword] = '0;
     end
     else begin
@@ -392,8 +398,8 @@ hmac_reg i_hmac_reg (
     .hwif_out(hwif_out)
 );
 
-always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[15:12] == 128'b0);
-always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == 512'b0);
+always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg | last_reg) & (mode_reg == HMAC512_MODE) & (key_reg[15:12] == 128'b0);
+always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg | last_reg) & (key_reg == 512'b0);
 
 always_comb error_flag = key_zero_error | key_mode_error;
 
