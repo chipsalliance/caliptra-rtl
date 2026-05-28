@@ -784,8 +784,8 @@
 `define HMAC_REG_HMAC512_CTRL_MODE_MASK                                                             (32'h8)
 `define HMAC_REG_HMAC512_CTRL_CSR_MODE_LOW                                                          (4)
 `define HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK                                                         (32'h10)
-`define HMAC_REG_HMAC512_CTRL_RESERVED_LOW                                                          (5)
-`define HMAC_REG_HMAC512_CTRL_RESERVED_MASK                                                         (32'h20)
+`define HMAC_REG_HMAC512_CTRL_LAST_LOW                                                              (5)
+`define HMAC_REG_HMAC512_CTRL_LAST_MASK                                                             (32'h20)
 `endif
 `ifndef HMAC_REG_HMAC512_STATUS
 `define HMAC_REG_HMAC512_STATUS                                                                     (32'h18)
@@ -1003,24 +1003,6 @@
 `endif
 `ifndef HMAC_REG_HMAC512_LFSR_SEED_5
 `define HMAC_REG_HMAC512_LFSR_SEED_5                                                                (32'h154)
-`endif
-`ifndef HMAC_REG_HMAC512_LFSR_SEED_6
-`define HMAC_REG_HMAC512_LFSR_SEED_6                                                                (32'h158)
-`endif
-`ifndef HMAC_REG_HMAC512_LFSR_SEED_7
-`define HMAC_REG_HMAC512_LFSR_SEED_7                                                                (32'h15c)
-`endif
-`ifndef HMAC_REG_HMAC512_LFSR_SEED_8
-`define HMAC_REG_HMAC512_LFSR_SEED_8                                                                (32'h160)
-`endif
-`ifndef HMAC_REG_HMAC512_LFSR_SEED_9
-`define HMAC_REG_HMAC512_LFSR_SEED_9                                                                (32'h164)
-`endif
-`ifndef HMAC_REG_HMAC512_LFSR_SEED_10
-`define HMAC_REG_HMAC512_LFSR_SEED_10                                                               (32'h168)
-`endif
-`ifndef HMAC_REG_HMAC512_LFSR_SEED_11
-`define HMAC_REG_HMAC512_LFSR_SEED_11                                                               (32'h16c)
 `endif
 `ifndef HMAC_REG_HMAC512_KV_RD_KEY_CTRL
 `define HMAC_REG_HMAC512_KV_RD_KEY_CTRL                                                             (32'h600)

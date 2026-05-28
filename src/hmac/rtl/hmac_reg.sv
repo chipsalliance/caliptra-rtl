@@ -73,7 +73,7 @@ module hmac_reg (
         logic [16-1:0]HMAC512_KEY;
         logic [32-1:0]HMAC512_BLOCK;
         logic [16-1:0]HMAC512_TAG;
-        logic [12-1:0]HMAC512_LFSR_SEED;
+        logic [6-1:0]HMAC512_LFSR_SEED;
         logic HMAC512_KV_RD_KEY_CTRL;
         logic HMAC512_KV_RD_KEY_STATUS;
         logic HMAC512_KV_RD_BLOCK_CTRL;
@@ -126,7 +126,7 @@ module hmac_reg (
         for(int i0=0; i0<16; i0++) begin
             decoded_reg_strb.HMAC512_TAG[i0] = cpuif_req_masked & (cpuif_addr == 12'h100 + i0*12'h4);
         end
-        for(int i0=0; i0<12; i0++) begin
+        for(int i0=0; i0<6; i0++) begin
             decoded_reg_strb.HMAC512_LFSR_SEED[i0] = cpuif_req_masked & (cpuif_addr == 12'h140 + i0*12'h4);
         end
         decoded_reg_strb.HMAC512_KV_RD_KEY_CTRL = cpuif_req_masked & (cpuif_addr == 12'h600);
@@ -190,7 +190,7 @@ module hmac_reg (
             struct packed{
                 logic next;
                 logic load_next;
-            } Reserved;
+            } LAST;
         } HMAC512_CTRL;
         struct packed{
             struct packed{
@@ -215,7 +215,7 @@ module hmac_reg (
                 logic [31:0] next;
                 logic load_next;
             } LFSR_SEED;
-        } [12-1:0]HMAC512_LFSR_SEED;
+        } [6-1:0]HMAC512_LFSR_SEED;
         struct packed{
             struct packed{
                 logic next;
@@ -518,7 +518,7 @@ module hmac_reg (
             } CSR_MODE;
             struct packed{
                 logic value;
-            } Reserved;
+            } LAST;
         } HMAC512_CTRL;
         struct packed{
             struct packed{
@@ -539,7 +539,7 @@ module hmac_reg (
             struct packed{
                 logic [31:0] value;
             } LFSR_SEED;
-        } [12-1:0]HMAC512_LFSR_SEED;
+        } [6-1:0]HMAC512_LFSR_SEED;
         struct packed{
             struct packed{
                 logic value;
@@ -865,27 +865,30 @@ module hmac_reg (
         end
     end
     assign hwif_out.HMAC512_CTRL.CSR_MODE.value = field_storage.HMAC512_CTRL.CSR_MODE.value;
-    // Field: hmac_reg.HMAC512_CTRL.Reserved
+    // Field: hmac_reg.HMAC512_CTRL.LAST
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.HMAC512_CTRL.Reserved.value;
+        next_c = field_storage.HMAC512_CTRL.LAST.value;
         load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.HMAC512_CTRL.Reserved.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
+        if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr && hwif_in.HMAC512_CTRL.LAST.swwe) begin // SW write
+            next_c = (field_storage.HMAC512_CTRL.LAST.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
+            load_next_c = '1;
+        end else begin // singlepulse clears back to 0
+            next_c = '0;
             load_next_c = '1;
         end
-        field_combo.HMAC512_CTRL.Reserved.next = next_c;
-        field_combo.HMAC512_CTRL.Reserved.load_next = load_next_c;
+        field_combo.HMAC512_CTRL.LAST.next = next_c;
+        field_combo.HMAC512_CTRL.LAST.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.HMAC512_CTRL.Reserved.value <= 1'h0;
-        end else if(field_combo.HMAC512_CTRL.Reserved.load_next) begin
-            field_storage.HMAC512_CTRL.Reserved.value <= field_combo.HMAC512_CTRL.Reserved.next;
+            field_storage.HMAC512_CTRL.LAST.value <= 1'h0;
+        end else if(field_combo.HMAC512_CTRL.LAST.load_next) begin
+            field_storage.HMAC512_CTRL.LAST.value <= field_combo.HMAC512_CTRL.LAST.next;
         end
     end
-    assign hwif_out.HMAC512_CTRL.Reserved.value = field_storage.HMAC512_CTRL.Reserved.value;
+    assign hwif_out.HMAC512_CTRL.LAST.value = field_storage.HMAC512_CTRL.LAST.value;
     for(genvar i0=0; i0<16; i0++) begin
         // Field: hmac_reg.HMAC512_KEY[].KEY
         always_comb begin
@@ -969,7 +972,7 @@ module hmac_reg (
             end
         end
     end
-    for(genvar i0=0; i0<12; i0++) begin
+    for(genvar i0=0; i0<6; i0++) begin
         // Field: hmac_reg.HMAC512_LFSR_SEED[].LFSR_SEED
         always_comb begin
             automatic logic [31:0] next_c;

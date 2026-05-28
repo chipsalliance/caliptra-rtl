@@ -989,8 +989,8 @@
 #define HMAC_REG_HMAC512_CTRL_MODE_MASK                                                             (0x8)
 #define HMAC_REG_HMAC512_CTRL_CSR_MODE_LOW                                                          (4)
 #define HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK                                                         (0x10)
-#define HMAC_REG_HMAC512_CTRL_RESERVED_LOW                                                          (5)
-#define HMAC_REG_HMAC512_CTRL_RESERVED_MASK                                                         (0x20)
+#define HMAC_REG_HMAC512_CTRL_LAST_LOW                                                              (5)
+#define HMAC_REG_HMAC512_CTRL_LAST_MASK                                                             (0x20)
 #endif
 #define CLP_HMAC_REG_HMAC512_STATUS                                                                 (0x10010018)
 #ifndef HMAC_REG_HMAC512_STATUS
@@ -1279,30 +1279,6 @@
 #define CLP_HMAC_REG_HMAC512_LFSR_SEED_5                                                            (0x10010154)
 #ifndef HMAC_REG_HMAC512_LFSR_SEED_5
 #define HMAC_REG_HMAC512_LFSR_SEED_5                                                                (0x154)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_6                                                            (0x10010158)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_6
-#define HMAC_REG_HMAC512_LFSR_SEED_6                                                                (0x158)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_7                                                            (0x1001015c)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_7
-#define HMAC_REG_HMAC512_LFSR_SEED_7                                                                (0x15c)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_8                                                            (0x10010160)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_8
-#define HMAC_REG_HMAC512_LFSR_SEED_8                                                                (0x160)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_9                                                            (0x10010164)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_9
-#define HMAC_REG_HMAC512_LFSR_SEED_9                                                                (0x164)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_10                                                           (0x10010168)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_10
-#define HMAC_REG_HMAC512_LFSR_SEED_10                                                               (0x168)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_11                                                           (0x1001016c)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_11
-#define HMAC_REG_HMAC512_LFSR_SEED_11                                                               (0x16c)
 #endif
 #define CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL                                                         (0x10010600)
 #ifndef HMAC_REG_HMAC512_KV_RD_KEY_CTRL
