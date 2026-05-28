@@ -65,6 +65,17 @@ void tcp_server_close(struct tcp_server_ctx *ctx);
  */
 void tcp_server_client_close(struct tcp_server_ctx *ctx);
 
+/**
+ * Get the actual port number assigned by the OS
+ *
+ * When listen_port is 0, the OS assigns an ephemeral port. This function
+ * returns the actual port after bind.
+ *
+ * @param ctx tcp server context object
+ * @return the port number the server is listening on
+ */
+uint16_t tcp_server_get_port(struct tcp_server_ctx *ctx);
+
 #ifdef __cplusplus
 }  // extern "C"
 #endif
