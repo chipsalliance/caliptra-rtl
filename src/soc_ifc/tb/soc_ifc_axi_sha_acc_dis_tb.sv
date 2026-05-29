@@ -239,12 +239,19 @@ module soc_ifc_axi_sha_acc_dis_tb
     .iccm_lock(),
     .iccm_axs_blocked(1'b0),
 
+    .iccm_fmc_start_addr(),
+    .iccm_fmc_end_addr(),
+    .iccm_rt_start_addr(),
+    .iccm_rt_end_addr(),
+    .iccm_region_lock(),
+
     .cptra_noncore_rst_b(),
     .cptra_uc_rst_b(),
     .clk_gating_en(),
     .rdc_clk_dis(),
     .fw_update_rst_window(),
     .crypto_error(1'b0),
+    .kv_error(1'b0),
     
     .cptra_uncore_dmi_reg_en(1'b0),
     .cptra_uncore_dmi_reg_wr_en(1'b0),
