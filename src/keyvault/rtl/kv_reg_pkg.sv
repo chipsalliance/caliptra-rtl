@@ -8,10 +8,12 @@ package kv_reg_pkg;
 
     typedef struct packed{
         logic swwel;
+        logic hwset;
     } kv_reg__kvCtrl__lock_wr__in_t;
 
     typedef struct packed{
         logic swwel;
+        logic hwset;
     } kv_reg__kvCtrl__lock_use__in_t;
 
     typedef struct packed{

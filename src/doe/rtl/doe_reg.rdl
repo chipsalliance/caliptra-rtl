@@ -38,6 +38,9 @@ addrmap doe_reg {
     signal {activelow; async; cpuif_reset; field_reset;} reset_b;
     signal {activelow; async;} cptra_pwrgood; // Driven by Caliptra pwrgood from SoC
 
+    /* ---- DOE command lockout ---- */
+    signal {} doe_cmd_lock; // Blocks SW writes to CMD/CMD_EXT once boot flow enters FMC/RT
+
     /* -----------------------
     * Register definitive definitions
     * ----------------------- */
@@ -79,7 +82,7 @@ addrmap doe_reg {
                     desc = "Sets the UDS, FE, and OBF KEY flops to zeroes.";
                 };
             };
-            encode = doe_cmd_e; hwclr; swmod;} CMD[2]=0;
+            encode = doe_cmd_e; hwclr; swwel = doe_cmd_lock; swmod;} CMD[2]=0;
         field {desc = "Key Vault entry to store the result.";} DEST[5] = 0;
         field {
             desc = "Additional encoding bits for DOE command to run";
@@ -98,7 +101,7 @@ addrmap doe_reg {
                     desc = "RESERVED";
                 };
             };
-        encode = doe_cmd_ext_e; hwclr; swmod;} CMD_EXT[2]=0;
+        encode = doe_cmd_ext_e; hwclr; swwel = doe_cmd_lock; swmod;} CMD_EXT[2]=0;
 
     } DOE_CTRL;
 

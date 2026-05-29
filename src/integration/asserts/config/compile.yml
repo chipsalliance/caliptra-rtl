@@ -6,11 +6,13 @@ requires:
   - doe_defines_pkg
   - axi_dma
   - libs
+  - caliptra_prim
 targets:
   tb:
     directories: [$COMPILE_ROOT]
     files:
       - $COMPILE_ROOT/caliptra_top_sva.sv
+      - $COMPILE_ROOT/kv_boot_flow_sva.sv
 global:
   tool:
     vcs:

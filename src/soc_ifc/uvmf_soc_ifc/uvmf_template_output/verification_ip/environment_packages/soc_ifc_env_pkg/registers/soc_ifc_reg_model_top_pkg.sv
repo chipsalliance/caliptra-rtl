@@ -381,6 +381,11 @@ package soc_ifc_reg_model_top_pkg;
             foreach(this.SS_GENERIC_FW_EXEC_CTRL[ii])         `REG_NO_CP_NONCORE_RST(this.SS_GENERIC_FW_EXEC_CTRL[ii]              )
             foreach(this.internal_obf_key[ii])                `REG_NO_CP_NONCORE_RST(this.internal_obf_key[ii]                     )
                                                               `REG____CP_NONCORE_RST(this.internal_iccm_lock                       )/* TODO also FW reset */
+                                                              `REG____CP_NONCORE_RST(this.internal_iccm_fmc_start_addr             )
+                                                              `REG____CP_NONCORE_RST(this.internal_iccm_fmc_end_addr               )
+                                                              `REG____CP_NONCORE_RST(this.internal_iccm_rt_start_addr              )
+                                                              `REG____CP_NONCORE_RST(this.internal_iccm_rt_end_addr                )
+                                                              `REG____CP_NONCORE_RST(this.internal_iccm_region_lock                )
                                                               `REG____CP_NONCORE_RST(this.internal_fw_update_reset                 )
                                                               `REG____CP_NONCORE_RST(this.internal_fw_update_reset_wait_cycles     )
                                                               `REG____CP_NONCORE_RST(this.internal_nmi_vector                      )

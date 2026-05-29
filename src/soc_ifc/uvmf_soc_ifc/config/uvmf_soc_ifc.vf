@@ -303,6 +303,7 @@ ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/i
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers/soc_ifc_reg_model_top_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_if.sv
+${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_iccm_shadow_cov.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_bind.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/parameters/soc_ifc_parameters_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/sequences/soc_ifc_sequences_pkg.sv
