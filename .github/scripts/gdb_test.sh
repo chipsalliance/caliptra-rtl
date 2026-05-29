@@ -56,6 +56,7 @@ echo -e "${COLOR_WHITE}======== Launching interactive simulation ========${COLOR
 
 # Start the simulation
 echo -e "Starting simulation..."
+export SIM_DIR=$(pwd)
 obj_dir/Vcaliptra_top_tb >"${SIM_LOG}" 2>&1 &
 SIM_PID=$!
 
