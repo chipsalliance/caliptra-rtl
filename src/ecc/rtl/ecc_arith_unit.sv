@@ -91,8 +91,6 @@ module ecc_arith_unit
     //----------------------------------------------------------------
     
     ecc_pm_ctrl #(
-        .REG_SIZE(REG_SIZE),
-        .RND_SIZE(RND_SIZE),
         .INSTR_SIZE(INSTRUCTION_LENGTH)
         )
         ecc_pm_ctrl_i(

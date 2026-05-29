@@ -277,10 +277,10 @@ default clocking default_clk @(posedge clk); endclocking
        ((addra >PM_INIT_E) && (addra < PA_S))||
        ((addra >PA_E) && (addra < PD_S))||
        ((addra >PD_E) && (addra < INV_S))||
-       ((addra >INV_E) && (addra < CONV_S))||
+       ((addra >INV_E_P384) && (addra < CONV_S))||
        ((addra >CONV_E) && (addra < SIGN0_S))||
        ((addra >SIGN0_E) && (addra < INVq_S))||
-       ((addra >INVq_E) && (addra < SIGN1_S))||
+       ((addra >INVq_E_P384) && (addra < SIGN1_S))||
        ((addra >SIGN1_E) && (addra < CHK_PK_S))||
        ((addra >CHK_PK_E) && (addra < VER0_P0_S))||
        ((addra >VER0_P0_E) && (addra < VER0_P1_S))||

@@ -15,7 +15,7 @@
 #
 # Dual-curve INV/INVq early-exit latency smoke. Verifies that for
 # curve_sel=P256, ecc_pm_ctrl jumps out of the inversion ROM at
-# INV_S+703 / INVq_S+703 instead of the P-384 anchors INV_E / INVq_E,
+# INV_S+703 / INVq_S+703 instead of the P-384 anchors INV_E_P384 / INVq_E_P384,
 # saving 336/340 cycles per inversion (676 cycles per sign/verify).
 #
 ---

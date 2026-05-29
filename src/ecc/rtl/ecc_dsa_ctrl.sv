@@ -227,7 +227,7 @@ module ecc_dsa_ctrl
     logic error_flag_edge;
 
     logic curve_sel;
-    logic curve_sel_active;
+    logic curve_sel_reg;
     logic [REG_SIZE-1 : 0] prime;
     logic [REG_SIZE-1 : 0] group_order;
     logic [REG_SIZE-1 : 0] E_a_MONT_c;
@@ -245,20 +245,20 @@ module ecc_dsa_ctrl
     // Module instantiantions.
     //----------------------------------------------------------------
     assign curve_sel       = hwif_out.ECC_CTRL.CURVE_SEL.value;
-    // Internal datapath uses the latched curve_sel_active (see curve_sel_latch
+    // Internal datapath uses the latched curve_sel_reg (see curve_sel_latch
     // below) so SW glitches on CURVE_SEL mid-op cannot reach the datapath.
-    assign prime           = curve_sel_active ? PRIME_P256       : PRIME_P384;
-    assign group_order     = curve_sel_active ? GROUP_ORDER_P256 : GROUP_ORDER_P384;
-    assign E_a_MONT_c      = curve_sel_active ? E_a_MONT_P256    : E_a_MONT_P384;
-    assign E_b_MONT_c      = curve_sel_active ? E_b_MONT_P256    : E_b_MONT_P384;
-    assign E_3b_MONT_c     = curve_sel_active ? E_3b_MONT_P256   : E_3b_MONT_P384;
-    assign ONE_p_MONT_c    = curve_sel_active ? ONE_p_MONT_P256  : ONE_p_MONT_P384;
-    assign R2_p_MONT_c     = curve_sel_active ? R2_p_MONT_P256   : R2_p_MONT_P384;
-    assign G_X_MONT_c      = curve_sel_active ? G_X_MONT_P256    : G_X_MONT_P384;
-    assign G_Y_MONT_c      = curve_sel_active ? G_Y_MONT_P256    : G_Y_MONT_P384;
-    assign R2_q_MONT_c     = curve_sel_active ? R2_q_MONT_P256   : R2_q_MONT_P384;
-    assign ONE_q_MONT_c    = curve_sel_active ? ONE_q_MONT_P256  : ONE_q_MONT_P384;
-    assign read_reg_c = curve_sel_active ? {128'd0, read_reg[7:0]} : read_reg;
+    assign prime           = curve_sel_reg ? PRIME_P256       : PRIME_P384;
+    assign group_order     = curve_sel_reg ? GROUP_ORDER_P256 : GROUP_ORDER_P384;
+    assign E_a_MONT_c      = curve_sel_reg ? E_a_MONT_P256    : E_a_MONT_P384;
+    assign E_b_MONT_c      = curve_sel_reg ? E_b_MONT_P256    : E_b_MONT_P384;
+    assign E_3b_MONT_c     = curve_sel_reg ? E_3b_MONT_P256   : E_3b_MONT_P384;
+    assign ONE_p_MONT_c    = curve_sel_reg ? ONE_p_MONT_P256  : ONE_p_MONT_P384;
+    assign R2_p_MONT_c     = curve_sel_reg ? R2_p_MONT_P256   : R2_p_MONT_P384;
+    assign G_X_MONT_c      = curve_sel_reg ? G_X_MONT_P256    : G_X_MONT_P384;
+    assign G_Y_MONT_c      = curve_sel_reg ? G_Y_MONT_P256    : G_Y_MONT_P384;
+    assign R2_q_MONT_c     = curve_sel_reg ? R2_q_MONT_P256   : R2_q_MONT_P384;
+    assign ONE_q_MONT_c    = curve_sel_reg ? ONE_q_MONT_P256  : ONE_q_MONT_P384;
+    assign read_reg_c = curve_sel_reg ? {128'd0, read_reg[7:0]} : read_reg;
 
     ecc_dsa_sequencer #(
         .ADDR_WIDTH(DSA_PROG_ADDR_W),
@@ -283,7 +283,7 @@ module ecc_dsa_ctrl
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
-        .curve_sel_i(curve_sel_active),
+        .curve_sel_i(curve_sel_reg),
         .ecc_cmd_i(pm_cmd_reg),
         .addr_i(prog_instr.mem_addr),
         .wr_op_sel_i(prog_instr.opcode.op_sel),
@@ -304,7 +304,7 @@ module ecc_dsa_ctrl
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
         .hmac_mode(hmac_mode),
-        .en(hmac_init & ~curve_sel_active),
+        .en(hmac_init & ~curve_sel_reg),
         .ready(hmac_ready_p384),
         .keygen_seed(seed_reg),
         .keygen_nonce(nonce_reg),
@@ -326,11 +326,11 @@ module ecc_dsa_ctrl
     assign masking_rnd_p256      = '0;
     assign hmac_drbg_result_p256 = '0;
 
-    assign hmac_ready       = curve_sel_active ? hmac_ready_p256       : hmac_ready_p384;
-    assign lambda_reg       = curve_sel_active ? lambda_p256           : lambda_p384;
-    assign scalar_rnd_reg   = curve_sel_active ? scalar_rnd_p256       : scalar_rnd_p384;
-    assign masking_rnd_reg  = curve_sel_active ? masking_rnd_p256      : masking_rnd_p384;
-    assign hmac_drbg_result = curve_sel_active ? hmac_drbg_result_p256 : hmac_drbg_result_p384;
+    assign hmac_ready       = curve_sel_reg ? hmac_ready_p256       : hmac_ready_p384;
+    assign lambda_reg       = curve_sel_reg ? lambda_p256           : lambda_p384;
+    assign scalar_rnd_reg   = curve_sel_reg ? scalar_rnd_p256       : scalar_rnd_p384;
+    assign masking_rnd_reg  = curve_sel_reg ? masking_rnd_p256      : masking_rnd_p384;
+    assign hmac_drbg_result = curve_sel_reg ? hmac_drbg_result_p256 : hmac_drbg_result_p384;
 
     ecc_scalar_blinding #(
         .REG_SIZE(REG_SIZE),
@@ -341,7 +341,7 @@ module ecc_dsa_ctrl
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize_reg),
-        .curve_sel_i(curve_sel_active),
+        .curve_sel_i(curve_sel_reg),
         .en_i(scalar_sca_en),
         .data_i(scalar_in_reg),
         .rnd_i(scalar_rnd_reg[RND_SIZE-1 : 0]),
@@ -383,7 +383,7 @@ module ecc_dsa_ctrl
         else begin
             privkey_we_reg <= hw_privkey_we;
             sharedkey_we_reg <= hw_sharedkey_we;
-            if (secretkey_we & (dest_keyvault | kv_seed_data_present) & ~curve_sel_active)
+            if (secretkey_we & (dest_keyvault | kv_seed_data_present) & ~curve_sel_reg)
                 kv_reg <= read_reg_c;
 
             kv_seed_data_present <= kv_seed_data_present_set ? '1 :
@@ -705,13 +705,13 @@ module ecc_dsa_ctrl
             // Left-align the scalar in the 576b PM rotate register so the ladder consumes its MSB first:
             // SCALAR_PK/G_ID uses MONT_COUNT shift, SCALAR_ID uses SCA_MONT_COUNT shift, curve-selected.
             unique case (prog_instr.reg_id)
-                SCALAR_PK_ID          : write_reg = curve_sel_active
+                SCALAR_PK_ID          : write_reg = curve_sel_reg
                                             ? ((REG_SIZE+RND_SIZE)'(scalar_PK_reg) << ((REG_SIZE+RND_SIZE) - MONT_COUNT_P256))
                                             : ((REG_SIZE+RND_SIZE)'(scalar_PK_reg) <<  RND_SIZE);
-                SCALAR_G_ID           : write_reg = curve_sel_active
+                SCALAR_G_ID           : write_reg = curve_sel_reg
                                             ? ((REG_SIZE+RND_SIZE)'(scalar_G_reg)  << ((REG_SIZE+RND_SIZE) - MONT_COUNT_P256))
                                             : ((REG_SIZE+RND_SIZE)'(scalar_G_reg)  <<  RND_SIZE);
-                SCALAR_ID             : write_reg = curve_sel_active
+                SCALAR_ID             : write_reg = curve_sel_reg
                                             ? (scalar_out_reg << ((REG_SIZE+RND_SIZE) - SCA_MONT_COUNT_P256))
                                             : scalar_out_reg; // SCA
                 default               : write_reg = '0;
@@ -783,8 +783,8 @@ module ecc_dsa_ctrl
 
     assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & pcr_sign_mode;
 
-    // KV path is illegal under P-256: fire error if any KV transaction is armed while curve_sel_active=1.
-    assign kv_under_p256_invalid    = curve_sel_active & (kv_privkey_read_ctrl_reg.read_en |
+    // KV path is illegal under P-256: fire error if any KV transaction is armed while curve_sel_reg=1.
+    assign kv_under_p256_invalid    = curve_sel_reg & (kv_privkey_read_ctrl_reg.read_en |
                                                           kv_seed_read_ctrl_reg.read_en   |
                                                           kv_write_ctrl_reg.write_en      |
                                                           dest_keyvault                   |
@@ -809,15 +809,15 @@ module ecc_dsa_ctrl
     // perform different operations.
     // Active low and async reset.
     //----------------------------------------------------------------
-    // Latch curve_sel into curve_sel_active at command dispatch so SW glitches on CURVE_SEL mid-op cannot reach the datapath.
+    // Latch curve_sel into curve_sel_reg at command dispatch so SW glitches on CURVE_SEL mid-op cannot reach the datapath.
     always_ff @(posedge clk or negedge reset_n)
     begin : curve_sel_latch
         if (!reset_n)
-            curve_sel_active <= 1'b0;
+            curve_sel_reg <= 1'b0;
         else if (zeroize_reg)
-            curve_sel_active <= 1'b0;
+            curve_sel_reg <= 1'b0;
         else if ((prog_cntr == ECC_NOP) && (cmd_reg != '0))
-            curve_sel_active <= curve_sel;
+            curve_sel_reg <= curve_sel;
     end
 
     always_ff @(posedge clk or negedge reset_n)
@@ -946,9 +946,9 @@ module ecc_dsa_ctrl
                             default    : prog_cntr <= prog_cntr + 1;  // -> ECC_NOP
                         endcase
                         pending_cmd_reg <= '0;
-                        pm_cmd_reg      <= prog_instr.opcode.pm_cmd;
-                        hmac_init       <= prog_instr.opcode.hmac_drbg_en;
-                        scalar_sca_en   <= prog_instr.opcode.sca_en;
+                        pm_cmd_reg      <= '0;
+                        hmac_init       <= '0;
+                        scalar_sca_en   <= '0;
                     end
 
                     DSA_KG_E : begin // end of keygen
@@ -1122,13 +1122,13 @@ always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_pri
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, !reset_n)
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, !reset_n)
 
-    // curve_sel_active must not change once a command is in flight.
+    // curve_sel_reg must not change once a command is in flight.
     `CALIPTRA_ASSERT(ERR_ECC_CURVE_SEL_ACTIVE_STABLE_IN_FLIGHT,
-        ((prog_cntr != ECC_NOP) && $past(prog_cntr != ECC_NOP)) |-> $stable(curve_sel_active),
+        ((prog_cntr != ECC_NOP) && $past(prog_cntr != ECC_NOP)) |-> $stable(curve_sel_reg),
         clk, !reset_n)
 
     // No KV write traffic while CURVE_SEL=P256 (KV path is P-384 only).
     `CALIPTRA_ASSERT(ERR_ECC_KV_BUS_SILENT_UNDER_P256,
-        curve_sel_active |-> !kv_write.write_en, clk, !reset_n)
+        curve_sel_reg |-> !kv_write.write_en, clk, !reset_n)
 
 endmodule

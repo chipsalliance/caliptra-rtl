@@ -81,7 +81,8 @@ addrmap ecc_reg {
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Run PCR Signing flow: Run ECC Signing flow to sign PCRs."; swwe = ecc_ready; hwclr;} PCR_SIGN = 1'b0;
         field {desc = "Run ECDH for shared key generation."; swwe = ecc_ready; hwclr;} DH_SHAREDKEY = 1'b0;
-        field {desc = "Select secp256r1 curve"; swwe = ecc_ready;} CURVE_SEL = 1'b0;
+        field {desc = "Curve select for ECC operations: 0 = secp384r1 (P-384, default), 1 = secp256r1 (P-256).
+                        [br] Sampled at command dispatch and latched for the duration of the in-flight operation; SW writes are gated by ecc_ready."; swwe = ecc_ready;} CURVE_SEL = 1'b0;
     
     } ECC_CTRL @0x00000010;
 
