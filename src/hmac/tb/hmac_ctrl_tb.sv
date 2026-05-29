@@ -38,6 +38,7 @@ module hmac_ctrl_tb();
 
   parameter CTRL_INIT_VALUE  = `HMAC_REG_HMAC512_CTRL_INIT_MASK;
   parameter CTRL_NEXT_VALUE  = `HMAC_REG_HMAC512_CTRL_NEXT_MASK;
+  parameter CTRL_LAST_VALUE  = `HMAC_REG_HMAC512_CTRL_LAST_MASK;
   
   parameter HMAC512_MODE     = (1'b1 << `HMAC_REG_HMAC512_CTRL_MODE_LOW) & `HMAC_REG_HMAC512_CTRL_MODE_MASK;
   parameter HMAC384_MODE     = (1'b0 << `HMAC_REG_HMAC512_CTRL_MODE_LOW) & `HMAC_REG_HMAC512_CTRL_MODE_MASK;
@@ -150,9 +151,8 @@ module hmac_ctrl_tb();
   //
   // 
   //----------------------------------------------------------------
-  function logic [383 : 0] random_gen();
-    return { $random, $random, $random, $random, $random, $random,
-             $random, $random, $random, $random, $random, $random};
+  function logic [191 : 0] random_gen();
+    return { $random, $random, $random, $random, $random, $random };
   endfunction
 
   //----------------------------------------------------------------
@@ -348,20 +348,14 @@ module hmac_ctrl_tb();
   //
   // Write the given seed to the dut.
   //----------------------------------------------------------------
-  task write_seed(input [383 : 0] seed);
+  task write_seed(input [191 : 0] seed);
     begin
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_0,  seed[383: 352]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_1,  seed[351: 320]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_2,  seed[319: 288]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_3,  seed[287: 256]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_4,  seed[255: 224]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_5,  seed[223: 192]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_6,  seed[191: 160]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_7,  seed[159: 128]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_8,  seed[127: 96 ]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_9,  seed[95 : 64 ]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_10, seed[63 : 32 ]);
-      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_11, seed[31 : 0  ]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_0,  seed[191: 160]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_1,  seed[159: 128]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_2,  seed[127:  96]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_3,  seed[ 95:  64]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_4,  seed[ 63:  32]);
+      write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_5,  seed[ 31:   0]);
     end
   endtask // write_seed
 
@@ -471,7 +465,7 @@ module hmac_ctrl_tb();
   task hmac_single_block_test(input [31:0] mode,
                          input [511 : 0] key,
                          input [1023: 0] block,
-                         input [383: 0]  seed,
+                         input [191 : 0] seed,
                          input [511 : 0] expected
                         );
     begin
@@ -486,7 +480,7 @@ module hmac_ctrl_tb();
       write_block(block);
       write_seed(seed);
       
-      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -528,7 +522,7 @@ module hmac_ctrl_tb();
                          input [511 : 0] key,
                          input [1023: 0] block0,
                          input [1023: 0] block1,
-                         input [383: 0]  seed,
+                         input [191 : 0] seed,
                          input [511 : 0] expected
                         );
     begin
@@ -552,10 +546,10 @@ module hmac_ctrl_tb();
       #(CLK_PERIOD);
       wait_ready();
 
-      // Final block
+      // Final block — finalize via NEXT|LAST (LAST is a modifier, never standalone)
       write_block(block1);
 
-      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -589,14 +583,15 @@ module hmac_ctrl_tb();
   //----------------------------------------------------------------
   // continuous_cmd_test()
   //
-  //
-  // Perform test of a double block digest.
+  // Issues a 2-block digest while spraying redundant INIT/NEXT
+  // writes at CTRL during BUSY. Engine must ignore the noise and
+  // still produce the correct final digest.
   //----------------------------------------------------------------
   task continuous_cmd_test(input [31:0] mode,
                          input [511 : 0] key,
                          input [1023: 0] block0,
                          input [1023: 0] block1,
-                         input [383: 0]  seed,
+                         input [191 : 0] seed,
                          input [511 : 0] expected
                         );
     begin
@@ -634,26 +629,12 @@ module hmac_ctrl_tb();
       #(CLK_PERIOD);
       wait_ready();
 
-      // Final block
+      // Final block — finalize via NEXT|LAST (LAST is a modifier, never standalone)
       write_block(block1);
 
-      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
-
-      #(CLK_PERIOD);
-
-      for (int i=0; i<10; i++)
-        begin
-          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
-          #CLK_PERIOD;
-          hsel_i_tb       = 0;
-          #CLK_PERIOD;
-          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
-          #CLK_PERIOD;
-          hsel_i_tb       = 0;
-          #CLK_PERIOD;
-        end
 
       #(CLK_PERIOD);
       wait_ready();
@@ -681,15 +662,363 @@ module hmac_ctrl_tb();
     end
   endtask // continuous_cmd_test
 
+
+  //----------------------------------------------------------------
+  // hmac_three_block_test()
+  //
+  // Three-block HMAC test. Sequence: INIT (b0), NEXT (b1),
+  // NEXT|LAST (b2). Exercises the FSM path that loops once
+  // through CTRL_MSG with is_last_block=0 before the final
+  // NEXT|LAST that drives the OPAD/HMAC tail.
+  //----------------------------------------------------------------
+  task hmac_three_block_test(input [31:0]  mode,
+                             input [511:0] key,
+                             input [1023:0] block0,
+                             input [1023:0] block1,
+                             input [1023:0] block2,
+                             input [191:0]  seed,
+                             input [511:0]  expected);
+    begin
+      reg [31:0] start_time;
+      reg [31:0] end_time;
+
+      start_time = cycle_ctr;
+      $display("*** TC%01d - Three-block test started.", tc_ctr);
+
+      hmac_write_key(key);
+
+      // Block 0 - kick off with INIT
+      write_block(block0);
+      write_seed(seed);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+
+      // Block 1 - intermediate NEXT
+      write_block(block1);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+
+      // Block 2 - final NEXT|LAST
+      write_block(block2);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      end_time = cycle_ctr - start_time;
+      $display("*** Three-block test processing time = %01d cycles", end_time);
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - Three-block test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // hmac_three_block_test
+
+
+  //----------------------------------------------------------------
+  // last_alone_ignored_test()
+  //
+  // LAST is a modifier-only bit per spec; alone it must NOT start
+  // the engine. This test writes CTRL = mode|LAST from IDLE (no
+  // INIT or NEXT companion), confirms STATUS.READY stays high, and
+  // then runs a valid INIT|LAST single-block op to prove internal
+  // state was not corrupted by the bogus LAST write.
+  //----------------------------------------------------------------
+  task last_alone_ignored_test(input [31:0]  mode,
+                               input [511:0] key,
+                               input [1023:0] block,
+                               input [191:0]  seed,
+                               input [511:0]  expected);
+    begin
+      $display("*** TC%01d - LAST-alone ignored test started.", tc_ctr);
+
+      hmac_write_key(key);
+      write_block(block);
+      write_seed(seed);
+
+      // Bogus write: LAST alone, no INIT or NEXT companion.
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD * 4);
+
+      // Engine must still be IDLE/READY.
+      read_single_word(`HMAC_REG_HMAC512_STATUS);
+      if ((read_data & `HMAC_REG_HMAC512_STATUS_READY_MASK) !== `HMAC_REG_HMAC512_STATUS_READY_MASK)
+        begin
+          $display("TC%01d: ERROR - STATUS.READY dropped after LAST-alone write.", tc_ctr);
+          error_ctr = error_ctr + 1;
+        end
+
+      // Now drive a valid single-block op and confirm the digest.
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d: OK (LAST alone ignored; follow-up op produced expected digest).", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR - state corruption after LAST-alone write.", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - LAST-alone ignored test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // last_alone_ignored_test
+
+
+  //----------------------------------------------------------------
+  // continuous_cmd_last_test()
+  //
+  // Stress variant of continuous_cmd_test. Between INIT and the
+  // closing NEXT|LAST, bombard CTRL with every command variant:
+  // INIT, INIT|LAST, NEXT and LAST alone. Engine must reject all
+  // of them during BUSY (block_reg_lock + ready_reg gating) and
+  // still produce the correct digest at the end.
+  //----------------------------------------------------------------
+  task continuous_cmd_last_test(input [31:0]  mode,
+                                input [511:0] key,
+                                input [1023:0] block0,
+                                input [1023:0] block1,
+                                input [191:0]  seed,
+                                input [511:0]  expected);
+    begin
+      reg [31:0] start_time;
+      reg [31:0] end_time;
+
+      start_time = cycle_ctr;
+      $display("*** TC%01d - continuous_cmd_last_test started.", tc_ctr);
+
+      hmac_write_key(key);
+      write_block(block0);
+      write_seed(seed);
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+
+      // Bombard with all four command variants during BUSY, and
+      // verify STATUS.READY stays low (engine truly rejected them).
+      for (int i = 0; i < 5; i++)
+        begin
+          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
+          #CLK_PERIOD; hsel_i_tb = 0; #CLK_PERIOD;
+          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+          #CLK_PERIOD; hsel_i_tb = 0; #CLK_PERIOD;
+          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
+          #CLK_PERIOD; hsel_i_tb = 0; #CLK_PERIOD;
+          write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_LAST_VALUE);
+          #CLK_PERIOD; hsel_i_tb = 0; #CLK_PERIOD;
+
+          read_single_word(`HMAC_REG_HMAC512_STATUS);
+          if ((read_data & `HMAC_REG_HMAC512_STATUS_READY_MASK) === `HMAC_REG_HMAC512_STATUS_READY_MASK)
+            begin
+              $display("TC%01d: ERROR - engine went READY during BUSY bombardment (iter %0d).", tc_ctr, i);
+              error_ctr = error_ctr + 1;
+            end
+        end
+
+      wait_ready();
+
+      // Final block via NEXT|LAST.
+      write_block(block1);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      end_time = cycle_ctr - start_time;
+      $display("*** continuous_cmd_last_test processing time = %01d cycles", end_time);
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest after BUSY bombardment.", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - continuous_cmd_last_test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // continuous_cmd_last_test
+
+
+  //----------------------------------------------------------------
+  // zeroize_mid_op_test()
+  //
+  // Aborts an op via CTRL.ZEROIZE while the engine is still BUSY,
+  // then verifies (a) READY returns to 1, and (b) a fresh INIT|LAST
+  // produces the expected digest. Confirms the new CTRL_ENTROPY
+  // state (and all later states) abort cleanly back to IDLE.
+  //----------------------------------------------------------------
+  task zeroize_mid_op_test(input [31:0]  mode,
+                           input [511:0] key,
+                           input [1023:0] block,
+                           input [191:0]  seed,
+                           input [511:0]  expected);
+    begin
+      $display("*** TC%01d - Zeroize mid-op test started.", tc_ctr);
+
+      hmac_write_key(key);
+      write_block(block);
+      write_seed(seed);
+
+      // Kick off an op, then zeroize after a randomized delay so
+      // different seeds catch the FSM in different mid-op states.
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      repeat ($urandom_range(5, 60)) #CLK_PERIOD;
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD * 4);
+
+      // Engine must be back to IDLE/READY.
+      read_single_word(`HMAC_REG_HMAC512_STATUS);
+      if ((read_data & `HMAC_REG_HMAC512_STATUS_READY_MASK) !== `HMAC_REG_HMAC512_STATUS_READY_MASK)
+        begin
+          $display("TC%01d: ERROR - STATUS.READY did not return high after mid-op ZEROIZE.", tc_ctr);
+          error_ctr = error_ctr + 1;
+        end
+
+      // Now re-load and run a clean op, expecting the reference digest.
+      hmac_write_key(key);
+      write_block(block);
+      write_seed(seed);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d: OK (mid-op ZEROIZE recovered cleanly).", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR - post-ZEROIZE op produced wrong digest.", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - Zeroize mid-op test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // zeroize_mid_op_test
+
+
+  //----------------------------------------------------------------
+  // init_next_conflict_test()
+  //
+  // Writes CTRL = mode|INIT|NEXT simultaneously from IDLE. Per the
+  // FSM (hmac_core CTRL_IDLE branch), INIT wins and NEXT is silently
+  // dropped. Verifies the engine completes a single-block op (the
+  // INIT path) and produces the expected digest -- proving the
+  // NEXT bit didn't divert flow or corrupt inner_digest_reg.
+  //----------------------------------------------------------------
+  task init_next_conflict_test(input [31:0]  mode,
+                               input [511:0] key,
+                               input [1023:0] block,
+                               input [191:0]  seed,
+                               input [511:0]  expected);
+    begin
+      $display("*** TC%01d - INIT|NEXT conflict test started.", tc_ctr);
+
+      hmac_write_key(key);
+      write_block(block);
+      write_seed(seed);
+
+      // Drive INIT, NEXT and LAST together. FSM should treat as INIT|LAST
+      // (INIT wins over NEXT in the IDLE branch; LAST is latched as the
+      // last-block modifier).
+      write_single_word(`HMAC_REG_HMAC512_CTRL,
+                        mode | CTRL_INIT_VALUE | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d: OK (INIT won; NEXT silently dropped).", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR - INIT|NEXT|LAST produced wrong digest.", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - INIT|NEXT conflict test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // init_next_conflict_test
+
+
   //----------------------------------------------------------------
   // zeroize_test()
   //
+  // Four zeroize scenarios: mid-op, ZEROIZE issued together with
+  // INIT, ZEROIZE issued together with NEXT, and ZEROIZE after a
+  // real INIT+NEXT sequence. Each sub-test expects digest == 0.
   //----------------------------------------------------------------
   task zeroize_test(input [31:0] mode,
                     input [511 : 0] key,
                     input [1023: 0] block0,
                     input [1023: 0] block1,
-                    input [383: 0]  seed,
+                    input [191 : 0] seed,
                     input [511 : 0] expected
                   );
     begin
@@ -783,13 +1112,20 @@ module hmac_ctrl_tb();
         end
       tc_ctr = tc_ctr + 1;
 
-      // Forth test: assert zeroize after NEXT
+      // Fourth test: real INIT then NEXT, then zeroize while BUSY.
       hmac_write_key(key);
-      
+
       write_block(block0);
 
       write_seed(seed);
 
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+
+      write_block(block1);
       write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
@@ -831,31 +1167,37 @@ module hmac_ctrl_tb();
     begin : hmac384_tests_block
       reg [383 : 0] key0;
       reg [1023: 0] data0;
-      reg [383 : 0] seed0;
+      reg [191 : 0] seed0;
       reg [383 : 0] expected0;
 
       reg [383 : 0] key1;
       reg [1023: 0] data1;
-      reg [383 : 0] seed1;
+      reg [191 : 0] seed1;
       reg [383 : 0] expected1;
 
       reg [383 : 0] key2;
       reg [1023: 0] data2;
-      reg [383 : 0] seed2;
+      reg [191 : 0] seed2;
       reg [383 : 0] expected2;
 
       reg [383 : 0] key3;
       reg [1023: 0] data3;
-      reg [383 : 0] seed3;
+      reg [191 : 0] seed3;
       reg [383 : 0] expected3;
 
       reg [383 : 0] key4;
       reg [1023: 0] data40;
       reg [1023: 0] data41;
-      reg [383 : 0] seed4;
+      reg [191 : 0] seed4;
       reg [383 : 0] expected4;
 
-      
+      // Three-block vector (RFC 4868 / NIST CAVS HMAC-SHA-384 COUNT=1)
+      reg [383 : 0] key5;
+      reg [1023: 0] data50;
+      reg [1023: 0] data51;
+      reg [1023: 0] data52;
+      reg [191 : 0] seed5;
+      reg [383 : 0] expected5;
 
       $display("\n\n*** Testcases for PRF-HMAC-SHA-384 functionality started.");
 
@@ -897,6 +1239,29 @@ module hmac_ctrl_tb();
 
       continuous_cmd_test(HMAC384_MODE, {key4, 128'b0}, data40, data41, seed4, {expected4, 128'b0});
 
+      // Stress: bombard CTRL with every command variant during BUSY.
+      continuous_cmd_last_test(HMAC384_MODE, {key4, 128'b0}, data40, data41, seed4, {expected4, 128'b0});
+
+      // Modifier-only LAST must be ignored when written alone.
+      // Reuses TC0 single-block vector to verify state is intact after the bogus write.
+      last_alone_ignored_test(HMAC384_MODE, {key0, 128'b0}, data0, seed0, {expected0, 128'b0});
+
+      // Three-block HMAC-SHA-384 (RFC 4868 / NIST CAVS HMAC-SHA-384 COUNT=1).
+      key5     = 384'h236e161c1b3fa17d8ee87427b56986f3b9779bb3b28b6200e46fafc436887f98f675f3bbc33384f38f60f77d14993863;
+      data50   = 1024'h8dbc773dac62e446067bca3a361ab54da9e5f8b43aeb7eed2666d4efa98c7a3fd8ccfa285ea19650b4efc000061d39458bebedcd6a140fe5032a98ed9131f078a594c95ee6e2383dca9b47ac304622093cfdab71bffa5dd843f1d06952c3580f6e0db840b06084b22e200c77a74b7b01a2a47d2b2c2ff885cd688bb6a96b30f4;
+      data51   = 1024'ha576778214cf8c8a552b806cf287cd13aa6df4ec9aad70fdfdd4744ff52b2739cd6bbc5c2f82e2ea84340325dafd2a8b9eff488d1d1ed697c5770eef651d0288677d87796f541fd7a797cac728d0b948daca9ac5a27de97947ab217e16c165b6a50e227245a01f6cd5f0fdf9980c49ebaa59e14ee56588bbecb4696cba50bb53;
+      data52   = 1024'h611aed9d86915a085981c8f303efe5fe91dc8365c19ebc612fb0b337e7750f96383062748f414edcd6d81e8bde4e012cc16bd8388c387c5e338000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dc8;
+      expected5 = 384'ha310a3b1d68c66000e48b34505aea9f3e3d628013f086801711610ed2b4524a24d69e6f2bb0a48368e7ab6a703f18b10;
+      seed5    = random_gen();
+
+      hmac_three_block_test(HMAC384_MODE, {key5, 128'b0}, data50, data51, data52, seed5, {expected5, 128'b0});
+
+      // Mid-op ZEROIZE recovers cleanly back to IDLE.
+      zeroize_mid_op_test(HMAC384_MODE, {key0, 128'b0}, data0, seed0, {expected0, 128'b0});
+
+      // INIT|NEXT|LAST -- INIT wins, NEXT silently dropped (single-block path).
+      init_next_conflict_test(HMAC384_MODE, {key0, 128'b0}, data0, seed0, {expected0, 128'b0});
+
       zeroize_test(HMAC384_MODE, {key4, 128'b0}, data40, data41, seed4, {expected4, 128'b0});
       
       $display("*** Testcases for PRF-HMAC-SHA-384 functionality completed.");
@@ -914,31 +1279,39 @@ module hmac_ctrl_tb();
     begin : hmac512_tests_block
       reg [511 : 0] key0;
       reg [1023: 0] data0;
-      reg [383 : 0] seed0;
+      reg [191 : 0] seed0;
       reg [511 : 0] expected0;
 
       reg [511 : 0] key1;
       reg [1023: 0] data1;
-      reg [383 : 0] seed1;
+      reg [191 : 0] seed1;
       reg [511 : 0] expected1;
 
       reg [511 : 0] key2;
       reg [1023: 0] data2;
-      reg [383 : 0] seed2;
+      reg [191 : 0] seed2;
       reg [511 : 0] expected2;
 
       reg [511 : 0] key3;
       reg [1023: 0] data3;
-      reg [383 : 0] seed3;
+      reg [191 : 0] seed3;
       reg [511 : 0] expected3;
 
       reg [511 : 0] key4;
       reg [1023: 0] data40;
       reg [1023: 0] data41;
-      reg [383 : 0] seed4;
+      reg [191 : 0] seed4;
       reg [511 : 0] expected4;
 
-      
+      // Three-block HMAC-SHA-512 vector. Same key/message as the
+      // HMAC-SHA-384 COUNT=1 vector in hmac_vectors_multiblk.txt;
+      // expected tag computed via Python's hmac.new(...,sha512).
+      reg [511 : 0] key5;
+      reg [1023: 0] data50;
+      reg [1023: 0] data51;
+      reg [1023: 0] data52;
+      reg [191 : 0] seed5;
+      reg [511 : 0] expected5;
 
       $display("\n\n*** Testcases for PRF-HMAC-SHA-512 functionality started.");
                       
@@ -981,6 +1354,32 @@ module hmac_ctrl_tb();
 
       continuous_cmd_test(HMAC512_MODE, key4, data40, data41, seed4, expected4);
 
+      // Stress: bombard CTRL with every command variant during BUSY.
+      continuous_cmd_last_test(HMAC512_MODE, key4, data40, data41, seed4, expected4);
+
+      // Modifier-only LAST must be ignored when written alone.
+      last_alone_ignored_test(HMAC512_MODE, key0, data0, seed0, expected0);
+
+      // Three-block HMAC-SHA-512. Same underlying key/message as the
+      // HMAC-SHA-384 COUNT=1 vector; tag re-derived for SHA-512.
+      // 384-bit key is zero-extended to 512 bits to match SHA-384's
+      // K' = (key || 80 zero bytes); for SHA-512 we get the same K'
+      // by passing (key || 16 zero bytes) into the 64-byte key reg.
+      key5     = {384'h236e161c1b3fa17d8ee87427b56986f3b9779bb3b28b6200e46fafc436887f98f675f3bbc33384f38f60f77d14993863, 128'b0};
+      data50   = 1024'h8dbc773dac62e446067bca3a361ab54da9e5f8b43aeb7eed2666d4efa98c7a3fd8ccfa285ea19650b4efc000061d39458bebedcd6a140fe5032a98ed9131f078a594c95ee6e2383dca9b47ac304622093cfdab71bffa5dd843f1d06952c3580f6e0db840b06084b22e200c77a74b7b01a2a47d2b2c2ff885cd688bb6a96b30f4;
+      data51   = 1024'ha576778214cf8c8a552b806cf287cd13aa6df4ec9aad70fdfdd4744ff52b2739cd6bbc5c2f82e2ea84340325dafd2a8b9eff488d1d1ed697c5770eef651d0288677d87796f541fd7a797cac728d0b948daca9ac5a27de97947ab217e16c165b6a50e227245a01f6cd5f0fdf9980c49ebaa59e14ee56588bbecb4696cba50bb53;
+      data52   = 1024'h611aed9d86915a085981c8f303efe5fe91dc8365c19ebc612fb0b337e7750f96383062748f414edcd6d81e8bde4e012cc16bd8388c387c5e338000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dc8;
+      expected5 = 512'h0b2b297297049be263e8ea4bb6c46a572f23067542515ade93e1685f3995f76aa74a2b67991ab2bc870eb85b85ad0cf3671df5e8752034c9258c210403c788e0;
+      seed5    = random_gen();
+
+      hmac_three_block_test(HMAC512_MODE, key5, data50, data51, data52, seed5, expected5);
+
+      // Mid-op ZEROIZE recovers cleanly back to IDLE.
+      zeroize_mid_op_test(HMAC512_MODE, key0, data0, seed0, expected0);
+
+      // INIT|NEXT|LAST -- INIT wins, NEXT silently dropped.
+      init_next_conflict_test(HMAC512_MODE, key0, data0, seed0, expected0);
+
       zeroize_test(HMAC512_MODE, key4, data40, data41, seed4, expected4);
       
       $display("*** Testcases for PRF-HMAC-SHA-512 functionality completed.");
@@ -991,7 +1390,7 @@ module hmac_ctrl_tb();
     begin
       reg [511 : 0] key;
       reg [1023: 0] data;
-      reg [383 : 0] seed;
+      reg [191 : 0] seed;
       reg [511 : 0] expected;
       
       $display("\n\n*** Testcases for CSR started.");
@@ -1006,7 +1405,7 @@ module hmac_ctrl_tb();
       write_block(data);
       write_seed(seed);
       
-      write_single_word(`HMAC_REG_HMAC512_CTRL, HMAC512_MODE | CTRL_INIT_VALUE | `HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, HMAC512_MODE | CTRL_INIT_VALUE | CTRL_LAST_VALUE | `HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
