@@ -208,6 +208,7 @@ module ecc_dsa_ctrl
     logic signing_process;
     logic verifying_process;
     logic sharedkey_process;
+    logic rand_k_en_mode;
 
     logic privkey_input_outofrange;
     logic r_output_outofrange;
@@ -218,6 +219,7 @@ module ecc_dsa_ctrl
     logic pubkeyy_input_outofrange;
     logic pubkey_input_invalid;
     logic pcr_sign_input_invalid;
+    logic rand_k_pcr_sign_illegal;
     logic kv_under_p256_invalid;
     logic privkey_output_outofrange, pubkeyx_output_outofrange, pubkeyy_output_outofrange;
     logic sharedkey_outofrange;
@@ -311,6 +313,7 @@ module ecc_dsa_ctrl
         .privKey(privkey_reg),
         .hashed_msg(msg_reduced_reg),
         .IV(IV_reg),
+        .rand_k_en(rand_k_en_mode),
         .lambda(lambda_p384),
         .scalar_rnd(scalar_rnd_p384),
         .masking_rnd(masking_rnd_p384),
@@ -530,6 +533,7 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_CTRL.CTRL.hwclr = |cmd_reg;
     always_comb hwif_in.ECC_CTRL.DH_SHAREDKEY.hwclr = |cmd_reg;
     always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
+    always_comb hwif_in.ECC_CTRL.RAND_K_EN.hwclr = |cmd_reg;
     
     // TODO add other interrupt hwset signals (errors)
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = error_flag_edge;
@@ -782,6 +786,7 @@ module ecc_dsa_ctrl
     assign pubkey_input_invalid     = (verifying_process | sharedkey_process) & (pk_chk_reg != 0);
 
     assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & pcr_sign_mode;
+    assign rand_k_pcr_sign_illegal  = (cmd_reg == SIGN) & pcr_sign_mode & hwif_out.ECC_CTRL.RAND_K_EN.value;
 
     // KV path is illegal under P-256: fire error if any KV transaction is armed while curve_sel_active=1.
     assign kv_under_p256_invalid    = curve_sel_active & (kv_privkey_read_ctrl_reg.read_en |
@@ -798,7 +803,7 @@ module ecc_dsa_ctrl
 
     assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | 
                         r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | 
-                        pubkey_input_invalid | pcr_sign_input_invalid | kv_under_p256_invalid |
+                        pubkey_input_invalid | pcr_sign_input_invalid | rand_k_pcr_sign_illegal | kv_under_p256_invalid |
                         privkey_output_outofrange | pubkeyx_output_outofrange | pubkeyy_output_outofrange |
                         sharedkey_outofrange;
 
@@ -835,6 +840,7 @@ module ecc_dsa_ctrl
             signing_process     <= 0;
             verifying_process   <= 0;
             sharedkey_process   <= 0;
+            rand_k_en_mode      <= 0;
             pending_cmd_reg     <= '0;
         end
         else if(zeroize_reg) begin
@@ -850,6 +856,7 @@ module ecc_dsa_ctrl
             signing_process     <= 0;
             verifying_process   <= 0;
             sharedkey_process   <= 0;
+            rand_k_en_mode      <= 0;
             pending_cmd_reg     <= '0;
         end
         else if (error_flag | error_flag_reg) begin
@@ -865,6 +872,7 @@ module ecc_dsa_ctrl
             signing_process     <= 0;
             verifying_process   <= 0;
             sharedkey_process   <= 0;
+            rand_k_en_mode      <= 0;
             pending_cmd_reg     <= '0;
         end
         else begin
@@ -886,6 +894,7 @@ module ecc_dsa_ctrl
                         signing_process     <= 0;
                         verifying_process   <= 0;
                         sharedkey_process   <= 0;
+                        rand_k_en_mode      <= 0;
                         // Every new command re-runs ECC_RESET init so PM-RAM curve constants
                         // match the current curve_sel; cmd is latched into pending_cmd_reg and dispatched at end-of-init.
                         unique case (cmd_reg)
@@ -905,6 +914,7 @@ module ecc_dsa_ctrl
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 2'b01;
                                 signing_process <= 1;
+                                rand_k_en_mode  <= hwif_out.ECC_CTRL.RAND_K_EN.value;
                             end                                   
 
                             VERIFY : begin  // verifying

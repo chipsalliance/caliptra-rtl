@@ -217,6 +217,8 @@
 #define ECC_REG_ECC_CTRL_DH_SHAREDKEY_MASK                                                          (0x10)
 #define ECC_REG_ECC_CTRL_CURVE_SEL_LOW                                                              (5)
 #define ECC_REG_ECC_CTRL_CURVE_SEL_MASK                                                             (0x20)
+#define ECC_REG_ECC_CTRL_RAND_K_EN_LOW                                                              (6)
+#define ECC_REG_ECC_CTRL_RAND_K_EN_MASK                                                             (0x40)
 #endif
 #define CLP_ECC_REG_ECC_STATUS                                                                      (0x10008018)
 #ifndef ECC_REG_ECC_STATUS

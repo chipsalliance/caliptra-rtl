@@ -154,7 +154,8 @@ module ecc_top_tb
         ecc_test_to_run == "ECC_p256_sign_test"          ||
         ecc_test_to_run == "ECC_p256_dualcurve_test"     ||
         ecc_test_to_run == "ECC_p256_keygen_blind_test"  ||
-        ecc_test_to_run == "ECC_p256_sign_blind_test") begin
+        ecc_test_to_run == "ECC_p256_sign_blind_test"    ||
+        ecc_test_to_run == "ECC_nondet_sign_p256_bypass_test") begin
       curve_sel_g = 1'b1;
       $display("%m: CURVE_SEL=1 (P-256) enabled for this run");
     end
@@ -1101,6 +1102,296 @@ module ecc_top_tb
 
 
   //----------------------------------------------------------------
+  // ecc_nondet_signing_test()
+  //
+  // Same as ecc_signing_test, but writes ECC_SEED/ECC_NONCE and sets
+  // RAND_K_EN=1 so HMAC-DRBG is reseeded from (seed, nonce) instead
+  // of from (privKey, hashed_msg). Expected R/S come from the
+  // mbedtls non-det KAT (see src/ecc/tb/test_vectors/nondet/).
+  //----------------------------------------------------------------
+  task ecc_nondet_signing_test(input [7 : 0]  tc_number,
+                               input test_vector_t test_vector);
+    reg [31  : 0]   start_time;
+    reg [31  : 0]   end_time;
+    operand_t       R;
+    operand_t       S;
+
+    begin
+      wait_ready();
+
+      $display("*** TC %0d non-det signing test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+
+      write_block(`ECC_REG_ECC_MSG_0,        test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+      write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
+      write_block(`ECC_REG_ECC_SEED_0,       test_vector.seed);
+      write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
+
+      // CTRL=SIGN + RAND_K_EN=1 in a single APB transaction so the
+      // FSM samples both at the same dispatch edge.
+      write_single_word(`ECC_REG_ECC_CTRL,
+                        ECC_CMD_SIGNING
+                        | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                        | (curve_sel_g ? `ECC_REG_ECC_CTRL_CURVE_SEL_MASK : 32'h0));
+      #(CLK_PERIOD);
+      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_SIGN_R_0);
+      R = reg_read_data;
+      read_block(`ECC_REG_ECC_SIGN_S_0);
+      S = reg_read_data;
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** non-det signing test processing time = %01d cycles.", end_time);
+
+      if (R == test_vector.R & S == test_vector.S) begin
+        $display("*** TC %0d non-det signing successful.", tc_number);
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: TC %0d non-det signing NOT successful.", tc_number);
+        $display("Expected_R: 0x%96x", test_vector.R);
+        $display("Got:        0x%96x", R);
+        $display("Expected_S: 0x%96x", test_vector.S);
+        $display("Got:        0x%96x", S);
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // ecc_nondet_signing_test
+
+
+  //----------------------------------------------------------------
+  // ecc_nondet_sign_p256_bypass_test()
+  //
+  // P-256 non-det SIGN with the (not-yet-instantiated) HMAC-DRBG-256
+  // bypassed via SV `force` on hmac_drbg_result_p256. The pre-computed
+  // k = HMAC-DRBG-SHA256(seed, nonce) (injected into the KAT line 9
+  // 'privkeyB' slot by gen_nondet_kat.py) is forced onto the DRBG-256
+  // placeholder net so the engine's nonce = k. RAND_K_EN is set together
+  // with SIGN so the ctrl FSM samples non-det mode for the dispatch
+  // edge. R/S must bit-exactly match the mbedtls non-det KAT.
+  //
+  // Scope: this exercises the curve-agnostic non-det control plane
+  // (RAND_K_EN lifecycle, SEED/NONCE/IV/MSG/PRIVKEY CSR paths,
+  // hwclr-on-cmd) on the P-256 SIGN flow. The P-256 DRBG entropy mux
+  // itself remains deferred until the HMAC-DRBG-256 instance is added.
+  //----------------------------------------------------------------
+  task ecc_nondet_sign_p256_bypass_test(input [7 : 0]  tc_number,
+                                        input test_vector_t test_vector);
+    reg [31 : 0]    start_time;
+    reg [31 : 0]    end_time;
+    operand_t       R;
+    operand_t       S;
+    begin
+      wait_ready();
+
+      $display("*** TC %0d P-256 non-det sign-bypass test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+
+      // privkeyB slot in the P-256 non-det KAT carries k (injected by
+      // gen_nondet_kat.py from HMAC-DRBG-SHA256(seed, nonce)).
+      drbg_bypass_force(test_vector.privkeyB[255:0]);
+
+      write_block(`ECC_REG_ECC_MSG_0,        test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+      write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
+      write_block(`ECC_REG_ECC_SEED_0,       test_vector.seed);
+      write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
+
+      // CTRL=SIGN + RAND_K_EN=1 + CURVE_SEL=1 in a single APB transaction
+      // so the FSM samples all three at the same dispatch edge.
+      write_single_word(`ECC_REG_ECC_CTRL,
+                        ECC_CMD_SIGNING
+                        | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                        | `ECC_REG_ECC_CTRL_CURVE_SEL_MASK);
+      #(CLK_PERIOD);
+      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_SIGN_R_0); R = reg_read_data;
+      read_block(`ECC_REG_ECC_SIGN_S_0); S = reg_read_data;
+
+      drbg_bypass_release();
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** P-256 non-det sign-bypass processing time = %01d cycles.", end_time);
+      $display("R          : 0x%64x", R[255:0]);
+      $display("S          : 0x%64x", S[255:0]);
+
+      if ((R[255:0] == test_vector.R[255:0]) &&
+          (S[255:0] == test_vector.S[255:0])) begin
+        $display("*** TC %0d P-256 non-det sign-bypass successful.", tc_number);
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: TC %0d P-256 non-det sign-bypass NOT successful.", tc_number);
+        $display("Expected_R: 0x%64x", test_vector.R[255:0]);
+        $display("Got_R:      0x%64x", R[255:0]);
+        $display("Expected_S: 0x%64x", test_vector.S[255:0]);
+        $display("Got_S:      0x%64x", S[255:0]);
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // ecc_nondet_sign_p256_bypass_test
+
+
+  //----------------------------------------------------------------
+  // ecc_nondet_distinct_k_test()
+  //
+  // Proves the non-det code path is live: signs the SAME
+  // (hashed_msg, privkey, IV) three times, varying only (seed, nonce)
+  // per iteration. Holding IV constant removes scalar-blinding entropy
+  // so any (R,S) difference must come from k. Asserts R/S are pairwise
+  // distinct across the three runs.
+  //
+  // Uses test_vectors[0] for msg/privkey/IV and test_vectors[0..2]
+  // for varying (seed, nonce). Expected R/S are NOT used.
+  //----------------------------------------------------------------
+  task ecc_nondet_distinct_k_test();
+    operand_t   R [0:2];
+    operand_t   S [0:2];
+    int         i;
+    int         a, b;
+    bit         all_distinct;
+
+    begin
+      $display("*** non-det distinct-k test started (3 signs, same msg/privkey/IV, varying seed/nonce).");
+      tc_ctr = tc_ctr + 1;
+
+      for (i = 0; i < 3; i = i + 1) begin
+        wait_ready();
+        write_block(`ECC_REG_ECC_MSG_0,        test_vectors[0].hashed_msg);
+        write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vectors[0].privkey);
+        write_block(`ECC_REG_ECC_IV_0,         test_vectors[0].IV);
+        write_block(`ECC_REG_ECC_SEED_0,       test_vectors[i].seed);
+        write_block(`ECC_REG_ECC_NONCE_0,      test_vectors[i].nonce);
+
+        write_single_word(`ECC_REG_ECC_CTRL,
+                          ECC_CMD_SIGNING
+                          | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                          | (curve_sel_g ? `ECC_REG_ECC_CTRL_CURVE_SEL_MASK : 32'h0));
+        #(CLK_PERIOD);
+        hsel_i_tb = 0;
+        #(CLK_PERIOD);
+
+        wait_ready();
+
+        read_block(`ECC_REG_ECC_SIGN_R_0);
+        R[i] = reg_read_data;
+        read_block(`ECC_REG_ECC_SIGN_S_0);
+        S[i] = reg_read_data;
+
+        trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+        $display("    iter %0d : R[%0d] = 0x%96x", i, i, R[i]);
+        $display("              S[%0d] = 0x%96x", i, S[i]);
+      end
+
+      all_distinct = 1'b1;
+      for (a = 0; a < 3; a = a + 1) begin
+        for (b = a + 1; b < 3; b = b + 1) begin
+          if (R[a] == R[b]) begin
+            $display("*** ERROR: distinct-k FAIL  R[%0d] == R[%0d]", a, b);
+            all_distinct = 1'b0;
+          end
+          if (S[a] == S[b]) begin
+            $display("*** ERROR: distinct-k FAIL  S[%0d] == S[%0d]", a, b);
+            all_distinct = 1'b0;
+          end
+        end
+      end
+
+      if (all_distinct) begin
+        $display("*** non-det distinct-k test successful: all 3 (R,S) pairs differ.");
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: non-det distinct-k test FAILED: signatures collided.");
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // ecc_nondet_distinct_k_test
+
+
+  //----------------------------------------------------------------
+  // ecc_nondet_pcr_sign_illegal_test()
+  //
+  // Negative test for the PCR_SIGN + RAND_K_EN mutex check added in
+  // ecc_dsa_ctrl.sv (rand_k_pcr_sign_illegal). The two modes are
+  // mutually exclusive: PCR signing must be deterministic. Asserting
+  // RAND_K_EN together with PCR_SIGN must:
+  //   1) set error_flag_reg
+  //   2) raise the error interrupt
+  //   3) prevent a sign from completing (no R/S produced)
+  //----------------------------------------------------------------
+  task ecc_nondet_pcr_sign_illegal_test();
+    reg error_intr_seen;
+
+    begin
+      wait_ready();
+
+      $display("*** PCR_SIGN + RAND_K_EN illegal-combo test started.");
+      tc_ctr = tc_ctr + 1;
+
+      // Enable the internal-error interrupt.
+      write_single_word(`ECC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,
+                        `ECC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
+      write_single_word(`ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,
+                        `ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK);
+
+      // Single APB write: SIGN + PCR_SIGN + RAND_K_EN  (illegal combo).
+      write_single_word(`ECC_REG_ECC_CTRL,
+                        ECC_CMD_SIGNING
+                        | `ECC_REG_ECC_CTRL_PCR_SIGN_MASK
+                        | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                        | (curve_sel_g ? `ECC_REG_ECC_CTRL_CURVE_SEL_MASK : 32'h0));
+      #(CLK_PERIOD);
+      hsel_i_tb = 0;
+
+      // Wait a few cycles for the error to latch and propagate to the
+      // interrupt block (error_intr has ~2-cycle latency).
+      #(8 * CLK_PERIOD);
+      error_intr_seen = error_intr_tb;
+
+      wait_ready();
+
+      if (dut.ecc_dsa_ctrl_i.error_flag_reg & error_intr_seen) begin
+        $display("*** PCR_SIGN + RAND_K_EN correctly flagged as illegal (error_flag_reg=1, error_intr=1).");
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: illegal-combo not detected.");
+        $display("    error_flag_reg = %0b (expected 1)", dut.ecc_dsa_ctrl_i.error_flag_reg);
+        $display("    error_intr_tb  = %0b (expected 1)", error_intr_seen);
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+
+      // Clear by zeroize.
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+      #(2 * CLK_PERIOD);
+    end
+  endtask // ecc_nondet_pcr_sign_illegal_test
+
+
+  //----------------------------------------------------------------
   // ecc_verifying_test()
   //
   // Perform a single verifying operation test.
@@ -1622,6 +1913,18 @@ module ecc_top_tb
         else if (ecc_test_to_run == "ECC_p384_keygen_bypass_test") begin
           ecc_p384_keygen_bypass_test(i, test_vectors[i]);
         end
+        else if (ecc_test_to_run == "ECC_nondet_sign_p384_test") begin
+          ecc_nondet_signing_test(i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_nondet_distinct_k_test") begin
+          if (i == 0) ecc_nondet_distinct_k_test();
+        end
+        else if (ecc_test_to_run == "ECC_nondet_pcr_sign_illegal_test") begin
+          if (i == 0) ecc_nondet_pcr_sign_illegal_test();
+        end
+        else if (ecc_test_to_run == "ECC_nondet_sign_p256_bypass_test") begin
+          ecc_nondet_sign_p256_bypass_test(i, test_vectors[i]);
+        end
       end
       
       if ((ecc_test_to_run != "ECC_p256_verify_test")        &&
@@ -1630,7 +1933,11 @@ module ecc_top_tb
           (ecc_test_to_run != "ECC_p256_dualcurve_test")     &&
           (ecc_test_to_run != "ECC_p256_keygen_blind_test")  &&
           (ecc_test_to_run != "ECC_p256_sign_blind_test")    &&
-          (ecc_test_to_run != "ECC_p384_keygen_bypass_test")) begin
+          (ecc_test_to_run != "ECC_p384_keygen_bypass_test") &&
+          (ecc_test_to_run != "ECC_nondet_sign_p384_test")   &&
+          (ecc_test_to_run != "ECC_nondet_distinct_k_test")  &&
+          (ecc_test_to_run != "ECC_nondet_pcr_sign_illegal_test") &&
+          (ecc_test_to_run != "ECC_nondet_sign_p256_bypass_test")) begin
         continuous_cmd_test(test_vectors[0]);
         zeroize_test(test_vectors[1]);
         ecc_fault_test();

@@ -63,6 +63,7 @@ module ecc_hmac_drbg_interface#(
     input wire   [REG_SIZE-1 : 0]   privKey,
     input wire   [REG_SIZE-1 : 0]   hashed_msg,
     input wire   [REG_SIZE-1 : 0]   IV,
+    input wire                      rand_k_en,
 
     output wire  [REG_SIZE-1 : 0]   lambda,
     output wire  [REG_SIZE-1 : 0]   scalar_rnd,
@@ -176,7 +177,7 @@ module ecc_hmac_drbg_interface#(
             SCALAR_RND_ST:  hmac_drbg_entropy = sca_entropy_reg;
             MASKING_RND_ST: hmac_drbg_entropy = sca_entropy_reg;
             KEYGEN_ST:      hmac_drbg_entropy = keygen_seed;
-            SIGN_ST:        hmac_drbg_entropy = privKey;
+            SIGN_ST:        hmac_drbg_entropy = rand_k_en ? keygen_seed : privKey;
             default:        hmac_drbg_entropy = sca_entropy_reg;
         endcase
     end // hmac_drbg_entropy_input
@@ -189,7 +190,7 @@ module ecc_hmac_drbg_interface#(
             SCALAR_RND_ST:  hmac_drbg_nonce = counter_nonce_reg;
             MASKING_RND_ST: hmac_drbg_nonce = counter_nonce_reg;
             KEYGEN_ST:      hmac_drbg_nonce = keygen_nonce;
-            SIGN_ST:        hmac_drbg_nonce = hashed_msg;
+            SIGN_ST:        hmac_drbg_nonce = rand_k_en ? keygen_nonce : hashed_msg;
             default:        hmac_drbg_nonce = counter_nonce_reg;
         endcase
     end // hmac_drbg_nonce_input

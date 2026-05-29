@@ -183,6 +183,8 @@
 `define ECC_REG_ECC_CTRL_DH_SHAREDKEY_MASK                                                          (32'h10)
 `define ECC_REG_ECC_CTRL_CURVE_SEL_LOW                                                              (5)
 `define ECC_REG_ECC_CTRL_CURVE_SEL_MASK                                                             (32'h20)
+`define ECC_REG_ECC_CTRL_RAND_K_EN_LOW                                                              (6)
+`define ECC_REG_ECC_CTRL_RAND_K_EN_MASK                                                             (32'h40)
 `endif
 `ifndef ECC_REG_ECC_STATUS
 `define ECC_REG_ECC_STATUS                                                                          (32'h18)
