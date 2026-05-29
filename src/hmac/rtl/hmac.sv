@@ -329,7 +329,7 @@ end
 //release the lock once init has been seen
 always_comb begin
   for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
-    if (init_reg | next_reg | last_reg) begin
+    if (init_reg | next_reg) begin
       block_reg_lock_nxt[dword] = '0;
     end
     else begin
@@ -398,8 +398,8 @@ hmac_reg i_hmac_reg (
     .hwif_out(hwif_out)
 );
 
-always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg | last_reg) & (mode_reg == HMAC512_MODE) & (key_reg[15:12] == 128'b0);
-always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg | last_reg) & (key_reg == 512'b0);
+always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[15:12] == 128'b0);
+always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == 512'b0);
 
 always_comb error_flag = key_zero_error | key_mode_error;
 

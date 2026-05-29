@@ -85,10 +85,10 @@ addrmap hmac_reg {
                                  0 for HMAC384
                                  1 for HMAC512"; swwe;} MODE = 1'b1;
         field {desc = "CSR Mode: Indicates to the HMAC512 core to use the CSR HMAC key"; swwe;} CSR_MODE = 1'b0;
-        field {desc = "Control last command bit: Trigs the HMAC512 core to start
-                                processing the last padded message block and
-                                generate the final HMAC tag (OPAD + outer hash).
-                                Can be combined with INIT for single-block messages.
+        field {desc = "Control last command bit: Marks the current INIT or NEXT
+                                command as the final message block. When set together
+                                with INIT or NEXT, the HMAC512 core completes the OPAD
+                                + final hash and produces the HMAC tag.
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse; swwe;} LAST = 1'b0;
     
