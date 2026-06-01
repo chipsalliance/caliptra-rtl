@@ -2,9 +2,9 @@
 //
 // Smoke TB for a-p256-inv-latency-opt:
 //   * Drives ecc_pm_ctrl through KEYGEN flow on both curves
-//   * Verifies P-256 leaves INV at INV_S+703 (CONV_S target) instead of INV_E
-//   * Verifies P-384 still leaves INV at INV_E (= INV_S+1039)
-//   * Verifies P-256 leaves INVq at INVq_S+703 instead of INVq_E (SIGN_CMD)
+//   * Verifies P-256 leaves INV at INV_S+703 (CONV_S target) instead of INV_E_P384
+//   * Verifies P-384 still leaves INV at INV_E_P384 (= INV_S+1039)
+//   * Verifies P-256 leaves INVq at INVq_S+703 instead of INVq_E_P384 (SIGN_CMD)
 //
 // Approach: instantiate ecc_pm_ctrl with a fake digit stream (digit_i=0 keeps
 // the Montgomery ladder counter consistent). The actual datapath isn't built
@@ -32,8 +32,6 @@ module ecc_pm_ctrl_inv_latency_smoke_tb
     logic                       busy;
 
     ecc_pm_ctrl #(
-        .REG_SIZE   (384),
-        .RND_SIZE   (192),
         .INSTR_SIZE (24)
     ) dut (
         .clk          (clk),
@@ -99,7 +97,7 @@ module ecc_pm_ctrl_inv_latency_smoke_tb
             @(posedge clk);
 
             // Track INV section visits.
-            if (dut.prog_cntr >= INV_S && dut.prog_cntr <= INV_E) begin
+            if (dut.prog_cntr >= INV_S && dut.prog_cntr <= INV_E_P384) begin
                 in_inv = 1;
                 last_in_inv = dut.prog_cntr;
             end
@@ -135,7 +133,7 @@ module ecc_pm_ctrl_inv_latency_smoke_tb
         for (cyc = 0; cyc < MAX_CYCLES; cyc++) begin
             @(posedge clk);
 
-            if (dut.prog_cntr >= INVq_S && dut.prog_cntr <= INVq_E) begin
+            if (dut.prog_cntr >= INVq_S && dut.prog_cntr <= INVq_E_P384) begin
                 in_invq = 1;
                 last_in_invq = dut.prog_cntr;
             end
@@ -155,11 +153,11 @@ module ecc_pm_ctrl_inv_latency_smoke_tb
 
     initial begin : main
         $display("[%0t] ecc_pm_ctrl_inv_latency_smoke_tb starting", $time);
-        $display("  INV_S=%0d INV_E_P256=%0d INV_E=%0d INVq_S=%0d INVq_E_P256=%0d INVq_E=%0d",
-                 INV_S, INV_E_P256, INV_E, INVq_S, INVq_E_P256, INVq_E);
+        $display("  INV_S=%0d INV_E_P256=%0d INV_E_P384=%0d INVq_S=%0d INVq_E_P256=%0d INVq_E_P384=%0d",
+                 INV_S, INV_E_P256, INV_E_P384, INVq_S, INVq_E_P256, INVq_E_P384);
 
         // --------------------------------------------------------------
-        // Check 1: P-384 KEYGEN — INV exits at INV_E
+        // Check 1: P-384 KEYGEN — INV exits at INV_E_P384
         // --------------------------------------------------------------
         do_reset();
         run_and_capture_inv_exit(1'b0, KEYGEN_CMD, exit_addr, to);
@@ -167,13 +165,13 @@ module ecc_pm_ctrl_inv_latency_smoke_tb
             $display("FAIL: P-384 KEYGEN timed out before reaching CONV_S");
             errors++;
         end
-        else if (exit_addr !== INV_E) begin
-            $display("FAIL: P-384 KEYGEN INV exit addr = %0d, expected INV_E = %0d",
-                     exit_addr, INV_E);
+        else if (exit_addr !== INV_E_P384) begin
+            $display("FAIL: P-384 KEYGEN INV exit addr = %0d, expected INV_E_P384 = %0d",
+                     exit_addr, INV_E_P384);
             errors++;
         end
         else begin
-            $display("PASS: P-384 KEYGEN INV exit at INV_E (%0d)", exit_addr);
+            $display("PASS: P-384 KEYGEN INV exit at INV_E_P384 (%0d)", exit_addr);
         end
 
         // --------------------------------------------------------------
@@ -191,12 +189,12 @@ module ecc_pm_ctrl_inv_latency_smoke_tb
             errors++;
         end
         else begin
-            $display("PASS: P-256 KEYGEN INV exit at INV_E_P256 (%0d, saved %0d cycles vs INV_E)",
-                     exit_addr, INV_E - INV_E_P256);
+            $display("PASS: P-256 KEYGEN INV exit at INV_E_P256 (%0d, saved %0d cycles vs INV_E_P384)",
+                     exit_addr, INV_E_P384 - INV_E_P256);
         end
 
         // --------------------------------------------------------------
-        // Check 3: P-384 SIGN — INVq exits at INVq_E
+        // Check 3: P-384 SIGN — INVq exits at INVq_E_P384
         // --------------------------------------------------------------
         do_reset();
         run_and_capture_invq_exit(1'b0, exit_addr, to);
@@ -204,13 +202,13 @@ module ecc_pm_ctrl_inv_latency_smoke_tb
             $display("FAIL: P-384 SIGN timed out before reaching SIGN1_S");
             errors++;
         end
-        else if (exit_addr !== INVq_E) begin
-            $display("FAIL: P-384 SIGN INVq exit addr = %0d, expected INVq_E = %0d",
-                     exit_addr, INVq_E);
+        else if (exit_addr !== INVq_E_P384) begin
+            $display("FAIL: P-384 SIGN INVq exit addr = %0d, expected INVq_E_P384 = %0d",
+                     exit_addr, INVq_E_P384);
             errors++;
         end
         else begin
-            $display("PASS: P-384 SIGN INVq exit at INVq_E (%0d)", exit_addr);
+            $display("PASS: P-384 SIGN INVq exit at INVq_E_P384 (%0d)", exit_addr);
         end
 
         // --------------------------------------------------------------
@@ -228,8 +226,8 @@ module ecc_pm_ctrl_inv_latency_smoke_tb
             errors++;
         end
         else begin
-            $display("PASS: P-256 SIGN INVq exit at INVq_E_P256 (%0d, saved %0d cycles vs INVq_E)",
-                     exit_addr, INVq_E - INVq_E_P256);
+            $display("PASS: P-256 SIGN INVq exit at INVq_E_P256 (%0d, saved %0d cycles vs INVq_E_P384)",
+                     exit_addr, INVq_E_P384 - INVq_E_P256);
         end
 
         // --------------------------------------------------------------

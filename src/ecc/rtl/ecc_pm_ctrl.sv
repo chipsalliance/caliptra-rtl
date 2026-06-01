@@ -43,8 +43,6 @@ module ecc_pm_ctrl
     import ecc_pm_uop_pkg::*;
     import ecc_params_pkg::*;
     #(
-    parameter REG_SIZE      = 384,
-    parameter RND_SIZE      = 192,
     parameter INSTR_SIZE    = 24
     )
     (
@@ -121,7 +119,7 @@ module ecc_pm_ctrl
         .clka(clk),
         .reset_n(reset_n),
         .zeroize(zeroize),
-        .ena(1'b1),
+        .ena(~curve_sel_i),
         .addra(prog_addr),
         .douta(prog_instr_p384)
     );
@@ -134,7 +132,7 @@ module ecc_pm_ctrl
         .clka(clk),
         .reset_n(reset_n),
         .zeroize(zeroize),
-        .ena(1'b1),
+        .ena(curve_sel_i),
         .addra(prog_addr),
         .douta(prog_instr_p256)
     );
@@ -295,7 +293,7 @@ module ecc_pm_ctrl
                             prog_cntr <= prog_cntr + 1;
                     end
 
-                    INV_E : begin // End of inversion mod p (P-384)
+                    INV_E_P384 : begin // End of inversion mod p (P-384)
                         prog_cntr <= CONV_S;
                     end
                     
@@ -323,7 +321,7 @@ module ecc_pm_ctrl
                         end
                     end
 
-                    INVq_E : begin // End of inversion mod q (P-384)
+                    INVq_E_P384 : begin // End of inversion mod q (P-384)
                         unique case (ecc_cmd_reg)
                             SIGN_CMD      : prog_cntr <= SIGN1_S;
                             VER_PART0_CMD : prog_cntr <= VER0_P1_S;

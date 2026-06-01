@@ -121,10 +121,7 @@ package ecc_params_pkg;
   //
   // Existing P-384-only code that has not yet been converted to mux
   // on CURVE_SEL continues to see the P-384 values via the unsuffixed
-  // names. 
-  // TODO: Each downstream block will be migrated to the suffixed
-  // _P384 / _P256 names (and CURVE_SEL muxing) by the remaining
-  // dual-curve work items.
+  // names.
   //================================================================
   parameter [REG_SIZE-1   : 0] ZERO_CONST     = {REG_SIZE{1'b0}};
   parameter [REG_SIZE-1   : 0] ONE_CONST      = {{(REG_SIZE-1){1'b0}}, 1'b1};
