@@ -155,7 +155,8 @@ module ecc_top_tb
         ecc_test_to_run == "ECC_p256_dualcurve_test"     ||
         ecc_test_to_run == "ECC_p256_keygen_blind_test"  ||
         ecc_test_to_run == "ECC_p256_sign_blind_test"    ||
-        ecc_test_to_run == "ECC_nondet_sign_p256_bypass_test") begin
+        ecc_test_to_run == "ECC_nondet_sign_p256_bypass_test" ||
+        ecc_test_to_run == "ECC_cavp_sign_p256_test") begin
       curve_sel_g = 1'b1;
       $display("%m: CURVE_SEL=1 (P-256) enabled for this run");
     end
@@ -1252,6 +1253,141 @@ module ecc_top_tb
 
 
   //----------------------------------------------------------------
+  // ecc_cavp_sign_p384_test()
+  //
+  // End-to-end CAVP ECDSA SigGen KAT for P-384. Runs the *deterministic*
+  // SIGN micro-program (RAND_K_EN=0, no SEED/NONCE writes) but
+  // force-bypasses the P-384 HMAC-DRBG output with the CAVP-provided k
+  // (KAT line 9, 'privkeyB' slot, populated by cavp_ecdsa_to_kat.py).
+  // Blinding entropy (lambda, scalar_rnd, masking_rnd) is forced to the
+  // identity (1, 0, 0) by drbg_bypass_force_p384 so (R,S) is a pure
+  // function of (k, d, hashed_msg) and must bit-exactly equal the
+  // NIST CAVP (R,S).
+  //----------------------------------------------------------------
+  task ecc_cavp_sign_p384_test(input [7 : 0]  tc_number,
+                               input test_vector_t test_vector);
+    reg [31 : 0]    start_time;
+    reg [31 : 0]    end_time;
+    operand_t       R;
+    operand_t       S;
+    begin
+      wait_ready();
+
+      $display("*** TC %0d P-384 CAVP det-sign test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+
+      // KAT line 9 carries the CAVP k for this TC.
+      drbg_bypass_force_p384(test_vector.privkeyB);
+
+      write_block(`ECC_REG_ECC_MSG_0,        test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+      write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
+
+      trig_ECC(ECC_CMD_SIGNING);
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_SIGN_R_0); R = reg_read_data;
+      read_block(`ECC_REG_ECC_SIGN_S_0); S = reg_read_data;
+
+      drbg_bypass_release_p384();
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** P-384 CAVP det-sign processing time = %01d cycles.", end_time);
+
+      if ((R == test_vector.R) && (S == test_vector.S)) begin
+        $display("*** TC %0d P-384 CAVP det-sign successful.", tc_number);
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: TC %0d P-384 CAVP det-sign NOT successful.", tc_number);
+        $display("Expected_R: 0x%96x", test_vector.R);
+        $display("Got_R:      0x%96x", R);
+        $display("Expected_S: 0x%96x", test_vector.S);
+        $display("Got_S:      0x%96x", S);
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // ecc_cavp_sign_p384_test
+
+
+  //----------------------------------------------------------------
+  // ecc_cavp_sign_p256_test()
+  //
+  // P-256 sibling of ecc_cavp_sign_p384_test. Same det-SIGN +
+  // force-bypass strategy, but routes through the P-256 placeholder
+  // nets (drbg_bypass_force / drbg_bypass_release) and asserts
+  // CURVE_SEL=1 in the CTRL write. Because the P-256 HMAC-DRBG block
+  // is not yet instantiated (`assign hmac_drbg_result_p256 = '0;` at
+  // ecc_dsa_ctrl.sv:330), the force is the only way to get a non-zero
+  // k into the engine for P-256; that limitation lifts when todo #17
+  // lands.
+  //----------------------------------------------------------------
+  task ecc_cavp_sign_p256_test(input [7 : 0]  tc_number,
+                               input test_vector_t test_vector);
+    reg [31 : 0]    start_time;
+    reg [31 : 0]    end_time;
+    operand_t       R;
+    operand_t       S;
+    begin
+      wait_ready();
+
+      $display("*** TC %0d P-256 CAVP det-sign test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+
+      // KAT line 9 carries the CAVP k for this TC (zero-padded to 256b).
+      drbg_bypass_force(test_vector.privkeyB[255:0]);
+
+      write_block(`ECC_REG_ECC_MSG_0,        test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+      write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
+
+      // CTRL=SIGN + CURVE_SEL=1 (no RAND_K_EN -- det path).
+      write_single_word(`ECC_REG_ECC_CTRL,
+                        ECC_CMD_SIGNING
+                        | `ECC_REG_ECC_CTRL_CURVE_SEL_MASK);
+      #(CLK_PERIOD);
+      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_SIGN_R_0); R = reg_read_data;
+      read_block(`ECC_REG_ECC_SIGN_S_0); S = reg_read_data;
+
+      drbg_bypass_release();
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** P-256 CAVP det-sign processing time = %01d cycles.", end_time);
+
+      if ((R[255:0] == test_vector.R[255:0]) &&
+          (S[255:0] == test_vector.S[255:0])) begin
+        $display("*** TC %0d P-256 CAVP det-sign successful.", tc_number);
+        $display("");
+      end
+      else begin
+        $display("*** ERROR: TC %0d P-256 CAVP det-sign NOT successful.", tc_number);
+        $display("Expected_R: 0x%64x", test_vector.R[255:0]);
+        $display("Got_R:      0x%64x", R[255:0]);
+        $display("Expected_S: 0x%64x", test_vector.S[255:0]);
+        $display("Got_S:      0x%64x", S[255:0]);
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // ecc_cavp_sign_p256_test
+
+
+  //----------------------------------------------------------------
   // ecc_nondet_distinct_k_test()
   //
   // Proves the non-det code path is live: signs the SAME
@@ -1925,6 +2061,12 @@ module ecc_top_tb
         else if (ecc_test_to_run == "ECC_nondet_sign_p256_bypass_test") begin
           ecc_nondet_sign_p256_bypass_test(i, test_vectors[i]);
         end
+        else if (ecc_test_to_run == "ECC_cavp_sign_p384_test") begin
+          ecc_cavp_sign_p384_test(i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_cavp_sign_p256_test") begin
+          ecc_cavp_sign_p256_test(i, test_vectors[i]);
+        end
       end
       
       if ((ecc_test_to_run != "ECC_p256_verify_test")        &&
@@ -1937,7 +2079,9 @@ module ecc_top_tb
           (ecc_test_to_run != "ECC_nondet_sign_p384_test")   &&
           (ecc_test_to_run != "ECC_nondet_distinct_k_test")  &&
           (ecc_test_to_run != "ECC_nondet_pcr_sign_illegal_test") &&
-          (ecc_test_to_run != "ECC_nondet_sign_p256_bypass_test")) begin
+          (ecc_test_to_run != "ECC_nondet_sign_p256_bypass_test") &&
+          (ecc_test_to_run != "ECC_cavp_sign_p384_test") &&
+          (ecc_test_to_run != "ECC_cavp_sign_p256_test")) begin
         continuous_cmd_test(test_vectors[0]);
         zeroize_test(test_vectors[1]);
         ecc_fault_test();
