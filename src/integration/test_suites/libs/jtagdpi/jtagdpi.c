@@ -124,13 +124,28 @@ void *jtagdpi_create(const char *display_name, int listen_port) {
       (struct jtagdpi_ctx *)calloc(1, sizeof(struct jtagdpi_ctx));
   assert(ctx);
 
-  // Create socket
+  // Create socket (port 0 lets the OS assign an ephemeral port)
   ctx->sock = tcp_server_create(display_name, listen_port);
 #ifdef JTAGDPI_DEBUG
   ctx->init = 1;
 #endif
 
   reset_jtag_signals(ctx);
+
+  // Get the actual port (may differ from listen_port when 0 was requested)
+  int actual_port = tcp_server_get_port(ctx->sock);
+
+  // Write port file so OpenOCD can discover the port at runtime
+  char port_filename[256];
+  snprintf(port_filename, sizeof(port_filename), "%s.port", display_name);
+  FILE *port_fp = fopen(port_filename, "w");
+  if (port_fp) {
+    fprintf(port_fp, "%d\n", actual_port);
+    fclose(port_fp);
+  } else {
+    fprintf(stderr, "JTAG DPI: Warning: could not write port file %s\n",
+            port_filename);
+  }
 
   printf(
       "\n"
@@ -139,7 +154,7 @@ void *jtagdpi_create(const char *display_name, int listen_port) {
       "  interface remote_bitbang\n"
       "  remote_bitbang_host localhost\n"
       "  remote_bitbang_port %d\n",
-      display_name, listen_port, listen_port);
+      display_name, actual_port, actual_port);
 
   return (void *)ctx;
 }
