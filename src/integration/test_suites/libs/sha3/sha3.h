@@ -311,7 +311,7 @@ void dif_kmac_mode_shake_start(
  * @return The result of the operation.
  */
 void dif_kmac_mode_cshake_start(
-    uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
+    const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
     dif_kmac_mode_cshake_t mode, const dif_kmac_function_name_t *n,
     const dif_kmac_customization_string_t *s, const dif_kmac_msg_endianness_t msg_endianness);
 
