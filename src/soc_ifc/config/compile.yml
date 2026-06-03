@@ -47,6 +47,7 @@ targets:
       - $COMPILE_ROOT/coverage
     files:
       - $COMPILE_ROOT/coverage/soc_ifc_cov_if.sv
+      - $COMPILE_ROOT/coverage/soc_ifc_iccm_shadow_cov.sv
       - $COMPILE_ROOT/coverage/soc_ifc_cov_bind.sv
 ---
 provides: [soc_ifc_top]

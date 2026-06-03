@@ -28,6 +28,7 @@ targets:
     files:
       - $COMPILE_ROOT/coverage/keyvault_cov_if.sv
       - $COMPILE_ROOT/coverage/keyvault_cov_props.sv
+      - $COMPILE_ROOT/coverage/kv_boot_flow_cov.sv
       - $COMPILE_ROOT/coverage/keyvault_cov_bind.sv
 ---
 provides: [keyvault]

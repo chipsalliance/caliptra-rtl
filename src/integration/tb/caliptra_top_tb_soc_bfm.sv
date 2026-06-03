@@ -48,6 +48,11 @@ import caliptra_top_tb_pkg::*; #(
 
     output logic ss_ocp_lock_en,
 
+    output logic [31:0] strap_ss_strap_generic_0,
+    output logic [31:0] strap_ss_strap_generic_1,
+    output logic [31:0] strap_ss_strap_generic_2,
+    output logic [31:0] strap_ss_strap_generic_3,
+
     input logic ready_for_fuses,
     input logic ready_for_mb_processing,
     input logic mailbox_data_avail,
@@ -187,6 +192,27 @@ import caliptra_top_tb_pkg::*; #(
         else begin
             // Randomize when neither plusarg is set
             ss_ocp_lock_en = $urandom();
+        end
+
+        // Initialize SS strap generics: randomize by default, plusarg overrides
+        for (int i = 0; i < 4; i++) begin
+            automatic logic [31:0] strap_val;
+            strap_val = $urandom();
+            case (i)
+                0: strap_ss_strap_generic_0 = strap_val;
+                1: strap_ss_strap_generic_1 = strap_val;
+                2: strap_ss_strap_generic_2 = strap_val;
+                3: strap_ss_strap_generic_3 = strap_val;
+            endcase
+            $display("STRAP_SS_STRAP_GENERIC_%0d randomized to 0x%08x", i, strap_val);
+        end
+        if ($test$plusargs("CLP_SS_STRAP_GENERIC_3_EN")) begin
+            strap_ss_strap_generic_3[0] = 1'b1;
+            $display("STRAP_SS_STRAP_GENERIC_3[0] forced to 1 by +CLP_SS_STRAP_GENERIC_3_EN");
+        end
+        else if ($test$plusargs("CLP_SS_STRAP_GENERIC_3_DIS")) begin
+            strap_ss_strap_generic_3[0] = 1'b0;
+            $display("STRAP_SS_STRAP_GENERIC_3[0] forced to 0 by +CLP_SS_STRAP_GENERIC_3_DIS");
         end
 
         // Initialize strap_ss_key_release_base_addr based on plusargs

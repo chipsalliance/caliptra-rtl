@@ -92,8 +92,12 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK                                      (0x4)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_LOW                                    (3)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK                                   (0x8)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (4)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (0xfffffff0)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_LOW                                      (4)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK                                     (0x10)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_LOW                            (5)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_MASK                           (0x20)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (6)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (0xffffffc0)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL                              (0x30004)
 #ifndef GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL
@@ -104,8 +108,10 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_OOO_MASK                            (0x2)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_LOW                              (2)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_MASK                             (0x4)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_LOW                                      (3)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_MASK                                     (0xfffffff8)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_SHADOW_UPDATE_ERR_LOW                         (3)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_SHADOW_UPDATE_ERR_MASK                        (0x8)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_LOW                                      (4)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_MASK                                     (0xfffffff0)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_FW_ERROR_FATAL                                  (0x30008)
 #ifndef GENERIC_AND_FUSE_REG_CPTRA_FW_ERROR_FATAL

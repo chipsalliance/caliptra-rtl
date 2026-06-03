@@ -21,7 +21,7 @@
 
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
-void wait_for_sha512_intr(){
+static void wait_for_sha512_intr(){
     VPRINTF(LOW, "SHA512 flow in progress...\n");
     while((cptra_intr_rcv.sha512_error == 0) & (cptra_intr_rcv.sha512_notif == 0)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"

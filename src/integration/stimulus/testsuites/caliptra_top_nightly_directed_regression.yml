@@ -42,6 +42,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_no_ocp_lock.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_sign_rnd/smoke_test_mldsa_sign_rnd.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv/smoke_test_kv.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ras/smoke_test_ras.yml
@@ -65,6 +66,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger2/smoke_test_ecc_errortrigger2.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger3/smoke_test_ecc_errortrigger3.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger4/smoke_test_ecc_errortrigger4.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger5/smoke_test_ecc_errortrigger5.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
@@ -119,3 +121,10 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h10/fw_test_lms_n32_w8_h10.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h15/fw_test_lms_n32_w8_h15.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h20/fw_test_lms_n32_w8_h20.yml
+        # KV boot flow monitor/enforcement tests
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_boot_flow_monitor/smoke_test_kv_boot_flow_monitor.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_monitor_neg/directed_kv_monitor_neg.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_enforcement/directed_kv_enforcement.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_iccm_region/directed_kv_iccm_region.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_debug_scan_bypass/directed_kv_debug_scan_bypass.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_glitch_inject/directed_kv_glitch_inject.yml

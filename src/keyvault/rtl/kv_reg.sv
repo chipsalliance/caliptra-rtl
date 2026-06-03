@@ -197,6 +197,9 @@ module kv_reg (
             if(decoded_reg_strb.KEY_CTRL[i0] && decoded_req_is_wr && !(hwif_in.KEY_CTRL[i0].lock_wr.swwel)) begin // SW write
                 next_c = (field_storage.KEY_CTRL[i0].lock_wr.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
                 load_next_c = '1;
+            end else if(hwif_in.KEY_CTRL[i0].lock_wr.hwset) begin // HW Set
+                next_c = '1;
+                load_next_c = '1;
             end
             field_combo.KEY_CTRL[i0].lock_wr.next = next_c;
             field_combo.KEY_CTRL[i0].lock_wr.load_next = load_next_c;
@@ -217,6 +220,9 @@ module kv_reg (
             load_next_c = '0;
             if(decoded_reg_strb.KEY_CTRL[i0] && decoded_req_is_wr && !(hwif_in.KEY_CTRL[i0].lock_use.swwel)) begin // SW write
                 next_c = (field_storage.KEY_CTRL[i0].lock_use.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
+                load_next_c = '1;
+            end else if(hwif_in.KEY_CTRL[i0].lock_use.hwset) begin // HW Set
+                next_c = '1;
                 load_next_c = '1;
             end
             field_combo.KEY_CTRL[i0].lock_use.next = next_c;

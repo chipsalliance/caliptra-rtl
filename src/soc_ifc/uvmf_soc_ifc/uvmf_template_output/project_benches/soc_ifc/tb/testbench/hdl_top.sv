@@ -65,10 +65,9 @@ import aaxi_uvm_pkg::*;
   // tbx clkgen
   initial begin
     clk = 0;
-    #0ns;
     forever begin
-      clk = ~clk;
       #5ns;
+      clk = ~clk;
     end
   end
 // pragma uvmf custom clock_generator end
@@ -341,6 +340,8 @@ import aaxi_uvm_pkg::*;
         .ss_ocp_lock_in_progress(    /*TODO*/),
         .ss_key_release_key_size(    /*TODO*/),
 
+        .stable_owner_key_en(       /*TODO*/),
+
         // NMI Vector 
         .nmi_vector(cptra_status_agent_bus.nmi_vector),
         .nmi_intr(cptra_status_agent_bus.nmi_intr),
@@ -358,6 +359,12 @@ import aaxi_uvm_pkg::*;
         .rdc_clk_dis          (                                           ), // TODO
         .fw_update_rst_window (cptra_status_agent_bus.fw_update_rst_window),
         .crypto_error         (cptra_ctrl_agent_bus.crypto_error          ),
+        .iccm_fmc_start_addr  (                                           ),
+        .iccm_fmc_end_addr    (                                           ),
+        .iccm_rt_start_addr   (                                           ),
+        .iccm_rt_end_addr     (                                           ),
+        .iccm_region_lock     (                                           ),
+        .kv_error             (1'b0                                       ),
 
         //caliptra uncore jtag ports
         .cptra_uncore_dmi_reg_en   (1'b0 ),

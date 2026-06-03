@@ -66,6 +66,7 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/caliptra_top.sv
+      - $COMPILE_ROOT/rtl/boot_flow_monitor.sv
     tops: [caliptra_top]
   rtl_lint:
     waiver_files:
@@ -114,6 +115,7 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/caliptra_top.sv
+      - $COMPILE_ROOT/rtl/boot_flow_monitor.sv
     tops: [caliptra_top]
   rtl_lint:
     waiver_files:

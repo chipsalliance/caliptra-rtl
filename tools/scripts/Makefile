@@ -81,6 +81,10 @@ COMP_LIB_NAMES := aes \
 		  clk_gate \
 		  wdt
 COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration/test_suites/libs/$(name))
+
+# Optional per-test makefile fragment for extra objects/libs/headers
+-include $(TEST_DIR)/$(TESTNAME).mk
+
 AUX_HEADER_FILES ?=
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
