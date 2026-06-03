@@ -47,6 +47,6 @@ int printf(const char* format, ...);
     }
 
 
-inline int SEND_STDOUT_CTRL(char ctrl) {putchar(ctrl);}
+inline int SEND_STDOUT_CTRL(char ctrl) {return putchar(ctrl);}
 
 #endif // PRINTF_H
