@@ -66,6 +66,12 @@ interface ecc_top_cov_if
 
     logic curve_sel_reg;
 
+    logic kv_privkey_read_en;
+    logic kv_seed_read_en;
+    logic kv_write_en;
+    logic kv_seed_data_present;
+    logic kv_under_p256_invalid;
+
     kv_write_filter_metrics_t kv_write_metrics;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
@@ -123,6 +129,12 @@ interface ecc_top_cov_if
     assign sharedkey_outofrange = ecc_top.ecc_dsa_ctrl_i.sharedkey_outofrange;
 
     assign curve_sel_reg = ecc_top.ecc_dsa_ctrl_i.curve_sel_reg;
+
+    assign kv_privkey_read_en   = ecc_top.ecc_dsa_ctrl_i.kv_privkey_read_ctrl_reg.read_en;
+    assign kv_seed_read_en      = ecc_top.ecc_dsa_ctrl_i.kv_seed_read_ctrl_reg.read_en;
+    assign kv_write_en          = ecc_top.ecc_dsa_ctrl_i.kv_write_ctrl_reg.write_en;
+    assign kv_seed_data_present = ecc_top.ecc_dsa_ctrl_i.kv_seed_data_present;
+    assign kv_under_p256_invalid = ecc_top.ecc_dsa_ctrl_i.kv_under_p256_invalid;
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
@@ -252,6 +264,33 @@ interface ecc_top_cov_if
 
     ecc_top_cov_grp ecc_top_cov_grp1 = new();
     ecc_ocp_lock_cov_grp ecc_ocp_lock_cov_grp1 = new();
+
+    // Lockout of KV path when CURVE_SEL=P256 (curve_sel_reg=1).
+    covergroup ecc_kv_p256_lockout_cov_grp @(posedge clk);
+        curve_sel_reg_cp:        coverpoint curve_sel_reg;
+        kv_privkey_read_en_cp:   coverpoint kv_privkey_read_en;
+        kv_seed_read_en_cp:      coverpoint kv_seed_read_en;
+        kv_write_en_cp:          coverpoint kv_write_en;
+        dest_keyvault_cp:        coverpoint dest_keyvault;
+        kv_seed_data_present_cp: coverpoint kv_seed_data_present;
+        kv_under_p256_invalid_cp: coverpoint kv_under_p256_invalid;
+
+        // Each KV OR-term seen under both curves.
+        privkey_read_x_curve_cp: cross kv_privkey_read_en_cp,   curve_sel_reg_cp;
+        seed_read_x_curve_cp:    cross kv_seed_read_en_cp,      curve_sel_reg_cp;
+        write_en_x_curve_cp:     cross kv_write_en_cp,          curve_sel_reg_cp;
+        dest_kv_x_curve_cp:      cross dest_keyvault_cp,        curve_sel_reg_cp;
+        seed_present_x_curve_cp: cross kv_seed_data_present_cp, curve_sel_reg_cp;
+
+        // Lockout fires error and only under P-256.
+        invalid_x_error_cp: cross kv_under_p256_invalid_cp, error_flag;
+        invalid_x_curve_cp: cross kv_under_p256_invalid_cp, curve_sel_reg_cp {
+            illegal_bins p384_invalid = binsof(kv_under_p256_invalid_cp) intersect {1} &&
+                                        binsof(curve_sel_reg_cp) intersect {0};
+        }
+    endgroup
+
+    ecc_kv_p256_lockout_cov_grp ecc_kv_p256_lockout_cov_grp1 = new();
 
 endinterface
 

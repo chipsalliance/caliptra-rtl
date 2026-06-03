@@ -154,7 +154,8 @@ module ecc_top_tb
         ecc_test_to_run == "ECC_p256_sign_test"          ||
         ecc_test_to_run == "ECC_p256_dualcurve_test"     ||
         ecc_test_to_run == "ECC_p256_keygen_blind_test"  ||
-        ecc_test_to_run == "ECC_p256_sign_blind_test") begin
+        ecc_test_to_run == "ECC_p256_sign_blind_test"    ||
+        ecc_test_to_run == "ECC_p256_kv_illegal_test") begin
       curve_sel_g = 1'b1;
       $display("%m: CURVE_SEL=1 (P-256) enabled for this run");
     end
@@ -964,6 +965,193 @@ module ecc_top_tb
 
 
   //----------------------------------------------------------------
+  // ecc_p256_kv_illegal_test() - helpers
+  //
+  // DV for `a-kv-p256-lockout` (RTL committed in 84e01515).
+  //
+  // The KV path is illegal whenever CURVE_SEL=P256. ecc_dsa_ctrl.sv
+  // implements two layers of defense:
+  //   1. Field-level swwe = !curve_sel on every ecc_kv_{rd,wr}_*
+  //      CTRL field (L563-588) -> SW writes to KV CTRL while
+  //      CURVE_SEL=1 are silently dropped.
+  //   2. error_flag := kv_under_p256_invalid (L787-791) when
+  //      curve_sel_reg=1 AND any KV ctrl flag is asserted.
+  //
+  // Sequencing: KV CTRL fields gate on the LIVE CURVE_SEL.value, so
+  // they must be armed while CURVE_SEL=0, then the dispatch write
+  // that asserts CURVE_SEL=1 follows. curve_sel_reg latches at
+  // dispatch (prog_cntr==ECC_NOP && cmd_reg!=0, L819-820); next
+  // cycle the FSM sees curve_sel_reg=1 with a non-zero KV ctrl
+  // flag -> error_flag -> FSM aborts to ECC_NOP.
+  //----------------------------------------------------------------
+  task kvp256_enable_err_intr();
+    begin
+      write_single_word(`ECC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,
+                        `ECC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
+      write_single_word(`ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,
+                        `ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK);
+    end
+  endtask
+
+  // Common per-subtest harness: reset, ready, enable intr, force CURVE_SEL=0
+  // (the arming window). Each subtest then writes its KV CTRL register and
+  // calls kvp256_dispatch_check_p256().
+  task kvp256_subtest_arm();
+    begin
+      reset_dut();
+      wait_ready();
+      kvp256_enable_err_intr();
+      curve_sel_g = 1'b0;
+    end
+  endtask
+
+  // Dispatch <cmd> with CURVE_SEL=P256, expect error_flag asserted, then
+  // zeroize and confirm error_flag_reg clears. Tag <name> shows up in logs.
+  task kvp256_dispatch_check_p256(input string name, input [31:0] cmd);
+    begin
+      curve_sel_g = 1'b1;
+      trig_ECC(cmd);
+      #(4 * CLK_PERIOD);
+
+      if (!error_intr_tb || (dut.ecc_dsa_ctrl_i.error_flag_reg !== 1'b1)) begin
+        $display("*** ERROR: [KV-P256 %s] expected error_flag asserted (error_intr=%0b error_flag_reg=%0b).",
+                 name, error_intr_tb, dut.ecc_dsa_ctrl_i.error_flag_reg);
+        error_ctr = error_ctr + 1;
+      end else begin
+        $display("*** [KV-P256 %s] error_flag fired as expected.", name);
+      end
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+      #(4 * CLK_PERIOD);
+      if (dut.ecc_dsa_ctrl_i.error_flag_reg !== 1'b0) begin
+        $display("*** ERROR: [KV-P256 %s] zeroize did not clear error_flag_reg.", name);
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask
+
+  // Readback an arming write and check the gating-sensitive low bit is set
+  // (i.e. the swwe gate let the write land while CURVE_SEL=0).
+  task kvp256_check_armed(input string name, input [31:0] addr, input [31:0] en_mask);
+    begin
+      read_single_word(addr); 
+      if ((read_data & en_mask) == 0) begin
+        $display("*** ERROR: [KV-P256 %s] arming write failed; en bit not captured.", name);
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask
+
+
+  //----------------------------------------------------------------
+  // ecc_p256_kv_illegal_test()
+  //
+  // Exercises all five OR-terms feeding kv_under_p256_invalid:
+  //   A: SIGN  + kv_privkey_read_ctrl_reg.read_en
+  //   B: KEYGEN+ kv_seed_read_ctrl_reg.read_en
+  //               (also drives kv_seed_data_present, L596)
+  //   C: KEYGEN+ kv_write_ctrl_reg.write_en
+  //               (also drives dest_keyvault, kv_write_client.sv:98)
+  //   D: ECDH  + read_pkey & write_pkey both armed (multi-source)
+  //   E: positive control - CURVE_SEL=0 arming must still succeed
+  //      and must NOT raise error_flag.
+  // Subtest A also asserts the layer-1 swwe drop: a follow-up SW
+  // write to KV RD PKEY CTRL while CURVE_SEL=1 must not change the
+  // captured entry.
+  //----------------------------------------------------------------
+  task ecc_p256_kv_illegal_test();
+    reg [31:0] rd_pkey_ctrl_val;
+    reg [31:0] rd_seed_ctrl_val;
+    reg [31:0] wr_pkey_ctrl_val;
+    reg [31:0] readback;
+
+    // Auto-complete KV reads (kv_fsm.sv:95): unblocks cmd_reg gating at
+    // ecc_dsa_ctrl.sv:361 so the engine dispatches and error_flag can fire.
+    kv_rd_resp_tb[0].last = 1'b1;
+    kv_rd_resp_tb[1].last = 1'b1;
+
+    rd_pkey_ctrl_val = `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                       ((32'd5 << `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) &
+                        `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK);
+    rd_seed_ctrl_val = `ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
+                       ((32'd7 << `ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_LOW) &
+                        `ECC_REG_ECC_KV_RD_SEED_CTRL_READ_ENTRY_MASK);
+    wr_pkey_ctrl_val = `ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
+                       ((32'd9 << `ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) &
+                        `ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_MASK) |
+                       `ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK;
+
+    // Subtest A: SIGN + read_pkey
+    $display("\n*** [KV-P256] subtest A: SIGN + read_pkey armed");
+    tc_ctr = tc_ctr + 1;
+    kvp256_subtest_arm();
+    write_single_word(`ECC_REG_ECC_KV_RD_PKEY_CTRL, rd_pkey_ctrl_val);
+    kvp256_check_armed("A", `ECC_REG_ECC_KV_RD_PKEY_CTRL,
+                       `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK);
+    kvp256_dispatch_check_p256("A SIGN", ECC_CMD_SIGNING);
+    // Layer-1 (swwe) verification: write while CURVE_SEL still =1.
+    curve_sel_g = 1'b1;
+    write_single_word(`ECC_REG_ECC_KV_RD_PKEY_CTRL,
+                      `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+                      ((32'd17 << `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) &
+                       `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK));
+    read_single_word(`ECC_REG_ECC_KV_RD_PKEY_CTRL); readback = read_data;
+    if (((readback >> `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) & 5'h1F) == 5'd17) begin
+      $display("*** ERROR: [KV-P256 A] swwe gate failed; write under CURVE_SEL=P256 landed.");
+      error_ctr = error_ctr + 1;
+    end else begin
+      $display("*** [KV-P256 A] swwe gate dropped post-dispatch write as expected.");
+    end
+
+    // Subtest B: KEYGEN + read_seed (+ kv_seed_data_present)
+    $display("\n*** [KV-P256] subtest B: KEYGEN + read_seed armed");
+    tc_ctr = tc_ctr + 1;
+    kvp256_subtest_arm();
+    write_single_word(`ECC_REG_ECC_KV_RD_SEED_CTRL, rd_seed_ctrl_val);
+    kvp256_check_armed("B", `ECC_REG_ECC_KV_RD_SEED_CTRL,
+                       `ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK);
+    kvp256_dispatch_check_p256("B KEYGEN", ECC_CMD_KEYGEN);
+
+    // Subtest C: KEYGEN + write_pkey (+ dest_keyvault)
+    $display("\n*** [KV-P256] subtest C: KEYGEN + write_pkey armed");
+    tc_ctr = tc_ctr + 1;
+    kvp256_subtest_arm();
+    write_single_word(`ECC_REG_ECC_KV_WR_PKEY_CTRL, wr_pkey_ctrl_val);
+    kvp256_check_armed("C", `ECC_REG_ECC_KV_WR_PKEY_CTRL,
+                       `ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK);
+    kvp256_dispatch_check_p256("C KEYGEN", ECC_CMD_KEYGEN);
+
+    // Subtest D: ECDH + read_pkey & write_pkey
+    $display("\n*** [KV-P256] subtest D: ECDH + read_pkey & write_pkey armed");
+    tc_ctr = tc_ctr + 1;
+    kvp256_subtest_arm();
+    write_single_word(`ECC_REG_ECC_KV_RD_PKEY_CTRL, rd_pkey_ctrl_val);
+    write_single_word(`ECC_REG_ECC_KV_WR_PKEY_CTRL, wr_pkey_ctrl_val);
+    kvp256_dispatch_check_p256("D ECDH", ECC_CMD_DH_SHARED);
+
+    // Subtest E (positive control): CURVE_SEL=0 -> arming must work, no error.
+    $display("\n*** [KV-P256] subtest E: positive control under CURVE_SEL=P384");
+    tc_ctr = tc_ctr + 1;
+    reset_dut();
+    wait_ready();
+    curve_sel_g = 1'b0;
+    write_single_word(`ECC_REG_ECC_KV_RD_PKEY_CTRL, rd_pkey_ctrl_val);
+    kvp256_check_armed("E", `ECC_REG_ECC_KV_RD_PKEY_CTRL,
+                       `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK);
+    if (dut.ecc_dsa_ctrl_i.error_flag_reg !== 1'b0) begin
+      $display("*** ERROR: [KV-P256 E] unexpected error_flag under CURVE_SEL=P384.");
+      error_ctr = error_ctr + 1;
+    end else begin
+      $display("*** [KV-P256 E] clean run under CURVE_SEL=P384 as expected.");
+    end
+
+    // Leave curve_sel_g asserted to match ecc_test() loop default.
+    curve_sel_g = 1'b1;
+    reset_dut();
+  endtask // ecc_p256_kv_illegal_test
+
+
+  //----------------------------------------------------------------
   // ecc_keygen_test()
   //
   // Perform a single point multiplication block test.
@@ -1622,6 +1810,11 @@ module ecc_top_tb
         else if (ecc_test_to_run == "ECC_p384_keygen_bypass_test") begin
           ecc_p384_keygen_bypass_test(i, test_vectors[i]);
         end
+        else if (ecc_test_to_run == "ECC_p256_kv_illegal_test") begin
+          // KV-under-P256 lockout DV: vector-independent, run once on i==0.
+          if (i == 0)
+            ecc_p256_kv_illegal_test();
+        end
       end
       
       if ((ecc_test_to_run != "ECC_p256_verify_test")        &&
@@ -1630,6 +1823,7 @@ module ecc_top_tb
           (ecc_test_to_run != "ECC_p256_dualcurve_test")     &&
           (ecc_test_to_run != "ECC_p256_keygen_blind_test")  &&
           (ecc_test_to_run != "ECC_p256_sign_blind_test")    &&
+          (ecc_test_to_run != "ECC_p256_kv_illegal_test")    &&
           (ecc_test_to_run != "ECC_p384_keygen_bypass_test")) begin
         continuous_cmd_test(test_vectors[0]);
         zeroize_test(test_vectors[1]);
