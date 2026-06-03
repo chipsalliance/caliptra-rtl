@@ -34,6 +34,11 @@ package hmac_param_pkg;
 
   localparam bit HMAC384_MODE = 1'b0;
   localparam bit HMAC512_MODE = 1'b1;
+
+  localparam int HMAC_BLOCK_SIZE     = 1024;
+  localparam int HMAC_KEY_SIZE       = 512;
+  localparam int HMAC_TAG_SIZE       = 512;
+  localparam int HMAC_LFSR_SEED_SIZE = 192;
 endpackage
 
 `endif

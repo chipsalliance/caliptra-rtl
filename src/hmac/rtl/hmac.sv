@@ -168,7 +168,12 @@ module hmac
   //----------------------------------------------------------------
   // core instantiation.
   //----------------------------------------------------------------
-  hmac_core core(
+  hmac_core #(
+                 .BLOCK_SIZE(BLOCK_SIZE),
+                 .KEY_SIZE(KEY_SIZE),
+                 .TAG_SIZE(TAG_SIZE),
+                 .LFSR_SEED_SIZE(LFSR_SEED_SIZE)
+                ) core(
                  .clk(clk),
                  .reset_n(reset_n),
                  .zeroize(zeroize_reg),

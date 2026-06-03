@@ -33,6 +33,13 @@
 //======================================================================
 
 module hmac_core
+  import hmac_param_pkg::*;
+#(
+  parameter int BLOCK_SIZE     = HMAC_BLOCK_SIZE,
+  parameter int KEY_SIZE       = HMAC_KEY_SIZE,
+  parameter int TAG_SIZE       = HMAC_TAG_SIZE,
+  parameter int LFSR_SEED_SIZE = HMAC_LFSR_SEED_SIZE
+)
 (
       // Clock and reset.
       input logic            clk,
@@ -48,19 +55,22 @@ module hmac_core
       output logic           tag_valid,
 
       // Data ports.
-      input logic [191 : 0]  lfsr_seed,
+      input  logic [LFSR_SEED_SIZE-1 : 0] lfsr_seed,
 
-      input logic [511 : 0]  key,
-      input logic [1023 : 0] block_msg,
-      output logic [511 : 0] tag
+      input  logic [KEY_SIZE-1   : 0] key,
+      input  logic [BLOCK_SIZE-1 : 0] block_msg,
+      output logic [TAG_SIZE-1   : 0] tag
     );
 
 
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  localparam bit [1023:0] IPAD       = 1024'h3636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636363636;
-  localparam bit [1023:0] OPAD       = 1024'h5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c5c;
+  // IPAD/OPAD are BLOCK_SIZE-wide repetitions of the HMAC pad bytes 0x36/0x5C.
+  localparam bit [BLOCK_SIZE-1:0] IPAD = {(BLOCK_SIZE/8){8'h36}};
+  localparam bit [BLOCK_SIZE-1:0] OPAD = {(BLOCK_SIZE/8){8'h5c}};
+
+  // SHA-512 mode-specific finalization padding (still SHA-512 family).
   localparam bit [639:0]  HMAC384_FINAL_PAD = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
   localparam bit [511:0]  HMAC512_FINAL_PAD = 512'h80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600;
   localparam bit [575:0]  ENTROPY_PAD       = 576'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001C0;
@@ -87,9 +97,9 @@ module hmac_core
   logic         digest_valid_new;
   logic         digest_valid_we;
 
-  logic [1023:0] key_ipadded;
-  logic [1023:0] key_opadded;
-  logic [1023:0] HMAC_padded;
+  logic [BLOCK_SIZE-1:0] key_ipadded;
+  logic [BLOCK_SIZE-1:0] key_opadded;
+  logic [BLOCK_SIZE-1:0] HMAC_padded;
 
   logic         first_round;
   logic         IPAD_ready;
@@ -110,25 +120,25 @@ module hmac_core
 
   logic             sha_init;
   logic             sha_next;
-  logic [1023 : 0]  sha_block;
+  logic [BLOCK_SIZE-1 : 0] sha_block;
   logic             sha_ready;
   logic [511 : 0]   sha_digest;
   logic             sha_digest_valid;
 
   // Entropy.
-  logic [191 : 0]   entropy;
-  logic [191 : 0]   lfsr_entropy;
-  logic [191 : 0]   entropy_digest;
-  logic [63 : 0]    counter_reg;
-  logic [1023 : 0]  entropy_block;
-  logic             set_entropy;
+  logic [LFSR_SEED_SIZE-1 : 0] entropy;
+  logic [LFSR_SEED_SIZE-1 : 0] lfsr_entropy;
+  logic [LFSR_SEED_SIZE-1 : 0] entropy_digest;
+  logic [63 : 0]               counter_reg;
+  logic [BLOCK_SIZE-1 : 0]     entropy_block;
+  logic                        set_entropy;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
   //----------------------------------------------------------------
   assign ready     = ready_flag;
 
-  assign tag       = digest_valid_reg ? sha_digest : 512'b0;
+  assign tag       = digest_valid_reg ? sha_digest : {TAG_SIZE{1'b0}};
   assign tag_valid = digest_valid_reg;
 
   //----------------------------------------------------------------
@@ -241,7 +251,7 @@ module hmac_core
     if (!reset_n)
       entropy_digest <= '0;
     else if (set_entropy)
-      entropy_digest <= sha_digest[191:0];
+      entropy_digest <= sha_digest[LFSR_SEED_SIZE-1 : 0];
   end
 
  
@@ -263,8 +273,8 @@ module hmac_core
   //----------------------------------------------------------------
   always_comb
     begin : state_logic
-      key_ipadded = {key, 512'b0} ^ IPAD;
-      key_opadded = {key, 512'b0} ^ OPAD;
+      key_ipadded = {key, {(BLOCK_SIZE-KEY_SIZE){1'b0}}} ^ IPAD;
+      key_opadded = {key, {(BLOCK_SIZE-KEY_SIZE){1'b0}}} ^ OPAD;
       HMAC_padded = mode_reg[0] ? {inner_digest_reg, HMAC512_FINAL_PAD}
                                 : {inner_digest_reg[511:128], HMAC384_FINAL_PAD};
 
