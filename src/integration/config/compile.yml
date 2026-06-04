@@ -74,6 +74,7 @@ targets:
     options:
       - '+define+CALIPTRA_INTERNAL_TRNG'
       - '+define+CALIPTRA_AXI_DMA_ADDR_WIDTH=32'
+      - '+define+RV_TOP=caliptra_top.rvtop'
   cdc:
     tcl_files:
       - $COMPILE_ROOT/config/cdc/integration_top.constraints.tcl
@@ -123,6 +124,7 @@ targets:
     options:
       - '+define+CALIPTRA_INTERNAL_TRNG'
       - '+define+CALIPTRA_AXI_DMA_ADDR_WIDTH=32'
+      - '+define+RV_TOP=caliptra_top.rvtop'
   cdc:
     tcl_files:
       - $COMPILE_ROOT/config/cdc/integration_top.constraints.tcl
@@ -242,6 +244,8 @@ global:
         - '-assert svaext'
 #        - '+define+CALIPTRA_INTERNAL_TRNG'
         - +define+CALIPTRA_TOP_TB
+        - +define+CALIPTRA_TOP=caliptra_top_tb
+        - +define+RV_TOP=caliptra_top_tb.caliptra_top_dut.rvtop
         - +define+CLP_ASSERT_ON
         - +define+ABR_ASSERT_ON
         - +define+SIMULATION
@@ -313,6 +317,9 @@ global:
     vcs:
       default:
         - '-assert svaext'
+        - '+define+CALIPTRA_TOP_TB'
+        - '+define+CALIPTRA_TOP=caliptra_top_tb'
+        - '+define+RV_TOP=caliptra_top_tb.caliptra_top_dut.rvtop'
         - +define+CLP_ASSERT_ON
         - +define+ABR_ASSERT_ON
         - +define+SIMULATION
@@ -378,6 +385,8 @@ global:
         - '+define+CALIPTRA_MODE_SUBSYSTEM'
         - '+define+CALIPTRA_INTERNAL_TRNG'
         - '+define+CALIPTRA_TOP_TB'
+        - '+define+CALIPTRA_TOP=caliptra_top_tb'
+        - '+define+RV_TOP=caliptra_top_tb.caliptra_top_dut.rvtop'
         - '+define+CLP_ASSERT_ON'
         - '+define+ABR_ASSERT_ON'
         - +define+SIMULATION

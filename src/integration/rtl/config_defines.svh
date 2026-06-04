@@ -100,11 +100,6 @@
   `define CALIPTRA_IMEM_BYTE_ADDR_W $clog2(`CALIPTRA_IMEM_BYTE_SIZE)
   `define CALIPTRA_IMEM_ADDR_WIDTH  $clog2(`CALIPTRA_IMEM_DEPTH)
 
-  `define CALIPTRA_TOP        caliptra_top_tb
-  `define CALIPTRA_RV_TOP     `CALIPTRA_TOP.caliptra_top_dut
-
-  `define RV_TOP              `CALIPTRA_RV_TOP.rvtop
-
   `define CALIPTRA_ICG           cptra_clk_gate
 
 `endif
