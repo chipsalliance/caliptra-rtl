@@ -34,12 +34,6 @@
 
 module hmac_core
   import hmac_param_pkg::*;
-#(
-  parameter int BLOCK_SIZE     = HMAC_BLOCK_SIZE,
-  parameter int KEY_SIZE       = HMAC_KEY_SIZE,
-  parameter int TAG_SIZE       = HMAC_TAG_SIZE,
-  parameter int LFSR_SEED_SIZE = HMAC_LFSR_SEED_SIZE
-)
 (
       // Clock and reset.
       input logic            clk,
@@ -66,14 +60,8 @@ module hmac_core
   //----------------------------------------------------------------
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
-  // IPAD/OPAD are BLOCK_SIZE-wide repetitions of the HMAC pad bytes 0x36/0x5C.
-  localparam bit [BLOCK_SIZE-1:0] IPAD = {(BLOCK_SIZE/8){8'h36}};
-  localparam bit [BLOCK_SIZE-1:0] OPAD = {(BLOCK_SIZE/8){8'h5c}};
-
-  // SHA-512 mode-specific finalization padding (still SHA-512 family).
-  localparam bit [639:0]  HMAC384_FINAL_PAD = 640'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000580;
-  localparam bit [511:0]  HMAC512_FINAL_PAD = 512'h80000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000600;
-  localparam bit [575:0]  ENTROPY_PAD       = 576'h8000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000001C0;
+  // IPAD/OPAD and SHA-512 family final-padding constants come from
+  // hmac_param_pkg so the same widths/values are used everywhere.
 
   localparam [2 : 0] CTRL_IDLE     = 3'd0;
   localparam [2 : 0] CTRL_ENTROPY  = 3'd1;
@@ -90,7 +78,7 @@ module hmac_core
   logic [2 : 0] hmac_ctrl_reg;
   logic [2 : 0] hmac_ctrl_new;
   logic         hmac_ctrl_we;
-  logic [2 : 0] hmac_ctrl_last;
+  logic [2 : 0] hmac_ctrl_ff;
 
   logic         ready_flag;
   logic         digest_valid_reg;
@@ -115,14 +103,14 @@ module hmac_core
 
   // Captured inner-hash digest at the final MSG -> OPAD transition; used
   // as data into the HMAC finalization block.
-  logic [511:0] inner_digest_reg;
+  logic [TAG_SIZE-1:0] inner_digest_reg;
   logic         inner_digest_we;
 
   logic             sha_init;
   logic             sha_next;
   logic [BLOCK_SIZE-1 : 0] sha_block;
   logic             sha_ready;
-  logic [511 : 0]   sha_digest;
+  logic [TAG_SIZE-1 : 0] sha_digest;
   logic             sha_digest_valid;
 
   // Entropy.
@@ -163,10 +151,10 @@ module hmac_core
                      .digest_valid(sha_digest_valid)
                     );
 
-  // 6 LFSRs for 192-bit entropy generation.
+  // One 32-bit LFSR per dword of entropy (LFSR_SEED_SIZE bits total).
   genvar i;
   generate
-      for (i = 0; i < 6; i++) begin : gen_lfsr
+      for (i = 0; i < LFSR_SEED_SIZE/32; i++) begin : gen_lfsr
         caliptra_prim_lfsr
         #(
           .LfsrType("FIB_XNOR"),
@@ -198,7 +186,7 @@ module hmac_core
         begin
           digest_valid_reg <= 1'b0;
           hmac_ctrl_reg    <= CTRL_IDLE;
-          hmac_ctrl_last   <= CTRL_IDLE;
+          hmac_ctrl_ff     <= CTRL_IDLE;
           inner_digest_reg <= '0;
           is_last_block    <= 1'b0;
         end
@@ -206,13 +194,13 @@ module hmac_core
         begin
           digest_valid_reg <= 1'b0;
           hmac_ctrl_reg    <= CTRL_IDLE;
-          hmac_ctrl_last   <= CTRL_IDLE;
+          hmac_ctrl_ff     <= CTRL_IDLE;
           inner_digest_reg <= '0;
           is_last_block    <= 1'b0;
         end
       else
         begin
-          hmac_ctrl_last <= hmac_ctrl_reg;
+          hmac_ctrl_ff <= hmac_ctrl_reg;
 
           if (digest_valid_we)
             digest_valid_reg <= digest_valid_new;
@@ -267,6 +255,23 @@ module hmac_core
   always_comb entropy_block = {entropy_digest, lfsr_seed, counter_reg, ENTROPY_PAD};
 
   //----------------------------------------------------------------
+  // sha_block_fsm
+  //
+  // Logic to select the appropriate SHA input block based on the current state of the HMAC control FSM.
+  //----------------------------------------------------------------
+  always_comb
+    begin : sha_block_fsm
+      unique case (hmac_ctrl_reg)
+        CTRL_ENTROPY: sha_block = entropy_block;
+        CTRL_IPAD:    sha_block = key_ipadded;
+        CTRL_MSG:     sha_block = block_msg;
+        CTRL_OPAD:    sha_block = key_opadded;
+        CTRL_HMAC:    sha_block = HMAC_padded;
+        default:      sha_block = '0;
+      endcase
+    end
+
+  //----------------------------------------------------------------
   // state_logic
   //
   // Mux and control for the single SHA core based on FSM state.
@@ -276,14 +281,13 @@ module hmac_core
       key_ipadded = {key, {(BLOCK_SIZE-KEY_SIZE){1'b0}}} ^ IPAD;
       key_opadded = {key, {(BLOCK_SIZE-KEY_SIZE){1'b0}}} ^ OPAD;
       HMAC_padded = mode_reg[0] ? {inner_digest_reg, HMAC512_FINAL_PAD}
-                                : {inner_digest_reg[511:128], HMAC384_FINAL_PAD};
+                                : {inner_digest_reg[TAG_SIZE-1 : HMAC384_TAG_PAD], HMAC384_FINAL_PAD};
 
       // Defaults
-      sha_block = key_ipadded;
       sha_init  = 1'b0;
       sha_next  = 1'b0;
 
-      first_round = (hmac_ctrl_reg == hmac_ctrl_last) ? 1'b0 : 1'b1;
+      first_round = (hmac_ctrl_reg == hmac_ctrl_ff) ? 1'b0 : 1'b1;
       // IPAD/OPAD finish with sha_init only — digest is not yet meaningful,
       IPAD_ready    = sha_ready;
       MSG_ready     = sha_ready & sha_digest_valid;
@@ -293,53 +297,39 @@ module hmac_core
 
       unique case (hmac_ctrl_reg)
         CTRL_ENTROPY:
-          begin
-            sha_block = entropy_block;
-            if (first_round)
-              begin
-                sha_init      = 1'b1;
-                ENTROPY_ready = 1'b0;
-              end
-          end
+          if (first_round)
+            begin
+              sha_init      = 1'b1;
+              ENTROPY_ready = 1'b0;
+            end
 
         CTRL_IPAD:
-          begin
-            if (first_round)
-              begin
-                sha_init   = 1'b1;
-                IPAD_ready = 1'b0;
-              end
-          end
+          if (first_round)
+            begin
+              sha_init   = 1'b1;
+              IPAD_ready = 1'b0;
+            end
 
         CTRL_MSG:
-          begin
-            sha_block = block_msg;
-            if (first_round)
-              begin
-                sha_next  = 1'b1;
-                MSG_ready = 1'b0;
-              end
-          end
+          if (first_round)
+            begin
+              sha_next  = 1'b1;
+              MSG_ready = 1'b0;
+            end
 
         CTRL_OPAD:
-          begin
-            sha_block = key_opadded;
-            if (first_round)
-              begin
-                sha_init   = 1'b1;
-                OPAD_ready = 1'b0;
-              end
-          end
+          if (first_round)
+            begin
+              sha_init   = 1'b1;
+              OPAD_ready = 1'b0;
+            end
 
         CTRL_HMAC:
-          begin
-            sha_block = HMAC_padded;
-            if (first_round)
-              begin
-                sha_next   = 1'b1;
-                HMAC_ready = 1'b0;
-              end
-          end
+          if (first_round)
+            begin
+              sha_next   = 1'b1;
+              HMAC_ready = 1'b0;
+            end
 
         default: begin
           sha_init = 1'b0;
