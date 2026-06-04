@@ -74,7 +74,7 @@ module ecc_hmac_drbg_interface#(
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
     logic [REG_SIZE-1 : 0]  lfsr_seed_reg;
-    logic [REG_SIZE-1 : 0]  hmac_lfsr_seed;
+    logic [191 : 0]         hmac_lfsr_seed;
 
     logic                   hmac_drbg_init;
     logic                   hmac_drbg_next;
@@ -141,7 +141,7 @@ module ecc_hmac_drbg_interface#(
 
     genvar i;
     generate 
-        for (i=0; i < 12; i++) begin : gen_lfsr
+        for (i=0; i < 6; i++) begin : gen_lfsr
             caliptra_prim_lfsr
             #(
             .LfsrType("FIB_XNOR"),

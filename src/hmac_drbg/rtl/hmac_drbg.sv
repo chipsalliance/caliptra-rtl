@@ -53,6 +53,7 @@
 module hmac_drbg  
 #(
   parameter                  REG_SIZE        = 384,
+  parameter                  LFSR_LENGTH     = 192,
   parameter [REG_SIZE-1 : 0] HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973
 )    
 (
@@ -68,7 +69,7 @@ module hmac_drbg
   output wire                       valid,
 
   //Data
-  input wire   [REG_SIZE-1 : 0]     lfsr_seed,
+  input wire   [LFSR_LENGTH-1 : 0]  lfsr_seed,
   input wire   [REG_SIZE-1 : 0]     entropy,
   input wire   [REG_SIZE-1 : 0]     nonce,
 
@@ -151,7 +152,7 @@ module hmac_drbg
     .next_cmd(HMAC_next),
     .last_cmd(HMAC_last),
     .mode_cmd(1'b0),  //hardcoded to HMAC384 mode
-    .lfsr_seed(lfsr_seed[191:0]),
+    .lfsr_seed(lfsr_seed),
     .key(HMAC512_key),
     .block_msg(HMAC_block),
     .ready(HMAC_ready),
