@@ -1105,10 +1105,28 @@ module ecc_top_tb
   //----------------------------------------------------------------
   // ecc_nondet_signing_test()
   //
-  // Same as ecc_signing_test, but writes ECC_SEED/ECC_NONCE and sets
-  // RAND_K_EN=1 so HMAC-DRBG is reseeded from (seed, nonce) instead
-  // of from (privKey, hashed_msg). Expected R/S come from the
-  // mbedtls non-det KAT (see src/ecc/tb/test_vectors/nondet/).
+  // Writes ECC_SEED/ECC_NONCE and sets RAND_K_EN=1 so the HMAC-DRBG
+  // generates k along the non-deterministic SIGN path. With the
+  // SIGN_NONCE_ST whitening stage in ecc_hmac_drbg_interface, the
+  // nonce fed into the k-gen DRBG is itself a fresh DRBG output and
+  // is NOT a function of API (seed, nonce) alone -- it also depends
+  // on internal LFSR / counter state. Therefore a bit-exact KAT on
+  // (R, S) is impossible by construction; this is CAVP-style for
+  // non-deterministic ECDSA.
+  //
+  // Validation strategy (CAVP-style):
+  //   1. Run the sign and read back (R, S).
+  //   2. Dump (hashed_msg, privkey, pubkey, seed, nonce, R, S, IV,
+  //      privkeyB, DH_sharedkey) to a per-TC .hex file in the
+  //      11-data-lines + blank-separator format that
+  //      src/ecc/tb/verify_nondet_kat.py consumes (curve auto-
+  //      detected from hex width: 64 = P-256, 96 = P-384).
+  //   3. Invoke verify_nondet_kat.py via $system. The script uses an
+  //      independent ECDSA implementation (Python `cryptography`
+  //      library) -- NOT the RTL VERIFY engine -- so a correlated
+  //      bug in RTL sign+verify cannot mask a failure.
+  //   4. Non-zero exit from the verifier => signature invalid =>
+  //      error_ctr++. The KAT R/S fields are now don't-cares.
   //----------------------------------------------------------------
   task ecc_nondet_signing_test(input [7 : 0]  tc_number,
                                input test_vector_t test_vector);
@@ -1116,6 +1134,10 @@ module ecc_top_tb
     reg [31  : 0]   end_time;
     operand_t       R;
     operand_t       S;
+    int             fd;
+    int             verify_rc;
+    string          outfile;
+    string          cmd;
 
     begin
       wait_ready();
@@ -1152,19 +1174,66 @@ module ecc_top_tb
 
       end_time = cycle_ctr - start_time;
       $display("*** non-det signing test processing time = %01d cycles.", end_time);
+      $display("Sign R: 0x%96x", R);
+      $display("Sign S: 0x%96x", S);
 
-      if (R == test_vector.R & S == test_vector.S) begin
-        $display("*** TC %0d non-det signing successful.", tc_number);
-        $display("");
+      // ---- SW-based signature validity check (independent of RTL VERIFY) ----
+      outfile = $sformatf("nondet_sig_tc%0d.hex", tc_number);
+      fd = $fopen(outfile, "w");
+      if (fd == 0) begin
+        $display("*** ERROR: TC %0d cannot open %s for write", tc_number, outfile);
+        error_ctr = error_ctr + 1;
       end
       else begin
-        $display("*** ERROR: TC %0d non-det signing NOT successful.", tc_number);
-        $display("Expected_R: 0x%96x", test_vector.R);
-        $display("Got:        0x%96x", R);
-        $display("Expected_S: 0x%96x", test_vector.S);
-        $display("Got:        0x%96x", S);
-        $display("");
-        error_ctr = error_ctr + 1;
+        // verify_nondet_kat.py auto-detects curve by hex line width:
+        //   P-256 = 64 hex chars (low 256 bits of operand_t)
+        //   P-384 = 96 hex chars (full operand_t)
+        if (curve_sel_g) begin
+          $fdisplay(fd, "%064x", test_vector.hashed_msg  [255:0]);
+          $fdisplay(fd, "%064x", test_vector.privkey     [255:0]);
+          $fdisplay(fd, "%064x", test_vector.pubkey.x    [255:0]);
+          $fdisplay(fd, "%064x", test_vector.pubkey.y    [255:0]);
+          $fdisplay(fd, "%064x", test_vector.seed        [255:0]);
+          $fdisplay(fd, "%064x", test_vector.nonce       [255:0]);
+          $fdisplay(fd, "%064x", R                       [255:0]);
+          $fdisplay(fd, "%064x", S                       [255:0]);
+          $fdisplay(fd, "%064x", test_vector.IV          [255:0]);
+          $fdisplay(fd, "%064x", test_vector.privkeyB    [255:0]);
+          $fdisplay(fd, "%064x", test_vector.DH_sharedkey[255:0]);
+        end
+        else begin
+          $fdisplay(fd, "%096x", test_vector.hashed_msg);
+          $fdisplay(fd, "%096x", test_vector.privkey);
+          $fdisplay(fd, "%096x", test_vector.pubkey.x);
+          $fdisplay(fd, "%096x", test_vector.pubkey.y);
+          $fdisplay(fd, "%096x", test_vector.seed);
+          $fdisplay(fd, "%096x", test_vector.nonce);
+          $fdisplay(fd, "%096x", R);
+          $fdisplay(fd, "%096x", S);
+          $fdisplay(fd, "%096x", test_vector.IV);
+          $fdisplay(fd, "%096x", test_vector.privkeyB);
+          $fdisplay(fd, "%096x", test_vector.DH_sharedkey);
+        end
+        $fdisplay(fd, "");  // blank-line TC separator
+        $fclose(fd);
+
+        cmd = $sformatf(
+          "python3 $CALIPTRA_ROOT/src/ecc/tb/verify_nondet_kat.py %s",
+          outfile);
+        verify_rc = $system(cmd);
+
+        if (verify_rc == 0) begin
+          $display("*** TC %0d non-det signing successful (SW-verified).", tc_number);
+          $display("");
+        end
+        else begin
+          $display("*** ERROR: TC %0d non-det signing NOT successful (SW verify rc=%0d).",
+                   tc_number, verify_rc);
+          $display("R: 0x%96x", R);
+          $display("S: 0x%96x", S);
+          $display("");
+          error_ctr = error_ctr + 1;
+        end
       end
     end
   endtask // ecc_nondet_signing_test
