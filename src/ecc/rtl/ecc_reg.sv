@@ -207,6 +207,10 @@ module ecc_reg (
                 logic next;
                 logic load_next;
             } CURVE_SEL;
+            struct packed{
+                logic next;
+                logic load_next;
+            } RAND_K_EN;
         } ECC_CTRL;
         struct packed{
             struct packed{
@@ -496,6 +500,9 @@ module ecc_reg (
             struct packed{
                 logic value;
             } CURVE_SEL;
+            struct packed{
+                logic value;
+            } RAND_K_EN;
         } ECC_CTRL;
         struct packed{
             struct packed{
@@ -828,6 +835,30 @@ module ecc_reg (
         end
     end
     assign hwif_out.ECC_CTRL.CURVE_SEL.value = field_storage.ECC_CTRL.CURVE_SEL.value;
+    // Field: ecc_reg.ECC_CTRL.RAND_K_EN
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.ECC_CTRL.RAND_K_EN.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+            next_c = (field_storage.ECC_CTRL.RAND_K_EN.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
+            load_next_c = '1;
+        end else if(hwif_in.ECC_CTRL.RAND_K_EN.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ECC_CTRL.RAND_K_EN.next = next_c;
+        field_combo.ECC_CTRL.RAND_K_EN.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ECC_CTRL.RAND_K_EN.value <= 1'h0;
+        end else if(field_combo.ECC_CTRL.RAND_K_EN.load_next) begin
+            field_storage.ECC_CTRL.RAND_K_EN.value <= field_combo.ECC_CTRL.RAND_K_EN.next;
+        end
+    end
+    assign hwif_out.ECC_CTRL.RAND_K_EN.value = field_storage.ECC_CTRL.RAND_K_EN.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: ecc_reg.ECC_SEED[].SEED
         always_comb begin

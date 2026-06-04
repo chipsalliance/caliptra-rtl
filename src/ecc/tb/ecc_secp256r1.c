@@ -38,6 +38,7 @@
 #include "mbedtls/ecdh.h"
 #include "mbedtls/sha256.h"
 #include "mbedtls/hmac_drbg.h"
+#include "mbedtls/asn1write.h"
 
 #include <string.h>
 #endif
@@ -251,14 +252,25 @@ int main( int argc, char *argv[] )
      * Generate two files for storing the test vectors
      */
     FILE *fptr;
+#ifdef NON_DET
+    /* Non-deterministic ECDSA (Option B): k derived from a fresh
+     * HMAC-DRBG seeded with entropy=nonce_buf, nonce=hash.  Output
+     * to a separate file so the deterministic KAT set is untouched. */
+    fptr = fopen("secp256_nondet_testvector.hex", "w");
+#else
     fptr = fopen("secp256_testvector.hex", "w");
+#endif
 
     if (fptr == NULL) {
         printf("Failed to create the file.\n");
     }
 
     FILE *fptr_all;
+#ifdef NON_DET
+    fptr_all = fopen("secp256_nondet_testvector_all.hex", "a");
+#else
     fptr_all = fopen("secp256_testvector_all.hex", "a");
+#endif
   
     if (fptr_all == NULL) {
         printf("Failed to create the all file.\n");
@@ -382,7 +394,104 @@ int main( int argc, char *argv[] )
         mbedtls_printf( " failed\n  ! extract_sig returned %d\n", ret );
         goto exit;
     }
-    
+
+#ifdef NON_DET
+    /*
+     * Non-deterministic ECDSA (Option B) -- re-sign with k drawn from
+     * a fresh HMAC-DRBG seeded with:
+     *     entropy = seed_buf    (the value SW writes to ECC_SEED)
+     *     nonce   = nonce_buf   (the value SW writes to ECC_NONCE)
+     * This mirrors the on-chip KEYGEN seeding (entropy=ECC_SEED,
+     * nonce=ECC_NONCE) and matches what ecc_hmac_drbg_interface.sv
+     * will drive in the SIGN_ST mux when ECC_CTRL.RAND_K_EN=1
+     * (see plans/non-deterministic-ecdsa.md, Option B revision).
+     *
+     * NOTE: hashed_msg is intentionally NOT mixed into the DRBG seed
+     * material here.  FW is therefore required to refresh seed/nonce
+     * for every signature; reuse with the same privkey across two
+     * different messages would produce identical k and leak the key.
+     *
+     * The deterministic sig produced by mbedtls_ecdsa_write_signature
+     * above is discarded; sig_r/sig_s are overwritten in place so the
+     * 12-line output format stays identical.
+     */
+    {
+        mbedtls_hmac_drbg_context rng_sign;
+        unsigned char sign_seed[2 * MBEDTLS_ECP_MAX_BYTES];
+        mbedtls_mpi r_mpi, s_mpi;
+
+        mbedtls_hmac_drbg_init( &rng_sign );
+        mbedtls_mpi_init( &r_mpi );
+        mbedtls_mpi_init( &s_mpi );
+
+        memcpy( sign_seed, seed_buf, seed_buf_len );
+        memcpy( sign_seed + seed_buf_len, nonce_buf, nonce_buf_len );
+
+        ret = mbedtls_hmac_drbg_seed_buf( &rng_sign, md_info,
+                                          sign_seed,
+                                          seed_buf_len + nonce_buf_len );
+        if( ret != 0 )
+        {
+            mbedtls_printf( " failed\n  ! NON_DET drbg seed returned %d\n", ret );
+            mbedtls_hmac_drbg_free( &rng_sign );
+            goto exit;
+        }
+
+        ret = mbedtls_ecdsa_sign( &ctx_sign.MBEDTLS_PRIVATE(grp),
+                                  &r_mpi, &s_mpi,
+                                  &ctx_sign.MBEDTLS_PRIVATE(d),
+                                  hash, sizeof( hash ),
+                                  mbedtls_hmac_drbg_random, &rng_sign );
+        if( ret != 0 )
+        {
+            mbedtls_printf( " failed\n  ! NON_DET ecdsa_sign returned %d\n", ret );
+            mbedtls_mpi_free( &r_mpi );
+            mbedtls_mpi_free( &s_mpi );
+            mbedtls_hmac_drbg_free( &rng_sign );
+            goto exit;
+        }
+
+        memset( sig_r, 0, len_c );
+        memset( sig_s, 0, len_c );
+        mbedtls_mpi_write_binary( &r_mpi, sig_r, len_c );
+        mbedtls_mpi_write_binary( &s_mpi, sig_s, len_c );
+
+        /* Re-encode an ASN.1 sig into sig[]/sig_len so the subsequent
+         * mbedtls_ecdsa_read_signature verification step verifies the
+         * NON_DET (r,s) we just produced, not the discarded det one. */
+        {
+            unsigned char *p = sig + sizeof( sig );
+            size_t sig_total_len = 0;
+            int rc;
+            rc = mbedtls_asn1_write_mpi( &p, sig, &s_mpi );
+            if( rc < 0 ) { ret = rc; goto nondet_cleanup; }
+            sig_total_len += rc;
+            rc = mbedtls_asn1_write_mpi( &p, sig, &r_mpi );
+            if( rc < 0 ) { ret = rc; goto nondet_cleanup; }
+            sig_total_len += rc;
+            rc = mbedtls_asn1_write_len( &p, sig, sig_total_len );
+            if( rc < 0 ) { ret = rc; goto nondet_cleanup; }
+            sig_total_len += rc;
+            rc = mbedtls_asn1_write_tag( &p, sig,
+                                         MBEDTLS_ASN1_CONSTRUCTED |
+                                         MBEDTLS_ASN1_SEQUENCE );
+            if( rc < 0 ) { ret = rc; goto nondet_cleanup; }
+            sig_total_len += rc;
+            memmove( sig, p, sig_total_len );
+            sig_len = sig_total_len;
+            ret = 0;
+        }
+    nondet_cleanup:
+        mbedtls_mpi_free( &r_mpi );
+        mbedtls_mpi_free( &s_mpi );
+        mbedtls_hmac_drbg_free( &rng_sign );
+        if( ret != 0 )
+        {
+            mbedtls_printf( " failed\n  ! NON_DET ASN.1 re-encode returned %d\n", ret );
+            goto exit;
+        }
+    }
+#endif /* NON_DET */
 
     /*
      * Generate a random IV
