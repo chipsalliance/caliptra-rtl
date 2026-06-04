@@ -85,6 +85,8 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   output logic               ctr_drbg_gen_sm_err_o
 );
 
+  `include "caliptra_prim_assert.sv"
+
   localparam logic[31:0] GenreqFifoDepth = 1;
   localparam logic[31:0] GenreqFifoWidth = KeyLen+BlkLen+CtrLen+1+SeedLen+1+StateId+Cmd;
   localparam logic[31:0] BlkEncAckFifoDepth = 1;

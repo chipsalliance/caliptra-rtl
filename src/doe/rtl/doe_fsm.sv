@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 //`include "kv_defines.svh"
+`include "caliptra_macros.svh"
 
 module doe_fsm 
     import doe_defines_pkg::*;
