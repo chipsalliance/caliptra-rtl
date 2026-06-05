@@ -399,7 +399,9 @@ module hmac_core
                 end
               else
                 begin
-                  hmac_ctrl_new   = CTRL_IDLE;
+                  digest_valid_new = 1'b1;
+                  digest_valid_we  = 1'b1;
+                  hmac_ctrl_new    = CTRL_IDLE;
                 end
               hmac_ctrl_we = 1'b1;
             end
