@@ -255,6 +255,9 @@ endif
 ifdef FORCE_CPU_RESET
     TB_DEFS += +define+CALIPTRA_FORCE_CPU_RESET
 endif
+TB_DEFS += +define+CALIPTRA_TOP_TB
+TB_DEFS += +define+CALIPTRA_TOP=caliptra_top_tb
+TB_DEFS += +define+RV_TOP=caliptra_top_tb.caliptra_top_dut.rvtop
 
 # Run time arguments from command line
 VERILATOR_RUN_ARGS ?= ""
@@ -265,9 +268,10 @@ CFLAGS += $(TB_DPI_INCS)
 ############# VCS Compile options #############
 VCS_COMP_OPTS += +lint=IA_CHECKFAIL
 VCS_COMP_OPTS += -assert svaext
-VCS_COMP_OPTS += +define+SIMULATION
 VCS_COMP_OPTS += +define+CLP_ASSERT_ON
+VCS_COMP_OPTS += +define+ABR_ASSERT_ON
 VCS_COMP_OPTS += -noinherit_timescale=1ns/1ps
+VCS_COMP_OPTS += +define+SIMULATION
 VCS_COMP_OPTS += $(TB_DEFS)
 
 # Targets

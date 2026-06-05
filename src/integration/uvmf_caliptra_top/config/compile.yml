@@ -69,6 +69,8 @@ global:
         # Define this for caliptra_sva to know how to report assert errors
         - +define+UVM
         - +define+UVMF_CALIPTRA_TOP
+        - +define+CALIPTRA_TOP=hdl_top
+        - +define+RV_TOP=hdl_top.caliptra_top_dut.rvtop
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'
@@ -153,6 +155,8 @@ global:
         # Define this for caliptra_sva to know how to report assert errors
         - +define+UVM
         - +define+UVMF_CALIPTRA_TOP
+        - +define+CALIPTRA_TOP=hdl_top
+        - +define+RV_TOP=hdl_top.caliptra_top_dut.rvtop
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
         # Suppress a warning due to calling $fgets as task instead of function
