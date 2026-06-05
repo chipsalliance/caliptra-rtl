@@ -1414,9 +1414,9 @@ module aes_clp_tb
         // Parse 96-bit nonce (24 hex chars)
         nonce = {hexstr_to_32(iv_str, 0), hexstr_to_32(iv_str, 8), hexstr_to_32(iv_str, 16)};
 
-        // Parse AAD blocks
-        aad_len = aad_str.len();
-        if (aad_len == 0 || aad_str == "00") begin
+        // Parse AAD blocks. "empty" in the stimulus file signals no AAD.
+        aad_len = (aad_str == "empty") ? 0 : aad_str.len();
+        if (aad_len == 0) begin
           n_aad   = 0;
           aad_arr = new[0];
         end else begin
@@ -1437,9 +1437,9 @@ module aes_clp_tb
           end
         end
 
-        // Parse PT blocks
-        pt_len = pt_str.len();
-        if (pt_len == 0 || pt_str == "00") begin
+        // Parse PT blocks. "empty" in the stimulus file signals no plaintext.
+        pt_len = (pt_str == "empty") ? 0 : pt_str.len();
+        if (pt_len == 0) begin
           n_pt   = 0;
           pt_arr = new[0];
         end else begin
@@ -1459,20 +1459,42 @@ module aes_clp_tb
           end
         end
 
-        // Run GCM encrypt
-        aes_run_gcm(key_len, key, nonce,
-                    aad_arr, 5'd16,
-                    pt_arr, (n_pt > 0) ? 5'd16 : 5'd0,
-                    ct_arr, tag);
-
-        // Write response: AFT tcId iv ct tag
+        // Run GCM encrypt then write response.
+        // aad_len and pt_len are 0 for "empty" fields, so /2 gives correct byte counts.
+        // The last CT block is trimmed to last_pt_bytes valid bytes: read_data_out()
+        // always returns 16 bytes, but the bytes beyond last_pt_bytes are raw keystream
+        // and must not appear in the response file.
         begin
-          string ct_hex;
+          automatic int    last_aad_bytes, last_pt_bytes;
+          automatic string ct_hex, full_hex;
+          last_aad_bytes = (n_aad == 0) ? 0
+                         : ((aad_len / 2) % 16 == 0) ? 16 : (aad_len / 2) % 16;
+          last_pt_bytes  = (n_pt  == 0) ? 0
+                         : ((pt_len  / 2) % 16 == 0) ? 16 : (pt_len  / 2) % 16;
+
+          $display("[TB] acvp_gcm_test: tgId=%0d tcId=%0d keyLen=%0d aadBytes=%0d ptBytes=%0d",
+                   tgid, tcid, key_len_int, aad_len / 2, pt_len / 2);
+
+          aes_run_gcm(key_len, key, nonce,
+                      aad_arr, 5'(last_aad_bytes),
+                      pt_arr,  (n_pt > 0) ? 5'(last_pt_bytes) : 5'd0,
+                      ct_arr, tag);
+
+          $display("[TB]   tag = %032h", tag);
+
+          // Build CT hex string: full blocks use all 32 chars; last partial block
+          // is trimmed to last_pt_bytes*2 hex chars to match PT length exactly.
           ct_hex = "";
-          for (int i = 0; i < n_pt; i++)
-            ct_hex = $sformatf("%s%032h", ct_hex, ct_arr[i]);
-          if (ct_hex == "") ct_hex = "00";
-          $fwrite(fout, "AFT %0d %024h %s %032h\n", tcid, nonce, ct_hex, tag);
+          for (int i = 0; i < n_pt; i++) begin
+            full_hex = $sformatf("%032h", ct_arr[i]);
+            if (i == n_pt - 1 && last_pt_bytes < 16)
+              ct_hex = $sformatf("%s%s", ct_hex,
+                                 full_hex.substr(0, last_pt_bytes * 2 - 1));
+            else
+              ct_hex = $sformatf("%s%s", ct_hex, full_hex);
+          end
+          if (ct_hex == "") ct_hex = "empty";
+          $fwrite(fout, "AFT %0d %s %032h\n", tcid, ct_hex, tag);
         end
       end
 
