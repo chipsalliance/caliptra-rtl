@@ -20,11 +20,7 @@
 //`include "kv_defines_pkg.sv"
 //`include "doe_defines_pkg.sv"
 `ifndef CPTRA_TB_TOP_NAME
-  `ifdef UVMF_CALIPTRA_TOP
-    `define CPTRA_TB_TOP_NAME hdl_top
-  `else
-    `define CPTRA_TB_TOP_NAME caliptra_top_tb
-  `endif
+  `define CPTRA_TB_TOP_NAME `CALIPTRA_TOP
 `endif
 `ifndef CPTRA_TOP_PATH
   `define CPTRA_TOP_PATH      `CPTRA_TB_TOP_NAME.caliptra_top_dut
