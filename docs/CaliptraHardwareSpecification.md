@@ -216,7 +216,9 @@ The WDT timers can be configured to operate independent of each other. When the 
 
 Each timer has an enable bit, a restart bit, and a 64-bit timeout value register that can be programmed as needed. The restart bit is used to service the timers and restart counting. The timeout period registers can be configured to the desired upper bound of timers.
 
-If the WDT timers are disabled and then re-enabled with a new timeout period, they must be restarted by setting the appropriate control register (restart bit). If the timers are temporarily disabled and re-enabled with the same timeout period, they resume counting and do not restart from 0.
+If the WDT timers are disabled and then re-enabled with a new timeout period, they must be restarted by setting the appropriate control register (restart bit). If the timers are temporarily disabled and re-enabled with the same timeout period, they resume counting and do not restart from 0. 
+
+Note that Timer 2 can be restarted in independent mode using the control register restart bit or if Timer 2 interrupt is serviced. In cascade mode, the Timer 2 is restarted once Timer 1 interrupt is serviced, or after a warm reset in the event of an NMI.
 
 For more details regarding the register interface to control the WDT, see the [register documentation](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg) published in the RTL GitHub repository.
 
