@@ -165,6 +165,32 @@ class HMAC_predictor #(
       `uvm_info("PREDICT",{"HMAC_OUT: ",HMAC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
 
     end
+    else if (t.op == 3'b100) begin
+      // last_alone_op: follow-up op is a hmac512 run, predict the same way.
+      $system("python ./test_gen.py");
+
+      file_name = "expected_hmac512_tag.txt";
+
+      cnt_tmp = 0;
+      fd_r = $fopen(file_name, "r");
+      if(!fd_r) $display("**HMAC_predictor** Cannot open file %s", file_name);
+
+      //Get tag:
+      $fgets(line_read, fd_r);
+      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac512_tmp);
+
+      while (tmp_str1 != "TAG") begin
+        $fgets(line_read, fd_r);
+        $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac512_tmp);
+      end
+
+      expected = hmac512_tmp;
+      $fclose(fd_r);
+
+      HMAC_sb_ap_output_transaction.result = expected;
+      `uvm_info("PREDICT",{"HMAC_OUT (last_alone_op follow-up): ",HMAC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
+
+    end
 
     // Code for sending output transaction out through HMAC_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 

@@ -53,7 +53,7 @@ interface  HMAC_in_if #(
   inout tri [1:0] htrans,
   inout tri [2:0] hsize,
   inout tri  transaction_flag_in_monitor,
-  inout tri [1:0] op,
+  inout tri [2:0] op,
   inout tri [15:0][31:0] csr_key,
   inout tri [3:0] block_length,
   inout tri [15:0] bit_length

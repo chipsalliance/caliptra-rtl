@@ -115,8 +115,8 @@ end
   reg [2:0] hsize_o = 'bz;
   tri  transaction_flag_in_monitor_i;
   reg  transaction_flag_in_monitor_o = 'bz;
-  tri  [1:0] op_i;
-  reg  [1:0] op_o = 'bz;
+  tri  [2:0] op_i;
+  reg  [2:0] op_o = 'bz;
   tri [3:0] block_length_i;
   reg [3:0] block_length_o = 'bz;
   tri [15:0] bit_length_i;
@@ -297,6 +297,7 @@ end
       hmac384_op  : hmac384_block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length, HMAC_in_initiator_struct.bit_length);
       hmac512_op  : hmac512_block_test      (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length, HMAC_in_initiator_struct.bit_length);
       otf_reset_op: otf_reset_test          (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length);
+      last_alone_op: last_alone_error_test  (HMAC_in_initiator_struct.op, HMAC_in_initiator_struct.block_length, HMAC_in_initiator_struct.bit_length);
       default     : hmac_init               (HMAC_in_initiator_struct.op);
 
     endcase
@@ -315,6 +316,7 @@ end
   parameter ADDR_CTRL        = BASE_ADDR + 32'h00000010;
   parameter CTRL_INIT_VALUE  = 8'h01;
   parameter CTRL_NEXT_VALUE  = 8'h02;
+  parameter CTRL_LAST_VALUE  = 8'h20;
   
   parameter HMAC512_MODE     = 8'h08;
   parameter HMAC384_MODE     = 8'h00;
@@ -392,18 +394,12 @@ end
   parameter ADDR_TAG14       =  BASE_ADDR + 32'h00000138;
   parameter ADDR_TAG15       =  BASE_ADDR + 32'h0000013C;
 
-  parameter ADDR_SEED0       =  BASE_ADDR + 32'h00000130;
-  parameter ADDR_SEED1       =  BASE_ADDR + 32'h00000134;
-  parameter ADDR_SEED2       =  BASE_ADDR + 32'h00000138;
-  parameter ADDR_SEED3       =  BASE_ADDR + 32'h0000013C;
-  parameter ADDR_SEED4       =  BASE_ADDR + 32'h00000140;
-  parameter ADDR_SEED5       =  BASE_ADDR + 32'h00000144;
-  parameter ADDR_SEED6       =  BASE_ADDR + 32'h00000148;
-  parameter ADDR_SEED7       =  BASE_ADDR + 32'h0000014C;
-  parameter ADDR_SEED8       =  BASE_ADDR + 32'h00000150;
-  parameter ADDR_SEED9       =  BASE_ADDR + 32'h00000154;
-  parameter ADDR_SEED10      =  BASE_ADDR + 32'h00000158;
-  parameter ADDR_SEED11      =  BASE_ADDR + 32'h0000015C;
+  parameter ADDR_SEED0       =  BASE_ADDR + 32'h00000140;
+  parameter ADDR_SEED1       =  BASE_ADDR + 32'h00000144;
+  parameter ADDR_SEED2       =  BASE_ADDR + 32'h00000148;
+  parameter ADDR_SEED3       =  BASE_ADDR + 32'h0000014C;
+  parameter ADDR_SEED4       =  BASE_ADDR + 32'h00000150;
+  parameter ADDR_SEED5       =  BASE_ADDR + 32'h00000154;
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
@@ -569,20 +565,14 @@ task write_single_word(input [31 : 0]  address,
   //----------------------------------------------------------------
   // Write the given seed to the dut.
   //----------------------------------------------------------------
-  task write_seed(input [383 : 0] seed); 
+  task write_seed(input [191 : 0] seed);
     begin
-      write_single_word(ADDR_SEED0,  seed[383: 352]);
-      write_single_word(ADDR_SEED1,  seed[351: 320]);
-      write_single_word(ADDR_SEED2,  seed[319: 288]);
-      write_single_word(ADDR_SEED3,  seed[287: 256]);
-      write_single_word(ADDR_SEED4,  seed[255: 224]);
-      write_single_word(ADDR_SEED5,  seed[223: 192]);
-      write_single_word(ADDR_SEED6,  seed[191: 160]);
-      write_single_word(ADDR_SEED7,  seed[159: 128]);
-      write_single_word(ADDR_SEED8,  seed[127: 96 ]);
-      write_single_word(ADDR_SEED9,  seed[95 : 64 ]);
-      write_single_word(ADDR_SEED10, seed[63 : 32 ]);
-      write_single_word(ADDR_SEED11, seed[31 : 0  ]);
+      write_single_word(ADDR_SEED0,  seed[191: 160]);
+      write_single_word(ADDR_SEED1,  seed[159: 128]);
+      write_single_word(ADDR_SEED2,  seed[127:  96]);
+      write_single_word(ADDR_SEED3,  seed[ 95:  64]);
+      write_single_word(ADDR_SEED4,  seed[ 63:  32]);
+      write_single_word(ADDR_SEED5,  seed[ 31:   0]);
     end
   endtask // write_seed
 
@@ -675,7 +665,7 @@ task hmac384_gen_test_vector (
 
   reg [383:0]  key;
   reg [1023:0] block;
-  reg [383:0]  seed;
+  reg [191:0]  seed;
   reg [1023:0] last_padding;
   reg [127:0]  msg_size;
 
@@ -692,16 +682,16 @@ task hmac384_gen_test_vector (
 
 
   //Generate random message of random block length
-  for(i=0; i<block_length; i=i+1) begin
+  //block_length = total number of blocks (single-block = 1, padding occupies the last block)
+  for(i=0; i<block_length-1; i=i+1) begin
     std::randomize(rand_block);
     msg_array[i] = rand_block;
   end
   
-  //Calculate padding
-  //Currently all generated messages will be multiples of 1024 bits. So, padding + msg_len will always be in the last block. TODO: other cases
-  msg_size = 'd1024 + (block_length * 'd1024);
+  //SHA length field encodes total bits hashed by inner SHA = K^ipad (1024) + msg = block_length * 1024
+  msg_size = block_length * 'd1024;
   last_padding = {8'b1000_0000, 888'b0, msg_size};
-  msg_array[block_length] = last_padding;
+  msg_array[block_length-1] = last_padding;
 
   //Generate random key and write to DUT
   std::randomize(key);
@@ -717,10 +707,10 @@ task hmac384_gen_test_vector (
 
   //Write 1st block to DUT
   block = msg_array[0];
-  $fdisplay(fd_w, "BLOCK = %h", block);
+  if (block_length > 1) $fdisplay(fd_w, "BLOCK = %h", block);
   $fdisplay(fd_all_a, "BLOCK = %h", block);
   write_block(block);
-  write_single_word(ADDR_CTRL, HMAC384_MODE | CTRL_INIT_VALUE);
+  write_single_word(ADDR_CTRL, HMAC384_MODE | CTRL_INIT_VALUE | ((block_length == 1) ? CTRL_LAST_VALUE : 8'h0));
   @(posedge clk_i);
   hsel_o = 0;
   @(posedge clk_i);
@@ -734,7 +724,7 @@ task hmac384_gen_test_vector (
   foreach(msg_array[i]) begin
     if(i > 0) begin
       block = msg_array[i];
-      if(i < block_length) begin //Don't write padding to python input file
+      if(i < block_length-1) begin //Don't write padding to python input file
         $fdisplay(fd_w, "BLOCK = %h", block);
         $fdisplay(fd_all_a, "BLOCK = %h", block);
       end
@@ -742,7 +732,7 @@ task hmac384_gen_test_vector (
         $fdisplay(fd_all_a, "BLOCK = %h", block); //Only write padding to all vectors file
 
       write_block(block);
-      write_single_word(ADDR_CTRL, HMAC384_MODE | CTRL_NEXT_VALUE);
+      write_single_word(ADDR_CTRL, HMAC384_MODE | CTRL_NEXT_VALUE | ((i == block_length-1) ? CTRL_LAST_VALUE : 8'h0));
       @(posedge clk_i);
       hsel_o = 0;
       @(posedge clk_i);
@@ -773,7 +763,7 @@ task hmac512_gen_test_vector (
 
   reg [511:0]  key;
   reg [1023:0] block;
-  reg [383:0]  seed;
+  reg [191:0]  seed;
   reg [1023:0] last_padding;
   reg [127:0]  msg_size;
 
@@ -792,16 +782,16 @@ task hmac512_gen_test_vector (
 
 
   //Generate random message of random block length
-  for(i=0; i<block_length; i=i+1) begin
+  //block_length = total number of blocks (single-block = 1, padding occupies the last block)
+  for(i=0; i<block_length-1; i=i+1) begin
     std::randomize(rand_block);
     msg_array[i] = rand_block;
   end
   
-  //Calculate padding
-  //Currently all generated messages will be multiples of 1024 bits. So, padding + msg_len will always be in the last block. TODO: other cases
-  msg_size = 'd1024 + (block_length * 'd1024);
+  //SHA length field encodes total bits hashed by inner SHA = K^ipad (1024) + msg = block_length * 1024
+  msg_size = block_length * 'd1024;
   last_padding = {8'b1000_0000, 888'b0, msg_size};
-  msg_array[block_length] = last_padding;
+  msg_array[block_length-1] = last_padding;
 
   //Generate random key and write to DUT
   std::randomize(key);
@@ -819,11 +809,11 @@ task hmac512_gen_test_vector (
 
   //Write 1st block to DUT
   block = msg_array[0];
-  $fdisplay(fd_w, "BLOCK = %h", block);
+  if (block_length > 1) $fdisplay(fd_w, "BLOCK = %h", block);
   $fdisplay(fd_all_a, "BLOCK = %h", block);
   write_block(block);
-  if (csr_mode_rand) write_single_word(ADDR_CTRL,  HMAC512_CSR_MODE | HMAC512_MODE | CTRL_INIT_VALUE);
-  else write_single_word(ADDR_CTRL,  HMAC512_MODE | CTRL_INIT_VALUE);
+  if (csr_mode_rand) write_single_word(ADDR_CTRL,  HMAC512_CSR_MODE | HMAC512_MODE | CTRL_INIT_VALUE | ((block_length == 1) ? CTRL_LAST_VALUE : 8'h0));
+  else write_single_word(ADDR_CTRL,  HMAC512_MODE | CTRL_INIT_VALUE | ((block_length == 1) ? CTRL_LAST_VALUE : 8'h0));
 
   @(posedge clk_i);
   hsel_o = 0;
@@ -838,7 +828,7 @@ task hmac512_gen_test_vector (
   foreach(msg_array[i]) begin
     if(i > 0) begin
       block = msg_array[i];
-      if(i < block_length) begin //Don't write padding to python input file
+      if(i < block_length-1) begin //Don't write padding to python input file
         $fdisplay(fd_w, "BLOCK = %h", block);
         $fdisplay(fd_all_a, "BLOCK = %h", block);
       end
@@ -846,8 +836,8 @@ task hmac512_gen_test_vector (
         $fdisplay(fd_all_a, "BLOCK = %h", block); //Only write padding to all vectors file
 
       write_block(block);
-      if (csr_mode_rand) write_single_word(ADDR_CTRL, HMAC512_CSR_MODE | HMAC512_MODE | CTRL_NEXT_VALUE);
-      else write_single_word(ADDR_CTRL, HMAC512_MODE | CTRL_NEXT_VALUE);
+      if (csr_mode_rand) write_single_word(ADDR_CTRL, HMAC512_CSR_MODE | HMAC512_MODE | CTRL_NEXT_VALUE | ((i == block_length-1) ? CTRL_LAST_VALUE : 8'h0));
+      else write_single_word(ADDR_CTRL, HMAC512_MODE | CTRL_NEXT_VALUE | ((i == block_length-1) ? CTRL_LAST_VALUE : 8'h0));
       
       @(posedge clk_i);
       hsel_o = 0;
@@ -993,7 +983,52 @@ hmac512_gen_test_vector(block_length);
 
 end
 endtask
-    
+
+//---------------------------------------------------------------------
+// LAST-alone error test: bogus CTRL write with only LAST asserted.
+// Engine must not start; error2_sts must fire. Follow-up valid op
+// produces a real digest so the scoreboard still sees a transaction.
+//---------------------------------------------------------------------
+task last_alone_error_test (
+    input hmac_in_op_transactions op,
+    input bit [3:0] block_length,
+    input bit [15:0] bit_length
+  );
+
+ begin
+
+  transaction_flag_in_monitor_o = 1'b0;
+  op_o = op;
+
+  // Bogus LAST-alone CTRL write (no INIT, no NEXT).
+  write_single_word(ADDR_CTRL, HMAC512_MODE | CTRL_LAST_VALUE);
+  @(posedge clk_i);
+  hsel_o = 0;
+  // Idle CTRL back to 0 so the cmd covergroup sees the 0 -> 4 -> 0 transition.
+  repeat (4) @(posedge clk_i);
+  write_single_word(ADDR_CTRL, HMAC512_MODE);
+  @(posedge clk_i);
+  hsel_o = 0;
+  repeat (4) @(posedge clk_i);
+
+  // Follow-up valid op so a real digest reaches the scoreboard.
+  hmac512_gen_test_vector(block_length);
+
+  repeat(130) begin
+    @(posedge clk_i);
+    read_single_word_driverbfm(ADDR_STATUS);
+  end
+
+  transaction_flag_in_monitor_o = 1'b1;
+  @(posedge clk_i);
+  transaction_flag_in_monitor_o = 1'b0;
+  @(posedge clk_i);
+
+  read_digest();
+
+ end
+endtask
+
 // pragma uvmf custom initiate_and_get_response end
 
 // pragma uvmf custom respond_and_wait_for_next_transfer begin
