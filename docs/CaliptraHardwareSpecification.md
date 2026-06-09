@@ -112,7 +112,7 @@ The following table shows the memory map address ranges for each of the IP block
 | IP/Peripheral                       | Target \# | Address size | Start address | End address |
 | :---------------------------------- | :-------- | :----------- | :------------ | :---------- |
 | Cryptographic Initialization Engine | 0         | 32 KiB       | 0x1000_0000   | 0x1000_7FFF |
-| ECC Secp384                         | 1         | 32 KiB       | 0x1000_8000   | 0x1000_FFFF |
+| ECC (Secp384r1 / Secp256r1)         | 1         | 32 KiB       | 0x1000_8000   | 0x1000_FFFF |
 | HMAC512                             | 2         | 4 KiB        | 0x1001_0000   | 0x1001_0FFF |
 | Key Vault                           | 3         | 8 KiB        | 0x1001_8000   | 0x1001_9FFF |
 | PCR Vault                           | 4         | 8 KiB        | 0x1001_A000   | 0x1001_BFFF |
@@ -1236,6 +1236,11 @@ Hash-based message authentication code (HMAC) deterministic random bit generator
 
 Caliptra HMAC_DRBG implementation uses HMAC384 as the HMAC function, accepts a 384-bit seed, and generates a 384-bit random value.
 
+The ECC engine instantiates two HMAC_DRBG cores, one per supported curve, selected by `ECC_CTRL.CURVE_SEL`:
+
+* P-384 path (`CURVE_SEL = 0`, default): HMAC-SHA-384 based DRBG with 384-bit entropy/nonce/output, modulus = n<sub>P-384</sub>.
+* P-256 path (`CURVE_SEL = 1`): HMAC-SHA-256 based DRBG with 256-bit entropy/nonce/output, modulus = n<sub>P-256</sub>. The wrapper presents the same 4-stage output bundle (`lambda`, `scalar_rnd`, `masking_rnd`, `drbg`) as the P-384 interface, zero-extended into the engine's native 384-bit datapath.
+
 The HMAC algorithm is described as follows:
 
 * The seed is fed to HMAC_DRBG core by the host
@@ -1300,18 +1305,35 @@ For information, see SCA countermeasure in the [HMAC384](#hmac384) section.
 
 The ECC unit includes the ECDSA (Elliptic Curve Digital Signature Algorithm) engine and the ECDH (Elliptic Curve Diffie-Hellman Key-Exchange) engine, offering a variant of the cryptographically secure Digital Signature Algorithm (DSA) and Diffie-Hellman Key-Exchange (DH), which uses elliptic curve (ECC). A digital signature is an authentication method in which a public key pair and a digital certificate are used as a signature to verify the identity of a recipient or sender of information.
 
-The hardware implementation supports ECDSA, 384 Bits (Prime Field), also known as NIST-Secp384r1. Two modes of generating the per-signature secret `k` are supported, selected by the `ECC_CTRL.RAND_K_EN` field:
+The hardware implementation supports ECDSA over both NIST-Secp384r1 (P-384) and NIST-Secp256r1 (P-256), selected per-operation by the `ECC_CTRL.CURVE_SEL` field (0 = P-384, default; 1 = P-256). The same register interface, microcode sequencer, and Montgomery datapath service both curves; per-curve parameters (prime, group order, generator point, Montgomery constants) and a per-curve HMAC-DRBG instance are muxed by `CURVE_SEL`. Two modes of generating the per-signature secret `k` are supported, selected by the `ECC_CTRL.RAND_K_EN` field:
 
 * `RAND_K_EN = 0` (default): deterministic SIGN per RFC 6979. `k = HMAC_DRBG(privKey, h)`.
 * `RAND_K_EN = 1`: non-deterministic SIGN per FIPS 186-4. `k = HMAC_DRBG(ECC_SEED, ECC_NONCE)`. Firmware must write fresh random values to `ECC_SEED` and `ECC_NONCE` before each SIGN command.
 
-The hardware implementation also supports ECDH, 384 Bits (Prime Field), also known as NIST-Secp384r1, described in SP800-56A.
+The hardware implementation also supports ECDH over the same two curves, described in SP800-56A.
 
 Secp384r1 parameters are shown in the following figure.
 
 *Figure: Secp384r1 parameters*
 
 ![](./images/secp384r1_params.png)
+
+#### Curve selection
+
+`ECC_CTRL.CURVE_SEL` (bit 5, `swwe = ecc_ready`, `hwclr` on `ZEROIZE`) gates the curve for every ECC operation. The field is sampled together with the operation `CTRL[1:0]` and `RAND_K_EN` on the same `ECC_CTRL` write, so firmware can switch curves between back-to-back operations with no reset required; the engine performs an internal re-initialization (`ECC_INIT_LAST` flow) so per-curve Montgomery constants and PM-RAM contents are reloaded on every curve switch.
+
+Per-curve effective widths and parameters:
+
+| Property                       | P-384 (`CURVE_SEL=0`)                                         | P-256 (`CURVE_SEL=1`)                                         |
+| :----------------------------- | :------------------------------------------------------------- | :------------------------------------------------------------- |
+| Scalar / coordinate width      | 384 bits                                                       | 256 bits                                                       |
+| Prime p                        | p<sub>P-384</sub> (FIPS 186-5 D.1.2.4)                         | p<sub>P-256</sub> (FIPS 186-5 D.1.2.3)                         |
+| Group order n                  | n<sub>P-384</sub>                                              | n<sub>P-256</sub>                                              |
+| Recommended message hash       | SHA-384 (digest = 384 b)                                       | SHA-256 (digest = 256 b)                                       |
+| HMAC_DRBG primitive            | HMAC-SHA-384                                                   | HMAC-SHA-256                                                   |
+| Register-bank dword usage      | All 12 dwords used                                             | Lower 8 dwords carry data; upper 4 dwords are RAZ on read and ignored on write |
+
+`PCR_SIGN` (PCR-vault-sourced privkey) is supported on both curves; the mutual-exclusion error against `RAND_K_EN = 1` is curve-independent.
 
 ### Operation
 
@@ -1327,13 +1349,13 @@ The ECDH also consists of the sharedkey generation.
 
 In the deterministic key generation, the paired key of (privKey, pubKey) is generated by KeyGen(seed, nonce), taking a deterministic seed and nonce. The KeyGen algorithm is as follows:
 
-* Compute privKey = HMAC_DRBG(seed, nonce) to generate a random integer in the interval [1, n-1] where n is the group order of Secp384 curve.
-* Generate pubKey(x,y) as a point on ECC calculated by pubKey=privKey × G, while G is the generator point over the curve.
+* Compute privKey = HMAC_DRBG(seed, nonce) to generate a random integer in the interval [1, n-1] where n is the group order of the curve selected by `ECC_CTRL.CURVE_SEL`.
+* Generate pubKey(x,y) as a point on ECC calculated by pubKey = privKey × G, where G is the generator point of the selected curve.
 
 
 #### Signing
 
-In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), taking a privKey and hash of message m, h = hash(m), using a cryptographic hash function, SHA512. The signing algorithm includes:
+In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), taking a privKey and hash of message m, h = hash(m). The message-digest hash function is firmware's responsibility and should match the curve security level (SHA-384 for P-384, SHA-256 for P-256); the engine consumes only the digest. The signing algorithm includes:
 
 * Generate a random number k in the range [1..n-1], while k = HMAC\_DRBG(privKey, h) when `ECC_CTRL.RAND_K_EN = 0`, or k = HMAC\_DRBG(ECC\_SEED, ECC\_NONCE) when `ECC_CTRL.RAND_K_EN = 1`
 * Calculate the random point R = k × G
@@ -1381,7 +1403,7 @@ The ECC architecture inputs and outputs are described in the following table.
 | nonce \[383:0\]            | input           | The deterministic nonce for HMAC_DRBG in the KeyGen operation. Also used as the HMAC_DRBG nonce input for the SIGN operation when `ECC_CTRL.RAND_K_EN = 1`. |
 | privKey_in\[383:0\]        | input           | The input private key used in the signing operation.                                                                       |
 | pubKey_in\[1:0\]\[383:0\]  | input           | The input public key(x,y) used in the verifying operation.                                                                 |
-| hashed_msg\[383:0\]        | input           | The hash of message using SHA512.                                                                                          |
+| hashed_msg\[383:0\]        | input           | The hash of message m. Width is curve-dependent: P-384 uses bits [383:0] (SHA-384 digest); P-256 uses bits [255:0] (SHA-256 digest) and ignores [383:256]. |
 | ready                      | output          | When HIGH, the signal indicates the core is ready.                                                                         |
 | privKey_out\[383:0\]       | output          | The generated private key in the KeyGen operation.                                                                         |
 | pubKey_out\[1:0\]\[383:0\] | output          | The generated public key(x,y) in the KeyGen operation.                                                                     |

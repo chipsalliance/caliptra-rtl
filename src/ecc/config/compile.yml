@@ -9,6 +9,12 @@ schema_version: 2.4.0
 requires:
   - libs
   - hmac_drbg
+  # *** TEMPORARY *** P-256 HMAC-DRBG dep (block from
+  # user/mojtabab/hmac-drbg-sha256 @d8765bdf). Remove this line and
+  # the wrapper's inner instantiation in ecc_hmac_drbg_p256_wrap.sv
+  # when the final P-256 HMAC-DRBG block lands.
+  # See src/hmac_drbg/TEMPORARY_DO_NOT_MERGE.md.
+  - hmac_drbg_sha256
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -24,6 +30,7 @@ targets:
       - $COMPILE_ROOT/rtl/ecc_dsa_sequencer.sv
       - $COMPILE_ROOT/rtl/ecc_scalar_blinding.sv
       - $COMPILE_ROOT/rtl/ecc_hmac_drbg_interface.sv
+      - $COMPILE_ROOT/rtl/ecc_hmac_drbg_p256_wrap.sv
       - $COMPILE_ROOT/rtl/ecc_arith_unit.sv
       - $COMPILE_ROOT/rtl/ecc_pm_ctrl.sv
       - $COMPILE_ROOT/rtl/ecc_pm_sequencer.sv

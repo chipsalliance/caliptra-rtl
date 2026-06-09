@@ -15,8 +15,21 @@ non-blank token (matches the P-384 `ecc_drbg_mbedtls.hex` convention
 where a decimal TC counter is placed there). This script replaces each
 blank separator with the running TC counter.
 
+Two modes:
+  - **force-bypass** (default): overloads line 9 (privkeyB) with
+    k = s^-1 * (h + r*priv) mod n so the TB's drbg_bypass_force task
+    can drive hmac_drbg_result_p256 = k.
+  - **--real-drbg**: leaves line 9 untouched. Use when the RTL P-256
+    HMAC-DRBG-SHA256 wrapper is driving k itself (no TB force). The
+    C tool already seeds its DRBG with the same (seed, nonce) the RTL
+    KEYGEN consumes and the same (privkey, hashed_msg) the RTL SIGN_ST
+    det path consumes, so the emitted privkey + (R, S) match what
+    the wrapper produces bit-exactly.
+
 Usage:
     gen_secp256r1_kat.py -n 10 -o test_vectors/secp256_kat.hex
+    gen_secp256r1_kat.py -n 50 --real-drbg \\
+        -o test_vectors/secp256_realdrbg_kat.hex
 """
 
 import argparse
@@ -40,7 +53,7 @@ def run_exe_n_times(exe: str, n: int, workdir: str) -> str:
     return src
 
 
-def reformat(src_path: str, dst_path: str) -> int:
+def reformat(src_path: str, dst_path: str, real_drbg: bool = False) -> int:
     # P-256 group order n
     N_P256 = 0xFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551
 
@@ -62,17 +75,24 @@ def reformat(src_path: str, dst_path: str) -> int:
                 raise RuntimeError(
                     f"expected blank separator at TC {tc} got {line!r}"
                 )
-            # Overload line 9 (privkeyB, unused for P-256 SIGN tests) with
-            # k = (h + r*priv) * s^-1 mod n_p256, so the SIGN-bypass TB task
-            # can force hmac_drbg_result_p256 = k for a deterministic KAT
-            # match. ECDH on P-256 is not part of this validation flow.
-            h    = int(tc_lines[0], 16)
-            priv = int(tc_lines[1], 16)
-            r    = int(tc_lines[6], 16)
-            s    = int(tc_lines[7], 16)
-            s_inv = pow(s, -1, N_P256)
-            k = (s_inv * (h + r * priv)) % N_P256
-            tc_lines[9] = f"{k:064X}"
+            if not real_drbg:
+                # Force-bypass mode: overload line 9 (privkeyB, unused for
+                # P-256 SIGN tests) with k = (h + r*priv) * s^-1 mod n_p256,
+                # so the SIGN-bypass TB task can force
+                # hmac_drbg_result_p256 = k for a deterministic KAT match.
+                # ECDH on P-256 is not part of this validation flow.
+                h    = int(tc_lines[0], 16)
+                priv = int(tc_lines[1], 16)
+                r    = int(tc_lines[6], 16)
+                s    = int(tc_lines[7], 16)
+                s_inv = pow(s, -1, N_P256)
+                k = (s_inv * (h + r * priv)) % N_P256
+                tc_lines[9] = f"{k:064X}"
+            # Real-DRBG mode: leave tc_lines[9] (privkeyB) untouched. The
+            # RTL HMAC-DRBG-SHA256 wrapper derives privkey from
+            # (seed, nonce) and k from (privkey, hashed_msg) on its own;
+            # no k injection needed. The C tool emits a privkey that
+            # matches what the RTL DRBG produces (seeded identically).
 
             out.extend(tc_lines)
             out.append(f"{tc}")
@@ -99,6 +119,12 @@ def main() -> int:
                     help="output hex file path")
     ap.add_argument("--exe", default=EXE_DEFAULT,
                     help=f"path to ecc_secp256r1.exe (default: {EXE_DEFAULT})")
+    ap.add_argument("--real-drbg", action="store_true",
+                    help="Real-DRBG mode: emit privkeyB (line 9) as-is from "
+                         "the C tool (no k injection). Use when the RTL "
+                         "P-256 HMAC-DRBG wrapper drives k itself (no TB "
+                         "force-bypass). Default is force-bypass mode "
+                         "with k = s^-1 * (h + r*priv) mod n injected.")
     args = ap.parse_args()
 
     if not os.path.isfile(args.exe) or not os.access(args.exe, os.X_OK):
@@ -108,9 +134,10 @@ def main() -> int:
 
     with tempfile.TemporaryDirectory(prefix="p256_kat_") as tmp:
         src = run_exe_n_times(args.exe, args.num, tmp)
-        n_tc = reformat(src, args.output)
+        n_tc = reformat(src, args.output, real_drbg=args.real_drbg)
 
-    print(f"Wrote {n_tc} P-256 KAT vectors to {args.output}")
+    mode = "real-DRBG" if args.real_drbg else "force-bypass"
+    print(f"Wrote {n_tc} P-256 KAT vectors ({mode}) to {args.output}")
     return 0
 
 

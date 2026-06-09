@@ -166,10 +166,16 @@ module ecc_dsa_ctrl
     logic                   hmac_ready;
     logic [REG_SIZE-1 : 0]  hmac_drbg_result;
     logic                   hmac_ready_p384, hmac_ready_p256;
-    logic [REG_SIZE-1 : 0]  lambda_p384, lambda_p256;
-    logic [REG_SIZE-1 : 0]  scalar_rnd_p384, scalar_rnd_p256;
-    logic [REG_SIZE-1 : 0]  masking_rnd_p384, masking_rnd_p256;
-    logic [REG_SIZE-1 : 0]  hmac_drbg_result_p384, hmac_drbg_result_p256;
+    logic [REG_SIZE-1 : 0]  lambda_p384;
+    logic [REG_SIZE-1 : 0]  scalar_rnd_p384;
+    logic [REG_SIZE-1 : 0]  masking_rnd_p384;
+    logic [REG_SIZE-1 : 0]  hmac_drbg_result_p384;
+    // P-256 nets are wrapper-native 256b; the curve mux below
+    // zero-extends them to REG_SIZE for the shared 384b datapath.
+    logic [255 : 0]         lambda_p256;
+    logic [255 : 0]         scalar_rnd_p256;
+    logic [255 : 0]         masking_rnd_p256;
+    logic [255 : 0]         hmac_drbg_result_p256;
     logic                   hmac_busy;
 
     //interface with kv client
@@ -320,20 +326,42 @@ module ecc_dsa_ctrl
         .drbg(hmac_drbg_result_p384)
         );
 
-    // P-256 HMAC-DRBG placeholder. Real ecc_hmac_drbg_interface_p256
-    // (HMAC-SHA-256, REG_SIZE=256) will replace this stub. Tie ready=1 and
-    // outputs=0 so the DSA FSM does not stall under CURVE_SEL=P256.
-    assign hmac_ready_p256       = 1'b1;
-    assign lambda_p256           = '0;
-    assign scalar_rnd_p256       = '0;
-    assign masking_rnd_p256      = '0;
-    assign hmac_drbg_result_p256 = '0;
+    // P-256 HMAC-DRBG via swap-boundary wrapper.
+    //
+    //   *** TEMPORARY *** ecc_hmac_drbg_p256_wrap currently wraps
+    //   the hmac_drbg_sha256 block cherry-picked from
+    //   user/mojtabab/hmac-drbg-sha256 @d8765bdf. The final
+    //   production P-256 HMAC-DRBG will replace ONLY the inner
+    //   instantiation inside the wrapper -- this site stays put.
+    //   See src/hmac_drbg/TEMPORARY_DO_NOT_MERGE.md.
+    ecc_hmac_drbg_p256_wrap #(
+        .REG_SIZE   (256),
+        .GROUP_ORDER(GROUP_ORDER_P256[255:0])
+        )
+        ecc_hmac_drbg_p256_wrap_i (
+        .clk(clk),
+        .reset_n(reset_n),
+        .zeroize(zeroize_reg),
+        .hmac_mode(hmac_mode),
+        .en(hmac_init & curve_sel_reg),
+        .ready(hmac_ready_p256),
+        .keygen_seed(seed_reg[REG_NUM_DWORDS_P256-1 : 0]),
+        .keygen_nonce(nonce_reg[REG_NUM_DWORDS_P256-1 : 0]),
+        .privKey(privkey_reg[REG_NUM_DWORDS_P256-1 : 0]),
+        .hashed_msg(msg_reduced_reg[REG_NUM_DWORDS_P256-1 : 0]),
+        .IV(IV_reg[REG_NUM_DWORDS_P256-1 : 0]),
+        .rand_k_en(rand_k_en_mode),
+        .lambda(lambda_p256),
+        .scalar_rnd(scalar_rnd_p256),
+        .masking_rnd(masking_rnd_p256),
+        .drbg(hmac_drbg_result_p256)
+        );
 
-    assign hmac_ready       = curve_sel_reg ? hmac_ready_p256       : hmac_ready_p384;
-    assign lambda_reg       = curve_sel_reg ? lambda_p256           : lambda_p384;
-    assign scalar_rnd_reg   = curve_sel_reg ? scalar_rnd_p256       : scalar_rnd_p384;
-    assign masking_rnd_reg  = curve_sel_reg ? masking_rnd_p256      : masking_rnd_p384;
-    assign hmac_drbg_result = curve_sel_reg ? hmac_drbg_result_p256 : hmac_drbg_result_p384;
+    assign hmac_ready       = curve_sel_reg ? hmac_ready_p256                                   : hmac_ready_p384;
+    assign lambda_reg       = curve_sel_reg ? {{(REG_SIZE-256){1'b0}}, lambda_p256}             : lambda_p384;
+    assign scalar_rnd_reg   = curve_sel_reg ? {{(REG_SIZE-256){1'b0}}, scalar_rnd_p256}         : scalar_rnd_p384;
+    assign masking_rnd_reg  = curve_sel_reg ? {{(REG_SIZE-256){1'b0}}, masking_rnd_p256}        : masking_rnd_p384;
+    assign hmac_drbg_result = curve_sel_reg ? {{(REG_SIZE-256){1'b0}}, hmac_drbg_result_p256}   : hmac_drbg_result_p384;
 
     ecc_scalar_blinding #(
         .REG_SIZE(REG_SIZE),
@@ -1134,7 +1162,7 @@ always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_pri
 
     // curve_sel_reg must not change once a command is in flight.
     `CALIPTRA_ASSERT(ERR_ECC_CURVE_SEL_ACTIVE_STABLE_IN_FLIGHT,
-        ((prog_cntr != ECC_NOP) && $past(prog_cntr != ECC_NOP)) |-> $stable(curve_sel_reg),
+        ((!(prog_cntr inside {ECC_NOP, ECC_RESET})) && (!($past(prog_cntr) inside {ECC_NOP, ECC_RESET}))) |-> $stable(curve_sel_reg),
         clk, !reset_n)
 
     // No KV write traffic while CURVE_SEL=P256 (KV path is P-384 only).

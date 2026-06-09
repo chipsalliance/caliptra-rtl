@@ -14,8 +14,8 @@
 #
 ---
 plusargs:
-  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex'
-  - +ECC_TEST='ECC_p384_keygen_bypass_test'
+  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/rfc6979/rfc6979_p384_sha384.hex'
+  - +ECC_TEST='ECC_rfc6979_sign_p384_test'
 
-testname: ecc_p384_keygen_bypass_test
+testname: ecc_rfc6979_sign_p384_test
 seed: 1

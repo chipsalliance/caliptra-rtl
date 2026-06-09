@@ -52,6 +52,11 @@ package ecc_params_pkg;
                                              // scalar blinding on elliptic curves with special structure. In: NIST Workshop on ECC standards
   parameter DATA_WIDTH           = 32;
   parameter REG_NUM_DWORDS       = REG_SIZE/DATA_WIDTH;
+  // P-256 occupies the low 256 bits of the 384b register bank, i.e. the
+  // low REG_NUM_DWORDS_P256 dwords. Used to slice the packed-array
+  // register-bank signals (seed_reg, nonce_reg, privkey_reg, ...) for
+  // the P-256 HMAC-DRBG wrapper port connections.
+  parameter REG_NUM_DWORDS_P256  = 256/DATA_WIDTH;
   parameter REG_OFFSET_W         = $clog2(REG_NUM_DWORDS);
   parameter MULT_RADIX           = 48;
   parameter SCALAR_BLIND_RADIX   = 32;
