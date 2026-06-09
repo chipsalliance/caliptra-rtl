@@ -34,17 +34,21 @@
 //
 //======================================================================
 
-module ecc_scalar_blinding #(
+module ecc_scalar_blinding 
+    import ecc_params_pkg::*;
+    #(
     parameter                   REG_SIZE     = 384,
     parameter                   RND_SIZE     = 192,
-    parameter                   RADIX        = 32,
-    parameter [REG_SIZE-1 : 0]  GROUP_ORDER  = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973
+    parameter                   RADIX        = 32
     )
     (
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
     input wire           zeroize,
+
+    // Curve select: 0 = P-384, 1 = P-256.
+    input wire           curve_sel_i,
 
     // DATA PORT
     input  wire                             en_i,
@@ -111,6 +115,12 @@ module ecc_scalar_blinding #(
     logic                           accu_done;
 
     logic                           shift_state;
+
+    // Curve-muxed group order. Named signal kept so external bindings
+    // (e.g. the formal property file) can reference it as a single
+    // observable, matching pre-dual-curve naming.
+    logic [REG_SIZE-1 : 0]          GROUP_ORDER;
+    assign GROUP_ORDER = curve_sel_i ? GROUP_ORDER_P256 : GROUP_ORDER_P384;
 
     logic [P_ARR_WIDTH-1 : 0]            product_idx;
     logic [B_ARR_WIDTH-1 : 0]            operand_idx;

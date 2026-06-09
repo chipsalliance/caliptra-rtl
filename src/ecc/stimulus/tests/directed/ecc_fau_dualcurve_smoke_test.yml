@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Standalone smoke test that sweeps all 4 corners of (curve_sel, mod_p_q)
+# through ecc_fau, verifying the prime/mu mux in ecc_arith_unit.
+#
+---
+plusargs: []
+
+testname: ecc_fau_dualcurve_smoke_test
+seed: 1

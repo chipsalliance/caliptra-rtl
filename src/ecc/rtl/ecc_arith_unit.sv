@@ -28,21 +28,21 @@
 
 module ecc_arith_unit 
     import ecc_pm_uop_pkg::*;
+    import ecc_params_pkg::*;
     #(
     parameter                  REG_SIZE     = 384,
     parameter                  RND_SIZE     = 192,
     parameter                  RADIX        = 32,
-    parameter                  ADDR_WIDTH   = 6,
-    parameter [REG_SIZE-1 : 0] p_prime      = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
-    parameter [RADIX-1    : 0] p_mu         = 32'h00000001,
-    parameter [REG_SIZE-1 : 0] q_grouporder = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973,
-    parameter [RADIX-1    : 0] q_mu         = 32'he88fdc45
+    parameter                  ADDR_WIDTH   = 6
     )
     (
     // Clock and reset.
     input wire           clk,
     input wire           reset_n,
     input wire           zeroize,
+
+    // Curve select: 0 = P-384, 1 = P-256.
+    input wire           curve_sel_i,
 
     // DATA PORT
     input  wire [3 : 0]                     ecc_cmd_i,
@@ -91,14 +91,13 @@ module ecc_arith_unit
     //----------------------------------------------------------------
     
     ecc_pm_ctrl #(
-        .REG_SIZE(REG_SIZE),
-        .RND_SIZE(RND_SIZE),
         .INSTR_SIZE(INSTRUCTION_LENGTH)
         )
         ecc_pm_ctrl_i(
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize),
+        .curve_sel_i(curve_sel_i),
         .ecc_cmd_i(ecc_cmd_i),
         .digit_i(digit_in),
         .instr_o(ecc_instr_s),
@@ -138,8 +137,10 @@ module ecc_arith_unit
     //----------------------------------------------------------------
 
     assign mod_p_q     = ecc_instr_s.opcode.mod_q_sel;  //performing mod_p if (mod_p_q = 0), else mod_q
-    assign adder_prime = (mod_p_q)? q_grouporder : p_prime;
-    assign mult_mu     = (mod_p_q)? q_mu : p_mu;
+    assign adder_prime = mod_p_q ? (curve_sel_i ? GROUP_ORDER_P256 : GROUP_ORDER_P384)
+                                 : (curve_sel_i ? PRIME_P256       : PRIME_P384);
+    assign mult_mu     = mod_p_q ? (curve_sel_i ? GROUP_ORDER_mu_P256 : GROUP_ORDER_mu_P384)
+                                 : (curve_sel_i ? PRIME_mu_P256       : PRIME_mu_P384);
 
     ecc_fau #(
         .REG_SIZE(REG_SIZE),
