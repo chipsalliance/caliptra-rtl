@@ -211,10 +211,10 @@ module fv_ecc_pm_ctrl_abstract
         verify_part1_stage2_loop_a: assert property(disable iff(!rst_n) pd_e_to_pa_s_p(VER_PART1_CMD));
         verify_part2_stage2_loop_a: assert property(disable iff(!rst_n) pd_e_to_pa_s_p(VER_PART2_CMD));
 
-    //validates if cmd sequence is ongoing then it would traverse from INV_E_P384 to CONV_S
+    //validates if cmd sequence is ongoing then it would traverse from INV_E to CONV_S
          property inve_to_convs_p(cmd);
             ecc_pm_ctrl.ecc_cmd_reg == cmd &&
-            ecc_pm_ctrl.prog_cntr == INV_E_P384[*(MULT_DLY+2)]      //[*3] for mult delay 1
+            ecc_pm_ctrl.prog_cntr == INV_E[*(MULT_DLY+2)]      //[*3] for mult delay 1
              |->
             ##1 ecc_pm_ctrl.prog_cntr == CONV_S; 
         endproperty
@@ -222,12 +222,12 @@ module fv_ecc_pm_ctrl_abstract
         signing_stage3_a: assert property(disable iff(!rst_n) inve_to_convs_p(SIGN_CMD));
         verify_part2_stage3_2_a: assert property(disable iff(!rst_n) inve_to_convs_p(VER_PART2_CMD));
          
-    //validates if cmd sequence is ongoing then it would traverse from INV_S to INV_E_P384
+    //validates if cmd sequence is ongoing then it would traverse from INV_S to INV_E
          property invs_to_inve_p(cmd,delay);
             ecc_pm_ctrl.ecc_cmd_reg == cmd &&
             ecc_pm_ctrl.prog_cntr == INV_S      //[*3] for mult delay 1
              |->
-            ##delay ecc_pm_ctrl.prog_cntr == INV_E_P384; 
+            ##delay ecc_pm_ctrl.prog_cntr == INV_E; 
         endproperty
         keygen_stage3_1_a: assert property(disable iff(!rst_n) invs_to_inve_p(KEYGEN_CMD,INV_DLY));
         signing_stage3_1_a: assert property(disable iff(!rst_n) invs_to_inve_p(SIGN_CMD,INV_DLY));
@@ -263,10 +263,10 @@ module fv_ecc_pm_ctrl_abstract
         property counter_nonreachable_values_p;
             counter_keygen_a != PM_INIT_G_E+1 && counter_keygen_b != PM_INIT_G_E+1 &&
             counter_keygen_a != PM_INIT_E+1 && counter_keygen_b != PM_INIT_E+1 &&
-            counter_keygen_a != INV_E_P384+1 && counter_keygen_b != INV_E_P384+1 &&
+            counter_keygen_a != INV_E+1 && counter_keygen_b != INV_E+1 &&
             counter_keygen_a != PA_E+1 && counter_keygen_b != PA_E+1 &&
             counter_keygen_a != PD_E+1 && counter_keygen_b != PD_E+1 &&
-            counter_keygen_a != INV_E_P384+1 && counter_keygen_b != INV_E_P384+1;
+            counter_keygen_a != INV_E+1 && counter_keygen_b != INV_E+1;
         endproperty
 
         counter_keygen_a_assume: assume property(disable iff(!rst_n) (counter_keygen_a >=PM_INIT_G_S) && (counter_keygen_a <=CONV_E) && $stable(counter_keygen_a));
@@ -330,20 +330,20 @@ module fv_ecc_pm_ctrl_abstract
         signing_stage3_2_a: assert property(disable iff(!rst_n) signing_stage3_2_p(CONV_VER0_P1_DLY,SIGN0_DLY));
 
 
-         //validates if signing sequence is ongoing then it would traverse from INVq_S  till INVq_E_P384
+         //validates if signing sequence is ongoing then it would traverse from INVq_S  till INVq_E
          property signing_stage4_1_p(delay);
             ecc_pm_ctrl.ecc_cmd_reg == SIGN_CMD &&
             ecc_pm_ctrl.prog_cntr == INVq_S 
             |->
-            ##delay ecc_pm_ctrl.prog_cntr == INVq_E_P384;            
+            ##delay ecc_pm_ctrl.prog_cntr == INVq_E;            
            endproperty
         signing_stage4_1_a: assert property(disable iff(!rst_n) signing_stage4_1_p(INVQ_DLY));
 
 
-        //validates if signing sequence is ongoing then it would traverse from INVq_E_P384 till NOP
+        //validates if signing sequence is ongoing then it would traverse from INVq_E till NOP
          property signing_stage4_p(delay);
             ecc_pm_ctrl.ecc_cmd_reg == SIGN_CMD &&
-            ecc_pm_ctrl.prog_cntr == INVq_E_P384
+            ecc_pm_ctrl.prog_cntr == INVq_E
             |->
             ##1 ecc_pm_ctrl.prog_cntr == SIGN1_S           // final value s [k^-1((h-d) + r (privKey-d))] + [k^-1(d + r.d)] mod q
             ##delay ecc_pm_ctrl.prog_cntr == SIGN1_E
@@ -369,13 +369,13 @@ module fv_ecc_pm_ctrl_abstract
         property counter_nonreachable_values_in_sign_p;
             counter_sign_a != PM_INIT_G_E+1 && counter_sign_b != PM_INIT_G_E+1 &&
             counter_sign_a != PM_INIT_E+1 && counter_sign_b != PM_INIT_E+1 &&
-            counter_sign_a != INV_E_P384+1 && counter_sign_b != INV_E_P384+1 &&
+            counter_sign_a != INV_E+1 && counter_sign_b != INV_E+1 &&
             counter_sign_a != PA_E+1 && counter_sign_b != PA_E+1 &&
             counter_sign_a != PD_E+1 && counter_sign_b != PD_E+1 &&
-            counter_sign_a != INV_E_P384+1 && counter_sign_b != INV_E_P384+1 &&
+            counter_sign_a != INV_E+1 && counter_sign_b != INV_E+1 &&
             counter_sign_a != CONV_E+1 && counter_sign_b != CONV_E+1 &&
             counter_sign_a != SIGN0_E+1 && counter_sign_b != SIGN0_E+1 &&
-            counter_sign_a != INVq_E_P384+1 && counter_sign_b != INVq_E_P384+1 
+            counter_sign_a != INVq_E+1 && counter_sign_b != INVq_E+1 
             ;
         endproperty
 
@@ -431,12 +431,12 @@ module fv_ecc_pm_ctrl_abstract
         verify_part0_stage0_a: assert property(disable iff(!rst_n) verify_part0_stage0_p(VER0_P0_DLY));
 
 
-        //validates if the verify part0 is ongoing then it would traverse from INVq_s to INVq_E_P384
+        //validates if the verify part0 is ongoing then it would traverse from INVq_s to INVq_E
         property verify_part0_stage1_1_p(delay);
             ecc_pm_ctrl.ecc_cmd_reg == VER_PART0_CMD &&
             ecc_pm_ctrl.prog_cntr == INVq_S
             |->
-            ##delay ecc_pm_ctrl.prog_cntr == INVq_E_P384;
+            ##delay ecc_pm_ctrl.prog_cntr == INVq_E;
          endproperty
         verify_part0_stage1_1_a: assert property(disable iff(!rst_n) verify_part0_stage1_1_p(INVQ_DLY));
 
@@ -444,7 +444,7 @@ module fv_ecc_pm_ctrl_abstract
         //validates if the verify part0 is ongoing then finally it would end in NOP
          property verify_part0_stage1_p(delay);
             ecc_pm_ctrl.ecc_cmd_reg == VER_PART0_CMD &&
-            ecc_pm_ctrl.prog_cntr == INVq_E_P384
+            ecc_pm_ctrl.prog_cntr == INVq_E
             |->
             ##1 ecc_pm_ctrl.prog_cntr == VER0_P1_S      // compute h*s_inv and r*s_inv
             ##delay ecc_pm_ctrl.prog_cntr == VER0_P1_E
@@ -482,8 +482,8 @@ module fv_ecc_pm_ctrl_abstract
        
         counter_ver_p0_a_assume: assume property(disable iff(!rst_n) (counter_ver_p0_a <=VER0_P0_E) && (counter_ver_p0_a >=VER0_P0_S) && $stable(counter_ver_p0_a));
         counter_ver_p0_a_1_assume: assume property(disable iff(!rst_n) (counter_ver_p0_a_1 <=VER0_P0_E) && (counter_ver_p0_a_1 > counter_ver_p0_a) && $stable(counter_ver_p0_a_1));
-        counter_ver_p0_b_assume: assume property(disable iff(!rst_n) (counter_ver_p0_b >=INVq_S) && (counter_ver_p0_b <=INVq_E_P384) && $stable(counter_ver_p0_b));
-        counter_ver_p0_b_1_assume: assume property(disable iff(!rst_n) (counter_ver_p0_b_1 >counter_ver_p0_b) && (counter_ver_p0_b_1 <=INVq_E_P384) && $stable(counter_ver_p0_b_1));
+        counter_ver_p0_b_assume: assume property(disable iff(!rst_n) (counter_ver_p0_b >=INVq_S) && (counter_ver_p0_b <=INVq_E) && $stable(counter_ver_p0_b));
+        counter_ver_p0_b_1_assume: assume property(disable iff(!rst_n) (counter_ver_p0_b_1 >counter_ver_p0_b) && (counter_ver_p0_b_1 <=INVq_E) && $stable(counter_ver_p0_b_1));
         counter_ver_p0_c_assume: assume property(disable iff(!rst_n) (counter_ver_p0_c <=VER0_P1_E) && ((counter_ver_p0_c >=VER0_P1_S)) && $stable(counter_ver_p0_c));
         counter_ver_p0_c_1_assume: assume property(disable iff(!rst_n) (counter_ver_p0_c_1 <=VER0_P1_E) && ((counter_ver_p0_c_1 > counter_ver_p0_c)) && $stable(counter_ver_p0_c_1));
         
@@ -590,7 +590,7 @@ module fv_ecc_pm_ctrl_abstract
         property counter_nonreachable_values_in_ver_p1_p;
             counter_ver_p1_a != PM_INIT_G_E+1 && counter_ver_p1_b != PM_INIT_G_E+1 &&
             counter_ver_p1_a != PM_INIT_E+1 && counter_ver_p1_b != PM_INIT_E+1 &&
-            counter_ver_p1_a != INV_E_P384+1 && counter_ver_p1_b != INV_E_P384+1 &&
+            counter_ver_p1_a != INV_E+1 && counter_ver_p1_b != INV_E+1 &&
             counter_ver_p1_a != PA_E+1 && counter_ver_p1_b != PA_E+1;
       
         endproperty
@@ -704,7 +704,7 @@ module fv_ecc_pm_ctrl_abstract
             counter_ver_p2_a != VER1_ST_E+1 && counter_ver_p2_a_1 != VER1_ST_E+1 &&
             counter_ver_p2_b != PM_INIT_E+1 && counter_ver_p2_b_1 != PM_INIT_E+1 &&
             counter_ver_p2_b != PA_E+1 && counter_ver_p2_b_1 != PA_E+1 && 
-            counter_ver_p2_d!= INV_E_P384+1 && counter_ver_p2_d_1!= INV_E_P384+1
+            counter_ver_p2_d!= INV_E+1 && counter_ver_p2_d_1!= INV_E+1
             ;
         endproperty
 
