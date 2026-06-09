@@ -28,8 +28,8 @@ typedef uint8_t BOOL;
 #define HMAC384_KEY_SIZE 12
 #define HMAC512_BLOCK_SIZE 32
 #define HMAC384_BLOCK_SIZE 32
-#define HMAC384_LFSR_SEED_SIZE 12
-#define HMAC512_LFSR_SEED_SIZE 12
+#define HMAC384_LFSR_SEED_SIZE 6
+#define HMAC512_LFSR_SEED_SIZE 6
 #define HMAC512_TAG_SIZE 16
 #define HMAC384_TAG_SIZE 12
 
@@ -41,10 +41,10 @@ typedef struct {
     uint32_t  data[32];
 }hmac_io;
 
-void hmac384_flow(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init);
-void hmac512_flow(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init);
-void hmac512_flow_csr(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init);
-void hmac512_flow_return(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, uint32_t* actual_tag);
+void hmac384_flow(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL last);
+void hmac512_flow(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL last);
+void hmac512_flow_csr(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL last);
+void hmac512_flow_return(hmac_io hmac_key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL last, uint32_t* actual_tag);
 void hmac_zeroize();
 void wait_for_hmac_intr();
 void write_hmac_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size);

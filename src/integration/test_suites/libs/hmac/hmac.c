@@ -44,7 +44,7 @@ void write_hmac_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size)
     }
 }
 
-void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init){
+void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL last){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -142,7 +142,7 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
     // Program LFSR_SEED
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_5) {
         *reg_ptr++ = lfsr_seed.data[offset++];
     }
 
@@ -161,12 +161,26 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
 
     // Enable HMAC core
     if (init) {
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        if (last) {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    HMAC_REG_HMAC512_CTRL_LAST_MASK |
+                                                    (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
+        else {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
     }
     else {
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
-                                                (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        if (last) {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                    HMAC_REG_HMAC512_CTRL_LAST_MASK |
+                                                    (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
+        else {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                    (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
     }
 
     // Verify engine did not start after KV read error
@@ -216,7 +230,7 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
     }
 }
 
-void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init){
+void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL last){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -312,7 +326,7 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
     // Program LFSR_SEED
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_5) {
         *reg_ptr++ = lfsr_seed.data[offset++];
     }
 
@@ -334,12 +348,26 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
 
     // Enable HMAC core
     if (init) {
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        if (last) {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    HMAC_REG_HMAC512_CTRL_LAST_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
+        else {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
     }
     else {
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
-                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        if (last) {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                    HMAC_REG_HMAC512_CTRL_LAST_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
+        else {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
     }
 
     // Verify engine did not start after KV read error
@@ -390,7 +418,7 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
 }
 
 
-void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, uint32_t* actual_tag){
+void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL last, uint32_t* actual_tag){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -487,7 +515,7 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
     // Program LFSR_SEED
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_5) {
         *reg_ptr++ = lfsr_seed.data[offset++];
     }
 
@@ -508,12 +536,26 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
 
     // Enable HMAC core
     if (init) {
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        if (last) {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    HMAC_REG_HMAC512_CTRL_LAST_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
+        else {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
     }
     else {
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
-                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        if (last) {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                    HMAC_REG_HMAC512_CTRL_LAST_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
+        else {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        }
     }
 
     // Try to toggle key vault controls during operation
@@ -543,7 +585,7 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
 }
 
 
-void hmac512_flow_csr(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init){
+void hmac512_flow_csr(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BOOL init, BOOL last){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -571,20 +613,36 @@ void hmac512_flow_csr(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag
     // Program LFSR_SEED
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_5) {
         *reg_ptr++ = lfsr_seed.data[offset++];
     }
 
     // Enable HMAC core
     if (init) {
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW) |
-                                                (HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK));
+        if (last) {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    HMAC_REG_HMAC512_CTRL_LAST_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW) |
+                                                    HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
+        }
+        else {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW) |
+                                                    HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
+        }
     }
     else {
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
-                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW) |
-                                                (HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK));
+        if (last) {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                    HMAC_REG_HMAC512_CTRL_LAST_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW) |
+                                                    HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
+        }
+        else {
+            lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                    (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW) |
+                                                    HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
+        }
     }
 
     

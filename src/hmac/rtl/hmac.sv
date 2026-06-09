@@ -265,13 +265,13 @@ always_comb begin
     hwif_in.HMAC512_TAG[dword].TAG.hwclr = zeroize_reg;
   end
   //drive hardware writable registers from key vault
-  for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
+  for (int unsigned dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     hwif_in.HMAC512_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC512_BLOCK[dword].BLOCK.next = kv_block_write_data;
     hwif_in.HMAC512_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_data_present_reset | (kv_block_error == KV_READ_FAIL);
     hwif_in.HMAC512_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
   end
-  for (int dword=0; dword < KEY_NUM_DWORDS; dword++)begin
+  for (int unsigned dword=0; dword < KEY_NUM_DWORDS; dword++)begin
     hwif_in.HMAC512_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC512_KEY[dword].KEY.next = kv_key_write_data;
     hwif_in.HMAC512_KEY[dword].KEY.hwclr = zeroize_reg | kv_data_present_reset | (kv_key_error == KV_READ_FAIL);
@@ -321,7 +321,7 @@ end
 //set the lock for the part of the block being written by KV logic
 //release the lock once init has been seen
 always_comb begin
-  for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
+  for (int unsigned dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
     if (init_reg | next_reg) begin
       block_reg_lock_nxt[dword] = '0;
     end
@@ -393,7 +393,7 @@ hmac_reg i_hmac_reg (
 
 always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[KEY_NUM_DWORDS-1 : HMAC384_KEY_SIZE/DATA_WIDTH] == '0);
 always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == '0);
-always_comb last_alone_error = last_reg & ~init_reg & ~next_reg;
+always_comb last_alone_error = hwif_out.HMAC512_CTRL.LAST.value & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value;
 
 // last_alone_error is a soft notification: the engine never started,
 // so it must NOT join error_flag (which gates core_tag_we and is

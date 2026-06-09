@@ -212,6 +212,24 @@ void main() {
             reg_ptr++;
             offset++;
         }
+        rst_count++;
+        SEND_STDOUT_CTRL(0xf6);
+    }
+    if(rst_count == 4) {
+        VPRINTF(LOW, " ***** HMAC last_alone_error !!\n");
+
+        while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
+
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_LAST_MASK |
+                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+
+        wait_for_hmac_intr();
+        if ((cptra_intr_rcv.hmac_error == 0)){
+            VPRINTF(ERROR, "\nHMAC last_alone_error is not detected.\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+        hmac_zeroize();
     }
     // Write 0xff to STDOUT for TB to terminate test.
     SEND_STDOUT_CTRL( 0xff);

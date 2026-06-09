@@ -193,7 +193,7 @@ void main() {
 
 
     VPRINTF(LOW, "Block data: 0x%x\n", hmac_block.data[0]);
-    hmac512_flow_return(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, actual_tag);
+    hmac512_flow_return(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, TRUE, actual_tag);
     hmac_zeroize();
 
     //Use SK  in aes to generate ciphertext
@@ -252,7 +252,7 @@ void main() {
     hmac512_tag.kv_intf = TRUE;
     hmac512_tag.kv_id = 3;
     hmac512_tag.data_size = 16;
-    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, TRUE);
     hmac_zeroize();
 
     //Use SK in AES to generate ciphertext, compare agains the one generated before
