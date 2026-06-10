@@ -723,4 +723,31 @@ initial begin
     end
 end
 
+initial begin
+    forever @(posedge cptra_rst_b) begin
+        if($test$plusargs("SOC_WRITE_RST")) begin
+            fork
+                begin
+                    assert (`CPTRA_TOP_PATH.cptra_noncore_rst_b == 0) else begin
+                        $display("* TEST FAILED");
+                        $error("cptra_noncore_rst_b asserted for the SoC access under reset test");
+                        $finish;
+                    end
+                    m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FW_EXTENDED_ERROR_INFO_0), .user(32'hFFFF_FFFF), .data(32'hBAADB000), .resp(wresp), .resp_user(buser));
+                    m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FW_EXTENDED_ERROR_INFO_0), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp), .resp_user(buser));
+
+                    if (rdata != 32'hBAADB000) begin
+                        $display("* TEST FAILED");
+                        $error($sformatf("SoC write on reset failed! Expected to read back: 0x%x. Got: 0x%x.", 32'hBAADB000, rdata));
+                        $finish;
+                    end
+
+                    $display("* TEST PASSED");
+                    $finish;
+                end
+            join
+        end
+    end
+end
+
 endmodule
