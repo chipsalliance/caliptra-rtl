@@ -2,17 +2,35 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 {
-  sv_flist_gen_cmd:   fusesoc
+  pre_build_cmds: [
+    // Generate fusesoc .core files from the Caliptra compile.yaml files into a
+    // temporary directory in the build dir. This is then passed via --cores-root
+    // to allow cores there to be discovered and resolved by fusesoc.
+    "cd {proj_root} && compile-to-core . {scratch_path}/cores",
+
+    // Generate the UVM RAL files
+    "true",
+  ]
+
+  sv_flist_gen_dir: "{build_dir}/fusesoc-work"
+
+  sv_flist_gen_cmd: "fusesoc"
+  sv_flist_gen_opts: [
+    "--cores-root={scratch_path}/cores",
+    "--cores-root={proj_root}/src",
+    "--cores-root={proj_root}/tools/dv-classes",
+    "run",
+    "{sv_flist_gen_flags}",
+    "--target=sim",
+    "--work-root={sv_flist_gen_dir}",
+    "--setup",
+    "{fusesoc_core}",
+  ]
+
+  // Construct the expected path the the .f/.scr filelist that is passed to the
+  // simulator. Note. that fusesoc converts the colons ':' that make up the VLNV
+  // core identifier to underscores in the generated filename, so we need to copy
+  // that operation here to correctly form the path.
   fusesoc_core_:      "{eval_cmd} echo \"{fusesoc_core}\" | tr ':' '_'"
-  sv_flist_gen_opts:  ["{fusesoc_cores_root_dirs}",
-                       "run",
-                       "{sv_flist_gen_flags}",
-                       "--target=sim",
-                       "--work-root={build_dir}/fusesoc-work",
-                       "--setup",
-                       "{fusesoc_core}",
-                      ]
-  fusesoc_cores_root_dirs: ["--cores-root {proj_root}/hw"]
-  sv_flist_gen_dir:   "{build_dir}/fusesoc-work"
   sv_flist:           "{sv_flist_gen_dir}/{fusesoc_core_}.scr"
 }
