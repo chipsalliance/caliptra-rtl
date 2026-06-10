@@ -889,7 +889,7 @@ module caliptra_top_sva
         @(posedge `SVA_RDC_CLK)
         ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_rdata0_bank[0][i] == 0))
       )
-      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_rdata0_bank[%0d] is not zero", i);
+      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_rdata0_bank[0][%0d] is not zero", i);
     end
 
     // abr_mem_wdata: Now indexed [ABR_NUM_NTT-1:0][2:1] after SCA. Check NTT[0] instances.
@@ -898,7 +898,7 @@ module caliptra_top_sva
         @(posedge `SVA_RDC_CLK)
         ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata[0][i] == 0))
       )
-      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata[%0d] is not zero", i);
+      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata[0][%0d] is not zero", i);
     end
 
     // abr_mem_masked_wdata: inst3 removed in SCA optimization — assertion removed
@@ -909,7 +909,7 @@ module caliptra_top_sva
         @(posedge `SVA_RDC_CLK)
         ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata0_bank[0][i] == 0))
       )
-      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata0_bank[%0d] is not zero", i);
+      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata0_bank[0][%0d] is not zero", i);
     end
   endgenerate
   
