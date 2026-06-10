@@ -1026,10 +1026,6 @@ module sha256_ctrl_tb();
 
       $display("   -- Testbench for sha256 started --");
 
-      init_sim();
-      reset_dut();
-      check_name_version();
-
       fin  = $fopen("../stimulus/acvp/SHA2-256.txt","r");
       if (fin == 0)
       begin
@@ -1047,7 +1043,7 @@ module sha256_ctrl_tb();
 
     while(1)
     begin
-      result = $fscanf(fin, "%*d %s %d %*d %s", test_type, tcid, pt);
+      result = $fscanf(fin, "%s %*d %d %*d %s", test_type, tcid, pt);
       if (result != 3)
       begin
         $display("End of file");
@@ -1088,11 +1084,11 @@ module sha256_ctrl_tb();
           case (test_mode)
             SHA224_MODE:
               begin
-                 $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"md\": \"%0h\"\n},\n", tcid, digest[255:32]);
+                 $fwrite(fout, "%s %0d %056h\n", test_type, tcid, digest[255:32]);
               end
             SHA256_MODE:
               begin
-                 $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"md\": \"%0h\"\n},\n", tcid, digest[255:0]);
+                 $fwrite(fout, "%s %0d %064h\n", test_type, tcid, digest[255:0]);
               end
           endcase
           write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
@@ -1129,7 +1125,6 @@ module sha256_ctrl_tb();
               //convert string to hex and feed it to IP
               for (int j = 0; j < (sha_in.len())/128; j++)
               begin
-                //sha_blk_str = sha_in[(j*128)+:128];
                 sha_blk_str = sha_in.substr(j*128, (j*128)+127);
                 //in vcs, atohex is working on 32 bits only.
                 //so slicing the 512 bit string and performing
@@ -1162,23 +1157,20 @@ module sha256_ctrl_tb();
                    c = $sformatf("%x", digest);
                 end
               endcase
-              //c = $sformatf("%x", digest);
               write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
             end//end inner loop
             case (test_mode)
             SHA224_MODE:
               begin
-                 $fwrite(fout, "{\n    \"md\": \"%0h\"\n},\n", digest[255:32]);
+                 $fwrite(fout, "%s %0d %056h\n", test_type, tcid, digest[255:32]);
                  seed = $sformatf("%x", digest[255:32]);
               end
             SHA256_MODE:
               begin
-                 $fwrite(fout, "{\n    \"md\": \"%0h\"\n},\n", digest);
+                 $fwrite(fout, "%s %0d %064h\n", test_type, tcid, digest[255:0]);
                  seed = $sformatf("%x", digest);
               end
             endcase
-            //$fwrite(fout, "%0h\n", digest);
-            //seed = $sformatf("%x", digest);
           end//end outer loop
         end
       end//processed 1 line from file
