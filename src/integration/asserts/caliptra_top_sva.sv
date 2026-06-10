@@ -866,13 +866,13 @@ module caliptra_top_sva
       @(posedge `SVA_RDC_CLK)
       ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.skdecode_mem_wr_data_a[0] == 0))
     )
-    else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data_a is not zero");
+    else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data_a[0] is not zero");
 
     ZERO_MLDSA_skdecode_mem_wr_data_b: assert property (
       @(posedge `SVA_RDC_CLK)
       ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.skdecode_mem_wr_data_b[0] == 0))
     )
-    else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data_b is not zero");
+    else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data_b[0] is not zero");
 
     // skdecode_rd_data: 2-element array of DATA_WIDTH bits each.
     for (genvar i = 0; i < 2; i++) begin: skdecode_rd_data_check
