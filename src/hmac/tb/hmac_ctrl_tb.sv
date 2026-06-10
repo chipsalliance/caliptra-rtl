@@ -25,6 +25,7 @@
 `include "caliptra_reg_defines.svh"
 `include "caliptra_reg_field_defines.svh"
 `include "kv_macros.svh"
+`include "caliptra_macros.svh"
 
 module hmac_ctrl_tb();
 
@@ -933,18 +934,22 @@ module hmac_ctrl_tb();
   task acvp_tests;
     begin : acvp_tests_block
       int fin, fout, result, mac_len, tcid, msg_len, pad_msg_len;
-      string key, key_32, msg, pad_msg, block_str, block_str_32;
-      reg [383:0] key_hex, digest_out;
+      string key, key_32, msg, pad_msg, block_str, block_str_32, digest_out_str, test_type;
+      string fmt;
+      reg [511:0] key_hex, digest_out;
       reg [1023:0] block_hex;
-      reg [159:0] seed;
+      reg [383:0] seed;
+      reg [31:0] mode;
 
-      fin  = $fopen("../stimulus/acvp/HMAC-SHA2-384.txt","r");
+      mode = HMAC512_MODE;
+
+      fin  = $fopen("../stimulus/acvp/HMAC-SHA2-512.txt","r");
       if (fin == 0)
       begin
         $display("ERROR: Input file not found");
         $stop;
       end
-      fout = $fopen("../stimulus/acvp/HMAC-SHA2-384_digest.txt","w");
+      fout = $fopen("../stimulus/acvp/HMAC-SHA2-512_digest.txt","w");
       if (fout == 0)
       begin
         $display("ERROR: Output file not found");
@@ -955,8 +960,8 @@ module hmac_ctrl_tb();
 
       while (1)
       begin
-        result = $fscanf(fin, "%*d %d %d %s %s", mac_len, tcid, key, msg);
-        if (result != 4)
+        result = $fscanf(fin, "%s %d %d %s %s", test_type, mac_len, tcid, key, msg);
+        if (result != 5)
         begin
           $display("End of file");
           break;
@@ -968,17 +973,21 @@ module hmac_ctrl_tb();
           $display("TC%01d: msg: %s", tcid, pad_msg);
           pad_msg_len = pad_msg.len();
           $display("*** TC%01d - acvp vector test started.", tcid);
-          //write Key
+          //write Key. Pad 0s to 384 bit key LSB to make 512 bits
           //in vcs, atohex works only on 32 bits.
-          //so slicing the 384 bit string and performing
+          //so slicing the 512 bit string and performing
           //the conversion
-          for (int i=0; i<12; i++)
+          if (mode == HMAC512_MODE)
+          begin
+            key = {key, "00000000000000000000000000000000"};
+          end
+          for (int i=0; i<16; i++)
           begin
              key_32  = key.substr(i*8, (i*8)+7);
-             key_hex = {key_hex[351:0], key_32.atohex()};
+             key_hex = {key_hex[479:0], key_32.atohex()};
           end
-          $display("TC%01d: Key: 0x%096x", tcid, key_hex);
-          write_key(key_hex);
+          $display("TC%01d: Key: 0x%0128x", tcid, key_hex);
+          hmac_write_key(key_hex);
           //convert string to hex and feed it to IP
           for (int j = 0; j < pad_msg_len/256; j++)
           begin
@@ -995,30 +1004,32 @@ module hmac_ctrl_tb();
             write_block(block_hex);
             if (j == 0)
             begin
-            //Write Seed
-            write_seed(seed);
-            //Init value
-            write_single_word(ADDR_CTRL, CTRL_INIT_VALUE);
-            #CLK_PERIOD;
-            hsel_i_tb       = 0;
+              //Write Seed
+              write_seed(seed);
+              //Init value
+              write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
+              #CLK_PERIOD;
+              hsel_i_tb       = 0;
             end
             else
             begin
-            //Next value
-            write_single_word(ADDR_CTRL, CTRL_NEXT_VALUE);
-            #CLK_PERIOD;
-            hsel_i_tb       = 0;
+              //Next value
+              write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
+              #CLK_PERIOD;
+              hsel_i_tb       = 0;
             end
             //Wait for done
             #(CLK_PERIOD);
             wait_ready();
           end
           //Read digest to global variable digest_data
-          read_digest();
-          digest_out = digest_data >> (384-mac_len);
-          $fwrite(fout, "{\n    \"tcId\": %0d,\n    \"mac\": \"%0h\"\n},\n", tcid, digest_out);
+          hmac_read_digest();
+          digest_out = digest_data >> (512-mac_len);
+          fmt = $sformatf("%%0%0dh", mac_len/4);
+          $sformat(digest_out_str, fmt, digest_out);
+          $fwrite(fout, "%s %0d %s\n", test_type, tcid, digest_out_str);
           //Zeroize
-          write_single_word(ADDR_CTRL, {29'h0, 1'b1, 2'b0}); //zeroize
+          write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
           
         end
       end
