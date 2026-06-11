@@ -281,12 +281,17 @@ package hmac_reg_pkg;
     } hmac_reg__HMAC512_CTRL__LAST__out_t;
 
     typedef struct packed{
+        logic value;
+    } hmac_reg__HMAC512_CTRL__Reserved__out_t;
+
+    typedef struct packed{
         hmac_reg__HMAC512_CTRL__INIT__out_t INIT;
         hmac_reg__HMAC512_CTRL__NEXT__out_t NEXT;
         hmac_reg__HMAC512_CTRL__ZEROIZE__out_t ZEROIZE;
         hmac_reg__HMAC512_CTRL__MODE__out_t MODE;
         hmac_reg__HMAC512_CTRL__CSR_MODE__out_t CSR_MODE;
         hmac_reg__HMAC512_CTRL__LAST__out_t LAST;
+        hmac_reg__HMAC512_CTRL__Reserved__out_t Reserved;
     } hmac_reg__HMAC512_CTRL__out_t;
 
     typedef struct packed{

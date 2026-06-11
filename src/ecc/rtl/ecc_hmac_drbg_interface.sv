@@ -43,6 +43,7 @@
 //                  There is NO RESEED process.
 //
 //======================================================================
+import hmac_param_pkg::*;
 
 module ecc_hmac_drbg_interface#(
     parameter                  REG_SIZE       = 384,
@@ -73,8 +74,8 @@ module ecc_hmac_drbg_interface#(
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
     //----------------------------------------------------------------
-    logic [REG_SIZE-1 : 0]  lfsr_seed_reg;
-    logic [191 : 0]         hmac_lfsr_seed;
+    logic [REG_SIZE-1 : 0]          lfsr_seed_reg;
+    logic [LFSR_SEED_SIZE-1 : 0]    hmac_lfsr_seed;
 
     logic                   hmac_drbg_init;
     logic                   hmac_drbg_next;
@@ -141,7 +142,7 @@ module ecc_hmac_drbg_interface#(
 
     genvar i;
     generate 
-        for (i=0; i < 6; i++) begin : gen_lfsr
+        for (i=0; i < LFSR_SEED_SIZE/32; i++) begin : gen_lfsr
             caliptra_prim_lfsr
             #(
             .LfsrType("FIB_XNOR"),

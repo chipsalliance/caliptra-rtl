@@ -70,15 +70,11 @@ addrmap hmac_reg {
         default resetsignal = reset_b;
         field {desc = "Control init command bit: Trigs the HMAC512 core to start the 
                                 processing for the key and the first padded 
-                                message block. SW must poll HMAC512_KV_RD_KEY_STATUS.READY
-                                and HMAC512_KV_RD_BLOCK_STATUS.READY before writing
-                                this bit when KV-sourced; pulses issued while KV is
-                                not ready are masked by HW.
+                                message block. 
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse; swwe;} INIT = 1'b0;
         field {desc = "Control next command bit: ​Trigs the HMAC512 core to start the 
                                 processing for the remining padded message block.
-                                Same KV-readiness requirement as INIT applies.
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse; swwe;} NEXT = 1'b0;
         field {desc = "Zeroize all internal registers: Zeroize all internal registers after HMAC process, to avoid SCA leakage.
@@ -95,6 +91,7 @@ addrmap hmac_reg {
                                 + final hash and produces the HMAC tag.
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse; swwe;} LAST = 1'b0;
+        field {desc = "Reserved";} Reserved = 1'b0;
     
     } HMAC512_CTRL @0x00000010;
 
@@ -109,9 +106,7 @@ addrmap hmac_reg {
         default hw = w;
         default resetsignal = reset_b;
         field {desc = "Status ready bit: ​Indicates if the core is ready to take
-                                a control command. In KV-sourced mode, also confirm
-                                HMAC512_KV_RD_KEY_STATUS.READY and HMAC512_KV_RD_BLOCK_STATUS.READY
-                                before issuing INIT/NEXT; this bit only reflects pipeline idleness.";} READY = 1'b0;
+                                a control command and process the block.";} READY = 1'b0;
         field {desc = "Status valid bit: ​Indicates if the process is done and the
                                 results stored in TAG registers are valid.";} VALID = 1'b0;
     

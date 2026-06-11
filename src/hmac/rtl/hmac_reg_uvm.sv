@@ -76,6 +76,7 @@ package hmac_reg_uvm;
         hmac_reg__HMAC512_CTRL_bit_cg MODE_bit_cg[1];
         hmac_reg__HMAC512_CTRL_bit_cg CSR_MODE_bit_cg[1];
         hmac_reg__HMAC512_CTRL_bit_cg LAST_bit_cg[1];
+        hmac_reg__HMAC512_CTRL_bit_cg Reserved_bit_cg[1];
         hmac_reg__HMAC512_CTRL_fld_cg fld_cg;
         rand uvm_reg_field INIT;
         rand uvm_reg_field NEXT;
@@ -83,6 +84,7 @@ package hmac_reg_uvm;
         rand uvm_reg_field MODE;
         rand uvm_reg_field CSR_MODE;
         rand uvm_reg_field LAST;
+        rand uvm_reg_field Reserved;
 
         function new(string name = "hmac_reg__HMAC512_CTRL");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -106,6 +108,8 @@ package hmac_reg_uvm;
             this.CSR_MODE.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
             this.LAST = new("LAST");
             this.LAST.configure(this, 1, 5, "WO", 0, 'h0, 1, 1, 0);
+            this.Reserved = new("Reserved");
+            this.Reserved.configure(this, 1, 6, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(INIT_bit_cg[bt]) INIT_bit_cg[bt] = new();
                 foreach(NEXT_bit_cg[bt]) NEXT_bit_cg[bt] = new();
@@ -113,6 +117,7 @@ package hmac_reg_uvm;
                 foreach(MODE_bit_cg[bt]) MODE_bit_cg[bt] = new();
                 foreach(CSR_MODE_bit_cg[bt]) CSR_MODE_bit_cg[bt] = new();
                 foreach(LAST_bit_cg[bt]) LAST_bit_cg[bt] = new();
+                foreach(Reserved_bit_cg[bt]) Reserved_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
