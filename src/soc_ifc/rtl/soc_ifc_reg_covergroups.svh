@@ -32,13 +32,17 @@
     input bit [1-1:0] dccm_ecc_unc,
     input bit [1-1:0] nmi_pin,
     input bit [1-1:0] crypto_err,
-    input bit [28-1:0] rsvd
+    input bit [1-1:0] kv_error,
+    input bit [1-1:0] shadow_storage_err,
+    input bit [26-1:0] rsvd
     );
         option.per_instance = 1;
         iccm_ecc_unc_cp : coverpoint iccm_ecc_unc;
         dccm_ecc_unc_cp : coverpoint dccm_ecc_unc;
         nmi_pin_cp : coverpoint nmi_pin;
         crypto_err_cp : coverpoint crypto_err;
+        kv_error_cp : coverpoint kv_error;
+        shadow_storage_err_cp : coverpoint shadow_storage_err;
         rsvd_cp : coverpoint rsvd;
 
     endgroup
@@ -59,12 +63,14 @@
     input bit [1-1:0] mbox_prot_no_lock,
     input bit [1-1:0] mbox_prot_ooo,
     input bit [1-1:0] mbox_ecc_unc,
-    input bit [29-1:0] rsvd
+    input bit [1-1:0] shadow_update_err,
+    input bit [28-1:0] rsvd
     );
         option.per_instance = 1;
         mbox_prot_no_lock_cp : coverpoint mbox_prot_no_lock;
         mbox_prot_ooo_cp : coverpoint mbox_prot_ooo;
         mbox_ecc_unc_cp : coverpoint mbox_ecc_unc;
+        shadow_update_err_cp : coverpoint shadow_update_err;
         rsvd_cp : coverpoint rsvd;
 
     endgroup
@@ -2075,7 +2081,8 @@
     input bit [1-1:0] mask_iccm_ecc_unc,
     input bit [1-1:0] mask_dccm_ecc_unc,
     input bit [1-1:0] mask_nmi_pin,
-    input bit [1-1:0] mask_crypto_err
+    input bit [1-1:0] mask_crypto_err,
+    input bit [1-1:0] mask_kv_error
     );
         option.per_instance = 1;
         option.auto_bin_max = 64;
@@ -2083,6 +2090,7 @@
         mask_dccm_ecc_unc_cp : coverpoint mask_dccm_ecc_unc;
         mask_nmi_pin_cp : coverpoint mask_nmi_pin;
         mask_crypto_err_cp : coverpoint mask_crypto_err {illegal_bins ro_value = {1};}
+        mask_kv_error_cp : coverpoint mask_kv_error {illegal_bins ro_value = {1};}
 
     endgroup
 
@@ -2234,6 +2242,110 @@
         option.per_instance = 1;
         option.auto_bin_max = 4;
         compare_h_cp : coverpoint compare_h;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__INTERNAL_ICCM_FMC_START_ADDR COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__internal_iccm_fmc_start_addr_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__internal_iccm_fmc_start_addr_fld_cg with function sample(
+    input bit [18-1:0] addr
+    );
+        option.per_instance = 1;
+        option.auto_bin_max = 64;
+        addr_cp : coverpoint addr;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__INTERNAL_ICCM_FMC_END_ADDR COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__internal_iccm_fmc_end_addr_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__internal_iccm_fmc_end_addr_fld_cg with function sample(
+    input bit [18-1:0] addr
+    );
+        option.per_instance = 1;
+        option.auto_bin_max = 64;
+        addr_cp : coverpoint addr;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__INTERNAL_ICCM_RT_START_ADDR COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__internal_iccm_rt_start_addr_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__internal_iccm_rt_start_addr_fld_cg with function sample(
+    input bit [18-1:0] addr
+    );
+        option.per_instance = 1;
+        option.auto_bin_max = 64;
+        addr_cp : coverpoint addr;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__INTERNAL_ICCM_RT_END_ADDR COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__internal_iccm_rt_end_addr_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__internal_iccm_rt_end_addr_fld_cg with function sample(
+    input bit [18-1:0] addr
+    );
+        option.per_instance = 1;
+        option.auto_bin_max = 64;
+        addr_cp : coverpoint addr;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__INTERNAL_ICCM_REGION_LOCK COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__internal_iccm_region_lock_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__internal_iccm_region_lock_fld_cg with function sample(
+    input bit [1-1:0] lock
+    );
+        option.per_instance = 1;
+        lock_cp : coverpoint lock;
 
     endgroup
 

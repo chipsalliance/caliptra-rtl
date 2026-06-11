@@ -22,6 +22,7 @@
 // 
 //======================================================================
 
+`include "caliptra_prim_assert.sv"
 `include "caliptra_reg_field_defines.svh"
 `include "kv_macros.svh"
 

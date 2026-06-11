@@ -31,6 +31,7 @@
 // 
 //==============================================================================
 
+`include "caliptra_macros.svh"
 module doe_cbc 
   import doe_defines_pkg::*;
   import kv_defines_pkg::*;
@@ -72,6 +73,7 @@ module doe_cbc
    //interface with kv
    output kv_write_t kv_write,
    input  logic ocp_lock_en, // Synth-time constant strap input instead of ocp_lock_in_progress
+   input  logic doe_cmd_lock, // Prevent new DOE commands once FMC/RT execution begins
    input  logic debugUnlock_or_scan_mode_switch
   );
 
@@ -200,8 +202,11 @@ assign hwif_in.DOE_STATUS.VALID.hwclr = hwif_out.DOE_CTRL.CMD.swmod || hwif_out.
 assign hwif_in.DOE_STATUS.ERROR.hwset = flow_error;
 assign hwif_in.DOE_STATUS.ERROR.hwclr = clear_obf_secrets || hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod;
 
-assign hwif_in.DOE_CTRL.CMD.hwclr     = flow_done | clear_obf_secrets;
-assign hwif_in.DOE_CTRL.CMD_EXT.hwclr = flow_done | clear_obf_secrets;
+// Wire doe_cmd_lock to the register block swwel -- blocks SW writes to CMD/CMD_EXT
+always_comb hwif_in.doe_cmd_lock = doe_cmd_lock;
+
+assign hwif_in.DOE_CTRL.CMD.hwclr     = flow_done | clear_obf_secrets | doe_cmd_lock;
+assign hwif_in.DOE_CTRL.CMD_EXT.hwclr = flow_done | clear_obf_secrets | doe_cmd_lock;
 
 assign doe_cmd_reg.cmd = doe_cmd_e'({hwif_out.DOE_CTRL.CMD_EXT.value,hwif_out.DOE_CTRL.CMD.value});
 // OCP LOCK flow for HEK deobf requires output be stored in a predetermined slot.

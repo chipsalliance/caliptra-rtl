@@ -58,6 +58,18 @@ localparam KV_DEST_IDX_AES_KEY    = 5;
 localparam KV_DEST_IDX_MLKEM_SEED = 6;
 localparam KV_DEST_IDX_MLKEM_MSG  = 7;
 localparam KV_DEST_IDX_DMA_DATA   = 8;
+
+//KV slots
+localparam KV_SLOT_SI_IDEV = 0;
+localparam KV_SLOT_SI_LDEV  = 1;
+localparam KV_SLOT_KEY_LADDER = 2;
+localparam KV_SLOT_FMC_CDI = 6;
+localparam KV_SLOT_FMC_ECDSA = 7;
+localparam KV_SLOT_FMC_MLDSA = 8;
+localparam KV_SLOT_RT_CDI = 4;
+localparam KV_SLOT_RT_ECDSA = 5;
+localparam KV_SLOT_RT_MLDSA = 9;
+localparam KV_SLOT_STABLE_OWNER = 15;
     
 // HEK seed (deobfuscated) is used as context for SP 800-108 KDF when deriving
 // the HEK

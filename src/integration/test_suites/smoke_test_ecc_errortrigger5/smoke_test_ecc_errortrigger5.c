@@ -202,7 +202,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST invalid privkey error\n");
+        VPRINTF(LOW, "\n TEST: invalid privkey injection\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -235,7 +235,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST invalid pubkey_x error\n");
+        VPRINTF(LOW, "\n TEST: invalid pubkey_x injection\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -268,7 +268,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST invalid pubkey_y error\n");
+        VPRINTF(LOW, "\n TEST: invalid pubkey_y injection\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;

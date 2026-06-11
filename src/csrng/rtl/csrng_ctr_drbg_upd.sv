@@ -59,6 +59,8 @@ module csrng_ctr_drbg_upd #(
   output logic               ctr_drbg_updob_sm_err_o
 );
 
+  `include "caliptra_prim_assert.sv"
+
   localparam logic[31:0] UpdReqFifoDepth = 1;
   localparam logic[31:0] UpdReqFifoWidth = KeyLen+BlkLen+SeedLen+StateId+Cmd;
   localparam logic[31:0] BlkEncReqFifoDepth = 1;

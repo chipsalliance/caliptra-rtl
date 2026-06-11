@@ -107,6 +107,7 @@ package doe_reg_pkg;
     typedef struct packed{
         logic reset_b;
         logic cptra_pwrgood;
+        logic doe_cmd_lock;
         doe_reg__DOE_IV__in_t [4-1:0]DOE_IV;
         doe_reg__DOE_CTRL__in_t DOE_CTRL;
         doe_reg__DOE_STATUS__in_t DOE_STATUS;

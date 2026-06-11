@@ -220,6 +220,8 @@ import el2_pkg::*;
    /*pragma coverage on*/
    );
 
+   `include "common_defines.sv"
+
    localparam TAGWIDTH = 2 ;
    localparam IDWIDTH  = 2 ;
 
