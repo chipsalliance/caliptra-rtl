@@ -991,6 +991,8 @@
 #define HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK                                                         (0x10)
 #define HMAC_REG_HMAC512_CTRL_LAST_LOW                                                              (5)
 #define HMAC_REG_HMAC512_CTRL_LAST_MASK                                                             (0x20)
+#define HMAC_REG_HMAC512_CTRL_RESTORE_LOW                                                           (6)
+#define HMAC_REG_HMAC512_CTRL_RESTORE_MASK                                                          (0x40)
 #endif
 #define CLP_HMAC_REG_HMAC512_STATUS                                                                 (0x10010018)
 #ifndef HMAC_REG_HMAC512_STATUS

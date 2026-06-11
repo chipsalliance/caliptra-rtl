@@ -67,6 +67,8 @@ module hmac
   reg init_reg;
   reg next_reg;
   reg last_reg;
+  reg restore_reg;
+  reg is_last_op_reg;
 
   reg mode_reg;
   
@@ -92,9 +94,11 @@ module hmac
   wire                          core_ready;
   wire [TAG_SIZE-1 : 0]         core_tag;
   wire                          core_tag_valid;
+  wire [TAG_SIZE-1 : 0]         core_restore_digest;
   wire [LFSR_SEED_SIZE-1 : 0]   core_lfsr_seed;
-  reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_reg;
-  reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] kv_reg;
+  reg  [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_reg;
+  wire [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_next;
+  reg  [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] kv_reg;
 
   reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] get_mask;
 
@@ -153,6 +157,15 @@ module hmac
 
   assign core_lfsr_seed = {lfsr_seed_reg[00], lfsr_seed_reg[01], lfsr_seed_reg[02],
                            lfsr_seed_reg[03], lfsr_seed_reg[04], lfsr_seed_reg[05]};
+
+  assign core_restore_digest = {hwif_out.HMAC512_TAG[00].TAG.value, hwif_out.HMAC512_TAG[01].TAG.value,
+                                hwif_out.HMAC512_TAG[02].TAG.value, hwif_out.HMAC512_TAG[03].TAG.value,
+                                hwif_out.HMAC512_TAG[04].TAG.value, hwif_out.HMAC512_TAG[05].TAG.value,
+                                hwif_out.HMAC512_TAG[06].TAG.value, hwif_out.HMAC512_TAG[07].TAG.value,
+                                hwif_out.HMAC512_TAG[08].TAG.value, hwif_out.HMAC512_TAG[09].TAG.value,
+                                hwif_out.HMAC512_TAG[10].TAG.value, hwif_out.HMAC512_TAG[11].TAG.value,
+                                hwif_out.HMAC512_TAG[12].TAG.value, hwif_out.HMAC512_TAG[13].TAG.value,
+                                hwif_out.HMAC512_TAG[14].TAG.value, hwif_out.HMAC512_TAG[15].TAG.value};
   
   //rising edge detect on core tag valid
   assign core_tag_we = (core_tag_valid & ~tag_valid_reg) & ~error_flag_reg;
@@ -175,6 +188,9 @@ module hmac
                  .key(core_key),
 
                  .block_msg(core_block),
+
+                 .restore_cmd(restore_reg),
+                 .restore_digest(core_restore_digest),
 
                  .ready(core_ready),
                  .tag(core_tag),
@@ -202,6 +218,7 @@ module hmac
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
           kv_block_data_present <= '0;
+          is_last_op_reg  <= '0;
         end
       else if (zeroize_reg)
         begin
@@ -212,17 +229,21 @@ module hmac
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
           kv_block_data_present <= '0;
+          is_last_op_reg  <= '0;
         end
       else
         begin
           tag_valid_reg <= core_tag_valid & ~error_flag_reg;
           ready_reg     <= core_ready; 
 
+          if (init_reg | next_reg | restore_reg)
+            is_last_op_reg <= last_reg;
+
           //write to sw register
           if (core_tag_we & ~(dest_keyvault | kv_data_present))
-            tag_reg <= core_tag & get_mask;
+            tag_reg <= tag_next;
           if (core_tag_we & (dest_keyvault | kv_data_present))
-            kv_reg <= core_tag & get_mask;
+            kv_reg <= tag_next;
 
           block_reg_lock <= block_reg_lock_nxt;
           kv_key_data_present <= kv_key_data_present_set ? '1 :
@@ -233,6 +254,10 @@ module hmac
     end // reg_update
 
 //HMAC register hardware interfaces
+//tag_next: comb value driven to TAG.next; tag_reg: same value flopped on core_tag_we.
+//Need both because TAG has we=true (regblock loads .next on the .we strobe).
+assign tag_next = is_last_op_reg ? (core_tag & get_mask) : core_tag;
+
 always_comb begin
   //drive resets to register block
   hwif_in.error_reset_b = cptra_pwrgood;
@@ -248,12 +273,14 @@ always_comb begin
   hwif_in.HMAC512_CTRL.NEXT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.LAST.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.MODE.swwe = ready_reg;
+  hwif_in.HMAC512_CTRL.RESTORE.swwe = ready_reg;
 
   //assign hardware readable registers to drive hmac core
   //mask the command until kv clients are idle
   init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
   next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready;
   last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready;
+  restore_reg = hwif_out.HMAC512_CTRL.RESTORE.value & kv_key_ready & kv_block_ready;
   zeroize_reg = hwif_out.HMAC512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
   mode_reg = hwif_out.HMAC512_CTRL.MODE.value;
 
@@ -261,9 +288,11 @@ always_comb begin
   hwif_in.HMAC512_STATUS.READY.next = ready_reg;
   hwif_in.HMAC512_STATUS.VALID.next = tag_valid_reg;
   for (int dword=0; dword < TAG_NUM_DWORDS; dword++) begin
-    hwif_in.HMAC512_TAG[dword].TAG.next = tag_reg[(TAG_NUM_DWORDS - 1)-dword];
+    hwif_in.HMAC512_TAG[dword].TAG.next  = tag_next[(TAG_NUM_DWORDS - 1)-dword];
+    hwif_in.HMAC512_TAG[dword].TAG.we    = core_tag_we & ~(dest_keyvault | kv_data_present);
     hwif_in.HMAC512_TAG[dword].TAG.hwclr = zeroize_reg;
   end
+
   //drive hardware writable registers from key vault
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     hwif_in.HMAC512_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
@@ -321,8 +350,8 @@ end
 //set the lock for the part of the block being written by KV logic
 //release the lock once init has been seen
 always_comb begin
-  for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
-    if (init_reg | next_reg) begin
+  for (int unsigned dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
+    if (init_reg | next_reg | restore_reg) begin
       block_reg_lock_nxt[dword] = '0;
     end
     else begin
@@ -391,9 +420,9 @@ hmac_reg i_hmac_reg (
     .hwif_out(hwif_out)
 );
 
-always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[KEY_NUM_DWORDS-1 : HMAC384_KEY_SIZE/DATA_WIDTH] == '0);
-always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == '0);
-always_comb last_alone_error = hwif_out.HMAC512_CTRL.LAST.value & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value;
+always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg | restore_reg) & (mode_reg == HMAC512_MODE) & (key_reg[KEY_NUM_DWORDS-1 : HMAC384_KEY_SIZE/DATA_WIDTH] == '0);
+always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg | restore_reg) & (key_reg == '0);
+always_comb last_alone_error = hwif_out.HMAC512_CTRL.LAST.value & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.RESTORE.value;
 
 // last_alone_error is a soft notification: the engine never started,
 // so it must NOT join error_flag (which gates core_tag_we and is

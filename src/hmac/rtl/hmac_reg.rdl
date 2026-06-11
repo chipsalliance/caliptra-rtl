@@ -91,6 +91,14 @@ addrmap hmac_reg {
                                 + final hash and produces the HMAC tag.
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse; swwe;} LAST = 1'b0;
+        field {desc = "Control restore command bit: Resumes HMAC processing from a
+                                saved intermediate inner-SHA chaining state. SW writes the
+                                previously-captured TAG back to HMAC512_TAG, re-supplies the
+                                same MODE/KEY, then asserts RESTORE together with NEXT or NEXT|LAST.
+                                RESTORE skips ENTROPY/IPAD and loads the SHA core with TAG as the inner chaining state
+                                before processing BLOCK.
+                                [br] Software write generates only a single-cycle pulse on the
+                                hardware interface and then will be erased"; singlepulse; swwe;} RESTORE = 1'b0;
     
     } HMAC512_CTRL @0x00000010;
 
@@ -149,10 +157,13 @@ addrmap hmac_reg {
     reg {
         name = "HMAC512 TAG";
         desc = "HMAC512 component tag register type definition
-                16 32-bit registers storing the 512-bit digest output in big-endian representation.";
+                16 32-bit registers storing the 512-bit digest output in big-endian representation.
+                SW may write the TAG back as the inner-SHA chaining state when issuing the
+                RESTORE command in HMAC512_CTRL.";
 
-        default sw = r;
-        default hw = w;
+        default sw = rw;
+        default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
         field {desc = "Output tag field"; hwclr;} TAG[32] = 32'b0;
     
