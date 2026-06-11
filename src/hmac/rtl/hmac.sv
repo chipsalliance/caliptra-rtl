@@ -265,13 +265,13 @@ always_comb begin
     hwif_in.HMAC512_TAG[dword].TAG.hwclr = zeroize_reg;
   end
   //drive hardware writable registers from key vault
-  for (int unsigned dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
+  for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     hwif_in.HMAC512_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC512_BLOCK[dword].BLOCK.next = kv_block_write_data;
     hwif_in.HMAC512_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_data_present_reset | (kv_block_error == KV_READ_FAIL);
     hwif_in.HMAC512_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
   end
-  for (int unsigned dword=0; dword < KEY_NUM_DWORDS; dword++)begin
+  for (int dword=0; dword < KEY_NUM_DWORDS; dword++)begin
     hwif_in.HMAC512_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC512_KEY[dword].KEY.next = kv_key_write_data;
     hwif_in.HMAC512_KEY[dword].KEY.hwclr = zeroize_reg | kv_data_present_reset | (kv_key_error == KV_READ_FAIL);
@@ -321,7 +321,7 @@ end
 //set the lock for the part of the block being written by KV logic
 //release the lock once init has been seen
 always_comb begin
-  for (int unsigned dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
+  for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
     if (init_reg | next_reg) begin
       block_reg_lock_nxt[dword] = '0;
     end
