@@ -51,7 +51,7 @@ void hmac_write_kv_slot(uint8_t slot, uint32_t dest_valid_mask) {
     // Write LFSR seed
     reg = (uint32_t *)CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
     for (int i = 0;
-         i <= (CLP_HMAC_REG_HMAC512_LFSR_SEED_11 - CLP_HMAC_REG_HMAC512_LFSR_SEED_0) / 4;
+         i <= (CLP_HMAC_REG_HMAC512_LFSR_SEED_5 - CLP_HMAC_REG_HMAC512_LFSR_SEED_0) / 4;
          i++) {
         lsu_write_32((uintptr_t)(reg + i), 0xA5A50000 + i);
     }

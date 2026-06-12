@@ -53,6 +53,7 @@
 module hmac_drbg  
 #(
   parameter                  REG_SIZE        = 384,
+  parameter                  LFSR_LENGTH     = 192,
   parameter [REG_SIZE-1 : 0] HMAC_DRBG_PRIME = 384'hFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFC7634D81F4372DDF581A0DB248B0A77AECEC196ACCC52973
 )    
 (
@@ -68,7 +69,7 @@ module hmac_drbg
   output wire                       valid,
 
   //Data
-  input wire   [REG_SIZE-1 : 0]     lfsr_seed,
+  input wire   [LFSR_LENGTH-1 : 0]  lfsr_seed,
   input wire   [REG_SIZE-1 : 0]     entropy,
   input wire   [REG_SIZE-1 : 0]     nonce,
 
@@ -126,6 +127,7 @@ module hmac_drbg
   //----------------------------------------------------------------
   reg                   HMAC_init;
   reg                   HMAC_next;
+  reg                   HMAC_last;
   reg  [1023:0]         HMAC_block;
   reg  [REG_SIZE-1:0]   HMAC_key;
   logic [511:0]         HMAC512_key;
@@ -148,6 +150,7 @@ module hmac_drbg
     .zeroize(zeroize),
     .init_cmd(HMAC_init),
     .next_cmd(HMAC_next),
+    .last_cmd(HMAC_last),
     .mode_cmd(1'b0),  //hardcoded to HMAC384 mode
     .lfsr_seed(lfsr_seed),
     .key(HMAC512_key),
@@ -228,28 +231,32 @@ module hmac_drbg
     if (!reset_n) begin
       HMAC_init <= 0;
       HMAC_next <= 0;
+      HMAC_last <= 0;
     end
     else if (zeroize) begin
       HMAC_init <= 0;
       HMAC_next <= 0;
+      HMAC_last <= 0;
     end
     else begin
       HMAC_init <= 0;
       HMAC_next <= 0;
+      HMAC_last <= 0;
       if (first_round) begin
         unique case(drbg_st_reg)
           K10_ST:       HMAC_init <= 1;
-          K11_ST:       HMAC_next <= 1;
-          V1_ST:        HMAC_init <= 1;
+          K11_ST:    begin HMAC_next <= 1; HMAC_last <= 1; end
+          V1_ST:     begin HMAC_init <= 1; HMAC_last <= 1; end
           K20_ST:       HMAC_init <= 1;
-          K21_ST:       HMAC_next <= 1;
-          V2_ST:        HMAC_init <= 1;
-          T_ST:         HMAC_init <= 1;
-          K3_ST:        HMAC_init <= 1;
-          V3_ST:        HMAC_init <= 1;
+          K21_ST:    begin HMAC_next <= 1; HMAC_last <= 1; end
+          V2_ST:     begin HMAC_init <= 1; HMAC_last <= 1; end
+          T_ST:      begin HMAC_init <= 1; HMAC_last <= 1; end
+          K3_ST:     begin HMAC_init <= 1; HMAC_last <= 1; end
+          V3_ST:     begin HMAC_init <= 1; HMAC_last <= 1; end
           default: begin
             HMAC_init <= 0;
             HMAC_next <= 0;
+            HMAC_last <= 0;
           end 
         endcase
       end

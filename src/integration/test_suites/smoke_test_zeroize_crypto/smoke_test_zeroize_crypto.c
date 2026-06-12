@@ -86,19 +86,14 @@ void main() {
                             0x00000000,
                             0x00000440};
 
-    //this is a random lfsr_seed
-    uint32_t lfsr_seed_data[12] =  {0xC8F518D4,
+    // Random LFSR seed. RTL: HMAC512_LFSR_SEED was shrunk from 12 to 6
+    // dwords on this branch (single-SHA redesign needs less PRNG state).
+    uint32_t lfsr_seed_data[6] =   {0xC8F518D4,
                                     0xF3AA1BD4,
                                     0x6ED56C1C,
                                     0x3C9E16FB,
                                     0x800AF504,
-                                    0xC8F518D4,
-                                    0xF3AA1BD4,
-                                    0x6ED56C1C,
-                                    0x3C9E16FB,
-                                    0x800AF504,
-                                    0xC8F518D4,
-                                    0xF3AA1BD4}; 
+                                    0xC8F518D4};
 
     uint32_t expected_tag[12] =   {0xb6a8d563,
                                     0x6f5c6a72,
@@ -147,7 +142,7 @@ void main() {
     // Program LFSR_SEED
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
     offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11) {
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_5) {
         *reg_ptr++ = lfsr_seed_data[offset++];
     }
 
@@ -168,6 +163,7 @@ void main() {
 
     // Enable HMAC core
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                            HMAC_REG_HMAC512_CTRL_LAST_MASK |
                                             (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
 
     // wait for HMAC to be ready

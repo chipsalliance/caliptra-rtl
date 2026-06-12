@@ -124,7 +124,7 @@ _start:
 
     // Enable HMAC core in HMAC384 mode
     li x3, CLP_HMAC_REG_HMAC512_CTRL
-    li x4, HMAC_REG_HMAC512_CTRL_INIT_MASK
+    li x4, HMAC_REG_HMAC512_CTRL_INIT_MASK | HMAC_REG_HMAC512_CTRL_LAST_MASK
     sw x4, 0(x3)
 
     // wait for HMAC process - check dest done
@@ -169,7 +169,7 @@ _start:
 
     // Enable HMAC core in HMAC384 mode
     li x3, CLP_HMAC_REG_HMAC512_CTRL
-    li x4, HMAC_REG_HMAC512_CTRL_INIT_MASK
+    li x4, HMAC_REG_HMAC512_CTRL_INIT_MASK | HMAC_REG_HMAC512_CTRL_LAST_MASK
     sw x4, 0(x3)
 
     // wait for HMAC process

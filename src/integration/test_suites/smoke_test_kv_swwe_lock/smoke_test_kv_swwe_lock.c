@@ -178,7 +178,7 @@ static int test_hmac_kv_swwe_lock(void) {
     lsu_write_32(CLP_HMAC_REG_HMAC512_BLOCK_0 + (31 * 4), 0x00000440);
 
     reg_ptr = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
-    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_11)
+    while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_5)
         *reg_ptr++ = 0xDEADBEEF;
 
     // ------------------------------------------------------------------

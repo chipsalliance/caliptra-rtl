@@ -246,8 +246,8 @@ void main() {
     //inject hmac384_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
 
-    hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE);
-    hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE);
+    hmac384_flow(hmac384_key, hmac_block1, hmac_lfsr_seed, hmac384_tag, TRUE, FALSE);
+    hmac384_flow(hmac384_key, hmac_block2, hmac_lfsr_seed, hmac384_tag, FALSE, TRUE);
     hmac_zeroize();
 
     //sign with the generated key
