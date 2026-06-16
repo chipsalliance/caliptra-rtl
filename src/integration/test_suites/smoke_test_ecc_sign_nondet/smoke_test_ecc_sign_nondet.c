@@ -44,7 +44,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
     VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Running ECC Smoke Test !!\n");
+    VPRINTF(LOW, " Running ECC P-384 Nondet SIGN Smoke Test !!\n");
     VPRINTF(LOW, "----------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
@@ -252,7 +252,8 @@ void main() {
         sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
 
     uint8_t curve_sel = 0;
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE, curve_sel);
+    uint8_t rand_k_en = 1;
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, curve_sel, rand_k_en);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();

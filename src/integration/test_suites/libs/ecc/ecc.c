@@ -41,7 +41,7 @@ void ecc_zeroize(){
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
 }
 
-void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, BOOL check_result){
+void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, BOOL check_result, uint8_t curve_sel){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -105,7 +105,8 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
 
     VPRINTF(LOW, "\nECC KEYGEN\n");
     // Enable ECC KEYGEN core
-    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN |
+                ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK));
 
     //Try to modify keyvault controls during operation
     lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, (ECC_REG_ECC_KV_RD_SEED_CTRL_READ_EN_MASK |
@@ -193,7 +194,7 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
 }
 
 
-void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sharedkey){
+void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sharedkey, uint8_t curve_sel){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -263,7 +264,8 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
 
     VPRINTF(LOW, "\nECC SHAREDKEY\n");
     // Enable ECC SHAREDKEY core
-    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY |
+                ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK));
 
     //Try to modify keyvault controls during operation
     lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
@@ -314,7 +316,7 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
     
 }
 
-void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s, BOOL check_result){
+void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s, BOOL check_result, uint8_t curve_sel, uint8_t rand_k_en){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -376,7 +378,9 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
 
     // Enable ECC SIGNING core
     VPRINTF(LOW, "\nECC SIGNING\n");
-    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING |
+                ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK) |
+                ((rand_k_en << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) & ECC_REG_ECC_CTRL_RAND_K_EN_MASK));
     
     //Try to modify keyvault controls during operation
     lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
@@ -438,7 +442,7 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
 
 }
 
-void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sign_r, ecc_io sign_s){
+void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sign_r, ecc_io sign_s, uint8_t curve_sel){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -485,7 +489,8 @@ void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sig
 
     // Enable ECC VERIFYING core
     VPRINTF(LOW, "\nECC VERIFYING\n");
-    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_VERIFYING);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_VERIFYING |
+                ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK));
     
     // wait for ECC VERIFYING process to be done
     wait_for_ecc_intr();

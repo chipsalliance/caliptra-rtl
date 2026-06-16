@@ -16,17 +16,7 @@
 //
 // ecc_hmac_drbg_p256_wrap.sv
 // --------------------------
-// P-256 HMAC-DRBG interface wrapper. STABLE swap boundary.
-//
-//   *** TEMPORARY P-256 HMAC-DRBG INTEGRATION ***
-//   The inner `hmac_drbg_sha256` instantiation below is a temporary
-//   block sourced from user/mojtabab/hmac-drbg-sha256 @d8765bdf.
-//   When the final production P-256 HMAC-DRBG block lands on a
-//   separate branch, replace ONLY the inner instantiation -- the
-//   external port shape of this wrapper must NOT change.
-//
-//   See src/hmac_drbg/TEMPORARY_DO_NOT_MERGE.md for the swap-out
-//   checklist.
+// P-256 HMAC-DRBG interface wrapper.
 //
 // This file is the P-256 counterpart of ecc_hmac_drbg_interface.sv
 // (P-384). It exposes the identical port shape at REG_SIZE=256 width
@@ -118,11 +108,7 @@ module ecc_hmac_drbg_p256_wrap #(
     localparam [3 : 0] SIGN_NONCE_ST  = 4'd9;
 
     //----------------------------------------------------------------
-    // *** TEMPORARY *** P-256 HMAC-DRBG primitive instantiation.
-    //
-    // Replace ONLY this instantiation (and the requires line in the
-    // ECC compile.yml) when the final P-256 HMAC-DRBG block lands.
-    // The wrapper's external ports MUST NOT change.
+    // P-256 HMAC-DRBG primitive instantiation.
     //----------------------------------------------------------------
     hmac_drbg_sha256 #(
         .REG_SIZE(REG_SIZE),

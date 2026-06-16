@@ -251,7 +251,8 @@ void main() {
     for (int i = 0; i < 12; i++)
         sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
 
-    ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
+    uint8_t curve_sel = 0;
+    ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh, curve_sel);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();

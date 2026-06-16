@@ -227,6 +227,7 @@ module ecc_dsa_ctrl
     logic pcr_sign_input_invalid;
     logic rand_k_pcr_sign_illegal;
     logic kv_under_p256_invalid;
+    logic kv_under_rand_k_invalid;
     logic privkey_output_outofrange, pubkeyx_output_outofrange, pubkeyy_output_outofrange;
     logic sharedkey_outofrange;
 
@@ -500,28 +501,32 @@ module ecc_dsa_ctrl
             pubkeyx_reg[dword] = hwif_out.ECC_PUBKEY_X[REG_NUM_DWORDS-1-dword].PUBKEY_X.value;
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.we = hw_pubkeyx_we & !zeroize_reg;
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg_c[REG_NUM_DWORDS-1-dword];  
-            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.hwclr = zeroize_reg;
+            // HW clears upper 4 dwords on P-384 -> P-256 transition.
+            hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             pubkeyy_reg[dword] = hwif_out.ECC_PUBKEY_Y[REG_NUM_DWORDS-1-dword].PUBKEY_Y.value;
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.we = hw_pubkeyy_we & !zeroize_reg;
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg_c[REG_NUM_DWORDS-1-dword];
-            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.hwclr = zeroize_reg;
+            // HW clears upper 4 dwords on P-384 -> P-256 transition.
+            hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             r_reg[dword] = hwif_out.ECC_SIGN_R[REG_NUM_DWORDS-1-dword].SIGN_R.value;
             hwif_in.ECC_SIGN_R[dword].SIGN_R.we = hw_r_we & !zeroize_reg;
             hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg_c[REG_NUM_DWORDS-1-dword];
-            hwif_in.ECC_SIGN_R[dword].SIGN_R.hwclr = zeroize_reg;
+            // HW clears upper 4 dwords on P-384 -> P-256 transition.
+            hwif_in.ECC_SIGN_R[dword].SIGN_R.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             s_reg[dword] = hwif_out.ECC_SIGN_S[REG_NUM_DWORDS-1-dword].SIGN_S.value;
             hwif_in.ECC_SIGN_S[dword].SIGN_S.we = hw_s_we & !zeroize_reg;
             hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg_c[REG_NUM_DWORDS-1-dword];
-            hwif_in.ECC_SIGN_S[dword].SIGN_S.hwclr = zeroize_reg;
+            // HW clears upper 4 dwords on P-384 -> P-256 transition.
+            hwif_in.ECC_SIGN_S[dword].SIGN_S.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin 
@@ -821,7 +826,17 @@ module ecc_dsa_ctrl
                                                           kv_seed_read_ctrl_reg.read_en   |
                                                           kv_write_ctrl_reg.write_en      |
                                                           dest_keyvault                   |
-                                                          kv_seed_data_present);
+                                                          kv_seed_data_present            |
+                                                          kv_key_data_present);
+
+    // KV path is illegal in nondet (RAND_K_EN) signing: fire error if any KV transaction is armed.
+    // The sticky *_data_present flags cover the window after read_en self-clears on KV ready.
+    assign kv_under_rand_k_invalid  = rand_k_en_mode & (kv_privkey_read_ctrl_reg.read_en |
+                                                          kv_seed_read_ctrl_reg.read_en   |
+                                                          kv_write_ctrl_reg.write_en      |
+                                                          dest_keyvault                   |
+                                                          kv_seed_data_present            |
+                                                          kv_key_data_present);
 
     assign privkey_output_outofrange = keygen_process & (hw_privkey_we & ((read_reg == 0) | (read_reg >= group_order)));
     assign pubkeyx_output_outofrange = keygen_process & (hw_pubkeyx_we & (read_reg >= prime));
@@ -831,7 +846,7 @@ module ecc_dsa_ctrl
 
     assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | 
                         r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | 
-                        pubkey_input_invalid | pcr_sign_input_invalid | rand_k_pcr_sign_illegal | kv_under_p256_invalid |
+                        pubkey_input_invalid | pcr_sign_input_invalid | rand_k_pcr_sign_illegal | kv_under_p256_invalid | kv_under_rand_k_invalid |
                         privkey_output_outofrange | pubkeyx_output_outofrange | pubkeyy_output_outofrange |
                         sharedkey_outofrange;
 
