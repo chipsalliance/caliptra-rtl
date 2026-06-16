@@ -235,17 +235,18 @@ always_comb mask_rdata = hwif_out.mbox_dataout.dataout.swacc & ~valid_receiver;
 
 //move from idle to rdy for command when lock is acquired
 //we have a valid read, to the lock register, and it's not currently locked
-//blocked during zeroization until SRAM is cleared
-always_comb arc_MBOX_IDLE_MBOX_RDY_FOR_CMD = (mbox_fsm_ps == MBOX_IDLE) & ~hwif_out.mbox_lock.lock.value & (hwif_out.mbox_lock.lock.swmod | hwif_in.mbox_lock.lock.hwset) & ~zeroize_active;
+//lock.value stays 1 throughout zeroization so this arc is naturally blocked
+//until zeroize_done clears lock.value
+always_comb arc_MBOX_IDLE_MBOX_RDY_FOR_CMD = (mbox_fsm_ps == MBOX_IDLE) & ~hwif_out.mbox_lock.lock.value & (hwif_out.mbox_lock.lock.swmod | hwif_in.mbox_lock.lock.hwset);
 //move from rdy for cmd to rdy for dlen when cmd is written
 always_comb arc_MBOX_RDY_FOR_CMD_MBOX_RDY_FOR_DLEN = (mbox_fsm_ps == MBOX_RDY_FOR_CMD) & ((hwif_out.mbox_cmd.command.swmod & valid_requester) | hwif_in.mbox_cmd.command.we);
 //move from rdy for dlen to rdy for data when dlen is written
 always_comb arc_MBOX_RDY_FOR_DLEN_MBOX_RDY_FOR_DATA = (mbox_fsm_ps == MBOX_RDY_FOR_DLEN) & ((hwif_out.mbox_dlen.length.swmod & valid_requester) | hwif_in.mbox_dlen.length.we);
 //move from rdy for data directly to idle when SoC sets execute with SoC-direct flag (bit 28)
 //used for idle memory graceful exit — no uC involvement needed
-always_comb arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & soc_has_lock & hwif_out.mbox_cmd.command.value[28];
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & soc_has_lock & hwif_out.mbox_cmd.command.value[26];
 //move from rdy for data to execute uc when SoC sets execute bit (excluded when SoC-direct flag set)
-always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & ((soc_has_lock & ~hwif_out.mbox_cmd.command.value[28]) | tap_has_lock);
+always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_UC = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & ((soc_has_lock & ~hwif_out.mbox_cmd.command.value[26]) | tap_has_lock);
 //move from rdy for data to execute soc when uc writes to execute
 always_comb arc_MBOX_RDY_FOR_DATA_MBOX_EXECUTE_SOC = (mbox_fsm_ps == MBOX_RDY_FOR_DATA) & hwif_out.mbox_execute.execute.value & uc_has_lock & ~tap_mode;
 //move from rdy for data to execute tap when uc writes to execute in tap_mode
@@ -714,10 +715,12 @@ always_comb hwif_in.mbox_dataout.dataout.swwe = '0; //no sw write enable, but ne
 //we load the first entry on the arc to execute
 always_comb hwif_in.mbox_dataout.dataout.we = mbox_protocol_sram_rd_f;
 always_comb hwif_in.mbox_dataout.dataout.next = mbox_rd_valid_f ? sram_rdata_cor : '0;
-//clear the lock when moving from execute to idle
-always_comb hwif_in.mbox_lock.lock.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_MBOX_EXECUTE_TAP_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK | arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT;
-//clear the mailbox status when we go back to IDLE
-always_comb hwif_in.mbox_status.status.hwclr = arc_MBOX_EXECUTE_SOC_MBOX_IDLE | arc_MBOX_EXECUTE_UC_MBOX_IDLE | arc_MBOX_EXECUTE_TAP_MBOX_IDLE | arc_FORCE_MBOX_UNLOCK | arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT;
+//clear the lock only when zeroization is complete so that polling masters see
+//lock.value=1 throughout zeroization and cannot spuriously acquire the lock.
+//force-unlock bypasses zeroization and clears immediately.
+always_comb hwif_in.mbox_lock.lock.hwclr = zeroize_done | arc_FORCE_MBOX_UNLOCK;
+//clear the mailbox status at the same point as the lock
+always_comb hwif_in.mbox_status.status.hwclr = zeroize_done | arc_FORCE_MBOX_UNLOCK;
 //clear the execute register when we force unlock or SoC-direct graceful exit
 always_comb hwif_in.mbox_execute.execute.hwclr = arc_FORCE_MBOX_UNLOCK | arc_MBOX_RDY_FOR_DATA_MBOX_IDLE_SOC_DIRECT;
 // Set mbox_csr status fields in response to ECC errors
