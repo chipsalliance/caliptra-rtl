@@ -70,7 +70,7 @@ addrmap hmac_reg {
         default resetsignal = reset_b;
         field {desc = "Control init command bit: Trigs the HMAC512 core to start the 
                                 processing for the key and the first padded 
-                                message block.
+                                message block. 
                                 [br] Software write generates only a single-cycle pulse on the 
                                 hardware interface and then will be erased"; singlepulse; swwe;} INIT = 1'b0;
         field {desc = "Control next command bit: ​Trigs the HMAC512 core to start the 
@@ -85,7 +85,13 @@ addrmap hmac_reg {
                                  0 for HMAC384
                                  1 for HMAC512"; swwe;} MODE = 1'b1;
         field {desc = "CSR Mode: Indicates to the HMAC512 core to use the CSR HMAC key"; swwe;} CSR_MODE = 1'b0;
-        field {desc = "Reserved";} Reserved = 1'b0;                                 
+        field {desc = "Control last command bit: Marks the current INIT or NEXT
+                                command as the final message block. When set together
+                                with INIT or NEXT, the HMAC512 core completes the OPAD
+                                + final hash and produces the HMAC tag.
+                                [br] Software write generates only a single-cycle pulse on the
+                                hardware interface and then will be erased"; singlepulse; swwe;} LAST = 1'b0;
+        field {desc = "Reserved";} Reserved = 1'b0;
     
     } HMAC512_CTRL @0x00000010;
 
@@ -158,14 +164,14 @@ addrmap hmac_reg {
     reg {
         name = "HMAC512 LFSR SEED";
         desc = "HMAC512 component lfsr seed register type definition
-                12 32-bit registers storing the 384-bit lfsr seed input.";
+                6 32-bit registers storing the 192-bit lfsr seed input.";
 
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Input lfsr seed field";} LFSR_SEED[32] = 32'h0;
     
-    } HMAC512_LFSR_SEED[12] @0x00000140;
+    } HMAC512_LFSR_SEED[6] @0x00000140;
 
     /* ---- HMAC Key Vault Control Reg ---- */
     kv_read_ctrl_reg HMAC512_KV_RD_KEY_CTRL @0x00000600;

@@ -121,7 +121,10 @@ module doe_ctrl_64bit_tb();
 
              .hresp_o(hresp_o_tb),
              .hreadyout_o(hreadyout_o_tb),
-             .hrdata_o(hrdata_o_tb)
+             .hrdata_o(hrdata_o_tb),
+             .ocp_lock_en(1'b0),
+             .doe_cmd_lock(1'b0),
+             .debugUnlock_or_scan_mode_switch(1'b0)
             );
 
 

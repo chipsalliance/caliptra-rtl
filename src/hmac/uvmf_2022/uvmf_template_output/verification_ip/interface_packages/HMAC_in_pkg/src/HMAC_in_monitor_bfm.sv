@@ -83,7 +83,7 @@ end
   tri [1:0] htrans_i;
   tri [2:0] hsize_i;
   tri  transaction_flag_in_monitor_i;
-  tri [1:0] op_i;
+  tri [2:0] op_i;
   tri [3:0] block_length_i;
   tri [15:0] bit_length_i;
   assign clk_i = bus.clk;

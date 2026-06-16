@@ -5,8 +5,6 @@
 +incdir+${CALIPTRA_ROOT}/src/sha256/coverage
 +incdir+${CALIPTRA_ROOT}/src/sha256/tb
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
-${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sva.svh
-${CALIPTRA_ROOT}/src/libs/rtl/caliptra_macros.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_ahb_srom.sv

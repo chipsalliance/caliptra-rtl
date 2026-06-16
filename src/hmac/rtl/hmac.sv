@@ -20,7 +20,9 @@
 //
 //======================================================================
 //`include "kv_defines.svh"
+`include "caliptra_macros.svh"
 `include "kv_macros.svh"
+`include "caliptra_prim_assert.sv"
 
 module hmac 
        import hmac_param_pkg::*;
@@ -65,24 +67,18 @@ module hmac
   // Registers including update variables and write enable.
   //----------------------------------------------------------------
   reg init_reg;
-  reg init_new;
-
   reg next_reg;
-  reg next_new;
+  reg last_reg;
 
   reg mode_reg;
   
   reg ready_reg;
   reg tag_valid_reg;
 
-  localparam BLOCK_SIZE       = 1024;
-  localparam KEY_SIZE         = 512;
-  localparam TAG_SIZE         = KEY_SIZE;
-  localparam LFSR_SEED_SIZE   = 384;
   localparam BLOCK_NUM_DWORDS = BLOCK_SIZE / DATA_WIDTH;
   localparam KEY_NUM_DWORDS   = KEY_SIZE / DATA_WIDTH;
   localparam TAG_NUM_DWORDS   = TAG_SIZE / DATA_WIDTH;
-  localparam SEED_NUM_DWORDS  = ((LFSR_SEED_SIZE - 1) / DATA_WIDTH) + 1; 
+  localparam SEED_NUM_DWORDS  = ((LFSR_SEED_SIZE - 1) / DATA_WIDTH) + 1;
 
   reg [KEY_NUM_DWORDS - 1   : 0][DATA_WIDTH - 1 : 0]    key_reg;
   reg [BLOCK_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0]    block_reg;
@@ -136,6 +132,7 @@ module hmac
 
   logic key_zero_error, key_zero_error_reg, key_zero_error_edge;
   logic key_mode_error, key_mode_error_reg, key_mode_error_edge;
+  logic last_alone_error, last_alone_error_reg, last_alone_error_edge;
 
   logic error_flag;
   logic error_flag_reg;
@@ -156,8 +153,8 @@ module hmac
                      key_reg[06], key_reg[07], key_reg[08], key_reg[09], key_reg[10], key_reg[11],
                      key_reg[12], key_reg[13], key_reg[14], key_reg[15]} & get_mask;
 
-  assign core_lfsr_seed = {lfsr_seed_reg[00], lfsr_seed_reg[01], lfsr_seed_reg[02], lfsr_seed_reg[03], lfsr_seed_reg[04], lfsr_seed_reg[05],
-                           lfsr_seed_reg[06], lfsr_seed_reg[07], lfsr_seed_reg[08], lfsr_seed_reg[09], lfsr_seed_reg[10], lfsr_seed_reg[11]};
+  assign core_lfsr_seed = {lfsr_seed_reg[00], lfsr_seed_reg[01], lfsr_seed_reg[02],
+                           lfsr_seed_reg[03], lfsr_seed_reg[04], lfsr_seed_reg[05]};
   
   //rising edge detect on core tag valid
   assign core_tag_we = (core_tag_valid & ~tag_valid_reg) & ~error_flag_reg;
@@ -172,6 +169,7 @@ module hmac
 
                  .init_cmd(init_reg),
                  .next_cmd(next_reg),
+                 .last_cmd(last_reg),
                  .mode_cmd(mode_reg),
 
                  .lfsr_seed(core_lfsr_seed),
@@ -250,12 +248,14 @@ always_comb begin
   hwif_in.HMAC512_CTRL.CSR_MODE.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.INIT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.NEXT.swwe = ready_reg;
+  hwif_in.HMAC512_CTRL.LAST.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.MODE.swwe = ready_reg;
 
   //assign hardware readable registers to drive hmac core
   //mask the command until kv clients are idle
   init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
   next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready;
+  last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready;
   zeroize_reg = hwif_out.HMAC512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
   mode_reg = hwif_out.HMAC512_CTRL.MODE.value;
 
@@ -314,8 +314,9 @@ end
 
 always_comb begin
   unique case (mode_reg)
-    1'b0 :     get_mask = {{12{32'hffffffff}}, {4{32'h00000000}}};  //HMAC384
-    default :  get_mask = {16{32'hffffffff}};                       //HMAC512
+    1'b0 :     get_mask = {{(HMAC384_TAG_SIZE/DATA_WIDTH){ {DATA_WIDTH{1'b1}} }},
+                           {(HMAC384_TAG_PAD /DATA_WIDTH){ {DATA_WIDTH{1'b0}} }}};  //HMAC384
+    default :  get_mask = {TAG_NUM_DWORDS{ {DATA_WIDTH{1'b1}} }};            //HMAC512
   endcase
 end
 
@@ -392,9 +393,13 @@ hmac_reg i_hmac_reg (
     .hwif_out(hwif_out)
 );
 
-always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[15:12] == 128'b0);
-always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == 512'b0);
+always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[KEY_NUM_DWORDS-1 : HMAC384_KEY_SIZE/DATA_WIDTH] == '0);
+always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == '0);
+always_comb last_alone_error = hwif_out.HMAC512_CTRL.LAST.value & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value;
 
+// last_alone_error is a soft notification: the engine never started,
+// so it must NOT join error_flag (which gates core_tag_we and is
+// sticky until zeroize). Keep it for the interrupt status bit only.
 always_comb error_flag = key_zero_error | key_mode_error;
 
 always_ff @(posedge clk or negedge reset_n) 
@@ -403,29 +408,33 @@ begin : error_detection
       error_flag_reg <= 1'b0;
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
+      last_alone_error_reg <= 1'b0;
     end
     else if(zeroize_reg) begin
       error_flag_reg <= 1'b0;
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
+      last_alone_error_reg <= 1'b0;
     end
     else begin
       if (error_flag)
         error_flag_reg <= 1'b1;
       key_mode_error_reg <= key_mode_error;
       key_zero_error_reg <= key_zero_error;
+      last_alone_error_reg <= last_alone_error;
     end
 end // error_detection
 
 always_comb error_flag_edge = error_flag & (!error_flag_reg);
 always_comb key_mode_error_edge = key_mode_error & (!key_mode_error_reg);
 always_comb key_zero_error_edge = key_zero_error & (!key_zero_error_reg);
+always_comb last_alone_error_edge = last_alone_error & (!last_alone_error_reg);
 
 //Interrupts hardware interface
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_tag_we;
 assign hwif_in.intr_block_rf.error_internal_intr_r.key_mode_error_sts.hwset = key_mode_error_edge;
 assign hwif_in.intr_block_rf.error_internal_intr_r.key_zero_error_sts.hwset = key_zero_error_edge;
-assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
+assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = last_alone_error_edge;
 assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
 
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;

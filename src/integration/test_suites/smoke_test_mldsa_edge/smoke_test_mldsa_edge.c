@@ -460,10 +460,16 @@ const uint32_t mldsa_pubkey[] = {
 0x9c03d6b5, 0x2637a27a, 0x00ed3350, 0xe8c83e88, 0x27f25a42, 0x858ad455, 0x02329622, 0x30e4e7b4
 };
 
-//Failed verify res
+// Failed verify res — poison-init value driven by set_verify_valid in abr_ctrl.sv:
+//   MLDSA_VERIFY_RES[i] = ~signature_reg.enc.c[i]
+// With the input signature reversed on load (sign[0] = mldsa_sign[SIGN_SIZE-1]),
+// c[i] = mldsa_sign[SIGN_SIZE-1-i]. After this local array is itself reversed
+// by the loop above, the expected value is:
+//   mldsa_verify_res[k] = ~mldsa_sign[SIGN_SIZE-16+k]   (k = 0..15)
+// i.e. the last 16 dwords of mldsa_sign[] bitwise-inverted.
 const uint32_t mldsa_verify_res [] = {
-0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 
-0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000
+0xd707ee26, 0xf8b69fac, 0x69c1302d, 0xb38f625d, 0x5be92136, 0x0235fd53, 0xdb13174f, 0xcedeff5d, 
+0x060cab8d, 0x0f30fe4b, 0x8fb5a570, 0xd80f609c, 0x23d90aca, 0x7d5de1b8, 0x3a7aa8a8, 0x42c66077
 };
 
 void main() {

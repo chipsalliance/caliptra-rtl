@@ -15,7 +15,7 @@
 //
                                                                                
 
-typedef enum bit [1:0] {reset_op = 2'b00, hmac384_op = 2'b01, hmac512_op = 2'b10, otf_reset_op = 2'b11} hmac_in_op_transactions;
+typedef enum bit [2:0] {reset_op = 3'b000, hmac384_op = 3'b001, hmac512_op = 3'b010, otf_reset_op = 3'b011, last_alone_op = 3'b100} hmac_in_op_transactions;
 
 // pragma uvmf custom additional begin
 // pragma uvmf custom additional end

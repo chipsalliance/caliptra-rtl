@@ -222,6 +222,12 @@ import aaxi_uvm_pkg::*;
     end
     assign cptra_rst_b_dly_assert_simult_deassert = cptra_rst_b_d | soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
 
+    // Ensure cptra_rst_b/cptra_pwrgood are 0 at elaboration (before delta 0),
+    // preventing X-triggered assertions in soc_ifc_reg.sv external ack logic.
+    // The driver BFM overrides these weak pulls once UVM configures it as INITIATOR.
+    pulldown (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b);
+    pulldown (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_pwrgood);
+
     aaxi_intf #(
         .MCB_INPUT (aaxi_pkg::AAXI_MCB_INPUT ),
         .MCB_OUTPUT(aaxi_pkg::AAXI_MCB_OUTPUT),
@@ -595,6 +601,7 @@ import aaxi_uvm_pkg::*;
     );
 
   caliptra_top_sva sva();
+  kv_boot_flow_sva kv_boot_flow_sva();
   // pragma uvmf custom dut_instantiation end
 
   initial begin      // tbx vif_binding_block 

@@ -18,6 +18,7 @@ module entropy_src_ack_sm (
   output logic               ack_sm_err_o
 );
 
+  `include "caliptra_prim_assert.sv"
   import entropy_src_ack_sm_pkg::*;
 
   state_e state_d, state_q;

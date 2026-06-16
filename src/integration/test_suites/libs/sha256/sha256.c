@@ -20,7 +20,7 @@
 
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
-void wait_for_sha256_intr(uint32_t notif, uint32_t error){
+static void wait_for_sha256_intr(uint32_t notif, uint32_t error){
     VPRINTF(LOW, "SHA256 flow in progress...\n");
     while(((cptra_intr_rcv.sha256_error & error) != error) || ((cptra_intr_rcv.sha256_notif & notif) != notif)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"

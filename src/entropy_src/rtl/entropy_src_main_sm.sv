@@ -35,6 +35,7 @@ module entropy_src_main_sm
   output logic                  main_sm_err_o
 );
 
+  `include "caliptra_prim_assert.sv"
   // The definition of state_e, the sparse FSM state enum, is in entropy_src_main_sm_pkg.sv
   state_e state_d, state_q;
 

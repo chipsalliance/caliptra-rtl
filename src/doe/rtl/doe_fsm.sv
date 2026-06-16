@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 //`include "kv_defines.svh"
+`include "caliptra_macros.svh"
 
 module doe_fsm 
     import doe_defines_pkg::*;
@@ -298,6 +299,8 @@ always_ff @(posedge clk or negedge rst_b) begin
 end
 
 //sticky flops for locking UDS/FE/HEK flow after execution
+// Only set by actual flow completion -- doe_cmd_lock is handled separately
+// via swwel on CMD/CMD_EXT to avoid falsely reporting flows as done.
 always_ff @(posedge clk or negedge hard_rst_b) begin
     if (~hard_rst_b) begin
         lock_uds_flow <= '0;
@@ -305,9 +308,9 @@ always_ff @(posedge clk or negedge hard_rst_b) begin
         lock_hek_flow <= '0;
     end
     else begin
-        lock_uds_flow <= running_uds & flow_done ? '1 : lock_uds_flow;
-        lock_fe_flow <= running_fe & flow_done ? '1 : lock_fe_flow;
-        lock_hek_flow <= running_hek & flow_done ? '1 : lock_hek_flow;
+        lock_uds_flow <= (running_uds & flow_done) ? '1 : lock_uds_flow;
+        lock_fe_flow <= (running_fe & flow_done) ? '1 : lock_fe_flow;
+        lock_hek_flow <= (running_hek & flow_done) ? '1 : lock_hek_flow;
     end
 end
 
