@@ -1090,13 +1090,15 @@ Caliptra HMAC implementation uses SHA512 as the hash function, accepts a 512-bit
 The implementation also supports PRF-HMAC-SHA-512. The PRF-HMAC-SHA-512 algorithm is identical to HMAC-SHA-512-256, except that variable-length keys are permitted, and the truncation step is not performed.
 
 The HMAC algorithm is described as follows:
+* The LFSR seed is written to seed the masking PRNG
 * The key is fed to the HMAC core to be padded
 * The message is broken into 1024-bit chunks by the host
-* For each chunk:
-     * The message is fed to the HMAC core
-     * The HMAC core should be triggered by the host
+* The first block is fed to the HMAC core and the core is triggered with INIT and, if the message fits in a single block, LAST
+* For each subsequent chunk:
+     * The message block is fed to the HMAC core
+     * The HMAC core is triggered with NEXT and, for the final block, LAST
      * The HMAC core status is changed to ready after hash processing
-* The result digest can be read after feeding all message chunks
+* The result digest can be read after last block is processed
 
 
 ### Operation
@@ -1168,13 +1170,14 @@ The HMAC architecture inputs and outputs are described in the following table.
 | reset_n                     | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal.                                                                                     |
 | init                        | input           | The core is initialized and processes the key and the first block of the message.                                                                                           |
 | next                        | input           | The core processes the rest of the message blocks using the result from the previous blocks.                                                                                |
+| last                        | input           | Indicates the last block of the message. When set with INIT or NEXT, the core finalizes the HMAC computation (OPAD and outer hash) after processing the current block.      |
 | zeroize                     | input           | The core clears all internal registers to avoid any SCA information leakage.                                                                                                |
 | csr_mode                    | input           | When set, the key comes from the cptra_csr_hmac_key interface pins. This key is valid only during MANUFACTURING mode.                                                       |
 | mode                        | input           | Indicates the hmac type of the function. This can be: <br>- HMAC384 <br>- HMAC512.                                                                                          |
 | cptra_csr_hmac_key\[511:0\] | input           | The key to be used during csr mode.                                                                                                                                         |
 | key\[511:0\]                | input           | The input key.                                                                                                                                                              |
 | block\[1023:0\]             | input           | The input padded block of message.                                                                                                                                          |
-| LFSR_seed\[383:0\]          | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
+| LFSR_seed\[191:0\]          | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
 | ready                       | output          | When HIGH, the signal indicates the core is ready.                                                                                                                          |
 | tag\[511:0\]                | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-512, a 512-bit tag is required. For HMAC-SHA-512-256, the host is responsible for reading 256 bits from the MSB. |
 | tag_valid                   | output          | When HIGH, the signal indicates the result is ready.                                                                                                                        |
@@ -1199,7 +1202,7 @@ To protect the HMAC algorithm from side-channel attacks, a masking countermeasur
 
 The embedded countermeasures are based on "Differential Power Analysis of HMAC Based on SHA-2, and Countermeasures" by McEvoy et. al. To provide the required random values for masking intermediate values, a lightweight 74-bit LFSR is implemented. Based on “Spin Me Right Round Rotational Symmetry for FPGA-specific AES” by Wegener et. al., LFSR is sufficient for masking statistical randomness.
 
-Each round of SHA512 execution needs 6,432 random bits, while one HMAC operation needs at least 4 rounds of SHA512 operations. However, the proposed architecture requires only 384-bit LFSR seed and provides first-order DPA attack protection at the cost of 10% latency overhead with negligible hardware resource overhead.
+Each round of SHA512 execution needs 6,432 random bits, while one HMAC operation needs at least 5 rounds of SHA512 operations. However, the proposed architecture requires only a 192-bit LFSR seed and provides first-order DPA attack protection at the cost of 10% latency overhead with negligible hardware resource overhead.
 
 ### Performance
 
@@ -1209,15 +1212,29 @@ The HMAC core performance is reported considering two different architectures: p
 
 In this architecture, the HMAC interface and controller are implemented in hardware. The performance specification of the HMAC architecture is reported as shown in the following table.
 
+##### HMAC-384
+
 | Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
 | :-------------------- | :------------------ | :-------------------- | :------------------ |
-| Data_In transmission  | 44                  | 0.11                  | -                   |
-| Process               | 254                 | 0.635                 | -                   |
-| Data_Out transmission | 12                  | 0.03                  | -                   |
-| Single block          | 310                 | 0.775                 | 1,290,322           |
-| Double block          | 513                 | 1.282                 | 780,031             |
-| 1 KiB message         | 1,731               | 4.327                 | 231,107             |
-| 128 KiB message       | 207,979             | 519.947               | 1,923               |
+| Data_In transmission  | 50                  | 0.125                 | -                   |
+| Process               | 461                 | 1.153                 | -                   |
+| Data_Out transmission | 12                  | 0.030                 | -                   |
+| Single block          | 523                 | 1.308                 | 764,818             |
+| Double block          | 648                 | 1.620                 | 617,283             |
+| 1 KiB message         | 1,523               | 3.808                 | 262,639             |
+| 128 KiB message       | 128,523             | 321.308               | 3,112               |
+
+##### HMAC-512
+
+| Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
+| :-------------------- | :------------------ | :-------------------- | :------------------ |
+| Data_In transmission  | 54                  | 0.135                 | -                   |
+| Process               | 461                 | 1.153                 | -                   |
+| Data_Out transmission | 16                  | 0.040                 | -                   |
+| Single block          | 531                 | 1.328                 | 753,295             |
+| Double block          | 656                 | 1.640                 | 609,756             |
+| 1 KiB message         | 1,531               | 3.828                 | 261,267             |
+| 128 KiB message       | 128,531             | 321.328               | 3,112               |
 
 #### Hardware/software architecture
 
@@ -1226,12 +1243,12 @@ In this architecture, the HMAC interface and controller are implemented in RISC-
 | Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
 | :-------------------- | :------------------ | :-------------------- | :------------------ |
 | Data_In transmission  | 1389                | 3.473                 | -                   |
-| Process               | 253                 | 0.633                 | -                   |
+| Process               | 461                 | 1.153                 | -                   |
 | Data_Out transmission | 290                 | 0.725                 | -                   |
-| Single block          | 1932                | 4.83                  | 207,039             |
-| Double block          | 3166                | 7.915                 | 136,342             |
-| 1 KiB message         | 10,570              | 26.425                | 37,842              |
-| 128 KiB message       | 1,264,314           | 3,160.785             | 316                 |
+| Single block          | 2,140               | 5.350                 | 186,916             |
+| Double block          | 3,374               | 8.435                 | 118,553             |
+| 1 KiB message         | 10,778              | 26.945                | 37,113              |
+| 128 KiB message       | 1,264,522           | 3,161.305             | 316                 |
 
 ## HMAC_DRBG
 
