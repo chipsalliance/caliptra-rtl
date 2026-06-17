@@ -143,3 +143,70 @@ Covergroups with crosses provide combinatorial coverage of the slot × transitio
 
 - `src/integration/stimulus/L0_regression.yml` -- smoke/kv_boot_flow_monitor
 - `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- all 4 tests
+
+---
+
+## ICCM Write Hash Measurement (PCR4/PCR5)
+
+### Feature Summary
+
+Hardware-only SHA-384 measurement of all data written to ICCM during firmware loading. The SHA-512 accelerator captures every ICCM write in real-time, computes the hash, and extends the result into two dedicated PCRs: PCR4 (Current — cleared each boot) and PCR5 (Journey — accumulates across FW updates). This closes the gap between "image was verified" and "image was correctly copied to ICCM."
+
+### Test Suite
+
+| Test | Category | Description |
+| :--- | :------- | :---------- |
+| `smoke_test_iccm_hash` | Smoke | Write 4 known words to ICCM, verify PCR4 matches expected extend result, cross-check PCR0 extend with same digest |
+| `directed_test_iccm_hash` | Directed | 6 sequences (multi-block, extra pad, zero-length, exact boundary, large, tight memcpy) with fw_update_reset between each |
+
+### Test Iterations
+
+#### `smoke_test_iccm_hash`
+
+Single iteration:
+1. Acquire SHA acc lock, set ICCM_MODE
+2. Write 4 words {0x1, 0x2, 0x3, 0x4} to ICCM
+3. Lock ICCM → triggers hash finalization + PCR4/PCR5 extend
+4. Verify PCR4 matches expected `SHA-384(zeros || SHA-384(LE_iccm_data))`
+5. Extend PCR0 via normal SHA512 `pcr_hash_extend` with same ICCM digest
+6. Verify PCR0 == PCR4 (byte-ordering consistency between extend paths)
+
+#### `directed_test_iccm_hash`
+
+| Iter | Sequence | Description | Pass Criteria |
+| :--- | :------- | :---------- | :------------ |
+| 0 | 64 words {0x10..0x4F} | Multi-block (256 bytes, 2 SHA blocks + padding block) | PCR4 matches expected |
+| 1 | 28 words {0xBB00..0xBB1B} | Extra padding block required (112 bytes) | PCR4 matches expected |
+| 2 | 0 words | Zero-length hash (lock immediately after trigger) | PCR4 matches expected |
+| 3 | 32 words {0xC000..0xC01F} | Exact SHA-384 block boundary (128 bytes) | PCR4 matches expected |
+| 4 | 260 words {0xD000..0xD103} | Large (1040 bytes, >1KB) | PCR4 matches expected |
+| 5 | 64 words {0x10..0x4F} tight | Back-to-back `sw` pairs via inline asm (LSU merge test) | PCR4 matches seq 0 |
+
+Each iteration ends with `fw_update_reset`, which clears PCR4 via `pcr4_hwclr` and resets ICCM mode for the next sequence.
+
+### Coverage Gaps (Not Yet Implemented)
+
+| Area | Description | Priority |
+| :--- | :---------- | :------- |
+| PCR5 Journey verification | Verify PCR5 accumulates across multiple fw_update_reset cycles (not cleared) | High |
+| FW write rejection | Verify FW AHB writes to PCR4/PCR5 are blocked (swwe=0) | Medium |
+| sha512_ctrl PCR4/PCR5 block | Verify `pv_write[0]` cannot target PCR4 or PCR5 | Medium |
+| FW clear escape hatch | Verify `PCR_CTRL[4].clear` zeros PCR4 but FW cannot write nonzero after | Medium |
+| ICCM_MODE write-once | Verify FW cannot re-trigger ICCM_MODE after completion | Medium |
+| SHA acc lock release | Verify FW can use sha512_acc normally after ICCM hash completes | Low |
+| Cold reset PCR5 | Verify PCR5 resets to zero on cold reset (new journey chain) | Low |
+
+### Security Enforcement
+
+| Mechanism | RTL Location | Description |
+| :-------- | :----------- | :---------- |
+| PCR4/PCR5 write guard | `pv.sv` | `pv_write[0]` (sha512_ctrl) blocked from targeting entry 4 or 5; only `pv_write[1]` (ICCM hash) can write |
+| ICCM_MODE write-once | `sha512_acc_top.sv` | `iccm_mode_done` sticky flag prevents re-trigger until `iccm_unlock` |
+| PCR4 clear on FW update | `caliptra_top.sv` | `pcr4_hwclr = iccm_unlock` clears PCR4 on fw_update_reset |
+| FW isolation | `sha512_acc_top.sv` | All extend FSM control signals (pv_read, write_entry, init) driven by HW state only — no CSR interface |
+| PCR extend correctness | `sha512_acc_top.sv` | Extend FSM uses same `kv_read_client` + `sha512_core` + `kv_write_client` pattern as sha512.sv PCR extend |
+
+### Regression
+
+- `src/integration/stimulus/L0_regression.yml` -- smoke_test_iccm_hash
+- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- directed_test_iccm_hash

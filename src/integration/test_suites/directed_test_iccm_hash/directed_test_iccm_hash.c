@@ -21,7 +21,9 @@
 // Sequence 2: 28 words  (112 bytes, extra pad block)      --> lock --> check PCR4 --> fw_update_reset
 // Sequence 3: 0 words   (zero-length hash)                --> lock --> check PCR4 --> fw_update_reset
 // Sequence 4: 32 words  (128 bytes, exact block boundary) --> lock --> check PCR4 --> fw_update_reset
-// Sequence 5: 260 words (1040 bytes, large >1KB)          --> lock --> check PCR4 --> PASS
+// Sequence 5: 260 words (1040 bytes, large >1KB)          --> lock --> check PCR4 --> fw_update_reset
+// Sequence 6: 64 words  tight memcpy (adjacent sw pairs   --> lock --> check PCR4 --> PASS
+//             to trigger LSU bus buffer dword merging)
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -47,40 +49,51 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 // Persistent state across fw_update_reset (DCCM survives reset)
 static uint32_t iteration __attribute__ ((section(".dccm.persistent"))) = 0;
 
-// Expected SHA-384 digests for each sequence (LE byte order into SHA)
-// Sequence 1: 64 words {0x10..0x4F} - 256 bytes (multi-block, 2 SHA-384 blocks)
+// Expected SHA-384 PCR4 extend digests for each sequence.
+// PCR4 is cleared to zero before each extend, so:
+//   PCR4 = SHA-384(48_bytes_of_zeros || SHA-384(iccm_write_stream))
+// The ICCM write stream is hashed as little-endian 32-bit words (no byte swap).
+
+// Sequence 1: 64 words {0x10..0x4F} - 256 bytes
 static const uint32_t expected_seq1[12] = {
-    0xf845605a, 0x4d8bbb7b, 0x8d4101db, 0xec07b679,
-    0x848dc298, 0x46dbdf5c, 0x42406eea, 0xe55e7daa,
-    0xa8b7e273, 0xd804e6b9, 0x98ed5e16, 0x0dd2fb8b
+    0x73c26a32, 0x28bce060, 0x94b092a6, 0x4d3c6007,
+    0xbe359bab, 0xa1b76c71, 0x812f325a, 0x99a13504,
+    0x665282d5, 0xa2df5e62, 0xf00187ff, 0x61da0cd0
 };
 
-// Sequence 2: 28 words {0xBB00..0xBB1B} - 112 bytes (forces extra padding block)
+// Sequence 2: 28 words {0xBB00..0xBB1B} - 112 bytes
 static const uint32_t expected_seq2[12] = {
-    0xdd4f6152, 0x7ff8693f, 0x8d2862ae, 0xdcf878fd,
-    0xa9e9bc21, 0x34e8749f, 0x8ea2e3e4, 0x6bab5729,
-    0xb8ee6dd8, 0x94a590ff, 0x9c5a259e, 0x25c2c64c
+    0xbd1c801b, 0x247dd517, 0x3ddff4e1, 0xf4336345,
+    0x177dd7d3, 0xf7803a8b, 0x25e87434, 0x3811fde4,
+    0x5aee0f9b, 0x0012e968, 0xf5cee942, 0x1941d55e
 };
 
-// Sequence 3: 0 words - 0 bytes (zero-length SHA-384)
+// Sequence 3: 0 words - 0 bytes (extend of zero-length iccm digest)
 static const uint32_t expected_seq3[12] = {
-    0x38b060a7, 0x51ac9638, 0x4cd9327e, 0xb1b1e36a,
-    0x21fdb711, 0x14be0743, 0x4c0cc7bf, 0x63f6e1da,
-    0x274edebf, 0xe76f65fb, 0xd51ad2f1, 0x4898b95b
+    0x21b9efbc, 0x18480766, 0x2e966d34, 0xf3908213,
+    0x09eeac68, 0x02309798, 0x826296bf, 0x3e8bec7c,
+    0x10edb309, 0x48c90ba6, 0x7310f7b9, 0x64fc500a
 };
 
-// Sequence 4: 32 words {0xC000..0xC01F} - 128 bytes (exact SHA-384 block boundary)
+// Sequence 4: 32 words {0xC000..0xC01F} - 128 bytes
 static const uint32_t expected_seq4[12] = {
-    0xc95e0b92, 0xd0adead5, 0x3cd89140, 0x4f52b384,
-    0xebd27444, 0x8d01157f, 0xb4352919, 0x1d6e9240,
-    0xb0133c4d, 0x66c97a0a, 0x3caeceba, 0x699d1be9
+    0x01c32e80, 0x6e0812d2, 0x3d2cf9c7, 0xd716f30f,
+    0xaf590d10, 0x167979cf, 0x8e8ff08d, 0x1f7c1e42,
+    0xfb0ccb85, 0x86552358, 0x0ab4d913, 0xa9bd6004
 };
 
-// Sequence 5: 260 words {0xD000..0xD103} - 1040 bytes (large, >1KB)
+// Sequence 5: 260 words {0xD000..0xD103} - 1040 bytes
 static const uint32_t expected_seq5[12] = {
-    0xa1531b27, 0xd65234c0, 0xb28cdb72, 0x52f090a6,
-    0x7e151e14, 0xe1ca70e8, 0x60738d63, 0xff244a0f,
-    0xcddb352a, 0xa2e62f2f, 0xb2a7a5cf, 0x2f35c7e2
+    0x701ae631, 0xa53f6b61, 0x2ab9b1f4, 0xc6fc4f35,
+    0x318ccd0c, 0x4a25076c, 0x0ce764ad, 0x51716b58,
+    0xcce93c4d, 0x14657f8e, 0x68c2d716, 0x045a289d
+};
+
+// Sequence 6: 64 words {0x10..0x4F} via tight memcpy (same data as seq1)
+static const uint32_t expected_seq6[12] = {
+    0x73c26a32, 0x28bce060, 0x94b092a6, 0x4d3c6007,
+    0xbe359bab, 0xa1b76c71, 0x812f325a, 0x99a13504,
+    0x665282d5, 0xa2df5e62, 0xf00187ff, 0x61da0cd0
 };
 
 // Acquire SHA acc lock: release reset-default lock, then read-to-acquire
@@ -177,11 +190,29 @@ void main(void) {
         for (uint32_t i = 0; i < 32; i++) {
             iccm[i] = 0xC000 + i;
         }
-    } else {
+    } else if (iteration == 4) {
         // Sequence 5: 260 words (1040 bytes, large >1KB)
         VPRINTF(LOW, "Seq5: Writing 260 words to ICCM (large)...\n");
         for (uint32_t i = 0; i < 260; i++) {
             iccm[i] = 0xD000 + i;
+        }
+    } else {
+        // Sequence 6: 64 words via tight back-to-back stores
+        // Same data as Seq1 {0x10..0x4F}, but written as adjacent pairs
+        // to maximize LSU bus buffer dword merging opportunities.
+        // Uses volatile asm to prevent compiler reordering.
+        VPRINTF(LOW, "Seq6: Tight memcpy 64 words (testing LSU merge)...\n");
+        uint32_t base = (uint32_t)iccm;
+        for (uint32_t i = 0; i < 64; i += 2) {
+            uint32_t val0 = 0x10 + i;
+            uint32_t val1 = 0x10 + i + 1;
+            uint32_t addr0 = base + (i * 4);
+            // Back-to-back sw to adjacent words -- LSU may merge into one 64-bit AXI txn
+            __asm__ volatile (
+                "sw %0, 0(%2)\n\t"
+                "sw %1, 4(%2)\n\t"
+                : : "r"(val0), "r"(val1), "r"(addr0) : "memory"
+            );
         }
     }
 
@@ -203,7 +234,8 @@ void main(void) {
     else if (iteration == 1) expected = expected_seq2;
     else if (iteration == 2) expected = expected_seq3;
     else if (iteration == 3) expected = expected_seq4;
-    else expected = expected_seq5;
+    else if (iteration == 4) expected = expected_seq5;
+    else expected = expected_seq6;
 
     if (!check_pcr4(expected, iteration + 1)) {
         VPRINTF(ERROR, "FAIL: PCR4 mismatch on iteration %d\n", iteration);
@@ -214,7 +246,7 @@ void main(void) {
 
     iteration++;
 
-    if (iteration < 5) {
+    if (iteration < 6) {
         // Trigger fw_update_reset -- boots back into main() with iccm_unlock
         VPRINTF(LOW, "Triggering fw_update_reset...\n");
         lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,
@@ -222,7 +254,7 @@ void main(void) {
         while(1); // Wait for reset
     }
 
-    // All 5 sequences passed
-    VPRINTF(LOW, "=== ALL 5 SEQUENCES PASSED ===\n");
+    // All 6 sequences passed
+    VPRINTF(LOW, "=== ALL 6 SEQUENCES PASSED ===\n");
     SEND_STDOUT_CTRL(0xff);
 }

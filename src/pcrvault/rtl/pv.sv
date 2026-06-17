@@ -116,8 +116,8 @@ always_comb begin : keyvault_ctrl
     //pcrvault storage
     //AND-OR mux writes to each entry from crypto blocks
     //write to the appropriate dest entry and offset when write_en is set
-    //PCR4 guard: pv_write[0] (sha512_ctrl) is blocked from writing PCR4.
-    //Only pv_write[1] (iccm hash engine) can write nonzero data to PCR4.
+    //PCR4/PCR5 guard: pv_write[0] (sha512_ctrl) is blocked from writing PCR4 and PCR5.
+    //Only pv_write[1] (iccm hash engine) can write nonzero data to PCR4/PCR5.
     for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
         for (int dword = 0; dword < PV_NUM_DWORDS; dword++) begin
             //initialize to 0 for AND-OR mux
@@ -125,15 +125,15 @@ always_comb begin : keyvault_ctrl
             pv_entry_next[entry][dword] = '0;
             
             for (int client = 0; client < PV_NUM_WRITE; client++) begin
-                // Block pv_write[0] from targeting PCR4 (entry 4).
-                // Only pv_write[1] (iccm hash) can write PCR4.
+                // Block pv_write[0] from targeting PCR4 (entry 4) or PCR5 (entry 5).
+                // Only pv_write[1] (iccm hash) can write these entries.
                 pv_entry_we[entry][dword] |= pv_write[client].write_en &
                                              (pv_write[client].write_entry == entry) & 
                                              (pv_write[client].write_offset == dword) &
-                                             ~(client == 0 && entry == 4);
+                                             ~(client == 0 && (entry == 4 || entry == 5));
                 pv_entry_next[entry][dword] |= (pv_write[client].write_en &
                                                 (pv_write[client].write_entry == entry) &
-                                                ~(client == 0 && entry == 4)) ? pv_write[client].write_data : '0;
+                                                ~(client == 0 && (entry == 4 || entry == 5))) ? pv_write[client].write_data : '0;
             end 
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = pv_entry_we[entry][dword];
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next =  pv_entry_next[entry][dword];

@@ -128,3 +128,6 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_iccm_region/directed_kv_iccm_region.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_debug_scan_bypass/directed_kv_debug_scan_bypass.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_glitch_inject/directed_kv_glitch_inject.yml
+        # ICCM write hash measurement tests
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_hash/smoke_test_iccm_hash.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash/directed_test_iccm_hash.yml

@@ -242,6 +242,9 @@ module caliptra_top
     logic [31:0] iccm_hash_data;
     pv_write_t   iccm_pv_write;
     logic        iccm_unlock;
+    // ICCM PCR extend: read port for current PCR values
+    pv_read_t    iccm_pv_read;
+    pv_rd_resp_t iccm_pv_rd_resp;
 
     // ICCM region registers for boot flow monitor
     logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr;
@@ -492,6 +495,9 @@ end
 
     // ICCM hash PCR write is pv_write[1]; sha512_ctrl drives pv_write[0]
     always_comb pv_write[1] = iccm_pv_write;
+    // ICCM PCR extend read is pv_read[1]; sha512_ctrl drives pv_read[0]
+    always_comb pv_read[1] = iccm_pv_read;
+    always_comb iccm_pv_rd_resp = pv_rd_resp[1];
 
    //=========================================================================-
    // RTL instance
@@ -1010,9 +1016,9 @@ sha512_ctrl #(
     .hresp_o        (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hresp),
     .hreadyout_o    (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hreadyout),
     .hrdata_o       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hrdata),
-    .pv_read        (pv_read),
+    .pv_read        (pv_read[0]),
     .pv_write       (pv_write[0]),
-    .pv_rd_resp     (pv_rd_resp),
+    .pv_rd_resp     (pv_rd_resp[0]),
     .pv_wr_resp     (pv_wr_resp[0]),
     .pcr_signing_hash(pcr_signing_data.pcr_hash),
 
@@ -1607,6 +1613,9 @@ soc_ifc_top1
     .iccm_hash_data  (iccm_hash_data),
     .iccm_pv_write   (iccm_pv_write),
     .iccm_unlock_o   (iccm_unlock),
+    // ICCM PCR extend
+    .iccm_pv_read    (iccm_pv_read),
+    .iccm_pv_rd_resp (iccm_pv_rd_resp),
     // ICCM Region Registers for Boot Flow Monitor
     .iccm_fmc_start_addr(iccm_fmc_start_addr),
     .iccm_fmc_end_addr  (iccm_fmc_end_addr),

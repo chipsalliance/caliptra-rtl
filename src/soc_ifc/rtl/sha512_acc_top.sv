@@ -46,6 +46,9 @@ module sha512_acc_top
       input  logic        iccm_lock_i,
       input  logic        iccm_unlock_i,
       output pv_write_t   iccm_pv_write_o,
+      // ICCM PCR extend ports (HW-only — driven by extend FSM, not FW)
+      output pv_read_t    iccm_pv_read_o,
+      input  pv_rd_resp_t iccm_pv_rd_resp_i,
 
       // Interrupts
       output logic error_intr,
@@ -78,6 +81,33 @@ module sha512_acc_top
   logic [PV_NUM_DWORDS-1:0][31:0] iccm_pcr_dest_data;
   kv_write_t iccm_kv_write;
   logic iccm_pcr_data_avail;
+
+  // PCR extend FSM
+  typedef enum logic [3:0] {
+    EXTEND_IDLE,
+    EXTEND_SAVE_DIGEST,
+    EXTEND_READ_PCR4,
+    EXTEND_LOAD_HASH_PCR4,
+    EXTEND_WAIT_PCR4,
+    EXTEND_WRITE_PCR4,
+    EXTEND_READ_PCR5,
+    EXTEND_LOAD_HASH_PCR5,
+    EXTEND_WAIT_PCR5,
+    EXTEND_WRITE_PCR5,
+    EXTEND_DONE
+  } iccm_extend_fsm_e;
+
+  iccm_extend_fsm_e extend_fsm_ps, extend_fsm_ns;
+  logic [PV_NUM_DWORDS-1:0][31:0] iccm_digest_hold;
+  logic [PV_NUM_DWORDS-1:0][31:0] extend_pcr_data;
+  logic [3:0] extend_rd_dword_ctr;
+  logic extend_init;
+  logic extend_pcr_read_en;
+  logic [PV_ENTRY_ADDR_W-1:0] extend_pcr_entry;
+  logic iccm_extend_ip;
+  logic extend_write_trigger;
+  logic extend_load_block;
+  logic [0:BLOCK_NO-1][DATA_WIDTH-1:0] extend_block;
 
   logic init_reg;
   logic next_reg;
@@ -185,13 +215,16 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       next_reg <= '0;
     end
     else begin
-      init_reg <= arc_SHA_BLOCK_0_SHA_BLOCK_N | arc_SHA_BLOCK_0_SHA_PAD0 | arc_SHA_IDLE_SHA_PAD0; 
+      init_reg <= arc_SHA_BLOCK_0_SHA_BLOCK_N | arc_SHA_BLOCK_0_SHA_PAD0 | arc_SHA_IDLE_SHA_PAD0 | extend_init; 
       next_reg <= arc_SHA_BLOCK_N_SHA_BLOCK_N | arc_SHA_BLOCK_N_SHA_PAD0 | arc_SHA_PAD0_SHA_PAD1;
       digest_valid_reg <= core_digest_valid;
       if (core_digest_valid & ~digest_valid_reg)
         digest_reg <= core_digest;
     end
   end // reg_update
+
+  // Extend FSM active flag
+  always_comb iccm_extend_ip = (extend_fsm_ps != EXTEND_IDLE) & (extend_fsm_ps != EXTEND_DONE);
 
   //SHA API
   //Acquire the lock and store the user
@@ -300,7 +333,9 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
                       block_we ? num_bytes_wr + 'd4 : num_bytes_wr;
 
       for (int dword = 0; dword < BLOCK_NO; dword++) begin
-        block_reg[dword] <= block_we & (block_wptr[BLOCK_OFFSET_W-1:0] == dword) ? block_wdata : block_reg_nxt[dword];
+        block_reg[dword] <= extend_load_block                                       ? extend_block[dword] :
+                            block_we & (block_wptr[BLOCK_OFFSET_W-1:0] == dword)    ? block_wdata :
+                                                                                      block_reg_nxt[dword];
       end
     end
   end
@@ -510,12 +545,13 @@ assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 // ICCM mode done flag: sticky until iccm_unlock re-enables measurement.
 // Prevents re-trigger of iccm_mode after hash completes.
+// Set when the full extend sequence (PCR4 + PCR5) is complete.
 always_ff @(posedge clk or negedge rst_b) begin
   if (!rst_b)
     iccm_mode_done <= 1'b0;
   else if (iccm_unlock_i)
     iccm_mode_done <= 1'b0;
-  else if (iccm_pcr_dest_done)
+  else if (extend_fsm_ps == EXTEND_DONE)
     iccm_mode_done <= 1'b1;
 end
 
@@ -541,18 +577,178 @@ end
 // ROM sequence: acquire lock, set mode, then memcpy.
 
 //----------------------------------------------------------------
-// PCR Write via kv_write_client
-// After SHA finishes in iccm_mode, sequences 12 dwords of digest to PCR4
+// PCR Extend FSM
+// After ICCM hash completes, extends PCR4 (Current) and PCR5 (Journey)
+// using the standard extend operation: new = SHA-384(current_PCR || digest).
+// Mirrors sha512.sv's pcr_hash_extend flow but controlled by HW FSM.
 //----------------------------------------------------------------
 
-// Map digest_reg[0:11] to dest_data[11:0] format for kv_write_client
-always_comb begin
-  for (int i = 0; i < PV_NUM_DWORDS; i++)
-    iccm_pcr_dest_data[i] = digest_reg[i];
+// Digest holding register: latched before sha512_core is reused for extend
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    iccm_digest_hold <= '0;
+  else if (extend_fsm_ps == EXTEND_SAVE_DIGEST) begin
+    for (int i = 0; i < PV_NUM_DWORDS; i++)
+      iccm_digest_hold[i] <= digest_reg[i];
+  end
 end
 
-// Trigger write when SHA completes in iccm_mode (single pulse)
-always_comb iccm_pcr_data_avail = iccm_mode & (sha_fsm_ps == SHA_DONE) & ~iccm_mode_done;
+// Extend FSM state register
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    extend_fsm_ps <= EXTEND_IDLE;
+  else if (iccm_unlock_i)
+    extend_fsm_ps <= EXTEND_IDLE;
+  else
+    extend_fsm_ps <= extend_fsm_ns;
+end
+
+// Dword counter for PCR reads and block_reg loading
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    extend_rd_dword_ctr <= '0;
+  else if (extend_fsm_ps == EXTEND_READ_PCR4 || extend_fsm_ps == EXTEND_READ_PCR5)
+    extend_rd_dword_ctr <= extend_rd_dword_ctr + 4'd1;
+  else
+    extend_rd_dword_ctr <= '0;
+end
+
+// PCR read data capture: store read response into extend_pcr_data
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    extend_pcr_data <= '0;
+  else if ((extend_fsm_ps == EXTEND_READ_PCR4 || extend_fsm_ps == EXTEND_READ_PCR5) &&
+           extend_rd_dword_ctr < PV_NUM_DWORDS[3:0])
+    extend_pcr_data[extend_rd_dword_ctr] <= iccm_pv_rd_resp_i.read_data;
+end
+
+// Extend FSM next-state logic
+always_comb begin
+  extend_fsm_ns = extend_fsm_ps;
+  extend_init = 1'b0;
+  extend_pcr_read_en = 1'b0;
+  extend_pcr_entry = '0;
+  extend_write_trigger = 1'b0;
+
+  case (extend_fsm_ps)
+    EXTEND_IDLE: begin
+      if (iccm_mode & (sha_fsm_ps == SHA_DONE) & ~iccm_mode_done)
+        extend_fsm_ns = EXTEND_SAVE_DIGEST;
+    end
+
+    EXTEND_SAVE_DIGEST: begin
+      extend_fsm_ns = EXTEND_READ_PCR4;
+    end
+
+    EXTEND_READ_PCR4: begin
+      extend_pcr_read_en = 1'b1;
+      extend_pcr_entry = PV_ENTRY_ADDR_W'(4);
+      if (extend_rd_dword_ctr == PV_NUM_DWORDS[3:0] - 1)
+        extend_fsm_ns = EXTEND_LOAD_HASH_PCR4;
+    end
+
+    EXTEND_LOAD_HASH_PCR4: begin
+      // block_reg will be loaded combinationally (see block_reg_nxt override below)
+      extend_init = 1'b1;  // triggers SHA-384 init on next clock
+      extend_fsm_ns = EXTEND_WAIT_PCR4;
+    end
+
+    EXTEND_WAIT_PCR4: begin
+      if (core_digest_valid & ~digest_valid_reg)
+        extend_fsm_ns = EXTEND_WRITE_PCR4;
+    end
+
+    EXTEND_WRITE_PCR4: begin
+      extend_write_trigger = 1'b1;
+      if (iccm_pcr_dest_done)
+        extend_fsm_ns = EXTEND_READ_PCR5;
+    end
+
+    EXTEND_READ_PCR5: begin
+      extend_pcr_read_en = 1'b1;
+      extend_pcr_entry = PV_ENTRY_ADDR_W'(5);
+      if (extend_rd_dword_ctr == PV_NUM_DWORDS[3:0] - 1)
+        extend_fsm_ns = EXTEND_LOAD_HASH_PCR5;
+    end
+
+    EXTEND_LOAD_HASH_PCR5: begin
+      extend_init = 1'b1;
+      extend_fsm_ns = EXTEND_WAIT_PCR5;
+    end
+
+    EXTEND_WAIT_PCR5: begin
+      if (core_digest_valid & ~digest_valid_reg)
+        extend_fsm_ns = EXTEND_WRITE_PCR5;
+    end
+
+    EXTEND_WRITE_PCR5: begin
+      extend_write_trigger = 1'b1;
+      if (iccm_pcr_dest_done)
+        extend_fsm_ns = EXTEND_DONE;
+    end
+
+    EXTEND_DONE: begin
+      extend_fsm_ns = EXTEND_IDLE;
+    end
+
+    default: extend_fsm_ns = EXTEND_IDLE;
+  endcase
+end
+
+// pv_read output: driven by extend FSM (HW-only, no FW control path)
+always_comb begin
+  iccm_pv_read_o.read_entry  = extend_pcr_entry;
+  iccm_pv_read_o.read_offset = extend_rd_dword_ctr[PV_ENTRY_SIZE_WIDTH-1:0];
+end
+
+// Block register override for extend: load PCR value + digest + padding
+// SHA-384 block = 1024 bits = 32 x 32-bit dwords
+// Layout: [0:11] = PCR (48B), [12:23] = digest (48B), [24:31] = padding
+// This feeds block_reg_nxt during EXTEND_LOAD_HASH_PCR4/PCR5 states
+always_comb extend_load_block = (extend_fsm_ps == EXTEND_LOAD_HASH_PCR4) |
+                                 (extend_fsm_ps == EXTEND_LOAD_HASH_PCR5);
+
+always_comb begin
+  for (int i = 0; i < BLOCK_NO; i++) begin
+    if (i < PV_NUM_DWORDS)
+      extend_block[i] = extend_pcr_data[i];              // PCR current value (offset 0 = MSB)
+    else if (i < 2 * PV_NUM_DWORDS)
+      // digest_reg[0] = MSB dword (ascending [0:15] assigned from descending [15:0])
+      extend_block[i] = iccm_digest_hold[i - PV_NUM_DWORDS];
+    else if (i == 2 * PV_NUM_DWORDS)
+      extend_block[i] = 32'h80000000;                     // 0x80 pad byte
+    else if (i == BLOCK_NO - 1)
+      extend_block[i] = 32'h00000300;                     // length = 768 bits
+    else
+      extend_block[i] = 32'h0;                            // zero padding
+  end
+end
+
+//----------------------------------------------------------------
+// PCR Write via kv_write_client
+// Used for both initial ICCM digest (future: removed) and extend results.
+// During extend, write_entry is overloaded by the extend FSM.
+//----------------------------------------------------------------
+
+// Dest data source: during extend, use core_digest (extend result).
+// core_digest[15] is MSB, core_digest[4] is LSB for SHA-384 (top 12 of 16 dwords).
+// Match sha512.sv convention: kv_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS]
+always_comb begin
+  for (int i = 0; i < PV_NUM_DWORDS; i++)
+    iccm_pcr_dest_data[i] = core_digest[15 - i];
+end
+
+// Data available: pulse when extend FSM enters WRITE_PCR4 or WRITE_PCR5
+always_comb iccm_pcr_data_avail = extend_write_trigger & ~iccm_pcr_dest_done;
+
+// Write entry: 4 for PCR4, 5 for PCR5
+logic [4:0] iccm_write_entry;
+always_comb begin
+  if (extend_fsm_ps == EXTEND_WRITE_PCR4 || extend_fsm_ps == EXTEND_WAIT_PCR4)
+    iccm_write_entry = 5'd4;
+  else
+    iccm_write_entry = 5'd5;
+end
 
 kv_write_client #(
   .DATA_WIDTH(PV_NUM_DWORDS * PV_DATA_W),
@@ -565,7 +761,7 @@ iccm_pcr_write_client
   .zeroize(1'b0),
 
   .num_dwords(PV_NUM_DWORDS[4:0]),
-  .write_ctrl_reg('{rsvd: '0, write_dest_vld: '0, write_entry: 5'd4, write_en: 1'b1}),
+  .write_ctrl_reg('{rsvd: '0, write_dest_vld: '0, write_entry: iccm_write_entry, write_en: 1'b1}),
   .write_metrics('{default: '0}),
 
   .kv_write(iccm_kv_write),

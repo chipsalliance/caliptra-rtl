@@ -181,6 +181,9 @@ module soc_ifc_top
     input  logic [31:0] iccm_hash_data,
     output pv_write_t   iccm_pv_write,
     output logic        iccm_unlock_o,
+    // ICCM PCR extend
+    output pv_read_t    iccm_pv_read,
+    input  pv_rd_resp_t iccm_pv_rd_resp,
 
     // ICCM Region Registers for Boot Flow Monitor
     output logic [ICCM_ADDR_WIDTH-1:0] iccm_fmc_start_addr,
@@ -1328,6 +1331,9 @@ i_sha512_acc_top (
     .iccm_lock_i(iccm_lock),
     .iccm_unlock_i(iccm_unlock),
     .iccm_pv_write_o(iccm_pv_write),
+    // ICCM PCR extend
+    .iccm_pv_read_o(iccm_pv_read),
+    .iccm_pv_rd_resp_i(iccm_pv_rd_resp),
 
     .error_intr(sha_error_intr),
     .notif_intr(sha_notif_intr)

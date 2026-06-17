@@ -23,7 +23,7 @@ parameter PV_ADDR_W = 13;
 parameter PV_DATA_W = 32;
 parameter PV_ENTRY_ADDR_W = $clog2(PV_NUM_PCR);
 parameter PV_ENTRY_SIZE_WIDTH = $clog2(PV_NUM_DWORDS);
-parameter PV_NUM_READ = 1;
+parameter PV_NUM_READ = 2;
 parameter PV_NUM_WRITE = 2;
 parameter PV_SIZE_OF_NONCE = 256;
 
