@@ -18,7 +18,7 @@
 #include "riscv_hw_if.h"
 #include "printf.h"
 
-inline void doe_set_ctrl(const enum doe_cmd_e cmd, uint32_t kv_dest) {
+static inline void doe_set_ctrl(const enum doe_cmd_e cmd, uint32_t kv_dest) {
     lsu_write_32(CLP_DOE_REG_DOE_CTRL, ((cmd        << DOE_REG_DOE_CTRL_CMD_LOW    ) & DOE_REG_DOE_CTRL_CMD_MASK    ) |
                                        ((kv_dest    << DOE_REG_DOE_CTRL_DEST_LOW   ) & DOE_REG_DOE_CTRL_DEST_MASK   ) |
                                        (((cmd >> 2) << DOE_REG_DOE_CTRL_CMD_EXT_LOW) & DOE_REG_DOE_CTRL_CMD_EXT_MASK));

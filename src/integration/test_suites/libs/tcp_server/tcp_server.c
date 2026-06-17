@@ -37,6 +37,7 @@ struct tcp_server_ctx {
   // Writeable by the host thread
   char *display_name;
   uint16_t listen_port;
+  uint16_t actual_port;
   volatile bool socket_run;
   // Writeable by the server thread
   struct tcp_buf *buf_in;
@@ -152,6 +153,17 @@ static int start(struct tcp_server_ctx *ctx) {
             strerror(errno), errno);
     return -1;
   }
+
+  // Retrieve the actual port (important when listen_port was 0)
+  struct sockaddr_in bound_addr;
+  socklen_t bound_addr_len = sizeof(bound_addr);
+  rv = getsockname(sfd, (struct sockaddr *)&bound_addr, &bound_addr_len);
+  if (rv != 0) {
+    fprintf(stderr, "%s: Failed to get socket name: %s (%d)\n",
+            ctx->display_name, strerror(errno), errno);
+    return -1;
+  }
+  ctx->actual_port = ntohs(bound_addr.sin_port);
 
   // listen for incoming connections
   rv = listen(sfd, 1);
@@ -300,31 +312,22 @@ static void ctx_free(struct tcp_server_ctx *ctx) {
 }
 
 /**
- * Thread function to create a new server instance
+ * Thread function to run the server event loop (accept + I/O)
  *
  * @param ctx_void context object
  * @return Always returns NULL
  */
-static void *server_create(void *ctx_void) {
+static void *server_run(void *ctx_void) {
   // Cast to a server struct
   struct tcp_server_ctx *ctx = (struct tcp_server_ctx *)ctx_void;
   struct timeval timeout;
 
-  // Start the server
-  int rv = start(ctx);
-  if (rv != 0) {
-    fprintf(stderr, "%s: Unable to create TCP server on port %d\n",
-            ctx->display_name, ctx->listen_port);
-    goto err_cleanup_return;
-  }
-
   // Initialise timeout
   timeout.tv_sec = 0;
 
-  // Initialise fd_set
-
   // Start waiting for connection / data
   char xfer_data;
+  int rv;
   while (ctx->socket_run) {
     // Initialise structure of fds
     fd_set read_fds;
@@ -346,7 +349,7 @@ static void *server_create(void *ctx_void) {
 
     if (rv < 0) {
       printf("%s: Socket read failed, port: %d\n", ctx->display_name,
-             ctx->listen_port);
+             ctx->actual_port);
       tcp_server_client_close(ctx);
     }
 
@@ -368,8 +371,6 @@ static void *server_create(void *ctx_void) {
       }
     }
   }
-
-err_cleanup_return:
 
   // Simulation done - clean up
   tcp_server_client_close(ctx);
@@ -401,15 +402,30 @@ struct tcp_server_ctx *tcp_server_create(const char *display_name,
   ctx->display_name = strdup(display_name);
   assert(ctx->display_name);
 
-  if (pthread_create(&ctx->sock_thread, NULL, server_create, (void *)ctx) !=
+  // Bind and listen in the calling thread so the actual port is known
+  // immediately (important when listen_port is 0 for OS-assigned ports).
+  int rv = start(ctx);
+  if (rv != 0) {
+    fprintf(stderr, "%s: Unable to create TCP server on port %d\n",
+            ctx->display_name, ctx->listen_port);
+    ctx_free(ctx);
+    return NULL;
+  }
+
+  if (pthread_create(&ctx->sock_thread, NULL, server_run, (void *)ctx) !=
       0) {
     fprintf(stderr, "%s: Unable to create TCP socket thread\n",
             ctx->display_name);
+    stop(ctx);
     ctx_free(ctx);
-    free(ctx);
     return NULL;
   }
   return ctx;
+}
+
+uint16_t tcp_server_get_port(struct tcp_server_ctx *ctx) {
+  assert(ctx);
+  return ctx->actual_port;
 }
 
 bool tcp_server_read(struct tcp_server_ctx *ctx, char *dat) {

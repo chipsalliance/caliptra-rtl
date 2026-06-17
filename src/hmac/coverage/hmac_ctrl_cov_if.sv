@@ -29,12 +29,13 @@ interface hmac_ctrl_cov_if
     logic next;
     logic zeroize;
     logic mode;
+    logic last;
     logic ready;
     logic valid;
     
     logic core_tag_we;
 
-    logic [1 : 0] hmac_cmd;
+    logic [2 : 0] hmac_cmd;
 
     kv_write_filter_metrics_t kv_write_metrics;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
@@ -43,12 +44,13 @@ interface hmac_ctrl_cov_if
     assign next = hmac_ctrl.hmac_inst.next_reg;
     assign zeroize = hmac_ctrl.hmac_inst.zeroize_reg;
     assign mode = hmac_ctrl.hmac_inst.mode_reg;
+    assign last = hmac_ctrl.hmac_inst.last_reg;
     assign ready = hmac_ctrl.hmac_inst.ready_reg;
     assign valid = hmac_ctrl.hmac_inst.tag_valid_reg;
 
     assign core_tag_we = hmac_ctrl.hmac_inst.core_tag_we;
 
-    assign hmac_cmd = {next, init};
+    assign hmac_cmd = {last, next, init};
 
     assign kv_write_metrics = hmac_ctrl.hmac_inst.kv_write_metrics;
     assign kv_write_ctrl_reg = hmac_ctrl.hmac_inst.kv_write_ctrl_reg;
@@ -61,12 +63,19 @@ interface hmac_ctrl_cov_if
         next_cp: coverpoint next;
         zeroize_cp: coverpoint zeroize;
         mode_cp: coverpoint mode;
+        last_cp: coverpoint last;
         ready_cp: coverpoint ready;
         valid_cp: coverpoint valid;
 
         core_tag_we_cp: coverpoint core_tag_we;
 
-        hmac_cmd_cp: coverpoint hmac_cmd  {bins cmd[]   = (0, 0 => 1, 2 => 0, 0);}
+        hmac_cmd_cp: coverpoint hmac_cmd {
+            bins init               = (0 => 1 => 0);
+            bins next               = (0 => 2 => 0);
+            bins last_alone_ignored = (0 => 4 => 0);
+            bins init_last          = (0 => 5 => 0);
+            bins next_last          = (0 => 6 => 0);
+        }
 
         //init_ready_cp: cross ready, init;
         //next_ready_cp: cross ready, next;
@@ -74,8 +83,10 @@ interface hmac_ctrl_cov_if
         zeroize_ready_cp: cross ready, zeroize;
         zeroize_init_cp: cross zeroize, init;
         zeroize_next_cp: cross zeroize, next;
+        zeroize_last_cp: cross zeroize, last;
         init_mode_cp: cross init, mode;
         next_mode_cp: cross next, mode;
+        last_mode_cp: cross last, mode;
 
     endgroup
 

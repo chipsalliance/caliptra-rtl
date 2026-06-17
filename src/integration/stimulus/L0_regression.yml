@@ -77,3 +77,5 @@ contents:
         - ../test_suites/smoke_test_mlkem_shared_key/smoke_test_mlkem_shared_key.yml
         - ../test_suites/smoke_test_kv_lock_use_mid_read/smoke_test_kv_lock_use_mid_read.yml
         - ../test_suites/smoke_test_mlkem_kv_endian/smoke_test_mlkem_kv_endian.yml
+        # KV boot flow monitor smoke test
+        - ../test_suites/smoke_test_kv_boot_flow_monitor/smoke_test_kv_boot_flow_monitor.yml

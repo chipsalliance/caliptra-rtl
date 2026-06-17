@@ -20,11 +20,7 @@
 //`include "kv_defines_pkg.sv"
 //`include "doe_defines_pkg.sv"
 `ifndef CPTRA_TB_TOP_NAME
-  `ifdef UVMF_CALIPTRA_TOP
-    `define CPTRA_TB_TOP_NAME hdl_top
-  `else
-    `define CPTRA_TB_TOP_NAME caliptra_top_tb
-  `endif
+  `define CPTRA_TB_TOP_NAME `CALIPTRA_TOP
 `endif
 `ifndef CPTRA_TOP_PATH
   `define CPTRA_TOP_PATH      `CPTRA_TB_TOP_NAME.caliptra_top_dut
@@ -204,32 +200,34 @@ module caliptra_top_sva
                                           )
                             else $display("SVA ERROR: AHB address not valid in keyvault");
 
-  // Single comprehensive function that handles both debug modes
-  //Adding a check because verilator is calling this function and the below display call happens
-  //This ensures that the function was called appropriately
-  function automatic logic check_all_kv_debug_values();
+  // Per-slot function to check debug flush value for a single KV entry
+  // Verifies all dwords in the given entry match the expected debug value
+  function automatic logic check_kv_slot_debug_value(int entry);
     logic sel_value = `KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value;
     logic [31:0] expected_value = sel_value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
     if ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && `KEYVAULT_PATH.cptra_pwrgood) begin
-      for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
-        for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
-          if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
-            $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", entry, dword, expected_value, `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
-            return 1'b0;
-          end
+      for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+        if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
+          $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", entry, dword, expected_value, `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
+          return 1'b0;
         end
       end
     end
     return 1'b1;
   endfunction
 
-  // Single assertion covering both debug modes
-  KV_debug_comprehensive: assert property (
-    @(posedge `SVA_RDC_CLK)
-    disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-    ($rose( ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked) || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && 
-           `KEYVAULT_PATH.cptra_pwrgood) |=> check_all_kv_debug_values()))
-  else $display("SVA ERROR: KV debug flush comprehensive check failed");
+  // Per-slot debug flush assertions.
+  // Edge-triggered on entry to debug-locked false, fatal error, or scan mode.
+  generate
+    for (genvar entry = 0; entry < KV_NUM_KEYS; entry++) begin : gen_kv_debug_per_slot
+      KV_debug_slot: assert property (
+        @(posedge `SVA_RDC_CLK)
+        disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
+        ($rose( ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked) || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) &&
+               `KEYVAULT_PATH.cptra_pwrgood) |=> check_kv_slot_debug_value(entry)))
+      else $display("SVA ERROR: KV[%0d] debug flush comprehensive check failed", entry);
+    end
+  endgenerate
 
   generate
     for (genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
@@ -863,14 +861,18 @@ module caliptra_top_sva
     )
     else $display("SVA ERROR: ABR_TOP_PATH.skencode_wr_data is not zero");
 
-    // skdecode_mem_wr_data: 2-element array of MLDSA_MEM_DATA_WIDTH bits each.
-    for (genvar i = 0; i < 2; i++) begin: skdecode_mem_wr_data_check
-      ZERO_MLDSA_skdecode_mem_wr_data: assert property (
-        @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.skdecode_mem_wr_data[i] == 0))
-      )
-      else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data[%0d] is not zero", i);
-    end
+    // skdecode_mem_wr_data_a/b: split into per-bank signals
+    ZERO_MLDSA_skdecode_mem_wr_data_a: assert property (
+      @(posedge `SVA_RDC_CLK)
+      ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.skdecode_mem_wr_data_a[0] == 0))
+    )
+    else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data_a[0] is not zero");
+
+    ZERO_MLDSA_skdecode_mem_wr_data_b: assert property (
+      @(posedge `SVA_RDC_CLK)
+      ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.skdecode_mem_wr_data_b[0] == 0))
+    )
+    else $display("SVA ERROR: ABR_TOP_PATH.skdecode_mem_wr_data_b[0] is not zero");
 
     // skdecode_rd_data: 2-element array of DATA_WIDTH bits each.
     for (genvar i = 0; i < 2; i++) begin: skdecode_rd_data_check
@@ -885,36 +887,29 @@ module caliptra_top_sva
     for (genvar i = 0; i < 2; i++) begin: abr_mem_rdata0_bank_check
       ZERO_MLDSA_abr_mem_rdata0_bank: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_rdata0_bank[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_rdata0_bank[0][i] == 0))
       )
-      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_rdata0_bank[%0d] is not zero", i);
+      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_rdata0_bank[0][%0d] is not zero", i);
     end
 
-    // abr_mem_wdata: Array indexed from 1 to 3, each element is MLDSA_MEM_DATA_WIDTH bits.
+    // abr_mem_wdata: Now indexed [ABR_NUM_NTT-1:0][2:1] after SCA. Check NTT[0] instances.
     for (genvar i = 1; i < 3; i++) begin: abr_mem_wdata_check
       ZERO_MLDSA_abr_mem_wdata: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata[0][i] == 0))
       )
-      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata[%0d] is not zero", i);
+      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata[0][%0d] is not zero", i);
     end
 
-    // abr_mem_wdata: Array indexed from 1 to 3, each element is MLDSA_MEM_DATA_WIDTH bits.
-    for (genvar i = 3; i <= 3; i++) begin: abr_mem_masked_wdata_check
-      ZERO_MLDSA_abr_mem_wdata: assert property (
-        @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_masked_wdata[i] == 0))
-      )
-      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata[%0d] is not zero", i);
-    end
+    // abr_mem_masked_wdata: inst3 removed in SCA optimization — assertion removed
 
     // abr_mem_wdata0_bank: 2-element array of MLDSA_MEM_DATA_WIDTH bits.
     for (genvar i = 0; i < 2; i++) begin: abr_mem_wdata0_bank_check
       ZERO_MLDSA_abr_mem_wdata0_bank: assert property (
         @(posedge `SVA_RDC_CLK)
-        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata0_bank[i] == 0))
+        ((`MLDSA_ZEROIZATION || `MLKEM_ZEROIZATION || `ABR_SCAN_DEBUG) |-> ##10 (`ABR_TOP_PATH.abr_mem_wdata0_bank[0][i] == 0))
       )
-      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata0_bank[%0d] is not zero", i);
+      else $display("SVA ERROR: ABR_TOP_PATH.abr_mem_wdata0_bank[0][%0d] is not zero", i);
     end
   endgenerate
   

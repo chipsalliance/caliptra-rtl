@@ -156,7 +156,7 @@ void main() {
     lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
     lsu_write_32(STDOUT, (hmac384_block.kv_id << 8) | 0xb0);
 
-    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, TRUE);
     hmac_zeroize();
 
 
@@ -260,7 +260,7 @@ void main() {
         VPRINTF(LOW, "Block KV ID: %d, KV Intf: %d\n", hmac512_block.kv_id, hmac512_block.kv_intf);
         VPRINTF(LOW, "Tag KV ID: %d, KV Intf: %d\n", hmac512_tag.kv_id, hmac512_tag.kv_intf);
 
-        hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE);
+        hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, TRUE);
         hmac_zeroize();
         cptra_intr_rcv.hmac_error = 0;
         cptra_intr_rcv.hmac_notif = 0;

@@ -989,8 +989,10 @@
 #define HMAC_REG_HMAC512_CTRL_MODE_MASK                                                             (0x8)
 #define HMAC_REG_HMAC512_CTRL_CSR_MODE_LOW                                                          (4)
 #define HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK                                                         (0x10)
-#define HMAC_REG_HMAC512_CTRL_RESERVED_LOW                                                          (5)
-#define HMAC_REG_HMAC512_CTRL_RESERVED_MASK                                                         (0x20)
+#define HMAC_REG_HMAC512_CTRL_LAST_LOW                                                              (5)
+#define HMAC_REG_HMAC512_CTRL_LAST_MASK                                                             (0x20)
+#define HMAC_REG_HMAC512_CTRL_RESERVED_LOW                                                          (6)
+#define HMAC_REG_HMAC512_CTRL_RESERVED_MASK                                                         (0x40)
 #endif
 #define CLP_HMAC_REG_HMAC512_STATUS                                                                 (0x10010018)
 #ifndef HMAC_REG_HMAC512_STATUS
@@ -1279,30 +1281,6 @@
 #define CLP_HMAC_REG_HMAC512_LFSR_SEED_5                                                            (0x10010154)
 #ifndef HMAC_REG_HMAC512_LFSR_SEED_5
 #define HMAC_REG_HMAC512_LFSR_SEED_5                                                                (0x154)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_6                                                            (0x10010158)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_6
-#define HMAC_REG_HMAC512_LFSR_SEED_6                                                                (0x158)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_7                                                            (0x1001015c)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_7
-#define HMAC_REG_HMAC512_LFSR_SEED_7                                                                (0x15c)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_8                                                            (0x10010160)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_8
-#define HMAC_REG_HMAC512_LFSR_SEED_8                                                                (0x160)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_9                                                            (0x10010164)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_9
-#define HMAC_REG_HMAC512_LFSR_SEED_9                                                                (0x164)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_10                                                           (0x10010168)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_10
-#define HMAC_REG_HMAC512_LFSR_SEED_10                                                               (0x168)
-#endif
-#define CLP_HMAC_REG_HMAC512_LFSR_SEED_11                                                           (0x1001016c)
-#ifndef HMAC_REG_HMAC512_LFSR_SEED_11
-#define HMAC_REG_HMAC512_LFSR_SEED_11                                                               (0x16c)
 #endif
 #define CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL                                                         (0x10010600)
 #ifndef HMAC_REG_HMAC512_KV_RD_KEY_CTRL
@@ -10653,8 +10631,12 @@
 #define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK                                               (0x4)
 #define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_LOW                                             (3)
 #define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_MASK                                            (0x8)
-#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (4)
-#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (0xfffffff0)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_LOW                                               (4)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK                                              (0x10)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_LOW                                     (5)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_MASK                                    (0x20)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (6)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (0xffffffc0)
 #endif
 #define CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL                                                    (0x30030004)
 #ifndef SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL
@@ -10665,8 +10647,10 @@
 #define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_OOO_MASK                                     (0x2)
 #define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_LOW                                       (2)
 #define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_ECC_UNC_MASK                                      (0x4)
-#define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_LOW                                               (3)
-#define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_MASK                                              (0xfffffff8)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_SHADOW_UPDATE_ERR_LOW                                  (3)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_SHADOW_UPDATE_ERR_MASK                                 (0x8)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_LOW                                               (4)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_RSVD_MASK                                              (0xfffffff0)
 #endif
 #define CLP_SOC_IFC_REG_CPTRA_FW_ERROR_FATAL                                                        (0x30030008)
 #ifndef SOC_IFC_REG_CPTRA_FW_ERROR_FATAL
@@ -11769,6 +11753,8 @@
 #define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK                                  (0x4)
 #define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_CRYPTO_ERR_LOW                                (3)
 #define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_CRYPTO_ERR_MASK                               (0x8)
+#define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_KV_ERROR_LOW                                  (4)
+#define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_KV_ERROR_MASK                                 (0x10)
 #endif
 #define CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK                                            (0x30030634)
 #ifndef SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK
@@ -11803,6 +11789,36 @@
 #define CLP_SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H                                                      (0x3003064c)
 #ifndef SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H
 #define SOC_IFC_REG_INTERNAL_RV_MTIMECMP_H                                                          (0x64c)
+#endif
+#define CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR                                                (0x30030650)
+#ifndef SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR
+#define SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR                                                    (0x650)
+#define SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR_ADDR_LOW                                           (0)
+#define SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR_ADDR_MASK                                          (0x3ffff)
+#endif
+#define CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR                                                  (0x30030654)
+#ifndef SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR
+#define SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR                                                      (0x654)
+#define SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR_ADDR_LOW                                             (0)
+#define SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR_ADDR_MASK                                            (0x3ffff)
+#endif
+#define CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR                                                 (0x30030658)
+#ifndef SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR
+#define SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR                                                     (0x658)
+#define SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR_ADDR_LOW                                            (0)
+#define SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR_ADDR_MASK                                           (0x3ffff)
+#endif
+#define CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR                                                   (0x3003065c)
+#ifndef SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR
+#define SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR                                                       (0x65c)
+#define SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR_ADDR_LOW                                              (0)
+#define SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR_ADDR_MASK                                             (0x3ffff)
+#endif
+#define CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK                                                   (0x30030660)
+#ifndef SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK
+#define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK                                                       (0x660)
+#define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_LOW                                              (0)
+#define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_MASK                                             (0x1)
 #endif
 #define CLP_SOC_IFC_REG_INTR_BLOCK_RF_START                                                         (0x30030800)
 #define CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                              (0x30030800)

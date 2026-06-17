@@ -54,6 +54,8 @@ module csrng_core
   output logic                                    intr_cs_fatal_err_o
 );
 
+  `include "caliptra_prim_assert.sv"
+
   import csrng_reg_pkg::*;
 
   import caliptra_prim_mubi_pkg::mubi4_t;

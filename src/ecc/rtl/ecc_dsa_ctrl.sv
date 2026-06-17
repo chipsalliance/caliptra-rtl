@@ -88,6 +88,8 @@ module ecc_dsa_ctrl
     input  logic debugUnlock_or_scan_mode_switch
     );
 
+    `include "caliptra_prim_assert.sv"
+
     //----------------------------------------------------------------
     // Internal constant and parameter definitions.
     //----------------------------------------------------------------

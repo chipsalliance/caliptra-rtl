@@ -315,11 +315,11 @@ void main() {
             uint8_t mode = xorshift32() % 2;
             if (mode == 0){
                 VPRINTF(LOW,"Trig hmac384 flow\n");
-                hmac384_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE);
+                hmac384_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE, TRUE);
             }
             else{
                 VPRINTF(LOW,"Trig hmac512 flow\n");
-                hmac512_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
+                hmac512_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, TRUE);
             }
 
             if (hmac512_tag.kv_intf == TRUE){

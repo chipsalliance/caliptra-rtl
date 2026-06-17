@@ -24,11 +24,12 @@ module caliptra_top
     import lc_ctrl_state_pkg::*;
     import lc_ctrl_reg_pkg::*;
     import lc_ctrl_pkg::*;
-    import el2_pkg::*;
+    import caliptra_prim_mubi_pkg::*;
 `ifdef CALIPTRA_INTERNAL_TRNG
     import entropy_src_pkg::*;
     import csrng_pkg::*;
 `endif
+    import el2_pkg::*;
     #(
     `include "el2_param.vh"
     )
@@ -241,7 +242,13 @@ module caliptra_top
     logic [31:0] iccm_hash_data;
     pv_write_t   iccm_pv_write;
     logic        iccm_unlock;
-  
+
+    // ICCM region registers for boot flow monitor
+    logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr;
+    logic [pt.ICCM_BITS-1:0] iccm_fmc_end_addr;
+    logic [pt.ICCM_BITS-1:0] iccm_rt_start_addr;
+    logic [pt.ICCM_BITS-1:0] iccm_rt_end_addr;
+    logic        iccm_region_lock;
     // AES status signals
     logic aes_input_ready;
     logic aes_output_valid;
@@ -312,6 +319,8 @@ module caliptra_top
     logic ss_ocp_lock_in_progress;
     // Key release size (used as input to AES operation)
     logic [15:0] ss_key_release_key_size;
+    // Stable owner key enable (from soc_ifc, used by KV enforcement)
+    logic stable_owner_key_en;
 
     logic [31:0] imem_haddr;
     logic imem_hsel;
@@ -329,6 +338,7 @@ module caliptra_top
     logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
     logic aes_busy_filtered, ecc_busy_filtered;
     logic crypto_error;
+    logic kv_monitor_alert;
 
     typedef enum logic [1:0] {
         CRYPTO_IDLE,
@@ -383,7 +393,7 @@ module caliptra_top
                                 (ecc_busy_filtered & aes_busy_filtered) |
                                 (abr_busy & doe_busy)                   |
                                 (abr_busy & aes_busy_filtered)          |
-                                (doe_busy & aes_busy_filtered)  ;
+                                (doe_busy & aes_busy_filtered);
             
 
 always_comb begin
@@ -545,6 +555,46 @@ always_comb begin
   el2_icache_stub.ic_tag_data_raw_packed_pre = '0;
   el2_icache_stub.ic_tag_data_raw_pre = '0;
 end
+
+//Boot flow monitor
+//Track the boot flow from ROM to FMC and then to RT
+//Trigger keyvault monitoring and enforcement blocks on transitions
+//Errors will be flagged as fatal and flush the keyvault
+logic sim_boot_flow_monitor_dis;
+logic boot_flow_monitor_en;
+`ifdef SIMULATION
+    assign sim_boot_flow_monitor_dis = 1'b1;
+`else
+    assign sim_boot_flow_monitor_dis = 1'b0;
+`endif
+
+// Disable boot flow monitoring when debug is unlocked or scan mode is active (clk_override can cause false ICCM read detection)
+// Default during simulation is to disable boot flow monitor as most tests don't go through the boot flow
+always_comb boot_flow_monitor_en = sim_boot_flow_monitor_dis ? '0 :
+                                   cptra_security_state_Latched.debug_locked & ~cptra_scan_mode_Latched; 
+
+
+caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
+caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt;
+caliptra_prim_mubi_pkg::mubi4_t boot_flow_error;
+
+boot_flow_monitor i_boot_flow_monitor (
+    .clk                (clk),
+    .cptra_uc_rst_b     (cptra_uc_rst_b),
+    .iccm_clken         (el2_mem_export.iccm_clken),
+    .iccm_wren_bank     (el2_mem_export.iccm_wren_bank),
+    .iccm_addr_bank     (el2_mem_export.iccm_addr_bank),
+    .iccm_fmc_start_addr(iccm_fmc_start_addr),
+    .iccm_fmc_end_addr  (iccm_fmc_end_addr),
+    .iccm_rt_start_addr (iccm_rt_start_addr),
+    .iccm_rt_end_addr   (iccm_rt_end_addr),
+    .iccm_region_lock   (iccm_region_lock),
+    .boot_flow_monitor_en(boot_flow_monitor_en),
+    .fw_update_rst_window(fw_update_rst_window),
+    .boot_flow_fmc_o    (boot_flow_fmc),
+    .boot_flow_rt_o     (boot_flow_rt),
+    .boot_flow_error_o  (boot_flow_error)
+);
 
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
@@ -1056,6 +1106,7 @@ doe_ctrl #(
     .kv_write (kv_write[KV_WRITE_IDX_DOE]),
     .kv_wr_resp (kv_wr_resp[KV_WRITE_IDX_DOE]),
     .ocp_lock_en(ss_ocp_lock_en),
+    .doe_cmd_lock(mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
 );
@@ -1232,11 +1283,17 @@ key_vault1
 
     .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode),
     .debugUnlock_or_scan_mode_switch (debug_lock_or_scan_mode_switch),
+    .boot_flow_fmc (boot_flow_fmc),
+    .boot_flow_rt (boot_flow_rt),
+    .boot_flow_error (boot_flow_error),
+    .stable_owner_key_en (stable_owner_key_en),
+    .ocp_lock_mode_en (ss_ocp_lock_en),
 
     .kv_read              (kv_read),
     .kv_write             (kv_write),
     .kv_rd_resp           (kv_rd_resp),
     .kv_wr_resp           (kv_wr_resp),
+    .kv_monitor_alert     (kv_monitor_alert),
     .pcr_ecc_signing_key  (pcr_signing_data.pcr_ecc_signing_privkey),
     .pcr_mldsa_signing_key  (pcr_signing_data.pcr_mldsa_signing_seed)
 );
@@ -1403,7 +1460,8 @@ soc_ifc_top #(
     .AXIM_ADDR_WIDTH(`CALIPTRA_AXI_DMA_ADDR_WIDTH),
     .AXIM_DATA_WIDTH(CPTRA_AXI_DMA_DATA_WIDTH),
     .AXIM_ID_WIDTH  (CPTRA_AXI_DMA_ID_WIDTH),
-    .AXIM_USER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH)
+    .AXIM_USER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH),
+    .ICCM_ADDR_WIDTH(pt.ICCM_BITS)
     )
 soc_ifc_top1 
     (
@@ -1536,6 +1594,7 @@ soc_ifc_top1
     .ss_ocp_lock_en(ss_ocp_lock_en),
     .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
     .ss_key_release_key_size(ss_key_release_key_size),
+    .stable_owner_key_en(stable_owner_key_en),
 
     // NMI Vector 
     .nmi_vector(nmi_vector),
@@ -1548,6 +1607,12 @@ soc_ifc_top1
     .iccm_hash_data  (iccm_hash_data),
     .iccm_pv_write   (iccm_pv_write),
     .iccm_unlock_o   (iccm_unlock),
+    // ICCM Region Registers for Boot Flow Monitor
+    .iccm_fmc_start_addr(iccm_fmc_start_addr),
+    .iccm_fmc_end_addr  (iccm_fmc_end_addr),
+    .iccm_rt_start_addr (iccm_rt_start_addr),
+    .iccm_rt_end_addr   (iccm_rt_end_addr),
+    .iccm_region_lock   (iccm_region_lock),
     //uC reset
     .cptra_noncore_rst_b (cptra_noncore_rst_b),
     .cptra_uc_rst_b (cptra_uc_rst_b),
@@ -1557,6 +1622,8 @@ soc_ifc_top1
     .fw_update_rst_window(fw_update_rst_window),
     //multiple cryptos operating at once, assert fatal error
     .crypto_error(crypto_error),
+    //kv boot flow monitor dest_valid mismatch or boot_flow_error
+    .kv_error(kv_monitor_alert | mubi4_test_true_loose(boot_flow_error)),
     //caliptra uncore jtag ports
     .cptra_uncore_dmi_reg_en( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),

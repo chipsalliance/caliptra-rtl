@@ -95,6 +95,7 @@ import kv_defines_pkg::*;
     // --------------------------------------- //
     import axi_dma_reg_pkg::*;
     `include "caliptra_prim_assert.sv"
+    `include "caliptra_reg_field_defines.svh"
 
 
     // --------------------------------------- //

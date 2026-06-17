@@ -195,7 +195,7 @@ void main() {
         hmac384_tag.data[i] = expected384_tag[i];
 
 
-    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE, TRUE);
     hmac_zeroize();
 
 
@@ -212,14 +212,14 @@ void main() {
     for (int i = 0; i < HMAC512_TAG_SIZE; i++)
         hmac512_tag.data[i] = expected512_tag[i];
 
-    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, TRUE);
     hmac_zeroize();
 
     hmac512_key.kv_intf = FALSE;
     for (int i = 0; i < HMAC512_KEY_SIZE; i++)
         hmac512_key.data[i] = 0x12345678;
 
-    hmac512_flow_csr(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow_csr(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, TRUE);
     hmac_zeroize();
 
     hmac512_key.kv_intf = FALSE;
@@ -229,14 +229,14 @@ void main() {
     for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
         hmac_block.data[i] = block1[i];
     hmac_block.exp_kv_err = TRUE; // just to avoid checking the results. TODO: remove this
-    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE);
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, TRUE, FALSE);
     hmac_block.kv_intf = FALSE;
     for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
         hmac_block.data[i] = block2[i];
     hmac512_tag.kv_intf = FALSE;
     for (int i = 0; i < HMAC512_TAG_SIZE; i++)
         hmac512_tag.data[i] = tag2[i];        
-    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, FALSE);
+    hmac512_flow(hmac512_key, hmac_block, hmac_lfsr_seed, hmac512_tag, FALSE, TRUE);
     hmac_zeroize();
 
     // Write 0xff to STDOUT for TB to terminate test.

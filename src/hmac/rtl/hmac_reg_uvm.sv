@@ -75,6 +75,7 @@ package hmac_reg_uvm;
         hmac_reg__HMAC512_CTRL_bit_cg ZEROIZE_bit_cg[1];
         hmac_reg__HMAC512_CTRL_bit_cg MODE_bit_cg[1];
         hmac_reg__HMAC512_CTRL_bit_cg CSR_MODE_bit_cg[1];
+        hmac_reg__HMAC512_CTRL_bit_cg LAST_bit_cg[1];
         hmac_reg__HMAC512_CTRL_bit_cg Reserved_bit_cg[1];
         hmac_reg__HMAC512_CTRL_fld_cg fld_cg;
         rand uvm_reg_field INIT;
@@ -82,6 +83,7 @@ package hmac_reg_uvm;
         rand uvm_reg_field ZEROIZE;
         rand uvm_reg_field MODE;
         rand uvm_reg_field CSR_MODE;
+        rand uvm_reg_field LAST;
         rand uvm_reg_field Reserved;
 
         function new(string name = "hmac_reg__HMAC512_CTRL");
@@ -104,14 +106,17 @@ package hmac_reg_uvm;
             this.MODE.configure(this, 1, 3, "WO", 0, 'h1, 1, 1, 0);
             this.CSR_MODE = new("CSR_MODE");
             this.CSR_MODE.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
+            this.LAST = new("LAST");
+            this.LAST.configure(this, 1, 5, "WO", 0, 'h0, 1, 1, 0);
             this.Reserved = new("Reserved");
-            this.Reserved.configure(this, 1, 5, "WO", 0, 'h0, 1, 1, 0);
+            this.Reserved.configure(this, 1, 6, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(INIT_bit_cg[bt]) INIT_bit_cg[bt] = new();
                 foreach(NEXT_bit_cg[bt]) NEXT_bit_cg[bt] = new();
                 foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
                 foreach(MODE_bit_cg[bt]) MODE_bit_cg[bt] = new();
                 foreach(CSR_MODE_bit_cg[bt]) CSR_MODE_bit_cg[bt] = new();
+                foreach(LAST_bit_cg[bt]) LAST_bit_cg[bt] = new();
                 foreach(Reserved_bit_cg[bt]) Reserved_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
@@ -1199,7 +1204,7 @@ package hmac_reg_uvm;
         rand hmac_reg__HMAC512_KEY HMAC512_KEY[16];
         rand hmac_reg__HMAC512_BLOCK HMAC512_BLOCK[32];
         rand hmac_reg__HMAC512_TAG HMAC512_TAG[16];
-        rand hmac_reg__HMAC512_LFSR_SEED HMAC512_LFSR_SEED[12];
+        rand hmac_reg__HMAC512_LFSR_SEED HMAC512_LFSR_SEED[6];
         rand kv_read_ctrl_reg HMAC512_KV_RD_KEY_CTRL;
         rand kv_status_reg HMAC512_KV_RD_KEY_STATUS;
         rand kv_read_ctrl_reg HMAC512_KV_RD_BLOCK_CTRL;

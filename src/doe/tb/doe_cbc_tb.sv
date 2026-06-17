@@ -150,7 +150,10 @@ module doe_cbc_tb();
              .kv_write(),
              .busy_o(),
              .error_intr(),
-             .notif_intr()
+             .notif_intr(),
+             .ocp_lock_en(1'b0),
+             .doe_cmd_lock(1'b0),
+             .debugUnlock_or_scan_mode_switch(1'b0)
             );
 
 

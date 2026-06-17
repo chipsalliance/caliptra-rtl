@@ -61,7 +61,7 @@ module hmac_drbg_tb();
   wire                       valid_tb;
 
   //Data
-  reg   [REG_SIZE-1 : 0]            lfsr_seed_tb;
+  reg   [191 : 0]                   lfsr_seed_tb;
   reg   [REG_SIZE-1 : 0]            entropy_tb;
   reg   [REG_SIZE-1 : 0]            nonce_tb;
   wire  [REG_SIZE-1 : 0]            drbg_tb;
@@ -246,7 +246,7 @@ module hmac_drbg_tb();
       next_tb           = 0;
     
       //Data
-      lfsr_seed_tb      = 384'h0;
+      lfsr_seed_tb      = 192'h0;
       entropy_tb        = 384'h0;
       nonce_tb          = 384'h0;
 
@@ -260,7 +260,7 @@ module hmac_drbg_tb();
   //
   //----------------------------------------------------------------
   task hmac384_drbg(input [383 : 0] entropy, input [383 : 0] nonce,
-                  input [383 : 0] lfsr_seed, input  [383 : 0] expected_drbg);
+                  input [191 : 0] lfsr_seed, input  [383 : 0] expected_drbg);
     begin
         if (!ready_tb)
             wait(ready_tb);
@@ -327,7 +327,7 @@ module hmac_drbg_tb();
         $display("*** nonce     : %096x", nonce_tb);
 
         for (int i = 0; i < num_rounds; i++) begin
-          lfsr_seed_tb = random_gen();
+          lfsr_seed_tb = 192'(random_gen());
           $display("*** lfsr_seed : %096x", lfsr_seed_tb);
 
           #(1 * CLK_PERIOD);
@@ -545,7 +545,7 @@ module hmac_drbg_tb();
   //
   //----------------------------------------------------------------
   task hmac384_drbg_failure_injection(input [383 : 0] entropy, input [383 : 0] nonce,
-                  input [383 : 0] lfsr_seed, input  [383 : 0] expected_drbg);
+                  input [191 : 0] lfsr_seed, input  [383 : 0] expected_drbg);
     begin
         if (!ready_tb)
             wait(ready_tb);
@@ -609,7 +609,7 @@ module hmac_drbg_tb();
       
       entropy_tb = random_gen();
       nonce_tb = random_gen();
-      lfsr_seed_tb = random_gen();
+      lfsr_seed_tb = 192'(random_gen());
 
       # CLK_PERIOD;
       init_tb = 1'b1;  

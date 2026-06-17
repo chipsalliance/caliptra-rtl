@@ -215,7 +215,7 @@ void main() {
         hmac_tag_io.data[i] = expected_tag[i];
 
     hmac512_flow_return(hmac_key_io, hmac_block_io, hmac_lfsr_seed,
-                        hmac_tag_io, TRUE, actual_tag);
+                        hmac_tag_io, TRUE, TRUE, actual_tag);
     hmac_zeroize();
     cptra_intr_rcv.hmac_notif = 0;
 
@@ -307,7 +307,7 @@ void main() {
     hmac_tag_io.kv_id = KV_HMAC_TAG_SLOT;
 
     hmac512_flow(hmac_key_io, hmac_block_io, hmac_lfsr_seed,
-                 hmac_tag_io, TRUE);
+                 hmac_tag_io, TRUE, TRUE);
     hmac_zeroize();
     cptra_intr_rcv.hmac_notif = 0;
 

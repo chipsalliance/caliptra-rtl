@@ -116,19 +116,20 @@ void main() {
                                     0xfb68dab9,
                                     0xf1b582c2}; 
 
-    uint32_t tag384_zerokey_zeroblock[12] =   
-                                   {0x6E120BA2,
-                                    0x27BF3557,
-                                    0x676B0256,
-                                    0x136302D7,
-                                    0xD544B868,
-                                    0x080BED15,
-                                    0xF7D59AB1,
-                                    0x1185C79F,
-                                    0x44A39E4F,
-                                    0x440810F9,
-                                    0x7F419C17,
-                                    0xD6DB7E92}; 
+    // HMAC-SHA384(K=zero, M="Hi There") -- standard verifiable vector.
+    uint32_t tag384_zerokey_zeroblock[12] =
+                                   {0xDA5393CE,
+                                    0xF424A670,
+                                    0xD6DB42C6,
+                                    0xED6E7920,
+                                    0x779DFA4C,
+                                    0xBB98BF1C,
+                                    0x2E9C12AE,
+                                    0x10D10905,
+                                    0xD0C9E9D5,
+                                    0x76C2A613,
+                                    0xBE54B8DA,
+                                    0xEA246D4B};
 
     uint8_t hmackey_kv_id       = 0x2;
     uint8_t hmacblock_kv_id     = 0x1;
@@ -165,20 +166,29 @@ void main() {
     //inject hmac384_key to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac384_key.kv_id << 8) | 0xa0);
 
-    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE);
+    hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE, TRUE);
     
     VPRINTF(LOW, "KV HMAC flow is completed.\n\n");
 
     /*
-        Start FW HMAC without injecting the key/block
+        Start FW HMAC without injecting the key.
 
-        The expected result is doing HMAC with zero key 
-        and zero block since all values should be cleared 
-        after KV flow.
+        After KV flow, KEY register should be cleared by hwclr. We re-load
+        only the message block (also cleared by hwclr) and trigger INIT|LAST,
+        which runs IPAD/OPAD with whatever KEY currently holds. If hwclr
+        worked, KEY=0 and the tag equals HMAC-SHA384(K=0, M="Hi There");
+        if KEY retained the KV value, the tag will differ catching the bug.
     */
     VPRINTF(LOW, "Start FW HMAC\n");
-    // Enable HMAC core with next command to avoid changing the key
-    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+
+    reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_BLOCK_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t *) CLP_HMAC_REG_HMAC512_BLOCK_31) {
+        *reg_ptr++ = block[offset++];
+    }
+
+    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                            HMAC_REG_HMAC512_CTRL_LAST_MASK |
                                             (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
 
     // wait for HMAC process to be done
