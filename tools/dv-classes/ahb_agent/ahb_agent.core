@@ -1,0 +1,18 @@
+CAPI=2:
+# Copyright lowRISC contributors.
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+name: "lowrisc:dv:ahb_agent:0.1"
+description: "AHB agent"
+filesets:
+  files_dv:
+    depend:
+      - lowrisc:dv:dv_utils
+    files:
+      - ahb_if.sv
+    file_type: systemVerilogSource
+
+targets:
+  default:
+    filesets:
+      - files_dv
