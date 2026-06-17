@@ -119,6 +119,12 @@ void populate_rt_slots(void);
 // and set the lock.
 void program_iccm_regions(void);
 
+// 2-phase commit only (no lock). Use when you need to write after commit.
+void commit_iccm_shadows(void);
+
+// Set the ICCM region lock register.
+void lock_iccm_region(void);
+
 // Verify a register reads back a specific value.
 void check_reg(const char *name, uint32_t addr, uint32_t expected);
 

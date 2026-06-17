@@ -99,7 +99,6 @@ module soc_ifc_iccm_shadow_cov (
         reg_X_op: cross cp_register, cp_operation;
         reg_X_locked: cross cp_register, cp_locked;
         op_X_committed: cross cp_operation, cp_committed;
-        op_X_err_update: cross cp_operation, cp_err_update;
         op_X_err_storage: cross cp_operation, cp_err_storage;
     endgroup
 

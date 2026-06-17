@@ -55,12 +55,12 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | 1 | Warm reset -- verify all registers and lock clear to 0 | All read back as 0 |
 | 2 | FW update reset -- verify registers and lock persist | Values unchanged after reset |
 | 3 | ICCM fetch with lock=0 -- jump to ICCM without setting lock | boot_flow_error fires; kv_error set |
-| 4 | Lock without programming addresses (all=0), FMC entry at nonzero addr | boot_flow_error fires (out-of-range) |
+| 4 | Lock without programming addresses (all=0), shadow not committed | boot_flow_error fires (effective_lock=0) |
 | 5 | Single write only (no commit) -- shadow phase stays 0 | iccm_all_shadows_committed=0; effective lock=0 |
 | 6 | Mismatched 2-phase write -- different values for phase 0 and phase 1 | shadow_update_err (NON_FATAL[3]) fires |
-| 7 | SoC write attempt -- write ICCM region register from SoC interface | Write rejected; register value unchanged |
-| 8 | SoC write to iccm_region_lock -- attempt to set lock from SoC | Write rejected (swwel=soc_req); lock remains 0 |
-| 9 | Out-of-range ICCM fetch after lock -- jump to address outside both FMC and RT regions | boot_flow_error fires; kv_error set |
+| 7 | Out-of-range ICCM fetch from ROM -- jump to address outside FMC/RT regions | boot_flow_error fires in ROM phase; kv_error set |
+| 8 | Out-of-range ICCM fetch from FMC -- normal boot then FMC jumps to OOR | boot_flow_error fires in FMC phase; kv_error set |
+| 9 | Out-of-range ICCM fetch from RT -- normal boot, FMC→RT, then RT jumps to OOR | boot_flow_error fires in RT phase; kv_error set |
 
 #### `directed_kv_monitor_neg`
 
@@ -72,8 +72,11 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | 3 | Slot 2 (Key Ladder) wrong dest_valid (AES_KEY instead of HMAC_KEY) | kv_error fires at FMC transition |
 | 4 | Skip slot 4 (RT_CDI) for RT transition | kv_error fires at RT transition |
 | 5 | Slot 9 (RT_MLDSA) wrong dest_valid at RT transition | kv_error fires at RT transition |
-| 6 | Slot 7 write count=1 (skip FMC Alias ECC keygen) | kv_error fires at FMC transition |
-| 7 | Slot 8 write count=1 (skip FMC Alias MLDSA keygen) | kv_error fires at FMC transition |
+| 6 | Slot 7 write count too low (1 instead of ==2, skip FMC Alias ECC) | kv_error fires at FMC transition |
+| 7 | Slot 8 write count too low (1 instead of ==2, skip FMC Alias MLDSA) | kv_error fires at FMC transition |
+| 8 | Slot 7 write count too high (3 instead of ==2, extra ECC keygen) | kv_error fires at FMC transition |
+| 9 | Slot 6 write count too high (5 instead of ==4, extra CDI write) | kv_error fires at FMC transition |
+| 10 | Slot 8 write count too high (3 instead of ==2, extra MLDSA keygen) | kv_error fires at FMC transition |
 
 #### `directed_kv_debug_scan_bypass`
 
@@ -103,15 +106,17 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | Error chain | 2 | kv_error -> CPTRA_HW_ERROR_FATAL propagation |
 | Monotonicity | 3 | boot_flow_fmc/rt non-regression, layer ordering |
 | DOE lockdown | 2 | DOE_CTRL.CMD cleared in FMC and RT |
-| Write counters | 13 | Increment, saturation, hard-reset clear, flush clear, stable-when-locked, stable-during-clear (3 slots) |
-| ICCM region | 2 | Fetch-without-lock -> error, W1S sticky lock |
+| Write counters | 13 | Increment, saturation, hard-reset clear, warm-reset clear, flush clear, stable-when-locked, stable-during-clear (3 slots) |
+| ICCM region | 4 | Fetch-without-lock -> error, W1S sticky lock, OOR fetch in FMC phase, OOR fetch in RT phase |
 | Cover properties | 1 | flush_keyvault with non-zero counters |
 
 ### Coverage Gaps (Not Yet Implemented)
 
 | Area | Description | Priority |
 | :--- | :---------- | :------- |
-| Counter clears on flush | Write to slot 6 (count=1), trigger debug unlock (flush) -- counter returns to 0 | Low |
+| Stable owner key preservation | Enable `stable_owner_key_en` strap (SS_STRAP_GENERIC[3] bit 0) and verify slot 15 preserved at enter_fmc (`StableOwnerPreservedAtFmc_C`) | Medium |
+| OCP Lock slot preservation | Enable `ocp_lock_mode_en` straps and verify MDK/HEK slots preserved at enter_fmc (`OcpLockMdkPreservedAtFmc_C`, `OcpLockHekPreservedAtFmc_C`) | Medium |
+| Multi-write arbitration | Trigger >1 crypto engine writing same KV slot simultaneously (`cg_multi_write`) | Low |
 | Counter clears on scan mode | Write to slots 6,7,8, enter scan mode -- all 3 counters return to 0 | Low |
 | Counter no increment during clear | key_entry_clear on slot 6 simultaneous with crypto write -- counter unchanged | Low |
 
@@ -119,15 +124,16 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 
 Location: `src/keyvault/coverage/kv_boot_flow_cov.sv` (KV-side) and `src/soc_ifc/coverage/soc_ifc_iccm_shadow_cov.sv` (shadow regs)
 
-Covergroups with crosses provide combinatorial coverage of the slot × transition × action state space. These complement the temporal cover properties in `kv_boot_flow_sva.sv`.
+Covergroups verify enforcement correctness, flush source attribution, monitor pass/fail, write counter thresholds, and multi-write arbitration errors. These complement the temporal cover properties in `kv_boot_flow_sva.sv`.
 
 | Covergroup | File | Sample Event | Key Crosses | Purpose |
 | :--------- | :--- | :----------- | :---------- | :------ |
-| `cg_enforcement_action` | `kv_boot_flow_cov.sv` | `enter_fmc`, `enter_rt` | transition × lock_wr_count, lock_use_count, cleared_count, alert | Enforcement combos exercised per transition |
+| `cg_enforcement_result` | `kv_boot_flow_cov.sv` | 1 cycle after `enter_fmc`/`enter_rt` | transition × lock_wr_correct, lock_use_correct | Verifies enforcement sets correct lock bits per transition |
 | `cg_monitor_check` | `kv_boot_flow_cov.sv` | `enter_fmc`, `enter_rt` | transition × pass/fail | Monitor validation at both boundaries |
-| `cg_error_escalation` | `kv_boot_flow_cov.sv` | Rising edge of any error | error_source × boot_phase | Correct escalation per error type per phase |
-| `cg_write_counter` | `kv_boot_flow_cov.sv` | Crypto write to slots 6,7,8 | slot × count_value, slot × boot_phase | Counter progression per slot |
-| `cg_iccm_shadow_reg` | `soc_ifc_iccm_shadow_cov.sv` | Shadow reg write/read strobe | register × operation, operation × committed, operation × err_update/err_storage, register × locked | All registers through all operation/error paths |
+| `cg_flush_source` | `kv_boot_flow_cov.sv` | Rising edge of boot_flow_error or monitor_alert | source × phase (rom/fmc/rt) | Which error source triggered KV flush, in which boot phase |
+| `cg_write_counter_threshold` | `kv_boot_flow_cov.sv` | `enter_fmc` | per-slot threshold × alert (3 independent crosses) | Each DICE slot's write count independently triggers/passes monitor (below, met, above) |
+| `cg_multi_write` | `keyvault_cov_if.sv` | Rising edge of multi-write error | detected | Bus arbitration error (>1 write client simultaneously) |
+| `cg_iccm_shadow_reg` | `soc_ifc_iccm_shadow_cov.sv` | Shadow reg write/read strobe | register × operation, operation × committed, operation × err_storage, register × locked | All registers through all operation/error paths |
 
 ### Security Enforcement
 
@@ -138,6 +144,7 @@ Covergroups with crosses provide combinatorial coverage of the slot × transitio
 | Shadow 2-phase protocol | `caliptra_prim_subreg_shadow` | Requires two identical writes to commit; mismatched second write sets CPTRA_HW_ERROR_NON_FATAL.shadow_update_err[3] |
 | Shadow storage fault detection | `caliptra_prim_subreg_shadow` | Continuous background comparison of primary/shadow copy sets CPTRA_HW_ERROR_FATAL.shadow_storage_err[5] on mismatch |
 | Region lock (post-commit) | `soc_ifc_top.sv` | `iccm_shadow_we` gated by `~iccm_region_lock` -- no writes after ROM locks |
+| Write counter exact match | `kv.sv` KV_MONITOR | Counters must equal `KV_EXPECTED_WRITES_*` at `enter_fmc` -- detects both truncated DICE chains (too few writes) and glitch-replayed operations (too many writes that could roll back to an earlier intermediate key) |
 
 ### Regression
 

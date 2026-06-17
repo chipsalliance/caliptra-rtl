@@ -82,6 +82,22 @@
 //
 //   Iter 8 (warm reset):
 //     - Stale kv_error from iter 7 confirmed and cleared
+//     - Normal setup: populate DICE slots, copy ICCM code, program regions
+//     - Jump to FMC -- monitor passes, enter FMC phase
+//     - FMC jumps to out-of-range ICCM address (0x4003D000)
+//     - boot_flow_error fires DURING FMC PHASE (coverage: boot_flow_err x fmc_phase)
+//     - OOR handler confirms kv fault and issues warm reset
+//
+//   Iter 9 (warm reset):
+//     - Stale kv_error from iter 8 confirmed and cleared
+//     - Normal setup: populate DICE slots, copy ICCM code, program regions
+//     - Jump to FMC -- FMC populates RT slots, jumps to RT
+//     - RT jumps to out-of-range ICCM address (0x4003D000)
+//     - boot_flow_error fires DURING RT PHASE (coverage: boot_flow_err x rt_phase)
+//     - OOR handler confirms kv fault and issues warm reset
+//
+//   Iter 10 (warm reset):
+//     - Stale kv_error from iter 9 confirmed and cleared
 //     - All scenarios passed
 
 #include "caliptra_defines.h"
@@ -118,7 +134,7 @@ void rt_entry(void) __attribute__((aligned(4), section(".data_iccm1")));
 extern uintptr_t iccm_code2_start, iccm_code2_end;
 void oor_entry(void) __attribute__((aligned(4), section(".data_iccm2")));
 
-#define NUM_ITERATIONS 8
+#define NUM_ITERATIONS 10
 
 // Out-of-range ICCM address (above RT_END_REL=0x3C7FF)
 #define OOR_ICCM_OFFSET 0x3D000
@@ -128,12 +144,13 @@ void oor_entry(void) __attribute__((aligned(4), section(".data_iccm2")));
 // Out-of-range entry point -- runs from ICCM at 0x4003D000
 // (outside both FMC and RT regions). The boot flow monitor should
 // fire boot_flow_error on this fetch. If we reach here, confirm
-// the error was latched and issue warm reset to continue to iter 8.
+// the fault was latched and issue warm reset to continue.
 // ============================================================
 void oor_entry(void) {
-    VPRINTF(LOW, "OOR[7]: Reached out-of-range ICCM -- checking fault\n");
-    check_and_clear_kv_error("OOR[7] out-of-range ICCM");
-    VPRINTF(LOW, "OOR[7]: boot_flow fault confirmed -- issuing warm reset\n");
+    uint32_t current_iter = iter - 1;
+    VPRINTF(LOW, "OOR[%d]: Reached out-of-range ICCM -- checking fault\n", current_iter);
+    check_and_clear_kv_error("OOR out-of-range ICCM");
+    VPRINTF(LOW, "OOR[%d]: boot_flow fault confirmed -- issuing warm reset\n", current_iter);
     SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
     while(1);
 }
@@ -182,9 +199,16 @@ void fmc_entry(void) {
         VPRINTF(LOW, "FMC[6]: boot_flow fault confirmed -- issuing warm reset\n");
         SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
         while(1);
+    } else if (current_iter == 8) {
+        // Iter 8: Normal FMC entry succeeded -- now jump to out-of-range ICCM
+        // to trigger boot_flow_error DURING FMC phase (boot_flow_fmc=True)
+        check_no_kv_error("FMC[8]");
+        VPRINTF(LOW, "FMC[8]: Jumping to OOR ICCM at 0x%x -- expect fault in FMC phase\n", OOR_ICCM_ADDR);
+        void (*oor_fn)(void) = (void (*)(void))OOR_ICCM_ADDR;
+        oor_fn();
     }
 
-    // Populate RT key slots and jump to RT (iters 0, 1, 2 only)
+    // Populate RT key slots and jump to RT (iters 0, 1, 2, 9)
     VPRINTF(LOW, "FMC[%d]: Populating RT slots\n", current_iter);
     populate_rt_slots();
 
@@ -202,8 +226,10 @@ void rt_entry(void) {
 
     if (current_iter == 0) {
         check_no_kv_error("RT[0]");
-        VPRINTF(LOW, "RT[0]: Issuing warm reset\n");
-        SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
+        // Cold reset so write counters clear (exact-match monitor requires
+        // fresh counters if ROM re-derives on next boot)
+        VPRINTF(LOW, "RT[0]: Issuing cold reset\n");
+        SEND_STDOUT_CTRL(TB_CMD_COLD_RESET);
         while(1);
     } else if (current_iter == 1) {
         check_no_kv_error("RT[1]");
@@ -216,6 +242,13 @@ void rt_entry(void) {
         VPRINTF(LOW, "RT[2]: Issuing warm reset\n");
         SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
         while(1);
+    } else if (current_iter == 9) {
+        // Iter 9: Normal RT entry succeeded -- now jump to out-of-range ICCM
+        // to trigger boot_flow_error DURING RT phase (boot_flow_fmc=True, boot_flow_rt=True)
+        check_no_kv_error("RT[9]");
+        VPRINTF(LOW, "RT[9]: Jumping to OOR ICCM at 0x%x -- expect fault in RT phase\n", OOR_ICCM_ADDR);
+        void (*oor_fn)(void) = (void (*)(void))OOR_ICCM_ADDR;
+        oor_fn();
     }
 
     VPRINTF(ERROR, "[FAIL] RT: unexpected iter %d\n", current_iter);
@@ -311,13 +344,19 @@ void main() {
     case 1:
         // ============================================================
         // Iter 1: Warm reset clears region registers -- reprogram
+        // Uses commit/lock split to hit write×committed coverage
         // ============================================================
         VPRINTF(LOW, "ROM[1]: Verifying registers cleared by warm reset\n");
         verify_regs_reset();
         VPRINTF(LOW, "ROM[1]: Re-populating DICE key slots\n");
         populate_dice_slots();
-        VPRINTF(LOW, "ROM[1]: Reprogramming ICCM regions\n");
-        program_iccm_regions();
+        VPRINTF(LOW, "ROM[1]: Committing ICCM shadows (2-phase, no lock yet)\n");
+        commit_iccm_shadows();
+        // Write again after commit (committed=1, unlocked) -- hits write×committed
+        VPRINTF(LOW, "ROM[1]: Extra write after commit (coverage: write x committed)\n");
+        lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
+        lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
+        lock_iccm_region();
         break;
 
     case 2:
@@ -406,6 +445,9 @@ void main() {
                 while(1);
             }
             VPRINTF(LOW, "  shadow_update_err confirmed (NON_FATAL=0x%08x)\n", nf_err);
+            // Read shadow register while err_update active (coverage: read×err_update)
+            VPRINTF(LOW, "ROM[6]: Reading shadow reg during err_update (coverage)\n");
+            lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR);
             // W1C clear -- we've verified the fault detection works
             lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL, SHADOW_UPDATE_ERR_MASK);
         }
@@ -438,9 +480,55 @@ void main() {
             oor_fn();
         }
         break;
+
+    case 8:
+        // ============================================================
+        // Iter 8: boot_flow_error DURING FMC PHASE
+        // Normal boot into FMC, then FMC jumps to out-of-range ICCM.
+        // This fires boot_flow_error while boot_flow_fmc=True (fmc_phase).
+        // ============================================================
+        VPRINTF(LOW, "ROM[8]: Verifying registers cleared by warm reset\n");
+        verify_regs_reset();
+        VPRINTF(LOW, "ROM[8]: Populating DICE key slots\n");
+        populate_dice_slots();
+        VPRINTF(LOW, "ROM[8]: Copying FMC/OOR code to ICCM\n");
+        copy_to_iccm(FMC_ICCM_ADDR,
+                      (uint32_t *)&iccm_code0_start,
+                      (uint32_t *)&iccm_code0_end);
+        copy_to_iccm(OOR_ICCM_ADDR,
+                      (uint32_t *)&iccm_code2_start,
+                      (uint32_t *)&iccm_code2_end);
+        VPRINTF(LOW, "ROM[8]: Programming ICCM regions\n");
+        program_iccm_regions();
+        break;
+
+    case 9:
+        // ============================================================
+        // Iter 9: boot_flow_error DURING RT PHASE
+        // Normal boot into FMC, FMC populates RT slots and jumps to RT,
+        // then RT jumps to out-of-range ICCM. This fires boot_flow_error
+        // while boot_flow_fmc=True AND boot_flow_rt=True (rt_phase).
+        // ============================================================
+        VPRINTF(LOW, "ROM[9]: Verifying registers cleared by warm reset\n");
+        verify_regs_reset();
+        VPRINTF(LOW, "ROM[9]: Populating DICE key slots\n");
+        populate_dice_slots();
+        VPRINTF(LOW, "ROM[9]: Copying FMC/RT/OOR code to ICCM\n");
+        copy_to_iccm(FMC_ICCM_ADDR,
+                      (uint32_t *)&iccm_code0_start,
+                      (uint32_t *)&iccm_code0_end);
+        copy_to_iccm(RT_ICCM_ADDR,
+                      (uint32_t *)&iccm_code1_start,
+                      (uint32_t *)&iccm_code1_end);
+        copy_to_iccm(OOR_ICCM_ADDR,
+                      (uint32_t *)&iccm_code2_start,
+                      (uint32_t *)&iccm_code2_end);
+        VPRINTF(LOW, "ROM[9]: Programming ICCM regions\n");
+        program_iccm_regions();
+        break;
     }
 
-    // Jump to FMC (iters 0-6)
+    // Jump to FMC (iters 0-6, 8, 9)
     VPRINTF(LOW, "ROM[%d]: Jumping to FMC\n", current_iter);
     void (*fmc_fn)(void) = (void (*)(void))FMC_ICCM_ADDR;
     fmc_fn();

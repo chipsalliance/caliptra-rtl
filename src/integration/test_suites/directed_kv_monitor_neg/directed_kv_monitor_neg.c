@@ -22,15 +22,18 @@
 //   Iteration 3: Slot 2 (Key Ladder) with wrong dest_valid (AES_KEY instead of HMAC_KEY)
 //   Iteration 4: FMC-to-RT fault -- skip slot 4 (RT_CDI)
 //   Iteration 5: FMC-to-RT fault -- slot 9 (RT_MLDSA) wrong dest_valid
-//   Iteration 6: Slot 7 write count too low (1 instead of >=2, skip FMC Alias ECC)
-//   Iteration 7: Slot 8 write count too low (1 instead of >=2, skip FMC Alias MLDSA)
+//   Iteration 6: Slot 7 write count too low (1 instead of ==2, skip FMC Alias ECC)
+//   Iteration 7: Slot 8 write count too low (1 instead of ==2, skip FMC Alias MLDSA)
+//   Iteration 8: Slot 7 write count too high (3 instead of ==2, extra write)
+//   Iteration 9: Slot 6 write count too high (5 instead of ==4, extra write)
+//   Iteration 10: Slot 8 write count too high (3 instead of ==2, extra write)
 //
 //   Each iteration:
 //     1. Populate slots (with one deliberate fault)
 //     2. Jump to FMC (or FMC jumps to RT for iterations 4-5)
 //     3. Monitor fires -> kv_error set, all slots cleared (key_entry_clear)
 //     4. Read back CPTRA_HW_ERROR_FATAL to confirm kv_error
-//     5. Issue warm or cold reset (cold before iters 6,7 to clear write counters)
+//     5. Issue warm reset to advance to next iteration
 //     6. After reset: W1C the sticky kv_error bit, continue to next iteration
 
 #include "caliptra_defines.h"
@@ -65,12 +68,12 @@ void fmc_entry(void) __attribute__((aligned(4), section(".data_iccm0")));
 extern uintptr_t iccm_code1_start, iccm_code1_end;
 void rt_entry(void) __attribute__((aligned(4), section(".data_iccm1")));
 
-#define NUM_ITERATIONS 8
+#define NUM_ITERATIONS 11
 
 //
 // Populate ROM-phase KV slots for the given iteration.
 // Must produce the correct write counts for slots 6/7/8 (4/2/2) except
-// when the fault specifically targets those slots.
+// when the fault specifically targets those slots (too few or too many).
 // Returns 1 if the fault is injected at ROM-to-FMC, 0 if at FMC-to-RT.
 //
 // Helper: perform the full DICE write sequence for slots 6/7/8
@@ -146,7 +149,7 @@ int populate_rom_slots(uint32_t iteration) {
         return 0;
 
     case 6:
-        // Slot 7 write count=1 (skip FMC Alias ECC keygen, expect >=2)
+        // Slot 7 write count=1 (skip FMC Alias ECC keygen, expect ==2)
         VPRINTF(LOW, "  Fault: slot 7 write count=1 (skip FMC Alias ECC)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
@@ -162,7 +165,7 @@ int populate_rom_slots(uint32_t iteration) {
         return 1;
 
     case 7:
-        // Slot 8 write count=1 (skip FMC Alias MLDSA keygen, expect >=2)
+        // Slot 8 write count=1 (skip FMC Alias MLDSA keygen, expect ==2)
         VPRINTF(LOW, "  Fault: slot 8 write count=1 (skip FMC Alias MLDSA)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
@@ -175,6 +178,44 @@ int populate_rom_slots(uint32_t iteration) {
         hmac_write_kv_slot(KV_SLOT_FMC_ECDSA, DV_ECC_PKEY);   // slot 7 write 2
         /* slot 8 write 2 SKIPPED -- count stays at 1 */
         hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_CDI);        // slot 6 write 4
+        return 1;
+
+    case 8:
+        // Slot 7 write count=3 (one EXTRA ECC keygen, expect ==2)
+        // Simulates glitch replay: attacker causes ROM to redo ECC keygen,
+        // overwriting the safe public key with earlier private key material.
+        VPRINTF(LOW, "  Fault: slot 7 write count too high (3 instead of 2)\n");
+        hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
+        hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
+        hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
+        dice_writes_slot678();
+        // Extra write to slot 7 -- simulates glitch replay
+        hmac_write_kv_slot(KV_SLOT_FMC_ECDSA, DV_ECC_PKEY);   // slot 7 write 3
+        return 1;
+
+    case 9:
+        // Slot 6 write count=5 (one EXTRA CDI write, expect ==4)
+        // Simulates glitch replay: attacker causes ROM to redo DOE decrypt,
+        // overwriting the safe alias CDI with raw UDS.
+        VPRINTF(LOW, "  Fault: slot 6 write count too high (5 instead of 4)\n");
+        hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
+        hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
+        hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
+        dice_writes_slot678();
+        // Extra write to slot 6 -- simulates glitch replay
+        hmac_write_kv_slot(KV_SLOT_FMC_CDI,   DV_CDI);        // slot 6 write 5
+        return 1;
+
+    case 10:
+        // Slot 8 write count=3 (one EXTRA MLDSA keygen, expect ==2)
+        // Simulates glitch replay of MLDSA keygen.
+        VPRINTF(LOW, "  Fault: slot 8 write count too high (3 instead of 2)\n");
+        hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
+        hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
+        hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
+        dice_writes_slot678();
+        // Extra write to slot 8 -- simulates glitch replay
+        hmac_write_kv_slot(KV_SLOT_FMC_MLDSA, DV_MLDSA_SEED); // slot 8 write 3
         return 1;
 
     default:
@@ -193,16 +234,13 @@ void confirm_violation_and_reset(const char *phase, uint32_t iteration) {
         while(1);
     }
 
-    // Iterations 5 and 6 must use cold reset so that write counters (which
-    // persist across warm reset) are cleared before the write-count-negative
-    // cases in iterations 6 and 7.
-    uint32_t next_iter = iteration + 1;
-    int use_cold = (next_iter == 6 || next_iter == 7);
+    // When kv_monitor_alert fires, flush_keyvault also fires (combinational OR),
+    // which clears the write counters. So warm reset is sufficient between all
+    // iterations -- counters are already 0 from the flush.
+    VPRINTF(LOW, "  iter %d %s: kv fault confirmed (reg=0x%08x) -- issuing warm reset\n",
+            iteration, phase, hw_err);
 
-    VPRINTF(LOW, "  iter %d %s: kv fault confirmed (reg=0x%08x) -- issuing %s reset\n",
-            iteration, phase, hw_err, use_cold ? "cold" : "warm");
-
-    SEND_STDOUT_CTRL(use_cold ? TB_CMD_COLD_RESET : TB_CMD_WARM_RESET);
+    SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
     // Should not reach here
     while(1);
 }

@@ -2674,12 +2674,14 @@ At each boot phase transition, the KV monitor validates that the expected DICE k
 | 7 | FMC_ECDSA | ECC_PKEY |
 | 8 | FMC_MLDSA | MLDSA_SEED |
 
-Additionally, per-slot crypto write counters verify minimum expected derivation counts:
-- Slot 6 (FMC_CDI): >= 4 writes (IDevID CDI + LDevID intermediate + LDevID CDI + FMC Alias CDI)
-- Slot 7 (FMC_ECDSA): >= 2 writes (IDevID ECC keygen + FMC Alias ECC keygen)
-- Slot 8 (FMC_MLDSA): >= 2 writes (IDevID MLDSA keygen + FMC Alias MLDSA keygen)
+Additionally, per-slot crypto write counters verify **exact** expected derivation counts:
+- Slot 6 (FMC_CDI): == 4 writes (IDevID CDI + LDevID intermediate + LDevID CDI + FMC Alias CDI)
+- Slot 7 (FMC_ECDSA): == 2 writes (IDevID ECC keygen + FMC Alias ECC keygen)
+- Slot 8 (FMC_MLDSA): == 2 writes (IDevID MLDSA keygen + FMC Alias MLDSA keygen)
 
-Write counters are 3-bit saturating counters that reset only on hard reset (`cptra_pwrgood`), persisting across warm and FW update resets.
+An exact match (rather than a minimum threshold) detects both truncated DICE chains (too few writes, indicating a skipped derivation step) and glitch-replayed operations (too many writes, which could overwrite the final safe key with an earlier intermediate value such as raw UDS).
+
+Write counters are 3-bit saturating counters that reset only on hard reset (`cptra_pwrgood`) or `flush_keyvault`, persisting across warm and FW update resets. Since ROM does not re-derive DICE keys on warm or FW update reset, the counters retain their cold-boot values and pass the exact-match check on subsequent transitions.
 
 #### FMC->RT checks (on `enter_rt`)
 

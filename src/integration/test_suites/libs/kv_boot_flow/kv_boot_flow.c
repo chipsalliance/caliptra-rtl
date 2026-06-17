@@ -116,7 +116,7 @@ void populate_rt_slots(void) {
 //
 // Program all 4 ICCM region registers with 2-phase shadow protocol and set lock.
 //
-void program_iccm_regions(void) {
+void commit_iccm_shadows(void) {
     // Phase 0: first write (captured in shadow staged register)
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   FMC_ICCM_END_REL);
@@ -127,7 +127,15 @@ void program_iccm_regions(void) {
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,   FMC_ICCM_END_REL);
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,  RT_ICCM_START_REL);
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,    RT_ICCM_END_REL);
-    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK,    0x1);
+}
+
+void lock_iccm_region(void) {
+    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK, 0x1);
+}
+
+void program_iccm_regions(void) {
+    commit_iccm_shadows();
+    lock_iccm_region();
 }
 
 //
