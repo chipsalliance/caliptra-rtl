@@ -17,8 +17,8 @@
 // Interface:  AHB-Lite (no hierarchical force/release)
 //
 // Register address map (all addresses are absolute AHB addresses):
-//   AES registers are at base 0x0000_0800 (VH_REGISTER_ADDRESS_OFFSET)
-//   CLP registers (ENTROPY_IF_SEED) are at base 0x0000_0000
+//   AES registers (TLUL space) are at base 0x0000_0000 (AHB addr < 0x800)
+//   CLP registers (ENTROPY_IF_SEED, CTRL0, etc.) are at base 0x0000_0800 (VH_REGISTER_ADDRESS_OFFSET, AHB addr >= 0x800)
 //
 // CTRL_SHADOWED [15:0]:
 //   [1:0]  operation       (AES_ENC=01, AES_DEC=10)

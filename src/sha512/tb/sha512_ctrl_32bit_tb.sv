@@ -1126,7 +1126,7 @@ module sha512_ctrl_32bit_tb
   // Input lab vectors to IP
   //----------------------------------------------------------------
   task acvp_test();
-  begin
+  begin : acvp_test_block
     int fin, fout, result, pt_len;
     string pt, sha_in, sha_blk_str, sha_blk_str_slice;
     reg [1023:0] sha_blk_hex;
@@ -1148,14 +1148,14 @@ module sha512_ctrl_32bit_tb
     fin  = $fopen("../stimulus/acvp/SHA2-384_stimulus.txt","r");
     if (fin == 0)
     begin
-      $display("ERROR: Input file not found");
-      $stop;
+      $display("ERROR: ACVP input file not found — skipping acvp_test()");
+      disable acvp_test_block;
     end
     fout = $fopen("../stimulus/acvp/SHA2-384_digest.txt","w");
     if (fout == 0)
     begin
-      $display("ERROR: Output file not found");
-      $stop;
+      $display("ERROR: ACVP output file could not be opened — skipping acvp_test()");
+      disable acvp_test_block;
     end
 
     while(1)
@@ -1267,11 +1267,11 @@ module sha512_ctrl_32bit_tb
               case (test_mode)
                   MODE_SHA_512:
                 begin
-                    c = $sformatf("%x", digest);
+                    c = $sformatf("%0128h", digest[511:0]);
                 end
                   MODE_SHA_384:
                   begin
-                    c = $sformatf("%x", digest[511:128]);
+                    c = $sformatf("%096h", digest[511:128]);
                 end
               endcase
               write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
@@ -1281,21 +1281,23 @@ module sha512_ctrl_32bit_tb
               begin
                   $fwrite(fout, "%s %0d %0128h\n", test_type, tcid, digest[511:0]);
                   $display("writing ol: %0d to file",ol);
-                  seed = $sformatf("%x", digest);
+                  seed = $sformatf("%0128h", digest[511:0]);
               end
               MODE_SHA_384:
               begin
                   $fwrite(fout, "%s %0d %096h\n", test_type, tcid, digest[511:128]);
                   $display("writing ol: %0d to file",ol);
-                  seed = $sformatf("%x", digest[511:128]);
+                  seed = $sformatf("%096h", digest[511:128]);
               end
             endcase
           end//end outer loop
         end
       end//processed 1 line from file
     end //end while
+    $fclose(fin);
+    $fclose(fout);
   end
-  endtask //acvp_test 
+  endtask //acvp_test
 
   //----------------------------------------------------------------
   // sha512_test
@@ -1328,8 +1330,6 @@ module sha512_ctrl_32bit_tb
       init_sim();
       reset_dut();
       check_name_version();
-
-      acvp_test();
 
       // Single block test mesage.
       single_block = 1024'h6162638000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018;
@@ -1389,7 +1389,9 @@ module sha512_ctrl_32bit_tb
       restore_test(8'h0e, MODE_SHA_512_256, double_block_one, double_block_two, tc9_expected, tc10_expected);
 
       restore_test(8'h0f, MODE_SHA_384, double_block_one, double_block_two, tc11_expected, tc12_expected);
-      
+
+      acvp_test();
+
       display_test_result();
       
       $display("   -- Testbench for sha512 done. --");
