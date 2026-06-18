@@ -107,7 +107,7 @@ import el2_pkg::*;
    logic exu_mp_valid_write;
    logic exu_mp_ataken;
    logic exu_mp_valid; // conditional branch mispredict
-   logic exu_mp_boffset; // branch offsett
+   logic exu_mp_boffset; // branch offset
    logic exu_mp_pc4; // branch is a 4B inst
    logic exu_mp_call; // branch is a call inst
    logic exu_mp_ret; // branch is a ret inst
@@ -588,7 +588,7 @@ assign use_fa_plus = (~bht_dir_f[0] & ~fetch_start_f[0] & ~btb_rd_pc4_f);
 
    if(!pt.BTB_FULLYA) begin
 
-      if(pt.BTB_BTAG_FOLD) begin : btbfold_en
+      if(pt.BTB_BTAG_FOLD) begin : btbfold
          el2_btb_tag_hash_fold #(.pt(pt)) rdtagf  (.hash(fetch_rd_tag_f[pt.BTB_BTAG_SIZE-1:0]),
                                                     .pc({ifc_fetch_addr_f[pt.BTB_ADDR_HI+pt.BTB_BTAG_SIZE+pt.BTB_BTAG_SIZE:pt.BTB_ADDR_HI+1]}));
          el2_btb_tag_hash_fold #(.pt(pt)) rdtagp1f(.hash(fetch_rd_tag_p1_f[pt.BTB_BTAG_SIZE-1:0]),

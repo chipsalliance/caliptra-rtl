@@ -32,7 +32,7 @@ import el2_pkg::*;
       input logic [31:1]                            ic_rw_addr,
       input logic [pt.ICACHE_NUM_WAYS-1:0]          ic_wr_en  ,         // Which way to write
       input logic                                   ic_rd_en  ,         // Read enable
-      input logic [pt.ICACHE_INDEX_HI:3]            ic_debug_addr,      // Read/Write addresss to the Icache.
+      input logic [pt.ICACHE_INDEX_HI:3]            ic_debug_addr,      // Read/Write address to the Icache.
       input logic                                   ic_debug_rd_en,     // Icache debug rd
       input logic                                   ic_debug_wr_en,     // Icache debug wr
       input logic                                   ic_debug_tag_array, // Debug tag array
@@ -41,13 +41,13 @@ import el2_pkg::*;
       input logic                                   ic_sel_premux_data, // Select the pre_muxed data
 
       input  logic [pt.ICACHE_BANKS_WAY-1:0][70:0]  ic_wr_data,         // Data to fill to the Icache. With ECC
-      output logic [63:0]                           ic_rd_data ,        // Data read from Icache. 2x64bits + parity bits. F2 stage. With ECC
+      output logic [141:0]                          ic_rd_data ,        // Raw way-muxed 142-bit ECC-protected word pair. F2 stage.
+      output logic [1:0]                            ic_rd_addr_lo,      // F2-aligned ic_rw_addr_ff[2:1] for core-side rotate
+      output logic [pt.ICACHE_BANKS_WAY-1:0]        ic_rd_bank_check_en,// Per-bank ECC check enable for core-side decode
       output logic [70:0]                           ic_debug_rd_data ,  // Data read from Icache. 2x64bits + parity bits. F2 stage. With ECC
       output logic [25:0]                           ictag_debug_rd_data,// Debug icache tag.
       input logic  [70:0]                           ic_debug_wr_data,   // Debug wr cache.
 
-      output logic [pt.ICACHE_BANKS_WAY-1:0]        ic_eccerr,          // ecc error per bank
-      output logic [pt.ICACHE_BANKS_WAY-1:0]        ic_parerr,          // ecc error per bank
       input logic [pt.ICACHE_NUM_WAYS-1:0]          ic_tag_valid,       // Valid from the I$ tag valid outside (in flops).
 
       el2_mem_if.veer_icache_src icache_export,
@@ -126,12 +126,12 @@ import el2_pkg::*;
       input logic                          ic_rd_en,           // Read enable
 
       input  logic [pt.ICACHE_BANKS_WAY-1:0][70:0]    ic_wr_data,         // Data to fill to the Icache. With ECC
-      output logic [63:0]                             ic_rd_data ,                                 // Data read from Icache. 2x64bits + parity bits. F2 stage. With ECC
+      output logic [141:0]                            ic_rd_data ,        // Raw way-muxed 142-bit ECC-protected word pair. F2 stage.
+      output logic [1:0]                              ic_rd_addr_lo,      // F2-aligned ic_rw_addr_ff[2:1] for core-side rotate
+      output logic [pt.ICACHE_BANKS_WAY-1:0]          ic_rd_bank_check_en,// Per-bank ECC check enable for core-side decode
       input  logic [70:0]                             ic_debug_wr_data,   // Debug wr cache.
       output logic [70:0]                             ic_debug_rd_data ,  // Data read from Icache. 2x64bits + parity bits. F2 stage. With ECC
-      output logic [pt.ICACHE_BANKS_WAY-1:0] ic_parerr,
-      output logic [pt.ICACHE_BANKS_WAY-1:0] ic_eccerr,    // ecc error per bank
-      input logic [pt.ICACHE_INDEX_HI:3]     ic_debug_addr,     // Read/Write addresss to the Icache.
+      input logic [pt.ICACHE_INDEX_HI:3]     ic_debug_addr,     // Read/Write address to the Icache.
       input logic                            ic_debug_rd_en,      // Icache debug rd
       input logic                            ic_debug_wr_en,      // Icache debug wr
       input logic                            ic_debug_tag_array,  // Debug tag array
@@ -158,9 +158,8 @@ import el2_pkg::*;
    logic [pt.ICACHE_BANKS_WAY-1:0]                                                ic_debug_sel_sb;
 
    logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0][70:0]                  wb_dout ;       //  ways x bank
-   logic [pt.ICACHE_BANKS_WAY-1:0][70:0]                                          ic_sb_wr_data, ic_bank_wr_data, wb_dout_ecc_bank;
+   logic [pt.ICACHE_BANKS_WAY-1:0][70:0]                                          ic_sb_wr_data, ic_bank_wr_data;
    logic [pt.ICACHE_NUM_WAYS-1:0] [141:0]                                         wb_dout_way_pre;
-   logic [pt.ICACHE_NUM_WAYS-1:0] [63:0]                                          wb_dout_way, wb_dout_way_with_premux;
    logic [141:0]                                                                  wb_dout_ecc;
 
    logic [pt.ICACHE_BANKS_WAY-1:0]                                                bank_check_en;
@@ -205,7 +204,7 @@ import el2_pkg::*;
 
 
    logic [pt.ICACHE_BANKS_WAY-1:0]                 [31 : pt.ICACHE_DATA_INDEX_LO] ic_b_rw_addr;
-   logic [pt.ICACHE_BANKS_WAY-1:0] [pt.ICACHE_INDEX_HI : pt.ICACHE_DATA_INDEX_LO] ic_b_rw_addr_index_only;
+   logic [pt.ICACHE_BANKS_WAY-1:0]  [pt.ICACHE_INDEX_HI : pt.ICACHE_DATA_INDEX_LO] ic_b_rw_addr_index_only;
 
    logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0]                 [31 : pt.ICACHE_DATA_INDEX_LO] ic_b_rw_addr_up;
    logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0] [pt.ICACHE_INDEX_HI : pt.ICACHE_DATA_INDEX_LO] ic_b_rw_addr_index_only_up;
@@ -285,7 +284,7 @@ import el2_pkg::*;
     logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0][pt.ICACHE_NUM_BYPASS_WIDTH-1:0] wrptr_in_up;
     logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0][pt.ICACHE_NUM_BYPASS-1:0]       sel_bypass_up;
     logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0][pt.ICACHE_NUM_BYPASS-1:0]       sel_bypass_ff_up;
-    logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0][(71*pt.ICACHE_NUM_WAYS)-1:0]    sel_bypass_data_up;
+    logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0][71-1:0]                         sel_bypass_data_up;
     logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0]                                 any_bypass_up;
     logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0]                                 any_addr_match_up;
 
@@ -295,12 +294,12 @@ import el2_pkg::*;
     for (genvar i=0; i<pt.ICACHE_NUM_WAYS; i++) begin: WAYS
       for (genvar k=0; k<pt.ICACHE_BANKS_WAY; k++) begin: BANKS_WAY   // 16B subbank
       if (pt.ICACHE_ECC) begin : ECC1
-        logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0] [71-1:0]        wb_dout_pre_up;           // data and its bit enables
-        logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0] [pt.ICACHE_NUM_BYPASS-1:0] [71-1:0]  wb_dout_hold_up;
+        logic                            [71-1:0]  wb_dout_pre_up;    // data and its bit enables
+        logic [pt.ICACHE_NUM_BYPASS-1:0] [71-1:0]  wb_dout_hold_up;
 
         // Use exported ICache interface.
         always_comb begin
-          wb_dout_pre_up[i][k] = icache_export.wb_dout_pre_up[i][k];
+          wb_dout_pre_up = icache_export.wb_dout_pre_up[i][k];
         end
         if (pt.ICACHE_BYPASS_ENABLE == 1) begin
           assign wrptr_in_up[i][k] = (wrptr_up[i][k] == (pt.ICACHE_NUM_BYPASS-1)) ? '0 : (wrptr_up[i][k] + 1'd1);
@@ -335,7 +334,7 @@ import el2_pkg::*;
                .*, .en(write_bypass_en_up[i][k][l]), .din(ic_b_rw_addr_up[i][k]), .dout(wb_index_hold_up[i][k][l])
             );
             rvdffe #(71) rd_data_hold_ff (
-               .*, .en(write_bypass_en_ff_up[i][k][l]), .din(wb_dout_pre_up[i][k]), .dout(wb_dout_hold_up[i][k][l])
+               .*, .en(write_bypass_en_ff_up[i][k][l]), .din(wb_dout_pre_up), .dout(wb_dout_hold_up[l])
             );
           end
           always_comb begin
@@ -343,25 +342,25 @@ import el2_pkg::*;
             sel_bypass_data_up[i][k] = '0;
             for (int l=0; l<pt.ICACHE_NUM_BYPASS; l++) begin
               any_bypass_up[i][k]      |=  sel_bypass_ff_up[i][k][l];
-              sel_bypass_data_up[i][k] |= (sel_bypass_ff_up[i][k][l]) ? wb_dout_hold_up[i][k][l] : '0;
+              sel_bypass_data_up[i][k] |= (sel_bypass_ff_up[i][k][l]) ? wb_dout_hold_up[l] : '0;
             end
-            wb_dout[i][k]   =   any_bypass_up[i][k] ?  sel_bypass_data_up[i][k] :  wb_dout_pre_up[i][k];
+            wb_dout[i][k]   =   any_bypass_up[i][k] ?  sel_bypass_data_up[i][k] :  wb_dout_pre_up;
           end
         end
         else begin
-          assign wb_dout[i][k]                      =   wb_dout_pre_up[i][k];
+          assign wb_dout[i][k]                      =   wb_dout_pre_up;
           assign ic_bank_way_clken_final_up[i][k]   =  ic_bank_way_clken[k][i];
         end
 
       end // if (pt.ICACHE_ECC)
 
      else  begin  : ECC0
-        logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0] [68-1:0]        wb_dout_pre_up;           // data and its bit enables
-        logic [pt.ICACHE_NUM_WAYS-1:0][pt.ICACHE_BANKS_WAY-1:0] [pt.ICACHE_NUM_BYPASS-1:0] [68-1:0]  wb_dout_hold_up;
+        logic [pt.ICACHE_BANKS_WAY-1:0] [68-1:0]        wb_dout_pre_up;           // data and its bit enables
+        logic [pt.ICACHE_NUM_BYPASS-1:0] [68-1:0]  wb_dout_hold_up;
 
         // Use exported ICache interface.
         always_comb begin
-           wb_dout_pre_up[i][k][68-1:0] = icache_export.wb_dout_pre_up[i][k][68-1:0];
+           wb_dout_pre_up[k][68-1:0] = icache_export.wb_dout_pre_up[i][k][68-1:0];
         end
         if (pt.ICACHE_BYPASS_ENABLE == 1) begin
           assign wrptr_in_up[i][k] = (wrptr_up[i][k] == (pt.ICACHE_NUM_BYPASS-1)) ? '0 : (wrptr_up[i][k] + 1'd1);
@@ -396,7 +395,7 @@ import el2_pkg::*;
                .*, .en(write_bypass_en_up[i][k][l]), .din(ic_b_rw_addr_up[i][k]), .dout(wb_index_hold_up[i][k][l])
             );
             rvdffe #(68) rd_data_hold_ff (
-               .*, .en(write_bypass_en_ff_up[i][k][l]), .din(wb_dout_pre_up[i][k]), .dout(wb_dout_hold_up[i][k][l])
+               .*, .en(write_bypass_en_ff_up[i][k][l]), .din(wb_dout_pre_up[k]), .dout(wb_dout_hold_up[l])
             );
           end
           always_comb begin
@@ -404,13 +403,13 @@ import el2_pkg::*;
             sel_bypass_data_up[i][k] = '0;
             for (int l=0; l<pt.ICACHE_NUM_BYPASS; l++) begin
               any_bypass_up[i][k]      |=  sel_bypass_ff_up[i][k][l];
-              sel_bypass_data_up[i][k] |= (sel_bypass_ff_up[i][k][l]) ? wb_dout_hold_up[i][k][l] : '0;
+              sel_bypass_data_up[i][k] |= (sel_bypass_ff_up[i][k][l]) ? wb_dout_hold_up[l] : '0;
             end
-            wb_dout[i][k]   =   any_bypass_up[i][k] ?  sel_bypass_data_up[i][k] :  wb_dout_pre_up[i][k];
+            wb_dout[i][k]   =   any_bypass_up[i][k] ?  sel_bypass_data_up[i][k] :  wb_dout_pre_up[k];
           end
         end
         else begin
-          assign wb_dout[i][k]                      =   wb_dout_pre_up[i][k];
+          assign wb_dout[i][k]                      =   wb_dout_pre_up[k];
           assign ic_bank_way_clken_final_up[i][k]   =  ic_bank_way_clken[k][i];
         end
 
@@ -437,18 +436,18 @@ import el2_pkg::*;
  // generate IC DATA PACKED SRAMS for 2/4 ways
   for (genvar k=0; k<pt.ICACHE_BANKS_WAY; k++) begin: BANKS_WAY   // 16B subbank
      if (pt.ICACHE_ECC) begin : ECC1
-        logic [pt.ICACHE_BANKS_WAY-1:0] [(71*pt.ICACHE_NUM_WAYS)-1:0]        wb_packeddout, ic_b_sb_bit_en_vec, wb_packeddout_pre;           // data and its bit enables
+        logic [(71*pt.ICACHE_NUM_WAYS)-1:0]        wb_packeddout, ic_b_sb_bit_en_vec, wb_packeddout_pre;           // data and its bit enables
 
-        logic [pt.ICACHE_BANKS_WAY-1:0] [pt.ICACHE_NUM_BYPASS-1:0] [(71*pt.ICACHE_NUM_WAYS)-1:0]  wb_packeddout_hold;
+        logic [pt.ICACHE_NUM_BYPASS-1:0] [(71*pt.ICACHE_NUM_WAYS)-1:0]  wb_packeddout_hold;
 
         // Use exported ICache interface.
         always_comb begin
-          icache_export.ic_b_sb_bit_en_vec[k] = ic_b_sb_bit_en_vec[k];
-          wb_packeddout_pre[k] = icache_export.wb_packeddout_pre[k];
+          icache_export.ic_b_sb_bit_en_vec[k] = ic_b_sb_bit_en_vec;
+          wb_packeddout_pre = icache_export.wb_packeddout_pre[k];
         end
 
         for (genvar i=0; i<pt.ICACHE_NUM_WAYS; i++) begin: BITEN
-           assign ic_b_sb_bit_en_vec[k][(71*i)+70:71*i] = {71{ic_b_sb_wren[k][i]}};
+           assign ic_b_sb_bit_en_vec[(71*i)+70:71*i] = {71{ic_b_sb_wren[k][i]}};
         end
 
         // SRAMS with ECC (single/double detect; no correct)
@@ -489,7 +488,7 @@ import el2_pkg::*;
                 .*, .en(write_bypass_en[k][l]), .din (ic_b_rw_addr[k]), .dout(wb_index_hold[k][l])
             );
             rvdffe #((71*pt.ICACHE_NUM_WAYS)) rd_data_hold_ff (
-                .*, .en(write_bypass_en_ff[k][l]), .din (wb_packeddout_pre[k]), .dout(wb_packeddout_hold[k][l])
+                .*, .en(write_bypass_en_ff[k][l]), .din (wb_packeddout_pre), .dout(wb_packeddout_hold[l])
             );
           end // block: BYPASS
 
@@ -499,36 +498,36 @@ import el2_pkg::*;
 
             for (int l=0; l<pt.ICACHE_NUM_BYPASS; l++) begin
               any_bypass[k]      |=  sel_bypass_ff[k][l];
-              sel_bypass_data[k] |= (sel_bypass_ff[k][l]) ? wb_packeddout_hold[k][l] : '0;
+              sel_bypass_data[k] |= (sel_bypass_ff[k][l]) ? wb_packeddout_hold[l] : '0;
             end
-              wb_packeddout[k]   =   any_bypass[k] ?  sel_bypass_data[k] :  wb_packeddout_pre[k];
+              wb_packeddout   =   any_bypass[k] ?  sel_bypass_data[k] :  wb_packeddout_pre;
           end // always_comb begin
         end // if (pt.ICACHE_BYPASS_ENABLE == 1)
         else begin
-            assign wb_packeddout[k]   =   wb_packeddout_pre[k];
+            assign wb_packeddout   =   wb_packeddout_pre;
             assign ic_bank_way_clken_final[k]   =  |ic_bank_way_clken[k];
         end
 
         for (genvar i=0; i<pt.ICACHE_NUM_WAYS; i++) begin: WAYS
-           assign wb_dout[i][k][70:0]  = wb_packeddout[k][(71*i)+70:71*i];
+           assign wb_dout[i][k][70:0]  = wb_packeddout[(71*i)+70:71*i];
         end : WAYS
 
      end // if (pt.ICACHE_ECC)
 
 
      else  begin  : ECC0
-        logic [pt.ICACHE_BANKS_WAY-1:0] [(68*pt.ICACHE_NUM_WAYS)-1:0]        wb_packeddout, ic_b_sb_bit_en_vec, wb_packeddout_pre;           // data and its bit enables
+        logic [(68*pt.ICACHE_NUM_WAYS)-1:0]        wb_packeddout, ic_b_sb_bit_en_vec, wb_packeddout_pre;           // data and its bit enables
 
-        logic [pt.ICACHE_BANKS_WAY-1:0] [pt.ICACHE_NUM_BYPASS-1:0] [(68*pt.ICACHE_NUM_WAYS)-1:0]  wb_packeddout_hold;
+        logic [pt.ICACHE_NUM_BYPASS-1:0] [(68*pt.ICACHE_NUM_WAYS)-1:0]  wb_packeddout_hold;
 
         // Use exported ICache interface.
         always_comb begin
-           icache_export.ic_b_sb_bit_en_vec[k] = ic_b_sb_bit_en_vec[k];
-           wb_packeddout_pre[k] = icache_export.wb_packeddout_pre[k];
+           icache_export.ic_b_sb_bit_en_vec[k] = ic_b_sb_bit_en_vec;
+           wb_packeddout_pre = icache_export.wb_packeddout_pre[k];
         end
 
         for (genvar i=0; i<pt.ICACHE_NUM_WAYS; i++) begin: BITEN
-           assign ic_b_sb_bit_en_vec[k][(68*i)+67:68*i] = {68{ic_b_sb_wren[k][i]}};
+           assign ic_b_sb_bit_en_vec[(68*i)+67:68*i] = {68{ic_b_sb_wren[k][i]}};
         end
 
         // SRAMs with parity
@@ -569,7 +568,7 @@ import el2_pkg::*;
                 .*, .en(write_bypass_en[k][l]), .din (ic_b_rw_addr[k]), .dout(wb_index_hold[k][l])
             );
             rvdffe #((68*pt.ICACHE_NUM_WAYS)) rd_data_hold_ff (
-                .*, .en(write_bypass_en_ff[k][l]), .din (wb_packeddout_pre[k]), .dout(wb_packeddout_hold[k][l])
+                .*, .en(write_bypass_en_ff[k][l]), .din (wb_packeddout_pre), .dout(wb_packeddout_hold[l])
             );
           end // block: BYPASS
 
@@ -579,18 +578,18 @@ import el2_pkg::*;
 
             for (int l=0; l<pt.ICACHE_NUM_BYPASS; l++) begin
               any_bypass[k]      |=  sel_bypass_ff[k][l];
-              sel_bypass_data[k] |= (sel_bypass_ff[k][l]) ? wb_packeddout_hold[k][l] : '0;
+              sel_bypass_data[k] |= (sel_bypass_ff[k][l]) ? wb_packeddout_hold[l] : '0;
             end
-              wb_packeddout[k]   =   any_bypass[k] ?  sel_bypass_data[k] :  wb_packeddout_pre[k];
+              wb_packeddout   =   any_bypass[k] ?  sel_bypass_data[k] :  wb_packeddout_pre;
           end // always_comb
         end // if (pt.ICACHE_BYPASS_ENABLE == 1)
         else begin
-            assign wb_packeddout[k]   =   wb_packeddout_pre[k];
+            assign wb_packeddout   =   wb_packeddout_pre;
             assign ic_bank_way_clken_final[k]   =  |ic_bank_way_clken[k];
         end
 
         for (genvar i=0; i<pt.ICACHE_NUM_WAYS; i++) begin: WAYS
-           assign wb_dout[i][k][67:0]  = wb_packeddout[k][(68*i)+67:68*i];
+           assign wb_dout[i][k][67:0]  = wb_packeddout[(68*i)+67:68*i];
         end
      end // block: ECC0
      end // block: BANKS_WAY
@@ -616,39 +615,23 @@ import el2_pkg::*;
       end
     end
 
-    for ( genvar i=0; i<pt.ICACHE_NUM_WAYS; i++) begin : num_ways_mux1
-      assign wb_dout_way[i][63:0] = (ic_rw_addr_ff[2:1] == 2'b00) ? wb_dout_way_pre[i][63:0]   :
-                                    (ic_rw_addr_ff[2:1] == 2'b01) ?{wb_dout_way_pre[i][86:71], wb_dout_way_pre[i][63:16]} :
-                                    (ic_rw_addr_ff[2:1] == 2'b10) ?{wb_dout_way_pre[i][102:71],wb_dout_way_pre[i][63:32]} :
-                                                                   {wb_dout_way_pre[i][118:71],wb_dout_way_pre[i][63:48]};
-
-      assign wb_dout_way_with_premux[i][63:0]  =  ic_sel_premux_data ? ic_premux_data[63:0] : wb_dout_way[i][63:0] ;
-   end
-
    always_comb begin : rd_out
       ic_debug_rd_data[70:0]     = '0;
-      ic_rd_data[63:0]           = '0;
       wb_dout_ecc[141:0]         = '0;
       for ( int i=0; i<pt.ICACHE_NUM_WAYS; i++) begin : num_ways_mux2
-         ic_rd_data[63:0]       |= ({64{ic_rd_hit_q[i] | ic_sel_premux_data}}) &  wb_dout_way_with_premux[i][63:0];
          ic_debug_rd_data[70:0] |= ({71{ic_rd_hit_q[i]}}) & wb_dout_way_pre[i][70:0];
          wb_dout_ecc[141:0]     |= {142{ic_rd_hit_q[i]}}  & wb_dout_way_pre[i];
       end
    end
 
+   // Expose the raw way-muxed 142-bit ECC-protected word pair to the core.
+   // Byte-rotate + ECC decode are performed core-side (in el2_ifu_mem_ctl).
+   assign ic_rd_data                = wb_dout_ecc;
+   assign ic_rd_addr_lo[1:0]        = ic_rw_addr_ff[2:1];
+   assign ic_rd_bank_check_en       = bank_check_en;
 
  for (genvar i=0; i < pt.ICACHE_BANKS_WAY ; i++) begin : ic_ecc_error
     assign bank_check_en[i]    = |ic_rd_hit[pt.ICACHE_NUM_WAYS-1:0] & ((i==0) | (~ic_cacheline_wrap_ff & (ic_b_rden_ff[pt.ICACHE_BANKS_WAY-1:0] == {pt.ICACHE_BANKS_WAY{1'b1}})));  // always check the lower address bank, and drop the upper address bank on a CL wrap
-    assign wb_dout_ecc_bank[i] = wb_dout_ecc[(71*i)+70:(71*i)];
-
-   rvecc_decode_64  ecc_decode_64 (
-                           .en               (bank_check_en[i]),
-                           .din              (wb_dout_ecc_bank[i][63 : 0]),                // [134:71],  [63:0]
-                           .ecc_in           (wb_dout_ecc_bank[i][70 : 64]),               // [141:135] [70:64]
-                           .ecc_error        (ic_eccerr[i]));
-
-   // or the sb and db error detects into 1 signal called aligndataperr[i] where i corresponds to 2B position
-  assign  ic_parerr[i]  = '0 ;
   end // block: ic_ecc_error
 
 end // if ( pt.ICACHE_ECC )
@@ -667,47 +650,25 @@ else  begin : ECC0_MUX
       end
      end
    end
-   // When we straddle the banks like this - the ECC we capture is not correct ??
-   for ( genvar i=0; i<pt.ICACHE_NUM_WAYS; i++) begin : num_ways_mux1
-      assign wb_dout_way[i][63:0] = (ic_rw_addr_ff[2:1] == 2'b00) ? wb_dout_way_pre[i][63:0]   :
-                                    (ic_rw_addr_ff[2:1] == 2'b01) ?{wb_dout_way_pre[i][83:68],  wb_dout_way_pre[i][63:16]} :
-                                    (ic_rw_addr_ff[2:1] == 2'b10) ?{wb_dout_way_pre[i][99:68],  wb_dout_way_pre[i][63:32]} :
-                                                                   {wb_dout_way_pre[i][115:68], wb_dout_way_pre[i][63:48]};
-
-      assign wb_dout_way_with_premux[i][63:0]      =  ic_sel_premux_data ? ic_premux_data[63:0]  : wb_dout_way[i][63:0] ;
-   end
-
    always_comb begin : rd_out
-      ic_rd_data[63:0]   = '0;
       ic_debug_rd_data[70:0]   = '0;
-      wb_dout_ecc[135:0] = '0;
+      wb_dout_ecc[141:0] = '0;
 
       for ( int i=0; i<pt.ICACHE_NUM_WAYS; i++) begin : num_ways_mux2
-         ic_rd_data[63:0]   |= ({64{ic_rd_hit_q[i] | ic_sel_premux_data}} &  wb_dout_way_with_premux[i][63:0]);
          ic_debug_rd_data[70:0] |= ({71{ic_rd_hit_q[i]}}) & {3'b0,wb_dout_way_pre[i][67:0]};
          wb_dout_ecc[135:0] |= {136{ic_rd_hit_q[i]}}  & wb_dout_way_pre[i][135:0];
       end
    end
 
-   assign wb_dout_ecc_bank[0] =  wb_dout_ecc[67:0];
-   assign wb_dout_ecc_bank[1] =  wb_dout_ecc[135:68];
-
-   logic [pt.ICACHE_BANKS_WAY-1:0][3:0] ic_parerr_bank;
+   // Expose the raw way-muxed 136-bit parity-protected word pair to the core.
+   // Byte-rotate + parity-check are performed core-side (in el2_ifu_mem_ctl).
+   assign ic_rd_data          = wb_dout_ecc;
+   assign ic_rd_addr_lo       = ic_rw_addr_ff[2:1];
+   assign ic_rd_bank_check_en = bank_check_en;
 
   for (genvar i=0; i < pt.ICACHE_BANKS_WAY ; i++) begin : ic_par_error
     assign bank_check_en[i]    = |ic_rd_hit[pt.ICACHE_NUM_WAYS-1:0] & ((i==0) | (~ic_cacheline_wrap_ff & (ic_b_rden_ff[pt.ICACHE_BANKS_WAY-1:0] == {pt.ICACHE_BANKS_WAY{1'b1}})));  // always check the lower address bank, and drop the upper address bank on a CL wrap
-     for (genvar j=0; j<4; j++)  begin : parity
-      rveven_paritycheck pchk (
-                           .data_in   (wb_dout_ecc_bank[i][16*(j+1)-1: 16*j]),
-                           .parity_in (wb_dout_ecc_bank[i][64+j]),
-                           .parity_err(ic_parerr_bank[i][j] )
-                           );
-        end
-     assign ic_eccerr [i] = '0 ;
   end
-
-     assign ic_parerr[1] = (|ic_parerr_bank[1][3:0]) & bank_check_en[1];
-     assign ic_parerr[0] = (|ic_parerr_bank[0][3:0]) & bank_check_en[0];
 
 end // else: !if( pt.ICACHE_ECC )
 
@@ -905,7 +866,7 @@ end // block: OTHERS
     for (genvar i=0; i<pt.ICACHE_NUM_WAYS; i++) begin: WAYS
 
       if (pt.ICACHE_ECC) begin  : ECC1
-        logic [pt.ICACHE_NUM_WAYS-1:0] [pt.ICACHE_TAG_NUM_BYPASS-1:0][25 :0] wb_dout_hold;
+        logic [pt.ICACHE_TAG_NUM_BYPASS-1:0][25 :0] wb_dout_hold;
 
         if (pt.ICACHE_TAG_BYPASS_ENABLE == 1) begin
           assign wrptr_in[i] = (wrptr[i] == (pt.ICACHE_TAG_NUM_BYPASS-1)) ? '0 : (wrptr[i] + 1'd1);
@@ -943,7 +904,7 @@ end // block: OTHERS
                   .*, .en(write_bypass_en[i][l]), .din (ic_b_rw_addr[i]), .dout(wb_index_hold[i][l])
             );
             rvdffe #(26) rd_data_hold_ff (
-                  .*, .en(write_bypass_en_ff[i][l]), .din (ic_tag_data_raw_pre[i][26-1:0]), .dout(wb_dout_hold[i][l])
+                  .*, .en(write_bypass_en_ff[i][l]), .din (ic_tag_data_raw_pre[i][26-1:0]), .dout(wb_dout_hold[l])
             );
           end // block: BYPASS
 
@@ -953,7 +914,7 @@ end // block: OTHERS
 
             for (int l=0; l<pt.ICACHE_TAG_NUM_BYPASS; l++) begin
               any_bypass[i]      |=  sel_bypass_ff[i][l];
-              sel_bypass_data[i] |= (sel_bypass_ff[i][l]) ? wb_dout_hold[i][l] : '0;
+              sel_bypass_data[i] |= (sel_bypass_ff[i][l]) ? wb_dout_hold[l] : '0;
             end
             ic_tag_data_raw[i]   =   any_bypass[i] ?  sel_bypass_data[i] :  ic_tag_data_raw_pre[i];
           end // always_comb
@@ -980,7 +941,7 @@ end // block: OTHERS
         assign ic_tag_way_perr[i]= ic_tag_single_ecc_error[i] | ic_tag_double_ecc_error[i]  ;
       end
       else  begin : ECC0
-        logic [pt.ICACHE_NUM_WAYS-1:0] [pt.ICACHE_TAG_NUM_BYPASS-1:0][21 :0] wb_dout_hold;
+        logic [pt.ICACHE_TAG_NUM_BYPASS-1:0][21 :0] wb_dout_hold;
 
         if (pt.ICACHE_TAG_BYPASS_ENABLE == 1) begin
           assign wrptr_in[i] = (wrptr[i] == (pt.ICACHE_TAG_NUM_BYPASS-1)) ? '0 : (wrptr[i] + 1'd1);
@@ -1018,7 +979,7 @@ end // block: OTHERS
                   .*, .en(write_bypass_en[i][l]), .din (ic_b_rw_addr[i]), .dout(wb_index_hold[i][l])
             );
             rvdffe #(22) rd_data_hold_ff (
-                  .*, .en(write_bypass_en_ff[i][l]), .din (ic_tag_data_raw_pre[i][22-1:0]), .dout(wb_dout_hold[i][l])
+                  .*, .en(write_bypass_en_ff[i][l]), .din (ic_tag_data_raw_pre[i][22-1:0]), .dout(wb_dout_hold[l])
             );
           end // block: BYPASS
 
@@ -1028,7 +989,7 @@ end // block: OTHERS
 
             for (int l=0; l<pt.ICACHE_TAG_NUM_BYPASS; l++) begin
               any_bypass[i]      |=  sel_bypass_ff[i][l];
-              sel_bypass_data[i] |= (sel_bypass_ff[i][l]) ? wb_dout_hold[i][l] : '0;
+              sel_bypass_data[i] |= (sel_bypass_ff[i][l]) ? wb_dout_hold[l] : '0;
             end
             ic_tag_data_raw[i]   =   any_bypass[i] ?  sel_bypass_data[i] :  ic_tag_data_raw_pre[i];
           end // always_comb
@@ -1309,7 +1270,7 @@ end // block: OTHERS
           end // always_comb
         end // if (pt.ICACHE_BYPASS_ENABLE == 1)
         else begin
-            assign ic_tag_data_raw_packed   =   ic_tag_data_raw_packed_pre;
+            assign ic_tag_data_raw_packed   =   ic_tag_data_raw_packed_pre; 
             assign ic_tag_clken_final       =   |ic_tag_clken;
         end
 
