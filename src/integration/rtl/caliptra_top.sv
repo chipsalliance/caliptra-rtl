@@ -232,6 +232,8 @@ module caliptra_top
 
     // Caliptra ECC status signals
     rv_ecc_sts_t rv_ecc_sts;
+    // RISC-V dual-core lockstep error (MuBi encoded)
+    el2_mubi_pkg::el2_mubi_t rv_dcls_error;
 
     el2_mem_if el2_icache_stub ();
 
@@ -692,7 +694,7 @@ el2_veer_wrapper rvtop (
     // DCLS control and status signals.
     .disable_corruption_detection_i (el2_mubi_pkg::El2MuBiFalse),
     .lockstep_err_injection_en_i    (el2_mubi_pkg::El2MuBiFalse),
-    .corruption_detected_o          (),
+    .corruption_detected_o          (rv_dcls_error),
 
     // Shadow core trace (DCLS) - currently not connected
     .shadow_core_trace_rv_i_insn_ip     (),
@@ -1608,6 +1610,9 @@ soc_ifc_top1
     .crypto_error(crypto_error),
     //kv boot flow monitor dest_valid mismatch or boot_flow_error
     .kv_error(kv_monitor_alert | mubi4_test_true_loose(boot_flow_error)),
+    //RISC-V dual-core lockstep corruption detected
+    .rv_dcls_err    (el2_mubi_pkg::mubi_check_true(rv_dcls_error)),
+    .rv_dcls_err_enc(rv_dcls_error),
     //caliptra uncore jtag ports
     .cptra_uncore_dmi_reg_en( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),

@@ -82,8 +82,10 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK                                     (32'h10)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_LOW                            (5)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_MASK                           (32'h20)
-`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (6)
-`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (32'hffffffc0)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_LOW                                   (6)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_MASK                                  (32'h3c0)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (10)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (32'hfffffc00)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL                                               (32'h4)

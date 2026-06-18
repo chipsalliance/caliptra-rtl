@@ -30,7 +30,8 @@ reg {
     rw_rw_sticky_hw crypto_err=0;       /* Crypto parallel operation error No Mask */ 
     rw_rw_sticky_hw kv_error=0;         /* KV boot flow monitor dest_valid mismatch */
     rw_rw_sticky_hw shadow_storage_err=0; /* Shadow register storage fault (fatal -- register or shadow corrupted) */
-    field {sw=r; hw=w;} rsvd[26]=26'h0;
+    rw_rw_sticky_hw rv_dcls_err[4]=4'h9; /* RISC-V dual-core lockstep (DCLS) MuBi-encoded corruption detected (reset=MuBiFalse) */
+    field {sw=r; hw=w;} rsvd[22]=22'h0;
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
