@@ -16,7 +16,8 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg crypto_err_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg kv_error_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg shadow_storage_err_bit_cg[1];
-        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg rsvd_bit_cg[26];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg rv_dcls_err_bit_cg[4];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg rsvd_bit_cg[22];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_fld_cg fld_cg;
         rand uvm_reg_field iccm_ecc_unc;
         rand uvm_reg_field dccm_ecc_unc;
@@ -24,6 +25,7 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field crypto_err;
         rand uvm_reg_field kv_error;
         rand uvm_reg_field shadow_storage_err;
+        rand uvm_reg_field rv_dcls_err;
         rand uvm_reg_field rsvd;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_ERROR_FATAL");
@@ -48,8 +50,10 @@ package soc_ifc_reg_uvm;
             this.kv_error.configure(this, 1, 4, "W1C", 1, 'h0, 1, 1, 0);
             this.shadow_storage_err = new("shadow_storage_err");
             this.shadow_storage_err.configure(this, 1, 5, "W1C", 1, 'h0, 1, 1, 0);
+            this.rv_dcls_err = new("rv_dcls_err");
+            this.rv_dcls_err.configure(this, 4, 6, "W1C", 1, 'h9, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 26, 6, "RO", 1, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 22, 10, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iccm_ecc_unc_bit_cg[bt]) iccm_ecc_unc_bit_cg[bt] = new();
                 foreach(dccm_ecc_unc_bit_cg[bt]) dccm_ecc_unc_bit_cg[bt] = new();
@@ -57,6 +61,7 @@ package soc_ifc_reg_uvm;
                 foreach(crypto_err_bit_cg[bt]) crypto_err_bit_cg[bt] = new();
                 foreach(kv_error_bit_cg[bt]) kv_error_bit_cg[bt] = new();
                 foreach(shadow_storage_err_bit_cg[bt]) shadow_storage_err_bit_cg[bt] = new();
+                foreach(rv_dcls_err_bit_cg[bt]) rv_dcls_err_bit_cg[bt] = new();
                 foreach(rsvd_bit_cg[bt]) rsvd_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
