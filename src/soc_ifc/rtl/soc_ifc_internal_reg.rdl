@@ -89,6 +89,7 @@ reg {
     ro_ro    mask_kv_error=0;         /* KV boot flow monitor error - No Mask (reserved, read-only 0) */
     ro_ro    shadow_storage_err=0;    /* Shadow register storage error - No Mask (reserved, read-only 0) */
     ro_ro    fsm_error=0;             /* Sparse FSM glitch/illegal-state error - No Mask (reserved, read-only 0) */
+    ro_ro    mask_rv_dcls_err=0;      /* RISC-V dual-core lockstep (DCLS) corruption - No Mask (reserved, read-only 0) */
 } internal_hw_error_fatal_mask;
 reg {
     name = "Hardware Error Non-Fatal Mask";

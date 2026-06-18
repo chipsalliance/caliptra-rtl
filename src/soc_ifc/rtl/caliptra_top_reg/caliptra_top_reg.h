@@ -98,8 +98,10 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_MASK                           (0x20)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_LOW                                     (6)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_MASK                                    (0x40)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (7)
-#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (0xffffff80)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_LOW                                   (7)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_MASK                                  (0x80)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (8)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (0xffffff00)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL                              (0x30004)
 #ifndef GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL

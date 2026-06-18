@@ -17,7 +17,8 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg kv_error_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg shadow_storage_err_bit_cg[1];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg fsm_error_bit_cg[1];
-        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg rsvd_bit_cg[25];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg rv_dcls_err_bit_cg[1];
+        soc_ifc_reg__CPTRA_HW_ERROR_FATAL_bit_cg rsvd_bit_cg[24];
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL_fld_cg fld_cg;
         rand uvm_reg_field iccm_ecc_unc;
         rand uvm_reg_field dccm_ecc_unc;
@@ -26,6 +27,7 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field kv_error;
         rand uvm_reg_field shadow_storage_err;
         rand uvm_reg_field fsm_error;
+        rand uvm_reg_field rv_dcls_err;
         rand uvm_reg_field rsvd;
 
         function new(string name = "soc_ifc_reg__CPTRA_HW_ERROR_FATAL");
@@ -52,8 +54,10 @@ package soc_ifc_reg_uvm;
             this.shadow_storage_err.configure(this, 1, 5, "W1C", 1, 'h0, 1, 1, 0);
             this.fsm_error = new("fsm_error");
             this.fsm_error.configure(this, 1, 6, "W1C", 1, 'h0, 1, 1, 0);
+            this.rv_dcls_err = new("rv_dcls_err");
+            this.rv_dcls_err.configure(this, 1, 7, "W1C", 1, 'h0, 1, 1, 0);
             this.rsvd = new("rsvd");
-            this.rsvd.configure(this, 25, 7, "RO", 1, 'h0, 1, 1, 0);
+            this.rsvd.configure(this, 24, 8, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iccm_ecc_unc_bit_cg[bt]) iccm_ecc_unc_bit_cg[bt] = new();
                 foreach(dccm_ecc_unc_bit_cg[bt]) dccm_ecc_unc_bit_cg[bt] = new();
@@ -62,6 +66,7 @@ package soc_ifc_reg_uvm;
                 foreach(kv_error_bit_cg[bt]) kv_error_bit_cg[bt] = new();
                 foreach(shadow_storage_err_bit_cg[bt]) shadow_storage_err_bit_cg[bt] = new();
                 foreach(fsm_error_bit_cg[bt]) fsm_error_bit_cg[bt] = new();
+                foreach(rv_dcls_err_bit_cg[bt]) rv_dcls_err_bit_cg[bt] = new();
                 foreach(rsvd_bit_cg[bt]) rsvd_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
@@ -3202,6 +3207,7 @@ package soc_ifc_reg_uvm;
         soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg mask_kv_error_bit_cg[1];
         soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg shadow_storage_err_bit_cg[1];
         soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg fsm_error_bit_cg[1];
+        soc_ifc_reg__internal_hw_error_fatal_mask_bit_cg mask_rv_dcls_err_bit_cg[1];
         soc_ifc_reg__internal_hw_error_fatal_mask_fld_cg fld_cg;
         rand uvm_reg_field mask_iccm_ecc_unc;
         rand uvm_reg_field mask_dccm_ecc_unc;
@@ -3210,6 +3216,7 @@ package soc_ifc_reg_uvm;
         rand uvm_reg_field mask_kv_error;
         rand uvm_reg_field shadow_storage_err;
         rand uvm_reg_field fsm_error;
+        rand uvm_reg_field mask_rv_dcls_err;
 
         function new(string name = "soc_ifc_reg__internal_hw_error_fatal_mask");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -3235,6 +3242,8 @@ package soc_ifc_reg_uvm;
             this.shadow_storage_err.configure(this, 1, 5, "RO", 0, 'h0, 1, 1, 0);
             this.fsm_error = new("fsm_error");
             this.fsm_error.configure(this, 1, 6, "RO", 0, 'h0, 1, 1, 0);
+            this.mask_rv_dcls_err = new("mask_rv_dcls_err");
+            this.mask_rv_dcls_err.configure(this, 1, 7, "RO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(mask_iccm_ecc_unc_bit_cg[bt]) mask_iccm_ecc_unc_bit_cg[bt] = new();
                 foreach(mask_dccm_ecc_unc_bit_cg[bt]) mask_dccm_ecc_unc_bit_cg[bt] = new();
@@ -3243,6 +3252,7 @@ package soc_ifc_reg_uvm;
                 foreach(mask_kv_error_bit_cg[bt]) mask_kv_error_bit_cg[bt] = new();
                 foreach(shadow_storage_err_bit_cg[bt]) shadow_storage_err_bit_cg[bt] = new();
                 foreach(fsm_error_bit_cg[bt]) fsm_error_bit_cg[bt] = new();
+                foreach(mask_rv_dcls_err_bit_cg[bt]) mask_rv_dcls_err_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
