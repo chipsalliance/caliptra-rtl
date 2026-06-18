@@ -2455,6 +2455,33 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__INTERNAL_DCLS_CTRL COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__internal_dcls_ctrl_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__internal_dcls_ctrl_fld_cg with function sample(
+    input bit [4-1:0] disable_corruption_detection
+    );
+        option.per_instance = 1;
+        // MuBi4 encoded: MuBiTrue (4'h6) disables detection, MuBiFalse (4'h9) enables it.
+        // Any other encoding is invalid; the TB injects invalid encodings deliberately
+        // (MuBi4 glitch injection), so these are collected rather than flagged illegal.
+        disable_corruption_detection_cp : coverpoint disable_corruption_detection {
+            bins mubi_true  = {4'h6};
+            bins mubi_false = {4'h9};
+            bins invalid    = default;
+        }
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__GLOBAL_INTR_EN_T COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__intr_block_t__global_intr_en_t_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;
