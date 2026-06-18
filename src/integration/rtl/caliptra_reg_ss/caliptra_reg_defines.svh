@@ -2407,6 +2407,7 @@
 `define CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR                                                 (32'h30030658)
 `define CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR                                                   (32'h3003065c)
 `define CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK                                                   (32'h30030660)
+`define CLP_SOC_IFC_REG_INTERNAL_DCLS_CTRL                                                          (32'h30030664)
 `define CLP_SOC_IFC_REG_INTR_BLOCK_RF_START                                                         (32'h30030800)
 `define CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                              (32'h30030800)
 `define CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                               (32'h30030804)

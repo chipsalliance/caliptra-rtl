@@ -11820,6 +11820,12 @@
 #define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_LOW                                              (0)
 #define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_MASK                                             (0x1)
 #endif
+#define CLP_SOC_IFC_REG_INTERNAL_DCLS_CTRL                                                          (0x30030664)
+#ifndef SOC_IFC_REG_INTERNAL_DCLS_CTRL
+#define SOC_IFC_REG_INTERNAL_DCLS_CTRL                                                              (0x664)
+#define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_LOW                             (0)
+#define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_MASK                            (0xf)
+#endif
 #define CLP_SOC_IFC_REG_INTR_BLOCK_RF_START                                                         (0x30030800)
 #define CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                              (0x30030800)
 #ifndef SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
