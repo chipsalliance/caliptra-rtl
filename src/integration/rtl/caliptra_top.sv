@@ -241,6 +241,8 @@ module caliptra_top
     rv_ecc_sts_t rv_ecc_sts;
     // RISC-V dual-core lockstep error (MuBi encoded)
     el2_mubi_pkg::el2_mubi_t rv_dcls_error;
+    // DCLS corruption detection disable control (MuBi4, from SW register)
+    el2_mubi_pkg::el2_mubi_t dcls_disable_corruption_detection;
 
     el2_mem_if el2_icache_stub ();
 
@@ -746,7 +748,7 @@ el2_veer_wrapper rvtop (
     .dmi_active       ( cptra_dmi_reg_en_preQ ),
 
     // DCLS control and status signals.
-    .disable_corruption_detection_i (el2_mubi_pkg::El2MuBiFalse),
+    .disable_corruption_detection_i (dcls_disable_corruption_detection),
     .lockstep_err_injection_en_i    (el2_mubi_pkg::El2MuBiFalse),
     .corruption_detected_o          (rv_dcls_error),
 
@@ -1816,6 +1818,8 @@ soc_ifc_top1
     .fw_update_rst_window(fw_update_rst_window),
     //Fatal errors consolidated into struct
     .cptra_hw_fatal_errors(cptra_hw_fatal_errors),
+    // DCLS disable corruption detection control
+    .dcls_disable_corruption_detection(dcls_disable_corruption_detection),
     //caliptra uncore jtag ports
     .cptra_uncore_dmi_reg_en( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),

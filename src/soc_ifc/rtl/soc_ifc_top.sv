@@ -178,6 +178,9 @@ module soc_ifc_top
     output logic [31:0] nmi_vector,
     output logic nmi_intr,
 
+    // DCLS Control
+    output logic [3:0] dcls_disable_corruption_detection,
+
     // ICCM Lock
     output logic iccm_lock,
     input  logic iccm_axs_blocked,
@@ -1121,6 +1124,7 @@ assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr
 assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 assign iccm_unlock_o = iccm_unlock;
+assign dcls_disable_corruption_detection = soc_ifc_reg_hwif_out.internal_dcls_ctrl.disable_corruption_detection.value;
 
 // iccm_fmc_start_addr, iccm_fmc_end_addr, iccm_rt_start_addr, iccm_rt_end_addr
 // are driven directly by the caliptra_prim_subreg_shadow .q outputs below.
@@ -1655,8 +1659,8 @@ always_comb cptra_uncore_dmi_locked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_ad
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_FATAL.rsvd.next[23:0],
-                                                                                                                   soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.fsm_error.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.rv_dcls_err.value,
+                                                                                                                   soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.fsm_error.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.shadow_storage_err.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.kv_error.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.crypto_err.value,
@@ -1698,6 +1702,7 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_FATAL.rsvd.next[23:0],
+                                                                                                                     soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.rv_dcls_err.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.fsm_error.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.shadow_storage_err.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.kv_error.value,
