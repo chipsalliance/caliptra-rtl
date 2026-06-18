@@ -67,6 +67,8 @@ contents:
         #smoke test interrupt handling
         #smoke test wd timer expiry and nmi generation
         - ../test_suites/smoke_test_wdt/smoke_test_wdt.yml
+        #smoke test DCLS control register (enable/disable lockstep comparison)
+        - ../test_suites/smoke_test_dcls_ctrl/smoke_test_dcls_ctrl.yml
         - ../test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml
         #smoke test jtag
         #smoke test generic input wire to fw interrupt
