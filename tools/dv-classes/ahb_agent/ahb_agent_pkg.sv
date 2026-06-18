@@ -27,4 +27,6 @@ package ahb_agent_pkg;
   `include "ahb_status_item.svh"
   `include "ahb_txn_request_item.svh"
   `include "ahb_txn_response_item.svh"
+
+  `include "ahb_mgr_driver.svh"
 endpackage
