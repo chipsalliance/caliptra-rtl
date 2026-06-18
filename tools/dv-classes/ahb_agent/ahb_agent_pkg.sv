@@ -29,4 +29,6 @@ package ahb_agent_pkg;
   `include "ahb_txn_response_item.svh"
 
   `include "ahb_mgr_driver.svh"
+
+  `include "seq_lib/ahb_transfer_seq.svh"
 endpackage
