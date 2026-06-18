@@ -1575,6 +1575,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__internal_iccm_region_lock__out_t;
 
     typedef struct packed{
+        logic [3:0] value;
+    } soc_ifc_reg__internal_dcls_ctrl__disable_corruption_detection__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__internal_dcls_ctrl__disable_corruption_detection__out_t disable_corruption_detection;
+    } soc_ifc_reg__internal_dcls_ctrl__out_t;
+
+    typedef struct packed{
         logic intr;
     } soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t;
 
@@ -1695,6 +1703,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__internal_iccm_rt_start_addr__external__out_t internal_iccm_rt_start_addr;
         soc_ifc_reg__internal_iccm_rt_end_addr__external__out_t internal_iccm_rt_end_addr;
         soc_ifc_reg__internal_iccm_region_lock__out_t internal_iccm_region_lock;
+        soc_ifc_reg__internal_dcls_ctrl__out_t internal_dcls_ctrl;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
     } soc_ifc_reg__out_t;
 
