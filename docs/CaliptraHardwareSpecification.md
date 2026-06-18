@@ -2611,6 +2611,10 @@ The feature consists of three cooperating blocks:
 2. **KV Monitor** (in `kv`): Validates dest_valid permissions and crypto write counts on DICE key slots at each transition boundary.
 3. **KV Enforcement** (in `kv`): Atomically applies lock_wr, lock_use, and slot clearing at each transition.
 
+*Figure: KV Boot Flow Transition Enforcement high-level block diagram*
+
+![](./images/kv_monitor.png)
+
 ### Boot flow monitor
 
 The boot flow monitor detects firmware execution phase transitions by spying the ICCM memory interface. It compares bank-level read addresses against programmed FMC and RT region boundaries.
