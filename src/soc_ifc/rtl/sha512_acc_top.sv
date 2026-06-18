@@ -709,19 +709,18 @@ always_comb extend_load_block = (extend_fsm_ps == EXTEND_LOAD_HASH_PCR4) |
                                  (extend_fsm_ps == EXTEND_LOAD_HASH_PCR5);
 
 always_comb begin
-  for (int i = 0; i < BLOCK_NO; i++) begin
-    if (i < PV_NUM_DWORDS)
-      extend_block[i] = extend_pcr_data[i];              // PCR current value (offset 0 = MSB)
-    else if (i < 2 * PV_NUM_DWORDS)
-      // digest_reg[0] = MSB dword (ascending [0:15] assigned from descending [15:0])
-      extend_block[i] = iccm_digest_hold[i - PV_NUM_DWORDS];
-    else if (i == 2 * PV_NUM_DWORDS)
-      extend_block[i] = 32'h80000000;                     // 0x80 pad byte
-    else if (i == BLOCK_NO - 1)
-      extend_block[i] = 32'h00000300;                     // length = 768 bits
-    else
-      extend_block[i] = 32'h0;                            // zero padding
+  for (int i = 0; i < PV_NUM_DWORDS; i++) begin
+    // PCR current value in dwords 0-11
+    extend_block[i] = extend_pcr_data[i];
+    // ICCM digest in dwords 12-23
+    extend_block[PV_NUM_DWORDS + i] = iccm_digest_hold[i];
   end
+  // SHA-384 padding in dwords 24-31
+  extend_block[2 * PV_NUM_DWORDS] = 32'h80000000;         // 0x80 pad byte
+  for (int i = 2 * PV_NUM_DWORDS + 1; i < BLOCK_NO - 1; i++) begin
+    extend_block[i] = 32'h0;
+  end
+  extend_block[BLOCK_NO - 1] = 32'h00000300;              // length = 768 bits
 end
 
 //----------------------------------------------------------------
