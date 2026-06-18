@@ -1392,8 +1392,10 @@ module ecc_top_tb
       if (result != 1)
       begin
         $display("ERROR [openssl_rand384]: Unexpected line format or end of file");
+        $fclose(fin);
         $stop;
       end
+      $fclose(fin);
     end
   endtask
 
@@ -1489,7 +1491,7 @@ module ecc_top_tb
       //find the "." in file name
       int dot_index;
       dot_index = infile.len() - 1;
-      while (dot_index >=0 && infile.getc(dot_index) != ".")
+      while (dot_index >=0 && infile.getc(dot_index) != 8'h2e)
       begin
         dot_index--;
       end
