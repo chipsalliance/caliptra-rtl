@@ -689,6 +689,20 @@ el2_veer_wrapper rvtop (
     .dmi_uncore_rdata ( cptra_uncore_dmi_reg_rdata ),
     .dmi_active       ( cptra_dmi_reg_en_preQ ),
 
+    // DCLS control and status signals.
+    .disable_corruption_detection_i (el2_mubi_pkg::El2MuBiFalse),
+    .lockstep_err_injection_en_i    (el2_mubi_pkg::El2MuBiFalse),
+    .corruption_detected_o          (),
+
+    // Shadow core trace (DCLS) - currently not connected
+    .shadow_core_trace_rv_i_insn_ip     (),
+    .shadow_core_trace_rv_i_address_ip  (),
+    .shadow_core_trace_rv_i_valid_ip    (),
+    .shadow_core_trace_rv_i_exception_ip(),
+    .shadow_core_trace_rv_i_ecause_ip   (),
+    .shadow_core_trace_rv_i_interrupt_ip(),
+    .shadow_core_trace_rv_i_tval_ip     (),
+
     .mpc_debug_halt_ack     ( mpc_debug_halt_ack),
     .mpc_debug_halt_req     ( 1'b0),
     .mpc_debug_run_ack      ( mpc_debug_run_ack),
