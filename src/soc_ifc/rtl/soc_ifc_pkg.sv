@@ -131,6 +131,7 @@ package soc_ifc_pkg;
         logic crypto_err;       // Crypto engine collision (e.g., HMAC busy & ECC busy)
         logic kv_error;         // Key vault monitor alert
         logic fsm_error;        // SPARSE FSM glitch detected
+        logic rv_dcls_error;    // RV dual-core lockstep mismatch detected
     } cptra_hw_fatal_error_t;
 
     //BOOT FSM
