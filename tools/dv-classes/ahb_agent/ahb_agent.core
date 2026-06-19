@@ -12,6 +12,7 @@ filesets:
       - ahb_if.sv
       - ahb_agent_pkg.sv
 
+      - ahb_status_item.svh: {is_include_file: true}
       - ahb_txn_request_item.svh: {is_include_file: true}
       - ahb_txn_response_item.svh: {is_include_file: true}
 
