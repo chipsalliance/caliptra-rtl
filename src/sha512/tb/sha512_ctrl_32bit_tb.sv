@@ -1139,19 +1139,37 @@ module sha512_ctrl_32bit_tb
 
     string seed, a, b, c, msg;
     int msg_len;
+    string acvp_mode_str, acvp_in_file, acvp_out_file;
 
     $display("   -- Testbench for sha512 started --");
 
-    //source the correct vector file for the mode set below
-    test_mode = MODE_SHA_384;
+    if (!$value$plusargs("SHA512_ACVP_MODE=%s", acvp_mode_str))
+      acvp_mode_str = "384";
 
-    fin  = $fopen("../stimulus/acvp/SHA2-384.txt","r");
+    case (acvp_mode_str)
+      "384": begin
+        test_mode    = MODE_SHA_384;
+        acvp_in_file  = "../stimulus/acvp/SHA2-384.txt";
+        acvp_out_file = "../stimulus/acvp/SHA2-384_digest.txt";
+      end
+      "512": begin
+        test_mode    = MODE_SHA_512;
+        acvp_in_file  = "../stimulus/acvp/SHA2-512.txt";
+        acvp_out_file = "../stimulus/acvp/SHA2-512_digest.txt";
+      end
+      default: begin
+        $display("ERROR: unknown SHA512_ACVP_MODE '%s' (valid: 384, 512)", acvp_mode_str);
+        disable acvp_test_block;
+      end
+    endcase
+
+    fin  = $fopen(acvp_in_file,"r");
     if (fin == 0)
     begin
       $display("ERROR: ACVP input file not found — skipping acvp_test()");
       disable acvp_test_block;
     end
-    fout = $fopen("../stimulus/acvp/SHA2-384_digest.txt","w");
+    fout = $fopen(acvp_out_file,"w");
     if (fout == 0)
     begin
       $display("ERROR: ACVP output file could not be opened — skipping acvp_test()");
