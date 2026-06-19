@@ -27,6 +27,7 @@
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
+#include "iccm_hash.h"
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
 #include "printf.h"
@@ -96,50 +97,6 @@ static const uint32_t expected_seq6[12] = {
     0x665282d5, 0xa2df5e62, 0xf00187ff, 0x61da0cd0
 };
 
-// Acquire SHA acc lock: release reset-default lock, then read-to-acquire
-static void acquire_sha_lock(void) {
-    uint32_t reg;
-    lsu_write_32(CLP_SHA512_ACC_CSR_LOCK, SHA512_ACC_CSR_LOCK_LOCK_MASK);
-    do {
-        reg = lsu_read_32(CLP_SHA512_ACC_CSR_LOCK);
-    } while (reg & SHA512_ACC_CSR_LOCK_LOCK_MASK);
-}
-
-// Wait for PCR4 to be written (poll dword[0] non-zero)
-static uint8_t wait_pcr4_ready(void) {
-    uint32_t timeout = 20000;
-    while (timeout--) {
-        if (lsu_read_32(CLP_PV_REG_PCR_ENTRY_4_0) != 0) return 1;
-    }
-    return 0;
-}
-
-// Verify PCR4 against expected digest
-static uint8_t check_pcr4(const uint32_t *expected, uint32_t seq_num) {
-    volatile uint32_t *pcr4 = (volatile uint32_t *)CLP_PV_REG_PCR_ENTRY_4_0;
-    uint8_t pass = 1;
-    for (int i = 0; i < 12; i++) {
-        uint32_t actual = pcr4[i];
-        if (actual != expected[i]) {
-            VPRINTF(ERROR, "ERROR: Seq%d PCR4[%d] mismatch! Got 0x%x, expected 0x%x\n",
-                    seq_num, i, actual, expected[i]);
-            pass = 0;
-        }
-    }
-    return pass;
-}
-
-// Verify PCR4 is all zeros (cleared after iccm_unlock)
-static uint8_t check_pcr4_cleared(void) {
-    volatile uint32_t *pcr4 = (volatile uint32_t *)CLP_PV_REG_PCR_ENTRY_4_0;
-    for (int i = 0; i < 12; i++) {
-        if (pcr4[i] != 0) {
-            VPRINTF(ERROR, "ERROR: PCR4[%d] not cleared! Got 0x%x\n", i, pcr4[i]);
-            return 0;
-        }
-    }
-    return 1;
-}
 
 void main(void) {
 
@@ -157,7 +114,7 @@ void main(void) {
     // Verify PCR4 is cleared (except on first boot where it starts at 0).
     if (iteration > 0) {
         VPRINTF(LOW, "Checking PCR4 cleared after fw_update_reset...\n");
-        if (!check_pcr4_cleared()) {
+        if (!check_pcr_zero(CLP_PV_REG_PCR_ENTRY_4_0, 4)) {
             VPRINTF(ERROR, "FAIL: PCR4 not cleared after iccm_unlock!\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
@@ -237,7 +194,7 @@ void main(void) {
     else if (iteration == 4) expected = expected_seq5;
     else expected = expected_seq6;
 
-    if (!check_pcr4(expected, iteration + 1)) {
+    if (!check_pcr_match(CLP_PV_REG_PCR_ENTRY_4_0, expected, 4, iteration + 1)) {
         VPRINTF(ERROR, "FAIL: PCR4 mismatch on iteration %d\n", iteration);
         SEND_STDOUT_CTRL(fail_cmd);
         while(1);
