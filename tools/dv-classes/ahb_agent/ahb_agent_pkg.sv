@@ -33,9 +33,12 @@ package ahb_agent_pkg;
   `include "ahb_mgr_driver.svh"
   `include "ahb_mgr_reg_adapter.svh"
 
-  typedef uvm_sequencer#(ahb_reg_op_item) ahb_reg_op_sequencer_t;
+  typedef uvm_sequencer#(ahb_reg_op_item)                         ahb_reg_op_sequencer_t;
+  typedef uvm_sequencer#(ahb_txn_request_item, uvm_sequence_item) ahb_txn_sequencer_t;
 
   `include "seq_lib/ahb_transfer_seq.svh"
   `include "seq_lib/ahb_single_write_seq.svh"
   `include "seq_lib/ahb_mgr_register_layer_vseq.svh"
+
+  `include "ahb_mgr_agent.svh"
 endpackage
