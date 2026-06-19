@@ -1145,7 +1145,7 @@ module sha512_ctrl_32bit_tb
     //source the correct vector file for the mode set below
     test_mode = MODE_SHA_384;
 
-    fin  = $fopen("../stimulus/acvp/SHA2-384_stimulus.txt","r");
+    fin  = $fopen("../stimulus/acvp/SHA2-384.txt","r");
     if (fin == 0)
     begin
       $display("ERROR: ACVP input file not found — skipping acvp_test()");
