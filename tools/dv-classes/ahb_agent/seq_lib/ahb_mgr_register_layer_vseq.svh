@@ -19,12 +19,6 @@ class ahb_mgr_register_layer_vseq extends uvm_sequence;
   local uvm_sequencer #(ahb_reg_op_item) m_layered_sequencer;
   local ahb_txn_sequencer_t              m_ahb_sequencer;
 
-  typedef struct {
-    bit [63:0]   addr_min;        // Minimum address in the range
-    bit [63:0]   addr_max;        // Maximum address in the range (inclusive)
-    int unsigned subordinate_idx; // Index of the associated subordinate.
-  } sub_addr_range_t;
-
   // An array of known mappings from address range to subordinate index. Set this with
   // set_sub_mappings.
   local sub_addr_range_t m_subordinate_mappings[$];
