@@ -747,6 +747,9 @@ module hmac_drbg_tb();
       //dump_dut_state();
 
       if (hmac_drbg_test_to_run == "acvp") begin
+        // hmac_drbg_zeroize_test() is intentionally omitted here — ACVP covers
+        // algorithm correctness only; zeroize is exercised by the directed and
+        // randomized flows.
         acvp_test();
       end
       else if (hmac_drbg_test_to_run == "HMAC_DRBG_directed_test") begin
