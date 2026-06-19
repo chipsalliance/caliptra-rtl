@@ -1155,6 +1155,10 @@ module ecc_top_tb
   //
   //----------------------------------------------------------------
   task read_test_vectors(input string fname);
+      if (fname == "") begin
+        $display("WARNING: read_test_vectors called with empty filename — skipping");
+        return;
+      end
       integer values_per_test_vector;
       integer line_cnt;
       integer fin;
