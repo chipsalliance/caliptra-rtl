@@ -1,0 +1,4 @@
+---
+# Random seed desired...
+seed: 1
+testname: directed_test_iccm_mode_write_once
