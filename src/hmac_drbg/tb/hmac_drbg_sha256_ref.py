@@ -20,12 +20,13 @@ import hmac
 import hashlib
 import os
 
-# secp256r1 (P-256) curve order n -- used for rejection sampling in
+# secp256r1 (P-256) group order n -- used for rejection sampling in
 # hmac_drbg_sha256.sv.  Match this constant to the RTL `HMAC_DRBG_PRIME`.
-# Default: NIST P-256 field prime
-#   p = 2**256 - 2**224 + 2**192 + 2**96 - 1
-PRIME_P256      = int("FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551", 16)
-HMAC_DRBG_PRIME = PRIME_P256
+# Note: despite the legacy variable name, this is the P-256 *group order n*
+# (FIPS 186-5 D.1.2.3), NOT the field prime p. It bounds DRBG output to
+# [1, n-1] for use as the ECDSA secret scalar k.
+GROUP_ORDER_P256 = int("FFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551", 16)
+HMAC_DRBG_PRIME  = GROUP_ORDER_P256
 
 
 class HMAC_DRBG_SHA256:

@@ -33,7 +33,13 @@ module ecc_arith_unit
     parameter                  REG_SIZE     = 384,
     parameter                  RND_SIZE     = 192,
     parameter                  RADIX        = 32,
-    parameter                  ADDR_WIDTH   = 6
+    parameter                  ADDR_WIDTH   = 6,
+    // Unused; kept for fv_ecc_arith_unit bind compatibility.
+    // TODO: remove after fpv review.
+    parameter [REG_SIZE-1 : 0] p_prime      = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff,
+    parameter [RADIX-1    : 0] p_mu         = 32'h00000001,
+    parameter [REG_SIZE-1 : 0] q_grouporder = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973,
+    parameter [RADIX-1    : 0] q_mu         = 32'he88fdc45
     )
     (
     // Clock and reset.
