@@ -25,6 +25,7 @@
 `include "caliptra_reg_defines.svh"
 `include "caliptra_reg_field_defines.svh"
 `include "kv_macros.svh"
+`include "caliptra_macros.svh"
 
 module hmac_ctrl_tb();
 
@@ -903,6 +904,160 @@ module hmac_ctrl_tb();
   endtask // hmac384_tests
 
   //----------------------------------------------------------------
+  // pad_data()
+  //----------------------------------------------------------------
+  task pad_data (input  string msg,
+        output string pad_msg
+       );
+  begin
+    int msg_len, pad_len;
+    string padding, len_str;
+    msg_len = msg.len();
+    pad_len = 256 - ((msg_len + 32) % 256);
+    padding = "8";
+    for (int i = 1; i < pad_len; i++)
+    begin
+      padding = {padding, "0"};
+    end
+    len_str = $sformatf("%032h", (msg_len*4)+1024);
+    $display("msg: %s \n padding: %s \n len_str: %s", msg, padding, len_str);
+    pad_msg = {msg,padding,len_str};
+  end
+  endtask //pad_data
+
+  //----------------------------------------------------------------
+  // acvp_tests()
+  //
+  // Run test cases for acvp cert.
+  // Test cases are in text format, provided by the lab:
+  //----------------------------------------------------------------
+  task acvp_tests;
+    begin : acvp_tests_block
+      int fin, fout, result, mac_len, tcid, msg_len, pad_msg_len;
+      string key, key_32, msg, pad_msg, block_str, block_str_32, digest_out_str, test_type;
+      string fmt;
+      reg [511:0] key_hex, digest_out;
+      reg [1023:0] block_hex;
+      reg [383:0] seed;
+      reg [31:0] mode;
+      string acvp_mode_str, acvp_in_file, acvp_out_file;
+
+      if (!$value$plusargs("HMAC_ACVP_MODE=%s", acvp_mode_str))
+        acvp_mode_str = "512";
+
+      case (acvp_mode_str)
+        "512": begin
+          mode          = HMAC512_MODE;
+          acvp_in_file  = "../stimulus/acvp/HMAC-SHA2-512.txt";
+          acvp_out_file = "../stimulus/acvp/HMAC-SHA2-512_digest.txt";
+        end
+        "384": begin
+          mode          = HMAC384_MODE;
+          acvp_in_file  = "../stimulus/acvp/HMAC-SHA2-384.txt";
+          acvp_out_file = "../stimulus/acvp/HMAC-SHA2-384_digest.txt";
+        end
+        default: begin
+          $display("ERROR: unknown HMAC_ACVP_MODE '%s' (valid: 512, 384)", acvp_mode_str);
+          disable acvp_tests_block;
+        end
+      endcase
+
+      fin  = $fopen(acvp_in_file,"r");
+      if (fin == 0)
+      begin
+        $display("ERROR: ACVP input file not found — skipping acvp_tests()");
+        disable acvp_tests_block;
+      end
+      fout = $fopen(acvp_out_file,"w");
+      if (fout == 0)
+      begin
+        $display("ERROR: ACVP output file could not be opened — skipping acvp_tests()");
+        disable acvp_tests_block;
+      end
+
+      seed = random_gen();
+
+      while (1)
+      begin
+        result = $fscanf(fin, "%s %d %d %s %s", test_type, mac_len, tcid, key, msg);
+        if (result != 5)
+        begin
+          $display("End of file");
+          break;
+        end
+        else
+        begin
+          $display("TC%01d: \n mac_len:%d \n key: %s \n msg: %s", tcid, mac_len, key, msg);
+          pad_data(msg, pad_msg);
+          $display("TC%01d: msg: %s", tcid, pad_msg);
+          pad_msg_len = pad_msg.len();
+          $display("*** TC%01d - acvp vector test started.", tcid);
+          //write Key. Pad 0s to 384 bit key LSB to make 512 bits
+          //in vcs, atohex works only on 32 bits.
+          //so slicing the 512 bit string and performing
+          //the conversion
+          if (mode == HMAC512_MODE)
+          begin
+            key = {key, "00000000000000000000000000000000"};
+          end
+          for (int i=0; i<16; i++)
+          begin
+             key_32  = key.substr(i*8, (i*8)+7);
+             key_hex = {key_hex[479:0], key_32.atohex()};
+          end
+          $display("TC%01d: Key: 0x%0128x", tcid, key_hex);
+          hmac_write_key(key_hex);
+          //convert string to hex and feed it to IP
+          for (int j = 0; j < pad_msg_len/256; j++)
+          begin
+            //Write Blocks
+            block_str = pad_msg.substr(j*256, (j*256)+255);
+            //in vcs, atohex works only on 32 bits.
+            //so slicing the 1024 bit string and performing
+            //the conversion
+            for (int k=0; k<32; k++)
+            begin
+               block_str_32 = block_str.substr(k*8, (k*8)+7);
+               block_hex = {block_hex[991:0], block_str_32.atohex()};
+            end
+            write_block(block_hex);
+            if (j == 0)
+            begin
+              //Write Seed
+              write_seed(seed);
+              //Init value
+              write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
+              #CLK_PERIOD;
+              hsel_i_tb       = 0;
+            end
+            else
+            begin
+              //Next value
+              write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_NEXT_VALUE);
+              #CLK_PERIOD;
+              hsel_i_tb       = 0;
+            end
+            //Wait for done
+            #(CLK_PERIOD);
+            wait_ready();
+          end
+          //Read digest to global variable digest_data
+          hmac_read_digest();
+          digest_out = digest_data >> (512-mac_len);
+          fmt = $sformatf("%%0%0dh", mac_len/4);
+          $sformat(digest_out_str, fmt, digest_out);
+          $fwrite(fout, "%s %0d %s\n", test_type, tcid, digest_out_str);
+          //Zeroize
+          write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+          
+        end
+      end
+      $fclose(fin);
+      $fclose(fout);
+    end
+  endtask //acvp_tests
+
+  //----------------------------------------------------------------
   // hmac512_tests()
   //
   // Run test cases for hmac.
@@ -1049,6 +1204,7 @@ module hmac_ctrl_tb();
       hmac512_tests();
 
       hmac_csr_tests();
+      acvp_tests();
 
       display_test_result();
 
