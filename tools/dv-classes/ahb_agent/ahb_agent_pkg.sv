@@ -24,6 +24,7 @@ package ahb_agent_pkg;
     BurstIncr16 = 7
   } burst_e;
 
+  `include "ahb_status_item.svh"
   `include "ahb_txn_request_item.svh"
   `include "ahb_txn_response_item.svh"
 endpackage
