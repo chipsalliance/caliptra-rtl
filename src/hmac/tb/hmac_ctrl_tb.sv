@@ -940,16 +940,35 @@ module hmac_ctrl_tb();
       reg [1023:0] block_hex;
       reg [383:0] seed;
       reg [31:0] mode;
+      string acvp_mode_str, acvp_in_file, acvp_out_file;
 
-      mode = HMAC512_MODE;
+      if (!$value$plusargs("HMAC_ACVP_MODE=%s", acvp_mode_str))
+        acvp_mode_str = "512";
 
-      fin  = $fopen("../stimulus/acvp/HMAC-SHA2-512.txt","r");
+      case (acvp_mode_str)
+        "512": begin
+          mode          = HMAC512_MODE;
+          acvp_in_file  = "../stimulus/acvp/HMAC-SHA2-512.txt";
+          acvp_out_file = "../stimulus/acvp/HMAC-SHA2-512_digest.txt";
+        end
+        "384": begin
+          mode          = HMAC384_MODE;
+          acvp_in_file  = "../stimulus/acvp/HMAC-SHA2-384.txt";
+          acvp_out_file = "../stimulus/acvp/HMAC-SHA2-384_digest.txt";
+        end
+        default: begin
+          $display("ERROR: unknown HMAC_ACVP_MODE '%s' (valid: 512, 384)", acvp_mode_str);
+          disable acvp_tests_block;
+        end
+      endcase
+
+      fin  = $fopen(acvp_in_file,"r");
       if (fin == 0)
       begin
         $display("ERROR: ACVP input file not found — skipping acvp_tests()");
         disable acvp_tests_block;
       end
-      fout = $fopen("../stimulus/acvp/HMAC-SHA2-512_digest.txt","w");
+      fout = $fopen(acvp_out_file,"w");
       if (fout == 0)
       begin
         $display("ERROR: ACVP output file could not be opened — skipping acvp_tests()");

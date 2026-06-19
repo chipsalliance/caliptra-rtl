@@ -1023,23 +1023,42 @@ module sha256_ctrl_tb();
 
     string seed, a, b, c, msg;
     int msg_len;
+    string acvp_mode_str, acvp_in_file, acvp_out_file;
 
       $display("   -- Testbench for sha256 started --");
 
-      fin  = $fopen("../stimulus/acvp/SHA2-256.txt","r");
+      if (!$value$plusargs("SHA256_ACVP_MODE=%s", acvp_mode_str))
+        acvp_mode_str = "256";
+
+      case (acvp_mode_str)
+        "256": begin
+          test_mode     = SHA256_MODE;
+          acvp_in_file  = "../stimulus/acvp/SHA2-256.txt";
+          acvp_out_file = "../stimulus/acvp/SHA2-256_digest.txt";
+        end
+        "224": begin
+          test_mode     = SHA224_MODE;
+          acvp_in_file  = "../stimulus/acvp/SHA2-224.txt";
+          acvp_out_file = "../stimulus/acvp/SHA2-224_digest.txt";
+        end
+        default: begin
+          $display("ERROR: unknown SHA256_ACVP_MODE '%s' (valid: 256, 224)", acvp_mode_str);
+          disable acvp_test_block;
+        end
+      endcase
+
+      fin  = $fopen(acvp_in_file,"r");
       if (fin == 0)
       begin
         $display("ERROR: ACVP input file not found — skipping acvp_test()");
         disable acvp_test_block;
       end
-      fout = $fopen("../stimulus/acvp/SHA2-256_digest.txt","w");
+      fout = $fopen(acvp_out_file,"w");
       if (fout == 0)
       begin
         $display("ERROR: ACVP output file could not be opened — skipping acvp_test()");
         disable acvp_test_block;
       end
-
-    test_mode = SHA256_MODE;
 
     while(1)
     begin
