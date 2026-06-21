@@ -19,6 +19,7 @@ filesets:
       - ahb_txn_response_item.svh: {is_include_file: true}
 
       - ahb_mgr_driver.svh: {is_include_file: true}
+      - ahb_mgr_reg_adapter.svh: {is_include_file: true}
 
       - seq_lib/ahb_transfer_seq.svh: {is_include_file: true}
       - seq_lib/ahb_single_write_seq.svh: {is_include_file: true}
