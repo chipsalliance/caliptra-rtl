@@ -673,10 +673,11 @@ void main() {
         VPRINTF(LOW, "Load VERIFY_RES data from MLDSA\n");
         offset = 0;
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
+            uint32_t actual = *reg_ptr;
             uint32_t expected = ~sign[offset];
-            if (*reg_ptr != expected) {
+            if (actual != expected) {
                 VPRINTF(ERROR, "At offset [%d], mldsa_verify_res data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual);
                 VPRINTF(ERROR, "Expected data: 0x%x\n", expected);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
