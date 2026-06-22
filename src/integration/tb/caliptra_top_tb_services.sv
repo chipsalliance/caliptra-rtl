@@ -381,7 +381,7 @@ module caliptra_top_tb_services
     //         8'hba        - Enable scan mode with KV write
     //         8'hbb        - Enable KV boot phase transition enforcement
     //         8'hbc        - Force MuBi4 glitch on boot_flow_fmc (invalid encoding, auto-release after 5 clocks)
-    //         8'hbd        - Unused
+    //         8'hbd        - Force DCLS lockstep corruption inject (lockstep_err_injection_en_i = El2MuBiTrue, auto-release after 5 clocks)
     //         8'hbe        - Force shadow storage bit-flip on ICCM fmc_start shadow register (auto-release after 5 clocks)
     //         8'hbf        - Unused
     //         8'hc0:       - Inject MLDSA_SEED to kv_key register
@@ -1854,6 +1854,53 @@ endgenerate //IV_NO
             $display("TB: Released boot_flow_fmc force (auto)");
         end
     end
+
+`ifdef RV_LOCKSTEP_ENABLE
+    // DCLS lockstep corruption injection (auto-release after 5 clocks).
+    // Forces lockstep_err_injection_en_i = El2MuBiTrue (4'h6) to trigger corruption_detected_o.
+    // NOTE: FW must first enable detection (internal_dcls_ctrl.disable_corruption_detection = MuBiFalse 0x9),
+    //       otherwise corruption_detected_o stays suppressed by the disable gate.
+    logic [63:0] dcls_inject_cycle;
+    initial dcls_inject_cycle = '0;
+    always @(posedge clk) begin
+        if ((WriteData[7:0] == 8'hbd) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i = 4'h6; // El2MuBiTrue
+            dcls_inject_cycle <= cycleCnt;
+            $display("TB: Forced lockstep_err_injection_en_i = El2MuBiTrue (DCLS corruption inject)");
+        end
+        else if (dcls_inject_cycle != '0 && cycleCnt == dcls_inject_cycle + 'd5) begin
+            release `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i;
+            dcls_inject_cycle <= '0;
+            $display("TB: Released lockstep_err_injection_en_i force (auto)");
+        end
+    end
+
+    // DCLS corruption self-check: after a 0xbd inject, verify the error latched and
+    // end the simulation. This test is self-terminating from the TB because the
+    // resulting cptra_error_fatal disrupts FW (so the FW cannot signal pass/fail itself).
+    logic [63:0] dcls_check_cycle;
+    initial dcls_check_cycle = '0;
+    always @(posedge clk) begin
+        if ((WriteData[7:0] == 8'hbd) && mailbox_write)
+            dcls_check_cycle <= cycleCnt;
+        else if (dcls_check_cycle != '0 && cycleCnt == dcls_check_cycle + 'd8) begin
+            dcls_check_cycle <= '0;
+            if ((`CPTRA_TOP_PATH.cptra_error_fatal === 1'b1) &&
+                (`CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_HW_ERROR_FATAL.rv_dcls_err.value === 4'h6)) begin
+                $display("TB: DCLS corruption latched (rv_dcls_err=0x6), cptra_error_fatal asserted");
+                $display("* TESTCASE PASSED");
+                $finish;
+            end
+            else begin
+                $error("TB: DCLS check FAILED - cptra_error_fatal=%0b rv_dcls_err=0x%0h (expected 1 / 0x6)",
+                       `CPTRA_TOP_PATH.cptra_error_fatal,
+                       `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_HW_ERROR_FATAL.rv_dcls_err.value);
+                $display("* TESTCASE FAILED");
+                $finish;
+            end
+        end
+    end
+`endif // RV_LOCKSTEP_ENABLE
 
     // Shadow storage bit-flip injection on ICCM fmc_start (auto-release after 5 clocks)
     logic [63:0] shadow_flip_cycle;
