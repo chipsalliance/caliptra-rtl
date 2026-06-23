@@ -240,11 +240,7 @@ module caliptra_top
     // ICCM hash mode: AND-OR mux combines bank writes into single data stream
     logic        iccm_hash_dv;
     logic [31:0] iccm_hash_data;
-    pv_write_t   iccm_pv_write;
     logic        iccm_unlock;
-    // ICCM PCR extend: read port for current PCR values
-    pv_read_t    iccm_pv_read;
-    pv_rd_resp_t iccm_pv_rd_resp;
 
     // ICCM region registers for boot flow monitor
     logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr;
@@ -492,12 +488,6 @@ end
                               el2_mem_export.iccm_bank_wr_data[i] : '0;
         end
     end
-
-    // ICCM hash PCR write is pv_write[1]; sha512_ctrl drives pv_write[0]
-    always_comb pv_write[1] = iccm_pv_write;
-    // ICCM PCR extend read is pv_read[1]; sha512_ctrl drives pv_read[0]
-    always_comb pv_read[1] = iccm_pv_read;
-    always_comb iccm_pv_rd_resp = pv_rd_resp[1];
 
    //=========================================================================-
    // RTL instance
@@ -1331,7 +1321,7 @@ pcr_vault1
     .pv_rd_resp           (pv_rd_resp),
     .pv_wr_resp           (pv_wr_resp),
 
-    .pcr4_hwclr           (iccm_unlock)
+    .iccm_unlock          (iccm_unlock)
 );
 
 dv #(
@@ -1611,11 +1601,11 @@ soc_ifc_top1
     // ICCM hash mode
     .iccm_hash_dv    (iccm_hash_dv),
     .iccm_hash_data  (iccm_hash_data),
-    .iccm_pv_write   (iccm_pv_write),
+    .pv_write        (pv_write[1]),
     .iccm_unlock_o   (iccm_unlock),
     // ICCM PCR extend
-    .iccm_pv_read    (iccm_pv_read),
-    .iccm_pv_rd_resp (iccm_pv_rd_resp),
+    .pv_read         (pv_read[1]),
+    .pv_rd_resp      (pv_rd_resp[1]),
     // ICCM Region Registers for Boot Flow Monitor
     .iccm_fmc_start_addr(iccm_fmc_start_addr),
     .iccm_fmc_end_addr  (iccm_fmc_end_addr),
