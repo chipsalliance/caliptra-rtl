@@ -731,6 +731,56 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__intr_block_t__in_t;
 
     typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__STASH_BANK_SLOT_DATA__data__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__STASH_BANK_SLOT_DATA__data__in_t data;
+    } soc_ifc_reg__STASH_BANK_SLOT_DATA__in_t;
+
+    typedef struct packed{
+        logic swwe;
+    } soc_ifc_reg__STASH_BANK_SOC_LOCK__lock__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__STASH_BANK_SOC_LOCK__lock__in_t lock;
+    } soc_ifc_reg__STASH_BANK_SOC_LOCK__in_t;
+
+    typedef struct packed{
+        logic swwe;
+    } soc_ifc_reg__STASH_END_STASH__end_stash__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__STASH_END_STASH__end_stash__in_t end_stash;
+    } soc_ifc_reg__STASH_END_STASH__in_t;
+
+    typedef struct packed{
+        logic swwe;
+    } soc_ifc_reg__STASH_BANK_CPTRA_LOCK__cptra_lock__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__STASH_BANK_CPTRA_LOCK__cptra_lock__in_t cptra_lock;
+    } soc_ifc_reg__STASH_BANK_CPTRA_LOCK__in_t;
+
+    typedef struct packed{
+        logic [7:0] next;
+    } soc_ifc_reg__STASH_BANK_STATUS__slot_locked__in_t;
+
+    typedef struct packed{
+        logic next;
+    } soc_ifc_reg__STASH_BANK_STATUS__end_stash__in_t;
+
+    typedef struct packed{
+        logic next;
+    } soc_ifc_reg__STASH_BANK_STATUS__cptra_lock__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__STASH_BANK_STATUS__slot_locked__in_t slot_locked;
+        soc_ifc_reg__STASH_BANK_STATUS__end_stash__in_t end_stash;
+        soc_ifc_reg__STASH_BANK_STATUS__cptra_lock__in_t cptra_lock;
+    } soc_ifc_reg__STASH_BANK_STATUS__in_t;
+
+    typedef struct packed{
         logic cptra_rst_b;
         logic cptra_pwrgood;
         logic soc_req;
@@ -811,6 +861,11 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__internal_iccm_rt_start_addr__external__in_t internal_iccm_rt_start_addr;
         soc_ifc_reg__internal_iccm_rt_end_addr__external__in_t internal_iccm_rt_end_addr;
         soc_ifc_reg__intr_block_t__in_t intr_block_rf;
+        soc_ifc_reg__STASH_BANK_SLOT_DATA__in_t [208-1:0]STASH_BANK_SLOT_DATA;
+        soc_ifc_reg__STASH_BANK_SOC_LOCK__in_t STASH_BANK_SOC_LOCK;
+        soc_ifc_reg__STASH_END_STASH__in_t STASH_END_STASH;
+        soc_ifc_reg__STASH_BANK_CPTRA_LOCK__in_t STASH_BANK_CPTRA_LOCK;
+        soc_ifc_reg__STASH_BANK_STATUS__in_t STASH_BANK_STATUS;
     } soc_ifc_reg__in_t;
 
     typedef struct packed{
@@ -1587,6 +1642,38 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__intr_block_t__out_t;
 
     typedef struct packed{
+        logic [31:0] value;
+    } soc_ifc_reg__STASH_BANK_SLOT_DATA__data__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__STASH_BANK_SLOT_DATA__data__out_t data;
+    } soc_ifc_reg__STASH_BANK_SLOT_DATA__out_t;
+
+    typedef struct packed{
+        logic [7:0] value;
+    } soc_ifc_reg__STASH_BANK_SOC_LOCK__lock__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__STASH_BANK_SOC_LOCK__lock__out_t lock;
+    } soc_ifc_reg__STASH_BANK_SOC_LOCK__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__STASH_END_STASH__end_stash__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__STASH_END_STASH__end_stash__out_t end_stash;
+    } soc_ifc_reg__STASH_END_STASH__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__STASH_BANK_CPTRA_LOCK__cptra_lock__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__STASH_BANK_CPTRA_LOCK__cptra_lock__out_t cptra_lock;
+    } soc_ifc_reg__STASH_BANK_CPTRA_LOCK__out_t;
+
+    typedef struct packed{
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL__out_t CPTRA_HW_ERROR_FATAL;
         soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL__out_t CPTRA_HW_ERROR_NON_FATAL;
         soc_ifc_reg__CPTRA_FW_ERROR_FATAL__out_t CPTRA_FW_ERROR_FATAL;
@@ -1685,6 +1772,10 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__internal_iccm_rt_end_addr__external__out_t internal_iccm_rt_end_addr;
         soc_ifc_reg__internal_iccm_region_lock__out_t internal_iccm_region_lock;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
+        soc_ifc_reg__STASH_BANK_SLOT_DATA__out_t [208-1:0]STASH_BANK_SLOT_DATA;
+        soc_ifc_reg__STASH_BANK_SOC_LOCK__out_t STASH_BANK_SOC_LOCK;
+        soc_ifc_reg__STASH_END_STASH__out_t STASH_END_STASH;
+        soc_ifc_reg__STASH_BANK_CPTRA_LOCK__out_t STASH_BANK_CPTRA_LOCK;
     } soc_ifc_reg__out_t;
 
     typedef enum logic [31:0] {

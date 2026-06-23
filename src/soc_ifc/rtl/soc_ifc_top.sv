@@ -770,6 +770,84 @@ always_comb begin
     end
 end
 
+// STASH measurement register bank (RFC 694) - lock / PAUSER / status glue.
+// Reuses the mailbox PAUSER table via the already-resolved valid_mbox_users[]
+// signal (see ~L669-680 above), which encodes the full three-source priority:
+//   1. integration-time CPTRA_SET_MBOX_AXI_USER_INTEG[u]
+//   2. SoC-programmed register, once CPTRA_MBOX_AXI_USER_LOCK[u] is set
+//   3. default CPTRA_DEF_MBOX_VALID_AXI_USER (32'hFFFF_FFFF)
+// Comparing the live request user against valid_mbox_users[u] makes the stash
+// filter behaviorally identical to the mailbox filter without re-implementing
+// (and missing) sources 1 and 3.
+// Subsystem mode (CALIPTRA_MODE_SUBSYSTEM) ties off slots 1..7 so only slot 0 is usable.
+// STASH_BANK_CPTRA_LOCK is Caliptra-only (RFC 694 §4.4): written by Caliptra Runtime FW
+// after the post-DPE-init drain to seal the bank for the rest of the boot.
+logic stash_axi_user_valid;
+always_comb begin
+    stash_axi_user_valid = 1'b0;
+    for (int u = 0; u < 5; u++) begin
+        if (soc_ifc_reg_req_data.user == valid_mbox_users[u]) begin
+            stash_axi_user_valid = 1'b1;
+        end
+    end
+end
+
+// Slot data swwel: block when slot locked, end_stash asserted, cptra_lock asserted,
+// request is not from SoC, or AXI USER does not match mailbox PAUSER table.
+// In subsystem mode, slots 1..7 are permanently write-disabled.
+always_comb begin
+    for (int k = 0; k < 208; k++) begin
+        automatic int slot_idx;
+        slot_idx = k / 26;
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        if (slot_idx > 0) begin
+            soc_ifc_reg_hwif_in.STASH_BANK_SLOT_DATA[k].data.swwel = 1'b1;
+        end
+        else begin
+            soc_ifc_reg_hwif_in.STASH_BANK_SLOT_DATA[k].data.swwel =
+                soc_ifc_reg_hwif_out.STASH_BANK_SOC_LOCK.lock.value[slot_idx] |
+                soc_ifc_reg_hwif_out.STASH_END_STASH.end_stash.value           |
+                soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value    |
+                ~soc_ifc_reg_req_data.soc_req                                   |
+                ~stash_axi_user_valid;
+        end
+`else
+        soc_ifc_reg_hwif_in.STASH_BANK_SLOT_DATA[k].data.swwel =
+            soc_ifc_reg_hwif_out.STASH_BANK_SOC_LOCK.lock.value[slot_idx] |
+            soc_ifc_reg_hwif_out.STASH_END_STASH.end_stash.value           |
+            soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value    |
+            ~soc_ifc_reg_req_data.soc_req                                   |
+            ~stash_axi_user_valid;
+`endif
+    end
+end
+
+// SOC_LOCK and END_STASH are SoC-only W1S; CPTRA_LOCK is Caliptra-only W1S.
+always_comb begin
+    soc_ifc_reg_hwif_in.STASH_BANK_SOC_LOCK.lock.swwe =
+        soc_ifc_reg_req_data.soc_req &
+        stash_axi_user_valid &
+        ~soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value &
+        ~soc_ifc_reg_hwif_out.STASH_END_STASH.end_stash.value;
+    soc_ifc_reg_hwif_in.STASH_END_STASH.end_stash.swwe =
+        soc_ifc_reg_req_data.soc_req &
+        stash_axi_user_valid &
+        ~soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value;
+    soc_ifc_reg_hwif_in.STASH_BANK_CPTRA_LOCK.cptra_lock.swwe = ~soc_ifc_reg_req_data.soc_req;
+end
+
+// Status mirror (hw=w pass-through fields). Per RFC 694 §4.5, STATUS is the single
+// read path for all stash bank lock state - the three lock registers above are W1S
+// write-only and read as 0.
+always_comb begin
+    soc_ifc_reg_hwif_in.STASH_BANK_STATUS.slot_locked.next =
+        soc_ifc_reg_hwif_out.STASH_BANK_SOC_LOCK.lock.value;
+    soc_ifc_reg_hwif_in.STASH_BANK_STATUS.end_stash.next =
+        soc_ifc_reg_hwif_out.STASH_END_STASH.end_stash.value;
+    soc_ifc_reg_hwif_in.STASH_BANK_STATUS.cptra_lock.next =
+        soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value;
+end
+
 // OCP Lock progress register is w1-set, meaning once set to 1 it persists until reset (on the uC fw upd reset domain)
 // It is also only settable when Caliptra was configured to support OCP LOCK operations (via the LOCK_EN strap)
 `ifdef CALIPTRA_MODE_SUBSYSTEM
