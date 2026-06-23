@@ -149,7 +149,9 @@ import uvmf_base_pkg_hdl::*;
       .pv_read       (pv_read),
       .pv_write      (pv_write),
       .pv_rd_resp    (pv_rd_resp),
-      .pv_wr_resp    (pv_wr_resp)
+      .pv_wr_resp    (pv_wr_resp),
+
+      .iccm_unlock   (1'b0)
   );
 
   pcrvault_cov_bind i_pcrvault_cov_bind();

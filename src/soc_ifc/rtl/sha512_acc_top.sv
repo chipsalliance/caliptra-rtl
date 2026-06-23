@@ -45,10 +45,10 @@ module sha512_acc_top
       input  logic [31:0] iccm_hash_data_i,
       input  logic        iccm_lock_i,
       input  logic        iccm_unlock_i,
-      output pv_write_t   iccm_pv_write_o,
+      output pv_write_t   pv_write_o,
       // ICCM PCR extend ports (HW-only — driven by extend FSM, not FW)
-      output pv_read_t    iccm_pv_read_o,
-      input  pv_rd_resp_t iccm_pv_rd_resp_i,
+      output pv_read_t    pv_read_o,
+      input  pv_rd_resp_t pv_rd_resp_i,
 
       // Interrupts
       output logic error_intr,
@@ -619,7 +619,7 @@ always_ff @(posedge clk or negedge rst_b) begin
     extend_pcr_data <= '0;
   else if ((extend_fsm_ps == EXTEND_READ_PCR4 || extend_fsm_ps == EXTEND_READ_PCR5) &&
            extend_rd_dword_ctr < PV_NUM_DWORDS[3:0])
-    extend_pcr_data[extend_rd_dword_ctr] <= iccm_pv_rd_resp_i.read_data;
+    extend_pcr_data[extend_rd_dword_ctr] <= pv_rd_resp_i.read_data;
 end
 
 // Extend FSM next-state logic
@@ -697,8 +697,8 @@ end
 
 // pv_read output: driven by extend FSM (HW-only, no FW control path)
 always_comb begin
-  iccm_pv_read_o.read_entry  = extend_pcr_entry;
-  iccm_pv_read_o.read_offset = extend_rd_dword_ctr[PV_ENTRY_SIZE_WIDTH-1:0];
+  pv_read_o.read_entry  = extend_pcr_entry;
+  pv_read_o.read_offset = extend_rd_dword_ctr[PV_ENTRY_SIZE_WIDTH-1:0];
 end
 
 // Block register override for extend: load PCR value + digest + padding
@@ -777,10 +777,10 @@ iccm_pcr_write_client
 
 // Map kv_write_t output to pv_write_t
 always_comb begin
-  iccm_pv_write_o.write_en     = iccm_kv_write.write_en;
-  iccm_pv_write_o.write_entry  = iccm_kv_write.write_entry[PV_ENTRY_ADDR_W-1:0];
-  iccm_pv_write_o.write_offset = iccm_kv_write.write_offset[PV_ENTRY_SIZE_WIDTH-1:0];
-  iccm_pv_write_o.write_data   = iccm_kv_write.write_data;
+  pv_write_o.write_en     = iccm_kv_write.write_en;
+  pv_write_o.write_entry  = iccm_kv_write.write_entry[PV_ENTRY_ADDR_W-1:0];
+  pv_write_o.write_offset = iccm_kv_write.write_offset[PV_ENTRY_SIZE_WIDTH-1:0];
+  pv_write_o.write_data   = iccm_kv_write.write_data;
 end
 
 endmodule // sha512_acc_top

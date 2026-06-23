@@ -50,7 +50,7 @@ module pv
     output pv_rd_resp_t [PV_NUM_READ-1:0] pv_rd_resp,
     output pv_wr_resp_t [PV_NUM_WRITE-1:0] pv_wr_resp,
 
-    input logic                           pcr4_hwclr
+    input logic                           iccm_unlock
 
 );
 
@@ -138,7 +138,7 @@ always_comb begin : keyvault_ctrl
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = pv_entry_we[entry][dword];
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next =  pv_entry_next[entry][dword];
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = pv_reg_hwif_out.PCR_CTRL[entry].clear.value |
-                                                                 (entry == 4 ? pcr4_hwclr : 1'b0);
+                                                                 (entry == 4 ? iccm_unlock : 1'b0);
         end
     end
 end
