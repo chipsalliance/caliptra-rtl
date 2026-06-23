@@ -18,7 +18,6 @@
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
 #include "printf.h"
-#include "xorshift.h"
 #include "mldsa.h"
 #include <stdlib.h>
 

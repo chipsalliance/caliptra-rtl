@@ -17,13 +17,13 @@
 // -- Begin Boilerplate --
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
+#include "caliptra_rtl_lib.h"
 #include "riscv-csr.h"
 #include <string.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "printf.h"
 #include "datavault.h"
-#include "xorshift.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
