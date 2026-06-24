@@ -86,6 +86,12 @@ $RV_ROOT/configs/veer.config    \
 -set=bitmanip_zbs=1              \
 -set=pmp_entries=64              \
 -set=reset_vec=0x00000000        \
+-set=lockstep_enable=1           \
+-set=lockstep_regfile_enable=1   \
+-set=lockstep_delay=2            \
+-set=mubi_width=4                \
+-set=mubi_true=0x6               \
+-set=mubi_false=0x9              \
 -fpga_optimize=0                 \
 -snapshot=$1
 #-text_in_iccm=0

@@ -2,4 +2,6 @@
 +incdir+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/include/el2_def.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/common_defines.sv
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_mubi_pkg.sv
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_lockstep_pkg.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/beh_lib.sv

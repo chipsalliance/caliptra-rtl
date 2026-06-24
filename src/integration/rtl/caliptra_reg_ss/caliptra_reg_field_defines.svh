@@ -8492,8 +8492,10 @@
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK                                              (32'h10)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_LOW                                     (5)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_MASK                                    (32'h20)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (6)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (32'hffffffc0)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_LOW                                            (6)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_MASK                                           (32'h3c0)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (10)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (32'hfffffc00)
 `endif
 `ifndef SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL
 `define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL                                                        (32'h4)
@@ -9426,6 +9428,11 @@
 `define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK                                                       (32'h660)
 `define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_LOW                                              (0)
 `define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_MASK                                             (32'h1)
+`endif
+`ifndef SOC_IFC_REG_INTERNAL_DCLS_CTRL
+`define SOC_IFC_REG_INTERNAL_DCLS_CTRL                                                              (32'h664)
+`define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_LOW                             (0)
+`define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_MASK                            (32'hf)
 `endif
 `ifndef SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
 `define SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (32'h800)

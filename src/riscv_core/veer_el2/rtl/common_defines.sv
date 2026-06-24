@@ -16,9 +16,9 @@
 
 
 // NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE NOTE
-// This is an automatically generated file by cwhitehead on Wed Oct  8 18:26:01 PDT 2025
+// This is an automatically generated file by pascal on Do 18 Jun 2026 09:43:43 CEST
 //
-// cmd:    veer -target=default_ahb -set=ret_stack_size=8 -set=btb_enable=1 -set=btb_fullya=0 -set=btb_size=512 -set=bht_size=512 -set=div_bit=4 -set=div_new=1 -set=dccm_enable=1 -set=dccm_num_banks=4 -set=dccm_region=0x5 -set=dccm_offset=0x00000 -set=dccm_size=256 -set=dma_buf_depth=5 -set=fast_interrupt_redirect=1 -set=icache_enable=0 -set=icache_waypack=1 -set=icache_ecc=1 -set=icache_size=16 -set=icache_2banks=1 -set=icache_num_ways=2 -set=icache_bypass_enable=1 -set=icache_num_bypass=2 -set=icache_num_tag_bypass=2 -set=icache_tag_bypass_enable=1 -set=iccm_enable=1 -set=iccm_num_banks=4 -set=iccm_region=0x4 -set=iccm_offset=0x0 -set=iccm_size=256 -set=lsu_stbuf_depth=4 -set=lsu_num_nbload=4 -set=load_to_use_plus1=0 -set=pic_2cycle=0 -set=pic_region=0x6 -set=pic_offset=0 -set=pic_size=32 -set=pic_total_int=31 -set=dma_buf_depth=5 -set=timer_legal_en=1 -set=bitmanip_zba=1 -set=bitmanip_zbb=1 -set=bitmanip_zbc=1 -set=bitmanip_zbe=0 -set=bitmanip_zbf=0 -set=bitmanip_zbp=0 -set=bitmanip_zbr=0 -set=bitmanip_zbs=1 -set=pmp_entries=64 -set=reset_vec=0x00000000 -fpga_optimize=0 -snapshot=Cores-VeeR-EL2 
+// cmd:    veer -target=default_ahb -set=ret_stack_size=8 -set=btb_enable=1 -set=btb_fullya=0 -set=btb_size=512 -set=bht_size=512 -set=div_bit=4 -set=div_new=1 -set=dccm_enable=1 -set=dccm_num_banks=4 -set=dccm_region=0x5 -set=dccm_offset=0x00000 -set=dccm_size=256 -set=dma_buf_depth=5 -set=fast_interrupt_redirect=1 -set=icache_enable=0 -set=icache_waypack=1 -set=icache_ecc=1 -set=icache_size=16 -set=icache_2banks=1 -set=icache_num_ways=2 -set=icache_bypass_enable=1 -set=icache_num_bypass=2 -set=icache_num_tag_bypass=2 -set=icache_tag_bypass_enable=1 -set=iccm_enable=1 -set=iccm_num_banks=4 -set=iccm_region=0x4 -set=iccm_offset=0x0 -set=iccm_size=256 -set=lsu_stbuf_depth=4 -set=lsu_num_nbload=4 -set=load_to_use_plus1=0 -set=pic_2cycle=0 -set=pic_region=0x6 -set=pic_offset=0 -set=pic_size=32 -set=pic_total_int=31 -set=dma_buf_depth=5 -set=timer_legal_en=1 -set=bitmanip_zba=1 -set=bitmanip_zbb=1 -set=bitmanip_zbc=1 -set=bitmanip_zbe=0 -set=bitmanip_zbf=0 -set=bitmanip_zbp=0 -set=bitmanip_zbr=0 -set=bitmanip_zbs=1 -set=pmp_entries=64 -set=reset_vec=0x00000000 -set=lockstep_enable=1 -set=lockstep_regfile_enable=1 -set=lockstep_delay=2 -set=mubi_width=4 -set=mubi_true=0x6 -set=mubi_false=0x9 -fpga_optimize=0 -snapshot=caliptra 
 //
 `ifndef RV_COMMON_DEFINES
 `define RV_COMMON_DEFINES
@@ -244,6 +244,12 @@
 `define RV_INST_ACCESS_MASK5 'hffffffff
 `define RV_INST_ACCESS_MASK6 'hffffffff
 `define RV_INST_ACCESS_MASK7 'hffffffff
+`define RV_LOCKSTEP_DELAY 2
+`define RV_LOCKSTEP_ENABLE 1
+`define RV_LOCKSTEP_REGFILE_ENABLE 1
+`define RV_MUBI_FALSE 'h9
+`define RV_MUBI_TRUE 'h6
+`define RV_MUBI_WIDTH 4
 `define RV_PMP_ENTRIES 64
 `define REGWIDTH 32
 `define RV_RESET_VEC 'h00000000
@@ -251,20 +257,16 @@
 `define RV_TARGET default_ahb
 `define TEC_RV_ICG clockhdr
 `define CPU_TOP `RV_TOP.veer
-//`define RV_TOP `TOP.rvtop
+`define RV_TOP `TOP.rvtop_wrapper.rvtop
 `define SDVT_AHB 1
-//`define TOP tb_top
+`define TOP tb_top
 `define RV_BUILD_AHB_LITE 1
 `define CLOCK_PERIOD 100
 `define RV_EXT_ADDRWIDTH 32
 `define RV_EXT_DATAWIDTH 64
 `define RV_LDERR_ROLLBACK 1
 `define RV_STERR_ROLLBACK 0
+`define USER_EC_RV_ICG user_clock_gate
 `define RV_XLEN 32
-`ifndef SYNTHESIS
-`ifndef VERILATOR
-    `define RV_ASSERT_ON 
-`endif
-`endif
 
 `endif // RV_COMMON_DEFINES
