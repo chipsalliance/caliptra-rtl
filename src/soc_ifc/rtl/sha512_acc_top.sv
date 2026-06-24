@@ -761,6 +761,20 @@ always_comb begin
     iccm_write_entry = 5'd5;
 end
 
+kv_write_ctrl_reg_t       iccm_write_ctrl_reg;
+kv_write_filter_metrics_t iccm_write_metrics;
+kv_wr_resp_t              iccm_kv_resp;
+
+always_comb begin
+  iccm_write_ctrl_reg.rsvd           = '0;
+  iccm_write_ctrl_reg.write_dest_vld = '0;
+  iccm_write_ctrl_reg.write_entry    = iccm_write_entry;
+  iccm_write_ctrl_reg.write_en       = 1'b1;
+end
+
+always_comb iccm_write_metrics = '0;
+always_comb iccm_kv_resp.error = 1'b0;
+
 kv_write_client #(
   .DATA_WIDTH(PV_NUM_DWORDS * PV_DATA_W),
   .KV_WRITE_SWAP_DWORDS(0)
@@ -772,11 +786,11 @@ iccm_pcr_write_client
   .zeroize(1'b0),
 
   .num_dwords(PV_NUM_DWORDS[4:0]),
-  .write_ctrl_reg('{rsvd: '0, write_dest_vld: '0, write_entry: iccm_write_entry, write_en: 1'b1}),
-  .write_metrics('{default: '0}),
+  .write_ctrl_reg(iccm_write_ctrl_reg),
+  .write_metrics(iccm_write_metrics),
 
   .kv_write(iccm_kv_write),
-  .kv_resp('{error: 1'b0}),
+  .kv_resp(iccm_kv_resp),
 
   .dest_keyvault(),
   .dest_data_avail(iccm_pcr_data_avail),
