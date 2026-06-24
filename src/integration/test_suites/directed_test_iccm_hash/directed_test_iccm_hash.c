@@ -42,11 +42,6 @@ volatile uint32_t  intr_count       = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-// ICCM_MODE field (bit 2 of MODE register)
-#ifndef SHA512_ACC_CSR_MODE_ICCM_MODE_MASK
-#define SHA512_ACC_CSR_MODE_ICCM_MODE_MASK (0x4)
-#endif
-
 // Persistent state across fw_update_reset (DCCM survives reset)
 static uint32_t iteration __attribute__ ((section(".dccm.persistent"))) = 0;
 
@@ -122,9 +117,9 @@ void main(void) {
         VPRINTF(LOW, "PCR4 confirmed cleared\n");
     }
 
-    // Acquire SHA acc lock and set ICCM_MODE
-    acquire_sha_lock();
-    lsu_write_32(CLP_SHA512_ACC_CSR_MODE, SHA512_ACC_CSR_MODE_ICCM_MODE_MASK);
+    // HW auto-arms ICCM hash on the first ICCM write (or on iccm_lock for
+    // the zero-length case), so no SHA acc lock acquire or MODE write is
+    // needed from firmware.
 
     if (iteration == 0) {
         // Sequence 1: 64 words (256 bytes, spans 2 SHA-384 blocks)

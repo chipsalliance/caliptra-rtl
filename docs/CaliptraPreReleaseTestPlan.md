@@ -162,21 +162,20 @@ Hardware-only SHA-384 measurement of all data written to ICCM during firmware lo
 | `directed_test_iccm_fw_write_block` | Directed | FW AHB writes to PCR4/PCR5 are dropped both pre-hash (zero) and post-hash (populated digest unchanged) |
 | `directed_test_iccm_sha_ctrl_block` | Directed | `sha512_ctrl` `pcr_hash_extend` targeting PCR4 / PCR5 is blocked by `pv.sv` guard; same flow against PCR0 succeeds (control) |
 | `directed_test_iccm_clear_hatch` | Directed | `PCR_CTRL[4,5].clear` zeros PCR4/PCR5, then FW AHB writes and SHA-ctrl extends are still blocked on the cleared entries |
-| `directed_test_iccm_mode_write_once` | Directed | After one ICCM hash completes, `MODE.ICCM_MODE` cannot be re-armed; re-asserting `iccm_lock` leaves PCR4 unchanged |
 | `directed_test_iccm_sha_acc_reuse` | Directed | After ICCM hash completes, SHA acc lock is released and a streaming SHA-384 produces a matching digest |
 | `directed_test_iccm_cold_reset_pcr5` | Directed | PCR5 populated in Boot 0; after cold reset (Boot 1) PCR5 reads back zero (new Journey chain) |
+| `directed_test_iccm_replay_block` | Directed | After the measurement completes, additional ICCM writes in the same boot do not perturb PCR4/PCR5 |
 
 ### Test Iterations
 
 #### `smoke_test_iccm_hash`
 
 Single iteration:
-1. Acquire SHA acc lock, set ICCM_MODE
-2. Write 4 words {0x1, 0x2, 0x3, 0x4} to ICCM
-3. Lock ICCM → triggers hash finalization + PCR4/PCR5 extend
-4. Verify PCR4 matches expected `SHA-384(zeros || SHA-384(LE_iccm_data))`
-5. Extend PCR0 via normal SHA512 `pcr_hash_extend` with same ICCM digest
-6. Verify PCR0 == PCR4 (byte-ordering consistency between extend paths)
+1. Write 4 words {0x1, 0x2, 0x3, 0x4} to ICCM (HW autonomously arms on the first write)
+2. Lock ICCM → triggers hash finalization + PCR4/PCR5 extend
+3. Verify PCR4 matches expected `SHA-384(zeros || SHA-384(LE_iccm_data))`
+4. Extend PCR0 via normal SHA512 `pcr_hash_extend` with same ICCM digest
+5. Verify PCR0 == PCR4 (byte-ordering consistency between extend paths)
 
 #### `directed_test_iccm_hash`
 
@@ -222,13 +221,6 @@ Single iteration, 4 steps:
 3. FW AHB write `0xDEADBEEF` to every dword of PCR4 / PCR5 → both still read zero
 4. SHA-ctrl `pcr_hash_extend` targeting PCR4 then PCR5 → both still read zero
 
-#### `directed_test_iccm_mode_write_once`
-
-Single iteration, 3 steps:
-1. Run default ICCM hash → snapshot PCR4
-2. Write `MODE.ICCM_MODE = 1` → read back, field must still be 0 (sticky `iccm_mode_done`)
-3. Write fresh ICCM data and assert `iccm_lock` again → PCR4 must equal the step-1 snapshot (no second hash ran)
-
 #### `directed_test_iccm_sha_acc_reuse`
 
 Single iteration, 3 steps:
@@ -242,12 +234,20 @@ Single iteration, 3 steps:
 1. Boot 0: run default ICCM hash → PCR5 non-zero, then trigger cold reset
 2. Boot 1: PCR5 must read all zeros (new Journey chain after cold reset)
 
+#### `directed_test_iccm_replay_block`
+
+Single iteration, 3 steps:
+1. Run default ICCM hash → PCR4 / PCR5 populated, snapshot both
+2. Write a different pattern to ICCM (no `fw_update_reset`) and re-assert `INTERNAL_ICCM_LOCK`
+3. Re-read PCR4 and PCR5 → both must match the snapshots byte-for-byte
+
 ### Security Enforcement
 
 | Mechanism | RTL Location | Description |
 | :-------- | :----------- | :---------- |
 | PCR4/PCR5 write guard | `pv.sv` | `pv_write[0]` (sha512_ctrl) blocked from targeting entry 4 or 5; only `pv_write[1]` (ICCM hash) can write |
-| ICCM_MODE write-once | `sha512_acc_top.sv` | `iccm_mode_done` sticky flag prevents re-trigger until `iccm_unlock` |
+| Autonomous arming | `sha512_acc_top.sv` | `iccm_armed` sticky flop set combinationally by the first ICCM-write snoop; HW also acquires the SHA acc LOCK in the same cycle via `LOCK.hwclr` |
+| Hash measurement single-shot | `sha512_acc_top.sv` | `iccm_mode_done` sticky flag prevents re-trigger until `iccm_unlock` (which fires on `fw_update_reset`) |
 | PCR4 clear on FW update | `caliptra_top.sv` | `pcr4_hwclr = iccm_unlock` clears PCR4 on fw_update_reset |
 | FW isolation | `sha512_acc_top.sv` | All extend FSM control signals (pv_read, write_entry, init) driven by HW state only — no CSR interface |
 | PCR extend correctness | `sha512_acc_top.sv` | Extend FSM uses same `kv_read_client` + `sha512_core` + `kv_write_client` pattern as sha512.sv PCR extend |
@@ -255,4 +255,4 @@ Single iteration, 3 steps:
 ### Regression
 
 - `src/integration/stimulus/L0_regression.yml` -- smoke_test_iccm_hash
-- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- directed_test_iccm_hash, directed_test_iccm_pcr5_journey, directed_test_iccm_fw_write_block, directed_test_iccm_sha_ctrl_block, directed_test_iccm_clear_hatch, directed_test_iccm_mode_write_once, directed_test_iccm_sha_acc_reuse, directed_test_iccm_cold_reset_pcr5
+- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- directed_test_iccm_hash, directed_test_iccm_pcr5_journey, directed_test_iccm_fw_write_block, directed_test_iccm_sha_ctrl_block, directed_test_iccm_clear_hatch, directed_test_iccm_sha_acc_reuse, directed_test_iccm_cold_reset_pcr5, directed_test_iccm_replay_block

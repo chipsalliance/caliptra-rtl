@@ -46,8 +46,8 @@ uint8_t wait_pcr4_ready(void) {
 
 uint8_t run_default_iccm_hash(void) {
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
-    if (!acquire_sha_lock()) return 0;
-    lsu_write_32(CLP_SHA512_ACC_CSR_MODE, SHA512_ACC_CSR_MODE_ICCM_MODE_MASK);
+    // ICCM-write snoop engages the hash automatically on the first write;
+    // no firmware-side arming or lock acquisition is required.
     for (uint32_t i = 0; i < ICCM_HASH_DEFAULT_NUM_WORDS; i++) {
         iccm[i] = ICCM_HASH_DEFAULT_WORD(i);
     }

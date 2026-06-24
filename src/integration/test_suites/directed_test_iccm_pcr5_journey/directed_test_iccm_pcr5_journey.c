@@ -88,8 +88,6 @@ static const uint32_t expected_pcr5_boot2[ICCM_HASH_PCR_DWORDS] = {
 // Run an ICCM hash with a specific data pattern (each boot uses different data)
 static uint8_t run_boot_hash(uint32_t boot) {
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
-    if (!acquire_sha_lock()) return 0;
-    lsu_write_32(CLP_SHA512_ACC_CSR_MODE, SHA512_ACC_CSR_MODE_ICCM_MODE_MASK);
     if (boot == 0) {
         for (uint32_t i = 0; i < 64; i++) iccm[i] = 0x10 + i;
     } else if (boot == 1) {
