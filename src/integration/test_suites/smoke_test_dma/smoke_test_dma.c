@@ -519,7 +519,7 @@ void main(void) {
         // Start a long transaction to cover highest size bits
         // ===========================================================================
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer - size over max\n");
-        soc_ifc_axi_dma_send_axi_to_axi_no_wait(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR+0x1000, 0, 0x1f0000, 0);
+        soc_ifc_axi_dma_send_axi_to_axi_no_wait(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR+0x1000, 0, 0x1f0000, 0, 0 ,0);
         // Don't use soc_ifc_axi_dma_wait_idle(), status0 may show an error, depending on the interrupt timing
         reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
         while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
@@ -527,7 +527,7 @@ void main(void) {
         }
 
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer - biggest implemented size\n");
-        soc_ifc_axi_dma_send_axi_to_axi_no_wait(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR+0x1000, 0, 0x100000, 0);
+        soc_ifc_axi_dma_send_axi_to_axi_no_wait(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR+0x1000, 0, 0x100000, 0, 0 ,0);
 
         for (uint8_t i = 0; i < 50; i++) {
             __asm__ volatile ("nop"); // Sleep loop as "nop"
@@ -562,7 +562,7 @@ void main(void) {
         // Move data from one address to another in AXI SRAM
         // ===========================================================================
         VPRINTF(LOW, "Moving payload at SRAM via axi-to-axi xfer\n");
-        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (16)*4, 0);
+        soc_ifc_axi_dma_send_axi_to_axi(AXI_SRAM_BASE_ADDR, 0, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES/2, 0, (16)*4, 0, 0, 0);
 
         // ===========================================================================
         // Read data back from AXI SRAM and confirm it matches
