@@ -484,21 +484,23 @@ interface soc_ifc_cov_if
     // ICCM hash control signals
     logic iccm_mode;
     logic iccm_mode_done;
+    logic iccm_armed;
     logic iccm_hash_dv;
     logic iccm_lock_i;
     logic iccm_unlock_i;
     logic iccm_pcr_dest_done;
     logic iccm_soc_has_lock;
-    logic iccm_mode_hwclr;
+    logic iccm_lock_acquire;
 
     assign iccm_mode           = i_sha512_acc_top.iccm_mode;
     assign iccm_mode_done      = i_sha512_acc_top.iccm_mode_done;
+    assign iccm_armed        = i_sha512_acc_top.iccm_armed;
     assign iccm_hash_dv        = i_sha512_acc_top.iccm_hash_dv_i;
     assign iccm_lock_i         = i_sha512_acc_top.iccm_lock_i;
     assign iccm_unlock_i       = i_sha512_acc_top.iccm_unlock_i;
     assign iccm_pcr_dest_done  = i_sha512_acc_top.iccm_pcr_dest_done;
     assign iccm_soc_has_lock   = i_sha512_acc_top.soc_has_lock;
-    assign iccm_mode_hwclr     = i_sha512_acc_top.hwif_in.MODE.ICCM_MODE.hwclr;
+    assign iccm_lock_acquire   = i_sha512_acc_top.iccm_lock_acquire;
 
     covergroup iccm_hash_cov_grp @(posedge clk iff cptra_rst_b);
         option.per_instance = 1;
@@ -507,6 +509,9 @@ interface soc_ifc_cov_if
 
         // ICCM mode active
         iccm_mode_cp: coverpoint iccm_mode;
+
+        // ICCM armed sticky flag (set on first ICCM write after reset / unlock)
+        iccm_armed_cp: coverpoint iccm_armed;
 
         // ICCM mode done (write-once completed)
         iccm_mode_done_cp: coverpoint iccm_mode_done;
@@ -526,8 +531,8 @@ interface soc_ifc_cov_if
         // SoC has lock (security: should block iccm_mode)
         iccm_soc_has_lock_cp: coverpoint iccm_soc_has_lock;
 
-        // ICCM_MODE hwclr (field cleared by HW)
-        iccm_mode_hwclr_cp: coverpoint iccm_mode_hwclr;
+        // HW-driven LOCK acquire pulse (asserted while ICCM hash is engaging)
+        iccm_lock_acquire_cp: coverpoint iccm_lock_acquire;
 
         // SHA FSM state during ICCM mode
         iccm_sha_fsm_cp: coverpoint sha_fsm_ps iff (iccm_mode) {

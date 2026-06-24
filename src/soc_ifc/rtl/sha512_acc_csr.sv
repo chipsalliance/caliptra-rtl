@@ -169,10 +169,6 @@ module sha512_acc_csr (
                 logic next;
                 logic load_next;
             } ENDIAN_TOGGLE;
-            struct packed{
-                logic next;
-                logic load_next;
-            } ICCM_MODE;
         } MODE;
         struct packed{
             struct packed{
@@ -417,9 +413,6 @@ module sha512_acc_csr (
             struct packed{
                 logic value;
             } ENDIAN_TOGGLE;
-            struct packed{
-                logic value;
-            } ICCM_MODE;
         } MODE;
         struct packed{
             struct packed{
@@ -604,6 +597,9 @@ module sha512_acc_csr (
         end else if(hwif_in.LOCK.LOCK.hwset) begin // HW Set
             next_c = '1;
             load_next_c = '1;
+        end else if(hwif_in.LOCK.LOCK.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
         end
         field_combo.LOCK.LOCK.next = next_c;
         field_combo.LOCK.LOCK.load_next = load_next_c;
@@ -681,30 +677,6 @@ module sha512_acc_csr (
         end
     end
     assign hwif_out.MODE.ENDIAN_TOGGLE.value = field_storage.MODE.ENDIAN_TOGGLE.value;
-    // Field: sha512_acc_csr.MODE.ICCM_MODE
-    always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.MODE.ICCM_MODE.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.MODE && decoded_req_is_wr && hwif_in.valid_user) begin // SW write
-            next_c = (field_storage.MODE.ICCM_MODE.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
-            load_next_c = '1;
-        end else if(hwif_in.MODE.ICCM_MODE.hwclr) begin // HW Clear
-            next_c = '0;
-            load_next_c = '1;
-        end
-        field_combo.MODE.ICCM_MODE.next = next_c;
-        field_combo.MODE.ICCM_MODE.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
-        if(~hwif_in.cptra_rst_b) begin
-            field_storage.MODE.ICCM_MODE.value <= 1'h0;
-        end else if(field_combo.MODE.ICCM_MODE.load_next) begin
-            field_storage.MODE.ICCM_MODE.value <= field_combo.MODE.ICCM_MODE.next;
-        end
-    end
-    assign hwif_out.MODE.ICCM_MODE.value = field_storage.MODE.ICCM_MODE.value;
     // Field: sha512_acc_csr.START_ADDRESS.ADDR
     always_comb begin
         automatic logic [31:0] next_c;
@@ -1667,8 +1639,7 @@ module sha512_acc_csr (
     assign readback_array[1][31:0] = (decoded_reg_strb.USER && !decoded_req_is_wr) ? field_storage.USER.USER.value : '0;
     assign readback_array[2][1:0] = (decoded_reg_strb.MODE && !decoded_req_is_wr) ? field_storage.MODE.MODE.value : '0;
     assign readback_array[2][2:2] = (decoded_reg_strb.MODE && !decoded_req_is_wr) ? field_storage.MODE.ENDIAN_TOGGLE.value : '0;
-    assign readback_array[2][3:3] = (decoded_reg_strb.MODE && !decoded_req_is_wr) ? field_storage.MODE.ICCM_MODE.value : '0;
-    assign readback_array[2][31:4] = '0;
+    assign readback_array[2][31:3] = '0;
     assign readback_array[3][31:0] = (decoded_reg_strb.START_ADDRESS && !decoded_req_is_wr) ? field_storage.START_ADDRESS.ADDR.value : '0;
     assign readback_array[4][31:0] = (decoded_reg_strb.DLEN && !decoded_req_is_wr) ? field_storage.DLEN.LENGTH.value : '0;
     assign readback_array[5][31:0] = (decoded_reg_strb.DATAIN && !decoded_req_is_wr) ? field_storage.DATAIN.DATAIN.value : '0;
