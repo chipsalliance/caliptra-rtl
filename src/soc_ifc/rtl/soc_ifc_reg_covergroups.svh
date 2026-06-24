@@ -3177,4 +3177,108 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__STASH_BANK_SLOT_DATA COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__STASH_BANK_SLOT_DATA_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__STASH_BANK_SLOT_DATA_fld_cg with function sample(
+    input bit [32-1:0] data
+    );
+        option.per_instance = 1;
+        data_cp : coverpoint data;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__STASH_BANK_SOC_LOCK COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__STASH_BANK_SOC_LOCK_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__STASH_BANK_SOC_LOCK_fld_cg with function sample(
+    input bit [8-1:0] lock
+    );
+        option.per_instance = 1;
+        lock_cp : coverpoint lock;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__STASH_END_STASH COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__STASH_END_STASH_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__STASH_END_STASH_fld_cg with function sample(
+    input bit [1-1:0] end_stash
+    );
+        option.per_instance = 1;
+        end_stash_cp : coverpoint end_stash;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__STASH_BANK_CPTRA_LOCK COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__STASH_BANK_CPTRA_LOCK_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__STASH_BANK_CPTRA_LOCK_fld_cg with function sample(
+    input bit [1-1:0] cptra_lock
+    );
+        option.per_instance = 1;
+        cptra_lock_cp : coverpoint cptra_lock;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__STASH_BANK_STATUS COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__STASH_BANK_STATUS_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__STASH_BANK_STATUS_fld_cg with function sample(
+    input bit [8-1:0] slot_locked,
+    input bit [1-1:0] end_stash,
+    input bit [1-1:0] cptra_lock
+    );
+        option.per_instance = 1;
+        slot_locked_cp : coverpoint slot_locked;
+        end_stash_cp : coverpoint end_stash;
+        cptra_lock_cp : coverpoint cptra_lock;
+
+    endgroup
+
 `endif

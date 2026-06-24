@@ -228,6 +228,11 @@ module soc_ifc_reg (
             logic notif_soc_req_lock_intr_count_incr_r;
             logic notif_gen_in_toggle_intr_count_incr_r;
         } intr_block_rf;
+        logic [208-1:0]STASH_BANK_SLOT_DATA;
+        logic STASH_BANK_SOC_LOCK;
+        logic STASH_END_STASH;
+        logic STASH_BANK_CPTRA_LOCK;
+        logic STASH_BANK_STATUS;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
     logic decoded_strb_is_external;
@@ -437,6 +442,13 @@ module soc_ifc_reg (
         decoded_reg_strb.intr_block_rf.notif_scan_mode_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha2c);
         decoded_reg_strb.intr_block_rf.notif_soc_req_lock_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha30);
         decoded_reg_strb.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha34);
+        for(int i0=0; i0<208; i0++) begin
+            decoded_reg_strb.STASH_BANK_SLOT_DATA[i0] = cpuif_req_masked & (cpuif_addr == 12'hc00 + i0*12'h4);
+        end
+        decoded_reg_strb.STASH_BANK_SOC_LOCK = cpuif_req_masked & (cpuif_addr == 12'hf40);
+        decoded_reg_strb.STASH_END_STASH = cpuif_req_masked & (cpuif_addr == 12'hf44);
+        decoded_reg_strb.STASH_BANK_CPTRA_LOCK = cpuif_req_masked & (cpuif_addr == 12'hf48);
+        decoded_reg_strb.STASH_BANK_STATUS = cpuif_req_masked & (cpuif_addr == 12'hf4c);
         decoded_strb_is_external = is_external;
         external_req = is_external;
     end
@@ -1615,6 +1627,30 @@ module soc_ifc_reg (
                 } pulse;
             } notif_gen_in_toggle_intr_count_incr_r;
         } intr_block_rf;
+        struct packed{
+            struct packed{
+                logic [31:0] next;
+                logic load_next;
+            } data;
+        } [208-1:0]STASH_BANK_SLOT_DATA;
+        struct packed{
+            struct packed{
+                logic [7:0] next;
+                logic load_next;
+            } lock;
+        } STASH_BANK_SOC_LOCK;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } end_stash;
+        } STASH_END_STASH;
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } cptra_lock;
+        } STASH_BANK_CPTRA_LOCK;
     } field_combo_t;
     field_combo_t field_combo;
 
@@ -2516,6 +2552,26 @@ module soc_ifc_reg (
                 } pulse;
             } notif_gen_in_toggle_intr_count_incr_r;
         } intr_block_rf;
+        struct packed{
+            struct packed{
+                logic [31:0] value;
+            } data;
+        } [208-1:0]STASH_BANK_SLOT_DATA;
+        struct packed{
+            struct packed{
+                logic [7:0] value;
+            } lock;
+        } STASH_BANK_SOC_LOCK;
+        struct packed{
+            struct packed{
+                logic value;
+            } end_stash;
+        } STASH_END_STASH;
+        struct packed{
+            struct packed{
+                logic value;
+            } cptra_lock;
+        } STASH_BANK_CPTRA_LOCK;
     } field_storage_t;
     field_storage_t field_storage;
 
@@ -7522,6 +7578,92 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r.pulse.next;
         end
     end
+    for(genvar i0=0; i0<208; i0++) begin
+        // Field: soc_ifc_reg.STASH_BANK_SLOT_DATA[].data
+        always_comb begin
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.STASH_BANK_SLOT_DATA[i0].data.value;
+            load_next_c = '0;
+            if(decoded_reg_strb.STASH_BANK_SLOT_DATA[i0] && decoded_req_is_wr && !(hwif_in.STASH_BANK_SLOT_DATA[i0].data.swwel)) begin // SW write
+                next_c = (field_storage.STASH_BANK_SLOT_DATA[i0].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end
+            field_combo.STASH_BANK_SLOT_DATA[i0].data.next = next_c;
+            field_combo.STASH_BANK_SLOT_DATA[i0].data.load_next = load_next_c;
+        end
+        always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+            if(~hwif_in.cptra_rst_b) begin
+                field_storage.STASH_BANK_SLOT_DATA[i0].data.value <= 32'h0;
+            end else if(field_combo.STASH_BANK_SLOT_DATA[i0].data.load_next) begin
+                field_storage.STASH_BANK_SLOT_DATA[i0].data.value <= field_combo.STASH_BANK_SLOT_DATA[i0].data.next;
+            end
+        end
+        assign hwif_out.STASH_BANK_SLOT_DATA[i0].data.value = field_storage.STASH_BANK_SLOT_DATA[i0].data.value;
+    end
+    // Field: soc_ifc_reg.STASH_BANK_SOC_LOCK.lock
+    always_comb begin
+        automatic logic [7:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.STASH_BANK_SOC_LOCK.lock.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.STASH_BANK_SOC_LOCK && decoded_req_is_wr && hwif_in.STASH_BANK_SOC_LOCK.lock.swwe) begin // SW write 1 set
+            next_c = field_storage.STASH_BANK_SOC_LOCK.lock.value | (decoded_wr_data[7:0] & decoded_wr_biten[7:0]);
+            load_next_c = '1;
+        end
+        field_combo.STASH_BANK_SOC_LOCK.lock.next = next_c;
+        field_combo.STASH_BANK_SOC_LOCK.lock.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.STASH_BANK_SOC_LOCK.lock.value <= 8'h0;
+        end else if(field_combo.STASH_BANK_SOC_LOCK.lock.load_next) begin
+            field_storage.STASH_BANK_SOC_LOCK.lock.value <= field_combo.STASH_BANK_SOC_LOCK.lock.next;
+        end
+    end
+    assign hwif_out.STASH_BANK_SOC_LOCK.lock.value = field_storage.STASH_BANK_SOC_LOCK.lock.value;
+    // Field: soc_ifc_reg.STASH_END_STASH.end_stash
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.STASH_END_STASH.end_stash.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.STASH_END_STASH && decoded_req_is_wr && hwif_in.STASH_END_STASH.end_stash.swwe) begin // SW write 1 set
+            next_c = field_storage.STASH_END_STASH.end_stash.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end
+        field_combo.STASH_END_STASH.end_stash.next = next_c;
+        field_combo.STASH_END_STASH.end_stash.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.STASH_END_STASH.end_stash.value <= 1'h0;
+        end else if(field_combo.STASH_END_STASH.end_stash.load_next) begin
+            field_storage.STASH_END_STASH.end_stash.value <= field_combo.STASH_END_STASH.end_stash.next;
+        end
+    end
+    assign hwif_out.STASH_END_STASH.end_stash.value = field_storage.STASH_END_STASH.end_stash.value;
+    // Field: soc_ifc_reg.STASH_BANK_CPTRA_LOCK.cptra_lock
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.STASH_BANK_CPTRA_LOCK.cptra_lock.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.STASH_BANK_CPTRA_LOCK && decoded_req_is_wr && hwif_in.STASH_BANK_CPTRA_LOCK.cptra_lock.swwe) begin // SW write 1 set
+            next_c = field_storage.STASH_BANK_CPTRA_LOCK.cptra_lock.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end
+        field_combo.STASH_BANK_CPTRA_LOCK.cptra_lock.next = next_c;
+        field_combo.STASH_BANK_CPTRA_LOCK.cptra_lock.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
+        if(~hwif_in.cptra_rst_b) begin
+            field_storage.STASH_BANK_CPTRA_LOCK.cptra_lock.value <= 1'h0;
+        end else if(field_combo.STASH_BANK_CPTRA_LOCK.cptra_lock.load_next) begin
+            field_storage.STASH_BANK_CPTRA_LOCK.cptra_lock.value <= field_combo.STASH_BANK_CPTRA_LOCK.cptra_lock.next;
+        end
+    end
+    assign hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value = field_storage.STASH_BANK_CPTRA_LOCK.cptra_lock.value;
 
     //--------------------------------------------------------------------------
     // Write response
@@ -7562,7 +7704,7 @@ module soc_ifc_reg (
     logic [31:0] readback_data;
 
     // Assign readback values to a flattened array
-    logic [256-1:0][31:0] readback_array;
+    logic [465-1:0][31:0] readback_array;
     assign readback_array[0][0:0] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.value : '0;
     assign readback_array[0][1:1] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value : '0;
     assign readback_array[0][2:2] = (decoded_reg_strb.CPTRA_HW_ERROR_FATAL && !decoded_req_is_wr) ? field_storage.CPTRA_HW_ERROR_FATAL.nmi_pin.value : '0;
@@ -7888,6 +8030,13 @@ module soc_ifc_reg (
     assign readback_array[254][31:1] = '0;
     assign readback_array[255][0:0] = (decoded_reg_strb.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_incr_r.pulse.value : '0;
     assign readback_array[255][31:1] = '0;
+    for(genvar i0=0; i0<208; i0++) begin
+        assign readback_array[i0*1 + 256][31:0] = (decoded_reg_strb.STASH_BANK_SLOT_DATA[i0] && !decoded_req_is_wr) ? field_storage.STASH_BANK_SLOT_DATA[i0].data.value : '0;
+    end
+    assign readback_array[464][7:0] = (decoded_reg_strb.STASH_BANK_STATUS && !decoded_req_is_wr) ? hwif_in.STASH_BANK_STATUS.slot_locked.next : '0;
+    assign readback_array[464][8:8] = (decoded_reg_strb.STASH_BANK_STATUS && !decoded_req_is_wr) ? hwif_in.STASH_BANK_STATUS.end_stash.next : '0;
+    assign readback_array[464][9:9] = (decoded_reg_strb.STASH_BANK_STATUS && !decoded_req_is_wr) ? hwif_in.STASH_BANK_STATUS.cptra_lock.next : '0;
+    assign readback_array[464][31:10] = '0;
 
     // Reduce the array
     always_comb begin
@@ -7895,7 +8044,7 @@ module soc_ifc_reg (
         readback_done = decoded_req & ~decoded_req_is_wr & ~decoded_strb_is_external;
         readback_err = '0;
         readback_data_var = '0;
-        for(int i=0; i<256; i++) readback_data_var |= readback_array[i];
+        for(int i=0; i<465; i++) readback_data_var |= readback_array[i];
         readback_data = readback_data_var;
     end
 

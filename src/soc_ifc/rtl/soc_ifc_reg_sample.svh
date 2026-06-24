@@ -3762,4 +3762,133 @@
         end
     endfunction
 
+    /*----------------------- SOC_IFC_REG__STASH_BANK_SLOT_DATA SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__STASH_BANK_SLOT_DATA::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(data_bit_cg[bt]) this.data_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[31:0]/*data*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__STASH_BANK_SLOT_DATA::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(data_bit_cg[bt]) this.data_bit_cg[bt].sample(data.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__STASH_BANK_SOC_LOCK SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__STASH_BANK_SOC_LOCK::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(lock_bit_cg[bt]) this.lock_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[7:0]/*lock*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__STASH_BANK_SOC_LOCK::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(lock_bit_cg[bt]) this.lock_bit_cg[bt].sample(lock.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( lock.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__STASH_END_STASH SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__STASH_END_STASH::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(end_stash_bit_cg[bt]) this.end_stash_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*end_stash*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__STASH_END_STASH::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(end_stash_bit_cg[bt]) this.end_stash_bit_cg[bt].sample(end_stash.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( end_stash.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__STASH_BANK_CPTRA_LOCK SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__STASH_BANK_CPTRA_LOCK::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(cptra_lock_bit_cg[bt]) this.cptra_lock_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*cptra_lock*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__STASH_BANK_CPTRA_LOCK::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(cptra_lock_bit_cg[bt]) this.cptra_lock_bit_cg[bt].sample(cptra_lock.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( cptra_lock.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__STASH_BANK_STATUS SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__STASH_BANK_STATUS::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(slot_locked_bit_cg[bt]) this.slot_locked_bit_cg[bt].sample(data[0 + bt]);
+            foreach(end_stash_bit_cg[bt]) this.end_stash_bit_cg[bt].sample(data[8 + bt]);
+            foreach(cptra_lock_bit_cg[bt]) this.cptra_lock_bit_cg[bt].sample(data[9 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[7:0]/*slot_locked*/  ,  data[8:8]/*end_stash*/  ,  data[9:9]/*cptra_lock*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__STASH_BANK_STATUS::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(slot_locked_bit_cg[bt]) this.slot_locked_bit_cg[bt].sample(slot_locked.get_mirrored_value() >> bt);
+            foreach(end_stash_bit_cg[bt]) this.end_stash_bit_cg[bt].sample(end_stash.get_mirrored_value() >> bt);
+            foreach(cptra_lock_bit_cg[bt]) this.cptra_lock_bit_cg[bt].sample(cptra_lock.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( slot_locked.get_mirrored_value()  ,  end_stash.get_mirrored_value()  ,  cptra_lock.get_mirrored_value()   );
+        end
+    endfunction
+
 `endif
