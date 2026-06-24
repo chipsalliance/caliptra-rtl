@@ -25,7 +25,7 @@ uint32_t soc_ifc_mbox_read_dataout_single() {
 uint32_t soc_ifc_mbox_dir_read_single(uint32_t rdptr) {
     return lsu_read_32(CLP_MBOX_SRAM_BASE_ADDR + rdptr);
 }
-uint32_t soc_ifc_mbox_dir_write_single(uint32_t wrptr, uint32_t wrdata) {
+void soc_ifc_mbox_dir_write_single(uint32_t wrptr, uint32_t wrdata) {
     lsu_write_32(CLP_MBOX_SRAM_BASE_ADDR + wrptr, wrdata);
 }
 
@@ -328,20 +328,20 @@ void soc_ifc_sha_accel_clr_lock() {
 }   
 
 // AXI DMA Functions
-uint8_t soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
+void soc_ifc_axi_dma_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
     soc_ifc_axi_dma_arm_send_ahb_payload(dst_addr, fixed, payload, byte_count, block_size);
     soc_ifc_axi_dma_get_send_ahb_payload(payload, byte_count);
     soc_ifc_axi_dma_wait_idle(0);
 }
 
 // AXI DMA Functions
-uint8_t soc_ifc_axi_dma_send_ahb_payload_w_error_expected(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size, uint8_t error_expected) {
+void soc_ifc_axi_dma_send_ahb_payload_w_error_expected(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size, uint8_t error_expected) {
     soc_ifc_axi_dma_arm_send_ahb_payload(dst_addr, fixed, payload, byte_count, block_size);
     soc_ifc_axi_dma_get_send_ahb_payload(payload, byte_count);
     soc_ifc_axi_dma_wait_idle_w_error_expected(0, error_expected);
 }
 
-uint8_t soc_ifc_axi_dma_arm_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
+void soc_ifc_axi_dma_arm_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
     uint32_t reg;
 
     // Arm the command
@@ -357,7 +357,7 @@ uint8_t soc_ifc_axi_dma_arm_send_ahb_payload(uint64_t dst_addr, uint8_t fixed, u
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
 }
 
-uint8_t soc_ifc_axi_dma_get_send_ahb_payload(uint32_t * payload, uint32_t byte_count) {
+void soc_ifc_axi_dma_get_send_ahb_payload(uint32_t * payload, uint32_t byte_count) {
     uint16_t mdepth;
 
     // Send data
@@ -369,19 +369,19 @@ uint8_t soc_ifc_axi_dma_get_send_ahb_payload(uint32_t * payload, uint32_t byte_c
     }
 }
 
-uint8_t soc_ifc_axi_dma_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
+void soc_ifc_axi_dma_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
     soc_ifc_axi_dma_arm_read_ahb_payload(src_addr, fixed, payload, byte_count, block_size);
     soc_ifc_axi_dma_get_read_ahb_payload(payload, byte_count);
     soc_ifc_axi_dma_wait_idle(0);
 }
 
-uint8_t soc_ifc_axi_dma_read_ahb_payload_w_error_expected(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size, uint8_t error_expected) {
+void soc_ifc_axi_dma_read_ahb_payload_w_error_expected(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size, uint8_t error_expected) {
     soc_ifc_axi_dma_arm_read_ahb_payload(src_addr, fixed, payload, byte_count, block_size);
     soc_ifc_axi_dma_get_read_ahb_payload(payload, byte_count);
     soc_ifc_axi_dma_wait_idle_w_error_expected(0, error_expected);
 }
 
-uint8_t soc_ifc_axi_dma_arm_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
+void soc_ifc_axi_dma_arm_read_ahb_payload(uint64_t src_addr, uint8_t fixed, uint32_t * payload, uint32_t byte_count, uint16_t block_size) {
     uint32_t reg;
 
     // Arm the command
@@ -398,7 +398,7 @@ uint8_t soc_ifc_axi_dma_arm_read_ahb_payload(uint64_t src_addr, uint8_t fixed, u
 
 }
 
-uint8_t soc_ifc_axi_dma_get_read_ahb_payload(uint32_t * payload, uint32_t byte_count) {
+void soc_ifc_axi_dma_get_read_ahb_payload(uint32_t * payload, uint32_t byte_count) {
     uint16_t mdepth;
     // Read data
     mdepth = (lsu_read_32(CLP_AXI_DMA_REG_CAP) & AXI_DMA_REG_CAP_FIFO_MAX_DEPTH_MASK) >> AXI_DMA_REG_CAP_FIFO_MAX_DEPTH_LOW;
@@ -410,6 +410,17 @@ uint8_t soc_ifc_axi_dma_get_read_ahb_payload(uint32_t * payload, uint32_t byte_c
 }
 
 uint8_t soc_ifc_axi_dma_send_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size) {
+    uint8_t res;
+
+    res = soc_ifc_axi_dma_send_mbox_payload_no_wait(src_addr, dst_addr, fixed, byte_count, block_size);
+
+    if (res == 0)
+        soc_ifc_axi_dma_wait_idle(1);
+
+    return res;
+}
+
+uint8_t soc_ifc_axi_dma_send_mbox_payload_no_wait(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size) {
     uint32_t reg;
 
     // Acquire the mailbox lock
@@ -444,26 +455,18 @@ uint8_t soc_ifc_axi_dma_send_mbox_payload(uint64_t src_addr, uint64_t dst_addr, 
           (fixed ? AXI_DMA_REG_CTRL_WR_FIXED_MASK : 0);
     lsu_write_32(CLP_AXI_DMA_REG_CTRL, reg);
 
-    // Check completion
-    reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
-    while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) && !(reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
-        reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
-    }
-
-    // Check status
-    if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
-        VPRINTF(FATAL, "FATAL: AXI DMA reports error status for MBOX-to-AXI xfer\n");
-        lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
-        SEND_STDOUT_CTRL(0x1);
-    }
-
-    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
     return 0;
 }
 
 uint8_t soc_ifc_axi_dma_read_mbox_payload(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size) {
-    soc_ifc_axi_dma_read_mbox_payload_no_wait(src_addr, dst_addr, fixed, byte_count, block_size);
-    soc_ifc_axi_dma_wait_idle(1);
+    uint8_t res;
+
+    res = soc_ifc_axi_dma_read_mbox_payload_no_wait(src_addr, dst_addr, fixed, byte_count, block_size);
+
+    if (res == 0)
+        soc_ifc_axi_dma_wait_idle(1);
+
+    return res;
 }
 
 uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t dst_addr, uint8_t fixed, uint32_t byte_count, uint16_t block_size) {
@@ -504,7 +507,7 @@ uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t ds
     return 0;
 }
 
-uint8_t soc_ifc_axi_dma_send_kv_to_axi_error(uint64_t dst_addr, uint32_t byte_count) {
+void soc_ifc_axi_dma_send_kv_to_axi_error(uint64_t dst_addr, uint32_t byte_count) {
     uint32_t reg;
     VPRINTF(LOW, "FW: Sending KV to AXI with ERR\n");
     reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
@@ -516,13 +519,13 @@ uint8_t soc_ifc_axi_dma_send_kv_to_axi_error(uint64_t dst_addr, uint32_t byte_co
     lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg | AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
 }
 
-uint8_t soc_ifc_axi_dma_send_kv_to_axi(uint64_t dst_addr, uint32_t byte_count) {
+void soc_ifc_axi_dma_send_kv_to_axi(uint64_t dst_addr, uint32_t byte_count) {
     VPRINTF(LOW, "FW: Sending KV to AXI\n");
     soc_ifc_axi_dma_send_kv_to_axi_no_wait(dst_addr, byte_count);
     soc_ifc_axi_dma_wait_idle(0);
 }
 
-uint8_t soc_ifc_axi_dma_send_kv_to_axi_no_wait(uint64_t dst_addr, uint32_t byte_count) {
+void soc_ifc_axi_dma_send_kv_to_axi_no_wait(uint64_t dst_addr, uint32_t byte_count) {
     uint32_t reg;
 
     // Arm the command
@@ -537,22 +540,22 @@ uint8_t soc_ifc_axi_dma_send_kv_to_axi_no_wait(uint64_t dst_addr, uint32_t byte_
 
 }
 
-uint8_t soc_ifc_axi_dma_send_axi_to_axi_error(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
+void soc_ifc_axi_dma_send_axi_to_axi_error(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
     soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, src_fixed, dst_addr, dst_fixed, byte_count, block_size,  aes_mode, aes_gcm_mode);
     soc_ifc_axi_dma_wait_error(0);
 }
 
-uint8_t soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
+void soc_ifc_axi_dma_send_axi_to_axi(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
     soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, src_fixed, dst_addr, dst_fixed, byte_count, block_size,  aes_mode, aes_gcm_mode);
     soc_ifc_axi_dma_wait_idle(0);
 }
 
-uint8_t soc_ifc_axi_dma_send_axi_to_axi_w_error_expected(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode, uint8_t error_expected) {
+void soc_ifc_axi_dma_send_axi_to_axi_w_error_expected(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode, uint8_t error_expected) {
     soc_ifc_axi_dma_send_axi_to_axi_no_wait(src_addr, src_fixed, dst_addr, dst_fixed, byte_count, block_size,  aes_mode, aes_gcm_mode);
     soc_ifc_axi_dma_wait_idle_w_error_expected(0, error_expected);
 }
 
-uint8_t soc_ifc_axi_dma_send_axi_to_axi_no_wait(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
+void soc_ifc_axi_dma_send_axi_to_axi_no_wait(uint64_t src_addr, uint8_t src_fixed, uint64_t dst_addr, uint8_t dst_fixed, uint32_t byte_count, uint16_t block_size, uint8_t aes_mode, uint8_t aes_gcm_mode) {
     uint32_t reg;
 
     // Arm the command
@@ -574,7 +577,7 @@ uint8_t soc_ifc_axi_dma_send_axi_to_axi_no_wait(uint64_t src_addr, uint8_t src_f
 
 }
 
-uint8_t soc_ifc_axi_dma_wait_idle(uint8_t clr_lock) {
+void soc_ifc_axi_dma_wait_idle(uint8_t clr_lock) {
     uint32_t reg;
 
     // Check completion
@@ -595,7 +598,7 @@ uint8_t soc_ifc_axi_dma_wait_idle(uint8_t clr_lock) {
     }
 }
 
-uint8_t soc_ifc_axi_dma_wait_error(uint8_t clr_lock) {
+void soc_ifc_axi_dma_wait_error(uint8_t clr_lock) {
     uint32_t reg;
 
     // Check completion
@@ -747,7 +750,7 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
 }
 
 
-uint8_t soc_ifc_axi_dma_wait_idle_w_error_expected(uint8_t clr_lock, uint8_t error_expected) {
+void soc_ifc_axi_dma_wait_idle_w_error_expected(uint8_t clr_lock, uint8_t error_expected) {
     
     uint32_t reg;
     uint32_t error_observed = 0;

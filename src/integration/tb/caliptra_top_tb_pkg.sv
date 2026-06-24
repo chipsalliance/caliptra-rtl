@@ -81,6 +81,8 @@ typedef struct packed {
     logic en_recovery_emulation;
     logic dma_gen_done;
     logic [99:0] [11:0] dma_gen_block_size;
+    logic fifo_rd_error;
+    logic fifo_wr_error;
 } axi_complex_ctrl_t;
 
 // Transfer types enum

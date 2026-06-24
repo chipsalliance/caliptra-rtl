@@ -334,6 +334,10 @@ module caliptra_top_tb_services
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Switch to MANUF device lifecycle state
+    //      16'h527F        - Inject FIFO AXI read errors
+    //      16'h537F        - Inject FIFO AXI write errors
+    //      16'h547F        - Stop injecting FIFO AXI read errors
+    //      16'h557F        - Stop injecting FIFO AXI write errors
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
     //         8'h88        - Toggle recovery interface emulation in AXI complex
     //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
@@ -553,6 +557,8 @@ module caliptra_top_tb_services
             axi_complex_ctrl.fifo_clear            <= 1'b0;
             axi_complex_ctrl.rand_delays           <= 1'b0;
             axi_complex_ctrl.en_recovery_emulation <= 1'b0;
+            axi_complex_ctrl.fifo_rd_error         <= 1'b0;
+            axi_complex_ctrl.fifo_wr_error         <= 1'b0;
         end
         else if((WriteData[7:0] == 8'h88) && mailbox_write) begin
             axi_complex_ctrl.en_recovery_emulation <= ~axi_complex_ctrl.en_recovery_emulation; // Toggle option
@@ -574,6 +580,18 @@ module caliptra_top_tb_services
         end
         else if((WriteData[7:0] == 8'h8f) && mailbox_write) begin
             axi_complex_ctrl.rand_delays    <= ~axi_complex_ctrl.rand_delays; // Toggle option
+        end
+        else if((WriteData[15:0] == 16'h527F) && mailbox_write) begin
+            axi_complex_ctrl.fifo_rd_error  <= 1'b1;
+        end
+        else if((WriteData[15:0] == 16'h537F) && mailbox_write) begin
+            axi_complex_ctrl.fifo_wr_error  <= 1'b1;
+        end
+        else if((WriteData[15:0] == 16'h547F) && mailbox_write) begin
+            axi_complex_ctrl.fifo_rd_error  <= 1'b0;
+        end
+        else if((WriteData[15:0] == 16'h557F) && mailbox_write) begin
+            axi_complex_ctrl.fifo_wr_error  <= 1'b0;
         end
         else begin
             axi_complex_ctrl.fifo_clear     <= 1'b0;
