@@ -642,7 +642,7 @@ always_comb begin
   extend_pcr_entry = '0;
   extend_write_trigger = 1'b0;
 
-  case (extend_fsm_ps)
+  case (extend_fsm_ps) inside
     EXTEND_IDLE: begin
       if (iccm_mode & (sha_fsm_ps == SHA_DONE) & ~iccm_mode_done)
         extend_fsm_ns = EXTEND_SAVE_DIGEST;
