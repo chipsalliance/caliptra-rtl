@@ -493,14 +493,16 @@ always_comb begin
   end
 end
 
-// HW SHA acc lock acquire: when iccm_mode engages and the lock is free,
-// pulse hwclr to drop LOCK.value to 0 (HW holds it). The pulse self-clears
-// after one cycle once LOCK.value is 0.
-always_comb iccm_lock_acquire = iccm_mode & hwif_out.LOCK.LOCK.value;
-assign hwif_in.LOCK.LOCK.hwclr = iccm_lock_acquire;
+// HW SHA acc lock acquire: pulse hwset on the very first ICCM activity
+// (snoop or iccm_lock_i). Gated by ~iccm_armed so the pulse fires exactly
+// once at the start of the measurement, not again during release.
+always_comb iccm_lock_acquire = (iccm_hash_dv_i | iccm_lock_i) &
+                                ~soc_has_lock & ~iccm_armed & ~iccm_mode_done &
+                                ~hwif_out.LOCK.LOCK.value;
+assign hwif_in.LOCK.LOCK.hwset = iccm_lock_acquire;
 
-// HW lock release: set lock back to 1 (unlocked) after ICCM hash PCR write completes
-assign hwif_in.LOCK.LOCK.hwset = iccm_pcr_dest_done & ~iccm_mode_done;
+// HW lock release: clear LOCK back to 0 (free) after extend completes.
+assign hwif_in.LOCK.LOCK.hwclr = iccm_pcr_dest_done & ~iccm_mode_done;
 
 genvar i;
 generate

@@ -2455,7 +2455,7 @@ Both PCR entries are write-protected: only the ICCM hash engine (`pv_write[1]`) 
 
 #### Operation
 
-1. **Autonomous arming**: HW measures the ICCM region automatically. The existing per-bank ICCM-write snoop sets a sticky internal `iccm_armed` flag on the very first write it sees after reset (or after `fw_update_reset` releases the `iccm_unlock`-driven clear). On the same cycle, HW acquires the SHA accelerator lock via the LOCK register's `hwclr` path, blocking any concurrent SOC access for the duration of the measurement. Firmware does not need to take any action to enable the feature; ROM simply performs the memcpy as normal.
+1. **Autonomous arming**: HW measures the ICCM region automatically. The existing per-bank ICCM-write snoop sets a sticky internal `iccm_armed` flag on the very first write it sees after reset (or after `fw_update_reset` releases the `iccm_unlock`-driven clear). On the same cycle, HW acquires the SHA accelerator lock via the LOCK register's `hwset` path, blocking any concurrent SOC access for the duration of the measurement. Firmware does not need to take any action to enable the feature; ROM simply performs the memcpy as normal.
 
 2. **ICCM write capture**: As ROM copies firmware from the mailbox to ICCM via CPU store instructions, each ICCM bank write is captured by the SHA accelerator and accumulated into a SHA-384 hash. The hash runs in parallel with the copy — no backpressure or stall. Data is hashed as little-endian 32-bit words (native CPU byte order). The combinational OR of the live snoop into the `iccm_mode` enable guarantees the very first dword is captured in the same cycle, before `iccm_armed` itself updates on the next clock edge.
 
