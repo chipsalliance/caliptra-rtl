@@ -17,10 +17,12 @@
 reg {
     name="SHA Accelerator Lock";
     desc="SHA lock register for SHA access, reading 0 will set the lock, Write 1 to clear the lock.
-          HW clears the lock after ICCM hash mode completes.
+          HW autonomously acquires the lock (hwclr) on the first ICCM write
+          when the ICCM hash measurement engages, and releases it (hwset)
+          after the PCR4/PCR5 extend completes.
           [br]Caliptra Access: RW
           [br]SOC Access:      RW";
-    field {rset; woclr; sw=rw; hw=r; hwset; swwe=valid_user; swmod=true;} LOCK=1;
+    field {rset; woclr; sw=rw; hw=r; hwset; hwclr; swwe=valid_user; swmod=true;} LOCK=1;
 } LOCK;
 
 reg {
@@ -63,15 +65,6 @@ reg {
               [br]Caliptra Access: RW
               [br]SOC Access:      RW";
         sw=rw; hw=r; swwe=valid_user;} ENDIAN_TOGGLE=0;
-    field {
-        name="ICCM Hash Mode";
-        desc="When set to 1 by ROM, SHA accelerator enters ICCM hash mode.
-              SHA-384 is forced, lock is auto-acquired, and ICCM write data
-              is hashed until iccm_lock asserts. Write-once per boot: HW clears
-              this field after hash completes and blocks re-trigger.
-              [br]Caliptra Access: RW
-              [br]SOC Access:      RW";
-        sw=rw; hw=r; hwclr; swwe=valid_user;} ICCM_MODE=0;
 } MODE;
 
 reg {

@@ -7,6 +7,7 @@ package sha512_acc_csr_pkg;
     localparam SHA512_ACC_CSR_MIN_ADDR_WIDTH = 12;
 
     typedef struct packed{
+        logic hwclr;
         logic hwset;
     } sha512_acc_csr__LOCK__LOCK__in_t;
 
@@ -21,14 +22,6 @@ package sha512_acc_csr_pkg;
     typedef struct packed{
         sha512_acc_csr__USER__USER__in_t USER;
     } sha512_acc_csr__USER__in_t;
-
-    typedef struct packed{
-        logic hwclr;
-    } sha512_acc_csr__MODE__ICCM_MODE__in_t;
-
-    typedef struct packed{
-        sha512_acc_csr__MODE__ICCM_MODE__in_t ICCM_MODE;
-    } sha512_acc_csr__MODE__in_t;
 
     typedef struct packed{
         logic hwclr;
@@ -104,7 +97,6 @@ package sha512_acc_csr_pkg;
         logic cptra_pwrgood;
         sha512_acc_csr__LOCK__in_t LOCK;
         sha512_acc_csr__USER__in_t USER;
-        sha512_acc_csr__MODE__in_t MODE;
         sha512_acc_csr__EXECUTE__in_t EXECUTE;
         sha512_acc_csr__STATUS__in_t STATUS;
         sha512_acc_csr__DIGEST__in_t [16-1:0]DIGEST;
@@ -138,13 +130,8 @@ package sha512_acc_csr_pkg;
     } sha512_acc_csr__MODE__ENDIAN_TOGGLE__out_t;
 
     typedef struct packed{
-        logic value;
-    } sha512_acc_csr__MODE__ICCM_MODE__out_t;
-
-    typedef struct packed{
         sha512_acc_csr__MODE__MODE__out_t MODE;
         sha512_acc_csr__MODE__ENDIAN_TOGGLE__out_t ENDIAN_TOGGLE;
-        sha512_acc_csr__MODE__ICCM_MODE__out_t ICCM_MODE;
     } sha512_acc_csr__MODE__out_t;
 
     typedef struct packed{

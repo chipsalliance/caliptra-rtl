@@ -72,6 +72,8 @@ module sha512_acc_top
   // ICCM hash mode signals
   logic iccm_mode;
   logic iccm_mode_done;
+  logic iccm_armed;             
+  logic iccm_lock_acquire;        
   logic iccm_mode_block_we;
   logic iccm_mode_execute;
   logic [31:0] iccm_num_bytes_wr;
@@ -254,8 +256,13 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb datain_write = hwif_in.valid_user & hwif_out.DATAIN.DATAIN.swmod;
   always_comb execute_set = hwif_out.EXECUTE.EXECUTE.value;
 
-  // ICCM mode: active when MODE.ICCM_MODE is set and not yet done
-  always_comb iccm_mode = hwif_out.MODE.ICCM_MODE.value & ~iccm_mode_done;
+  // ICCM mode: arms on the first ICCM write the snoop sees, or on
+  // iccm_lock_i for the zero-length case. The OR with the live trigger
+  // engages the same cycle the snoop fires to capture the first dword
+  // without a one-cycle slip.
+  always_comb iccm_mode = (iccm_armed |
+                           ((iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock)) &
+                          ~iccm_mode_done;
   // iccm_lock rising edge triggers finalization (equivalent to execute_set)
   always_comb iccm_mode_execute = iccm_mode & iccm_lock_i;
   // block_we for iccm mode: write when data valid and not stalled by block_full
@@ -486,9 +493,11 @@ always_comb begin
   end
 end
 
-// ICCM_MODE HW interface: clear field and block re-trigger after completion.
-// Also immediately clear if SoC holds the lock (prevent external use of iccm_mode).
-assign hwif_in.MODE.ICCM_MODE.hwclr = iccm_mode_done | iccm_pcr_dest_done | soc_has_lock;
+// HW SHA acc lock acquire: when iccm_mode engages and the lock is free,
+// pulse hwclr to drop LOCK.value to 0 (HW holds it). The pulse self-clears
+// after one cycle once LOCK.value is 0.
+always_comb iccm_lock_acquire = iccm_mode & hwif_out.LOCK.LOCK.value;
+assign hwif_in.LOCK.LOCK.hwclr = iccm_lock_acquire;
 
 // HW lock release: set lock back to 1 (unlocked) after ICCM hash PCR write completes
 assign hwif_in.LOCK.LOCK.hwset = iccm_pcr_dest_done & ~iccm_mode_done;
@@ -555,6 +564,18 @@ always_ff @(posedge clk or negedge rst_b) begin
     iccm_mode_done <= 1'b1;
 end
 
+// ICCM armed: sticky, set on the first ICCM write the snoop sees, or on
+// iccm_lock_i for the zero-length case. Cleared by iccm_unlock_i (fired
+// by the boot FSM on fw_update_reset).
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    iccm_armed <= 1'b0;
+  else if (iccm_unlock_i)
+    iccm_armed <= 1'b0;
+  else if ((iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock & ~iccm_mode_done)
+    iccm_armed <= 1'b1;
+end
+
 // ICCM byte counter: tracks total bytes written for SHA padding
 always_ff @(posedge clk or negedge rst_b) begin
   if (!rst_b)
@@ -564,17 +585,6 @@ always_ff @(posedge clk or negedge rst_b) begin
   else if (iccm_mode & iccm_mode_block_we)
     iccm_num_bytes_wr <= iccm_num_bytes_wr + 32'd4;
 end
-
-// Lock auto-acquisition: when ROM sets ICCM_MODE and lock is free,
-// HW acquires the lock. We tie into the existing lock_set path by
-// ensuring LOCK.value is set. The simplest approach: use hwif_in to
-// force LOCK when entering iccm_mode.
-// Note: The LOCK register in RDL uses rset (reset=1), woclr, swmod.
-// For iccm_mode, we hold the lock by blocking the arc_IDLE signal
-// (already done above: arc_IDLE = ~LOCK.value & ~iccm_mode).
-// The lock is acquired by ROM doing a normal LOCK read (gets lock=0,
-// sets it to 1), then writing MODE.ICCM_MODE=1. This is the expected
-// ROM sequence: acquire lock, set mode, then memcpy.
 
 //----------------------------------------------------------------
 // PCR Extend FSM
