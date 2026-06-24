@@ -1189,9 +1189,9 @@ module caliptra_top_sva
 
   cascade_wdt_t2_pet: assert property (
     @(posedge `SVA_RDC_CLK)
-    (`WDT_PATH.timer2_restart && !`WDT_PATH.timer2_en && !`WDT_PATH.t2_timeout) |=> (`WDT_PATH.timer2_count == 'h0)
+    (`WDT_PATH.timer2_restart && !`WDT_PATH.timer2_en && !`WDT_PATH.t2_timeout) |=> (`WDT_PATH.timer2_count >= $past(`WDT_PATH.timer2_count)) //If timer2 is not counting yet, it will be at 0. If it started counting, it will increment every cycle and should not reset on restart
   )
-  else $display("SVA ERROR: [Cascade] WDT Timer2 did not restart on pet");
+  else $display("SVA ERROR: [Cascade] WDT Timer2 unexpectedly restarted on pet in cascade mode");
 
   cascade_wdt_t1_service: assert property (
     @(posedge `SVA_RDC_CLK)

@@ -59,6 +59,36 @@ void main() {
     init_interrupts();
     
     if(rst_count == 0) {
+        // Cascade mode + TIMER2_RESTART stimulus for the WDT SVA
+        VPRINTF(LOW, "Cascade mode + TIMER2_RESTART stimulus\n");
+        // Mask T1/T2 timeout intr sources so ISR cannot race with SW poll
+        *soc_intr_en = 0;
+        // timer2_en is 0 by default after reset (cascade mode)
+        *wdt_timer1_en = SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK;
+        set_t1_period(0x00000040, 0x00000000);
+
+        // Stimulus #1: timer2 still idle (t1_timeout=0).
+        *wdt_timer1_ctrl = SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK;
+        *wdt_timer2_ctrl = SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK;
+        VPRINTF(LOW, "Issued TIMER1_RESTART and TIMER2_RESTART (timer2 idle in cascade)\n");
+
+        VPRINTF(LOW, "Stall until timer1 times out (cascade mode)\n");
+        while (!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK));
+        VPRINTF(LOW, "WDT T1 timed out - timer2 now counting in cascade mode\n");
+
+        // Stimulus #2: timer2 actively counting in cascade (t1_timeout=1)
+        *wdt_timer2_ctrl = SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_MASK;
+        VPRINTF(LOW, "Issued TIMER2_RESTART (timer2 actively counting in cascade)\n");
+
+        // Restore state: W1C T1 timeout pulses serviced -> in cascade
+        // mode this restarts both timer1 and timer2 counters to 0.
+        lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R,
+                     SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK);
+        set_default_t1_period();
+        *wdt_timer1_en = 0;
+        // Restore intr enables for the rest of the test
+        *soc_intr_en = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER1_TIMEOUT_EN_MASK | SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER2_TIMEOUT_EN_MASK;
+
         VPRINTF(LOW, "Cascaded mode\n");
         //Enable WDT timer1
         *wdt_timer1_en = SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK;
