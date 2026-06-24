@@ -358,10 +358,13 @@ localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_CDI        = (9'd1 << KV_DEST_
 localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_ECC_PKEY   = (9'd1 << KV_DEST_IDX_ECC_PKEY);
 localparam logic [KV_NUM_READ-1:0] KV_EXPECTED_DV_MLDSA_SEED = (9'd1 << KV_DEST_IDX_MLDSA_SEED);
 
-// Expected minimum crypto write counts for DICE chain integrity
-localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_FMC_CDI = 3'd4; // IDevID CDI + LDEV intermediate + LDEV CDI + FMC Alias CDI
-localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_FMC_ECDSA = 3'd2; // IDevID ECC keygen + FMC Alias ECC keygen
-localparam logic [WRITE_CNT_W-1:0] KV_MIN_WRITES_FMC_MLDSA = 3'd2; // IDevID MLDSA keygen + FMC Alias MLDSA keygen
+// Expected exact crypto write counts for DICE chain integrity.
+// An exact match detects both truncated chains (too few writes) and
+// glitch-induced replays (too many writes, potentially rolling back
+// to an earlier intermediate key).
+localparam logic [WRITE_CNT_W-1:0] KV_EXPECTED_WRITES_FMC_CDI   = 3'd4; // IDevID CDI + LDEV intermediate + LDEV CDI + FMC Alias CDI
+localparam logic [WRITE_CNT_W-1:0] KV_EXPECTED_WRITES_FMC_ECDSA = 3'd2; // IDevID ECC keygen + FMC Alias ECC keygen
+localparam logic [WRITE_CNT_W-1:0] KV_EXPECTED_WRITES_FMC_MLDSA = 3'd2; // IDevID MLDSA keygen + FMC Alias MLDSA keygen
 
 always_comb begin : KV_MONITOR
     kv_monitor_alert = '0;
@@ -375,10 +378,10 @@ always_comb begin : KV_MONITOR
         kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_CDI].dest_valid.value    != KV_EXPECTED_DV_CDI);
         kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_ECDSA].dest_valid.value  != KV_EXPECTED_DV_ECC_PKEY);
         kv_monitor_alert |= (kv_reg_hwif_out.KEY_CTRL[KV_SLOT_FMC_MLDSA].dest_valid.value  != KV_EXPECTED_DV_MLDSA_SEED);
-        // Write counter checks -- detect truncated DICE chains
-        kv_monitor_alert |= (write_count_fmc_cdi < KV_MIN_WRITES_FMC_CDI);
-        kv_monitor_alert |= (write_count_fmc_ecdsa < KV_MIN_WRITES_FMC_ECDSA);
-        kv_monitor_alert |= (write_count_fmc_mldsa < KV_MIN_WRITES_FMC_MLDSA);
+        // Write counter checks -- detect truncated OR replayed DICE chains
+        kv_monitor_alert |= (write_count_fmc_cdi   != KV_EXPECTED_WRITES_FMC_CDI);
+        kv_monitor_alert |= (write_count_fmc_ecdsa != KV_EXPECTED_WRITES_FMC_ECDSA);
+        kv_monitor_alert |= (write_count_fmc_mldsa != KV_EXPECTED_WRITES_FMC_MLDSA);
     end
 
     // FMC-to-RT: check dest_valid of preserved RT slots (4,5,9)

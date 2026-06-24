@@ -161,10 +161,13 @@ void main() {
             // The forced bit-flip corrupts the shadow flop permanently
             // (err_storage is combinational: ~shadow_q != committed_q).
             // This is by design -- recovery requires reset.
+            //
+            // Uses commit_iccm_shadows() (no lock) so write attempts
+            // during err_storage produce we=1 (coverage: write×err_storage).
             // ========================================================
 
-            // Program ICCM region registers (commits shadow values)
-            program_iccm_regions();
+            // Commit shadow values (2-phase) without locking
+            commit_iccm_shadows();
 
             // Save the committed value before injection
             uint32_t orig_val = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR);

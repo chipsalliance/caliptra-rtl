@@ -103,25 +103,17 @@ void main() {
                       (uint32_t *)&iccm_code1_end);
     } else if (is_warm) {
         // ============================================================
-        // Boot 1: Warm reset -- full DICE re-derivation required
+        // Boot 1: Warm reset -- keys persist (lock_wr in non-core domain),
+        // ROM does NOT re-derive DICE keys on warm reset.
         // ============================================================
         boot_count = 1;
         VPRINTF(LOW, "============================================\n");
         VPRINTF(LOW, " Boot 1: Warm Reset\n");
         VPRINTF(LOW, "============================================\n");
 
-        VPRINTF(LOW, "ROM: Warm reset -- re-deriving DICE keys...\n");
-        populate_dice_slots();
+        VPRINTF(LOW, "ROM: Warm reset -- keys persist, skipping DICE derivation\n");
 
-        // ICCM content persists across warm reset -- re-copy for safety
-        VPRINTF(LOW, "ROM: Re-copying FMC code to ICCM\n");
-        copy_to_iccm(FMC_ICCM_ADDR,
-                      (uint32_t *)&iccm_code0_start,
-                      (uint32_t *)&iccm_code0_end);
-        VPRINTF(LOW, "ROM: Re-copying RT code to ICCM\n");
-        copy_to_iccm(RT_ICCM_ADDR,
-                      (uint32_t *)&iccm_code1_start,
-                      (uint32_t *)&iccm_code1_end);
+        // ICCM content persists across warm reset -- no re-copy needed
     } else {
         // ============================================================
         // Boot 2: Firmware update reset -- keys persist, skip derivation
