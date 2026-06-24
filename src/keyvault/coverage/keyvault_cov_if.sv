@@ -63,6 +63,32 @@ interface keyvault_cov_if
     assign ahb_write = kv.kv_ahb_slv1.dv & kv.kv_ahb_slv1.write;
     assign ahb_read  = kv.kv_ahb_slv1.dv & ~kv.kv_ahb_slv1.write;
 
+    // Multi-write error: >1 crypto write client active simultaneously
+    logic kv_multi_write_err;
+    assign kv_multi_write_err = kv.kv_multi_write_err;
+
+    logic prev_multi_write_err;
+    always_ff @(posedge clk or negedge rst_b) begin
+        if (!rst_b)
+            prev_multi_write_err <= '0;
+        else
+            prev_multi_write_err <= kv_multi_write_err;
+    end
+
+    logic multi_write_event;
+    assign multi_write_event = kv_multi_write_err & ~prev_multi_write_err;
+
+    covergroup cg_multi_write @(posedge clk iff multi_write_event);
+        option.per_instance = 1;
+        option.name = "cg_multi_write";
+
+        cp_multi_write: coverpoint kv_multi_write_err {
+            bins detected = {1'b1};
+        }
+    endgroup
+
+    cg_multi_write cg_multi_write_inst = new();
+
     covergroup keyvault_top_cov_grp @(posedge clk);
         option.per_instance = 1;
         debug: coverpoint cptra_in_debug_scan_mode; //debugUnlock_or_scan_mode_switch;
