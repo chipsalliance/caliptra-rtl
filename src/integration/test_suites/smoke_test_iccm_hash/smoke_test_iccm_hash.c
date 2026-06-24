@@ -32,12 +32,6 @@ volatile uint32_t  intr_count       = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-// ICCM_MODE field is bit[2] of the MODE register (added in this feature).
-// Until CSR is regenerated, define manually.
-#ifndef SHA512_ACC_CSR_MODE_ICCM_MODE_MASK
-#define SHA512_ACC_CSR_MODE_ICCM_MODE_MASK (0x4)
-#endif
-
 // Expected PCR4 after extend: SHA-384(48_zeros || SHA-384(iccm_write_stream))
 // ICCM writes: 4 words {0x1, 0x2, 0x3, 0x4} as little-endian (no byte swap).
 static const uint32_t expected_pcr4[12] = {
@@ -57,31 +51,8 @@ void main(void) {
     uint32_t reg_val;
     uint8_t fail_cmd = 0x1;
 
-    // ---------------------------------------------------------------
-    // Step 1: Acquire SHA accelerator lock
-    // The LOCK register resets to 1 (locked). Write-1-to-clear releases it,
-    // then the next read returns 0 (acquired) or 1 (contention).
-    // ---------------------------------------------------------------
-    VPRINTF(LOW, "Releasing SHA acc lock (reset default)...\n");
-    lsu_write_32(CLP_SHA512_ACC_CSR_LOCK, SHA512_ACC_CSR_LOCK_LOCK_MASK);
-
-    VPRINTF(LOW, "Acquiring SHA acc lock...\n");
-    do {
-        reg_val = lsu_read_32(CLP_SHA512_ACC_CSR_LOCK);
-    } while (reg_val & SHA512_ACC_CSR_LOCK_LOCK_MASK);
-    VPRINTF(LOW, "SHA acc lock acquired\n");
-
-    // ---------------------------------------------------------------
-    // Step 2: Set ICCM_MODE in SHA acc MODE register
-    // ---------------------------------------------------------------
-    VPRINTF(LOW, "Setting ICCM_MODE...\n");
-    lsu_write_32(CLP_SHA512_ACC_CSR_MODE, SHA512_ACC_CSR_MODE_ICCM_MODE_MASK);
-
-    // ---------------------------------------------------------------
-    // Step 3: Write known data to ICCM
-    // The AND-OR mux in caliptra_top captures each ICCM write and
-    // feeds it to the SHA accelerator in iccm_mode.
-    // ---------------------------------------------------------------
+    // HW autonomously arms the SHA accelerator on the first ICCM write,
+    // so firmware just writes the data and asserts the ICCM lock.
     VPRINTF(LOW, "Writing test data to ICCM...\n");
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
     iccm[0] = 0x00000001;
@@ -89,19 +60,11 @@ void main(void) {
     iccm[2] = 0x00000003;
     iccm[3] = 0x00000004;
 
-    // ---------------------------------------------------------------
-    // Step 4: Lock ICCM (triggers hash finalization)
-    // ---------------------------------------------------------------
     VPRINTF(LOW, "Locking ICCM (triggers hash finalize)...\n");
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK,
                  SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK);
 
-    // ---------------------------------------------------------------
-    // Step 5: Wait for hash completion
-    // The SHA engine processes padding and computes the final digest,
-    // then the kv_write_client sequences it into PCR4.
-    // Poll until PCR4[0] is non-zero (digest written).
-    // ---------------------------------------------------------------
+    // Wait for the extend FSM to land PCR4 (poll dword[0] non-zero).
     VPRINTF(LOW, "Waiting for PCR4 write...\n");
     uint32_t timeout = 10000;
     while (timeout--) {
@@ -114,9 +77,6 @@ void main(void) {
         while(1);
     }
 
-    // ---------------------------------------------------------------
-    // Step 6: Read PCR4 and compare against expected SHA-384 digest
-    // ---------------------------------------------------------------
     VPRINTF(LOW, "Checking PCR4 value...\n");
     volatile uint32_t *pcr4 = (volatile uint32_t *)CLP_PV_REG_PCR_ENTRY_4_0;
     uint8_t mismatch = 0;

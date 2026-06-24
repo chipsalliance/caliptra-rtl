@@ -25,12 +25,6 @@
 #include "riscv_hw_if.h"
 #include <stdint.h>
 
-// ICCM_MODE field (bit 2 of MODE register) -- fallback if caliptra_reg.h
-// pre-dates the ICCM hash feature
-#ifndef SHA512_ACC_CSR_MODE_ICCM_MODE_MASK
-#define SHA512_ACC_CSR_MODE_ICCM_MODE_MASK (0x4)
-#endif
-
 // Number of dwords in a single PCR entry (384-bit / 32-bit)
 #define ICCM_HASH_PCR_DWORDS 12
 
@@ -46,16 +40,17 @@ extern const uint32_t expected_default_iccm_hash_pcr[ICCM_HASH_PCR_DWORDS];
 // ---- SHA accelerator + ICCM hash flow ----
 
 // Acquire SHA acc lock: release reset-default lock, then read-to-acquire.
-// Returns 1 on success, 0 on timeout.
+// Returns 1 on success, 0 on timeout. (Kept for the sha_ctrl_extend /
+// fw_write_attack helpers below; not used by run_default_iccm_hash.)
 uint8_t acquire_sha_lock(void);
 
 // Wait for PCR4 to be written by the extend FSM (poll dword[0] non-zero).
 // Returns 1 on success, 0 on timeout.
 uint8_t wait_pcr4_ready(void);
 
-// Run an ICCM hash with the default 64-word pattern. Acquires lock, sets
-// ICCM_MODE, writes data to ICCM, asserts iccm_lock, waits for PCR4.
-// Returns 1 on success, 0 on timeout.
+// Run an ICCM hash with the default 64-word pattern. Writes data to ICCM
+// (the ICCM-write snoop engages the hash on the first write), asserts
+// iccm_lock, waits for PCR4. Returns 1 on success, 0 on timeout.
 uint8_t run_default_iccm_hash(void);
 
 // ---- Regular sha512_ctrl pcr_hash_extend driver ----

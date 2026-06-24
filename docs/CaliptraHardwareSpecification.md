@@ -2455,9 +2455,9 @@ Both PCR entries are write-protected: only the ICCM hash engine (`pv_write[1]`) 
 
 #### Operation
 
-1. **ROM triggers ICCM mode**: After verifying the firmware image, ROM acquires the SHA accelerator lock and sets `MODE.ICCM_MODE = 1`. This arms the hash engine to capture ICCM writes.
+1. **Autonomous arming**: HW measures the ICCM region automatically. The existing per-bank ICCM-write snoop sets a sticky internal `iccm_armed` flag on the very first write it sees after reset (or after `fw_update_reset` releases the `iccm_unlock`-driven clear). On the same cycle, HW acquires the SHA accelerator lock via the LOCK register's `hwclr` path, blocking any concurrent SOC access for the duration of the measurement. Firmware does not need to take any action to enable the feature; ROM simply performs the memcpy as normal.
 
-2. **ICCM write capture**: As ROM copies firmware from the mailbox to ICCM via CPU store instructions, each ICCM bank write is captured by the SHA accelerator and accumulated into a SHA-384 hash. The hash runs in parallel with the copy — no backpressure or stall. Data is hashed as little-endian 32-bit words (native CPU byte order).
+2. **ICCM write capture**: As ROM copies firmware from the mailbox to ICCM via CPU store instructions, each ICCM bank write is captured by the SHA accelerator and accumulated into a SHA-384 hash. The hash runs in parallel with the copy — no backpressure or stall. Data is hashed as little-endian 32-bit words (native CPU byte order). The combinational OR of the live snoop into the `iccm_mode` enable guarantees the very first dword is captured in the same cycle, before `iccm_armed` itself updates on the next clock edge.
 
 3. **Finalization on ICCM lock**: When ROM sets `INTERNAL_ICCM_LOCK`, the SHA accelerator finalizes the hash (padding and last compression), producing a 384-bit ICCM digest.
 
@@ -2466,11 +2466,12 @@ Both PCR entries are write-protected: only the ICCM hash engine (`pv_write[1]`) 
    - Reads PCR5 current value, computes `SHA-384(PCR5 || ICCM_digest)`, writes result to PCR5
    - The extend uses the same `sha512_core` instance with the same byte ordering as the normal PCR hash extend path, ensuring consistent results
 
-5. **Lock release**: After both PCR extends complete, `ICCM_MODE` is marked done and the SHA accelerator lock is released for normal firmware use.
+5. **Lock release**: After both PCR extends complete, the sticky `iccm_mode_done` flag latches (blocking re-trigger until the next `iccm_unlock`) and the SHA accelerator lock is released for normal firmware use.
 
 #### Security properties
 
-- ICCM mode is write-once per boot cycle: firmware cannot re-trigger it after completion to overwrite PCR4/PCR5
+- HW-autonomous arming closes the bypass window where firmware could "forget" to enable the feature — the hash starts unconditionally on the first ICCM write the snoop sees
+- ICCM measurement is single-shot per boot cycle: once `iccm_mode_done` latches, firmware cannot re-trigger it to overwrite PCR4/PCR5
 - The hash captures the ground truth of ICCM write data at the memory bank interface — eliminating TOCTOU gaps between verification and copy
 - Skipping any step (trigger, copy, or lock) results in empty PCRs, causing attestation failure
 - The feature operates correctly regardless of `boot_flow_monitor_en` — if debug-unlocked tests skip ICCM mode, PCRs stay empty and attestation fails (no security bypass)

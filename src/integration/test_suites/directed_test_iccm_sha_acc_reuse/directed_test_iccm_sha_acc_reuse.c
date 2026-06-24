@@ -84,8 +84,7 @@ void main(void) {
 
     // Step 3: streaming SHA-384 of {0x01..0x04}, verify digest
     VPRINTF(LOW, "Streaming SHA-384 to verify accelerator still works...\n");
-    // SHA-384, no endian toggle, streaming (MODE.MODE=0, ENDIAN_TOGGLE=0,
-    // ICCM_MODE=0)
+    // SHA-384, no endian toggle, streaming (MODE.MODE=0, ENDIAN_TOGGLE=0)
     lsu_write_32(CLP_SHA512_ACC_CSR_MODE, 0);
     lsu_write_32(CLP_SHA512_ACC_CSR_DLEN, 16);
     lsu_write_32(CLP_SHA512_ACC_CSR_DATAIN, 0x00000001);

@@ -11,4 +11,3 @@
 OFILES += iccm_hash.o
 AUX_LIB_DIR += $(CALIPTRA_ROOT)/src/integration/test_suites/libs/iccm_hash
 AUX_HEADER_FILES += $(CALIPTRA_ROOT)/src/integration/test_suites/libs/iccm_hash/iccm_hash.h
-
