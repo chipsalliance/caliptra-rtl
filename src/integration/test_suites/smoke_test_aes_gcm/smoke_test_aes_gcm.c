@@ -15,10 +15,14 @@
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
+#include "caliptra_rtl_lib.h"
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
 #include "printf.h"
 #include "aes.h"
+
+const uint32_t iteration_count = 2;
+volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -64,6 +68,18 @@ Ciphertext = 42831ec2217774244b7221b784d0d49ce3aa212f2c02a4e035c17e2329aca12e21d
 AAD = feedfacedeadbeeffeedfacedeadbeefabaddad2
 Tag = 5bc94fbc3221a5db94fae95ae7121a47
 */
+
+void randomize_entropy() {
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_0, xorshift32());
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_1, xorshift32());
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_2, xorshift32());
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_3, xorshift32());
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_4, xorshift32());
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_5, xorshift32());
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_6, xorshift32());
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_7, xorshift32());
+    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, xorshift32());
+}
 
 void main() {
 
@@ -123,16 +139,10 @@ void main() {
     VPRINTF(LOW, " AES-GCM smoke test !!\n"            );
     VPRINTF(LOW, "----------------------------------\n");
 
+    VPRINTF(LOW, "Iteration %0d of %0d\n", rst_count+1, iteration_count);
+
     //Seed the entropy once
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_0, 0x30000567);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_1, 0x30000567);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_2, 0x30000567);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_3, 0x30000567);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_4, 0x30000567);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_5, 0x30000567);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_6, 0x30000567);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_7, 0x30000567);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0x30000567);
+    randomize_entropy();
 
     //CASE1
     VPRINTF(LOW, "Test Case 1\n");
@@ -163,15 +173,7 @@ void main() {
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //Try to write entropy again, seed assertion should fire if this isn't blocked
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_0, 0x30FF0432);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_1, 0x30FF0432);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_2, 0x30FF0432);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_3, 0x30FF0432);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_4, 0x30FF0432);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_5, 0x30FF0432);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_6, 0x30FF0432);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_7, 0x30FF0432);
-    lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0x30FF0432);
+    randomize_entropy();
 
     //CASE2
     VPRINTF(LOW, "Test Case 2\n");
@@ -257,7 +259,13 @@ void main() {
 
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
-    SEND_STDOUT_CTRL( 0xff);
-    while(1);
+    if(rst_count + 1 < iteration_count) {
+        rst_count++;
+        // Warm reset to reinitialize entropy
+        SEND_STDOUT_CTRL(0xf6);
+    } else {
+        SEND_STDOUT_CTRL( 0xff);
+    }
 
+    while(1);
 }
