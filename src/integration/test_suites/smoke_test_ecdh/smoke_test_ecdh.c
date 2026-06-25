@@ -30,7 +30,7 @@ volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-/* ECC test vector:
+/* ECC test vector (P-384):
     MSG      = C8F518D4F3AA1BD46ED56C1C3C9E16FB800AF504DB98843548C5F623EE115F73D4C62ABC06D303B5D90D9A175087290D
     PRIVKEY  = F274F69D163B0C9F1FC3EBF4292AD1C4EB3CEC1C5A7DDE6F80C14292934C2055E087748D0A169C772483ADEE5EE70E17
     PUBKEY_X = D79C6D972B34A1DFC916A7B6E0A99B6B5387B34DA2187607C1AD0A4D1A8C2E4172AB5FA5D9AB58FE45E43F56BBB66BA4
@@ -42,9 +42,19 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
     IV       = 3401CEFAE20A737649073AC1A351E32926DB9ED0DB6B1CFFAB0493DAAFB93DDDD83EDEA28A803D0D003B2633B9D0F1BF
 */
 
+/* P-256 ECDH KAT (vector 0 from src/ecc/tb/test_vectors/secp256_realdrbg_kat.hex,
+   same KAT consumed by block-level ecc_p256_ecdh_test). 256-bit values packed
+   MSW-first into dwords [4..11]; upper 4 dwords zeroed.
+    PRIVKEY    = E5C64BE9E359BE4480D43C9F5674AEFF188B9536B438F4F54B48E5C0EF43CB0E   (privkeyB)
+    PUBKEY_X   = C45FB65AD3FD376EC42D26E46948B804CF03C342ED8280E6ADDF370B7ADEEE33   (peer A)
+    PUBKEY_Y   = 075E51802556AC1F194E1CEAEE7EEE233A3CD1B6525A7CD76C4E7F0398167731   (peer A)
+    IV         = A9E48008266C0F419E450539DC4F94E1FEC8188130BDB07C794878891B1F0983
+    SHAREDKEY  = A7BFBCAC01067AECB2B9D19D82CF09DD62EE9335EA26AC76BBE2B1E7C77F7760
+*/
+
 void main() {
     VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Running ECC Smoke Test !!\n");
+    VPRINTF(LOW, " Running ECC Smoke Test (P-384 + P-256 ECDH) !!\n");
     VPRINTF(LOW, "----------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
@@ -182,6 +192,23 @@ void main() {
     uint32_t ecc_pubkey_y_dh[] =   {0xC6C41294,0X331D23E6,0XF480F4FB,0X4CD40504,0XC947392E,0X94F4C3F0,0X6B8F398B,0XB29E4236,0X8F7A6859,0X23DE3B67,0XBACED214,0XA1A1D128};
     uint32_t ecc_sharedkey_dh[] =  {0x5EA1FC4A,0XF7256D20,0X55981B11,0X0575E0A8,0XCAE53160,0X137D904C,0X59D926EB,0X1B8456E4,0X27AA8A45,0X40884C37,0XDE159A58,0X028ABC0E}; 
 
+    // P-256 ECDH KAT (vector 0 from secp256_realdrbg_kat.hex). Upper 4 dwords zero.
+    uint32_t ecc_privkey_p256_dh[]   = {0x00000000,0x00000000,0x00000000,0x00000000,
+                                        0xE5C64BE9,0xE359BE44,0x80D43C9F,0x5674AEFF,
+                                        0x188B9536,0xB438F4F5,0x4B48E5C0,0xEF43CB0E};
+    uint32_t ecc_pubkey_x_p256_dh[]  = {0x00000000,0x00000000,0x00000000,0x00000000,
+                                        0xC45FB65A,0xD3FD376E,0xC42D26E4,0x6948B804,
+                                        0xCF03C342,0xED8280E6,0xADDF370B,0x7ADEEE33};
+    uint32_t ecc_pubkey_y_p256_dh[]  = {0x00000000,0x00000000,0x00000000,0x00000000,
+                                        0x075E5180,0x2556AC1F,0x194E1CEA,0xEE7EEE23,
+                                        0x3A3CD1B6,0x525A7CD7,0x6C4E7F03,0x98167731};
+    uint32_t ecc_iv_p256[]           = {0x00000000,0x00000000,0x00000000,0x00000000,
+                                        0xA9E48008,0x266C0F41,0x9E450539,0xDC4F94E1,
+                                        0xFEC81881,0x30BDB07C,0x79487889,0x1B1F0983};
+    uint32_t ecc_sharedkey_p256_dh[] = {0x00000000,0x00000000,0x00000000,0x00000000,
+                                        0xA7BFBCAC,0x01067AEC,0xB2B9D19D,0x82CF09DD,
+                                        0x62EE9335,0xEA26AC76,0xBBE2B1E7,0xC77F7760};
+
     //Call interrupt init
     init_interrupts();
 
@@ -252,6 +279,23 @@ void main() {
         sharedkey_dh.data[i] = ecc_sharedkey_dh[i];
 
     uint8_t curve_sel = 0;
+    ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh, curve_sel);
+    cptra_intr_rcv.ecc_notif = 0;
+
+    ecc_zeroize();
+
+    // ---------------- P-256 ECDH ----------------
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " Running ECC P-256 ECDH !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
+
+    for (int i = 0; i < 12; i++) privkey_dh.data[i]   = ecc_privkey_p256_dh[i];
+    for (int i = 0; i < 12; i++) pubkey_x_dh.data[i]  = ecc_pubkey_x_p256_dh[i];
+    for (int i = 0; i < 12; i++) pubkey_y_dh.data[i]  = ecc_pubkey_y_p256_dh[i];
+    for (int i = 0; i < 12; i++) iv.data[i]           = ecc_iv_p256[i];
+    for (int i = 0; i < 12; i++) sharedkey_dh.data[i] = ecc_sharedkey_p256_dh[i];
+
+    curve_sel = 1;
     ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh, curve_sel);
     cptra_intr_rcv.ecc_notif = 0;
 

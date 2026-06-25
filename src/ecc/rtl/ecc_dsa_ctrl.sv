@@ -228,6 +228,7 @@ module ecc_dsa_ctrl
     logic pubkey_input_invalid;
     logic pcr_sign_input_invalid;
     logic rand_k_pcr_sign_illegal;
+    logic rand_k_invalid_cmd;
     logic kv_under_p256_invalid;
     logic kv_under_rand_k_invalid;
     logic privkey_output_outofrange, pubkeyx_output_outofrange, pubkeyy_output_outofrange;
@@ -823,6 +824,9 @@ module ecc_dsa_ctrl
     assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & pcr_sign_mode;
     assign rand_k_pcr_sign_illegal  = (cmd_reg == SIGN) & pcr_sign_mode & hwif_out.ECC_CTRL.RAND_K_EN.value;
 
+    // RAND_K_EN is only meaningful for SIGN; flag misuse on KEYGEN/VERIFY/SHARED_KEY (ECDH).
+    assign rand_k_invalid_cmd       = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & hwif_out.ECC_CTRL.RAND_K_EN.value;
+
     // KV path is illegal under P-256: fire error if any KV transaction is armed while curve_sel_reg=1.
     assign kv_under_p256_invalid    = curve_sel_reg & (kv_privkey_read_ctrl_reg.read_en |
                                                           kv_seed_read_ctrl_reg.read_en   |
@@ -848,7 +852,7 @@ module ecc_dsa_ctrl
 
     assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | 
                         r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | 
-                        pubkey_input_invalid | pcr_sign_input_invalid | rand_k_pcr_sign_illegal | kv_under_p256_invalid | kv_under_rand_k_invalid |
+                        pubkey_input_invalid | pcr_sign_input_invalid | rand_k_pcr_sign_illegal | rand_k_invalid_cmd | kv_under_p256_invalid | kv_under_rand_k_invalid |
                         privkey_output_outofrange | pubkeyx_output_outofrange | pubkeyy_output_outofrange |
                         sharedkey_outofrange;
 
