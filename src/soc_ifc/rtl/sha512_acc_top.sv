@@ -69,48 +69,6 @@ module sha512_acc_top
   logic stall_write;
   logic execute_set;
 
-  // ICCM hash mode signals
-  logic iccm_mode;
-  logic iccm_mode_done;
-  logic iccm_armed;             
-  logic iccm_lock_acquire;        
-  logic iccm_mode_block_we;
-  logic iccm_mode_execute;
-  logic [31:0] iccm_num_bytes_wr;
-
-  // PCR write via kv_write_client
-  logic iccm_pcr_dest_done;
-  logic [PV_NUM_DWORDS-1:0][31:0] iccm_pcr_dest_data;
-  kv_write_t iccm_kv_write;
-  logic iccm_pcr_data_avail;
-
-  // PCR extend FSM
-  typedef enum logic [3:0] {
-    EXTEND_IDLE,
-    EXTEND_SAVE_DIGEST,
-    EXTEND_READ_PCR4,
-    EXTEND_LOAD_HASH_PCR4,
-    EXTEND_WAIT_PCR4,
-    EXTEND_WRITE_PCR4,
-    EXTEND_READ_PCR5,
-    EXTEND_LOAD_HASH_PCR5,
-    EXTEND_WAIT_PCR5,
-    EXTEND_WRITE_PCR5,
-    EXTEND_DONE
-  } iccm_extend_fsm_e;
-
-  iccm_extend_fsm_e extend_fsm_ps, extend_fsm_ns;
-  logic [PV_NUM_DWORDS-1:0][31:0] iccm_digest_hold;
-  logic [PV_NUM_DWORDS-1:0][31:0] extend_pcr_data;
-  logic [3:0] extend_rd_dword_ctr;
-  logic extend_init;
-  logic extend_pcr_read_en;
-  logic [PV_ENTRY_ADDR_W-1:0] extend_pcr_entry;
-  logic iccm_extend_ip;
-  logic extend_write_trigger;
-  logic extend_load_block;
-  logic [0:BLOCK_NO-1][DATA_WIDTH-1:0] extend_block;
-
   logic init_reg;
   logic next_reg;
   logic soc_has_lock;
@@ -178,6 +136,16 @@ module sha512_acc_top
 
   logic zeroize_pulse;
 
+  logic iccm_mode;
+  logic iccm_lock_acquire;
+  logic iccm_lock_clear;
+  logic iccm_mode_block_we;
+  logic iccm_mode_execute;
+  logic [31:0] iccm_num_bytes_wr;
+  logic extend_init;
+  logic extend_load_block;
+  logic [0:BLOCK_NO-1][DATA_WIDTH-1:0] extend_block;
+
   assign req_hold = stall_write;
   
   assign err = read_error | write_error;
@@ -225,9 +193,6 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
     end
   end // reg_update
 
-  // Extend FSM active flag
-  always_comb iccm_extend_ip = (extend_fsm_ps != EXTEND_IDLE) & (extend_fsm_ps != EXTEND_DONE);
-
   //SHA API
   //Acquire the lock and store the user
   always_comb hwif_in.USER.USER.next = 32'(req_data.user);
@@ -255,18 +220,6 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //Detect writes to datain register
   always_comb datain_write = hwif_in.valid_user & hwif_out.DATAIN.DATAIN.swmod;
   always_comb execute_set = hwif_out.EXECUTE.EXECUTE.value;
-
-  // ICCM mode: arms on the first ICCM write the snoop sees, or on
-  // iccm_lock_i for the zero-length case. The OR with the live trigger
-  // engages the same cycle the snoop fires to capture the first dword
-  // without a one-cycle slip.
-  always_comb iccm_mode = (iccm_armed |
-                           ((iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock)) &
-                          ~iccm_mode_done;
-  // iccm_lock rising edge triggers finalization (equivalent to execute_set)
-  always_comb iccm_mode_execute = iccm_mode & iccm_lock_i;
-  // block_we for iccm mode: write when data valid and not stalled by block_full
-  always_comb iccm_mode_block_we = iccm_mode & iccm_hash_dv_i & ~block_full;
 
   //When we reach the end of a block we indicate block full
   //If this is also the end of the entire DLEN, mask block full so that we properly pad the last dword
@@ -493,18 +446,8 @@ always_comb begin
   end
 end
 
-// HW SHA acc lock acquire: pulse hwset on the very first ICCM activity
-// (snoop or iccm_lock_i). Gated by ~iccm_armed so the pulse fires exactly
-// once at the start of the measurement, not again during release.
-always_comb iccm_lock_acquire = (iccm_hash_dv_i | iccm_lock_i) &
-                                ~soc_has_lock & ~iccm_armed & ~iccm_mode_done &
-                                ~hwif_out.LOCK.LOCK.value;
 assign hwif_in.LOCK.LOCK.hwset = iccm_lock_acquire;
-
-// HW lock release: clear LOCK back to 0 (free) after the full extend
-// sequence completes (EXTEND_DONE). Using extend_fsm_ps == EXTEND_DONE
-// ensures the lock is held through both the PCR4 and PCR5 writes.
-assign hwif_in.LOCK.LOCK.hwclr = (extend_fsm_ps == EXTEND_DONE);
+assign hwif_in.LOCK.LOCK.hwclr = iccm_lock_clear;
 
 genvar i;
 generate
@@ -553,8 +496,68 @@ assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 //----------------------------------------------------------------
-// ICCM Hash Mode Logic
+// ICCM Hash Mode Logic (subsystem mode only)
 //----------------------------------------------------------------
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+  // ICCM hash mode signals
+  logic iccm_mode_done;
+  logic iccm_armed;     
+
+  // PCR write via kv_write_client
+  logic iccm_pcr_dest_done;
+  logic [PV_NUM_DWORDS-1:0][31:0] iccm_pcr_dest_data;
+  kv_write_t iccm_kv_write;
+  logic iccm_pcr_data_avail;
+
+  // PCR extend FSM
+  typedef enum logic [3:0] {
+    EXTEND_IDLE,
+    EXTEND_SAVE_DIGEST,
+    EXTEND_READ_PCR4,
+    EXTEND_LOAD_HASH_PCR4,
+    EXTEND_WAIT_PCR4,
+    EXTEND_WRITE_PCR4,
+    EXTEND_READ_PCR5,
+    EXTEND_LOAD_HASH_PCR5,
+    EXTEND_WAIT_PCR5,
+    EXTEND_WRITE_PCR5,
+    EXTEND_DONE
+  } iccm_extend_fsm_e;
+
+  iccm_extend_fsm_e extend_fsm_ps, extend_fsm_ns;
+  logic [PV_NUM_DWORDS-1:0][31:0] iccm_digest_hold;
+  logic [PV_NUM_DWORDS-1:0][31:0] extend_pcr_data;
+  logic [3:0] extend_rd_dword_ctr;
+  logic extend_pcr_read_en;
+  logic [PV_ENTRY_ADDR_W-1:0] extend_pcr_entry;
+  logic iccm_extend_ip;
+  logic extend_write_trigger;
+
+// ICCM mode: arms on the first ICCM write the snoop sees, or on
+// iccm_lock_i for the zero-length case. The OR with the live trigger
+// engages the same cycle the snoop fires to capture the first dword
+// without a one-cycle slip.
+always_comb iccm_mode = (iccm_armed | ((iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock)) & ~iccm_mode_done;
+
+// HW SHA acc lock acquire: pulse hwset on the very first ICCM activity
+// (snoop or iccm_lock_i). Gated by ~iccm_armed so the pulse fires exactly
+// once at the start of the measurement, not again during release.
+always_comb iccm_lock_acquire = (iccm_hash_dv_i | iccm_lock_i) &
+                                ~soc_has_lock & ~iccm_armed & ~iccm_mode_done &
+                                ~hwif_out.LOCK.LOCK.value;
+
+// HW lock release: clear LOCK back to 0 (free) after the full extend
+// sequence completes (EXTEND_DONE). Using extend_fsm_ps == EXTEND_DONE
+// ensures the lock is held through both the PCR4 and PCR5 writes.
+always_comb iccm_lock_clear = (extend_fsm_ps == EXTEND_DONE);
+
+// Extend FSM active flag
+always_comb iccm_extend_ip = (extend_fsm_ps != EXTEND_IDLE) & (extend_fsm_ps != EXTEND_DONE);
+
+// iccm_lock rising edge triggers finalization (equivalent to execute_set)
+always_comb iccm_mode_execute = iccm_mode & iccm_lock_i;
+// block_we for iccm mode: write when data valid and not stalled by block_full
+always_comb iccm_mode_block_we = iccm_mode & iccm_hash_dv_i & ~block_full;
 
 // ICCM mode done flag: sticky until iccm_unlock re-enables measurement.
 // Prevents re-trigger of iccm_mode after hash completes.
@@ -810,5 +813,22 @@ always_comb begin
   pv_write_o.write_offset = iccm_kv_write.write_offset[PV_ENTRY_SIZE_WIDTH-1:0];
   pv_write_o.write_data   = iccm_kv_write.write_data;
 end
+
+`else // !CALIPTRA_MODE_SUBSYSTEM
+// Non-subsystem: ICCM hash feature not present. Tie off outputs.
+always_comb begin
+  iccm_mode = '0;
+  iccm_lock_acquire = '0;
+  iccm_lock_clear = '0;
+  iccm_mode_block_we = '0;
+  iccm_mode_execute = '0;
+  iccm_num_bytes_wr = '0;
+  extend_init = '0;
+  extend_load_block = '0;
+  extend_block = '0;
+  pv_write_o = '0;
+  pv_read_o  = '0;
+end
+`endif // CALIPTRA_MODE_SUBSYSTEM
 
 endmodule // sha512_acc_top

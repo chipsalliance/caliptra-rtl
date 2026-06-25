@@ -51,8 +51,11 @@ void main(void) {
     uint32_t reg_val;
     uint8_t fail_cmd = 0x1;
 
-    // HW autonomously arms the SHA accelerator on the first ICCM write,
-    // so firmware just writes the data and asserts the ICCM lock.
+    // Check if subsystem mode is active (ICCM hash feature only present in SS mode)
+    uint32_t hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+    uint32_t ss_mode = (hw_config >> SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW) & 0x1;
+
+    // Write test data to ICCM (both modes -- ICCM writes always work)
     VPRINTF(LOW, "Writing test data to ICCM...\n");
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
     iccm[0] = 0x00000001;
@@ -60,12 +63,35 @@ void main(void) {
     iccm[2] = 0x00000003;
     iccm[3] = 0x00000004;
 
-    VPRINTF(LOW, "Locking ICCM (triggers hash finalize)...\n");
+    VPRINTF(LOW, "Locking ICCM...\n");
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_LOCK,
                  SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK);
 
-    // Wait for the extend FSM to land PCR4 (poll dword[0] non-zero).
-    VPRINTF(LOW, "Waiting for PCR4 write...\n");
+    if (!ss_mode) {
+        // ---------------------------------------------------------------
+        // Passive mode: ICCM hash feature not present.
+        // Verify PCR4 remains at zero (no HW writes it).
+        // ---------------------------------------------------------------
+        VPRINTF(LOW, "Passive mode: verifying PCR4 stays zero...\n");
+        volatile uint32_t *pcr4 = (volatile uint32_t *)CLP_PV_REG_PCR_ENTRY_4_0;
+        for (int i = 0; i < 12; i++) {
+            if (pcr4[i] != 0) {
+                VPRINTF(ERROR, "ERROR: PCR4[%d] = 0x%x (expected 0 in passive mode)\n",
+                        i, pcr4[i]);
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
+        VPRINTF(LOW, "PASS: PCR4 is zero (passive mode, feature not present)\n");
+        SEND_STDOUT_CTRL(0xff);
+        return;
+    }
+
+    // ---------------------------------------------------------------
+    // Subsystem mode: ICCM hash feature active.
+    // Wait for the extend FSM to write PCR4.
+    // ---------------------------------------------------------------
+    VPRINTF(LOW, "Subsystem mode: waiting for PCR4 write...\n");
     uint32_t timeout = 10000;
     while (timeout--) {
         reg_val = lsu_read_32(CLP_PV_REG_PCR_ENTRY_4_0);
@@ -98,23 +124,20 @@ void main(void) {
     VPRINTF(LOW, "PASS: PCR4 matches expected SHA-384 of ICCM writes!\n");
 
     // ---------------------------------------------------------------
-    // Step 7: Sanity check -- extend PCR0 with the same ICCM digest
-    // using the normal SHA512 pcr_hash_extend path (same method as
-    // caliptra-sw: trigger PCR read into BLOCK, then write data + padding,
-    // then init). Since PCR0 starts at 0, the result should match PCR4.
+    // Sanity check: extend PCR0 with the same ICCM digest using the
+    // normal SHA512 pcr_hash_extend path. Since PCR0 starts at 0,
+    // the result should match PCR4.
     // ---------------------------------------------------------------
     VPRINTF(LOW, "Sanity: Extending PCR0 via SHA512 pcr_hash_extend...\n");
 
     // Known ICCM digest of {0x1, 0x2, 0x3, 0x4} as LE words:
-    // SHA-384(01000000 02000000 03000000 04000000)
     static const uint32_t iccm_raw_digest[12] = {
         0x1639dafc, 0xda504134, 0x9489cdac, 0xe63691bc,
         0x887ff539, 0xb61e635b, 0x0f5849e5, 0x85344d5b,
         0xb13af6fa, 0x55f6041a, 0x12fc1ef6, 0xc09cf6cf
     };
 
-    // Step 7a: Trigger PCR read -- kv_read_client reads PCR0 into BLOCK[0:11]
-    // First wait for SHA512 engine to be ready
+    // Trigger PCR read into BLOCK[0:11]
     timeout = 10000;
     while (timeout--) {
         reg_val = lsu_read_32(CLP_SHA512_REG_SHA512_VAULT_RD_STATUS);
@@ -125,27 +148,25 @@ void main(void) {
                  (0 << SHA512_REG_SHA512_VAULT_RD_CTRL_READ_ENTRY_LOW) |
                  (1 << SHA512_REG_SHA512_VAULT_RD_CTRL_PCR_HASH_EXTEND_LOW));
 
-    // Wait for the PCR data to be loaded (VAULT_RD_STATUS.VALID)
     timeout = 10000;
     while (timeout--) {
         reg_val = lsu_read_32(CLP_SHA512_REG_SHA512_VAULT_RD_STATUS);
         if (reg_val & SHA512_REG_SHA512_VAULT_RD_STATUS_VALID_MASK) break;
     }
 
-    // Step 7b: Write ICCM digest into BLOCK[12:23] (measurement data)
+    // Write ICCM digest into BLOCK[12:23]
     for (int i = 0; i < 12; i++) {
         lsu_write_32(CLP_SHA512_REG_SHA512_BLOCK_12 + (i * 4), iccm_raw_digest[i]);
     }
 
-    // Step 7c: Write SHA-384 padding into BLOCK[24:31]
-    // Total message = 96 bytes (48 PCR + 48 digest), bit length = 768 = 0x300
-    lsu_write_32(CLP_SHA512_REG_SHA512_BLOCK_24, 0x80000000);  // 0x80 pad byte
+    // Write SHA-384 padding into BLOCK[24:31]
+    lsu_write_32(CLP_SHA512_REG_SHA512_BLOCK_24, 0x80000000);
     for (int i = 25; i < 31; i++) {
         lsu_write_32(CLP_SHA512_REG_SHA512_BLOCK_0 + (i * 4), 0x00000000);
     }
-    lsu_write_32(CLP_SHA512_REG_SHA512_BLOCK_0 + (31 * 4), 0x00000300);  // length
+    lsu_write_32(CLP_SHA512_REG_SHA512_BLOCK_0 + (31 * 4), 0x00000300);
 
-    // Step 7d: Wait for SHA512 ready, then trigger SHA-384 init
+    // Trigger SHA-384 init
     timeout = 10000;
     while (timeout--) {
         reg_val = lsu_read_32(CLP_SHA512_REG_SHA512_STATUS);
@@ -156,7 +177,7 @@ void main(void) {
                  (2 << SHA512_REG_SHA512_CTRL_MODE_LOW) |
                  (1 << SHA512_REG_SHA512_CTRL_LAST_LOW));
 
-    // Wait for hash + PCR write-back to complete (STATUS.READY)
+    // Wait for completion
     timeout = 10000;
     while (timeout--) {
         reg_val = lsu_read_32(CLP_SHA512_REG_SHA512_STATUS);
@@ -168,7 +189,7 @@ void main(void) {
         while(1);
     }
 
-    // Compare PCR0 with PCR4 -- they should be identical
+    // Compare PCR0 with PCR4
     VPRINTF(LOW, "Comparing PCR0 vs PCR4...\n");
     volatile uint32_t *pcr0 = (volatile uint32_t *)CLP_PV_REG_PCR_ENTRY_0_0;
     mismatch = 0;
@@ -189,5 +210,5 @@ void main(void) {
     }
 
     VPRINTF(LOW, "PASS: PCR0 == PCR4 -- extend paths produce identical results!\n");
-    SEND_STDOUT_CTRL(0xff); // End test with success
+    SEND_STDOUT_CTRL(0xff);
 }

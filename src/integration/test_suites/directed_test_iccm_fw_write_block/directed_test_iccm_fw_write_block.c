@@ -48,6 +48,15 @@ void main(void) {
 
     init_interrupts();
 
+    // Check if subsystem mode is active (ICCM hash feature only in SS mode)
+    uint32_t hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+    uint32_t ss_mode = (hw_config >> SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW) & 0x1;
+    if (!ss_mode) {
+        VPRINTF(LOW, "Passive mode: ICCM hash not present, skipping. PASS\n");
+        SEND_STDOUT_CTRL(0xff);
+        return;
+    }
+
     // Step 1: pre-hash empty-PCR attack
     VPRINTF(LOW, "Attempting FW write attack on empty PCR4/PCR5...\n");
     fw_write_attack(CLP_PV_REG_PCR_ENTRY_4_0);

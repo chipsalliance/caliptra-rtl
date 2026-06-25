@@ -103,6 +103,29 @@ void main(void) {
 
     init_interrupts();
 
+    // Check if subsystem mode is active (ICCM hash feature only in SS mode)
+    uint32_t hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+    uint32_t ss_mode = (hw_config >> SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW) & 0x1;
+
+    if (!ss_mode) {
+        // Passive mode: ICCM hash feature not present.
+        // Verify PCR4 remains zero and pass.
+        VPRINTF(LOW, "Passive mode: verifying PCR4 stays zero...\n");
+        volatile uint32_t *pcr4 = (volatile uint32_t *)CLP_PV_REG_PCR_ENTRY_4_0;
+        for (int i = 0; i < 12; i++) {
+            if (pcr4[i] != 0) {
+                VPRINTF(ERROR, "ERROR: PCR4[%d] = 0x%x (expected 0 in passive mode)\n",
+                        i, pcr4[i]);
+                SEND_STDOUT_CTRL(fail_cmd);
+                while(1);
+            }
+        }
+        VPRINTF(LOW, "PASS: PCR4 is zero (passive mode, feature not present)\n");
+        SEND_STDOUT_CTRL(0xff);
+        return;
+    }
+
+    // Subsystem mode: full ICCM hash test sequence
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
 
     // After fw_update_reset, iccm_unlock should have fired.

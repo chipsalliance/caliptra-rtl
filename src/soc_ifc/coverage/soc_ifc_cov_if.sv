@@ -473,6 +473,7 @@ interface soc_ifc_cov_if
 
     endgroup
 
+`ifdef CALIPTRA_MODE_SUBSYSTEM
     // -----------------------------------------------------------------------
     // ICCM Hash --> PCR4 Coverage
     // -----------------------------------------------------------------------
@@ -585,6 +586,9 @@ interface soc_ifc_cov_if
         iccm_pcr_doneXmode_done: cross iccm_pcr_dest_done_cp, iccm_mode_done_cp;
 
     endgroup
+
+    iccm_hash_cov_grp iccm_hash_cov_grp1 = new();
+`endif
 
     mbox_fsm_state_e mbox_fsm_ps;
     assign mbox_fsm_ps = mbox_fsm_state_e'(i_mbox.mbox_fsm_ps);
@@ -726,7 +730,6 @@ interface soc_ifc_cov_if
     soc_ifc_arb_cov_grp soc_ifc_arb_cov_grp1 = new();
     soc_ifc_boot_fsm_cov_grp soc_ifc_boot_fsm_cov_grp1 = new();
     sha512_acc_cov_grp sha512_acc_cov_grp1 = new();
-    iccm_hash_cov_grp iccm_hash_cov_grp1 = new();
     mbox_cov_grp mbox_cov_grp1 = new();
     axi_dma_cov_grp axi_dma_cov_grp1 = new();
 

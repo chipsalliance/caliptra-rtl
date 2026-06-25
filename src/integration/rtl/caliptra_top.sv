@@ -476,8 +476,10 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_AES]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA3]   = 1'b0;
 
+`ifdef CALIPTRA_MODE_SUBSYSTEM
     //=========================================================================-
-    // ICCM Hash AND-OR Mux
+    // ICCM Hash AND-OR Mux (subsystem mode only)
+    //=========================================================================-
     // Combines per-bank write enables and data into a single stream for SHA acc.
     //
     // Multi-bank simultaneous writes CANNOT occur in this architecture:
@@ -497,6 +499,10 @@ end
                               el2_mem_export.iccm_bank_wr_data[i] : '0;
         end
     end
+`else
+    always_comb iccm_hash_dv   = 1'b0;
+    always_comb iccm_hash_data = '0;
+`endif
 
    //=========================================================================-
    // RTL instance
@@ -1681,6 +1687,8 @@ endgenerate
 `CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, !cptra_noncore_rst_b)
 
 // Safety assertion: verify single-bank-at-a-time ICCM write invariant
+`ifdef CALIPTRA_MODE_SUBSYSTEM
 `CALIPTRA_ASSERT_MUTEX(IccmHashSingleBank_A, el2_mem_export.iccm_wren_bank, clk, !cptra_noncore_rst_b)
+`endif
 
 endmodule

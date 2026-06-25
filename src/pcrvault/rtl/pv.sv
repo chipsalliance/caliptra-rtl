@@ -125,6 +125,7 @@ always_comb begin : keyvault_ctrl
             pv_entry_next[entry][dword] = '0;
             
             for (int client = 0; client < PV_NUM_WRITE; client++) begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
                 // Block pv_write[0] from targeting PCR4 (entry 4) or PCR5 (entry 5).
                 // Only pv_write[1] (iccm hash) can write these entries.
                 pv_entry_we[entry][dword] |= pv_write[client].write_en &
@@ -134,6 +135,14 @@ always_comb begin : keyvault_ctrl
                 pv_entry_next[entry][dword] |= (pv_write[client].write_en &
                                                 (pv_write[client].write_entry == entry) &
                                                 ~(client == 0 && (entry == 4 || entry == 5))) ? pv_write[client].write_data : '0;
+`else
+                // Non-subsystem: no PCR4/PCR5 write guard needed
+                pv_entry_we[entry][dword] |= pv_write[client].write_en &
+                                             (pv_write[client].write_entry == entry) & 
+                                             (pv_write[client].write_offset == dword);
+                pv_entry_next[entry][dword] |= (pv_write[client].write_en &
+                                                (pv_write[client].write_entry == entry)) ? pv_write[client].write_data : '0;
+`endif
             end 
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = pv_entry_we[entry][dword];
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next =  pv_entry_next[entry][dword];

@@ -49,6 +49,15 @@ void main(void) {
 
     init_interrupts();
 
+    // Check if subsystem mode is active (ICCM hash feature only in SS mode)
+    uint32_t hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+    uint32_t ss_mode = (hw_config >> SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_LOW) & 0x1;
+    if (!ss_mode) {
+        VPRINTF(LOW, "Passive mode: ICCM hash not present, skipping. PASS\n");
+        SEND_STDOUT_CTRL(0xff);
+        return;
+    }
+
     if (iteration == 0) {
         // Boot 0: populate PCR5 with a real digest, then cold reset
         VPRINTF(LOW, "Boot 0: running ICCM hash to populate PCR5\n");
