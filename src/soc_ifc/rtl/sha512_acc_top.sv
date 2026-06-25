@@ -501,8 +501,10 @@ always_comb iccm_lock_acquire = (iccm_hash_dv_i | iccm_lock_i) &
                                 ~hwif_out.LOCK.LOCK.value;
 assign hwif_in.LOCK.LOCK.hwset = iccm_lock_acquire;
 
-// HW lock release: clear LOCK back to 0 (free) after extend completes.
-assign hwif_in.LOCK.LOCK.hwclr = iccm_pcr_dest_done & ~iccm_mode_done;
+// HW lock release: clear LOCK back to 0 (free) after the full extend
+// sequence completes (EXTEND_DONE). Using extend_fsm_ps == EXTEND_DONE
+// ensures the lock is held through both the PCR4 and PCR5 writes.
+assign hwif_in.LOCK.LOCK.hwclr = (extend_fsm_ps == EXTEND_DONE);
 
 genvar i;
 generate

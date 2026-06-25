@@ -478,7 +478,16 @@ end
 
     //=========================================================================-
     // ICCM Hash AND-OR Mux
-    // Combines per-bank write enables and data into a single stream for SHA acc
+    // Combines per-bank write enables and data into a single stream for SHA acc.
+    //
+    // Multi-bank simultaneous writes CANNOT occur in this architecture:
+    //   1. BUILD_AHB_LITE=1 unconditionally disables LSU store merging
+    //      (bus_coalescing_disable = ... | pt.BUILD_AHB_LITE in el2_lsu_bus_buffer.sv)
+    //   2. The only masters with a path to the ICCM DMA slave are the CPU LSU
+    //      (32-bit, merging disabled) and System/Debug bus (32-bit only)
+    //   3. The AXI DMA engine faces outward to SoC and has no path to ICCM
+    // Therefore at most one iccm_wren_bank bit is asserted per cycle, and the
+    // OR-mux produces the correct single-bank data word.
     //=========================================================================-
     always_comb begin
         iccm_hash_dv   = |el2_mem_export.iccm_wren_bank;
@@ -1670,5 +1679,8 @@ endgenerate
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, !cptra_noncore_rst_b)
+
+// Safety assertion: verify single-bank-at-a-time ICCM write invariant
+`CALIPTRA_ASSERT_MUTEX(IccmHashSingleBank_A, el2_mem_export.iccm_wren_bank, clk, !cptra_noncore_rst_b)
 
 endmodule
