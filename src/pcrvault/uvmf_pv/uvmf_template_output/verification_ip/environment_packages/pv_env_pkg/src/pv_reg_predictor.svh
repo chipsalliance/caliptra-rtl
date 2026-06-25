@@ -119,7 +119,13 @@ class pv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
                 //$display("Rights = %s, Info rights = %s", pv_reg.get_rights(), pv_reg_info.rights);
                 //$display("Rights = %s, Info rights = %s, map = %s", pv_reg.get_rights(), pv_reg_data_field.get_access(map), map.get_full_name());
                 if (map.get_name != "pv_AHB_map") begin
-                    if(pv_reg_data_field.get_access(map) == "RO") begin
+                    //PCR4/PCR5 are reserved for the ICCM hash engine (pv_write[1]).
+                    //pv_write[0] (sha512_ctrl) is blocked by RTL from writing these
+                    //entries. Skip the mirror update so prediction matches the DUT.
+                    if (rw.addr >= `PV_REG_PCR_ENTRY_4_0 && rw.addr < `PV_REG_PCR_ENTRY_6_0) begin
+                        `uvm_info("PV_REG", $sformatf("Dropping sha512 write to PCR4/PCR5 entry (addr=0x%0h) to match RTL guard", rw.addr), UVM_MEDIUM)
+                    end
+                    else if(pv_reg_data_field.get_access(map) == "RO") begin
                         pv_reg_data_field.set_access("RW");
                         super.write(tr);
                         pv_reg_data_field.set_access("RO");

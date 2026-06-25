@@ -117,6 +117,8 @@ import uvmf_base_pkg_hdl::*;
   localparam SHA512_BLOCK_READ_IDX = 0;
 
   always_comb begin
+    pv_write = '{default: '0};
+    pv_read  = '{default: '0};
     pv_write[SHA512_WRITE_IDX]      = pv_sha512_write_agent_bus.pv_write;
     pv_read [SHA512_BLOCK_READ_IDX] = pv_sha512_block_read_agent_bus.pv_read;
   end
