@@ -2,7 +2,7 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 
-// A sequence that sends a BurstSingle, writing a value to an address
+// A sequence that sends a BurstSingle burst, writing a value to an address
 
 class ahb_single_write_seq extends ahb_transfer_seq;
   `uvm_object_utils(ahb_single_write_seq)

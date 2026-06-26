@@ -132,13 +132,11 @@ task ahb_mgr_register_layer_vseq::send_op_item(ahb_reg_op_item item);
   case (item.m_rw.kind)
     UVM_READ: begin
       // Single read
-      ahb_transfer_seq read_seq = ahb_transfer_seq::type_id::create("read_seq");
+      ahb_single_read_seq read_seq = ahb_single_read_seq::type_id::create("read_seq");
 
       if (!read_seq.randomize() with {
             m_subordinate_idx == local::subordinate_idx;
-            m_burst           == BurstSingle;
             m_size            == local::hsize;
-            m_write           == 0;
             m_addr            == local::item.m_rw.addr;
           }) begin
         `uvm_fatal(get_full_name(), "Failed to randomise read_seq.")
