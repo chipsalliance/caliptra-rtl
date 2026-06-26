@@ -195,6 +195,10 @@ module hmac_reg (
                 logic next;
                 logic load_next;
             } Reserved;
+            struct packed{
+                logic next;
+                logic load_next;
+            } RESTORE;
         } HMAC512_CTRL;
         struct packed{
             struct packed{
@@ -526,6 +530,9 @@ module hmac_reg (
             struct packed{
                 logic value;
             } Reserved;
+            struct packed{
+                logic value;
+            } RESTORE;
         } HMAC512_CTRL;
         struct packed{
             struct packed{
@@ -917,6 +924,30 @@ module hmac_reg (
         end
     end
     assign hwif_out.HMAC512_CTRL.Reserved.value = field_storage.HMAC512_CTRL.Reserved.value;
+    // Field: hmac_reg.HMAC512_CTRL.RESTORE
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.HMAC512_CTRL.RESTORE.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.HMAC512_CTRL && decoded_req_is_wr && hwif_in.HMAC512_CTRL.RESTORE.swwe) begin // SW write
+            next_c = (field_storage.HMAC512_CTRL.RESTORE.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
+            load_next_c = '1;
+        end else begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.HMAC512_CTRL.RESTORE.next = next_c;
+        field_combo.HMAC512_CTRL.RESTORE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.HMAC512_CTRL.RESTORE.value <= 1'h0;
+        end else if(field_combo.HMAC512_CTRL.RESTORE.load_next) begin
+            field_storage.HMAC512_CTRL.RESTORE.value <= field_combo.HMAC512_CTRL.RESTORE.next;
+        end
+    end
+    assign hwif_out.HMAC512_CTRL.RESTORE.value = field_storage.HMAC512_CTRL.RESTORE.value;
     for(genvar i0=0; i0<16; i0++) begin
         // Field: hmac_reg.HMAC512_KEY[].KEY
         always_comb begin
@@ -982,11 +1013,14 @@ module hmac_reg (
             automatic logic load_next_c;
             next_c = field_storage.HMAC512_TAG[i0].TAG.value;
             load_next_c = '0;
-            if(hwif_in.HMAC512_TAG[i0].TAG.hwclr) begin // HW Clear
-                next_c = '0;
+            if(decoded_reg_strb.HMAC512_TAG[i0] && decoded_req_is_wr) begin // SW write
+                next_c = (field_storage.HMAC512_TAG[i0].TAG.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
-            end else begin // HW Write
+            end else if(hwif_in.HMAC512_TAG[i0].TAG.we) begin // HW Write - we
                 next_c = hwif_in.HMAC512_TAG[i0].TAG.next;
+                load_next_c = '1;
+            end else if(hwif_in.HMAC512_TAG[i0].TAG.hwclr) begin // HW Clear
+                next_c = '0;
                 load_next_c = '1;
             end
             field_combo.HMAC512_TAG[i0].TAG.next = next_c;
@@ -999,6 +1033,8 @@ module hmac_reg (
                 field_storage.HMAC512_TAG[i0].TAG.value <= field_combo.HMAC512_TAG[i0].TAG.next;
             end
         end
+        assign hwif_out.HMAC512_TAG[i0].TAG.value = field_storage.HMAC512_TAG[i0].TAG.value;
+        assign hwif_out.HMAC512_TAG[i0].TAG.swacc = decoded_reg_strb.HMAC512_TAG[i0];
     end
     for(genvar i0=0; i0<6; i0++) begin
         // Field: hmac_reg.HMAC512_LFSR_SEED[].LFSR_SEED

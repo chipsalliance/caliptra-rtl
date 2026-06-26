@@ -788,6 +788,8 @@
 `define HMAC_REG_HMAC512_CTRL_LAST_MASK                                                             (32'h20)
 `define HMAC_REG_HMAC512_CTRL_RESERVED_LOW                                                          (6)
 `define HMAC_REG_HMAC512_CTRL_RESERVED_MASK                                                         (32'h40)
+`define HMAC_REG_HMAC512_CTRL_RESTORE_LOW                                                           (7)
+`define HMAC_REG_HMAC512_CTRL_RESTORE_MASK                                                          (32'h80)
 `endif
 `ifndef HMAC_REG_HMAC512_STATUS
 `define HMAC_REG_HMAC512_STATUS                                                                     (32'h18)
@@ -1099,6 +1101,8 @@
 `define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR2_EN_MASK                                       (32'h4)
 `define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_LOW                                        (3)
 `define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_MASK                                       (32'h8)
+`define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_INTERMEDIATE_TAG_HIDDEN_EN_LOW                       (4)
+`define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_INTERMEDIATE_TAG_HIDDEN_EN_MASK                      (32'h10)
 `endif
 `ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
 `define HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                      (32'h808)
@@ -1125,6 +1129,8 @@
 `define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK                                (32'h4)
 `define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_LOW                                 (3)
 `define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK                                (32'h8)
+`define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_INTERMEDIATE_TAG_HIDDEN_STS_LOW                (4)
+`define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_INTERMEDIATE_TAG_HIDDEN_STS_MASK               (32'h10)
 `endif
 `ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
 `define HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                                (32'h818)
@@ -1141,6 +1147,8 @@
 `define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR2_TRIG_MASK                                   (32'h4)
 `define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_LOW                                    (3)
 `define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_MASK                                   (32'h8)
+`define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_INTERMEDIATE_TAG_HIDDEN_TRIG_LOW                   (4)
+`define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_INTERMEDIATE_TAG_HIDDEN_TRIG_MASK                  (32'h10)
 `endif
 `ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
 `define HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                    (32'h820)
@@ -1158,6 +1166,9 @@
 `endif
 `ifndef HMAC_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R
 `define HMAC_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R                                                  (32'h90c)
+`endif
+`ifndef HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_R
+`define HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_R                                 (32'h910)
 `endif
 `ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
 `define HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                          (32'h980)
@@ -1182,8 +1193,13 @@
 `define HMAC_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_LOW                                   (0)
 `define HMAC_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_MASK                                  (32'h1)
 `endif
+`ifndef HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_INCR_R
+`define HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_INCR_R                            (32'ha10)
+`define HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_INCR_R_PULSE_LOW                  (0)
+`define HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_INCR_R_PULSE_MASK                 (32'h1)
+`endif
 `ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R
-`define HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                     (32'ha10)
+`define HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                     (32'ha14)
 `define HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                           (0)
 `define HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                          (32'h1)
 `endif

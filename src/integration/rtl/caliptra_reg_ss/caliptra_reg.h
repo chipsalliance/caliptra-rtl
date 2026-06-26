@@ -993,6 +993,8 @@
 #define HMAC_REG_HMAC512_CTRL_LAST_MASK                                                             (0x20)
 #define HMAC_REG_HMAC512_CTRL_RESERVED_LOW                                                          (6)
 #define HMAC_REG_HMAC512_CTRL_RESERVED_MASK                                                         (0x40)
+#define HMAC_REG_HMAC512_CTRL_RESTORE_LOW                                                           (7)
+#define HMAC_REG_HMAC512_CTRL_RESTORE_MASK                                                          (0x80)
 #endif
 #define CLP_HMAC_REG_HMAC512_STATUS                                                                 (0x10010018)
 #ifndef HMAC_REG_HMAC512_STATUS
@@ -1384,6 +1386,8 @@
 #define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR2_EN_MASK                                       (0x4)
 #define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_LOW                                        (3)
 #define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_MASK                                       (0x8)
+#define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_INTERMEDIATE_TAG_HIDDEN_EN_LOW                       (4)
+#define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_INTERMEDIATE_TAG_HIDDEN_EN_MASK                      (0x10)
 #endif
 #define CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                  (0x10010808)
 #ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
@@ -1414,6 +1418,8 @@
 #define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK                                (0x4)
 #define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_LOW                                 (3)
 #define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK                                (0x8)
+#define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_INTERMEDIATE_TAG_HIDDEN_STS_LOW                (4)
+#define HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_INTERMEDIATE_TAG_HIDDEN_STS_MASK               (0x10)
 #endif
 #define CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                            (0x10010818)
 #ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
@@ -1432,6 +1438,8 @@
 #define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR2_TRIG_MASK                                   (0x4)
 #define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_LOW                                    (3)
 #define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_MASK                                   (0x8)
+#define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_INTERMEDIATE_TAG_HIDDEN_TRIG_LOW                   (4)
+#define HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_INTERMEDIATE_TAG_HIDDEN_TRIG_MASK                  (0x10)
 #endif
 #define CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                (0x10010820)
 #ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
@@ -1454,6 +1462,10 @@
 #define CLP_HMAC_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R                                              (0x1001090c)
 #ifndef HMAC_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R
 #define HMAC_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R                                                  (0x90c)
+#endif
+#define CLP_HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_R                             (0x10010910)
+#ifndef HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_R
+#define HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_R                                 (0x910)
 #endif
 #define CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                      (0x10010980)
 #ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
@@ -1483,9 +1495,15 @@
 #define HMAC_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_LOW                                   (0)
 #define HMAC_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_MASK                                  (0x1)
 #endif
-#define CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                 (0x10010a10)
+#define CLP_HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_INCR_R                        (0x10010a10)
+#ifndef HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_INCR_R
+#define HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_INCR_R                            (0xa10)
+#define HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_INCR_R_PULSE_LOW                  (0)
+#define HMAC_REG_INTR_BLOCK_RF_INTERMEDIATE_TAG_HIDDEN_INTR_COUNT_INCR_R_PULSE_MASK                 (0x1)
+#endif
+#define CLP_HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                 (0x10010a14)
 #ifndef HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R
-#define HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                     (0xa10)
+#define HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                     (0xa14)
 #define HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                           (0)
 #define HMAC_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                          (0x1)
 #endif
