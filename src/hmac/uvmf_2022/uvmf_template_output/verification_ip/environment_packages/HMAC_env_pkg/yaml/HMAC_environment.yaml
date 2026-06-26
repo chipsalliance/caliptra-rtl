@@ -1,38 +1,57 @@
 uvmf:
   environments:
-    HMAC:
+    hmac:
       agents:
       - initiator_responder: INITIATOR
-        name: HMAC_in_agent
-        type: HMAC_in
-      - initiator_responder: RESPONDER
-        name: HMAC_out_agent
-        type: HMAC_out
+        name: HMAC_rst_agent
+        type: hmac_rst
       analysis_components:
-      - name: HMAC_pred
+      - name: hmac_pred
         parameters: []
         type: HMAC_predictor
+      - name: hmac_sb
+        parameters: []
+        type: HMAC_scoreboard
       analysis_exports: []
       analysis_ports: []
       config_constraints: []
       config_vars: []
       existing_library_component: 'True'
       hvl_pkg_parameters: []
+      imports:
+      - name: mvc_pkg
+      - name: mgc_ahb_v2_0_pkg
+      - name: rw_txn_pkg
       non_uvmf_components: []
       parameters: []
+      qvip_connections:
+      - ap_key: burst_transfer
+        driver: qvip_ahb_lite_slave_subenv_ahb_lite_slave_0
+        receiver: hmac_pred.ahb_slave_0_ae
+        validate: 'false'
+      - ap_key: burst_transfer_sb
+        driver: qvip_ahb_lite_slave_subenv_ahb_lite_slave_0
+        receiver: hmac_sb.actual_ahb_analysis_export
+        validate: 'false'
       qvip_memory_agents: []
-      scoreboards:
-      - name: HMAC_sb
-        sb_type: uvmf_in_order_scoreboard
-        trans_type: HMAC_out_transaction
+      qvip_subenvs:
+      - name: qvip_ahb_lite_slave_subenv
+        type: qvip_ahb_lite_slave
+      register_model:
+        maps:
+        - interface: qvip_ahb_lite_slave_subenv.ahb_lite_slave_0
+          name: ahb_map
+          qvip_agent: 'True'
+        reg_block_class: hmac_reg_model_top
+        reg_model_package: HMAC_reg_model_top_pkg
+        use_adapter: 'True'
+        use_explicit_prediction: 'True'
+      scoreboards: []
       subenvs: []
       tlm_connections:
-      - driver: HMAC_in_agent.monitored_ap
-        receiver: HMAC_pred.HMAC_in_agent_ae
+      - driver: HMAC_rst_agent.monitored_ap
+        receiver: hmac_pred.hmac_rst_agent_ae
         validate: 'True'
-      - driver: HMAC_pred.HMAC_sb_ap
-        receiver: HMAC_sb.expected_analysis_export
-        validate: 'True'
-      - driver: HMAC_out_agent.monitored_ap
-        receiver: HMAC_sb.actual_analysis_export
+      - driver: hmac_pred.hmac_sb_ahb_ap
+        receiver: hmac_sb.expected_ahb_analysis_export
         validate: 'True'

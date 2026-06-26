@@ -1,24 +1,25 @@
-# HMAC environment packages source and make target
+# hmac environment packages source and make target
 
 # pragma uvmf custom additional begin
 # pragma uvmf custom additional end
 
 # Include all requisite sub-environment package targets for this bench
 
-HMAC_ENV_PKG =\
+hmac_ENV_PKG =\
+		 $(UVMF_VIP_LIBRARY_HOME)/environment_packages/HMAC_env_pkg/registers/HMAC_reg_model_top_pkg.sv \
 		 $(UVMF_VIP_LIBRARY_HOME)/environment_packages/HMAC_env_pkg/HMAC_env_pkg.sv
 
-COMP_HMAC_PKG_TGT_0 = q_comp_HMAC_env_pkg
-COMP_HMAC_PKG_TGT_1 = v_comp_HMAC_env_pkg
-COMP_HMAC_PKG_TGT = $(COMP_HMAC_PKG_TGT_$(USE_VELOCE))
+COMP_hmac_PKG_TGT_0 = q_comp_hmac_env_pkg
+COMP_hmac_PKG_TGT_1 = v_comp_hmac_env_pkg
+COMP_hmac_PKG_TGT = $(COMP_hmac_PKG_TGT_$(USE_VELOCE))
 
-comp_HMAC_env_pkg: $(COMP_HMAC_PKG_TGT) 
+comp_hmac_env_pkg: $(COMP_hmac_PKG_TGT) 
 
-q_comp_HMAC_env_pkg:   
-		$(HVL_COMP_CMD) +incdir+$(UVMF_VIP_LIBRARY_HOME)/environment_packages/HMAC_env_pkg $(HMAC_ENV_PKG)
+q_comp_hmac_env_pkg:   
+		$(HVL_COMP_CMD) +incdir+$(UVMF_VIP_LIBRARY_HOME)/environment_packages/HMAC_env_pkg $(hmac_ENV_PKG)
 
-v_comp_HMAC_env_pkg: q_comp_HMAC_env_pkg
-	$(VELANALYZE_HVL_CMD) +incdir+$(UVMF_VIP_LIBRARY_HOME)/environment_packages/HMAC_env_pkg $(HMAC_ENV_PKG)
+v_comp_hmac_env_pkg: q_comp_hmac_env_pkg
+	$(VELANALYZE_HVL_CMD) +incdir+$(UVMF_VIP_LIBRARY_HOME)/environment_packages/HMAC_env_pkg $(hmac_ENV_PKG)
 
 
 
@@ -28,29 +29,29 @@ else
   GCC_COMP_ARCH = -m32
 endif
 
-export HMAC_ENV_DPI_SRC ?= $(UVMF_VIP_LIBRARY_HOME)/environment_packages/HMAC_env_pkg/dpi
+export hmac_ENV_DPI_SRC ?= $(UVMF_VIP_LIBRARY_HOME)/environment_packages/HMAC_env_pkg/dpi
 
-C_FILE_COMPILE_LIST_HMAC_env_pkg	= \
+C_FILE_COMPILE_LIST_hmac_env_pkg	= \
 
-O_FILE_COMPILE_LIST_HMAC_env_pkg = $(notdir $(C_FILE_COMPILE_LIST_HMAC_env_pkg:.c=.o))
+O_FILE_COMPILE_LIST_hmac_env_pkg = $(notdir $(C_FILE_COMPILE_LIST_hmac_env_pkg:.c=.o))
 
-GCC_COMP_ARGS_HMAC_env_pkg	+= -I$(HMAC_ENV_DPI_SRC) \
+GCC_COMP_ARGS_hmac_env_pkg	+= -I$(hmac_ENV_DPI_SRC) \
 	-fPIC 
 
-GCC_COMP_ARGS_HMAC_env_pkg	+= $(HMAC_ENV_GCC_COMP_ARGUMENTS)
+GCC_COMP_ARGS_hmac_env_pkg	+= $(hmac_ENV_GCC_COMP_ARGUMENTS)
 
-GCC_LINK_ARGS_HMAC_env_pkg	+= \
+GCC_LINK_ARGS_hmac_env_pkg	+= \
 	 \
  	-o .so
 
-comp_HMAC_env_pkg_c_files:
+comp_hmac_env_pkg_c_files:
 	@echo "--------------------------------"
 	@echo "Compiling Environment C source"
 	@echo "--------------------------------"
-	gcc $(GCC_COMP_ARCH) $(GCC_COMP_ARGS_HMAC_env_pkg) $(C_FILE_COMPILE_LIST_HMAC_env_pkg)
+	gcc $(GCC_COMP_ARCH) $(GCC_COMP_ARGS_hmac_env_pkg) $(C_FILE_COMPILE_LIST_hmac_env_pkg)
 	@echo "--------------------------------"
 	@echo "Linking Environment C objects into a shared object"
 	@echo "--------------------------------"
-	gcc $(GCC_COMP_ARCH) $(GCC_LINK_ARGS_HMAC_env_pkg) $(O_FILE_COMPILE_LIST_HMAC_env_pkg)
+	gcc $(GCC_COMP_ARCH) $(GCC_LINK_ARGS_hmac_env_pkg) $(O_FILE_COMPILE_LIST_hmac_env_pkg)
 	@echo "--------------------------------"
 

@@ -1,6 +1,20 @@
 //----------------------------------------------------------------------
 // Created with uvmf_gen version 2022.3
 //----------------------------------------------------------------------
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // pragma uvmf custom header begin
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
@@ -19,14 +33,14 @@ class HMAC_environment  extends uvmf_environment_base #(
   `uvm_component_utils( HMAC_environment )
 
 
+  qvip_ahb_lite_slave_environment #()  qvip_ahb_lite_slave_subenv;
 
 
 
-  typedef HMAC_in_agent  HMAC_in_agent_t;
-  HMAC_in_agent_t HMAC_in_agent;
+  uvm_analysis_port #( mvc_sequence_item_base ) qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap [string];
 
-  typedef HMAC_out_agent  HMAC_out_agent_t;
-  HMAC_out_agent_t HMAC_out_agent;
+  typedef HMAC_rst_agent  hmac_rst_agent_t;
+  hmac_rst_agent_t HMAC_rst_agent;
 
 
 
@@ -34,16 +48,41 @@ class HMAC_environment  extends uvmf_environment_base #(
   typedef HMAC_predictor #(
                 .CONFIG_T(CONFIG_T)
                 )
- HMAC_pred_t;
-  HMAC_pred_t HMAC_pred;
+ hmac_pred_t;
+  hmac_pred_t hmac_pred;
+  typedef HMAC_scoreboard #(
+                .CONFIG_T(CONFIG_T)
+                )
+ hmac_sb_t;
+  hmac_sb_t hmac_sb;
 
-  typedef uvmf_in_order_scoreboard #(.T(HMAC_out_transaction))  HMAC_sb_t;
-  HMAC_sb_t HMAC_sb;
+
+// REG ADAPTER: use the concrete reg2ahb_adapter from the QVIP AHB package
+// (matches the adams-bridge / mldsa pattern). The default uvm_reg_adapter is
+// abstract and cannot be constructed; without a concrete adapter the reg
+// model emits "[REG_NO_ADAPT]" warnings and our RAL writes never reach the
+// AHB sequencer.
+   typedef ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                       ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                       ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                       ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                       ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                       ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_reg_transfer_t;
+
+   typedef reg2ahb_adapter #(ahb_reg_transfer_t,
+                             ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                             ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                             ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                             ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                             ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                             ahb_lite_slave_0_params::AHB_RDATA_WIDTH) reg_adapter_t;
+   reg_adapter_t    reg_adapter;
+   typedef uvm_reg_predictor #(ahb_reg_transfer_t) reg_predictor_t;
+   reg_predictor_t    reg_predictor;
 
 
-
-  typedef uvmf_virtual_sequencer_base #(.CONFIG_T(HMAC_env_configuration)) HMAC_vsqr_t;
-  HMAC_vsqr_t vsqr;
+  typedef uvmf_virtual_sequencer_base #(.CONFIG_T(HMAC_env_configuration)) hmac_vsqr_t;
+  hmac_vsqr_t vsqr;
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -64,15 +103,22 @@ class HMAC_environment  extends uvmf_environment_base #(
 // pragma uvmf custom build_phase_pre_super begin
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
-    HMAC_in_agent = HMAC_in_agent_t::type_id::create("HMAC_in_agent",this);
-    HMAC_in_agent.set_config(configuration.HMAC_in_agent_config);
-    HMAC_out_agent = HMAC_out_agent_t::type_id::create("HMAC_out_agent",this);
-    HMAC_out_agent.set_config(configuration.HMAC_out_agent_config);
-    HMAC_pred = HMAC_pred_t::type_id::create("HMAC_pred",this);
-    HMAC_pred.configuration = configuration;
-    HMAC_sb = HMAC_sb_t::type_id::create("HMAC_sb",this);
+    qvip_ahb_lite_slave_subenv = qvip_ahb_lite_slave_environment#()::type_id::create("qvip_ahb_lite_slave_subenv",this);
+    qvip_ahb_lite_slave_subenv.set_config(configuration.qvip_ahb_lite_slave_subenv_config);
+    HMAC_rst_agent = hmac_rst_agent_t::type_id::create("HMAC_rst_agent",this);
+    HMAC_rst_agent.set_config(configuration.hmac_rst_agent_config);
+    hmac_pred = hmac_pred_t::type_id::create("hmac_pred",this);
+    hmac_pred.configuration = configuration;
+    hmac_sb = hmac_sb_t::type_id::create("hmac_sb",this);
+    hmac_sb.configuration = configuration;
+// pragma uvmf custom reg_model_build_phase begin
+  // Build register model predictor if prediction is enabled
+  if (configuration.enable_reg_prediction) begin
+    reg_predictor = reg_predictor_t::type_id::create("reg_predictor", this);
+  end
+// pragma uvmf custom reg_model_build_phase end
 
-    vsqr = HMAC_vsqr_t::type_id::create("vsqr", this);
+    vsqr = hmac_vsqr_t::type_id::create("vsqr", this);
     vsqr.set_config(configuration);
     configuration.set_vsqr(vsqr);
 
@@ -90,10 +136,44 @@ class HMAC_environment  extends uvmf_environment_base #(
 // pragma uvmf custom connect_phase_pre_super begin
 // pragma uvmf custom connect_phase_pre_super end
     super.connect_phase(phase);
-    HMAC_in_agent.monitored_ap.connect(HMAC_pred.HMAC_in_agent_ae);
-    HMAC_pred.HMAC_sb_ap.connect(HMAC_sb.expected_analysis_export);
-    HMAC_out_agent.monitored_ap.connect(HMAC_sb.actual_analysis_export);
+    HMAC_rst_agent.monitored_ap.connect(hmac_pred.hmac_rst_agent_ae);
+    hmac_pred.hmac_sb_ahb_ap.connect(hmac_sb.expected_ahb_analysis_export);
+    qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
+    qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(hmac_pred.ahb_slave_0_ae);
+    if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
+       uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_ahb_lite_slave_subenv_interface_names[0],qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer  );
     // pragma uvmf custom reg_model_connect_phase begin
+    // Create register model adapter if required
+    if (configuration.enable_reg_prediction ||
+        configuration.enable_reg_adaptation) begin
+      // Construct the concrete AHB reg adapter (mldsa pattern). Without
+      // this `reg_adapter` stays null and `set_sequencer` below installs
+      // a null adapter, leading to "[REG_NO_ADAPT]" + abstract uvm_reg_item
+      // traffic that never reaches the bus.
+      reg_adapter = reg_adapter_t::type_id::create("reg2ahb_adapter");
+      reg_adapter.en_n_bits = 1; // allow byte/word accesses, not just 64-bit
+    end
+    // Set sequencer and adapter in register model map
+    if ((configuration.enable_reg_adaptation) && (qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer != null ))
+      configuration.hmac_rm.ahb_map.set_sequencer(qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer, reg_adapter);
+    // Set map and adapter handles within uvm predictor
+    if (configuration.enable_reg_prediction) begin
+      reg_predictor.map     = configuration.hmac_rm.ahb_map;
+      reg_predictor.adapter = reg_adapter;
+      // The connection between the agent analysis_port and uvm_reg_predictor 
+      // analysis_export could cause problems due to a uvm register package bug,
+      // if this environment is used as a sub-environment at a higher level.
+      // The uvm register package does not construct sub-maps within register
+      // sub blocks.  While the connection below succeeds, the execution of the
+      // write method associated with the analysis_export fails.  It fails because
+      // the write method executes the get_reg_by_offset method of the register
+      // map, which is null because of the uvm register package bug.
+      // The call works when operating at block level because the uvm register 
+      // package constructs the top level register map.  The call fails when the 
+      // register map associated with this environment is a sub-map.  Construction
+      // of the sub-maps must be done manually.
+      //qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.monitored_ap.connect(reg_predictor.bus_in);
+    end
     // pragma uvmf custom reg_model_connect_phase end
   endfunction
 
@@ -109,7 +189,7 @@ class HMAC_environment  extends uvmf_environment_base #(
 // responsible for sampling the covergroup in the configuration if required.
 //
   virtual function void start_of_simulation_phase(uvm_phase phase);
-     configuration.HMAC_configuration_cg.sample();
+     configuration.hmac_configuration_cg.sample();
   endfunction
 
 endclass

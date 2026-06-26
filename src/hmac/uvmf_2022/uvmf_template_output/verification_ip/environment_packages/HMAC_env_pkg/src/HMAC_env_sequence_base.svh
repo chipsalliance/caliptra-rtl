@@ -1,6 +1,20 @@
 //----------------------------------------------------------------------
 // Created with uvmf_gen version 2022.3
 //----------------------------------------------------------------------
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // pragma uvmf custom header begin
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
@@ -21,7 +35,10 @@ class HMAC_env_sequence_base #(
                            CONFIG_T
                            ) );
 
-  
+  // Handle to the environments register model
+// This handle needs to be set before use.
+  hmac_reg_model_top  reg_model;
+
 // This HMAC_env_sequence_base contains a handle to a HMAC_env_configuration object 
 // named configuration.  This configuration variable contains a handle to each 
 // sequencer within each agent within this environment and any sub-environments.
@@ -31,15 +48,13 @@ class HMAC_env_sequence_base #(
 // Available sequencer handles within the environment configuration:
 
   // Initiator agent sequencers in HMAC_environment:
-    // configuration.HMAC_in_agent_config.sequencer
+    // configuration.hmac_rst_agent_config.sequencer
 
   // Responder agent sequencers in HMAC_environment:
-    // configuration.HMAC_out_agent_config.sequencer
 
 
-    typedef HMAC_in_random_sequence HMAC_in_agent_random_sequence_t;
-    HMAC_in_agent_random_sequence_t HMAC_in_agent_rand_seq;
-
+    typedef HMAC_rst_random_sequence hmac_rst_agent_random_sequence_t;
+    hmac_rst_agent_random_sequence_t hmac_rst_agent_rand_seq;
 
 
 
@@ -49,15 +64,15 @@ class HMAC_env_sequence_base #(
   
   function new(string name = "" );
     super.new(name);
-    HMAC_in_agent_rand_seq = HMAC_in_agent_random_sequence_t::type_id::create("HMAC_in_agent_rand_seq");
+    hmac_rst_agent_rand_seq = hmac_rst_agent_random_sequence_t::type_id::create("hmac_rst_agent_rand_seq");
 
 
   endfunction
 
   virtual task body();
 
-    if ( configuration.HMAC_in_agent_config.sequencer != null )
-       repeat (10) HMAC_in_agent_rand_seq.start(configuration.HMAC_in_agent_config.sequencer);
+    if ( configuration.hmac_rst_agent_config.sequencer != null )
+       repeat (25) hmac_rst_agent_rand_seq.start(configuration.hmac_rst_agent_config.sequencer);
 
 
   endtask

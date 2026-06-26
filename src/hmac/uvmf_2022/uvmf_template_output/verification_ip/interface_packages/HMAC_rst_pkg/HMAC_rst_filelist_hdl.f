@@ -1,0 +1,1 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC_rst_pkg/HMAC_rst_pkg_hdl.sv

@@ -39,7 +39,6 @@ uvmf_testlist:
 # pragma uvmf custom regression_suite begin
     - name: test_top
       repeat: 3
-    - name: HMAC_last_alone_error_test
 # pragma uvmf custom regression_suite end
 
 

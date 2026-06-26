@@ -1,0 +1,9 @@
+---
+# UVM built-in register sanity test (HW reset, bit-bash, access, walk).
+# Independent of the HMAC algorithm -- exercises only the RAL stack
+# (UVM RAL -> ahb_adapter -> QVIP AHB -> DUT). Use as the first sim run
+# to validate map / adapter wiring before the predictor is exercised.
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=register_test'
+testname: register_test

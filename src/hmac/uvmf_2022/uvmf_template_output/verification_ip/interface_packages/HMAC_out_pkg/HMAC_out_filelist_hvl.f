@@ -1,1 +1,0 @@
-$UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC_out_pkg/HMAC_out_pkg.sv

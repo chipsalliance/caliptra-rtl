@@ -8,7 +8,7 @@
   </pluginPaths>
   <libraryPaths/>
   <argFilePaths>
-    <argFilePath path="${project_loc}/HMAC_sve.F"/>
+    <argFilePath path="${project_loc}/hmac_sve.F"/>
   </argFilePaths>
   <sourceCollections/>
   <projectRefs/>

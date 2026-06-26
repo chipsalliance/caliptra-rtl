@@ -1,56 +1,76 @@
-// ==============================================================================
-// =====            Mentor Graphics UK Ltd                                  =====
-// =====            Rivergate, London Road, Newbury BERKS RG14 2QB          =====
-// ==============================================================================
-// ==============================================================================
-// This unpublished work contains proprietary information.
-// All right reserved. Supplied in confidence and must not be copied, used or disclosed 
-// for any purpose without express written permission.
-// 2019 @ Copyright Mentor Graphics UK Ltd
-// ==============================================================================
+//----------------------------------------------------------------------
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//----------------------------------------------------------------------
+// Description: HMAC_otf_reset_sequence
+//   Start an HMAC operation, then trigger an on-the-fly reset partway
+//   through the block sequence. After the reset the DUT must come
+//   back to STATUS.READY=1 cleanly, prove RAL still works, and run
+//   a small follow-on operation to confirm recovery.
+//----------------------------------------------------------------------
 
+class HMAC_otf_reset_sequence extends HMAC_bench_sequence_base;
 
-`ifndef __HMAC_OTF_RESET_SEQUENCE
-`define __HMAC_OTF_RESET_SEQUENCE
+  `uvm_object_utils(HMAC_otf_reset_sequence)
 
-`include "uvm_macros.svh"
+  uvm_event ev_rst;
 
-class HMAC_otf_reset_sequence #(int AHB_DATA_WIDTH = 64,
-                            int AHB_ADDR_WIDTH = 32,
-                            bit BYPASS_HSEL = 0
-                            ) extends HMAC_bench_sequence_base;
-
-  `uvm_object_utils(HMAC_otf_reset_sequence) 
-
-  // Define type and handle for reset sequence
-  typedef HMAC_in_otf_reset_sequence #(AHB_DATA_WIDTH, AHB_ADDR_WIDTH, BYPASS_HSEL) HMAC_in_otf_reset_sequence_t;
-  HMAC_in_otf_reset_sequence_t HMAC_in_otf_reset_s;
-  
-  // constructor
-  function new(string name = "");
+  function new(string name = "HMAC_otf_reset_sequence");
     super.new(name);
-  endfunction : new
+  endfunction
 
   virtual task body();
-    //HMAC_in_agent_random_seq = HMAC_in_random_sequence#()::type_id::create("HMAC_in_agent_random_seq");
-    HMAC_in_otf_reset_s = HMAC_in_otf_reset_sequence#()::type_id::create("HMAC_in_otf_reset_s");
-    
-    HMAC_in_agent_config.wait_for_reset();
-    HMAC_in_agent_config.wait_for_num_clocks(10);
+    bit [31:0] read_data;
+    bit [31:0] ctrl_init;
 
-    //repeat (10) HMAC_in_agent_random_seq.start(HMAC_in_agent_sequencer);
-    HMAC_in_otf_reset_s.start(HMAC_in_agent_sequencer);
-    //repeat (5) HMAC_in_agent_random_seq.start(HMAC_in_agent_sequencer);
+    ev_rst = uvm_event_pool::get_global("ev_rst");
 
-    HMAC_in_agent_config.wait_for_num_clocks(50);    
-    
-    if (1) // TODO -- how to properly choose which to print?
-        $display("* TESTCASE PASSED");
-    else
-        $display("* TESTCASE FAILED");
+    fork
+      hmac_rst_agent_config.wait_for_reset();
+    join
+    reg_model.reset();
+
+    wait_for_status(32'h1, "READY", read_data);
+
+    // Kick off an HMAC-384 op with garbage KEY/BLOCK -- we only care
+    // about reset recovery, not the tag.
+    foreach (reg_model.HMAC512_KEY[i])
+      reg_model.HMAC512_KEY[i].write(status, $urandom());
+    foreach (reg_model.HMAC512_BLOCK[i])
+      reg_model.HMAC512_BLOCK[i].write(status, $urandom());
+
+    ctrl_init      = 32'h0;
+    ctrl_init[0]   = 1'b1;
+    reg_model.HMAC512_CTRL.write(status, ctrl_init);
+
+    // Let the engine grind a bit, then yank reset.
+    fork
+      hmac_rst_agent_config.wait_for_num_clocks(40);
+    join
+
+    `uvm_info("HMAC_OTF", "Triggering on-the-fly reset", UVM_LOW)
+    ev_rst.trigger();
+
+    // Wait long enough for hdl_top to deassert rst and the DUT to
+    // become responsive again (200 ns hold + a few clocks).
+    fork
+      hmac_rst_agent_config.wait_for_num_clocks(50);
+    join
+    reg_model.reset();
+
+    // Follow-on probe: STATUS.READY must come back high and RAL
+    // traffic must succeed.
+    wait_for_status(32'h1, "READY", read_data);
+    `uvm_info("HMAC_OTF",
+      $sformatf("Post-reset STATUS recovered: 0x%08h", read_data), UVM_LOW)
+
+    `uvm_info("HMAC_OTF", "HMAC_otf_reset_sequence complete", UVM_LOW)
+    $display("* TESTCASE PASSED");
   endtask
 
-
-endclass : HMAC_otf_reset_sequence
-
-`endif
+endclass

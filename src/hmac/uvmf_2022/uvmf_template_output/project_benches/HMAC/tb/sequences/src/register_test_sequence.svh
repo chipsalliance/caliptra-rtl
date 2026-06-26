@@ -18,6 +18,7 @@ class register_test_sequence extends HMAC_bench_sequence_base;
 
   `uvm_object_utils( register_test_sequence );
 
+  uvm_reg_mem_built_in_seq uvm_register_test_seq;
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -28,6 +29,7 @@ class register_test_sequence extends HMAC_bench_sequence_base;
 
   // ****************************************************************************
   virtual task body();
+    uvm_register_test_seq = new("uvm_register_test_seq");
 
     // Reset the DUT
     fork
@@ -35,8 +37,7 @@ class register_test_sequence extends HMAC_bench_sequence_base;
       // UVMF_CHANGE_ME 
       // Select the desired wait_for_reset or provide custom mechanism.
       // fork-join for this code block may be unnecessary based on your situation.
-      HMAC_in_agent_config.wait_for_reset();
-      HMAC_out_agent_config.wait_for_reset();
+      hmac_rst_agent_config.wait_for_reset();
       // pragma uvmf custom register_test_reset end
     join
 
@@ -44,9 +45,25 @@ class register_test_sequence extends HMAC_bench_sequence_base;
       // UVMF_CHANGE_ME perform potentially necessary operations before running the sequence.
       // pragma uvmf custom register_test_setup end
 
+    // Reset the register model
+    reg_model.reset();
+    // Identify the register model to test
+    uvm_register_test_seq.model = reg_model;
+    // Perform the register test
+    // Disable particular tests in sequence by commenting options below
+    uvm_register_test_seq.tests = {
     // pragma uvmf custom register_test_operation begin
-    // UVMF_CHANGE_ME Perform your custom register test
+                                   UVM_DO_REG_HW_RESET      |
+                                   UVM_DO_REG_BIT_BASH      |
+                                   UVM_DO_REG_ACCESS        |
+                                   UVM_DO_MEM_ACCESS        |
+                                   UVM_DO_SHARED_ACCESS     |
+                                   UVM_DO_MEM_WALK          |
+                                   UVM_DO_ALL_REG_MEM_TESTS 
     // pragma uvmf custom register_test_operation end
+                                  };
+
+    uvm_register_test_seq.start(null);
 
   endtask
 

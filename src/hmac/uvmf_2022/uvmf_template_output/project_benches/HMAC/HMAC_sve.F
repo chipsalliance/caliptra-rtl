@@ -7,8 +7,7 @@ ${UVM_HOME}/src/uvm_pkg.sv
 -f ${UVMF_HOME}/common/common_sve.f
 
 // BFM Files
--F ${UVMF_VIP_LIBRARY_HOME}/interface_packages/HMAC_in_pkg/HMAC_in_pkg_sve.F
--F ${UVMF_VIP_LIBRARY_HOME}/interface_packages/HMAC_out_pkg/HMAC_out_pkg_sve.F
+-F ${UVMF_VIP_LIBRARY_HOME}/interface_packages/HMAC_rst_pkg/HMAC_rst_pkg_sve.F
 
 // Environment Files
 -F ${UVMF_VIP_LIBRARY_HOME}/environment_packages/HMAC_env_pkg/HMAC_env_pkg_sve.F
