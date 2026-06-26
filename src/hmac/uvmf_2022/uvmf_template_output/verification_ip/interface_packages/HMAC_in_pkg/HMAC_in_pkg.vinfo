@@ -1,4 +1,0 @@
-@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
-@use HMAC_in_pkg_hdl.vinfo
-+incdir+@vinfodir
-HMAC_in_pkg.sv

@@ -1,6 +1,20 @@
 //----------------------------------------------------------------------
 // Created with uvmf_gen version 2022.3
 //----------------------------------------------------------------------
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // pragma uvmf custom header begin
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
@@ -10,10 +24,11 @@
 //    environment package that will run on the host simulator.
 //
 // CONTAINS:
-//     - <HMAC_configuration.svh>
+//     - <hmac_configuration.svh>
 //     - <HMAC_environment.svh>
 //     - <HMAC_env_sequence_base.svh>
 //     - <HMAC_predictor.svh>
+//     - <HMAC_scoreboard.svh>
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -23,12 +38,19 @@ package HMAC_env_pkg;
   import uvm_pkg::*;
   `include "uvm_macros.svh"
   import uvmf_base_pkg::*;
-  import HMAC_in_pkg::*;
-  import HMAC_in_pkg_hdl::*;
-  import HMAC_out_pkg::*;
-  import HMAC_out_pkg_hdl::*;
+  import mvc_pkg::*;
+  import mgc_ahb_v2_0_pkg::*;
+  import rw_txn_pkg::*;
+  import HMAC_rst_pkg::*;
+  import HMAC_rst_pkg_hdl::*;
+  import HMAC_reg_model_top_pkg::*;
+  import qvip_ahb_lite_slave_pkg::*;
+  import qvip_ahb_lite_slave_params_pkg::*;
  
-  `uvm_analysis_imp_decl(_HMAC_in_agent_ae)
+  `uvm_analysis_imp_decl(_hmac_rst_agent_ae)
+  `uvm_analysis_imp_decl(_ahb_slave_0_ae)
+  `uvm_analysis_imp_decl(_actual_ahb_analysis_export)
+  `uvm_analysis_imp_decl(_expected_ahb_analysis_export)
 
   // pragma uvmf custom package_imports_additional begin
   // pragma uvmf custom package_imports_additional end
@@ -38,6 +60,7 @@ package HMAC_env_pkg;
   `include "src/HMAC_env_typedefs.svh"
   `include "src/HMAC_env_configuration.svh"
   `include "src/HMAC_predictor.svh"
+  `include "src/HMAC_scoreboard.svh"
   `include "src/HMAC_environment.svh"
   `include "src/HMAC_env_sequence_base.svh"
 

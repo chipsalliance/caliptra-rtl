@@ -1,0 +1,3 @@
+needs:
+  - hmac_rst_hvl.compile
+  - hmac_rst_hdl.compile

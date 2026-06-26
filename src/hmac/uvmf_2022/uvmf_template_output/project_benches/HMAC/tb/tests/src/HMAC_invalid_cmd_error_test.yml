@@ -1,0 +1,5 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=HMAC_invalid_cmd_error_test'
+testname: HMAC_invalid_cmd_error_test
