@@ -399,11 +399,21 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
+        // RAND_K_EN is sticky; clear it (preserve CURVE_SEL) before returning so
+        // subsequent ops aren't surprised by lingering nondet mode.
+        lsu_write_32(CLP_ECC_REG_ECC_CTRL,
+                     ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK));
         return;
     }
 
     // wait for ECC SIGNING process to be done
     wait_for_ecc_intr();
+
+    // RAND_K_EN is sticky across operations; clear it (preserve CURVE_SEL) once
+    // the engine is back to ready so back-to-back ops don't carry nondet state.
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL,
+                 ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK));
 
     if (check_result == TRUE) {
         // Read the data back from ECC register

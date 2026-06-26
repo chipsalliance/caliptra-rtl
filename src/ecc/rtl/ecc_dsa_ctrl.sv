@@ -569,7 +569,10 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_CTRL.CTRL.hwclr = |cmd_reg;
     always_comb hwif_in.ECC_CTRL.DH_SHAREDKEY.hwclr = |cmd_reg;
     always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
-    always_comb hwif_in.ECC_CTRL.RAND_K_EN.hwclr = |cmd_reg;
+    // RAND_K_EN is sticky across operations (symmetric to CURVE_SEL) so that the
+    // ecc_kv_wr_pkey_ctrl swwe lockout below blocks SW from arming KV-dest under
+    // nondet. Cleared only by ECC_CTRL.ZEROIZE (or explicit SW write when ready).
+    always_comb hwif_in.ECC_CTRL.RAND_K_EN.hwclr = zeroize_reg;
     
     // TODO add other interrupt hwset signals (errors)
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = error_flag_edge;
@@ -599,32 +602,33 @@ module ecc_dsa_ctrl
         hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = ~kv_write_ready;
     end
 
-    // KV path is P-384 only; SW cannot arm KV read/write while CURVE_SEL selects P-256.
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o && !curve_sel;
+    // KV path is P-384 only and forbidden under nondet (RAND_K_EN); SW cannot
+    // arm KV read/write while CURVE_SEL=P-256 or RAND_K_EN=1.
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = 0;
 
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o && !curve_sel;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = 0;
 
     // KV write control must be written before ECC core operation begins, even though
     // output isn't written to KV until the end of the operation.
     // Prevent partial-key attacks by blocking register modifications during core execution.
-    // Also block when CURVE_SEL=P256 since P-256 has no KV path.
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = !busy_o && !curve_sel;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = !busy_o && !curve_sel;
+    // Also block when CURVE_SEL=P256 (no KV path) or RAND_K_EN=1 (nondet mode has no KV path).
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = 0;
 
     //keyvault control reg macros for assigning to struct
