@@ -104,7 +104,7 @@ def _parse_tcs(path, hex_widths):
     """Yield lists of 11 hex strings.  Accepts either the raw C-tool
     format (11 data lines + 1 blank separator per TC) or the
     post-processed gen_*_kat.py format (12 data lines per TC with the
-    12th being a decimal TC counter)."""
+    12th being a hex TC counter)."""
     with open(path) as f:
         raw = f.read().splitlines()
     buf = []
