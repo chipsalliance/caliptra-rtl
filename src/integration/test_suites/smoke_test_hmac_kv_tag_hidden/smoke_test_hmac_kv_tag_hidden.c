@@ -1,0 +1,147 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+// Verify that when an HMAC key or block is sourced from KeyVault, the
+// SW-readable TAG register reads back zero for BOTH the intermediate
+// completion (after INIT) and the final completion (after LAST). Per
+// spec section "Key vault cryptographic functional block": when a key
+// is read from KV, the API register is locked and the digest is not
+// readable by firmware; the only legal sink is a KV slot via
+// HMAC512_KV_WR_CTRL. Reading the masked TAG also raises error3_sts
+// on the read cycle (consent-based notification).
+//
+// Three input combinations are exercised: KV key + SW block, SW key +
+// KV block, and KV key + KV block.
+//
+#include "caliptra_defines.h"
+#include "caliptra_isr.h"
+#include "riscv_hw_if.h"
+#include "riscv-csr.h"
+#include <string.h>
+#include <stdint.h>
+#include <stdlib.h>
+#include "printf.h"
+#include "hmac.h"
+#include "caliptra_rtl_lib.h"
+
+#ifdef CPT_VERBOSITY
+    enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+    enum printf_verbosity verbosity_g = LOW;
+#endif
+volatile uint32_t* stdout           = (uint32_t *)STDOUT;
+volatile uint32_t  intr_count       = 0;
+
+volatile caliptra_intr_received_s cptra_intr_rcv = {0};
+
+static uint32_t block_msg[32] = {
+    0x80808080,0x80808080,0x80808080,0x80808080,
+    0x80808080,0x80808080,0x80808080,0x80808080,
+    0x80808080,0x80808080,0x80808080,0x80808080,
+    0x80808080,0x80808080,0x80808080,0x80808080,
+    0x80808080,0x80808080,0x80808080,0x80808080,
+    0x80808080,0x80808080,0x80808080,0x80808080,
+    0x80808080,0x80808080,0x80808080,0x80808080,
+    0x80808080,0x80808080,0x80808080,0x80808080};
+
+static uint32_t sw_key[16] = {
+    0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,
+    0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,
+    0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,
+    0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b};
+
+static uint32_t lfsr_seed_dwords[6] = {
+    0xfeedface,0xdeadbeef,0xcafef00d,0x12345678,0x9abcdef0,0x0badc0de};
+
+static void run_subtest(const char *label, BOOL key_from_kv, BOOL block_from_kv) {
+    const uint8_t KV_KEY_SLOT   = 0;
+    const uint8_t KV_BLOCK_SLOT = 1;
+
+    VPRINTF(LOW, "--- %s ---\n", label);
+    hmac_wait_ready();
+
+    VPRINTF(LOW, "Step 1: load KEY from %s\n", key_from_kv ? "KV" : "SW");
+    if (key_from_kv) {
+        lsu_write_32(STDOUT, (KV_KEY_SLOT << 8) | 0xa9);
+        hmac_enable_kv_key(KV_KEY_SLOT);
+    } else {
+        write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0, sw_key, 16);
+    }
+
+    VPRINTF(LOW, "Step 2: load BLOCK from %s\n", block_from_kv ? "KV" : "SW");
+    if (block_from_kv) {
+        lsu_write_32(STDOUT, (KV_BLOCK_SLOT << 8) | 0xb0);
+        hmac_enable_kv_block(KV_BLOCK_SLOT);
+    } else {
+        write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0, block_msg, 32);
+    }
+
+    VPRINTF(LOW, "Step 3: issue INIT (no LAST) -> intermediate TAG must be masked\n");
+    write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_LFSR_SEED_0, lfsr_seed_dwords, 6);
+    hmac512_ctrl_write(HMAC_REG_HMAC512_CTRL_INIT_MASK, FALSE);
+    hmac_wait_valid();
+
+    VPRINTF(LOW, "Step 4: read TAG, expect 0 + error3_sts on the read\n");
+    if (hmac_read_tag_or(16) != 0) {
+        VPRINTF(LOW, "FAIL: %s leaked intermediate TAG\n", label);
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
+    hmac_check_error_intr(
+        HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK,
+        0x1);
+    VPRINTF(LOW, "OK: intermediate TAG hidden for %s\n", label);
+
+    VPRINTF(LOW, "Step 5: re-arm KV input(s) per spec (multi-iteration rule), drive NEXT|LAST\n");
+    if (key_from_kv) {
+        lsu_write_32(STDOUT, (KV_KEY_SLOT << 8) | 0xa9);
+        hmac_enable_kv_key(KV_KEY_SLOT);
+    } else {
+        write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0, sw_key, 16);
+    }
+    if (block_from_kv) {
+        lsu_write_32(STDOUT, (KV_BLOCK_SLOT << 8) | 0xb0);
+        hmac_enable_kv_block(KV_BLOCK_SLOT);
+    } else {
+        write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0, block_msg, 32);
+    }
+    hmac512_ctrl_write(HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                       HMAC_REG_HMAC512_CTRL_LAST_MASK, FALSE);
+    hmac_wait_valid();
+
+    VPRINTF(LOW, "Step 6: read final TAG, expect 0 (KV op result is not FW-readable)\n");
+    if (hmac_read_tag_or(16) != 0) {
+        VPRINTF(LOW, "FAIL: %s leaked final TAG\n", label);
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
+    hmac_check_error_intr(
+        HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK,
+        0x1);
+    VPRINTF(LOW, "OK: final TAG hidden for %s\n", label);
+    hmac_zeroize();
+}
+
+void main(void) {
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " HMAC KV tag-hidden test\n");
+    VPRINTF(LOW, "----------------------------------\n");
+
+    run_subtest("KV key, SW block",   TRUE,  FALSE);
+    run_subtest("SW key, KV block",   FALSE, TRUE);
+    run_subtest("KV key, KV block",   TRUE,  TRUE);
+
+    SEND_STDOUT_CTRL(0xff);
+    while (1);
+}

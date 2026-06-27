@@ -48,6 +48,15 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
 void hmac_zeroize();
 void wait_for_hmac_intr();
 void write_hmac_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size);
+void hmac512_ctrl_write(uint32_t ctrl_bits, BOOL csr_mode);
+void hmac_ctrl_write(uint32_t ctrl_bits, uint8_t mode, BOOL csr_mode);
+uint32_t hmac_read_tag_or(uint8_t tag_dwords);
+void hmac_check_error_intr(uint32_t expected_mask, uint8_t fail_cmd);
+void hmac_wait_ready();
+void hmac_wait_valid();
+void hmac_load_inputs(uint32_t *key, uint32_t *block, uint32_t *lfsr_seed);
+void hmac_enable_kv_key(uint8_t kv_id);
+void hmac_enable_kv_block(uint8_t kv_id);
 
 
 #endif
