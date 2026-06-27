@@ -230,6 +230,22 @@ void main() {
             while(1);
         }
         hmac_zeroize();
+
+        VPRINTF(LOW, " ***** HMAC restore_alone_error !!\n");
+
+        while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
+
+        cptra_intr_rcv.hmac_error = 0;
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_RESTORE_MASK |
+                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+
+        wait_for_hmac_intr();
+        if ((cptra_intr_rcv.hmac_error & HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK) == 0){
+            VPRINTF(ERROR, "\nHMAC restore_alone_error is not detected (sts=0x%x).\n", cptra_intr_rcv.hmac_error);
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+        hmac_zeroize();
     }
     // Write 0xff to STDOUT for TB to terminate test.
     SEND_STDOUT_CTRL( 0xff);
