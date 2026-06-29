@@ -77,6 +77,7 @@ COMP_LIB_NAMES := aes \
 		  sha512 \
 		  sha3 \
 		  soc_ifc \
+		  soc_access \
 		  caliptra_rtl_lib \
 		  clk_gate \
 		  wdt
