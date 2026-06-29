@@ -39,6 +39,18 @@ targets:
       - $COMPILE_ROOT/rtl/hmac256_param_pkg.sv
       - $COMPILE_ROOT/tb/hmac256_ctrl_tb.sv
     tops: [hmac256_ctrl_tb]
+---
+provides: [hmac256_coverage]
+schema_version: 2.4.0
+requires:
+  - hmac256_ctrl
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/hmac256_ctrl_cov_if.sv
+      - $COMPILE_ROOT/coverage/hmac256_ctrl_cov_bind.sv
 global:
   tool:
     vcs:
