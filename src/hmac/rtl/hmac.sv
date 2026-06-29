@@ -137,8 +137,7 @@ module hmac
 
   logic key_zero_error, key_zero_error_reg, key_zero_error_edge;
   logic key_mode_error, key_mode_error_reg, key_mode_error_edge;
-  logic last_alone_error, last_alone_error_reg, last_alone_error_edge;
-  logic restore_invalid_cmd_error, restore_invalid_cmd_error_reg, restore_invalid_cmd_error_edge;
+  logic invalid_cmd_error, invalid_cmd_error_reg, invalid_cmd_error_edge;
   logic intermediate_tag_hidden, intermediate_tag_hidden_reg, intermediate_tag_hidden_edge;
 
   logic error_flag;
@@ -424,8 +423,8 @@ hmac_reg i_hmac_reg (
 
 always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg | restore_reg) & (mode_reg == HMAC512_MODE) & (key_reg[KEY_NUM_DWORDS-1 : HMAC384_KEY_SIZE/DATA_WIDTH] == '0);
 always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg | restore_reg) & (key_reg == '0);
-always_comb last_alone_error = hwif_out.HMAC512_CTRL.LAST.value & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.RESTORE.value;
-always_comb restore_invalid_cmd_error = hwif_out.HMAC512_CTRL.RESTORE.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.LAST.value;
+always_comb invalid_cmd_error = (hwif_out.HMAC512_CTRL.LAST.value    & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.RESTORE.value)
+                              | (hwif_out.HMAC512_CTRL.RESTORE.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.LAST.value);
 always_comb intermediate_tag_hidden = core_tag_we & ~is_last_op_reg & (kv_key_data_present | kv_block_data_present | csr_mode_reg);
 
 always_comb error_flag = key_zero_error | key_mode_error;
@@ -446,8 +445,7 @@ begin : error_detection
       error_flag_reg <= 1'b0;
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
-      last_alone_error_reg <= 1'b0;
-      restore_invalid_cmd_error_reg <= 1'b0;
+      invalid_cmd_error_reg <= 1'b0;
       intermediate_tag_hidden_reg <= 1'b0;
       tag_was_masked_reg <= 1'b0;
     end
@@ -455,8 +453,7 @@ begin : error_detection
       error_flag_reg <= 1'b0;
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
-      last_alone_error_reg <= 1'b0;
-      restore_invalid_cmd_error_reg <= 1'b0;
+      invalid_cmd_error_reg <= 1'b0;
       intermediate_tag_hidden_reg <= 1'b0;
       tag_was_masked_reg <= 1'b0;
     end
@@ -465,8 +462,7 @@ begin : error_detection
         error_flag_reg <= 1'b1;
       key_mode_error_reg <= key_mode_error;
       key_zero_error_reg <= key_zero_error;
-      last_alone_error_reg <= last_alone_error;
-      restore_invalid_cmd_error_reg <= restore_invalid_cmd_error;
+      invalid_cmd_error_reg <= invalid_cmd_error;
       intermediate_tag_hidden_reg <= intermediate_tag_hidden;
       if (intermediate_tag_hidden)
         tag_was_masked_reg <= 1'b1;
@@ -478,15 +474,14 @@ end // error_detection
 always_comb error_flag_edge = error_flag & (!error_flag_reg);
 always_comb key_mode_error_edge = key_mode_error & (!key_mode_error_reg);
 always_comb key_zero_error_edge = key_zero_error & (!key_zero_error_reg);
-always_comb last_alone_error_edge = last_alone_error & (!last_alone_error_reg);
-always_comb restore_invalid_cmd_error_edge = restore_invalid_cmd_error & (!restore_invalid_cmd_error_reg);
+always_comb invalid_cmd_error_edge = invalid_cmd_error & (!invalid_cmd_error_reg);
 always_comb intermediate_tag_hidden_edge = tag_was_masked_reg & tag_read_strobe;
 
 //Interrupts hardware interface
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_tag_we;
 assign hwif_in.intr_block_rf.error_internal_intr_r.key_mode_error_sts.hwset = key_mode_error_edge;
 assign hwif_in.intr_block_rf.error_internal_intr_r.key_zero_error_sts.hwset = key_zero_error_edge;
-assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = last_alone_error_edge | restore_invalid_cmd_error_edge;
+assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = invalid_cmd_error_edge;
 assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = intermediate_tag_hidden_edge;
 
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
