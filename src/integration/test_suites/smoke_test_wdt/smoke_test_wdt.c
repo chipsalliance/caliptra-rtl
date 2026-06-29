@@ -60,6 +60,8 @@ void main() {
     
     if(rst_count == 0) {
         VPRINTF(LOW, "Cascaded mode\n");
+        // Disable interrupt for the test to pass
+        *soc_intr_en = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER2_TIMEOUT_EN_MASK;
         //Enable WDT timer1
         *wdt_timer1_en = SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK;
         set_t1_period(0x00000040, 0x00000000);
@@ -69,12 +71,15 @@ void main() {
         VPRINTF(LOW, "WDT T1 timed out as expected\n");
         *wdt_timer1_ctrl = SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK;
 
+        //Enable SOC notif interrupt
+        *soc_intr_en = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER1_TIMEOUT_EN_MASK | SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER2_TIMEOUT_EN_MASK;
+
         //Set timer1 period to default to avoid immediate time out
         set_default_t1_period();
         
     
         VPRINTF(LOW, "Independent mode - both timers enabled\n");
-        //Enable WDT timer1
+        //Enable WDT timer2
         *wdt_timer2_en = SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK;
         set_t2_period(0x00000040, 0x00000000);
         
