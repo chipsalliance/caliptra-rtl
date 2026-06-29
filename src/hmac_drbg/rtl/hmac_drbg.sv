@@ -151,10 +151,12 @@ module hmac_drbg
     .init_cmd(HMAC_init),
     .next_cmd(HMAC_next),
     .last_cmd(HMAC_last),
+    .restore_cmd(1'b0),
     .mode_cmd(1'b0),  //hardcoded to HMAC384 mode
     .lfsr_seed(lfsr_seed),
     .key(HMAC512_key),
     .block_msg(HMAC_block),
+    .restore_digest('0),
     .ready(HMAC_ready),
     .tag(HMAC512_tag),
     .tag_valid(HMAC_tag_valid)
