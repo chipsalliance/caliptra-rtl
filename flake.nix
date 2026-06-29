@@ -46,6 +46,7 @@
         inherit system;
       };
       python_dvsim = pkgs.callPackage ./tools/dvsim/python {inherit inputs;};
+      python_reg_gen = pkgs.callPackage ./tools/scripts/python {inherit inputs;};
 
       # Environment variables derivable from the repo layout.
       # Variables that cannot be auto-set here:
@@ -65,6 +66,13 @@
           ]) ++ (with pkgs; [
             uv
           ]);
+          shellHook = commonShellHook;
+        };
+        caliptra-reg-gen = pkgs.mkShell {
+          name = "caliptra-reg-gen";
+          packages = [
+            python_reg_gen
+          ];
           shellHook = commonShellHook;
         };
       };
