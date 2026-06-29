@@ -145,7 +145,7 @@ module soc_ifc_axi_sha_acc_dis_tb
     .recovery_data_avail(1'b0),
     .recovery_image_activated(1'b0),
 
-    .security_state({2'b11, 1'b0}),
+    .security_state('{debug_locked: caliptra_prim_mubi_pkg::MuBi4False, device_lifecycle: soc_ifc_pkg::DEVICE_PRODUCTION}),
 
     .generic_input_wires(64'h0),
     .BootFSM_BrkPoint(1'b0),

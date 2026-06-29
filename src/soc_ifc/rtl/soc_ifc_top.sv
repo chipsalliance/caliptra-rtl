@@ -22,6 +22,7 @@ module soc_ifc_top
     import mbox_pkg::*;
     import soc_ifc_reg_pkg::*;
     import kv_defines_pkg::*;
+    import caliptra_prim_mubi_pkg::*;
     #(
      parameter AXI_ADDR_WIDTH = 18
     ,parameter AXI_DATA_WIDTH = 32
@@ -263,7 +264,7 @@ logic [4:0][AXI_USER_WIDTH-1:0] valid_mbox_users;
 logic uc_mbox_data_avail;
 logic uc_mbox_data_avail_d;
 logic uc_cmd_avail_p;
-logic security_state_debug_locked_d;
+mubi4_t security_state_debug_locked_d;
 logic security_state_debug_locked_p;
 logic scan_mode_f;
 logic scan_mode_p;
@@ -545,7 +546,7 @@ always_comb begin
     for (int i = 0; i < `CLP_OBF_KEY_DWORDS; i++) begin
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.swwe = '0; //sw can't write to obf key
         //Sample only if its a pwrgood cycle, in debug locked state and scan mode is not asserted (as in do not sample if it was a warm reset or debug or scan mode)
-        soc_ifc_reg_hwif_in.internal_obf_key[i].key.wel = ~pwrgood_toggle_hint || ~security_state.debug_locked || scan_mode_f || clear_obf_secrets;
+        soc_ifc_reg_hwif_in.internal_obf_key[i].key.wel = ~pwrgood_toggle_hint || mubi4_test_false_strict(security_state.debug_locked) || scan_mode_f || clear_obf_secrets;
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.next = cptra_obf_key[i];
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.hwclr = clear_obf_secrets;
         cptra_obf_key_reg[i] = soc_ifc_reg_hwif_out.internal_obf_key[i].key.value;
@@ -554,7 +555,7 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.hwclr = clear_obf_secrets;
         //Sample immediately after we leave warm reset.
         //Only if debug locked, not scan mode, and the fuse valid bit is set
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && mubi4_test_true_loose(security_state.debug_locked) && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.next = cptra_obf_uds_seed[i];
         obf_uds_seed[i] = soc_ifc_reg_hwif_out.fuse_uds_seed[i].seed.value;
     end
@@ -562,7 +563,7 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.hwclr = clear_obf_secrets;
         //Sample immediately after we leave warm reset.
         //Only if debug locked, not scan mode, and the fuse valid bit is set
-        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && mubi4_test_true_loose(security_state.debug_locked) && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.next = cptra_obf_field_entropy[i];
         obf_field_entropy[i] = soc_ifc_reg_hwif_out.fuse_field_entropy[i].seed.value;
     end
@@ -577,7 +578,7 @@ always_comb begin
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next = ready_for_fuses;
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.boot_fsm_ps.next = boot_fsm_ps;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next = security_state.device_lifecycle;
-    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next     = security_state.debug_locked;
+    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next     = mubi4_test_true_loose(security_state.debug_locked);
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.scan_mode.next        = scan_mode;
     //generic wires
     for (int i = 0; i < 2; i++) begin
@@ -598,8 +599,7 @@ logic cptra_in_dbg_or_manuf_mode;
 // Breakpoint value captured on a Caliptra reset deassertion (0->1 signal transition)
 // BootFSM_Continue will allow the boot fsm to continue
 // Security State in Debug or Manuf Mode
-assign cptra_in_dbg_or_manuf_mode = ~(security_state.debug_locked) | 
-                                     ((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING));
+assign cptra_in_dbg_or_manuf_mode = mubi4_test_false_strict(security_state.debug_locked) | (security_state.device_lifecycle == DEVICE_MANUFACTURING);
 
 always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
@@ -656,14 +656,15 @@ end
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
-        security_state_debug_locked_d <= '0;
+        security_state_debug_locked_d <= MuBi4True;
     end
     else begin
         security_state_debug_locked_d <= security_state.debug_locked;
     end
 end
 
-always_comb security_state_debug_locked_p = security_state.debug_locked ^ security_state_debug_locked_d;
+// Pulse when interpreted locked state changes (loose for locked, strict for unlocked)
+always_comb security_state_debug_locked_p = mubi4_test_true_loose(security_state.debug_locked) ^ mubi4_test_true_loose(security_state_debug_locked_d);
 
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
@@ -789,8 +790,7 @@ assign stable_owner_key_en = soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.SUBSYSTEM_MODE
 
 //Uncore registers only open for debug unlock or manufacturing
 always_comb cptra_uncore_dmi_unlocked_reg_en = cptra_uncore_dmi_reg_en & 
-                                               (~(security_state.debug_locked) | 
-                                                 (security_state.device_lifecycle == DEVICE_MANUFACTURING));
+                                               (mubi4_test_false_strict(security_state.debug_locked) | (security_state.device_lifecycle == DEVICE_MANUFACTURING));
 //Uncore registers open for all cases
 always_comb cptra_uncore_dmi_locked_reg_en = cptra_uncore_dmi_reg_en;
 

@@ -38,6 +38,7 @@ module caliptra_top_tb_services
     import soc_ifc_pkg::*;
     import kv_defines_pkg::*;
     import caliptra_top_tb_pkg::*;
+    import caliptra_prim_mubi_pkg::*;
 #(
     parameter UVM_TB = 0
 ) (
@@ -1151,13 +1152,13 @@ module caliptra_top_tb_services
     //TIE-OFF device lifecycle
     logic assert_ss_tran;
 `ifdef CALIPTRA_DEBUG_UNLOCKED
-    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4False}; // DebugUnlocked & Production
 `else
     initial begin
         if ($test$plusargs("CALIPTRA_DEBUG_UNLOCKED"))
-            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4False}; // DebugUnlocked & Production
         else
-            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
+            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4True}; // DebugLocked & Production
 
         unlock_security_state = 1'b0; // Default to not unlocking security state
     end
@@ -1165,18 +1166,18 @@ module caliptra_top_tb_services
     always @(negedge clk) begin
         //lock debug mode
         if ((WriteData[7:0] == 8'hf9) && mailbox_write) begin
-            security_state.debug_locked <= 1'b1;
+            security_state.debug_locked <= MuBi4True;
             if (UVM_TB) $warning("WARNING! Detected FW write to manually set security_state.debug_locked, but Firmware can't do this in UVM. Use a sequence in the soc_ifc_ctrl_agent to modify this field.");
         end
         //unlock debug mode
         else if ((WriteData[7:0] == 8'hfa) && mailbox_write) begin
             cycleCnt_ff <= cycleCnt;
             assert_ss_tran <= 'b1;
-            //security_state.debug_locked <= 1'b0;
+            //security_state.debug_locked <= MuBi4False;
             if (UVM_TB) $warning("WARNING! Detected FW write to manually clear security_state.debug_locked, but Firmware can't do this in UVM. Use a sequence in the soc_ifc_ctrl_agent to modify this field.");
         end
         else if(assert_ss_tran && (cycleCnt == cycleCnt_ff + 'd100)) begin
-            security_state.debug_locked <= 1'b0;
+            security_state.debug_locked <= MuBi4False;
             assert_ss_tran <= 'b0;
         end
 

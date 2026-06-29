@@ -33,6 +33,8 @@
 
 `ifndef VERILATOR
 
+`include "caliptra_macros.svh"
+
 interface soc_ifc_cov_if
     import soc_ifc_pkg::*;
     import mbox_pkg::*;

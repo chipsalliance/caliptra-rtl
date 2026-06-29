@@ -519,9 +519,9 @@ always_comb begin
 end
 
 //Open Core TAP only for debug unlocked
-always_comb cptra_core_dmi_enable = ~(cptra_security_state_Latched.debug_locked);
+always_comb cptra_core_dmi_enable = mubi4_test_false_strict(cptra_security_state_Latched.debug_locked);
 //Open Uncore TAP for debug unlocked, or DEVICE_MANUFACTURING, or debug intent set
-always_comb cptra_uncore_dmi_enable = ~(cptra_security_state_Latched.debug_locked) | 
+always_comb cptra_uncore_dmi_enable = mubi4_test_false_strict(cptra_security_state_Latched.debug_locked) | 
                                        (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) |
                                        cptra_ss_debug_intent;
 
@@ -548,7 +548,7 @@ logic boot_flow_monitor_en;
 // Disable boot flow monitoring when debug is unlocked or scan mode is active (clk_override can cause false ICCM read detection)
 // Default during simulation is to disable boot flow monitor as most tests don't go through the boot flow
 always_comb boot_flow_monitor_en = sim_boot_flow_monitor_dis ? '0 :
-                                   cptra_security_state_Latched.debug_locked & ~cptra_scan_mode_Latched; 
+                                   mubi4_test_true_loose(cptra_security_state_Latched.debug_locked) & ~cptra_scan_mode_Latched; 
 
 
 caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
@@ -780,8 +780,8 @@ el2_veer_wrapper rvtop (
 
     always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
         if (~cptra_noncore_rst_b) begin //Setting the default value to be debug locked and in production mode
-            cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; 
-            cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1};
+            cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4True}; 
+            cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4True};
         end
         else if (unlock_caliptra_security_state) begin //capture the new value at reset or when unlocked
             cptra_security_state_Latched_d <= security_state;
@@ -803,8 +803,8 @@ el2_veer_wrapper rvtop (
         end
     end
 
-    //Lock debug unless both flops are unlocked
-    always_comb cptra_security_state_Latched.debug_locked = cptra_security_state_Latched_d.debug_locked | cptra_security_state_Latched_f.debug_locked;
+    //Lock debug unless both flops are unlocked (MuBi4 OR: result is True/locked if either input is True/locked)
+    always_comb cptra_security_state_Latched.debug_locked = mubi4_or_hi(cptra_security_state_Latched_d.debug_locked, cptra_security_state_Latched_f.debug_locked);
     //Pass on the latched value of device lifecycle
     always_comb cptra_security_state_Latched.device_lifecycle = cptra_security_state_Latched_f.device_lifecycle;
     //Only assert scan mode once both flops have set
@@ -815,7 +815,7 @@ el2_veer_wrapper rvtop (
     // gets messed up. So switch to scan is destructive (obvious! Duh!)
     always_comb scan_mode_switch = cptra_scan_mode_Latched_d & ~cptra_scan_mode_Latched_f;
     // Detect transition of debug mode
-    always_comb debug_lock_switch = cptra_security_state_Latched_d.debug_locked ^ cptra_security_state_Latched_f.debug_locked;
+    always_comb debug_lock_switch = mubi4_test_true_loose(cptra_security_state_Latched_d.debug_locked) ^ mubi4_test_true_loose(cptra_security_state_Latched_f.debug_locked);
     // Detect transition from valid lifecycle state to invalid
     always_comb device_lifecycle_switch = (cptra_security_state_Latched_f.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION}) &
                                          ~(cptra_security_state_Latched_d.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION});
@@ -1047,7 +1047,7 @@ sha3_ctrl #(
 );
 
 //override device secrets with debug values in Debug, Debug Intent, or Scan Mode or any device lifecycle other than PROD and MANUF
-always_comb cptra_in_debug_scan_mode = ~cptra_security_state_Latched.debug_locked | cptra_scan_mode_Latched | cptra_ss_debug_intent |
+always_comb cptra_in_debug_scan_mode = mubi4_test_false_strict(cptra_security_state_Latched.debug_locked) | cptra_scan_mode_Latched | cptra_ss_debug_intent |
                                        ~(cptra_security_state_Latched.device_lifecycle inside {DEVICE_PRODUCTION, DEVICE_MANUFACTURING});
 always_comb cptra_obf_key_dbg      = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_OBF_KEY : cptra_obf_key_reg;
 always_comb obf_uds_seed_dbg       = cptra_in_debug_scan_mode ? `CLP_DEBUG_MODE_UDS_SEED : obf_uds_seed;
