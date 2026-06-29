@@ -1,0 +1,34 @@
+---
+provides: [sha256_masked_core]
+schema_version: 2.4.0
+requires:
+  - sha256_ctrl
+  - caliptra_prim
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/sha256_masked_defines_pkg.sv
+      - $COMPILE_ROOT/rtl/sha256_masked_core.sv
+      - $COMPILE_ROOT/rtl/sha256_masked_w_mem.sv
+    tops: [sha256_masked_core]
+---
+provides: [sha256_masked_core_tb]
+schema_version: 2.4.0
+requires:
+  - sha256_masked_core
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/sha256_masked_core_tb.sv
+    tops: [sha256_masked_core_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'

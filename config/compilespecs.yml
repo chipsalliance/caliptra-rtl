@@ -17,6 +17,7 @@ files:
   - src/datavault/config/compile.yml
   - src/integration/asserts/config/compile.yml
   - src/sha512_masked/config/compile.yml
+  - src/sha256_masked/config/compile.yml
   - src/axi/config/compile.yml
   # -- Start RNG --
   - src/caliptra_prim_generic/config/compile.yml
