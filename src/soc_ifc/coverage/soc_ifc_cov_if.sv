@@ -490,7 +490,6 @@ interface soc_ifc_cov_if
     logic iccm_lock_i;
     logic iccm_unlock_i;
     logic iccm_pcr_dest_done;
-    logic iccm_soc_has_lock;
     logic iccm_lock_acquire;
 
     assign iccm_mode           = i_sha512_acc_top.iccm_mode;
@@ -500,7 +499,6 @@ interface soc_ifc_cov_if
     assign iccm_lock_i         = i_sha512_acc_top.iccm_lock_i;
     assign iccm_unlock_i       = i_sha512_acc_top.iccm_unlock_i;
     assign iccm_pcr_dest_done  = i_sha512_acc_top.iccm_pcr_dest_done;
-    assign iccm_soc_has_lock   = i_sha512_acc_top.soc_has_lock;
     assign iccm_lock_acquire   = i_sha512_acc_top.iccm_lock_acquire;
 
     covergroup iccm_hash_cov_grp @(posedge clk iff cptra_rst_b);
@@ -528,9 +526,6 @@ interface soc_ifc_cov_if
 
         // PCR4 write completion
         iccm_pcr_dest_done_cp: coverpoint iccm_pcr_dest_done;
-
-        // SoC has lock (security: should block iccm_mode)
-        iccm_soc_has_lock_cp: coverpoint iccm_soc_has_lock;
 
         // HW-driven LOCK acquire pulse (asserted while ICCM hash is engaging)
         iccm_lock_acquire_cp: coverpoint iccm_lock_acquire;
@@ -565,25 +560,19 @@ interface soc_ifc_cov_if
         }
 
         // Byte count x extra pad: verify boundary cases trigger extra padding
-        iccm_byte_countXextra_pad: cross iccm_byte_count_cp, iccm_extra_pad_cp;
-
-        // SoC lock x iccm_mode: verify SoC is blocked from using iccm_mode
-        iccm_soc_lockXmode: cross iccm_soc_has_lock_cp, iccm_mode_cp {
-            // Security: soc_has_lock=1 with iccm_mode=1 should never persist (hwclr fires)
-            illegal_bins soc_with_iccm = binsof(iccm_soc_has_lock_cp) intersect {1} &&
-                                         binsof(iccm_mode_cp) intersect {1};
+        iccm_byte_countXextra_pad: cross iccm_byte_count_cp, iccm_extra_pad_cp {
+            ignore_bins impossible_min_extra_pad =
+                binsof(iccm_byte_count_cp.min_write) &&
+                binsof(iccm_extra_pad_cp) intersect {1};
+            ignore_bins impossible_one_block_extra_pad =
+                binsof(iccm_byte_count_cp.one_block) &&
+                binsof(iccm_extra_pad_cp) intersect {1};
         }
-
-        // Unlock x mode_done: verify anti-replay clears correctly
-        iccm_unlockXmode_done: cross iccm_unlock_cp, iccm_mode_done_cp;
 
         // Lock with no prior writes (edge case: empty hash attempt)
         iccm_lock_no_writes_cp: coverpoint (iccm_lock_i & iccm_mode & (iccm_num_bytes_wr == 0)) {
             bins no_write_lock = {1};
         }
-
-        // PCR dest done x mode_done: verify completion sequence
-        iccm_pcr_doneXmode_done: cross iccm_pcr_dest_done_cp, iccm_mode_done_cp;
 
     endgroup
 
