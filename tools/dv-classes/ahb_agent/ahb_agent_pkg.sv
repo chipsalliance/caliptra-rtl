@@ -40,6 +40,7 @@ package ahb_agent_pkg;
 
   `include "ahb_txn_request_item.svh"
   `include "ahb_txn_response_item.svh"
+  `include "ahb_txn_item.svh"
 
   `include "ahb_mgr_driver.svh"
   `include "ahb_mgr_reg_adapter.svh"
