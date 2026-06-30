@@ -76,16 +76,16 @@ void check_external_mu(uintptr_t kmac, const char *message, const size_t message
 }
 
 void main() {
-    VPRINTF(LOW, "-----------------------------------\n");
-    VPRINTF(LOW, " Running SHA3 in ExternalMu test !!\n");
-    VPRINTF(LOW, "-----------------------------------\n");
+    VPRINTF_LOW("-----------------------------------\n");
+    VPRINTF_LOW(" Running SHA3 in ExternalMu test !!\n");
+    VPRINTF_LOW("-----------------------------------\n");
 
     // Call interrupt initialisation.
     init_interrupts();
 
     for (int i = 0; i < sizeof(external_mu_tests) / sizeof(external_mu_test_t); ++i) {
         external_mu_test_t test = external_mu_tests[i];
-        VPRINTF(LOW, "Processing external mu test from ACVP with index %d\n", test.identifier);
+        VPRINTF_LOW("Processing external mu test from ACVP with index %d\n", test.identifier);
         check_external_mu(CLP_KMAC_BASE_ADDR, test.message, test.message_len, test.public_key, test.external_mu);
     }
 

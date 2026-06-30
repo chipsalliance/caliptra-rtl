@@ -74,24 +74,24 @@ void main(){
     //inject hmac512_block to kv key reg (in RTL)
     lsu_write_32(STDOUT, (hmac512_block_kv_id << 8) | 0xb0); 
     
-    VPRINTF(LOW, "wait for HMAC to be ready\n");
+    VPRINTF_LOW("wait for HMAC to be ready\n");
     while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
-    VPRINTF(LOW, "Program KEY Read with 12 dwords from key_kv_id\n");
+    VPRINTF_LOW("Program KEY Read with 12 dwords from key_kv_id\n");
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
                                                         ((hmac512_key_kv_id << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
     
     // Check that HMAC KEY is loaded
     while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
-    VPRINTF(LOW, "Program HMAC_BLOCK\n");
+    VPRINTF_LOW("Program HMAC_BLOCK\n");
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_EN_MASK |
                                                             ((hmac512_block_kv_id << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) & HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK));
 
     // Check that HMAC BLOCK is loaded
     while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
     
-    VPRINTF(LOW, "Program HMAC_TAG Dest\n");
+    VPRINTF_LOW("Program HMAC_TAG Dest\n");
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL, HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
                                                       HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK  |
                                                       HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK|
@@ -107,7 +107,7 @@ void main(){
  
 
 
-    VPRINTF(LOW, "Enable HMAC core\n");
+    VPRINTF_LOW("Enable HMAC core\n");
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));    
 

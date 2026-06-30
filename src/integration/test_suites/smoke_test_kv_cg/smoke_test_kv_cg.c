@@ -87,7 +87,7 @@ void main() {
     // for (uint16_t i = 0; i < 2; i++){
     //     printf("%d\n", i);
     // }
-    VPRINTF(LOW, "Dummy print\n");
+    VPRINTF_LOW("Dummy print\n");
     __asm__ volatile ("csrwi    %0, %1" \
                     : /* output: none */        \
                     : "i" (0x7c6), "i" (0x03)  /* input : immediate  */ \
@@ -104,17 +104,17 @@ void main() {
     }
     
 
-    VPRINTF(LOW, "Core back up\n");
+    VPRINTF_LOW("Core back up\n");
     //Restart UDS flow after core wakes up - should not go through
     //Write UDS IV
-    VPRINTF(LOW, "Writing IV a 2nd time\n");
+    VPRINTF_LOW("Writing IV a 2nd time\n");
     *doe_iv_0 = IV_DATA_UDS3;
     *doe_iv_1 = IV_DATA_UDS2;
     *doe_iv_2 = IV_DATA_UDS1;
     *doe_iv_3 = IV_DATA_UDS0;
 
     //Start UDS and store in KV0
-    VPRINTF(LOW, "Starting UDS again\n");
+    VPRINTF_LOW("Starting UDS again\n");
     *doe_ctrl = 0x00000001;
 
     //Enable clk gating and halt core

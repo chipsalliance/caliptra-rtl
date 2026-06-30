@@ -44,9 +44,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 */
 
 void main() {
-    VPRINTF(LOW, "----------------------------------------\n");
-    VPRINTF(LOW, " Running ECC Smoke Test error_trigger !!\n");
-    VPRINTF(LOW, "----------------------------------------\n");
+    VPRINTF_LOW("----------------------------------------\n");
+    VPRINTF_LOW(" Running ECC Smoke Test error_trigger !!\n");
+    VPRINTF_LOW("----------------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -202,7 +202,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST: invalid privkey injection\n");
+        VPRINTF_LOW("\n TEST: invalid privkey injection\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -214,14 +214,14 @@ void main() {
         //Inject invalid privkey
         SEND_STDOUT_CTRL(0x9c);
 
-        VPRINTF(LOW, "\nECC KEYGEN\n");
+        VPRINTF_LOW("\nECC KEYGEN\n");
         // Enable ECC KEYGEN core
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
         
         // wait for ECC PCR SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC invalid privkey error is not detected.\n");
+            VPRINTF_ERROR("\nECC invalid privkey error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -235,7 +235,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST: invalid pubkey_x injection\n");
+        VPRINTF_LOW("\n TEST: invalid pubkey_x injection\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -247,14 +247,14 @@ void main() {
         //Inject invalid pubkey_x
         SEND_STDOUT_CTRL(0x9d);
 
-        VPRINTF(LOW, "\nECC KEYGEN\n");
+        VPRINTF_LOW("\nECC KEYGEN\n");
         // Enable ECC KEYGEN core
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
         
         // wait for ECC PCR SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC invalid pubkey_x error is not detected.\n");
+            VPRINTF_ERROR("\nECC invalid pubkey_x error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -268,7 +268,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST: invalid pubkey_y injection\n");
+        VPRINTF_LOW("\n TEST: invalid pubkey_y injection\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -280,14 +280,14 @@ void main() {
         //Inject invalid pubkey_x
         SEND_STDOUT_CTRL(0x9e);
 
-        VPRINTF(LOW, "\nECC KEYGEN\n");
+        VPRINTF_LOW("\nECC KEYGEN\n");
         // Enable ECC KEYGEN core
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
         
         // wait for ECC PCR SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC invalid pubkey_y error is not detected.\n");
+            VPRINTF_ERROR("\nECC invalid pubkey_y error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }

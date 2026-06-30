@@ -150,7 +150,7 @@ void main(void) {
     // Set endianness mode
     endian_mode = AES_LITTLE_ENDIAN;
 
-    VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
 
     SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
@@ -165,12 +165,12 @@ void main(void) {
     // hex_to_uint32_array(tag_str3, tag, &tag_length);
     // hex_to_uint32_array(tag_long_str, tag_long, &tag_long_length);
 
-    VPRINTF(LOW, "Tag address: 0x%08X\n", (uint32_t)tag);
-    VPRINTF(LOW, "Tag: ");
+    VPRINTF_LOW("Tag address: 0x%08X\n", (uint32_t)tag);
+    VPRINTF_LOW("Tag: ");
     for (int i = 0; i < tag_length/4; i++) {
-        VPRINTF(LOW, "%08X", tag[i]);
+        VPRINTF_LOW("%08X", tag[i]);
     }
-    VPRINTF(LOW, "\n");
+    VPRINTF_LOW("\n");
 
     // Setup AES key structure
     aes_key.kv_intf = FALSE;
@@ -199,7 +199,7 @@ void main(void) {
     // Sending image over to AXI SRAM for usage during DMA AES calculation
     // ===========================================================================
     // Use a FIXED transfer (only the final beat should be present at the target address)
-    VPRINTF(LOW, "Sending image payload via AHB i/f to AXI SRAM\n");
+    VPRINTF_LOW("Sending image payload via AHB i/f to AXI SRAM\n");
     soc_ifc_axi_dma_send_ahb_payload(aes_input.dma_transfer_data.src_addr, 0, 
                                       aes_input.plaintext, aes_input.text_len, 0);
 
@@ -226,15 +226,15 @@ void main(void) {
     // Sending image over to AXI SRAM for usage during DMA AES calculation
     // ===========================================================================
     // Use a FIXED transfer (only the final beat should be present at the target address)
-    VPRINTF(LOW, "Sending image payload via AHB i/f to AXI SRAM\n");
+    VPRINTF_LOW("Sending image payload via AHB i/f to AXI SRAM\n");
     soc_ifc_axi_dma_send_ahb_payload(aes_input.dma_transfer_data.src_addr, 0, 
                                       aes_input.plaintext, aes_input.text_len, 0);
 
     
     // Execute AES flow
-    VPRINTF(LOW, "Executing AES flow for long string test\n");
+    VPRINTF_LOW("Executing AES flow for long string test\n");
     aes_flow(op, mode, key_len, aes_input, endian_mode);
-    VPRINTF(LOW, "AES flow complete\n");
+    VPRINTF_LOW("AES flow complete\n");
 
     // Signal completion and wait
     SEND_STDOUT_CTRL(0xff);

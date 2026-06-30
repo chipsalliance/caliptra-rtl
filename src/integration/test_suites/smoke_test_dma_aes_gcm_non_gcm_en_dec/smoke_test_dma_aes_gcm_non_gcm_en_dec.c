@@ -52,7 +52,7 @@ void run_aes_test(test_config_t test_config) {
     aes_mode_e mode = test_config.mode;
     aes_key_len_e key_len;
 
-    VPRINTF(LOW, "\n----------------------------------\n%s\n----------------------------------\n", test_config.test_name);
+    VPRINTF_LOW("\n----------------------------------\n%s\n----------------------------------\n", test_config.test_name);
 
     const char key_str3[] = "feffe9928665731c6d6a8f9467308308feffe9928665731c6d6a8f9467308308";
     const char ecb_key_str[] = "b6a8d5636f5c6a7224f9977dcf7ee6c7fb6d0c48cbdee9737a959796489bddbc";
@@ -95,7 +95,7 @@ void run_aes_test(test_config_t test_config) {
 
     // Parse test vectors based on mode
     if (mode == AES_GCM) {
-        VPRINTF(LOW, "Configuring AES for GCM mode\n");
+        VPRINTF_LOW("Configuring AES for GCM mode\n");
         hex_to_uint32_array(key_str3, key, &key_size);
         key_len = key_size == 32 ? AES_256 :
                   key_size == 16 ? AES_128 : AES_192;
@@ -113,7 +113,7 @@ void run_aes_test(test_config_t test_config) {
         aes_input.ciphertext = ciphertext;
         aes_input.text_len = plaintext_length;
     } else {
-        VPRINTF(LOW, "Configuring AES for non-GCM mode\n");
+        VPRINTF_LOW("Configuring AES for non-GCM mode\n");
         // Non-GCM modes (ECB)
         
         hex_to_uint32_array(ecb_key_str, key, &key_size);
@@ -154,7 +154,7 @@ void run_aes_test(test_config_t test_config) {
     aes_input.data_src_mode  = AES_DATA_DMA;
 
     if(test_config.use_src_as_dst == 1){
-        VPRINTF(LOW, "Using.. source address as destination address\n");
+        VPRINTF_LOW("Using.. source address as destination address\n");
         aes_input.dma_transfer_data.src_addr = (uint64_t)AXI_SRAM_BASE_ADDR;
         aes_input.dma_transfer_data.dst_addr = (uint64_t)AXI_SRAM_BASE_ADDR;
     } else {
@@ -166,7 +166,7 @@ void run_aes_test(test_config_t test_config) {
     // Sending image over to AXI SRAM for usage during DMA AES calculation
     // ===========================================================================
     // Use a FIXED transfer (only the final beat should be present at the target address)
-    VPRINTF(LOW, "Sending image payload via AHB i/f to AXI SRAM AES GCM\n");
+    VPRINTF_LOW("Sending image payload via AHB i/f to AXI SRAM AES GCM\n");
     if(op==AES_ENC){
         soc_ifc_axi_dma_send_ahb_payload(aes_input.dma_transfer_data.src_addr, 0, aes_input.plaintext, aes_input.text_len, 0);
     } else {
@@ -178,7 +178,7 @@ void run_aes_test(test_config_t test_config) {
 
 void main(void) {
 
-    VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES - Multiple Test Cases\n----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\nSmoke Test AXI DMA AES - Multiple Test Cases\n----------------------------------\n");
 
     // Define all test cases
     test_config_t test_cases[] = {
@@ -206,12 +206,12 @@ void main(void) {
     int num_tests = sizeof(test_cases) / sizeof(test_config_t);
     
     for (int i = 0; i < num_tests; i++) {
-        VPRINTF(LOW, "\n========================================\nRunning Test %d of %d\n========================================\n", i+1, num_tests);
+        VPRINTF_LOW("\n========================================\nRunning Test %d of %d\n========================================\n", i+1, num_tests);
         run_aes_test(test_cases[i]);
-        VPRINTF(LOW, "Test %d PASSED\n", i+1);
+        VPRINTF_LOW("Test %d PASSED\n", i+1);
     }
 
-    VPRINTF(LOW, "\n========================================\nALL TESTS COMPLETED SUCCESSFULLY!\n========================================\n");
+    VPRINTF_LOW("\n========================================\nALL TESTS COMPLETED SUCCESSFULLY!\n========================================\n");
 
     SEND_STDOUT_CTRL( 0xff);
     while(1);

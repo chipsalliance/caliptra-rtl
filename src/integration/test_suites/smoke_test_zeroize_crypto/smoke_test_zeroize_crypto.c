@@ -46,9 +46,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Smoke Test With Crypto Zeroize !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Smoke Test With Crypto Zeroize !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -172,7 +172,7 @@ void main() {
     // check that dest valid bits are 0 since the key generation was interrupted
     check_data = lsu_read_32(CLP_KV_REG_KEY_CTRL_0);
     if ((check_data & (KV_REG_KEY_CTRL_0_DEST_VALID_MASK)) != 0) {
-        VPRINTF(ERROR, "ERROR: Dest valid mismatch actual (0x%x) expected (0x00000000)\n", check_data);
+        VPRINTF_ERROR("ERROR: Dest valid mismatch actual (0x%x) expected (0x00000000)\n", check_data);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     } else {

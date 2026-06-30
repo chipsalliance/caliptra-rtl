@@ -43,9 +43,9 @@ void main() {
     uint32_t mie_external_int_en = 0x00000800;
     uint32_t mie_timer0_ext_int_en = 0x20000800;
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " CLK GATING smoke test !!\n"         );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" CLK GATING smoke test !!\n"         );
+    VPRINTF_LOW("----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();
@@ -55,7 +55,7 @@ void main() {
     //----------------------------------------------------
         SEND_STDOUT_CTRL(0xf2); 
         //Set internal timer0 counter to 0
-        VPRINTF(LOW, "Wake up core using internal timer0\n");
+        VPRINTF_LOW("Wake up core using internal timer0\n");
         __asm__ volatile ("csrwi    %0, %1" \
                       : /* output: none */        \
                       : "i" (0x7d2), "i" (0x00)  /* input : immediate  */ \
@@ -100,7 +100,7 @@ void main() {
     //------------------------------------------------------
     //Wake up using software int
     //------------------------------------------------------
-        VPRINTF(LOW, "Wake up core using software interrupt\n");
+        VPRINTF_LOW("Wake up core using software interrupt\n");
         //Set machine intr enable reg (mie) - enable soft intr
         __asm__ volatile ("csrwi    %0, %1" \
                       : /* output: none */        \
@@ -116,7 +116,7 @@ void main() {
     //------------------------------------------------------
     //Wake SOC up for AXI tx and core using timer int later
     //------------------------------------------------------
-        VPRINTF(LOW, "Wake up SOC clk on AXI txns and later wake up core using timer interrupt\n");
+        VPRINTF_LOW("Wake up SOC clk on AXI txns and later wake up core using timer interrupt\n");
         //Machine intr enable reg (mie) - enable timer int 
         __asm__ volatile ("csrw    %0, %1" \
                       : /* output: none */        \
@@ -134,7 +134,7 @@ void main() {
     //------------------------------------------------------
     //Wake up using generic input wires and then soft intr
     //------------------------------------------------------
-        VPRINTF(LOW, "Wake up clks on change in generic_input_wires and later wake up core using software interrupt\n");
+        VPRINTF_LOW("Wake up clks on change in generic_input_wires and later wake up core using software interrupt\n");
         //Set machine intr enable reg (mie) - enable soft intr
         __asm__ volatile ("csrwi    %0, %1" \
                       : /* output: none */        \
@@ -150,7 +150,7 @@ void main() {
     //------------------------------------------------------
     //Wake up using JTAG accesses and then mit0 timer intr
     //------------------------------------------------------
-        VPRINTF(LOW, "Wake up clks on JTAG accesses and later wake up core on t0 timer intr\n");
+        VPRINTF_LOW("Wake up clks on JTAG accesses and later wake up core on t0 timer intr\n");
         set_mit0(mitb0_1, mie_timer0_en);
         SEND_STDOUT_CTRL(0xe9); //Force dmi_reg_en input to clk_gate after a delay
         halt_core();

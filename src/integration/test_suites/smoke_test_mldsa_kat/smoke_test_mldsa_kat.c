@@ -32,9 +32,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Running MLDSA KAT Smoke Test !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Running MLDSA KAT Smoke Test !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     // uint32_t mldsa_msg[] = {};
 

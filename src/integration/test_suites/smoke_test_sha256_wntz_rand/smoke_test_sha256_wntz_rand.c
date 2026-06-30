@@ -33,9 +33,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 void main() {
 
     // Entry message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " SHA256 wntz rand smoke test !!\n"   );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" SHA256 wntz rand smoke test !!\n"   );
+    VPRINTF_LOW("----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();

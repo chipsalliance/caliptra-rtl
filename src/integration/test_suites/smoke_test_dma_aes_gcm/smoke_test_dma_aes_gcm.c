@@ -72,7 +72,7 @@ void main(void) {
 
     endian_mode = AES_LITTLE_ENDIAN;
 
-    VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
 
     hex_to_uint32_array(key_str3, key, &key_size);
     key_len = key_size == 32 ? AES_256 :
@@ -106,7 +106,7 @@ void main(void) {
     // Sending image overto AXI SRAM for usage during DMA AES calculation
     // ===========================================================================
     // Use a FIXED transfer (only the final beat should be present at the target address)
-    VPRINTF(LOW, "Sending image payload via AHB i/f to AXI SRAM\n");
+    VPRINTF_LOW("Sending image payload via AHB i/f to AXI SRAM\n");
     soc_ifc_axi_dma_send_ahb_payload(aes_input.dma_transfer_data.src_addr, 0, aes_input.plaintext, aes_input.text_len, 0);
 
 

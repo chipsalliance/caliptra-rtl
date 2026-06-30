@@ -153,7 +153,7 @@ void main(void) {
 
         uint64_t src_addr, dst_addr;
 
-        VPRINTF(LOW, "----------------------------------\nRand Test AXI DMA  !!\n----------------------------------\n");
+        VPRINTF_LOW("----------------------------------\nRand Test AXI DMA  !!\n----------------------------------\n");
         rst_count++;
 
         // Setup the interrupt CSR configuration
@@ -174,18 +174,18 @@ void main(void) {
             // Set rst_done = 1 so that reset is not injected again for the same test
             rst_done = 1;
 
-            VPRINTF(LOW, "Observed reset! Reading status registers for sign of life\n");
+            VPRINTF_LOW("Observed reset! Reading status registers for sign of life\n");
             //TODO: Read RESET_REASON register
             uint32_t reset_reason = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON) & SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK;
             if (reset_reason == 0x2) {
-                VPRINTF(LOW, "Reset Reason: Warm reset\n");
+                VPRINTF_LOW("Reset Reason: Warm reset\n");
             }
         }
 
 
         // Read DCCM to determine number of transfers
         num_transfers = lsu_read_32(RV_DCCM_EADR - 3);
-        VPRINTF(LOW, "Number of transfers: %d\n\n", num_transfers);
+        VPRINTF_LOW("Number of transfers: %d\n\n", num_transfers);
 
         // Read transfer type and size for each transfer and perform the transfer
         dccm_addr = RV_DCCM_EADR - 7;
@@ -194,13 +194,13 @@ void main(void) {
             // Keep track of transfer number so transfer can resume after reset
             curr_transfer = i; 
 
-            VPRINTF(LOW, "TRANSFER #%d\n", i);
+            VPRINTF_LOW("TRANSFER #%d\n", i);
             // Read control word that includes transfer type and other control information for DMA transfer
             
             if (next_transfer_dccm_addr != 0) { 
                 dccm_addr = next_transfer_dccm_addr;
             }
-            VPRINTF(HIGH, "dccm_addr = 0x%0x", dccm_addr);
+            VPRINTF_HIGH("dccm_addr = 0x%0x", dccm_addr);
             dma_control = lsu_read_32(dccm_addr);
             
             // Extract fields
@@ -213,19 +213,19 @@ void main(void) {
             test_block_size = (dma_control & TEST_BLOCK_SIZE_MASK) ? 1 : 0;
             dma_xfer_type = (dma_control & DMA_XFER_TYPE_MASK) >> DMA_XFER_TYPE_POS;
             block_size = test_block_size ? ((dma_control & DMA_BLOCK_SIZE_MASK) >> DMA_BLOCK_SIZE_POS) : 0;
-            VPRINTF(HIGH,   "Raw dma_control: 0x%08x\n", dma_control);
-            VPRINTF(ALL,    "DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
-            VPRINTF(HIGH,   "Masked value: 0x%08x\n", dma_control & DMA_XFER_TYPE_MASK);
-            VPRINTF(MEDIUM, "Extracted dma_xfer_type value: %d (0x%x)\n", dma_xfer_type, dma_xfer_type);
-            VPRINTF(LOW,    "Transfer type: %s\n", transfer_type_to_string((transfer_type_t)dma_xfer_type));
-            VPRINTF(MEDIUM, "Block Size: %d\n", block_size);
-            VPRINTF(LOW,    "Src is FIFO: %s\n", src_is_fifo ? "Yes" : "No");
-            VPRINTF(LOW,    "Dst is FIFO: %s\n", dst_is_fifo ? "Yes" : "No");
-            VPRINTF(LOW,    "Use Rd Fixed: %s\n", use_rd_fixed ? "Yes" : "No");
-            VPRINTF(LOW,    "Use Wr Fixed: %s\n", use_wr_fixed ? "Yes" : "No");
-            VPRINTF(MEDIUM, "Inject Rand Delays: %s\n", inject_rand_delays ? "Yes" : "No");
-            VPRINTF(MEDIUM, "Inject Rst: %s\n", inject_rst ? "Yes" : "No");
-            VPRINTF(LOW,    "Test Block Size: %s\n", test_block_size ? "Yes" : "No");
+            VPRINTF_HIGH(  "Raw dma_control: 0x%08x\n", dma_control);
+            VPRINTF_ALL(   "DMA_XFER_TYPE_MASK: 0x%08x\n", DMA_XFER_TYPE_MASK);
+            VPRINTF_HIGH(  "Masked value: 0x%08x\n", dma_control & DMA_XFER_TYPE_MASK);
+            VPRINTF_MEDIUM("Extracted dma_xfer_type value: %d (0x%x)\n", dma_xfer_type, dma_xfer_type);
+            VPRINTF_LOW(   "Transfer type: %s\n", transfer_type_to_string((transfer_type_t)dma_xfer_type));
+            VPRINTF_MEDIUM("Block Size: %d\n", block_size);
+            VPRINTF_LOW(   "Src is FIFO: %s\n", src_is_fifo ? "Yes" : "No");
+            VPRINTF_LOW(   "Dst is FIFO: %s\n", dst_is_fifo ? "Yes" : "No");
+            VPRINTF_LOW(   "Use Rd Fixed: %s\n", use_rd_fixed ? "Yes" : "No");
+            VPRINTF_LOW(   "Use Wr Fixed: %s\n", use_wr_fixed ? "Yes" : "No");
+            VPRINTF_MEDIUM("Inject Rand Delays: %s\n", inject_rand_delays ? "Yes" : "No");
+            VPRINTF_MEDIUM("Inject Rst: %s\n", inject_rst ? "Yes" : "No");
+            VPRINTF_LOW(   "Test Block Size: %s\n", test_block_size ? "Yes" : "No");
 
 
             // Read transfer size
@@ -239,7 +239,7 @@ void main(void) {
             else {
                 data_check = 0;
             }
-            VPRINTF(LOW, "Transfer size: %d dwords\n", transfer_size);
+            VPRINTF_LOW("Transfer size: %d dwords\n", transfer_size);
 
             // Read source offset
             dccm_addr = dccm_addr - 4;
@@ -248,7 +248,7 @@ void main(void) {
                        ((dma_xfer_type == MBOX2AXI) ? (uint64_t) CLP_MBOX_SRAM_BASE_ADDR :
                                         src_is_fifo ? (uint64_t) AXI_FIFO_BASE_ADDR :
                                                       (uint64_t) AXI_SRAM_BASE_ADDR);
-            VPRINTF(LOW, "Source Offset = 0x%0x\n", src_offset);
+            VPRINTF_LOW("Source Offset = 0x%0x\n", src_offset);
 
             // Read destination offset
             dccm_addr = dccm_addr - 4;
@@ -257,7 +257,7 @@ void main(void) {
                        ((dma_xfer_type == AXI2MBOX) ? (uint64_t) CLP_MBOX_SRAM_BASE_ADDR :
                                         dst_is_fifo ? (uint64_t) AXI_FIFO_BASE_ADDR :
                                                       (uint64_t) AXI_SRAM_BASE_ADDR);
-            VPRINTF(LOW, "Destination Offset = 0x%0x\n", dst_offset);
+            VPRINTF_LOW("Destination Offset = 0x%0x\n", dst_offset);
             
             // Calculate starting address of payload data
             if (data_check) {
@@ -268,8 +268,8 @@ void main(void) {
                 payload_start_addr = payload_end_addr;
             }
         
-            VPRINTF(LOW,    "Payload DCCM Start Address = 0x%0x\n", payload_start_addr);
-            VPRINTF(MEDIUM, "Payload DCCM End Address = 0x%0x\n", payload_end_addr);
+            VPRINTF_LOW(   "Payload DCCM Start Address = 0x%0x\n", payload_start_addr);
+            VPRINTF_MEDIUM("Payload DCCM End Address = 0x%0x\n", payload_end_addr);
 
             switch ((transfer_type_t)dma_xfer_type) {
                 
@@ -280,17 +280,17 @@ void main(void) {
                     }
 
                     if (data_check) {
-                        VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
+                        VPRINTF_MEDIUM("Sending payload via AHB i/f\n");
 
                         if (inject_rst && (rst_done == 0)) {
-                            VPRINTF(LOW, "Request random reset\n");
+                            VPRINTF_LOW("Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
                         soc_ifc_axi_dma_send_ahb_payload(dst_addr, use_wr_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
                     } else {
                         if (inject_rst && (rst_done == 0)) {
-                            VPRINTF(LOW, "Request random reset\n");
+                            VPRINTF_LOW("Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
                         if (!dst_is_fifo) {
@@ -307,10 +307,10 @@ void main(void) {
                             
                         } else {
                             // Set auto-read
-                            VPRINTF(LOW, "Set FIFO to auto-read\n");
+                            VPRINTF_LOW("Set FIFO to auto-read\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
 
-                            VPRINTF(LOW, "Sending payload from AHB\n");
+                            VPRINTF_LOW("Sending payload from AHB\n");
                             // arm_send_ahb
                             soc_ifc_axi_dma_arm_send_ahb_payload(dst_addr, use_wr_fixed, &ahb_wdata, transfer_size*4, 0);
                             
@@ -323,7 +323,7 @@ void main(void) {
                             soc_ifc_axi_dma_wait_idle(0);
 
                             // Clear auto-read
-                            VPRINTF(LOW, "Disable FIFO to auto-read\n");
+                            VPRINTF_LOW("Disable FIFO to auto-read\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
                             SEND_STDOUT_CTRL(FIFO_CLEAR);
                         }
@@ -336,7 +336,7 @@ void main(void) {
                     if (data_check) {
                         //Read back via AHB and compare data
                         // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                        VPRINTF(MEDIUM, "Reading payload via AHB i/f\n");
+                        VPRINTF_MEDIUM("Reading payload via AHB i/f\n");
 
                         // Use the same 'fixed' value that was used to send data
                         soc_ifc_axi_dma_read_ahb_payload(dst_addr, use_wr_fixed, read_payload, transfer_size*4, 0);
@@ -345,23 +345,23 @@ void main(void) {
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
                             if (use_wr_fixed && !dst_is_fifo && read_payload[dw] != lsu_read_32(payload_end_addr)) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
+                                VPRINTF_ERROR("read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
                                 fail = 1;
                             }
                             else if ((!use_wr_fixed || dst_is_fifo) && read_payload[dw] != dccm_data[dw]) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
+                                VPRINTF_ERROR("read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
                                 fail = 1;
                             }
                         }
                         if (!fail) {
-                            VPRINTF(HIGH, "AHB2AXI: Read-back data matches sent data\n");
+                            VPRINTF_HIGH("AHB2AXI: Read-back data matches sent data\n");
                         }
                     } 
                     break;
                 
                 case MBOX2AXI:
                     // Send data through Mailbox to AXI_DMA, target the AXI SRAM
-                    VPRINTF(MEDIUM, "Writing payload to Mailbox via Direct Mode\n");
+                    VPRINTF_MEDIUM("Writing payload to Mailbox via Direct Mode\n");
 
                     if (data_check) {
                         // Acquire the mailbox lock
@@ -381,17 +381,17 @@ void main(void) {
                         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
                         mbox_locked = 0;
                     } else {
-                        VPRINTF(MEDIUM, "Large transfer - auto-write FIFO --> MBOX --> auto-read FIFO\n");
-                        VPRINTF(MEDIUM, "Set FIFO to auto-write\n");
+                        VPRINTF_MEDIUM("Large transfer - auto-write FIFO --> MBOX --> auto-read FIFO\n");
+                        VPRINTF_MEDIUM("Set FIFO to auto-write\n");
                         SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
 
-                        VPRINTF(LOW, "Reading rand payload to Mailbox\n");
+                        VPRINTF_LOW("Reading rand payload to Mailbox\n");
                         if (soc_ifc_axi_dma_read_mbox_payload(AXI_FIFO_BASE_ADDR, src_offset, 1, transfer_size*4, 0)) {
                             fail = 1;
                         }
 
                         // Clear auto-write
-                        VPRINTF(LOW, "Disable FIFO to auto-write\n");
+                        VPRINTF_LOW("Disable FIFO to auto-write\n");
                         SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
                         SEND_STDOUT_CTRL(FIFO_CLEAR);
                     }
@@ -402,39 +402,39 @@ void main(void) {
                     }
 
                     if (data_check) {
-                        VPRINTF(HIGH, "Sending payload from Mailbox\n");
+                        VPRINTF_HIGH("Sending payload from Mailbox\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset\n");
+                            VPRINTF_LOW("Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
                         soc_ifc_axi_dma_send_mbox_payload(src_offset, dst_addr, use_wr_fixed, transfer_size*4, 0);
                     } else {
-                        VPRINTF(HIGH, "Sending large payload from Mailbox\n");
+                        VPRINTF_HIGH("Sending large payload from Mailbox\n");
 
                         if (!dst_is_fifo) {
                             if (inject_rst && (rst_done==0)) {
-                                VPRINTF(LOW, "Request random reset\n");
+                                VPRINTF_LOW("Request random reset\n");
                                 SEND_STDOUT_CTRL(RAND_RST);
                             }
                             soc_ifc_axi_dma_send_mbox_payload(src_offset, dst_addr, use_wr_fixed, transfer_size*4, 0);
                         }
                         else {
                             // Set auto-read
-                            VPRINTF(LOW, "Set FIFO to auto-read\n");
+                            VPRINTF_LOW("Set FIFO to auto-read\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
 
-                            VPRINTF(LOW, "Sending payload from Mailbox\n");
+                            VPRINTF_LOW("Sending payload from Mailbox\n");
 
                             if (inject_rst && (rst_done==0)) {
-                                VPRINTF(LOW, "Request random reset\n");
+                                VPRINTF_LOW("Request random reset\n");
                                 SEND_STDOUT_CTRL(RAND_RST);
                             }
                             soc_ifc_axi_dma_send_mbox_payload(src_offset, AXI_FIFO_BASE_ADDR, use_wr_fixed, transfer_size*4, 0);
 
                             // Clear auto-read
-                            VPRINTF(LOW, "Disable FIFO to auto-read\n");
+                            VPRINTF_LOW("Disable FIFO to auto-read\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
                             SEND_STDOUT_CTRL(FIFO_CLEAR);
                         }
@@ -447,23 +447,23 @@ void main(void) {
                     if (data_check) {
                         //Read back via AHB and compare data
                         // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                        VPRINTF(HIGH, "Reading payload via AHB i/f\n");
+                        VPRINTF_HIGH("Reading payload via AHB i/f\n");
                         soc_ifc_axi_dma_read_ahb_payload(dst_addr, use_wr_fixed, read_payload, transfer_size*4, 0);
 
                         // Compare read_payload data with original dccm_data
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
                             if (use_wr_fixed && !dst_is_fifo && read_payload[dw] != lsu_read_32(payload_end_addr)) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
+                                VPRINTF_ERROR("read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
                                 fail = 1;
                             }
                             else if ((!use_wr_fixed || dst_is_fifo) && read_payload[dw] != dccm_data[dw]) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccmdccm_data_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
+                                VPRINTF_ERROR("read_payload[%d] (0x%08x) does not match dccmdccm_data_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
                                 fail = 1;
                             }
                         }
                         if (!fail) {
-                            VPRINTF(HIGH, "MBOX2AXI: Read-back data matches sent data\n");
+                            VPRINTF_HIGH("MBOX2AXI: Read-back data matches sent data\n");
                         }
                     }
 
@@ -471,23 +471,23 @@ void main(void) {
                 
                 case AXI2AXI:
                     if (test_block_size) {
-                        VPRINTF(HIGH, "Enable recovery mode emulation");
+                        VPRINTF_HIGH("Enable recovery mode emulation");
                         SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                     }
 
                     if (data_check) {
                         // Populate AXI source via AHB2AXI transfer
-                        VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
+                        VPRINTF_MEDIUM("Sending payload via AHB i/f\n");
                         soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
                         if (test_block_size && src_is_fifo) {
                             uint32_t tmp[block_size]; // Push in an extra "block_size" of data; in the pulse TB mode, fifo must be full before recovery_data_avail is set
                             soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, tmp, block_size, 0);
                         }
                     } else {
-                        VPRINTF(MEDIUM, "Large transfer\n");
+                        VPRINTF_MEDIUM("Large transfer\n");
 
                         if (!src_is_fifo) {
-                            VPRINTF(HIGH, "Data pre-loaded into SRAM will be transferred to destination") ;
+                            VPRINTF_HIGH("Data pre-loaded into SRAM will be transferred to destination") ;
                         }
                     }
 
@@ -497,10 +497,10 @@ void main(void) {
 
                     // Test AXI2AXI
                     if (data_check) {
-                        VPRINTF(HIGH, "Moving payload at SRAM via axi-to-axi xfer\n");
+                        VPRINTF_HIGH("Moving payload at SRAM via axi-to-axi xfer\n");
                         
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset\n");
+                            VPRINTF_LOW("Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
@@ -513,22 +513,22 @@ void main(void) {
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
                     } else {
-                        VPRINTF(HIGH, "Moving large from FIFO via axi-to-axi xfer\n");
+                        VPRINTF_HIGH("Moving large from FIFO via axi-to-axi xfer\n");
 
                         if (src_is_fifo) { 
-                            VPRINTF(MEDIUM, "Set FIFO to auto-write\n");
+                            VPRINTF_MEDIUM("Set FIFO to auto-write\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
-                            VPRINTF(HIGH, "Moving large payload from FIFO to SRAM\n");
+                            VPRINTF_HIGH("Moving large payload from FIFO to SRAM\n");
                         } else if (dst_is_fifo) {
-                            VPRINTF(MEDIUM, "Set FIFO to auto-read\n");
+                            VPRINTF_MEDIUM("Set FIFO to auto-read\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_READ_ON);
-                            VPRINTF(HIGH, "Moving large payload from SRAM to FIFO\n");
+                            VPRINTF_HIGH("Moving large payload from SRAM to FIFO\n");
                         } else {
-                            VPRINTF(HIGH, "Moving large payload from SRAM to SRAM\n");
+                            VPRINTF_HIGH("Moving large payload from SRAM to SRAM\n");
                         }
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset\n");
+                            VPRINTF_LOW("Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
@@ -543,12 +543,12 @@ void main(void) {
 
                         if (src_is_fifo) {
                             // Clear auto-write
-                            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+                            VPRINTF_LOW("Disable FIFO to auto-write\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
                             SEND_STDOUT_CTRL(FIFO_CLEAR);
                         } else if (dst_is_fifo) {
                             // Clear auto-read
-                            VPRINTF(LOW, "Disable FIFO to auto-read\n");
+                            VPRINTF_LOW("Disable FIFO to auto-read\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_READ_OFF);
                             SEND_STDOUT_CTRL(FIFO_CLEAR);
                         }
@@ -560,23 +560,23 @@ void main(void) {
                     if (data_check) {
                         //Read back via AHB and compare data
                         // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                        VPRINTF(HIGH, "Reading payload via AHB i/f\n");
+                        VPRINTF_HIGH("Reading payload via AHB i/f\n");
                         soc_ifc_axi_dma_read_ahb_payload(dst_addr, use_wr_fixed, read_payload, transfer_size*4, 0);
 
                         // Compare read_payload data with original dccm_data
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
                             if (((use_rd_fixed && !src_is_fifo) || (use_wr_fixed && !dst_is_fifo)) && (read_payload[dw] != lsu_read_32(payload_end_addr))) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
+                                VPRINTF_ERROR("read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
                                 fail = 1;
                             }
                             else if ((!use_rd_fixed || src_is_fifo) && (!use_wr_fixed || dst_is_fifo) && read_payload[dw] != dccm_data[dw]) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
+                                VPRINTF_ERROR("read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
                                 fail = 1;
                             }
                         }
                         if (!fail) {
-                            VPRINTF(HIGH, "AXI2AXI: Read-back data matches sent data\n");
+                            VPRINTF_HIGH("AXI2AXI: Read-back data matches sent data\n");
                         }
                     }
                     SEND_STDOUT_CTRL(FIFO_CLEAR);
@@ -584,13 +584,13 @@ void main(void) {
 
                 case AXI2MBOX:
                     if (test_block_size) {
-                        VPRINTF(HIGH, "Enable recovery mode emulation");
+                        VPRINTF_HIGH("Enable recovery mode emulation");
                         SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                     }
 
                     if (data_check) {
                         // Populate AXI SRAM/FIFO via AHB2AXI transfer
-                        VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
+                        VPRINTF_MEDIUM("Sending payload via AHB i/f\n");
                         soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, (uint32_t*)payload_start_addr, transfer_size*4, block_size);
                         if (test_block_size && src_is_fifo) {
                             uint32_t tmp[block_size]; // Push in an extra "block_size" of data; in the pulse TB mode, fifo must be full before recovery_data_avail is set
@@ -605,10 +605,10 @@ void main(void) {
 
                     // AXI2MBOX: Read data to mailbox
                     if (data_check) {
-                        VPRINTF(HIGH, "Reading payload to Mailbox\n");
+                        VPRINTF_HIGH("Reading payload to Mailbox\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset\n");
+                            VPRINTF_LOW("Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
                         soc_ifc_axi_dma_read_mbox_payload_no_wait(src_addr, dst_offset, use_rd_fixed, transfer_size*4, block_size);
@@ -620,16 +620,16 @@ void main(void) {
                             SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                         }
                     } else {
-                        VPRINTF(HIGH, "Reading rand payload to Mailbox\n");
+                        VPRINTF_HIGH("Reading rand payload to Mailbox\n");
 
                         if (src_is_fifo) {
-                            VPRINTF(MEDIUM, "Large transfer - enabling FIFO to auto-write\n");
-                            VPRINTF(MEDIUM, "Set FIFO to auto-write\n");
+                            VPRINTF_MEDIUM("Large transfer - enabling FIFO to auto-write\n");
+                            VPRINTF_MEDIUM("Set FIFO to auto-write\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
                         }
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset\n");
+                            VPRINTF_LOW("Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
@@ -644,7 +644,7 @@ void main(void) {
 
                         if (src_is_fifo) {
                             // Clear auto-write
-                            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+                            VPRINTF_LOW("Disable FIFO to auto-write\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
                             SEND_STDOUT_CTRL(FIFO_CLEAR);
                         }
@@ -654,7 +654,7 @@ void main(void) {
                     }
 
                     if (data_check) {
-                        VPRINTF(HIGH, "Reading payload from Mailbox via Direct Mode\n");
+                        VPRINTF_HIGH("Reading payload from Mailbox via Direct Mode\n");
                         // Acquire the mailbox lock
                         soc_ifc_mbox_acquire_lock(1);
                         mbox_locked = 1;
@@ -664,16 +664,16 @@ void main(void) {
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
                             mbox_data = lsu_read_32(((uint32_t) dst_addr) + (dw << 2));
                             if (use_rd_fixed && !src_is_fifo && (mbox_data != lsu_read_32(payload_end_addr))) {
-                                VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, mbox_data, lsu_read_32(payload_end_addr));
+                                VPRINTF_ERROR("mbox_data[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, mbox_data, lsu_read_32(payload_end_addr));
                                 fail = 1;
                             }
                             else if ((!use_rd_fixed || src_is_fifo) && (mbox_data != dccm_data[dw])){
-                                VPRINTF(ERROR, "mbox_data[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, mbox_data, dw, dccm_data[dw]);
+                                VPRINTF_ERROR("mbox_data[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, mbox_data, dw, dccm_data[dw]);
                                 fail = 1;
                             }
                         }
                         if (!fail) {
-                            VPRINTF(HIGH, "AXI2MBOX: Read-back data matches sent data\n");
+                            VPRINTF_HIGH("AXI2MBOX: Read-back data matches sent data\n");
                         }
                     
                         // Release mailbox lock
@@ -685,13 +685,13 @@ void main(void) {
 
                 case AXI2AHB:
                     if (test_block_size) {
-                        VPRINTF(HIGH, "Enable recovery mode emulation");
+                        VPRINTF_HIGH("Enable recovery mode emulation");
                         SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
                     }
 
                     if (data_check) {
                         // Populate AXI SRAM via AHB2AXI transfer
-                        VPRINTF(MEDIUM, "Sending payload via AHB i/f\n");
+                        VPRINTF_MEDIUM("Sending payload via AHB i/f\n");
                         soc_ifc_axi_dma_send_ahb_payload(src_addr, use_rd_fixed, (uint32_t*)payload_start_addr, transfer_size*4, 0);
                         if (test_block_size && src_is_fifo) {
                             uint32_t tmp[block_size]; // Push in an extra "block_size" of data; in the pulse TB mode, fifo must be full before recovery_data_avail is set
@@ -706,10 +706,10 @@ void main(void) {
 
                     if (data_check) {
                         // AXI2AHB: Read data back from AXI SRAM and confirm it matches
-                        VPRINTF(HIGH, "Reading payload via AHB i/f\n");
+                        VPRINTF_HIGH("Reading payload via AHB i/f\n");
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset\n");
+                            VPRINTF_LOW("Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
 
@@ -723,15 +723,15 @@ void main(void) {
                         }
                     } else {
                         // AXI2AHB: Read data from AXI FIFO 
-                        VPRINTF(HIGH, "Reading payload via AHB i/f\n");
+                        VPRINTF_HIGH("Reading payload via AHB i/f\n");
 
                         if (src_is_fifo) {
-                            VPRINTF(MEDIUM, "Large transfer - enabling FIFO to auto-write\n");
+                            VPRINTF_MEDIUM("Large transfer - enabling FIFO to auto-write\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
                         }
 
                         if (inject_rst && (rst_done==0)) {
-                            VPRINTF(LOW, "Request random reset\n");
+                            VPRINTF_LOW("Request random reset\n");
                             SEND_STDOUT_CTRL(RAND_RST);
                         }
                         // Arm AXI2HB transfer
@@ -747,7 +747,7 @@ void main(void) {
 
                         if (src_is_fifo) {
                             // Clear auto-write
-                            VPRINTF(LOW, "Disable FIFO to auto-write\n");
+                            VPRINTF_LOW("Disable FIFO to auto-write\n");
                             SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_OFF);
                         }
                         if (test_block_size) {
@@ -768,23 +768,23 @@ void main(void) {
                         dccm_data = (uint32_t*) payload_start_addr;
                         for (uint32_t dw = 0; dw < transfer_size; dw++) {
                             if (use_rd_fixed && !src_is_fifo && (read_payload[dw] != lsu_read_32(payload_end_addr))) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
+                                VPRINTF_ERROR("read_payload[%d] (0x%08x) does not match lsu_read_32(payload_end_addr) (0x%08x)\n", dw, read_payload[dw], lsu_read_32(payload_end_addr));
                                 fail = 1;
                             }
                             else if ((!use_rd_fixed || src_is_fifo) && read_payload[dw] != dccm_data[dw]) {
-                                VPRINTF(ERROR, "read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
+                                VPRINTF_ERROR("read_payload[%d] (0x%08x) does not match dccm_data[%d] (0x%08x)\n", dw, read_payload[dw], dw, dccm_data[dw]);
                                 fail = 1;
                             }
                         }
                         if (!fail) {
-                            VPRINTF(HIGH, "AXI2AHB: Read-back data matches sent data\n");
+                            VPRINTF_HIGH("AXI2AHB: Read-back data matches sent data\n");
                         }
                     }
                     SEND_STDOUT_CTRL(FIFO_CLEAR);
                     break;
 
                 default:
-                    VPRINTF(ERROR, "Unknown transfer type: %d\n", transfer_type);
+                    VPRINTF_ERROR("Unknown transfer type: %d\n", transfer_type);
                     fail = 1;
                     break;
             }
@@ -792,7 +792,7 @@ void main(void) {
             // This should be highly unusual (due to short TB timing on random reset injection), but wait for the reset before
             // proceeding if it has not already been asserted for this iteration.
             if (inject_rst && (rst_done==0)) {
-                VPRINTF(MEDIUM, "Rst wait...\n");
+                VPRINTF_MEDIUM("Rst wait...\n");
                 while(1);
             }
 
@@ -804,8 +804,8 @@ void main(void) {
             rst_done = 0;
 
             next_transfer_dccm_addr = dccm_addr;
-            VPRINTF(MEDIUM, "Next Transfer start address (dccm_addr) = 0x%0x\n", dccm_addr);
-            VPRINTF(MEDIUM, "Next Transfer start address (next_transfer_dccm_addr) = 0x%0x\n", next_transfer_dccm_addr);
+            VPRINTF_MEDIUM("Next Transfer start address (dccm_addr) = 0x%0x\n", dccm_addr);
+            VPRINTF_MEDIUM("Next Transfer start address (next_transfer_dccm_addr) = 0x%0x\n", next_transfer_dccm_addr);
 
         }
 
@@ -815,11 +815,11 @@ void main(void) {
         }
 
         if (fail) {
-            VPRINTF(FATAL, "rand_test_dma failed!\n");
+            VPRINTF_FATAL("rand_test_dma failed!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         } else {
-            VPRINTF(LOW, "rand_test_dma completed successfully!\n");
+            VPRINTF_LOW("rand_test_dma completed successfully!\n");
         }
 }
 

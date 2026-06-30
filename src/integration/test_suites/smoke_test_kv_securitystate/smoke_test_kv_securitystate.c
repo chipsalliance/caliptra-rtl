@@ -37,9 +37,9 @@ volatile uint32_t * reset_reason  = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_RESET_REA
 volatile uint16_t i = 0;
 
 void main() {
-    VPRINTF(LOW, "---------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test for Security States !!\n");
-    VPRINTF(LOW, "---------------------------\n");
+    VPRINTF_LOW("---------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test for Security States !!\n");
+    VPRINTF_LOW("---------------------------\n");
 
     rst_count++;
 
@@ -50,11 +50,11 @@ void main() {
         // SEND_STDOUT_CTRL( 0xee);
 
         //Unlock debug mode - expecting ?
-        VPRINTF(LOW, "Unlock debug mode\n");
+        VPRINTF_LOW("Unlock debug mode\n");
         SEND_STDOUT_CTRL(0xfa);
         //Add reset
         // for(int i=0; i<100;i++) {
-        //     VPRINTF(LOW, "%d\n",i);
+        //     VPRINTF_LOW("%d\n",i);
         // }
         for(i=0;i<100;i++);
         SEND_STDOUT_CTRL(0xf6);
@@ -63,7 +63,7 @@ void main() {
         //Write random value to KV00 and KV54
         // SEND_STDOUT_CTRL(0xf4);
 
-        VPRINTF(LOW, "Clear secrets during debug mode\n");
+        VPRINTF_LOW("Clear secrets during debug mode\n");
 
         //Flush KV with debug value 0 - expecting AAs
         *clear_secrets = 0x00000001; 
@@ -79,11 +79,11 @@ void main() {
         // SEND_STDOUT_CTRL(0xf4);
 
         //Lock debug mode
-        VPRINTF(LOW, "Lock debug mode\n");
+        VPRINTF_LOW("Lock debug mode\n");
         SEND_STDOUT_CTRL(0xf9);
         //Add reset
         // for(int i=0; i<100;i++){
-        //     VPRINTF(LOW, "%d\n",i);
+        //     VPRINTF_LOW("%d\n",i);
         // }
         for(i=0;i<100;i++);
         SEND_STDOUT_CTRL(0xf6);
@@ -91,70 +91,70 @@ void main() {
     }
     else if (rst_count == 3) {
 
-        VPRINTF(LOW, "Unlock debug mode - 2\n");
+        VPRINTF_LOW("Unlock debug mode - 2\n");
         //Unlock and lock debug mode - expecting AAs
         SEND_STDOUT_CTRL(0xfa);
         //Add reset
         // for(int i=0; i<100;i++){
-        //     VPRINTF(LOW, "%d\n",i);
+        //     VPRINTF_LOW("%d\n",i);
         // }
         for(i=0;i<100;i++);
         SEND_STDOUT_CTRL(0xf6);
     }
     else if (rst_count == 4) {
-        VPRINTF(LOW, "Clear secrets again\n");
+        VPRINTF_LOW("Clear secrets again\n");
         //Debug value 0
         *clear_secrets = 0x00000000;
 
         //Debug value 1
         *clear_secrets = 0x00000002;
 
-        VPRINTF(LOW, "Lock debug mode - 2\n");
+        VPRINTF_LOW("Lock debug mode - 2\n");
         SEND_STDOUT_CTRL(0xf9);
         //Add reset
         // for(int i=0; i<100;i++) {
-        //     VPRINTF(LOW, "%d\n",i);
+        //     VPRINTF_LOW("%d\n",i);
         // }
         for(i=0;i<100;i++);
         SEND_STDOUT_CTRL(0xf6);
     }
     else if (rst_count == 5) {
-        VPRINTF(LOW, "Enable scan mode\n");
+        VPRINTF_LOW("Enable scan mode\n");
         //Enable and disable scan mode - expecting 55s
         SEND_STDOUT_CTRL(0xef);
         //Add reset
         // for(int i=0; i<100;i++) {
-        //     VPRINTF(LOW, "%d\n",i);
+        //     VPRINTF_LOW("%d\n",i);
         // }
         for(i=0;i<100;i++);
         SEND_STDOUT_CTRL(0xf6);
 
     }
     else if (rst_count == 6) {
-        // VPRINTF(LOW, "Waiting for reason\n");
+        // VPRINTF_LOW("Waiting for reason\n");
         // //Wait for reset to be asserted before advancing
         // while(*reset_reason & SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK != SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK);
 
-        VPRINTF(LOW, "Disable scan mode\n");
+        VPRINTF_LOW("Disable scan mode\n");
         //Disable scan mode
         SEND_STDOUT_CTRL(0xf0);
         //Add reset
         // for(int i=0; i<100;i++){
-        //     VPRINTF(LOW, "%d\n",i);
+        //     VPRINTF_LOW("%d\n",i);
         // }
         for(i=0;i<100;i++);
         SEND_STDOUT_CTRL(0xf6);
 
     }
     else if(rst_count == 7) {
-        // VPRINTF(LOW, "Waiting for reason - 2\n");
+        // VPRINTF_LOW("Waiting for reason - 2\n");
         // //Wait for reset to be asserted before advancing
         // while(*reset_reason & SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK != SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK);
 
         //-------------------------------------------------
         //Cold reset - all 0s
         //-------------------------------------------------
-        VPRINTF(LOW, "Cold rst\n");
+        VPRINTF_LOW("Cold rst\n");
         SEND_STDOUT_CTRL(0xf5);
     }
 }

@@ -70,7 +70,7 @@ void test_lock_wr_blocks_write(uint8_t slot, uint32_t expected_dv, const char *p
     uint32_t ctrl_before = lsu_read_32(KV_KEY_CTRL(slot));
     uint32_t dv_before = (ctrl_before & KV_DEST_VALID_MASK) >> KV_DEST_VALID_LOW;
 
-    VPRINTF(LOW, "  %s: Attempting HMAC write to locked slot %d (dest_valid=0x%03x)...\n",
+    VPRINTF_LOW("  %s: Attempting HMAC write to locked slot %d (dest_valid=0x%03x)...\n",
             phase, slot, dv_before);
 
     // Write with a DIFFERENT dest_valid to detect if the write takes effect
@@ -79,14 +79,14 @@ void test_lock_wr_blocks_write(uint8_t slot, uint32_t expected_dv, const char *p
 
     // Check KV_WR_STATUS -- expect VALID=1 with possible error from lock_wr rejection
     uint32_t wr_status = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS);
-    VPRINTF(LOW, "  %s: KV_WR_STATUS=0x%08x\n", phase, wr_status);
+    VPRINTF_LOW("  %s: KV_WR_STATUS=0x%08x\n", phase, wr_status);
 
     // Read back and verify dest_valid is unchanged
     uint32_t ctrl_after = lsu_read_32(KV_KEY_CTRL(slot));
     uint32_t dv_after = (ctrl_after & KV_DEST_VALID_MASK) >> KV_DEST_VALID_LOW;
 
     if (dv_after != dv_before) {
-        VPRINTF(ERROR, "[FAIL] %s: slot %d dest_valid changed! before=0x%03x after=0x%03x\n",
+        VPRINTF_ERROR("[FAIL] %s: slot %d dest_valid changed! before=0x%03x after=0x%03x\n",
                 phase, slot, dv_before, dv_after);
         SEND_STDOUT_CTRL(0x01);
         while(1);
@@ -95,7 +95,7 @@ void test_lock_wr_blocks_write(uint8_t slot, uint32_t expected_dv, const char *p
     // Zeroize HMAC to ensure clean state for subsequent operations
     hmac_zeroize();
 
-    VPRINTF(LOW, "  %s: slot %d lock_wr blocked write (dest_valid=0x%03x unchanged) -- OK\n",
+    VPRINTF_LOW("  %s: slot %d lock_wr blocked write (dest_valid=0x%03x unchanged) -- OK\n",
             phase, slot, dv_after);
 }
 
@@ -104,7 +104,7 @@ void test_lock_wr_blocks_write(uint8_t slot, uint32_t expected_dv, const char *p
 // HMAC key register and verifies the KV read status shows a fault.
 //
 void test_lock_use_blocks_read(uint8_t slot, const char *phase) {
-    VPRINTF(LOW, "  %s: Attempting KV key read from lock_use'd slot %d...\n", phase, slot);
+    VPRINTF_LOW("  %s: Attempting KV key read from lock_use'd slot %d...\n", phase, slot);
 
     // Trigger KV key read into HMAC engine
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL,
@@ -124,7 +124,7 @@ void test_lock_use_blocks_read(uint8_t slot, const char *phase) {
     uint32_t err = (status & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK)
                    >> HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_LOW;
     if (err == 0) {
-        VPRINTF(ERROR, "[FAIL] %s: KV read from lock_use'd slot %d succeeded (status=0x%08x)\n",
+        VPRINTF_ERROR("[FAIL] %s: KV read from lock_use'd slot %d succeeded (status=0x%08x)\n",
                 phase, slot, status);
         SEND_STDOUT_CTRL(0x01);
         while(1);
@@ -133,7 +133,7 @@ void test_lock_use_blocks_read(uint8_t slot, const char *phase) {
     // Verify HMAC engine is still READY (KV read error should not start engine)
     uint32_t hmac_status = lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS);
     if (!(hmac_status & HMAC_REG_HMAC512_STATUS_READY_MASK)) {
-        VPRINTF(ERROR, "[FAIL] %s: HMAC engine not ready after KV read fault\n", phase);
+        VPRINTF_ERROR("[FAIL] %s: HMAC engine not ready after KV read fault\n", phase);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
@@ -141,7 +141,7 @@ void test_lock_use_blocks_read(uint8_t slot, const char *phase) {
     // Zeroize HMAC to clear error state for subsequent operations
     hmac_zeroize();
 
-    VPRINTF(LOW, "  %s: slot %d lock_use blocked read (err_code=0x%02x) -- OK\n", phase, slot, err);
+    VPRINTF_LOW("  %s: slot %d lock_use blocked read (err_code=0x%02x) -- OK\n", phase, slot, err);
 }
 
 //
@@ -160,22 +160,22 @@ void main() {
     // Enable boot flow monitoring
     SEND_STDOUT_CTRL(TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR);
 
-    VPRINTF(LOW, "============================================\n");
-    VPRINTF(LOW, " KV Enforcement Behavior Test\n");
-    VPRINTF(LOW, "============================================\n");
+    VPRINTF_LOW("============================================\n");
+    VPRINTF_LOW(" KV Enforcement Behavior Test\n");
+    VPRINTF_LOW("============================================\n");
 
     // --- ROM phase: Standard DICE derivation ---
     // Verify enforcement has NOT fired yet (slots unlocked during ROM)
     // This covers RFC item: "Enforcement fires on first FMC fetch"
     uint32_t rom_ctrl0 = lsu_read_32(KV_KEY_CTRL(KV_SLOT_SI_IDEV));
     if (rom_ctrl0 & KV_LOCK_WR_MASK) {
-        VPRINTF(ERROR, "[FAIL] ROM: slot 0 lock_wr=1 before FMC jump -- premature enforcement!\n");
+        VPRINTF_ERROR("[FAIL] ROM: slot 0 lock_wr=1 before FMC jump -- premature enforcement!\n");
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "ROM: Pre-enforcement check -- slot 0 lock_wr=0 (no premature enforcement) -- OK\n");
+    VPRINTF_LOW("ROM: Pre-enforcement check -- slot 0 lock_wr=0 (no premature enforcement) -- OK\n");
 
-    VPRINTF(LOW, "ROM: Populating DICE key slots...\n");
+    VPRINTF_LOW("ROM: Populating DICE key slots...\n");
     populate_dice_slots();
 
     // Compute conditional enables from register readback
@@ -185,15 +185,15 @@ void main() {
     g_ocp_lock_mode_en = ocp_lock_mode_en;
 
     // Populate conditional + canary slots for preservation testing
-    VPRINTF(LOW, "ROM: Populating conditional slots...\n");
+    VPRINTF_LOW("ROM: Populating conditional slots...\n");
     populate_conditional_slots();
 
     // Copy FMC and RT code to ICCM
-    VPRINTF(LOW, "ROM: Copying FMC code to ICCM\n");
+    VPRINTF_LOW("ROM: Copying FMC code to ICCM\n");
     copy_to_iccm(FMC_ICCM_ADDR,
                   (uint32_t *)&iccm_code0_start,
                   (uint32_t *)&iccm_code0_end);
-    VPRINTF(LOW, "ROM: Copying RT code to ICCM\n");
+    VPRINTF_LOW("ROM: Copying RT code to ICCM\n");
     copy_to_iccm(RT_ICCM_ADDR,
                   (uint32_t *)&iccm_code1_start,
                   (uint32_t *)&iccm_code1_end);
@@ -202,7 +202,7 @@ void main() {
     program_iccm_regions();
 
     // Jump to FMC -- triggers ROM-to-FMC enforcement
-    VPRINTF(LOW, "ROM: Jumping to FMC...\n");
+    VPRINTF_LOW("ROM: Jumping to FMC...\n");
     void (*fmc_fn)(void) = (void (*)(void))FMC_ICCM_ADDR;
     fmc_fn();
 }
@@ -211,20 +211,20 @@ void main() {
 // FMC entry point -- runs from ICCM FMC region
 // ============================================================
 void fmc_entry(void) {
-    VPRINTF(LOW, "FMC: Executing from ICCM FMC region\n");
+    VPRINTF_LOW("FMC: Executing from ICCM FMC region\n");
 
     // Baseline: monitor passed at ROM-to-FMC
     check_no_kv_error("FMC");
 
     // --- Test 1: lock_wr prevents overwrite ---
-    VPRINTF(LOW, "FMC: Test 1 -- lock_wr prevents overwrite\n");
+    VPRINTF_LOW("FMC: Test 1 -- lock_wr prevents overwrite\n");
     check_lock_wr(KV_SLOT_SI_IDEV, "FMC");
     test_lock_wr_blocks_write(KV_SLOT_SI_IDEV, DV_AES_KEY, "FMC");
     // Also verify no kv_error from the blocked write
     check_no_kv_error("FMC post-lock_wr");
 
     // --- Test 2: Cleared slots have dest_valid=0 ---
-    VPRINTF(LOW, "FMC: Test 2 -- cleared slots inaccessible\n");
+    VPRINTF_LOW("FMC: Test 2 -- cleared slots inaccessible\n");
     check_slot_cleared(KV_SLOT_TMP, "FMC");
     check_slot_cleared(KV_SLOT_RT_CDI, "FMC");
     check_slot_cleared(KV_SLOT_RT_ECDSA, "FMC");
@@ -235,55 +235,55 @@ void fmc_entry(void) {
     }
 
     // --- Test 2b: Conditional slot preservation ---
-    VPRINTF(LOW, "FMC: Test 2b -- conditional slot preservation\n");
+    VPRINTF_LOW("FMC: Test 2b -- conditional slot preservation\n");
     check_conditional_slots(g_stable_owner_key_en, g_ocp_lock_mode_en, "FMC");
 
     // --- Test 3: ROM callback does not regress layer ---
-    VPRINTF(LOW, "FMC: Test 3 -- ROM callback non-regression\n");
+    VPRINTF_LOW("FMC: Test 3 -- ROM callback non-regression\n");
     volatile uint32_t result = rom_callback_helper(42);
     if (result != 43) {
-        VPRINTF(ERROR, "[FAIL] ROM callback returned wrong value: %d\n", result);
+        VPRINTF_ERROR("[FAIL] ROM callback returned wrong value: %d\n", result);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
     // The key check: PC went to ROM .text and back -- no kv_error should fire
     check_no_kv_error("FMC post-ROM-callback");
-    VPRINTF(LOW, "  FMC: ROM callback returned correctly, no re-trigger -- OK\n");
+    VPRINTF_LOW("  FMC: ROM callback returned correctly, no re-trigger -- OK\n");
 
     // --- Test 4: DOE lockdown ---
-    VPRINTF(LOW, "FMC: Test 4 -- DOE lockdown\n");
+    VPRINTF_LOW("FMC: Test 4 -- DOE lockdown\n");
     check_doe_locked("FMC");
 
     // --- Test 4b: Counter stable on lock_wr (slot 6) ---
     // Slot 6 (FMC_CDI) has lock_wr set after enter_fmc. Attempting a crypto
     // write must not increment write_count_fmc_cdi (verified by SVA
     // WriteCountFmcCdiStableLocked_A; functionally by FMC-to-RT passing later).
-    VPRINTF(LOW, "FMC: Test 4b -- counter stable on locked slot 6 write\n");
+    VPRINTF_LOW("FMC: Test 4b -- counter stable on locked slot 6 write\n");
     check_lock_wr(KV_SLOT_FMC_CDI, "FMC");
     hmac_write_kv_slot(KV_SLOT_FMC_CDI, DV_CDI);
     hmac_zeroize();
     check_no_kv_error("FMC post-lock_wr-slot6-write");
-    VPRINTF(LOW, "  FMC: slot 6 locked write did not increment counter -- OK\n");
+    VPRINTF_LOW("  FMC: slot 6 locked write did not increment counter -- OK\n");
 
     // --- Test 4c: Counter stable on lock_wr+lock_use (slot 8) ---
-    VPRINTF(LOW, "FMC: Test 4c -- counter stable on locked slot 8 write\n");
+    VPRINTF_LOW("FMC: Test 4c -- counter stable on locked slot 8 write\n");
     check_lock_wr(KV_SLOT_FMC_MLDSA, "FMC");
     hmac_write_kv_slot(KV_SLOT_FMC_MLDSA, DV_MLDSA_SEED);
     hmac_zeroize();
     check_no_kv_error("FMC post-lock_wr-slot8-write");
-    VPRINTF(LOW, "  FMC: slot 8 locked write did not increment counter -- OK\n");
+    VPRINTF_LOW("  FMC: slot 8 locked write did not increment counter -- OK\n");
 
     // Populate RT key slots (needed for FMC-to-RT transition)
-    VPRINTF(LOW, "FMC: Populating RT key slots...\n");
+    VPRINTF_LOW("FMC: Populating RT key slots...\n");
     populate_rt_slots();
 
     // Jump to RT -- triggers FMC-to-RT enforcement
-    VPRINTF(LOW, "FMC: Jumping to RT...\n");
+    VPRINTF_LOW("FMC: Jumping to RT...\n");
     void (*rt_fn)(void) = (void (*)(void))RT_ICCM_ADDR;
     rt_fn();
 
     // Should not return
-    VPRINTF(ERROR, "[FAIL] RT returned to FMC\n");
+    VPRINTF_ERROR("[FAIL] RT returned to FMC\n");
     SEND_STDOUT_CTRL(0x01);
     while(1);
 }
@@ -292,7 +292,7 @@ void fmc_entry(void) {
 // RT entry point -- runs from ICCM RT region
 // ============================================================
 void rt_entry(void) {
-    VPRINTF(LOW, "RT: Executing from ICCM RT region\n");
+    VPRINTF_LOW("RT: Executing from ICCM RT region\n");
 
     // Baseline: monitor passed at FMC-to-RT
     check_no_kv_error("RT");
@@ -300,13 +300,13 @@ void rt_entry(void) {
     // --- Test 5: lock_wr prevents RT slot overwrite ---
     // (Must run before lock_use test -- the KV_RD_KEY error from lock_use
     //  leaves the HMAC key-read client in a state that blocks new operations)
-    VPRINTF(LOW, "RT: Test 5 -- lock_wr prevents RT slot overwrite\n");
+    VPRINTF_LOW("RT: Test 5 -- lock_wr prevents RT slot overwrite\n");
     check_lock_wr(KV_SLOT_RT_CDI, "RT");
     test_lock_wr_blocks_write(KV_SLOT_RT_CDI, DV_CDI, "RT");
     check_no_kv_error("RT post-lock_wr");
 
     // --- Test 6: lock_use prevents FMC key access ---
-    VPRINTF(LOW, "RT: Test 6 -- lock_use prevents FMC key read\n");
+    VPRINTF_LOW("RT: Test 6 -- lock_use prevents FMC key read\n");
     check_lock_use(KV_SLOT_FMC_CDI, "RT");
     test_lock_use_blocks_read(KV_SLOT_FMC_CDI, "RT");
     // lock_use read failure should not cause kv_error (it's expected behavior)
@@ -316,24 +316,24 @@ void rt_entry(void) {
     // Slot 7 (FMC_ECDSA) has lock_use set after enter_rt. Attempting a crypto
     // write must not increment write_count_fmc_ecdsa (verified by SVA
     // WriteCountFmcEcdsaStableLocked_A).
-    VPRINTF(LOW, "RT: Test 6b -- counter stable on lock_use'd slot 7 write\n");
+    VPRINTF_LOW("RT: Test 6b -- counter stable on lock_use'd slot 7 write\n");
     check_lock_use(KV_SLOT_FMC_ECDSA, "RT");
     hmac_write_kv_slot(KV_SLOT_FMC_ECDSA, DV_ECC_PKEY);
     hmac_zeroize();
     check_no_kv_error("RT post-lock_use-slot7-write");
-    VPRINTF(LOW, "  RT: slot 7 lock_use'd write did not increment counter -- OK\n");
+    VPRINTF_LOW("  RT: slot 7 lock_use'd write did not increment counter -- OK\n");
 
     // --- Test 7: DOE still locked ---
-    VPRINTF(LOW, "RT: Test 7 -- DOE lockdown persists\n");
+    VPRINTF_LOW("RT: Test 7 -- DOE lockdown persists\n");
     check_doe_locked("RT");
 
     // --- Test 8: Conditional slot preservation at RT ---
-    VPRINTF(LOW, "RT: Test 8 -- conditional slot preservation\n");
+    VPRINTF_LOW("RT: Test 8 -- conditional slot preservation\n");
     check_conditional_slots(g_stable_owner_key_en, g_ocp_lock_mode_en, "RT");
 
     // All tests passed
-    VPRINTF(LOW, "============================================\n");
-    VPRINTF(LOW, " All enforcement tests passed\n");
-    VPRINTF(LOW, "============================================\n");
+    VPRINTF_LOW("============================================\n");
+    VPRINTF_LOW(" All enforcement tests passed\n");
+    VPRINTF_LOW("============================================\n");
     SEND_STDOUT_CTRL(0xff);
 }

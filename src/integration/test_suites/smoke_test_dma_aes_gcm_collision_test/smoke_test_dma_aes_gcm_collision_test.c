@@ -84,7 +84,7 @@ void main(void) {
     // Set endianness mode
     endian_mode = AES_LITTLE_ENDIAN;
 
-    VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
 
     SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
@@ -95,11 +95,11 @@ void main(void) {
         
         fail = 0;
         if((mcause & 0xF0000000) == 0xF0000000) {
-            VPRINTF(LOW, "mcause=0x%08X indicates that test hit an exception\n", mcause);
-            VPRINTF(LOW, "NMI Occurred!");
+            VPRINTF_LOW("mcause=0x%08X indicates that test hit an exception\n", mcause);
+            VPRINTF_LOW("NMI Occurred!");
         }
         else {
-            VPRINTF(LOW, "mcause=0x%08X NMI was expected - 0xFXXX_XXXX\n", mcause);
+            VPRINTF_LOW("mcause=0x%08X NMI was expected - 0xFXXX_XXXX\n", mcause);
             fail = 1;
         }
 
@@ -107,7 +107,7 @@ void main(void) {
         for(int i = 0; i < 50; i++) {
             reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
             if(reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
-                VPRINTF(LOW, "DMA Detected: AXI DMA Err Status=0x%08X\n", (reg & AXI_DMA_REG_STATUS0_ERROR_MASK));
+                VPRINTF_LOW("DMA Detected: AXI DMA Err Status=0x%08X\n", (reg & AXI_DMA_REG_STATUS0_ERROR_MASK));
                 break;
             } else {
                 // wait a bit
@@ -116,7 +116,7 @@ void main(void) {
                 }
             }
             if (i == 49) {
-                VPRINTF(ERROR, "ERROR: NMI Detected but no AXI DMA Error Status=0x%08X\n", (reg & AXI_DMA_REG_STATUS0_ERROR_MASK));
+                VPRINTF_ERROR("ERROR: NMI Detected but no AXI DMA Error Status=0x%08X\n", (reg & AXI_DMA_REG_STATUS0_ERROR_MASK));
                 fail = 1;
             }
         }
@@ -124,10 +124,10 @@ void main(void) {
         // Checking CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R -- CIF bit is set
         reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
         if (reg & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_MASK) {
-            VPRINTF(LOW, "NMI Detected: AXI DMA CIF Err Status=0x%08X matches expected value\n", reg);
+            VPRINTF_LOW("NMI Detected: AXI DMA CIF Err Status=0x%08X matches expected value\n", reg);
         } else {
-            VPRINTF(ERROR, "ERROR: NMI Detected but AXI DMA CIF Error Status=0x%08X\n", reg);
-            VPRINTF(ERROR, "ERROR: AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_MASK not set!\n");
+            VPRINTF_ERROR("ERROR: NMI Detected but AXI DMA CIF Error Status=0x%08X\n", reg);
+            VPRINTF_ERROR("ERROR: AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_AES_CIF_EN_MASK not set!\n");
             fail = 1;
         }
 
@@ -138,17 +138,17 @@ void main(void) {
         // check if cleared
         reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
         if (!(reg & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AES_CIF_STS_MASK)) {
-            VPRINTF(LOW, "CIF Err Interrupt cleared\n");
+            VPRINTF_LOW("CIF Err Interrupt cleared\n");
         } else {
-            VPRINTF(ERROR, "ERROR: CIF Error Interrupt not cleared!\n");
+            VPRINTF_ERROR("ERROR: CIF Error Interrupt not cleared!\n");
             fail = 1;
         }
 
         if (fail) {
-            VPRINTF(ERROR, "Test Failed!\n");
+            VPRINTF_ERROR("Test Failed!\n");
             SEND_STDOUT_CTRL(0x01);
         } else {
-            VPRINTF(LOW, "Test Passed!\n");
+            VPRINTF_LOW("Test Passed!\n");
             SEND_STDOUT_CTRL(0xFF);
         }
         while(1);
@@ -165,12 +165,12 @@ void main(void) {
     // hex_to_uint32_array(tag_str3, tag, &tag_length);
     // hex_to_uint32_array(tag_long_str, tag_long, &tag_long_length);
 
-    VPRINTF(LOW, "Tag address: 0x%08X\n", (uint32_t)tag);
-    VPRINTF(LOW, "Tag: ");
+    VPRINTF_LOW("Tag address: 0x%08X\n", (uint32_t)tag);
+    VPRINTF_LOW("Tag: ");
     for (int i = 0; i < tag_length/4; i++) {
-        VPRINTF(LOW, "%08X", tag[i]);
+        VPRINTF_LOW("%08X", tag[i]);
     }
-    VPRINTF(LOW, "\n");
+    VPRINTF_LOW("\n");
 
     // Setup AES key structure
     aes_key.kv_intf = FALSE;
@@ -198,7 +198,7 @@ void main(void) {
     // Sending image over to AXI SRAM for usage during DMA AES calculation
     // ===========================================================================
     // Use a FIXED transfer (only the final beat should be present at the target address)
-    VPRINTF(LOW, "Sending image payload via AHB i/f to AXI SRAM\n");
+    VPRINTF_LOW("Sending image payload via AHB i/f to AXI SRAM\n");
     soc_ifc_axi_dma_send_ahb_payload(aes_input.dma_transfer_data.src_addr, 0, 
                                       aes_input.plaintext, aes_input.text_len, 0);
 
@@ -211,14 +211,14 @@ void main(void) {
 
     aes_input.aes_collision_err = TRUE;
     aes_input.aes_expect_err = TRUE;
-    VPRINTF(LOW, "AES collision err injection enabled\n");
+    VPRINTF_LOW("AES collision err injection enabled\n");
    
     // Execute AES flow
-    VPRINTF(LOW, "Executing AES flow with collision err injection enabled\n");
+    VPRINTF_LOW("Executing AES flow with collision err injection enabled\n");
     aes_flow(op, mode, key_len, aes_input, endian_mode);
 
     // Reached here means test failed
-    VPRINTF(ERROR, "Collision error not detected test progressed unexpectedly\n");
+    VPRINTF_ERROR("Collision error not detected test progressed unexpectedly\n");
     // Signal completion and wait
     SEND_STDOUT_CTRL(0x01);
     while(1);

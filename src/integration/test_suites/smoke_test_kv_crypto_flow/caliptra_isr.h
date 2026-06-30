@@ -251,8 +251,8 @@ inline void service_abr_notif_intr() {
         while(1);
     }
 }
-inline void service_axi_dma_error_intr() {VPRINTF(ERROR, "ERROR");}
-inline void service_axi_dma_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_axi_dma_error_intr() {VPRINTF_ERROR("ERROR");}
+inline void service_axi_dma_notif_intr() {VPRINTF_ERROR("ERROR");}
 
 
 #endif //CALIPTRA_ISR_H

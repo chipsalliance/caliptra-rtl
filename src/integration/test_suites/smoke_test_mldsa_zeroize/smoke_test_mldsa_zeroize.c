@@ -71,7 +71,7 @@ void inject_command(uint8_t cmd){
         lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, (1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
     }
     else{
-        VPRINTF(LOW, "Enable scan mode\n");
+        VPRINTF_LOW("Enable scan mode\n");
         SEND_STDOUT_CTRL(0xef);
 
         for(uint8_t i=0;i<100;i++);
@@ -80,9 +80,9 @@ void inject_command(uint8_t cmd){
 } 
 
 void main() {
-    VPRINTF(LOW, "---------------------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With MLDSA Zeroize/ScanMode !!\n");
-    VPRINTF(LOW, "---------------------------------------------\n");
+    VPRINTF_LOW("---------------------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With MLDSA Zeroize/ScanMode !!\n");
+    VPRINTF_LOW("---------------------------------------------\n");
 
     /* Intializes random number generator */  //TODO    
     srand(time);
@@ -113,10 +113,10 @@ void main() {
         for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
             msg[i] = rand() % 0xffffffff;
 
-        VPRINTF(LOW, "inject random mldsa seed to kv key reg (in RTL)\n");
+        VPRINTF_LOW("inject random mldsa seed to kv key reg (in RTL)\n");
         SEND_STDOUT_CTRL(0x93);
         
-        VPRINTF(LOW, "Waiting for mldsa status ready\n");
+        VPRINTF_LOW("Waiting for mldsa status ready\n");
         while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
         // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
@@ -138,31 +138,31 @@ void main() {
         uint8_t inject_cmd = rand() % 2;
         uint8_t test_mode = rand() % 16;
         if (test_mode == 0) {
-            VPRINTF(LOW, "\nApplying MLDSA zeroize/scan_mode just before enabling MLDSA.\n");
+            VPRINTF_LOW("\nApplying MLDSA zeroize/scan_mode just before enabling MLDSA.\n");
             inject_command(inject_cmd);
 
-            VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
+            VPRINTF_LOW("\nMLDSA KEYGEN + SIGNING\n");
             lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
         }
         else if (test_mode == 1){
-            VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
+            VPRINTF_LOW("\nMLDSA KEYGEN + SIGNING\n");
             lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
-            VPRINTF(LOW, "\nApplying MLDSA zeroize/scan_mode just after enabling MLDSA.\n");
+            VPRINTF_LOW("\nApplying MLDSA zeroize/scan_mode just after enabling MLDSA.\n");
             inject_command(inject_cmd);
         }
         else {
-            VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
+            VPRINTF_LOW("\nMLDSA KEYGEN + SIGNING\n");
             lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
         
             // Randomly apply zeroize during engine execution
             uint32_t zeroize_time = rand() % 3000;
-            VPRINTF(LOW, "\nzeroize time is = %d\n", zeroize_time);
+            VPRINTF_LOW("\nzeroize time is = %d\n", zeroize_time);
             for (uint32_t slp = 0; slp < zeroize_time; slp++) {
                 __asm__ volatile ("nop"); // Sleep loop as "nop"
             }
 
-            VPRINTF(LOW, "\nApplying MLDSA zeroize/scan_mode during execution.\n");
+            VPRINTF_LOW("\nApplying MLDSA zeroize/scan_mode during execution.\n");
             inject_command(inject_cmd);
         }
 
@@ -170,22 +170,22 @@ void main() {
         uint8_t zeroize_target_api = rand() % 4;
         switch (zeroize_target_api){
             case 0:
-                VPRINTF(LOW, "\nTry to Load zeroized Pubkey data from MLDSA\n");
+                VPRINTF_LOW("\nTry to Load zeroized Pubkey data from MLDSA\n");
                 reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PUBKEY_BASE_ADDR;
                 end_addr = MLDSA87_PUBKEY_SIZE;
                 break;
             case 1:
-                VPRINTF(LOW, "\nTry to Load zeroized PRIVKEY_OUT data from MLDSA\n");
+                VPRINTF_LOW("\nTry to Load zeroized PRIVKEY_OUT data from MLDSA\n");
                 reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
                 end_addr = MLDSA87_PRIVKEY_SIZE;
                 break;
             case 2:
-                VPRINTF(LOW, "\nTry to Load zeroized SIGNATURE data from MLDSA\n");
+                VPRINTF_LOW("\nTry to Load zeroized SIGNATURE data from MLDSA\n");
                 reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
                 end_addr = MLDSA87_SIGN_SIZE;
                 break;
             case 3:
-                VPRINTF(LOW, "\nTry to Load zeroized PRIVKEY_IN data from MLDSA\n");
+                VPRINTF_LOW("\nTry to Load zeroized PRIVKEY_IN data from MLDSA\n");
                 reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
                 end_addr = MLDSA87_PRIVKEY_SIZE;
                 break;
@@ -196,9 +196,9 @@ void main() {
             // Try to Overwrite data in MLDSA
             *reg_ptr = rand() % 0xffffffff;
             if (*reg_ptr != 0) {
-                VPRINTF(ERROR, "At offset [%d], mldsa data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                VPRINTF_ERROR("At offset [%d], mldsa data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF_ERROR("Expected data: 0x%x\n", 0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }

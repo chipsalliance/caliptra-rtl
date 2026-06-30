@@ -32,27 +32,27 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    VPRINTF(LOW, "-------------------------------------\n");
-    VPRINTF(LOW, " PCR MLDSA Injection !!\n");
-    VPRINTF(LOW, "-------------------------------------\n");
+    VPRINTF_LOW("-------------------------------------\n");
+    VPRINTF_LOW(" PCR MLDSA Injection !!\n");
+    VPRINTF_LOW("-------------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
 
     //Inject mldsa failure
-    VPRINTF(LOW, "Inject random failure into mldsa\n");
+    VPRINTF_LOW("Inject random failure into mldsa\n");
     SEND_STDOUT_CTRL(0xd7);
     
     //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW, "Inject randomized SEED into KV slot and MSG into SHA512 digest\n");
+    VPRINTF_LOW("Inject randomized SEED into KV slot and MSG into SHA512 digest\n");
     SEND_STDOUT_CTRL(0x93);
 
     // wait for MLDSA to be ready
-    VPRINTF(LOW, "Waiting for mldsa status ready\n");
+    VPRINTF_LOW("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Enable MLDSA keygen sign
-    VPRINTF(LOW, "\nMLDSA PCR SIGNING\n");
+    VPRINTF_LOW("\nMLDSA PCR SIGNING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN | 
                                           ((1 << ABR_REG_MLDSA_CTRL_PCR_SIGN_LOW) & ABR_REG_MLDSA_CTRL_PCR_SIGN_MASK));
 

@@ -361,9 +361,9 @@ const uint32_t mldsa_entropy[] = {
 
 
 void main() {
-    VPRINTF(LOW, "----------------------------\n");
-    VPRINTF(LOW, " Running MLDSA SIGN RND Smoke Test !!\n");
-    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF_LOW("----------------------------\n");
+    VPRINTF_LOW(" Running MLDSA SIGN RND Smoke Test !!\n");
+    VPRINTF_LOW("----------------------------\n");
 
     //Call interrupt init
     init_interrupts();

@@ -133,9 +133,9 @@ void mlkem_test(uint8_t seed_kv_id, uint8_t sharedkey_kv_id){
 void enable_ocp_lock(){    
     // Set OCP_LOCK_IN_PROGRESS
     lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK);
-    VPRINTF(LOW, "OCP_LOCK_IN_PROGRESS: 0x%x\n", lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL));
+    VPRINTF_LOW("OCP_LOCK_IN_PROGRESS: 0x%x\n", lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL));
     if((lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL) & SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK) == 0) {
-        VPRINTF(FATAL, "OCP_LOCK_IN_PROGRESS is not set!\n");
+        VPRINTF_FATAL("OCP_LOCK_IN_PROGRESS is not set!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -154,7 +154,7 @@ void main() {
 
     // Enable OCP LOCK mode
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
-    VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
+    VPRINTF_LOW("OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
     if (ocp_lock_mode){
         uint8_t kv_slot0, kv_slot1, kv_slot2;
@@ -173,17 +173,17 @@ void main() {
             } while (kv_slot1 == kv_slot0);
             kv_slot2 = rand() % 16;
         }
-        VPRINTF(LOW, "slot0: 0x%x, slot1: 0x%x, slot2: 0x%x\n", kv_slot0, kv_slot1, kv_slot2);
+        VPRINTF_LOW("slot0: 0x%x, slot1: 0x%x, slot2: 0x%x\n", kv_slot0, kv_slot1, kv_slot2);
 
         VPRINTF(LOW,"Running HMAC core before enabling OCP LOCK\n");
         hmac_test(kv_slot0, kv_slot1, kv_slot2);
         if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) != 0) {
-            VPRINTF(FATAL, "KV_WRITE_FAIL is set!\n");
+            VPRINTF_FATAL("KV_WRITE_FAIL is set!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
         else{
-            VPRINTF(LOW, "KV Write is successful!\n");
+            VPRINTF_LOW("KV Write is successful!\n");
         }
 
         switch (op){
@@ -192,7 +192,7 @@ void main() {
                 enable_ocp_lock();
                 hmac_test(kv_slot0, kv_slot1, kv_slot2);
                 if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) == 0) {
-                    VPRINTF(FATAL, "KV_WRITE_FAIL is not detected!\n");
+                    VPRINTF_FATAL("KV_WRITE_FAIL is not detected!\n");
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
                 }
@@ -207,7 +207,7 @@ void main() {
                 enable_ocp_lock();
                 hmac_test(kv_slot0, kv_slot1, kv_slot2);
                 if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) == 0) {
-                    VPRINTF(FATAL, "KV_WRITE_FAIL is not detected!\n");
+                    VPRINTF_FATAL("KV_WRITE_FAIL is not detected!\n");
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
                 }
@@ -223,7 +223,7 @@ void main() {
                 ecc_test(kv_slot0, kv_slot2);
                 
                 if((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) >> ECC_REG_ECC_KV_WR_PKEY_STATUS_ERROR_LOW) == 0) {
-                    VPRINTF(FATAL, "KV Write Error is not detected!\n");
+                    VPRINTF_FATAL("KV Write Error is not detected!\n");
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
                 }
@@ -239,7 +239,7 @@ void main() {
                 mlkem_test(kv_slot0, kv_slot2);
                 
                 if((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS) >> ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS_ERROR_LOW) == 0) {
-                    VPRINTF(FATAL, "KV Write Error is not detected!\n");
+                    VPRINTF_FATAL("KV Write Error is not detected!\n");
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
                 }

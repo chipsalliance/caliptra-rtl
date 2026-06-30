@@ -45,9 +45,9 @@ void main() {
     uint8_t fail_cmd = 0x1;
     uint8_t kv_slot;
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " ABR KV Zero Seed Test - rst_count = %d\n", rst_count);
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" ABR KV Zero Seed Test - rst_count = %d\n", rst_count);
+    VPRINTF_LOW("----------------------------------\n");
 
     // Setup the interrupt CSR configuration
     init_interrupts();
@@ -56,14 +56,14 @@ void main() {
         //--------------------------------------------------------------
         // Test 0: MLDSA seed zero error
         //--------------------------------------------------------------
-        VPRINTF(LOW, "\n=== TEST 0: MLDSA seed zero ===\n");
+        VPRINTF_LOW("\n=== TEST 0: MLDSA seed zero ===\n");
 
         // Wait for MLDSA to be ready
         while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
         // Inject all-zero MLDSA seed into KV slot 8 (KV_ENTRY_FOR_MLDSA_SIGNING)
         // TB command 0xa1: zero MLDSA seed injection
-        VPRINTF(LOW, "Injecting zero MLDSA seed into KV\n");
+        VPRINTF_LOW("Injecting zero MLDSA seed into KV\n");
         SEND_STDOUT_CTRL(0xa1);
 
         // Program KV read for MLDSA seed from slot 8
@@ -79,7 +79,7 @@ void main() {
 
         if ((lsu_read_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS) &
              ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_MASK) != 0) {
-            VPRINTF(ERROR, "Unexpected KV read error for MLDSA seed\n");
+            VPRINTF_ERROR("Unexpected KV read error for MLDSA seed\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -90,7 +90,7 @@ void main() {
         }
 
         // Trigger MLDSA KEYGEN - should detect zero seed and raise error
-        VPRINTF(LOW, "Triggering MLDSA KEYGEN with zero seed\n");
+        VPRINTF_LOW("Triggering MLDSA KEYGEN with zero seed\n");
         lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN);
 
         // Wait for interrupt (error or notification)
@@ -98,15 +98,15 @@ void main() {
 
         // Check that error interrupt was received
         if (cptra_intr_rcv.abr_error == 0) {
-            VPRINTF(ERROR, "\nMLDSA seed_zero_error is NOT detected.\n");
+            VPRINTF_ERROR("\nMLDSA seed_zero_error is NOT detected.\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
-        VPRINTF(LOW, "MLDSA seed_zero_error detected successfully!\n");
+        VPRINTF_LOW("MLDSA seed_zero_error detected successfully!\n");
 
         // Check STATUS.ERROR is set
         if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_ERROR_MASK) == 0) {
-            VPRINTF(ERROR, "MLDSA STATUS.ERROR not set after seed_zero_error\n");
+            VPRINTF_ERROR("MLDSA STATUS.ERROR not set after seed_zero_error\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -119,14 +119,14 @@ void main() {
         //--------------------------------------------------------------
         // Test 1: MLKEM seed zero error
         //--------------------------------------------------------------
-        VPRINTF(LOW, "\n=== TEST 1: MLKEM seed zero ===\n");
+        VPRINTF_LOW("\n=== TEST 1: MLKEM seed zero ===\n");
 
         // Wait for MLKEM to be ready
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
 
         // Inject all-zero MLKEM seed into KV via 0xa8 (reuses HMAC zero key cmd, both 16 dwords)
         kv_slot = 0;
-        VPRINTF(LOW, "Injecting zero MLKEM seed into KV slot %d\n", kv_slot);
+        VPRINTF_LOW("Injecting zero MLKEM seed into KV slot %d\n", kv_slot);
         SEND_STDOUT_CTRL(0xa8);
 
         // Program KV read for MLKEM seed
@@ -142,7 +142,7 @@ void main() {
 
         if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) &
              ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) != 0) {
-            VPRINTF(ERROR, "Unexpected KV read error for MLKEM seed\n");
+            VPRINTF_ERROR("Unexpected KV read error for MLKEM seed\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -153,7 +153,7 @@ void main() {
         }
 
         // Trigger MLKEM KEYGEN - should detect zero seed and raise error
-        VPRINTF(LOW, "Triggering MLKEM KEYGEN with zero seed\n");
+        VPRINTF_LOW("Triggering MLKEM KEYGEN with zero seed\n");
         lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_KEYGEN);
 
         // Wait for interrupt
@@ -161,15 +161,15 @@ void main() {
 
         // Check that error interrupt was received
         if (cptra_intr_rcv.abr_error == 0) {
-            VPRINTF(ERROR, "\nMLKEM seed_zero_error is NOT detected.\n");
+            VPRINTF_ERROR("\nMLKEM seed_zero_error is NOT detected.\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
-        VPRINTF(LOW, "MLKEM seed_zero_error detected successfully!\n");
+        VPRINTF_LOW("MLKEM seed_zero_error detected successfully!\n");
 
         // Check STATUS.ERROR is set
         if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_ERROR_MASK) == 0) {
-            VPRINTF(ERROR, "MLKEM STATUS.ERROR not set after seed_zero_error\n");
+            VPRINTF_ERROR("MLKEM STATUS.ERROR not set after seed_zero_error\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -184,7 +184,7 @@ void main() {
         // Write MLKEM seed via SW registers (not KV), then inject
         // all-zero msg via KV. Only msg zero error should fire.
         //--------------------------------------------------------------
-        VPRINTF(LOW, "\n=== TEST 2: MLKEM msg zero ===\n");
+        VPRINTF_LOW("\n=== TEST 2: MLKEM msg zero ===\n");
 
         // Wait for MLKEM to be ready
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
@@ -198,7 +198,7 @@ void main() {
         // Inject all-zero MLKEM msg into KV via 0xa1 (reuses MLDSA zero seed cmd, both 8 dwords)
         // 0xa1 writes to slot 8 (KV_ENTRY_FOR_MLDSA_SIGNING) with MLDSA_SEED+MLKEM_MSG dest_valid
         kv_slot = 8;
-        VPRINTF(LOW, "Injecting zero MLKEM msg into KV slot %d\n", kv_slot);
+        VPRINTF_LOW("Injecting zero MLKEM msg into KV slot %d\n", kv_slot);
         SEND_STDOUT_CTRL(0xa1);
 
         // Program KV read for MLKEM msg
@@ -214,7 +214,7 @@ void main() {
 
         if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) &
              ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) != 0) {
-            VPRINTF(ERROR, "Unexpected KV read error for MLKEM msg\n");
+            VPRINTF_ERROR("Unexpected KV read error for MLKEM msg\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -230,7 +230,7 @@ void main() {
         }
 
         // Trigger MLKEM ENCAPS - should detect zero msg and raise error
-        VPRINTF(LOW, "Triggering MLKEM ENCAPS with zero msg\n");
+        VPRINTF_LOW("Triggering MLKEM ENCAPS with zero msg\n");
         lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
 
         // Wait for interrupt
@@ -238,15 +238,15 @@ void main() {
 
         // Check that error interrupt was received
         if (cptra_intr_rcv.abr_error == 0) {
-            VPRINTF(ERROR, "\nMLKEM msg_zero_error is NOT detected.\n");
+            VPRINTF_ERROR("\nMLKEM msg_zero_error is NOT detected.\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
-        VPRINTF(LOW, "MLKEM msg_zero_error detected successfully!\n");
+        VPRINTF_LOW("MLKEM msg_zero_error detected successfully!\n");
 
         // Check STATUS.ERROR is set
         if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_ERROR_MASK) == 0) {
-            VPRINTF(ERROR, "MLKEM STATUS.ERROR not set after msg_zero_error\n");
+            VPRINTF_ERROR("MLKEM STATUS.ERROR not set after msg_zero_error\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -254,8 +254,8 @@ void main() {
         mlkem_zeroize();
     }
 
-    VPRINTF(LOW, "\n----------------------------------\n");
-    VPRINTF(LOW, " ABR KV Zero Seed Test PASSED\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("\n----------------------------------\n");
+    VPRINTF_LOW(" ABR KV Zero Seed Test PASSED\n");
+    VPRINTF_LOW("----------------------------------\n");
     SEND_STDOUT_CTRL(0xff);
 }

@@ -48,9 +48,9 @@ void mbox_fw();
 /* --------------- Function Definitions --------------- */
 void main() {
     
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Caliptra Crypto Demo!!\n"           );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Caliptra Crypto Demo!!\n"           );
+    VPRINTF_LOW("----------------------------------\n");
 
     init_interrupts();
 
@@ -62,9 +62,9 @@ void main() {
 
     mbox_fw();
     
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Demo completed successfully! \n"    );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Demo completed successfully! \n"    );
+    VPRINTF_LOW("----------------------------------\n");
 }
 
 void init_doe() {

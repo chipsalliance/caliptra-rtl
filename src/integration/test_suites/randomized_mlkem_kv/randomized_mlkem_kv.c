@@ -50,15 +50,15 @@ void main() {
     uint32_t actual_ciphertext[MLKEM_CIPHERTEXT_SIZE];
     uint32_t actual_sharedkey[MLKEM_SHAREDKEY_SIZE];
 
-    VPRINTF(LOW, "----------------------------\n");
-    VPRINTF(LOW, " Running MLKEM Smoke Test !!\n");
-    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF_LOW("----------------------------\n");
+    VPRINTF_LOW(" Running MLKEM Smoke Test !!\n");
+    VPRINTF_LOW("----------------------------\n");
 
     //Call interrupt init
     init_interrupts();
 
     for(int i = 0; i < 3; i++) {
-        VPRINTF(LOW, "START TEST %d\n", i);
+        VPRINTF_LOW("START TEST %d\n", i);
 
         seed.kv_intf = TRUE;
         seed.kv_id = xorshift32() % 24;

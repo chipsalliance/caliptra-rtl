@@ -173,9 +173,9 @@ void main() {
     uint32_t expected_ct[32];
     uint32_t expected_ct_length;
 
-    VPRINTF(LOW, "----------------------------------------------\n");
-    VPRINTF(LOW, " HMAC->ML-KEM->AES KV Endianness Smoke Test\n");
-    VPRINTF(LOW, "----------------------------------------------\n");
+    VPRINTF_LOW("----------------------------------------------\n");
+    VPRINTF_LOW(" HMAC->ML-KEM->AES KV Endianness Smoke Test\n");
+    VPRINTF_LOW("----------------------------------------------\n");
 
     init_interrupts();
 
@@ -206,10 +206,10 @@ void main() {
     // PHASE 1: API reference path (all FW registers)
     //   HMAC -> tag via FW -> seed_d/z -> ML-KEM -> shared key -> AES
     // ================================================================
-    VPRINTF(LOW, "\n--- Phase 1: All-FW reference path ---\n");
+    VPRINTF_LOW("\n--- Phase 1: All-FW reference path ---\n");
 
     // HMAC-512 -> tag via FW registers
-    VPRINTF(LOW, "Phase 1: HMAC-512 -> tag via FW\n");
+    VPRINTF_LOW("Phase 1: HMAC-512 -> tag via FW\n");
     hmac_tag_io.kv_intf = FALSE;
     for (int i = 0; i < HMAC512_TAG_SIZE; i++)
         hmac_tag_io.data[i] = expected_tag[i];
@@ -221,15 +221,15 @@ void main() {
 
     // Verify HMAC tag
     for (int i = 0; i < HMAC512_TAG_SIZE; i++) {
-        VPRINTF(LOW, "HMAC tag[%d]: 0x%x\n", i, actual_tag[i]);
+        VPRINTF_LOW("HMAC tag[%d]: 0x%x\n", i, actual_tag[i]);
         if (actual_tag[i] != expected_tag[i]) {
-            VPRINTF(FATAL, "ERROR: HMAC tag mismatch at [%d]: got 0x%x, expected 0x%x\n",
+            VPRINTF_FATAL("ERROR: HMAC tag mismatch at [%d]: got 0x%x, expected 0x%x\n",
                     i, actual_tag[i], expected_tag[i]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
     }
-    VPRINTF(LOW, "HMAC tag matches expected reference\n");
+    VPRINTF_LOW("HMAC tag matches expected reference\n");
 
     // Split tag -> seed_d (first 8 DWORDs), seed_z (last 8 DWORDs)
     // DWORD reversal only (no BSWAP) to match KV path (RTL DWORD reversal).
@@ -246,29 +246,29 @@ void main() {
         shared_key.data[i] = 0;
 
     // ML-KEM keygen (FW seeds)
-    VPRINTF(LOW, "Phase 1: ML-KEM keygen (FW seeds)\n");
+    VPRINTF_LOW("Phase 1: ML-KEM keygen (FW seeds)\n");
     mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
     // ML-KEM encaps -> shared key via FW
-    VPRINTF(LOW, "Phase 1: ML-KEM encaps (FW) -> shared key\n");
+    VPRINTF_LOW("Phase 1: ML-KEM encaps (FW) -> shared key\n");
     mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext,
                       shared_key, actual_sharedkey);
 
     for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++)
-        VPRINTF(LOW, "Shared Key[%d]: 0x%x\n", i, actual_sharedkey[i]);
+        VPRINTF_LOW("Shared Key[%d]: 0x%x\n", i, actual_sharedkey[i]);
 
     // Verify shared key against independent reference
     for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
         if (actual_sharedkey[i] != expected_sk[i]) {
-            VPRINTF(FATAL, "ERROR: Shared key mismatch at [%d]: got 0x%x, expected 0x%x\n",
+            VPRINTF_FATAL("ERROR: Shared key mismatch at [%d]: got 0x%x, expected 0x%x\n",
                     i, actual_sharedkey[i], expected_sk[i]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
     }
-    VPRINTF(LOW, "Phase 1: Shared key matches expected reference\n");
+    VPRINTF_LOW("Phase 1: Shared key matches expected reference\n");
 
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
@@ -277,7 +277,7 @@ void main() {
     // ML-KEM shared key goes through full byte reversal in KV path:
     //   RTL: sharedkey_data[d] = shared_key[7-d] + kv_write SWAP=0 + AES byte swap
     // To match: FW key = BSWAP32(shared_key[7-i])
-    VPRINTF(LOW, "Phase 1: AES-ECB encrypt (FW key)\n");
+    VPRINTF_LOW("Phase 1: AES-ECB encrypt (FW key)\n");
     aes_key_t aes_key_api = {0};
     aes_key_api.kv_intf = FALSE;
     for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
@@ -292,17 +292,17 @@ void main() {
     aes_input.aad_len = 0;
 
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
-    VPRINTF(LOW, "Phase 1 PASS: All FW path matches reference\n");
+    VPRINTF_LOW("Phase 1 PASS: All FW path matches reference\n");
 
     // ================================================================
     // PHASE 2: KV path (under test)
     //   HMAC -> tag to KV -> ML-KEM keygen_decaps (seed from KV) ->
     //   shared key to KV -> AES
     // ================================================================
-    VPRINTF(LOW, "\n--- Phase 2: All-KV path (under test) ---\n");
+    VPRINTF_LOW("\n--- Phase 2: All-KV path (under test) ---\n");
 
     // HMAC-512 -> tag to KV slot
-    VPRINTF(LOW, "Phase 2: HMAC-512 -> tag to KV slot %d\n", KV_HMAC_TAG_SLOT);
+    VPRINTF_LOW("Phase 2: HMAC-512 -> tag to KV slot %d\n", KV_HMAC_TAG_SLOT);
     hmac_tag_io.kv_intf = TRUE;
     hmac_tag_io.kv_id = KV_HMAC_TAG_SLOT;
 
@@ -312,7 +312,7 @@ void main() {
     cptra_intr_rcv.hmac_notif = 0;
 
     // ML-KEM keygen_decaps with seed from KV
-    VPRINTF(LOW, "Phase 2: ML-KEM keygen_decaps (seed from KV slot %d)\n", KV_HMAC_TAG_SLOT);
+    VPRINTF_LOW("Phase 2: ML-KEM keygen_decaps (seed from KV slot %d)\n", KV_HMAC_TAG_SLOT);
     seed.kv_intf = TRUE;
     seed.kv_id = KV_HMAC_TAG_SLOT;
 
@@ -325,14 +325,14 @@ void main() {
 
     // ML-KEM keygen + decaps -> shared key to KV
     // Uses ciphertext from Phase 1 encaps
-    VPRINTF(LOW, "Phase 2: ML-KEM keygen_decaps (KV seed -> KV shared key)\n");
+    VPRINTF_LOW("Phase 2: ML-KEM keygen_decaps (KV seed -> KV shared key)\n");
     mlkem_keygen_decaps_flow(seed, actual_ciphertext, abr_entropy,
                              kv_shared_key);
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 
     // AES-256-ECB with key from KV
-    VPRINTF(LOW, "Phase 2: AES-ECB encrypt (key from KV slot %d)\n", KV_SHARED_KEY_SLOT);
+    VPRINTF_LOW("Phase 2: AES-ECB encrypt (key from KV slot %d)\n", KV_SHARED_KEY_SLOT);
     aes_key_t aes_key_kv = {0};
     aes_key_kv.kv_intf = TRUE;
     aes_key_kv.kv_reuse_key = FALSE;
@@ -348,8 +348,8 @@ void main() {
     // different keys -> decaps fails -> wrong shared key -> AES mismatch -> FAIL
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
-    VPRINTF(LOW, "\n--- PASS: KV path matches FW reference ---\n");
-    VPRINTF(LOW, "HMAC->KV->ML-KEM(seed)->KV->AES endianness is correct.\n");
+    VPRINTF_LOW("\n--- PASS: KV path matches FW reference ---\n");
+    VPRINTF_LOW("HMAC->KV->ML-KEM(seed)->KV->AES endianness is correct.\n");
 
     SEND_STDOUT_CTRL(0xff);
 }

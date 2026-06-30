@@ -45,9 +45,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(){
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Smoke Test With PCR Signing flow !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Smoke Test With PCR Signing flow !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -151,11 +151,11 @@ void main(){
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
+    VPRINTF_LOW("Inject PRIVKEY into KV slot 7\n");
     uint8_t privkey_inject_cmd = 0x88 + 0x7;
     SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-    VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+    VPRINTF_LOW("Inject MSG into SHA512 digest\n");
     SEND_STDOUT_CTRL(0x90);
 
     // Program ECC IV
@@ -166,7 +166,7 @@ void main(){
     }
 
     // Enable ECC PCR SIGNING core
-    VPRINTF(LOW, "\nECC PCR SIGNING\n");
+    VPRINTF_LOW("\nECC PCR SIGNING\n");
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
                 ((1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK));
@@ -175,13 +175,13 @@ void main(){
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
 
-    VPRINTF(LOW, "Load SIGN_R data from ECC\n");
+    VPRINTF_LOW("Load SIGN_R data from ECC\n");
     reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
         if (*reg_ptr != 0) {
-            VPRINTF(ERROR, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF_ERROR("At offset [%d], ecc_sign_r data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -189,13 +189,13 @@ void main(){
         offset++;
     }
 
-    VPRINTF(LOW, "Load SIGN_S data from ECC\n");
+    VPRINTF_LOW("Load SIGN_S data from ECC\n");
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
         if (*reg_ptr != 0) {
-            VPRINTF(ERROR, "At offset [%d], ecc_sign_s data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF_ERROR("At offset [%d], ecc_sign_s data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         } 
@@ -209,10 +209,10 @@ void main(){
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
+    VPRINTF_LOW("Inject PRIVKEY into KV slot 7\n");
     SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-    VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+    VPRINTF_LOW("Inject MSG into SHA512 digest\n");
     SEND_STDOUT_CTRL(0x90);
 
     // Program ECC IV
@@ -223,7 +223,7 @@ void main(){
     }
 
     // Enable ECC PCR SIGNING core
-    VPRINTF(LOW, "\nECC PCR SIGNING\n");
+    VPRINTF_LOW("\nECC PCR SIGNING\n");
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
@@ -236,13 +236,13 @@ void main(){
     // wait for ECC to be ready
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-    VPRINTF(LOW, "Load SIGN_R data from ECC\n");
+    VPRINTF_LOW("Load SIGN_R data from ECC\n");
     reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_SIGN_R_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
         if (*reg_ptr != 0) {
-            VPRINTF(ERROR, "At offset [%d], ecc_sign_r data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF_ERROR("At offset [%d], ecc_sign_r data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -250,34 +250,34 @@ void main(){
         offset++;
     }
    
-    VPRINTF(LOW, "\nMLDSA PCR with zeroize\n");
+    VPRINTF_LOW("\nMLDSA PCR with zeroize\n");
     volatile uint32_t * status_ptr;
     
     //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW, "Inject randomized SEED into KV slot and MSG into SHA512 digest\n");
+    VPRINTF_LOW("Inject randomized SEED into KV slot and MSG into SHA512 digest\n");
     SEND_STDOUT_CTRL(0x93);
 
     // wait for MLDSA to be ready
-    VPRINTF(LOW, "Waiting for mldsa status ready\n");
+    VPRINTF_LOW("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Enable MLDSA keygen sign
-    VPRINTF(LOW, "\nMLDSA PCR SIGNING\n");
+    VPRINTF_LOW("\nMLDSA PCR SIGNING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN | 
                                          ((1 << ABR_REG_MLDSA_CTRL_PCR_SIGN_LOW) & ABR_REG_MLDSA_CTRL_PCR_SIGN_MASK) |
                                          ((1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK));
 
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-    VPRINTF(LOW, "Try to Load SIGN data from MLDSA\n");
+    VPRINTF_LOW("Try to Load SIGN data from MLDSA\n");
     while (*status_ptr == 0){
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_SIGN_SIZE) {
             if ((*reg_ptr != 0) & (*status_ptr == 0)) {
-                VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                VPRINTF_ERROR("At offset [%d], mldsa_sign data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF_ERROR("Expected data: 0x%x\n", 0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -287,15 +287,15 @@ void main(){
     }
 
     //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW, "Inject randomized SEED into KV slot and MSG into SHA512 digest\n");
+    VPRINTF_LOW("Inject randomized SEED into KV slot and MSG into SHA512 digest\n");
     SEND_STDOUT_CTRL(0x93);
 
     // wait for MLDSA to be ready
-    VPRINTF(LOW, "Waiting for mldsa status ready\n");
+    VPRINTF_LOW("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Enable MLDSA keygen sign
-    VPRINTF(LOW, "\nMLDSA PCR SIGNING\n");
+    VPRINTF_LOW("\nMLDSA PCR SIGNING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN | 
                                          ((1 << ABR_REG_MLDSA_CTRL_PCR_SIGN_LOW) & ABR_REG_MLDSA_CTRL_PCR_SIGN_MASK));
 
@@ -306,15 +306,15 @@ void main(){
 
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
-    VPRINTF(LOW, "Try to Load SIGN data from MLDSA\n");
+    VPRINTF_LOW("Try to Load SIGN data from MLDSA\n");
     while (*status_ptr == 0){
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_SIGN_SIZE) {
             if ((*reg_ptr != 0) & (*status_ptr == 0)) {
-                VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                VPRINTF_ERROR("At offset [%d], mldsa_sign data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF_ERROR("Expected data: 0x%x\n", 0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }

@@ -38,9 +38,9 @@ volatile int indexer = 0;
 #define EXTERNAL_MU_HEADER_LEN (2)
 
 void main() {
-    VPRINTF(LOW, "-----------------------------------------\n");
-    VPRINTF(LOW, " Running MLDSA Random External Mu Test !!\n");
-    VPRINTF(LOW, "-----------------------------------------\n");
+    VPRINTF_LOW("-----------------------------------------\n");
+    VPRINTF_LOW(" Running MLDSA Random External Mu Test !!\n");
+    VPRINTF_LOW("-----------------------------------------\n");
 
     //--------------------------------------------------------------
     // Calculate external mu.
@@ -49,44 +49,44 @@ void main() {
     dif_kmac_operation_state_t operation_state;
     uint32_t public_key_hash[MLDSA87_PUBKEY_HASH_SIZE];
     dif_kmac_mode_shake_start(CLP_KMAC_BASE_ADDR, &operation_state, kDifKmacModeShakeLen256, kDifKmacMsgEndiannessLittle);
-    VPRINTF(LOW, "Forcing public key into SHA3.\n");
+    VPRINTF_LOW("Forcing public key into SHA3.\n");
     SEND_STDOUT_CTRL(0xd0); // Inject public key into SHA3 to calculate tr.
     for (indexer = 0; indexer < MLDSA87_PUBKEY_SIZE; ++indexer) {
         __asm__ volatile ("nop"); // Sleep loop as "nop"
     }
-    VPRINTF(LOW, "Squeezing out tr.\n");
+    VPRINTF_LOW("Squeezing out tr.\n");
     dif_kmac_squeeze(CLP_KMAC_BASE_ADDR, &operation_state, public_key_hash, MLDSA87_PUBKEY_HASH_SIZE, /*processed=*/NULL, /*capacity=*/NULL);
-    VPRINTF(LOW, "Clear forces.\n");
+    VPRINTF_LOW("Clear forces.\n");
     SEND_STDOUT_CTRL(0xd8); // Clear mldsa and sha3 forces.
-    VPRINTF(LOW, "End calculation of tr.\n");
+    VPRINTF_LOW("End calculation of tr.\n");
     dif_kmac_end(CLP_KMAC_BASE_ADDR, &operation_state);
-    VPRINTF(LOW, "Waiting for SHA3 idle.\n");
+    VPRINTF_LOW("Waiting for SHA3 idle.\n");
     dif_kmac_poll_status(CLP_KMAC_BASE_ADDR, KMAC_STATUS_SHA3_IDLE_LOW);
 
     // Calculate External mu which is a 64-bit SHAKE hash of the formatted message `tr ^ M'`.
     // `M' = 0 ^ 0 ^ M` where ^ is concatenation is M is the message.
     uint32_t mu[MLDSA87_EXTERNAL_MU_SIZE];
     const char message_header[EXTERNAL_MU_HEADER_LEN] = "\x00\x00";
-    VPRINTF(LOW, "Starting calculation of external mu.\n");
+    VPRINTF_LOW("Starting calculation of external mu.\n");
     dif_kmac_mode_shake_start(CLP_KMAC_BASE_ADDR, &operation_state, kDifKmacModeShakeLen256, kDifKmacMsgEndiannessLittle);
     // Absorb the public key hash digest.
-    VPRINTF(LOW, "Absorbing tr into SHA3.\n");
+    VPRINTF_LOW("Absorbing tr into SHA3.\n");
     dif_kmac_absorb(CLP_KMAC_BASE_ADDR, &operation_state, public_key_hash, MLDSA87_PUBKEY_HASH_SIZE*4, NULL);
     // Absorb the formatted message.
-    VPRINTF(LOW, "Absorbing message header into SHA3.\n");
+    VPRINTF_LOW("Absorbing message header into SHA3.\n");
     dif_kmac_absorb(CLP_KMAC_BASE_ADDR, &operation_state, message_header, EXTERNAL_MU_HEADER_LEN, NULL);
-    VPRINTF(LOW, "Forcing message into SHA3.\n");
+    VPRINTF_LOW("Forcing message into SHA3.\n");
     SEND_STDOUT_CTRL(0xd1);
     for (indexer = 0; indexer < MLDSA87_EXTERNAL_MU_SIZE; ++indexer) {
         __asm__ volatile ("nop"); // Sleep loop as "nop"
     }
-    VPRINTF(LOW, "Squeezing external mu from SHA3.\n");
+    VPRINTF_LOW("Squeezing external mu from SHA3.\n");
     dif_kmac_squeeze(CLP_KMAC_BASE_ADDR, &operation_state, mu, MLDSA87_EXTERNAL_MU_SIZE, /*processed=*/NULL, /*capacity=*/NULL);
-    VPRINTF(LOW, "Clear forces.\n");
+    VPRINTF_LOW("Clear forces.\n");
     SEND_STDOUT_CTRL(0xd8); // Clear mldsa and sha3 forces.
-    VPRINTF(LOW, "Ending calculation of external mu.\n");
+    VPRINTF_LOW("Ending calculation of external mu.\n");
     dif_kmac_end(CLP_KMAC_BASE_ADDR, &operation_state);
-    VPRINTF(LOW, "Waiting for SHA3 idle.\n");
+    VPRINTF_LOW("Waiting for SHA3 idle.\n");
     dif_kmac_poll_status(CLP_KMAC_BASE_ADDR, KMAC_STATUS_SHA3_IDLE_LOW);
 
     //--------------------------------------------------------------
@@ -96,23 +96,23 @@ void main() {
     init_interrupts();
 
     // Wait for MLDSA to be ready.
-    VPRINTF(LOW, "Waiting for mldsa status ready in keygen+sign\n");
+    VPRINTF_LOW("Waiting for mldsa status ready in keygen+sign\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Program MLDSA EXTERNAL_MU
     write_mldsa_reg((uint32_t *) CLP_ABR_REG_MLDSA_EXTERNAL_MU_0, mu, MLDSA87_EXTERNAL_MU_SIZE);
 
-    VPRINTF(LOW, "Forcing secret key into MLDSA.\n");
+    VPRINTF_LOW("Forcing secret key into MLDSA.\n");
     SEND_STDOUT_CTRL(0xd2); // Inject secret key for signing.
 
-    VPRINTF(LOW, "\nMLDSA KEYGEN_SIGN\n");
+    VPRINTF_LOW("\nMLDSA KEYGEN_SIGN\n");
     // Enable MLDSA keygen sign
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN |
                                          ABR_REG_MLDSA_CTRL_EXTERNAL_MU_MASK);
 
     // Wait for MLDSA SIGNING process to be done.
     wait_for_mldsa_intr();
-    VPRINTF(LOW, "Clear forces.\n");
+    VPRINTF_LOW("Clear forces.\n");
     SEND_STDOUT_CTRL(0xd8); // Clear mldsa and sha3 forces.
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
@@ -121,21 +121,21 @@ void main() {
     // Verification process.
 
     // Wait for MLDSA to be ready.
-    VPRINTF(LOW, "Waiting for mldsa status ready in verify\n");
+    VPRINTF_LOW("Waiting for mldsa status ready in verify\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     write_mldsa_reg((uint32_t *) CLP_ABR_REG_MLDSA_EXTERNAL_MU_0, mu, MLDSA87_EXTERNAL_MU_SIZE);
-    VPRINTF(LOW, "Forcing signature and public key into MLDSA.\n");
+    VPRINTF_LOW("Forcing signature and public key into MLDSA.\n");
     SEND_STDOUT_CTRL(0xd3); // Inject signature and public key for verifying.
 
-    VPRINTF(LOW, "\nMLDSA VERIFY\n");
+    VPRINTF_LOW("\nMLDSA VERIFY\n");
     // Enable MLDSA Verify
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING |
                                          ABR_REG_MLDSA_CTRL_EXTERNAL_MU_MASK);
 
     // Wait for MLDSA SIGNING process to be done.
     wait_for_mldsa_intr();
-    VPRINTF(LOW, "Clear forces.\n");
+    VPRINTF_LOW("Clear forces.\n");
     SEND_STDOUT_CTRL(0xd8); // Clear mldsa and sha3 forces.
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;

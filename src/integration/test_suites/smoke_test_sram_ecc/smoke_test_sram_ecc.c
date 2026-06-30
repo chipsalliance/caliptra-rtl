@@ -59,7 +59,7 @@ uint32_t test_mbox_sram_ecc() {
 
     // Check Interrupt Counts
     if (intr_count == 0) {
-        VPRINTF(ERROR, "ERROR: No interrupts received during ECC sram test\n");
+        VPRINTF_ERROR("ERROR: No interrupts received during ECC sram test\n");
         sts = 1;
     }
     // Sleep in between checking/clearing intr_count to allow ISR to execute and show idle time in sims
@@ -71,20 +71,20 @@ uint32_t test_mbox_sram_ecc() {
     // Get the interrupt count for the expected type
     if (ecc_error_mode == SINGLE) {
         if (*soc_ifc_notif_mbox_ecc_cor_ctr == 0) {
-            VPRINTF(ERROR, "ERROR: Unexpected 0 count value for correctable ECC errors\n");
+            VPRINTF_ERROR("ERROR: Unexpected 0 count value for correctable ECC errors\n");
             sts |= 0x04;
         } else {
-            VPRINTF(LOW, "Correctable ECC err count: %x\n", *soc_ifc_notif_mbox_ecc_cor_ctr);
+            VPRINTF_LOW("Correctable ECC err count: %x\n", *soc_ifc_notif_mbox_ecc_cor_ctr);
         }
     } else if (ecc_error_mode == DOUBLE) {
         if (*soc_ifc_error_mbox_ecc_unc_ctr == 0) {
-            VPRINTF(ERROR, "ERROR: Unexpected 0 count value for uncorrectable ECC errors\n");
+            VPRINTF_ERROR("ERROR: Unexpected 0 count value for uncorrectable ECC errors\n");
             sts |= 0x08;
         } else {
-            VPRINTF(LOW, "Uncorrectable ECC err count: %x\n", *soc_ifc_error_mbox_ecc_unc_ctr);
+            VPRINTF_LOW("Uncorrectable ECC err count: %x\n", *soc_ifc_error_mbox_ecc_unc_ctr);
         }
     } else {
-        VPRINTF(ERROR, "ERROR: Unexpected ecc_error_mode: %x\n", ecc_error_mode);
+        VPRINTF_ERROR("ERROR: Unexpected ecc_error_mode: %x\n", ecc_error_mode);
         sts |= 0x80;
     }
 
@@ -117,7 +117,7 @@ void main(void) {
 
         uint32_t sts;
 
-        VPRINTF(LOW, "----------------------------------\nSRAM ECC Smoke Test!!\n----------------------------------\n");
+        VPRINTF_LOW("----------------------------------\nSRAM ECC Smoke Test!!\n----------------------------------\n");
 
         // Setup the interrupt CSR configuration
         init_interrupts();
@@ -151,7 +151,7 @@ void main(void) {
 
         // Print interrupt count from FW/HW trackers
         // SHA Accelerator
-        VPRINTF(LOW, "SHA Accel hw count: %x\n", *sha512_acc_notif_ctr);
+        VPRINTF_LOW("SHA Accel hw count: %x\n", *sha512_acc_notif_ctr);
 
         // SOC_IFC Error
         soc_ifc_error_intr_count_hw =  *soc_ifc_error_internal_ctr +
@@ -160,16 +160,16 @@ void main(void) {
                                        *soc_ifc_error_bad_fuse_ctr +
                                        *soc_ifc_error_iccm_blocked_ctr +
                                        *soc_ifc_error_mbox_ecc_unc_ctr;
-        VPRINTF(LOW, "SOC_IFC Err hw count: %x\n", soc_ifc_error_intr_count_hw);
+        VPRINTF_LOW("SOC_IFC Err hw count: %x\n", soc_ifc_error_intr_count_hw);
 
         // SOC_IFC Notif
         soc_ifc_notif_intr_count_hw =  *soc_ifc_notif_cmd_avail_ctr +
                                        *soc_ifc_notif_mbox_ecc_cor_ctr;
-        VPRINTF(LOW, "SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
+        VPRINTF_LOW("SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
 
         // Print ending status
         if (sts) {
-            VPRINTF(ERROR, "Detected errors during ECC error injection test. Sts: [%x] - killing sim with error\n", sts);
+            VPRINTF_ERROR("Detected errors during ECC error injection test. Sts: [%x] - killing sim with error\n", sts);
             SEND_STDOUT_CTRL( 0x1); // Kill sim with ERROR
             while(1);
         }

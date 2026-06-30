@@ -170,7 +170,7 @@ const shake_test_t shake_tests[] = {
 void run_sha3_test(uintptr_t kmac) {
   dif_kmac_operation_state_t operation_state;
   for (int i = 0; i < sizeof(sha3_tests) / sizeof(sha3_test_t); ++i) {
-    VPRINTF(LOW, "run_sha3_test: processing test with index %d\n", i);
+    VPRINTF_LOW("run_sha3_test: processing test with index %d\n", i);
     sha3_test_t test = sha3_tests[i];
 
     dif_kmac_mode_sha3_start(kmac, &operation_state, test.mode, kDifKmacMsgEndiannessLittle);
@@ -180,7 +180,7 @@ void run_sha3_test(uintptr_t kmac) {
     }
     uint32_t out[DIGEST_LEN_SHA3_MAX];
     if (DIGEST_LEN_SHA3_MAX < test.digest_len) {
-      VPRINTF(ERROR, "test.digest_len (%d) is greater than DIGEST_LEN_SHA3_MAX.\n", test.digest_len);
+      VPRINTF_ERROR("test.digest_len (%d) is greater than DIGEST_LEN_SHA3_MAX.\n", test.digest_len);
       SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
       while (1);
     }
@@ -190,7 +190,7 @@ void run_sha3_test(uintptr_t kmac) {
 
     for (int j = 0; j < test.digest_len; ++j) {
       if (out[j] != test.digest[j]) {
-        VPRINTF(ERROR, "test %d: mismatch at %d got=0x%x want=0x%x", i, j, out[j], test.digest[j]);
+        VPRINTF_ERROR("test %d: mismatch at %d got=0x%x want=0x%x", i, j, out[j], test.digest[j]);
         SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
         while (1);
         return;
@@ -216,7 +216,7 @@ void run_sha3_alignment_test(uintptr_t kmac) {
   dif_kmac_operation_state_t operation_state;
 
   for (size_t i = 0; i < sizeof(uint32_t); ++i) {
-    VPRINTF(LOW, "run_sha3_alignment_test: processing test with alignment %d\n", i);
+    VPRINTF_LOW("run_sha3_alignment_test: processing test with alignment %d\n", i);
     char buffer[kSize + sizeof(uint32_t)];
     for (size_t j = 0; j < kSize + sizeof(uint32_t); ++j) {
       buffer[j] = 0;
@@ -233,7 +233,7 @@ void run_sha3_alignment_test(uintptr_t kmac) {
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     if (out != kExpect) {
-      VPRINTF(ERROR, "mismatch at alignment %u got 0x%u want 0x%x", i, out, kExpect);
+      VPRINTF_ERROR("mismatch at alignment %u got 0x%u want 0x%x", i, out, kExpect);
       SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
       while (1);
       return;
@@ -256,7 +256,7 @@ void run_sha3_alignment_test(uintptr_t kmac) {
     dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
     if (out != kExpect) {
-      VPRINTF(ERROR, "mismatch got 0x%u want 0x%x", out, kExpect);
+      VPRINTF_ERROR("mismatch got 0x%u want 0x%x", out, kExpect);
       SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
       while (1);
       return;
@@ -271,7 +271,7 @@ void run_shake_test(uintptr_t kmac) {
   dif_kmac_operation_state_t operation_state;
 
   for (int i = 0; i < sizeof(shake_tests) / sizeof(shake_test_t); ++i) {
-    VPRINTF(LOW, "run_shake_test: processing test with index %d\n", i);
+    VPRINTF_LOW("run_shake_test: processing test with index %d\n", i);
     shake_test_t test = shake_tests[i];
 
     dif_kmac_mode_shake_start(kmac, &operation_state, test.mode, kDifKmacMsgEndiannessLittle);
@@ -280,7 +280,7 @@ void run_shake_test(uintptr_t kmac) {
     }
     uint32_t out[DIGEST_LEN_SHAKE_MAX];
     if (DIGEST_LEN_SHAKE_MAX < test.digest_len) {
-      VPRINTF(ERROR, "DIGEST_LEN_SHAKE_MAX less than digest length.\n");
+      VPRINTF_ERROR("DIGEST_LEN_SHAKE_MAX less than digest length.\n");
       SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
       while (1);
       return;
@@ -291,7 +291,7 @@ void run_shake_test(uintptr_t kmac) {
 
     for (int j = 0; j < test.digest_len; ++j) {
       if (out[j] != test.digest[j]) {
-        VPRINTF(ERROR, "test %d: mismatch at %d got=0x%x want=0x%x", i, j, out[j], test.digest[j]);
+        VPRINTF_ERROR("test %d: mismatch at %d got=0x%x want=0x%x", i, j, out[j], test.digest[j]);
         SEND_STDOUT_CTRL(0x1); // Terminate test with failure.
         while (1);
         return;
@@ -303,18 +303,18 @@ void run_shake_test(uintptr_t kmac) {
 void main() {
 
   // Entry message
-  VPRINTF(LOW, "----------------------------------\n");
-  VPRINTF(LOW, " SHA3 smoke test!\n"                 );
-  VPRINTF(LOW, "----------------------------------\n");
+  VPRINTF_LOW("----------------------------------\n");
+  VPRINTF_LOW(" SHA3 smoke test!\n"                 );
+  VPRINTF_LOW("----------------------------------\n");
 
   // Call interrupt init
   init_interrupts();
 
-  VPRINTF(LOW, "Running SHA3 test.\n");
+  VPRINTF_LOW("Running SHA3 test.\n");
   run_sha3_test(CLP_KMAC_BASE_ADDR);
-  VPRINTF(LOW, "Running SHA3 allignment test.\n");
+  VPRINTF_LOW("Running SHA3 allignment test.\n");
   run_sha3_alignment_test(CLP_KMAC_BASE_ADDR);
-  VPRINTF(LOW, "Running SHAKE test.\n");
+  VPRINTF_LOW("Running SHAKE test.\n");
   run_shake_test(CLP_KMAC_BASE_ADDR);
 
   // Write 0xff to STDOUT for TB to terminate test.

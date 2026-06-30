@@ -38,7 +38,7 @@ int read_and_compare(uint32_t addr, uint32_t exp_data) {
   uint32_t act_data;
   act_data = lsu_read_32(addr);
   if (act_data != exp_data) {
-    VPRINTF(ERROR, "Got:%x Want: %x", act_data, exp_data);
+    VPRINTF_ERROR("Got:%x Want: %x", act_data, exp_data);
     return 1;
   }
   return 0;
@@ -48,7 +48,7 @@ int read_and_compare(uint32_t addr, uint32_t exp_data) {
 void poll_reg(uint32_t addr, uint32_t expected_data) {
   uint32_t read_data;
 
-  VPRINTF(LOW, "  - Polling addr=%x until it reads back %x...\n", addr,
+  VPRINTF_LOW("  - Polling addr=%x until it reads back %x...\n", addr,
          expected_data);
   do {
     read_data = lsu_read_32(addr);
@@ -59,9 +59,9 @@ void end_sim_if_itrng_disabled() {
   uint32_t hw_cfg;
   hw_cfg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
   if (hw_cfg & SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK) {
-    VPRINTF(LOW, "Internal TRNG is enabled, running TRNG smoke test\n");
+    VPRINTF_LOW("Internal TRNG is enabled, running TRNG smoke test\n");
   } else {
-    VPRINTF(FATAL, "Internal TRNG is not enabled, skipping TRNG smoke test\n");
+    VPRINTF_FATAL("Internal TRNG is not enabled, skipping TRNG smoke test\n");
     SEND_STDOUT_CTRL(0xFF);
     while (1)
       ;
@@ -70,15 +70,15 @@ void end_sim_if_itrng_disabled() {
 
 void enable_csrng() {
   uint32_t read_data;
-  VPRINTF(LOW, "Enabling entropy_src\n");
+  VPRINTF_LOW("Enabling entropy_src\n");
   lsu_write_32(CLP_ENTROPY_SRC_REG_CONF, 0x2649999);
   lsu_write_32(CLP_ENTROPY_SRC_REG_MODULE_ENABLE, 0x6);
 
-  VPRINTF(LOW, "Enabling csrng\n");
+  VPRINTF_LOW("Enabling csrng\n");
   lsu_write_32(CLP_CSRNG_REG_CTRL, 0x666);
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x901);
 
-  VPRINTF(LOW, "  - Waiting for boot done...\n");
+  VPRINTF_LOW("  - Waiting for boot done...\n");
 
   poll_reg(CLP_ENTROPY_SRC_REG_DEBUG_STATUS,
            ENTROPY_SRC_REG_DEBUG_STATUS_MAIN_SM_BOOT_DONE_MASK);
@@ -88,12 +88,12 @@ int run_entropy_source_seed_test() {
   uint32_t read_data;
   int error;
 
-  VPRINTF(LOW, "\nEntropy Source Seed Test\n");
+  VPRINTF_LOW("\nEntropy Source Seed Test\n");
 
-  VPRINTF(LOW, "Instantiate Command\n");
+  VPRINTF_LOW("Instantiate Command\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x1003);
 
-  VPRINTF(LOW, "  - Waiting for csrng to generate bits ...\n");
+  VPRINTF_LOW("  - Waiting for csrng to generate bits ...\n");
   poll_reg(CLP_CSRNG_REG_GENBITS_VLD, CSRNG_REG_GENBITS_VLD_GENBITS_VLD_MASK);
 
   error += read_and_compare(CLP_CSRNG_REG_GENBITS, 0x15eb2a44);
@@ -107,14 +107,14 @@ int run_entropy_source_seed_test() {
 int run_smoke_test() {
   int error;
 
-  VPRINTF(LOW, "\nTRNG Smoke Test\n");
+  VPRINTF_LOW("\nTRNG Smoke Test\n");
 
-  VPRINTF(LOW, "Uninitiate Command\n");
+  VPRINTF_LOW("Uninitiate Command\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x905);
 
   poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
-  VPRINTF(LOW, "Initiate Command - Writing 48B of seed\n");
+  VPRINTF_LOW("Initiate Command - Writing 48B of seed\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x06C1);
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x73BEC010);
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x9262474c);
@@ -131,7 +131,7 @@ int run_smoke_test() {
 
   poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
-  VPRINTF(LOW, "Generate Command - 512b\n");
+  VPRINTF_LOW("Generate Command - 512b\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x4903);
   poll_reg(CLP_CSRNG_REG_GENBITS_VLD, CSRNG_REG_GENBITS_VLD_GENBITS_VLD_MASK);
 
@@ -160,7 +160,7 @@ int run_smoke_test() {
 
   poll_reg(CLP_CSRNG_REG_SW_CMD_STS, CSRNG_REG_SW_CMD_STS_CMD_RDY_MASK | CSRNG_REG_SW_CMD_STS_CMD_ACK_MASK);
 
-  VPRINTF(LOW, "Generate Command - 512b\n");
+  VPRINTF_LOW("Generate Command - 512b\n");
   lsu_write_32(CLP_CSRNG_REG_CMD_REQ, 0x4903);
   poll_reg(CLP_CSRNG_REG_GENBITS_VLD, CSRNG_REG_GENBITS_VLD_GENBITS_VLD_MASK);
 
@@ -196,16 +196,16 @@ int run_smoke_test() {
 void main() {
   int error;
 
-  VPRINTF(LOW, "---------------------------\n");
-  VPRINTF(LOW, " TRNG Smoke Test \n");
-  VPRINTF(LOW, "---------------------------\n");
+  VPRINTF_LOW("---------------------------\n");
+  VPRINTF_LOW(" TRNG Smoke Test \n");
+  VPRINTF_LOW("---------------------------\n");
 
   end_sim_if_itrng_disabled();
   enable_csrng();
   error += run_entropy_source_seed_test();
-  if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
+  if (error > 0) VPRINTF_ERROR("Error: %d\n", error);
   error += run_smoke_test();
-  if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
+  if (error > 0) VPRINTF_ERROR("Error: %d\n", error);
 
   // End the sim in failure
   if (error > 0) SEND_STDOUT_CTRL(0x1);

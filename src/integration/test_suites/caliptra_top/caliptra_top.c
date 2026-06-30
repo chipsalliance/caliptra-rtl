@@ -65,12 +65,12 @@ void main() {
                              0xdaf3c89d};
     const uint32_t iv_data_hek[]  = {0x3e8b1c72,0xa459d6f0,0x5c27b9ae,0xf02d4389};
 
-    VPRINTF(MEDIUM, "----------------------------------\n");
-    VPRINTF(LOW,    "- Caliptra Validation ROM!!\n"       );
-    VPRINTF(MEDIUM, "----------------------------------\n");
+    VPRINTF_MEDIUM("----------------------------------\n");
+    VPRINTF_LOW(   "- Caliptra Validation ROM!!\n"       );
+    VPRINTF_MEDIUM("----------------------------------\n");
 
     // TODO other init tasks? (interrupts later)
-    VPRINTF(LOW, "Starting WDT in cascade mode\n");
+    VPRINTF_LOW("Starting WDT in cascade mode\n");
     lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK);
 
     //Check the reset reason FIXME (as soc_ifc fn)
@@ -78,21 +78,21 @@ void main() {
 
     //Cold Boot, run DOE flows, wait for FW image
     if (reset_reason == 0x0) {
-        VPRINTF(LOW, "Beginning Cold Boot flow\n");
+        VPRINTF_LOW("Beginning Cold Boot flow\n");
         uint8_t doe_uds_dest_id = 0;
         uint8_t doe_fe_dest_id = 2;
         uint8_t doe_hek_dest_id = 22;
 
         doe_init(iv_data_uds, iv_data_fe, iv_data_hek, doe_uds_dest_id, doe_fe_dest_id, doe_hek_dest_id);
 
-        VPRINTF(LOW, "Setting Flow Status\n");
+        VPRINTF_LOW("Setting Flow Status\n");
         soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK);
 
-        VPRINTF(LOW, "Unlocking SHA512-ACC\n");
+        VPRINTF_LOW("Unlocking SHA512-ACC\n");
         // Clear SHA accelerator lock (FIPS requirement)
         soc_ifc_w1clr_sha_lock_field(SHA512_ACC_CSR_LOCK_LOCK_MASK);
 
-        VPRINTF(LOW, "Waiting for first mailbox command\n");
+        VPRINTF_LOW("Waiting for first mailbox command\n");
         // Wait for mailbox command available (FMC, or an early stash-measurement-like command)
         do {
             intr_sts = lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
@@ -106,11 +106,11 @@ void main() {
             // Handling for early mailbox command
             uint32_t read_data;
             if ((op.cmd & MBOX_CMD_FIELD_RESP_MASK) || (op.cmd & MBOX_CMD_FIELD_FW_MASK)) {
-                VPRINTF(FATAL, "Got inv mailbox command from SOC! RESP_REQ: %d FIELD_FW: %d\n", op.cmd & MBOX_CMD_FIELD_RESP_MASK, op.cmd & MBOX_CMD_FIELD_FW_MASK);
+                VPRINTF_FATAL("Got inv mailbox command from SOC! RESP_REQ: %d FIELD_FW: %d\n", op.cmd & MBOX_CMD_FIELD_RESP_MASK, op.cmd & MBOX_CMD_FIELD_FW_MASK);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
-            VPRINTF(MEDIUM, "Got cmd (0x%x) with DLEN 0x%x\n", op.cmd, op.dlen);
+            VPRINTF_MEDIUM("Got cmd (0x%x) with DLEN 0x%x\n", op.cmd, op.dlen);
 
             // Read provided data
             for (uint32_t loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
@@ -121,7 +121,7 @@ void main() {
             soc_ifc_set_mbox_status_field(CMD_COMPLETE);
 
             // Now we wait for FW
-            VPRINTF(LOW, "Waiting for firmware mailbox command\n");
+            VPRINTF_LOW("Waiting for firmware mailbox command\n");
 
             // Wait for mailbox command available (FMC)
             do {
@@ -149,7 +149,7 @@ void main() {
         //read the mbox command
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_RT_UPDATE) {
-            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
+            VPRINTF_FATAL("Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -158,15 +158,15 @@ void main() {
         soc_ifc_clr_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK);
 
         // Jump to ICCM (this is the FMC image, a.k.a. Section 0)
-        VPRINTF(LOW, "FMC FW loaded into ICCM - jumping there \n");
+        VPRINTF_LOW("FMC FW loaded into ICCM - jumping there \n");
         iccm_fmc();
     }  
     //FW Update Reset
     else if (reset_reason == 0x1) {
-        VPRINTF(LOW, "Beginning FW Update Reset flow\n");
+        VPRINTF_LOW("Beginning FW Update Reset flow\n");
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_RT_UPDATE) {
-            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
+            VPRINTF_FATAL("Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -177,7 +177,7 @@ void main() {
     //Warm Reset
     else if (reset_reason == 0x2) {
         // TODO: Check for NMI Cause?
-        VPRINTF(LOW, "Beginning Warm Reset flow\n");
+        VPRINTF_LOW("Beginning Warm Reset flow\n");
 
         // skip doe_init
 
@@ -197,7 +197,7 @@ void main() {
 
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_FMC_UPDATE) {
-            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_FMC_UPDATE, op.cmd);
+            VPRINTF_FATAL("Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_FMC_UPDATE, op.cmd);
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -216,7 +216,7 @@ void main() {
         //read the mbox command
         op = soc_ifc_read_mbox_cmd();
         if (op.cmd != MBOX_CMD_RT_UPDATE) {
-            VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
+            VPRINTF_FATAL("Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -230,9 +230,9 @@ void main() {
 
 
     // Should never get here
-    VPRINTF(FATAL, "----------------------------------\n");
-    VPRINTF(FATAL, " Reached end of val FW unexpectedly! \n");
-    VPRINTF(FATAL, "----------------------------------\n");
+    VPRINTF_FATAL("----------------------------------\n");
+    VPRINTF_FATAL(" Reached end of val FW unexpectedly! \n");
+    VPRINTF_FATAL("----------------------------------\n");
     SEND_STDOUT_CTRL(0x1);
     while(1);
 }

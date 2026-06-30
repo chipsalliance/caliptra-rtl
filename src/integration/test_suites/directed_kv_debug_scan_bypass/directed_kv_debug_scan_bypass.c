@@ -76,19 +76,19 @@ void fmc_entry(void) __attribute__((aligned(4), section(".data_iccm0")));
 void fmc_entry(void) {
     uint32_t current_iter = iter - 1; // iter was incremented before jump
 
-    VPRINTF(LOW, "FMC[%d]: Reached FMC entry point\n", current_iter);
+    VPRINTF_LOW("FMC[%d]: Reached FMC entry point\n", current_iter);
 
     // The key check: no kv_fault should have fired
     check_no_kv_error("FMC");
 
-    VPRINTF(LOW, "FMC[%d]: No kv fault -- pass\n", current_iter);
+    VPRINTF_LOW("FMC[%d]: No kv fault -- pass\n", current_iter);
 
     switch (current_iter) {
         case 0:
             // Happy path done. Now set up debug unlock for iter 1.
             // Issue debug unlock -- TB sets security_state.debug_locked=0
             // after 100 cycle delay. Then warm reset propagates it.
-            VPRINTF(LOW, "FMC[0]: Issuing debug unlock + warm reset\n");
+            VPRINTF_LOW("FMC[0]: Issuing debug unlock + warm reset\n");
             SEND_STDOUT_CTRL(TB_CMD_DEBUG_UNLOCK);
             // Wait for TB to set security_state.debug_locked=0
             for (volatile int i = 0; i < 200; i++) { __asm__ volatile("nop"); }
@@ -97,7 +97,7 @@ void fmc_entry(void) {
 
         case 1:
             // Debug bypass confirmed. Re-lock debug and warm reset for iter 2.
-            VPRINTF(LOW, "FMC[1]: Debug bypass confirmed -- re-locking + warm reset\n");
+            VPRINTF_LOW("FMC[1]: Debug bypass confirmed -- re-locking + warm reset\n");
             SEND_STDOUT_CTRL(TB_CMD_DEBUG_LOCK);
             for (volatile int i = 0; i < 50; i++) { __asm__ volatile("nop"); }
             SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
@@ -105,12 +105,12 @@ void fmc_entry(void) {
 
         case 2:
             // Scan mode bypass confirmed. Exit scan and pass.
-            VPRINTF(LOW, "FMC[2]: Scan bypass confirmed -- exiting scan mode\n");
+            VPRINTF_LOW("FMC[2]: Scan bypass confirmed -- exiting scan mode\n");
             SEND_STDOUT_CTRL(TB_CMD_SCAN_MODE_OFF);
 
-            VPRINTF(LOW, "============================================\n");
-            VPRINTF(LOW, " All debug/scan bypass tests passed\n");
-            VPRINTF(LOW, "============================================\n");
+            VPRINTF_LOW("============================================\n");
+            VPRINTF_LOW(" All debug/scan bypass tests passed\n");
+            VPRINTF_LOW("============================================\n");
             SEND_STDOUT_CTRL(0xff);
             while(1);
     }
@@ -126,12 +126,12 @@ void main() {
     // has no effect since the RTL gate takes priority)
     SEND_STDOUT_CTRL(TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR);
 
-    VPRINTF(LOW, "============================================\n");
-    VPRINTF(LOW, " KV Debug/Scan Bypass Test -- iter %d\n", current_iter);
-    VPRINTF(LOW, "============================================\n");
+    VPRINTF_LOW("============================================\n");
+    VPRINTF_LOW(" KV Debug/Scan Bypass Test -- iter %d\n", current_iter);
+    VPRINTF_LOW("============================================\n");
 
     if (current_iter >= NUM_ITERATIONS) {
-        VPRINTF(FATAL, "[FAIL] Unexpected iteration %d\n", current_iter);
+        VPRINTF_FATAL("[FAIL] Unexpected iteration %d\n", current_iter);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
@@ -139,22 +139,22 @@ void main() {
     // Clear any stale HW faults from previous iteration
     uint32_t hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
     if (hw_err) {
-        VPRINTF(LOW, "  Clearing stale HW fault (0x%08x)\n", hw_err);
+        VPRINTF_LOW("  Clearing stale HW fault (0x%08x)\n", hw_err);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, hw_err);
         uint32_t post = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
         if (post) {
-            VPRINTF(ERROR, "[FAIL] W1C did not clear HW fault (0x%08x)\n", post);
+            VPRINTF_ERROR("[FAIL] W1C did not clear HW fault (0x%08x)\n", post);
             SEND_STDOUT_CTRL(0x01);
             while(1);
         }
     }
 
     // --- ROM phase: Standard DICE derivation ---
-    VPRINTF(LOW, "ROM[%d]: Populating DICE key slots...\n", current_iter);
+    VPRINTF_LOW("ROM[%d]: Populating DICE key slots...\n", current_iter);
     populate_dice_slots();
 
     // Copy FMC code to ICCM
-    VPRINTF(LOW, "ROM[%d]: Copying FMC code to ICCM\n", current_iter);
+    VPRINTF_LOW("ROM[%d]: Copying FMC code to ICCM\n", current_iter);
     copy_to_iccm(FMC_ICCM_ADDR,
                   (uint32_t *)&iccm_code0_start,
                   (uint32_t *)&iccm_code0_end);
@@ -164,19 +164,19 @@ void main() {
 
     // Iter 2: enter scan mode before FMC jump
     if (current_iter == 2) {
-        VPRINTF(LOW, "ROM[2]: Entering scan mode\n");
+        VPRINTF_LOW("ROM[2]: Entering scan mode\n");
         SEND_STDOUT_CTRL(TB_CMD_SCAN_MODE_ON);
         // Wait for double-flop propagation
         for (volatile int i = 0; i < 200; i++) { __asm__ volatile("nop"); }
     }
 
     // Jump to FMC
-    VPRINTF(LOW, "ROM[%d]: Jumping to FMC...\n", current_iter);
+    VPRINTF_LOW("ROM[%d]: Jumping to FMC...\n", current_iter);
     void (*fmc_fn)(void) = (void (*)(void))FMC_ICCM_ADDR;
     fmc_fn();
 
     // Should not return
-    VPRINTF(FATAL, "[FAIL] FMC returned to ROM\n");
+    VPRINTF_FATAL("[FAIL] FMC returned to ROM\n");
     SEND_STDOUT_CTRL(0x01);
     while(1);
 }

@@ -493,9 +493,9 @@ const uint32_t mldsa_verify_res [] = {
 };
 
 void main() {
-    VPRINTF(LOW, "---------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With MLDSA flow !!\n");
-    VPRINTF(LOW, "---------------------------------\n");
+    VPRINTF_LOW("---------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With MLDSA flow !!\n");
+    VPRINTF_LOW("---------------------------------\n");
 
 
     //Call interrupt init

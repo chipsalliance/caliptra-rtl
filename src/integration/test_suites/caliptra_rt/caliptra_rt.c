@@ -80,14 +80,14 @@ void nmi_handler() {
             caliptra_rt();
         }
         else {
-            VPRINTF(FATAL, "Unexpected NMI\n");
+            VPRINTF_FATAL("Unexpected NMI\n");
             SEND_STDOUT_CTRL(0x1);
         }
     }
     else {
-        VPRINTF(LOW, "In NMI handler\n");
+        VPRINTF_LOW("In NMI handler\n");
         if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK)
-            VPRINTF(LOW, "Saw hw_error_fatal.nmi_pin assertion\n");
+            VPRINTF_LOW("Saw hw_error_fatal.nmi_pin assertion\n");
         while(1);
     }
 }
@@ -111,22 +111,22 @@ void caliptra_rt() {
     int wdt_rand_t1_val;
     int wdt_rand_t2_val;
 
-    VPRINTF(MEDIUM, "----------------------------------\n");
-    VPRINTF(LOW,    "- Caliptra Validation RT!!\n"        );
-    VPRINTF(MEDIUM, "----------------------------------\n");
+    VPRINTF_MEDIUM("----------------------------------\n");
+    VPRINTF_LOW(   "- Caliptra Validation RT!!\n"        );
+    VPRINTF_MEDIUM("----------------------------------\n");
 
     //set NMI vector
     lsu_write_32((uintptr_t) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t) (nmi_handler));
 
     // Initialize rand num generator
-    VPRINTF(LOW,"\nUsing random seed = %u\n\n", (uint32_t) MY_RANDOM_SEED);
+    VPRINTF_LOW("\nUsing random seed = %u\n\n", (uint32_t) MY_RANDOM_SEED);
     srand((uint32_t) MY_RANDOM_SEED);
 
     // Runtime flow -- set ready for RT
     soc_ifc_set_flow_status_field(SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_RUNTIME_MASK);
 
 #ifdef WDT_TEST
-    VPRINTF(LOW, "Enabling WDT intr\n");
+    VPRINTF_LOW("Enabling WDT intr\n");
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER1_TIMEOUT_EN_MASK | SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER2_TIMEOUT_EN_MASK);
     lsu_write_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R, SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
     
@@ -136,7 +136,7 @@ void caliptra_rt() {
     
     while (!(lsu_read_32(CLP_SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R) & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK));
     if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0) == WDT_CASCADE) { //rand() % 2; //0 - independent mode, 1 - cascade mode
-        VPRINTF(LOW, "Restarting WDT in cascade mode\n");
+        VPRINTF_LOW("Restarting WDT in cascade mode\n");
         // //Enable timer1 to start cascade mode
         configure_wdt_cascade(wdt_rand_t1_val, 0x00000000, 0xffffffff, 0xffffffff);
         service_t1_intr();
@@ -199,7 +199,7 @@ void caliptra_rt() {
         // Service received interrupts
         // Start with highest priority
         if (cptra_intr_rcv.soc_ifc_error   ) {
-            VPRINTF(ERROR, "Intr received: soc_ifc_error\n");
+            VPRINTF_ERROR("Intr received: soc_ifc_error\n");
             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK)
             }
@@ -246,30 +246,30 @@ void caliptra_rt() {
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK &
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK &
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_MASK)) {
-                VPRINTF(FATAL, "Intr received: unsupported soc_ifc_error (0x%x)\n", cptra_intr_rcv.soc_ifc_error);
+                VPRINTF_FATAL("Intr received: unsupported soc_ifc_error (0x%x)\n", cptra_intr_rcv.soc_ifc_error);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
         }
 
         if (cptra_intr_rcv.doe_error       ) {
-            VPRINTF(ERROR, "Intr received: doe_error\n");
+            VPRINTF_ERROR("Intr received: doe_error\n");
         }
 
         if (cptra_intr_rcv.ecc_error       ) {
-            VPRINTF(ERROR, "Intr received: ecc_error\n");
+            VPRINTF_ERROR("Intr received: ecc_error\n");
             if (cptra_intr_rcv.ecc_error & ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.ecc_error, ~ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK)
             }
             if (cptra_intr_rcv.ecc_error & ~ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK) {
-                VPRINTF(FATAL, "Intr received: unsupported ecc_error (0x%x)\n", cptra_intr_rcv.ecc_error);
+                VPRINTF_FATAL("Intr received: unsupported ecc_error (0x%x)\n", cptra_intr_rcv.ecc_error);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
         }
 
         if (cptra_intr_rcv.hmac_error      ) {
-            VPRINTF(ERROR, "Intr received: hmac_error\n");
+            VPRINTF_ERROR("Intr received: hmac_error\n");
             if (cptra_intr_rcv.hmac_error & HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_MODE_ERROR_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.hmac_error, ~HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_MODE_ERROR_STS_MASK)
             }
@@ -278,33 +278,33 @@ void caliptra_rt() {
             }
             if (cptra_intr_rcv.hmac_error & (~HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_MODE_ERROR_STS_MASK &
                                              ~HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_KEY_ZERO_ERROR_STS_MASK)) {
-                VPRINTF(FATAL, "Intr received: unsupported hmac_error (0x%x)\n", cptra_intr_rcv.hmac_error);
+                VPRINTF_FATAL("Intr received: unsupported hmac_error (0x%x)\n", cptra_intr_rcv.hmac_error);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
         }
 
         if (cptra_intr_rcv.kv_error        ) {
-            VPRINTF(ERROR, "Intr received: kv_error\n");
+            VPRINTF_ERROR("Intr received: kv_error\n");
         }
 
         if (cptra_intr_rcv.sha512_error    ) {
-            VPRINTF(ERROR, "Intr received: sha512_error\n");
+            VPRINTF_ERROR("Intr received: sha512_error\n");
         }
 
         if (cptra_intr_rcv.sha256_error    ) {
-            VPRINTF(ERROR, "Intr received: sha256_error\n");
+            VPRINTF_ERROR("Intr received: sha256_error\n");
         }
 
         if (cptra_intr_rcv.sha512_acc_error) {
-            VPRINTF(ERROR, "Intr received: sha512_acc_error\n");
+            VPRINTF_ERROR("Intr received: sha512_acc_error\n");
         }
 
         if (cptra_intr_rcv.soc_ifc_notif   ) {
             uint8_t fsm_chk;
             uint8_t fail = 0;
             uint32_t dlen_received;
-            VPRINTF(LOW, "Intr received: soc_ifc_notif\n");
+            VPRINTF_LOW("Intr received: soc_ifc_notif\n");
             if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_notif, ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK)
                 // Always check mbox FSM state at new command entry to detect
@@ -315,9 +315,9 @@ void caliptra_rt() {
                     if (fsm_chk == 0xF) {
                         if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                             CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
+                            VPRINTF_LOW("Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
                         } else {
-                            VPRINTF(ERROR, "After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                            VPRINTF_ERROR("After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                             SEND_STDOUT_CTRL(0x1);
                             while(1);
                         }
@@ -325,7 +325,7 @@ void caliptra_rt() {
                         // This oftens occurs alongside the cmd_fail bit in error injection tests...
                         if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK) {
                             CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK)
-                            VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (inv dev) after servicing\n");
+                            VPRINTF_LOW("Clearing FW soc_ifc_error intr bit (inv dev) after servicing\n");
                         }
                     }
                     continue;
@@ -357,7 +357,7 @@ void caliptra_rt() {
                 if (cptra_intr_rcv.soc_ifc_error & ~(SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK |
                                                      SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK |
                                                      SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INV_DEV_STS_MASK )) {
-                    VPRINTF(ERROR, "Unexpected err intr 0x%x\n", cptra_intr_rcv.soc_ifc_error);
+                    VPRINTF_ERROR("Unexpected err intr 0x%x\n", cptra_intr_rcv.soc_ifc_error);
                     SEND_STDOUT_CTRL(0x1);
                     while(1);
                 }
@@ -365,20 +365,20 @@ void caliptra_rt() {
                 op = soc_ifc_read_mbox_cmd();
                 dlen_received = op.dlen;
                 if (op.cmd & MBOX_CMD_FIELD_FW_MASK) {
-                    VPRINTF(MEDIUM, "Received mailbox firmware command from SOC! Got 0x%x\n", op.cmd);
+                    VPRINTF_MEDIUM("Received mailbox firmware command from SOC! Got 0x%x\n", op.cmd);
                     if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
-                        VPRINTF(ERROR, "Mailbox firmware command unexpectedly has response expected field set!\n");
+                        VPRINTF_ERROR("Mailbox firmware command unexpectedly has response expected field set!\n");
                     }
-                    VPRINTF(MEDIUM, "Triggering FW update reset\n");
+                    VPRINTF_MEDIUM("Triggering FW update reset\n");
                     //Trigger firmware update reset, new fw will get copied over from ROM
                     soc_ifc_set_fw_update_reset((uint8_t) (rand() & 0xFF));
                 }
                 else if (op.cmd & MBOX_CMD_FIELD_RESP_MASK) {
-                    VPRINTF(MEDIUM, "Received mailbox command (expecting RESP) from SOC! Got 0x%x\n", op.cmd);
+                    VPRINTF_MEDIUM("Received mailbox command (expecting RESP) from SOC! Got 0x%x\n", op.cmd);
                     if (op.cmd == MBOX_CMD_REG_ACCESS) {
                         for (loop_iter = 0; loop_iter<op.dlen; loop_iter+=4) {
                             reg_addr = soc_ifc_mbox_read_dataout_single();
-                            VPRINTF(MEDIUM, "Reading reg addr 0x%x from mailbox req\n", reg_addr);
+                            VPRINTF_MEDIUM("Reading reg addr 0x%x from mailbox req\n", reg_addr);
                             read_data = lsu_read_32((uintptr_t) reg_addr);
                             lsu_write_32((uintptr_t) (CLP_MBOX_CSR_MBOX_DATAIN), read_data);
                         }
@@ -389,9 +389,9 @@ void caliptra_rt() {
                         lsu_write_32((uintptr_t) CLP_SOC_IFC_REG_CPTRA_FW_ERROR_FATAL, 0xF0000001);
                         //just read one address, it's going to trigger NMI by going OOB
                         reg_addr = soc_ifc_mbox_read_dataout_single();
-                        VPRINTF(MEDIUM, "Reading reg addr 0x%x from mailbox req\n", reg_addr);
+                        VPRINTF_MEDIUM("Reading reg addr 0x%x from mailbox req\n", reg_addr);
                         read_data = lsu_read_32((uintptr_t) reg_addr);
-                        VPRINTF(FATAL, "Received MBOX_CMD_OOB_ACCESS but didn't trigger NMI\n");
+                        VPRINTF_FATAL("Received MBOX_CMD_OOB_ACCESS but didn't trigger NMI\n");
                         SEND_STDOUT_CTRL(0x1);
                     }
                     else if ((op.cmd == MBOX_CMD_SHA384_REQ) | (op.cmd == MBOX_CMD_SHA512_REQ)) {
@@ -471,9 +471,9 @@ void caliptra_rt() {
                         // and fail the command
                         // Or if the resp dlen is outright absurd, also fail
                         if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
-                            VPRINTF(ERROR, "Skipping resp data wr on UNC ECC err\n");
+                            VPRINTF_ERROR("Skipping resp data wr on UNC ECC err\n");
                         } else if (temp > MBOX_DIR_SPAN) {
-                            VPRINTF(ERROR, "Skipping resp data wr on invalid dlen: 0x%x\n", temp);
+                            VPRINTF_ERROR("Skipping resp data wr on invalid dlen: 0x%x\n", temp);
                             fail = 1;
                         } else {
                             for (loop_iter = 0; loop_iter<temp; loop_iter+=4) {
@@ -488,9 +488,9 @@ void caliptra_rt() {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
+                                VPRINTF_LOW("Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
                             } else {
-                                VPRINTF(ERROR, "After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                                VPRINTF_ERROR("After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
                                 while(1);
                             }
@@ -500,7 +500,7 @@ void caliptra_rt() {
                     }
                     if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
                         CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
-                        VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
+                        VPRINTF_LOW("Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
                         soc_ifc_set_mbox_status_field(CMD_FAILURE);
                         // TODO Remove the mailbox sanitization op in Gen2 validation framework.
                         //      In Gen2, Caliptra Mailbox code should be modified to avoid spurious
@@ -511,15 +511,15 @@ void caliptra_rt() {
                             while(1);
                         }
                     } else if (fail) {
-                        VPRINTF(LOW, "Cmd failed\n");
+                        VPRINTF_LOW("Cmd failed\n");
                         soc_ifc_set_mbox_status_field(CMD_FAILURE);
                     } else {
                         soc_ifc_set_mbox_status_field(DATA_READY);
                     }
                 }
                 else {
-                    VPRINTF(MEDIUM, "Received mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
-                    VPRINTF(MEDIUM, "Got command with DLEN 0x%x\n", op.dlen);
+                    VPRINTF_MEDIUM("Received mailbox command (no expected RESP) from SOC! Got 0x%x\n", op.cmd);
+                    VPRINTF_MEDIUM("Got command with DLEN 0x%x\n", op.dlen);
                     //Command to exercise direct read path to mailbox
                     if (op.cmd == MBOX_CMD_DIR_RD) {
                         // Read provided data through direct path
@@ -542,9 +542,9 @@ void caliptra_rt() {
                         if (fsm_chk == 0xF) {
                             if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK) {
                                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK)
-                                VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
+                                VPRINTF_LOW("Clearing FW soc_ifc_error intr bit (cmd fail) prior to servicing\n");
                             } else {
-                                VPRINTF(ERROR, "After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
+                                VPRINTF_ERROR("After finding an error requiring mailbox reset with force unlock, RT firmware has not received an soc_ifc_err_intr!\n");
                                 SEND_STDOUT_CTRL(0x1);
                                 while(1);
                             }
@@ -555,7 +555,7 @@ void caliptra_rt() {
                     //Mark the command complete
                     if (cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK) {
                         CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.soc_ifc_error, ~SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_ECC_UNC_STS_MASK)
-                        VPRINTF(LOW, "Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
+                        VPRINTF_LOW("Clearing FW soc_ifc_error intr bit (ECC unc) after servicing\n");
                         soc_ifc_set_mbox_status_field(CMD_FAILURE);
                         // TODO Remove the mailbox sanitization op in Gen2 validation framework.
                         //      In Gen2, Caliptra Mailbox code should be modified to avoid spurious
@@ -591,83 +591,83 @@ void caliptra_rt() {
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK &
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK &
                                                 ~SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK )) {
-                VPRINTF(FATAL, "Intr received: unsupported soc_ifc_notif (0x%x)\n", cptra_intr_rcv.soc_ifc_notif);
+                VPRINTF_FATAL("Intr received: unsupported soc_ifc_notif (0x%x)\n", cptra_intr_rcv.soc_ifc_notif);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
         }
 
         if (cptra_intr_rcv.doe_notif       ) {
-            VPRINTF(LOW, "Intr received: doe_notif\n");
+            VPRINTF_LOW("Intr received: doe_notif\n");
             if (cptra_intr_rcv.doe_notif & DOE_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.doe_notif, ~DOE_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.doe_notif & (~DOE_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
-                VPRINTF(FATAL, "Intr received: unsupported doe_notif (0x%x)\n", cptra_intr_rcv.doe_notif);
+                VPRINTF_FATAL("Intr received: unsupported doe_notif (0x%x)\n", cptra_intr_rcv.doe_notif);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
         }
 
         if (cptra_intr_rcv.ecc_notif       ) {
-            VPRINTF(LOW, "Intr received: ecc_notif\n");
+            VPRINTF_LOW("Intr received: ecc_notif\n");
             if (cptra_intr_rcv.ecc_notif & ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.ecc_notif, ~ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.ecc_notif & (~ECC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
-                VPRINTF(FATAL, "Intr received: unsupported ecc_notif (0x%x)\n", cptra_intr_rcv.ecc_notif);
+                VPRINTF_FATAL("Intr received: unsupported ecc_notif (0x%x)\n", cptra_intr_rcv.ecc_notif);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
         }
 
         if (cptra_intr_rcv.hmac_notif      ) {
-            VPRINTF(LOW, "Intr received: hmac_notif\n");
+            VPRINTF_LOW("Intr received: hmac_notif\n");
             if (cptra_intr_rcv.hmac_notif & HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.hmac_notif, ~HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.hmac_notif & (~HMAC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
-                VPRINTF(FATAL, "Intr received: unsupported hmac_notif (0x%x)\n", cptra_intr_rcv.hmac_notif);
+                VPRINTF_FATAL("Intr received: unsupported hmac_notif (0x%x)\n", cptra_intr_rcv.hmac_notif);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
         }
 
         if (cptra_intr_rcv.kv_notif        ) {
-            VPRINTF(LOW, "Intr received: kv_notif\n");
+            VPRINTF_LOW("Intr received: kv_notif\n");
         }
 
         if (cptra_intr_rcv.sha512_notif    ) {
-            VPRINTF(LOW, "Intr received: sha512_notif\n");
+            VPRINTF_LOW("Intr received: sha512_notif\n");
             if (cptra_intr_rcv.sha512_notif & SHA512_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.sha512_notif, ~SHA512_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.sha512_notif & (~SHA512_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
-                VPRINTF(FATAL, "Intr received: unsupported sha512_notif (0x%x)\n", cptra_intr_rcv.sha512_notif);
+                VPRINTF_FATAL("Intr received: unsupported sha512_notif (0x%x)\n", cptra_intr_rcv.sha512_notif);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
         }
 
         if (cptra_intr_rcv.sha256_notif    ) {
-            VPRINTF(LOW, "Intr received: sha256_notif\n");
+            VPRINTF_LOW("Intr received: sha256_notif\n");
             if (cptra_intr_rcv.sha256_notif & SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.sha256_notif, ~SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.sha256_notif & (~SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
-                VPRINTF(FATAL, "Intr received: unsupported sha256_notif (0x%x)\n", cptra_intr_rcv.sha256_notif);
+                VPRINTF_FATAL("Intr received: unsupported sha256_notif (0x%x)\n", cptra_intr_rcv.sha256_notif);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }
         }
 
         if (cptra_intr_rcv.sha512_acc_notif) {
-            VPRINTF(LOW, "Intr received: sha512_acc_notif");
+            VPRINTF_LOW("Intr received: sha512_acc_notif");
             if (cptra_intr_rcv.sha512_acc_notif & SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
                 CLEAR_INTR_FLAG_SAFELY(cptra_intr_rcv.sha512_acc_notif, ~SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)
             }
             if (cptra_intr_rcv.sha512_acc_notif & (~SHA512_ACC_CSR_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK)) {
-                VPRINTF(FATAL, "Intr received: unsupported sha512_acc_notif (0x%x)\n", cptra_intr_rcv.sha512_acc_notif);
+                VPRINTF_FATAL("Intr received: unsupported sha512_acc_notif (0x%x)\n", cptra_intr_rcv.sha512_acc_notif);
                 SEND_STDOUT_CTRL(0x1);
                 while(1);
             }

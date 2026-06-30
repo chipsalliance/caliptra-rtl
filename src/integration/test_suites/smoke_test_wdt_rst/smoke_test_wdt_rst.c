@@ -51,20 +51,20 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 void nmi_handler       (void);
 
 void nmi_handler (void) {
-    VPRINTF(LOW, "**** Entering NMI Handler ****\n");
+    VPRINTF_LOW("**** Entering NMI Handler ****\n");
     if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK) {
         SEND_STDOUT_CTRL(0xf5);
     }
     else {
-        VPRINTF(ERROR, "Unexpected entry into NMI handler function!\n");
+        VPRINTF_ERROR("Unexpected entry into NMI handler function!\n");
     }
 
 }
 
 void main() {
-    VPRINTF(LOW, "---------------------------\n");
-    VPRINTF(LOW, " WDT Smoke Test with reset !!\n");
-    VPRINTF(LOW, "---------------------------\n");
+    VPRINTF_LOW("---------------------------\n");
+    VPRINTF_LOW(" WDT Smoke Test with reset !!\n");
+    VPRINTF_LOW("---------------------------\n");
 
     //Enable SOC error interrupt
     *soc_global_intr_en = SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK;
@@ -79,10 +79,10 @@ void main() {
     lsu_write_32((uintptr_t) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t) (nmi_handler));
     
     if(rst_count == 1) {
-        VPRINTF(LOW, "Cascaded mode\n");
+        VPRINTF_LOW("Cascaded mode\n");
         configure_wdt_cascade(0x200, 0x00, 0xffffffff, 0xffffffff);
         
-        VPRINTF(LOW, "Stall until timer1 times out\n");
+        VPRINTF_LOW("Stall until timer1 times out\n");
         service_t1_intr();
         
         SEND_STDOUT_CTRL(0xf6);
@@ -106,9 +106,9 @@ void main() {
         //Enable WDT timer2
         // *wdt_timer2_en = SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK;
     
-        VPRINTF(LOW, "Independent mode - both timers enabled - warm rst\n");
+        VPRINTF_LOW("Independent mode - both timers enabled - warm rst\n");
         
-        VPRINTF(LOW, "Stall until timer1 times out\n");
+        VPRINTF_LOW("Stall until timer1 times out\n");
         service_t1_intr();
         //reset t1
         *wdt_timer1_en = 0;
@@ -125,16 +125,16 @@ void main() {
         // configure_wdt_cascade(0x200, 0x00, 0xffffffff, 0xffffffff);
         configure_wdt_independent(BOTH_TIMERS_EN, 0x200, 0x00000000, 0x200, 0x00000000);
     
-        VPRINTF(LOW, "Independent mode - both timers enabled - cold rst\n");
+        VPRINTF_LOW("Independent mode - both timers enabled - cold rst\n");
         //Enable WDT timer1
         // *wdt_timer2_en = SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK;
         // set_t2_period(0x00000200, 0x00000000);
         
-        VPRINTF(LOW, "Stall until timer1 times out\n");
+        VPRINTF_LOW("Stall until timer1 times out\n");
         service_t1_intr();
         *wdt_timer1_en = 0;
 
-        VPRINTF(LOW, "Stall until timer2 times out\n");
+        VPRINTF_LOW("Stall until timer2 times out\n");
         service_t2_intr();
         *wdt_timer2_en = 0;
         
@@ -144,7 +144,7 @@ void main() {
         //Release forced timer periods from tb so test can set them
         SEND_STDOUT_CTRL(0xf1);
         configure_wdt_cascade(0x200, 0x00, 0xffffffff, 0xffffffff);
-        VPRINTF(LOW, "Cascaded mode with timer2 timeout - NMI - cold rst\n");
+        VPRINTF_LOW("Cascaded mode with timer2 timeout - NMI - cold rst\n");
         *wdt_timer1_en = 0x0;
         *wdt_timer2_en = 0x0;
 //        *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
@@ -154,15 +154,15 @@ void main() {
         *wdt_timer1_en = 0x1;
         *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
         
-        VPRINTF(LOW, "Stall until timer1 times out\n");
-        VPRINTF(LOW, "Stall until timer2 times out\n");
+        VPRINTF_LOW("Stall until timer1 times out\n");
+        VPRINTF_LOW("Stall until timer2 times out\n");
         // while (!(lsu_read_32(SOC_IFC_REG_CPTRA_WDT_STATUS) & SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK));
         // service_t2_intr();
         while(!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL) & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK));
 
         //Not executed since handler issues reset
         //Issue warm reset after NMI as per spec
-        // VPRINTF(LOW, "Issuing reset in response to NMI (t2 timeout)\n");
+        // VPRINTF_LOW("Issuing reset in response to NMI (t2 timeout)\n");
         // SEND_STDOUT_CTRL(0xf5);
     }
     else if (rst_count == 6) {
@@ -170,15 +170,15 @@ void main() {
         SEND_STDOUT_CTRL(0xf1);
         //Write 1 to clear HW fatal error register
         if ((*hw_error_fatal && SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK) == 1) {
-            VPRINTF(ERROR, "Cold rst should have reset hw_fatal_error nmi_pin!\n");
+            VPRINTF_ERROR("Cold rst should have reset hw_fatal_error nmi_pin!\n");
             SEND_STDOUT_CTRL(0x1);
         }
 
-        VPRINTF(LOW, "Independent mode - timer2 enabled, timer1 disabled - warm rst\n");
+        VPRINTF_LOW("Independent mode - timer2 enabled, timer1 disabled - warm rst\n");
         *wdt_timer2_en = SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK;
         set_t2_period(0x00000200, 0x00000000);
         
-        VPRINTF(LOW, "Stall until timer2 times out\n");
+        VPRINTF_LOW("Stall until timer2 times out\n");
         service_t2_intr();
         *wdt_timer2_en = 0;
         
@@ -188,12 +188,12 @@ void main() {
     else if (rst_count == 7) {
         //Release forced timer periods from tb so test can set them
         SEND_STDOUT_CTRL(0xf1);
-        VPRINTF(LOW, "Independent mode - timer2 enabled, timer1 disabled - cold rst\n");
+        VPRINTF_LOW("Independent mode - timer2 enabled, timer1 disabled - cold rst\n");
         // *wdt_timer2_en = SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK;
         // set_t2_period(0x00000200, 0x00000000);
         configure_wdt_independent(T1_DIS_T2_EN, 0x200, 0x00000000, 0x200, 0x00000000);
         
-        VPRINTF(LOW, "Stall until timer2 times out\n");
+        VPRINTF_LOW("Stall until timer2 times out\n");
         service_t2_intr();
         *wdt_timer2_en = 0;
         
@@ -235,6 +235,6 @@ void main() {
         SEND_STDOUT_CTRL(0xf5);
     }
     else {
-        VPRINTF(LOW, "End of test\n");
+        VPRINTF_LOW("End of test\n");
     }
 }

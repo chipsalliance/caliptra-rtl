@@ -68,19 +68,19 @@ void configure_wdt_cascade(uint32_t t1_period_0, uint32_t t1_period_1, uint32_t 
 
 void configure_wdt_independent(enum wdt_independent_mode_e mode, uint32_t t1_period_0, uint32_t t1_period_1, uint32_t t2_period_0, uint32_t t2_period_1) {
     if (mode == BOTH_TIMERS_DIS) {
-        VPRINTF(LOW, "Disabling both timers in independent mode\n");
+        VPRINTF_LOW("Disabling both timers in independent mode\n");
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN, 0);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, 0);
     }
     else if (mode == T1_DIS_T2_EN) {
-        VPRINTF(LOW, "Enabling only timer2 in independent mode\n");
+        VPRINTF_LOW("Enabling only timer2 in independent mode\n");
         set_t2_period(t2_period_0, t2_period_1);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_EN, 1);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_WDT_TIMER2_CTRL, 1);
 
     }
     else if (mode == BOTH_TIMERS_EN) {
-        VPRINTF(LOW, "Enabling both timers in independent mode\n");
+        VPRINTF_LOW("Enabling both timers in independent mode\n");
         set_t1_period(t1_period_0, t1_period_1);
         set_t2_period(t2_period_0, t2_period_1);
 

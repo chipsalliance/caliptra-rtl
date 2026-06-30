@@ -36,9 +36,9 @@ void main() {
     uint32_t digest;
 
     // Entry message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " SHA3 smoke test for interrupts!\n"   );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" SHA3 smoke test for interrupts!\n"   );
+    VPRINTF_LOW("----------------------------------\n");
 
     // Call interrupt init.
     init_interrupts();
@@ -55,9 +55,9 @@ void main() {
     dif_kmac_end(CLP_KMAC_BASE_ADDR, &operation_state);
 
     if (cptra_intr_rcv.sha3_notif & KMAC_INTR_STATE_KMAC_DONE_MASK) {
-        VPRINTF(LOW, "Successfully received command done interrupt.\n");
+        VPRINTF_LOW("Successfully received command done interrupt.\n");
     } else {
-        VPRINTF(LOW, "ERROR: expected KMAC DONE interrupt.\n");
+        VPRINTF_LOW("ERROR: expected KMAC DONE interrupt.\n");
         // Write 0x1 to STDOUT for TB to fail test.
         SEND_STDOUT_CTRL(0x1);
         while (1);
@@ -72,12 +72,12 @@ void main() {
     // Check that the FIFO empty interrupt has been triggered.
     for (int i = 0; i < INTERRUPT_TIMEOUT; ++i) {
         if (cptra_intr_rcv.sha3_notif & KMAC_INTR_STATE_FIFO_EMPTY_MASK) {
-            VPRINTF(LOW, "Successfully received message FIFO empty interrupt.\n");
+            VPRINTF_LOW("Successfully received message FIFO empty interrupt.\n");
             break;
         }
     }
     if (!(cptra_intr_rcv.sha3_notif & KMAC_INTR_STATE_FIFO_EMPTY_MASK)) {
-        VPRINTF(LOW, "ERROR: expected KMAC empty interrupt.\n");
+        VPRINTF_LOW("ERROR: expected KMAC empty interrupt.\n");
         // Write 0x1 to STDOUT for TB to fail test.
         SEND_STDOUT_CTRL(0x1);
         while (1);
@@ -93,12 +93,12 @@ void main() {
 
     for (int i = 0; i < INTERRUPT_TIMEOUT; ++i) {
         if (cptra_intr_rcv.sha3_error & KMAC_INTR_ENABLE_KMAC_ERR_MASK) {
-            VPRINTF(LOW, "Successfully received expected interrupt for KMAC which is not a notification.\n");
+            VPRINTF_LOW("Successfully received expected interrupt for KMAC which is not a notification.\n");
             break;
         }
     }
     if (!(cptra_intr_rcv.sha3_error & KMAC_INTR_ENABLE_KMAC_ERR_MASK)) {
-        VPRINTF(LOW, "ERROR: expected KMAC error interrupt.\n");
+        VPRINTF_LOW("ERROR: expected KMAC error interrupt.\n");
         // Write 0x1 to STDOUT for TB to fail test.
         SEND_STDOUT_CTRL(0x1);
         while (1);

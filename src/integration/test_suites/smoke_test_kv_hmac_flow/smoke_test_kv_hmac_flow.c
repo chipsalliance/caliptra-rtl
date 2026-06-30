@@ -58,9 +58,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With hmac384 flow !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With hmac384 flow !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     /* Intializes random number generator */
     srand(rand_seed);
@@ -160,9 +160,9 @@ void main() {
     hmac_zeroize();
 
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With hmac512 flow !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With hmac512 flow !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     uint32_t key512_data[] = {0x0b0b0b0b,
                            0x0b0b0b0b,
@@ -217,7 +217,7 @@ void main() {
     hmac_io hmac512_tag;
 
     for(int i = 0; i < 20; i++) {
-        VPRINTF(LOW, "START TEST %d\n", i);
+        VPRINTF_LOW("START TEST %d\n", i);
         hmac512_key.kv_intf = (xorshift32() % 2) ? TRUE : FALSE;
         hmac512_key.kv_id = xorshift32() % 24;
         hmac512_key.exp_kv_err = FALSE;
@@ -256,9 +256,9 @@ void main() {
         //inject hmac512_block to kv key reg (in RTL)
         lsu_write_32(STDOUT, (hmac512_block.kv_id << 8) | 0xb0); 
 
-        VPRINTF(LOW, "Key KV ID: %d, KV Intf: %d\n", hmac512_key.kv_id, hmac512_key.kv_intf);
-        VPRINTF(LOW, "Block KV ID: %d, KV Intf: %d\n", hmac512_block.kv_id, hmac512_block.kv_intf);
-        VPRINTF(LOW, "Tag KV ID: %d, KV Intf: %d\n", hmac512_tag.kv_id, hmac512_tag.kv_intf);
+        VPRINTF_LOW("Key KV ID: %d, KV Intf: %d\n", hmac512_key.kv_id, hmac512_key.kv_intf);
+        VPRINTF_LOW("Block KV ID: %d, KV Intf: %d\n", hmac512_block.kv_id, hmac512_block.kv_intf);
+        VPRINTF_LOW("Tag KV ID: %d, KV Intf: %d\n", hmac512_tag.kv_id, hmac512_tag.kv_intf);
 
         hmac512_flow(hmac512_key, hmac512_block, hmac512_lfsr_seed, hmac512_tag, TRUE, TRUE);
         hmac_zeroize();

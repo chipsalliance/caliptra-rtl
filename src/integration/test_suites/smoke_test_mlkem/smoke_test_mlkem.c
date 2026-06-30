@@ -652,9 +652,9 @@ void main() {
     uint32_t actual_ciphertext[MLKEM_CIPHERTEXT_SIZE];
     uint32_t actual_sharedkey[MLKEM_SHAREDKEY_SIZE];
 
-    VPRINTF(LOW, "----------------------------\n");
-    VPRINTF(LOW, " Running MLKEM Smoke Test !!\n");
-    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF_LOW("----------------------------\n");
+    VPRINTF_LOW(" Running MLKEM Smoke Test !!\n");
+    VPRINTF_LOW("----------------------------\n");
 
     //Call interrupt init
     init_interrupts();

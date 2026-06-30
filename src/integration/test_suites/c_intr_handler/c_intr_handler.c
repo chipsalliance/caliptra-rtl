@@ -87,7 +87,7 @@ void main(void) {
         uint32_t soc_ifc_error_intr_count_hw = 0;
         uint64_t mtime = 0;
 
-        VPRINTF(LOW,"----------------------------------\nCaliptra: Direct ISR Test!!\n----------------------------------\n");
+        VPRINTF_LOW("----------------------------------\nCaliptra: Direct ISR Test!!\n----------------------------------\n");
 
         // Setup the interrupt CSR configuration
         init_interrupts();
@@ -138,64 +138,64 @@ void main(void) {
 
         // Print interrupt count from FW/HW trackers
         // SHA512
-        VPRINTF(MEDIUM, "SHA512 fw count: %x\n", sha512_intr_count);
-        VPRINTF(MEDIUM, "SHA512 hw count: %x\n", *sha512_notif_ctr);
+        VPRINTF_MEDIUM("SHA512 fw count: %x\n", sha512_intr_count);
+        VPRINTF_MEDIUM("SHA512 hw count: %x\n", *sha512_notif_ctr);
         if (sha512_intr_count != *sha512_notif_ctr) {
-            VPRINTF(ERROR, "SHA512 count mismatch!\n");
+            VPRINTF_ERROR("SHA512 count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // SHA256
-        VPRINTF(MEDIUM, "SHA256 fw count: %x\n", sha256_intr_count);
-        VPRINTF(MEDIUM, "SHA256 hw count: %x\n", *sha256_notif_ctr);
+        VPRINTF_MEDIUM("SHA256 fw count: %x\n", sha256_intr_count);
+        VPRINTF_MEDIUM("SHA256 hw count: %x\n", *sha256_notif_ctr);
         if (sha256_intr_count != *sha256_notif_ctr) {
-            VPRINTF(ERROR, "SHA256 count mismatch!\n");
+            VPRINTF_ERROR("SHA256 count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // SHA Accelerator
-        VPRINTF(MEDIUM, "SHA Accel fw count: %x\n", sha512_acc_intr_count);
-        VPRINTF(MEDIUM, "SHA Accel hw count: %x\n", *sha512_acc_notif_ctr);
+        VPRINTF_MEDIUM("SHA Accel fw count: %x\n", sha512_acc_intr_count);
+        VPRINTF_MEDIUM("SHA Accel hw count: %x\n", *sha512_acc_notif_ctr);
         if (sha512_acc_intr_count != *sha512_acc_notif_ctr) {
-            VPRINTF(ERROR, "SHA512_acc count mismatch!\n");
+            VPRINTF_ERROR("SHA512_acc count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // HMAC Notif
-        VPRINTF(MEDIUM, "HMAC fw Notif count: %x\n", hmac_notif_intr_count);
-        VPRINTF(MEDIUM, "HMAC hw Notif count: %x\n", *hmac_notif_ctr);
+        VPRINTF_MEDIUM("HMAC fw Notif count: %x\n", hmac_notif_intr_count);
+        VPRINTF_MEDIUM("HMAC hw Notif count: %x\n", *hmac_notif_ctr);
         if (hmac_notif_intr_count != *hmac_notif_ctr) {
-            VPRINTF(ERROR, "HMAC Notif count mismatch!\n");
+            VPRINTF_ERROR("HMAC Notif count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // HMAC Error
-        VPRINTF(MEDIUM, "HMAC fw Err count: %x\n", hmac_error_intr_count);
-        VPRINTF(MEDIUM, "HMAC hw Err count: %x\n", *hmac_notif_ctr);
+        VPRINTF_MEDIUM("HMAC fw Err count: %x\n", hmac_error_intr_count);
+        VPRINTF_MEDIUM("HMAC hw Err count: %x\n", *hmac_notif_ctr);
         hmac_error_intr_count_hw =  *hmac_error_key_mode_ctr +
                                     *hmac_error_key_zero_ctr;
         if (hmac_error_intr_count != hmac_error_intr_count_hw) {
-            VPRINTF(ERROR, "HMAC Err count mismatch!\n");
+            VPRINTF_ERROR("HMAC Err count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
         // ECC
-        VPRINTF(MEDIUM, "ECC fw count: %x\n", ecc_intr_count);
-        VPRINTF(MEDIUM, "ECC hw count: %x\n", *ecc_notif_ctr);
+        VPRINTF_MEDIUM("ECC fw count: %x\n", ecc_intr_count);
+        VPRINTF_MEDIUM("ECC hw count: %x\n", *ecc_notif_ctr);
         if (ecc_intr_count != *ecc_notif_ctr) {
-            VPRINTF(ERROR, "ECC count mismatch!\n");
+            VPRINTF_ERROR("ECC count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // DOE
-        VPRINTF(MEDIUM, "DOE fw count: %x\n", doe_intr_count);
-        VPRINTF(MEDIUM, "DOE hw count: %x\n", *doe_notif_ctr);
+        VPRINTF_MEDIUM("DOE fw count: %x\n", doe_intr_count);
+        VPRINTF_MEDIUM("DOE hw count: %x\n", *doe_notif_ctr);
         if (doe_intr_count != *doe_notif_ctr) {
-            VPRINTF(ERROR, "DOE count mismatch!\n");
+            VPRINTF_ERROR("DOE count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // SOC_IFC Error
-        VPRINTF(MEDIUM, "SOC_IFC Err fw count: %x\n", soc_ifc_error_intr_count);
+        VPRINTF_MEDIUM("SOC_IFC Err fw count: %x\n", soc_ifc_error_intr_count);
         soc_ifc_error_intr_count_hw =  *soc_ifc_error_internal_ctr +
                                        *soc_ifc_error_inv_dev_ctr  +
                                        *soc_ifc_error_cmd_fail_ctr +
@@ -204,30 +204,30 @@ void main(void) {
                                        *soc_ifc_error_mbox_ecc_unc_ctr +
                                        *soc_ifc_error_wdt_timer1_timeout_ctr +
                                        *soc_ifc_error_wdt_timer2_timeout_ctr;
-        VPRINTF(MEDIUM, "SOC_IFC Err hw count: %x\n", soc_ifc_error_intr_count_hw);
+        VPRINTF_MEDIUM("SOC_IFC Err hw count: %x\n", soc_ifc_error_intr_count_hw);
         if (soc_ifc_error_intr_count != soc_ifc_error_intr_count_hw) {
-            VPRINTF(ERROR, "SOC_IFC Error count mismatch!\n");
+            VPRINTF_ERROR("SOC_IFC Error count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // SOC_IFC Notif
-        VPRINTF(MEDIUM, "SOC_IFC Notif fw count: %x\n", soc_ifc_notif_intr_count);
+        VPRINTF_MEDIUM("SOC_IFC Notif fw count: %x\n", soc_ifc_notif_intr_count);
         soc_ifc_notif_intr_count_hw =  *soc_ifc_notif_cmd_avail_ctr +
                                        *soc_ifc_notif_mbox_ecc_cor_ctr +
                                        *soc_ifc_notif_debug_locked_ctr +
                                        *soc_ifc_notif_scan_mode_ctr +
                                        *soc_ifc_notif_soc_req_lock_ctr +
                                        *soc_ifc_notif_gen_in_toggle_ctr;
-        VPRINTF(MEDIUM, "SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
+        VPRINTF_MEDIUM("SOC_IFC Notif hw count: %x\n", soc_ifc_notif_intr_count_hw);
         if (soc_ifc_notif_intr_count != soc_ifc_notif_intr_count_hw) {
-            VPRINTF(ERROR, "SOC_IFC Notif count mismatch!\n");
+            VPRINTF_ERROR("SOC_IFC Notif count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 
         // Print total interrupt count
-        VPRINTF(MEDIUM, "main end - intr_cnt:%x\n", intr_count);
+        VPRINTF_MEDIUM("main end - intr_cnt:%x\n", intr_count);
         if (intr_count != *sha512_notif_ctr + *sha256_notif_ctr + *sha512_acc_notif_ctr + *hmac_notif_ctr + hmac_error_intr_count_hw + *ecc_notif_ctr + *doe_notif_ctr + soc_ifc_error_intr_count_hw + soc_ifc_notif_intr_count_hw) {
-            VPRINTF(ERROR, "TOTAL count mismatch!\n");
+            VPRINTF_ERROR("TOTAL count mismatch!\n");
             SEND_STDOUT_CTRL(0x1); // Kill sim with ERROR
         }
 

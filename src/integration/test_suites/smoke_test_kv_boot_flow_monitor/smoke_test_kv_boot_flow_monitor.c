@@ -85,19 +85,19 @@ void main() {
         // Boot 0: Cold boot -- full DICE derivation
         // ============================================================
         boot_count = 0;
-        VPRINTF(LOW, "============================================\n");
-        VPRINTF(LOW, " Boot 0: Cold Boot\n");
-        VPRINTF(LOW, "============================================\n");
+        VPRINTF_LOW("============================================\n");
+        VPRINTF_LOW(" Boot 0: Cold Boot\n");
+        VPRINTF_LOW("============================================\n");
 
-        VPRINTF(LOW, "ROM: Populating DICE key slots...\n");
+        VPRINTF_LOW("ROM: Populating DICE key slots...\n");
         populate_dice_slots();
 
         // Copy FMC and RT code to ICCM
-        VPRINTF(LOW, "ROM: Copying FMC code to 0x%x\n", FMC_ICCM_ADDR);
+        VPRINTF_LOW("ROM: Copying FMC code to 0x%x\n", FMC_ICCM_ADDR);
         copy_to_iccm(FMC_ICCM_ADDR,
                       (uint32_t *)&iccm_code0_start,
                       (uint32_t *)&iccm_code0_end);
-        VPRINTF(LOW, "ROM: Copying RT code to 0x%x\n", RT_ICCM_ADDR);
+        VPRINTF_LOW("ROM: Copying RT code to 0x%x\n", RT_ICCM_ADDR);
         copy_to_iccm(RT_ICCM_ADDR,
                       (uint32_t *)&iccm_code1_start,
                       (uint32_t *)&iccm_code1_end);
@@ -107,11 +107,11 @@ void main() {
         // ROM does NOT re-derive DICE keys on warm reset.
         // ============================================================
         boot_count = 1;
-        VPRINTF(LOW, "============================================\n");
-        VPRINTF(LOW, " Boot 1: Warm Reset\n");
-        VPRINTF(LOW, "============================================\n");
+        VPRINTF_LOW("============================================\n");
+        VPRINTF_LOW(" Boot 1: Warm Reset\n");
+        VPRINTF_LOW("============================================\n");
 
-        VPRINTF(LOW, "ROM: Warm reset -- keys persist, skipping DICE derivation\n");
+        VPRINTF_LOW("ROM: Warm reset -- keys persist, skipping DICE derivation\n");
 
         // ICCM content persists across warm reset -- no re-copy needed
     } else {
@@ -119,22 +119,22 @@ void main() {
         // Boot 2: Firmware update reset -- keys persist, skip derivation
         // ============================================================
         boot_count = 2;
-        VPRINTF(LOW, "============================================\n");
-        VPRINTF(LOW, " Boot 2: FW Update Reset\n");
-        VPRINTF(LOW, "============================================\n");
+        VPRINTF_LOW("============================================\n");
+        VPRINTF_LOW(" Boot 2: FW Update Reset\n");
+        VPRINTF_LOW("============================================\n");
 
         // Keys persist across fw update reset (dest_valid resets on hard_reset_b only)
         // lock_wr/lock_use were cleared by reset -- enforcement will re-apply
         // ICCM content persists -- no need to re-copy FMC/RT
-        VPRINTF(LOW, "ROM: FW update reset detected, skipping key derivation\n");
+        VPRINTF_LOW("ROM: FW update reset detected, skipping key derivation\n");
     }
 
     // Program ICCM region registers with 2-phase shadow protocol
-    VPRINTF(LOW, "ROM: Programming ICCM region registers\n");
+    VPRINTF_LOW("ROM: Programming ICCM region registers\n");
     program_iccm_regions();
 
     // Jump to FMC (triggers ROM-to-FMC transition)
-    VPRINTF(LOW, "ROM: Jumping to FMC at 0x%x...\n", FMC_ICCM_ADDR);
+    VPRINTF_LOW("ROM: Jumping to FMC at 0x%x...\n", FMC_ICCM_ADDR);
     void (*fmc_fn)(void) = (void (*)(void))FMC_ICCM_ADDR;
     fmc_fn();
 }
@@ -145,7 +145,7 @@ void fmc_entry(void) {
     if (boot_count == 0) bp = "FMC[0]";
     else if (boot_count == 1) bp = "FMC[1]";
     else bp = "FMC[2]";
-    VPRINTF(LOW, "%s: Executing from ICCM FMC region\n", bp);
+    VPRINTF_LOW("%s: Executing from ICCM FMC region\n", bp);
 
     // --- FMC-phase validation (post ROM-to-FMC transition) ---
 
@@ -153,7 +153,7 @@ void fmc_entry(void) {
     check_no_kv_error(bp);
 
     // lock_wr set on ROM-phase preserved slots (0,1,2,6,7,8)
-    VPRINTF(LOW, "%s: Checking lock_wr on ROM-phase slots...\n", bp);
+    VPRINTF_LOW("%s: Checking lock_wr on ROM-phase slots...\n", bp);
     check_lock_wr(KV_SLOT_SI_IDEV, bp);
     check_lock_wr(KV_SLOT_SI_LDEV, bp);
     check_lock_wr(KV_SLOT_KEY_LADDER, bp);
@@ -162,7 +162,7 @@ void fmc_entry(void) {
     check_lock_wr(KV_SLOT_FMC_MLDSA, bp);
 
     // Non-preserved slots cleared at ROM-to-FMC (3,4,5,9,10-15)
-    VPRINTF(LOW, "%s: Checking non-preserved slots cleared...\n", bp);
+    VPRINTF_LOW("%s: Checking non-preserved slots cleared...\n", bp);
     check_slot_cleared(KV_SLOT_TMP, bp);
     check_slot_cleared(KV_SLOT_RT_CDI, bp);
     check_slot_cleared(KV_SLOT_RT_ECDSA, bp);
@@ -172,15 +172,15 @@ void fmc_entry(void) {
     }
 
     // DOE is locked
-    VPRINTF(LOW, "%s: Checking DOE lockdown...\n", bp);
+    VPRINTF_LOW("%s: Checking DOE lockdown...\n", bp);
     check_doe_locked(bp);
 
     // Mimic FMC DICE derivation -- populate RT key slots
-    VPRINTF(LOW, "%s: Populating RT key slots...\n", bp);
+    VPRINTF_LOW("%s: Populating RT key slots...\n", bp);
     populate_rt_slots();
 
     // Jump to RT (triggers FMC-to-RT transition)
-    VPRINTF(LOW, "%s: Jumping to RT at 0x%x...\n", bp, RT_ICCM_ADDR);
+    VPRINTF_LOW("%s: Jumping to RT at 0x%x...\n", bp, RT_ICCM_ADDR);
     void (*rt_fn)(void) = (void (*)(void))RT_ICCM_ADDR;
     rt_fn();
 }
@@ -191,7 +191,7 @@ void rt_entry(void) {
     if (boot_count == 0) bp = "RT[0]";
     else if (boot_count == 1) bp = "RT[1]";
     else bp = "RT[2]";
-    VPRINTF(LOW, "%s: Executing from ICCM RT region\n", bp);
+    VPRINTF_LOW("%s: Executing from ICCM RT region\n", bp);
 
     // --- RT-phase validation (post FMC-to-RT transition) ---
 
@@ -199,50 +199,50 @@ void rt_entry(void) {
     check_no_kv_error(bp);
 
     // lock_wr set on RT-phase slots (4,5,9)
-    VPRINTF(LOW, "%s: Checking lock_wr on RT-phase slots...\n", bp);
+    VPRINTF_LOW("%s: Checking lock_wr on RT-phase slots...\n", bp);
     check_lock_wr(KV_SLOT_RT_CDI, bp);
     check_lock_wr(KV_SLOT_RT_ECDSA, bp);
     check_lock_wr(KV_SLOT_RT_MLDSA, bp);
 
     // lock_use set on FMC-phase slots (6,7,8)
-    VPRINTF(LOW, "%s: Checking lock_use on FMC-phase slots...\n", bp);
+    VPRINTF_LOW("%s: Checking lock_use on FMC-phase slots...\n", bp);
     check_lock_use(KV_SLOT_FMC_CDI, bp);
     check_lock_use(KV_SLOT_FMC_ECDSA, bp);
     check_lock_use(KV_SLOT_FMC_MLDSA, bp);
 
     // Non-preserved slots cleared at FMC-to-RT (3,10-15)
-    VPRINTF(LOW, "%s: Checking non-preserved slots cleared...\n", bp);
+    VPRINTF_LOW("%s: Checking non-preserved slots cleared...\n", bp);
     check_slot_cleared(KV_SLOT_TMP, bp);
     for (int i = 10; i < KV_NUM_KEYS; i++) {
         check_slot_cleared(i, bp);
     }
 
     // DOE still locked
-    VPRINTF(LOW, "%s: Checking DOE still locked...\n", bp);
+    VPRINTF_LOW("%s: Checking DOE still locked...\n", bp);
     check_doe_locked(bp);
 
     if (boot_count == 0) {
         // Boot 0: Issue warm reset -- will re-enter main()
-        VPRINTF(LOW, "%s: Boot 0 checks passed, issuing warm reset...\n", bp);
+        VPRINTF_LOW("%s: Boot 0 checks passed, issuing warm reset...\n", bp);
         SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
         // Should not reach here -- reset takes effect
-        VPRINTF(ERROR, "[FAIL] Warm reset did not take effect!\n");
+        VPRINTF_ERROR("[FAIL] Warm reset did not take effect!\n");
         SEND_STDOUT_CTRL(0x01);
         while(1);
     } else if (boot_count == 1) {
         // Boot 1: Issue firmware update reset -- will re-enter main()
-        VPRINTF(LOW, "%s: Boot 1 checks passed, issuing FW update reset...\n", bp);
+        VPRINTF_LOW("%s: Boot 1 checks passed, issuing FW update reset...\n", bp);
         lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET,
                      SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
         // Should not reach here -- reset takes effect
-        VPRINTF(ERROR, "[FAIL] FW update reset did not take effect!\n");
+        VPRINTF_ERROR("[FAIL] FW update reset did not take effect!\n");
         SEND_STDOUT_CTRL(0x01);
         while(1);
     } else {
         // Boot 2: All checks passed across all three boot cycles
-        VPRINTF(LOW, "============================================\n");
-        VPRINTF(LOW, " All checks passed -- cold + warm + fw update\n");
-        VPRINTF(LOW, "============================================\n");
+        VPRINTF_LOW("============================================\n");
+        VPRINTF_LOW(" All checks passed -- cold + warm + fw update\n");
+        VPRINTF_LOW("============================================\n");
         SEND_STDOUT_CTRL(0xff);
     }
 }

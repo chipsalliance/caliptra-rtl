@@ -44,9 +44,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 */
 
 void main() {
-    VPRINTF(LOW, "----------------------------------------\n");
-    VPRINTF(LOW, " Running ECC Smoke Test error_trigger !!\n");
-    VPRINTF(LOW, "----------------------------------------\n");
+    VPRINTF_LOW("----------------------------------------\n");
+    VPRINTF_LOW(" Running ECC Smoke Test error_trigger !!\n");
+    VPRINTF_LOW("----------------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -202,7 +202,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST INVALID OUTPUT SIGN_S\n");
+        VPRINTF_LOW("\n TEST INVALID OUTPUT SIGN_S\n");
         // Program ECC PRIVKEY
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
         offset = 0;
@@ -228,13 +228,13 @@ void main() {
         SEND_STDOUT_CTRL(0x9a);
 
         // Enable ECC SIGNING core
-        VPRINTF(LOW, "\nECC SIGNING\n");
+        VPRINTF_LOW("\nECC SIGNING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC s_output_outofrange error is not detected.\n");
+            VPRINTF_ERROR("\nECC s_output_outofrange error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -248,7 +248,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST PCR WITH INVALID OUTPUT SIGN_S\n");
+        VPRINTF_LOW("\n TEST PCR WITH INVALID OUTPUT SIGN_S\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -261,15 +261,15 @@ void main() {
         SEND_STDOUT_CTRL(0x9a);
 
         //inject seed to kv key reg (in RTL)
-        VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
+        VPRINTF_LOW("Inject PRIVKEY into KV slot 7\n");
         privkey_inject_cmd = 0x88 + 0x7;
         SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-        VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+        VPRINTF_LOW("Inject MSG into SHA512 digest\n");
         SEND_STDOUT_CTRL(0x90);
 
         // Enable ECC PCR SIGNING core
-        VPRINTF(LOW, "\nECC PCR SIGNING\n");
+        VPRINTF_LOW("\nECC PCR SIGNING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING | 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
@@ -277,7 +277,7 @@ void main() {
         // wait for ECC PCR SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC PCR s_output_outofrange error is not detected.\n");
+            VPRINTF_ERROR("\nECC PCR s_output_outofrange error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -291,7 +291,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST PCR WITH INVALID INPUT COMMAND\n");
+        VPRINTF_LOW("\n TEST PCR WITH INVALID INPUT COMMAND\n");
         
         // Program ECC IV
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_IV_0;
@@ -301,14 +301,14 @@ void main() {
         }
 
         //inject seed to kv key reg (in RTL)
-        VPRINTF(LOW, "Inject PRIVKEY into KV slot 7\n");
+        VPRINTF_LOW("Inject PRIVKEY into KV slot 7\n");
         privkey_inject_cmd = 0x88 + 0x7;
         SEND_STDOUT_CTRL(privkey_inject_cmd);
 
-        VPRINTF(LOW, "Inject MSG into SHA512 digest\n");
+        VPRINTF_LOW("Inject MSG into SHA512 digest\n");
         SEND_STDOUT_CTRL(0x90);
 
-        VPRINTF(LOW, "\nECC PCR SHARED_KEY\n");
+        VPRINTF_LOW("\nECC PCR SHARED_KEY\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY| 
                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
     
@@ -316,7 +316,7 @@ void main() {
         // wait for ECC VERIFYING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC PCR invalid command error is not detected.\n");
+            VPRINTF_ERROR("\nECC PCR invalid command error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }

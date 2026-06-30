@@ -283,9 +283,9 @@ const uint32_t exp_shared_key[] = {
 };
 
 void main() {
-    VPRINTF(LOW, "-------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With MLKEM flow !!\n");
-    VPRINTF(LOW, "-------------------------------\n");
+    VPRINTF_LOW("-------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With MLKEM flow !!\n");
+    VPRINTF_LOW("-------------------------------\n");
 
     init_interrupts();
 

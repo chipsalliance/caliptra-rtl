@@ -30,15 +30,15 @@ volatile uint32_t intr_count = 0;
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
-    VPRINTF(LOW, "---------------------------------\n");
-    VPRINTF(LOW, " Read KV entries and expect not success !!\n");
-    VPRINTF(LOW, "---------------------------------\n");
+    VPRINTF_LOW("---------------------------------\n");
+    VPRINTF_LOW(" Read KV entries and expect not success !!\n");
+    VPRINTF_LOW("---------------------------------\n");
 
     int num_keys = 24;
 
     SEND_STDOUT_CTRL(0xcd); //Enable kv error injection mode
 
-    VPRINTF(LOW, "Testing ECC KV reads\n");
+    VPRINTF_LOW("Testing ECC KV reads\n");
     for (int i = 0; i < num_keys; i++) {
         // Program ECC_PRIVKEY Read
         lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
@@ -49,7 +49,7 @@ void main() {
 
         // Check that we got a KV error
         if ( (lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_MASK) == 0){
-            VPRINTF(ERROR, "ERROR: Expected ECC PKEY KV read entry %d error not detected!\n", i);
+            VPRINTF_ERROR("ERROR: Expected ECC PKEY KV read entry %d error not detected!\n", i);
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
@@ -69,7 +69,7 @@ void main() {
 
         // Check that we got a KV error
         if ( (lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) & ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_MASK) == 0){
-            VPRINTF(ERROR, "ERROR: Expected ECC SEED KV read entry %d error not detected!\n", i);
+            VPRINTF_ERROR("ERROR: Expected ECC SEED KV read entry %d error not detected!\n", i);
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
@@ -80,7 +80,7 @@ void main() {
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
     }
 
-    VPRINTF(LOW, "Testing HMAC KV reads\n");
+    VPRINTF_LOW("Testing HMAC KV reads\n");
     for (int i = 0; i < num_keys; i++) {
         // Program HMAC KEY Read
         lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, (HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
@@ -91,7 +91,7 @@ void main() {
 
         // Check that we got a KV error
         if ( (lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK) == 0){
-            VPRINTF(ERROR, "ERROR: Expected HMAC KEY KV read entry %d error not detected!\n", i);
+            VPRINTF_ERROR("ERROR: Expected HMAC KEY KV read entry %d error not detected!\n", i);
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
@@ -108,7 +108,7 @@ void main() {
 
         // Check that we got a KV error
         if ( (lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS) & HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_ERROR_MASK) == 0){
-            VPRINTF(ERROR, "ERROR: Expected EHMAC BLOCK KV read entry %d error not detected!\n", num_keys-1-i);
+            VPRINTF_ERROR("ERROR: Expected EHMAC BLOCK KV read entry %d error not detected!\n", num_keys-1-i);
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
@@ -117,7 +117,7 @@ void main() {
         lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, (1 << HMAC_REG_HMAC512_CTRL_ZEROIZE_LOW) & HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK);
     }
 
-    VPRINTF(LOW, "Testing AES KV reads\n");
+    VPRINTF_LOW("Testing AES KV reads\n");
     for (int i = 0; i < num_keys; i++) {
         // Program AES KEY Read
         lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, (AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |
@@ -128,13 +128,13 @@ void main() {
 
         // Check that we got a KV error
         if ( (lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_MASK) == 0){
-            VPRINTF(ERROR, "ERROR: Expected AES KEY KV read entry %d error not detected!\n", i);
+            VPRINTF_ERROR("ERROR: Expected AES KEY KV read entry %d error not detected!\n", i);
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
     }
 
-    VPRINTF(LOW, "Testing MLDSA KV reads\n");
+    VPRINTF_LOW("Testing MLDSA KV reads\n");
     for (int i = 0; i < num_keys; i++) {
         // Program MLDSA SEED Read
         lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
@@ -145,7 +145,7 @@ void main() {
 
         // Check that we got a KV error
         if ( (lsu_read_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS) & ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_MASK) == 0){
-            VPRINTF(ERROR, "ERROR: Expected MLDSA SEED KV read entry %d error not detected!\n", i);
+            VPRINTF_ERROR("ERROR: Expected MLDSA SEED KV read entry %d error not detected!\n", i);
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
@@ -157,7 +157,7 @@ void main() {
         while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
     }
 
-    VPRINTF(LOW, "Testing MLKEM KV reads\n");
+    VPRINTF_LOW("Testing MLKEM KV reads\n");
     for (int i = 0; i < num_keys; i++) {
         // Program MLKEM SEED Read
         lsu_write_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL, (ABR_REG_KV_MLKEM_SEED_RD_CTRL_READ_EN_MASK |
@@ -168,7 +168,7 @@ void main() {
 
         // Check that we got a KV error
         if ( (lsu_read_32(CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS) & ABR_REG_KV_MLKEM_SEED_RD_STATUS_ERROR_MASK) == 0){
-            VPRINTF(ERROR, "ERROR: Expected MLKEM SEED KV read entry %d error not detected!\n", i);
+            VPRINTF_ERROR("ERROR: Expected MLKEM SEED KV read entry %d error not detected!\n", i);
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }
@@ -188,7 +188,7 @@ void main() {
 
         // Check that we got a KV error
         if ( (lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) == 0){
-            VPRINTF(ERROR, "ERROR: Expected MLKEM MSG KV read entry %d error not detected!\n", num_keys-1-i);
+            VPRINTF_ERROR("ERROR: Expected MLKEM MSG KV read entry %d error not detected!\n", num_keys-1-i);
             SEND_STDOUT_CTRL(0x1); // Indicate failure
             while(1);
         }

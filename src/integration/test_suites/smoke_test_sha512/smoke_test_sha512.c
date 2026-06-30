@@ -85,9 +85,9 @@ void main() {
 
 
     // Entry message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " SHA512 smoke test !!\n"             );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" SHA512 smoke test !!\n"             );
+    VPRINTF_LOW("----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();
@@ -107,7 +107,7 @@ void main() {
     sha512_zeroize();
 
     // Zeroize SHA512 commands
-    VPRINTF(LOW, "Init and Zeroize\n");
+    VPRINTF_LOW("Init and Zeroize\n");
     lsu_write_32(CLP_SHA512_REG_SHA512_CTRL,(((1 << SHA512_REG_SHA512_CTRL_INIT_LOW) & SHA512_REG_SHA512_CTRL_INIT_MASK) |
                                              ((0 << SHA512_REG_SHA512_CTRL_NEXT_LOW) & SHA512_REG_SHA512_CTRL_NEXT_MASK) |
                                              ((0 << SHA512_REG_SHA512_CTRL_RESTORE_LOW) & SHA512_REG_SHA512_CTRL_RESTORE_MASK) |
@@ -116,11 +116,11 @@ void main() {
     // wait for SHA to be ready
     while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
     if ((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_VALID_MASK) != 0){
-        VPRINTF(LOW, "Wrong command is not detected\n");
+        VPRINTF_LOW("Wrong command is not detected\n");
         SEND_STDOUT_CTRL(0x1);
     }
 
-    VPRINTF(LOW, "Next/Restore and Zeroize\n");
+    VPRINTF_LOW("Next/Restore and Zeroize\n");
     lsu_write_32(CLP_SHA512_REG_SHA512_CTRL,(((0 << SHA512_REG_SHA512_CTRL_INIT_LOW) & SHA512_REG_SHA512_CTRL_INIT_MASK) |
                                              ((1 << SHA512_REG_SHA512_CTRL_NEXT_LOW) & SHA512_REG_SHA512_CTRL_NEXT_MASK) |
                                              ((1 << SHA512_REG_SHA512_CTRL_RESTORE_LOW) & SHA512_REG_SHA512_CTRL_RESTORE_MASK) |
@@ -129,7 +129,7 @@ void main() {
     // wait for SHA to be ready
     while((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK) == 0);
     if ((lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_VALID_MASK) != 0){
-        VPRINTF(LOW, "Wrong command is not detected\n");
+        VPRINTF_LOW("Wrong command is not detected\n");
         SEND_STDOUT_CTRL(0x1);
     }
     

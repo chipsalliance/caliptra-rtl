@@ -38,24 +38,24 @@ void dif_kmac_poll_status(const uintptr_t kmac, uint32_t flag) {
 void dif_kmac_customization_string_init(
     const char *data, size_t len, dif_kmac_customization_string_t *out) {
   if ((data == NULL && len != 0) || out == NULL) {
-    VPRINTF(ERROR, "dif_kmac_customization_string_init: ERROR data and out arguments must not be null.\n");
+    VPRINTF_ERROR("dif_kmac_customization_string_init: ERROR data and out arguments must not be null.\n");
     while (1);
     return;
   }
 
   if (len > kDifKmacMaxCustomizationStringLen) {
-    VPRINTF(ERROR, "dif_kmac_customization_string_init: ERROR length greater than maximum.\n");
+    VPRINTF_ERROR("dif_kmac_customization_string_init: ERROR length greater than maximum.\n");
     while (1);
     return;
   }
 
   if (kDifKmacMaxCustomizationStringLen > UINT16_MAX / 8) {
-    VPRINTF(ERROR, "dif_kmac_customization_string_init: ERROR length requires more than 3 bytes to left encode.\n");
+    VPRINTF_ERROR("dif_kmac_customization_string_init: ERROR length requires more than 3 bytes to left encode.\n");
     while (1);
     return;
   }
   if ((sizeof(out->buffer) / sizeof(char)) < kDifKmacMaxCustomizationStringLen + 3) {
-    VPRINTF(ERROR, "dif_kmac_customization_string_init: ERROR buffer is not large enough\n");
+    VPRINTF_ERROR("dif_kmac_customization_string_init: ERROR buffer is not large enough\n");
     while (1);
     return;
   }
@@ -80,24 +80,24 @@ void dif_kmac_customization_string_init(
 
 void dif_kmac_function_name_init(const char *data, size_t len, dif_kmac_function_name_t *out) {
   if ((data == NULL && len != 0) || out == NULL) {
-    VPRINTF(ERROR, "dif_kmac_function_name_init: ERROR data and out must not be NULL.\n");
+    VPRINTF_ERROR("dif_kmac_function_name_init: ERROR data and out must not be NULL.\n");
     while (1);
     return;
   }
 
   if (len > kDifKmacMaxFunctionNameLen) {
-    VPRINTF(ERROR, "dif_kmac_function_name_init: ERROR length larger than maximum.\n");
+    VPRINTF_ERROR("dif_kmac_function_name_init: ERROR length larger than maximum.\n");
     while (1);
     return;
   }
 
   if (kDifKmacMaxFunctionNameLen > UINT8_MAX / 8) {
-    VPRINTF(ERROR, "dif_kmac_function_name_init: ERROR length requires more than 2 bytes to left encode\n");
+    VPRINTF_ERROR("dif_kmac_function_name_init: ERROR length requires more than 2 bytes to left encode\n");
     while (1);
     return;
   }
   if ((sizeof(out->buffer) / sizeof(char)) < kDifKmacMaxFunctionNameLen + 2) {
-    VPRINTF(ERROR, "dif_kmac_function_name_init: ERROR buffer is not large enough.\n");
+    VPRINTF_ERROR("dif_kmac_function_name_init: ERROR buffer is not large enough.\n");
     while (1);
     return;
   }
@@ -116,7 +116,7 @@ void dif_kmac_mode_sha3_start(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
     dif_kmac_mode_sha3_t mode, const dif_kmac_msg_endianness_t msg_endianness) {
   if (kmac == 0 || operation_state == 0) {
-    VPRINTF(ERROR, "dif_kmac_mode_sha3_start: ERROR kmac or operation_state NULL.\n");
+    VPRINTF_ERROR("dif_kmac_mode_sha3_start: ERROR kmac or operation_state NULL.\n");
     while(1);
     return;
   }
@@ -150,7 +150,7 @@ void dif_kmac_mode_sha3_start(
       operation_state->d = 512 / 32;
       break;
     default:
-      VPRINTF(ERROR, "dif_kmac_sha3_start: ERROR Unsupported mode.\n");
+      VPRINTF_ERROR("dif_kmac_sha3_start: ERROR Unsupported mode.\n");
       while(1);
       return;
   }
@@ -158,7 +158,7 @@ void dif_kmac_mode_sha3_start(
   // Hardware must be idle to start an operation.
   uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS);
   if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_LOW)) == 0) {
-    VPRINTF(ERROR, "dif_kmac_sha3_start: ERROR hardware must be idle.\n");
+    VPRINTF_ERROR("dif_kmac_sha3_start: ERROR hardware must be idle.\n");
     while(1);
     return;
   }
@@ -187,7 +187,7 @@ void dif_kmac_mode_shake_start(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
     dif_kmac_mode_shake_t mode, const dif_kmac_msg_endianness_t msg_endianness) {
   if (kmac == 0 || operation_state == NULL) {
-    VPRINTF(ERROR, "dif_kmac_mode_shake_start: ERROR kmac and operation state cannot be NULL.\n");
+    VPRINTF_ERROR("dif_kmac_mode_shake_start: ERROR kmac and operation state cannot be NULL.\n");
     while (1);
     return;
   }
@@ -204,7 +204,7 @@ void dif_kmac_mode_shake_start(
       operation_state->r = calculate_rate_bits(256) / 32;
       break;
     default:
-      VPRINTF(ERROR, "dif_kmac_mode_shake_start: ERROR mode not allowed.\n");
+      VPRINTF_ERROR("dif_kmac_mode_shake_start: ERROR mode not allowed.\n");
       while (1);
       return;
   }
@@ -212,7 +212,7 @@ void dif_kmac_mode_shake_start(
   // Hardware must be idle to start an operation.
   uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS);
   if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_LOW)) == 0) {
-    VPRINTF(ERROR, "dif_kmac_shake_start: ERROR hardware must be idle.\n");
+    VPRINTF_ERROR("dif_kmac_shake_start: ERROR hardware must be idle.\n");
     while(1);
     return;
   }
@@ -239,7 +239,7 @@ void dif_kmac_mode_cshake_start(
     dif_kmac_mode_cshake_t mode, const dif_kmac_function_name_t *n,
     const dif_kmac_customization_string_t *s, const dif_kmac_msg_endianness_t msg_endianness) {
   if (kmac == 0 || operation_state == NULL) {
-    VPRINTF(ERROR, "dif_kmac_mode_cshake_start: ERROR kmac or operation state is NULL.\n");
+    VPRINTF_ERROR("dif_kmac_mode_cshake_start: ERROR kmac or operation state is NULL.\n");
     while (1);
     return;
   }
@@ -256,7 +256,7 @@ void dif_kmac_mode_cshake_start(
         dif_kmac_mode_shake_start(kmac, operation_state, kDifKmacModeShakeLen256, msg_endianness);
         return;
       default:
-        VPRINTF(ERROR, "dif_kmac_mode_cshake_start: ERROR unsupported mode for empty N and S.\n");
+        VPRINTF_ERROR("dif_kmac_mode_cshake_start: ERROR unsupported mode for empty N and S.\n");
         while (1);
         return;
     }
@@ -274,7 +274,7 @@ void dif_kmac_mode_cshake_start(
       operation_state->r = calculate_rate_bits(256) / 32;
       break;
     default:
-      VPRINTF(ERROR, "dif_kmac_mode_cshake_start: ERROR unsupported kstrenght.\n");
+      VPRINTF_ERROR("dif_kmac_mode_cshake_start: ERROR unsupported kstrenght.\n");
       while (1);
       return;
   }
@@ -282,7 +282,7 @@ void dif_kmac_mode_cshake_start(
   // Hardware must be idle to start an operation.
   uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS);
   if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_IDLE_LOW)) == 0) {
-    VPRINTF(ERROR, "dif_kmac_mode_cshake_start: ERROR hardware must be idle.\n");
+    VPRINTF_ERROR("dif_kmac_mode_cshake_start: ERROR hardware must be idle.\n");
     while (1);
     return;
   }
@@ -383,14 +383,14 @@ void dif_kmac_absorb(
   }
 
   if (kmac == 0 || operation_state == 0 || (msg == 0 && len != 0)) {
-    VPRINTF(ERROR, "dif_kmac_absorb: ERROR one of function arguments is null\n");
+    VPRINTF_ERROR("dif_kmac_absorb: ERROR one of function arguments is null\n");
     while (1);
     return;
   }
 
   // Check that an operation has been started.
   if (operation_state->r == 0) {
-    VPRINTF(ERROR, "dif_kmac_absorb: ERROR operation not started yet\n");
+    VPRINTF_ERROR("dif_kmac_absorb: ERROR operation not started yet\n");
     while (1);
     return;
   }
@@ -398,7 +398,7 @@ void dif_kmac_absorb(
   // Poll until the status register is in the 'absorb' state.
   uint32_t kmac_status = lsu_read_32(kmac + KMAC_STATUS);
   if ((kmac_status & (0x1U << KMAC_STATUS_SHA3_ABSORB_LOW)) == 0) {
-    VPRINTF(ERROR, "dif_kmac_absorb: ERROR hardware must be absorbing.\n");
+    VPRINTF_ERROR("dif_kmac_absorb: ERROR hardware must be absorbing.\n");
     while(1);
     return;
   }
@@ -436,7 +436,7 @@ void dif_kmac_squeeze(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state,
     uint32_t *out, size_t len, size_t *processed, uint32_t *capacity) {
   if (kmac == 0 || operation_state == 0 || (out == 0 && len != 0)) {
-    VPRINTF(ERROR, "dif_kmac_squeeze: ERROR arguments may not be NULL.\n");
+    VPRINTF_ERROR("dif_kmac_squeeze: ERROR arguments may not be NULL.\n");
     while (1);
     return;
   }
@@ -475,7 +475,7 @@ void dif_kmac_squeeze(
   // requested must not exceed that length.
   if (operation_state->d != 0 &&
       len > (operation_state->d - operation_state->offset)) {
-    VPRINTF(ERROR, "dif_kmac_squeeze: ERROR total bytes requested must not exceed fixed output length.\n");
+    VPRINTF_ERROR("dif_kmac_squeeze: ERROR total bytes requested must not exceed fixed output length.\n");
     while (1);
     return;
   }
@@ -497,7 +497,7 @@ void dif_kmac_squeeze(
       // Reduce the digest length to reflect consumed output state.
       if (operation_state->d != 0) {
         if (operation_state->d <= operation_state->r) {
-          VPRINTF(ERROR, "dif_kmac_squeeze: ERROR operation state d less than r.\n");
+          VPRINTF_ERROR("dif_kmac_squeeze: ERROR operation state d less than r.\n");
           while (1);
           return;
         }
@@ -549,7 +549,7 @@ void dif_kmac_squeeze(
 void dif_kmac_end(
     const uintptr_t kmac, dif_kmac_operation_state_t *operation_state) {
   if (kmac == 0 || operation_state == 0) {
-    VPRINTF(ERROR, "dif_kmac_end: ERROR arguments may not be NULL.\n");
+    VPRINTF_ERROR("dif_kmac_end: ERROR arguments may not be NULL.\n");
     while (1);
     return;
   }
@@ -557,7 +557,7 @@ void dif_kmac_end(
   // The hardware should (must?) complete squeeze operation before the DONE
   // command is issued.
   if (!operation_state->squeezing) {
-    VPRINTF(ERROR, "dif_kmac_end: ERROR hardware must be done squeezing.\n");
+    VPRINTF_ERROR("dif_kmac_end: ERROR hardware must be done squeezing.\n");
     while (1);
     return;
   }

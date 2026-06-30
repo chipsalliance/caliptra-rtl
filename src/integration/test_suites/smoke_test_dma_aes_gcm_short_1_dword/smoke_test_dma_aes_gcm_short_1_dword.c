@@ -225,15 +225,15 @@ void run_aes_test(test_config_t test_config) {
     aes_key_len_e key_len;
     aes_key_t aes_key = {0};
 
-    VPRINTF(LOW, "\n----------------------------------\n%s\n----------------------------------\n", test_config.test_name);
+    VPRINTF_LOW("\n----------------------------------\n%s\n----------------------------------\n", test_config.test_name);
     
-    VPRINTF(LOW, "Configuring AES for GCM mode\n");
+    VPRINTF_LOW("Configuring AES for GCM mode\n");
     
     // Get the appropriate test vector for the random dword length
     int vector_idx = get_vector_index(test_config.random_dword_len);
     uint32_t random_len_bytes = test_config.random_dword_len * 4;
     
-    VPRINTF(LOW, "Using test vector %d for %d dwords (%d bytes)\n", 
+    VPRINTF_LOW("Using test vector %d for %d dwords (%d bytes)\n",
             vector_idx, test_config.random_dword_len, random_len_bytes);
     
     // Get references to pre-converted arrays from test vector
@@ -254,13 +254,13 @@ void run_aes_test(test_config_t test_config) {
     // Determine key length
     key_len = key_bytes == 32 ? AES_256 : key_bytes == 16 ? AES_128 : AES_192;
 
-    VPRINTF(LOW, "Plaintext length: %d dwords (%d bytes)\n", vector->length_dwords, vector->length_dwords * 4);
-    VPRINTF(LOW, "Ciphertext length: %d dwords (%d bytes)\n", vector->length_dwords, vector->length_dwords * 4);
-    VPRINTF(LOW, "Key bytes: %d: \n", key_bytes);
-    VPRINTF(LOW, "Key DWORD: %d: \n", vector->key_dwords);
-    VPRINTF(LOW, "Key LEN: %d: \n", key_len);
-    VPRINTF(LOW, "AAD bytes: %d: \n", aad_bytes);
-    VPRINTF(LOW, "AAD DWORD: %d: \n", vector->aad_dwords);
+    VPRINTF_LOW("Plaintext length: %d dwords (%d bytes)\n", vector->length_dwords, vector->length_dwords * 4);
+    VPRINTF_LOW("Ciphertext length: %d dwords (%d bytes)\n", vector->length_dwords, vector->length_dwords * 4);
+    VPRINTF_LOW("Key bytes: %d: \n", key_bytes);
+    VPRINTF_LOW("Key DWORD: %d: \n", vector->key_dwords);
+    VPRINTF_LOW("Key LEN: %d: \n", key_len);
+    VPRINTF_LOW("AAD bytes: %d: \n", aad_bytes);
+    VPRINTF_LOW("AAD DWORD: %d: \n", vector->aad_dwords);
 
     // Setup AES input structure - use vector data directly
     aes_input.aad_len = aad_bytes; // Dynamic AAD length in bytes
@@ -288,7 +288,7 @@ void run_aes_test(test_config_t test_config) {
     // Sending image over to AXI SRAM for usage during DMA AES calculation
     // ===========================================================================
     // Use a FIXED transfer (only the final beat should be present at the target address)
-    VPRINTF(LOW, "Sending image payload via AHB i/f to AXI SRAM AES GCM\n");
+    VPRINTF_LOW("Sending image payload via AHB i/f to AXI SRAM AES GCM\n");
     if(op==AES_ENC){
         soc_ifc_axi_dma_send_ahb_payload(aes_input.dma_transfer_data.src_addr, 0, aes_input.plaintext, aes_input.text_len, 0);
     } else {
@@ -300,7 +300,7 @@ void run_aes_test(test_config_t test_config) {
 
 void main(void) {
 
-    VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES - Variable Length Test Cases\n----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\nSmoke Test AXI DMA AES - Variable Length Test Cases\n----------------------------------\n");
 
     // Define all test cases with randomized dword lengths
     test_config_t test_cases[] = {
@@ -323,14 +323,14 @@ void main(void) {
     int num_tests = sizeof(test_cases) / sizeof(test_config_t);
     
     for (int i = 0; i < num_tests; i++) {
-        VPRINTF(LOW, "\n========================================\nRunning Test %d of %d\n========================================\n", i+1, num_tests);
-        VPRINTF(LOW, "Test: %s\n", test_cases[i].test_name);
-        VPRINTF(LOW, "Random length: %d dwords (%d bytes)\n", test_cases[i].random_dword_len, test_cases[i].random_dword_len * 4);
+        VPRINTF_LOW("\n========================================\nRunning Test %d of %d\n========================================\n", i+1, num_tests);
+        VPRINTF_LOW("Test: %s\n", test_cases[i].test_name);
+        VPRINTF_LOW("Random length: %d dwords (%d bytes)\n", test_cases[i].random_dword_len, test_cases[i].random_dword_len * 4);
         run_aes_test(test_cases[i]);
-        VPRINTF(LOW, "Test %d PASSED\n", i+1);
+        VPRINTF_LOW("Test %d PASSED\n", i+1);
     }
 
-    VPRINTF(LOW, "\n========================================\nALL TESTS COMPLETED SUCCESSFULLY!\n========================================\n");
+    VPRINTF_LOW("\n========================================\nALL TESTS COMPLETED SUCCESSFULLY!\n========================================\n");
 
     SEND_STDOUT_CTRL( 0xff);
     while(1);

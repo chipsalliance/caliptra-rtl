@@ -60,9 +60,9 @@ void main() {
     //uint32_t mie_machinetimer_en = 0x00000080;
     //uint32_t mie_external_int_en = 0x00000800;
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " CLK GATING + WDT smoke test !!\n"   );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" CLK GATING + WDT smoke test !!\n"   );
+    VPRINTF_LOW("----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();
@@ -75,7 +75,7 @@ void main() {
     //----------------------------------------------------
     
     //Enable clk gating
-    VPRINTF(LOW, "Enabling clk gating\n====================\n");
+    VPRINTF_LOW("Enabling clk gating\n====================\n");
     SEND_STDOUT_CTRL(0xf2); 
 
     if (rst_count == 0) {
@@ -91,11 +91,11 @@ void main() {
         // *wdt_timer2_period_1 = 0x00000000;
 
         //============= Case 1 ================
-        VPRINTF(LOW, "WDT t1 intr\n");
+        VPRINTF_LOW("WDT t1 intr\n");
         set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
 
         //Core wakes up and services timer1 intr
-        VPRINTF(LOW, "Core is awake\n====================\n");
+        VPRINTF_LOW("Core is awake\n====================\n");
 
         //while ((*soc_ifc_error_status & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_MASK) == 1);
         soc_error_status_int = *soc_ifc_error_status;
@@ -105,7 +105,7 @@ void main() {
 
         //============= Case 2 ================
         //Inject fatal error (after some delay)
-        VPRINTF(LOW, "Cptra_f_err injection\n====================\n");
+        VPRINTF_LOW("Cptra_f_err injection\n====================\n");
         SEND_STDOUT_CTRL(0xeb);
 
         set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
@@ -114,7 +114,7 @@ void main() {
 
         //============= Case 3 ================
         //Enable scan mode (after some delay)
-        VPRINTF(LOW, "Scan mode enabled\n====================\n");
+        VPRINTF_LOW("Scan mode enabled\n====================\n");
         SEND_STDOUT_CTRL(0xef);
 
         set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
@@ -122,7 +122,7 @@ void main() {
         // //KV regs should be flushed
 
         //Disable scan mode
-        VPRINTF(LOW, "Scan mode disabled\n====================\n");
+        VPRINTF_LOW("Scan mode disabled\n====================\n");
         SEND_STDOUT_CTRL(0xf0);
 
         //============= Case 4 ================
@@ -130,7 +130,7 @@ void main() {
         *clear_secrets = 0x00000002;
 
         //Enable ss tran after some delay
-        VPRINTF(LOW, "Debug mode unlocked\n====================\n");
+        VPRINTF_LOW("Debug mode unlocked\n====================\n");
         SEND_STDOUT_CTRL(0xfa);
 
         for (int i = 0; i < 1000; i++); //sleep
@@ -149,12 +149,12 @@ void main() {
         set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
 
         //Disable ss tran
-        VPRINTF(LOW, "Debug mode locked\n====================\n");
+        VPRINTF_LOW("Debug mode locked\n====================\n");
         SEND_STDOUT_CTRL(0xf9); 
 
         //============= Case 5 ================  
         //cg enabled, issue warm reset
-        VPRINTF(LOW, "Issue warm reset\n====================\n");
+        VPRINTF_LOW("Issue warm reset\n====================\n");
         rst_count++;
         SEND_STDOUT_CTRL(0xf6);
     }
@@ -189,7 +189,7 @@ void main() {
                         : "i" (0x300), "i" (0x08)  /* input : immediate  */ \
                         : /* clobbers: none */);
 
-        VPRINTF(LOW, "Issue random warm reset while core is asleep\n====================\n");
+        VPRINTF_LOW("Issue random warm reset while core is asleep\n====================\n");
         rst_count++;
         SEND_STDOUT_CTRL(0xee);
 
@@ -214,7 +214,7 @@ void main() {
         *wdt_timer2_period_1 = 0x00000000;
 
         //============= Case 6 ================
-        VPRINTF(LOW, "WDT independent mode and core is halted\n====================\n");
+        VPRINTF_LOW("WDT independent mode and core is halted\n====================\n");
         set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
     }
 }

@@ -135,7 +135,7 @@ void main() {
         
         rst_count++;
         SEND_STDOUT_CTRL(0xee);
-        VPRINTF(LOW, "Issuing a warm reset");
+        VPRINTF_LOW("Issuing a warm reset");
         sha_poll_gen_hash_valid();
 
         //check expected output from digest
@@ -144,7 +144,7 @@ void main() {
         while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_DIGEST_11) {
             read_data = *reg_ptr++;
             if (exp3[offset] != read_data) {
-                VPRINTF(FATAL,"SHA Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp3[offset], read_data);
+                VPRINTF_FATAL("SHA Result Mismatch - EXP: 0x%x RECVD: 0x%x\n", exp3[offset], read_data);
                 SEND_STDOUT_CTRL( 0x01);
             }
             offset++;

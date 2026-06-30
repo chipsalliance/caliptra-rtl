@@ -131,32 +131,32 @@ inline void service_soc_ifc_notif_intr () {
     uint32_t sts = *reg;
     /* Write 1 to Clear the pending interrupt */
     if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK) {
-        VPRINTF(HIGH, "cmd_avail\n");
+        VPRINTF_HIGH("cmd_avail\n");
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
         cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_AVAIL_STS_MASK;
     }
     if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK) {
-        VPRINTF(HIGH, "mbox_ecc_cor\n");
+        VPRINTF_HIGH("mbox_ecc_cor\n");
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK;
         cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_MBOX_ECC_COR_STS_MASK;
     }
     if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK) {
-        VPRINTF(HIGH, "debug_locked\n");
+        VPRINTF_HIGH("debug_locked\n");
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
         cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_DEBUG_LOCKED_STS_MASK;
     }
     if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK) {
-        VPRINTF(HIGH, "SCAN_MODE\n");
+        VPRINTF_HIGH("SCAN_MODE\n");
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK;
         cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SCAN_MODE_STS_MASK;
     }
     if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK) {
-        VPRINTF(HIGH, "soc_req_lock\n");
+        VPRINTF_HIGH("soc_req_lock\n");
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK;
         cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK;
     }
     if (sts & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK) {
-        VPRINTF(HIGH, "gen_in_toggle\n");
+        VPRINTF_HIGH("gen_in_toggle\n");
         *reg = SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK;
         cptra_intr_rcv.soc_ifc_notif |= SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK;
     }
@@ -185,8 +185,8 @@ inline void service_sha512_acc_notif_intr() {
 
 inline void service_abr_error_intr() {return;}
 inline void service_abr_notif_intr() {return;}
-inline void service_axi_dma_error_intr() {VPRINTF(ERROR, "ERROR");}
-inline void service_axi_dma_notif_intr() {VPRINTF(ERROR, "ERROR");}
+inline void service_axi_dma_error_intr() {VPRINTF_ERROR("ERROR");}
+inline void service_axi_dma_notif_intr() {VPRINTF_ERROR("ERROR");}
 
 
 #endif //CALIPTRA_ISR_H
