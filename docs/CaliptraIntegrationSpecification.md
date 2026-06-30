@@ -62,7 +62,7 @@ The following table describes integration parameters.
 
 | **Defines** | **Defines file** | **Description** |
 | :--------- | :--------- | :--------- |
-| CALIPTRA_INTERNAL_TRNG      | config_defines.svh   | Defining this enables the internal TRNG source. This must be set to 1 in Subsystem mode. |
+| CALIPTRA_INTERNAL_TRNG      | config_defines.svh   | Defining this enables the internal TRNG source. This is recommended to be set to 1 in Core (Passive) mode and must be set to 1 in Subsystem mode. |
 | CALIPTRA_MODE_SUBSYSTEM     | config_defines.svh   | Defining this enables Caliptra to operate in Subsystem mode. This includes features such as the debug unlock flow, AXI DMA (for recovery flow), Subsystem-level straps, among other capabilites. See [Caliptra Subsystem Architectural Flows](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#caliptra-subsystem-architectural-flows) for more details |
 | USER_ICG                    | config_defines.svh   | If added by an integrator, provides the name of the custom clock gating module that is used in [clk_gate.sv](../src/libs/rtl/clk_gate.sv). USER_ICG replaces the clock gating module, CALIPTRA_ICG, defined in [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_ICG. |
 | TECH_SPECIFIC_ICG           | config_defines.svh   | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_ICG macro) to be used in place of the native Caliptra clock gate module. |
@@ -207,7 +207,7 @@ The table below details the interface required for each SRAM. Driver direction i
 | trace_rv_i_interrupt_ip |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 | trace_rv_i_tval_ip      | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 
-*Table 11: Subsystem Straps and Control*
+*Table 11: Subsystem Straps, Controls, and iTRNG Configuration*
 
 | Signal name | Width      | Driver     | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :---------- | :--------- | :--------- | :----------------------------------------------- | :--------- |
@@ -221,7 +221,7 @@ The table below details the interface required for each SRAM. Driver direction i
 |  strap_ss_caliptra_dma_axi_user                           | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Provides Caliptra ROM with entropy source (CSRNG) configuration used during initialization when `CALIPTRA_INTERNAL_TRNG` is enabled, including Passive mode. If this configuration is not used, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sample on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | Enables unlock of the debug interface in the Manufacturing security state, for Subsystem mode only. |
@@ -349,7 +349,7 @@ Caliptra firmware internally has the capability to force release the mailbox bas
 ### Straps
 
 Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either cptra_pwrgood signal assertion (cold reset exit) or cptra\_noncore\_rst\_b deassertion (warm reset exit)  – refer to interface table for list of straps.
-In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. These must be programmed by SoC FW at the same time as Caliptra [Fuses](#fuses) per [Caliptra Spec](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#subsystem-pre-fw-load-boot-flow). Once written and locked, the values of these straps persist until a cold reset.
+In 2.0, Caliptra adds support for numerous Subsystem-level straps. Unless otherwise noted in the interface table, Subsystem-mode straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. These must be programmed by SoC FW at the same time as Caliptra [Fuses](#fuses) per [Caliptra Spec](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#subsystem-pre-fw-load-boot-flow). Once written and locked, the values of these straps persist until a cold reset.
 
 ### Obfuscation key
 
@@ -392,9 +392,9 @@ The following table describes the allocation of functionality to strap\_ss\_stra
 
 | N          | Name               | Description                                                                                                                 |
 | :--------- | :---------         | :---------                                                                                                                  |
-| 0          | strap_ss_strap_generic_0           | Provides the Caliptra ROM with a 32-bit pointer that encodes the location of the fuse controller's status register and the bit position of the idle indicator. Upper 16 bits: Bit index of the IDLE_BIT_STATUS within SOC_OTP_CTRL_STATUS. Lower 16 bits: Offset address of SOC_OTP_CTRL_STATUS within the SOC_IFC_REG space, relative to SOC_OTP_CTRL_BASE_ADDR.                                                                                                      |
-| 1          | strap_ss_strap_generic_1           | Provides the Caliptra ROM with a 32-bit pointer to the fuse controller’s command register (CMD), enabling ROM-level control or triggering of fuse operations.                                                                                                      |
-| 2          | strap_ss_strap_generic_2           | Provides the Caliptra ROM with entropy source (CSRNG) configuration used during initialization. Bits [15:0]: Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane. Bit [16]: Entropy source single-bit mode. When set to 1, ROM enables `rng_bit_enable` and clears `threshold_scope`. Bits [18:17]: Entropy source single-bit mode `rng_bit_sel`. Selects which RNG bit stream to process when single-bit mode is enabled. Bits [30:19]: RESERVED/unused, must be tied to 0. Bit [31]: Entropy bypass mode. When set to 1, enables bypass mode (`es_type`) to allow entropy characterization directly without passing through conditioning. Refer to the Caliptra ROM Specification for additional details. |
+| 0          | strap_ss_strap_generic_0           | Provides the Caliptra ROM with a 32-bit pointer that encodes the location of the fuse controller's status register and the bit position of the idle indicator. Upper 16 bits: Bit index of the IDLE_BIT_STATUS within SOC_OTP_CTRL_STATUS. Lower 16 bits: Offset address of SOC_OTP_CTRL_STATUS within the SOC_IFC_REG space, relative to SOC_OTP_CTRL_BASE_ADDR.|
+| 1          | strap_ss_strap_generic_1           | Provides the Caliptra ROM with a 32-bit pointer to the fuse controller’s command register (CMD), enabling ROM-level control or triggering of fuse operations. |
+| 2          | strap_ss_strap_generic_2           | Provides the Caliptra ROM with entropy source (CSRNG) configuration used during initialization when `CALIPTRA_INTERNAL_TRNG` is enabled, including Passive mode. Bits [15:0]: Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane. Bit [16]: Entropy source single-bit mode. ROM clears `threshold_scope` during entropy source initialization. When this bit is set to 1, ROM enables `rng_bit_enable`. Bits [18:17]: Entropy source single-bit mode `rng_bit_sel`. Selects which RNG bit stream to process when single-bit mode is enabled. Bits [30:19]: RESERVED/unused, must be tied to 0. Bit [31]: Entropy bypass mode. When set to 1, enables bypass mode (`es_type`) to allow entropy characterization directly without passing through conditioning. Refer to the Caliptra ROM Specification for additional details. |
 | 3          | strap_ss_strap_generic_3           | No allocated function.                                                                                                      |
 
 # SoC interface operation
@@ -618,11 +618,11 @@ See the Hardware specification for additional details.
 
 # TRNG REQ HW API
 
-For SoCs that choose to not instantiate Caliptra’s internal TRNG, we provide a TRNQ REQ HW API.
+For SoCs integrating Caliptra core without Subsystem (i.e., passive mode) that choose not to instantiate Caliptra’s internal TRNG, Caliptra provides a TRNQ REQ HW API.
 
 **While the use of this API is convenient for early enablement, the current
 Caliptra hardware is unable to provide the same security guarantees with an
-external TRNG. In particular, it is highly advisable to instantiate an internal
+external TRNG. The internal TRNG is recommended at a minimum, and required in Subsystem mode. In particular, it is highly advisable to instantiate an internal
 TRNG if ROM glitch protection is important.**
 
 1. Caliptra asserts TRNG\_REQ wire (this may be because Caliptra’s internal hardware or firmware made the request for a TRNG).
@@ -630,9 +630,9 @@ TRNG if ROM glitch protection is important.**
 3. SoC write a done bit in the TRNG architectural registers.
 4. Caliptra deasserts TRNG\_REQ.
 
-Having an interface that is separate from the SoC mailbox ensures that this request is not intercepted by any SoC firmware agents (which communicate with SoC mailbox). It is a requirement for FIPS compliance that this TRNG HW API is always handled by SoC hardware gasket logic (and not some SoC ROM or firmware code).
+Having an interface that is separate from the SoC mailbox ensures that this request is not intercepted by any SoC firmware agents (which communicate with SoC mailbox). It is a requirement for FIPS compliance that this TRNG HW API is always handled by SoC hardware gasket logic (and not some SoC ROM or firmware code). SoC implementations of this gasket logic must guarantee that only one AXI agent has access to the Caliptra TRNG REQ HW API.
 
-TRNG DATA register is tied to TRNG VALID AXI USER. SoC can program the TRNG VALID AXI USER and lock the register using TRNG\_AXI\_USER\_LOCK[LOCK]. This ensures that TRNG DATA register is read-writeable by only the AXI USER programmed into the TRNG\_VALID\_AXI\_USER register. If the CPTRA\_TNRG\_AXI\_USER\_LOCK.LOCK is set to ‘0, then any agent can write to the TRNG DATA register. If the lock is set, only an agent with a specific TRNG\_VALID\_AXI\_USER can write.
+Access to TRNG DATA register is controlled by TRNG VALID AXI USER. SoC can program the TRNG VALID AXI USER and lock the register using TRNG\_AXI\_USER\_LOCK[LOCK]. This ensures that TRNG DATA register is read-writeable by only the AXI USER programmed into the TRNG\_VALID\_AXI\_USER register. If the CPTRA\_TNRG\_AXI\_USER\_LOCK.LOCK is set to ‘0, then any agent can write to the TRNG DATA register. If the lock is set to ‘1, only an agent whose AXI USER matches TRNG\_VALID\_AXI\_USER can write to TRNG DATA. It is strongly recommended that these AXI USER registers are either set at integration time through integration parameters or be programmed by the SoC ROM before any mutable FW or ROM patches are absorbed. If integrators do not use these registers to filter agent access to the TRNG REQ HW API, then the SoC implementation must allow no more than one AXI agent in total to access Caliptra's SoC interface.
 
 The ROM and firmware currently time out on the TRNG interface after 250,000
 attempts to read a DONE bit. This bit is set in the architectural registers, as
@@ -649,7 +649,8 @@ configured for FIPS compliance, but rather to ensure that the quality of the
 entropy output is sufficient for ROM operation.
 
 The default self-test parameters are provided to the ROM via the
-`CPTRA_iTRNG_ENTROPY_CONFIG0` and `CPTRA_iTRNG_ENTROPY_CONFIG1` registers.
+`SS_STRAP_GENERIC[2]`, `CPTRA_iTRNG_ENTROPY_CONFIG0`, and
+`CPTRA_iTRNG_ENTROPY_CONFIG1` registers.
 
 The ROM configures self tests with the following parameters.
 
@@ -659,12 +660,12 @@ The adaptive self-test thresholds are configured as follows if the high and low
 thresholds provided in the `CPTRA_iTRNG_ENTROPY_CONFIG0` are non-zero.
 
 `entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.HIGH_THRESHOLD`\
-`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.HIGH_THRESHOLD`
+`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.LOW_THRESHOLD`
 
 Otherwise, the ROM will use 75% and 25% of the FIPS window size for the default
 high and low thresholds.
 
-`W` = 2048 (bits)\
+For example, when `W` = 2048 bits:\
 `entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = $3 * (W / 4)$ = 1536 \
 `entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = $W / 4$ = 512
 
@@ -716,13 +717,13 @@ The variable names are as defined in NIST SP 800-90B.
 
 $α = 2^{-40}$ (recommended)\
 $H = 0.5$ (example, implementation specific)\
-$W = 2048$ (constant in ROM/hw)
+$W = 2048$ (example health-test window in bits)
 
 ### Adaptive proportion test
 
-The test is configured with to sum all the bits per symbol, due to
-`entropy_src.CONF.THRESHOLD_SCOPE` being enabled. The test essentially treats
-the combined input as a single binary stream, counting the occurrences of '1's.
+The ROM clears `entropy_src.CONF.THRESHOLD_SCOPE`, so the adaptive proportion
+test scores the RNG lanes individually. The following example treats one lane
+as a binary stream, counting the occurrences of '1's over the selected window.
 
 > Note: The `critbinom` function (critical binomial distribution function) is
 > implemented by most spreadsheet applications.
@@ -815,7 +816,7 @@ This section describes an example implementation of integrator machine check rel
 
 This example is applicable to scenarios where an integrator may need control of or visibility into SRAM errors for purposes of reliability or functional safety. In such cases, integrators may introduce additional layers of error injection, detection, and correction logic surrounding SRAMs. The addition of such logic is transparent to the correct function of Caliptra, and removes integrator dependency on Caliptra for error logging or injection.
 
-Note that the example assumes that data and ECC codes are in non-deterministic bit-position in the exposed SRAM interface bus. Accordingly, redundant correction coding is shown in the integrator level logic (i.e., integrator\_ecc(calitpra\_data, caliptra\_ecc)). If the Caliptra data and ECC are deterministically separable at the Caliptra interface, the integrator would have discretion to store the ECC codes directly and calculate integrator ECC codes for the data alone.
+Note that the example assumes that data and ECC codes are in non-deterministic bit-position in the exposed SRAM interface bus. Accordingly, redundant correction coding is shown in the integrator level logic (i.e., integrator\_ecc(caliptra\_data, caliptra\_ecc)). If the Caliptra data and ECC are deterministically separable at the Caliptra interface, the integrator would have discretion to store the ECC codes directly and calculate integrator ECC codes for the data alone.
 
 *Figure 7: Example machine check reliability implementation*
 
@@ -1022,7 +1023,7 @@ Clock Domain Crossing (CDC) analysis is performed on the Caliptra core IP. The f
 In an unconstrained environment, several CDC violations are anticipated. CDC analysis requires the addition of constraints to identify valid synchronization mechanisms and/or static/pseudo-static signals.
 
 ## Analysis of missing synchronizers
-* All of the signals, whether single-bit or multi-bit, originate from the CalitpraClockDomain clock and their endpoint is the JTAG clock domain.
+* All of the signals, whether single-bit or multi-bit, originate from the CaliptraClockDomain clock and their endpoint is the JTAG clock domain.
 * The violations occur on the read path to the JTAG.
 * We only need to synchronize the controlling signal for this interface.
 * Inside the dmi\_wrapper, the dmi\_reg\_en and dmi\_reg\_rd\_en comes from dmi\_jtag\_to\_core\_sync, which is a 2FF synchronizer.
