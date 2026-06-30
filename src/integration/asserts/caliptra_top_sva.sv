@@ -299,7 +299,7 @@ module caliptra_top_sva
   endgenerate
 
   generate
-    for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin
+    for(genvar dword = 0; dword < KV_NUM_DWORDS; dword++) begin : KV_check
       if (dword < MLDSA_SEED_NUM_DWORDS) begin
       //mldsa seed read
       kv_mldsa_seed_r_flow:   assert property (
