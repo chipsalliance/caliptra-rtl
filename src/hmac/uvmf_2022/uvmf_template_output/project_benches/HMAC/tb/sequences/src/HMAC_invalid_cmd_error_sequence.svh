@@ -9,8 +9,9 @@
 //----------------------------------------------------------------------
 // Description: HMAC_invalid_cmd_error_sequence
 //   Drive the two illegal CTRL encodings (LAST alone, RESTORE alone).
-//   The DUT must reject both: STATUS.VALID stays 0 and the matching
-//   error_internal_intr field asserts.
+//   The DUT must reject both: STATUS.VALID stays 0 and error2_sts in
+//   error_internal_intr_r asserts. Both encodings are collapsed into
+//   the same `invalid_cmd_error -> error2_sts` path in the RTL.
 //----------------------------------------------------------------------
 
 class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
@@ -43,13 +44,12 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
     case (kind)
       INVALID_LAST_ALONE: begin
         reg_model.HMAC512_CTRL.LAST.set(1'b1);
-        target_err_field = reg_model.intr_block_rf.error_internal_intr_r.error2_sts;
       end
       INVALID_RESTORE_ALONE: begin
         reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
-        target_err_field = reg_model.intr_block_rf.error_internal_intr_r.error3_sts;
       end
     endcase
+    target_err_field = reg_model.intr_block_rf.error_internal_intr_r.error2_sts;
 
     `uvm_info(id, "Writing illegal CTRL command", UVM_LOW)
     reg_model.HMAC512_CTRL.update(status);
