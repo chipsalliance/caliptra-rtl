@@ -38,7 +38,9 @@ module caliptra_top_tb_axi_fifo #(
     input  logic en_recovery_emulation,
     output logic recovery_data_avail,
     input  logic dma_gen_done,
-    input  logic [99:0] [11:0] dma_gen_block_size
+    input  logic [99:0] [11:0] dma_gen_block_size,
+    input  logic inject_rd_error,
+    input  logic inject_wr_error
 );
 
     // --------------------------------------- //
@@ -113,8 +115,8 @@ module caliptra_top_tb_axi_fifo #(
     `CALIPTRA_ASSERT(AXI_FIFO_WR_FIXED_ONLY, s_axi_w_if.awvalid && s_axi_w_if.awready |-> s_axi_w_if.awburst == AXI_BURST_FIXED, clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_FIFO_RD_FIXED_ONLY, s_axi_r_if.arvalid && s_axi_r_if.arready |-> s_axi_r_if.arburst == AXI_BURST_FIXED, clk, !rst_n)
 
-    assign rd_error = 1'b0;
-    assign wr_error = 1'b0;
+    assign rd_error = inject_rd_error;
+    assign wr_error = inject_wr_error;
 
     // --------------------------------------- //
     // Data FIFO                               //
