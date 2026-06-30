@@ -41,10 +41,10 @@ void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_s
     int len = strlen(hex_str);
     int num_dwords;
     int num_chars;
-      VPRINTF(HIGH, "String length is %d.\n",len);
+      VPRINTF_HIGH("String length is %d.\n",len);
     const uint32_t index[] = {1,0,3,2,5,4,7,6};
     if (len % 2 != 0) {
-        VPRINTF(HIGH, "Error: Hex string length must be a multiple of 2.\n");
+        VPRINTF_HIGH("Error: Hex string length must be a multiple of 2.\n");
         return;
     }
     num_dwords = (len / 8);
@@ -63,7 +63,7 @@ void hex_to_uint32_array(const char *hex_str, uint32_t *array, uint32_t *array_s
             } else if (c >= 'A' && c <= 'F') {
                 digit = c - 'A' + 10;
             } else {
-                VPRINTF(HIGH, "Error: Invalid hex character: %c\n", c);
+                VPRINTF_HIGH("Error: Invalid hex character: %c\n", c);
                 return;
             }
             value |= digit << (4 * index[j]);
@@ -80,10 +80,10 @@ void hex_to_uint32_array_with_endianess(const char *hex_str, uint32_t *array, ui
     int num_dwords;
     int num_chars;
 
-    VPRINTF(LOW, "String length is %d.\n", len);
+    VPRINTF_LOW("String length is %d.\n", len);
     const uint32_t index[] = {1, 0, 3, 2, 5, 4, 7, 6};
     if (len % 2 != 0) {
-        VPRINTF(ERROR, "Error: Hex string length must be a multiple of 2.\n");
+        VPRINTF_ERROR("Error: Hex string length must be a multiple of 2.\n");
         return;
     }
     num_dwords = (len / 8);
@@ -102,7 +102,7 @@ void hex_to_uint32_array_with_endianess(const char *hex_str, uint32_t *array, ui
             } else if (c >= 'A' && c <= 'F') {
                 digit = c - 'A' + 10;
             } else {
-                VPRINTF(ERROR, "Error: Invalid hex character: %c\n", c);
+                VPRINTF_ERROR("Error: Invalid hex character: %c\n", c);
                 return;
             }
             value |= digit << (4 * index[j]);
@@ -164,11 +164,11 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   
   // Configure endianness if needed
   if (endian_mode == AES_BIG_ENDIAN) {
-      VPRINTF(LOW, "Configuring AES for big endian mode\n");
+      VPRINTF_LOW("Configuring AES for big endian mode\n");
       // Set ENDIAN_SWAP bit to convert big endian to little endian
       lsu_write_32(CLP_AES_CLP_REG_CTRL0, AES_CLP_REG_CTRL0_ENDIAN_SWAP_MASK);        
   } else {
-      VPRINTF(LOW, "Configuring AES for little endian mode\n");
+      VPRINTF_LOW("Configuring AES for little endian mode\n");
       // Clear ENDIAN_SWAP bit for native little endian
       lsu_write_32(CLP_AES_CLP_REG_CTRL0, 0);
   }
@@ -178,7 +178,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
   //Load key from keyvault if expected
   if (aes_input.key.kv_intf && !aes_input.key.kv_reuse_key) {
-      VPRINTF(LOW, "Reading AES Key from the Key Vault\n");
+      VPRINTF_LOW("Reading AES Key from the Key Vault\n");
       // Wait for KV read logic to be idle
       while((lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS) & AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_MASK) == 0);
 
@@ -195,7 +195,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
     kv_write_ctrl(CLP_AES_CLP_REG_AES_KV_WR_CTRL, 
                   aes_input.key_o.kv_id,
                   aes_input.key_o.dest_valid);
-    VPRINTF(LOW, "Set AES KV Write to slot %d\n", aes_input.key_o.kv_id);
+    VPRINTF_LOW("Set AES KV Write to slot %d\n", aes_input.key_o.kv_id);
   }
   uint32_t aes_ctrl =
     ((op << AES_REG_CTRL_SHADOWED_OPERATION_LOW) & AES_REG_CTRL_SHADOWED_OPERATION_MASK) |
@@ -204,7 +204,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
     (0x0 << AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_LOW) |
     (aes_input.key.kv_intf << AES_REG_CTRL_SHADOWED_SIDELOAD_LOW);
 
-  VPRINTF(LOW, "Write AES CTRL with value 0x%x\n", aes_ctrl);
+  VPRINTF_LOW("Write AES CTRL with value 0x%x\n", aes_ctrl);
   
   //write shadowed ctrl twice
   lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
@@ -231,7 +231,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   //Write the key
   if (!aes_input.key.kv_intf) {
       // Load key from hw_data and write to AES
-      VPRINTF(LOW, "Load Key data to AES\n");
+      VPRINTF_LOW("Load Key data to AES\n");
       for (int j = 0; j < 8; j++) {
         lsu_write_32(CLP_AES_REG_KEY_SHARE0_0 + j * 4, aes_input.key.key_share0[j]);
         lsu_write_32(CLP_AES_REG_KEY_SHARE1_0 + j * 4, aes_input.key.key_share1[j]);
@@ -241,7 +241,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   aes_wait_idle();
 
   // Write IV
-  VPRINTF(LOW, "Write AES IV\n");
+  VPRINTF_LOW("Write AES IV\n");
   for (int j = 0; j < 4; j++) {
     lsu_write_32((CLP_AES_REG_IV_0 + j * 4), aes_input.iv[j]);
   }
@@ -257,25 +257,25 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
         aes_wait_idle();
 
-        VPRINTF(LOW, "Write GCM_AAD Phase, NUM_BYTES 0x%x\n", num_bytes);
+        VPRINTF_LOW("Write GCM_AAD Phase, NUM_BYTES 0x%x\n", num_bytes);
         lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_AAD << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
                                                     (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
         lsu_write_32(CLP_AES_REG_CTRL_GCM_SHADOWED, (GCM_AAD << AES_REG_CTRL_GCM_SHADOWED_PHASE_LOW) |
                                                     (num_bytes << AES_REG_CTRL_GCM_SHADOWED_NUM_VALID_BYTES_LOW));
       }
 
-      VPRINTF(LOW, "Wait for INPUT_READY\n");
+      VPRINTF_LOW("Wait for INPUT_READY\n");
       // Wait for INPUT_READY
       while((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_INPUT_READY_MASK) == 0);
 
-      VPRINTF(LOW, "Write AES AAD Block %d\n", i);
+      VPRINTF_LOW("Write AES AAD Block %d\n", i);
       for (int j = 0; j < 4; j++) {
         if(((i*4) +j) < ((aes_input.aad_len >> 2) + partial_aad_len)) {
-            VPRINTF(MEDIUM, "Write In Data: 0x%x aad DWORD: %d\n", aes_input.aad[j+i*4], ((i*4) +j));
+            VPRINTF_MEDIUM("Write In Data: 0x%x aad DWORD: %d\n", aes_input.aad[j+i*4], ((i*4) +j));
             aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.aad[j+i*4], endian_mode);
         }
         else {
-            VPRINTF(MEDIUM, "Padding AAD with 0s AAD DWORD: %d", ((i*4) +j));
+            VPRINTF_MEDIUM("Padding AAD with 0s AAD DWORD: %d", ((i*4) +j));
             aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), 0x0, endian_mode);
         }
       }
@@ -287,14 +287,14 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   if (aes_input.text_len > 0) { 
     if (aes_input.data_src_mode == AES_DATA_DMA){
 
-        VPRINTF(LOW, "SRC: { 0x%0x_%0x } to DST: { 0x%0x_%0x }\n", 
+        VPRINTF_LOW("SRC: { 0x%0x_%0x } to DST: { 0x%0x_%0x }\n",
           (uint32_t)((aes_input.dma_transfer_data.src_addr >> 32) & 0xFFFFFFFF), 
           (uint32_t)(aes_input.dma_transfer_data.src_addr & 0xFFFFFFFF),
           (uint32_t)((aes_input.dma_transfer_data.dst_addr >> 32) & 0xFFFFFFFF),
           (uint32_t)(aes_input.dma_transfer_data.dst_addr & 0xFFFFFFFF));
         
         if(aes_input.aes_dma_err == TRUE) {
-          VPRINTF(LOW, "Injecting DMA err\n");
+          VPRINTF_LOW("Injecting DMA err\n");
           while(src_fixed == 0 && dst_fixed == 0 && block_size == 0) {
             src_fixed = xorshift32()%2;
             dst_fixed = xorshift32()%2;
@@ -304,7 +304,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         }
 
         if(aes_input.aes_collision_err == TRUE) {
-          VPRINTF(LOW, "Injecting AES collision err\n");
+          VPRINTF_LOW("Injecting AES collision err\n");
           soc_ifc_axi_dma_send_axi_to_axi_no_wait(aes_input.dma_transfer_data.src_addr, src_fixed, aes_input.dma_transfer_data.dst_addr, dst_fixed,  aes_input.text_len, block_size, 1, gcm_mode);
           for (size_t i = 0; i < 100; i++)
           {
@@ -314,7 +314,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
             lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
             lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
           }
-          VPRINTF(FATAL, "AES collision error must result in NMI, and firmware reset\n");
+          VPRINTF_FATAL("AES collision error must result in NMI, and firmware reset\n");
           SEND_STDOUT_CTRL(fail_cmd);
           while(1);
         } else {
@@ -332,19 +332,19 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           if (op == AES_ENC) {
             if ((read_payload[j] & mask) != (aes_input.ciphertext[j] & mask)) {
               if(aes_input.aes_expect_err == FALSE){
-                VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-                VPRINTF(FATAL, "Actual   data: 0x%x\n", read_payload[j] & mask);
-                VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j] & mask);
-                VPRINTF(FATAL,"%c", fail_cmd);
+                VPRINTF_FATAL("At offset [%d], output data mismatch!\n", j);
+                VPRINTF_FATAL("Actual   data: 0x%x\n", read_payload[j] & mask);
+                VPRINTF_FATAL("Expected data: 0x%x\n", aes_input.ciphertext[j] & mask);
+                VPRINTF_FATAL("%c", fail_cmd);
                 while(1);
               }
             }
           } else if (op == AES_DEC) {
             if ((read_payload[j] & mask) != (aes_input.plaintext[j] & mask)) {
               if(aes_input.aes_expect_err == FALSE){
-              VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-              VPRINTF(FATAL, "Actual   data: 0x%x\n", read_payload[j] & mask);
-              VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j] & mask);
+              VPRINTF_FATAL("At offset [%d], output data mismatch!\n", j);
+              VPRINTF_FATAL("Actual   data: 0x%x\n", read_payload[j] & mask);
+              VPRINTF_FATAL("Expected data: 0x%x\n", aes_input.plaintext[j] & mask);
               SEND_STDOUT_CTRL(fail_cmd);
               while(1);
               }
@@ -382,13 +382,13 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
 
         // Write Input Data Block.
-        VPRINTF(LOW, "Write AES Input Data Block %d\n", i);
+        VPRINTF_LOW("Write AES Input Data Block %d\n", i);
         for (int j = 0; j < 4; j++) {
           if (op == AES_ENC) {
-            VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.plaintext[j+i*4]);
+            VPRINTF_HIGH("Write In Data: 0x%x\n", aes_input.plaintext[j+i*4]);
             aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.plaintext[j+i*4], endian_mode);
           } else if (op == AES_DEC) {
-            VPRINTF(HIGH, "Write In Data: 0x%x\n", aes_input.ciphertext[j+i*4]);
+            VPRINTF_HIGH("Write In Data: 0x%x\n", aes_input.ciphertext[j+i*4]);
             aes_lsu_write_32((CLP_AES_REG_DATA_IN_0 + j * 4), aes_input.ciphertext[j+i*4], endian_mode);
           }
         }                      
@@ -396,7 +396,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         if (aes_input.aes_err_inj.sideload_corrupt) {
           lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
           lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
-          VPRINTF(LOW, "ATTEMPT TO FLIP SIDELOAD BIT\n")
+          VPRINTF_LOW("ATTEMPT TO FLIP SIDELOAD BIT\n")
         }
 
         if( !aes_input.key_o.kv_intf ) {
@@ -415,16 +415,16 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
             if(ocp_lock_block_output) {
               if((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK) == 0) {
                 if(aes_input.aes_expect_err == FALSE){
-                  VPRINTF(FATAL, "EXPECTED OUTPUT_LOST to be non-zero since OCP LOCK protections are blocking the output to FW\n");
-                  VPRINTF(FATAL,"%c", fail_cmd);
+                  VPRINTF_FATAL("EXPECTED OUTPUT_LOST to be non-zero since OCP LOCK protections are blocking the output to FW\n");
+                  VPRINTF_FATAL("%c", fail_cmd);
                   while(1);
                 }
               }
             
             } else if((lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK) != 0) {
                 if(aes_input.aes_expect_err == FALSE){
-                  VPRINTF(FATAL, "EXPECTED OUTPUT_LOST to be 0x0 - Actual: 0x%x", (lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK));
-                  VPRINTF(FATAL,"%c", fail_cmd);
+                  VPRINTF_FATAL("EXPECTED OUTPUT_LOST to be 0x0 - Actual: 0x%x", (lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_LOST_MASK));
+                  VPRINTF_FATAL("%c", fail_cmd);
                   while(1);
                 }
             }
@@ -432,7 +432,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
             // Read Output Data Block I
             for (int j = 0; j < 4; j++) {
               ciphertext[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
-              VPRINTF(MEDIUM, "CIPHERTEXT: 0x%x\n", ciphertext[j]);
+              VPRINTF_MEDIUM("CIPHERTEXT: 0x%x\n", ciphertext[j]);
 
               //byte mask
               uint32_t mask = (masked == 0) ? 0xffffffff : 0x00000000;
@@ -445,9 +445,9 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
               if(ocp_lock_block_output) {
                 if(aes_input.aes_expect_err == FALSE){
                 if ((ciphertext[j] & mask) != 0) {
-                  VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-                  VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
-                  VPRINTF(FATAL, "Expected data: 0x0\n");
+                  VPRINTF_FATAL("At offset [%d], output data mismatch!\n", j);
+                  VPRINTF_FATAL("Actual   data: 0x%x\n", ciphertext[j] & mask);
+                  VPRINTF_FATAL("Expected data: 0x0\n");
                   SEND_STDOUT_CTRL(fail_cmd);
                   while(1);
                   }
@@ -456,9 +456,9 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
               else if (op == AES_ENC) {
                 if(aes_input.aes_expect_err == FALSE){
                 if ((ciphertext[j] & mask) != (aes_input.ciphertext[j+i*4] & mask)) {
-                  VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-                  VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
-                  VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
+                  VPRINTF_FATAL("At offset [%d], output data mismatch!\n", j);
+                  VPRINTF_FATAL("Actual   data: 0x%x\n", ciphertext[j] & mask);
+                  VPRINTF_FATAL("Expected data: 0x%x\n", aes_input.ciphertext[j+i*4] & mask);
                   SEND_STDOUT_CTRL(fail_cmd);
                   while(1);
                 }
@@ -466,9 +466,9 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
               } else if (op == AES_DEC) {
                 if(aes_input.aes_expect_err == FALSE){
                 if ((ciphertext[j] & mask) != (aes_input.plaintext[j+i*4] & mask)) {
-                  VPRINTF(FATAL, "At offset [%d], output data mismatch!\n", j);
-                  VPRINTF(FATAL, "Actual   data: 0x%x\n", ciphertext[j] & mask);
-                  VPRINTF(FATAL, "Expected data: 0x%x\n", aes_input.plaintext[j+i*4] & mask);
+                  VPRINTF_FATAL("At offset [%d], output data mismatch!\n", j);
+                  VPRINTF_FATAL("Actual   data: 0x%x\n", ciphertext[j] & mask);
+                  VPRINTF_FATAL("Expected data: 0x%x\n", aes_input.plaintext[j+i*4] & mask);
                   SEND_STDOUT_CTRL(fail_cmd);
                   while(1);
                 }
@@ -476,29 +476,29 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
               }
             }
         } else if(i == 0 && aes_input.key.kv_intf) {
-          VPRINTF(LOW, "WAITING FOR KV READ TO FINISH\n");
+          VPRINTF_LOW("WAITING FOR KV READ TO FINISH\n");
           kv_poll_valid(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
           if(aes_input.key.kv_expect_err == TRUE) {
-              VPRINTF(LOW, "EXPECTING KV RD ERR\n");
+              VPRINTF_LOW("EXPECTING KV RD ERR\n");
               kv_expect_error_check(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
               break; // If we expect an error, we break out of the loop
           }
           else {
-              VPRINTF(LOW, "EXPECTING NO KV RD ERR\n");
+              VPRINTF_LOW("EXPECTING NO KV RD ERR\n");
               kv_error_check(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
           }
         }
       }
       if (aes_input.key_o.kv_intf && aes_input.key.kv_expect_err == FALSE) {
-        VPRINTF(LOW, "WAITING FOR KV WRITE TO FINISH\n");
+        VPRINTF_LOW("WAITING FOR KV WRITE TO FINISH\n");
         kv_poll_valid(CLP_AES_CLP_REG_AES_KV_WR_STATUS);
-        VPRINTF(LOW, "CHECKING FOR KV WRITE ERR\n");
+        VPRINTF_LOW("CHECKING FOR KV WRITE ERR\n");
         if(aes_input.key_o.kv_expect_err == TRUE) {
-            VPRINTF(LOW, "EXPECTING KV ERR\n");
+            VPRINTF_LOW("EXPECTING KV ERR\n");
             kv_expect_error_check(CLP_AES_CLP_REG_AES_KV_WR_STATUS);
         }
         else {
-            VPRINTF(LOW, "EXPECTING NO KV ERR\n");
+            VPRINTF_LOW("EXPECTING NO KV ERR\n");
             kv_error_check(CLP_AES_CLP_REG_AES_KV_WR_STATUS);
         }
       }
@@ -523,7 +523,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
              ((length>> 8) & 0x0000ff00) |
              ((length>>24) & 0x000000ff);
 
-    VPRINTF(HIGH, "Write AAD Length: 0x%x\n", length);
+    VPRINTF_HIGH("Write AAD Length: 0x%x\n", length);
     aes_lsu_write_32(CLP_AES_REG_DATA_IN_0, 0, endian_mode);
     aes_lsu_write_32(CLP_AES_REG_DATA_IN_1, length, endian_mode);
 
@@ -534,7 +534,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
              ((length>> 8) & 0x0000ff00) |
              ((length>>24) & 0x000000ff);
 
-    VPRINTF(HIGH, "Write Text Length: 0x%x\n", length);
+    VPRINTF_HIGH("Write Text Length: 0x%x\n", length);
     aes_lsu_write_32(CLP_AES_REG_DATA_IN_2, 0, endian_mode);
     aes_lsu_write_32(CLP_AES_REG_DATA_IN_3, length, endian_mode);
 
@@ -555,24 +555,24 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         }
     }
 
-    VPRINTF(LOW, "Read and Compare GCM TAG\n");
+    VPRINTF_LOW("Read and Compare GCM TAG\n");
     //compare output data to expected tag
     // Read Output Data Block I
     for (int j = 0; j < 4; j++) {
       tag[j] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + j * 4);
-      VPRINTF(MEDIUM, "TAG: 0x%x\n", tag[j]);
+      VPRINTF_MEDIUM("TAG: 0x%x\n", tag[j]);
       if(aes_input.aes_expect_err == FALSE){
         if (tag[j] != expected_tag[j]) {
-          VPRINTF(FATAL,"At offset [%d], tag data mismatch!\n", j);
-          VPRINTF(FATAL,"Actual   data: 0x%x\n", tag[j]);
-          VPRINTF(FATAL,"Expected data: 0x%x\n", aes_input.tag[j]);
+          VPRINTF_FATAL("At offset [%d], tag data mismatch!\n", j);
+          VPRINTF_FATAL("Actual   data: 0x%x\n", tag[j]);
+          VPRINTF_FATAL("Expected data: 0x%x\n", aes_input.tag[j]);
           SEND_STDOUT_CTRL(fail_cmd);
           while(1);
         }
       }
     }
   }
-  VPRINTF(LOW, "AES Operation Complete\n");
+  VPRINTF_LOW("AES Operation Complete\n");
 
   // Disable autostart. Note the control register is shadowed and thus needs to be written twice.
   aes_ctrl = 0x1 << AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_LOW;
@@ -587,11 +587,11 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
 
 void populate_kv_slot_aes(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t override_text_length, uint32_t expected_key[16], uint8_t encrypt, aes_mode_e mode) {
     //CASE1
-    VPRINTF(LOW, "Loading KV via AES\n");
+    VPRINTF_LOW("Loading KV via AES\n");
 
     // Check that override_text_length is not larger than 512 bits (16 dwords)
     if (override_text_length > 16) {
-        VPRINTF(ERROR, "ERROR: override_text_length (%d) exceeds maximum allowed size of 16 dwords (512 bits)\n", override_text_length);
+        VPRINTF_ERROR("ERROR: override_text_length (%d) exceeds maximum allowed size of 16 dwords (512 bits)\n", override_text_length);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }   
@@ -683,7 +683,7 @@ void populate_kv_slot_aes(aes_key_o_t aes_key_o, aes_key_t aes_key, uint32_t ove
         plaintext_length = override_text_length;
         ciphertext_length = override_text_length;
     }   
-    VPRINTF(LOW, "Populate KV with key length: %d\n", ciphertext_length);
+    VPRINTF_LOW("Populate KV with key length: %d\n", ciphertext_length);
        
     if (encrypt) {
       for (int i = 0; i < ciphertext_length; i++) {

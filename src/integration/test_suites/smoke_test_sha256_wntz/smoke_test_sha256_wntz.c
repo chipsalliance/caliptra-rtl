@@ -156,9 +156,9 @@ void main() {
 
 
     // Entry message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " SHA256 smoke test !!\n"             );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" SHA256 smoke test !!\n"             );
+    VPRINTF_LOW("----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();
@@ -264,7 +264,7 @@ void main() {
     sha256_zeroize();
 
     // Invalid SHA256 commands
-    VPRINTF(LOW, "Enable SHA256\n");
+    VPRINTF_LOW("Enable SHA256\n");
     lsu_write_32(CLP_SHA256_REG_SHA256_CTRL,(((0 << SHA256_REG_SHA256_CTRL_INIT_LOW) & SHA256_REG_SHA256_CTRL_INIT_MASK) |
                                              ((1 << SHA256_REG_SHA256_CTRL_NEXT_LOW) & SHA256_REG_SHA256_CTRL_NEXT_MASK) |
                                              ((SHA256_MODE_SHA_224 << SHA256_REG_SHA256_CTRL_MODE_LOW) & SHA256_REG_SHA256_CTRL_MODE_MASK) |
@@ -274,7 +274,7 @@ void main() {
                                              ((1 << SHA256_REG_SHA256_CTRL_ZEROIZE_LOW) & SHA256_REG_SHA256_CTRL_ZEROIZE_MASK)));
     
     if ((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0){
-        VPRINTF(LOW, "Wrong command is not detected\n");
+        VPRINTF_LOW("Wrong command is not detected\n");
         SEND_STDOUT_CTRL(0x1);
     }
 
@@ -288,7 +288,7 @@ void main() {
                                              ((1 << SHA256_REG_SHA256_CTRL_ZEROIZE_LOW) & SHA256_REG_SHA256_CTRL_ZEROIZE_MASK)));
     
     if ((lsu_read_32(CLP_SHA256_REG_SHA256_STATUS) & SHA256_REG_SHA256_STATUS_READY_MASK) == 0){
-        VPRINTF(LOW, "Wrong command is not detected\n");
+        VPRINTF_LOW("Wrong command is not detected\n");
         SEND_STDOUT_CTRL(0x1);
     }
 

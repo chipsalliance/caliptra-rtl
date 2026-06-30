@@ -47,7 +47,7 @@ volatile uint32_t  fail      __attribute__((section(".dccm.persistent"))) = 0;
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void nmi_handler() {
-    VPRINTF(FATAL, "NMI");
+    VPRINTF_FATAL("NMI");
 }
 
 void main(void) {
@@ -62,7 +62,7 @@ void main(void) {
     aes_mode_e rand_aes_mode;
 
 
-    VPRINTF(LOW, "----------------------------------\nSmoke Test AES KV RAND  !!\n----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\nSmoke Test AES KV RAND  !!\n----------------------------------\n");
     rst_count++;
 
     //set NMI vector
@@ -78,20 +78,20 @@ void main(void) {
 
 
     if (xorshift32() % 2) {
-        VPRINTF(LOW, "Writing OCP lock control register\n");
+        VPRINTF_LOW("Writing OCP lock control register\n");
         lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK);
     } else {
-        VPRINTF(LOW, "Skipping OCP lock control register write\n");
+        VPRINTF_LOW("Skipping OCP lock control register write\n");
     }
     
     uint32_t lock_status = lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL);
     uint32_t lock_in_progress = (lock_status & SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK) != 0;
 
-    VPRINTF(LOW, "OCP Lock Status: 0x%x, Lock In Progress: %d\n", lock_status, lock_in_progress);
+    VPRINTF_LOW("OCP Lock Status: 0x%x, Lock In Progress: %d\n", lock_status, lock_in_progress);
             
 
     for(int i = 0; i < 50; i++) {
-        VPRINTF(LOW, "START TEST %d\n", i);
+        VPRINTF_LOW("START TEST %d\n", i);
         aes_key_o = (aes_key_o_t){0};
         aes_key = (aes_key_t){0};
 
@@ -157,9 +157,9 @@ void main(void) {
 
 
 
-        VPRINTF(LOW, "KV ID: %d, KV Intf: %d, KV Expect Err: %d\n", aes_key.kv_id, aes_key.kv_intf, aes_key.kv_expect_err);
-        VPRINTF(LOW, "KV_O ID: %d, KV_O Intf: %d, Expect_O Err: %d\n", aes_key_o.kv_id, aes_key_o.kv_intf, aes_key_o.kv_expect_err);
-        VPRINTF(LOW, "AES MODE: %s AES ENCRYPT: %d\n", 
+        VPRINTF_LOW("KV ID: %d, KV Intf: %d, KV Expect Err: %d\n", aes_key.kv_id, aes_key.kv_intf, aes_key.kv_expect_err);
+        VPRINTF_LOW("KV_O ID: %d, KV_O Intf: %d, Expect_O Err: %d\n", aes_key_o.kv_id, aes_key_o.kv_intf, aes_key_o.kv_expect_err);
+        VPRINTF_LOW("AES MODE: %s AES ENCRYPT: %d\n",
                 (rand_aes_mode == AES_ECB) ? "AES_ECB" :
                 (rand_aes_mode == AES_CBC) ? "AES_CBC" :
                 (rand_aes_mode == AES_CFB) ? "AES_CFB" :
@@ -179,7 +179,7 @@ void main(void) {
     // Ending Status
     // ===========================================================================
     if (fail) {
-        VPRINTF(FATAL, "smoke_test_dma_aes_kv failed!\n");
+        VPRINTF_FATAL("smoke_test_dma_aes_kv failed!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }

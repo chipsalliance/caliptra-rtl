@@ -814,9 +814,9 @@ void main() {
     uint32_t msg[MLDSA87_MSG_SIZE];
     uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE];
 
-    VPRINTF(LOW, "----------------------------------------------\n");
-    VPRINTF(LOW, " MLDSA KeyGen + Signing — all-zero inputs\n");
-    VPRINTF(LOW, "----------------------------------------------\n");
+    VPRINTF_LOW("----------------------------------------------\n");
+    VPRINTF_LOW(" MLDSA KeyGen + Signing — all-zero inputs\n");
+    VPRINTF_LOW("----------------------------------------------\n");
 
     init_interrupts();
 

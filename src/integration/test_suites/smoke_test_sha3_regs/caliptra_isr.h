@@ -168,7 +168,7 @@ inline void service_sha3_error_intr() {
         if (sha3_sts & SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_SHA3_ERROR_EN_MASK) {
             *sha3_reg = SHA3_INTR_BLOCK_RF_ERROR_INTR_EN_R_SHA3_ERROR_EN_MASK;
         } else {
-            VPRINTF(ERROR, "SHA3 and KMAC interrupts out of sync for SHA3_ERROR.\n");
+            VPRINTF_ERROR("SHA3 and KMAC interrupts out of sync for SHA3_ERROR.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -177,7 +177,7 @@ inline void service_sha3_error_intr() {
     } else if (kmac_sts & KMAC_INTR_STATE_FIFO_EMPTY_MASK) {
         // This will be handled by a notification interrupt.
     } else {
-        VPRINTF(ERROR, "bad sha3_error_intr sts:%x\n", kmac_sts);
+        VPRINTF_ERROR("bad sha3_error_intr sts:%x\n", kmac_sts);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -195,7 +195,7 @@ inline void service_sha3_notif_intr() {
         if (sha3_sts & SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK) {
             *sha3_reg = SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
         } else {
-            VPRINTF(ERROR, "SHA3 and KMAC interrupts out of sync for CMD_DONE.\n");
+            VPRINTF_ERROR("SHA3 and KMAC interrupts out of sync for CMD_DONE.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -205,7 +205,7 @@ inline void service_sha3_notif_intr() {
         if (sha3_sts & SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MSG_FIFO_EMPTY_EN_MASK) {
             *sha3_reg = SHA3_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_MSG_FIFO_EMPTY_EN_MASK;
         } else {
-            VPRINTF(ERROR, "SHA3 and KMAC interrupts out of sync for MSG_FIFO_EMPTY.\n");
+            VPRINTF_ERROR("SHA3 and KMAC interrupts out of sync for MSG_FIFO_EMPTY.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }

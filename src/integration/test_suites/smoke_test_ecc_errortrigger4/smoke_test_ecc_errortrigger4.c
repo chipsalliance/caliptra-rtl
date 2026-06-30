@@ -44,9 +44,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 */
 
 void main() {
-    VPRINTF(LOW, "-----------------------------------------\n");
-    VPRINTF(LOW, " Running ECDH Smoke Test error_trigger !!\n");
-    VPRINTF(LOW, "-----------------------------------------\n");
+    VPRINTF_LOW("-----------------------------------------\n");
+    VPRINTF_LOW(" Running ECDH Smoke Test error_trigger !!\n");
+    VPRINTF_LOW("-----------------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -202,7 +202,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n ECDH WITH OUT OF RANGE PUBKEY\n");
+        VPRINTF_LOW("\n ECDH WITH OUT OF RANGE PUBKEY\n");
         // Program ECC PUBKEY_X
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
         offset = 0;
@@ -218,13 +218,13 @@ void main() {
         }
 
         // Enable ECDH core
-        VPRINTF(LOW, "\nECDH\n");
+        VPRINTF_LOW("\nECDH\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECDH pubkey_input_outofrange error is not detected.\n");
+            VPRINTF_ERROR("\nECDH pubkey_input_outofrange error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -238,7 +238,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n ECDH TEST INVALID PUBKEY\n");
+        VPRINTF_LOW("\n ECDH TEST INVALID PUBKEY\n");
         // Program ECC PUBKEY_X
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
         offset = 0;
@@ -254,13 +254,13 @@ void main() {
         }
 
         // Enable ECDH core
-        VPRINTF(LOW, "\nECDH\n");
+        VPRINTF_LOW("\nECDH\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECDH pubkey_input_invalid error is not detected.\n");
+            VPRINTF_ERROR("\nECDH pubkey_input_invalid error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -274,7 +274,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n ECDH TEST INVALID SHARED_KEY\n");
+        VPRINTF_LOW("\n ECDH TEST INVALID SHARED_KEY\n");
         // Program ECC PUBKEY_X
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
         offset = 0;
@@ -289,17 +289,17 @@ void main() {
             *reg_ptr++ = ecc_pubkey_y[offset++];
         }
 
-        VPRINTF(LOW, "Inject invalid shared_key\n");
+        VPRINTF_LOW("Inject invalid shared_key\n");
         SEND_STDOUT_CTRL(0x97);
 
         // Enable ECDH core
-        VPRINTF(LOW, "\nECDH\n");
+        VPRINTF_LOW("\nECDH\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SHAREDKEY);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECDH sharedkey_outofrange error is not detected.\n");
+            VPRINTF_ERROR("\nECDH sharedkey_outofrange error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }

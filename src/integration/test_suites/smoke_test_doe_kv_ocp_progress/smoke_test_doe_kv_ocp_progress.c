@@ -70,26 +70,26 @@ void doe_flow(const enum doe_cmd_e cmd, uint8_t doe_dest_id) {
     }
 
     //start DOE and store in KV
-    VPRINTF(LOW, "DOE: Starting flow with cmd = %d, dest id = %d\n", cmd, doe_dest_id);
+    VPRINTF_LOW("DOE: Starting flow with cmd = %d, dest id = %d\n", cmd, doe_dest_id);
     doe_set_ctrl(cmd, doe_dest_id);
 
     // Check that DOE flow is done
     if (doe_dest_id != 23) {
         while((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_VALID_MASK) == 0);
-        VPRINTF(LOW, "DOE completed successfully\n");
+        VPRINTF_LOW("DOE completed successfully\n");
     }
     else {
         while ((lsu_read_32(CLP_DOE_REG_DOE_STATUS) & DOE_REG_DOE_STATUS_ERROR_MASK) == 0);
-        VPRINTF(LOW, "Received expected err from DOE flow\n");
+        VPRINTF_LOW("Received expected err from DOE flow\n");
         error_flag = 1;
     }
 }
 
 void main(){
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With DOE flow    !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With DOE flow    !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     volatile uint8_t doe_dest_id;
     volatile uint8_t ocp_progress_bit;
@@ -101,7 +101,7 @@ void main(){
     error_flag = 0;
 
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
-    VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
+    VPRINTF_LOW("OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
     
     if(ocp_lock_mode) {
@@ -114,11 +114,11 @@ void main(){
             VPRINTF(LOW,"OCP lock not in progress\n");
         }
 
-        VPRINTF(LOW, "rst count = %d\n", rst_count);
+        VPRINTF_LOW("rst count = %d\n", rst_count);
 
         if (rst_count == 1) {
             //-------------------------------------------------------
-            VPRINTF(LOW, "DOE: Init\n");
+            VPRINTF_LOW("DOE: Init\n");
             doe_dest_id = rand() % 2 + 22;
 
             doe_flow(DOE_UDS, doe_dest_id);
@@ -173,7 +173,7 @@ void main(){
 
     }
     else {
-        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
+        VPRINTF_ERROR("This test is supported only in SS_MODE\n");
     }
 
     SEND_STDOUT_CTRL(0xff); //End the test

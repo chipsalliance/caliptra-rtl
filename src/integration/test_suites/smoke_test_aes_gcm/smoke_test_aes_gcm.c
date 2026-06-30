@@ -119,9 +119,9 @@ void main() {
     aes_key_t aes_key = {0};
 
     // Entry message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " AES-GCM smoke test !!\n"            );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" AES-GCM smoke test !!\n"            );
+    VPRINTF_LOW("----------------------------------\n");
 
     //Seed the entropy once
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_0, 0x30000567);
@@ -135,7 +135,7 @@ void main() {
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0x30000567);
 
     //CASE1
-    VPRINTF(LOW, "Test Case 1\n");
+    VPRINTF_LOW("Test Case 1\n");
     hex_to_uint32_array(key_str1, key, &key_size);
     key_len = key_size == 32 ? AES_256 :
               key_size == 16 ? AES_128 : AES_192;
@@ -174,7 +174,7 @@ void main() {
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0x30FF0432);
 
     //CASE2
-    VPRINTF(LOW, "Test Case 2\n");
+    VPRINTF_LOW("Test Case 2\n");
     hex_to_uint32_array(key_str2, key, &key_size);
     key_len = key_size == 32 ? AES_256 :
               key_size == 16 ? AES_128 : AES_192;
@@ -202,7 +202,7 @@ void main() {
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE3
-    VPRINTF(LOW, "Test Case 3\n");
+    VPRINTF_LOW("Test Case 3\n");
     hex_to_uint32_array(key_str3, key, &key_size);
     key_len = key_size == 32 ? AES_256 :
               key_size == 16 ? AES_128 : AES_192;
@@ -230,7 +230,7 @@ void main() {
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE4
-    VPRINTF(LOW, "Test Case 4\n");
+    VPRINTF_LOW("Test Case 4\n");
     hex_to_uint32_array(key_str4, key, &key_size);
     key_len = key_size == 32 ? AES_256 :
               key_size == 16 ? AES_128 : AES_192;

@@ -427,7 +427,7 @@ void std_rv_mtvec_mti(void) {
     *mtimecmp_l = 0xFFFFFFFF;
     *mtimecmp_h = 0xFFFFFFFF;
 
-    VPRINTF(MEDIUM, "Done handling machine-mode TIMER interrupt\n");
+    VPRINTF_MEDIUM("Done handling machine-mode TIMER interrupt\n");
 }
 
 void nonstd_veer_mtvec_miti0(void) {
@@ -461,7 +461,7 @@ static void std_rv_isr(void) {
     void (* isr) (void); // Function pointer to source-specific ISR
     SEND_STDOUT_CTRL(0xfb); //FIXME
     uint_xlen_t this_cause = csr_read_mcause();
-    VPRINTF(LOW,"In:Std ISR\nmcause:%x\n", this_cause);
+    VPRINTF_LOW("In:Std ISR\nmcause:%x\n", this_cause);
     if (this_cause &  MCAUSE_INTERRUPT_BIT_MASK) {
         this_cause &= 0xFF;
         // Known exceptions
@@ -514,13 +514,13 @@ static void std_rv_isr(void) {
                               : "=r" (this_cause)  /* output : register */
                               : "i" (VEER_CSR_MSCAUSE) /* input : immediate */
                               : /* clobbers: none */);
-            VPRINTF(LOW,"mscause:%x\n",this_cause);
+            VPRINTF_LOW("mscause:%x\n",this_cause);
             // mepc
             this_cause = csr_read_mepc();
-            VPRINTF(LOW,"mepc:%x\n",this_cause);
+            VPRINTF_LOW("mepc:%x\n",this_cause);
             // mtval
             this_cause = csr_read_mtval();
-            VPRINTF(LOW,"mtval:%x\n",this_cause);
+            VPRINTF_LOW("mtval:%x\n",this_cause);
             break;
         }
     }
@@ -582,7 +582,7 @@ static void std_rv_isr_vector_table(void) {
 void std_rv_mtvec_exception(void) {
     SEND_STDOUT_CTRL( 0xfb); //FIXME
     uint_xlen_t this_cause = csr_read_mcause();
-    VPRINTF(WARNING,"In:Std Excptn\nmcause:%x\n", this_cause);
+    VPRINTF_WARNING("In:Std Excptn\nmcause:%x\n", this_cause);
     if (this_cause &  MCAUSE_INTERRUPT_BIT_MASK) {
         VPRINTF(ERROR,"Unexpected Intr bit:%x\n", 0xFFFFFFFF);
         SEND_STDOUT_CTRL(0x1); // KILL THE SIMULATION with "ERROR"
@@ -594,7 +594,7 @@ void std_rv_mtvec_exception(void) {
                           : "=r" (tmp_reg)  /* output : register */
                           : "i" (VEER_CSR_MSCAUSE) /* input : immediate */
                           : /* clobbers: none */);
-        VPRINTF(LOW,"mscause:%x\n",tmp_reg);
+        VPRINTF_LOW("mscause:%x\n",tmp_reg);
         #ifdef RV_EXCEPTION_STRUCT
         SEND_STDOUT_CTRL(0xe4); // Disable ECC Error injection, if enabled, to allow exc_flag writes (which may be in DCCM) without corruption
         __asm__ volatile ("fence.i");
@@ -604,10 +604,10 @@ void std_rv_mtvec_exception(void) {
         #endif
         // mepc
         tmp_reg = csr_read_mepc();
-        VPRINTF(LOW,"mepc:%x\n",tmp_reg);
+        VPRINTF_LOW("mepc:%x\n",tmp_reg);
         // mtval
         tmp_reg = csr_read_mtval();
-        VPRINTF(LOW,"mtval:%x\n",tmp_reg);
+        VPRINTF_LOW("mtval:%x\n",tmp_reg);
 
         switch (this_cause) {
         case RISCV_EXCP_LOAD_ACCESS_FAULT :
@@ -649,11 +649,11 @@ void std_rv_mtvec_exception(void) {
 
                 // If the FATAL Error bit for ICCM ECC Error is masked, manually trigger firmware reset
                 if (lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK) & SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_ICCM_ECC_UNC_MASK) {
-                    VPRINTF(LOW, "ICCM ECC FATAL_ERROR bit is masked, no reset expected from TB: resetting the core manually!\n");
+                    VPRINTF_LOW("ICCM ECC FATAL_ERROR bit is masked, no reset expected from TB: resetting the core manually!\n");
                     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
                 // Otherwise, wait for core reset
                 } else {
-                    VPRINTF(LOW, "ICCM ECC FATAL_ERROR bit is not masked, waiting for reset from TB!\n");
+                    VPRINTF_LOW("ICCM ECC FATAL_ERROR bit is not masked, waiting for reset from TB!\n");
                     while(1);
                 }
 
@@ -675,7 +675,7 @@ void std_rv_mtvec_exception(void) {
 // ISR 0 is, by definition, not implemented and simply returns
 static void nonstd_veer_isr_0 (void) {
     SEND_STDOUT_CTRL(0xfb); //FIXME
-    VPRINTF(MEDIUM, "In:0\n");
+    VPRINTF_MEDIUM("In:0\n");
     SEND_STDOUT_CTRL(0xfc); //FIXME
     return;
 }
@@ -694,7 +694,7 @@ static void nonstd_veer_isr_0 (void) {
     /* Print msg before enabling nested interrupts so it                                              \
      * completes printing and is legible                                                              \
      */                                                                                               \
-    VPRINTF(MEDIUM, "In:"stringify(name)"\n");                                                        \
+    VPRINTF_MEDIUM("In:"stringify(name)"\n");                                                        \
                                                                                                       \
     /* Save Context to Stack */                                                                       \
     uint32_t meicidpl;                                                                                \

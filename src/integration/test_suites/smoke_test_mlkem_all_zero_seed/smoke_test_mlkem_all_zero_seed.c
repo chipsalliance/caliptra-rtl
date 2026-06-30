@@ -456,9 +456,9 @@ void main() {
     mlkem_shared_key shared_key;
     uint32_t abr_entropy[ABR_ENTROPY_SIZE];
 
-    VPRINTF(LOW, "----------------------------\n");
-    VPRINTF(LOW, " Running MLKEM Smoke Test !!\n");
-    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF_LOW("----------------------------\n");
+    VPRINTF_LOW(" Running MLKEM Smoke Test !!\n");
+    VPRINTF_LOW("----------------------------\n");
 
     //Call interrupt init
     init_interrupts();

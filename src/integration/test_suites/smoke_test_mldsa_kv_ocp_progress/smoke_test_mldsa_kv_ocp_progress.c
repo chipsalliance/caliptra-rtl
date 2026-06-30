@@ -499,9 +499,9 @@ const uint32_t mldsa_verify_res [] = {
 };
 
 void main() {
-    VPRINTF(LOW, "---------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With MLDSA flow !!\n");
-    VPRINTF(LOW, "---------------------------------\n");
+    VPRINTF_LOW("---------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With MLDSA flow !!\n");
+    VPRINTF_LOW("---------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -532,7 +532,7 @@ void main() {
 
 
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
-    VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
+    VPRINTF_LOW("OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
     if (ocp_lock_mode) {
         //Choose a slot type to read from
@@ -550,7 +550,7 @@ void main() {
                 seed.kv_id = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
                 break;
         }
-        VPRINTF(LOW, "Running mldsa with seed kv_id = 0x%x\n", seed.kv_id);
+        VPRINTF_LOW("Running mldsa with seed kv_id = 0x%x\n", seed.kv_id);
 
         //Inject MLDSA SEED vectors into KV
         lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xc0);
@@ -574,7 +574,7 @@ void main() {
         cptra_intr_rcv.abr_notif = 0;
     }
     else {
-        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
+        VPRINTF_ERROR("This test is supported only in SS_MODE\n");
     }
 
     SEND_STDOUT_CTRL(0xff); //End the test

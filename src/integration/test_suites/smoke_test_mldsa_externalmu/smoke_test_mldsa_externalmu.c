@@ -499,9 +499,9 @@ void check_external_mu(uintptr_t kmac, const uint32_t *message, const size_t mes
 }
 
 void main() {
-    VPRINTF(LOW, "-----------------------------------------------\n");
-    VPRINTF(LOW, " Running MLDSA Smoke Test in ExternalMu mode !!\n");
-    VPRINTF(LOW, "-----------------------------------------------\n");
+    VPRINTF_LOW("-----------------------------------------------\n");
+    VPRINTF_LOW(" Running MLDSA Smoke Test in ExternalMu mode !!\n");
+    VPRINTF_LOW("-----------------------------------------------\n");
 
     //Call interrupt init
     init_interrupts();

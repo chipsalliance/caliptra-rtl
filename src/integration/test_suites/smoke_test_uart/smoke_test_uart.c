@@ -37,9 +37,9 @@ void end_sim_if_uart_disabled() {
   uint32_t hw_cfg;
   hw_cfg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
   if (hw_cfg & SOC_IFC_REG_CPTRA_HW_CONFIG_UART_EN_MASK) {
-    VPRINTF(LOW, "Internal UART is enabled, running UART smoke test\n");
+    VPRINTF_LOW("Internal UART is enabled, running UART smoke test\n");
   } else {
-    VPRINTF(FATAL, "Internal UART is not enabled, skipping UART smoke test\n");
+    VPRINTF_FATAL("Internal UART is not enabled, skipping UART smoke test\n");
     SEND_STDOUT_CTRL(0xFF);
     while (1)
       ;
@@ -48,7 +48,7 @@ void end_sim_if_uart_disabled() {
 
 void uart_tx(uint8_t data) {
   uint32_t status, tx_full, wdata;
-  VPRINTF(LOW, "uart_tx >> Sending 0x%x\n", data);
+  VPRINTF_LOW("uart_tx >> Sending 0x%x\n", data);
   // Check the TX fifo is not full
   do {
     status = lsu_read_32(CLP_UART_STATUS);
@@ -71,7 +71,7 @@ uint8_t uart_rx() {
 
   // read the data
   data = lsu_read_32(CLP_UART_RDATA);
-  VPRINTF(LOW, "uart_rx << Receiving 0x%x\n", data);
+  VPRINTF_LOW("uart_rx << Receiving 0x%x\n", data);
   rdata = data & 0xff;
   return rdata;
 }
@@ -100,7 +100,7 @@ void enable_uart() {
   // Fclk  = fixed frequency of the IP
   nco = baud_rate << 20;
   nco = nco / ip_frequency;
-  VPRINTF(LOW, "nco = %d\n", nco);
+  VPRINTF_LOW("nco = %d\n", nco);
 
   ctrl = ((nco & 0xffff) << UART_CTRL_NCO_LOW) | UART_CTRL_TX_MASK |
          UART_CTRL_RX_MASK;
@@ -125,7 +125,7 @@ int run_loopback_test() {
     rxdata = uart_rx();
 
     if (rxdata != txdata) {
-      VPRINTF(LOW, "run_loopback_test: Got: 0x%x Want: 0x%x\n", rxdata, txdata);
+      VPRINTF_LOW("run_loopback_test: Got: 0x%x Want: 0x%x\n", rxdata, txdata);
       error += 1;
     }
   }
@@ -136,15 +136,15 @@ int run_loopback_test() {
 void main() {
   int error;
 
-  VPRINTF(LOW, "---------------------------\n");
-  VPRINTF(LOW, " UART Smoke Test \n");
-  VPRINTF(LOW, "---------------------------\n");
+  VPRINTF_LOW("---------------------------\n");
+  VPRINTF_LOW(" UART Smoke Test \n");
+  VPRINTF_LOW("---------------------------\n");
 
   end_sim_if_uart_disabled();
   enable_uart();
 
   error += run_loopback_test();
-  if (error > 0) VPRINTF(ERROR, "Error: %d\n", error);
+  if (error > 0) VPRINTF_ERROR("Error: %d\n", error);
 
   // End the sim in failure
   if (error > 0) SEND_STDOUT_CTRL(0x1);

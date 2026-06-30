@@ -72,7 +72,7 @@ void hmac_write_kv_slot(uint8_t slot, uint32_t dest_valid_mask) {
     while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) &
             HMAC_REG_HMAC512_STATUS_VALID_MASK) == 0);
 
-    VPRINTF(LOW, "  KV slot %d populated (dest_valid_mask=0x%x)\n",
+    VPRINTF_LOW("  KV slot %d populated (dest_valid_mask=0x%x)\n",
             slot, dest_valid_mask);
 }
 
@@ -144,12 +144,12 @@ void program_iccm_regions(void) {
 void check_reg(const char *name, uint32_t addr, uint32_t expected) {
     uint32_t val = lsu_read_32(addr);
     if (val != expected) {
-        VPRINTF(ERROR, "[FAIL] %s: got=0x%08x expected=0x%08x\n",
+        VPRINTF_ERROR("[FAIL] %s: got=0x%08x expected=0x%08x\n",
                 name, val, expected);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  CHECK OK: %s = 0x%08x\n", name, val);
+    VPRINTF_LOW("  CHECK OK: %s = 0x%08x\n", name, val);
 }
 
 //
@@ -184,12 +184,12 @@ void verify_regs_programmed(void) {
 void check_no_kv_error(const char *phase) {
     uint32_t hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
     if (hw_err & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK) {
-        VPRINTF(ERROR, "[FAIL] %s: CPTRA_HW_ERROR_FATAL.kv_error=1 "
+        VPRINTF_ERROR("[FAIL] %s: CPTRA_HW_ERROR_FATAL.kv_error=1 "
                 "(reg=0x%08x)\n", phase, hw_err);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  %s: kv_err=0 -- OK (reg=0x%08x)\n", phase, hw_err);
+    VPRINTF_LOW("  %s: kv_err=0 -- OK (reg=0x%08x)\n", phase, hw_err);
 }
 
 //
@@ -198,12 +198,12 @@ void check_no_kv_error(const char *phase) {
 void check_and_clear_kv_error(const char *phase) {
     uint32_t hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
     if (!(hw_err & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK)) {
-        VPRINTF(ERROR, "[FAIL] %s: expected kv_error but got 0x%08x\n",
+        VPRINTF_ERROR("[FAIL] %s: expected kv_error but got 0x%08x\n",
                 phase, hw_err);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  %s: kv fault confirmed (0x%08x) -- W1C clearing\n",
+    VPRINTF_LOW("  %s: kv fault confirmed (0x%08x) -- W1C clearing\n",
             phase, hw_err);
     lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,
                  SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK);
@@ -215,12 +215,12 @@ void check_and_clear_kv_error(const char *phase) {
 void check_lock_wr(uint8_t slot, const char *phase) {
     uint32_t ctrl = lsu_read_32(KV_KEY_CTRL(slot));
     if (!(ctrl & KV_LOCK_WR_MASK)) {
-        VPRINTF(ERROR, "[FAIL] %s: slot %d lock_wr not set (ctrl=0x%08x)\n",
+        VPRINTF_ERROR("[FAIL] %s: slot %d lock_wr not set (ctrl=0x%08x)\n",
                 phase, slot, ctrl);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  %s: slot %d lock_wr=1 -- OK\n", phase, slot);
+    VPRINTF_LOW("  %s: slot %d lock_wr=1 -- OK\n", phase, slot);
 }
 
 //
@@ -229,12 +229,12 @@ void check_lock_wr(uint8_t slot, const char *phase) {
 void check_lock_use(uint8_t slot, const char *phase) {
     uint32_t ctrl = lsu_read_32(KV_KEY_CTRL(slot));
     if (!(ctrl & KV_LOCK_USE_MASK)) {
-        VPRINTF(ERROR, "[FAIL] %s: slot %d lock_use not set (ctrl=0x%08x)\n",
+        VPRINTF_ERROR("[FAIL] %s: slot %d lock_use not set (ctrl=0x%08x)\n",
                 phase, slot, ctrl);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  %s: slot %d lock_use=1 -- OK\n", phase, slot);
+    VPRINTF_LOW("  %s: slot %d lock_use=1 -- OK\n", phase, slot);
 }
 
 //
@@ -244,12 +244,12 @@ void check_slot_cleared(uint8_t slot, const char *phase) {
     uint32_t ctrl = lsu_read_32(KV_KEY_CTRL(slot));
     uint32_t dv = (ctrl & KV_DEST_VALID_MASK) >> KV_DEST_VALID_LOW;
     if (dv != 0) {
-        VPRINTF(ERROR, "[FAIL] %s: slot %d not cleared "
+        VPRINTF_ERROR("[FAIL] %s: slot %d not cleared "
                 "(dest_valid=0x%03x, ctrl=0x%08x)\n", phase, slot, dv, ctrl);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  %s: slot %d cleared -- OK\n", phase, slot);
+    VPRINTF_LOW("  %s: slot %d cleared -- OK\n", phase, slot);
 }
 
 //
@@ -266,7 +266,7 @@ void check_doe_locked(const char *phase) {
     // Engine should remain idle: ready=1 (swwel blocked the write)
     uint32_t status = lsu_read_32(CLP_DOE_REG_DOE_STATUS);
     if (!(status & DOE_REG_DOE_STATUS_READY_MASK)) {
-        VPRINTF(ERROR, "[FAIL] %s: DOE went busy after locked cmd write "
+        VPRINTF_ERROR("[FAIL] %s: DOE went busy after locked cmd write "
                 "(status=0x%08x)\n", phase, status);
         SEND_STDOUT_CTRL(0x01);
         while(1);
@@ -275,12 +275,12 @@ void check_doe_locked(const char *phase) {
     // Confirm the cmd register itself was cleared by hwclr
     uint32_t ctrl = lsu_read_32(CLP_DOE_REG_DOE_CTRL);
     if (ctrl & DOE_REG_DOE_CTRL_CMD_MASK) {
-        VPRINTF(ERROR, "[FAIL] %s: DOE cmd not cleared by hwclr "
+        VPRINTF_ERROR("[FAIL] %s: DOE cmd not cleared by hwclr "
                 "(ctrl=0x%08x)\n", phase, ctrl);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  %s: DOE cmd rejected (ready=1 cmd=0) -- OK\n", phase);
+    VPRINTF_LOW("  %s: DOE cmd rejected (ready=1 cmd=0) -- OK\n", phase);
 }
 
 //
@@ -310,7 +310,7 @@ void compute_conditional_enables(uint32_t *stable_owner_key_en, uint32_t *ocp_lo
     *ocp_lock_mode_en = ocp_lock;
     *stable_owner_key_en = ss_mode && !ocp_lock && strap3_bit0;
 
-    VPRINTF(LOW, "  Conditional enables: ss_mode=%d ocp_lock=%d strap3[0]=%d "
+    VPRINTF_LOW("  Conditional enables: ss_mode=%d ocp_lock=%d strap3[0]=%d "
             "=> stable_owner_key_en=%d ocp_lock_mode_en=%d\n",
             ss_mode, ocp_lock, strap3_bit0, *stable_owner_key_en, *ocp_lock_mode_en);
 }
@@ -321,7 +321,7 @@ void compute_conditional_enables(uint32_t *stable_owner_key_en, uint32_t *ocp_lo
 // and canary slots 10 (standard) and 17 (OCP range).
 //
 void populate_conditional_slots(void) {
-    VPRINTF(LOW, "  Populating conditional + canary slots...\n");
+    VPRINTF_LOW("  Populating conditional + canary slots...\n");
     hmac_write_kv_slot(KV_SLOT_CANARY_STD,   DV_AES_KEY);
     hmac_write_kv_slot(KV_SLOT_STABLE_OWNER, DV_AES_KEY);
     hmac_write_kv_slot(KV_SLOT_MDK,          DV_AES_KEY);
@@ -337,12 +337,12 @@ void check_slot_preserved(uint8_t slot, const char *phase) {
     uint32_t ctrl = lsu_read_32(KV_KEY_CTRL(slot));
     uint32_t dv = (ctrl & KV_DEST_VALID_MASK) >> KV_DEST_VALID_LOW;
     if (dv == 0) {
-        VPRINTF(FATAL, "[FAIL] %s: slot %d was cleared but should be preserved "
+        VPRINTF_FATAL("[FAIL] %s: slot %d was cleared but should be preserved "
                 "(ctrl=0x%08x)\n", phase, slot, ctrl);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "  %s: slot %d preserved (dest_valid=0x%03x) -- OK\n", phase, slot, dv);
+    VPRINTF_LOW("  %s: slot %d preserved (dest_valid=0x%03x) -- OK\n", phase, slot, dv);
 }
 
 //
@@ -350,7 +350,7 @@ void check_slot_preserved(uint8_t slot, const char *phase) {
 //
 void check_conditional_slots(uint32_t stable_owner_key_en, uint32_t ocp_lock_mode_en,
                              const char *phase) {
-    VPRINTF(LOW, "%s: Checking conditional slots (stable_owner=%d, ocp_lock=%d)\n",
+    VPRINTF_LOW("%s: Checking conditional slots (stable_owner=%d, ocp_lock=%d)\n",
             phase, stable_owner_key_en, ocp_lock_mode_en);
 
     // Slot 15 (Stable Owner Key)
@@ -376,5 +376,5 @@ void check_conditional_slots(uint32_t stable_owner_key_en, uint32_t ocp_lock_mod
     check_slot_cleared(KV_SLOT_CANARY_STD, phase);
     check_slot_cleared(KV_SLOT_CANARY_OCP, phase);
 
-    VPRINTF(LOW, "%s: Conditional slot checks passed\n", phase);
+    VPRINTF_LOW("%s: Conditional slot checks passed\n", phase);
 }

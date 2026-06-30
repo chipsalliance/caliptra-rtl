@@ -60,9 +60,9 @@ void main() {
     BOOL read_from_kv;
     uint8_t kv_slot_type;
 
-    VPRINTF(LOW, "----------------------------\n");
-    VPRINTF(LOW, " Running MLKEM Smoke Test !!\n");
-    VPRINTF(LOW, "----------------------------\n");
+    VPRINTF_LOW("----------------------------\n");
+    VPRINTF_LOW(" Running MLKEM Smoke Test !!\n");
+    VPRINTF_LOW("----------------------------\n");
 
     srand(time);
 
@@ -70,7 +70,7 @@ void main() {
     init_interrupts();
 
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
-    VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
+    VPRINTF_LOW("OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
     //3 in 4 tests will get data from KV
     read_from_kv = ((xorshift32() % 4) == 0) ? FALSE : TRUE;
@@ -112,7 +112,7 @@ void main() {
                 seed.kv_id = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
                 break;
         }
-        VPRINTF(LOW, "Running mlkem with seed kv_id = 0x%x\n", seed.kv_id);
+        VPRINTF_LOW("Running mlkem with seed kv_id = 0x%x\n", seed.kv_id);
 
         //pick a kv read slot for msg
         kv_slot_type = (xorshift32() % 3);
@@ -132,7 +132,7 @@ void main() {
                 msg.kv_id = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
                 break;
         }
-        VPRINTF(LOW, "Running mlkem with msg kv_id = 0x%x\n", msg.kv_id);
+        VPRINTF_LOW("Running mlkem with msg kv_id = 0x%x\n", msg.kv_id);
 
         //Choose any kv write slot
         kv_slot_type = (xorshift32() % 4);
@@ -155,7 +155,7 @@ void main() {
                 shared_key.kv_id = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
                 break;
         }
-        VPRINTF(LOW, "Running mlkem with shared_key kv_id = 0x%x\n", shared_key.kv_id);
+        VPRINTF_LOW("Running mlkem with shared_key kv_id = 0x%x\n", shared_key.kv_id);
 
         //determine if kv access should fail
         if (ocp_progress_bit) {
@@ -217,7 +217,7 @@ void main() {
         cptra_intr_rcv.abr_notif = 0;
     }
     else {
-        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
+        VPRINTF_ERROR("This test is supported only in SS_MODE\n");
     }
 
     SEND_STDOUT_CTRL(0xff); //End the test

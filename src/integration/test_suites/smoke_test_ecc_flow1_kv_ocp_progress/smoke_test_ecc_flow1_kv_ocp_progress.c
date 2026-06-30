@@ -51,9 +51,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(){
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With ECC flow !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With ECC flow !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     srand(time);
     uint8_t ocp_progress_bit;
@@ -191,11 +191,11 @@ void main(){
     ecc_io sharedkey_dh;
 
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
-    VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
+    VPRINTF_LOW("OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
     if (ocp_lock_mode) {
 
-        VPRINTF(LOW, "Running ecc with seed kv_id = 0x%x\n", seed_kv_id);
+        VPRINTF_LOW("Running ecc with seed kv_id = 0x%x\n", seed_kv_id);
         pubkey_x_dh.kv_intf = FALSE;
         for (int i = 0; i < 12; i++)
             pubkey_x_dh.data[i] = ecc_pubkey_x_dh[i];  
@@ -245,7 +245,7 @@ void main(){
             sign_s.data[i] = expected_sign_s[i];
 
         //inject seed to kv key reg (in RTL)
-        VPRINTF(LOW, "Inject SEED into KV\n");
+        VPRINTF_LOW("Inject SEED into KV\n");
         uint8_t seed_inject_cmd = 0xac; //0x80 + (seed_kv_id & 0x7); //TODO: change
         SEND_STDOUT_CTRL(seed_inject_cmd);
 
@@ -267,7 +267,7 @@ void main(){
         kv_status_success = ((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_STATUS) & ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_MASK) >> ECC_REG_ECC_KV_RD_SEED_STATUS_ERROR_LOW) == 0;
 
         if(expect_kv_status_success != kv_status_success) {
-            VPRINTF(FATAL, "ERROR: Unexpected KV read status!\n");
+            VPRINTF_FATAL("ERROR: Unexpected KV read status!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -289,7 +289,7 @@ void main(){
         kv_status_success = ((lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_STATUS) & ECC_REG_ECC_KV_WR_PKEY_STATUS_ERROR_MASK) >> ECC_REG_ECC_KV_WR_PKEY_STATUS_ERROR_LOW) == 0;
 
         if(expect_kv_status_success != kv_status_success) {
-            VPRINTF(FATAL, "ERROR: Unexpected KV write status!\n");
+            VPRINTF_FATAL("ERROR: Unexpected KV write status!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -304,7 +304,7 @@ void main(){
         kv_status_success = ((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_MASK) >> ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_LOW) == 0;
 
         if(expect_kv_status_success != kv_status_success) {
-            VPRINTF(FATAL, "ERROR: Unexpected KV read status!\n");
+            VPRINTF_FATAL("ERROR: Unexpected KV read status!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -312,7 +312,7 @@ void main(){
         ecc_zeroize();
 
     } else {
-        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
+        VPRINTF_ERROR("This test is supported only in SS_MODE\n");
     }
 
     SEND_STDOUT_CTRL(0xff); //End the test

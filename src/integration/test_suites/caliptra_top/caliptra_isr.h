@@ -70,7 +70,7 @@ inline void service_doe_error_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.doe_error = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -81,7 +81,7 @@ inline void service_doe_notif_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.doe_notif = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -92,7 +92,7 @@ inline void service_ecc_error_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.ecc_error = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -103,7 +103,7 @@ inline void service_ecc_notif_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.ecc_notif = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -114,7 +114,7 @@ inline void service_hmac_error_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.hmac_error = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -125,7 +125,7 @@ inline void service_hmac_notif_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.hmac_notif = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -138,7 +138,7 @@ inline void service_sha512_error_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.sha512_error = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -149,7 +149,7 @@ inline void service_sha512_notif_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.sha512_notif = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -160,7 +160,7 @@ inline void service_sha256_error_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.sha256_error = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -171,7 +171,7 @@ inline void service_sha256_notif_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.sha256_notif = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -185,7 +185,7 @@ inline void service_soc_ifc_error_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.soc_ifc_error = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -196,7 +196,7 @@ inline void service_soc_ifc_notif_intr () {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.soc_ifc_notif = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -207,7 +207,7 @@ inline void service_sha512_acc_error_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.sha512_acc_error = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -218,7 +218,7 @@ inline void service_sha512_acc_notif_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.sha512_acc_notif = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -229,7 +229,7 @@ inline void service_abr_error_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.abr_error = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -240,7 +240,7 @@ inline void service_abr_notif_intr() {
     uint32_t sts = *reg;
     if (sts != 0) {
         cptra_intr_rcv.abr_notif = 0xFFFFFFFF;
-        VPRINTF(FATAL,"caliptra_top (ROM) val image does not support interrupts!\n");
+        VPRINTF_FATAL("caliptra_top (ROM) val image does not support interrupts!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }

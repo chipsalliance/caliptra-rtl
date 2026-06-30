@@ -73,7 +73,7 @@ void main(void) {
 
     endian_mode = AES_LITTLE_ENDIAN;
 
-    VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\nSmoke Test AXI DMA AES  !!\n----------------------------------\n");
 
     hex_to_uint32_array(key_str3, key, &key_size);
     key_len = key_size == 32 ? AES_256 :
@@ -110,17 +110,17 @@ void main(void) {
     SEND_STDOUT_CTRL( 0xb6); // assertoff
     
     SEND_STDOUT_CTRL( 0xb8); //  AXI Error Injection Disabled
-    VPRINTF(LOW, "Sending image payload via AHB i/f to AXI SRAM\n");
+    VPRINTF_LOW("Sending image payload via AHB i/f to AXI SRAM\n");
     soc_ifc_axi_dma_send_ahb_payload(aes_input.dma_transfer_data.src_addr, 0, aes_input.plaintext, aes_input.text_len, 0);
 
     SEND_STDOUT_CTRL( 0xb7); // AXI Error Injection Enabled
-    VPRINTF(LOW, "Trying the AES GCM Operation.. Err Inj ON\n");
+    VPRINTF_LOW("Trying the AES GCM Operation.. Err Inj ON\n");
     aes_input.aes_expect_err = TRUE;
     aes_flow(op, mode, key_len, aes_input, endian_mode);
     SEND_STDOUT_CTRL( 0xb8); //  AXI Error Injection Disabled   
     SEND_STDOUT_CTRL( 0xb5); // asserton
 
-    VPRINTF(LOW, "Trying Again the AES GCM Operation.. Err Inj OFF\n");
+    VPRINTF_LOW("Trying Again the AES GCM Operation.. Err Inj OFF\n");
     aes_input.aes_expect_err = FALSE;
     aes_flow(op, mode, key_len, aes_input, endian_mode);
 

@@ -51,9 +51,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(){
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With ECC flow !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With ECC flow !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     uint32_t ecc_seed[] =          {0x8FA8541C,
                                     0x82A392CA,
@@ -265,7 +265,7 @@ void main(){
         sign_s.data[i] = expected_sign_s[i];
 
     //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW, "Inject SEED into KV\n");
+    VPRINTF_LOW("Inject SEED into KV\n");
     lsu_write_32(STDOUT, (seed.kv_id << 8) | 0x80);
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);

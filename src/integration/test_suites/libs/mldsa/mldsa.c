@@ -24,7 +24,7 @@
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 void wait_for_mldsa_intr(){
-    VPRINTF(LOW, "MLDSA flow in progress...\n");
+    VPRINTF_LOW("MLDSA flow in progress...\n");
     while((cptra_intr_rcv.abr_error == 0) & (cptra_intr_rcv.abr_notif == 0)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during MLDSA operation to allow ISR to execute and show idle time in sims
@@ -32,16 +32,16 @@ void wait_for_mldsa_intr(){
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    //VPRINTF(LOW, "Received MLDSA error intr with status = %d\n", cptra_intr_rcv.abr_error);
-    VPRINTF(LOW, "Received MLDSA notif/ err intr with status = %d/ %d\n", cptra_intr_rcv.abr_notif, cptra_intr_rcv.abr_error);
+    //VPRINTF_LOW("Received MLDSA error intr with status = %d\n", cptra_intr_rcv.abr_error);
+    VPRINTF_LOW("Received MLDSA notif/ err intr with status = %d/ %d\n", cptra_intr_rcv.abr_notif, cptra_intr_rcv.abr_error);
 }
 
 void mldsa_zeroize(){
-    VPRINTF(LOW, "MLDSA zeroize flow.\n");
+    VPRINTF_LOW("MLDSA zeroize flow.\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, (1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
 
     // wait for MLDSA to be ready
-    VPRINTF(LOW, "Waiting for mldsa status ready\n");
+    VPRINTF_LOW("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
 }
@@ -61,7 +61,7 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     uint32_t actual_data;
     
     // wait for MLDSA to be ready
-    VPRINTF(LOW, "Waiting for mldsa status ready in keygen\n");
+    VPRINTF_LOW("Waiting for mldsa status ready in keygen\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     //Program MLDSA seed
@@ -70,7 +70,7 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
         lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
-        VPRINTF(LOW, "Try to Overwrite seed data in MLDSA\n");
+        VPRINTF_LOW("Try to Overwrite seed data in MLDSA\n");
         reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SEED_0;
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_SEED_7) {
              *reg_ptr++ = 0;
@@ -81,17 +81,17 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
 
         if ((lsu_read_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS) & ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_MASK) != 0) {
             if (seed.exp_kv_err == TRUE) {
-                VPRINTF(LOW, "[MLDSA KeyGen] Received expected err for MLDSA seed read from KV\n");
+                VPRINTF_LOW("[MLDSA KeyGen] Received expected err for MLDSA seed read from KV\n");
             }
             else {
-                VPRINTF(ERROR, "[MLDSA KeyGen] Received unexpected err for MLDSA seed read from KV\n");
+                VPRINTF_ERROR("[MLDSA KeyGen] Received unexpected err for MLDSA seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
         }
         else {
             if (seed.exp_kv_err == TRUE) {
-                VPRINTF(ERROR, "[MLDSA KeyGen] Expected err but received success for MLDSA seed read from KV\n");
+                VPRINTF_ERROR("[MLDSA KeyGen] Expected err but received success for MLDSA seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -102,20 +102,20 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     }
 
     // Write MLDSA ENTROPY
-    VPRINTF(LOW, "Writing entropy\n");
+    VPRINTF_LOW("Writing entropy\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     // Verify engine is not ready if kv read error was expected
     if (seed.exp_kv_err == TRUE) {
         if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) != 0) {
-            VPRINTF(ERROR, "MLDSA engine is ready after KV read error\n");
+            VPRINTF_ERROR("MLDSA engine is ready after KV read error\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         return;
     }
 
-    VPRINTF(LOW, "\nMLDSA KEYGEN\n");
+    VPRINTF_LOW("\nMLDSA KEYGEN\n");
     // Enable MLDSA KEYGEN core
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN);
 
@@ -129,15 +129,15 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     //Only check the PRIVKEY result if the seed was not read from KV
     if (seed.kv_intf == FALSE) {
         // Read the data back from MLDSA register
-        VPRINTF(LOW, "Load PRIVKEY data from MLDSA\n");
+        VPRINTF_LOW("Load PRIVKEY data from MLDSA\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_PRIVKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != privkey[offset]) {
-                VPRINTF(ERROR, "At offset [%d], mldsa_privkey data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", privkey[offset]);
+                VPRINTF_ERROR("At offset [%d], mldsa_privkey data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", actual_data);
+                VPRINTF_ERROR("Expected data: 0x%x\n", privkey[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -149,15 +149,15 @@ void mldsa_keygen_flow(mldsa_io seed, uint32_t entropy[MLDSA87_ENTROPY_SIZE], ui
     // Read the data back from MLDSA register
     //Only check the PUBKEY result if the seed was not read from KV or no error was expected
     if (seed.kv_intf == FALSE || seed.exp_kv_err == FALSE) {
-        VPRINTF(LOW, "Load PUBKEY data from MLDSA\n");
+        VPRINTF_LOW("Load PUBKEY data from MLDSA\n");
         reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_PUBKEY_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_PUBKEY_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != pubkey[offset]) {
-                VPRINTF(ERROR, "At offset [%d], mldsa_pubkey data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", pubkey[offset]);
+                VPRINTF_ERROR("At offset [%d], mldsa_pubkey data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", actual_data);
+                VPRINTF_ERROR("Expected data: 0x%x\n", pubkey[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             } 
@@ -176,7 +176,7 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     uint32_t actual_data;
     
     // wait for MLDSA to be ready
-    VPRINTF(LOW, "Waiting for mldsa status ready in keygen\n");
+    VPRINTF_LOW("Waiting for mldsa status ready in keygen\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     //Program MLDSA seed
@@ -185,7 +185,7 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
         lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
-        VPRINTF(LOW, "Try to Overwrite seed data in MLDSA\n");
+        VPRINTF_LOW("Try to Overwrite seed data in MLDSA\n");
         reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SEED_0;
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_SEED_7) {
              *reg_ptr++ = 0;
@@ -196,17 +196,17 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
 
         if ((lsu_read_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS) & ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_MASK) != 0) {
             if (seed.exp_kv_err == TRUE) {
-                VPRINTF(LOW, "[MLDSA KeyGen Signing] Received expected err for MLDSA seed read from KV\n");
+                VPRINTF_LOW("[MLDSA KeyGen Signing] Received expected err for MLDSA seed read from KV\n");
             }
             else {
-                VPRINTF(ERROR, "[MLDSA KeyGen Signing] Received unexpected err for MLDSA seed read from KV\n");
+                VPRINTF_ERROR("[MLDSA KeyGen Signing] Received unexpected err for MLDSA seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
         }
         else {
             if (seed.exp_kv_err == TRUE) {
-                VPRINTF(ERROR, "[MLDSA KeyGen Signing] Expected err but received success for MLDSA seed read from KV\n");
+                VPRINTF_ERROR("[MLDSA KeyGen Signing] Expected err but received success for MLDSA seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -228,7 +228,7 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     // Verify engine is not ready if kv read error was expected
     if (seed.exp_kv_err == TRUE) {
         if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) != 0) {
-            VPRINTF(ERROR, "MLDSA engine is ready after KV read error\n");
+            VPRINTF_ERROR("MLDSA engine is ready after KV read error\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -236,7 +236,7 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     }
 
     // Enable MLDSA KEYGEN + SIGNING core
-    VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
+    VPRINTF_LOW("\nMLDSA KEYGEN + SIGNING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
     // Try to program MLDSA_SEED
@@ -249,15 +249,15 @@ void mldsa_keygen_signing_flow(mldsa_io seed, uint32_t msg[MLDSA87_MSG_SIZE], ui
     // Read the data back from MLDSA register
     //Only check the result if the seed was not read from KV or no error was expected
     if (seed.kv_intf == FALSE || seed.exp_kv_err == FALSE) {
-        VPRINTF(LOW, "Load SIGN data from MLDSA\n");
+        VPRINTF_LOW("Load SIGN data from MLDSA\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_SIGN_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != sign[offset]) {
-                VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
+                VPRINTF_ERROR("At offset [%d], mldsa_sign data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", actual_data);
+                VPRINTF_ERROR("Expected data: 0x%x\n", sign[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -277,15 +277,15 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
 
     uint32_t actual_data;
 
-    VPRINTF(LOW, "Waiting for mldsa status ready\n");
+    VPRINTF_LOW("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Program MLDSA PRIVKEY
-    VPRINTF(LOW, "Writing privkey\n");
+    VPRINTF_LOW("Writing privkey\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR, privkey, MLDSA87_PRIVKEY_SIZE);
     
     // Program MLDSA MSG
-    VPRINTF(LOW, "Writing msg\n");
+    VPRINTF_LOW("Writing msg\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
 
     // Program MLDSA Sign Rnd
@@ -295,22 +295,22 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     // Enable MLDSA SIGNING core
-    VPRINTF(LOW, "\nMLDSA SIGNING\n");
+    VPRINTF_LOW("\nMLDSA SIGNING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_SIGNING);
     
     // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
         
     // // Read the data back from MLDSA register
-    VPRINTF(LOW, "Load SIGN data from MLDSA\n");
+    VPRINTF_LOW("Load SIGN data from MLDSA\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != sign[offset]) {
-            VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
+            VPRINTF_ERROR("At offset [%d], mldsa_sign data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", actual_data);
+            VPRINTF_ERROR("Expected data: 0x%x\n", sign[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -341,7 +341,7 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR, sign, MLDSA87_SIGN_SIZE);
 
     // Enable MLDSA VERIFYING core
-    VPRINTF(LOW, "\nMLDSA VERIFYING\n");
+    VPRINTF_LOW("\nMLDSA VERIFYING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING);
     
     // wait for MLDSA VERIFYING process to be done
@@ -349,14 +349,14 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
     
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_VERIFY_RES_0;
     // Read the data back from MLDSA register
-    VPRINTF(LOW, "Load VERIFY_RES data from MLDSA\n");
+    VPRINTF_LOW("Load VERIFY_RES data from MLDSA\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
         actual_data = *reg_ptr;
         if (actual_data != verify_res[offset]) {
-            VPRINTF(ERROR, "At offset [%d], mldsa_verify_res data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", verify_res[offset]);
+            VPRINTF_ERROR("At offset [%d], mldsa_verify_res data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", actual_data);
+            VPRINTF_ERROR("Expected data: 0x%x\n", verify_res[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -375,7 +375,7 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
     uint32_t actual_data;
     
     // wait for MLDSA to be ready
-    VPRINTF(LOW, "Waiting for mldsa status ready in keygen\n");
+    VPRINTF_LOW("Waiting for mldsa status ready in keygen\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     //Program MLDSA seed
@@ -384,7 +384,7 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
         lsu_write_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_CTRL, (ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_EN_MASK |
                                                           ((seed.kv_id << ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLDSA_SEED_RD_CTRL_READ_ENTRY_MASK)));
 
-        VPRINTF(LOW, "Try to Overwrite seed data in MLDSA\n");
+        VPRINTF_LOW("Try to Overwrite seed data in MLDSA\n");
         reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_SEED_0;
         while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_SEED_7) {
              *reg_ptr++ = 0;
@@ -395,17 +395,17 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
 
         if ((lsu_read_32(CLP_ABR_REG_KV_MLDSA_SEED_RD_STATUS) & ABR_REG_KV_MLDSA_SEED_RD_STATUS_ERROR_MASK) != 0) {
             if (seed.exp_kv_err == TRUE) {
-                VPRINTF(LOW, "[MLDSA KeyGen Signing] Received expected err for MLDSA seed read from KV\n");
+                VPRINTF_LOW("[MLDSA KeyGen Signing] Received expected err for MLDSA seed read from KV\n");
             }
             else {
-                VPRINTF(ERROR, "[MLDSA KeyGen Signing] Received unexpected err for MLDSA seed read from KV\n");
+                VPRINTF_ERROR("[MLDSA KeyGen Signing] Received unexpected err for MLDSA seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
         }
         else {
             if (seed.exp_kv_err == TRUE) {
-                VPRINTF(ERROR, "[MLDSA KeyGen Signing] Expected err but received success for MLDSA seed read from KV\n");
+                VPRINTF_ERROR("[MLDSA KeyGen Signing] Expected err but received success for MLDSA seed read from KV\n");
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -422,20 +422,20 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_SIGN_RND_0, sign_rnd, MLDSA87_SIGN_RND_SIZE);
 
     // Write MLDSA ENTROPY
-    VPRINTF(LOW, "Writing entropy\n");
+    VPRINTF_LOW("Writing entropy\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     // Verify engine is not ready after KV read error
     if (seed.exp_kv_err == TRUE) {
         if ((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) != 0) {
-            VPRINTF(ERROR, "MLDSA engine is ready after KV read error\n");
+            VPRINTF_ERROR("MLDSA engine is ready after KV read error\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
         return;
     }
     // Enable MLDSA KEYGEN + SIGNING core
-    VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING in ExternalMu mode\n");
+    VPRINTF_LOW("\nMLDSA KEYGEN + SIGNING in ExternalMu mode\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN | 
                                            ABR_REG_MLDSA_CTRL_EXTERNAL_MU_MASK);
 
@@ -449,15 +449,15 @@ void mldsa_keygen_signing_external_mu_flow(mldsa_io seed, uint32_t external_mu[M
     //Only check the result if the seed was not read from KV or no error was expected
     if (seed.kv_intf == FALSE || seed.exp_kv_err == FALSE) {
         // Read the data back from MLDSA register
-        VPRINTF(LOW, "Load SIGN data from MLDSA\n");
+        VPRINTF_LOW("Load SIGN data from MLDSA\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_SIGN_SIZE) {
             actual_data = *reg_ptr;
             if (actual_data != sign[offset]) {
-                VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
+                VPRINTF_ERROR("At offset [%d], mldsa_sign data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", actual_data);
+                VPRINTF_ERROR("Expected data: 0x%x\n", sign[offset]);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -476,14 +476,14 @@ void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint
     uint32_t actual_data;
 
     //  wait for MLDSA to be ready
-    VPRINTF(LOW, "Waiting for mldsa status ready\n");
+    VPRINTF_LOW("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Program MLDSA PRIVKEY
-    VPRINTF(LOW, "Writing privkey\n");
+    VPRINTF_LOW("Writing privkey\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR, privkey, MLDSA87_PRIVKEY_SIZE);
     
-    VPRINTF(LOW, "Writing ExternalMu\n");
+    VPRINTF_LOW("Writing ExternalMu\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_EXTERNAL_MU_0, external_mu, MLDSA87_EXTERNAL_MU_SIZE);
 
     // Program MLDSA Sign Rnd
@@ -493,7 +493,7 @@ void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
 
     // Enable MLDSA SIGNING core
-    VPRINTF(LOW, "\nMLDSA SIGNING in ExternalMu mode\n");
+    VPRINTF_LOW("\nMLDSA SIGNING in ExternalMu mode\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_SIGNING | 
                                            ABR_REG_MLDSA_CTRL_EXTERNAL_MU_MASK);
     
@@ -501,15 +501,15 @@ void mldsa_signing_external_mu_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint
     wait_for_mldsa_intr();
         
     // // Read the data back from MLDSA register
-    VPRINTF(LOW, "Load SIGN data from MLDSA\n");
+    VPRINTF_LOW("Load SIGN data from MLDSA\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_SIGN_SIZE) {
         actual_data = *reg_ptr;
         if (actual_data != sign[offset]) {
-            VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
+            VPRINTF_ERROR("At offset [%d], mldsa_sign data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", actual_data);
+            VPRINTF_ERROR("Expected data: 0x%x\n", sign[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -530,7 +530,7 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
     // wait for MLDSA to be ready
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
     
-    VPRINTF(LOW, "Writing ExternalMu\n");
+    VPRINTF_LOW("Writing ExternalMu\n");
     // Program MLDSA EXTERNAL_MU
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_EXTERNAL_MU_0, external_mu, MLDSA87_EXTERNAL_MU_SIZE);
 
@@ -541,7 +541,7 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR, sign, MLDSA87_SIGN_SIZE);
 
     // Enable MLDSA VERIFYING core
-    VPRINTF(LOW, "\nMLDSA VERIFYING in ExternalMu mode\n");
+    VPRINTF_LOW("\nMLDSA VERIFYING in ExternalMu mode\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_VERIFYING | 
                                            ABR_REG_MLDSA_CTRL_EXTERNAL_MU_MASK);
     
@@ -550,14 +550,14 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
     
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_VERIFY_RES_0;
     // Read the data back from MLDSA register
-    VPRINTF(LOW, "Load VERIFY_RES data from MLDSA\n");
+    VPRINTF_LOW("Load VERIFY_RES data from MLDSA\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLDSA_VERIFY_RES_15) {
         actual_data = *reg_ptr;
         if (actual_data != verify_res[offset]) {
-            VPRINTF(ERROR, "At offset [%d], actual_data data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", verify_res[offset]);
+            VPRINTF_ERROR("At offset [%d], actual_data data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", actual_data);
+            VPRINTF_ERROR("Expected data: 0x%x\n", verify_res[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -569,7 +569,7 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
 void mldsa_keyload_error_flow(mldsa_io seed)
 {
     // wait for MLDSA to be ready
-    VPRINTF(LOW, "Waiting for mldsa status ready\n");
+    VPRINTF_LOW("Waiting for mldsa status ready\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     //Enable force of zeroize during keyvault read

@@ -46,6 +46,20 @@ int printf(const char* format, ...);
         printf(fmt, ##__VA_ARGS__); \
     }
 
+#define VPRINTF_FATAL(format, ...) VPRINTF(FATAL, format, ##__VA_ARGS__)
+#define VPRINTF_ERROR(format, ...) VPRINTF(ERROR, format, ##__VA_ARGS__)
+#define VPRINTF_WARNING(format, ...) VPRINTF(WARNING, format, ##__VA_ARGS__)
+#define VPRINTF_LOW(format, ...) VPRINTF(LOW, format, ##__VA_ARGS__)
+
+#ifndef MINIMAL_LOGGING
+    #define VPRINTF_MEDIUM(format, ...) VPRINTF(MEDIUM, format, ##__VA_ARGS__)
+    #define VPRINTF_HIGH(format, ...) VPRINTF(HIGH, format, ##__VA_ARGS__)
+    #define VPRINTF_ALL(format, ...) VPRINTF(ALL, format, ##__VA_ARGS__)
+#else
+    #define VPRINTF_MEDIUM(format, ...) (void)0;
+    #define VPRINTF_HIGH(format, ...) (void)0;
+    #define VPRINTF_ALL(format, ...) (void)0;
+#endif
 
 inline int SEND_STDOUT_CTRL(char ctrl) {return putchar(ctrl);}
 

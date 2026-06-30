@@ -55,7 +55,7 @@ void populate_wr_exp_values(uint32_t init_val) {
     widereg_t *dvregs_ptr;
     uint32_t curr = init_val; 
 
-    VPRINTF(LOW, "\n-- Populating write data and expected values into arrays starting w/0x%x--\n", init_val);
+    VPRINTF_LOW("\n-- Populating write data and expected values into arrays starting w/0x%x--\n", init_val);
 
     dvregs_ptr = dv_regs;
     
@@ -66,7 +66,7 @@ void populate_wr_exp_values(uint32_t init_val) {
             curr += 0x10;
         }
     }
-    VPRINTF(LOW, "\n-- Done with populating data --\n");
+    VPRINTF_LOW("\n-- Done with populating data --\n");
 }    
 
 
@@ -117,7 +117,7 @@ void write_dv_regs() {
         }
     }
 
-    VPRINTF(LOW, "\n-- Done writing data to registers --\n");
+    VPRINTF_LOW("\n-- Done writing data to registers --\n");
 }
 
 

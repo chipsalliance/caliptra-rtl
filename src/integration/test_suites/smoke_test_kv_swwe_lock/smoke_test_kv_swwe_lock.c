@@ -58,18 +58,18 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 // Returns 1 if the register held its original value (SWWE blocked the write)
 static int check_swwe_blocked(uint32_t reg_addr, uint32_t original_val,
                                uint32_t attack_val, const char *reg_name) {
-    VPRINTF(LOW, "[SWWE_CHECK] %s: original=0x%08x, attempting write=0x%08x\n",
+    VPRINTF_LOW("[SWWE_CHECK] %s: original=0x%08x, attempting write=0x%08x\n",
             reg_name, original_val, attack_val);
     lsu_write_32(reg_addr, attack_val);
     uint32_t readback = lsu_read_32(reg_addr);
-    VPRINTF(LOW, "[SWWE_CHECK] %s: readback=0x%08x (expected=0x%08x)\n",
+    VPRINTF_LOW("[SWWE_CHECK] %s: readback=0x%08x (expected=0x%08x)\n",
             reg_name, readback, original_val);
     if (readback != original_val) {
-        VPRINTF(ERROR, "[SWWE_FAIL] %s: register modified while engine busy! "
+        VPRINTF_ERROR("[SWWE_FAIL] %s: register modified while engine busy! "
                        "got=0x%08x expected=0x%08x\n", reg_name, readback, original_val);
         return 0;
     }
-    VPRINTF(LOW, "[SWWE_PASS] %s: write correctly blocked\n", reg_name);
+    VPRINTF_LOW("[SWWE_PASS] %s: write correctly blocked\n", reg_name);
     return 1;
 }
 
@@ -77,43 +77,43 @@ static int check_swwe_blocked(uint32_t reg_addr, uint32_t original_val,
 // Returns 1 if the register accepted the new value (SWWE allowed the write)
 static int check_swwe_allowed(uint32_t reg_addr, uint32_t new_val,
                                const char *reg_name) {
-    VPRINTF(LOW, "[SWWE_WRITABLE] %s: attempting write=0x%08x\n", reg_name, new_val);
+    VPRINTF_LOW("[SWWE_WRITABLE] %s: attempting write=0x%08x\n", reg_name, new_val);
     lsu_write_32(reg_addr, new_val);
     uint32_t readback = lsu_read_32(reg_addr);
-    VPRINTF(LOW, "[SWWE_WRITABLE] %s: readback=0x%08x (expected=0x%08x)\n",
+    VPRINTF_LOW("[SWWE_WRITABLE] %s: readback=0x%08x (expected=0x%08x)\n",
             reg_name, readback, new_val);
     if (readback != new_val) {
-        VPRINTF(ERROR, "[SWWE_WRITABLE_FAIL] %s: register NOT writable when engine idle! "
+        VPRINTF_ERROR("[SWWE_WRITABLE_FAIL] %s: register NOT writable when engine idle! "
                        "got=0x%08x expected=0x%08x\n", reg_name, readback, new_val);
         return 0;
     }
-    VPRINTF(LOW, "[SWWE_WRITABLE_PASS] %s: write correctly accepted\n", reg_name);
+    VPRINTF_LOW("[SWWE_WRITABLE_PASS] %s: write correctly accepted\n", reg_name);
     return 1;
 }
 
 // ---- Helper: wait for HMAC to complete via interrupt ----
 static void wait_for_hmac_complete(void) {
-    VPRINTF(LOW, "[WAIT] Waiting for HMAC completion interrupt...\n");
+    VPRINTF_LOW("[WAIT] Waiting for HMAC completion interrupt...\n");
     while ((cptra_intr_rcv.hmac_error == 0) && (cptra_intr_rcv.hmac_notif == 0)) {
         __asm__ volatile ("wfi");
         for (uint16_t slp = 0; slp < 100; slp++) {
             __asm__ volatile ("nop");
         }
     }
-    VPRINTF(LOW, "[WAIT] HMAC done: notif=%d, error=%d\n",
+    VPRINTF_LOW("[WAIT] HMAC done: notif=%d, error=%d\n",
             cptra_intr_rcv.hmac_notif, cptra_intr_rcv.hmac_error);
 }
 
 // ---- Helper: wait for ECC to complete via interrupt ----
 static void wait_for_ecc_complete(void) {
-    VPRINTF(LOW, "[WAIT] Waiting for ECC completion interrupt...\n");
+    VPRINTF_LOW("[WAIT] Waiting for ECC completion interrupt...\n");
     while ((cptra_intr_rcv.ecc_error == 0) && (cptra_intr_rcv.ecc_notif == 0)) {
         __asm__ volatile ("wfi");
         for (uint16_t slp = 0; slp < 100; slp++) {
             __asm__ volatile ("nop");
         }
     }
-    VPRINTF(LOW, "[WAIT] ECC done: notif=%d, error=%d\n",
+    VPRINTF_LOW("[WAIT] ECC done: notif=%d, error=%d\n",
             cptra_intr_rcv.ecc_notif, cptra_intr_rcv.ecc_error);
 }
 
@@ -131,13 +131,13 @@ static int test_hmac_kv_swwe_lock(void) {
     int pass = 1;
     volatile uint32_t *reg_ptr;
 
-    VPRINTF(LOW, "\n============================================================\n");
-    VPRINTF(LOW, " TEST 1: HMAC KV SWWE Lock During Operation\n");
-    VPRINTF(LOW, "============================================================\n");
+    VPRINTF_LOW("\n============================================================\n");
+    VPRINTF_LOW(" TEST 1: HMAC KV SWWE Lock During Operation\n");
+    VPRINTF_LOW("============================================================\n");
 
     // Wait for HMAC ready
     while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-    VPRINTF(LOW, "[HMAC] Engine ready\n");
+    VPRINTF_LOW("[HMAC] Engine ready\n");
 
     // ------------------------------------------------------------------
     // Step 1: Pre-configure KV ctrl regs with non-zero values, enable=0.
@@ -160,7 +160,7 @@ static int test_hmac_kv_swwe_lock(void) {
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, rd_block_orig);
     rd_block_orig = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL);
 
-    VPRINTF(LOW, "[HMAC] KV ctrl pre-load: WR=0x%08x RD_KEY=0x%08x RD_BLOCK=0x%08x\n",
+    VPRINTF_LOW("[HMAC] KV ctrl pre-load: WR=0x%08x RD_KEY=0x%08x RD_BLOCK=0x%08x\n",
             wr_ctrl_orig, rd_key_orig, rd_block_orig);
 
     // ------------------------------------------------------------------
@@ -224,33 +224,33 @@ static int test_hmac_kv_swwe_lock(void) {
     // ------------------------------------------------------------------
     // Step 5: Log and evaluate SWWE check results.
     // ------------------------------------------------------------------
-    VPRINTF(LOW, "\n[HMAC] === SWWE lock results ===\n");
+    VPRINTF_LOW("\n[HMAC] === SWWE lock results ===\n");
 
-    VPRINTF(LOW, "[SWWE_CHECK] KV_WR_CTRL:    orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+    VPRINTF_LOW("[SWWE_CHECK] KV_WR_CTRL:    orig=0x%08x  attack=0x%08x  after=0x%08x\n",
             wr_ctrl_orig, attack_wr, wr_ctrl_after);
     if (wr_ctrl_after != wr_ctrl_orig) {
-        VPRINTF(ERROR, "[SWWE_FAIL] KV_WR_CTRL modified while engine busy!\n");
+        VPRINTF_ERROR("[SWWE_FAIL] KV_WR_CTRL modified while engine busy!\n");
         pass = 0;
     } else {
-        VPRINTF(LOW, "[SWWE_PASS] KV_WR_CTRL correctly blocked\n");
+        VPRINTF_LOW("[SWWE_PASS] KV_WR_CTRL correctly blocked\n");
     }
 
-    VPRINTF(LOW, "[SWWE_CHECK] KV_RD_KEY_CTRL:   orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+    VPRINTF_LOW("[SWWE_CHECK] KV_RD_KEY_CTRL:   orig=0x%08x  attack=0x%08x  after=0x%08x\n",
             rd_key_orig, attack_rd_key, rd_key_after);
     if (rd_key_after != rd_key_orig) {
-        VPRINTF(ERROR, "[SWWE_FAIL] KV_RD_KEY_CTRL modified while engine busy!\n");
+        VPRINTF_ERROR("[SWWE_FAIL] KV_RD_KEY_CTRL modified while engine busy!\n");
         pass = 0;
     } else {
-        VPRINTF(LOW, "[SWWE_PASS] KV_RD_KEY_CTRL correctly blocked\n");
+        VPRINTF_LOW("[SWWE_PASS] KV_RD_KEY_CTRL correctly blocked\n");
     }
 
-    VPRINTF(LOW, "[SWWE_CHECK] KV_RD_BLOCK_CTRL: orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+    VPRINTF_LOW("[SWWE_CHECK] KV_RD_BLOCK_CTRL: orig=0x%08x  attack=0x%08x  after=0x%08x\n",
             rd_block_orig, attack_rd_block, rd_block_after);
     if (rd_block_after != rd_block_orig) {
-        VPRINTF(ERROR, "[SWWE_FAIL] KV_RD_BLOCK_CTRL modified while engine busy!\n");
+        VPRINTF_ERROR("[SWWE_FAIL] KV_RD_BLOCK_CTRL modified while engine busy!\n");
         pass = 0;
     } else {
-        VPRINTF(LOW, "[SWWE_PASS] KV_RD_BLOCK_CTRL correctly blocked\n");
+        VPRINTF_LOW("[SWWE_PASS] KV_RD_BLOCK_CTRL correctly blocked\n");
     }
 
     // ------------------------------------------------------------------
@@ -259,7 +259,7 @@ static int test_hmac_kv_swwe_lock(void) {
     //         stick.  enable is hwclr so we exclude it from the readback
     //         comparison.
     // ------------------------------------------------------------------
-    VPRINTF(LOW, "\n[HMAC] === Verifying registers writable after idle ===\n");
+    VPRINTF_LOW("\n[HMAC] === Verifying registers writable after idle ===\n");
 
     hmac_zeroize();
     cptra_intr_rcv.hmac_error = 0;
@@ -297,13 +297,13 @@ static int test_ecc_kv_swwe_lock(void) {
     int pass = 1;
     volatile uint32_t *reg_ptr;
 
-    VPRINTF(LOW, "\n============================================================\n");
-    VPRINTF(LOW, " TEST 2: ECC KV SWWE Lock During Operation\n");
-    VPRINTF(LOW, "============================================================\n");
+    VPRINTF_LOW("\n============================================================\n");
+    VPRINTF_LOW(" TEST 2: ECC KV SWWE Lock During Operation\n");
+    VPRINTF_LOW("============================================================\n");
 
     // Wait for ECC ready
     while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
-    VPRINTF(LOW, "[ECC] Engine ready\n");
+    VPRINTF_LOW("[ECC] Engine ready\n");
 
     // ------------------------------------------------------------------
     // Step 1: Pre-configure KV ctrl regs with non-zero values, enable=0.
@@ -319,7 +319,7 @@ static int test_ecc_kv_swwe_lock(void) {
     lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, rd_seed_orig);
     rd_seed_orig = lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL);
 
-    VPRINTF(LOW, "[ECC] KV ctrl pre-load: WR_PKEY=0x%08x  RD_SEED=0x%08x\n",
+    VPRINTF_LOW("[ECC] KV ctrl pre-load: WR_PKEY=0x%08x  RD_SEED=0x%08x\n",
             wr_pkey_orig, rd_seed_orig);
 
     // ------------------------------------------------------------------
@@ -365,30 +365,30 @@ static int test_ecc_kv_swwe_lock(void) {
     // ------------------------------------------------------------------
     // Step 5: Log and evaluate SWWE check results.
     // ------------------------------------------------------------------
-    VPRINTF(LOW, "\n[ECC] === SWWE lock results ===\n");
+    VPRINTF_LOW("\n[ECC] === SWWE lock results ===\n");
 
-    VPRINTF(LOW, "[SWWE_CHECK] KV_WR_PKEY_CTRL: orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+    VPRINTF_LOW("[SWWE_CHECK] KV_WR_PKEY_CTRL: orig=0x%08x  attack=0x%08x  after=0x%08x\n",
             wr_pkey_orig, attack_wr_pkey, wr_pkey_after);
     if (wr_pkey_after != wr_pkey_orig) {
-        VPRINTF(ERROR, "[SWWE_FAIL] KV_WR_PKEY_CTRL modified while engine busy!\n");
+        VPRINTF_ERROR("[SWWE_FAIL] KV_WR_PKEY_CTRL modified while engine busy!\n");
         pass = 0;
     } else {
-        VPRINTF(LOW, "[SWWE_PASS] KV_WR_PKEY_CTRL correctly blocked\n");
+        VPRINTF_LOW("[SWWE_PASS] KV_WR_PKEY_CTRL correctly blocked\n");
     }
 
-    VPRINTF(LOW, "[SWWE_CHECK] KV_RD_SEED_CTRL: orig=0x%08x  attack=0x%08x  after=0x%08x\n",
+    VPRINTF_LOW("[SWWE_CHECK] KV_RD_SEED_CTRL: orig=0x%08x  attack=0x%08x  after=0x%08x\n",
             rd_seed_orig, attack_rd_seed, rd_seed_after);
     if (rd_seed_after != rd_seed_orig) {
-        VPRINTF(ERROR, "[SWWE_FAIL] KV_RD_SEED_CTRL modified while engine busy!\n");
+        VPRINTF_ERROR("[SWWE_FAIL] KV_RD_SEED_CTRL modified while engine busy!\n");
         pass = 0;
     } else {
-        VPRINTF(LOW, "[SWWE_PASS] KV_RD_SEED_CTRL correctly blocked\n");
+        VPRINTF_LOW("[SWWE_PASS] KV_RD_SEED_CTRL correctly blocked\n");
     }
 
     // ------------------------------------------------------------------
     // Step 6: Verify registers are writable after engine goes idle.
     // ------------------------------------------------------------------
-    VPRINTF(LOW, "\n[ECC] === Verifying registers writable after idle ===\n");
+    VPRINTF_LOW("\n[ECC] === Verifying registers writable after idle ===\n");
 
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) &
                                         ECC_REG_ECC_CTRL_ZEROIZE_MASK);
@@ -417,31 +417,31 @@ static int test_ecc_kv_swwe_lock(void) {
 static int test_pcr_hash_extend_locked(void) {
     int pass = 1;
 
-    VPRINTF(LOW, "\n============================================================\n");
-    VPRINTF(LOW, " TEST 3: pcr_hash_extend SWWE = 0 (always locked)\n");
-    VPRINTF(LOW, "============================================================\n");
+    VPRINTF_LOW("\n============================================================\n");
+    VPRINTF_LOW(" TEST 3: pcr_hash_extend SWWE = 0 (always locked)\n");
+    VPRINTF_LOW("============================================================\n");
 
     // Wait for HMAC ready
     while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
     // Read current KV RD KEY CTRL
     uint32_t rd_key_before = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL);
-    VPRINTF(LOW, "[PCR_EXT] HMAC KV_RD_KEY_CTRL before = 0x%08x\n", rd_key_before);
+    VPRINTF_LOW("[PCR_EXT] HMAC KV_RD_KEY_CTRL before = 0x%08x\n", rd_key_before);
 
     // Try to set pcr_hash_extend bit (bit 6 in HMAC KV_RD_KEY_CTRL)
     uint32_t with_pcr_extend = rd_key_before | HMAC_REG_HMAC512_KV_RD_KEY_CTRL_PCR_HASH_EXTEND_MASK;
-    VPRINTF(LOW, "[PCR_EXT] Attempting to set pcr_hash_extend: write=0x%08x\n", with_pcr_extend);
+    VPRINTF_LOW("[PCR_EXT] Attempting to set pcr_hash_extend: write=0x%08x\n", with_pcr_extend);
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL, with_pcr_extend);
 
     uint32_t rd_key_after = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL);
-    VPRINTF(LOW, "[PCR_EXT] HMAC KV_RD_KEY_CTRL after = 0x%08x\n", rd_key_after);
+    VPRINTF_LOW("[PCR_EXT] HMAC KV_RD_KEY_CTRL after = 0x%08x\n", rd_key_after);
 
     // The pcr_hash_extend bit should NOT be set (SWWE=0)
     if (rd_key_after & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_PCR_HASH_EXTEND_MASK) {
-        VPRINTF(ERROR, "[PCR_EXT_FAIL] pcr_hash_extend bit was set! SWWE=0 not enforced\n");
+        VPRINTF_ERROR("[PCR_EXT_FAIL] pcr_hash_extend bit was set! SWWE=0 not enforced\n");
         pass = 0;
     } else {
-        VPRINTF(LOW, "[PCR_EXT_PASS] pcr_hash_extend correctly blocked (SWWE=0)\n");
+        VPRINTF_LOW("[PCR_EXT_PASS] pcr_hash_extend correctly blocked (SWWE=0)\n");
     }
 
     // Also check HMAC KV_RD_BLOCK_CTRL
@@ -449,14 +449,14 @@ static int test_pcr_hash_extend_locked(void) {
     uint32_t with_pcr_block = rd_block_before | HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_PCR_HASH_EXTEND_MASK;
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL, with_pcr_block);
     uint32_t rd_block_after = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL);
-    VPRINTF(LOW, "[PCR_EXT] HMAC KV_RD_BLOCK_CTRL: before=0x%08x, wrote=0x%08x, after=0x%08x\n",
+    VPRINTF_LOW("[PCR_EXT] HMAC KV_RD_BLOCK_CTRL: before=0x%08x, wrote=0x%08x, after=0x%08x\n",
             rd_block_before, with_pcr_block, rd_block_after);
 
     if (rd_block_after & HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_PCR_HASH_EXTEND_MASK) {
-        VPRINTF(ERROR, "[PCR_EXT_FAIL] pcr_hash_extend in BLOCK CTRL was set!\n");
+        VPRINTF_ERROR("[PCR_EXT_FAIL] pcr_hash_extend in BLOCK CTRL was set!\n");
         pass = 0;
     } else {
-        VPRINTF(LOW, "[PCR_EXT_PASS] pcr_hash_extend in BLOCK CTRL correctly blocked\n");
+        VPRINTF_LOW("[PCR_EXT_PASS] pcr_hash_extend in BLOCK CTRL correctly blocked\n");
     }
 
     // Check ECC seed ctrl pcr_hash_extend
@@ -465,14 +465,14 @@ static int test_pcr_hash_extend_locked(void) {
     uint32_t ecc_seed_with_pcr = ecc_seed_before | ECC_REG_ECC_KV_RD_SEED_CTRL_PCR_HASH_EXTEND_MASK;
     lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL, ecc_seed_with_pcr);
     uint32_t ecc_seed_after = lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL);
-    VPRINTF(LOW, "[PCR_EXT] ECC KV_RD_SEED_CTRL: before=0x%08x, wrote=0x%08x, after=0x%08x\n",
+    VPRINTF_LOW("[PCR_EXT] ECC KV_RD_SEED_CTRL: before=0x%08x, wrote=0x%08x, after=0x%08x\n",
             ecc_seed_before, ecc_seed_with_pcr, ecc_seed_after);
 
     if (ecc_seed_after & ECC_REG_ECC_KV_RD_SEED_CTRL_PCR_HASH_EXTEND_MASK) {
-        VPRINTF(ERROR, "[PCR_EXT_FAIL] pcr_hash_extend in ECC SEED CTRL was set!\n");
+        VPRINTF_ERROR("[PCR_EXT_FAIL] pcr_hash_extend in ECC SEED CTRL was set!\n");
         pass = 0;
     } else {
-        VPRINTF(LOW, "[PCR_EXT_PASS] pcr_hash_extend in ECC SEED CTRL correctly blocked\n");
+        VPRINTF_LOW("[PCR_EXT_PASS] pcr_hash_extend in ECC SEED CTRL correctly blocked\n");
     }
 
     // Check AES key ctrl pcr_hash_extend
@@ -480,14 +480,14 @@ static int test_pcr_hash_extend_locked(void) {
     uint32_t aes_key_with_pcr = aes_key_before | AES_CLP_REG_AES_KV_RD_KEY_CTRL_PCR_HASH_EXTEND_MASK;
     lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, aes_key_with_pcr);
     uint32_t aes_key_after = lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL);
-    VPRINTF(LOW, "[PCR_EXT] AES KV_RD_KEY_CTRL: before=0x%08x, wrote=0x%08x, after=0x%08x\n",
+    VPRINTF_LOW("[PCR_EXT] AES KV_RD_KEY_CTRL: before=0x%08x, wrote=0x%08x, after=0x%08x\n",
             aes_key_before, aes_key_with_pcr, aes_key_after);
 
     if (aes_key_after & AES_CLP_REG_AES_KV_RD_KEY_CTRL_PCR_HASH_EXTEND_MASK) {
-        VPRINTF(ERROR, "[PCR_EXT_FAIL] pcr_hash_extend in AES KEY CTRL was set!\n");
+        VPRINTF_ERROR("[PCR_EXT_FAIL] pcr_hash_extend in AES KEY CTRL was set!\n");
         pass = 0;
     } else {
-        VPRINTF(LOW, "[PCR_EXT_PASS] pcr_hash_extend in AES KEY CTRL correctly blocked\n");
+        VPRINTF_LOW("[PCR_EXT_PASS] pcr_hash_extend in AES KEY CTRL correctly blocked\n");
     }
 
     return pass;
@@ -501,48 +501,48 @@ static int test_pcr_hash_extend_locked(void) {
 void main() {
     int all_pass = 1;
 
-    VPRINTF(LOW, "============================================================\n");
-    VPRINTF(LOW, " KV SWWE Lock Smoke Test\n");
-    VPRINTF(LOW, " Tests that KV control registers are locked while busy_o=1\n");
-    VPRINTF(LOW, "============================================================\n");
+    VPRINTF_LOW("============================================================\n");
+    VPRINTF_LOW(" KV SWWE Lock Smoke Test\n");
+    VPRINTF_LOW(" Tests that KV control registers are locked while busy_o=1\n");
+    VPRINTF_LOW("============================================================\n");
 
     // Initialize interrupts
     init_interrupts();
 
     // ---- TEST 1: HMAC KV SWWE Lock ----
     if (!test_hmac_kv_swwe_lock()) {
-        VPRINTF(ERROR, "\n*** TEST 1 FAILED: HMAC KV SWWE Lock ***\n");
+        VPRINTF_ERROR("\n*** TEST 1 FAILED: HMAC KV SWWE Lock ***\n");
         all_pass = 0;
     } else {
-        VPRINTF(LOW, "\n*** TEST 1 PASSED: HMAC KV SWWE Lock ***\n");
+        VPRINTF_LOW("\n*** TEST 1 PASSED: HMAC KV SWWE Lock ***\n");
     }
 
     // ---- TEST 2: ECC KV SWWE Lock ----
     if (!test_ecc_kv_swwe_lock()) {
-        VPRINTF(ERROR, "\n*** TEST 2 FAILED: ECC KV SWWE Lock ***\n");
+        VPRINTF_ERROR("\n*** TEST 2 FAILED: ECC KV SWWE Lock ***\n");
         all_pass = 0;
     } else {
-        VPRINTF(LOW, "\n*** TEST 2 PASSED: ECC KV SWWE Lock ***\n");
+        VPRINTF_LOW("\n*** TEST 2 PASSED: ECC KV SWWE Lock ***\n");
     }
 
     // ---- TEST 3: pcr_hash_extend SWWE=0 ----
     if (!test_pcr_hash_extend_locked()) {
-        VPRINTF(ERROR, "\n*** TEST 3 FAILED: pcr_hash_extend SWWE=0 ***\n");
+        VPRINTF_ERROR("\n*** TEST 3 FAILED: pcr_hash_extend SWWE=0 ***\n");
         all_pass = 0;
     } else {
-        VPRINTF(LOW, "\n*** TEST 3 PASSED: pcr_hash_extend SWWE=0 ***\n");
+        VPRINTF_LOW("\n*** TEST 3 PASSED: pcr_hash_extend SWWE=0 ***\n");
     }
 
     // ---- Final verdict ----
     if (all_pass) {
-        VPRINTF(LOW, "\n============================================================\n");
-        VPRINTF(LOW, " ALL KV SWWE LOCK TESTS PASSED\n");
-        VPRINTF(LOW, "============================================================\n");
+        VPRINTF_LOW("\n============================================================\n");
+        VPRINTF_LOW(" ALL KV SWWE LOCK TESTS PASSED\n");
+        VPRINTF_LOW("============================================================\n");
         SEND_STDOUT_CTRL(0xff);
     } else {
-        VPRINTF(ERROR, "\n============================================================\n");
-        VPRINTF(ERROR, " ONE OR MORE KV SWWE LOCK TESTS FAILED\n");
-        VPRINTF(ERROR, "============================================================\n");
+        VPRINTF_ERROR("\n============================================================\n");
+        VPRINTF_ERROR(" ONE OR MORE KV SWWE LOCK TESTS FAILED\n");
+        VPRINTF_ERROR("============================================================\n");
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }

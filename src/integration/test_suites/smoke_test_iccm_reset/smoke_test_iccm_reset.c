@@ -41,9 +41,9 @@ void main() {
     uint32_t * code_word = 0;
     uint32_t * iccm_dest = ICCM;
     void (* iccm_fn) (void) = (void*) ICCM;
-    VPRINTF(LOW,"---------------------------\n");
-    VPRINTF(LOW," Smoke test ICCM/DCCM + reset !!\n");
-    VPRINTF(LOW,"---------------------------\n");
+    VPRINTF_LOW("---------------------------\n");
+    VPRINTF_LOW(" Smoke test ICCM/DCCM + reset !!\n");
+    VPRINTF_LOW("---------------------------\n");
 
     rst_count++;
 
@@ -52,38 +52,38 @@ void main() {
     if(rst_count == 1) {
 
         code_word = (uint32_t *) &iccm_code0_start;
-        VPRINTF(LOW, "Copying code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code0_end, (uintptr_t) iccm_dest);
+        VPRINTF_LOW("Copying code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code0_end, (uintptr_t) iccm_dest);
         while (code_word < (uint32_t *) &iccm_code0_end) {
-            VPRINTF(ALL, "at %x: %x\n", (uintptr_t) code_word, *code_word);
+            VPRINTF_ALL("at %x: %x\n", (uintptr_t) code_word, *code_word);
             *iccm_dest++ = *code_word++;
         }
 
-        VPRINTF(LOW, "Execute function from ICCM\n");
+        VPRINTF_LOW("Execute function from ICCM\n");
         iccm_fn();
         
         //Issue warm reset
-        VPRINTF(LOW, "Issue warm reset\n");
+        VPRINTF_LOW("Issue warm reset\n");
         SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 2) {
-        VPRINTF(LOW, "Execute function from ICCM after warm reset\n");
+        VPRINTF_LOW("Execute function from ICCM after warm reset\n");
         iccm_fn();
 
         //Issue cold reset
-        VPRINTF(LOW, "Issue cold reset\n");
+        VPRINTF_LOW("Issue cold reset\n");
          SEND_STDOUT_CTRL(0xf5);
 
     }
     else if(rst_count == 3) {
-        VPRINTF(LOW, "Execute function from ICCM after cold reset\n");
+        VPRINTF_LOW("Execute function from ICCM after cold reset\n");
         iccm_fn();
 
         //Issue fw update reset
-        VPRINTF(LOW, "Issue core only reset\n");
+        VPRINTF_LOW("Issue core only reset\n");
         *soc_ifc_fw_update_reset = SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK;
     }
     else if (rst_count == 4) {
-        VPRINTF(LOW, "Execute function from ICCM after core reset\n");
+        VPRINTF_LOW("Execute function from ICCM after core reset\n");
         iccm_fn();
     }
 

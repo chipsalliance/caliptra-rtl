@@ -51,9 +51,9 @@ void main() {
     VPRINTF(LOW,"\nUsing random seed = %u\n\n", (uint32_t) MY_RANDOM_SEED);
     srand((uint32_t) MY_RANDOM_SEED);
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Run HMAC 384 to generate a key in KV !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Run HMAC 384 to generate a key in KV !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -195,9 +195,9 @@ void main() {
     hmac384_flow(hmac384_key, hmac384_block, hmac384_lfsr_seed, hmac384_tag, TRUE, TRUE);
     hmac_zeroize();
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Reseed AES entropy interface \n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Reseed AES entropy interface \n");
+    VPRINTF_LOW("----------------------------------\n");
 
     // After reseeding the state of the Trivium stream cipher primitive with
     // the seed below, it will produce the following key stream:
@@ -217,9 +217,9 @@ void main() {
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_7, 0xEB4814D1);
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_8, 0xE843DB60);
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Run AES using key in KV\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Run AES using key in KV\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     aes_flow_t aes_input = {0};
     aes_input.data_src_mode = AES_DATA_DIRECT;
@@ -267,7 +267,7 @@ void main() {
     //Key from KV
     aes_key.kv_intf = TRUE;
     aes_key.kv_id = tag_kv_id;
-    VPRINTF(LOW, "Key Stored in KV ID %d\n", tag_kv_id);
+    VPRINTF_LOW("Key Stored in KV ID %d\n", tag_kv_id);
 
     //Common values
     hex_to_uint32_array(key_str, key, &key_size);
@@ -284,7 +284,7 @@ void main() {
     hex_to_uint32_array(plaintext_str_ECB, plaintext, &plaintext_length);
 
     //CASE1
-    VPRINTF(LOW, "Test Case 1 - ECB\n");
+    VPRINTF_LOW("Test Case 1 - ECB\n");
     op = AES_ENC;
     mode = AES_ECB;
     hex_to_uint32_array(ciphertext_str_ECB, ciphertext, &ciphertext_length);
@@ -304,7 +304,7 @@ void main() {
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE2
-    VPRINTF(LOW, "Test Case 2 - CBC\n");
+    VPRINTF_LOW("Test Case 2 - CBC\n");
     op = AES_ENC;
     mode = AES_CBC;
     hex_to_uint32_array(ciphertext_str_CBC, ciphertext, &ciphertext_length);
@@ -327,7 +327,7 @@ void main() {
     hex_to_uint32_array(plaintext_str, plaintext, &plaintext_length);
 
     //CASE3
-    VPRINTF(LOW, "Test Case 3 - CFB\n");
+    VPRINTF_LOW("Test Case 3 - CFB\n");
     op = AES_ENC;
     mode = AES_CFB;
     hex_to_uint32_array(ciphertext_str_CFB, ciphertext, &ciphertext_length);
@@ -347,7 +347,7 @@ void main() {
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE4
-    VPRINTF(LOW, "Test Case 4 - OFB\n");
+    VPRINTF_LOW("Test Case 4 - OFB\n");
     op = AES_ENC;
     mode = AES_OFB;
     hex_to_uint32_array(ciphertext_str_OFB, ciphertext, &ciphertext_length);
@@ -367,7 +367,7 @@ void main() {
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE5
-    VPRINTF(LOW, "Test Case 5 - CTR\n");
+    VPRINTF_LOW("Test Case 5 - CTR\n");
     op = AES_ENC;
     mode = AES_CTR;
     hex_to_uint32_array(ciphertext_str_CTR, ciphertext, &ciphertext_length);
@@ -387,7 +387,7 @@ void main() {
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE6
-    VPRINTF(LOW, "Test Case 6 - GCM 256\n");
+    VPRINTF_LOW("Test Case 6 - GCM 256\n");
     op = AES_ENC;
     mode = AES_GCM;
     hex_to_uint32_array(ciphertext_str_GCM, ciphertext, &ciphertext_length);
@@ -410,7 +410,7 @@ void main() {
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
 
     //CASE7
-    VPRINTF(LOW, "Test Case 7 - GCM 128\n");
+    VPRINTF_LOW("Test Case 7 - GCM 128\n");
     key_len = AES_128;
     op = AES_ENC;
     mode = AES_GCM;

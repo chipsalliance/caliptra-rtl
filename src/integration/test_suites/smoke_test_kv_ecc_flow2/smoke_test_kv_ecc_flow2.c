@@ -51,9 +51,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main(){
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With ECC flow !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With ECC flow !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     uint32_t ecc_seed[] =          {0x8FA8541C,
                                     0x82A392CA,
@@ -270,13 +270,13 @@ void main(){
     }
 
     //inject seed to kv key reg (in RTL)
-    VPRINTF(LOW, "Inject SEED into KV\n");
+    VPRINTF_LOW("Inject SEED into KV\n");
     lsu_write_32(STDOUT, (seed.kv_id << 8) | 0x80);
 
-    VPRINTF(LOW, "seed.kv_id: 0x%x, seed.kv_id :0x%d\n",seed.kv_id, seed.kv_intf);
-    VPRINTF(LOW, "privkey.kv_id: 0x%x, privkey.kv_id :0x%d\n",privkey.kv_id, privkey.kv_intf);
-    VPRINTF(LOW, "privkey_dh.kv_id: 0x%x, privkey_dh.kv_id :0x%d\n",privkey_dh.kv_id, privkey_dh.kv_intf);
-    VPRINTF(LOW, "sharedkey_dh.kv_id: 0x%x, sharedkey_dh.kv_id :0x%d\n",sharedkey_dh.kv_id, sharedkey_dh.kv_intf);
+    VPRINTF_LOW("seed.kv_id: 0x%x, seed.kv_id :0x%d\n",seed.kv_id, seed.kv_intf);
+    VPRINTF_LOW("privkey.kv_id: 0x%x, privkey.kv_id :0x%d\n",privkey.kv_id, privkey.kv_intf);
+    VPRINTF_LOW("privkey_dh.kv_id: 0x%x, privkey_dh.kv_id :0x%d\n",privkey_dh.kv_id, privkey_dh.kv_intf);
+    VPRINTF_LOW("sharedkey_dh.kv_id: 0x%x, sharedkey_dh.kv_id :0x%d\n",sharedkey_dh.kv_id, sharedkey_dh.kv_intf);
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;

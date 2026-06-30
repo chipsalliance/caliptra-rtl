@@ -301,7 +301,7 @@ void main(){
         chosen[1] = engines[3];
     }
                 
-    VPRINTF(LOW, "Running %d engines: ", num_engines);
+    VPRINTF_LOW("Running %d engines: ", num_engines);
     for (int i = 0; i < num_engines; i++) {
         VPRINTF(LOW,"%s%s", engine_name(chosen[i]), (i == num_engines - 1) ? "\n" : ", ");
     }

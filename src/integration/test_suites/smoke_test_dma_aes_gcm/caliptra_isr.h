@@ -278,7 +278,7 @@ inline void service_axi_dma_error_intr() {
 inline void service_axi_dma_notif_intr() {
     uint32_t * reg = (uint32_t *) (CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
     uint32_t sts = *reg;
-//    VPRINTF(LOW, "ntf\n");
+//    VPRINTF_LOW("ntf\n");
     /* Write 1 to Clear the pending interrupt */
     if (sts & AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_TXN_DONE_STS_MASK) {
         *reg = AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_TXN_DONE_STS_MASK;

@@ -47,9 +47,9 @@ void main() {
     init_interrupts();
 
     // Entry message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " HMAC error_trigger smoke test !!\n"         );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" HMAC error_trigger smoke test !!\n"         );
+    VPRINTF_LOW("----------------------------------\n");
 
     volatile uint32_t * reg_ptr;
     uint8_t key_slot = xorshift32() % 24;
@@ -57,10 +57,10 @@ void main() {
     uint8_t offset;
     uint8_t fail_cmd = 0x1;
 
-    VPRINTF(LOW, "Key KV ID: %d\n", key_slot);
+    VPRINTF_LOW("Key KV ID: %d\n", key_slot);
 
     if(rst_count == 0) {
-        VPRINTF(LOW, " ***** HMAC512 key_zero_error !!\n");
+        VPRINTF_LOW(" ***** HMAC512 key_zero_error !!\n");
         // wait for HMAC to be ready
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
@@ -81,7 +81,7 @@ void main() {
         // wait for HMAC process to be done
         wait_for_hmac_intr();
         if ((cptra_intr_rcv.hmac_error == 0)){
-            VPRINTF(ERROR, "\nHMAC key_zero error is not detected.\n");
+            VPRINTF_ERROR("\nHMAC key_zero error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -91,7 +91,7 @@ void main() {
         SEND_STDOUT_CTRL(0xf6);
     }
     else if(rst_count == 1) {
-        VPRINTF(LOW, " ***** HMAC384 key_zero_error !!\n");
+        VPRINTF_LOW(" ***** HMAC384 key_zero_error !!\n");
         // wait for HMAC to be ready
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
@@ -112,7 +112,7 @@ void main() {
         // wait for HMAC process to be done
         wait_for_hmac_intr();
         if ((cptra_intr_rcv.hmac_error == 0)){
-            VPRINTF(ERROR, "\nHMAC key_zero error is not detected.\n");
+            VPRINTF_ERROR("\nHMAC key_zero error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -122,7 +122,7 @@ void main() {
         SEND_STDOUT_CTRL(0xf6);
     }
     if(rst_count == 2) {
-        VPRINTF(LOW, " ***** HMAC key_mode_error !!\n");
+        VPRINTF_LOW(" ***** HMAC key_mode_error !!\n");
         
         //inject hmac384_key to kv key reg (in RTL)
         key_inject_cmd = 0xa0 + (key_slot & 0x7);
@@ -144,7 +144,7 @@ void main() {
         // wait for HMAC process to be done
         wait_for_hmac_intr();
         if ((cptra_intr_rcv.hmac_error == 0)){
-            VPRINTF(ERROR, "\nHMAC key_mode_error is not detected.\n");
+            VPRINTF_ERROR("\nHMAC key_mode_error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -154,7 +154,7 @@ void main() {
         SEND_STDOUT_CTRL(0xf6);
     }
     if(rst_count == 3) {
-        VPRINTF(LOW, " ***** HMAC ZEROIZE !!\n");
+        VPRINTF_LOW(" ***** HMAC ZEROIZE !!\n");
         
         //inject hmac512_key to kv key reg (in RTL)
         lsu_write_32(STDOUT, (key_slot << 8) | 0xa9); 
@@ -176,14 +176,14 @@ void main() {
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
         // Load TAG data from HMAC
-        VPRINTF(LOW, "Load TAG data from HMAC\n");
+        VPRINTF_LOW("Load TAG data from HMAC\n");
         reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
         offset = 0;
         while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {
             if (*reg_ptr != 0) {
-                VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                VPRINTF_ERROR("At offset [%d], hmac_tag data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF_ERROR("Expected data: 0x%x\n", 0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -198,14 +198,14 @@ void main() {
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
         // Load TAG data from HMAC
-        VPRINTF(LOW, "Load TAG data from HMAC\n");
+        VPRINTF_LOW("Load TAG data from HMAC\n");
         reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
         offset = 0;
         while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_15) {
             if (*reg_ptr != 0) {
-                VPRINTF(ERROR, "At offset [%d], hmac_tag data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                VPRINTF_ERROR("At offset [%d], hmac_tag data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF_ERROR("Expected data: 0x%x\n", 0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -216,7 +216,7 @@ void main() {
         SEND_STDOUT_CTRL(0xf6);
     }
     if(rst_count == 4) {
-        VPRINTF(LOW, " ***** HMAC last_alone_error !!\n");
+        VPRINTF_LOW(" ***** HMAC last_alone_error !!\n");
 
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
@@ -225,7 +225,7 @@ void main() {
 
         wait_for_hmac_intr();
         if ((cptra_intr_rcv.hmac_error == 0)){
-            VPRINTF(ERROR, "\nHMAC last_alone_error is not detected.\n");
+            VPRINTF_ERROR("\nHMAC last_alone_error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }

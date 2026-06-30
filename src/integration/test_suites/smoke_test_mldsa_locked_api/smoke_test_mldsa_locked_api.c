@@ -65,9 +65,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
 };
 
 void main() {
-    VPRINTF(LOW, "--------------------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With MLDSA Locked API flow !!\n");
-    VPRINTF(LOW, "--------------------------------------------\n");
+    VPRINTF_LOW("--------------------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With MLDSA Locked API flow !!\n");
+    VPRINTF_LOW("--------------------------------------------\n");
 
     /* Intializes random number generator */  //TODO    
     srand(time);
@@ -90,7 +90,7 @@ void main() {
     for (int i = 0; i < MLDSA87_MSG_SIZE; i++)
         msg[i] = rand() % 0xffffffff;
 
-    VPRINTF(LOW, "inject random mldsa seed to kv key reg (in RTL)\n");
+    VPRINTF_LOW("inject random mldsa seed to kv key reg (in RTL)\n");
     SEND_STDOUT_CTRL(0x93);
 
     uint16_t offset;
@@ -98,7 +98,7 @@ void main() {
     volatile uint32_t * status_ptr;
     uint8_t fail_cmd = 0x1;
     
-    VPRINTF(LOW, "Waiting for mldsa status ready in keygen\n");
+    VPRINTF_LOW("Waiting for mldsa status ready in keygen\n");
     while((lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_READY_MASK) == 0);
 
     // Program MLDSA_SEED Read with 12 dwords from seed_kv_id
@@ -131,18 +131,18 @@ void main() {
 
     status_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_STATUS;
 
-    VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
+    VPRINTF_LOW("\nMLDSA KEYGEN + SIGNING\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
 
-    VPRINTF(LOW, "Try to Load Locked SIGN data from MLDSA\n");
+    VPRINTF_LOW("Try to Load Locked SIGN data from MLDSA\n");
     while (*status_ptr == 0){
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR;
         offset = 0;
         while (offset < MLDSA87_SIGN_SIZE) {
             if ((*reg_ptr != 0) & (*status_ptr == 0)) {
-                VPRINTF(ERROR, "At offset [%d], mldsa_sign data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+                VPRINTF_ERROR("At offset [%d], mldsa_sign data mismatch!\n", offset);
+                VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
+                VPRINTF_ERROR("Expected data: 0x%x\n", 0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -155,14 +155,14 @@ void main() {
     wait_for_mldsa_intr();
 
     // Read the data back from MLDSA register
-    VPRINTF(LOW, "Try to Load Locked PRIVKEY data from MLDSA\n");
+    VPRINTF_LOW("Try to Load Locked PRIVKEY data from MLDSA\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_PRIVKEY_SIZE) {
         if (*reg_ptr != 0) {
-            VPRINTF(ERROR, "At offset [%d], mldsa_privkey data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+            VPRINTF_ERROR("At offset [%d], mldsa_privkey data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF_ERROR("Expected data: 0x%x\n", 0);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -170,18 +170,18 @@ void main() {
         offset++;
     }
 
-    VPRINTF(LOW, "MLDSA zeroize flow.\n");
+    VPRINTF_LOW("MLDSA zeroize flow.\n");
     lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, (1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
 
     // Read the data back from MLDSA register
-    VPRINTF(LOW, "Try to Load zeroized PRIVKEY data from MLDSA\n");
+    VPRINTF_LOW("Try to Load zeroized PRIVKEY data from MLDSA\n");
     reg_ptr = (uint32_t *) CLP_ABR_REG_MLDSA_PRIVKEY_OUT_BASE_ADDR;
     offset = 0;
     while (offset < MLDSA87_PRIVKEY_SIZE) {
         if (*reg_ptr != 0) {
-            VPRINTF(ERROR, "At offset [%d], mldsa_privkey data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
+            VPRINTF_ERROR("At offset [%d], mldsa_privkey data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF_ERROR("Expected data: 0x%x\n", 0);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }

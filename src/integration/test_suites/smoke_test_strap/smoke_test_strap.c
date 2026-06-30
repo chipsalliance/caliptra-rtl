@@ -46,7 +46,7 @@ void main() {
                  (lsu_read_32(CLP_SOC_IFC_REG_SS_CALIPTRA_BASE_ADDR_L)      ));
 
     if (strap_reg != 0xba5eba11) {
-        VPRINTF(FATAL, "Strap value 0x%x mismatch. Expected: 0x%x\n", strap_reg, 0xba5eba11);
+        VPRINTF_FATAL("Strap value 0x%x mismatch. Expected: 0x%x\n", strap_reg, 0xba5eba11);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }

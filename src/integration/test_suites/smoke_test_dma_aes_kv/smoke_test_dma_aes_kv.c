@@ -68,7 +68,7 @@ volatile uint32_t  fail      __attribute__((section(".dccm.persistent"))) = 0;
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void nmi_handler() {
-    VPRINTF(FATAL, "NMI");
+    VPRINTF_FATAL("NMI");
 }
 
 void main(void) {
@@ -93,7 +93,7 @@ void main(void) {
 
 
 
-    VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA AES KV  !!\n----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\nSmoke Test AXI DMA AES KV  !!\n----------------------------------\n");
     rst_count++;
 
     //set NMI vector
@@ -109,20 +109,20 @@ void main(void) {
     if(!(lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK)) {
         // If OCP LOCK mode is not enable we need to check if OCP_LOCK_IN_PROGRESS can be set
         lsu_write_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL, SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK);
-        VPRINTF(LOW, "OCP_LOCK_IN_PROGRESS: 0x%x\n", lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL));
+        VPRINTF_LOW("OCP_LOCK_IN_PROGRESS: 0x%x\n", lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL));
         if((lsu_read_32(CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL) & SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK) != 0) {
-            VPRINTF(FATAL, "OCP_LOCK_IN_PROGRESS set when OCP_LOCK_MODE_EN not set!\n");
+            VPRINTF_FATAL("OCP_LOCK_IN_PROGRESS set when OCP_LOCK_MODE_EN not set!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
     }
             
-    VPRINTF(LOW, "MEK KEY SIZE: 0x%x\n", kv_key_size);
-    VPRINTF(LOW, "MEK KEY DEST: 0x%x\n", kv_key_dest);
+    VPRINTF_LOW("MEK KEY SIZE: 0x%x\n", kv_key_size);
+    VPRINTF_LOW("MEK KEY DEST: 0x%x\n", kv_key_dest);
 
 
     if ( kv_key_size <= 0x40) {
-        VPRINTF(LOW, "KV KEY SIZE is less than 0x40 and is valid.\n" );
+        VPRINTF_LOW("KV KEY SIZE is less than 0x40 and is valid.\n" );
 
 
         // Test each malformed command check
@@ -135,14 +135,14 @@ void main(void) {
             if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_wr_fixed_kv))      { fail = 1; } // Can only be tested after IN PROGRESS has been set
         }
 
-        VPRINTF(FATAL, "Enable random delays in AXI\n");
+        VPRINTF_FATAL("Enable random delays in AXI\n");
         SEND_STDOUT_CTRL(RAND_DELAY_TOGGLE);
 
         // ===========================================================================
         // Send KV Key to AXI SRAM                                 
         // ===========================================================================
         if((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK)) {
-            VPRINTF(LOW, "OCP_LOCK_MODE_EN is set, RUNNING KV key test\n");
+            VPRINTF_LOW("OCP_LOCK_MODE_EN is set, RUNNING KV key test\n");
 
 
 
@@ -150,7 +150,7 @@ void main(void) {
             // TEST 1: BASIC TEST AES KV 23 to DMA
             ///////////////////////////////////
 
-            VPRINTF(LOW, "START TEST 1: BASIC TEST AES KV 23 to DMA\n");
+            VPRINTF_LOW("START TEST 1: BASIC TEST AES KV 23 to DMA\n");
             // Key to KV
             aes_key_o.kv_intf = TRUE;
             aes_key_o.kv_expect_err = FALSE;
@@ -183,10 +183,10 @@ void main(void) {
             soc_ifc_axi_dma_read_ahb_payload(kv_key_dest, 0, kv_actual_key, kv_key_size, 0);
 
 
-            VPRINTF(LOW, "TEST 1: Checking if key stores in AXI SRAM matches expected\n");
+            VPRINTF_LOW("TEST 1: Checking if key stores in AXI SRAM matches expected\n");
             for(int i = 0; i < 16; i++) {
                 if(kv_expected_key[i] != kv_actual_key[i]) {
-                    VPRINTF(ERROR, "ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
+                    VPRINTF_ERROR("ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
                     fail = 1;
                 }
             }
@@ -194,7 +194,7 @@ void main(void) {
             // TEST 2: TEST AES KV 23 to DMA REUSE KV16
             ///////////////////////////////////
 
-            VPRINTF(LOW, "START TEST 2: TEST AES KV 23 to DMA REUSE KV16\n");
+            VPRINTF_LOW("START TEST 2: TEST AES KV 23 to DMA REUSE KV16\n");
             
             // Initialize structs to ensure clean state
 
@@ -232,10 +232,10 @@ void main(void) {
             soc_ifc_axi_dma_read_ahb_payload(kv_key_dest, 0, kv_actual_key, kv_key_size, 0);
 
 
-            VPRINTF(LOW, "TEST 2: Checking if key stores in AXI SRAM matches expected\n");
+            VPRINTF_LOW("TEST 2: Checking if key stores in AXI SRAM matches expected\n");
             for(int i = 0; i < 16; i++) {
                 if(kv_expected_key[i] != kv_actual_key[i]) {
-                    VPRINTF(ERROR, "ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
+                    VPRINTF_ERROR("ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
                     fail = 1;
                 }
             }
@@ -244,7 +244,7 @@ void main(void) {
             // TEST 3: ERR DMA NO ACCESS KV23
             ///////////////////////////////////
 
-            VPRINTF(LOW, "START TEST 3: ERR TEST DMA NO ACCESS KV23\n");
+            VPRINTF_LOW("START TEST 3: ERR TEST DMA NO ACCESS KV23\n");
             
             // Clearing KV23 so we can load a new key into it. 
             lsu_write_32(CLP_KV_REG_KEY_CTRL_23, KV_REG_KEY_CTRL_23_CLEAR_MASK);
@@ -277,10 +277,10 @@ void main(void) {
             // No data should have been sent to the SRAM so expected should be 0.
             memset(kv_expected_key, 0, sizeof(kv_expected_key));
 
-            VPRINTF(LOW, "TEST 3: Checking if key stores in AXI SRAM matches expected\n");
+            VPRINTF_LOW("TEST 3: Checking if key stores in AXI SRAM matches expected\n");
             for(int i = 0; i < 16; i++) {
                 if(kv_expected_key[i] != kv_actual_key[i]) {
-                    VPRINTF(ERROR, "ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
+                    VPRINTF_ERROR("ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
                     fail = 1;
                 }
             }
@@ -291,7 +291,7 @@ void main(void) {
             ///////////////////////////////////
             if(kv_key_size > 0x4) {
                 // Test when key in KV slot is smaller than the key_release_size
-                VPRINTF(LOW, "START TEST 4: SMALL KV23\n");
+                VPRINTF_LOW("START TEST 4: SMALL KV23\n");
 
                 lsu_write_32(CLP_KV_REG_KEY_CTRL_23, KV_REG_KEY_CTRL_23_CLEAR_MASK);
             
@@ -307,16 +307,16 @@ void main(void) {
 
                 memset(kv_expected_key, 0, sizeof(kv_expected_key));
 
-                VPRINTF(LOW, " TEST 4: Checking if key stores in AXI SRAM matches expected\n");
+                VPRINTF_LOW(" TEST 4: Checking if key stores in AXI SRAM matches expected\n");
                 for(int i = 0; i < 16; i++) {
                     if(kv_expected_key[i] != kv_actual_key[i]) {
-                        VPRINTF(ERROR, "ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
+                        VPRINTF_ERROR("ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
                         fail = 1;
                     }
                 }
             }
             else {
-                VPRINTF(LOW, "SKIP TEST 4: SMALL KV23\n");
+                VPRINTF_LOW("SKIP TEST 4: SMALL KV23\n");
             }
 
             ///////////////////////////////////
@@ -324,7 +324,7 @@ void main(void) {
             ///////////////////////////////////
             if(kv_key_size <= 0x3C) {
                 // Test when key in KV slot is larger than the key_release_size
-                VPRINTF(LOW, "START TEST 5: LARGE KV23\n");
+                VPRINTF_LOW("START TEST 5: LARGE KV23\n");
 
                 lsu_write_32(CLP_KV_REG_KEY_CTRL_23, KV_REG_KEY_CTRL_23_CLEAR_MASK);
             
@@ -340,27 +340,27 @@ void main(void) {
 
                 memset(kv_expected_key, 0, sizeof(kv_expected_key));
 
-                VPRINTF(LOW, " TEST 5: Checking if key stores in AXI SRAM matches expected\n");
+                VPRINTF_LOW(" TEST 5: Checking if key stores in AXI SRAM matches expected\n");
                 for(int i = 0; i < 16; i++) {
                     if(kv_expected_key[i] != kv_actual_key[i]) {
-                        VPRINTF(ERROR, "ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
+                        VPRINTF_ERROR("ERROR: KV expected doesn't match actual. Expected 0x%x Actual: 0x%x\n", kv_expected_key[i], kv_actual_key[i]);
                         fail = 1;
                     }
                 }
             }
             else {
-                VPRINTF(LOW, "SKIP TEST 5: LARGE KV23\n");
+                VPRINTF_LOW("SKIP TEST 5: LARGE KV23\n");
             }
             
             /////////////////////////////////////
             //// TEST 6: ERR ROUTE KV16 to FW with a DECRYPT OPERATION         
             /////////////////////////////////////
-            VPRINTF(LOW, "START TEST 6: ROUTE KV16 to FW - ERR\n");
+            VPRINTF_LOW("START TEST 6: ROUTE KV16 to FW - ERR\n");
 
             for(int i = 0; i < 23; i++){
                 kv_set_clear(i);
             }
-            VPRINTF(LOW, "DONE CLEARING KEYS\n");
+            VPRINTF_LOW("DONE CLEARING KEYS\n");
             
             // Key to KV
             aes_key_o.kv_intf = FALSE;
@@ -380,7 +380,7 @@ void main(void) {
             // TEST 7: ERR ROUTE KV16 to KV != KV23
             ///////////////////////////////////
 
-            VPRINTF(LOW, "START TEST 7: ERR ROUTE KV16 to KV != KV23\n");
+            VPRINTF_LOW("START TEST 7: ERR ROUTE KV16 to KV != KV23\n");
             
             // Clearing SRAM where we expect the key to be written
             soc_ifc_axi_dma_send_ahb_payload(kv_key_dest, 0, send_payload, kv_key_size, 0);
@@ -405,11 +405,11 @@ void main(void) {
 
         }
         else {
-            VPRINTF(LOW, "OCP_LOCK_MODE_EN is not set, SKIPPING KV key test\n");
+            VPRINTF_LOW("OCP_LOCK_MODE_EN is not set, SKIPPING KV key test\n");
         }
     }
     else {
-        VPRINTF(FATAL, "KV KEY SIZE is not valid: 0x%x testing the byte count too large err\n", kv_key_size);
+        VPRINTF_FATAL("KV KEY SIZE is not valid: 0x%x testing the byte count too large err\n", kv_key_size);
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_byte_count_kv_large))    { fail = 1; } // Can only be tested after IN PROGRESS has been set
 
     }
@@ -419,7 +419,7 @@ void main(void) {
     // Ending Status
     // ===========================================================================
     if (fail) {
-        VPRINTF(FATAL, "smoke_test_dma_aes_kv failed!\n");
+        VPRINTF_FATAL("smoke_test_dma_aes_kv failed!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }

@@ -186,9 +186,9 @@ void main() {
                                     0xA54CA49F};
 
     // Entry message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " SHA512 Restore smoke test !!\n"     );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" SHA512 Restore smoke test !!\n"     );
+    VPRINTF_LOW("----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();

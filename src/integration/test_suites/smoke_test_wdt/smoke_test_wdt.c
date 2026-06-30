@@ -48,9 +48,9 @@ volatile uint32_t * hw_error_fatal      = (uint32_t *) CLP_SOC_IFC_REG_CPTRA_HW_
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
-    VPRINTF(LOW, "---------------------------\n");
-    VPRINTF(LOW, " WDT Smoke Test !!\n");
-    VPRINTF(LOW, "---------------------------\n");
+    VPRINTF_LOW("---------------------------\n");
+    VPRINTF_LOW(" WDT Smoke Test !!\n");
+    VPRINTF_LOW("---------------------------\n");
 
     //Enable SOC notif interrupt
     *soc_intr_en = SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER1_TIMEOUT_EN_MASK | SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_WDT_TIMER2_TIMEOUT_EN_MASK;
@@ -59,30 +59,30 @@ void main() {
     init_interrupts();
     
     if(rst_count == 0) {
-        VPRINTF(LOW, "Cascaded mode\n");
+        VPRINTF_LOW("Cascaded mode\n");
         //Enable WDT timer1
         *wdt_timer1_en = SOC_IFC_REG_CPTRA_WDT_TIMER1_EN_TIMER1_EN_MASK;
         set_t1_period(0x00000040, 0x00000000);
         
-        VPRINTF(LOW, "Stall until timer1 times out\n");
+        VPRINTF_LOW("Stall until timer1 times out\n");
         while (!(lsu_read_32(SOC_IFC_REG_CPTRA_WDT_STATUS_T1_TIMEOUT_MASK)));
-        VPRINTF(LOW, "WDT T1 timed out as expected\n");
+        VPRINTF_LOW("WDT T1 timed out as expected\n");
         *wdt_timer1_ctrl = SOC_IFC_REG_CPTRA_WDT_TIMER1_CTRL_TIMER1_RESTART_MASK;
 
         //Set timer1 period to default to avoid immediate time out
         set_default_t1_period();
         
     
-        VPRINTF(LOW, "Independent mode - both timers enabled\n");
+        VPRINTF_LOW("Independent mode - both timers enabled\n");
         //Enable WDT timer1
         *wdt_timer2_en = SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK;
         set_t2_period(0x00000040, 0x00000000);
         
-        VPRINTF(LOW, "Stall until timer2 times out\n");
+        VPRINTF_LOW("Stall until timer2 times out\n");
         //Release forced timer periods from tb so test can set them
         SEND_STDOUT_CTRL(0xf1);
 
-        VPRINTF(LOW, "Cascaded mode with timer2 timeout\n");
+        VPRINTF_LOW("Cascaded mode with timer2 timeout\n");
         *wdt_timer2_en = 0x0;
         *wdt_timer1_ctrl = 0x1; //restart counter so timer1 can start counting
         
@@ -90,25 +90,25 @@ void main() {
         set_t1_period(0x00000040, 0x00000000);
         
 
-        VPRINTF(LOW, "Stall until timer1 times out\n");
-        VPRINTF(LOW, "Stall until timer2 times out\n");
+        VPRINTF_LOW("Stall until timer1 times out\n");
+        VPRINTF_LOW("Stall until timer2 times out\n");
 
         
     }
     else if(rst_count == 1) {
         //Issue warm reset after NMI as per spec
-        VPRINTF(LOW, "Issuing reset in response to NMI (t2 timeout)\n");
+        VPRINTF_LOW("Issuing reset in response to NMI (t2 timeout)\n");
         rst_count++;
         SEND_STDOUT_CTRL(0xf6);
     }
     else {
-        VPRINTF(LOW, "Independent mode - timer2 enabled, timer1 disabled\n");
+        VPRINTF_LOW("Independent mode - timer2 enabled, timer1 disabled\n");
         *wdt_timer2_en = SOC_IFC_REG_CPTRA_WDT_TIMER2_EN_TIMER2_EN_MASK;
         set_t2_period(0x00000040, 0x00000000);
         
-        VPRINTF(LOW, "Stall until timer2 times out\n");
+        VPRINTF_LOW("Stall until timer2 times out\n");
         while (!(lsu_read_32(SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK)));
-        VPRINTF(LOW, "WDT T2 timed out as expected\n")
+        VPRINTF_LOW("WDT T2 timed out as expected\n")
         //Release forced timer periods from tb so test can set them
         // SEND_STDOUT_CTRL(0xf1);
 
@@ -117,7 +117,7 @@ void main() {
             *hw_error_fatal = SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_NMI_PIN_MASK;
         }
         else {
-            VPRINTF(ERROR, "Did not see expected hw fatal error!");
+            VPRINTF_ERROR("Did not see expected hw fatal error!");
         }
     }
 }

@@ -59,9 +59,9 @@ void main() {
     uint32_t error_field;
     uint8_t test_slot = 2;
 
-    VPRINTF(LOW, "============================================================\n");
-    VPRINTF(LOW, " KV lock_use Mid-Read Fault Capture Test\n");
-    VPRINTF(LOW, "============================================================\n");
+    VPRINTF_LOW("============================================================\n");
+    VPRINTF_LOW(" KV lock_use Mid-Read Fault Capture Test\n");
+    VPRINTF_LOW("============================================================\n");
 
     // ------------------------------------------------------------------
     // Step 1: Inject a valid HMAC512 key into KV slot via TB
@@ -72,7 +72,7 @@ void main() {
     // Note: must use lsu_write_32 (not SEND_STDOUT_CTRL) because the slot
     // number is encoded in bits [12:8] and SEND_STDOUT_CTRL truncates to char.
     // ------------------------------------------------------------------
-    VPRINTF(LOW, "[SETUP] Injecting HMAC512 key into KV slot %d via TB...\n", test_slot);
+    VPRINTF_LOW("[SETUP] Injecting HMAC512 key into KV slot %d via TB...\n", test_slot);
     lsu_write_32((uintptr_t) stdout, (test_slot << 8) | 0xa9);
 
     // ------------------------------------------------------------------
@@ -84,7 +84,7 @@ void main() {
     // ------------------------------------------------------------------
     uint32_t key_ctrl_addr = CLP_KV_REG_KEY_CTRL_0 + (test_slot * 4);
     uint32_t key_ctrl_val = lsu_read_32(key_ctrl_addr);
-    VPRINTF(LOW, "[SETUP] KEY_CTRL[%d] = 0x%08x\n", test_slot, key_ctrl_val);
+    VPRINTF_LOW("[SETUP] KEY_CTRL[%d] = 0x%08x\n", test_slot, key_ctrl_val);
 
     uint32_t lock_val = key_ctrl_val | KV_REG_KEY_CTRL_0_LOCK_USE_MASK;
 
@@ -112,7 +112,7 @@ void main() {
     //   - Beat 0: kv_resp.error=0, error_code=KV_SUCCESS
     //   - Beats 1+: kv_resp.error=1, read_allow=1 → KV_READ_FAIL
     // ------------------------------------------------------------------
-    VPRINTF(LOW, "[TEST] Triggering HMAC KV key read + delayed lock_use...\n");
+    VPRINTF_LOW("[TEST] Triggering HMAC KV key read + delayed lock_use...\n");
 
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL,
                  HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
@@ -136,17 +136,17 @@ void main() {
     error_field = (status & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK) >>
                   HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_LOW;
 
-    VPRINTF(LOW, "[RESULT] HMAC KV_RD_KEY_STATUS = 0x%08x (error=0x%02x)\n",
+    VPRINTF_LOW("[RESULT] HMAC KV_RD_KEY_STATUS = 0x%08x (error=0x%02x)\n",
             status, error_field);
 
     if (error_field == 0) {
-        VPRINTF(ERROR, "[FAIL] lock_use set mid-read but error_code = KV_SUCCESS!\n");
-        VPRINTF(ERROR, "       Crypto engine received partially-zeroed key "
+        VPRINTF_ERROR("[FAIL] lock_use set mid-read but error_code = KV_SUCCESS!\n");
+        VPRINTF_ERROR("       Crypto engine received partially-zeroed key "
                        "without error detection.\n");
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "[PASS] Mid-read lock_use correctly reported error=0x%02x\n",
+    VPRINTF_LOW("[PASS] Mid-read lock_use correctly reported error=0x%02x\n",
             error_field);
 
     // ------------------------------------------------------------------
@@ -154,7 +154,7 @@ void main() {
     // ------------------------------------------------------------------
     uint32_t key_ctrl_readback = lsu_read_32(key_ctrl_addr);
     if (!(key_ctrl_readback & KV_REG_KEY_CTRL_0_LOCK_USE_MASK)) {
-        VPRINTF(ERROR, "[FAIL] lock_use bit not set after write!\n");
+        VPRINTF_ERROR("[FAIL] lock_use bit not set after write!\n");
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
@@ -164,17 +164,17 @@ void main() {
     key_ctrl_readback = lsu_read_32(key_ctrl_addr);
 
     if (!(key_ctrl_readback & KV_REG_KEY_CTRL_0_LOCK_USE_MASK)) {
-        VPRINTF(ERROR, "[FAIL] lock_use was cleared by SW — not sticky!\n");
+        VPRINTF_ERROR("[FAIL] lock_use was cleared by SW — not sticky!\n");
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "[PASS] lock_use is sticky — cannot be cleared by SW\n");
+    VPRINTF_LOW("[PASS] lock_use is sticky — cannot be cleared by SW\n");
 
     // ------------------------------------------------------------------
     // Done
     // ------------------------------------------------------------------
-    VPRINTF(LOW, "\n============================================================\n");
-    VPRINTF(LOW, " ALL CHECKS PASSED\n");
-    VPRINTF(LOW, "============================================================\n");
+    VPRINTF_LOW("\n============================================================\n");
+    VPRINTF_LOW(" ALL CHECKS PASSED\n");
+    VPRINTF_LOW("============================================================\n");
     SEND_STDOUT_CTRL(0xff);
 }

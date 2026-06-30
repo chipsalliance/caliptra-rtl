@@ -160,13 +160,13 @@ void set_kv_intf_hmac(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t ta
     if (key_kv_intf_bit == 1) {
         hmac_key.kv_intf = TRUE;
         hmac_key.kv_id = hmackey_kv_id;
-        VPRINTF(LOW, "HMAC Key KV interface enabled\n");
+        VPRINTF_LOW("HMAC Key KV interface enabled\n");
     }
     else {
         hmac_key.kv_intf = FALSE;
         for (int i = 0; i < HMAC512_KEY_SIZE; i++)
             hmac_key.data[i] = key512_data[i];
-        VPRINTF(LOW, "HMAC Key FW interface enabled\n");
+        VPRINTF_LOW("HMAC Key FW interface enabled\n");
     }
     //--------------------------------------------------      
 
@@ -175,13 +175,13 @@ void set_kv_intf_hmac(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t ta
     if (block_kv_intf_bit == 1) {
         hmac_block.kv_intf = TRUE;
         hmac_block.kv_id = hmacblock_kv_id;
-        VPRINTF(LOW, "HMAC Block KV interface enabled\n");
+        VPRINTF_LOW("HMAC Block KV interface enabled\n");
     }
     else {
         hmac_block.kv_intf = FALSE;
         for (int i = 0; i < HMAC512_BLOCK_SIZE; i++)
             hmac_block.data[i] = block_data[i];
-        VPRINTF(LOW, "HMAC Block FW interface enabled\n");
+        VPRINTF_LOW("HMAC Block FW interface enabled\n");
     }
     //--------------------------------------------------
 
@@ -194,7 +194,7 @@ void set_kv_intf_hmac(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t ta
     if (tag_kv_intf_bit == 1) {
         hmac512_tag.kv_intf = TRUE;
         hmac512_tag.kv_id = tag_kv_id;
-        VPRINTF(LOW, "HMAC Tag KV interface enabled\n");
+        VPRINTF_LOW("HMAC Tag KV interface enabled\n");
     }
     else {
         if (key_kv_intf_bit == 1 || block_kv_intf_bit == 1) {
@@ -215,7 +215,7 @@ void set_kv_intf_hmac(uint8_t hmackey_kv_id, uint8_t hmacblock_kv_id, uint8_t ta
             for (int i = 0; i < HMAC512_TAG_SIZE; i++)
                 hmac512_tag.data[i] = expected512_tag[i];
         }
-        VPRINTF(LOW, "HMAC Tag FW interface enabled\n");
+        VPRINTF_LOW("HMAC Tag FW interface enabled\n");
     }
 }
 
@@ -241,7 +241,7 @@ void main() {
     init_interrupts();
 
     uint32_t ocp_lock_mode = (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
-    VPRINTF(LOW, "OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
+    VPRINTF_LOW("OCP_LOCK_MODE_EN: 0x%x\n", ocp_lock_mode);
 
     if (ocp_lock_mode) {
         for(int i = 0; i < 20; i++) {
@@ -258,7 +258,7 @@ void main() {
                 hmacblock_kv_id = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
                 tag_kv_id = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
             }
-            VPRINTF(LOW, "\nSTART TEST %d\n", i);
+            VPRINTF_LOW("\nSTART TEST %d\n", i);
 
             set_kv_intf_hmac(hmackey_kv_id, hmacblock_kv_id, tag_kv_id);
 
@@ -303,9 +303,9 @@ void main() {
             hmac384_tag.kv_id = hmac512_tag.kv_id;
             hmac384_tag.exp_kv_err = hmac512_tag.exp_kv_err;
 
-            VPRINTF(LOW, "Key KV ID: %d, KV Intf: %d, exp_err: %d\n", hmac_key.kv_id, hmac_key.kv_intf, hmac_key.exp_kv_err);
-            VPRINTF(LOW, "Block KV ID: %d, KV Intf: %d, exp_err: %d\n", hmac_block.kv_id, hmac_block.kv_intf, hmac_block.exp_kv_err);
-            VPRINTF(LOW, "Tag KV ID: %d, KV Intf: %d, exp_err: %d\n", hmac512_tag.kv_id, hmac512_tag.kv_intf, hmac512_tag.exp_kv_err);
+            VPRINTF_LOW("Key KV ID: %d, KV Intf: %d, exp_err: %d\n", hmac_key.kv_id, hmac_key.kv_intf, hmac_key.exp_kv_err);
+            VPRINTF_LOW("Block KV ID: %d, KV Intf: %d, exp_err: %d\n", hmac_block.kv_id, hmac_block.kv_intf, hmac_block.exp_kv_err);
+            VPRINTF_LOW("Tag KV ID: %d, KV Intf: %d, exp_err: %d\n", hmac512_tag.kv_id, hmac512_tag.kv_intf, hmac512_tag.exp_kv_err);
 
             //inject hmac512_key to kv key reg (in RTL)
             lsu_write_32(STDOUT, (hmac_key.kv_id << 8) | 0xa9);
@@ -326,7 +326,7 @@ void main() {
                 if ((hmac_key.exp_kv_err == FALSE) && (hmac_block.exp_kv_err == FALSE)) {
                     if (hmac512_tag.exp_kv_err == TRUE){
                         if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) == 0) {
-                            VPRINTF(FATAL, "KV_WRITE_FAIL is not detected!\n");
+                            VPRINTF_FATAL("KV_WRITE_FAIL is not detected!\n");
                             SEND_STDOUT_CTRL(0x1);
                             while(1);
                         }
@@ -335,7 +335,7 @@ void main() {
                         }
                     }
                     else if((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) >> HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_LOW) != 0) {
-                        VPRINTF(FATAL, "Unexpected KV_WRITE_FAIL is detected!\n");
+                        VPRINTF_FATAL("Unexpected KV_WRITE_FAIL is detected!\n");
                         SEND_STDOUT_CTRL(0x1);
                         while(1);
                     }
@@ -351,7 +351,7 @@ void main() {
             cptra_intr_rcv.hmac_notif = 0;
         }
     } else {
-        VPRINTF(ERROR, "This test is supported only in SS_MODE\n");
+        VPRINTF_ERROR("This test is supported only in SS_MODE\n");
     }
     SEND_STDOUT_CTRL(0xff); //End the test
 }

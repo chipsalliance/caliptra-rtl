@@ -46,9 +46,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 
 void main() {
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Smoke Test With FW HMAC after KV flow !!\n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Smoke Test With FW HMAC after KV flow !!\n");
+    VPRINTF_LOW("----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -168,7 +168,7 @@ void main() {
 
     hmac384_flow(hmac384_key, hmac_block, hmac_lfsr_seed, hmac384_tag, TRUE, TRUE);
     
-    VPRINTF(LOW, "KV HMAC flow is completed.\n\n");
+    VPRINTF_LOW("KV HMAC flow is completed.\n\n");
 
     /*
         Start FW HMAC without injecting the key.
@@ -179,7 +179,7 @@ void main() {
         worked, KEY=0 and the tag equals HMAC-SHA384(K=0, M="Hi There");
         if KEY retained the KV value, the tag will differ catching the bug.
     */
-    VPRINTF(LOW, "Start FW HMAC\n");
+    VPRINTF_LOW("Start FW HMAC\n");
 
     reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_BLOCK_0;
     offset = 0;
@@ -194,14 +194,14 @@ void main() {
     // wait for HMAC process to be done
     wait_for_hmac_intr();
 
-    VPRINTF(LOW, "Load TAG from FW HMAC\n");
+    VPRINTF_LOW("Load TAG from FW HMAC\n");
     reg_ptr = (uint32_t *) CLP_HMAC_REG_HMAC512_TAG_0;
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_HMAC_REG_HMAC512_TAG_11) {
         if (tag384_zerokey_zeroblock[offset] != *reg_ptr) {
-            VPRINTF(ERROR, "At offset [%d], hmac384_tag data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", tag384_zerokey_zeroblock[offset]);
+            VPRINTF_ERROR("At offset [%d], hmac384_tag data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", *reg_ptr);
+            VPRINTF_ERROR("Expected data: 0x%x\n", tag384_zerokey_zeroblock[offset]);
             SEND_STDOUT_CTRL(0x1); //fail_cmd
             while(1);
         }

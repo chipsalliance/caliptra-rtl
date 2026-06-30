@@ -163,9 +163,9 @@ void main() {
                                     
 
     // Entry message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " HMAC384 smoke test !!\n"            );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" HMAC384 smoke test !!\n"            );
+    VPRINTF_LOW("----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();
@@ -200,9 +200,9 @@ void main() {
 
 
     // Entry message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " HMAC512 smoke test !!\n"            );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" HMAC512 smoke test !!\n"            );
+    VPRINTF_LOW("----------------------------------\n");
 
     hmac512_key.kv_intf = FALSE;
     for (int i = 0; i < HMAC512_KEY_SIZE; i++)

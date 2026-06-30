@@ -44,9 +44,9 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 */
 
 void main() {
-    VPRINTF(LOW, "----------------------------------------\n");
-    VPRINTF(LOW, " Running ECC Smoke Test error_trigger !!\n");
-    VPRINTF(LOW, "----------------------------------------\n");
+    VPRINTF_LOW("----------------------------------------\n");
+    VPRINTF_LOW(" Running ECC Smoke Test error_trigger !!\n");
+    VPRINTF_LOW("----------------------------------------\n");
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -203,20 +203,20 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST OUT OF RANGE PRIVEKEY ZERO\n");
+        VPRINTF_LOW("\n TEST OUT OF RANGE PRIVEKEY ZERO\n");
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
         while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
             *reg_ptr++ = 0;
         }
 
         // Enable ECC SIGNING core
-        VPRINTF(LOW, "\nECC SIGNING\n");
+        VPRINTF_LOW("\nECC SIGNING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC privkey_input_outofrange 0 error is not detected.\n");
+            VPRINTF_ERROR("\nECC privkey_input_outofrange 0 error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -230,7 +230,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST OUT OF RANGE PRIVEKEY GREATER q\n");
+        VPRINTF_LOW("\n TEST OUT OF RANGE PRIVEKEY GREATER q\n");
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
         offset = 0;
         while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_11) {
@@ -238,13 +238,13 @@ void main() {
         }
 
         // Enable ECC SIGNING core
-        VPRINTF(LOW, "\nECC SIGNING\n");
+        VPRINTF_LOW("\nECC SIGNING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC privkey_input_outofrange 1 error is not detected.\n");
+            VPRINTF_ERROR("\nECC privkey_input_outofrange 1 error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -258,7 +258,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST OUT OF RANGE PUBKEY\n");
+        VPRINTF_LOW("\n TEST OUT OF RANGE PUBKEY\n");
         // Program ECC PUBKEY_X
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
         offset = 0;
@@ -274,13 +274,13 @@ void main() {
         }
 
         // Enable ECC VERIFYING core
-        VPRINTF(LOW, "\nECC VERIFYING\n");
+        VPRINTF_LOW("\nECC VERIFYING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_VERIFYING);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC pubkey_input_outofrange error is not detected.\n");
+            VPRINTF_ERROR("\nECC pubkey_input_outofrange error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -294,7 +294,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST INVALID PUBKEY\n");
+        VPRINTF_LOW("\n TEST INVALID PUBKEY\n");
         // Program ECC PUBKEY_X
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
         offset = 0;
@@ -324,13 +324,13 @@ void main() {
         }
 
         // Enable ECC VERIFYING core
-        VPRINTF(LOW, "\nECC VERIFYING\n");
+        VPRINTF_LOW("\nECC VERIFYING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_VERIFYING);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC pubkey_input_invalid error is not detected.\n");
+            VPRINTF_ERROR("\nECC pubkey_input_invalid error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -344,7 +344,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST INVALID OUTPUT SIGN_R\n");
+        VPRINTF_LOW("\n TEST INVALID OUTPUT SIGN_R\n");
         // Program ECC PRIVKEY
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PRIVKEY_IN_0;
         offset = 0;
@@ -370,13 +370,13 @@ void main() {
         SEND_STDOUT_CTRL(0x98);
 
         // Enable ECC SIGNING core
-        VPRINTF(LOW, "\nECC SIGNING\n");
+        VPRINTF_LOW("\nECC SIGNING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC r_output_outofrange error is not detected.\n");
+            VPRINTF_ERROR("\nECC r_output_outofrange error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
@@ -390,7 +390,7 @@ void main() {
         // wait for ECC to be ready
         while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-        VPRINTF(LOW, "\n TEST OUT OF RANGE INPUT R/S\n");
+        VPRINTF_LOW("\n TEST OUT OF RANGE INPUT R/S\n");
         // Program ECC SIGN_R
         reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;
         offset = 0;
@@ -405,13 +405,13 @@ void main() {
         }
 
         // Enable ECC VERIFYING core
-        VPRINTF(LOW, "\nECC VERIFYING\n");
+        VPRINTF_LOW("\nECC VERIFYING\n");
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_VERIFYING);
         
         // wait for ECC SIGNING process to be done
         wait_for_ecc_intr();
         if ((cptra_intr_rcv.ecc_error == 0)){
-            VPRINTF(ERROR, "\nECC r/s_input_outofrange error is not detected.\n");
+            VPRINTF_ERROR("\nECC r/s_input_outofrange error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }

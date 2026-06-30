@@ -22,7 +22,7 @@
 extern volatile caliptra_intr_received_s cptra_intr_rcv;
 
 static void wait_for_sha512_intr(){
-    VPRINTF(LOW, "SHA512 flow in progress...\n");
+    VPRINTF_LOW("SHA512 flow in progress...\n");
     while((cptra_intr_rcv.sha512_error == 0) & (cptra_intr_rcv.sha512_notif == 0)){
         __asm__ volatile ("wfi"); // "Wait for interrupt"
         // Sleep during SHA512 operation to allow ISR to execute and show idle time in sims
@@ -30,8 +30,8 @@ static void wait_for_sha512_intr(){
             __asm__ volatile ("nop"); // Sleep loop as "nop"
         }
     };
-    //VPRINTF(LOW, "Received SHA512 error intr with status = %d\n", cptra_intr_rcv.sha512_error);
-    VPRINTF(LOW, "Received SHA512 notif intr with status = %d\n", cptra_intr_rcv.sha512_notif);
+    //VPRINTF_LOW("Received SHA512 error intr with status = %d\n", cptra_intr_rcv.sha512_error);
+    VPRINTF_LOW("Received SHA512 notif intr with status = %d\n", cptra_intr_rcv.sha512_notif);
 }
 
 void sha_init(enum sha512_mode_e mode) {
@@ -77,7 +77,7 @@ void sha_gen_hash_start() {
 
 
 void sha512_zeroize(){
-    VPRINTF(LOW, "SHA512 zeroize flow.\n");
+    VPRINTF_LOW("SHA512 zeroize flow.\n");
     lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, (1 << SHA512_REG_SHA512_CTRL_ZEROIZE_LOW) & SHA512_REG_SHA512_CTRL_ZEROIZE_MASK);
 }
 
@@ -98,7 +98,7 @@ void sha512_flow(sha512_io block, uint8_t mode, sha512_io digest){
     }
 
     // Enable SHA512 core 
-    VPRINTF(LOW, "Enable SHA512\n");
+    VPRINTF_LOW("Enable SHA512\n");
     lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, SHA512_REG_SHA512_CTRL_INIT_MASK | 
                                             (mode << SHA512_REG_SHA512_CTRL_MODE_LOW) & SHA512_REG_SHA512_CTRL_MODE_MASK);
     
@@ -106,14 +106,14 @@ void sha512_flow(sha512_io block, uint8_t mode, sha512_io digest){
     wait_for_sha512_intr();
 
     reg_ptr = (uint32_t *) CLP_SHA512_REG_SHA512_DIGEST_0;
-    VPRINTF(LOW, "Load DIGEST data from SHA512\n");
+    VPRINTF_LOW("Load DIGEST data from SHA512\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_15) {
         sha512_digest[offset] = *reg_ptr;
         if (sha512_digest[offset] != digest.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], sha_digest data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", sha512_digest[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", digest.data[offset]);
+            VPRINTF_ERROR("At offset [%d], sha_digest data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", sha512_digest[offset]);
+            VPRINTF_ERROR("Expected data: 0x%x\n", digest.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
@@ -147,7 +147,7 @@ void sha512_restore_flow(sha512_io block, uint8_t mode, sha512_io restore_digest
     }
 
     // Enable SHA512 core 
-    VPRINTF(LOW, "Enable SHA512\n");
+    VPRINTF_LOW("Enable SHA512\n");
     lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, SHA512_REG_SHA512_CTRL_NEXT_MASK | 
                                              SHA512_REG_SHA512_CTRL_RESTORE_MASK |
                                             (mode << SHA512_REG_SHA512_CTRL_MODE_LOW) & SHA512_REG_SHA512_CTRL_MODE_MASK);
@@ -156,14 +156,14 @@ void sha512_restore_flow(sha512_io block, uint8_t mode, sha512_io restore_digest
     wait_for_sha512_intr();
 
     reg_ptr = (uint32_t *) CLP_SHA512_REG_SHA512_DIGEST_0;
-    VPRINTF(LOW, "Load DIGEST data from SHA512\n");
+    VPRINTF_LOW("Load DIGEST data from SHA512\n");
     offset = 0;
     while (reg_ptr <= (uint32_t*) CLP_SHA512_REG_SHA512_DIGEST_15) {
         sha512_digest[offset] = *reg_ptr;
         if (sha512_digest[offset] != digest.data[offset]) {
-            VPRINTF(ERROR, "At offset [%d], sha_digest data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", sha512_digest[offset]);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", digest.data[offset]);
+            VPRINTF_ERROR("At offset [%d], sha_digest data mismatch!\n", offset);
+            VPRINTF_ERROR("Actual   data: 0x%x\n", sha512_digest[offset]);
+            VPRINTF_ERROR("Expected data: 0x%x\n", digest.data[offset]);
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }

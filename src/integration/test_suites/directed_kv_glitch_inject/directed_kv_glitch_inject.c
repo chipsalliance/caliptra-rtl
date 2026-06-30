@@ -79,11 +79,11 @@ static inline void tb_settle(void) {
 // should succeed without triggering kv_fault.
 // ============================================================
 void fmc_entry(void) {
-    VPRINTF(LOW, "FMC[0]: Reached FMC after MuBi4 glitch recovery\n");
+    VPRINTF_LOW("FMC[0]: Reached FMC after MuBi4 glitch recovery\n");
 
     check_no_kv_error("FMC post-glitch");
 
-    VPRINTF(LOW, "FMC[0]: Glitch fail-safe confirmed -- warm reset\n");
+    VPRINTF_LOW("FMC[0]: Glitch fail-safe confirmed -- warm reset\n");
     SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
     while(1);
 }
@@ -94,12 +94,12 @@ void main() {
 
     init_interrupts();
 
-    VPRINTF(LOW, "============================================\n");
-    VPRINTF(LOW, " KV Glitch Injection Test -- iter %d\n", current_iter);
-    VPRINTF(LOW, "============================================\n");
+    VPRINTF_LOW("============================================\n");
+    VPRINTF_LOW(" KV Glitch Injection Test -- iter %d\n", current_iter);
+    VPRINTF_LOW("============================================\n");
 
     if (current_iter >= NUM_ITERATIONS) {
-        VPRINTF(FATAL, "[FAIL] Unexpected iteration %d\n", current_iter);
+        VPRINTF_FATAL("[FAIL] Unexpected iteration %d\n", current_iter);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
@@ -107,7 +107,7 @@ void main() {
     // Clear any stale HW faults (skip for iter 2 -- it checks persistence)
     uint32_t hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
     if (hw_err && current_iter != 2) {
-        VPRINTF(LOW, "  Clearing stale HW fault (0x%08x)\n", hw_err);
+        VPRINTF_LOW("  Clearing stale HW fault (0x%08x)\n", hw_err);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, hw_err);
     }
 
@@ -120,11 +120,11 @@ void main() {
             // ========================================================
 
             // Standard DICE derivation
-            VPRINTF(LOW, "ROM[0]: Populating DICE key slots...\n");
+            VPRINTF_LOW("ROM[0]: Populating DICE key slots...\n");
             populate_dice_slots();
 
             // Copy FMC code to ICCM
-            VPRINTF(LOW, "ROM[0]: Copying FMC code to ICCM\n");
+            VPRINTF_LOW("ROM[0]: Copying FMC code to ICCM\n");
             copy_to_iccm(FMC_ICCM_ADDR,
                           (uint32_t *)&iccm_code0_start,
                           (uint32_t *)&iccm_code0_end);
@@ -135,21 +135,21 @@ void main() {
             // Enable boot flow monitoring
             SEND_STDOUT_CTRL(TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR);
 
-            VPRINTF(LOW, "ROM[0]: Injecting MuBi4 glitch on boot_flow_fmc\n");
+            VPRINTF_LOW("ROM[0]: Injecting MuBi4 glitch on boot_flow_fmc\n");
             SEND_STDOUT_CTRL(TB_CMD_MUBI4_GLITCH);
             tb_settle(); // Wait for force + auto-release
 
             // Verify: invalid encoding does NOT trigger kv_fault
             check_no_kv_error("MuBi4 glitch");
-            VPRINTF(LOW, "ROM[0]: No spurious fault from invalid MuBi4 (fail-safe OK)\n");
+            VPRINTF_LOW("ROM[0]: No spurious fault from invalid MuBi4 (fail-safe OK)\n");
 
             // Normal FMC jump -- real transition should succeed
-            VPRINTF(LOW, "ROM[0]: Jumping to FMC (normal transition)...\n");
+            VPRINTF_LOW("ROM[0]: Jumping to FMC (normal transition)...\n");
             void (*fmc_fn)(void) = (void (*)(void))FMC_ICCM_ADDR;
             fmc_fn();
 
             // Should not return
-            VPRINTF(FATAL, "[FAIL] FMC returned to ROM\n");
+            VPRINTF_FATAL("[FAIL] FMC returned to ROM\n");
             SEND_STDOUT_CTRL(0x01);
             while(1);
         }
@@ -171,23 +171,23 @@ void main() {
 
             // Save the committed value before injection
             uint32_t orig_val = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR);
-            VPRINTF(LOW, "ROM[1]: fmc_start before injection: 0x%08x\n", orig_val);
+            VPRINTF_LOW("ROM[1]: fmc_start before injection: 0x%08x\n", orig_val);
 
             // Inject shadow bit-flip (auto-releases after 5 clocks,
             // but the flop retains the corrupted value permanently)
-            VPRINTF(LOW, "ROM[1]: Injecting shadow storage bit-flip\n");
+            VPRINTF_LOW("ROM[1]: Injecting shadow storage bit-flip\n");
             SEND_STDOUT_CTRL(TB_CMD_SHADOW_FLIP);
             tb_settle();
 
             // Verify: shadow_storage_err (bit 5) set in HW_ERROR_FATAL
             hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
             if (!(hw_err & SHADOW_STORAGE_ERR_MASK)) {
-                VPRINTF(FATAL, "[FAIL] shadow_storage_err not set "
+                VPRINTF_FATAL("[FAIL] shadow_storage_err not set "
                         "(hw_fatal=0x%08x)\n", hw_err);
                 SEND_STDOUT_CTRL(0x01);
                 while(1);
             }
-            VPRINTF(LOW, "ROM[1]: shadow_storage_err detected (hw_fatal=0x%08x)\n", hw_err);
+            VPRINTF_LOW("ROM[1]: shadow_storage_err detected (hw_fatal=0x%08x)\n", hw_err);
 
             // Attempt write -- should be locked out by err_storage
             uint32_t new_val = orig_val ^ 0x100;
@@ -197,17 +197,17 @@ void main() {
 
             uint32_t readback = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR);
             if (readback != orig_val) {
-                VPRINTF(FATAL, "[FAIL] Shadow write succeeded during "
+                VPRINTF_FATAL("[FAIL] Shadow write succeeded during "
                         "err_storage (got 0x%08x, expected 0x%08x)\n",
                         readback, orig_val);
                 SEND_STDOUT_CTRL(0x01);
                 while(1);
             }
-            VPRINTF(LOW, "ROM[1]: Write correctly rejected during err_storage\n");
+            VPRINTF_LOW("ROM[1]: Write correctly rejected during err_storage\n");
 
             // Warm reset -- clears err_storage (shadow re-inits) but
             // CPTRA_HW_ERROR_FATAL persists (pwrgood-only reset domain)
-            VPRINTF(LOW, "ROM[1]: Issuing warm reset for recovery check\n");
+            VPRINTF_LOW("ROM[1]: Issuing warm reset for recovery check\n");
             SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
             while(1);
         }
@@ -223,27 +223,27 @@ void main() {
             // Verify fatal bit persisted across warm reset
             hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
             if (!(hw_err & SHADOW_STORAGE_ERR_MASK)) {
-                VPRINTF(FATAL, "[FAIL] shadow_storage_err did not persist "
+                VPRINTF_FATAL("[FAIL] shadow_storage_err did not persist "
                         "across warm reset (hw_fatal=0x%08x)\n", hw_err);
                 SEND_STDOUT_CTRL(0x01);
                 while(1);
             }
-            VPRINTF(LOW, "ROM[2]: shadow_storage_err persisted (hw_fatal=0x%08x)\n", hw_err);
+            VPRINTF_LOW("ROM[2]: shadow_storage_err persisted (hw_fatal=0x%08x)\n", hw_err);
 
             // W1C clear -- should succeed now that err_storage is gone
             lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, SHADOW_STORAGE_ERR_MASK);
             hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
             if (hw_err & SHADOW_STORAGE_ERR_MASK) {
-                VPRINTF(FATAL, "[FAIL] W1C did not clear shadow_storage_err "
+                VPRINTF_FATAL("[FAIL] W1C did not clear shadow_storage_err "
                         "(hw_fatal=0x%08x)\n", hw_err);
                 SEND_STDOUT_CTRL(0x01);
                 while(1);
             }
-            VPRINTF(LOW, "ROM[2]: W1C cleared shadow_storage_err after warm reset\n");
+            VPRINTF_LOW("ROM[2]: W1C cleared shadow_storage_err after warm reset\n");
 
-            VPRINTF(LOW, "============================================\n");
-            VPRINTF(LOW, " All glitch injection tests passed\n");
-            VPRINTF(LOW, "============================================\n");
+            VPRINTF_LOW("============================================\n");
+            VPRINTF_LOW(" All glitch injection tests passed\n");
+            VPRINTF_LOW("============================================\n");
             SEND_STDOUT_CTRL(0xff);
             while(1);
         }

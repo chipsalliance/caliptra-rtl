@@ -100,7 +100,7 @@ int populate_rom_slots(uint32_t iteration) {
     switch (iteration) {
     case 0:
         // Skip slot 0 (UDS) entirely -- monitor expects AES_KEY
-        VPRINTF(LOW, "  Fault: skipping slot 0 (UDS)\n");
+        VPRINTF_LOW("  Fault: skipping slot 0 (UDS)\n");
         /* slot 0 omitted */
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
@@ -109,7 +109,7 @@ int populate_rom_slots(uint32_t iteration) {
 
     case 1:
         // Slot 0 with wrong dest_valid (HMAC_KEY instead of AES_KEY)
-        VPRINTF(LOW, "  Fault: slot 0 wrong dest_valid (HMAC_KEY)\n");
+        VPRINTF_LOW("  Fault: slot 0 wrong dest_valid (HMAC_KEY)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_HMAC_KEY);  // WRONG
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
@@ -118,7 +118,7 @@ int populate_rom_slots(uint32_t iteration) {
 
     case 2:
         // Skip slot 6 (FMC_CDI) -- monitor expects CDI dest_valid AND write count >= 4
-        VPRINTF(LOW, "  Fault: skipping slot 6 (FMC_CDI)\n");
+        VPRINTF_LOW("  Fault: skipping slot 6 (FMC_CDI)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
@@ -131,7 +131,7 @@ int populate_rom_slots(uint32_t iteration) {
 
     case 3:
         // Slot 2 (Key Ladder) with wrong dest_valid (AES_KEY instead of HMAC_KEY)
-        VPRINTF(LOW, "  Fault: slot 2 wrong dest_valid (AES_KEY)\n");
+        VPRINTF_LOW("  Fault: slot 2 wrong dest_valid (AES_KEY)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_AES_KEY);   // WRONG
@@ -141,7 +141,7 @@ int populate_rom_slots(uint32_t iteration) {
     case 4:
     case 5:
         // FMC-to-RT faults: ROM slots are correct, fault injected in FMC
-        VPRINTF(LOW, "  ROM slots correct -- fault at FMC-to-RT\n");
+        VPRINTF_LOW("  ROM slots correct -- fault at FMC-to-RT\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
@@ -150,7 +150,7 @@ int populate_rom_slots(uint32_t iteration) {
 
     case 6:
         // Slot 7 write count=1 (skip FMC Alias ECC keygen, expect ==2)
-        VPRINTF(LOW, "  Fault: slot 7 write count=1 (skip FMC Alias ECC)\n");
+        VPRINTF_LOW("  Fault: slot 7 write count=1 (skip FMC Alias ECC)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
@@ -166,7 +166,7 @@ int populate_rom_slots(uint32_t iteration) {
 
     case 7:
         // Slot 8 write count=1 (skip FMC Alias MLDSA keygen, expect ==2)
-        VPRINTF(LOW, "  Fault: slot 8 write count=1 (skip FMC Alias MLDSA)\n");
+        VPRINTF_LOW("  Fault: slot 8 write count=1 (skip FMC Alias MLDSA)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
@@ -184,7 +184,7 @@ int populate_rom_slots(uint32_t iteration) {
         // Slot 7 write count=3 (one EXTRA ECC keygen, expect ==2)
         // Simulates glitch replay: attacker causes ROM to redo ECC keygen,
         // overwriting the safe public key with earlier private key material.
-        VPRINTF(LOW, "  Fault: slot 7 write count too high (3 instead of 2)\n");
+        VPRINTF_LOW("  Fault: slot 7 write count too high (3 instead of 2)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
@@ -197,7 +197,7 @@ int populate_rom_slots(uint32_t iteration) {
         // Slot 6 write count=5 (one EXTRA CDI write, expect ==4)
         // Simulates glitch replay: attacker causes ROM to redo DOE decrypt,
         // overwriting the safe alias CDI with raw UDS.
-        VPRINTF(LOW, "  Fault: slot 6 write count too high (5 instead of 4)\n");
+        VPRINTF_LOW("  Fault: slot 6 write count too high (5 instead of 4)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
@@ -209,7 +209,7 @@ int populate_rom_slots(uint32_t iteration) {
     case 10:
         // Slot 8 write count=3 (one EXTRA MLDSA keygen, expect ==2)
         // Simulates glitch replay of MLDSA keygen.
-        VPRINTF(LOW, "  Fault: slot 8 write count too high (3 instead of 2)\n");
+        VPRINTF_LOW("  Fault: slot 8 write count too high (3 instead of 2)\n");
         hmac_write_kv_slot(KV_SLOT_SI_IDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_SI_LDEV,    DV_AES_KEY);
         hmac_write_kv_slot(KV_SLOT_KEY_LADDER, DV_HMAC_KEY);
@@ -229,7 +229,7 @@ int populate_rom_slots(uint32_t iteration) {
 void confirm_violation_and_reset(const char *phase, uint32_t iteration) {
     uint32_t hw_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
     if (!(hw_err & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK)) {
-        VPRINTF(ERROR, "[FAIL] iter %d %s: kv_error NOT set (reg=0x%08x)\n", iteration, phase, hw_err);
+        VPRINTF_ERROR("[FAIL] iter %d %s: kv_error NOT set (reg=0x%08x)\n", iteration, phase, hw_err);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
@@ -237,7 +237,7 @@ void confirm_violation_and_reset(const char *phase, uint32_t iteration) {
     // When kv_monitor_alert fires, flush_keyvault also fires (combinational OR),
     // which clears the write counters. So warm reset is sufficient between all
     // iterations -- counters are already 0 from the flush.
-    VPRINTF(LOW, "  iter %d %s: kv fault confirmed (reg=0x%08x) -- issuing warm reset\n",
+    VPRINTF_LOW("  iter %d %s: kv fault confirmed (reg=0x%08x) -- issuing warm reset\n",
             iteration, phase, hw_err);
 
     SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);
@@ -251,21 +251,21 @@ void main() {
     // Enable boot flow monitoring (needed after every reset)
     SEND_STDOUT_CTRL(TB_CMD_ENABLE_KV_BOOT_FLOW_MONITOR);
 
-    VPRINTF(LOW, "============================================\n");
-    VPRINTF(LOW, " KV Monitor Negative Test -- iter %d of %d\n", iter, NUM_ITERATIONS);
-    VPRINTF(LOW, "============================================\n");
+    VPRINTF_LOW("============================================\n");
+    VPRINTF_LOW(" KV Monitor Negative Test -- iter %d of %d\n", iter, NUM_ITERATIONS);
+    VPRINTF_LOW("============================================\n");
 
     // After warm reset, the sticky kv_error bit persists (resets on cptra_pwrgood only).
     // W1C it so that a stale bit from the previous iteration doesn't confuse us.
     uint32_t stale_err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
     if (stale_err & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK) {
-        VPRINTF(LOW, "  Clearing stale kv fault from previous iteration\n");
+        VPRINTF_LOW("  Clearing stale kv fault from previous iteration\n");
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,
                      SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK);
         // Verify W1C took effect
         uint32_t post_clear = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
         if (post_clear & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK) {
-            VPRINTF(ERROR, "[FAIL] W1C did not clear kv_error (reg=0x%08x)\n", post_clear);
+            VPRINTF_ERROR("[FAIL] W1C did not clear kv_error (reg=0x%08x)\n", post_clear);
             SEND_STDOUT_CTRL(0x01);
             while(1);
         }
@@ -273,9 +273,9 @@ void main() {
 
     if (iter >= NUM_ITERATIONS) {
         // All iterations passed
-        VPRINTF(LOW, "============================================\n");
-        VPRINTF(LOW, " All %d negative iterations passed\n", NUM_ITERATIONS);
-        VPRINTF(LOW, "============================================\n");
+        VPRINTF_LOW("============================================\n");
+        VPRINTF_LOW(" All %d negative iterations passed\n", NUM_ITERATIONS);
+        VPRINTF_LOW("============================================\n");
         SEND_STDOUT_CTRL(0xff);
         return;
     }
@@ -292,7 +292,7 @@ void main() {
     }
 
     // Populate ROM-phase slots with the iteration's fault injected
-    VPRINTF(LOW, "ROM: Populating slots for iter %d\n", iter);
+    VPRINTF_LOW("ROM: Populating slots for iter %d\n", iter);
     int fault_at_rom_to_fmc = populate_rom_slots(iter);
 
     // Set flag for FMC-to-RT fault iterations
@@ -306,13 +306,13 @@ void main() {
     program_iccm_regions();
 
     // Jump to FMC -- if fault is at ROM-to-FMC, the monitor fires on this transition
-    VPRINTF(LOW, "ROM: Jumping to FMC (iter %d)...\n", current_iter);
+    VPRINTF_LOW("ROM: Jumping to FMC (iter %d)...\n", current_iter);
     void (*fmc_fn)(void) = (void (*)(void))FMC_ICCM_ADDR;
     fmc_fn();
 
     // If we get here on a ROM-to-FMC fault iteration, the monitor didn't fire
     if (fault_at_rom_to_fmc) {
-        VPRINTF(ERROR, "[FAIL] iter %d: monitor did not fire at ROM-to-FMC\n", current_iter);
+        VPRINTF_ERROR("[FAIL] iter %d: monitor did not fire at ROM-to-FMC\n", current_iter);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
@@ -324,20 +324,20 @@ void fmc_entry(void) {
 
     if (fmc_to_rt_fault) {
         // ROM-to-FMC passed (correct). Now inject fault for FMC-to-RT.
-        VPRINTF(LOW, "FMC: ROM-to-FMC monitor passed (correct for iter %d)\n", current_iter);
+        VPRINTF_LOW("FMC: ROM-to-FMC monitor passed (correct for iter %d)\n", current_iter);
 
         // Populate RT slots with the appropriate fault
         switch (current_iter) {
         case 4:
             // Skip slot 4 (RT_CDI)
-            VPRINTF(LOW, "  FMC fault: skipping slot 4 (RT_CDI)\n");
+            VPRINTF_LOW("  FMC fault: skipping slot 4 (RT_CDI)\n");
             /* slot 4 omitted */
             hmac_write_kv_slot(KV_SLOT_RT_ECDSA, DV_ECC_PKEY);
             hmac_write_kv_slot(KV_SLOT_RT_MLDSA, DV_MLDSA_SEED);
             break;
         case 5:
             // Slot 9 (RT_MLDSA) wrong dest_valid
-            VPRINTF(LOW, "  FMC fault: slot 9 wrong dest_valid (AES_KEY)\n");
+            VPRINTF_LOW("  FMC fault: slot 9 wrong dest_valid (AES_KEY)\n");
             hmac_write_kv_slot(KV_SLOT_RT_CDI,   DV_CDI);
             hmac_write_kv_slot(KV_SLOT_RT_ECDSA, DV_ECC_PKEY);
             hmac_write_kv_slot(KV_SLOT_RT_MLDSA, DV_AES_KEY);  // WRONG
@@ -345,18 +345,18 @@ void fmc_entry(void) {
         }
 
         // Jump to RT -- monitor should fire at FMC-to-RT
-        VPRINTF(LOW, "FMC: Jumping to RT (iter %d)...\n", current_iter);
+        VPRINTF_LOW("FMC: Jumping to RT (iter %d)...\n", current_iter);
         void (*rt_fn)(void) = (void (*)(void))RT_ICCM_ADDR;
         rt_fn();
 
         // If we return here, the monitor didn't fire
-        VPRINTF(ERROR, "[FAIL] iter %d: monitor did not fire at FMC-to-RT\n", current_iter);
+        VPRINTF_ERROR("[FAIL] iter %d: monitor did not fire at FMC-to-RT\n", current_iter);
         SEND_STDOUT_CTRL(0x01);
         while(1);
     } else {
         // ROM-to-FMC fault: we should have gotten kv_error already
         // (The monitor fires on the transition, but CPU keeps running)
-        VPRINTF(LOW, "FMC: Checking for ROM-to-FMC violation (iter %d)\n", current_iter);
+        VPRINTF_LOW("FMC: Checking for ROM-to-FMC violation (iter %d)\n", current_iter);
         confirm_violation_and_reset("ROM-to-FMC", current_iter);
     }
 }
@@ -365,6 +365,6 @@ void fmc_entry(void) {
 void rt_entry(void) {
     uint32_t current_iter = iter - 1;
     // FMC-to-RT fault: check for violation
-    VPRINTF(LOW, "RT: Checking for FMC-to-RT violation (iter %d)\n", current_iter);
+    VPRINTF_LOW("RT: Checking for FMC-to-RT violation (iter %d)\n", current_iter);
     confirm_violation_and_reset("FMC-to-RT", current_iter);
 }

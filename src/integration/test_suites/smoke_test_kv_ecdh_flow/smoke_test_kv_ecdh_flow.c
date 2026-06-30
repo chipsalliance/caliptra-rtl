@@ -85,7 +85,7 @@ void kv_ecc_flow(uint8_t privkey_kv_id, uint8_t sharedkey_kv_id){
 
     ecc_sharedkey_flow(iv, privkey, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
     cptra_intr_rcv.ecc_notif = 0;
-    VPRINTF(LOW, "Stored ECDH sharedkey into KV ID %d\n", sharedkey_kv_id);
+    VPRINTF_LOW("Stored ECDH sharedkey into KV ID %d\n", sharedkey_kv_id);
 
     ecc_zeroize();
 }
@@ -122,7 +122,7 @@ void kv_hmac512_flow(uint8_t block_id, uint8_t tag_id){
 }
 
 kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext_str){
-    VPRINTF(LOW, "\n\nEncryption in ECB mode\n");
+    VPRINTF_LOW("\n\nEncryption in ECB mode\n");
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_ECB;
     aes_key_len_e key_len = AES_256;
@@ -142,7 +142,7 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
     aes_key.kv_reuse_key = FALSE;
     aes_key.kv_expect_err = FALSE;
     aes_key.kv_id = aes_kv_id;
-    VPRINTF(LOW, "Key Stored in KV ID %d\n", aes_key.kv_id);
+    VPRINTF_LOW("Key Stored in KV ID %d\n", aes_key.kv_id);
 
     aes_input.key = aes_key;
     aes_input.text_len = plaintext_length;
@@ -157,9 +157,9 @@ kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext
 
 void main(){
 
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " KV Smoke Test With ECDH flow !!  \n");
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" KV Smoke Test With ECDH flow !!  \n");
+    VPRINTF_LOW("----------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
@@ -179,7 +179,7 @@ void main(){
     /* RUN AES to encrypt a data*/
     kv_aes_flow(sharedkey_kv_id, plaintext_str_ECB0, ciphertext_str_ECB0);
 
-    // VPRINTF(LOW, "Inject HMAC BLOCK into KV ID 4\n");
+    // VPRINTF_LOW("Inject HMAC BLOCK into KV ID 4\n");
     // uint8_t hmac_block_inject_cmd = 0xb0;
     // SEND_STDOUT_CTRL(hmac_block_inject_cmd);
 

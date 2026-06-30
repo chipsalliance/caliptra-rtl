@@ -59,9 +59,9 @@ void caliptra_fmc() {
     mbox_op_s op;
     void (* iccm_fn) (void) = (void*) RV_ICCM_SADR + MBOX_ICCM_OFFSET_RT;
 
-    VPRINTF(MEDIUM, "----------------------------------\n");
-    VPRINTF(LOW,    "- Caliptra Validation FMC!!\n"       );
-    VPRINTF(MEDIUM, "----------------------------------\n");
+    VPRINTF_MEDIUM("----------------------------------\n");
+    VPRINTF_LOW(   "- Caliptra Validation FMC!!\n"       );
+    VPRINTF_MEDIUM("----------------------------------\n");
 
     //Enhancement - Do other stuff before jumping immediately to Runtime image?
 
@@ -77,7 +77,7 @@ void caliptra_fmc() {
         soc_ifc_set_iccm_lock();
     }
     else {
-        VPRINTF(FATAL, "Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
+        VPRINTF_FATAL("Received invalid mailbox command from SOC! Expected 0x%x, got 0x%x\n", MBOX_CMD_RT_UPDATE, op.cmd);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -86,9 +86,9 @@ void caliptra_fmc() {
     iccm_fn();
 
     // Should never get here
-    VPRINTF(FATAL, "----------------------------------\n");
-    VPRINTF(FATAL, " Reached end of FMC FW image unexpectedly! \n");
-    VPRINTF(FATAL, "----------------------------------\n");
+    VPRINTF_FATAL("----------------------------------\n");
+    VPRINTF_FATAL(" Reached end of FMC FW image unexpectedly! \n");
+    VPRINTF_FATAL("----------------------------------\n");
     SEND_STDOUT_CTRL(0x1);
     while(1);
 }

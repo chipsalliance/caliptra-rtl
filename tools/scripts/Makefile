@@ -64,6 +64,14 @@ endif
 #  TEST_DIR = $(TBDIR)/tests/$(TEST)
 #endif
 
+# Reduce logging to reduce size; register testing library is not required
+# for any other tests
+EXTRA_LIBS =
+ifneq (,$(findstring ifc_reg,$(TESTNAME)))
+    TEST_CFLAGS += -DMINIMAL_LOGGING
+	EXTRA_LIBS += ifc_reg
+endif
+
 # Libraries providing functionality for each peripheral component in Caliptra
 COMP_LIB_NAMES := aes \
 		  doe \
@@ -80,7 +88,9 @@ COMP_LIB_NAMES := aes \
 		  soc_access \
 		  caliptra_rtl_lib \
 		  clk_gate \
-		  wdt
+		  wdt \
+		  $(EXTRA_LIBS)
+
 COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration/test_suites/libs/$(name))
 
 # Optional per-test makefile fragment for extra objects/libs/headers

@@ -62,7 +62,7 @@ void main(void) {
         uint32_t * iccm_dest = ICCM;
         void (* iccm_fn) (void) = (void*) ICCM;
 
-        VPRINTF(LOW, "----------------------------------\nICCM Lock Test from VeeR EL2  !!\n----------------------------------\n");
+        VPRINTF_LOW("----------------------------------\nICCM Lock Test from VeeR EL2  !!\n----------------------------------\n");
 
         // Setup the interrupt CSR configuration
         init_interrupts();
@@ -74,7 +74,7 @@ void main(void) {
 
         // Check ICCM_LOCK is not currently set
         if (*soc_ifc_iccm_lock & SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK == SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK) {
-            VPRINTF(ERROR, "ERROR: ICCM_LOCK set unexpectedly!\n");
+            VPRINTF_ERROR("ERROR: ICCM_LOCK set unexpectedly!\n");
             SEND_STDOUT_CTRL( 0x1);
             while(1);
         }
@@ -87,23 +87,23 @@ void main(void) {
         //     a. Copy section (B) to ICCM (different print)
         if (persistent_is_second_pass) {
             code_word = (uint32_t *) &iccm_code1_start;
-            VPRINTF(LOW, "Copying code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code1_end, (uintptr_t) iccm_dest);
+            VPRINTF_LOW("Copying code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code1_end, (uintptr_t) iccm_dest);
             while (code_word < (uint32_t *) &iccm_code1_end) {
-                VPRINTF(ALL, "at %x: %x\n", (uintptr_t) code_word, *code_word);
+                VPRINTF_ALL("at %x: %x\n", (uintptr_t) code_word, *code_word);
                 *iccm_dest++ = *code_word++;
             }
         } else {
             code_word = (uint32_t *) &iccm_code0_start;
-            VPRINTF(LOW, "Copying code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code0_end, (uintptr_t) iccm_dest);
+            VPRINTF_LOW("Copying code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code0_end, (uintptr_t) iccm_dest);
             while (code_word < (uint32_t *) &iccm_code0_end) {
-                VPRINTF(ALL, "at %x: %x\n", (uintptr_t) code_word, *code_word);
+                VPRINTF_ALL("at %x: %x\n", (uintptr_t) code_word, *code_word);
                 *iccm_dest++ = *code_word++;
             }
         }
 
         // Check interrupt count (die if !0)
         if (intr_count) {
-            VPRINTF(ERROR, "ERROR: Detected interrupt while copying code to unlocked ICCM!\n");
+            VPRINTF_ERROR("ERROR: Detected interrupt while copying code to unlocked ICCM!\n");
             SEND_STDOUT_CTRL( 0x1);
         }
 
@@ -113,38 +113,38 @@ void main(void) {
         // Code from ICCM (1) increments persistent_exec_cnt. If > 1, then die (it executed > once)
         // Code from ICCM (2) does not increment.
         if (persistent_exec_cnt > 1) {
-            VPRINTF(ERROR, "ERROR: First pass code executed from ICCM during second pass (after reset)!\n");
+            VPRINTF_ERROR("ERROR: First pass code executed from ICCM during second pass (after reset)!\n");
             SEND_STDOUT_CTRL(0x1);
         }
 
         // Lock ICCM Writes
         *soc_ifc_iccm_lock = SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK;
         if (*soc_ifc_iccm_lock & SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK != SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK) {
-            VPRINTF(ERROR, "ERROR: Failed to set ICCM_LOCK!\n");
+            VPRINTF_ERROR("ERROR: Failed to set ICCM_LOCK!\n");
             SEND_STDOUT_CTRL(0x1);
         }
 
         // Try to unlock ICCM Writes (should fail)
         *soc_ifc_iccm_lock = *soc_ifc_iccm_lock & ~SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK;
         if (*soc_ifc_iccm_lock & SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK != SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK) {
-            VPRINTF(ERROR, "ERROR: Attempt to clear ICCM_LOCK via reg write succeeded!\n");
+            VPRINTF_ERROR("ERROR: Attempt to clear ICCM_LOCK via reg write succeeded!\n");
             SEND_STDOUT_CTRL(0x1);
         }
 
         // Check that DCCM can still be written/read
         if ((uint32_t)(&STACK) + 4 <= RV_DCCM_EADR) {
             uint32_t dccm_test_val = lsu_read_32((uintptr_t)(&STACK)+4);
-            VPRINTF(LOW, "Test DCCM at addr: 0x%x\n", (uintptr_t)(&STACK)+4);
+            VPRINTF_LOW("Test DCCM at addr: 0x%x\n", (uintptr_t)(&STACK)+4);
             dccm_test_val ^= 0xAAAAAAAA;
             lsu_write_32((uintptr_t)(&STACK)+4, dccm_test_val);
             if (lsu_read_32((uintptr_t)(&STACK)+4) != dccm_test_val) {
-                VPRINTF(ERROR, "ERROR: Rd data (0x%x) after wr to DCCM does not match exp (0x%x)!\n", lsu_read_32((uintptr_t)(&STACK)+4), dccm_test_val);
+                VPRINTF_ERROR("ERROR: Rd data (0x%x) after wr to DCCM does not match exp (0x%x)!\n", lsu_read_32((uintptr_t)(&STACK)+4), dccm_test_val);
                 SEND_STDOUT_CTRL(0x1);
             } else {
-                VPRINTF(LOW, "Rd data (0x%x) after DCCM wr matches exp (0x%x)!\n", lsu_read_32((uintptr_t)(&STACK)+4), dccm_test_val);
+                VPRINTF_LOW("Rd data (0x%x) after DCCM wr matches exp (0x%x)!\n", lsu_read_32((uintptr_t)(&STACK)+4), dccm_test_val);
             }
         } else {
-            VPRINTF(FATAL, "FATAL: Unable to test DCCM access because there is no unused space in DCCM (above STACK)!\n");
+            VPRINTF_FATAL("FATAL: Unable to test DCCM access because there is no unused space in DCCM (above STACK)!\n");
             SEND_STDOUT_CTRL(0x1);
         }
 
@@ -154,7 +154,7 @@ void main(void) {
         iccm_dest = ICCM;
         if (persistent_is_second_pass) {
             code_word = (uint32_t *) &iccm_code1_start;
-            VPRINTF(LOW,"Comparing second pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code1_end, (uintptr_t) iccm_dest);
+            VPRINTF_LOW("Comparing second pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code1_end, (uintptr_t) iccm_dest);
             while (code_word < (uint32_t *) &iccm_code1_end) {
                 VPRINTF(ALL,"at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
                 if(*iccm_dest++ != *code_word++) {
@@ -164,7 +164,7 @@ void main(void) {
             }
         } else {
             code_word = (uint32_t *) &iccm_code0_start;
-            VPRINTF(LOW,"Comparing first pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code0_end, (uintptr_t) iccm_dest);
+            VPRINTF_LOW("Comparing first pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code0_end, (uintptr_t) iccm_dest);
             while (code_word < (uint32_t *) &iccm_code0_end) {
                 VPRINTF(ALL,"at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
                 if(*iccm_dest++ != *code_word++) {
@@ -180,16 +180,16 @@ void main(void) {
         //     which will result in AHB error response and NMI
         code_word = (uint32_t *) &iccm_code2_start;
         iccm_dest = ICCM;
-        VPRINTF(LOW, "Copying code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code2_end, (uintptr_t) iccm_dest);
+        VPRINTF_LOW("Copying code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code2_end, (uintptr_t) iccm_dest);
         persistent_nmi_expected = 1;
         while (code_word < (uint32_t *) &iccm_code2_end) {
-            VPRINTF(ALL, "at %x: %x\n", (uintptr_t) code_word, *code_word);
+            VPRINTF_ALL("at %x: %x\n", (uintptr_t) code_word, *code_word);
             *iccm_dest++ = *code_word++;
         }
 
         // The above code should cause NMI resulting in the end of the firmware
         // run. If we get to this point, it's an error and we should kill the sim
-        VPRINTF(ERROR, "ERROR: Did not receive expected NMI while writing to Locked ICCM!\n");
+        VPRINTF_ERROR("ERROR: Did not receive expected NMI while writing to Locked ICCM!\n");
         SEND_STDOUT_CTRL( 0x1);
         while(1);
 
@@ -200,11 +200,11 @@ void execute_first_pass_from_iccm (void) {
     // If we got here via NMI (D-Bus Store Error), document the iteration status
     // and reset the core
     if ((csr_read_mcause() & MCAUSE_NMI_BIT_MASK) == MCAUSE_NMI_BIT_MASK) {
-        VPRINTF(LOW, "**** NMI ****\n");
+        VPRINTF_LOW("**** NMI ****\n");
         intr_count++;
         if (!persistent_nmi_expected) {
-            VPRINTF(ERROR, "ERROR: Entered NMI with mcause [0x%x] while not expecting an error!\n", csr_read_mcause());
-            VPRINTF(ERROR, "       mepc [0x%x]\n", csr_read_mepc());
+            VPRINTF_ERROR("ERROR: Entered NMI with mcause [0x%x] while not expecting an error!\n", csr_read_mcause());
+            VPRINTF_ERROR("       mepc [0x%x]\n", csr_read_mepc());
             SEND_STDOUT_CTRL(0x1);
             while(1);
         } else {
@@ -217,11 +217,11 @@ void execute_first_pass_from_iccm (void) {
         //   3. Else:
         //     a. End simulation with fail message
         if (persistent_is_second_pass) {
-            VPRINTF(ERROR, "ERROR: Entered first pass subroutine while expecting to enter second pass!\n");
+            VPRINTF_ERROR("ERROR: Entered first pass subroutine while expecting to enter second pass!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         } else {
-            VPRINTF(LOW, "At the end of first pass through ICCM LOCK test: resetting the core!\n");
+            VPRINTF_LOW("At the end of first pass through ICCM LOCK test: resetting the core!\n");
             persistent_is_second_pass = 1;
             lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET, SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK);
             while(1);
@@ -233,11 +233,11 @@ void execute_first_pass_from_iccm (void) {
     //   3. Else:
     //     a. End simulation with fail message
     if (persistent_is_second_pass) {
-        VPRINTF(ERROR, "ERROR: Entered first pass subroutine while expecting to enter second pass!\n");
+        VPRINTF_ERROR("ERROR: Entered first pass subroutine while expecting to enter second pass!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
-    VPRINTF(LOW, "First pass through ICCM LOCK test!\n");
+    VPRINTF_LOW("First pass through ICCM LOCK test!\n");
     persistent_exec_cnt++;
 }
 
@@ -245,10 +245,10 @@ void execute_second_pass_from_iccm (void) {
     // If we got here via expected NMI (D-Bus Store Error), document the
     // iteration status and end the test with success
     if ((csr_read_mcause() & MCAUSE_NMI_BIT_MASK) == MCAUSE_NMI_BIT_MASK) {
-        VPRINTF(LOW, "**** NMI ****\n");
+        VPRINTF_LOW("**** NMI ****\n");
         intr_count++;
         if (!persistent_nmi_expected) {
-            VPRINTF(ERROR, "ERROR: Entered NMI with mcause [0x%x] while not expecting an error!\n", csr_read_mcause());
+            VPRINTF_ERROR("ERROR: Entered NMI with mcause [0x%x] while not expecting an error!\n", csr_read_mcause());
             SEND_STDOUT_CTRL(0x1);
             while(1);
         } else {
@@ -260,16 +260,16 @@ void execute_second_pass_from_iccm (void) {
         //   3. Else:
         //     a. End simulation with success message
         if (persistent_is_second_pass) {
-            VPRINTF(LOW, "Success! Reached end of ICCM lock firmware during second iteration\n");
+            VPRINTF_LOW("Success! Reached end of ICCM lock firmware during second iteration\n");
             SEND_STDOUT_CTRL(0xff);
             while(1);
         } else {
-            VPRINTF(ERROR, "ERROR: Entered second pass subroutine unexpectedly!\n");
+            VPRINTF_ERROR("ERROR: Entered second pass subroutine unexpectedly!\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
     }
-    VPRINTF(LOW, "Second pass through ICCM LOCK test!\n");
+    VPRINTF_LOW("Second pass through ICCM LOCK test!\n");
 }
 
 void execute_fatal_from_iccm (void) {
@@ -282,7 +282,7 @@ void execute_fatal_from_iccm (void) {
                            : /* clobbers */
                            : bad_code /* goto_labels */);
     bad_code:
-    VPRINTF(FATAL, "Error! Fatal subroutine is executing from ICCM even though locked when written!\n");
+    VPRINTF_FATAL("Error! Fatal subroutine is executing from ICCM even though locked when written!\n");
     SEND_STDOUT_CTRL(0x1); // Kills simulation with error
     while(1);
 }

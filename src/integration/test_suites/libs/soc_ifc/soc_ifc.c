@@ -49,13 +49,13 @@ uint8_t soc_ifc_chk_execute_uc() {
         VPRINTF(HIGH,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_EXECUTE_UC\n");
         return 0;
     } else if (state == MBOX_IDLE) {
-        VPRINTF(WARNING,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_IDLE\n");
+        VPRINTF_WARNING("SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_IDLE\n");
         return 1;
     } else if (state == MBOX_ERROR) {
         VPRINTF(ERROR,"SOC_IFC: Check mbox_status.mbox_fsm_ps found MBOX_ERROR, mailbox force-unlock needed\n");
         return 0xF;
     } else {
-        VPRINTF(FATAL,"SOC_IFC: Check mbox_status.mbox_fsm_ps found unexpected state 0x%x\n", state);
+        VPRINTF_FATAL("SOC_IFC: Check mbox_status.mbox_fsm_ps found unexpected state 0x%x\n", state);
         return 0xFF;
     }
 }
@@ -101,11 +101,11 @@ void soc_ifc_w1clr_sha_lock_field(uint32_t field) {
     uint32_t reg;
     reg = lsu_read_32(CLP_SHA512_ACC_CSR_LOCK);
     if (field & ~SHA512_ACC_CSR_LOCK_LOCK_MASK) {
-       VPRINTF(FATAL, "SOC_IFC: Bad field value");
+       VPRINTF_FATAL("SOC_IFC: Bad field value");
        SEND_STDOUT_CTRL(0x1); 
     } 
     else if (reg & ~SHA512_ACC_CSR_LOCK_LOCK_MASK) {
-       VPRINTF(FATAL, "SOC_IFC: Bad field value");
+       VPRINTF_FATAL("SOC_IFC: Bad field value");
        SEND_STDOUT_CTRL(0x1); 
     }
     if (field & SHA512_ACC_CSR_LOCK_LOCK_MASK) {
@@ -168,9 +168,9 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
     uint32_t* dccm;
     uint32_t  offset; // In 32-bit dwords
 
-    VPRINTF(LOW, "SOC_IFC: Beginning mbox fw flow\n");
+    VPRINTF_LOW("SOC_IFC: Beginning mbox fw flow\n");
     if (op.dlen > MBOX_DIR_SPAN) {
-        VPRINTF(FATAL, "FATAL: Invalid dlen passed to mbox fw flow: 0x%x\n", op.dlen);
+        VPRINTF_FATAL("FATAL: Invalid dlen passed to mbox fw flow: 0x%x\n", op.dlen);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -181,7 +181,7 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
         iccm = (uint32_t*) (RV_ICCM_SADR + MBOX_ICCM_OFFSET_RT);
         dccm = (uint32_t*) (RV_DCCM_SADR + MBOX_DCCM_OFFSET_RT);
     } else {
-        VPRINTF(FATAL, "FATAL: Invalid cmd passed to mbox fw flow: 0x%x\n", op.cmd);
+        VPRINTF_FATAL("FATAL: Invalid cmd passed to mbox fw flow: 0x%x\n", op.cmd);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -191,7 +191,7 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
     //  1. Get size of the text section for ICCM
     iccm_cp_size = soc_ifc_mbox_read_dataout_single();
     if (iccm_cp_size == 0x0 || (iccm_cp_size + 0x20) > op.dlen) { // 0x20 fudge factor for linker offsets that contain iccm/dccm copy size
-        VPRINTF(FATAL, "Found invalid iccm size in firmware image received from SOC! Max expected 0x%x, got 0x%x\n", op.dlen, iccm_cp_size);
+        VPRINTF_FATAL("Found invalid iccm size in firmware image received from SOC! Max expected 0x%x, got 0x%x\n", op.dlen, iccm_cp_size);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -208,7 +208,7 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
     offset = 0;
 
     //  2. Copy from mailbox into ICCM
-    VPRINTF(LOW, "SOC_IFC: Cp to ICCM\n");
+    VPRINTF_LOW("SOC_IFC: Cp to ICCM\n");
     while(offset < iccm_cp_size) {
         iccm[offset++] = soc_ifc_mbox_read_dataout_single();
     }
@@ -216,7 +216,7 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
     //  3. Get size of the data section for DCCM
     dccm_cp_size = soc_ifc_mbox_read_dataout_single();
     if (dccm_cp_size == 0x0 || ((iccm_cp_size<<2) + dccm_cp_size + 0x20) > op.dlen) { // 0x20 fudge factor for linker offsets that contain iccm/dccm copy size
-        VPRINTF(FATAL, "Found invalid dccm size in firmware image received from SOC! Max expected 0x%x, got 0x%x\n", op.dlen - iccm_cp_size - 0x20, dccm_cp_size);
+        VPRINTF_FATAL("Found invalid dccm size in firmware image received from SOC! Max expected 0x%x, got 0x%x\n", op.dlen - iccm_cp_size - 0x20, dccm_cp_size);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -233,7 +233,7 @@ void soc_ifc_mbox_fw_flow(mbox_op_s op) {
     offset = 0;
 
     //  4. Copy from mailbox to DCCM
-    VPRINTF(LOW, "SOC_IFC: Cp to DCCM\n");
+    VPRINTF_LOW("SOC_IFC: Cp to DCCM\n");
     while(offset < dccm_cp_size) {
         dccm[offset++] = soc_ifc_mbox_read_dataout_single();
     }
@@ -252,9 +252,9 @@ void soc_ifc_fw_update(mbox_op_s op) {
     uint32_t * iccm_dest = ICCM;
     uint32_t data_length;
 
-    VPRINTF(MEDIUM, "Copying code from mailbox to ICCM\n");
+    VPRINTF_MEDIUM("Copying code from mailbox to ICCM\n");
     while (data_length < op.dlen) {
-        VPRINTF(MEDIUM, "at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
+        VPRINTF_MEDIUM("at %x: %x\n", (uintptr_t) iccm_dest, *iccm_dest);
             *iccm_dest++ = soc_ifc_mbox_read_dataout_single();
             data_length += 4; //dlen is in bytes
         }
@@ -263,17 +263,17 @@ void soc_ifc_fw_update(mbox_op_s op) {
 uint8_t soc_ifc_sanitize_mbox_n_bytes(uint32_t byte_count, uint32_t attempt_count) {
     uint32_t notif_intr_en;
     if (byte_count > MBOX_DIR_SPAN) {
-        VPRINTF(FATAL, "SOC_IFC: Illegal byte_count 0x%x\n", byte_count);
+        VPRINTF_FATAL("SOC_IFC: Illegal byte_count 0x%x\n", byte_count);
         SEND_STDOUT_CTRL(0x1);
     }
     if(soc_ifc_mbox_acquire_lock(attempt_count) != 0) {
-        VPRINTF(WARNING, "Failed to acquire lock - mbox sanitize\n");
+        VPRINTF_WARNING("Failed to acquire lock - mbox sanitize\n");
         for(uint32_t ii=1; ii<attempt_count; ii++) {
             lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
             if((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) == 0) {
                 break;
             } else if (ii == attempt_count) {
-                VPRINTF(FATAL, "FATAL: Failed to acquire lock after force unlock\n");
+                VPRINTF_FATAL("FATAL: Failed to acquire lock after force unlock\n");
                 return 1;
             }
         }
@@ -438,18 +438,18 @@ uint8_t soc_ifc_axi_dma_send_mbox_payload_no_wait(uint64_t src_addr, uint64_t ds
 
     // Acquire the mailbox lock
     if (soc_ifc_mbox_acquire_lock(1)) {
-        VPRINTF(ERROR, "Acquire mailbox lock failed\n");
+        VPRINTF_ERROR("Acquire mailbox lock failed\n");
         return 1;
     }
 
     // src_addr checks
     if (src_addr & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
-        VPRINTF(ERROR, "src_addr 0x%x is out of bounds for mbox span!\n", (uint32_t) src_addr);
+        VPRINTF_ERROR("src_addr 0x%x is out of bounds for mbox span!\n", (uint32_t) src_addr);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
     if ((src_addr + byte_count) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
-        VPRINTF(ERROR, "reading 0x%x bytes from src_addr 0x%x goes out of bounds for mbox span!\n", byte_count, (uint32_t) src_addr);
+        VPRINTF_ERROR("reading 0x%x bytes from src_addr 0x%x goes out of bounds for mbox span!\n", byte_count, (uint32_t) src_addr);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -487,18 +487,18 @@ uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t ds
 
     // Acquire the mailbox lock
     if (soc_ifc_mbox_acquire_lock(1)) {
-        VPRINTF(ERROR, "Acquire mailbox lock failed\n");
+        VPRINTF_ERROR("Acquire mailbox lock failed\n");
         return 1;
     }
 
     // dst_addr checks
     if (dst_addr & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
-        VPRINTF(ERROR, "dst_addr 0x%x is out of bounds for mbox span!\n", (uint32_t) dst_addr);
+        VPRINTF_ERROR("dst_addr 0x%x is out of bounds for mbox span!\n", (uint32_t) dst_addr);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
     if ((dst_addr + byte_count) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
-        VPRINTF(ERROR, "writing 0x%x bytes to dst_addr 0x%x goes out of bounds for mbox span!\n", byte_count, (uint32_t) dst_addr);
+        VPRINTF_ERROR("writing 0x%x bytes to dst_addr 0x%x goes out of bounds for mbox span!\n", byte_count, (uint32_t) dst_addr);
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -522,7 +522,7 @@ uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t ds
 
 void soc_ifc_axi_dma_send_kv_to_axi_error(uint64_t dst_addr, uint32_t byte_count) {
     uint32_t reg;
-    VPRINTF(LOW, "FW: Sending KV to AXI with ERR\n");
+    VPRINTF_LOW("FW: Sending KV to AXI with ERR\n");
     reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
     lsu_write_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R, reg & ~AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_TXN_DONE_EN_MASK);
     soc_ifc_axi_dma_send_kv_to_axi_no_wait(dst_addr, byte_count);
@@ -601,7 +601,7 @@ void soc_ifc_axi_dma_wait_idle(uint8_t clr_lock) {
 
     // Check status
     if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
-        VPRINTF(LOW, "FATAL: AXI DMA reports error status for xfer\n");
+        VPRINTF_LOW("FATAL: AXI DMA reports error status for xfer\n");
         lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
         SEND_STDOUT_CTRL(0x1);
     }
@@ -622,10 +622,10 @@ void soc_ifc_axi_dma_wait_error(uint8_t clr_lock) {
 
     // Check status
     if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
-        VPRINTF(LOW, "AXI DMA reports err status for err injection xfer\n");
+        VPRINTF_LOW("AXI DMA reports err status for err injection xfer\n");
         lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
     } else {
-        VPRINTF(FATAL, "FATAL: AXI DMA reports success status for err injection xfer!\n");
+        VPRINTF_FATAL("FATAL: AXI DMA reports success status for err injection xfer!\n");
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
@@ -721,16 +721,16 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
 
     aes_mode = (err_type == cmd_inv_aes_route_combo) || (err_type == cmd_inv_aes_block_size) || (err_type == cmd_inv_aes_fixed); 
 
-    VPRINTF(HIGH, "param: err_type   0x%x\n"     , err_type  );
-    VPRINTF(HIGH, "param: src_addr   0x%x 0x%x\n", (uint32_t) (src_addr >> 32) , (uint32_t) (src_addr & 0xffffffff));
-    VPRINTF(HIGH, "param: dst_addr   0x%x 0x%x\n", (uint32_t) (dst_addr >> 32) , (uint32_t) (dst_addr & 0xffffffff));
-    VPRINTF(HIGH, "param: rd_route   0x%x\n"     , rd_route  );
-    VPRINTF(HIGH, "param: wr_route   0x%x\n"     , wr_route  );
-    VPRINTF(HIGH, "param: rd_fixed   0x%x\n"     , rd_fixed  );
-    VPRINTF(HIGH, "param: wr_fixed   0x%x\n"     , wr_fixed  );
-    VPRINTF(HIGH, "param: aes_mode   0x%x\n"     , aes_mode  );
-    VPRINTF(HIGH, "param: byte_count 0x%x\n"     , byte_count);
-    VPRINTF(HIGH, "param: block_size 0x%x\n"     , block_size);
+    VPRINTF_HIGH("param: err_type   0x%x\n"     , err_type  );
+    VPRINTF_HIGH("param: src_addr   0x%x 0x%x\n", (uint32_t) (src_addr >> 32) , (uint32_t) (src_addr & 0xffffffff));
+    VPRINTF_HIGH("param: dst_addr   0x%x 0x%x\n", (uint32_t) (dst_addr >> 32) , (uint32_t) (dst_addr & 0xffffffff));
+    VPRINTF_HIGH("param: rd_route   0x%x\n"     , rd_route  );
+    VPRINTF_HIGH("param: wr_route   0x%x\n"     , wr_route  );
+    VPRINTF_HIGH("param: rd_fixed   0x%x\n"     , rd_fixed  );
+    VPRINTF_HIGH("param: wr_fixed   0x%x\n"     , wr_fixed  );
+    VPRINTF_HIGH("param: aes_mode   0x%x\n"     , aes_mode  );
+    VPRINTF_HIGH("param: byte_count 0x%x\n"     , byte_count);
+    VPRINTF_HIGH("param: block_size 0x%x\n"     , block_size);
 
     // Disable txn_done interrupt since we'll poll it
     reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);
@@ -738,7 +738,7 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
 
     // Arm the Error command
     while (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK);
-    VPRINTF(LOW, "FW: Arm err command\n");
+    VPRINTF_LOW("FW: Arm err command\n");
     lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_L,  src_addr        & 0xffffffff);
     lsu_write_32(CLP_AXI_DMA_REG_SRC_ADDR_H, (src_addr >> 32) & 0xffffffff);
     lsu_write_32(CLP_AXI_DMA_REG_DST_ADDR_L,  dst_addr        & 0xffffffff);
@@ -777,11 +777,11 @@ void soc_ifc_axi_dma_wait_idle_w_error_expected(uint8_t clr_lock, uint8_t error_
     // Check status
     if (reg & AXI_DMA_REG_STATUS0_ERROR_MASK) {
         if(error_expected){
-            VPRINTF(LOW, "AXI DMA reports status for xfer that would require DMA Flush\n");
+            VPRINTF_LOW("AXI DMA reports status for xfer that would require DMA Flush\n");
             lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
             error_observed = 1;
         } else {
-            VPRINTF(FATAL, "AXI DMA reports status for xfer that would require DMA Flush\n");
+            VPRINTF_FATAL("AXI DMA reports status for xfer that would require DMA Flush\n");
             lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
             SEND_STDOUT_CTRL(0x1);
         }
@@ -789,7 +789,7 @@ void soc_ifc_axi_dma_wait_idle_w_error_expected(uint8_t clr_lock, uint8_t error_
     }
 
     if(error_expected && !error_observed) {
-        VPRINTF(FATAL, "AXI DMA did not report err status for xfer that would require DMA Flush\n");
+        VPRINTF_FATAL("AXI DMA did not report err status for xfer that would require DMA Flush\n");
         lsu_write_32(CLP_AXI_DMA_REG_CTRL, AXI_DMA_REG_CTRL_FLUSH_MASK);
         SEND_STDOUT_CTRL(0x1);
     }

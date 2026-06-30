@@ -108,9 +108,9 @@ void main () {
     uint32_t mie_timer0_ext_int_en = 0x20000800;
 
     // Message
-    VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " Caliptra Mailbox Smoke Test!!\n"    );
-    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF_LOW("----------------------------------\n");
+    VPRINTF_LOW(" Caliptra Mailbox Smoke Test!!\n"    );
+    VPRINTF_LOW("----------------------------------\n");
 
     // Call interrupt init
     init_interrupts();
@@ -124,7 +124,7 @@ void main () {
     set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
 
     //wait for mailbox data avail
-    VPRINTF(LOW, "FW: Wait\n");
+    VPRINTF_LOW("FW: Wait\n");
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) != MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK);
 
     set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
@@ -133,10 +133,10 @@ void main () {
     op = soc_ifc_read_mbox_cmd();
 
     //read from mbox
-    VPRINTF(LOW, "FW: Reading %d bytes from mailbox\n", op.dlen);
+    VPRINTF_LOW("FW: Reading %d bytes from mailbox\n", op.dlen);
     while(op.dlen) {
         data = soc_ifc_mbox_read_dataout_single();
-        VPRINTF(HIGH, "  dataout: 0x%x\n", data);
+        VPRINTF_HIGH("  dataout: 0x%x\n", data);
         if (op.dlen < 4) {
             op.dlen=0;
         } else {
@@ -145,14 +145,14 @@ void main () {
     }
 
     //push new data in like a response
-    VPRINTF(LOW, "FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
+    VPRINTF_LOW("FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
     for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
-        VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
+        VPRINTF_HIGH("  datain: 0x%x\n", mbox_data[ii]);
         lsu_write_32(CLP_MBOX_CSR_MBOX_DATAIN,mbox_data[ii]);
     }
 
     //set data ready status
-    VPRINTF(LOW, "FW: Set data ready status\n");
+    VPRINTF_LOW("FW: Set data ready status\n");
     lsu_write_32(CLP_MBOX_CSR_MBOX_STATUS,DATA_READY);
 
     //Halt core while SoC is executing mbox flow
@@ -161,24 +161,24 @@ void main () {
     //check FSM state, should be in EXECUTE_SOC
     state = (lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW;
     if (state != MBOX_EXECUTE_SOC && ((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 1)) {
-        VPRINTF(ERROR, "ERROR: mailbox in unexpected state (%x) when expecting MBOX_EXECUTE_SOC (0x%x)\n", state, MBOX_EXECUTE_SOC);
+        VPRINTF_ERROR("ERROR: mailbox in unexpected state (%x) when expecting MBOX_EXECUTE_SOC (0x%x)\n", state, MBOX_EXECUTE_SOC);
         SEND_STDOUT_CTRL( 0x1);
         while(1);
     } else if ((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 0) {
-        VPRINTF(LOW, "FW: Mailbox operation has ended, execute cleared to 0. Ending test with success\n");
+        VPRINTF_LOW("FW: Mailbox operation has ended, execute cleared to 0. Ending test with success\n");
     } else {
-        VPRINTF(LOW, "FW: Mailbox in expected state, MBOX_EXECUTE_SOC. Ending test with success\n");
+        VPRINTF_LOW("FW: Mailbox in expected state, MBOX_EXECUTE_SOC. Ending test with success\n");
     }
 
 //--------------------------------------------------------------------------------------------
     //Wait for SoC to reset execute reg
-    VPRINTF(LOW, "FW: Wait for SoC to reset execute register\n");
+    VPRINTF_LOW("FW: Wait for SoC to reset execute register\n");
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 1);
 
     set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
 
     //poll for mbox lock
-    VPRINTF(LOW, "FW: Acquire lock to send mbox cmd\n");
+    VPRINTF_LOW("FW: Acquire lock to send mbox cmd\n");
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) == 1);
 
     set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
@@ -194,9 +194,9 @@ void main () {
     set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
 
     //write datain
-    VPRINTF(LOW, "FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
+    VPRINTF_LOW("FW: Writing %d bytes to mailbox\n", MBOX_DLEN_VAL);
     for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
-        VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
+        VPRINTF_HIGH("  datain: 0x%x\n", mbox_data[ii]);
         lsu_write_32(CLP_MBOX_CSR_MBOX_DATAIN,mbox_data[ii]);
     }
 
@@ -213,15 +213,15 @@ void main () {
     set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
 
     //check data 
-    VPRINTF(LOW, "FW: Checking %d bytes from mailbox as if return data\n", MBOX_DLEN_VAL);
+    VPRINTF_LOW("FW: Checking %d bytes from mailbox as if return data\n", MBOX_DLEN_VAL);
     for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
         if (ii % 4 == 0){
             set_mit0_and_halt_core(mitb0, mie_timer0_ext_int_en);
         }
-        VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
+        VPRINTF_HIGH("  datain: 0x%x\n", mbox_data[ii]);
         read_data = lsu_read_32(CLP_MBOX_CSR_MBOX_DATAOUT);
         if (read_data != mbox_data[ii]) {
-            VPRINTF(ERROR, "ERROR: mailbox data mismatch actual (0x%x) expected (0x%x)\n", read_data, mbox_data[ii]);
+            VPRINTF_ERROR("ERROR: mailbox data mismatch actual (0x%x) expected (0x%x)\n", read_data, mbox_data[ii]);
             SEND_STDOUT_CTRL( 0x1);
             while(1);
         };

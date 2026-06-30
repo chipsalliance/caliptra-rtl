@@ -236,7 +236,7 @@ int sm_handle_2d_locking(ctrl_reg_t *dv_ctrl_ptr) {
         VPRINTF (LOW, "\n--next set--\n");
         datagrp_ptr = &sm_dv_regs[*dataset_ptr];
 
-        VPRINTF(LOW, "%s[%d] -LOCKS-> %s[0..%d]\n", ctrlgrp_ptr->pfx, j, datagrp_ptr->pfx, ctrl_entry_count-1);
+        VPRINTF_LOW("%s[%d] -LOCKS-> %s[0..%d]\n", ctrlgrp_ptr->pfx, j, datagrp_ptr->pfx, ctrl_entry_count-1);
         errs += wr_regs_per_pfx( datagrp_ptr, DV_ONES, EXPECT_UNLOCKED );                // write random 
         errs += wr_single_reg_explicit( ctrlgrp_ptr, 0x1, 0x1, j );                      // lock registers
         errs += wr_regs_per_pfx( datagrp_ptr, DV_ONES, EXPECT_LOCKED );                  // attempt write random 
@@ -271,7 +271,7 @@ int sm_handle_1d_locking(ctrl_reg_t *dv_ctrl_ptr) {
         VPRINTF (LOW, "\n--next set--\n");
         datagrp_ptr = &sm_dv_regs[*dataset_ptr];
 
-        VPRINTF(LOW, "%s[%d] -LOCKS-> %s[%d]\n", ctrlgrp_ptr->pfx, j, datagrp_ptr->pfx, j);
+        VPRINTF_LOW("%s[%d] -LOCKS-> %s[%d]\n", ctrlgrp_ptr->pfx, j, datagrp_ptr->pfx, j);
 
         uint32_t locked_data = rand();
         errs += wr_single_reg_explicit( datagrp_ptr, locked_data, locked_data, j );     // write random
