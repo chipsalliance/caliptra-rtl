@@ -209,7 +209,7 @@ Trace ports have been directly connected from Caliptra's instance of the VeeR-EL
 | trace_rv_i_interrupt_ip |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 | trace_rv_i_tval_ip      | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 
-*Table 11: Subsystem Straps and Control*
+*Table 11: Subsystem Straps, Controls, and iTRNG Configuration*
 
 | Signal name | Width      | Driver     | Synchronous (as viewed from Caliptra’s boundary) | Description |
 | :---------- | :--------- | :--------- | :----------------------------------------------- | :--------- |
@@ -226,7 +226,7 @@ Trace ports have been directly connected from Caliptra's instance of the VeeR-EL
 |  strap_ss_caliptra_dma_axi_user                           | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Provides Caliptra ROM with entropy source (CSRNG) configuration used during initialization when `CALIPTRA_INTERNAL_TRNG` is enabled, including Passive mode. If this configuration is not used, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
 |  ss_ocp_lock_en                                           | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC enables OCP LOCK features of Caliptra. Must be tied to a constant value. For example, driving this input from a programmable register or from a package pin is not permitted. |
@@ -369,7 +369,7 @@ Caliptra firmware internally has the capability to force release the mailbox bas
 ### Straps
 
 Straps are signal inputs to Caliptra that are sampled once on reset exit, and the latched value persists throughout the remaining uptime of the system. Straps are sampled on either cptra_pwrgood signal assertion (cold reset exit) or cptra\_noncore\_rst\_b deassertion (warm reset exit)  – refer to interface table for list of straps.
-In 2.0, Caliptra adds support for numerous Subsystem-level straps. These straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. These must be programmed by SoC FW at the same time as Caliptra [Fuses](#fuses) per [Caliptra Spec](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#subsystem-pre-fw-load-boot-flow). Once written and locked, the values of these straps persist until a cold reset.
+In 2.0, Caliptra adds support for numerous Subsystem-level straps. Unless otherwise noted in the interface table, Subsystem-mode straps are initialized on warm reset deassertion to the value from the external port, but may also be rewritten by the SoC firmware at any time prior to CPTRA_FUSE_WR_DONE being set. These must be programmed by SoC FW at the same time as Caliptra [Fuses](#fuses) per [Caliptra Spec](https://github.com/chipsalliance/Caliptra/blob/main/doc/Caliptra.md#subsystem-pre-fw-load-boot-flow). Once written and locked, the values of these straps persist until a cold reset.
 
 ### Obfuscation key
 
@@ -414,8 +414,8 @@ The following table describes the allocation of functionality to strap\_ss\_stra
 | :--------- | :---------         | :---------                                                                                                                  |
 | 0          | strap_ss_strap_generic_0           | Provides the Caliptra ROM with a 32-bit pointer that encodes the location of the fuse controller's status register and the bit position of the idle indicator. Upper 16 bits: Bit index of the IDLE_BIT_STATUS within SOC_OTP_CTRL_STATUS. Lower 16 bits: Offset address of SOC_OTP_CTRL_STATUS within the SOC_IFC_REG space, relative to SOC_OTP_CTRL_BASE_ADDR.|
 | 1          | strap_ss_strap_generic_1           | Provides the Caliptra ROM with a 32-bit pointer to the fuse controller’s command register (CMD), enabling ROM-level control or triggering of fuse operations. |
-| 2          | strap_ss_strap_generic_2           | Provides the Caliptra ROM with entropy source (CSRNG) configuration used during initialization. Bits [15:0]: Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane. Bit [16]: Entropy source single-bit mode. When set to 1, ROM enables `rng_bit_enable` and clears `threshold_scope`. Bits [18:17]: Entropy source single-bit mode `rng_bit_sel`. Selects which RNG bit stream to process when single-bit mode is enabled. Bits [30:19]: RESERVED/unused, must be tied to 0. Bit [31]: Entropy bypass mode. When set to 1, enables bypass mode (`es_type`) to allow entropy characterization directly without passing through conditioning. Refer to the Caliptra ROM Specification for additional details. |
-| 3          | strap_ss_strap_generic_3           | Provides the Caliptra ROM with Stable Owner Key and fatal-error reporting controls. Bit [0]: Stable Owner Key enable. When set to 1, ROM derives the Stable Owner Root Key from the HEK seed and allows `CM_DERIVE_STABLE_KEY` with `key_type = OwnerKey` when the other availability requirements are met (subsystem mode active and OCP LOCK disabled). When clear, Stable Owner Key derivation is disabled. Bit [1]: Wait for device reset before fatal error reporting. When set to 1 in subsystem mode, ROM waits for the recovery interface `DEVICE_RESET.RESET_CTRL` field to be set to `0x1` (`Reset Device`) before updating `CPTRA_FW_ERROR_FATAL` in the fatal error handler. When clear, ROM reports fatal errors immediately. Bits [31:2]: RESERVED/unused, must be tied to 0. Refer to the Caliptra ROM Specification for additional details. |
+| 2          | strap_ss_strap_generic_2           | Provides the Caliptra ROM with entropy source (CSRNG) configuration used during initialization when `CALIPTRA_INTERNAL_TRNG` is enabled, including Passive mode. Bits [15:0]: Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane. Bit [16]: Entropy source single-bit mode. ROM clears `threshold_scope` during entropy source initialization. When this bit is set to 1, ROM enables `rng_bit_enable`. Bits [18:17]: Entropy source single-bit mode `rng_bit_sel`. Selects which RNG bit stream to process when single-bit mode is enabled. Bits [30:19]: RESERVED/unused, must be tied to 0. Bit [31]: Entropy bypass mode. When set to 1, enables bypass mode (`es_type`) to allow entropy characterization directly without passing through conditioning. Refer to the Caliptra ROM Specification for additional details. |
+| 3          | strap_ss_strap_generic_3           | Provides the Caliptra ROM with Stable Owner Key controls. Bit [0]: Stable Owner Key enable. When set to 1, ROM derives the Stable Owner Root Key from the HEK seed and allows `CM_DERIVE_STABLE_KEY` with `key_type = OwnerKey` when the other availability requirements are met (subsystem mode active and OCP LOCK disabled). When clear, Stable Owner Key derivation is disabled. Bits [31:1]: RESERVED/unused, must be tied to 0. Refer to the Caliptra ROM Specification for additional details. |
 
 # SoC interface operation
 
@@ -695,7 +695,8 @@ configured for FIPS compliance, but rather to ensure that the quality of the
 entropy output is sufficient for ROM operation.
 
 The default self-test parameters are provided to the ROM via the
-`CPTRA_iTRNG_ENTROPY_CONFIG0` and `CPTRA_iTRNG_ENTROPY_CONFIG1` registers.
+`SS_STRAP_GENERIC[2]`, `CPTRA_iTRNG_ENTROPY_CONFIG0`, and
+`CPTRA_iTRNG_ENTROPY_CONFIG1` registers.
 
 The ROM configures self tests with the following parameters.
 
@@ -705,12 +706,12 @@ The adaptive self-test thresholds are configured as follows if the high and low
 thresholds provided in the `CPTRA_iTRNG_ENTROPY_CONFIG0` are non-zero.
 
 `entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.HIGH_THRESHOLD`\
-`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.HIGH_THRESHOLD`
+`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.LOW_THRESHOLD`
 
 Otherwise, the ROM will use 75% and 25% of the FIPS window size for the default
 high and low thresholds.
 
-`W` = 2048 (bits)\
+For example, when `W` = 2048 bits:\
 `entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = $3 * (W / 4)$ = 1536 \
 `entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = $W / 4$ = 512
 
@@ -762,13 +763,13 @@ The variable names are as defined in NIST SP 800-90B.
 
 $α = 2^{-40}$ (recommended)\
 $H = 0.5$ (example, implementation specific)\
-$W = 2048$ (constant in ROM/hw)
+$W = 2048$ (example health-test window in bits)
 
 ### Adaptive proportion test
 
-The test is configured with to sum all the bits per symbol, due to
-`entropy_src.CONF.THRESHOLD_SCOPE` being enabled. The test essentially treats
-the combined input as a single binary stream, counting the occurrences of '1's.
+The ROM clears `entropy_src.CONF.THRESHOLD_SCOPE`, so the adaptive proportion
+test scores the RNG lanes individually. The following example treats one lane
+as a binary stream, counting the occurrences of '1's over the selected window.
 
 > Note: The `critbinom` function (critical binomial distribution function) is
 > implemented by most spreadsheet applications.
