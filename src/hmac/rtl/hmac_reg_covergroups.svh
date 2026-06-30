@@ -241,55 +241,7 @@
 
     endgroup
 
-    /*----------------------- KV_READ_CTRL_REG COVERGROUPS -----------------------*/
-    covergroup kv_read_ctrl_reg_bit_cg with function sample(input bit reg_bit);
-        option.per_instance = 1;
-        reg_bit_cp : coverpoint reg_bit {
-            bins value[2] = {0,1};
-        }
-        reg_bit_edge_cp : coverpoint reg_bit {
-            bins rise = (0 => 1);
-            bins fall = (1 => 0);
-        }
 
-    endgroup
-    covergroup kv_read_ctrl_reg_fld_cg with function sample(
-    input bit [1-1:0] read_en,
-    input bit [5-1:0] read_entry,
-    input bit [1-1:0] pcr_hash_extend,
-    input bit [25-1:0] rsvd
-    );
-        option.per_instance = 1;
-        read_en_cp : coverpoint read_en;
-        read_entry_cp : coverpoint read_entry;
-        pcr_hash_extend_cp : coverpoint pcr_hash_extend;
-        rsvd_cp : coverpoint rsvd;
-
-    endgroup
-
-    /*----------------------- KV_STATUS_REG COVERGROUPS -----------------------*/
-    covergroup kv_status_reg_bit_cg with function sample(input bit reg_bit);
-        option.per_instance = 1;
-        reg_bit_cp : coverpoint reg_bit {
-            bins value[2] = {0,1};
-        }
-        reg_bit_edge_cp : coverpoint reg_bit {
-            bins rise = (0 => 1);
-            bins fall = (1 => 0);
-        }
-
-    endgroup
-    covergroup kv_status_reg_fld_cg with function sample(
-    input bit [1-1:0] READY,
-    input bit [1-1:0] VALID,
-    input bit [8-1:0] ERROR
-    );
-        option.per_instance = 1;
-        READY_cp : coverpoint READY;
-        VALID_cp : coverpoint VALID;
-        ERROR_cp : coverpoint ERROR;
-
-    endgroup
 
     /*----------------------- KV_WRITE_CTRL_REG COVERGROUPS -----------------------*/
     covergroup kv_write_ctrl_reg_bit_cg with function sample(input bit reg_bit);
@@ -333,29 +285,6 @@
 
     endgroup
 
-    /*----------------------- KV_STATUS_REG COVERGROUPS -----------------------*/
-    covergroup kv_status_reg_bit_cg with function sample(input bit reg_bit);
-        option.per_instance = 1;
-        reg_bit_cp : coverpoint reg_bit {
-            bins value[2] = {0,1};
-        }
-        reg_bit_edge_cp : coverpoint reg_bit {
-            bins rise = (0 => 1);
-            bins fall = (1 => 0);
-        }
-
-    endgroup
-    covergroup kv_status_reg_fld_cg with function sample(
-    input bit [1-1:0] READY,
-    input bit [1-1:0] VALID,
-    input bit [8-1:0] ERROR
-    );
-        option.per_instance = 1;
-        READY_cp : coverpoint READY;
-        VALID_cp : coverpoint VALID;
-        ERROR_cp : coverpoint ERROR;
-
-    endgroup
 
     /*----------------------- HMAC_REG__GLOBAL_INTR_EN_T COVERGROUPS -----------------------*/
     covergroup hmac_reg__global_intr_en_t_bit_cg with function sample(input bit reg_bit);
