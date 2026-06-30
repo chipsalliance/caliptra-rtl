@@ -424,7 +424,9 @@ hmac_reg i_hmac_reg (
 always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg | restore_reg) & (mode_reg == HMAC512_MODE) & (key_reg[KEY_NUM_DWORDS-1 : HMAC384_KEY_SIZE/DATA_WIDTH] == '0);
 always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg | restore_reg) & (key_reg == '0);
 always_comb invalid_cmd_error = (hwif_out.HMAC512_CTRL.LAST.value    & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.RESTORE.value)
-                              | (hwif_out.HMAC512_CTRL.RESTORE.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.LAST.value);
+                              | (hwif_out.HMAC512_CTRL.RESTORE.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.LAST.value)
+                              | (hwif_out.HMAC512_CTRL.INIT.value    & hwif_out.HMAC512_CTRL.NEXT.value)
+                              | (hwif_out.HMAC512_CTRL.INIT.value    & hwif_out.HMAC512_CTRL.RESTORE.value);
 always_comb intermediate_tag_hidden = core_tag_we & ~is_last_op_reg & (kv_key_data_present | kv_block_data_present | csr_mode_reg);
 
 always_comb error_flag = key_zero_error | key_mode_error;
