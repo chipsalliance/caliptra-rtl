@@ -672,7 +672,9 @@ module caliptra_top_tb_axi_complex import caliptra_top_tb_pkg::*; (
         .en_recovery_emulation(ctrl.en_recovery_emulation),
         .recovery_data_avail  (recovery_data_avail       ),
         .dma_gen_done         (ctrl.dma_gen_done         ),
-        .dma_gen_block_size   (ctrl.dma_gen_block_size   )
+        .dma_gen_block_size   (ctrl.dma_gen_block_size   ),
+        .inject_rd_error      (ctrl.fifo_rd_error        ),
+        .inject_wr_error      (ctrl.fifo_wr_error        )
     );
 
     // --------------------- REG Endpoint TODO ---------------------

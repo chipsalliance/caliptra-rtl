@@ -61,13 +61,17 @@ module caliptra_top_tb (
     logic                       recovery_data_avail;
 
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key;
-    
+
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key;
 
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
     logic [0:OCP_LOCK_HEK_NUM_DWORDS-1][31:0]      cptra_hek_rand;
     logic [0:`CLP_OBF_KEY_DWORDS-1][31:0]          cptra_obf_key_tb;
+    logic [`CLP_OBF_UDS_DWORDS-1:0][31:0]          cptra_uds_strap;
+    logic                                          cptra_uds_strap_vld;
+    logic [`CLP_OBF_FE_DWORDS-1:0] [31:0]          cptra_fe_strap;
+    logic                                          cptra_fe_strap_vld;
 
     //jtag interface
     logic                       jtag_tck;    // JTAG clk
@@ -135,6 +139,51 @@ module caliptra_top_tb (
     logic deassert_hard_rst_flag;
     logic assert_rst_flag_from_service;
     logic deassert_rst_flag_from_service;
+    logic route_fatal_to_nmi;
+
+    // Custom event injection
+    logic inject_mbox_soc_lock_on_mbox_unlock;
+
+    //AXI
+    logic [31:0] address;
+    logic [31:0] axuser;
+    logic [31:0] wuser[$];
+    logic [31:0] wdata[$];
+    logic [ 7:0] len;
+    logic [ 3:0] wstrb[$];
+    logic [ 1:0] burst;
+    logic        use_id;
+    logic        id;
+    logic        write;
+    logic        write_addr;
+    logic        write_data;
+    logic        write_resp;
+    logic        read;
+    logic        read_addr;
+    logic        read_resp;
+    logic        put_status;
+    logic        put_rdata;
+
+    logic [31:0] obf_key_value;
+    logic  [2:0] obf_key_idx;
+    logic        set_obf_key;
+    logic        get_obf_key;
+
+
+    // UDS access
+    logic       get_uds_value;
+    logic [2:0] uds_idx;
+
+    // FE access
+    logic       get_fe_value;
+    logic [1:0] fe_idx;
+
+    // KV check cleared
+    logic        check_kv_clear;
+    logic [4:0]  kv_idx;
+
+    //Control singlas
+    logic debug_intent;
 
     el2_mem_if el2_mem_export ();
     abr_mem_if abr_memory_export();
@@ -157,6 +206,10 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .cycleCnt        (cycleCnt        ),
 
     .cptra_obf_key      (cptra_obf_key   ),
+    .cptra_uds_strap    (cptra_uds_strap    ),
+    .cptra_uds_strap_vld(cptra_uds_strap_vld),
+    .cptra_fe_strap     (cptra_fe_strap     ),
+    .cptra_fe_strap_vld (cptra_fe_strap_vld ),
     .cptra_csr_hmac_key (cptra_csr_hmac_key),
 
     .strap_ss_key_release_key_size,
@@ -192,8 +245,49 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .assert_hard_rst_flag(assert_hard_rst_flag),
     .deassert_hard_rst_flag(deassert_hard_rst_flag),
     .assert_rst_flag_from_service(assert_rst_flag_from_service),
-    .deassert_rst_flag_from_service(deassert_rst_flag_from_service)
+    .deassert_rst_flag_from_service(deassert_rst_flag_from_service),
 
+    .route_fatal_to_nmi(route_fatal_to_nmi),
+
+    // Custom event injection
+    .inject_mbox_soc_lock_on_mbox_unlock(inject_mbox_soc_lock_on_mbox_unlock),
+
+    //AXI SoC
+    .axi_addr(address),
+    .axi_axuser(axuser),
+    .axi_wuser(wuser),
+    .axi_wdata(wdata),
+    .axi_len(len),
+    .axi_wstrb(wstrb),
+    .axi_burst(burst),
+    .axi_use_id(use_id),
+    .axi_id(id),
+    .axi_write(write),
+    .axi_write_addr(write_addr),
+    .axi_write_data(write_data),
+    .axi_write_resp(write_resp),
+    .axi_read(read),
+    .axi_read_addr(read_addr),
+    .axi_read_resp(read_resp),
+    .axi_put_status(put_status),
+    .axi_put_rdata(put_rdata),
+
+    .obf_key_value(obf_key_value),
+    .obf_key_idx(obf_key_idx),
+    .set_obf_key(set_obf_key),
+    .get_obf_key(get_obf_key),
+
+    // UDS access
+    .get_uds_value(get_uds_value),
+    .uds_idx(uds_idx),
+
+    // FE access
+    .get_fe_value(get_fe_value),
+    .fe_idx(fe_idx),
+
+    // KV check cleared
+    .check_kv_clear(check_kv_clear),
+    .kv_idx(kv_idx)
 );
     
 // JTAG DPI
@@ -220,10 +314,10 @@ caliptra_top caliptra_top_dut (
     .clk                        (core_clk),
 
     .cptra_obf_key              (cptra_obf_key),
-    .cptra_obf_uds_seed_vld     ('0), //validated at caliptra-ss
-    .cptra_obf_uds_seed         ('0), //validated at caliptra-ss
-    .cptra_obf_field_entropy_vld('0), //validated at caliptra-ss
-    .cptra_obf_field_entropy    ('0), //validated at caliptra-ss
+    .cptra_obf_uds_seed_vld     (cptra_uds_strap_vld),
+    .cptra_obf_uds_seed         (cptra_uds_strap),
+    .cptra_obf_field_entropy_vld(cptra_fe_strap_vld),
+    .cptra_obf_field_entropy    (cptra_fe_strap),
     .cptra_csr_hmac_key         (cptra_csr_hmac_key),
 
     .jtag_tck(jtag_tck),
@@ -295,7 +389,7 @@ caliptra_top caliptra_top_dut (
     .strap_ss_strap_generic_1                               (strap_ss_strap_generic_1),
     .strap_ss_strap_generic_2                               (strap_ss_strap_generic_2),
     .strap_ss_strap_generic_3                               (strap_ss_strap_generic_3),
-    .ss_debug_intent                                        ( 1'b0),
+    .ss_debug_intent                                        (debug_intent),
 
     // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
     .ss_ocp_lock_en                                         (ss_ocp_lock_en),
@@ -373,6 +467,9 @@ caliptra_top_tb_services #(
     .cycleCnt(cycleCnt),
     .axi_complex_ctrl(axi_complex_ctrl),
 
+    // Custom event injection
+    .inject_mbox_soc_lock_on_mbox_unlock(inject_mbox_soc_lock_on_mbox_unlock),
+
     //Interrupt flags
     .int_flag(int_flag),
     .cycleCnt_smpl_en(cycleCnt_smpl_en),
@@ -383,11 +480,53 @@ caliptra_top_tb_services #(
 
     .assert_rst_flag(assert_rst_flag_from_service),
     .deassert_rst_flag(deassert_rst_flag_from_service),
-    
+
+    .route_fatal_to_nmi(route_fatal_to_nmi),
+
     .cptra_uds_tb(cptra_uds_rand),
     .cptra_fe_tb(cptra_fe_rand),
     .cptra_obf_key_tb(cptra_obf_key_tb),
     .cptra_hek_tb(cptra_hek_rand),
+
+    //AXI SoC
+    .axi_addr(address),
+    .axi_axuser(axuser),
+    .axi_wuser(wuser),
+    .axi_wdata(wdata),
+    .axi_len(len),
+    .axi_wstrb(wstrb),
+    .axi_burst(burst),
+    .axi_use_id(use_id),
+    .axi_id(id),
+    .axi_write(write),
+    .axi_write_addr(write_addr),
+    .axi_write_data(write_data),
+    .axi_write_resp(write_resp),
+    .axi_read(read),
+    .axi_read_addr(read_addr),
+    .axi_read_resp(read_resp),
+    .axi_put_status(put_status),
+    .axi_put_rdata(put_rdata),
+
+    .obf_key_value(obf_key_value),
+    .obf_key_idx(obf_key_idx),
+    .set_obf_key(set_obf_key),
+    .get_obf_key(get_obf_key),
+
+    // UDS access
+    .get_uds_value(get_uds_value),
+    .uds_idx(uds_idx),
+
+    // FE access
+    .get_fe_value(get_fe_value),
+    .fe_idx(fe_idx),
+
+    // KV check cleared
+    .check_kv_clear(check_kv_clear),
+    .kv_idx(kv_idx),
+
+    //Control signals
+    .debug_intent(debug_intent),
 
     .axi_error_inj_en(axi_error_inj_en)
 

@@ -34,6 +34,10 @@ import caliptra_top_tb_pkg::*; #(
     input int                          cycleCnt,
 
     output logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key,
+    output logic [`CLP_OBF_UDS_DWORDS-1:0][31:0]          cptra_uds_strap,
+    output logic                                          cptra_uds_strap_vld,
+    output logic [`CLP_OBF_FE_DWORDS-1:0] [31:0]          cptra_fe_strap,
+    output logic                                          cptra_fe_strap_vld,
     output logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key,
 
     input  logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand,
@@ -71,7 +75,47 @@ import caliptra_top_tb_pkg::*; #(
     input logic assert_hard_rst_flag,
     input logic deassert_hard_rst_flag,
     input logic assert_rst_flag_from_service,
-    input logic deassert_rst_flag_from_service
+    input logic deassert_rst_flag_from_service,
+
+    input logic route_fatal_to_nmi,
+
+    // Custom event injection
+    input logic inject_mbox_soc_lock_on_mbox_unlock,
+
+    //AXI SoC
+    input logic [31:0] axi_addr,
+    input logic [31:0] axi_axuser,
+    ref   logic [31:0] axi_wuser[$],
+    ref   logic [31:0] axi_wdata[$],
+    input logic [ 7:0] axi_len,
+    ref   logic [ 3:0] axi_wstrb[$],
+    input logic [ 1:0] axi_burst,
+    input logic        axi_use_id,
+    input logic [ 7:0] axi_id,
+    input logic        axi_write,
+    input logic        axi_write_addr,
+    input logic        axi_write_data,
+    input logic        axi_write_resp,
+    input logic        axi_read,
+    input logic        axi_read_addr,
+    input logic        axi_read_resp,
+    input logic        axi_put_status,
+    input logic        axi_put_rdata,
+
+    input logic [31:0] obf_key_value,
+    input logic  [2:0] obf_key_idx,
+    input logic        set_obf_key,
+    input logic        get_obf_key,
+
+    //UDS access
+    input logic       get_uds_value,
+    input logic [2:0] uds_idx,
+    //FE access
+    input logic       get_fe_value,
+    input logic [1:0] fe_idx,
+    // KV check cleared
+    input logic        check_kv_clear,
+    input logic [4:0]  kv_idx
 
 );
     localparam FW_NUM_DWORDS         = 256;
@@ -127,7 +171,7 @@ import caliptra_top_tb_pkg::*; #(
         end
     end
     // Pulse fires about 640ns after the original error interrupt occurs
-    always_comb cptra_error_fatal_dly_p     = cptra_error_fatal_counter     == 16'h0040;
+    always_comb cptra_error_fatal_dly_p     = (cptra_error_fatal_counter     == 16'h0040) && !route_fatal_to_nmi;
     always_comb cptra_error_non_fatal_dly_p = cptra_error_non_fatal_counter == 16'h0040;
 
     always@(negedge core_clk) begin
@@ -237,6 +281,8 @@ import caliptra_top_tb_pkg::*; #(
         BootFSM_BrkPoint = $urandom_range(1,0); //Set before anything starts (drive like a const strap)
         cptra_rst_b = 1'b0;
         assert_rst_flag_from_fatal = 1'b0;
+        cptra_uds_strap_vld = 1'b0;
+        cptra_fe_strap_vld = 1'b0;
         m_axi_bfm_if.rst_mgr();
 
 `ifndef VERILATOR
@@ -254,6 +300,14 @@ import caliptra_top_tb_pkg::*; #(
 
             cptra_uds_tb = cptra_uds_rand;
             cptra_fe_tb = cptra_fe_rand;
+            for (int dword = 0; dword < $bits(cptra_uds_strap)/32; dword++) begin
+                cptra_uds_strap[dword] = cptra_uds_tb[dword];
+            end
+            cptra_uds_strap_vld = 1'b1;
+            for (int dword = 0; dword < $bits(cptra_fe_strap)/32; dword++) begin
+                cptra_fe_strap[dword] = cptra_fe_tb[dword];
+            end
+            cptra_fe_strap_vld = 1'b1;
             cptra_hek_tb = cptra_hek_rand;
         end
         else begin
@@ -278,6 +332,14 @@ import caliptra_top_tb_pkg::*; #(
             for (int dword = 0; dword < $bits(cptra_obf_key)/32; dword++) begin
                 cptra_obf_key[dword] = cptra_obfkey_tb[dword];
             end
+            for (int dword = 0; dword < $bits(cptra_uds_strap)/32; dword++) begin
+                cptra_uds_strap[dword] = cptra_uds_tb[dword];
+            end
+            cptra_uds_strap_vld = 1'b1;
+            for (int dword = 0; dword < $bits(cptra_fe_strap)/32; dword++) begin
+                cptra_fe_strap[dword] = cptra_fe_tb[dword];
+            end
+            cptra_fe_strap_vld = 1'b1;
         end
 
         for (int dword = 0; dword < `CLP_CSR_HMAC_KEY_DWORDS; dword++) begin
@@ -343,10 +405,14 @@ import caliptra_top_tb_pkg::*; #(
                         $write ("SoC: Polling Flow Status...");
                         poll_count = 0;
                         do begin
-                            m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS), .data(rdata), .resp(rresp), .resp_user(buser));
+                            // Make a narrow and unaligned access
+                            automatic int size = $urandom_range(0, 1);
+                            automatic int bytes = 2**size;
+                            m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FLOW_STATUS + `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_LOW / 8 / bytes * bytes), .size(size), .data(rdata), .resp(rresp), .resp_user(buser));
                             poll_count++;
-                        end while(rdata[`SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_LOW] == 1);
-                        $display("\n  >>> SoC: Ready for Fuses deasserted after polling %d times\n", poll_count);
+                         end while(rdata[`SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_FUSES_LOW] == 1);
+                         $display("\n  >>> SoC: Ready for Fuses deasserted after polling %d times\n", poll_count);
+
                         $display ("SoC: Writing BootGo register\n");
                         m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_BOOTFSM_GO), .data(32'h00000001), .resp(wresp), .resp_user(buser));
                     end
@@ -355,7 +421,6 @@ import caliptra_top_tb_pkg::*; #(
                     end
 
                     $display ("CLP: ROM Flow in progress...\n");
-
                     // Test sequence (Mailbox or error handling)
                     wait(ready_for_mb_processing || ras_test_ctrl.error_injection_seen);
 
@@ -616,6 +681,210 @@ import caliptra_top_tb_pkg::*; #(
                     m_axi_bfm_if.rst_mgr();
                 end: RESET_FLOW
             join_any
+        end
+    end
+
+    always @(posedge core_clk) begin
+        if (set_obf_key) begin
+            cptra_obf_key[obf_key_idx] <= obf_key_value;
+        end else if (get_obf_key) begin
+            generic_input_wires <= {32'h0, `CPTRA_TOP_PATH.cptra_obf_key_reg[obf_key_idx]};
+        end
+    end
+
+    logic done, read, write, read_addr, read_resp, write_addr, write_data, write_resp;
+    logic [31:0] axi_rdata[$];
+    axi_resp_e axi_bresp, axi_rresp[$];
+    logic [`CALIPTRA_AXI_USER_WIDTH  -1:0] axi_buser, axi_ruser[$];
+    always @(posedge core_clk or negedge cptra_pwrgood) begin
+        if (~cptra_pwrgood) begin
+            done <= 1'b0;
+            read <= 1'b0;
+            read_addr <= 1'b0;
+            read_resp <= 1'b0;
+            write <= 1'b0;
+            write_addr <= 1'b0;
+            write_data <= 1'b0;
+            write_resp <= 1'b0;
+            axi_bresp <= axi_pkg::axi_resp_e'(0);
+            axi_buser <= '0;
+        end else if (axi_write || axi_read || axi_write_addr || axi_write_data || axi_write_resp || axi_read_addr || axi_read_resp ) begin
+            done <= 1'b0;
+            read <= 1'b0;
+            write <= 1'b0;
+            read_addr <= 1'b0;
+            read_resp <= 1'b0;
+            write_addr <= 1'b0;
+            write_data <= 1'b0;
+            write_resp <= 1'b0;
+            fork
+                if (axi_write_addr) begin
+                    write_addr <= 1'b1;
+                    m_axi_bfm_if.send_write_addr(
+                        .addr(axi_addr),
+                        .burst(axi_pkg::axi_burst_e'(axi_burst)),
+                        .len(axi_len),
+                        .user(axi_axuser),
+                        .id(axi_id),
+                        .lock(1'b0)
+                    );
+                end
+                if (axi_write_data) begin
+                    write_data <= 1'b1;
+                    for (int beat=0; beat <= axi_len; beat++)
+                        m_axi_bfm_if.send_write_beat(
+                            .last(beat == axi_len),
+                            .data(axi_wdata[beat]),
+                            .user(axi_wuser[beat]),
+                            .strb(axi_wstrb[beat])
+                        );
+                end
+                if (axi_write_resp) begin
+                    write_resp <= 1'b1;
+                    m_axi_bfm_if.get_write_resp(
+                        .id(axi_id),
+                        .resp(axi_bresp),
+                        .user(axi_buser)
+                    );
+                end
+                if (axi_write) begin
+                    write <= 1'b1;
+                    m_axi_bfm_if.axi_write(
+                        .addr(axi_addr),
+                        .burst(axi_pkg::axi_burst_e'(axi_burst)),
+                        .len(axi_len),
+                        .user(axi_axuser),
+                        .id  (axi_use_id ? axi_id : $urandom()),
+                        .lock(1'b0),
+                        .data(axi_wdata),
+                        .use_strb(1'b1),
+                        .strb(axi_wstrb),
+                        .use_write_user(1'b1),
+                        .write_user(axi_wuser),
+                        .resp(axi_bresp),
+                        .resp_user(axi_buser)
+                    );
+                end
+                if (axi_read_addr) begin
+                    read_addr <= 1'b1;
+                    m_axi_bfm_if.send_read_address(
+                        .addr(axi_addr),
+                        .burst(axi_pkg::axi_burst_e'(axi_burst)),
+                        .len(axi_len),
+                        .user(axi_axuser),
+                        .id(axi_id),
+                        .lock(1'b0)
+                    );
+                end
+                if (axi_read_resp) begin
+                    automatic axi_resp_e   beat_resp, rresp[];
+                    automatic logic [31:0] beat_user, ruser[];
+                    automatic logic [31:0] beat_data, rdata[];
+                    read_resp <= 1'b1;
+                    rdata = new[axi_len+1];
+                    ruser = new[axi_len+1];
+                    rresp = new[axi_len+1];
+                    for (int beat=0; beat <= axi_len; beat++) begin
+                        m_axi_bfm_if.get_read_beat(
+                            .id(axi_id),
+                            .data(beat_data),
+                            .user(beat_user),
+                            .resp(beat_resp)
+                        );
+                        rdata[beat] = beat_data;
+                        ruser[beat] = beat_user;
+                        rresp[beat] = beat_resp;
+                    end
+                    axi_rdata = rdata;
+                    axi_ruser = ruser;
+                    axi_rresp = rresp;
+                end
+                if (axi_read) begin
+                    read <= 1'b1;
+                    m_axi_bfm_if.axi_read(
+                        .addr(axi_addr),
+                        .burst(axi_pkg::axi_burst_e'(axi_burst)),
+                        .len(axi_len),
+                        .id(axi_use_id ? axi_id : $urandom()),
+                        .user(axi_axuser),
+                        .data(axi_rdata),
+                        .resp(axi_rresp),
+                        .resp_user(axi_ruser)
+                    );
+                end
+            join
+        end else begin
+            done <= 1'b1;
+        end
+    end
+
+    always @(posedge core_clk) begin
+        if (axi_put_status) begin
+            if (done) begin
+                if (read && write) // Need to merge the results
+                    // only keep read response user bit
+                    // OR the status, if one is an error, the whole transaction looks like an error
+                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, (axi_rresp.pop_front() || axi_bresp), 1'b1};
+                else if (read)
+                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, axi_rresp.pop_front(), 1'b1};
+                else if (write)// write
+                    generic_input_wires <= {axi_buser, 29'b0, axi_bresp, 1'b1};
+                else if (write_addr)
+                    generic_input_wires <= {63'h0, 1'b1};
+                else if (write_data)
+                    generic_input_wires <= {63'h0, 1'b1};
+                else if (write_resp)
+                    generic_input_wires <= {axi_buser, 29'b0, axi_bresp, 1'b1};
+                else if (read_addr)
+                    generic_input_wires <= {63'h0, 1'b1};
+                else if (read_resp)
+                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, axi_rresp.pop_front(), 1'b1};
+            end else
+                generic_input_wires <= '0;
+        end else if (axi_put_rdata) begin
+            generic_input_wires <= {32'b0, axi_rdata.pop_front()};
+        end
+    end
+
+    always @(posedge core_clk) begin
+        if (inject_mbox_soc_lock_on_mbox_unlock) begin
+            if (`CPTRA_TOP_PATH.soc_ifc_top1.i_mbox.mbox_csr1.field_combo.mbox_unlock.unlock.load_next &
+                |`CPTRA_TOP_PATH.soc_ifc_top1.i_mbox.mbox_csr1.field_combo.mbox_unlock.unlock.next) begin
+                m_axi_bfm_if.axi_read_single(
+                    .addr(`CLP_MBOX_CSR_MBOX_LOCK),
+                    .user(32'hFFFF_FFFF),
+                    .data(rdata),
+                    .resp(rresp),
+                    .resp_user(buser)
+                );
+            end
+        end
+    end
+
+    logic[15:0] kv_slot_is_clear [24];
+    generate
+        for(genvar i0=0; i0<24; i0++) begin
+            for(genvar i1=0; i1<16; i1++) begin
+                assign kv_slot_is_clear[i0][i1] = |`CPTRA_TOP_PATH.key_vault1.kv_reg1.field_storage.KEY_ENTRY[i0][i1].data.value;
+            end
+        end
+    endgenerate
+
+    always @(posedge core_clk) begin
+        if (get_uds_value) begin
+            generic_input_wires <= {
+                `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.fuse_uds_seed[(4'(uds_idx) << 1)].seed.value,
+                `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.fuse_uds_seed[(4'(uds_idx) << 1) + 4'h1].seed.value
+            };
+        end
+        if (get_fe_value) begin
+            generic_input_wires <= {
+                `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.fuse_field_entropy[(3'(fe_idx) << 1)].seed.value,
+                `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.fuse_field_entropy[(3'(fe_idx) << 1) + 3'h1].seed.value
+            };
+        end
+        if (check_kv_clear) begin
+            generic_input_wires <= { {48{1'b0}}, kv_slot_is_clear[kv_idx]};
         end
     end
 
