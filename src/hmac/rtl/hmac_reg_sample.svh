@@ -291,65 +291,9 @@
         end
     endfunction
 
-    /*----------------------- KV_READ_CTRL_REG SAMPLE FUNCTIONS -----------------------*/
-    function void kv_read_ctrl_reg::sample(uvm_reg_data_t  data,
-                                                   uvm_reg_data_t  byte_en,
-                                                   bit             is_read,
-                                                   uvm_reg_map     map);
-        m_current = get();
-        m_data    = data;
-        m_is_read = is_read;
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(read_en_bit_cg[bt]) this.read_en_bit_cg[bt].sample(data[0 + bt]);
-            foreach(read_entry_bit_cg[bt]) this.read_entry_bit_cg[bt].sample(data[1 + bt]);
-            foreach(pcr_hash_extend_bit_cg[bt]) this.pcr_hash_extend_bit_cg[bt].sample(data[6 + bt]);
-            foreach(rsvd_bit_cg[bt]) this.rsvd_bit_cg[bt].sample(data[7 + bt]);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*read_en*/  ,  data[5:1]/*read_entry*/  ,  data[6:6]/*pcr_hash_extend*/  ,  data[31:7]/*rsvd*/   );
-        end
-    endfunction
 
-    function void kv_read_ctrl_reg::sample_values();
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(read_en_bit_cg[bt]) this.read_en_bit_cg[bt].sample(read_en.get_mirrored_value() >> bt);
-            foreach(read_entry_bit_cg[bt]) this.read_entry_bit_cg[bt].sample(read_entry.get_mirrored_value() >> bt);
-            foreach(pcr_hash_extend_bit_cg[bt]) this.pcr_hash_extend_bit_cg[bt].sample(pcr_hash_extend.get_mirrored_value() >> bt);
-            foreach(rsvd_bit_cg[bt]) this.rsvd_bit_cg[bt].sample(rsvd.get_mirrored_value() >> bt);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( read_en.get_mirrored_value()  ,  read_entry.get_mirrored_value()  ,  pcr_hash_extend.get_mirrored_value()  ,  rsvd.get_mirrored_value()   );
-        end
-    endfunction
 
-    /*----------------------- KV_STATUS_REG SAMPLE FUNCTIONS -----------------------*/
-    function void kv_status_reg::sample(uvm_reg_data_t  data,
-                                                   uvm_reg_data_t  byte_en,
-                                                   bit             is_read,
-                                                   uvm_reg_map     map);
-        m_current = get();
-        m_data    = data;
-        m_is_read = is_read;
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(READY_bit_cg[bt]) this.READY_bit_cg[bt].sample(data[0 + bt]);
-            foreach(VALID_bit_cg[bt]) this.VALID_bit_cg[bt].sample(data[1 + bt]);
-            foreach(ERROR_bit_cg[bt]) this.ERROR_bit_cg[bt].sample(data[2 + bt]);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*READY*/  ,  data[1:1]/*VALID*/  ,  data[9:2]/*ERROR*/   );
-        end
-    endfunction
 
-    function void kv_status_reg::sample_values();
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(READY_bit_cg[bt]) this.READY_bit_cg[bt].sample(READY.get_mirrored_value() >> bt);
-            foreach(VALID_bit_cg[bt]) this.VALID_bit_cg[bt].sample(VALID.get_mirrored_value() >> bt);
-            foreach(ERROR_bit_cg[bt]) this.ERROR_bit_cg[bt].sample(ERROR.get_mirrored_value() >> bt);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( READY.get_mirrored_value()  ,  VALID.get_mirrored_value()  ,  ERROR.get_mirrored_value()   );
-        end
-    endfunction
 
     /*----------------------- KV_WRITE_CTRL_REG SAMPLE FUNCTIONS -----------------------*/
     function void kv_write_ctrl_reg::sample(uvm_reg_data_t  data,
@@ -398,34 +342,7 @@
         end
     endfunction
 
-    /*----------------------- KV_STATUS_REG SAMPLE FUNCTIONS -----------------------*/
-    function void kv_status_reg::sample(uvm_reg_data_t  data,
-                                                   uvm_reg_data_t  byte_en,
-                                                   bit             is_read,
-                                                   uvm_reg_map     map);
-        m_current = get();
-        m_data    = data;
-        m_is_read = is_read;
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(READY_bit_cg[bt]) this.READY_bit_cg[bt].sample(data[0 + bt]);
-            foreach(VALID_bit_cg[bt]) this.VALID_bit_cg[bt].sample(data[1 + bt]);
-            foreach(ERROR_bit_cg[bt]) this.ERROR_bit_cg[bt].sample(data[2 + bt]);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*READY*/  ,  data[1:1]/*VALID*/  ,  data[9:2]/*ERROR*/   );
-        end
-    endfunction
 
-    function void kv_status_reg::sample_values();
-        if (get_coverage(UVM_CVR_REG_BITS)) begin
-            foreach(READY_bit_cg[bt]) this.READY_bit_cg[bt].sample(READY.get_mirrored_value() >> bt);
-            foreach(VALID_bit_cg[bt]) this.VALID_bit_cg[bt].sample(VALID.get_mirrored_value() >> bt);
-            foreach(ERROR_bit_cg[bt]) this.ERROR_bit_cg[bt].sample(ERROR.get_mirrored_value() >> bt);
-        end
-        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( READY.get_mirrored_value()  ,  VALID.get_mirrored_value()  ,  ERROR.get_mirrored_value()   );
-        end
-    endfunction
 
     /*----------------------- HMAC_REG__GLOBAL_INTR_EN_T SAMPLE FUNCTIONS -----------------------*/
     function void hmac_reg__global_intr_en_t::sample(uvm_reg_data_t  data,

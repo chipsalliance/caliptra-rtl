@@ -236,7 +236,7 @@ module hmac
       else
         begin
           tag_valid_reg <= core_tag_valid & ~error_flag_reg;
-          ready_reg     <= core_ready; 
+          ready_reg     <= core_ready;
 
           if (init_reg | next_reg | restore_reg)
             is_last_op_reg <= last_reg;
@@ -276,11 +276,11 @@ always_comb begin
   hwif_in.HMAC512_CTRL.RESTORE.swwe = ready_reg;
 
   //assign hardware readable registers to drive hmac core
-  //mask the command until kv clients are idle
-  init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
-  next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready;
-  last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready;
-  restore_reg = hwif_out.HMAC512_CTRL.RESTORE.value & (hwif_out.HMAC512_CTRL.NEXT.value | hwif_out.HMAC512_CTRL.LAST.value) & kv_key_ready & kv_block_ready;
+  //mask the command until kv clients are idle, and refuse illegal CTRL combos
+  init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready & ~invalid_cmd_error;
+  next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready & ~invalid_cmd_error;
+  last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready & ~invalid_cmd_error;
+  restore_reg = hwif_out.HMAC512_CTRL.RESTORE.value & (hwif_out.HMAC512_CTRL.NEXT.value | hwif_out.HMAC512_CTRL.LAST.value) & kv_key_ready & kv_block_ready & ~invalid_cmd_error;
   zeroize_reg = hwif_out.HMAC512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
   mode_reg = hwif_out.HMAC512_CTRL.MODE.value;
   csr_mode_reg = hwif_out.HMAC512_CTRL.CSR_MODE.value;
@@ -427,7 +427,7 @@ always_comb invalid_cmd_error = (hwif_out.HMAC512_CTRL.LAST.value    & ~hwif_out
                               | (hwif_out.HMAC512_CTRL.RESTORE.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.LAST.value)
                               | (hwif_out.HMAC512_CTRL.INIT.value    & hwif_out.HMAC512_CTRL.NEXT.value)
                               | (hwif_out.HMAC512_CTRL.INIT.value    & hwif_out.HMAC512_CTRL.RESTORE.value);
-always_comb intermediate_tag_hidden = core_tag_we & ~is_last_op_reg & (kv_key_data_present | kv_block_data_present | csr_mode_reg);
+always_comb intermediate_tag_hidden = core_tag_we & ~is_last_op_reg & (kv_key_data_present | kv_block_data_present | csr_mode_reg | dest_keyvault);
 
 always_comb error_flag = key_zero_error | key_mode_error;
 
@@ -468,7 +468,9 @@ begin : error_detection
       intermediate_tag_hidden_reg <= intermediate_tag_hidden;
       if (intermediate_tag_hidden)
         tag_was_masked_reg <= 1'b1;
-      else if (core_tag_we & is_last_op_reg & ~(dest_keyvault | kv_data_present))
+      else if (core_tag_we & (dest_keyvault | kv_data_present))
+        tag_was_masked_reg <= 1'b1;
+      else if (core_tag_we & is_last_op_reg)
         tag_was_masked_reg <= 1'b0;
     end
 end // error_detection
