@@ -7,9 +7,17 @@ class ahb_mgr_agent extends uvm_agent;
 
   typedef uvm_sequencer #(ahb_reg_op_item) layered_reg_sequencer_t;
 
+  // Analysis ports for requests, responses and complete transactions
+  uvm_analysis_port #(ahb_txn_request_item)  m_request_port;
+  uvm_analysis_port #(ahb_txn_response_item) m_response_port;
+  uvm_analysis_port #(ahb_txn_item)          m_transaction_port;
+
   // The virtual interface. This can either be set by calling set_vif() before the build phase, or
   // provided through uvm_config_db.
   local virtual ahb_if m_vif;
+
+  // The monitor for the interface
+  local ahb_monitor m_monitor;
 
   // The driver that can send read and write transactions
   local ahb_mgr_driver m_driver;
@@ -75,12 +83,19 @@ endfunction
 function void ahb_mgr_agent::build_phase(uvm_phase phase);
   super.build_phase(phase);
 
+  m_request_port = new("m_request_port", this);
+  m_response_port = new("m_response_port", this);
+  m_transaction_port = new("m_transaction_port", this);
+
   if (m_vif == null && !uvm_config_db#(virtual ahb_if)::get(this, "", "vif", m_vif)) begin
     `uvm_fatal(get_full_name(), "failed to get vif from uvm_config_db")
   end
   if (m_vif == null) begin
     `uvm_fatal(get_full_name(), "No non-null m_vif provided.")
   end
+
+  m_monitor = ahb_monitor::type_id::create("m_monitor", this);
+  m_monitor.set_vif(m_vif);
 
   if (get_is_active() == UVM_ACTIVE) begin
     // Generate a driver, sequencer and reg adapter
@@ -94,6 +109,10 @@ endfunction
 
 function void ahb_mgr_agent::connect_phase(uvm_phase phase);
   super.connect_phase(phase);
+
+  m_monitor.m_request_port.connect(m_request_port);
+  m_monitor.m_response_port.connect(m_response_port);
+  m_monitor.m_transaction_port.connect(m_transaction_port);
 
   // If the agent is active, connect drivers to interfaces and sequencers
   if (get_is_active() == UVM_ACTIVE) begin
