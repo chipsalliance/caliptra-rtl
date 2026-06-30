@@ -239,6 +239,15 @@ module soc_ifc_axi_sha_acc_dis_tb
     .iccm_lock(),
     .iccm_axs_blocked(1'b0),
 
+    // ICCM hash mode
+    .iccm_hash_dv(1'b0),
+    .iccm_hash_data(32'b0),
+    .pv_write(),
+    .iccm_unlock_o(),
+    // ICCM PCR extend
+    .pv_read(),
+    .pv_rd_resp('0),
+
     .iccm_fmc_start_addr(),
     .iccm_fmc_end_addr(),
     .iccm_rt_start_addr(),

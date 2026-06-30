@@ -16,10 +16,13 @@
 
 reg {
     name="SHA Accelerator Lock";
-    desc="SHA lock register for SHA access, reading 0 will set the lock, Write 1 to clear the lock
+    desc="SHA lock register for SHA access, reading 0 will set the lock, Write 1 to clear the lock.
+          HW autonomously acquires the lock (hwset) on the first ICCM write
+          when the ICCM hash measurement engages, and releases it (hwclr)
+          after the PCR4/PCR5 extend completes.
           [br]Caliptra Access: RW
           [br]SOC Access:      RW";
-    field {rset; woclr; sw=rw; hw=r; swwe=valid_user; swmod=true;} LOCK=1;
+    field {rset; woclr; sw=rw; hw=r; hwset; hwclr; swwe=valid_user; swmod=true;} LOCK=1;
 } LOCK;
 
 reg {

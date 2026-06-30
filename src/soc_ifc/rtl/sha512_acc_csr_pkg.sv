@@ -7,6 +7,15 @@ package sha512_acc_csr_pkg;
     localparam SHA512_ACC_CSR_MIN_ADDR_WIDTH = 12;
 
     typedef struct packed{
+        logic hwclr;
+        logic hwset;
+    } sha512_acc_csr__LOCK__LOCK__in_t;
+
+    typedef struct packed{
+        sha512_acc_csr__LOCK__LOCK__in_t LOCK;
+    } sha512_acc_csr__LOCK__in_t;
+
+    typedef struct packed{
         logic [31:0] next;
     } sha512_acc_csr__USER__USER__in_t;
 
@@ -86,6 +95,7 @@ package sha512_acc_csr_pkg;
         logic soc_req;
         logic cptra_rst_b;
         logic cptra_pwrgood;
+        sha512_acc_csr__LOCK__in_t LOCK;
         sha512_acc_csr__USER__in_t USER;
         sha512_acc_csr__EXECUTE__in_t EXECUTE;
         sha512_acc_csr__STATUS__in_t STATUS;

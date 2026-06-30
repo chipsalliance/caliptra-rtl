@@ -16,7 +16,9 @@ module sha512_acc_top
     import soc_ifc_pkg::*;
     import mbox_pkg::*;
     import sha512_acc_csr_pkg::*;
-    import sha512_params_pkg::*; 
+    import sha512_params_pkg::*;
+    import pv_defines_pkg::*;
+    import kv_defines_pkg::*;
   #(
     parameter DATA_WIDTH = 32
     )(
@@ -37,6 +39,16 @@ module sha512_acc_top
       output logic [CPTRA_MBOX_ADDR_W-1:0] sha_sram_req_addr,
       input cptra_mbox_sram_resp_t sha_sram_resp,
       input logic sha_sram_hold,
+
+      // ICCM hash mode ports
+      input  logic        iccm_hash_dv_i,
+      input  logic [31:0] iccm_hash_data_i,
+      input  logic        iccm_lock_i,
+      input  logic        iccm_unlock_i,
+      output pv_write_t   pv_write_o,
+      // ICCM PCR extend ports (HW-only — driven by extend FSM, not FW)
+      output pv_read_t    pv_read_o,
+      input  pv_rd_resp_t pv_rd_resp_i,
 
       // Interrupts
       output logic error_intr,
@@ -79,6 +91,7 @@ module sha512_acc_top
   sha_fsm_state_e sha_fsm_ps, sha_fsm_ns;
 
   logic arc_SHA_IDLE_SHA_BLOCK_0;
+  logic arc_SHA_IDLE_SHA_PAD0;
   logic arc_SHA_BLOCK_0_SHA_BLOCK_N;
   logic arc_SHA_BLOCK_0_SHA_PAD0;
   logic arc_SHA_BLOCK_N_SHA_BLOCK_N;
@@ -123,6 +136,16 @@ module sha512_acc_top
 
   logic zeroize_pulse;
 
+  logic iccm_mode;
+  logic iccm_lock_acquire;
+  logic iccm_lock_clear;
+  logic iccm_mode_block_we;
+  logic iccm_mode_execute;
+  logic [31:0] iccm_num_bytes_wr;
+  logic extend_init;
+  logic extend_load_block;
+  logic [0:BLOCK_NO-1][DATA_WIDTH-1:0] extend_block;
+
   assign req_hold = stall_write;
   
   assign err = read_error | write_error;
@@ -162,7 +185,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       next_reg <= '0;
     end
     else begin
-      init_reg <= arc_SHA_BLOCK_0_SHA_BLOCK_N | arc_SHA_BLOCK_0_SHA_PAD0; 
+      init_reg <= arc_SHA_BLOCK_0_SHA_BLOCK_N | arc_SHA_BLOCK_0_SHA_PAD0 | arc_SHA_IDLE_SHA_PAD0 | extend_init; 
       next_reg <= arc_SHA_BLOCK_N_SHA_BLOCK_N | arc_SHA_BLOCK_N_SHA_PAD0 | arc_SHA_PAD0_SHA_PAD1;
       digest_valid_reg <= core_digest_valid;
       if (core_digest_valid & ~digest_valid_reg)
@@ -188,11 +211,12 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb hwif_in.STATUS.SOC_HAS_LOCK.next = soc_has_lock;
   
   always_comb mode = hwif_out.MODE.MODE.value;
-  //mode encoding bit 0 determines 512 or 384.
-  always_comb sha_mode = mode[0] ? MODE_SHA_512 : MODE_SHA_384;
+  //mode encoding bit 0 determines 512 or 384. In iccm_mode, force SHA-384.
+  always_comb sha_mode = iccm_mode ? MODE_SHA_384 : (mode[0] ? MODE_SHA_512 : MODE_SHA_384);
   //determine streaming or mailbox mode - SoC is limited to streaming mode only
-  always_comb streaming_mode = ~mode[1] | soc_has_lock;
-  always_comb mailbox_mode = mode[1] & ~soc_has_lock;
+  //iccm_mode is mutually exclusive with streaming/mailbox
+  always_comb streaming_mode = ~iccm_mode & (~mode[1] | soc_has_lock);
+  always_comb mailbox_mode = ~iccm_mode & mode[1] & ~soc_has_lock;
   //Detect writes to datain register
   always_comb datain_write = hwif_in.valid_user & hwif_out.DATAIN.DATAIN.swmod;
   always_comb execute_set = hwif_out.EXECUTE.EXECUTE.value;
@@ -200,7 +224,9 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //When we reach the end of a block we indicate block full
   //If this is also the end of the entire DLEN, mask block full so that we properly pad the last dword
   //We don't want to mask this if num bytes wr is == dlen. This means we wrote a full dword and no padding goes here
-  always_comb block_full = block_wptr[BLOCK_OFFSET_W] & ~(num_bytes_wr > hwif_out.DLEN.LENGTH.value);
+  //In iccm_mode, block_full is purely based on block_wptr (no DLEN limit -- we hash until iccm_lock)
+  always_comb block_full = iccm_mode ? block_wptr[BLOCK_OFFSET_W] :
+                           (block_wptr[BLOCK_OFFSET_W] & ~(num_bytes_wr > hwif_out.DLEN.LENGTH.value));
   always_comb mbox_mode_last_dword_wr = mbox_mode_block_we & (block_wptr == (BLOCK_NO-1));
 
   //read from mbox is one clock ahead of writes
@@ -218,7 +244,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb mbox_mode_block_we = (mailbox_mode & mbox_block_we);
   always_comb stream_mode_block_we = (streaming_mode & datain_write & ~stall_write);
 
-  always_comb block_we = mbox_mode_block_we | stream_mode_block_we;
+  always_comb block_we = mbox_mode_block_we | stream_mode_block_we | iccm_mode_block_we;
   
   genvar b;
   generate
@@ -226,9 +252,12 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       always_comb mbox_rdata[b]      = sha_sram_resp.rdata.data[b*8 +: 8];
       always_comb streaming_wdata[b] = req_data.wdata          [b*8 +: 8];
       always_comb input_data[b] = ({8{mailbox_mode}}   & mbox_rdata[b]     ) |
-                                  ({8{streaming_mode}} & streaming_wdata[b]);
-      always_comb swizzled_data[b] = hwif_out.MODE.ENDIAN_TOGGLE.value ? input_data[b] : //assign data as-is from input
-                                                                         input_data[(DATA_NUM_BYTES-1-b)]; //convert data to big endian
+                                  ({8{streaming_mode}} & streaming_wdata[b]) |
+                                  ({8{iccm_mode}}      & iccm_hash_data_i[b*8 +: 8]);
+      // In iccm_mode, force LE->BE byte swap (ENDIAN_TOGGLE=0 behavior)
+      always_comb swizzled_data[b] = (iccm_mode | ~hwif_out.MODE.ENDIAN_TOGGLE.value) ?
+                                     input_data[(DATA_NUM_BYTES-1-b)] : //convert data to big endian
+                                     input_data[b]; //assign data as-is from input
     end
   endgenerate
 
@@ -264,14 +293,19 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
                       block_we ? num_bytes_wr + 'd4 : num_bytes_wr;
 
       for (int dword = 0; dword < BLOCK_NO; dword++) begin
-        block_reg[dword] <= block_we & (block_wptr[BLOCK_OFFSET_W-1:0] == dword) ? block_wdata : block_reg_nxt[dword];
+        block_reg[dword] <= extend_load_block                                       ? extend_block[dword] :
+                            block_we & (block_wptr[BLOCK_OFFSET_W-1:0] == dword)    ? block_wdata :
+                                                                                      block_reg_nxt[dword];
       end
     end
   end
 
   //padding logic
   //this is how many bytes of data are in the last block
-  assign num_bytes_data = hwif_out.DLEN.LENGTH.value[BYTE_OFFSET_W-1:0];
+  //In iccm_mode, use internal byte counter instead of DLEN register
+  logic [31:0] effective_dlen;
+  always_comb effective_dlen = iccm_mode ? iccm_num_bytes_wr : hwif_out.DLEN.LENGTH.value;
+  assign num_bytes_data = effective_dlen[BYTE_OFFSET_W-1:0];
   //when there are >= 112 bytes of data in the block we can't fit the length
   assign extra_pad_block_required = (num_bytes_data >= 'd112);
 
@@ -280,11 +314,11 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
     //set the valid bytes to '1 to keep the valid data and zero out the rest
     pad_mask = pad_mask << (1024-(num_bytes_data*8));
     //we append the length in bits to the least significant 128 bits
-    pad_length = {{($bits(pad_length)-32){1'b0}}, hwif_out.DLEN.LENGTH.value} << 3;
+    pad_length = {{($bits(pad_length)-32){1'b0}}, effective_dlen} << 3;
 
     //First case - Padding and length fit - just pad and add the length in this block
     //This might be an empty padded block with just length if dlen is divisible by 1024
-    if (~extra_pad_block_required & (arc_SHA_BLOCK_0_SHA_PAD0 | arc_SHA_BLOCK_N_SHA_PAD0)) begin
+    if (~extra_pad_block_required & (arc_SHA_BLOCK_0_SHA_PAD0 | arc_SHA_BLOCK_N_SHA_PAD0 | arc_SHA_IDLE_SHA_PAD0)) begin
       block_reg_nxt_pad = block_reg & pad_mask;
       //force the pad bit on the MSB of the first byte of padding
       block_reg_nxt_pad[num_bytes_data] = 8'h80;
@@ -293,7 +327,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       block_reg_nxt_pad[112:127] = pad_length;
     end
     //Second case - length won't fit, we need to first send valid data + pad followed by zeroes and length
-    else if (extra_pad_block_required & (arc_SHA_BLOCK_0_SHA_PAD0 | arc_SHA_BLOCK_N_SHA_PAD0)) begin
+    else if (extra_pad_block_required & (arc_SHA_BLOCK_0_SHA_PAD0 | arc_SHA_BLOCK_N_SHA_PAD0 | arc_SHA_IDLE_SHA_PAD0)) begin
       block_reg_nxt_pad = block_reg & pad_mask;
       //force the pad bit on the MSB of the first byte of padding
       block_reg_nxt_pad[num_bytes_data] = 8'h80;
@@ -327,25 +361,34 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
                                (mbox_read_to_end & mbox_rdptr[CPTRA_MBOX_ADDR_W]);
 
   //HW API State Machine
-  //whenever lock is cleared, go back to idle
-  always_comb arc_IDLE = ~hwif_out.LOCK.LOCK.value;
+  //whenever lock is cleared, go back to idle (in iccm_mode, lock is held by HW so this won't fire)
+  always_comb arc_IDLE = ~hwif_out.LOCK.LOCK.value & ~iccm_mode;
   //Streaming mode - go to block 0 when first datain comes
   //Mailbox mode - go to block 0 when execute is set
+  //ICCM mode - go to block 0 when first iccm write arrives
   always_comb arc_SHA_IDLE_SHA_BLOCK_0 = (sha_fsm_ps == SHA_IDLE) & (
                                          (streaming_mode & datain_write) |
-                                         (mailbox_mode & execute_set));
+                                         (mailbox_mode & execute_set) |
+                                         (iccm_mode & iccm_hash_dv_i));
+
+  // ICCM zero-length: lock asserts from IDLE with no prior writes -- skip to PAD0
+  always_comb arc_SHA_IDLE_SHA_PAD0 = (sha_fsm_ps == SHA_IDLE) & iccm_mode_execute &
+                                      (iccm_num_bytes_wr == '0);
   //When a full block is complete, send INIT and move to BLOCK_N state
   always_comb arc_SHA_BLOCK_0_SHA_BLOCK_N = (sha_fsm_ps == SHA_BLOCK_0) & block_full & core_ready_q;
   always_comb arc_SHA_BLOCK_N_SHA_BLOCK_N = (sha_fsm_ps == SHA_BLOCK_N) & block_full & core_ready_q;
   //When execute is set for streaming, OR we reach the end of the mailbox region, move to PAD0
+  //For ICCM mode, move to PAD0 when iccm_lock asserts (finalize trigger)
   //If a block ends on 1024 bit boundary, we can't move to PAD until that block is processed
   //so we give priority to the end of block arcs, and move to PAD only after core is ready for the pad block
   always_comb arc_SHA_BLOCK_0_SHA_PAD0 = (sha_fsm_ps == SHA_BLOCK_0) & ~arc_SHA_BLOCK_0_SHA_BLOCK_N &
                                          (streaming_mode & (execute_set & core_ready_q) |
-                                          mailbox_mode & (mbox_read_done & ~block_we & core_ready_q));
+                                          mailbox_mode & (mbox_read_done & ~block_we & core_ready_q) |
+                                          iccm_mode & (iccm_mode_execute & core_ready_q));
   always_comb arc_SHA_BLOCK_N_SHA_PAD0 = (sha_fsm_ps == SHA_BLOCK_N) & ~arc_SHA_BLOCK_N_SHA_BLOCK_N &
                                          (streaming_mode & (execute_set & core_ready_q) |
-                                          mailbox_mode & (mbox_read_done & ~block_we & core_ready_q)); 
+                                          mailbox_mode & (mbox_read_done & ~block_we & core_ready_q) |
+                                          iccm_mode & (iccm_mode_execute & core_ready_q)); 
   //Moving to PAD0 fills in the padding for the current block and sends NEXT command
   //If we can't fit the length into the current block we'll need another block to pad and write the length in
   //So go to PAD1 after PAD0 in this case
@@ -361,7 +404,8 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
     unique case (sha_fsm_ps) inside
       SHA_IDLE: begin
-        if (arc_SHA_IDLE_SHA_BLOCK_0) sha_fsm_ns = SHA_BLOCK_0;
+        if (arc_SHA_IDLE_SHA_PAD0) sha_fsm_ns = SHA_PAD0;
+        else if (arc_SHA_IDLE_SHA_BLOCK_0) sha_fsm_ns = SHA_BLOCK_0;
       end
       SHA_BLOCK_0: begin
         if (arc_IDLE) sha_fsm_ns = SHA_IDLE;
@@ -394,13 +438,16 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
 //register hw interface
 always_comb begin
-  hwif_in.STATUS.VALID.next = (sha_fsm_ps == SHA_DONE);
+  hwif_in.STATUS.VALID.next = (sha_fsm_ps == SHA_DONE) & ~iccm_mode;
   hwif_in.EXECUTE.EXECUTE.hwclr = arc_IDLE;
   for (int dword =0; dword < 16; dword++) begin
     hwif_in.DIGEST[dword].DIGEST.next = digest_reg[dword];
     hwif_in.DIGEST[dword].DIGEST.hwclr = zeroize_pulse;
   end
 end
+
+assign hwif_in.LOCK.LOCK.hwset = iccm_lock_acquire;
+assign hwif_in.LOCK.LOCK.hwclr = iccm_lock_clear;
 
 genvar i;
 generate
@@ -439,7 +486,7 @@ always_comb mailbox_address_err = (mbox_end_addr < mbox_start_addr); //calculate
 //interrupt register hw interface
 assign hwif_in.cptra_rst_b = rst_b;
 assign hwif_in.cptra_pwrgood = cptra_pwrgood;
-assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ~soc_has_lock & (arc_SHA_PAD0_SHA_DONE | arc_SHA_PAD1_SHA_DONE);
+assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ~soc_has_lock & ~iccm_mode & (arc_SHA_PAD0_SHA_DONE | arc_SHA_PAD1_SHA_DONE);
 assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
@@ -447,5 +494,341 @@ assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // T
 
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
+
+//----------------------------------------------------------------
+// ICCM Hash Mode Logic (subsystem mode only)
+//----------------------------------------------------------------
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+  // ICCM hash mode signals
+  logic iccm_mode_done;
+  logic iccm_armed;     
+
+  // PCR write via kv_write_client
+  logic iccm_pcr_dest_done;
+  logic [PV_NUM_DWORDS-1:0][31:0] iccm_pcr_dest_data;
+  kv_write_t iccm_kv_write;
+  logic iccm_pcr_data_avail;
+
+  // PCR extend FSM
+  typedef enum logic [3:0] {
+    EXTEND_IDLE,
+    EXTEND_SAVE_DIGEST,
+    EXTEND_READ_PCR4,
+    EXTEND_LOAD_HASH_PCR4,
+    EXTEND_WAIT_PCR4,
+    EXTEND_WRITE_PCR4,
+    EXTEND_READ_PCR5,
+    EXTEND_LOAD_HASH_PCR5,
+    EXTEND_WAIT_PCR5,
+    EXTEND_WRITE_PCR5,
+    EXTEND_DONE
+  } iccm_extend_fsm_e;
+
+  iccm_extend_fsm_e extend_fsm_ps, extend_fsm_ns;
+  logic [PV_NUM_DWORDS-1:0][31:0] iccm_digest_hold;
+  logic [PV_NUM_DWORDS-1:0][31:0] extend_pcr_data;
+  logic [3:0] extend_rd_dword_ctr;
+  logic extend_pcr_read_en;
+  logic [PV_ENTRY_ADDR_W-1:0] extend_pcr_entry;
+  logic iccm_extend_ip;
+  logic extend_write_trigger;
+
+// ICCM mode: arms on the first ICCM write the snoop sees, or on
+// iccm_lock_i for the zero-length case. The OR with the live trigger
+// engages the same cycle the snoop fires to capture the first dword
+// without a one-cycle slip.
+always_comb iccm_mode = (iccm_armed | ((iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock)) & ~iccm_mode_done;
+
+// HW SHA acc lock acquire: pulse hwset on the very first ICCM activity
+// (snoop or iccm_lock_i). Gated by ~iccm_armed so the pulse fires exactly
+// once at the start of the measurement, not again during release.
+always_comb iccm_lock_acquire = (iccm_hash_dv_i | iccm_lock_i) &
+                                ~soc_has_lock & ~iccm_armed & ~iccm_mode_done &
+                                ~hwif_out.LOCK.LOCK.value;
+
+// HW lock release: clear LOCK back to 0 (free) after the full extend
+// sequence completes (EXTEND_DONE). Using extend_fsm_ps == EXTEND_DONE
+// ensures the lock is held through both the PCR4 and PCR5 writes.
+always_comb iccm_lock_clear = (extend_fsm_ps == EXTEND_DONE);
+
+// Extend FSM active flag
+always_comb iccm_extend_ip = (extend_fsm_ps != EXTEND_IDLE) & (extend_fsm_ps != EXTEND_DONE);
+
+// iccm_lock rising edge triggers finalization (equivalent to execute_set)
+always_comb iccm_mode_execute = iccm_mode & iccm_lock_i;
+// block_we for iccm mode: write when data valid and not stalled by block_full
+always_comb iccm_mode_block_we = iccm_mode & iccm_hash_dv_i & ~block_full;
+
+// ICCM mode done flag: sticky until iccm_unlock re-enables measurement.
+// Prevents re-trigger of iccm_mode after hash completes.
+// Set when the full extend sequence (PCR4 + PCR5) is complete.
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    iccm_mode_done <= 1'b0;
+  else if (iccm_unlock_i)
+    iccm_mode_done <= 1'b0;
+  else if (extend_fsm_ps == EXTEND_DONE)
+    iccm_mode_done <= 1'b1;
+end
+
+// ICCM armed: sticky, set on the first ICCM write the snoop sees, or on
+// iccm_lock_i for the zero-length case. Cleared by iccm_unlock_i (fired
+// by the boot FSM on fw_update_reset).
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    iccm_armed <= 1'b0;
+  else if (iccm_unlock_i)
+    iccm_armed <= 1'b0;
+  else if ((iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock & ~iccm_mode_done)
+    iccm_armed <= 1'b1;
+end
+
+// ICCM byte counter: tracks total bytes written for SHA padding
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    iccm_num_bytes_wr <= '0;
+  else if (iccm_unlock_i)
+    iccm_num_bytes_wr <= '0;
+  else if (iccm_mode & iccm_mode_block_we)
+    iccm_num_bytes_wr <= iccm_num_bytes_wr + 32'd4;
+end
+
+//----------------------------------------------------------------
+// PCR Extend FSM
+// After ICCM hash completes, extends PCR4 (Current) and PCR5 (Journey)
+// using the standard extend operation: new = SHA-384(current_PCR || digest).
+// Mirrors sha512.sv's pcr_hash_extend flow but controlled by HW FSM.
+//----------------------------------------------------------------
+
+// Digest holding register: latched before sha512_core is reused for extend
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    iccm_digest_hold <= '0;
+  else if (extend_fsm_ps == EXTEND_SAVE_DIGEST) begin
+    for (int i = 0; i < PV_NUM_DWORDS; i++)
+      iccm_digest_hold[i] <= digest_reg[i];
+  end
+end
+
+// Extend FSM state register
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    extend_fsm_ps <= EXTEND_IDLE;
+  else if (iccm_unlock_i)
+    extend_fsm_ps <= EXTEND_IDLE;
+  else
+    extend_fsm_ps <= extend_fsm_ns;
+end
+
+// Dword counter for PCR reads and block_reg loading
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    extend_rd_dword_ctr <= '0;
+  else if (extend_fsm_ps == EXTEND_READ_PCR4 || extend_fsm_ps == EXTEND_READ_PCR5)
+    extend_rd_dword_ctr <= extend_rd_dword_ctr + 4'd1;
+  else
+    extend_rd_dword_ctr <= '0;
+end
+
+// PCR read data capture: store read response into extend_pcr_data
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    extend_pcr_data <= '0;
+  else if ((extend_fsm_ps == EXTEND_READ_PCR4 || extend_fsm_ps == EXTEND_READ_PCR5) &&
+           extend_rd_dword_ctr < PV_NUM_DWORDS[3:0])
+    extend_pcr_data[extend_rd_dword_ctr] <= pv_rd_resp_i.read_data;
+end
+
+// Extend FSM next-state logic
+always_comb begin
+  extend_fsm_ns = extend_fsm_ps;
+  extend_init = 1'b0;
+  extend_pcr_read_en = 1'b0;
+  extend_pcr_entry = '0;
+  extend_write_trigger = 1'b0;
+
+  case (extend_fsm_ps) inside
+    EXTEND_IDLE: begin
+      if (iccm_mode & (sha_fsm_ps == SHA_DONE) & ~iccm_mode_done)
+        extend_fsm_ns = EXTEND_SAVE_DIGEST;
+    end
+
+    EXTEND_SAVE_DIGEST: begin
+      extend_fsm_ns = EXTEND_READ_PCR4;
+    end
+
+    EXTEND_READ_PCR4: begin
+      extend_pcr_read_en = 1'b1;
+      extend_pcr_entry = PV_ENTRY_ADDR_W'(4);
+      if (extend_rd_dword_ctr == PV_NUM_DWORDS[3:0] - 1)
+        extend_fsm_ns = EXTEND_LOAD_HASH_PCR4;
+    end
+
+    EXTEND_LOAD_HASH_PCR4: begin
+      // block_reg will be loaded combinationally (see block_reg_nxt override below)
+      extend_init = 1'b1;  // triggers SHA-384 init on next clock
+      extend_fsm_ns = EXTEND_WAIT_PCR4;
+    end
+
+    EXTEND_WAIT_PCR4: begin
+      if (core_digest_valid & ~digest_valid_reg)
+        extend_fsm_ns = EXTEND_WRITE_PCR4;
+    end
+
+    EXTEND_WRITE_PCR4: begin
+      extend_write_trigger = 1'b1;
+      if (iccm_pcr_dest_done)
+        extend_fsm_ns = EXTEND_READ_PCR5;
+    end
+
+    EXTEND_READ_PCR5: begin
+      extend_pcr_read_en = 1'b1;
+      extend_pcr_entry = PV_ENTRY_ADDR_W'(5);
+      if (extend_rd_dword_ctr == PV_NUM_DWORDS[3:0] - 1)
+        extend_fsm_ns = EXTEND_LOAD_HASH_PCR5;
+    end
+
+    EXTEND_LOAD_HASH_PCR5: begin
+      extend_init = 1'b1;
+      extend_fsm_ns = EXTEND_WAIT_PCR5;
+    end
+
+    EXTEND_WAIT_PCR5: begin
+      if (core_digest_valid & ~digest_valid_reg)
+        extend_fsm_ns = EXTEND_WRITE_PCR5;
+    end
+
+    EXTEND_WRITE_PCR5: begin
+      extend_write_trigger = 1'b1;
+      if (iccm_pcr_dest_done)
+        extend_fsm_ns = EXTEND_DONE;
+    end
+
+    EXTEND_DONE: begin
+      extend_fsm_ns = EXTEND_IDLE;
+    end
+
+    default: extend_fsm_ns = EXTEND_IDLE;
+  endcase
+end
+
+// pv_read output: driven by extend FSM (HW-only, no FW control path)
+always_comb begin
+  pv_read_o.read_entry  = extend_pcr_entry;
+  pv_read_o.read_offset = extend_rd_dword_ctr[PV_ENTRY_SIZE_WIDTH-1:0];
+end
+
+// Block register override for extend: load PCR value + digest + padding
+// SHA-384 block = 1024 bits = 32 x 32-bit dwords
+// Layout: [0:11] = PCR (48B), [12:23] = digest (48B), [24:31] = padding
+// This feeds block_reg_nxt during EXTEND_LOAD_HASH_PCR4/PCR5 states
+always_comb extend_load_block = (extend_fsm_ps == EXTEND_LOAD_HASH_PCR4) |
+                                 (extend_fsm_ps == EXTEND_LOAD_HASH_PCR5);
+
+always_comb begin
+  for (int i = 0; i < PV_NUM_DWORDS; i++) begin
+    // PCR current value in dwords 0-11
+    extend_block[i] = extend_pcr_data[i];
+    // ICCM digest in dwords 12-23
+    extend_block[PV_NUM_DWORDS + i] = iccm_digest_hold[i];
+  end
+  // SHA-384 padding in dwords 24-31
+  extend_block[2 * PV_NUM_DWORDS] = 32'h80000000;         // 0x80 pad byte
+  for (int i = 2 * PV_NUM_DWORDS + 1; i < BLOCK_NO - 1; i++) begin
+    extend_block[i] = 32'h0;
+  end
+  extend_block[BLOCK_NO - 1] = 32'h00000300;              // length = 768 bits
+end
+
+//----------------------------------------------------------------
+// PCR Write via kv_write_client
+// Used for both initial ICCM digest (future: removed) and extend results.
+// During extend, write_entry is overloaded by the extend FSM.
+//----------------------------------------------------------------
+
+// Dest data source: during extend, use core_digest (extend result).
+// core_digest[15] is MSB, core_digest[4] is LSB for SHA-384 (top 12 of 16 dwords).
+// Match sha512.sv convention: kv_reg <= core_digest[DIG_NUM_DWORDS-1:DIG_NUM_DWORDS-PV_NUM_DWORDS]
+always_comb begin
+  for (int i = 0; i < PV_NUM_DWORDS; i++)
+    iccm_pcr_dest_data[i] = core_digest[15 - i];
+end
+
+// Data available: pulse when extend FSM enters WRITE_PCR4 or WRITE_PCR5
+always_comb iccm_pcr_data_avail = extend_write_trigger & ~iccm_pcr_dest_done;
+
+// Write entry: 4 for PCR4, 5 for PCR5
+logic [4:0] iccm_write_entry;
+always_comb begin
+  if (extend_fsm_ps == EXTEND_WRITE_PCR4 || extend_fsm_ps == EXTEND_WAIT_PCR4)
+    iccm_write_entry = 5'd4;
+  else
+    iccm_write_entry = 5'd5;
+end
+
+kv_write_ctrl_reg_t       iccm_write_ctrl_reg;
+kv_write_filter_metrics_t iccm_write_metrics;
+kv_wr_resp_t              iccm_kv_resp;
+
+always_comb begin
+  iccm_write_ctrl_reg.rsvd           = '0;
+  iccm_write_ctrl_reg.write_dest_vld = '0;
+  iccm_write_ctrl_reg.write_entry    = iccm_write_entry;
+  iccm_write_ctrl_reg.write_en       = 1'b1;
+end
+
+always_comb iccm_write_metrics = '0;
+always_comb iccm_kv_resp.error = 1'b0;
+
+kv_write_client #(
+  .DATA_WIDTH(PV_NUM_DWORDS * PV_DATA_W),
+  .KV_WRITE_SWAP_DWORDS(0)
+)
+iccm_pcr_write_client
+(
+  .clk(clk),
+  .rst_b(rst_b),
+  .zeroize(1'b0),
+
+  .num_dwords(PV_NUM_DWORDS[4:0]),
+  .write_ctrl_reg(iccm_write_ctrl_reg),
+  .write_metrics(iccm_write_metrics),
+
+  .kv_write(iccm_kv_write),
+  .kv_resp(iccm_kv_resp),
+
+  .dest_keyvault(),
+  .dest_data_avail(iccm_pcr_data_avail),
+  .dest_data(iccm_pcr_dest_data),
+
+  .error_code(),
+  .kv_ready(),
+  .dest_done(iccm_pcr_dest_done)
+);
+
+// Map kv_write_t output to pv_write_t
+always_comb begin
+  pv_write_o.write_en     = iccm_kv_write.write_en;
+  pv_write_o.write_entry  = iccm_kv_write.write_entry[PV_ENTRY_ADDR_W-1:0];
+  pv_write_o.write_offset = iccm_kv_write.write_offset[PV_ENTRY_SIZE_WIDTH-1:0];
+  pv_write_o.write_data   = iccm_kv_write.write_data;
+end
+
+`else // !CALIPTRA_MODE_SUBSYSTEM
+// Non-subsystem: ICCM hash feature not present. Tie off outputs.
+always_comb begin
+  iccm_mode = '0;
+  iccm_lock_acquire = '0;
+  iccm_lock_clear = '0;
+  iccm_mode_block_we = '0;
+  iccm_mode_execute = '0;
+  iccm_num_bytes_wr = '0;
+  extend_init = '0;
+  extend_load_block = '0;
+  extend_block = '0;
+  pv_write_o = '0;
+  pv_read_o  = '0;
+end
+`endif // CALIPTRA_MODE_SUBSYSTEM
 
 endmodule // sha512_acc_top

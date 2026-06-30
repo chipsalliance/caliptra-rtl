@@ -594,6 +594,12 @@ module sha512_acc_csr (
         end else if(decoded_reg_strb.LOCK && decoded_req_is_wr && hwif_in.valid_user) begin // SW write 1 clear
             next_c = field_storage.LOCK.LOCK.value & ~(decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
+        end else if(hwif_in.LOCK.LOCK.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.LOCK.LOCK.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
         end
         field_combo.LOCK.LOCK.next = next_c;
         field_combo.LOCK.LOCK.load_next = load_next_c;
