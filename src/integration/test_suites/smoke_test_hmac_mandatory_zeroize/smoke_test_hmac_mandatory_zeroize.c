@@ -13,7 +13,7 @@
 // limitations under the License.
 //
 // Verify the mandatory-zeroize contract enforced by hmac_core's
-// CTRL_WAIT_ZEROIZE state. After any completed HMAC operation, the
+// awaiting_zeroize gate state. After any completed HMAC operation, the
 // engine parks with STATUS.READY=0 until firmware writes
 // HMAC512_CTRL.ZEROIZE. CTRL writes during the parked window are
 // dropped via swwe=ready_reg, so a stray INIT/RESTORE cannot bypass
@@ -101,10 +101,10 @@ void main(void) {
     run_single_block_op();
     check_tag_matches(expected_tag_512);
 
-    // CTRL_WAIT_ZEROIZE must keep STATUS.READY at 0 without an explicit ZEROIZE.
+    // awaiting_zeroize gate must keep STATUS.READY at 0 without an explicit ZEROIZE.
     for (volatile int i = 0; i < 64; i++) { __asm__ volatile ("nop"); }
     if (status_read() & HMAC_REG_HMAC512_STATUS_READY_MASK) {
-        VPRINTF(LOW, "FAIL: engine left CTRL_WAIT_ZEROIZE without ZEROIZE\n");
+        VPRINTF(LOW, "FAIL: engine left awaiting_zeroize gate without ZEROIZE\n");
         SEND_STDOUT_CTRL(0x1);
         while (1);
     }
