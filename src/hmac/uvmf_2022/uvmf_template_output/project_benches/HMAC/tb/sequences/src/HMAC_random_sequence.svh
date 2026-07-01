@@ -200,6 +200,8 @@ class HMAC_random_sequence extends HMAC_bench_sequence_base;
     `uvm_info("HMAC_RAND_CHECK",
       $sformatf("Op %0d/%0d TAG comparison done", op_i + 1, NUM_OPS), UVM_LOW)
 
+    zeroize_and_wait();
+
     end // for op_i
 
     fork

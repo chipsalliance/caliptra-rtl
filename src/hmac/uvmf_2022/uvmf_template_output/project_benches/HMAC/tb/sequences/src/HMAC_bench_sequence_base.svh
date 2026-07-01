@@ -127,6 +127,23 @@ rand hmac_env_sequence_base_t hmac_env_seq;
   endtask
 
   // ----------------------------------------------------------------
+  // Write CTRL.ZEROIZE and wait for STATUS.READY. Required between
+  // back-to-back operations because hmac.sv gates ready_reg on the
+  // awaiting_zeroize flag after every final tag write.
+  // ----------------------------------------------------------------
+  task zeroize_and_wait();
+    bit [31:0] read_data;
+    reg_model.HMAC512_CTRL.INIT.set(1'b0);
+    reg_model.HMAC512_CTRL.NEXT.set(1'b0);
+    reg_model.HMAC512_CTRL.LAST.set(1'b0);
+    reg_model.HMAC512_CTRL.RESTORE.set(1'b0);
+    reg_model.HMAC512_CTRL.ZEROIZE.set(1'b1);
+    reg_model.HMAC512_CTRL.update(status);
+    fork hmac_rst_agent_config.wait_for_num_clocks(8); join
+    wait_for_status(32'h1, "READY", read_data);
+  endtask
+
+  // ----------------------------------------------------------------
   // Synthesize the FIPS-180 padding tail block. Caller passes the
   // total block_length B (so the HMAC core hashes K_ipad + B-1 msg
   // blocks + 1 pad block); pad_len_bits = B * 1024.
