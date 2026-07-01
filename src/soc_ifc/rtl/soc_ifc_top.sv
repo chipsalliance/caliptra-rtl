@@ -331,7 +331,7 @@ logic valid_sha_user;
 
 logic strap_we_pre_fuse_done;
 
-boot_fsm_state_e boot_fsm_ps;
+logic [2:0] boot_fsm_ps;
 logic boot_fsm_error;
 logic mbox_fsm_error;
 
@@ -349,7 +349,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .fw_update_rst (soc_ifc_reg_hwif_out.internal_fw_update_reset.core_rst.value),
     .fw_update_rst_wait_cycles (soc_ifc_reg_hwif_out.internal_fw_update_reset_wait_cycles.wait_cycles.value),
     .ready_for_fuses(ready_for_fuses),
-    .boot_fsm_ps(boot_fsm_ps),
+    .boot_fsm_ps_encoded(boot_fsm_ps),
 
     .fuse_done(fuse_done),
     .fuse_wr_done_observed(fuse_wr_done_reg_write_observed),
@@ -1557,7 +1557,8 @@ always_comb unmasked_hw_error_fatal_write = (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc      .we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc      .next) ||
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin           .we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_nmi_pin     .value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin           .next) ||
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error          .we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error          .next) ||
-                                            (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.next);
+                                            (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.next) ||
+                                            (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.fsm_error         .we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.fsm_error         .next);
 
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.we = mbox_protocol_error.axs_without_lock;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .we = mbox_protocol_error.axs_incorrect_order;

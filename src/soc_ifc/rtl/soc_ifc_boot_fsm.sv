@@ -28,7 +28,7 @@ module soc_ifc_boot_fsm
     input logic BootFSM_Continue,
 
     output logic ready_for_fuses,
-    output boot_fsm_state_e boot_fsm_ps,
+    output logic [2:0] boot_fsm_ps_encoded,
 
     input logic fuse_done,
     input logic fuse_wr_done_observed,
@@ -280,6 +280,19 @@ caliptra_2ff_sync #(.WIDTH(1), .RST_VAL('d1)) i_rst_window_sync (.clk(clk), .rst
 `CALIPTRA_ASSERT_KNOWN(ERR_FSM_STATE_X, boot_fsm_ps, clk, !cptra_rst_b)
 `CALIPTRA_ASSERT_KNOWN(ERR_UC_RST_X, cptra_noncore_rst_b, clk, !cptra_rst_b)
 `CALIPTRA_ASSERT_KNOWN(ERR_UC_FWRST_X, cptra_uc_rst_b, clk, !cptra_rst_b)
+
+// Encode sparse state to 3-bit sequential value for register visibility
+always_comb begin
+    unique case (boot_fsm_ps)
+        BOOT_IDLE:   boot_fsm_ps_encoded = 3'd0;
+        BOOT_FUSE:   boot_fsm_ps_encoded = 3'd1;
+        BOOT_FW_RST: boot_fsm_ps_encoded = 3'd2;
+        BOOT_WAIT:   boot_fsm_ps_encoded = 3'd3;
+        BOOT_DONE:   boot_fsm_ps_encoded = 3'd4;
+        BOOT_ERROR:  boot_fsm_ps_encoded = 3'd5;
+        default:     boot_fsm_ps_encoded = 3'd5;
+    endcase
+end
 
 //Reset got asserted, but cptra rst window wasn't asserted to protect RDC
 `CALIPTRA_ASSERT_NEVER(ERR_RST_ASSERT_NO_WINDOW, $fell(cptra_noncore_rst_b) && ~rdc_clk_dis, clk, !(cptra_pwrgood && ~scan_mode))
