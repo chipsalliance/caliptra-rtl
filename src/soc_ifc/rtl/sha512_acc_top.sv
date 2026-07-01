@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+  `include "caliptra_prim_assert.sv"
+
 module sha512_acc_top
     import soc_ifc_pkg::*;
     import mbox_pkg::*;
@@ -77,6 +79,7 @@ module sha512_acc_top
   logic mbox_block_we;
 
   sha_fsm_state_e sha_fsm_ps, sha_fsm_ns;
+  logic sha_fsm_error;
 
   logic arc_SHA_IDLE_SHA_BLOCK_0;
   logic arc_SHA_BLOCK_0_SHA_BLOCK_N;
@@ -235,9 +238,11 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb block_wdata = swizzled_data;
 
   //registers for the HW API
+  // Sparse FSM flop for glitch hardening (invalid encoding -> SHA_ERROR)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_sha_state_regs, sha_fsm_ns, sha_fsm_ps, sha_fsm_state_e, SHA_IDLE, clk, rst_b)
+
   always_ff @(posedge clk or negedge rst_b) begin : api_regs
     if (~rst_b) begin
-      sha_fsm_ps    <= SHA_IDLE;
       soc_has_lock  <= '0;
       block_wptr    <= '0;
       mbox_rdptr    <= '0;
@@ -246,7 +251,6 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       num_bytes_wr  <= '0;
     end
     else begin
-      sha_fsm_ps   <= sha_fsm_ns;
       soc_has_lock <= (hwif_in.lock_set & req_data.soc_req) ? '1 : 
                        hwif_out.LOCK.LOCK.value ? soc_has_lock : '0;
 
@@ -358,6 +362,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb begin : sha_api_combo
     //default back to present state
     sha_fsm_ns = sha_fsm_ps;
+    sha_fsm_error = '0;
 
     unique case (sha_fsm_ps) inside
       SHA_IDLE: begin
@@ -385,9 +390,15 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       SHA_DONE: begin
         if (arc_IDLE) sha_fsm_ns = SHA_IDLE;
       end
+      SHA_ERROR: begin
+        // Terminal error state — sticky until reset
+        sha_fsm_ns = SHA_ERROR;
+        sha_fsm_error = 1'b1;
+      end
       default: begin
-        //TODO Error condition
-        sha_fsm_ns = SHA_IDLE;
+        // Invalid encoding detected — go to terminal error
+        sha_fsm_ns = SHA_ERROR;
+        sha_fsm_error = 1'b1;
       end
     endcase
   end
@@ -440,7 +451,7 @@ always_comb mailbox_address_err = (mbox_end_addr < mbox_start_addr); //calculate
 assign hwif_in.cptra_rst_b = rst_b;
 assign hwif_in.cptra_pwrgood = cptra_pwrgood;
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ~soc_has_lock & (arc_SHA_PAD0_SHA_DONE | arc_SHA_PAD1_SHA_DONE);
-assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
+assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = sha_fsm_error; // FSM glitch/invalid encoding detected
 assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO

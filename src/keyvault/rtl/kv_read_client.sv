@@ -56,6 +56,7 @@ logic [DATA_OFFSET_W-1:0] read_offset;
 logic [DATA_OFFSET_W:0] num_dwords;
 logic write_pad;
 logic [31:0] pad_data;
+logic fsm_error;
 
 logic kv_fsm_ready;
 
@@ -97,7 +98,8 @@ kv_read_fsm
     .write_last(),
     .pad_data(pad_data),
     .ready(kv_fsm_ready),
-    .done(read_done)
+    .done(read_done),
+    .fsm_error(fsm_error)
 );
 
 always_comb kv_read.read_entry = read_ctrl_reg.read_entry;
@@ -111,6 +113,9 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
     else if (zeroize) begin
         error_code <= KV_SUCCESS;
+    end
+    else if (fsm_error) begin
+        error_code <= KV_FSM_ERROR;
     end
     else begin
         // On first beat of kv read, latch any error conditions.

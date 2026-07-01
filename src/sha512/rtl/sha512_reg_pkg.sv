@@ -437,7 +437,8 @@ package sha512_reg_pkg;
     typedef enum logic [31:0] {
         kv_status_reg__ERROR__kv_error_e__SUCCESS = 'h0,
         kv_status_reg__ERROR__kv_error_e__KV_READ_FAIL = 'h1,
-        kv_status_reg__ERROR__kv_error_e__KV_WRITE_FAIL = 'h2
+        kv_status_reg__ERROR__kv_error_e__KV_WRITE_FAIL = 'h2,
+        kv_status_reg__ERROR__kv_error_e__KV_FSM_ERROR = 'h4
     } kv_status_reg__ERROR__kv_error_e_e;
 
     localparam SHA512_REG_ADDR_WIDTH = 32'd12;

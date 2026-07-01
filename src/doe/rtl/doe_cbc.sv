@@ -117,6 +117,7 @@ module doe_cbc
 
   logic flow_done;
   logic flow_error;
+  logic doe_fsm_error;
   logic flow_in_progress, lock_fe_flow, lock_uds_flow, lock_hek_flow;
 
   doe_reg__in_t  hwif_in;
@@ -264,6 +265,7 @@ doe_fsm1
 
   .flow_done(flow_done),
   .flow_error(flow_error),
+  .fsm_error(doe_fsm_error),
   .flow_in_progress(flow_in_progress),
   .lock_uds_flow(lock_uds_flow),
   .lock_fe_flow (lock_fe_flow ),
@@ -276,7 +278,7 @@ always_comb hwif_in.reset_b = reset_n;
 always_comb hwif_in.cptra_pwrgood = cptra_pwrgood;
 
 // Pulse input to intr_regs to set the interrupt status bit and generate interrupt output (if enabled)
-always_comb hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset  = 1'b0; // TODO please assign
+always_comb hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset  = doe_fsm_error; // FSM glitch/invalid encoding detected
 always_comb hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset  = 1'b0; // TODO please assign
 always_comb hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset  = 1'b0; // TODO please assign
 always_comb hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset  = 1'b0; // TODO please assign

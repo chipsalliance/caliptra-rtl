@@ -87,6 +87,8 @@ reg {
     rw_ro_hw mask_nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
     ro_ro    mask_crypto_err=0;       /* Crypto parallel operation error No Mask */
     ro_ro    mask_kv_error=0;         /* KV boot flow monitor No Mask */
+    ro_ro    shadow_storage_err=0;
+    rw_ro_hw fsm_error=0;
 } internal_hw_error_fatal_mask;
 reg {
     name = "Hardware Error Non-Fatal Mask";

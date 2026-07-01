@@ -13,6 +13,7 @@
 // limitations under the License.
 
 `include "caliptra_sva.svh"
+`include "caliptra_prim_assert.sv"
 
 module mbox 
     import mbox_pkg::*;
@@ -95,6 +96,7 @@ module mbox
     output logic soc_req_mbox_lock,
     output mbox_protocol_error_t mbox_protocol_error,
     output logic mbox_inv_axi_user_axs,
+    output logic mbox_fsm_error,
 
     //DMI reg access
     input logic dmi_mbox_avail,
@@ -119,6 +121,9 @@ module mbox
 //present and next state
 mbox_fsm_state_e mbox_fsm_ns;
 mbox_fsm_state_e mbox_fsm_ps;
+logic mbox_fsm_glitch_error;
+
+assign mbox_fsm_error = mbox_fsm_glitch_error;
 
 //arcs between states
 logic arc_FORCE_MBOX_UNLOCK;
@@ -318,6 +323,7 @@ always_comb begin : mbox_fsm_combo
     tap_mbox_data_avail = 0;
     mbox_protocol_error_nxt = '{default: 0};
     mbox_fsm_ns = mbox_fsm_ps;
+    mbox_fsm_glitch_error = '0;
 
     unique case (mbox_fsm_ps)
         MBOX_IDLE: begin
@@ -482,7 +488,9 @@ always_comb begin : mbox_fsm_combo
         end
 
         default: begin
-            mbox_fsm_ns = mbox_fsm_ps;
+            // Invalid encoding detected — go to error state
+            mbox_fsm_ns = MBOX_ERROR;
+            mbox_fsm_glitch_error = 1'b1;
         end
     endcase
 end
@@ -500,9 +508,12 @@ always_comb mbox_protocol_sram_rd = inc_rdptr | rst_mbox_rdptr;
 always_comb mbox_protocol_sram_we = inc_wrptr & ~mbox_wr_full;
 
 //flops
+// Sparse FSM flop for glitch hardening (invalid encoding -> MBOX_ERROR)
+`CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_mbox_state_regs, mbox_fsm_ns, mbox_fsm_ps,
+    mbox_fsm_state_e, MBOX_IDLE, clk, rst_b)
+
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b)begin
-        mbox_fsm_ps <= MBOX_IDLE;
         soc_has_lock <= '0;
         uc_has_lock <= '0;
         tap_has_lock <= '0;
@@ -519,7 +530,6 @@ always_ff @(posedge clk or negedge rst_b) begin
         sram_rd_ecc_en <= '0;
     end
     else begin
-        mbox_fsm_ps <= mbox_fsm_ns;
         soc_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? soc_has_lock_nxt : 
                         hwif_out.mbox_lock.lock.value ? soc_has_lock : '0;
         uc_has_lock  <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? uc_has_lock_nxt : 

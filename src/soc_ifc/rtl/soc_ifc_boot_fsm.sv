@@ -38,10 +38,12 @@ module soc_ifc_boot_fsm
     output logic iccm_unlock,
     output logic fw_upd_rst_executed,
     output logic rdc_clk_dis,
-    output logic fw_update_rst_window
+    output logic fw_update_rst_window,
+    output logic fsm_error
 );
 
 `include "caliptra_sva.svh"
+`include "caliptra_prim_assert.sv"
 
 logic cptra_uc_rst_b_nq;
 logic cptra_noncore_rst_b_nq;
@@ -112,6 +114,7 @@ always_comb begin
     fsm_synch_uc_rst_b = '0;
     wait_count_decr = 0;
     wait_count_rst = 0;
+    fsm_error = '0;
 
     unique case (boot_fsm_ps) inside
         BOOT_IDLE: begin
@@ -192,23 +195,34 @@ always_comb begin
             wait_count_rst = 0;
             wait_count_decr = 0;
         end
-        default: begin
-            boot_fsm_ns = boot_fsm_ps;
-            fw_upd_rst_executed = '0;
-            fsm_synch_noncore_rst_b = '0;
-            fsm_iccm_unlock = '0;
+        BOOT_ERROR: begin
+            // Terminal error state — hold resets asserted, only exit via cptra_pwrgood
+            boot_fsm_ns = BOOT_ERROR;
+            fsm_error = 1'b1;
             fsm_synch_uc_rst_b = '0;
-            wait_count_decr = 0;
-            wait_count_rst = 0;
+            fsm_synch_noncore_rst_b = '0;
+        end
+        default: begin
+            // Invalid encoding detected — go to terminal error
+            boot_fsm_ns = BOOT_ERROR;
+            fsm_error = 1'b1;
+            fsm_synch_noncore_rst_b = '0;
+            fsm_synch_uc_rst_b = '0;
         end
     endcase
 end
 
 //next state -> present state
 //reset boot fsm to idle on cptra_pwrgood
+// Sparse FSM flop for glitch hardening (invalid encoding -> BOOT_ERROR)
+// arc_IDLE (warm reset) forces BOOT_IDLE for normal states; ERROR is terminal (only cptra_pwrgood exits)
+boot_fsm_state_e boot_fsm_ns_muxed;
+always_comb boot_fsm_ns_muxed = (arc_IDLE && (boot_fsm_ps != BOOT_ERROR)) ? BOOT_IDLE : boot_fsm_ns;
+
+`CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_boot_state_regs, boot_fsm_ns_muxed, boot_fsm_ps, boot_fsm_state_e, BOOT_IDLE, clk, cptra_pwrgood)
+
 always_ff @(posedge clk or negedge cptra_pwrgood) begin
     if (~cptra_pwrgood) begin
-        boot_fsm_ps <= BOOT_IDLE;
         synch_noncore_rst_b <= '0;
         synch_uc_rst_b <= 0;
         cptra_noncore_rst_b_nq <= '0;
@@ -218,7 +232,6 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
         cptra_rst_window_sync_2f <= '1;
     end
     else begin
-        boot_fsm_ps <= arc_IDLE ? BOOT_IDLE : boot_fsm_ns;
         synch_noncore_rst_b <= fsm_synch_noncore_rst_b;
         synch_uc_rst_b <= fsm_synch_uc_rst_b;
         cptra_noncore_rst_b_nq <= synch_noncore_rst_b;
