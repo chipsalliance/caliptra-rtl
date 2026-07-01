@@ -1258,9 +1258,10 @@ module caliptra_top_sva
                                         )
                             else $display("SVA ERROR: SHA256 VALID flag mismatch!");
 
-  // Disabled: post-CTRL_WAIT_ZEROIZE, HMAC parks with tag_valid_reg=1 and
-  // ready_reg=0 until firmware issues ZEROIZE, mirroring the ABR MLDSA
-  // contract (see commented MLDSA_valid_flag below). The implication
+  // Disabled: after every SW-visible operation HMAC parks with
+  // tag_valid_reg=1 and ready_reg=0 (awaiting_zeroize gate) until
+  // firmware issues ZEROIZE, mirroring the ABR MLDSA contract (see
+  // commented MLDSA_valid_flag below). The implication
   // tag_valid_reg |-> ready_reg no longer holds and is intentionally so.
   //HMAC_valid_flag:      assert property (
   //                                  @(posedge `SVA_RDC_CLK)

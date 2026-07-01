@@ -72,7 +72,6 @@ module hmac_core
   localparam [2 : 0] CTRL_OPAD     = 3'd4;
   localparam [2 : 0] CTRL_HMAC     = 3'd5;
   localparam [2 : 0] CTRL_DONE     = 3'd6;
-  localparam [2 : 0] CTRL_WAIT_ZEROIZE = 3'd7;
   
 
   //----------------------------------------------------------------
@@ -437,13 +436,8 @@ module hmac_core
           begin
             digest_valid_new = 1'b1;
             digest_valid_we  = 1'b1;
-            hmac_ctrl_new    = CTRL_WAIT_ZEROIZE;
+            hmac_ctrl_new    = CTRL_IDLE;
             hmac_ctrl_we     = 1'b1;
-          end
-
-        CTRL_WAIT_ZEROIZE:
-          begin
-            ready_flag = 1'b0;
           end
 
         default:

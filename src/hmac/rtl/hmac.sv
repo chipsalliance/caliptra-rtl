@@ -139,6 +139,7 @@ module hmac
   logic key_mode_error, key_mode_error_reg, key_mode_error_edge;
   logic invalid_cmd_error, invalid_cmd_error_reg, invalid_cmd_error_edge;
   logic intermediate_tag_hidden, intermediate_tag_hidden_reg, intermediate_tag_hidden_edge;
+  logic awaiting_zeroize;
 
   logic error_flag;
   logic error_flag_reg;
@@ -236,7 +237,7 @@ module hmac
       else
         begin
           tag_valid_reg <= core_tag_valid & ~error_flag_reg;
-          ready_reg     <= core_ready;
+          ready_reg     <= core_ready & ~awaiting_zeroize;
 
           if (init_reg | next_reg | restore_reg)
             is_last_op_reg <= last_reg;
@@ -474,6 +475,21 @@ begin : error_detection
         tag_was_masked_reg <= 1'b0;
     end
 end // error_detection
+
+// Mandatory zeroize after each SW-visible operation. Latched on final
+// tag write, cleared only by zeroize. While set, gates ready_reg so
+// STATUS.READY=0 and swwe=ready_reg drops every CTRL write firmware
+// issues without a preceding ZEROIZE. Direct hmac_core users (e.g.
+// hmac_drbg) bypass this wrapper and are unaffected.
+always_ff @(posedge clk or negedge reset_n)
+begin : awaiting_zeroize_tracker
+    if (!reset_n)
+      awaiting_zeroize <= 1'b0;
+    else if (zeroize_reg)
+      awaiting_zeroize <= 1'b0;
+    else if (core_tag_we & is_last_op_reg)
+      awaiting_zeroize <= 1'b1;
+end
 
 always_comb error_flag_edge = error_flag & (!error_flag_reg);
 always_comb key_mode_error_edge = key_mode_error & (!key_mode_error_reg);
