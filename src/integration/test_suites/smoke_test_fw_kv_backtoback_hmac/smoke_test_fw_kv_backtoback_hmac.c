@@ -170,6 +170,11 @@ void main() {
     
     VPRINTF(LOW, "KV HMAC flow is completed.\n\n");
 
+    // Mandatory zeroize between ops (see hmac.sv awaiting_zeroize gate).
+    // The hwclr on KEY/BLOCK from KV flow is still exercised because we
+    // start the next op without re-loading KEY.
+    hmac_zeroize();
+
     /*
         Start FW HMAC without injecting the key.
 
