@@ -41,6 +41,11 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_collision_test/smoke_test_dma_aes_gcm_collision_test.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv_no_ocp_lock.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_save_restore/smoke_test_hmac_save_restore.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_kv_tag_hidden/smoke_test_hmac_kv_tag_hidden.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_csr_intermediate_tag_hidden/smoke_test_hmac_csr_intermediate_tag_hidden.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_mode_change_mid_op/smoke_test_hmac_mode_change_mid_op.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac_mandatory_zeroize/smoke_test_hmac_mandatory_zeroize.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_externalmu/smoke_test_mldsa_externalmu.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_sign_rnd/smoke_test_mldsa_sign_rnd.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv/smoke_test_kv.yml
