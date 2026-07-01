@@ -69,8 +69,11 @@ module hmac
   reg init_reg;
   reg next_reg;
   reg last_reg;
+  reg restore_reg;
+  reg is_last_op_reg;
 
   reg mode_reg;
+  reg csr_mode_reg;
   
   reg ready_reg;
   reg tag_valid_reg;
@@ -94,9 +97,11 @@ module hmac
   wire                          core_ready;
   wire [TAG_SIZE-1 : 0]         core_tag;
   wire                          core_tag_valid;
+  wire [TAG_SIZE-1 : 0]         core_restore_digest;
   wire [LFSR_SEED_SIZE-1 : 0]   core_lfsr_seed;
-  reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_reg;
-  reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] kv_reg;
+  reg  [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_reg;
+  wire [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_next;
+  reg  [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] kv_reg;
 
   reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] get_mask;
 
@@ -132,7 +137,9 @@ module hmac
 
   logic key_zero_error, key_zero_error_reg, key_zero_error_edge;
   logic key_mode_error, key_mode_error_reg, key_mode_error_edge;
-  logic last_alone_error, last_alone_error_reg, last_alone_error_edge;
+  logic invalid_cmd_error, invalid_cmd_error_reg, invalid_cmd_error_edge;
+  logic intermediate_tag_hidden, intermediate_tag_hidden_reg, intermediate_tag_hidden_edge;
+  logic awaiting_zeroize;
 
   logic error_flag;
   logic error_flag_reg;
@@ -155,6 +162,13 @@ module hmac
 
   assign core_lfsr_seed = {lfsr_seed_reg[00], lfsr_seed_reg[01], lfsr_seed_reg[02],
                            lfsr_seed_reg[03], lfsr_seed_reg[04], lfsr_seed_reg[05]};
+
+  generate
+    for (genvar i = 0; i < TAG_NUM_DWORDS; i++) begin : gen_restore_digest
+      assign core_restore_digest[(TAG_NUM_DWORDS-1-i)*DATA_WIDTH +: DATA_WIDTH] =
+             hwif_out.HMAC512_TAG[i].TAG.value;
+    end
+  endgenerate
   
   //rising edge detect on core tag valid
   assign core_tag_we = (core_tag_valid & ~tag_valid_reg) & ~error_flag_reg;
@@ -177,6 +191,9 @@ module hmac
                  .key(core_key),
 
                  .block_msg(core_block),
+
+                 .restore_cmd(restore_reg),
+                 .restore_digest(core_restore_digest),
 
                  .ready(core_ready),
                  .tag(core_tag),
@@ -204,6 +221,7 @@ module hmac
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
           kv_block_data_present <= '0;
+          is_last_op_reg  <= '0;
         end
       else if (zeroize_reg)
         begin
@@ -214,17 +232,21 @@ module hmac
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
           kv_block_data_present <= '0;
+          is_last_op_reg  <= '0;
         end
       else
         begin
           tag_valid_reg <= core_tag_valid & ~error_flag_reg;
-          ready_reg     <= core_ready; 
+          ready_reg     <= core_ready & ~awaiting_zeroize;
+
+          if (init_reg | next_reg | restore_reg)
+            is_last_op_reg <= last_reg;
 
           //write to sw register
-          if (core_tag_we & ~(dest_keyvault | kv_data_present))
-            tag_reg <= core_tag & get_mask;
-          if (core_tag_we & (dest_keyvault | kv_data_present))
-            kv_reg <= core_tag & get_mask;
+          if (core_tag_we & ~(dest_keyvault | kv_data_present | (csr_mode_reg & ~is_last_op_reg)))
+            tag_reg <= tag_next;
+          if (core_tag_we & ( dest_keyvault | kv_data_present | (csr_mode_reg & ~is_last_op_reg)))
+            kv_reg <= tag_next;
 
           block_reg_lock <= block_reg_lock_nxt;
           kv_key_data_present <= kv_key_data_present_set ? '1 :
@@ -235,6 +257,8 @@ module hmac
     end // reg_update
 
 //HMAC register hardware interfaces
+assign tag_next = is_last_op_reg ? (core_tag & get_mask) : core_tag;
+
 always_comb begin
   //drive resets to register block
   hwif_in.error_reset_b = cptra_pwrgood;
@@ -250,22 +274,27 @@ always_comb begin
   hwif_in.HMAC512_CTRL.NEXT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.LAST.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.MODE.swwe = ready_reg;
+  hwif_in.HMAC512_CTRL.RESTORE.swwe = ready_reg;
 
   //assign hardware readable registers to drive hmac core
-  //mask the command until kv clients are idle
-  init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
-  next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready;
-  last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready;
+  //mask the command until kv clients are idle, and refuse illegal CTRL combos
+  init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready & ~invalid_cmd_error;
+  next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready & ~invalid_cmd_error;
+  last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready & ~invalid_cmd_error;
+  restore_reg = hwif_out.HMAC512_CTRL.RESTORE.value & (hwif_out.HMAC512_CTRL.NEXT.value | hwif_out.HMAC512_CTRL.LAST.value) & kv_key_ready & kv_block_ready & ~invalid_cmd_error;
   zeroize_reg = hwif_out.HMAC512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
   mode_reg = hwif_out.HMAC512_CTRL.MODE.value;
+  csr_mode_reg = hwif_out.HMAC512_CTRL.CSR_MODE.value;
 
   //drive hardware writeable registers from hmac core
   hwif_in.HMAC512_STATUS.READY.next = ready_reg;
   hwif_in.HMAC512_STATUS.VALID.next = tag_valid_reg;
   for (int dword=0; dword < TAG_NUM_DWORDS; dword++) begin
-    hwif_in.HMAC512_TAG[dword].TAG.next = tag_reg[(TAG_NUM_DWORDS - 1)-dword];
+    hwif_in.HMAC512_TAG[dword].TAG.next  = tag_next[(TAG_NUM_DWORDS - 1)-dword];
+    hwif_in.HMAC512_TAG[dword].TAG.we    = core_tag_we & ~(dest_keyvault | kv_data_present | (csr_mode_reg & ~is_last_op_reg));
     hwif_in.HMAC512_TAG[dword].TAG.hwclr = zeroize_reg;
   end
+
   //drive hardware writable registers from key vault
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     hwif_in.HMAC512_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
@@ -301,7 +330,7 @@ always_comb begin
   hwif_in.HMAC512_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
   //assign hardware readable registers to drive hmac core
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++) begin
-    key_reg[dword] = hwif_out.HMAC512_CTRL.CSR_MODE.value ? cptra_csr_hmac_key[dword] : hwif_out.HMAC512_KEY[dword].KEY.value;
+    key_reg[dword] = csr_mode_reg ? cptra_csr_hmac_key[dword] : hwif_out.HMAC512_KEY[dword].KEY.value;
   end
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     block_reg[dword] = hwif_out.HMAC512_BLOCK[dword].BLOCK.value;
@@ -324,7 +353,7 @@ end
 //release the lock once init has been seen
 always_comb begin
   for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
-    if (init_reg | next_reg) begin
+    if (init_reg | next_reg | restore_reg) begin
       block_reg_lock_nxt[dword] = '0;
     end
     else begin
@@ -393,14 +422,25 @@ hmac_reg i_hmac_reg (
     .hwif_out(hwif_out)
 );
 
-always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[KEY_NUM_DWORDS-1 : HMAC384_KEY_SIZE/DATA_WIDTH] == '0);
-always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == '0);
-always_comb last_alone_error = hwif_out.HMAC512_CTRL.LAST.value & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value;
+always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg | restore_reg) & (mode_reg == HMAC512_MODE) & (key_reg[KEY_NUM_DWORDS-1 : HMAC384_KEY_SIZE/DATA_WIDTH] == '0);
+always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg | restore_reg) & (key_reg == '0);
+always_comb invalid_cmd_error = (hwif_out.HMAC512_CTRL.LAST.value    & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.RESTORE.value)
+                              | (hwif_out.HMAC512_CTRL.RESTORE.value & ~hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.LAST.value)
+                              | (hwif_out.HMAC512_CTRL.INIT.value    & hwif_out.HMAC512_CTRL.NEXT.value)
+                              | (hwif_out.HMAC512_CTRL.INIT.value    & hwif_out.HMAC512_CTRL.RESTORE.value);
+always_comb intermediate_tag_hidden = core_tag_we & ~is_last_op_reg & (kv_key_data_present | kv_block_data_present | csr_mode_reg | dest_keyvault);
 
-// last_alone_error is a soft notification: the engine never started,
-// so it must NOT join error_flag (which gates core_tag_we and is
-// sticky until zeroize). Keep it for the interrupt status bit only.
 always_comb error_flag = key_zero_error | key_mode_error;
+
+logic tag_was_masked_reg;
+logic tag_read_strobe;
+
+always_comb begin
+  tag_read_strobe = 1'b0;
+  for (int dword = 0; dword < TAG_NUM_DWORDS; dword++) begin
+    tag_read_strobe = tag_read_strobe | hwif_out.HMAC512_TAG[dword].TAG.swacc;
+  end
+end
 
 always_ff @(posedge clk or negedge reset_n) 
 begin : error_detection
@@ -408,34 +448,61 @@ begin : error_detection
       error_flag_reg <= 1'b0;
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
-      last_alone_error_reg <= 1'b0;
+      invalid_cmd_error_reg <= 1'b0;
+      intermediate_tag_hidden_reg <= 1'b0;
+      tag_was_masked_reg <= 1'b0;
     end
     else if(zeroize_reg) begin
       error_flag_reg <= 1'b0;
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
-      last_alone_error_reg <= 1'b0;
+      invalid_cmd_error_reg <= 1'b0;
+      intermediate_tag_hidden_reg <= 1'b0;
+      tag_was_masked_reg <= 1'b0;
     end
     else begin
       if (error_flag)
         error_flag_reg <= 1'b1;
       key_mode_error_reg <= key_mode_error;
       key_zero_error_reg <= key_zero_error;
-      last_alone_error_reg <= last_alone_error;
+      invalid_cmd_error_reg <= invalid_cmd_error;
+      intermediate_tag_hidden_reg <= intermediate_tag_hidden;
+      if (intermediate_tag_hidden)
+        tag_was_masked_reg <= 1'b1;
+      else if (core_tag_we & (dest_keyvault | kv_data_present))
+        tag_was_masked_reg <= 1'b1;
+      else if (core_tag_we & is_last_op_reg)
+        tag_was_masked_reg <= 1'b0;
     end
 end // error_detection
+
+// Mandatory zeroize after each SW-visible operation. Latched on final
+// tag write, cleared only by zeroize. While set, gates ready_reg so
+// STATUS.READY=0 and swwe=ready_reg drops every CTRL write firmware
+// issues without a preceding ZEROIZE. Direct hmac_core users (e.g.
+// hmac_drbg) bypass this wrapper and are unaffected.
+always_ff @(posedge clk or negedge reset_n)
+begin : awaiting_zeroize_tracker
+    if (!reset_n)
+      awaiting_zeroize <= 1'b0;
+    else if (zeroize_reg)
+      awaiting_zeroize <= 1'b0;
+    else if (core_tag_we & is_last_op_reg)
+      awaiting_zeroize <= 1'b1;
+end
 
 always_comb error_flag_edge = error_flag & (!error_flag_reg);
 always_comb key_mode_error_edge = key_mode_error & (!key_mode_error_reg);
 always_comb key_zero_error_edge = key_zero_error & (!key_zero_error_reg);
-always_comb last_alone_error_edge = last_alone_error & (!last_alone_error_reg);
+always_comb invalid_cmd_error_edge = invalid_cmd_error & (!invalid_cmd_error_reg);
+always_comb intermediate_tag_hidden_edge = tag_was_masked_reg & tag_read_strobe;
 
 //Interrupts hardware interface
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_tag_we;
 assign hwif_in.intr_block_rf.error_internal_intr_r.key_mode_error_sts.hwset = key_mode_error_edge;
 assign hwif_in.intr_block_rf.error_internal_intr_r.key_zero_error_sts.hwset = key_zero_error_edge;
-assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = last_alone_error_edge;
-assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
+assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = invalid_cmd_error_edge;
+assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = intermediate_tag_hidden_edge;
 
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;

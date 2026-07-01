@@ -671,3 +671,71 @@ void hmac512_flow_csr(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag
         offset++;
     }
 }
+
+void hmac512_ctrl_write(uint32_t ctrl_bits, BOOL csr_mode) {
+    uint32_t reg = ctrl_bits |
+                   (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW);
+    if (csr_mode) reg |= HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK;
+    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, reg);
+}
+
+void hmac_ctrl_write(uint32_t ctrl_bits, uint8_t mode, BOOL csr_mode) {
+    uint32_t reg = ctrl_bits |
+                   ((uint32_t)mode << HMAC_REG_HMAC512_CTRL_MODE_LOW);
+    if (csr_mode) reg |= HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK;
+    lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, reg);
+}
+
+uint32_t hmac_read_tag_or(uint8_t tag_dwords) {
+    volatile uint32_t *p = (uint32_t *)CLP_HMAC_REG_HMAC512_TAG_0;
+    uint32_t accum = 0;
+    for (uint8_t i = 0; i < tag_dwords; i++) {
+        accum |= p[i];
+    }
+    return accum;
+}
+
+void hmac_check_error_intr(uint32_t expected_mask, uint8_t fail_cmd) {
+    uint32_t sts = lsu_read_32(CLP_HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+    if ((sts & expected_mask) == 0) {
+        VPRINTF(LOW, "FAIL: expected error bits 0x%08x not set (sts=0x%08x)\n",
+                expected_mask, sts);
+        SEND_STDOUT_CTRL(fail_cmd);
+        while (1);
+    }
+    lsu_write_32(CLP_HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, expected_mask);
+}
+
+void hmac_wait_ready() {
+    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) &
+            HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
+}
+
+void hmac_wait_valid() {
+    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) &
+            HMAC_REG_HMAC512_STATUS_VALID_MASK) == 0);
+}
+
+void hmac_load_inputs(uint32_t *key, uint32_t *block, uint32_t *lfsr_seed) {
+    write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0,       key,       16);
+    write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0,     block,     32);
+    write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_LFSR_SEED_0, lfsr_seed,  6);
+}
+
+void hmac_enable_kv_key(uint8_t kv_id) {
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL,
+        HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
+        ((kv_id << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) &
+         HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) &
+            HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) == 0);
+}
+
+void hmac_enable_kv_block(uint8_t kv_id) {
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL,
+        HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_EN_MASK |
+        ((kv_id << HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_LOW) &
+         HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL_READ_ENTRY_MASK));
+    while ((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS) &
+            HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS_VALID_MASK) == 0);
+}

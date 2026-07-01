@@ -92,6 +92,14 @@ addrmap hmac_reg {
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse; swwe;} LAST = 1'b0;
         field {desc = "Reserved";} Reserved = 1'b0;
+        field {desc = "Control restore command bit: Resumes HMAC processing from a
+                                saved intermediate inner-SHA chaining state. SW writes the
+                                previously-captured TAG back to HMAC512_TAG, re-supplies the
+                                same MODE/KEY, then asserts RESTORE together with NEXT or NEXT|LAST.
+                                RESTORE skips ENTROPY/IPAD and loads the SHA core with TAG as the inner chaining state
+                                before processing BLOCK.
+                                [br] Software write generates only a single-cycle pulse on the
+                                hardware interface and then will be erased"; singlepulse; swwe;} RESTORE = 1'b0;
     
     } HMAC512_CTRL @0x00000010;
 
@@ -152,10 +160,11 @@ addrmap hmac_reg {
         desc = "HMAC512 component tag register type definition
                 16 32-bit registers storing the 512-bit digest output in big-endian representation.";
 
-        default sw = r;
-        default hw = w;
+        default sw = rw;
+        default hw = rw;
+        default we = true;
         default resetsignal = reset_b;
-        field {desc = "Output tag field"; hwclr;} TAG[32] = 32'b0;
+        field {desc = "Output tag field"; hwclr; swacc = true;} TAG[32] = 32'b0;
     
     } HMAC512_TAG[16] @0x00000100;
 
@@ -241,8 +250,8 @@ addrmap hmac_reg {
 
         field {desc = "Interrupt Event 0 status bit when 384-bit key is selected in HMAC512 mode";} key_mode_error_sts = 1'b0;
         field {desc = "Interrupt Event 1 status bit when all-zero key is derived from KeyVault";} key_zero_error_sts = 1'b0;
-        field {desc = "Interrupt Event 2 status bit";} error2_sts = 1'b0;
-        field {desc = "Interrupt Event 3 status bit";} error3_sts = 1'b0;
+        field {desc = "Interrupt Event 2 status bit set when CTRL.LAST or CTRL.RESTORE is written without INIT or NEXT";} error2_sts = 1'b0;
+        field {desc = "Interrupt Event 3 status bit set when an intermediate tag is masked because the key or block is sourced from KeyVault or CSR_MODE is set";} error3_sts = 1'b0;
     };
 
     /* ---- Notification Interrupt Status ---- */
@@ -388,7 +397,7 @@ addrmap hmac_reg {
         intr_count_t      error2_intr_count_r;         /* Per error */                                                   //
         intr_count_t      error3_intr_count_r;         /* Per error */                                                   //
         intr_count_t      notif_cmd_done_intr_count_r @0x180;   /* Per notification */                                   //
-                                                                                                                         //
+        //                                                                                                                          //
         // These registers should be treated by SW as reserved, and ignored.                                             //
         // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
         // to be implemented (requiring 2*32 32-bit registers starting at                                                //
