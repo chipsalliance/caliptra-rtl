@@ -689,6 +689,7 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
     * SHA3 (based on [NIST FIPS 202](https://doi.org/10.6028/NIST.FIPS.202) [17])
 * Public-key cryptography
     * NIST Secp384r1 Digital Signature Algorithm, deterministic (RFC 6979 [7]) and non-deterministic (FIPS 186-4 [11]) variants
+    * NIST Secp256r1 Digital Signature Algorithm, deterministic (RFC 6979 [7]) and non-deterministic (FIPS 186-4 [11]) variants
 * Key vault
     * Key slots
     * Key slot management
@@ -1317,7 +1318,7 @@ For information, see SCA countermeasure in the [HMAC384](#hmac384) section.
 
 The ECC unit includes the ECDSA (Elliptic Curve Digital Signature Algorithm) engine and the ECDH (Elliptic Curve Diffie-Hellman Key-Exchange) engine, offering a variant of the cryptographically secure Digital Signature Algorithm (DSA) and Diffie-Hellman Key-Exchange (DH), which uses elliptic curve (ECC). A digital signature is an authentication method in which a public key pair and a digital certificate are used as a signature to verify the identity of a recipient or sender of information.
 
-The hardware implementation supports ECDSA over both NIST-Secp384r1 (P-384) and NIST-Secp256r1 (P-256), selected per-operation by the `ECC_CTRL.CURVE_SEL` field (0 = P-384, default; 1 = P-256). The same register interface, microcode sequencer, and Montgomery datapath service both curves; per-curve parameters (prime, group order, generator point, Montgomery constants) and a per-curve HMAC-DRBG instance are muxed by `CURVE_SEL`. Two modes of generating the per-signature secret `k` are supported, selected by the `ECC_CTRL.RAND_K_EN` field:
+The hardware implementation supports ECDSA over both NIST-Secp384r1 (P-384) and NIST-Secp256r1 (P-256), selected per-operation by the `ECC_CTRL.CURVE_SEL` field (0 = P-384, default; 1 = P-256). Two modes of generating the per-signature secret `k` are supported, selected by the `ECC_CTRL.RAND_K_EN` field:
 
 * `RAND_K_EN = 0` (default): deterministic SIGN per RFC 6979. `k = HMAC_DRBG(privKey, h)`.
 * `RAND_K_EN = 1`: non-deterministic SIGN per FIPS 186-4. `k = HMAC_DRBG(ECC_SEED, sign_nonce)`.
@@ -1334,7 +1335,7 @@ Secp384r1 parameters are shown in the following figure.
 
 #### Curve selection
 
-`ECC_CTRL.CURVE_SEL` (bit 5, `swwe = ecc_ready`) gates the curve for every ECC operation. The field is sampled together with the operation `CTRL[1:0]` and `RAND_K_EN` on the same `ECC_CTRL` write, so firmware can switch curves between back-to-back operations with no reset required; the engine performs an internal re-initialization (`ECC_INIT_LAST` flow) so per-curve Montgomery constants and PM-RAM contents are reloaded on every curve switch. The SW-visible `CURVE_SEL` field persists across `ZEROIZE`; the internal latched `curve_sel_reg` is cleared on `ZEROIZE` and re-sampled from the field at the next command dispatch, so firmware must rewrite `CURVE_SEL` after `ZEROIZE` only if a different curve is desired than the persisted value.
+`ECC_CTRL.CURVE_SEL` (bit 5, `swwe = ecc_ready`) gates the curve for every ECC operation. The field is sampled together with the operation `CTRL[1:0]` and `RAND_K_EN` on the same `ECC_CTRL` write, so firmware can switch curves between back-to-back operations with no reset required. Every command triggers an init flow that refreshes internal PM-RAM contents with appropriate Montgomery constants for the selected curve. The SW-visible `CURVE_SEL` field persists across `ZEROIZE`; the internal latched `curve_sel_reg` is cleared on `ZEROIZE` and re-sampled from the field at the next command dispatch, so firmware must rewrite `CURVE_SEL` after `ZEROIZE` only if a different curve is desired than the persisted value.
 
 Per-curve effective widths and parameters:
 
@@ -1345,9 +1346,9 @@ Per-curve effective widths and parameters:
 | Group order n                  | n<sub>P-384</sub>                                              | n<sub>P-256</sub>                                              |
 | Recommended message hash       | SHA-384 (digest = 384 b)                                       | SHA-256 (digest = 256 b)                                       |
 | HMAC_DRBG primitive            | HMAC-SHA-384                                                   | HMAC-SHA-256                                                   |
-| Register-bank dword usage      | All 12 dwords used                                             | Lower 8 dwords carry data; upper 4 dwords are HW-cleared on the P-384→P-256 curve switch and ignored by the ECDSA core (SW writes change register storage but have no operational effect) |
+| Register-bank dword usage      | All 12 dwords used                                             | Lower 8 dwords carry data; upper 4 dwords held at zero for API registers |
 
-`PCR_SIGN` (PCR-vault-sourced privkey) is supported on both curves; the mutual-exclusion error against `RAND_K_EN = 1` is curve-independent.
+`PCR_SIGN` (PCR-vault-sourced privkey) is supported only for P-384 deterministic SIGN. Firmware requests that combine `PCR_SIGN=1` with any of `CURVE_SEL=1` (P-256), `RAND_K_EN=1` (nondet), or any non-SIGN command raise an `ecc_error`.
 
 ### Operation
 
@@ -1417,7 +1418,7 @@ The ECC architecture inputs and outputs are described in the following table.
 | nonce \[383:0\]            | input           | The deterministic nonce for HMAC_DRBG in the KeyGen operation. Not consumed in non-deterministic SIGN |
 | privKey_in\[383:0\]        | input           | The input private key used in the signing operation.                                                                       |
 | pubKey_in\[1:0\]\[383:0\]  | input           | The input public key(x,y) used in the verifying operation.                                                                 |
-| hashed_msg\[383:0\]        | input           | The hash of message m. Width is curve-dependent: P-384 uses bits [383:0] (SHA-384 digest); P-256 uses bits [255:0] (SHA-256 digest) and ignores [383:256]. |
+| hashed_msg\[383:0\]        | input           | The hash of message m. P-384 uses SHA-384 digest; P-256 uses SHA-256 digest. |
 | ready                      | output          | When HIGH, the signal indicates the core is ready.                                                                         |
 | privKey_out\[383:0\]       | output          | The generated private key in the KeyGen operation.                                                                         |
 | pubKey_out\[1:0\]\[383:0\] | output          | The generated public key(x,y) in the KeyGen operation.                                                                     |
@@ -1426,6 +1427,11 @@ The ECC architecture inputs and outputs are described in the following table.
 | r’\[383:0\]                | Output          | The signature verification result.                                                                                         |
 | DH_sharedkey\[383:0\]      | output          | The generated shared key in the ECDH sharedkey operation.                                                                  |
 | valid                      | output          | When HIGH, the signal indicates the result is ready.                                                                       |
+
+> **Note (dual-curve widths):** all `[383:0]` signals above are physical
+> bus widths sized for P-384. Under P-256 (`ECC_CTRL.CURVE_SEL=1`), only the
+> lower 256 bits carry curve-relevant data; the upper 128 bits are held at
+> zero (see the "Register-bank dword usage" row in the Curve selection table).
 
 ### Address map
 
@@ -1449,7 +1455,7 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 
 The pseudocode above shows the deterministic SIGN flow (`ECC_CTRL.RAND_K_EN = 0`). When `RAND_K_EN = 1`, the only change is the `k` generation step: replace `k = HMAC_DRBG(privKey, h)` with `k = HMAC_DRBG(ECC_SEED, sign_nonce)`.
 
-Signing with `RAND_K_EN = 1` is not permitted when the private key is sourced from the PCR vault (PCR_SIGN mode).
+Signing with `RAND_K_EN = 1` is not permitted when inputs are sourced from the Key Vault (either private key or seed) or from the PCR vault (`PCR_SIGN` mode); any such combination raises `ecc_error`.
 
 #### Verifying
 

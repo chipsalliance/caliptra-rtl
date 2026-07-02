@@ -6,10 +6,11 @@
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Negative test: SIGN + PCR_SIGN + RAND_K_EN=1 illegal combo.
-// Expect ecc_error from rand_k_pcr_sign_illegal (ecc_dsa_ctrl.sv:825).
-// Covers P-384 nondet (subtest 1) and P-256 nondet (subtest 2 — also fires
-// kv_under_p256_invalid since PCR_SIGN reads KV slot 7).
+// Negative test: PCR_SIGN illegal combos. Expect ecc_error for each.
+//   Subtest 1: P-384 PCR_SIGN + RAND_K_EN=1  -> rand_k_pcr_sign_illegal
+//   Subtest 2: P-256 PCR_SIGN + RAND_K_EN=1  -> rand_k_pcr_sign_illegal + pcr_sign_under_p256_invalid
+//   Subtest 3: P-256 PCR_SIGN + RAND_K_EN=0  -> pcr_sign_under_p256_invalid (P-256 det)
+// PCR_SIGN is architecturally P-384 deterministic only.
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -39,9 +40,9 @@ static const uint32_t p256_iv[] = {0x00000000,0x00000000,0x00000000,0x00000000,
                                    0xC8B3EDA5,0xE4FE8883,0xA5D6BB3E,0xA5D3173F};
 
 // Helper: set up PCR-sign inputs (privkey in KV slot 7, MSG via SHA512 digest)
-// and issue SIGN+PCR_SIGN+RAND_K_EN with the given CURVE_SEL. Expect ecc_error.
-static void run_pcr_sign_randk_err(const uint32_t *iv, uint8_t curve_sel,
-                                   const char *label) {
+// and issue SIGN+PCR_SIGN with the given CURVE_SEL and RAND_K_EN. Expect ecc_error.
+static void run_pcr_sign_err(const uint32_t *iv, uint8_t curve_sel,
+                             uint8_t rand_k_en, const char *label) {
     volatile uint32_t *reg_ptr;
 
     while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
@@ -57,14 +58,14 @@ static void run_pcr_sign_randk_err(const uint32_t *iv, uint8_t curve_sel,
 
     uint32_t ctrl = ECC_CMD_SIGNING |
                     ((1u << ECC_REG_ECC_CTRL_PCR_SIGN_LOW)  & ECC_REG_ECC_CTRL_PCR_SIGN_MASK)  |
-                    ((1u << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) & ECC_REG_ECC_CTRL_RAND_K_EN_MASK) |
+                    ((rand_k_en  << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) & ECC_REG_ECC_CTRL_RAND_K_EN_MASK) |
                     ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK);
-    VPRINTF(LOW, "\nECC PCR SIGNING + RAND_K_EN (CURVE_SEL=%0d)\n", curve_sel);
+    VPRINTF(LOW, "\nECC PCR SIGNING (CURVE_SEL=%0d, RAND_K_EN=%0d)\n", curve_sel, rand_k_en);
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ctrl);
 
     wait_for_ecc_intr();
     if (cptra_intr_rcv.ecc_error == 0) {
-        VPRINTF(ERROR, "\n%s: ecc_error not asserted for PCR_SIGN+RAND_K_EN\n", label);
+        VPRINTF(ERROR, "\n%s: ecc_error not asserted for illegal PCR_SIGN combo\n", label);
         SEND_STDOUT_CTRL(0x1); while(1);
     }
     VPRINTF(LOW, "PASS: %s\n", label);
@@ -73,7 +74,7 @@ static void run_pcr_sign_randk_err(const uint32_t *iv, uint8_t curve_sel,
 
 void main() {
     VPRINTF(LOW, "-------------------------------------------------\n");
-    VPRINTF(LOW, " ECC PCR_SIGN + RAND_K_EN illegal-combo error test\n");
+    VPRINTF(LOW, " ECC PCR_SIGN illegal-combo error test\n");
     VPRINTF(LOW, "-------------------------------------------------\n");
 
     init_interrupts();
@@ -81,13 +82,18 @@ void main() {
 
     switch (rst_count) {
         case 1:
-            run_pcr_sign_randk_err(p384_iv, 0,
-                                   "P-384 PCR_SIGN + RAND_K_EN");
+            run_pcr_sign_err(p384_iv, 0, 1,
+                             "P-384 PCR_SIGN + RAND_K_EN=1");
             SEND_STDOUT_CTRL(0xf6);
             break;
         case 2:
-            run_pcr_sign_randk_err(p256_iv, 1,
-                                   "P-256 PCR_SIGN + RAND_K_EN");
+            run_pcr_sign_err(p256_iv, 1, 1,
+                             "P-256 PCR_SIGN + RAND_K_EN=1");
+            SEND_STDOUT_CTRL(0xf6);
+            break;
+        case 3:
+            run_pcr_sign_err(p256_iv, 1, 0,
+                             "P-256 PCR_SIGN + RAND_K_EN=0 (det)");
             break;
         default:
             break;

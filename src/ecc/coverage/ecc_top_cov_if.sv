@@ -72,6 +72,12 @@ interface ecc_top_cov_if
     logic kv_seed_data_present;
     logic kv_under_p256_invalid;
 
+    logic pcr_sign_under_p256_invalid;
+    logic rand_k_pcr_sign_illegal;
+    logic rand_k_invalid_cmd;
+    logic rand_k_en_mode;
+    logic curve_sel_to_p256_pulse;
+
     kv_write_filter_metrics_t kv_write_metrics;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
@@ -135,6 +141,12 @@ interface ecc_top_cov_if
     assign kv_write_en          = ecc_top.ecc_dsa_ctrl_i.kv_write_ctrl_reg.write_en;
     assign kv_seed_data_present = ecc_top.ecc_dsa_ctrl_i.kv_seed_data_present;
     assign kv_under_p256_invalid = ecc_top.ecc_dsa_ctrl_i.kv_under_p256_invalid;
+
+    assign pcr_sign_under_p256_invalid = ecc_top.ecc_dsa_ctrl_i.pcr_sign_under_p256_invalid;
+    assign rand_k_pcr_sign_illegal     = ecc_top.ecc_dsa_ctrl_i.rand_k_pcr_sign_illegal;
+    assign rand_k_invalid_cmd          = ecc_top.ecc_dsa_ctrl_i.rand_k_invalid_cmd;
+    assign rand_k_en_mode              = ecc_top.ecc_dsa_ctrl_i.rand_k_en_mode;
+    assign curve_sel_to_p256_pulse     = ecc_top.ecc_dsa_ctrl_i.curve_sel_to_p256_pulse;
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
@@ -218,7 +230,27 @@ interface ecc_top_cov_if
         add_carry_cp: cross mod_p_q, add_sub_i, add_cout0, add_cout1;
         add_result_less_than_prime_cp: cross mod_p_q, add_sub_i, add_res_less_than_prime;
         add_result_greater_than_384_bit_cp: cross mod_p_q, add_sub_i, add_res_greater_than_384_bit;
-        
+
+        // RAND_K / PCR_SIGN dual-curve gates (reuse curve_active_cp, pcr_sign_cp, ecc_cmd_cp).
+        rand_k_en_mode_cp:              coverpoint rand_k_en_mode;
+        pcr_sign_under_p256_invalid_cp: coverpoint pcr_sign_under_p256_invalid;
+        rand_k_pcr_sign_illegal_cp:     coverpoint rand_k_pcr_sign_illegal;
+        rand_k_invalid_cmd_cp:          coverpoint rand_k_invalid_cmd;
+        curve_sel_to_p256_pulse_cp:     coverpoint curve_sel_to_p256_pulse;
+
+        // 8-cell (PCR_SIGN x curve x RAND_K) matrix for SIGN dispatches.
+        sign_illegal_matrix_cp: cross pcr_sign_cp, curve_active_cp, rand_k_en_mode_cp
+            iff (ecc_cmd == 3'b010);
+
+        // Each RAND_K / PCR_SIGN error gate must be observed asserting the error_flag.
+        pcr_p256_x_error_cp:   cross pcr_sign_under_p256_invalid_cp, error_flag;
+        rand_k_pcr_x_error_cp: cross rand_k_pcr_sign_illegal_cp,     error_flag;
+        rand_k_cmd_x_error_cp: cross rand_k_invalid_cmd_cp,          error_flag;
+
+        // Per-op P-256 scrub pulse must fire across every legal cmd.
+        scrub_x_cmd_cp: cross curve_sel_to_p256_pulse_cp, ecc_cmd_cp {
+            ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
+        }
 
     endgroup
 
