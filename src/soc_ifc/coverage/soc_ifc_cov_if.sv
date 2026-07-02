@@ -203,7 +203,7 @@ interface soc_ifc_cov_if
     input logic rdc_clk_dis,
     input logic fw_update_rst_window,
 
-    input logic crypto_error,
+    input cptra_hw_fatal_error_t cptra_hw_fatal_errors,
 
     input logic uc_req_dv,
     input soc_ifc_req_t uc_req,
@@ -255,7 +255,7 @@ interface soc_ifc_cov_if
         clk_gating_en_cp: coverpoint clk_gating_en;
         rdc_clk_dis_cp: coverpoint rdc_clk_dis;
         fw_update_rst_window_cp: coverpoint fw_update_rst_window;
-        crypto_error_cp: coverpoint crypto_error;
+        crypto_error_cp: coverpoint cptra_hw_fatal_errors.crypto_err;
         security_state_cp: coverpoint security_state;
         ready_for_fuses_cp: coverpoint ready_for_fuses;
         ready_for_mb_processing_cp: coverpoint ready_for_mb_processing;

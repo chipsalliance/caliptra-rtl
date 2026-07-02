@@ -178,7 +178,7 @@ always_comb begin : kv_fsm_comb
 end
 
 // Sparse FSM flop for glitch hardening (invalid encoding -> KV_ERROR)
-`CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_kv_state_regs, kv_fsm_ns, kv_fsm_ps, kv_fsm_state_e, KV_IDLE, clk, rst_b)
+`CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_kv_state_regs, kv_fsm_ns, kv_fsm_ps, kv_fsm_state_e, KV_IDLE, clk, rst_b, 0)
 
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin

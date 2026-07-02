@@ -331,7 +331,13 @@ module caliptra_top
     logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
     logic aes_busy_filtered, ecc_busy_filtered;
     logic crypto_error;
+    logic doe_fsm_error;
+    cptra_hw_fatal_error_t cptra_hw_fatal_errors;
     logic kv_monitor_alert;
+
+    caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
+    caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt;
+    caliptra_prim_mubi_pkg::mubi4_t boot_flow_error;
 
     typedef enum logic [1:0] {
         CRYPTO_IDLE,
@@ -387,6 +393,13 @@ module caliptra_top
                                 (abr_busy & doe_busy)                   |
                                 (abr_busy & aes_busy_filtered)          |
                                 (doe_busy & aes_busy_filtered);
+
+    // Build fatal error struct for soc_ifc_top
+    always_comb cptra_hw_fatal_errors = '{
+        crypto_err:    crypto_error,
+        kv_error:      kv_monitor_alert | mubi4_test_true_loose(boot_flow_error),
+        fsm_error:     doe_fsm_error
+    };
             
 
 always_comb begin
@@ -549,11 +562,6 @@ logic boot_flow_monitor_en;
 // Default during simulation is to disable boot flow monitor as most tests don't go through the boot flow
 always_comb boot_flow_monitor_en = sim_boot_flow_monitor_dis ? '0 :
                                    mubi4_test_true_loose(cptra_security_state_Latched.debug_locked) & ~cptra_scan_mode_Latched; 
-
-
-caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
-caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt;
-caliptra_prim_mubi_pkg::mubi4_t boot_flow_error;
 
 boot_flow_monitor i_boot_flow_monitor (
     .clk                (clk),
@@ -1078,6 +1086,7 @@ doe_ctrl #(
 
     .error_intr(doe_error_intr),
     .notif_intr(doe_notif_intr),
+    .doe_fsm_error(doe_fsm_error),
     .clear_obf_secrets(clear_obf_secrets), //Output
     .busy_o(doe_busy),
     .kv_write (kv_write[KV_WRITE_IDX_DOE]),
@@ -1590,10 +1599,8 @@ soc_ifc_top1
     .clk_gating_en(clk_gating_en),
     .rdc_clk_dis(rdc_clk_dis),
     .fw_update_rst_window(fw_update_rst_window),
-    //multiple cryptos operating at once, assert fatal error
-    .crypto_error(crypto_error),
-    //kv boot flow monitor dest_valid mismatch or boot_flow_error
-    .kv_error(kv_monitor_alert | mubi4_test_true_loose(boot_flow_error)),
+    //Fatal errors consolidated into struct
+    .cptra_hw_fatal_errors(cptra_hw_fatal_errors),
     //caliptra uncore jtag ports
     .cptra_uncore_dmi_reg_en( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),

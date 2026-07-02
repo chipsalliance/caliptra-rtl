@@ -65,6 +65,7 @@ module doe_cbc
    // Interrupt Outputs
    output logic error_intr,
    output logic notif_intr,
+   output logic doe_fsm_error,
 
    output logic clear_obf_secrets,
 
@@ -117,7 +118,6 @@ module doe_cbc
 
   logic flow_done;
   logic flow_error;
-  logic doe_fsm_error;
   logic flow_in_progress, lock_fe_flow, lock_uds_flow, lock_hek_flow;
 
   doe_reg__in_t  hwif_in;

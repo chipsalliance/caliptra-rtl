@@ -461,8 +461,7 @@ module soc_ifc_tb
              .rdc_clk_dis(),
              .fw_update_rst_window(),
 
-             .crypto_error('0),
-             .kv_error(1'b0),
+             .cptra_hw_fatal_errors('0),
 
              .cptra_uncore_dmi_reg_en     ( 1'h0),
              .cptra_uncore_dmi_reg_wr_en  ( 1'h0),

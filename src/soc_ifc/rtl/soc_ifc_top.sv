@@ -192,8 +192,7 @@ module soc_ifc_top
     output logic rdc_clk_dis,
     output logic fw_update_rst_window,
 
-    input logic crypto_error,
-    input logic kv_error,
+    input cptra_hw_fatal_error_t cptra_hw_fatal_errors,
 
     //caliptra uncore jtag ports
     input  logic                            cptra_uncore_dmi_reg_en,
@@ -334,6 +333,7 @@ logic strap_we_pre_fuse_done;
 logic [2:0] boot_fsm_ps;
 logic boot_fsm_error;
 logic mbox_fsm_error;
+logic sha_fsm_error;
 
 assign fuse_done = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
@@ -1316,6 +1316,8 @@ i_sha512_acc_top (
     .sha_sram_resp(sha_sram_resp),
     .sha_sram_hold(sha_sram_hold),
 
+    .sha_fsm_error(sha_fsm_error),
+
     .error_intr(sha_error_intr),
     .notif_intr(sha_notif_intr)
 );
@@ -1534,13 +1536,13 @@ wdt #(
 // Write-enables for CPTRA_HW_ERROR_FATAL and CPTRA_HW_ERROR_NON_FATAL
 // Also calculate whether or not an unmasked event is being set, so we can
 // trigger the SOC interrupt signal
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .we = crypto_error;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .we = cptra_hw_fatal_errors.crypto_err;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we = rv_ecc_sts.cptra_iccm_ecc_double_error & ~fw_update_rst_window;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.we = rv_ecc_sts.cptra_dccm_ecc_double_error & ~fw_update_rst_window;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .we = nmi_intr;
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error    .we = kv_error;
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.fsm_error   .we = boot_fsm_error | mbox_fsm_error;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error    .we = cptra_hw_fatal_errors.kv_error;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.we = shadow_storage_err;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.fsm_error   .we = boot_fsm_error | mbox_fsm_error | sha_fsm_error | cptra_hw_fatal_errors.fsm_error;
 // Using we+next instead of hwset allows us to encode the reserved fields in some fashion
 // other than bit-hot in the future, if needed (e.g. we need to encode > 32 FATAL events)
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .next = 1'b1;

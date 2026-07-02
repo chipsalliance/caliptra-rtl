@@ -290,7 +290,7 @@ always_comb src_write_data = running_uds ? obf_uds_seed[block_offset[UDS_BLOCK_O
 
 //state flops
 // Sparse FSM flop for glitch hardening (invalid encoding -> DOE_ERROR)
-`CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_doe_state_regs, kv_doe_fsm_ns, kv_doe_fsm_ps, kv_doe_fsm_state_e, DOE_IDLE, clk, rst_b)
+`CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_doe_state_regs, kv_doe_fsm_ns, kv_doe_fsm_ps, kv_doe_fsm_state_e, DOE_IDLE, clk, rst_b, 0)
 
 always_ff @(posedge clk or negedge rst_b) begin
     if (~rst_b) begin

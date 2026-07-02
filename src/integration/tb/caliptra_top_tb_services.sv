@@ -349,6 +349,7 @@ module caliptra_top_tb_services
     //         8'h92        - Check PCR ECC signing with randomized vector
     //         8'h93        - Issue PCR MLDSA signing with randomized vector
     //         8'h94        - Check PCR MLDSA signing with randomized vector
+    //         8'h95        - Glitch inject sparse encoded FSM
     //         8'h97        - Inject invalid dh_key into ECC
     //         8'h98        - Inject invalid zero sign_r into ECC
     //         8'h99        - Inject zeroize into HMAC
@@ -544,6 +545,15 @@ module caliptra_top_tb_services
     initial ras_test_ctrl.reset_generic_input_wires = 1'b0;
     always@(negedge clk) begin
         ras_test_ctrl.reset_generic_input_wires <= mailbox_write && (WriteData[7:0] inside {8'he0, 8'he1, 8'he2, 8'he3, 8'hfd, 8'hfe});
+    end
+
+    //Error injections that need to skip mb processing and expect fatal error to trigger reset
+    initial ras_test_ctrl.skip_mb_processing = 1'b0;
+    always@(negedge clk) begin
+        if (mailbox_write && (WriteData[7:0] inside {8'h95}))
+            ras_test_ctrl.skip_mb_processing <= 1'b1;
+        else
+            ras_test_ctrl.skip_mb_processing <= 1'b0;
     end
 
     // AXI Complex Control
@@ -3422,5 +3432,54 @@ doe_cov_bind i_doe_cov_bind();
 `include "dasm.svi"
 /* verilator lint_on CASEINCOMPLETE */
 
+//========================================================================
+// FSM Glitch Injection Handlers
+// FW writes command bytes 0x60-0x64 to STDOUT to trigger FSM glitch inject.
+// Each handler forces the sparse FSM state register to an invalid encoding
+// for 1 clock cycle, then releases. The FSM should enter its ERROR state.
+//========================================================================
+`ifndef VERILATOR
+    logic release_glitch = 0;
+    logic boot_fsm_glitch_pending = 0;
+    always @(negedge clk) begin
+        // DOE FSM glitch
+        if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h00) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.u_doe_state_regs_glitch_inject = 1'b1;
+            release_glitch <= 1'b1;
+        end
+        // Boot FSM glitch
+        else if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h01) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_boot_fsm.u_boot_state_regs_glitch_inject = 1'b1;
+            release_glitch <= 1'b1;
+        end
+        // Mailbox FSM glitch
+        else if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h02) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.soc_ifc_top1.i_mbox.u_mbox_state_regs_glitch_inject = 1'b1;
+            release_glitch <= 1'b1;
+        end
+        // SHA512 acc FSM glitch
+        else if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h03) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.soc_ifc_top1.i_sha512_acc_top.u_sha_state_regs_glitch_inject = 1'b1;
+            release_glitch <= 1'b1;
+        end
+        else if (release_glitch) begin
+            release_glitch <= 0;
+            release `CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.u_doe_state_regs_glitch_inject;
+            release `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_boot_fsm.u_boot_state_regs_glitch_inject;
+            release `CPTRA_TOP_PATH.soc_ifc_top1.i_mbox.u_mbox_state_regs_glitch_inject;
+            release `CPTRA_TOP_PATH.soc_ifc_top1.i_sha512_acc_top.u_sha_state_regs_glitch_inject;
+            // Boot FSM glitch kills the CPU — trigger cold reset from TB
+            if (boot_fsm_glitch_pending) begin
+                boot_fsm_glitch_pending <= 0;
+                warm_rst <= 1;
+                rst_cyclecnt <= cycleCnt;
+            end
+        end
+        // Track boot FSM glitch request
+        if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h01) && mailbox_write) begin
+            boot_fsm_glitch_pending <= 1;
+        end
+    end
+`endif
 
 endmodule

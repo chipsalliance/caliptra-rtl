@@ -40,6 +40,8 @@ module sha512_acc_top
       input cptra_mbox_sram_resp_t sha_sram_resp,
       input logic sha_sram_hold,
 
+      output logic sha_fsm_error,
+
       // Interrupts
       output logic error_intr,
       output logic notif_intr
@@ -79,7 +81,6 @@ module sha512_acc_top
   logic mbox_block_we;
 
   sha_fsm_state_e sha_fsm_ps, sha_fsm_ns;
-  logic sha_fsm_error;
 
   logic arc_SHA_IDLE_SHA_BLOCK_0;
   logic arc_SHA_BLOCK_0_SHA_BLOCK_N;
@@ -239,7 +240,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
   //registers for the HW API
   // Sparse FSM flop for glitch hardening (invalid encoding -> SHA_ERROR)
-  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_sha_state_regs, sha_fsm_ns, sha_fsm_ps, sha_fsm_state_e, SHA_IDLE, clk, rst_b)
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_sha_state_regs, sha_fsm_ns, sha_fsm_ps, sha_fsm_state_e, SHA_IDLE, clk, rst_b, 0)
 
   always_ff @(posedge clk or negedge rst_b) begin : api_regs
     if (~rst_b) begin

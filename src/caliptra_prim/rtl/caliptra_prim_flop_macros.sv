@@ -43,6 +43,10 @@
 // caliptra_prim_sparse_fsm_flop output and the behavioral flop output in that case.
 `define CALIPTRA_PRIM_FLOP_SPARSE_FSM(__name, __d, __q, __type, __resval = `CALIPTRA_PRIM_FLOP_RESVAL, __clk = `CALIPTRA_PRIM_FLOP_CLK, __rst_n = `CALIPTRA_PRIM_FLOP_RST, __alert_trigger_sva_en = 1) \
   `ifdef SIMULATION                                   \
+    logic ``__name``_glitch_inject;                   \
+    assign ``__name``_glitch_inject = '0;             \
+    __type ``__name``_d;                              \
+    assign ``__name``_d = __type'($bits(__type)'(__d) ^ {``__name``_glitch_inject, {($bits(__type)-1){1'b0}}}); \
     caliptra_prim_sparse_fsm_flop #(                  \
       .StateEnumT(__type),                            \
       .Width($bits(__type)),                          \
@@ -52,10 +56,10 @@
     ) __name (                                        \
       .clk_i   ( __clk   ),                           \
       .rst_ni  ( __rst_n ),                           \
-      .state_i ( __d     ),                           \
+      .state_i ( ``__name``_d ),                      \
       .state_o (         )                            \
     );                                                \
-    `CALIPTRA_PRIM_FLOP_A(__d, __q, __resval, __clk, __rst_n)  \
+    `CALIPTRA_PRIM_FLOP_A(``__name``_d, __q, __resval, __clk, __rst_n)  \
     `CALIPTRA_ASSERT(``__name``_A, __q === ``__name``.state_o, __clk, !(__rst_n)) \
   `else                                               \
     caliptra_prim_sparse_fsm_flop #(                  \

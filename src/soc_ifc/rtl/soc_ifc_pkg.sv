@@ -130,6 +130,13 @@ package soc_ifc_pkg;
     // timing in a reset event.
     parameter SOC_IFC_CPTRA_RST_NONCORE_RST_DELAY = 4;
 
+    // Fatal error struct — consolidates error inputs into soc_ifc_top
+    typedef struct packed {
+        logic crypto_err;       // Crypto engine collision (e.g., HMAC busy & ECC busy)
+        logic kv_error;         // Key vault monitor alert
+        logic fsm_error;        // SPARSE FSM glitch detected
+    } cptra_hw_fatal_error_t;
+
     //BOOT FSM
     // Encoding generated with
     // $ python3 sparse_fsm_encode.py -d 5 -m 6 -n 10 -s 14142135

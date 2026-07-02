@@ -65,6 +65,7 @@ module doe_ctrl
     // Interrupt
     output logic error_intr,
     output logic notif_intr,
+    output logic doe_fsm_error,
     input  logic ocp_lock_en, // Synth-time constant strap input instead of ocp_lock_in_progress
     input  logic doe_cmd_lock, // Prevent new DOE commands once FMC/RT execution begins
     input  logic debugUnlock_or_scan_mode_switch
@@ -97,6 +98,7 @@ module doe_ctrl
         .read_data(doe_read_data[31:0]),
         .error_intr(error_intr),
         .notif_intr(notif_intr),
+        .doe_fsm_error(doe_fsm_error),
         .busy_o(busy_o),
         .clear_obf_secrets(clear_obf_secrets),
         .kv_write(kv_write),

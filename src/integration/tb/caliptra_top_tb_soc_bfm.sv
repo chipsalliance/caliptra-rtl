@@ -357,7 +357,7 @@ import caliptra_top_tb_pkg::*; #(
                     $display ("CLP: ROM Flow in progress...\n");
 
                     // Test sequence (Mailbox or error handling)
-                    wait(ready_for_mb_processing || ras_test_ctrl.error_injection_seen);
+                    wait(ready_for_mb_processing || ras_test_ctrl.error_injection_seen || ras_test_ctrl.skip_mb_processing);
 
                     // Mailbox flow
                     if (ready_for_mb_processing) begin
@@ -438,6 +438,8 @@ import caliptra_top_tb_pkg::*; #(
 
                     // Mailbox response flow and RAS functionality
                     forever begin
+                        // DEBUG: uncomment to trace BFM loop state during boot FSM glitch debug
+                        // if (cptra_error_fatal) $display("SoC BFM: cptra_error_fatal=%0b fatal_counter=%0d fatal_dly_p=%0b t=%0t", cptra_error_fatal, cptra_error_fatal_counter, cptra_error_fatal_dly_p, $time);
                         if (cptra_error_fatal_dly_p) begin
                             $display("SoC: Observed cptra_error_fatal; reading Caliptra register\n");
                             m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL), .data(rdata), .resp(rresp), .resp_user(buser));
