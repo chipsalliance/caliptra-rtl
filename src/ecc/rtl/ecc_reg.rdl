@@ -81,6 +81,9 @@ addrmap ecc_reg {
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Run PCR Signing flow: Run ECC Signing flow to sign PCRs."; swwe = ecc_ready; hwclr;} PCR_SIGN = 1'b0;
         field {desc = "Run ECDH for shared key generation."; swwe = ecc_ready; hwclr;} DH_SHAREDKEY = 1'b0;
+        field {desc = "Curve select for ECC operations: 0 = secp384r1 (P-384, default), 1 = secp256r1 (P-256).
+                        [br] Sampled at command dispatch and latched for the duration of the in-flight operation; SW writes are gated by ecc_ready."; swwe = ecc_ready;} CURVE_SEL = 1'b0;
+        field {desc = "Enable non-deterministic SIGN"; swwe = ecc_ready; hwclr;} RAND_K_EN = 1'b0;
     
     } ECC_CTRL @0x00000010;
 
@@ -106,8 +109,9 @@ addrmap ecc_reg {
     reg {
         name = "ECC SEED";
         desc = "ECC component seed register type definition
-                12 32-bit registers storing the 384-bit seed for keygen in big-endian representation.
-                The seed can be any 384-bit value in [0 : 2^384-1].";
+                12 32-bit registers storing the seed for keygen in big-endian representation.
+                For secp384r1 curve, SEED is a 384-bit value. For secp256r1 curve, only lower
+                256 bits are consumed. Upper 4 dwords are cleared by hardware.";
 
         default sw = w;
         default hw = rw;
@@ -122,8 +126,9 @@ addrmap ecc_reg {
     reg {
         name = "ECC NONCE";
         desc = "ECC component nonce register type definition
-                12 32-bit registers storing the 384-bit nonce for keygen in big-endian representation.
-                The nonce can be any 384-bit value in [0 : 2^384-1].";
+                12 32-bit registers storing the nonce for keygen in big-endian representation.
+                For secp384r1 curve, NONCE is a 384-bit value. For secp256r1 curve, only lower
+                256 bits are consumed. Upper 4 dwords are cleared by hardware.";
 
         default sw = w;
         default hw = r;
@@ -138,9 +143,10 @@ addrmap ecc_reg {
     reg {
         name = "ECC_MSG";
         desc = "ECC component hashed message register type definition
-                12 32-bit registers storing the hash of the message respect 
-                to SHA384 algorithm in big-endian representation.
-                The hashed message can be any 384-bit value in [0 : 2^384-1].";
+                12 32-bit registers storing the hashed message in big-endian representation.
+                For secp384r1 curve, MSG is a 384-bit value (e.g. SHA-384 digest). For
+                secp256r1 curve, only lower 256 bits are consumed (e.g. SHA-256 digest). Upper
+                4 dwords are cleared by hardware.";
 
         default sw = w;
         default hw = rw;
@@ -173,10 +179,11 @@ addrmap ecc_reg {
     reg {
         name = "ECC PRIVKEY IN";
         desc = "ECC component private key input register type definition
-                12 32-bit registers storing the private key for signing in big-endian representation. 
-                These registers is set before signing operation.
-                The private key should be in [1 : q-1] while q is the group
-                order of the Secp384r1 curve.";
+                12 32-bit registers storing the private key for signing in big-endian
+                representation. These registers are set before signing operation. For
+                secp384r1 curve, PRIVKEY_IN is a 384-bit value in [1 : q-1]. For secp256r1
+                curve, only lower 256 bits are consumed and must be in [1 : q-1]. Upper 4
+                dwords are cleared by hardware. q is the group order of the active curve.";
 
         default sw = w;
         default hw = rw;
@@ -294,10 +301,10 @@ addrmap ecc_reg {
     reg {
         name = "ECC IV";
         desc = "ECC component IV register type definition
-                12 32-bit registers storing the 384-bit IV required 
-                for SCA countermeasures to randomize the inputs with no change
-                on the ECC outputs. 
-                The IV can be any 384-bit value in [0 : 2^384-1].";
+                12 32-bit registers storing the IV required for SCA countermeasures to
+                randomize the inputs with no change on the ECC outputs.
+                For secp384r1 curve, IV is a 384-bit value. For secp256r1 curve, only lower
+                256 bits are consumed. Upper 4 dwords are cleared by hardware.";
 
         default sw = w;
         default hw = r;

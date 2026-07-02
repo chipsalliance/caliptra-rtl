@@ -2283,6 +2283,105 @@ endgenerate //IV_NO
         end
     endtask // ecc_test
 
+    `define ECC_DSA         `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i
+`define ECC_DRBG_K_P256 `ECC_DSA.ecc_hmac_drbg_p256_wrap_i.drbg_reg
+`define ECC_DRBG_K_P384 `ECC_DSA.ecc_hmac_drbg_interface_i.drbg_reg
+
+    logic ecc_ktap_armed;
+    logic ecc_ktap_valid_d;
+
+    // Arm on SIGN-with-RAND_K_EN kickoff; fire on ecc_valid_reg rising edge.
+    always_ff @(posedge `CPTRA_TOP_PATH.clk or negedge `CPTRA_TOP_PATH.cptra_rst_b) begin
+        if (!`CPTRA_TOP_PATH.cptra_rst_b) begin
+            ecc_ktap_armed   <= 1'b0;
+            ecc_ktap_valid_d <= 1'b0;
+        end
+        else if (!UVM_TB) begin
+            ecc_ktap_valid_d <= `ECC_DSA.ecc_valid_reg;
+            if ((`ECC_DSA.cmd_reg == 3'b010 /* ecc_params_pkg::SIGN, avoid TB-pkg link dep */) &&
+                `ECC_DSA.hwif_out.ECC_CTRL.RAND_K_EN.value)
+                ecc_ktap_armed <= 1'b1;
+            if (ecc_ktap_armed && !ecc_ktap_valid_d && `ECC_DSA.ecc_valid_reg) begin
+                ecc_ktap_armed <= 1'b0;
+                ecc_ktap_check();
+            end
+        end
+    end
+
+    // CSR dword 0 = MSW => reverse-pack into 384-bit bignum for chip R/S.
+    // For P256 the upper 4 dwords are hwclr'd to 0; active value is in [255:0].
+    task automatic ecc_ktap_check ();
+        int           fd, rc;
+        logic         is_p256;
+        string        curve_tag, line_read;
+        logic [383:0] r_chip, s_chip, k_v;
+        logic [383:0] r_exp,  s_exp;
+        is_p256   = (`ECC_DSA.hwif_out.ECC_CTRL.CURVE_SEL.value == 1'b1);
+        curve_tag = is_p256 ? "P256" : "P384";
+        r_chip = '0; s_chip = '0; k_v = '0;
+        for (int dw = 0; dw < 12; dw++) begin
+            r_chip[32*(11-dw) +: 32] = `ECC_DSA.hwif_out.ECC_SIGN_R[dw].SIGN_R.value;
+            s_chip[32*(11-dw) +: 32] = `ECC_DSA.hwif_out.ECC_SIGN_S[dw].SIGN_S.value;
+        end
+        k_v = is_p256 ? {128'h0, `ECC_DRBG_K_P256} : `ECC_DRBG_K_P384;
+
+        // ----- write input file -----
+        fd = $fopen("ecc_ktap_in.hex", "w");
+        if (fd == 0) begin $error("ecc_ktap: cannot open ecc_ktap_in.hex"); return; end
+        $fwrite(fd, "%s\n", curve_tag);
+        // Tap privkey/hashed_msg from the ECC CSRs the RTL is using
+        // (same source as privkey_reg/msg_reg in ecc_dsa_ctrl.sv).
+        // Independent of where the SW vector originated.
+        begin
+            logic [383:0] pk_csr, hm_csr;
+            pk_csr = '0; hm_csr = '0;
+            for (int dw = 0; dw < 12; dw++) begin
+                pk_csr[32*(11-dw) +: 32] = `ECC_DSA.hwif_out.ECC_PRIVKEY_IN[dw].PRIVKEY_IN.value;
+                hm_csr[32*(11-dw) +: 32] = `ECC_DSA.hwif_out.ECC_MSG       [dw].MSG.value;
+            end
+            if (is_p256) begin
+                $fwrite(fd, "%064h\n", pk_csr[255:0]);
+                $fwrite(fd, "%064h\n", hm_csr[255:0]);
+                $fwrite(fd, "%064h\n", k_v  [255:0]);
+            end
+            else begin
+                $fwrite(fd, "%096h\n", pk_csr);
+                $fwrite(fd, "%096h\n", hm_csr);
+                $fwrite(fd, "%096h\n", k_v);
+            end
+        end
+        $fclose(fd);
+
+        // ----- invoke tool -----
+        rc = $system("./ecdsa_sign_with_k_tool ecc_ktap_in.hex ecc_ktap_out.hex");
+        if (rc != 0) begin
+            $error("ecc_ktap: tool returned rc=%0d (curve=%s)", rc, curve_tag);
+            return;
+        end
+
+        // ----- read output file -----
+        fd = $fopen("ecc_ktap_out.hex", "r");
+        if (fd == 0) begin $error("ecc_ktap: cannot open ecc_ktap_out.hex"); return; end
+        r_exp = '0; s_exp = '0;
+        void'($fgets(line_read, fd)); void'($sscanf(line_read, "%h", r_exp));
+        void'($fgets(line_read, fd)); void'($sscanf(line_read, "%h", s_exp));
+        $fclose(fd);
+
+        // P256: only [255:0] is meaningful on both sides; mask any stale upper bits.
+        // P384: full width compare.
+        if (is_p256) begin
+            r_chip[383:256] = '0; s_chip[383:256] = '0;
+            r_exp [383:256] = '0; s_exp [383:256] = '0;
+        end
+        if (r_chip !== r_exp || s_chip !== s_exp) begin
+            $error("ecc_ktap MISMATCH curve=%s\n  r_chip=%h\n  r_exp =%h\n  s_chip=%h\n  s_exp =%h",
+                   curve_tag, r_chip, r_exp, s_chip, s_exp);
+        end
+        else begin
+            $display("ecc_ktap OK curve=%s", curve_tag);
+        end
+    endtask
+
     task static ecc_read_test_vectors (input string fname);
         integer values_per_test_vector;
         int fd_r;

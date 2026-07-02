@@ -9,6 +9,7 @@ schema_version: 2.4.0
 requires:
   - libs
   - hmac_drbg
+  - hmac_drbg_sha256
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -24,9 +25,11 @@ targets:
       - $COMPILE_ROOT/rtl/ecc_dsa_sequencer.sv
       - $COMPILE_ROOT/rtl/ecc_scalar_blinding.sv
       - $COMPILE_ROOT/rtl/ecc_hmac_drbg_interface.sv
+      - $COMPILE_ROOT/rtl/ecc_hmac_drbg_p256_wrap.sv
       - $COMPILE_ROOT/rtl/ecc_arith_unit.sv
       - $COMPILE_ROOT/rtl/ecc_pm_ctrl.sv
       - $COMPILE_ROOT/rtl/ecc_pm_sequencer.sv
+      - $COMPILE_ROOT/rtl/ecc_pm_sequencer_p256.sv
       - $COMPILE_ROOT/rtl/ecc_ram_tdp_file.sv
       - $COMPILE_ROOT/rtl/ecc_fau.sv
       - $COMPILE_ROOT/rtl/ecc_montgomerymultiplier.sv
@@ -79,6 +82,91 @@ targets:
     tops: [ecc_montgomerymultiplier_tb]
   sim:
     pre_exec: 'echo "[PRE-EXEC] Copying Mont multiplication test vector to $PWD" && cp $COMPILE_ROOT/tb/test_vectors/mm_test_vectors*.hex .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
+provides: [ecc_montmul_smoke_tb]
+schema_version: 2.4.0
+requires:
+  - ecc_top
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/rtl/ecc_params_pkg.sv
+      - $COMPILE_ROOT/tb/ecc_montmul_smoke_tb.sv
+    tops: [ecc_montmul_smoke_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
+provides: [ecc_fau_dualcurve_smoke_tb]
+schema_version: 2.4.0
+requires:
+  - ecc_top
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/rtl/ecc_params_pkg.sv
+      - $COMPILE_ROOT/tb/ecc_fau_dualcurve_smoke_tb.sv
+    tops: [ecc_fau_dualcurve_smoke_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
+provides: [ecc_scalar_blinding_dualcurve_smoke_tb]
+schema_version: 2.4.0
+requires:
+  - ecc_top
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/rtl/ecc_params_pkg.sv
+      - $COMPILE_ROOT/tb/ecc_scalar_blinding_dualcurve_smoke_tb.sv
+    tops: [ecc_scalar_blinding_dualcurve_smoke_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
+provides: [ecc_pm_ctrl_inv_latency_smoke_tb]
+schema_version: 2.4.0
+requires:
+  - ecc_top
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/rtl/ecc_params_pkg.sv
+      - $COMPILE_ROOT/rtl/ecc_pm_uop_pkg.sv
+      - $COMPILE_ROOT/tb/ecc_pm_ctrl_inv_latency_smoke_tb.sv
+    tops: [ecc_pm_ctrl_inv_latency_smoke_tb]
 global:
   tool:
     vcs:

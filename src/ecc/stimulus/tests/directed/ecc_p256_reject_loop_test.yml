@@ -1,0 +1,27 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Directed test for the P-256 HMAC-DRBG candidate-rejection loop:
+# forces the SHA-256 DRBG core's HMAC_tag to {0, n, n+1, 2^256-1}
+# during the privkey (KEYGEN) and k (non-det SIGN) draws and confirms
+# the failure_check redirect through K3/V3 produces a valid retried
+# scalar in (0, n). Reuses the real-DRBG P-256 KAT for valid seed /
+# nonce / msg / privkey driving values.
+---
+plusargs:
+  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/secp256_reject_kat.hex'
+  - +ECC_TEST='ECC_p256_reject_loop_test'
+
+testname: ecc_p256_reject_loop_test
+seed: 1
