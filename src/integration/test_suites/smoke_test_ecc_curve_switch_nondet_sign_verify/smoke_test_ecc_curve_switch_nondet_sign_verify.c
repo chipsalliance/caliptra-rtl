@@ -98,6 +98,7 @@ void main() {
     make_io(&iv,      p384_iv);
     ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, 0, 1);
     cptra_intr_rcv.ecc_notif = 0;
+    cptra_intr_rcv.ecc_error = 0;
 
     // [2/4] SIGN P-256 nondet (P-384 -> P-256 switch)
     VPRINTF(LOW, "\n[2/4] SIGN P-256 nondet\n");
@@ -106,6 +107,7 @@ void main() {
     make_io(&iv,      p256_iv);
     ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, 1, 1);
     cptra_intr_rcv.ecc_notif = 0;
+    cptra_intr_rcv.ecc_error = 0;
 
     // [3/4] VERIFY P-384 (P-256 -> P-384 back-switch)
     VPRINTF(LOW, "\n[3/4] VERIFY P-384\n");
@@ -116,6 +118,7 @@ void main() {
     make_io(&sign_s,   p384_sign_s);
     ecc_verifying_flow(msg, pubkey_x, pubkey_y, sign_r, sign_s, 0);
     cptra_intr_rcv.ecc_notif = 0;
+    cptra_intr_rcv.ecc_error = 0;
 
     // [4/4] VERIFY P-256 (P-384 -> P-256 switch)
     VPRINTF(LOW, "\n[4/4] VERIFY P-256\n");
@@ -126,6 +129,7 @@ void main() {
     make_io(&sign_s,   p256_sign_s);
     ecc_verifying_flow(msg, pubkey_x, pubkey_y, sign_r, sign_s, 1);
     cptra_intr_rcv.ecc_notif = 0;
+    cptra_intr_rcv.ecc_error = 0;
 
     ecc_zeroize();
     SEND_STDOUT_CTRL(0xff);  // end of test

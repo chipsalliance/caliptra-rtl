@@ -146,15 +146,33 @@ void main() {
     write_12dw(CLP_ECC_REG_ECC_IV_0,  p256_iv);
     zeroize_mid_op(ECC_CMD_SIGNING | curve_p256 | rand_k, CLP_ECC_REG_ECC_SIGN_R_0, "P-256 SIGN nondet");
 
-    // ---- P-384 VERIFY (still useful to verify zeroize works mid-VERIFY) ----
-    write_12dw(CLP_ECC_REG_ECC_MSG_0, p384_msg);
-    // We re-use sign_r/sign_s from a prior valid sign for VERIFY inputs; values
-    // don't matter since we zeroize mid-op. Just confirm the engine recovers.
+    // ---- P-384 VERIFY ----
+    // Prime PUBKEY_X/Y and SIGN_R/S non-zero so zeroize clearance is testable
+    // (VERIFY_R alone is a tautology: never written pre-zeroize).
+    write_12dw(CLP_ECC_REG_ECC_MSG_0,      p384_msg);
+    write_12dw(CLP_ECC_REG_ECC_PUBKEY_X_0, p384_iv);
+    write_12dw(CLP_ECC_REG_ECC_PUBKEY_Y_0, p384_nonce);
+    write_12dw(CLP_ECC_REG_ECC_SIGN_R_0,   p384_privkey);
+    write_12dw(CLP_ECC_REG_ECC_SIGN_S_0,   p384_seed);
     zeroize_mid_op(ECC_CMD_VERIFYING, CLP_ECC_REG_ECC_VERIFY_R_0, "P-384 VERIFY");
+    check_cleared(CLP_ECC_REG_ECC_MSG_0,      "P-384 VERIFY MSG");
+    check_cleared(CLP_ECC_REG_ECC_PUBKEY_X_0, "P-384 VERIFY PUBKEY_X");
+    check_cleared(CLP_ECC_REG_ECC_PUBKEY_Y_0, "P-384 VERIFY PUBKEY_Y");
+    check_cleared(CLP_ECC_REG_ECC_SIGN_R_0,   "P-384 VERIFY SIGN_R");
+    check_cleared(CLP_ECC_REG_ECC_SIGN_S_0,   "P-384 VERIFY SIGN_S");
 
     // ---- P-256 VERIFY ----
-    write_12dw(CLP_ECC_REG_ECC_MSG_0, p256_msg);
+    write_12dw(CLP_ECC_REG_ECC_MSG_0,      p256_msg);
+    write_12dw(CLP_ECC_REG_ECC_PUBKEY_X_0, p256_iv);
+    write_12dw(CLP_ECC_REG_ECC_PUBKEY_Y_0, p256_nonce);
+    write_12dw(CLP_ECC_REG_ECC_SIGN_R_0,   p256_privkey);
+    write_12dw(CLP_ECC_REG_ECC_SIGN_S_0,   p256_seed);
     zeroize_mid_op(ECC_CMD_VERIFYING | curve_p256, CLP_ECC_REG_ECC_VERIFY_R_0, "P-256 VERIFY");
+    check_cleared(CLP_ECC_REG_ECC_MSG_0,      "P-256 VERIFY MSG");
+    check_cleared(CLP_ECC_REG_ECC_PUBKEY_X_0, "P-256 VERIFY PUBKEY_X");
+    check_cleared(CLP_ECC_REG_ECC_PUBKEY_Y_0, "P-256 VERIFY PUBKEY_Y");
+    check_cleared(CLP_ECC_REG_ECC_SIGN_R_0,   "P-256 VERIFY SIGN_R");
+    check_cleared(CLP_ECC_REG_ECC_SIGN_S_0,   "P-256 VERIFY SIGN_S");
 
     VPRINTF(LOW, "\nAll zeroize-while-busy variants passed.\n");
     SEND_STDOUT_CTRL(0xff);

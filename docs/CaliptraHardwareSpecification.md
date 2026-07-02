@@ -1299,6 +1299,12 @@ The HMAC_DRBG architecture inputs and outputs are described in the following tab
 | drbg \[383:0\]       | output          | The hmac_drbg value of the given inputs.                                                |
 | valid                | output          | When HIGH, the signal indicates the result is ready.                                    |
 
+> **Note (dual-curve widths):** signal widths shown above are the physical bus
+> width (384 bits, sized for P-384). Under P-256 (`ECC_CTRL.CURVE_SEL=1`),
+> only the lower 256 bits carry curve-relevant data on `entropy`, `nonce`,
+> and `drbg`; the upper 128 bits are zero (hwclr'd on op dispatch — see the
+> `ECC_SEED`/`ECC_NONCE`/`ECC_IV` RDL descriptions).
+
 ### Address map
 
 The HMAC_DRBG is embedded into ECC architecture, since there is no address map to access it from FW.

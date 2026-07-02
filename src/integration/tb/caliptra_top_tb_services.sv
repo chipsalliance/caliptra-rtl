@@ -2296,7 +2296,7 @@ endgenerate //IV_NO
             ecc_ktap_armed   <= 1'b0;
             ecc_ktap_valid_d <= 1'b0;
         end
-        else begin
+        else if (!UVM_TB) begin
             ecc_ktap_valid_d <= `ECC_DSA.ecc_valid_reg;
             if ((`ECC_DSA.cmd_reg == 3'b010 /* ecc_params_pkg::SIGN, avoid TB-pkg link dep */) &&
                 `ECC_DSA.hwif_out.ECC_CTRL.RAND_K_EN.value)

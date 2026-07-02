@@ -445,18 +445,10 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_STATUS.READY.next = ecc_ready_reg;
     always_comb hwif_in.ECC_STATUS.VALID.next = ecc_valid_reg;
 
-    // One-cycle pulse on P-384 -> P-256 transition to clear stale upper 128b of operand CSRs.
-    logic curve_sel_d;
+    // Per-op scrub pulse: fires on every P-256 command dispatch (not just the
+    // P-384 -> P-256 edge) to clear stale upper 128b of operand CSRs.
     logic curve_sel_to_p256_pulse;
-    always_ff @(posedge clk or negedge reset_n) begin : curve_sel_edge_det
-        if (!reset_n)
-            curve_sel_d <= 1'b0;
-        else if (zeroize_reg)
-            curve_sel_d <= 1'b0;
-        else
-            curve_sel_d <= curve_sel;
-    end
-    assign curve_sel_to_p256_pulse = curve_sel & ~curve_sel_d;
+    assign curve_sel_to_p256_pulse = (prog_cntr == ECC_NOP) & (cmd_reg != '0) & curve_sel;
 
     
     always_comb begin // ecc_reg_writing
@@ -468,7 +460,7 @@ module ecc_dsa_ctrl
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode       ? pcr_signing_data.pcr_ecc_signing_privkey[dword] : 
                                                             kv_privkey_write_en ? kv_privkey_write_data : 
                                                                                   read_reg_c[REG_NUM_DWORDS-1-dword];
-            // HW clears upper 4 dwords on P-384 -> P-256 transition.
+            // HW clears upper 4 dwords on every P-256 op dispatch.
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL) | (curve_sel_to_p256_pulse & (dword < 4));
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = ecc_ready_reg & ~kv_key_data_present;
         end 
@@ -484,7 +476,7 @@ module ecc_dsa_ctrl
             seed_reg[dword] = hwif_out.ECC_SEED[REG_NUM_DWORDS-1-dword].SEED.value;
             hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
-            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error == KV_READ_FAIL);
+            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error == KV_READ_FAIL) | (curve_sel_to_p256_pulse & (dword < 4));
             hwif_in.ECC_SEED[dword].SEED.swwe  = ecc_ready_reg & ~kv_seed_data_present;
         end
 
@@ -504,7 +496,7 @@ module ecc_dsa_ctrl
             pubkeyx_reg[dword] = hwif_out.ECC_PUBKEY_X[REG_NUM_DWORDS-1-dword].PUBKEY_X.value;
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.we = hw_pubkeyx_we & !zeroize_reg;
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.next = read_reg_c[REG_NUM_DWORDS-1-dword];  
-            // HW clears upper 4 dwords on P-384 -> P-256 transition.
+            // HW clears upper 4 dwords on every P-256 op dispatch.
             hwif_in.ECC_PUBKEY_X[dword].PUBKEY_X.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
@@ -512,7 +504,7 @@ module ecc_dsa_ctrl
             pubkeyy_reg[dword] = hwif_out.ECC_PUBKEY_Y[REG_NUM_DWORDS-1-dword].PUBKEY_Y.value;
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.we = hw_pubkeyy_we & !zeroize_reg;
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.next = read_reg_c[REG_NUM_DWORDS-1-dword];
-            // HW clears upper 4 dwords on P-384 -> P-256 transition.
+            // HW clears upper 4 dwords on every P-256 op dispatch.
             hwif_in.ECC_PUBKEY_Y[dword].PUBKEY_Y.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
@@ -520,7 +512,7 @@ module ecc_dsa_ctrl
             r_reg[dword] = hwif_out.ECC_SIGN_R[REG_NUM_DWORDS-1-dword].SIGN_R.value;
             hwif_in.ECC_SIGN_R[dword].SIGN_R.we = hw_r_we & !zeroize_reg;
             hwif_in.ECC_SIGN_R[dword].SIGN_R.next = read_reg_c[REG_NUM_DWORDS-1-dword];
-            // HW clears upper 4 dwords on P-384 -> P-256 transition.
+            // HW clears upper 4 dwords on every P-256 op dispatch.
             hwif_in.ECC_SIGN_R[dword].SIGN_R.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
@@ -528,7 +520,7 @@ module ecc_dsa_ctrl
             s_reg[dword] = hwif_out.ECC_SIGN_S[REG_NUM_DWORDS-1-dword].SIGN_S.value;
             hwif_in.ECC_SIGN_S[dword].SIGN_S.we = hw_s_we & !zeroize_reg;
             hwif_in.ECC_SIGN_S[dword].SIGN_S.next = read_reg_c[REG_NUM_DWORDS-1-dword];
-            // HW clears upper 4 dwords on P-384 -> P-256 transition.
+            // HW clears upper 4 dwords on every P-256 op dispatch.
             hwif_in.ECC_SIGN_S[dword].SIGN_S.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
@@ -540,7 +532,7 @@ module ecc_dsa_ctrl
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
             IV_reg[dword] = hwif_out.ECC_IV[REG_NUM_DWORDS-1-dword].IV.value;
-            hwif_in.ECC_IV[dword].IV.hwclr = zeroize_reg;
+            hwif_in.ECC_IV[dword].IV.hwclr = zeroize_reg | (curve_sel_to_p256_pulse & (dword < 4));
         end
 
         for (int dword=0; dword < REG_NUM_DWORDS; dword++)begin
