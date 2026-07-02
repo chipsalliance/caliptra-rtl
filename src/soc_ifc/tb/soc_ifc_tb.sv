@@ -42,10 +42,12 @@ module soc_ifc_tb
   import soc_ifc_tb_pkg::*;
   import axi_pkg::*;
   import kv_defines_pkg::*;
+  import caliptra_prim_mubi_pkg::*;
   ();
 
 
-  enum logic {DEBUG_UNLOCKED = 1'b0, DEBUG_LOCKED = 1'b1} debug_state_e;
+  localparam mubi4_t DEBUG_UNLOCKED = MuBi4False;
+  localparam mubi4_t DEBUG_LOCKED   = MuBi4True;
 
   // plusargs and other test related
   string soc_ifc_testname; 
@@ -459,8 +461,7 @@ module soc_ifc_tb
              .rdc_clk_dis(),
              .fw_update_rst_window(),
 
-             .crypto_error('0),
-             .kv_error(1'b0),
+             .cptra_hw_fatal_errors('0),
 
              .cptra_uncore_dmi_reg_en     ( 1'h0),
              .cptra_uncore_dmi_reg_wr_en  ( 1'h0),
@@ -621,7 +622,7 @@ module soc_ifc_tb
       $display("SocRegisters finished executing new()");
       fork
         forever @($changed({scan_mode,security_state.debug_locked,security_state.device_lifecycle}))
-          update_CPTRA_SECURITY_STATE(scan_mode, security_state.debug_locked, security_state.device_lifecycle);
+          update_CPTRA_SECURITY_STATE(scan_mode, mubi4_test_true_loose(security_state.debug_locked), security_state.device_lifecycle);
         forever @($changed({ready_for_fuses,`REG_HIER_BOOT_FSM_PS}))
           update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
         forever @($changed(generic_input_wires1_q))
@@ -629,7 +630,7 @@ module soc_ifc_tb
         forever @($changed(generic_input_wires0_q))
           update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
         forever @($changed({gen_input_wire_toggle,security_state.debug_locked}))
-          update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
+          update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, mubi4_test_true_loose(security_state.debug_locked)); 
       join_none
   end
 
@@ -1760,12 +1761,15 @@ module soc_ifc_tb
       begin
           security_state = '{device_lifecycle: ss.device_lifecycle, debug_locked: ss.debug_locked};
 
-          // TODO. Has hardwired mask bit positions in here. Ideally they should be pulled from tb package. 
-          //       Eg: in update_CPTRA_SECURITY_STATE(...)
-          set_initval("CPTRA_SECURITY_STATE", ss & 32'h7);  
-          update_exp_regval("CPTRA_SECURITY_STATE", ss & 32'h7, SET_DIRECT); 
+          // Construct register value: bit[2]=debug_locked (boolean), bits[1:0]=device_lifecycle
+          begin
+              logic [31:0] reg_val;
+              reg_val = {29'b0, mubi4_test_true_loose(ss.debug_locked), ss.device_lifecycle};
+              set_initval("CPTRA_SECURITY_STATE", reg_val);  
+              update_exp_regval("CPTRA_SECURITY_STATE", reg_val, SET_DIRECT); 
+          end
 
-          intr_notif_val = get_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R") & 32'hffff_fffb | ss.debug_locked & 32'h4;
+          intr_notif_val = get_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R") & 32'hffff_fffb | mubi4_test_true_loose(ss.debug_locked) & 32'h4;
           set_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val); 
           update_exp_regval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val, SET_DIRECT);  
       end

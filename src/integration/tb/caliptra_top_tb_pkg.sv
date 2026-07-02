@@ -71,6 +71,7 @@ typedef struct packed {
     logic reset_generic_input_wires;
     logic do_no_lock_access;
     logic do_ooo_access;
+    logic skip_mb_processing;
 } ras_test_ctrl_t;
 
 typedef struct packed {

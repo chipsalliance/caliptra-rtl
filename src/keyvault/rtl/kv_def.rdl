@@ -32,6 +32,9 @@
                 KV_WRITE_FAIL = 8'h02 {
                     desc = "Key Vault Write flow failed";
                 };
+                KV_FSM_ERROR = 8'h04 {
+                    desc = "Key Vault FSM entered illegal state";
+                };
             };
             sw=r; hw=w; encode = kv_error_e;} ERROR[8]=0;
     };

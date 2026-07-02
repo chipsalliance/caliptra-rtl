@@ -1,0 +1,6 @@
+---
+seed: 0
+testname: directed_fsm_glitch_inject
+timeout: 500000
+plusargs:
+  - CALIPTRA_DEBUG_UNLOCKED
