@@ -8993,7 +8993,7 @@
 #define CLP_KMAC_STATE_BASE_ADDR                                                                    (0x10040400)
 #define CLP_KMAC_STATE_END_ADDR                                                                     (0x100404ff)
 #define CLP_KMAC_MSG_FIFO_BASE_ADDR                                                                 (0x10040800)
-#define CLP_KMAC_MSG_FIFO_END_ADDR                                                                  (0x100408ff)
+#define CLP_KMAC_MSG_FIFO_END_ADDR                                                                  (0x10040fff)
 #define CLP_SHA3_BASE_ADDR                                                                          (0x10041000)
 #define CLP_SHA3_SHA3_NAME_0                                                                        (0x10041000)
 #ifndef SHA3_SHA3_NAME_0
