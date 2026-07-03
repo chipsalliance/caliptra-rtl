@@ -27,6 +27,14 @@ parameter PV_NUM_READ = 2;
 parameter PV_NUM_WRITE = 2;
 parameter PV_SIZE_OF_NONCE = 256;
 
+//pv_write client identifiers
+parameter PV_SHA_CLIENT  = 0;
+parameter PV_ICCM_CLIENT = 1;
+
+//PCR entries reserved for the HW ICCM hash measurement
+parameter PV_PCR_CUR = 4;
+parameter PV_PCR_JRN = 5;
+
 
 typedef struct packed {
     logic   [PV_ADDR_W-1:0] addr;

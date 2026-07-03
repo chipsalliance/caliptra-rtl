@@ -64,6 +64,7 @@ pv_uc_req_t uc_req;
 //intermediate signals to make verilator happy
 logic [PV_NUM_PCR-1:0][PV_NUM_DWORDS-1:0] pv_entry_we;
 logic [PV_NUM_PCR-1:0][PV_NUM_DWORDS-1:0][31:0] pv_entry_next;
+logic [PV_NUM_WRITE-1:0][PV_NUM_PCR-1:0] client_entry_blocked;
 
 pv_reg__in_t pv_reg_hwif_in;
 pv_reg__out_t pv_reg_hwif_out;
@@ -113,6 +114,19 @@ always_comb begin : keyvault_ctrl
         pv_reg_hwif_in.PCR_CTRL[entry].clear.swwel = pv_reg_hwif_out.PCR_CTRL[entry].lock.value & ~fw_update_rst_window;
     end
 
+    //per-client x per-entry write guard
+    for (int client = 0; client < PV_NUM_WRITE; client++) begin
+        for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+            client_entry_blocked[client][entry] =
+                ((client == PV_SHA_CLIENT)  && ((entry == PV_PCR_CUR) || (entry == PV_PCR_JRN))) ||
+                ((client == PV_ICCM_CLIENT) &&  (entry != PV_PCR_CUR) && (entry != PV_PCR_JRN));
+`else
+            client_entry_blocked[client][entry] = 1'b0;
+`endif
+        end
+    end
+
     //pcrvault storage
     //AND-OR mux writes to each entry from crypto blocks
     //write to the appropriate dest entry and offset when write_en is set
@@ -125,29 +139,18 @@ always_comb begin : keyvault_ctrl
             pv_entry_next[entry][dword] = '0;
             
             for (int client = 0; client < PV_NUM_WRITE; client++) begin
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-                // Block pv_write[0] from targeting PCR4 (entry 4) or PCR5 (entry 5).
-                // Only pv_write[1] (iccm hash) can write these entries.
                 pv_entry_we[entry][dword] |= pv_write[client].write_en &
                                              (pv_write[client].write_entry == entry) & 
                                              (pv_write[client].write_offset == dword) &
-                                             ~(client == 0 && (entry == 4 || entry == 5));
+                                             ~client_entry_blocked[client][entry];
                 pv_entry_next[entry][dword] |= (pv_write[client].write_en &
                                                 (pv_write[client].write_entry == entry) &
-                                                ~(client == 0 && (entry == 4 || entry == 5))) ? pv_write[client].write_data : '0;
-`else
-                // Non-subsystem: no PCR4/PCR5 write guard needed
-                pv_entry_we[entry][dword] |= pv_write[client].write_en &
-                                             (pv_write[client].write_entry == entry) & 
-                                             (pv_write[client].write_offset == dword);
-                pv_entry_next[entry][dword] |= (pv_write[client].write_en &
-                                                (pv_write[client].write_entry == entry)) ? pv_write[client].write_data : '0;
-`endif
+                                                ~client_entry_blocked[client][entry]) ? pv_write[client].write_data : '0;
             end 
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = pv_entry_we[entry][dword];
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next =  pv_entry_next[entry][dword];
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = pv_reg_hwif_out.PCR_CTRL[entry].clear.value |
-                                                                 (entry == 4 ? iccm_unlock : 1'b0);
+                                                                 (entry == PV_PCR_CUR ? iccm_unlock : 1'b0);
         end
     end
 end
