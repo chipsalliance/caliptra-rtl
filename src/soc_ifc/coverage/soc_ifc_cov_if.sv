@@ -493,12 +493,12 @@ interface soc_ifc_cov_if
     logic iccm_lock_acquire;
 
     assign iccm_mode           = i_sha512_acc_top.iccm_mode;
-    assign iccm_mode_done      = i_sha512_acc_top.iccm_mode_done;
-    assign iccm_armed        = i_sha512_acc_top.iccm_armed;
+    assign iccm_mode_done      = i_sha512_acc_top.i_sha512_acc_iccm_hash.iccm_mode_done;
+    assign iccm_armed          = i_sha512_acc_top.i_sha512_acc_iccm_hash.iccm_armed;
     assign iccm_hash_dv        = i_sha512_acc_top.iccm_hash_dv_i;
     assign iccm_lock_i         = i_sha512_acc_top.iccm_lock_i;
     assign iccm_unlock_i       = i_sha512_acc_top.iccm_unlock_i;
-    assign iccm_pcr_dest_done  = i_sha512_acc_top.iccm_pcr_dest_done;
+    assign iccm_pcr_dest_done  = i_sha512_acc_top.i_sha512_acc_iccm_hash.iccm_pcr_dest_done;
     assign iccm_lock_acquire   = i_sha512_acc_top.iccm_lock_acquire;
 
     covergroup iccm_hash_cov_grp @(posedge clk iff cptra_rst_b);
