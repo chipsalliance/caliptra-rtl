@@ -103,6 +103,8 @@ interface hmac_ctrl_cov_if
         zeroize_ready_cp: cross ready, zeroize;
         zeroize_init_cp: cross zeroize, init;
         zeroize_next_cp: cross zeroize, next;
+        zeroize_last_cp: cross zeroize, last;
+        zeroize_restore_cp: cross zeroize, restore;
         init_mode_cp: cross init, mode;
         next_mode_cp: cross next, mode;
 
