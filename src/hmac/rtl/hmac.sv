@@ -296,7 +296,7 @@ always_comb begin
   hwif_in.HMAC512_STATUS.VALID.next = tag_valid_reg;
   for (int dword=0; dword < TAG_NUM_DWORDS; dword++) begin
     hwif_in.HMAC512_TAG[dword].TAG.next  = tag_next[(TAG_NUM_DWORDS - 1)-dword];
-    hwif_in.HMAC512_TAG[dword].TAG.we    = core_tag_we & ~(dest_keyvault | kv_data_present | (csr_mode_reg & ~is_last_op_reg));
+    hwif_in.HMAC512_TAG[dword].TAG.we    = core_tag_we & ~(dest_keyvault | kv_data_present | (csr_mode_reg & ~is_last_op_reg)) & ~zeroize_reg;
     hwif_in.HMAC512_TAG[dword].TAG.hwclr = zeroize_reg;
   end
 
