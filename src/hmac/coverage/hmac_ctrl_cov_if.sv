@@ -69,36 +69,33 @@ interface hmac_ctrl_cov_if
 
         init_cp: coverpoint init;
         next_cp: coverpoint next;
-        last_cp: coverpoint last;
-        restore_cp: coverpoint restore;
         zeroize_cp: coverpoint zeroize;
         mode_cp: coverpoint mode;
+        last_cp: coverpoint last;
+        restore_cp: coverpoint restore;
         ready_cp: coverpoint ready;
         valid_cp: coverpoint valid;
         is_last_op_cp: coverpoint is_last_op;
 
         core_tag_we_cp: coverpoint core_tag_we;
 
-        // hmac_cmd encoding: {restore, last, next, init}.
-        // Named bins for every legal command + every illegal combination.
-        // Illegal entries OR into invalid_cmd_error and assert error2_sts.
         hmac_cmd_cp: coverpoint hmac_cmd {
             bins idle              = (0 => 'h0 => 0);
             bins init              = (0 => 'h1 => 0);
-            bins next              = (0 => 'h2 => 0);
-            bins init_next         = (0 => 'h3 => 0); // illegal: two starts
-            bins last_alone        = (0 => 'h4 => 0); // illegal
-            bins init_last         = (0 => 'h5 => 0);
-            bins next_last         = (0 => 'h6 => 0);
-            bins init_next_last    = (0 => 'h7 => 0); // illegal
-            bins restore_alone     = (0 => 'h8 => 0); // illegal
-            bins init_restore      = (0 => 'h9 => 0); // illegal
+            bins next               = (0 => 'h2 => 0);
+            bins init_next         = (0 => 'h3 => 0);
+            bins last_alone        = (0 => 'h4 => 0);
+            bins init_last          = (0 => 'h5 => 0);
+            bins next_last          = (0 => 'h6 => 0);
+            bins init_next_last    = (0 => 'h7 => 0);
+            bins restore_alone     = (0 => 'h8 => 0);
+            bins init_restore      = (0 => 'h9 => 0);
             bins restore_next      = (0 => 'hA => 0);
-            bins init_next_restore = (0 => 'hB => 0); // illegal
+            bins init_next_restore = (0 => 'hB => 0);
             bins restore_last      = (0 => 'hC => 0);
-            bins init_last_restore = (0 => 'hD => 0); // illegal
-            bins next_last_restore = (0 => 'hE => 0); // legal (restore modifies the active op, finalized by LAST)
-            bins all_four          = (0 => 'hF => 0); // illegal
+            bins init_last_restore = (0 => 'hD => 0);
+            bins next_last_restore = (0 => 'hE => 0);
+            bins all_four          = (0 => 'hF => 0);
         }
 
         //init_ready_cp: cross ready, init;

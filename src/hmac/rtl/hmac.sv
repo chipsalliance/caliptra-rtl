@@ -138,7 +138,7 @@ module hmac
   logic key_zero_error, key_zero_error_reg, key_zero_error_edge;
   logic key_mode_error, key_mode_error_reg, key_mode_error_edge;
   logic invalid_cmd_error, invalid_cmd_error_reg, invalid_cmd_error_edge;
-  logic intermediate_tag_hidden, intermediate_tag_hidden_reg, intermediate_tag_hidden_edge;
+  logic intermediate_tag_hidden, intermediate_tag_hidden_edge;
   logic awaiting_zeroize;
 
   logic error_flag;
@@ -456,7 +456,6 @@ begin : error_detection
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
       invalid_cmd_error_reg <= 1'b0;
-      intermediate_tag_hidden_reg <= 1'b0;
       tag_was_masked_reg <= 1'b0;
     end
     else if(zeroize_reg) begin
@@ -464,7 +463,6 @@ begin : error_detection
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
       invalid_cmd_error_reg <= 1'b0;
-      intermediate_tag_hidden_reg <= 1'b0;
       tag_was_masked_reg <= 1'b0;
     end
     else begin
@@ -473,7 +471,6 @@ begin : error_detection
       key_mode_error_reg <= key_mode_error;
       key_zero_error_reg <= key_zero_error;
       invalid_cmd_error_reg <= invalid_cmd_error;
-      intermediate_tag_hidden_reg <= intermediate_tag_hidden;
       if (intermediate_tag_hidden)
         tag_was_masked_reg <= 1'b1;
       else if (core_tag_we & (dest_keyvault | kv_data_present))

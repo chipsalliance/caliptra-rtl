@@ -397,7 +397,7 @@ addrmap hmac_reg {
         intr_count_t      error2_intr_count_r;         /* Per error */                                                   //
         intr_count_t      error3_intr_count_r;         /* Per error */                                                   //
         intr_count_t      notif_cmd_done_intr_count_r @0x180;   /* Per notification */                                   //
-        //                                                                                                                          //
+                                                                                                                         //
         // These registers should be treated by SW as reserved, and ignored.                                             //
         // Offset at 0x200 gives enough space for 32 Errors and 32 Notifications                                         //
         // to be implemented (requiring 2*32 32-bit registers starting at                                                //
