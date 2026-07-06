@@ -49,13 +49,13 @@ class soc_ifc_ctrl_transaction  extends uvmf_transaction_base;
   //Constraints for the transaction variables:
   constraint wait_cycles_c { wait_cycles dist {[1:9] :/ 80, [10:99] :/ 15, [100:500] :/ 5}; }
   constraint generic_tie_zero_c { generic_input_val == 64'h0; }
-  constraint debug_locked_c {security_state.debug_locked == 1'b1;} //reset sequence tied this off, doing it here instead
+  constraint debug_locked_c {security_state.debug_locked == 4'h6;} // MuBi4True: debug locked
   constraint device_lifecycle_const_c { if (device_lifecycle_set_static) {security_state.device_lifecycle == device_lifecycle_static; } }
   
   //Match RTL constraint for latching bootfsm breakpoint
   //we'll never set bootfsm breakpoint unless we are in the appropriate debug/device lifecycle state to latch it in RTL
-  constraint set_bootfsm_breakpoint_c { if ((security_state.debug_locked) & 
-                                            ~((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING)))
+  constraint set_bootfsm_breakpoint_c { if ((security_state.debug_locked == 4'h6) & 
+                                            ~((security_state.debug_locked == 4'h6) & (security_state.device_lifecycle == DEVICE_MANUFACTURING)))
                                             {set_bootfsm_breakpoint == 0;}
                                           solve security_state before set_bootfsm_breakpoint; }
   constraint obf_fe_load_c { cptra_obf_field_entropy_vld dist {0 :/ 80, 1 :/ 20}; }

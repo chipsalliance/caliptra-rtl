@@ -21,7 +21,6 @@ package mbox_pkg;
   // Minimum Hamming distance: 5
   // Maximum Hamming distance: 6
   //
-  localparam int MboxStateWidthLogic = 3;
   localparam int MboxStateWidth = 10;
   typedef enum logic [MboxStateWidth-1:0] {
     MBOX_IDLE         = 10'b0111010111,
@@ -34,18 +33,31 @@ package mbox_pkg;
     MBOX_ERROR        = 10'b1001011001
   } mbox_fsm_state_e;
 
+  localparam int MboxStateWidthLogic = 3;
+  typedef enum logic [MboxStateWidthLogic-1:0] {
+    MBOX_IDLE_LOGIC         = 3'b000,
+    MBOX_RDY_FOR_CMD_LOGIC  = 3'b001,
+    MBOX_RDY_FOR_DLEN_LOGIC = 3'b011,
+    MBOX_RDY_FOR_DATA_LOGIC = 3'b010,
+    MBOX_EXECUTE_UC_LOGIC   = 3'b110,
+    MBOX_EXECUTE_SOC_LOGIC  = 3'b100,
+    MBOX_EXECUTE_TAP_LOGIC  = 3'b101,
+    MBOX_ERROR_LOGIC        = 3'b111
+  } mbox_fsm_state_logic_e;
+
+
 // Encode sparse mbox FSM state to 3-bit value matching mbox_csr.rdl enum (mbox_fsm_e)
   function automatic logic [MboxStateWidthLogic-1:0] mboxsparse2logic(mbox_fsm_state_e st);
     unique case (st)
-      MBOX_IDLE         : return 3'b000;
-      MBOX_RDY_FOR_CMD  : return 3'b001;
-      MBOX_RDY_FOR_DLEN : return 3'b011;
-      MBOX_RDY_FOR_DATA : return 3'b010;
-      MBOX_EXECUTE_UC   : return 3'b110;
-      MBOX_EXECUTE_SOC  : return 3'b100;
-      MBOX_EXECUTE_TAP  : return 3'b101;
-      MBOX_ERROR        : return 3'b111;
-      default            : return 3'b111;
+      MBOX_IDLE         : return MBOX_IDLE_LOGIC;
+      MBOX_RDY_FOR_CMD  : return MBOX_RDY_FOR_CMD_LOGIC;
+      MBOX_RDY_FOR_DLEN : return MBOX_RDY_FOR_DLEN_LOGIC;
+      MBOX_RDY_FOR_DATA : return MBOX_RDY_FOR_DATA_LOGIC;
+      MBOX_EXECUTE_UC   : return MBOX_EXECUTE_UC_LOGIC;
+      MBOX_EXECUTE_SOC  : return MBOX_EXECUTE_SOC_LOGIC;
+      MBOX_EXECUTE_TAP  : return MBOX_EXECUTE_TAP_LOGIC;
+      MBOX_ERROR        : return MBOX_ERROR_LOGIC;
+      default            : return MBOX_ERROR_LOGIC;
     endcase
   endfunction : mboxsparse2logic
 
