@@ -6,11 +6,14 @@
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Negative test: PCR_SIGN illegal combos. Expect ecc_error for each.
-//   Subtest 1: P-384 PCR_SIGN + RAND_K_EN=1  -> rand_k_pcr_sign_illegal
-//   Subtest 2: P-256 PCR_SIGN + RAND_K_EN=1  -> rand_k_pcr_sign_illegal + pcr_sign_under_p256_invalid
-//   Subtest 3: P-256 PCR_SIGN + RAND_K_EN=0  -> pcr_sign_under_p256_invalid (P-256 det)
-// PCR_SIGN is architecturally P-384 deterministic only.
+// Negative test: PCR_SIGN and RAND_K_EN illegal combos. Expect ecc_error for each.
+//   Subtest 1: SIGN + P-384 + PCR_SIGN + RAND_K_EN=1  -> rand_k_pcr_sign_illegal
+//   Subtest 2: SIGN + P-256 + PCR_SIGN + RAND_K_EN=1  -> rand_k_pcr_sign_illegal + pcr_sign_under_p256_invalid
+//   Subtest 3: SIGN + P-256 + PCR_SIGN + RAND_K_EN=0  -> pcr_sign_under_p256_invalid (P-256 det)
+//   Subtest 4: KEYGEN     + RAND_K_EN=1  -> rand_k_invalid_cmd
+//   Subtest 5: VERIFY     + RAND_K_EN=1  -> rand_k_invalid_cmd
+//   Subtest 6: SHARED_KEY + RAND_K_EN=1  -> rand_k_invalid_cmd
+// PCR_SIGN is architecturally P-384 deterministic SIGN only; RAND_K_EN is architecturally SIGN only.
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -72,10 +75,29 @@ static void run_pcr_sign_err(const uint32_t *iv, uint8_t curve_sel,
     ecc_zeroize();
 }
 
+// Helper: issue non-SIGN command (KEYGEN/VERIFY/SHARED_KEY) with RAND_K_EN=1.
+// Expect ecc_error via rand_k_invalid_cmd. No PCR/KV setup needed.
+static void run_rand_k_nonsign_err(uint32_t cmd, const char *label) {
+    while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+    VPRINTF(LOW, "\n %s\n", label);
+    uint32_t ctrl = cmd | ((1u << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) &
+                            ECC_REG_ECC_CTRL_RAND_K_EN_MASK);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ctrl);
+
+    wait_for_ecc_intr();
+    if (cptra_intr_rcv.ecc_error == 0) {
+        VPRINTF(ERROR, "\n%s: ecc_error not asserted for RAND_K_EN on non-SIGN\n", label);
+        SEND_STDOUT_CTRL(0x1); while(1);
+    }
+    VPRINTF(LOW, "PASS: %s\n", label);
+    ecc_zeroize();
+}
+
 void main() {
-    VPRINTF(LOW, "-------------------------------------------------\n");
-    VPRINTF(LOW, " ECC PCR_SIGN illegal-combo error test\n");
-    VPRINTF(LOW, "-------------------------------------------------\n");
+    VPRINTF(LOW, "----------------------------------------------------\n");
+    VPRINTF(LOW, " ECC PCR_SIGN / RAND_K_EN illegal-combo error test\n");
+    VPRINTF(LOW, "----------------------------------------------------\n");
 
     init_interrupts();
     rst_count++;
@@ -94,6 +116,18 @@ void main() {
         case 3:
             run_pcr_sign_err(p256_iv, 1, 0,
                              "P-256 PCR_SIGN + RAND_K_EN=0 (det)");
+            SEND_STDOUT_CTRL(0xf6);
+            break;
+        case 4:
+            run_rand_k_nonsign_err(ECC_CMD_KEYGEN,    "KEYGEN + RAND_K_EN=1");
+            SEND_STDOUT_CTRL(0xf6);
+            break;
+        case 5:
+            run_rand_k_nonsign_err(ECC_CMD_VERIFYING, "VERIFY + RAND_K_EN=1");
+            SEND_STDOUT_CTRL(0xf6);
+            break;
+        case 6:
+            run_rand_k_nonsign_err(ECC_CMD_SHAREDKEY, "SHARED_KEY + RAND_K_EN=1");
             break;
         default:
             break;

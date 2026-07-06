@@ -78,6 +78,10 @@ interface ecc_top_cov_if
     logic rand_k_en_mode;
     logic curve_sel_to_p256_pulse;
 
+    // Combinational hwif values (SW-requested state, sampled at SIGN dispatch cycle).
+    logic curve_sel_hwif;
+    logic rand_k_en_hwif;
+
     kv_write_filter_metrics_t kv_write_metrics;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
@@ -111,6 +115,13 @@ interface ecc_top_cov_if
             ecc_sw_cmd[1:0] <= (ecc_top.ecc_reg1.field_storage.ECC_CTRL.CTRL.value & ~ecc_top.ecc_reg1.decoded_wr_biten[1:0]) | (ecc_top.ecc_reg1.decoded_wr_data[1:0] & ecc_top.ecc_reg1.decoded_wr_biten[1:0]);
             ecc_sw_cmd[2] <= (ecc_top.ecc_reg1.field_storage.ECC_CTRL.DH_SHAREDKEY.value & ~ecc_top.ecc_reg1.decoded_wr_biten[4]) | (ecc_top.ecc_reg1.decoded_wr_data[4] & ecc_top.ecc_reg1.decoded_wr_biten[4]);
         end
+    end
+
+    // Prev-cycle curve_sel_reg for curve_transition_cp (avoids $past in cp expr).
+    logic prev_curve_sel_reg;
+    always_ff @(posedge clk) begin
+        if (!reset_n) prev_curve_sel_reg <= 1'b0;
+        else          prev_curve_sel_reg <= ecc_top.ecc_dsa_ctrl_i.curve_sel_reg;
     end
 
     assign dest_keyvault = ecc_top.ecc_dsa_ctrl_i.dest_keyvault;
@@ -147,6 +158,9 @@ interface ecc_top_cov_if
     assign rand_k_invalid_cmd          = ecc_top.ecc_dsa_ctrl_i.rand_k_invalid_cmd;
     assign rand_k_en_mode              = ecc_top.ecc_dsa_ctrl_i.rand_k_en_mode;
     assign curve_sel_to_p256_pulse     = ecc_top.ecc_dsa_ctrl_i.curve_sel_to_p256_pulse;
+
+    assign curve_sel_hwif = ecc_top.ecc_dsa_ctrl_i.hwif_out.ECC_CTRL.CURVE_SEL.value;
+    assign rand_k_en_hwif = ecc_top.ecc_dsa_ctrl_i.hwif_out.ECC_CTRL.RAND_K_EN.value;
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
@@ -219,7 +233,7 @@ interface ecc_top_cov_if
         cmd_x_curve_cp: cross ecc_cmd_cp, curve_active_cp {
             ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
         }
-        curve_transition_cp: coverpoint {$past(curve_sel_reg), curve_sel_reg};
+        curve_transition_cp: coverpoint {prev_curve_sel_reg, curve_sel_reg};
         error_keygen_curve_cp:    cross error_flag, keygen_process,    curve_active_cp;
         error_signing_curve_cp:   cross error_flag, signing_process,   curve_active_cp;
         error_verifying_curve_cp: cross error_flag, verifying_process, curve_active_cp;
@@ -238,18 +252,37 @@ interface ecc_top_cov_if
         rand_k_invalid_cmd_cp:          coverpoint rand_k_invalid_cmd;
         curve_sel_to_p256_pulse_cp:     coverpoint curve_sel_to_p256_pulse;
 
+        // Combinational SW-requested state (aligned with cmd_reg==SIGN dispatch
+        // cycle). curve_active_cp / rand_k_en_mode_cp track LATCHED state which
+        // trails the write cycle by one edge and misaligns with the iff guard.
+        curve_sel_hwif_cp: coverpoint curve_sel_hwif;
+        rand_k_en_hwif_cp: coverpoint rand_k_en_hwif;
+
         // 8-cell (PCR_SIGN x curve x RAND_K) matrix for SIGN dispatches.
-        sign_illegal_matrix_cp: cross pcr_sign_cp, curve_active_cp, rand_k_en_mode_cp
+        sign_illegal_matrix_cp: cross pcr_sign_cp, curve_sel_hwif_cp, rand_k_en_hwif_cp
             iff (ecc_cmd == 3'b010);
 
-        // Each RAND_K / PCR_SIGN error gate must be observed asserting the error_flag.
-        pcr_p256_x_error_cp:   cross pcr_sign_under_p256_invalid_cp, error_flag;
-        rand_k_pcr_x_error_cp: cross rand_k_pcr_sign_illegal_cp,     error_flag;
-        rand_k_cmd_x_error_cp: cross rand_k_invalid_cmd_cp,          error_flag;
+        // Each RAND_K / PCR_SIGN error gate must be observed asserting error_flag.
+        // (invalid=1 & error=0) is impossible: invalid is OR'd into error_flag.
+        pcr_p256_x_error_cp: cross pcr_sign_under_p256_invalid_cp, error_flag {
+            illegal_bins invalid_no_error = binsof(pcr_sign_under_p256_invalid_cp) intersect {1} &&
+                                            binsof(error_flag) intersect {0};
+        }
+        rand_k_pcr_x_error_cp: cross rand_k_pcr_sign_illegal_cp, error_flag {
+            illegal_bins invalid_no_error = binsof(rand_k_pcr_sign_illegal_cp) intersect {1} &&
+                                            binsof(error_flag) intersect {0};
+        }
+        rand_k_cmd_x_error_cp: cross rand_k_invalid_cmd_cp, error_flag {
+            illegal_bins invalid_no_error = binsof(rand_k_invalid_cmd_cp) intersect {1} &&
+                                            binsof(error_flag) intersect {0};
+        }
 
         // Per-op P-256 scrub pulse must fire across every legal cmd.
+        // (pulse=1, cmd=NOP) is impossible: pulse asserts only when cmd_reg!=0.
         scrub_x_cmd_cp: cross curve_sel_to_p256_pulse_cp, ecc_cmd_cp {
             ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
+            illegal_bins pulse_with_nop = binsof(curve_sel_to_p256_pulse_cp) intersect {1} &&
+                                          binsof(ecc_cmd_cp) intersect {0};
         }
 
     endgroup
