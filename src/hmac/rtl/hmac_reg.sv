@@ -1034,6 +1034,7 @@ module hmac_reg (
             end
         end
         assign hwif_out.HMAC512_TAG[i0].TAG.value = field_storage.HMAC512_TAG[i0].TAG.value;
+        assign hwif_out.HMAC512_TAG[i0].TAG.swmod = decoded_reg_strb.HMAC512_TAG[i0] && decoded_req_is_wr;
         assign hwif_out.HMAC512_TAG[i0].TAG.swacc = decoded_reg_strb.HMAC512_TAG[i0];
     end
     for(genvar i0=0; i0<6; i0++) begin
