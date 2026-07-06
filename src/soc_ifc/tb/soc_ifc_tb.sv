@@ -1769,7 +1769,7 @@ module soc_ifc_tb
               update_exp_regval("CPTRA_SECURITY_STATE", reg_val, SET_DIRECT); 
           end
 
-          intr_notif_val = get_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R") & 32'hffff_fffb | mubi4_test_true_loose(ss.debug_locked) & 32'h4;
+          intr_notif_val = get_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R") & 32'hffff_fffb | ({31'b0, mubi4_test_true_loose(ss.debug_locked)} << 2);
           set_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val); 
           update_exp_regval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val, SET_DIRECT);  
       end

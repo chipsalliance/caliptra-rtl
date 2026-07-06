@@ -191,8 +191,12 @@ def main():
         help='Comma-separated state names (e.g., "IDLE,LOAD,COMPUTE,DONE,ERROR").')
     parser.add_argument(
         '--avoid-zero',
-        action='store_true', default=True,
-        help='Enforce minimum HD from zero word (default: True).')
+        dest='avoid_zero', action='store_true', default=True,
+        help='Enforce minimum HD from zero word (default: enabled).')
+    parser.add_argument(
+        '--no-avoid-zero',
+        dest='avoid_zero', action='store_false',
+        help='Disable the minimum-HD-from-zero constraint (allow encodings near the all-zero word).')
 
     args = parser.parse_args()
 

@@ -1474,7 +1474,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__rw_ro_hw__out_t mask_iccm_ecc_unc;
         soc_ifc_reg__rw_ro_hw__out_t mask_dccm_ecc_unc;
         soc_ifc_reg__rw_ro_hw__out_t mask_nmi_pin;
-        soc_ifc_reg__rw_ro_hw__out_t fsm_error;
     } soc_ifc_reg__internal_hw_error_fatal_mask__out_t;
 
     typedef struct packed{

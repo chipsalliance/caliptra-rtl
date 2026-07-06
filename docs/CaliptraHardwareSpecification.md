@@ -267,11 +267,21 @@ The RISC-V processor is able to access the SoC mailbox SRAM using a direct acces
 
 ## Security state
 
-Caliptra uses the MSB of the security state input to determine whether or not Caliptra is in debug mode.
+The security state input is a packed value encoded as `{debug_locked[3:0], device_lifecycle[1:0]}`. Caliptra uses the `debug_locked` field to determine whether or not Caliptra is in debug mode.
 
-When Caliptra is in debug mode:
+To harden this security-critical decision against fault-injection (glitch) attacks, `debug_locked` is a multi-bit (MuBi4) encoded value rather than a single bit:
 
-* Security state MSB is set to 0.
+* `debug_locked` = `4'h6` (MuBi4True) &rarr; debug is **locked** (secure).
+* `debug_locked` = `4'h9` (MuBi4False) &rarr; debug is **unlocked** (debug mode).
+
+The two legal encodings are bitwise complements, so a single- or multi-bit glitch is unlikely to convert one legal value into the other. Caliptra evaluates the field with a fail-secure policy:
+
+* The "debug unlocked" decision uses a *strict* test: only the exact `4'h9` encoding unlocks debug. Any other value (including any invalid encoding) leaves debug locked.
+* The "debug locked" decision uses a *loose* test: `4'h6` and any invalid encoding are all treated as locked.
+
+Consequently, any value other than the two legal MuBi4 encodings resolves to debug **locked**. Integrators must drive one of the two legal MuBi4 values on the external `security_state` strap; see the Caliptra Integration Specification for the strap layout.
+
+When Caliptra is in debug mode (`debug_locked` = MuBi4False):
 
 * Caliptra JTAG is opened for the microcontroller and HW debug.
 
@@ -2784,6 +2794,7 @@ Once the boot flow monitor detects that execution has transitioned to FMC or RT 
 | :------- | :-- | :---- | :------ |
 | CPTRA_HW_ERROR_FATAL | 4 | kv_error | Boot flow error OR KV monitor alert |
 | CPTRA_HW_ERROR_FATAL | 5 | shadow_storage_err | ICCM region shadow register storage fault |
+| CPTRA_HW_ERROR_FATAL | 6 | fsm_error | Sparse-encoded security FSM detected an illegal state (glitch). See [Finite state machine (FSM) glitch hardening](#finite-state-machine-fsm-glitch-hardening). Unmaskable. |
 | CPTRA_HW_ERROR_NON_FATAL | 3 | shadow_update_err | ICCM region shadow register phase mismatch |
 
 ### DICE slot assignments

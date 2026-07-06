@@ -3059,7 +3059,7 @@ package soc_ifc_reg_uvm;
             this.shadow_storage_err = new("shadow_storage_err");
             this.shadow_storage_err.configure(this, 1, 5, "RO", 0, 'h0, 1, 1, 0);
             this.fsm_error = new("fsm_error");
-            this.fsm_error.configure(this, 1, 6, "RW", 0, 'h0, 1, 1, 0);
+            this.fsm_error.configure(this, 1, 6, "RO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(mask_iccm_ecc_unc_bit_cg[bt]) mask_iccm_ecc_unc_bit_cg[bt] = new();
                 foreach(mask_dccm_ecc_unc_bit_cg[bt]) mask_dccm_ecc_unc_bit_cg[bt] = new();
