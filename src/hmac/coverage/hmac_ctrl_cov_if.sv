@@ -67,6 +67,10 @@ interface hmac_ctrl_cov_if
         reset_cp: coverpoint reset_n;
         //cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
+        init_cp: coverpoint init;
+        next_cp: coverpoint next;
+        last_cp: coverpoint last;
+        restore_cp: coverpoint restore;
         zeroize_cp: coverpoint zeroize;
         mode_cp: coverpoint mode;
         ready_cp: coverpoint ready;
@@ -107,6 +111,8 @@ interface hmac_ctrl_cov_if
         zeroize_restore_cp: cross zeroize, restore;
         init_mode_cp: cross init, mode;
         next_mode_cp: cross next, mode;
+        last_mode_cp: cross last, mode;
+        restore_mode_cp: cross restore, mode;
 
     endgroup
 
