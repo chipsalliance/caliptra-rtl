@@ -99,8 +99,8 @@ module hmac
   wire                          core_tag_valid;
   wire [TAG_SIZE-1 : 0]         core_restore_digest;
   wire [LFSR_SEED_SIZE-1 : 0]   core_lfsr_seed;
-  reg  [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_reg;
   wire [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_next;
+  reg  [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] tag_reg;
   reg  [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] kv_reg;
 
   reg [TAG_NUM_DWORDS - 1 : 0][DATA_WIDTH - 1 : 0] get_mask;
@@ -243,6 +243,7 @@ module hmac
             is_last_op_reg <= last_reg;
 
           //write to sw register
+          // tag_reg mirrors the RDL flop so caliptra_top_sva can observe TAG.
           if (core_tag_we & ~(dest_keyvault | kv_data_present | (csr_mode_reg & ~is_last_op_reg)))
             tag_reg <= tag_next;
           if (core_tag_we & ( dest_keyvault | kv_data_present | (csr_mode_reg & ~is_last_op_reg)))
@@ -257,6 +258,10 @@ module hmac
     end // reg_update
 
 //HMAC register hardware interfaces
+// Comb tag_next feeds HMAC512_TAG[*].TAG.next; masking with get_mask is
+// applied only on the final block so HMAC-384 hides the unused upper
+// dwords, while intermediate/save captures keep the full inner SHA
+// chaining state so RESTORE can resume from it.
 assign tag_next = is_last_op_reg ? (core_tag & get_mask) : core_tag;
 
 always_comb begin
@@ -438,7 +443,9 @@ logic tag_read_strobe;
 always_comb begin
   tag_read_strobe = 1'b0;
   for (int dword = 0; dword < TAG_NUM_DWORDS; dword++) begin
-    tag_read_strobe = tag_read_strobe | hwif_out.HMAC512_TAG[dword].TAG.swacc;
+    tag_read_strobe = tag_read_strobe |
+                      (hwif_out.HMAC512_TAG[dword].TAG.swacc &
+                       ~hwif_out.HMAC512_TAG[dword].TAG.swmod);
   end
 end
 

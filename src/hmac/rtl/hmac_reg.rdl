@@ -95,7 +95,7 @@ addrmap hmac_reg {
         field {desc = "Control restore command bit: Resumes HMAC processing from a
                                 saved intermediate inner-SHA chaining state. SW writes the
                                 previously-captured TAG back to HMAC512_TAG, re-supplies the
-                                same MODE/KEY, then asserts RESTORE together with NEXT or NEXT|LAST.
+                                same MODE/KEY, then asserts RESTORE together with LAST, NEXT, or NEXT|LAST.
                                 RESTORE skips ENTROPY/IPAD and loads the SHA core with TAG as the inner chaining state
                                 before processing BLOCK.
                                 [br] Software write generates only a single-cycle pulse on the
@@ -164,7 +164,7 @@ addrmap hmac_reg {
         default hw = rw;
         default we = true;
         default resetsignal = reset_b;
-        field {desc = "Output tag field"; hwclr; swacc = true;} TAG[32] = 32'b0;
+        field {desc = "Output tag field"; hwclr; swacc = true; swmod = true;} TAG[32] = 32'b0;
     
     } HMAC512_TAG[16] @0x00000100;
 
@@ -250,8 +250,8 @@ addrmap hmac_reg {
 
         field {desc = "Interrupt Event 0 status bit when 384-bit key is selected in HMAC512 mode";} key_mode_error_sts = 1'b0;
         field {desc = "Interrupt Event 1 status bit when all-zero key is derived from KeyVault";} key_zero_error_sts = 1'b0;
-        field {desc = "Interrupt Event 2 status bit set when CTRL.LAST or CTRL.RESTORE is written without INIT or NEXT";} error2_sts = 1'b0;
-        field {desc = "Interrupt Event 3 status bit set when an intermediate tag is masked because the key or block is sourced from KeyVault or CSR_MODE is set";} error3_sts = 1'b0;
+        field {desc = "Interrupt Event 2 status bit set when an illegal CTRL encoding is written (e.g., LAST-only, RESTORE-only, INIT|NEXT, INIT|RESTORE)";} error2_sts = 1'b0;
+        field {desc = "Interrupt Event 3 status bit set when an intermediate tag is masked (key/block from KeyVault, CSR_MODE set, or digest destined for KeyVault)";} error3_sts = 1'b0;
     };
 
     /* ---- Notification Interrupt Status ---- */
