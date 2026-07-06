@@ -219,13 +219,15 @@ module hmac_core
           if (inner_digest_we)
             inner_digest_reg <= sha_digest;
 
-          // Sample at IDLE: LAST is a modifier on INIT or NEXT, so any
-          // command kicked off at IDLE latches is_last_block from last_cmd.
-           // This handles all firmware patterns: INIT, INIT|LAST, NEXT and NEXT|LAST. 
+          // Sample at IDLE: LAST is a modifier on INIT, NEXT, or RESTORE, so any
+          // command kicked off at IDLE latches is_last_block from last_cmd and
+          // is_restore_block from restore_cmd. This handles INIT, INIT|LAST,
+          // NEXT, NEXT|LAST, RESTORE, RESTORE|NEXT, and RESTORE|LAST.
           if (hmac_ctrl_reg == CTRL_IDLE) begin
-            if (init_cmd | next_cmd | restore_cmd) 
-              is_last_block <= last_cmd;
+            if (init_cmd | next_cmd | restore_cmd) begin
+              is_last_block    <= last_cmd;
               is_restore_block <= restore_cmd;
+            end
           end
         end
     end // reg_update
