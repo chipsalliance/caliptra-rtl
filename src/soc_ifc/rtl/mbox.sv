@@ -662,20 +662,7 @@ always_comb soc_req_mbox_lock = hwif_out.mbox_lock.lock.value & uc_has_lock & hw
 
 always_comb hwif_in.cptra_rst_b = rst_b;
 always_comb hwif_in.mbox_user.user.next = 32'(req_data_user);
-// Encode sparse mbox FSM state to 3-bit sequential value for register visibility
-always_comb begin
-    unique case (mbox_fsm_ps)
-        MBOX_IDLE:         hwif_in.mbox_status.mbox_fsm_ps.next = 3'd0;
-        MBOX_RDY_FOR_CMD:  hwif_in.mbox_status.mbox_fsm_ps.next = 3'd1;
-        MBOX_RDY_FOR_DLEN: hwif_in.mbox_status.mbox_fsm_ps.next = 3'd2;
-        MBOX_RDY_FOR_DATA: hwif_in.mbox_status.mbox_fsm_ps.next = 3'd3;
-        MBOX_EXECUTE_UC:   hwif_in.mbox_status.mbox_fsm_ps.next = 3'd4;
-        MBOX_EXECUTE_SOC:  hwif_in.mbox_status.mbox_fsm_ps.next = 3'd5;
-        MBOX_EXECUTE_TAP:  hwif_in.mbox_status.mbox_fsm_ps.next = 3'd6;
-        MBOX_ERROR:        hwif_in.mbox_status.mbox_fsm_ps.next = 3'd7;
-        default:           hwif_in.mbox_status.mbox_fsm_ps.next = 3'd7;
-    endcase
-end
+assign hwif_in.mbox_status.mbox_fsm_ps.next = mbox_pkg::mboxsparse2logic(mbox_fsm_ps);
 
 always_comb hwif_in.soc_req = req_data_soc_req;
 //check the requesting ID:

@@ -536,7 +536,7 @@ module caliptra_top_tb_services
 
     initial ras_test_ctrl.error_injection_seen = 1'b0;
     always @(negedge clk) begin
-        if (mailbox_write && WriteData[7:0] == 8'hfd) begin
+        if (mailbox_write && WriteData[7:0] inside {8'hfd, 8'h95}) begin
             ras_test_ctrl.error_injection_seen <= 1'b1;
         end
     end
@@ -544,16 +544,7 @@ module caliptra_top_tb_services
     // New values will be loaded to reflect the result of the RAS test.
     initial ras_test_ctrl.reset_generic_input_wires = 1'b0;
     always@(negedge clk) begin
-        ras_test_ctrl.reset_generic_input_wires <= mailbox_write && (WriteData[7:0] inside {8'he0, 8'he1, 8'he2, 8'he3, 8'hfd, 8'hfe});
-    end
-
-    //Error injections that need to skip mb processing and expect fatal error to trigger reset
-    initial ras_test_ctrl.skip_mb_processing = 1'b0;
-    always@(negedge clk) begin
-        if (mailbox_write && (WriteData[7:0] inside {8'h95}))
-            ras_test_ctrl.skip_mb_processing <= 1'b1;
-        else
-            ras_test_ctrl.skip_mb_processing <= 1'b0;
+        ras_test_ctrl.reset_generic_input_wires <= mailbox_write && (WriteData[7:0] inside {8'he0, 8'he1, 8'he2, 8'he3, 8'hfd, 8'hfe, 8'h95});
     end
 
     // AXI Complex Control
@@ -3434,7 +3425,8 @@ doe_cov_bind i_doe_cov_bind();
 
 //========================================================================
 // FSM Glitch Injection Handlers
-// FW writes command bytes 0x60-0x64 to STDOUT to trigger FSM glitch inject.
+// FW writes command byte 0x95 to STDOUT to trigger FSM glitch inject.
+// Upper byte encodes which FSM to glitch
 // Each handler forces the sparse FSM state register to an invalid encoding
 // for 1 clock cycle, then releases. The FSM should enter its ERROR state.
 //========================================================================
@@ -3468,16 +3460,6 @@ doe_cov_bind i_doe_cov_bind();
             release `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_boot_fsm.u_boot_state_regs_glitch_inject;
             release `CPTRA_TOP_PATH.soc_ifc_top1.i_mbox.u_mbox_state_regs_glitch_inject;
             release `CPTRA_TOP_PATH.soc_ifc_top1.i_sha512_acc_top.u_sha_state_regs_glitch_inject;
-            // Boot FSM glitch kills the CPU — trigger cold reset from TB
-            if (boot_fsm_glitch_pending) begin
-                boot_fsm_glitch_pending <= 0;
-                warm_rst <= 1;
-                rst_cyclecnt <= cycleCnt;
-            end
-        end
-        // Track boot FSM glitch request
-        if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h01) && mailbox_write) begin
-            boot_fsm_glitch_pending <= 1;
         end
     end
 `endif

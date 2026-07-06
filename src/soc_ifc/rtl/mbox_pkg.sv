@@ -21,6 +21,7 @@ package mbox_pkg;
   // Minimum Hamming distance: 5
   // Maximum Hamming distance: 6
   //
+  localparam int MboxStateWidthLogic = 3;
   localparam int MboxStateWidth = 10;
   typedef enum logic [MboxStateWidth-1:0] {
     MBOX_IDLE         = 10'b0111010111,
@@ -32,6 +33,21 @@ package mbox_pkg;
     MBOX_EXECUTE_TAP  = 10'b1100110101,
     MBOX_ERROR        = 10'b1001011001
   } mbox_fsm_state_e;
+
+// Encode sparse mbox FSM state to 3-bit value matching mbox_csr.rdl enum (mbox_fsm_e)
+  function automatic logic [MboxStateWidthLogic-1:0] mboxsparse2logic(mbox_fsm_state_e st);
+    unique case (st)
+      MBOX_IDLE         : return 3'b000;
+      MBOX_RDY_FOR_CMD  : return 3'b001;
+      MBOX_RDY_FOR_DLEN : return 3'b011;
+      MBOX_RDY_FOR_DATA : return 3'b010;
+      MBOX_EXECUTE_UC   : return 3'b110;
+      MBOX_EXECUTE_SOC  : return 3'b100;
+      MBOX_EXECUTE_TAP  : return 3'b101;
+      MBOX_ERROR        : return 3'b111;
+      default            : return 3'b111;
+    endcase
+  endfunction : mboxsparse2logic
 
   //MAILBOX Status
   typedef enum logic [3:0] {

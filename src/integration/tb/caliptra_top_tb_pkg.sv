@@ -71,7 +71,6 @@ typedef struct packed {
     logic reset_generic_input_wires;
     logic do_no_lock_access;
     logic do_ooo_access;
-    logic skip_mb_processing;
 } ras_test_ctrl_t;
 
 typedef struct packed {
@@ -101,6 +100,7 @@ localparam ICCM_FATAL_OBSERVED             = 32'hdeadaca1;
 localparam DCCM_FATAL_OBSERVED             = 32'hdeadbeef;
 localparam NMI_FATAL_OBSERVED              = 32'hdeadc0a7;
 localparam CRYPTO_ERROR_OBSERVED           = 32'hdeadface;
+localparam FSM_ERROR_OBSERVED              = 32'hdead0f5e;
 localparam DMA_ERROR_OBSERVED              = 32'hfadebadd;
 localparam ERROR_NONE_SET                  = 32'hba5eba11; /* default value for a test with no activity observed by TB */
 

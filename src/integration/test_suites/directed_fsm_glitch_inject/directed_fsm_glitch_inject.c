@@ -15,14 +15,10 @@
 // directed_fsm_glitch_inject.c
 //
 // Verifies that glitch injection into sparse-encoded FSMs causes
-// CPTRA_HW_ERROR_FATAL.fsm_error to assert and the TB issues a warm reset.
-//
-// Flow:
-//   iter 0: trigger DOE glitch → TB observes fatal → warm reset
-//   iter 1: check DOE fatal bit, clear, trigger SHA_ACC glitch → warm reset
-//   iter 2: check SHA_ACC fatal bit, clear, trigger MBOX glitch → warm reset
-//   iter 3: check MBOX fatal bit, clear, trigger BOOT glitch → warm reset
-//   iter 4: check BOOT fatal bit, clear → PASS
+// CPTRA_HW_ERROR_FATAL.fsm_error to assert. The SOC BFM observes the
+// fatal, sets GENERIC_INPUT_WIRES_0 = FSM_ERROR_OBSERVED, W1C clears
+// the error register, and issues a warm reset. After reset, this test
+// checks GENERIC_INPUT_WIRES_0 for the expected encoding.
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -39,7 +35,7 @@ volatile uint32_t intr_count = 0;
 #endif
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-// Iteration counter -- persists across warm resets (DCCM not cleared on warm reset)
+// Iteration counter -- persists across warm resets (DCCM not cleared)
 volatile uint32_t iter __attribute__((section(".dccm.persistent"))) = 0;
 
 // TB command: byte 0x95, WriteData[15:8] selects target FSM
@@ -50,10 +46,8 @@ volatile uint32_t iter __attribute__((section(".dccm.persistent"))) = 0;
 #define FSM_TARGET_MBOX     2
 #define FSM_TARGET_SHA_ACC  3
 
-// FSM fatal bit in CPTRA_HW_ERROR_FATAL
-#ifndef SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_MASK
-#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_MASK (0x40)
-#endif
+// Expected value on GENERIC_INPUT_WIRES_0 after BFM observes fsm_error
+#define FSM_ERROR_OBSERVED  0xdead0f5e
 
 #define NUM_FSMS 4
 
@@ -74,8 +68,7 @@ static const char * const fsm_names[NUM_FSMS] = {
 void trigger_fsm_glitch(uint32_t target) {
     uint32_t cmd = (target << 8) | FSM_GLITCH_CMD;
     *((volatile uint32_t *)STDOUT) = cmd;
-    // TB will observe cptra_error_fatal and issue warm reset
-    // CPU may or may not continue depending on which FSM was hit
+    // TB will observe cptra_error_fatal, set generic_input_wires, W1C, and warm reset
     for (volatile int i = 0; i < 200; i++);
 }
 
@@ -84,19 +77,18 @@ void main(void) {
 
     VPRINTF(LOW, "-- directed_fsm_glitch_inject (iter %d) --\n", current);
 
-    // Iterations 1..NUM_FSMS: check fatal bit from PREVIOUS glitch, then clear
+    // Iterations 1..NUM_FSMS: check that BFM reported FSM_ERROR_OBSERVED from previous glitch
     if (current > 0 && current <= NUM_FSMS) {
-        uint32_t fatal = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
-        if (fatal & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_MASK) {
-            VPRINTF(LOW, "  [PASS] %s: fsm bit confirmed after reset (reg=0x%08x)\n",
-                    fsm_names[current - 1], fatal);
+        uint32_t resp = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0);
+        if (resp == FSM_ERROR_OBSERVED) {
+            VPRINTF(LOW, "  [PASS] %s: BFM reported fsm fault (wires=0x%08x)\n",
+                    fsm_names[current - 1], resp);
         } else {
-            VPRINTF(FATAL, "  [FAIL] %s: fsm bit NOT set after reset (reg=0x%08x)\n",
-                    fsm_names[current - 1], fatal);
+            VPRINTF(FATAL, "  [FAIL] %s: expected 0x%08x got 0x%08x\n",
+                    fsm_names[current - 1], FSM_ERROR_OBSERVED, resp);
+            SEND_STDOUT_CTRL(0x01);
+            while(1);
         }
-        // W1C clear the fatal bit
-        lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL,
-                     SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_MASK);
     }
 
     // After all FSMs tested: done
@@ -110,8 +102,6 @@ void main(void) {
     VPRINTF(LOW, "  Triggering %s FSM glitch\n", fsm_names[current]);
     trigger_fsm_glitch(fsm_targets[current]);
 
-    // If CPU survives (DOE/SHA_ACC/MBOX don't kill CPU immediately),
-    // just wait for the TB to issue warm reset
-    VPRINTF(LOW, "  Waiting for TB warm reset...\n");
+    // Wait for TB to observe fatal and issue warm reset
     while(1);
 }

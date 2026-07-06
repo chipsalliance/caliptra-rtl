@@ -43,6 +43,10 @@
 // caliptra_prim_sparse_fsm_flop output and the behavioral flop output in that case.
 `define CALIPTRA_PRIM_FLOP_SPARSE_FSM(__name, __d, __q, __type, __resval = `CALIPTRA_PRIM_FLOP_RESVAL, __clk = `CALIPTRA_PRIM_FLOP_CLK, __rst_n = `CALIPTRA_PRIM_FLOP_RST, __alert_trigger_sva_en = 1) \
   `ifdef SIMULATION                                   \
+    /* Glitch injection for simulation fault testing. TB can force __name_glitch_inject = 1 to    */ \
+    /* flip the MSB of the next-state input. This produces a guaranteed invalid encoding because  */ \
+    /* sparse_fsm_encode.py ensures HD >= 3 between all valid states — a single-bit flip can     */ \
+    /* never land on another valid state.                                                         */ \
     logic ``__name``_glitch_inject;                   \
     assign ``__name``_glitch_inject = '0;             \
     __type ``__name``_d;                              \
