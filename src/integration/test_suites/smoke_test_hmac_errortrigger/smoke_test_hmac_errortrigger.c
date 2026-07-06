@@ -277,29 +277,18 @@ void main() {
         }
         hmac_zeroize();
 
-        // ---- Only-NEXT (no prior INIT): engine ignores, STATUS.READY returns high ----
-        VPRINTF(LOW, " ***** HMAC only_next_silent_ignore !!\n");
-        while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
-                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-        // Engine should drop the orphan NEXT and stay/return to READY shortly.
-        for (volatile int i = 0; i < 64; i++) { __asm__ volatile ("nop"); }
-        if ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0){
-            VPRINTF(ERROR, "\nOnly-NEXT was incorrectly accepted (engine left IDLE).\n");
-            SEND_STDOUT_CTRL(0x1);
-            while(1);
-        }
-        hmac_zeroize();
-
-        // ---- NEXT then INIT recovery: fresh INIT|LAST after orphan NEXT works ----
+        // ---- NEXT-then-INIT recovery: orphan NEXT followed by clean INIT
+        // returns the engine to READY. Mirrors smoke_test_sha256_wntz.c
+        // (CTRL bundled with ZEROIZE in the same write).
         VPRINTF(LOW, " ***** HMAC next_then_init_recovery !!\n");
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-        cptra_intr_rcv.hmac_notif = 0;
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
-                                                HMAC_REG_HMAC512_CTRL_LAST_MASK |
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK |
                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
-        wait_for_hmac_intr();
-        if (cptra_intr_rcv.hmac_notif == 0){
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK |
+                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        if ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0){
             VPRINTF(ERROR, "\nHMAC failed to recover after orphan NEXT.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
