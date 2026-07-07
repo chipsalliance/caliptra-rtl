@@ -296,15 +296,20 @@ void main() {
         hmac_zeroize();
 
         // Coverage-only writes: exercise LAST+ZEROIZE and RESTORE+ZEROIZE
-        // in the same CTRL beat. ZEROIZE wins so the op is dropped; the
-        // covergroup samples both bits high in the same cycle.
+        // in the same CTRL beat. LAST/RESTORE must be paired with a
+        // legal partner (INIT/NEXT) so invalid_cmd_error doesn't mask
+        // the *_reg used by the covergroup. ZEROIZE wins so the op is
+        // dropped; the covergroup samples both bits high in the same
+        // cycle.
         VPRINTF(LOW, " ***** HMAC last_zeroize + restore_zeroize coverage !!\n");
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_LAST_MASK |
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                HMAC_REG_HMAC512_CTRL_LAST_MASK |
                                                 HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK |
                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_RESTORE_MASK |
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                                                HMAC_REG_HMAC512_CTRL_RESTORE_MASK |
                                                 HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK |
                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
