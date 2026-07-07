@@ -19,7 +19,6 @@ files:
   - src/sha512_masked/config/compile.yml
   - src/sha256_masked/config/compile.yml
   - src/hmac256/config/compile.yml
-  - src/hmac256_drbg/config/compile.yml
   - src/axi/config/compile.yml
   # -- Start RNG --
   - src/caliptra_prim_generic/config/compile.yml
