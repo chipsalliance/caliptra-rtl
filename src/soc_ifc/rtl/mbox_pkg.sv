@@ -23,41 +23,41 @@ package mbox_pkg;
   //
   localparam int MboxStateWidth = 10;
   typedef enum logic [MboxStateWidth-1:0] {
-    MBOX_IDLE         = 10'b0111010111,
-    MBOX_RDY_FOR_CMD  = 10'b0111101001,
-    MBOX_RDY_FOR_DLEN = 10'b0010111100,
-    MBOX_RDY_FOR_DATA = 10'b1110011010,
-    MBOX_EXECUTE_UC   = 10'b1101101110,
-    MBOX_EXECUTE_SOC  = 10'b1010100011,
-    MBOX_EXECUTE_TAP  = 10'b1100110101,
-    MBOX_ERROR        = 10'b1001011001
-  } mbox_fsm_state_e;
+    MBOX_IDLE_SPARSE         = 10'b0111010111,
+    MBOX_RDY_FOR_CMD_SPARSE  = 10'b0111101001,
+    MBOX_RDY_FOR_DLEN_SPARSE = 10'b0010111100,
+    MBOX_RDY_FOR_DATA_SPARSE = 10'b1110011010,
+    MBOX_EXECUTE_UC_SPARSE   = 10'b1101101110,
+    MBOX_EXECUTE_SOC_SPARSE  = 10'b1010100011,
+    MBOX_EXECUTE_TAP_SPARSE  = 10'b1100110101,
+    MBOX_ERROR_SPARSE        = 10'b1001011001
+  } mbox_fsm_state_sparse_e;
 
   localparam int MboxStateWidthLogic = 3;
   typedef enum logic [MboxStateWidthLogic-1:0] {
-    MBOX_IDLE_LOGIC         = 3'b000,
-    MBOX_RDY_FOR_CMD_LOGIC  = 3'b001,
-    MBOX_RDY_FOR_DLEN_LOGIC = 3'b011,
-    MBOX_RDY_FOR_DATA_LOGIC = 3'b010,
-    MBOX_EXECUTE_UC_LOGIC   = 3'b110,
-    MBOX_EXECUTE_SOC_LOGIC  = 3'b100,
-    MBOX_EXECUTE_TAP_LOGIC  = 3'b101,
-    MBOX_ERROR_LOGIC        = 3'b111
-  } mbox_fsm_state_logic_e;
+    MBOX_IDLE         = 3'b000,
+    MBOX_RDY_FOR_CMD  = 3'b001,
+    MBOX_RDY_FOR_DLEN = 3'b011,
+    MBOX_RDY_FOR_DATA = 3'b010,
+    MBOX_EXECUTE_UC   = 3'b110,
+    MBOX_EXECUTE_SOC  = 3'b100,
+    MBOX_EXECUTE_TAP  = 3'b101,
+    MBOX_ERROR        = 3'b111
+  } mbox_fsm_state_e;
 
 
 // Encode sparse mbox FSM state to 3-bit value matching mbox_csr.rdl enum (mbox_fsm_e)
-  function automatic logic [MboxStateWidthLogic-1:0] mboxsparse2logic(mbox_fsm_state_e st);
+  function automatic logic [MboxStateWidthLogic-1:0] mboxsparse2logic(mbox_fsm_state_sparse_e st);
     unique case (st)
-      MBOX_IDLE         : return MBOX_IDLE_LOGIC;
-      MBOX_RDY_FOR_CMD  : return MBOX_RDY_FOR_CMD_LOGIC;
-      MBOX_RDY_FOR_DLEN : return MBOX_RDY_FOR_DLEN_LOGIC;
-      MBOX_RDY_FOR_DATA : return MBOX_RDY_FOR_DATA_LOGIC;
-      MBOX_EXECUTE_UC   : return MBOX_EXECUTE_UC_LOGIC;
-      MBOX_EXECUTE_SOC  : return MBOX_EXECUTE_SOC_LOGIC;
-      MBOX_EXECUTE_TAP  : return MBOX_EXECUTE_TAP_LOGIC;
-      MBOX_ERROR        : return MBOX_ERROR_LOGIC;
-      default            : return MBOX_ERROR_LOGIC;
+      MBOX_IDLE_SPARSE         : return MBOX_IDLE;
+      MBOX_RDY_FOR_CMD_SPARSE  : return MBOX_RDY_FOR_CMD;
+      MBOX_RDY_FOR_DLEN_SPARSE : return MBOX_RDY_FOR_DLEN;
+      MBOX_RDY_FOR_DATA_SPARSE : return MBOX_RDY_FOR_DATA;
+      MBOX_EXECUTE_UC_SPARSE   : return MBOX_EXECUTE_UC;
+      MBOX_EXECUTE_SOC_SPARSE  : return MBOX_EXECUTE_SOC;
+      MBOX_EXECUTE_TAP_SPARSE  : return MBOX_EXECUTE_TAP;
+      MBOX_ERROR_SPARSE        : return MBOX_ERROR;
+      default            : return MBOX_ERROR;
     endcase
   endfunction : mboxsparse2logic
 
