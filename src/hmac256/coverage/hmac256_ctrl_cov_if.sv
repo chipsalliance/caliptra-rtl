@@ -83,7 +83,6 @@ interface hmac256_ctrl_cov_if
             bins init_next_restore = (0 => 'hB => 0);
             bins restore_last      = (0 => 'hC => 0);
             bins init_last_restore = (0 => 'hD => 0);
-            bins next_last_restore = (0 => 'hE => 0);
             bins all_four          = (0 => 'hF => 0);
         }
 
