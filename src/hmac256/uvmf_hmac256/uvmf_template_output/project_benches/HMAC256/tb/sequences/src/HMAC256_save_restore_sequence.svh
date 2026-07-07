@@ -35,6 +35,8 @@ class HMAC256_save_restore_sequence extends HMAC256_bench_sequence_base;
   rand int unsigned block_length_a;
   rand int unsigned save_point;
   rand int unsigned block_length_b;
+  rand bit          mode_a;   // 1'b1 -> HMAC-SHA-256, 1'b0 -> HMAC-SHA-224
+  rand bit          mode_b;
   constraint c_a_len { block_length_a inside {[2:10]}; }
   constraint c_b_len { block_length_b inside {[1:6]};  }
   constraint c_save  { save_point > 0; save_point < block_length_a; }
@@ -99,8 +101,8 @@ class HMAC256_save_restore_sequence extends HMAC256_bench_sequence_base;
     build_random_msg(block_length_b, blocks_b);
 
     `uvm_info("HMAC256_SR",
-      $sformatf("Shape: A.block_length=%0d, save_point=%0d, B.block_length=%0d",
-                block_length_a, save_point, block_length_b), UVM_LOW)
+      $sformatf("Shape: A.block_length=%0d, save_point=%0d, mode_a=%0d, B.block_length=%0d, mode_b=%0d",
+                block_length_a, save_point, mode_a, block_length_b, mode_b), UVM_LOW)
 
     // -------- Step 1: reference HMAC256 for context A --------
     `uvm_info("HMAC256_SR", "Step 1: reference HMAC256 for context A", UVM_LOW)
@@ -112,7 +114,7 @@ class HMAC256_save_restore_sequence extends HMAC256_bench_sequence_base;
                .end_idx(block_length_a - 1),
                .total_blocks(block_length_a),
                .restore_first(1'b0),
-               .mode_bit(1'b1),
+               .mode_bit(mode_a),
                .wait_last(1'b1));
     read_tag_regs(ref_tag_a);
 
@@ -131,7 +133,7 @@ class HMAC256_save_restore_sequence extends HMAC256_bench_sequence_base;
                .end_idx(save_point - 1),
                .total_blocks(block_length_a),
                .restore_first(1'b0),
-               .mode_bit(1'b1),
+               .mode_bit(mode_a),
                .wait_last(1'b0));
     read_tag_regs(save_tag);
     `uvm_info("HMAC256_SR",
@@ -148,7 +150,7 @@ class HMAC256_save_restore_sequence extends HMAC256_bench_sequence_base;
                .end_idx(block_length_b - 1),
                .total_blocks(block_length_b),
                .restore_first(1'b0),
-               .mode_bit(1'b1),
+               .mode_bit(mode_b),
                .wait_last(1'b1));
     read_tag_regs(mid_tag_b);
 
@@ -164,17 +166,21 @@ class HMAC256_save_restore_sequence extends HMAC256_bench_sequence_base;
                .end_idx(block_length_b - 1),
                .total_blocks(block_length_b),
                .restore_first(1'b0),
-               .mode_bit(1'b1),
+               .mode_bit(mode_b),
                .wait_last(1'b1));
     read_tag_regs(ref_tag_b);
 
     mismatches_b = 0;
-    for (int i = 0; i < 8; i++) begin
-      if (mid_tag_b[i] !== ref_tag_b[i]) begin
-        `uvm_error("HMAC256_SR_CHECK",
-          $sformatf("B.TAG[%0d] mismatch in intervening op: got=%08h ref=%08h",
-                    i, mid_tag_b[i], ref_tag_b[i]))
-        mismatches_b++;
+    // HMAC-SHA-224 truncates to 7 dwords; upper dword undefined.
+    begin
+      int unsigned tag_dwords_b = mode_b ? 8 : 7;
+      for (int i = 0; i < tag_dwords_b; i++) begin
+        if (mid_tag_b[i] !== ref_tag_b[i]) begin
+          `uvm_error("HMAC256_SR_CHECK",
+            $sformatf("B.TAG[%0d] mismatch in intervening op: got=%08h ref=%08h",
+                      i, mid_tag_b[i], ref_tag_b[i]))
+          mismatches_b++;
+        end
       end
     end
     if (mismatches_b == 0)
@@ -198,18 +204,22 @@ class HMAC256_save_restore_sequence extends HMAC256_bench_sequence_base;
                .end_idx(block_length_a - 1),
                .total_blocks(block_length_a),
                .restore_first(1'b1),
-               .mode_bit(1'b1),
+               .mode_bit(mode_a),
                .wait_last(1'b1));
     read_tag_regs(restore_tag);
 
     // -------- Compare restored A.TAG to single-shot reference --------
     mismatches_a = 0;
-    for (int i = 0; i < 8; i++) begin
-      if (restore_tag[i] !== ref_tag_a[i]) begin
-        `uvm_error("HMAC256_SR_CHECK",
-          $sformatf("A.TAG[%0d] mismatch after restore: got=%08h ref=%08h",
-                    i, restore_tag[i], ref_tag_a[i]))
-        mismatches_a++;
+    // HMAC-SHA-224 truncates to 7 dwords; upper dword undefined.
+    begin
+      int unsigned tag_dwords_a = mode_a ? 8 : 7;
+      for (int i = 0; i < tag_dwords_a; i++) begin
+        if (restore_tag[i] !== ref_tag_a[i]) begin
+          `uvm_error("HMAC256_SR_CHECK",
+            $sformatf("A.TAG[%0d] mismatch after restore: got=%08h ref=%08h",
+                      i, restore_tag[i], ref_tag_a[i]))
+          mismatches_a++;
+        end
       end
     end
     if (mismatches_a == 0)
