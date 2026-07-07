@@ -10,9 +10,9 @@
 # If not enough seeds are provided then random seeds are used to pad
 # If no repeat count is given, default is 1
 # pragma uvmf custom tb_info begin
-TB_INFO HMAC { UVMF_VIP_LIBRARY_HOME=../../../../../../../../verification_ip UVMF_PROJECT_DIR=../../../../../../../HMAC } {  }
+TB_INFO HMAC256 { UVMF_VIP_LIBRARY_HOME=../../../../../../../../verification_ip UVMF_PROJECT_DIR=../../../../../../../HMAC256 } {  }
 # pragma uvmf custom tb_info end
-TB HMAC
+TB HMAC256
 # pragma uvmf custom regression_suite begin
 TEST test_top 3
 # pragma uvmf custom regression_suite end
