@@ -320,7 +320,8 @@ module hmac256_drbg_tb();
       $fclose(file);
 
       // Call Python reference model
-      $system("python3 hmac256_drbg_ref.py");
+      if ($system("python3 hmac256_drbg_ref.py") != 0)
+          $fatal(1, "Python reference model failed");
 
       // Read expected results
       read_test_vectors("hmac256_drbg_test_vector.hex");
@@ -346,7 +347,7 @@ module hmac256_drbg_tb();
 
       fin = $fopen(fname, "r");
       if (fin == 0)
-          $error("Can't open file %s", fname);
+          $fatal(1, "Can't open file %s", fname);
       while (!$feof(fin)) begin
         if (line_cnt == 0) begin
           rv = $fscanf(fin, "%h\n", round_val);
