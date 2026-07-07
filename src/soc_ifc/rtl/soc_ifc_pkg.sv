@@ -21,10 +21,6 @@
 
 package soc_ifc_pkg;
 
-    import caliptra_prim_mubi_pkg::mubi4_t;
-    import caliptra_prim_mubi_pkg::MuBi4True;
-    import caliptra_prim_mubi_pkg::MuBi4False;
-
     parameter SOC_IFC_ADDR_W = 19;
     parameter SOC_IFC_DATA_W = 32;
     parameter SOC_IFC_USER_W = 32;
@@ -197,7 +193,7 @@ package soc_ifc_pkg;
     } device_lifecycle_e;
 
     typedef struct packed {
-        mubi4_t debug_locked;
+        caliptra_prim_mubi_pkg::mubi4_t debug_locked;
         device_lifecycle_e device_lifecycle;
     } security_state_t;
 

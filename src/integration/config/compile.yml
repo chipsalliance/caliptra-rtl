@@ -61,7 +61,6 @@ requires:
   - csrng
   - aes
   - sha3_ctrl
-  - caliptra_prim_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -112,7 +111,6 @@ requires:
   - csrng
   - aes
   - sha3_ctrl
-  - caliptra_prim_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
