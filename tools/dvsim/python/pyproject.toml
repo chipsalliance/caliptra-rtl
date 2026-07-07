@@ -17,7 +17,7 @@
 name = "caliptra-dvsim"
 version = "0.0.0"
 description = "Open-source hardware root-of-trust"
-requires-python = ">=3.10, <3.14"
+requires-python = ">=3.13, <3.14"
 
 dependencies = [
   # Linters
@@ -32,11 +32,17 @@ dependencies = [
 
   # Build and run tool for Design Verification flows
   "dvsim==1.49.9",
+
+  # Extract fusesoc information from compile.yaml files
+  "compile-to-core",
 ]
 
 [tool.uv]
 # This is not a distributable package — pyproject.toml is used only for dependency management.
 package = false
+
+[tool.uv.sources]
+compile-to-core = { git = "https://github.com/lowRISC/compile-to-core", branch = "main" }
 
 [tool.setuptools]
 py-modules = []
