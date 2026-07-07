@@ -1,0 +1,17 @@
+document:
+  schema: 1.0
+
+contents:
+  - generator:
+      tags: ["L1", "HMAC256",  "random"]
+      path: ""
+      weight: 100
+      generations: 1020
+      formats: 
+        generate: "reseed {template}.yml -seed {seed}"
+        path: "{template_basename}__{seed}.yml"
+      templates:
+        $CALIPTRA_ROOT/src/hmac256/uvmf_hmac256/uvmf_template_output/project_benches/HMAC256/tb/tests/src/HMAC256_otf_reset_test         : { weight 2 }
+        $CALIPTRA_ROOT/src/hmac256/uvmf_hmac256/uvmf_template_output/project_benches/HMAC256/tb/tests/src/HMAC256_invalid_cmd_error_test  : { weight 2 }
+        $CALIPTRA_ROOT/src/hmac256/uvmf_hmac256/uvmf_template_output/project_benches/HMAC256/tb/tests/src/HMAC256_save_restore_test      : { weight 2 }
+        $CALIPTRA_ROOT/src/hmac256/uvmf_hmac256/uvmf_template_output/project_benches/HMAC256/tb/tests/src/HMAC256_random_test            : { weight 94 }

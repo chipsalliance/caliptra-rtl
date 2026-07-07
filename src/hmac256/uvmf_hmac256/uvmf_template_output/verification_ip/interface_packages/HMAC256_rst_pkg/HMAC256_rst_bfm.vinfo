@@ -1,0 +1,6 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg_hdl.vinfo
+@use HMAC256_rst_pkg_hdl.vinfo
++incdir+@vinfodir
+src/HMAC256_rst_if.sv
+src/HMAC256_rst_driver_bfm.sv
+src/HMAC256_rst_monitor_bfm.sv

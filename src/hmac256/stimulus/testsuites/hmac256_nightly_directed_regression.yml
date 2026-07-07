@@ -1,0 +1,8 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "HMAC256"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/hmac256/stimulus/tests/directed/hmac256_normal_test.yml

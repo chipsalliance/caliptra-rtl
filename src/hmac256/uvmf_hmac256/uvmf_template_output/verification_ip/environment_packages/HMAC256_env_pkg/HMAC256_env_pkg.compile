@@ -1,0 +1,8 @@
+needs:
+  - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
+  - ../../../verification_ip/interface_packages/HMAC256_rst_pkg/HMAC256_rst_hvl.compile
+
+src:
+  - registers/HMAC256_reg_model_top_pkg.sv
+  - HMAC256_env_pkg.sv
+
