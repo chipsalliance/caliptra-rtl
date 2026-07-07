@@ -35,6 +35,7 @@ class HMAC_save_restore_sequence extends HMAC_bench_sequence_base;
   rand int unsigned block_length_a;
   rand int unsigned save_point;
   rand int unsigned block_length_b;
+  rand bit          mode_bit;   // 1: HMAC-512, 0: HMAC-384
   constraint c_a_len { block_length_a inside {[2:10]}; }
   constraint c_b_len { block_length_b inside {[1:6]};  }
   constraint c_save  { save_point > 0; save_point < block_length_a; }
@@ -112,7 +113,7 @@ class HMAC_save_restore_sequence extends HMAC_bench_sequence_base;
                .end_idx(block_length_a - 1),
                .total_blocks(block_length_a),
                .restore_first(1'b0),
-               .mode_bit(1'b1),
+               .mode_bit(mode_bit),
                .wait_last(1'b1));
     read_tag_regs(ref_tag_a);
 
@@ -131,7 +132,7 @@ class HMAC_save_restore_sequence extends HMAC_bench_sequence_base;
                .end_idx(save_point - 1),
                .total_blocks(block_length_a),
                .restore_first(1'b0),
-               .mode_bit(1'b1),
+               .mode_bit(mode_bit),
                .wait_last(1'b0));
     read_tag_regs(save_tag);
     `uvm_info("HMAC_SR",
@@ -148,7 +149,7 @@ class HMAC_save_restore_sequence extends HMAC_bench_sequence_base;
                .end_idx(block_length_b - 1),
                .total_blocks(block_length_b),
                .restore_first(1'b0),
-               .mode_bit(1'b1),
+               .mode_bit(mode_bit),
                .wait_last(1'b1));
     read_tag_regs(mid_tag_b);
 
@@ -164,7 +165,7 @@ class HMAC_save_restore_sequence extends HMAC_bench_sequence_base;
                .end_idx(block_length_b - 1),
                .total_blocks(block_length_b),
                .restore_first(1'b0),
-               .mode_bit(1'b1),
+               .mode_bit(mode_bit),
                .wait_last(1'b1));
     read_tag_regs(ref_tag_b);
 
@@ -198,7 +199,7 @@ class HMAC_save_restore_sequence extends HMAC_bench_sequence_base;
                .end_idx(block_length_a - 1),
                .total_blocks(block_length_a),
                .restore_first(1'b1),
-               .mode_bit(1'b1),
+               .mode_bit(mode_bit),
                .wait_last(1'b1));
     read_tag_regs(restore_tag);
 
