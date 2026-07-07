@@ -8,19 +8,26 @@
 // http://www.apache.org/licenses/LICENSE-2.0
 //----------------------------------------------------------------------
 // Description: HMAC_invalid_cmd_error_sequence
-//   Drive the two illegal CTRL encodings (LAST alone, RESTORE alone).
-//   The DUT must reject both: STATUS.VALID stays 0 and error2_sts in
-//   error_internal_intr_r asserts. Both encodings are collapsed into
-//   the same `invalid_cmd_error -> error2_sts` path in the RTL.
+//   Drive every illegal CTRL encoding covered by invalid_cmd_error in
+//   hmac.sv (LAST-alone, RESTORE-alone, INIT+NEXT, INIT+RESTORE and
+//   supersets thereof). The DUT must reject each: STATUS.VALID stays
+//   0 and error2_sts in error_internal_intr_r asserts. All encodings
+//   collapse into the same `invalid_cmd_error -> error2_sts` path.
 //----------------------------------------------------------------------
 
 class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
 
   `uvm_object_utils(HMAC_invalid_cmd_error_sequence)
 
-  typedef enum bit [1:0] {
-    INVALID_LAST_ALONE,
-    INVALID_RESTORE_ALONE
+  typedef enum bit [2:0] {
+    INVALID_LAST_ALONE,        // 4'b0100
+    INVALID_RESTORE_ALONE,     // 4'b1000
+    INVALID_INIT_NEXT,         // 4'b0011
+    INVALID_INIT_NEXT_LAST,    // 4'b0111
+    INVALID_INIT_RESTORE,      // 4'b1001
+    INVALID_INIT_NEXT_RESTORE, // 4'b1011
+    INVALID_INIT_LAST_RESTORE, // 4'b1101
+    INVALID_ALL_FOUR           // 4'b1111
   } invalid_cmd_e;
 
   function new(string name = "HMAC_invalid_cmd_error_sequence");
@@ -46,6 +53,35 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
         reg_model.HMAC512_CTRL.LAST.set(1'b1);
       end
       INVALID_RESTORE_ALONE: begin
+        reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
+      end
+      INVALID_INIT_NEXT: begin
+        reg_model.HMAC512_CTRL.INIT.set(1'b1);
+        reg_model.HMAC512_CTRL.NEXT.set(1'b1);
+      end
+      INVALID_INIT_NEXT_LAST: begin
+        reg_model.HMAC512_CTRL.INIT.set(1'b1);
+        reg_model.HMAC512_CTRL.NEXT.set(1'b1);
+        reg_model.HMAC512_CTRL.LAST.set(1'b1);
+      end
+      INVALID_INIT_RESTORE: begin
+        reg_model.HMAC512_CTRL.INIT.set(1'b1);
+        reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
+      end
+      INVALID_INIT_NEXT_RESTORE: begin
+        reg_model.HMAC512_CTRL.INIT.set(1'b1);
+        reg_model.HMAC512_CTRL.NEXT.set(1'b1);
+        reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
+      end
+      INVALID_INIT_LAST_RESTORE: begin
+        reg_model.HMAC512_CTRL.INIT.set(1'b1);
+        reg_model.HMAC512_CTRL.LAST.set(1'b1);
+        reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
+      end
+      INVALID_ALL_FOUR: begin
+        reg_model.HMAC512_CTRL.INIT.set(1'b1);
+        reg_model.HMAC512_CTRL.NEXT.set(1'b1);
+        reg_model.HMAC512_CTRL.LAST.set(1'b1);
         reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
       end
     endcase
@@ -93,8 +129,14 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
 
     wait_for_status(32'h1, "READY", read_data);
 
-    drive_invalid_cmd(INVALID_LAST_ALONE,    "HMAC_LAST_ALONE");
-    drive_invalid_cmd(INVALID_RESTORE_ALONE, "HMAC_RESTORE_ALONE");
+    drive_invalid_cmd(INVALID_LAST_ALONE,        "HMAC_LAST_ALONE");
+    drive_invalid_cmd(INVALID_RESTORE_ALONE,     "HMAC_RESTORE_ALONE");
+    drive_invalid_cmd(INVALID_INIT_NEXT,         "HMAC_INIT_NEXT");
+    drive_invalid_cmd(INVALID_INIT_NEXT_LAST,    "HMAC_INIT_NEXT_LAST");
+    drive_invalid_cmd(INVALID_INIT_RESTORE,      "HMAC_INIT_RESTORE");
+    drive_invalid_cmd(INVALID_INIT_NEXT_RESTORE, "HMAC_INIT_NEXT_RESTORE");
+    drive_invalid_cmd(INVALID_INIT_LAST_RESTORE, "HMAC_INIT_LAST_RESTORE");
+    drive_invalid_cmd(INVALID_ALL_FOUR,          "HMAC_ALL_FOUR");
 
     `uvm_info("HMAC_INVALID_CMD",
       "HMAC_invalid_cmd_error_sequence complete", UVM_LOW)
