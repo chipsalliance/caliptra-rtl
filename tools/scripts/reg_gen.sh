@@ -25,17 +25,66 @@ UVM_TPL=$CALIPTRA_ROOT/tools/templates/rdl/uvm
 
 REG_GEN="python3 tools/scripts/reg_gen.py --uvm-template-dir $UVM_TPL"
 
-$REG_GEN $CALIPTRA_ROOT/src/keyvault/data/kv_reg.rdl                     --emit-rtl --emit-dv
-$REG_GEN $CALIPTRA_ROOT/src/pcrvault/data/pv_reg.rdl                     --emit-rtl --emit-dv
-$REG_GEN $CALIPTRA_ROOT/src/datavault/data/dv_reg.rdl                    --emit-rtl --emit-dv
-$REG_GEN --preload $KV_DEF $CALIPTRA_ROOT/src/ecc/data/ecc_reg.rdl       --emit-rtl --emit-dv
-$REG_GEN --preload $KV_DEF $CALIPTRA_ROOT/src/sha512/data/sha512_reg.rdl --emit-rtl --emit-dv
-$REG_GEN $CALIPTRA_ROOT/src/sha256/data/sha256_reg.rdl                   --emit-rtl --emit-dv
-$REG_GEN $CALIPTRA_ROOT/src/sha3/data/sha3_reg.rdl                       --emit-rtl --emit-dv
-$REG_GEN $CALIPTRA_ROOT/src/soc_ifc/data/mbox_csr.rdl                    --emit-rtl --emit-dv
-$REG_GEN $CALIPTRA_ROOT/src/soc_ifc/data/sha512_acc_csr.rdl              --emit-rtl --emit-dv
-$REG_GEN $CALIPTRA_ROOT/src/soc_ifc/data/soc_ifc_reg.rdl                 --emit-rtl --emit-dv
-$REG_GEN --preload $KV_DEF $CALIPTRA_ROOT/src/hmac/data/hmac_reg.rdl     --emit-rtl --emit-dv
-$REG_GEN $CALIPTRA_ROOT/src/doe/data/doe_reg.rdl                         --emit-rtl --emit-dv
-$REG_GEN $CALIPTRA_ROOT/src/axi/data/axi_dma_reg.rdl                     --emit-rtl --emit-dv
-$REG_GEN --preload $KV_DEF $CALIPTRA_ROOT/src/aes/data/aes_clp_reg.rdl   --emit-rtl --emit-dv
+$REG_GEN $CALIPTRA_ROOT/src/keyvault/data/kv_reg.rdl                   \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/keyvault/rtl/generated  \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/keyvault/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/pcrvault/data/pv_reg.rdl                   \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/pcrvault/rtl/generated  \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/pcrvault/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/datavault/data/dv_reg.rdl                  \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/datavault/rtl/generated \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/datavault/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/ecc/data/ecc_reg.rdl                       \
+    --preload $KV_DEF                                                  \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/ecc/rtl/generated       \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/ecc/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/sha512/data/sha512_reg.rdl                 \
+    --preload $KV_DEF                                                  \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/sha512/rtl/generated    \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/sha512/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/sha256/data/sha256_reg.rdl                 \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/sha256/rtl/generated    \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/sha256/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/sha3/data/sha3_reg.rdl                     \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/sha3/rtl/generated      \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/sha3/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/soc_ifc/data/mbox_csr.rdl                  \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/soc_ifc/rtl/generated   \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/soc_ifc/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/soc_ifc/data/sha512_acc_csr.rdl            \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/soc_ifc/rtl/generated   \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/soc_ifc/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/soc_ifc/data/soc_ifc_reg.rdl               \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/soc_ifc/rtl/generated   \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/soc_ifc/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/hmac/data/hmac_reg.rdl                     \
+    --preload $KV_DEF                                                  \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/hmac/rtl/generated      \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/hmac/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/doe/data/doe_reg.rdl                       \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/doe/rtl/generated       \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/doe/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/axi/data/axi_dma_reg.rdl                   \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/axi/rtl/generated       \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/axi/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/aes/data/aes_clp_reg.rdl                   \
+    --preload $KV_DEF                                                  \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/aes/rtl/generated       \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/aes/dv/reg_model
+
+$REG_GEN $CALIPTRA_ROOT/src/libs/data/interrupt_regs.rdl               \
+    --emit-rtl --rtl-output $CALIPTRA_ROOT/src/libs/rtl/generated      \
+    --emit-dv  --dv-output  $CALIPTRA_ROOT/src/libs/dv/reg_model
