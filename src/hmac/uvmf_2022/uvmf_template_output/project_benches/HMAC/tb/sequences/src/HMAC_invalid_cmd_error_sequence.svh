@@ -7,87 +7,55 @@
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //----------------------------------------------------------------------
-// Description: HMAC_invalid_cmd_error_sequence
-//   Drive every illegal CTRL encoding covered by invalid_cmd_error in
-//   hmac.sv (LAST-alone, RESTORE-alone, INIT+NEXT, INIT+RESTORE and
-//   supersets thereof). The DUT must reject each: STATUS.VALID stays
-//   0 and error2_sts in error_internal_intr_r asserts. All encodings
-//   collapse into the same `invalid_cmd_error -> error2_sts` path.
-//----------------------------------------------------------------------
 
 class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
 
   `uvm_object_utils(HMAC_invalid_cmd_error_sequence)
 
-  typedef enum bit [2:0] {
-    INVALID_LAST_ALONE,        // 4'b0100
-    INVALID_RESTORE_ALONE,     // 4'b1000
-    INVALID_INIT_NEXT,         // 4'b0011
-    INVALID_INIT_NEXT_LAST,    // 4'b0111
-    INVALID_INIT_RESTORE,      // 4'b1001
-    INVALID_INIT_NEXT_RESTORE, // 4'b1011
-    INVALID_INIT_LAST_RESTORE, // 4'b1101
-    INVALID_ALL_FOUR           // 4'b1111
-  } invalid_cmd_e;
+  localparam int CMD_ZEROIZE = 0;
+  localparam int CMD_INIT    = 1;
+  localparam int CMD_NEXT    = 2;
+  localparam int CMD_LAST    = 3;
+  localparam int CMD_RESTORE = 4;
 
   function new(string name = "HMAC_invalid_cmd_error_sequence");
     super.new(name);
   endfunction
 
-  task drive_invalid_cmd(input invalid_cmd_e kind, input string id);
+  // Mirrors hmac.sv invalid_cmd_error
+  function bit is_illegal(bit [4:0] cmd);
+    bit init_b    = cmd[CMD_INIT];
+    bit next_b    = cmd[CMD_NEXT];
+    bit last_b    = cmd[CMD_LAST];
+    bit restore_b = cmd[CMD_RESTORE];
+    return   (last_b    & ~init_b & ~next_b & ~restore_b)
+           | (restore_b & ~next_b & ~last_b)
+           | (init_b    & next_b)
+           | (init_b    & restore_b);
+  endfunction
+
+  task drive_cmd(input bit [4:0] cmd, input bit mode_bit, input string id);
     bit [31:0]      read_data;
     uvm_reg_field   target_err_field;
+    bit             expect_illegal = is_illegal(cmd);
 
     foreach (reg_model.HMAC512_KEY[i])
       reg_model.HMAC512_KEY[i].write(status, $urandom());
     foreach (reg_model.HMAC512_BLOCK[i])
       reg_model.HMAC512_BLOCK[i].write(status, $urandom());
 
-    reg_model.HMAC512_CTRL.INIT.set(1'b0);
-    reg_model.HMAC512_CTRL.NEXT.set(1'b0);
-    reg_model.HMAC512_CTRL.LAST.set(1'b0);
-    reg_model.HMAC512_CTRL.RESTORE.set(1'b0);
+    reg_model.HMAC512_CTRL.INIT.set(cmd[CMD_INIT]);
+    reg_model.HMAC512_CTRL.NEXT.set(cmd[CMD_NEXT]);
+    reg_model.HMAC512_CTRL.LAST.set(cmd[CMD_LAST]);
+    reg_model.HMAC512_CTRL.RESTORE.set(cmd[CMD_RESTORE]);
+    reg_model.HMAC512_CTRL.ZEROIZE.set(cmd[CMD_ZEROIZE]);
+    reg_model.HMAC512_CTRL.MODE.set(mode_bit);
 
-    case (kind)
-      INVALID_LAST_ALONE: begin
-        reg_model.HMAC512_CTRL.LAST.set(1'b1);
-      end
-      INVALID_RESTORE_ALONE: begin
-        reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
-      end
-      INVALID_INIT_NEXT: begin
-        reg_model.HMAC512_CTRL.INIT.set(1'b1);
-        reg_model.HMAC512_CTRL.NEXT.set(1'b1);
-      end
-      INVALID_INIT_NEXT_LAST: begin
-        reg_model.HMAC512_CTRL.INIT.set(1'b1);
-        reg_model.HMAC512_CTRL.NEXT.set(1'b1);
-        reg_model.HMAC512_CTRL.LAST.set(1'b1);
-      end
-      INVALID_INIT_RESTORE: begin
-        reg_model.HMAC512_CTRL.INIT.set(1'b1);
-        reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
-      end
-      INVALID_INIT_NEXT_RESTORE: begin
-        reg_model.HMAC512_CTRL.INIT.set(1'b1);
-        reg_model.HMAC512_CTRL.NEXT.set(1'b1);
-        reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
-      end
-      INVALID_INIT_LAST_RESTORE: begin
-        reg_model.HMAC512_CTRL.INIT.set(1'b1);
-        reg_model.HMAC512_CTRL.LAST.set(1'b1);
-        reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
-      end
-      INVALID_ALL_FOUR: begin
-        reg_model.HMAC512_CTRL.INIT.set(1'b1);
-        reg_model.HMAC512_CTRL.NEXT.set(1'b1);
-        reg_model.HMAC512_CTRL.LAST.set(1'b1);
-        reg_model.HMAC512_CTRL.RESTORE.set(1'b1);
-      end
-    endcase
     target_err_field = reg_model.intr_block_rf.error_internal_intr_r.error2_sts;
 
-    `uvm_info(id, "Writing illegal CTRL command", UVM_LOW)
+    `uvm_info(id,
+      $sformatf("cmd=5'b%05b mode=%0d expect_illegal=%0d",
+                cmd, mode_bit, expect_illegal), UVM_LOW)
     reg_model.HMAC512_CTRL.update(status);
 
     fork
@@ -95,29 +63,42 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
     join
 
     reg_model.HMAC512_STATUS.read(status, read_data);
-    if (reg_model.HMAC512_STATUS.VALID.get_mirrored_value() !== 1'b0) begin
-      `uvm_error(id,
-        $sformatf("STATUS.VALID asserted after invalid CTRL (status=0x%08h)",
-                  read_data))
-    end
-
     reg_model.intr_block_rf.error_internal_intr_r.read(status, read_data);
-    if ((read_data >> target_err_field.get_lsb_pos()) & 32'h1) begin
-      `uvm_info(id,
-        $sformatf("Error bit '%s' asserted as expected (raw=0x%08h)",
-                  target_err_field.get_name(), read_data), UVM_LOW)
+
+    if (expect_illegal) begin
+      if (reg_model.HMAC512_STATUS.VALID.get_mirrored_value() !== 1'b0) begin
+        `uvm_error(id,
+          $sformatf("STATUS.VALID asserted after invalid CTRL cmd=5'b%05b",
+                    cmd))
+      end
+      if (((read_data >> target_err_field.get_lsb_pos()) & 32'h1) == 1'b0) begin
+        `uvm_error(id,
+          $sformatf("expected error2_sts high for cmd=5'b%05b (raw=0x%08h)",
+                    cmd, read_data))
+      end
+      reg_model.intr_block_rf.error_internal_intr_r.write(status,
+          32'h1 << target_err_field.get_lsb_pos());
     end else begin
-      `uvm_error(id,
-        $sformatf("Expected error bit '%s' not set in error_internal_intr_r (raw=0x%08h)",
-                  target_err_field.get_name(), read_data))
+      hmac_rst_agent_config.wait_for_num_clocks(50);
     end
 
-    // Clear the asserted bit by writing 1 to it.
-    reg_model.intr_block_rf.error_internal_intr_r.write(status,
-        32'h1 << target_err_field.get_lsb_pos());
+    reg_model.HMAC512_CTRL.INIT.set(1'b0);
+    reg_model.HMAC512_CTRL.NEXT.set(1'b0);
+    reg_model.HMAC512_CTRL.LAST.set(1'b0);
+    reg_model.HMAC512_CTRL.RESTORE.set(1'b0);
+    reg_model.HMAC512_CTRL.ZEROIZE.set(1'b1);
+    reg_model.HMAC512_CTRL.update(status);
+    reg_model.HMAC512_CTRL.ZEROIZE.set(1'b0);
 
     wait_for_status(32'h1, "READY", read_data);
   endtask
+
+  rand int unsigned num_random_stimuli;
+  rand bit [4:0]    rc_cmd;
+  rand bit          rc_mode;
+  rand bit          rc_csr;
+
+  constraint c_num  { num_random_stimuli inside {[16:48]}; }
 
   virtual task body();
     bit [31:0] read_data;
@@ -129,17 +110,31 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
 
     wait_for_status(32'h1, "READY", read_data);
 
-    drive_invalid_cmd(INVALID_LAST_ALONE,        "HMAC_LAST_ALONE");
-    drive_invalid_cmd(INVALID_RESTORE_ALONE,     "HMAC_RESTORE_ALONE");
-    drive_invalid_cmd(INVALID_INIT_NEXT,         "HMAC_INIT_NEXT");
-    drive_invalid_cmd(INVALID_INIT_NEXT_LAST,    "HMAC_INIT_NEXT_LAST");
-    drive_invalid_cmd(INVALID_INIT_RESTORE,      "HMAC_INIT_RESTORE");
-    drive_invalid_cmd(INVALID_INIT_NEXT_RESTORE, "HMAC_INIT_NEXT_RESTORE");
-    drive_invalid_cmd(INVALID_INIT_LAST_RESTORE, "HMAC_INIT_LAST_RESTORE");
-    drive_invalid_cmd(INVALID_ALL_FOUR,          "HMAC_ALL_FOUR");
+    // Phase 1: deterministic sweep of all 32 CTRL encodings x 2 modes
+    for (int m = 0; m < 2; m++) begin
+      for (int c = 0; c < 32; c++) begin
+        drive_cmd(c[4:0], m[0],
+          $sformatf("HMAC_INVALID_CMD.sweep.mode%0d.cmd%02h", m, c));
+      end
+    end
+
+    // Phase 2: randomised stress loop
+    if (!this.randomize(num_random_stimuli))
+      `uvm_fatal("HMAC_INVALID_CMD",
+        "randomize(num_random_stimuli) failed")
+
+    repeat (num_random_stimuli) begin
+      if (!this.randomize(rc_cmd, rc_mode, rc_csr))
+        `uvm_fatal("HMAC_INVALID_CMD",
+          "randomize(rc_cmd/rc_mode/rc_csr) failed")
+      drive_cmd(rc_cmd, rc_mode,
+        $sformatf("HMAC_INVALID_CMD.rand.mode%0d.cmd%02h",
+                  rc_mode, rc_cmd));
+    end
 
     `uvm_info("HMAC_INVALID_CMD",
-      "HMAC_invalid_cmd_error_sequence complete", UVM_LOW)
+      $sformatf("HMAC_invalid_cmd_error_sequence complete (%0d random stimuli)",
+                num_random_stimuli), UVM_LOW)
     $display("* TESTCASE PASSED");
   endtask
 
