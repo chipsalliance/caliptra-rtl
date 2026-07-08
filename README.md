@@ -159,6 +159,36 @@ Each sub-component is accompanied by a file list summary (located in src/<compon
 VF files provide absolute filepaths (prefixed by the `CALIPTRA_ROOT` environment variable) to each compile target for the associated component.<BR>
 The "Integration" sub-component contains the top-level fileset for Caliptra. `src/integration/config/compile.yml` defines the required filesets and sub-component dependencies for this build target. All of the files/dependencies are explicitly listed in `src/integration/config/caliptra_top_tb.vf`. Users may compile the entire design using only this VF filelist.<BR>
 
+### Per-block layout ###
+Most sub-components under `src/` follow the layout below. Not every block contains every directory (e.g. only blocks with a register interface have `data/` and `rtl/generated/`; only blocks with a UVM testbench have a `uvmf_<block>/` tree), but the meaning of each path is consistent across the repository.
+```
+src/<block>
+|-- config              # Compile manifests for this block
+|   |-- compile.yml     #   FuseSoC-style block description (filesets + dependencies)
+|   |-- <block>.vf      #   Design filelist (absolute paths, CALIPTRA_ROOT-prefixed)
+|   |-- <block>_tb.vf   #   Unit-testbench filelist (optional)
+|   `-- rtl_lint        #   Lint waivers / lint-flow config (optional)
+|-- data                # SystemRDL sources ({block}_reg.rdl, shared *_def.rdl) — inputs to reg_gen
+|-- rtl                 # Hand-written synthesisable RTL
+|   `-- generated       #   Generated regblock outputs: {addrmap}.sv, {addrmap}_pkg.sv (from reg_gen.sh)
+|-- dv                  # Design-verification sources
+|   `-- reg_model       #   Generated UVM RAL model: {rdl_stem}_uvm.sv (from reg_gen.sh)
+|-- tb                  # Standalone SystemVerilog unit testbench (optional)
+|-- stimulus            # Standalone-TB stimulus / test vectors (optional)
+|   |-- tests
+|   `-- testsuites
+|-- coverage            # Functional-coverage collateral (optional)
+|   `-- config
+|-- formal              # Formal properties / model (optional)
+|   |-- model
+|   `-- properties
+`-- uvmf_<block>        # UVMF-generated UVM testbench (optional; name varies per block)
+    |-- config
+    |-- coverage
+    `-- uvmf_template_output
+```
+Generated files under `rtl/generated/` and `dv/reg_model/` are produced by `tools/scripts/reg_gen.sh` from the RDL sources in `data/`; do not edit them by hand.
+
 
 ## **Verilog File Lists** ##
 Verilog file lists are generated via VCS and included in the config directory for each unit. New files added to the design must be included in the vf list. They can be included manually or by using VCS to regenerate the vf file. File lists define the compilation sources (including all dependencies) required to build and simulate a given module or testbench, and should be used by integrators for simulation, lint, and synthesis.
