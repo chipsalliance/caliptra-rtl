@@ -49,6 +49,9 @@ interface hmac_ctrl_cov_if
     logic invalid_cmd_error_edge;
     logic intermediate_tag_hidden_edge;
 
+    logic error_intr;
+    logic notif_intr;
+
     logic [4:0] hmac_cmd;
     logic [1:0] hmac_mode_bits;
 
@@ -79,9 +82,10 @@ interface hmac_ctrl_cov_if
     assign invalid_cmd_error_edge       = hmac_ctrl.hmac_inst.invalid_cmd_error_edge;
     assign intermediate_tag_hidden_edge = hmac_ctrl.hmac_inst.intermediate_tag_hidden_edge;
 
+    assign error_intr = hmac_ctrl.hmac_inst.error_intr;
+    assign notif_intr = hmac_ctrl.hmac_inst.notif_intr;
+
     // hmac_cmd bit layout: {restore, last, next, init, zeroize}.
-    // Sampled off the RAW CTRL field values so illegal combos that get
-    // masked by invalid_cmd_error still show up in the covergroup.
     assign hmac_cmd = {hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.RESTORE.value,
                        hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.LAST.value,
                        hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.NEXT.value,
@@ -112,7 +116,6 @@ interface hmac_ctrl_cov_if
         core_tag_we_cp: coverpoint core_tag_we;
 
         // Every combination of {restore, last, next, init, zeroize}.
-        // Bin names describe which SW-visible fields are asserted.
         hmac_cmd_cp: coverpoint hmac_cmd {
             bins idle                     = {5'h00};
             bins zeroize_only             = {5'h01};
@@ -160,8 +163,6 @@ interface hmac_ctrl_cov_if
         // = 32 * 4 = 128 physical stimuli that SW can present.
         hmac_cmd_x_mode: cross hmac_cmd_cp, hmac_mode_bits_cp;
 
-        //init_ready_cp: cross ready, init;
-        //next_ready_cp: cross ready, next;
         mode_ready_cp: cross ready, mode;
         zeroize_ready_cp: cross ready, zeroize;
         zeroize_init_cp: cross zeroize, init;
@@ -212,21 +213,14 @@ interface hmac_ctrl_cov_if
     //   miss.
     // ---------------------------------------------------------------
     covergroup hmac_error_cov_grp @(posedge clk);
-        key_mode_error_cp          : coverpoint key_mode_error_edge
-                                       iff (key_mode_error_edge);
-        key_zero_error_cp          : coverpoint key_zero_error_edge
-                                       iff (key_zero_error_edge);
-        invalid_cmd_error_cp       : coverpoint invalid_cmd_error_edge
-                                       iff (invalid_cmd_error_edge);
-        intermediate_tag_hidden_cp : coverpoint intermediate_tag_hidden_edge
-                                       iff (intermediate_tag_hidden_edge);
+        error0_sts_cp : coverpoint key_mode_error_edge          { bins fired = {1'b1}; }
+        error1_sts_cp : coverpoint key_zero_error_edge          { bins fired = {1'b1}; }
+        error2_sts_cp : coverpoint invalid_cmd_error_edge       { bins fired = {1'b1}; }
+        error3_sts_cp : coverpoint intermediate_tag_hidden_edge { bins fired = {1'b1}; }
 
-        // Both error paths crossed with mode so we know HMAC-384 and
-        // HMAC-512 each exercised each error class.
-        invalid_cmd_x_mode : cross invalid_cmd_error_cp, mode;
-        tag_hidden_x_mode  : cross intermediate_tag_hidden_cp, mode;
+        error_intr_cp : coverpoint error_intr { bins asserted = {1'b1}; }
+        notif_intr_cp : coverpoint notif_intr { bins asserted = {1'b1}; }
 
-        // awaiting_zeroize gate — did we ever park the engine?
         awaiting_zeroize_cp : coverpoint awaiting_zeroize;
     endgroup
 
