@@ -62,6 +62,9 @@ class ahb_mgr_agent extends uvm_agent;
   extern function void register_subordinate_for_map(uvm_reg_map  reg_map,
                                                     int unsigned subordinate_idx);
 
+  // Append the agent's mapping from address range to subordinates to the given ranges argument.
+  extern function void get_subordinate_ranges(ref sub_addr_range_t ranges[$]);
+
   // Run the layered register vseq, which shouldn't already be running.
   //
   // This sequence will run forever and its layering sequencer can be retrieved with
@@ -104,6 +107,10 @@ function void ahb_mgr_agent::build_phase(uvm_phase phase);
     m_reg_adapter = ahb_mgr_reg_adapter::type_id::create("m_reg_adapter");
     m_layered_reg_sequencer = layered_reg_sequencer_t::type_id::create("m_layered_reg_sequencer",
                                                                        this);
+
+    // Configure m_reg_adapter's supports_byte_enable flag. The protocol supports this, but only if
+    // the interface has write strobes.
+    m_reg_adapter.supports_byte_enable = m_vif.has_write_strobes;
   end
 endfunction
 
@@ -164,6 +171,10 @@ function void ahb_mgr_agent::register_subordinate_for_map(uvm_reg_map   reg_map,
     rng.subordinate_idx = subordinate_idx;
     m_subordinate_ranges.push_front(rng);
   end
+endfunction
+
+function void ahb_mgr_agent::get_subordinate_ranges(ref sub_addr_range_t ranges[$]);
+  foreach (m_subordinate_ranges[i]) ranges.push_back(m_subordinate_ranges[i]);
 endfunction
 
 task ahb_mgr_agent::run_layered_register_vseq();
