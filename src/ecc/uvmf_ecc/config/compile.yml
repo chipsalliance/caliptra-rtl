@@ -42,7 +42,7 @@ targets:
       - hdl_top
       - hvl_top
   sim:
-    pre_exec: 'echo "[PRE-EXEC] Copying ECC vector generator to $(pwd)" && cp $COMPILE_ROOT/../tb/ecc_secp384r1.exe .'
+    pre_exec: 'echo "[PRE-EXEC] Copying ECC vector generators and KAT hex files to $(pwd)" && cp $COMPILE_ROOT/../tb/ecc_secp384r1.exe . && cp $COMPILE_ROOT/../tb/ecc_secp256r1.exe . && cp $COMPILE_ROOT/../tb/secp256_testvector.hex . && cp $COMPILE_ROOT/../tb/secp384_testvector.hex . && cp $COMPILE_ROOT/../tb/test_vectors/nondet/secp256_nondet_kat.hex . && cp $COMPILE_ROOT/../tb/test_vectors/nondet/secp384_nondet_kat.hex .'
 global:
   tool:
     vcs:

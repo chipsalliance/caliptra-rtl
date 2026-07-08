@@ -38,6 +38,13 @@ package ECC_sequences_pkg;
   `include "src/example_derived_test_sequence.svh"
   `include "src/ECC_normal_sequence.svh"
   `include "src/ECC_otf_reset_sequence.svh"
+  `include "src/ECC_dualcurve_random_sequence.svh"
+  `include "src/ECC_illegal_mode_random_sequence.svh"
+  `include "src/ECC_curve_switch_random_sequence.svh"
+  `include "src/ECC_otf_reset_dualcurve_random_sequence.svh"
+  `include "src/ECC_back_to_back_random_sequence.svh"
+  `include "src/ECC_kv_slot_random_sequence.svh"
+  `include "src/ECC_zeroize_random_sequence.svh"
 
   // pragma uvmf custom package_item_additional begin
   // UVMF_CHANGE_ME : When adding new sequences to the src directory

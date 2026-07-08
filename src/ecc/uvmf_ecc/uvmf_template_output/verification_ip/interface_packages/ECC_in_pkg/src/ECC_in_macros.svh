@@ -79,6 +79,15 @@ typedef struct packed  { \
   `define ECC_in_INITIATOR_STRUCT typedef struct packed  { \
   ecc_in_test_transactions test ; \
   ecc_in_op_transactions op ; \
+  ecc_in_curve_e curve ; \
+  ecc_in_err_mode_e err_mode ; \
+  bit rand_k_en ; \
+  bit pcr_sign ; \
+  bit kv_intf ; \
+  bit [4:0] kv_slot ; \
+  bit pollute_upper ; \
+  bit zeroize_mid_op ; \
+  bit [3:0] zeroize_delay_clks ; \
      } ECC_in_initiator_s;
 
   `define ECC_in_TO_INITIATOR_STRUCT_FUNCTION \
@@ -86,7 +95,16 @@ typedef struct packed  { \
     ECC_in_initiator_struct = \
            {\
            this.test , \
-           this.op  \
+           this.op , \
+           this.curve , \
+           this.err_mode , \
+           this.rand_k_en , \
+           this.pcr_sign , \
+           this.kv_intf , \
+           this.kv_slot , \
+           this.pollute_upper , \
+           this.zeroize_mid_op , \
+           this.zeroize_delay_clks \
            };\
     return ( ECC_in_initiator_struct);\
   endfunction
@@ -95,7 +113,16 @@ typedef struct packed  { \
   virtual function void from_initiator_struct(ECC_in_initiator_s ECC_in_initiator_struct);\
            {\
            this.test , \
-           this.op  \
+           this.op , \
+           this.curve , \
+           this.err_mode , \
+           this.rand_k_en , \
+           this.pcr_sign , \
+           this.kv_intf , \
+           this.kv_slot , \
+           this.pollute_upper , \
+           this.zeroize_mid_op , \
+           this.zeroize_delay_clks \
            } = ECC_in_initiator_struct;\
   endfunction
 

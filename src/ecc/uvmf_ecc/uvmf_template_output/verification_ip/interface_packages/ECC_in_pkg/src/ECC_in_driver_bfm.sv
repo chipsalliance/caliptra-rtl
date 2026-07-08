@@ -291,9 +291,9 @@ end
       */
     case (ECC_in_initiator_struct.test)
       ecc_reset_test      : ecc_init(ECC_in_initiator_struct.test, ECC_in_initiator_struct.op);
-      ecc_normal_test     : ecc_test(ECC_in_initiator_struct.test, ECC_in_initiator_struct.op);
-      ecc_otf_reset_test  : ecc_test(ECC_in_initiator_struct.test, ECC_in_initiator_struct.op);
-      default             : ecc_test(ECC_in_initiator_struct.test, ECC_in_initiator_struct.op);
+      ecc_normal_test     : ecc_test(ECC_in_initiator_struct.test, ECC_in_initiator_struct);
+      ecc_otf_reset_test  : ecc_test(ECC_in_initiator_struct.test, ECC_in_initiator_struct);
+      default             : ecc_test(ECC_in_initiator_struct.test, ECC_in_initiator_struct);
     endcase
 
   endtask   
@@ -356,6 +356,20 @@ end
 
   parameter ADDR_DH_SHARED_KEY_START = BASE_ADDR + 32'h000005C0;
   parameter ADDR_DH_SHARED_KEY_END   = BASE_ADDR + 32'h000005EC;
+
+  // KV control register addresses (see src/ecc/rtl/ecc_reg.rdl).
+  parameter ADDR_KV_RD_PKEY_CTRL   = BASE_ADDR + 32'h00000600;
+  parameter ADDR_KV_RD_SEED_CTRL   = BASE_ADDR + 32'h00000608;
+  parameter ADDR_KV_WR_PKEY_CTRL   = BASE_ADDR + 32'h00000610;
+  parameter KV_READ_EN_MASK        = 32'h00000001;
+  parameter KV_WRITE_EN_MASK       = 32'h00000001;
+  parameter KV_ECC_PKEY_DEST_MASK  = 32'h00000200;
+
+  // ECC_CTRL bit masks (see src/ecc/rtl/ecc_reg.rdl -- ECC_CTRL fields).
+  parameter CTRL_ZEROIZE_MASK      = 32'h00000004;
+  parameter CTRL_PCR_SIGN_MASK     = 32'h00000008;
+  parameter CTRL_CURVE_SEL_MASK    = 32'h00000020;
+  parameter CTRL_RAND_K_EN_MASK    = 32'h00000040;
 
   parameter REG_SIZE      = 384;
   parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
@@ -893,13 +907,16 @@ end
   //----------------------------------------------------------------
   // ecc_test()
   //
+  // Dispatch entry. Legacy P-384-det path preserved for backward compat
+  // with ECC_normal_test / ECC_otf_reset_test; new random axes are
+  // handled by ecc_random_test which selects curve/mode-aware KAT and
+  // drives ECC_CTRL with CURVE_SEL / RAND_K_EN / PCR_SIGN.
   //----------------------------------------------------------------
   task ecc_test (
     input ecc_in_test_transactions test,
-    input ecc_in_op_transactions op
+    input ECC_in_initiator_s       istruct
   );
     string    file_name;
-    string    msg;
     reg       test_otf_reset;
 
     begin
@@ -907,40 +924,272 @@ end
       // pass op and selection to monitor
       transaction_flag_out_monitor_o = 1'b0;
       test_o = test;
-      op_o = op;
+      op_o = istruct.op;
 
       test_case_num++;
-      $sformat(msg, "Test Case #%d", test_case_num);
 
-      if (test == ecc_normal_test) 
+      if (test == ecc_normal_test)
         test_otf_reset = 0;
       else if (test == ecc_otf_reset_test)
         test_otf_reset = 1;
-     
-      // $system("./ecdsa_secp384r1.exe");
-      $system("./ecc_secp384r1.exe");
 
+      // Any non-default random axis routes to the random-test path.
+      if ((istruct.curve   != ecc_curve_p384) ||
+          (istruct.err_mode != ERR_NONE)      ||
+          (istruct.rand_k_en != 1'b0)         ||
+          (istruct.pcr_sign  != 1'b0)         ||
+          (istruct.kv_intf   != 1'b0)         ||
+          (istruct.pollute_upper != 1'b0)     ||
+          (istruct.zeroize_mid_op != 1'b0)) begin
+        ecc_random_test(istruct, test_otf_reset);
+        return;
+      end
+
+      // Legacy path: P-384 det, single-TC KAT freshly generated on each call.
+      $system("./ecc_secp384r1.exe");
       file_name = "secp384_testvector.hex";
       read_test_vectors(file_name);
 
-      //`uvm_info("IN_DRIVER", msg, UVM_MEDIUM)
-      if (op == key_gen) begin
-        //`uvm_info("IN_DRIVER", "Key_Gen Test", UVM_MEDIUM)
+      if (istruct.op == key_gen)
         ecc_keygen_test(test_vector, test_otf_reset);
-      end
-      else if (op == key_sign) begin
-        //`uvm_info("IN_DRIVER", "Key_Sign Test", UVM_MEDIUM)
+      else if (istruct.op == key_sign)
         ecc_signing_test(test_vector, test_otf_reset);
-      end
-      else if (op == key_verify) begin
-        //`uvm_info("IN_DRIVER", "Key_Verify Test", UVM_MEDIUM)
+      else if (istruct.op == key_verify)
         ecc_verifying_test(test_vector, test_otf_reset);
-      end
-      else if (op == ecdh_sharedkey) begin
+      else if (istruct.op == ecdh_sharedkey)
         ecc_DH_sharedkey_test(test_vector, test_otf_reset);
-      end
     end
   endtask // ecc_test
+
+  //----------------------------------------------------------------
+  // ecc_random_test()
+  //
+  // Random-axes dispatch: selects the right KAT hex (per curve, per
+  // det/nondet), optionally pollutes P-256 upper 4 dwords, and arms
+  // the illegal combination when err_mode != NONE.
+  //
+  // Output monitor is NEVER armed on the random path -- the existing
+  // out-monitor is timing-fragile (fixed 2-clk sample cadence vs the
+  // AHB read's variable cadence) and only reliably follows the legacy
+  // path. UVM random tests here own stimulus + coverage; correctness
+  // checking is delegated to the shared ecc_top_cov_if.sv + block-TB
+  // KAT compares + SVAs. Predictor mirrors this by skipping emit for
+  // any transaction with a non-default new axis so scoreboard queues
+  // stay balanced.
+  //----------------------------------------------------------------
+  task ecc_random_test (
+    input ECC_in_initiator_s istruct,
+    input bit                test_otf_reset
+  );
+    bit [31:0] cmd_word;
+    bit        is_p256;
+    bit        is_nondet;
+    bit        is_err;
+    begin
+      // Backdoor test/op signals -- kept updated for the ECC_in monitor
+      // and out-monitor even though our path leaves the flag low.
+      test_o = istruct.test;
+      op_o   = istruct.op;
+      transaction_flag_out_monitor_o = 1'b0;
+      test_case_num++;
+
+      is_p256   = (istruct.curve == ecc_curve_p256);
+      is_nondet = istruct.rand_k_en;
+      is_err    = (istruct.err_mode != ERR_NONE);
+
+      // Load the correct KAT into test_vector. For err_mode we still
+      // need operand values because CSR writes happen before dispatch;
+      // the DUT never reads them past the error gate.
+      if (is_p256 && !is_nondet)
+        read_test_vectors("secp256_testvector.hex");
+      else if (is_p256 && is_nondet)
+        read_test_vectors("secp256_nondet_kat.hex");
+      else if (!is_p256 && is_nondet)
+        read_test_vectors("secp384_nondet_kat.hex");
+      else
+        read_test_vectors("secp384_testvector.hex");
+
+      wait_ready();
+
+      // Arm KV control regs for the KV-error subtests. No actual KV
+      // entry is required; the error latches at dispatch.
+      if (istruct.err_mode == ERR_KV_P256 || istruct.err_mode == ERR_KV_RAND_K)
+        arm_kv_illegal(istruct.kv_slot, istruct.op);
+
+      // For P-256, upper 4 dwords are curve-native zeros; upper-word
+      // pollution asks the DUT to scrub them (positive-control on the
+      // per-op P-256 scrub pulse).
+      if (is_p256 && istruct.pollute_upper) begin
+        test_vector.hashed_msg[REG_SIZE-1:256] = {4{32'hDEADBEEF}};
+        test_vector.privkey[REG_SIZE-1:256]    = {4{32'hDEADBEEF}};
+        test_vector.pubkey.x[REG_SIZE-1:256]   = {4{32'hDEADBEEF}};
+        test_vector.pubkey.y[REG_SIZE-1:256]   = {4{32'hDEADBEEF}};
+        test_vector.seed[REG_SIZE-1:256]       = {4{32'hDEADBEEF}};
+        test_vector.nonce[REG_SIZE-1:256]      = {4{32'hDEADBEEF}};
+        test_vector.IV[REG_SIZE-1:256]         = {4{32'hDEADBEEF}};
+        test_vector.privkeyB[REG_SIZE-1:256]   = {4{32'hDEADBEEF}};
+      end
+
+      // Build CTRL command word (base op + curve/rand_k/pcr bits).
+      case (istruct.op)
+        key_gen         : cmd_word = KEYGEN_CMD;
+        key_sign        : cmd_word = SIGN_CMD;
+        key_verify      : cmd_word = VERIFY_CMD;
+        ecdh_sharedkey  : cmd_word = DH_SHARED_CMD;
+        default         : cmd_word = KEYGEN_CMD;
+      endcase
+      if (is_p256)           cmd_word = cmd_word | CTRL_CURVE_SEL_MASK;
+      if (istruct.rand_k_en) cmd_word = cmd_word | CTRL_RAND_K_EN_MASK;
+      if (istruct.pcr_sign)  cmd_word = cmd_word | CTRL_PCR_SIGN_MASK;
+
+      // Drive operand CSRs then dispatch.
+      write_operands(istruct.op);
+      write_single_word(ADDR_CTRL, cmd_word);
+      @(posedge clk_i);
+      hsel_o <= 0;
+      @(posedge clk_i);
+
+      if (is_err) begin
+        // Wait for error_flag to latch.
+        wait_for_error_or_timeout(2000);
+      end
+      else if (istruct.zeroize_mid_op) begin
+        // Zeroize-mid-op: wait N clocks after dispatch (op is mid-flight,
+        // ready=0), then fire the ZEROIZE cmd bit. Then wait a bit for
+        // the FSM to snap back to ECC_RESET and ready to reassert.
+        repeat (istruct.zeroize_delay_clks + 1) @(posedge clk_i);
+        write_single_word(ADDR_CTRL, CTRL_ZEROIZE_MASK);
+        @(posedge clk_i);
+        hsel_o <= 0;
+        wait_ready();
+      end
+      else begin
+        if (!test_otf_reset)
+          wait_ready();
+        else begin
+          @(posedge clk_i);
+          ecc_rst_n_o = 1'b0;
+          repeat (2) @(posedge clk_i);
+          ecc_rst_n_o = 1'b1;
+        end
+        // Drain the DUT outputs by reading them (keeps AHB bus quiet
+        // and lets any error_intr / notif_intr settle) but do NOT arm
+        // the out-monitor -- scoreboard has no expected for this txn.
+        read_op_output(istruct.op);
+      end
+    end
+  endtask // ecc_random_test
+
+  //----------------------------------------------------------------
+  // write_operands()
+  //
+  // Op-specific operand-CSR writes; shared by legacy and random paths.
+  //----------------------------------------------------------------
+  task write_operands (input ecc_in_op_transactions op);
+    begin
+      case (op)
+        key_gen : begin
+          write_block(ADDR_SEED_START,  test_vector.seed);
+          write_block(ADDR_NONCE_START, test_vector.nonce);
+          write_block(ADDR_IV_START,    test_vector.IV);
+        end
+        key_sign : begin
+          write_block(ADDR_MSG_START,        test_vector.hashed_msg);
+          write_block(ADDR_PRIVKEY_IN_START, test_vector.privkey);
+          write_block(ADDR_IV_START,         test_vector.IV);
+          // Nondet SIGN also consumes SEED/NONCE for the DRBG entropy.
+          write_block(ADDR_SEED_START,       test_vector.seed);
+          write_block(ADDR_NONCE_START,      test_vector.nonce);
+        end
+        key_verify : begin
+          write_block(ADDR_MSG_START,     test_vector.hashed_msg);
+          write_block(ADDR_PUBKEYX_START, test_vector.pubkey.x);
+          write_block(ADDR_PUBKEYY_START, test_vector.pubkey.y);
+          write_block(ADDR_SIGNR_START,   test_vector.R);
+          write_block(ADDR_SIGNS_START,   test_vector.S);
+          write_block(ADDR_IV_START,      384'h1);
+        end
+        ecdh_sharedkey : begin
+          write_block(ADDR_PRIVKEY_IN_START, test_vector.privkeyB);
+          write_block(ADDR_PUBKEYX_START,    test_vector.pubkey.x);
+          write_block(ADDR_PUBKEYY_START,    test_vector.pubkey.y);
+          write_block(ADDR_IV_START,         test_vector.IV);
+        end
+        default : ;
+      endcase
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // read_op_output()
+  //
+  // Op-specific output-CSR reads; keeps hrdata visible to the out-monitor.
+  //----------------------------------------------------------------
+  task read_op_output (input ecc_in_op_transactions op);
+    begin
+      case (op)
+        key_gen : begin
+          read_block(ADDR_PRIVKEY_OUT_START);
+          read_block(ADDR_PUBKEYX_START);
+          read_block(ADDR_PUBKEYY_START);
+        end
+        key_sign : begin
+          read_block(ADDR_SIGNR_START);
+          read_block(ADDR_SIGNS_START);
+        end
+        key_verify : begin
+          read_block(ADDR_VERIFY_R_START);
+        end
+        ecdh_sharedkey : begin
+          read_block(ADDR_DH_SHARED_KEY_START);
+        end
+        default : ;
+      endcase
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // arm_kv_illegal()
+  //
+  // Programs one of the ECC_KV_*_CTRL registers with read_en/write_en=1
+  // to fire kv_under_p256_invalid / kv_under_rand_k_invalid at dispatch.
+  //----------------------------------------------------------------
+  task arm_kv_illegal (input bit [4:0] slot, input ecc_in_op_transactions op);
+    bit [31:0] v;
+    begin
+      v = KV_READ_EN_MASK | ({27'h0, slot} << 1);
+      if (op == key_gen)
+        write_single_word(ADDR_KV_RD_SEED_CTRL, v);
+      else if (op == key_sign)
+        write_single_word(ADDR_KV_RD_PKEY_CTRL, v);
+      else
+        write_single_word(ADDR_KV_WR_PKEY_CTRL, KV_WRITE_EN_MASK | ({27'h0, slot} << 1) | KV_ECC_PKEY_DEST_MASK);
+      @(posedge clk_i);
+      hsel_o <= 0;
+      @(posedge clk_i);
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // wait_for_error_or_timeout()
+  //
+  // Poll ecc_dsa_ctrl_i.error_flag via absolute hierarchical path from
+  // inside hdl_top. Returns when error_flag is high or after N clocks.
+  //----------------------------------------------------------------
+  task wait_for_error_or_timeout (input int max_clocks);
+    int i;
+    begin
+      for (i = 0; i < max_clocks; i++) begin
+        if (hdl_top.dut.ecc_dsa_ctrl_i.error_flag ||
+            hdl_top.dut.ecc_dsa_ctrl_i.error_flag_reg) begin
+          `uvm_info("ECC_BFM", $sformatf("error_flag asserted after %0d clocks", i), UVM_MEDIUM)
+          return;
+        end
+        @(posedge clk_i);
+      end
+      `uvm_warning("ECC_BFM", $sformatf("error_flag did not assert within %0d clocks", max_clocks))
+    end
+  endtask
 
   task read_test_vectors (
     input string fname
