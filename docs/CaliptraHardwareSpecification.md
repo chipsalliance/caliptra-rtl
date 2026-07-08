@@ -2794,7 +2794,6 @@ Once the boot flow monitor detects that execution has transitioned to FMC or RT 
 | :------- | :-- | :---- | :------ |
 | CPTRA_HW_ERROR_FATAL | 4 | kv_error | Boot flow error OR KV monitor alert |
 | CPTRA_HW_ERROR_FATAL | 5 | shadow_storage_err | ICCM region shadow register storage fault |
-| CPTRA_HW_ERROR_FATAL | 6 | fsm_error | Sparse-encoded security FSM detected an illegal state (glitch). See [Finite state machine (FSM) glitch hardening](#finite-state-machine-fsm-glitch-hardening). Unmaskable. |
 | CPTRA_HW_ERROR_NON_FATAL | 3 | shadow_update_err | ICCM region shadow register phase mismatch |
 
 ### DICE slot assignments
@@ -2960,6 +2959,27 @@ Caliptra's AXI DMA supports a hardware path to write **KV23 (MEK)** to the SoC v
 - **Enable AES ↔ KV write path** only if `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set.
 
 
+
+## Fatal hardware errors
+
+The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditions. Assertion of any bit drives the SoC `cptra_error_fatal` interrupt pin (unless the bit is masked by `internal_hw_error_fatal_mask`). Once the interrupt is asserted, clearing the register bit does **not** deassert the interrupt — only a Caliptra reset clears a fatal error interrupt. All fields are sticky (RW1C by Caliptra and SoC).
+
+| Bit | Field | Maskable | Trigger |
+| :-- | :---- | :------- | :------ |
+| 0 | iccm_ecc_unc | Yes (`mask_iccm_ecc_unc`) | Uncorrectable double-bit ECC error in ICCM |
+| 1 | dccm_ecc_unc | Yes (`mask_dccm_ecc_unc`) | Uncorrectable double-bit ECC error in DCCM |
+| 2 | nmi_pin | Yes (`mask_nmi_pin`) | NMI asserted by WDT Timer2 timeout |
+| 3 | crypto_err | No | Multiple concurrent cryptographic operations using the Key Vault |
+| 4 | kv_error | No | KV boot-flow monitor `dest_valid` mismatch or boot-flow error |
+| 5 | shadow_storage_err | No | ICCM region shadow-register storage fault (register/shadow corrupted) |
+| 6 | fsm_error | No | Sparse-encoded security FSM entered an invalid/illegal state (fault-injection/glitch detection) |
+| 31:7 | rsvd | — | Reserved |
+
+**Masking behavior:** Only `iccm_ecc_unc`, `dccm_ecc_unc`, and `nmi_pin` are maskable via the writable fields of `internal_hw_error_fatal_mask`. The remaining fields (`crypto_err`, `kv_error`, `shadow_storage_err`, `fsm_error`) are unmaskable; their corresponding mask bits are read-only zero. Firmware cannot suppress an already-triggered fatal interrupt by setting a mask bit.
+
+**`fsm_error` — sparse-FSM glitch detection:** Security-critical FSMs (for example, the mailbox FSM) are sparse-encoded with Hamming-distance-separated state values. If a fault-injection/glitch drives an FSM into an unused encoding, the sparse-FSM guard forces the machine to its error state and asserts `fsm_error`. This is an unmaskable, reset-only fatal error.
+
+The recoverable counterpart, `CPTRA_HW_ERROR_NON_FATAL`, aggregates non-fatal conditions (mailbox protocol violations, mailbox uncorrectable ECC, and the ICCM region shadow-register phase mismatch `shadow_update_err`); firmware may deassert `cptra_error_non_fatal` by clearing or masking all set non-fatal bits.
 
 ## Cryptographic blocks fatal and non-fatal errors
 
