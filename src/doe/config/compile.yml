@@ -35,7 +35,7 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/doe_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/generated/doe_reg_pkg.sv
       - $COMPILE_ROOT/rtl/doe_ctrl.sv
       - $COMPILE_ROOT/rtl/doe_decipher_block.sv
       - $COMPILE_ROOT/rtl/doe_encipher_block.sv
@@ -44,7 +44,7 @@ targets:
       - $COMPILE_ROOT/rtl/doe_sbox.sv
       - $COMPILE_ROOT/rtl/doe_cbc.sv
       - $COMPILE_ROOT/rtl/doe_core_cbc.sv
-      - $COMPILE_ROOT/rtl/doe_reg.sv
+      - $COMPILE_ROOT/rtl/generated/doe_reg.sv
       - $COMPILE_ROOT/rtl/doe_fsm.sv
     tops: [doe_ctrl]
   rtl_lint:
