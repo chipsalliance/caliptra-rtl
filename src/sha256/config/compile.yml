@@ -7,14 +7,14 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/sha256_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/generated/sha256_reg_pkg.sv
       - $COMPILE_ROOT/rtl/sha256_params_pkg.sv
       - $COMPILE_ROOT/rtl/sha256_ctrl.sv
       - $COMPILE_ROOT/rtl/sha256.sv
       - $COMPILE_ROOT/rtl/sha256_core.v
       - $COMPILE_ROOT/rtl/sha256_k_constants.v
       - $COMPILE_ROOT/rtl/sha256_w_mem.v
-      - $COMPILE_ROOT/rtl/sha256_reg.sv
+      - $COMPILE_ROOT/rtl/generated/sha256_reg.sv
     tops: [sha256_ctrl]
   rtl_lint:
     directories: []

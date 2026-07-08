@@ -10,16 +10,16 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/soc_ifc_pkg.sv
       - $COMPILE_ROOT/rtl/mbox_pkg.sv
-      - $COMPILE_ROOT/rtl/mbox_csr_pkg.sv
-      - $COMPILE_ROOT/rtl/sha512_acc_csr_pkg.sv
-      - $COMPILE_ROOT/rtl/soc_ifc_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/generated/mbox_csr_pkg.sv
+      - $COMPILE_ROOT/rtl/generated/sha512_acc_csr_pkg.sv
+      - $COMPILE_ROOT/rtl/generated/soc_ifc_reg_pkg.sv
   tb:
     directories: 
       - $COMPILE_ROOT/rtl
     files:
       - $COMPILE_ROOT/rtl/soc_ifc_pkg.sv
       - $COMPILE_ROOT/rtl/mbox_pkg.sv
-      - $COMPILE_ROOT/rtl/soc_ifc_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/generated/soc_ifc_reg_pkg.sv
 ---
 provides: [soc_ifc_uvm_pkg]
 schema_version: 2.4.0
@@ -30,9 +30,9 @@ targets:
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/mbox_csr_uvm.sv
-      - $COMPILE_ROOT/rtl/sha512_acc_csr_uvm.sv
-      - $COMPILE_ROOT/rtl/soc_ifc_reg_uvm.sv
+      - $COMPILE_ROOT/dv/reg_model/mbox_csr_uvm.sv
+      - $COMPILE_ROOT/dv/reg_model/sha512_acc_csr_uvm.sv
+      - $COMPILE_ROOT/dv/reg_model/soc_ifc_reg_uvm.sv
 ---
 provides: [soc_ifc_coverage]
 schema_version: 2.4.0
@@ -68,11 +68,11 @@ targets:
       - $COMPILE_ROOT/rtl/soc_ifc_top.sv
       - $COMPILE_ROOT/rtl/soc_ifc_boot_fsm.sv
       - $COMPILE_ROOT/rtl/soc_ifc_arb.sv
-      - $COMPILE_ROOT/rtl/soc_ifc_reg.sv
+      - $COMPILE_ROOT/rtl/generated/soc_ifc_reg.sv
       - $COMPILE_ROOT/rtl/mbox.sv
-      - $COMPILE_ROOT/rtl/mbox_csr.sv
+      - $COMPILE_ROOT/rtl/generated/mbox_csr.sv
       - $COMPILE_ROOT/rtl/sha512_acc_top.sv
-      - $COMPILE_ROOT/rtl/sha512_acc_csr.sv
+      - $COMPILE_ROOT/rtl/generated/sha512_acc_csr.sv
       - $COMPILE_ROOT/rtl/wdt.sv
     tops: [soc_ifc_top]
   rtl_lint:

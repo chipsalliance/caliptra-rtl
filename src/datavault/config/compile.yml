@@ -17,7 +17,7 @@ targets:
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/dv_reg_uvm.sv
+      - $COMPILE_ROOT/dv/reg_model/dv_reg_uvm.sv
 ---
 provides: [datavault]
 schema_version: 2.4.0
@@ -28,8 +28,8 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/dv_reg_pkg.sv
-      - $COMPILE_ROOT/rtl/dv_reg.sv
+      - $COMPILE_ROOT/rtl/generated/dv_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/generated/dv_reg.sv
       - $COMPILE_ROOT/rtl/dv_defines_pkg.sv
       - $COMPILE_ROOT/rtl/dv.sv
     tops: [dv]

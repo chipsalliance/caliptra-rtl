@@ -1,2 +1,2 @@
 +incdir+${CALIPTRA_ROOT}/src/axi/rtl
-${CALIPTRA_ROOT}/src/axi/rtl/axi_dma_reg_uvm.sv
+${CALIPTRA_ROOT}/src/axi/dv/reg_model/axi_dma_reg_uvm.sv
