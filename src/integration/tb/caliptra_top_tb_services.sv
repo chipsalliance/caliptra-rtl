@@ -3432,7 +3432,6 @@ doe_cov_bind i_doe_cov_bind();
 //========================================================================
 `ifndef VERILATOR
     logic release_glitch = 0;
-    logic boot_fsm_glitch_pending = 0;
     always @(negedge clk) begin
         // DOE FSM glitch
         if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h00) && mailbox_write) begin

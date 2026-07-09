@@ -232,7 +232,7 @@ class soc_ifc_predictor #(
   bit                                 cptra_obf_uds_seed_vld = 1'b0;
   bit [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed = '{default:32'h0};
 
-  security_state_t security_state = '{debug_locked: 4'h6, device_lifecycle: DEVICE_UNPROVISIONED}; // FIXME unused
+  security_state_t security_state = '{debug_locked: MuBi4True, device_lifecycle: DEVICE_UNPROVISIONED}; // FIXME unused
   bit bootfsm_breakpoint = 1'b0;
   bit cptra_in_dbg_or_manuf_mode = 1'b0;
   int unsigned fw_update_wait_count = 0;
@@ -482,7 +482,7 @@ class soc_ifc_predictor #(
         if (soc_ifc_rst_in_asserted) begin
             // Todo check for breakpoint assertion and flag an expected AHB write to clear it
             soc_ifc_rst_in_asserted = 1'b0;
-            cptra_in_dbg_or_manuf_mode = (t.security_state.debug_locked == 4'h9) || t.security_state.device_lifecycle == DEVICE_MANUFACTURING;
+            cptra_in_dbg_or_manuf_mode = mubi4_test_false_strict(t.security_state.debug_locked) || t.security_state.device_lifecycle == DEVICE_MANUFACTURING;
             bootfsm_breakpoint = t.set_bootfsm_breakpoint && cptra_in_dbg_or_manuf_mode;
             reset_predicted.reset();
             send_soc_ifc_sts_txn = 0; // prediction for ready_for_fuses done in predict_reset after noncore reset deassertion

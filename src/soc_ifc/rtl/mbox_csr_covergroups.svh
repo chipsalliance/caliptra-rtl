@@ -236,6 +236,7 @@
             bins MBOX_RDY_FOR_DATA                            = {mbox_fsm_state_e'(MBOX_RDY_FOR_DATA)};
             bins MBOX_EXECUTE_UC                              = {mbox_fsm_state_e'(MBOX_EXECUTE_UC)};
             bins MBOX_EXECUTE_SOC                             = {mbox_fsm_state_e'(MBOX_EXECUTE_SOC)};
+            bins MBOX_EXECUTE_TAP                             = {mbox_fsm_state_e'(MBOX_EXECUTE_TAP)};
             bins MBOX_ERROR                                   = {mbox_fsm_state_e'(MBOX_ERROR)};
         }
         mbox_fsm_ps_edge_cp : coverpoint mbox_fsm_ps {

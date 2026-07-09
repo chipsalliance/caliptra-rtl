@@ -666,7 +666,9 @@ always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
     end
 end
 
-// Pulse when interpreted locked state changes (loose for locked, strict for unlocked)
+// Pulse when the interpreted locked state changes. Uses the loose "locked" test
+// (mubi4_test_true_loose) on both the current and delayed values so that any
+// transition into or out of the locked interpretation generates a single pulse.
 always_comb security_state_debug_locked_p = mubi4_test_true_loose(security_state.debug_locked) ^ mubi4_test_true_loose(security_state_debug_locked_d);
 
 // Generate a pulse to set the interrupt bit

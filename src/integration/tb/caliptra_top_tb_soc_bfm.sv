@@ -455,7 +455,7 @@ import caliptra_top_tb_pkg::*; #(
                             else if (rdata[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_LOW]) begin
                                 generic_input_wires = {32'h0, CRYPTO_ERROR_OBSERVED};
                             end
-                            else if (rdata[6]) begin // fsm_error bit
+                            else if (rdata[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_LOW]) begin // fsm_error bit
                                 generic_input_wires = {32'h0, FSM_ERROR_OBSERVED};
                             end
                             else begin
