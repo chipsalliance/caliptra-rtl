@@ -44,6 +44,10 @@ class ECC_back_to_back_random_sequence #(int AHB_DATA_WIDTH = 64,
       axis_s.bias_curve     = ecc_curve_p256;
       axis_s.pin_pollute    = 1'b1;
       axis_s.bias_pollute_upper = 1'b1;
+      // P-256 blocks PCR_SIGN anyway (illegal combo), but pin=0 keeps
+      // stimulus focused on the scrub path without spurious errors.
+      axis_s.pin_pcr_sign   = 1'b1;
+      axis_s.bias_pcr_sign  = 1'b0;
       axis_s.start(ECC_in_agent_sequencer);
     end
 

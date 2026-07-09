@@ -42,6 +42,9 @@ class ECC_otf_reset_dualcurve_random_sequence #(int AHB_DATA_WIDTH = 64,
       axis_s.bias_err_mode = ERR_NONE;
       axis_s.pin_pollute   = 1'b1;
       axis_s.bias_pollute_upper = 1'b1;
+      // PCR_SIGN needs PCR data; UVMF env stubs it and PCR SIGN would hang.
+      axis_s.pin_pcr_sign  = 1'b1;
+      axis_s.bias_pcr_sign = 1'b0;
       axis_s.start(ECC_in_agent_sequencer);
     end
 

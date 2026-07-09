@@ -513,6 +513,22 @@ end
           end
       end
     endtask // wait_ready
+
+    // Wait for STATUS[1]=VALID specifically. wait_ready above returns
+    // as soon as any status bit is set, which can be too eager right
+    // after a dispatch (ready=1 default lingers a few clocks before the
+    // FSM drops it), causing the caller to observe stale outputs.
+    task wait_valid;
+      begin
+        read_single_word(ADDR_STATUS);
+        // VALID = bit 1 on either AHB lane depending on addr[2] of
+        // STATUS (0x18, bit[2]=0 -> lane 0).
+        while (((hrdata_i[31:0] | hrdata_i[63:32]) & 32'h2) == 32'h0)
+          begin
+            read_single_word(ADDR_STATUS);
+          end
+      end
+    endtask // wait_valid
   
 
   //----------------------------------------------------------------
@@ -606,30 +622,33 @@ end
     input [31 : 0] addr
     );
     begin
+      // 32-bit dword lands on lane 0 or lane 1 of the 64-bit hrdata
+      // bus based on addr[2]; other lane is zero. OR both lanes to
+      // recover the dword regardless (matches ECC_out_pkg hrdata_32).
       read_single_word(addr);
-      reg_read_data[383 : 352] = hrdata_i;
+      reg_read_data[383 : 352] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr + 4*1);
-      reg_read_data[351 : 320] = hrdata_i;
+      reg_read_data[351 : 320] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*2);
-      reg_read_data[319 : 288] = hrdata_i;
+      reg_read_data[319 : 288] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*3);
-      reg_read_data[287 : 256] = hrdata_i;
+      reg_read_data[287 : 256] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*4);
-      reg_read_data[255 : 224] = hrdata_i;
+      reg_read_data[255 : 224] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*5);
-      reg_read_data[223 : 192] = hrdata_i;
+      reg_read_data[223 : 192] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*6);
-      reg_read_data[191 : 160] = hrdata_i;
+      reg_read_data[191 : 160] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*7);
-      reg_read_data[159 : 128] = hrdata_i;
+      reg_read_data[159 : 128] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*8);
-      reg_read_data[127 :  96] = hrdata_i;
+      reg_read_data[127 :  96] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*9);
-      reg_read_data[95  :  64] = hrdata_i;
+      reg_read_data[95  :  64] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*10);
-      reg_read_data[63  :  32] = hrdata_i;
+      reg_read_data[63  :  32] = hrdata_i[31:0] | hrdata_i[63:32];
       read_single_word(addr +  4*11);
-      reg_read_data[31  :   0] = hrdata_i;
+      reg_read_data[31  :   0] = hrdata_i[31:0] | hrdata_i[63:32];
     end
   endtask // read_digest
 
@@ -905,6 +924,181 @@ end
   endtask
 
   //----------------------------------------------------------------
+  // check_field()
+  //
+  // Compare 384b actual against 384b expected; uvm_error on mismatch.
+  // For P-256 the DUT scrubs the upper 128b (curve-native), so the
+  // expected is masked to lower 256b regardless of whether the caller
+  // polluted test_vector's upper bits.
+  //----------------------------------------------------------------
+  task check_field (input bit [383:0] got, input bit [383:0] exp,
+                    input ecc_in_curve_e curve, input string name);
+    bit [383:0] exp_masked;
+    begin
+      exp_masked = (curve == ecc_curve_p256) ? {128'h0, exp[255:0]} : exp;
+      if (got !== exp_masked) begin
+        `uvm_error("ECC_BFM", $sformatf("%s MISMATCH: expected 0x%096h, got 0x%096h", name, exp_masked, got))
+      end else begin
+        `uvm_info("ECC_BFM", $sformatf("%s CHECK OK: 0x%096h", name, got), UVM_LOW)
+      end
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // check_op_output()
+  //
+  // Read DUT output block(s) for the given op and compare against the
+  // exe-provided fresh KAT (in test_vector). Only meaningful when the
+  // op completes deterministically (legal det: KEYGEN, non-nondet SIGN,
+  // VERIFY, ECDH). Nondet SIGN, err, otf-reset, zeroize paths call
+  // read_op_output instead (no check).
+  //----------------------------------------------------------------
+  task check_op_output (input ecc_in_op_transactions op, input ecc_in_curve_e curve);
+    begin
+      case (op)
+        key_gen : begin
+          read_block(ADDR_PRIVKEY_OUT_START);
+          check_field(reg_read_data, test_vector.privkey,  curve, "privkey_out");
+          read_block(ADDR_PUBKEYX_START);
+          check_field(reg_read_data, test_vector.pubkey.x, curve, "pubkey_x");
+          read_block(ADDR_PUBKEYY_START);
+          check_field(reg_read_data, test_vector.pubkey.y, curve, "pubkey_y");
+        end
+        key_sign : begin
+          read_block(ADDR_SIGNR_START);
+          check_field(reg_read_data, test_vector.R, curve, "sign_R");
+          read_block(ADDR_SIGNS_START);
+          check_field(reg_read_data, test_vector.S, curve, "sign_S");
+        end
+        key_verify : begin
+          read_block(ADDR_VERIFY_R_START);
+          check_field(reg_read_data, test_vector.R, curve, "verify_R");
+        end
+        ecdh_sharedkey : begin
+          read_block(ADDR_DH_SHARED_KEY_START);
+          check_field(reg_read_data, test_vector.DH_sharedkey, curve, "DH_sharedkey");
+        end
+        default : ;
+      endcase
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // check_zero_outputs()
+  //
+  // Verify that all sensitive output CSRs read as 0. Used after
+  // zeroize-mid-op and OTF-reset paths to confirm the DUT cleared
+  // its outputs (the zeroize / reset contract).
+  //----------------------------------------------------------------
+  task check_zero_outputs (input string context);
+    begin
+      read_block(ADDR_PRIVKEY_OUT_START);
+      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":privkey_out"});
+      read_block(ADDR_PUBKEYX_START);
+      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":pubkey_x"});
+      read_block(ADDR_PUBKEYY_START);
+      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":pubkey_y"});
+      read_block(ADDR_SIGNR_START);
+      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":sign_R"});
+      read_block(ADDR_SIGNS_START);
+      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":sign_S"});
+      read_block(ADDR_VERIFY_R_START);
+      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":verify_R"});
+      read_block(ADDR_DH_SHARED_KEY_START);
+      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":DH_sharedkey"});
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // verify_signature()
+  //
+  // Dispatch an RTL VERIFY on the given (R, S) using the current
+  // test_vector's (msg, pubkey). Reads back verify_R and checks
+  // verify_R == R (the ECDSA validity condition). Used for nondet
+  // SIGN self-check: any valid signature must satisfy this
+  // regardless of the k value the DRBG produced.
+  //----------------------------------------------------------------
+  task verify_signature (input bit [383:0] R_got, input bit [383:0] S_got,
+                         input ecc_in_curve_e curve, input string context);
+    bit [31:0] cmd_word;
+    begin
+      // Give the SIGN op time to fully complete (ready should be up).
+      wait_ready();
+      write_block(ADDR_MSG_START,     test_vector.hashed_msg);
+      write_block(ADDR_PUBKEYX_START, test_vector.pubkey.x);
+      write_block(ADDR_PUBKEYY_START, test_vector.pubkey.y);
+      write_block(ADDR_SIGNR_START,   R_got);
+      write_block(ADDR_SIGNS_START,   S_got);
+      write_block(ADDR_IV_START,      384'h1);
+      cmd_word = VERIFY_CMD | ((curve == ecc_curve_p256) ? CTRL_CURVE_SEL_MASK : 0);
+      write_single_word(ADDR_CTRL, cmd_word);
+      @(posedge clk_i);
+      hsel_o <= 0;
+      @(posedge clk_i);
+      wait_valid();
+      read_block(ADDR_VERIFY_R_START);
+      check_field(reg_read_data, R_got, curve,
+                  {context, ":nondet_self_verify_R"});
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // drbg_force_p256 / drbg_release_p256
+  //
+  // Force the P-256 HMAC-DRBG wrapper's output to a known k value so
+  // the RTL bit-matches the pre-baked nondet KAT's R,S. Used only for
+  // P-256 nondet SIGN. Mirrors ecc_top_tb::drbg_bypass_force.
+  //----------------------------------------------------------------
+  task drbg_force_p256 (input bit [255:0] k_val);
+    begin
+      force hdl_top.dut.ecc_dsa_ctrl_i.hmac_drbg_result_p256 = k_val;
+      force hdl_top.dut.ecc_dsa_ctrl_i.lambda_p256           = 256'd1;
+      force hdl_top.dut.ecc_dsa_ctrl_i.scalar_rnd_p256       = '0;
+      force hdl_top.dut.ecc_dsa_ctrl_i.masking_rnd_p256      = '0;
+    end
+  endtask
+
+  task drbg_release_p256 ();
+    begin
+      release hdl_top.dut.ecc_dsa_ctrl_i.hmac_drbg_result_p256;
+      release hdl_top.dut.ecc_dsa_ctrl_i.lambda_p256;
+      release hdl_top.dut.ecc_dsa_ctrl_i.scalar_rnd_p256;
+      release hdl_top.dut.ecc_dsa_ctrl_i.masking_rnd_p256;
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // drbg_force_p384 / drbg_release_p384
+  //
+  // Force the P-384 HMAC-DRBG output to a known k, bypassing the RTL
+  // DRBG's SIGN_NONCE_ST whitening stage. Also short-circuits the
+  // DRBG wait via hmac_ready_p384=1 so the FSM doesn't stall waiting
+  // for the (bypassed) DRBG. Used for P-384 nondet SIGN so R,S
+  // bit-exactly match the pre-computed nondet KAT (k from privkeyB
+  // slot, injected by gen_nondet_kat.py's _HmacDrbgSha384). Mirrors
+  // ecc_top_tb::drbg_bypass_force_p384.
+  //----------------------------------------------------------------
+  task drbg_force_p384 (input bit [383:0] k_val);
+    begin
+      force hdl_top.dut.ecc_dsa_ctrl_i.hmac_drbg_result_p384 = k_val;
+      force hdl_top.dut.ecc_dsa_ctrl_i.lambda_p384           = {{(384-1){1'b0}}, 1'b1};
+      force hdl_top.dut.ecc_dsa_ctrl_i.scalar_rnd_p384       = '0;
+      force hdl_top.dut.ecc_dsa_ctrl_i.masking_rnd_p384      = '0;
+      force hdl_top.dut.ecc_dsa_ctrl_i.hmac_ready_p384       = 1'b1;
+    end
+  endtask
+
+  task drbg_release_p384 ();
+    begin
+      release hdl_top.dut.ecc_dsa_ctrl_i.hmac_drbg_result_p384;
+      release hdl_top.dut.ecc_dsa_ctrl_i.lambda_p384;
+      release hdl_top.dut.ecc_dsa_ctrl_i.scalar_rnd_p384;
+      release hdl_top.dut.ecc_dsa_ctrl_i.masking_rnd_p384;
+      release hdl_top.dut.ecc_dsa_ctrl_i.hmac_ready_p384;
+    end
+  endtask
+
+  //----------------------------------------------------------------
   // ecc_test()
   //
   // Dispatch entry. Legacy P-384-det path preserved for backward compat
@@ -985,6 +1179,7 @@ end
     bit        is_p256;
     bit        is_nondet;
     bit        is_err;
+    bit        drbg_forced;   // track SV-force so we can always release
     begin
       // Backdoor test/op signals -- kept updated for the ECC_in monitor
       // and out-monitor even though our path leaves the flag low.
@@ -992,22 +1187,39 @@ end
       op_o   = istruct.op;
       transaction_flag_out_monitor_o = 1'b0;
       test_case_num++;
+      drbg_forced = 1'b0;
 
       is_p256   = (istruct.curve == ecc_curve_p256);
       is_nondet = istruct.rand_k_en;
       is_err    = (istruct.err_mode != ERR_NONE);
 
-      // Load the correct KAT into test_vector. For err_mode we still
-      // need operand values because CSR writes happen before dispatch;
-      // the DUT never reads them past the error gate.
-      if (is_p256 && !is_nondet)
-        read_test_vectors("secp256_testvector.hex");
-      else if (is_p256 && is_nondet)
-        read_test_vectors("secp256_nondet_kat.hex");
-      else if (!is_p256 && is_nondet)
-        read_test_vectors("secp384_nondet_kat.hex");
-      else
-        read_test_vectors("secp384_testvector.hex");
+      // Load KAT.
+      //   * Det: run the per-curve exe once to get a fresh single-TC
+      //     KAT (msg, privkey, seed, nonce, pubkey, IV) -- every
+      //     random seed produces distinct inputs.
+      //   * Nondet: same exe first, then post-process via Python
+      //     make_nondet_kat.py which derives k = HMAC-DRBG-SHA{256,
+      //     384}(seed, nonce) and recomputes (R,S) = ECDSA(msg, priv,
+      //     k) so KAT R,S is bit-exact for the k that the BFM SV-forces
+      //     into hmac_drbg_result_p{256,384} at dispatch.
+      if (is_p256) begin
+        $system("./ecc_secp256r1.exe");
+        if (is_nondet) begin
+          $system("./make_nondet_kat.py secp256_testvector.hex secp256_nondet_kat.hex");
+          read_test_vectors("secp256_nondet_kat.hex");
+        end else begin
+          read_test_vectors("secp256_testvector.hex");
+        end
+      end
+      else begin
+        $system("./ecc_secp384r1.exe");
+        if (is_nondet) begin
+          $system("./make_nondet_kat.py secp384_testvector.hex secp384_nondet_kat.hex");
+          read_test_vectors("secp384_nondet_kat.hex");
+        end else begin
+          read_test_vectors("secp384_testvector.hex");
+        end
+      end
 
       wait_ready();
 
@@ -1044,6 +1256,18 @@ end
 
       // Drive operand CSRs then dispatch.
       write_operands(istruct.op);
+      // For nondet SIGN (both curves), force hmac_drbg_result to the
+      // KAT's pre-computed k in privkeyB, bypassing the RTL DRBG
+      // (P-256: temp wrapper; P-384: SIGN_NONCE_ST whitening) so R,S
+      // become deterministic and bit-exact match the KAT. Released
+      // unconditionally at end of txn regardless of which path taken.
+      if (is_nondet && istruct.op == key_sign) begin
+        if (is_p256)
+          drbg_force_p256(test_vector.privkeyB[255:0]);
+        else
+          drbg_force_p384(test_vector.privkeyB);
+        drbg_forced = 1'b1;
+      end
       write_single_word(ADDR_CTRL, cmd_word);
       @(posedge clk_i);
       hsel_o <= 0;
@@ -1057,25 +1281,48 @@ end
         // Zeroize-mid-op: wait N clocks after dispatch (op is mid-flight,
         // ready=0), then fire the ZEROIZE cmd bit. Then wait a bit for
         // the FSM to snap back to ECC_RESET and ready to reassert.
+        // After zeroize completes, all sensitive outputs must be 0.
         repeat (istruct.zeroize_delay_clks + 1) @(posedge clk_i);
         write_single_word(ADDR_CTRL, CTRL_ZEROIZE_MASK);
         @(posedge clk_i);
         hsel_o <= 0;
         wait_ready();
+        check_zero_outputs("zeroize_mid_op");
       end
       else begin
-        if (!test_otf_reset)
-          wait_ready();
+        if (!test_otf_reset) begin
+          wait_valid();
+        end
         else begin
           @(posedge clk_i);
           ecc_rst_n_o = 1'b0;
           repeat (2) @(posedge clk_i);
           ecc_rst_n_o = 1'b1;
+          repeat (10) @(posedge clk_i);
         end
-        // Drain the DUT outputs by reading them (keeps AHB bus quiet
-        // and lets any error_intr / notif_intr settle) but do NOT arm
-        // the out-monitor -- scoreboard has no expected for this txn.
-        read_op_output(istruct.op);
+        // After completion, check the outputs.
+        //   * Legal det op   -> compare against fresh KAT from the exe.
+        //   * Nondet SIGN    -> forced k means (R,S) must bit-exactly
+        //                       match the pre-baked nondet KAT (works
+        //                       for both curves; P-384 k pre-computed
+        //                       by gen_nondet_kat.py's HMAC-DRBG-SHA384
+        //                       into privkeyB slot).
+        //   * OTF-reset      -> all outputs zeroed.
+        if (test_otf_reset) begin
+          check_zero_outputs("otf_reset");
+        end
+        else begin
+          check_op_output(istruct.op, istruct.curve);
+        end
+      end
+
+      // Always release the DRBG force at end of txn so it can't leak
+      // into the next transaction regardless of which path was taken.
+      if (drbg_forced) begin
+        if (is_p256)
+          drbg_release_p256();
+        else
+          drbg_release_p384();
       end
     end
   endtask // ecc_random_test
@@ -1174,7 +1421,8 @@ end
   // wait_for_error_or_timeout()
   //
   // Poll ecc_dsa_ctrl_i.error_flag via absolute hierarchical path from
-  // inside hdl_top. Returns when error_flag is high or after N clocks.
+  // inside hdl_top. Returns when error_flag is high. Fires uvm_error
+  // if the expected error does not assert within max_clocks.
   //----------------------------------------------------------------
   task wait_for_error_or_timeout (input int max_clocks);
     int i;
@@ -1187,7 +1435,7 @@ end
         end
         @(posedge clk_i);
       end
-      `uvm_warning("ECC_BFM", $sformatf("error_flag did not assert within %0d clocks", max_clocks))
+      `uvm_error("ECC_BFM", $sformatf("Expected error_flag did not assert within %0d clocks", max_clocks))
     end
   endtask
 
@@ -1211,7 +1459,7 @@ end
 
       fd_r = $fopen(fname, "r");
       if (fd_r == 0)
-        $error("Can't open file %s", fname);
+        `uvm_fatal("ECC_BFM", $sformatf("Cannot open KAT file %s", fname))
   
       // Get hashed message, private key, public key x, public key y, k and R
       $fgets(line_read, fd_r);  

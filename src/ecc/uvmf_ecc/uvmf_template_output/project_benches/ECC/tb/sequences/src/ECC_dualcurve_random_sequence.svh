@@ -42,6 +42,11 @@ class ECC_dualcurve_random_sequence #(int AHB_DATA_WIDTH = 64,
       axis_s.bias_test     = ecc_normal_test;
       axis_s.pin_pollute   = 1'b1;
       axis_s.bias_pollute_upper = 1'b1;
+      // PCR_SIGN needs a PCR data source; the UVMF env stubs it to 0
+      // (never asserts), so a legal PCR SIGN op would hang. PCR error
+      // coverage is via ERR_PCR_P256 / ERR_RAND_K_PCR in illegal_mode.
+      axis_s.pin_pcr_sign  = 1'b1;
+      axis_s.bias_pcr_sign = 1'b0;
       axis_s.start(ECC_in_agent_sequencer);
     end
 

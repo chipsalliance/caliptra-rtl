@@ -42,7 +42,15 @@ targets:
       - hdl_top
       - hvl_top
   sim:
-    pre_exec: 'echo "[PRE-EXEC] Copying ECC vector generators and KAT hex files to $(pwd)" && cp $COMPILE_ROOT/../tb/ecc_secp384r1.exe . && cp $COMPILE_ROOT/../tb/ecc_secp256r1.exe . && cp $COMPILE_ROOT/../tb/secp256_testvector.hex . && cp $COMPILE_ROOT/../tb/secp384_testvector.hex . && cp $COMPILE_ROOT/../tb/test_vectors/nondet/secp256_nondet_kat.hex . && cp $COMPILE_ROOT/../tb/test_vectors/nondet/secp384_nondet_kat.hex .'
+    # Copy per-curve KAT generator exes AND the nondet KAT builder
+    # script. Every txn: (a) exe generates a fresh single-TC det KAT
+    # (msg, privkey, seed, nonce, pubkey, IV) with distinct random-seed
+    # inputs; (b) for nondet SIGN txns the BFM invokes make_nondet_kat.py
+    # to derive k = HMAC-DRBG-SHA{256,384}(seed, nonce) and recompute
+    # (R,S) = ECDSA(msg, privkey, k) purely in Python. The BFM then
+    # SV-forces hmac_drbg_result_p{256,384} = k so RTL R,S bit-exactly
+    # match the freshly computed KAT.
+    pre_exec: 'echo "[PRE-EXEC] Copying ECC vector generators and nondet KAT builder to $(pwd)" && cp $COMPILE_ROOT/../tb/ecc_secp384r1.exe . && cp $COMPILE_ROOT/../tb/ecc_secp256r1.exe . && cp $COMPILE_ROOT/../tb/test_vectors/nondet/make_nondet_kat.py . && chmod +x make_nondet_kat.py'
 global:
   tool:
     vcs:

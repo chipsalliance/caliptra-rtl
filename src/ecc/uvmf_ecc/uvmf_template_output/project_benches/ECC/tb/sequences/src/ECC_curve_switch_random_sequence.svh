@@ -48,6 +48,10 @@ class ECC_curve_switch_random_sequence #(int AHB_DATA_WIDTH = 64,
       axis_s.bias_curve    = cur_curve;
       axis_s.pin_pollute   = 1'b1;
       axis_s.bias_pollute_upper = 1'b1;
+      // PCR_SIGN needs a PCR data source; UVMF env stubs it. Legal
+      // PCR SIGN would hang. Coverage handled by illegal_mode test.
+      axis_s.pin_pcr_sign  = 1'b1;
+      axis_s.bias_pcr_sign = 1'b0;
       axis_s.start(ECC_in_agent_sequencer);
       cur_curve = (cur_curve == ecc_curve_p384) ? ecc_curve_p256 : ecc_curve_p384;
     end
@@ -62,6 +66,8 @@ class ECC_curve_switch_random_sequence #(int AHB_DATA_WIDTH = 64,
       axis_s.bias_curve    = (i < 2) ? ecc_curve_p384 : ecc_curve_p256;
       axis_s.pin_pollute   = 1'b1;
       axis_s.bias_pollute_upper = 1'b1;
+      axis_s.pin_pcr_sign  = 1'b1;
+      axis_s.bias_pcr_sign = 1'b0;
       axis_s.start(ECC_in_agent_sequencer);
     end
 

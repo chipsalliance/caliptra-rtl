@@ -169,7 +169,7 @@ class ECC_predictor #(
 
     fd_r = $fopen(kat_file, "r");
     if (fd_r == 0)
-      `uvm_fatal("PREDICT", {"FILE_READ_ERROR: Can't open input vector file ", kat_file})
+      `uvm_fatal("PREDICT", {"Cannot open KAT file ", kat_file})
 
     $fgets(line_read, fd_r); $sscanf(line_read, "%h", tmp_data); // hashed_msg
     $fgets(line_read, fd_r); $sscanf(line_read, "%h", privkey);
