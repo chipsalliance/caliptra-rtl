@@ -1942,14 +1942,10 @@
 #define HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK                                                       (0x4)
 #define HMAC256_REG_HMAC256_CTRL_MODE_LOW                                                           (3)
 #define HMAC256_REG_HMAC256_CTRL_MODE_MASK                                                          (0x8)
-#define HMAC256_REG_HMAC256_CTRL_RESERVED4_LOW                                                      (4)
-#define HMAC256_REG_HMAC256_CTRL_RESERVED4_MASK                                                     (0x10)
-#define HMAC256_REG_HMAC256_CTRL_LAST_LOW                                                           (5)
-#define HMAC256_REG_HMAC256_CTRL_LAST_MASK                                                          (0x20)
-#define HMAC256_REG_HMAC256_CTRL_RESERVED6_LOW                                                      (6)
-#define HMAC256_REG_HMAC256_CTRL_RESERVED6_MASK                                                     (0x40)
-#define HMAC256_REG_HMAC256_CTRL_RESTORE_LOW                                                        (7)
-#define HMAC256_REG_HMAC256_CTRL_RESTORE_MASK                                                       (0x80)
+#define HMAC256_REG_HMAC256_CTRL_LAST_LOW                                                           (4)
+#define HMAC256_REG_HMAC256_CTRL_LAST_MASK                                                          (0x10)
+#define HMAC256_REG_HMAC256_CTRL_RESTORE_LOW                                                        (5)
+#define HMAC256_REG_HMAC256_CTRL_RESTORE_MASK                                                       (0x20)
 #endif
 #define CLP_HMAC256_REG_HMAC256_STATUS                                                              (0x10012018)
 #ifndef HMAC256_REG_HMAC256_STATUS

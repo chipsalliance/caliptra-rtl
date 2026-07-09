@@ -160,15 +160,7 @@ package hmac256_reg_pkg;
 
     typedef struct packed{
         logic value;
-    } hmac256_reg__HMAC256_CTRL__Reserved4__out_t;
-
-    typedef struct packed{
-        logic value;
     } hmac256_reg__HMAC256_CTRL__LAST__out_t;
-
-    typedef struct packed{
-        logic value;
-    } hmac256_reg__HMAC256_CTRL__Reserved6__out_t;
 
     typedef struct packed{
         logic value;
@@ -179,9 +171,7 @@ package hmac256_reg_pkg;
         hmac256_reg__HMAC256_CTRL__NEXT__out_t NEXT;
         hmac256_reg__HMAC256_CTRL__ZEROIZE__out_t ZEROIZE;
         hmac256_reg__HMAC256_CTRL__MODE__out_t MODE;
-        hmac256_reg__HMAC256_CTRL__Reserved4__out_t Reserved4;
         hmac256_reg__HMAC256_CTRL__LAST__out_t LAST;
-        hmac256_reg__HMAC256_CTRL__Reserved6__out_t Reserved6;
         hmac256_reg__HMAC256_CTRL__RESTORE__out_t RESTORE;
     } hmac256_reg__HMAC256_CTRL__out_t;
 

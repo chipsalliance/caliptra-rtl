@@ -72,9 +72,7 @@
     input bit [1-1:0] NEXT,
     input bit [1-1:0] ZEROIZE,
     input bit [1-1:0] MODE,
-    input bit [1-1:0] Reserved4,
     input bit [1-1:0] LAST,
-    input bit [1-1:0] Reserved6,
     input bit [1-1:0] RESTORE
     );
         option.per_instance = 1;
@@ -82,9 +80,7 @@
         NEXT_cp : coverpoint NEXT;
         ZEROIZE_cp : coverpoint ZEROIZE;
         MODE_cp : coverpoint MODE;
-        Reserved4_cp : coverpoint Reserved4;
         LAST_cp : coverpoint LAST;
-        Reserved6_cp : coverpoint Reserved6;
         RESTORE_cp : coverpoint RESTORE;
 
     endgroup

@@ -84,14 +84,12 @@ addrmap hmac256_reg {
                                  the HMAC256 core:
                                  0 for HMAC-SHA-224
                                  1 for HMAC-SHA-256"; swwe;} MODE = 1'b1;
-        field {desc = "Reserved";} Reserved4 = 1'b0;
         field {desc = "Control last command bit: Marks the current INIT or NEXT
                                 command as the final message block. When set together
                                 with INIT or NEXT, the HMAC256 core completes the OPAD
                                 + final hash and produces the HMAC tag.
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse; swwe;} LAST = 1'b0;
-        field {desc = "Reserved";} Reserved6 = 1'b0;
         field {desc = "Control restore command bit: Resumes HMAC processing from a
                                 saved intermediate inner-SHA chaining state. SW writes the
                                 previously-captured TAG back to HMAC256_TAG, re-supplies the

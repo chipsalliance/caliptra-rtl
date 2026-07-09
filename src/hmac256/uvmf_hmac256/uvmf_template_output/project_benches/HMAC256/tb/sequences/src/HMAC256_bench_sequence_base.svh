@@ -162,7 +162,7 @@ rand hmac256_env_sequence_base_t hmac256_env_seq;
   //                  0 -> first CTRL is INIT.
   //   mode_bit     : 0 -> HMAC-SHA-224, 1 -> HMAC-SHA-256.
   //   wait_last    : 1 -> wait STATUS.VALID, 0 -> wait STATUS.READY.
-  // CTRL bits: [0]=INIT [1]=NEXT [3]=MODE [5]=LAST [7]=RESTORE.
+  // CTRL bits: [0]=INIT [1]=NEXT [3]=MODE [4]=LAST [5]=RESTORE.
   // ----------------------------------------------------------------
   task run_blocks(input bit [31:0] blocks [],
                   input int unsigned start_idx,
@@ -181,7 +181,7 @@ rand hmac256_env_sequence_base_t hmac256_env_seq;
 
       ctrl_val = 32'h0;
       if (b == start_idx && restore_first) begin
-        ctrl_val[7] = 1'b1;
+        ctrl_val[5] = 1'b1;
         if (b != total_blocks - 1)
           ctrl_val[1] = 1'b1;
       end else if (b == 0) begin
@@ -190,7 +190,7 @@ rand hmac256_env_sequence_base_t hmac256_env_seq;
         ctrl_val[1] = 1'b1;
       end
       if (mode_bit)              ctrl_val[3] = 1'b1;
-      if (b == total_blocks - 1) ctrl_val[5] = 1'b1;
+      if (b == total_blocks - 1) ctrl_val[4] = 1'b1;
 
       reg_model.HMAC256_CTRL.write(status, ctrl_val);
       // Wait for CTRL singlepulse to clear READY before polling.
