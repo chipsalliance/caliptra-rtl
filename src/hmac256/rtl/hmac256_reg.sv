@@ -73,7 +73,7 @@ module hmac256_reg (
         logic [16-1:0]HMAC256_KEY;
         logic [16-1:0]HMAC256_BLOCK;
         logic [8-1:0]HMAC256_TAG;
-        logic [6-1:0]HMAC256_LFSR_SEED;
+        logic [3-1:0]HMAC256_LFSR_SEED;
         struct packed{
             logic global_intr_en_r;
             logic error_intr_en_r;
@@ -120,7 +120,7 @@ module hmac256_reg (
         for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.HMAC256_TAG[i0] = cpuif_req_masked & (cpuif_addr == 12'hc0 + i0*12'h4);
         end
-        for(int i0=0; i0<6; i0++) begin
+        for(int i0=0; i0<3; i0++) begin
             decoded_reg_strb.HMAC256_LFSR_SEED[i0] = cpuif_req_masked & (cpuif_addr == 12'he0 + i0*12'h4);
         end
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h800);
@@ -211,7 +211,7 @@ module hmac256_reg (
                 logic [31:0] next;
                 logic load_next;
             } LFSR_SEED;
-        } [6-1:0]HMAC256_LFSR_SEED;
+        } [3-1:0]HMAC256_LFSR_SEED;
         struct packed{
             struct packed{
                 struct packed{
@@ -437,7 +437,7 @@ module hmac256_reg (
             struct packed{
                 logic [31:0] value;
             } LFSR_SEED;
-        } [6-1:0]HMAC256_LFSR_SEED;
+        } [3-1:0]HMAC256_LFSR_SEED;
         struct packed{
             struct packed{
                 struct packed{
@@ -838,7 +838,7 @@ module hmac256_reg (
         end
         assign hwif_out.HMAC256_TAG[i0].TAG.value = field_storage.HMAC256_TAG[i0].TAG.value;
     end
-    for(genvar i0=0; i0<6; i0++) begin
+    for(genvar i0=0; i0<3; i0++) begin
         // Field: hmac256_reg.HMAC256_LFSR_SEED[].LFSR_SEED
         always_comb begin
             automatic logic [31:0] next_c;

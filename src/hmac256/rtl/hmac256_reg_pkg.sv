@@ -245,7 +245,7 @@ package hmac256_reg_pkg;
         hmac256_reg__HMAC256_KEY__out_t [16-1:0]HMAC256_KEY;
         hmac256_reg__HMAC256_BLOCK__out_t [16-1:0]HMAC256_BLOCK;
         hmac256_reg__HMAC256_TAG__out_t [8-1:0]HMAC256_TAG;
-        hmac256_reg__HMAC256_LFSR_SEED__out_t [6-1:0]HMAC256_LFSR_SEED;
+        hmac256_reg__HMAC256_LFSR_SEED__out_t [3-1:0]HMAC256_LFSR_SEED;
         hmac256_reg__intr_block_t__out_t intr_block_rf;
     } hmac256_reg__out_t;
 

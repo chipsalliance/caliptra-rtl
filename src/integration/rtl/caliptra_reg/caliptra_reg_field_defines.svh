@@ -1705,15 +1705,6 @@
 `ifndef HMAC256_REG_HMAC256_LFSR_SEED_2
 `define HMAC256_REG_HMAC256_LFSR_SEED_2                                                             (32'he8)
 `endif
-`ifndef HMAC256_REG_HMAC256_LFSR_SEED_3
-`define HMAC256_REG_HMAC256_LFSR_SEED_3                                                             (32'hec)
-`endif
-`ifndef HMAC256_REG_HMAC256_LFSR_SEED_4
-`define HMAC256_REG_HMAC256_LFSR_SEED_4                                                             (32'hf0)
-`endif
-`ifndef HMAC256_REG_HMAC256_LFSR_SEED_5
-`define HMAC256_REG_HMAC256_LFSR_SEED_5                                                             (32'hf4)
-`endif
 `ifndef HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
 `define HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (32'h800)
 `define HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                     (0)

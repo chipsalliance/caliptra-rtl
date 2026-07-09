@@ -67,8 +67,7 @@ void main() {
     };
 
     uint32_t hmac_lfsr_seed_data[HMAC256_LFSR_SEED_SIZE] = {
-        0xC8F518D4, 0xF3AA1BD4, 0x6ED56C1C,
-        0x3C9E16FB, 0x800AF504, 0xC8F518D4
+        0xC8F518D4, 0xF3AA1BD4, 0x6ED56C1C
     };
 
     // AES-256-ECB(key = HMAC256 tag, plaintext = 16 zero bytes).

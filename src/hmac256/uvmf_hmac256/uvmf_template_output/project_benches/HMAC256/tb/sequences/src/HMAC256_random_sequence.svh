@@ -139,7 +139,7 @@ class HMAC256_random_sequence extends HMAC256_bench_sequence_base;
       reg_model.HMAC256_KEY[i].write(status, key_dwords[i]);
     end
 
-    // LFSR seed (6 dwords). 
+    // LFSR seed (3 dwords).
     foreach (reg_model.HMAC256_LFSR_SEED[i]) begin
       reg_model.HMAC256_LFSR_SEED[i].write(status, $urandom());
     end

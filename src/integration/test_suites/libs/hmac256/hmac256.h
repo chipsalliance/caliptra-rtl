@@ -30,7 +30,7 @@ typedef uint8_t BOOL;
 #define HMAC256_BLOCK_SIZE 16
 #define HMAC256_TAG_SIZE    8
 #define HMAC224_TAG_SIZE    7
-#define HMAC256_LFSR_SEED_SIZE 6
+#define HMAC256_LFSR_SEED_SIZE 3
 
 typedef struct {
     uint8_t   data_size;

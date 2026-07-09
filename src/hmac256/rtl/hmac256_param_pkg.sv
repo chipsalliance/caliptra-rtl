@@ -38,7 +38,8 @@ package hmac256_param_pkg;
   localparam int BLOCK_SIZE     = 512;
   localparam int KEY_SIZE       = 512;
   localparam int TAG_SIZE       = 256;
-  localparam int LFSR_SEED_SIZE = 192;
+  localparam int LFSR_SEED_SIZE = 96;
+  localparam int ENTROPY_COUNTER_SIZE = 32;
 
   // SHA-224 variant widths (tag only) and zero-pad widths when packed
   // into the SHA-256-sized regs.
@@ -60,14 +61,13 @@ package hmac256_param_pkg;
       256'h8000000000000000000000000000000000000000000000000000000000000300;
 
 
-  // The entropy block runs the SHA core over a fixed pattern to produce
-  // a 192-bit pseudo-random refresh of the inner LFSRs. The pattern is
-  // not interpreted as a hashed message by anything outside the core, so
-  // the trailing space is plain zero-fill rather than valid FIPS-180
-  // padding (a 448-bit "message" would not fit in one 512-bit SHA-256
-  // block with valid padding).
-  localparam int                                              ENTROPY_MSG_SIZE = (2 * LFSR_SEED_SIZE) + 64;
-  localparam bit [BLOCK_SIZE-ENTROPY_MSG_SIZE-1:0]            ENTROPY_PAD      = '0;
+  // FIPS-180 padded entropy block for the CTRL_ENTROPY compression.
+  // Payload is {entropy_digest, lfsr_seed, counter_reg} =
+  // 2 * LFSR_SEED_SIZE + ENTROPY_COUNTER_SIZE = 224 bits, followed by
+  // the {0x80, zero-pad, 64-bit length} FIPS-180 tail (0xE0 = 224).
+  localparam int                                              ENTROPY_MSG_SIZE = (2 * LFSR_SEED_SIZE) + ENTROPY_COUNTER_SIZE;
+  localparam bit [BLOCK_SIZE-ENTROPY_MSG_SIZE-1:0]            ENTROPY_PAD      =
+      288'h8000000000000000000000000000000000000000000000000000000000000000000000E0;
 endpackage
 
 `endif

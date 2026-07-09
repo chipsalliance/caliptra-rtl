@@ -59,8 +59,7 @@ void main() {
     };
 
     uint32_t lfsr_seed_data[HMAC256_LFSR_SEED_SIZE] = {
-        0xC8F518D4, 0xF3AA1BD4, 0x6ED56C1C,
-        0x3C9E16FB, 0x800AF504, 0xC8F518D4
+        0xC8F518D4, 0xF3AA1BD4, 0x6ED56C1C
     };
 
     SEND_STDOUT_CTRL(0x7F);
