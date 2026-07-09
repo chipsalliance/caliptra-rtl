@@ -17,6 +17,13 @@
 
   `define CALIPTRA
 
+// Redirect the VeeR EL2 lockstep optimization-barrier buffer (el2_prim_buf) to
+// Caliptra's constrained prim library instead of the unconstrained
+// el2_prim_generic_buf. Guarded so a command-line +define+ can still override it.
+`ifndef RV_PRIM_BUF_IMPL
+  `define RV_PRIM_BUF_IMPL caliptra_prim_buf
+`endif
+
 // Uncomment to enable Caliptra Internal TRNG
 //`define CALIPTRA_INTERNAL_TRNG
 
