@@ -3049,7 +3049,17 @@ task static preload_iccm;
                 dummy_iccm_preloader.ram [addr[`RV_ICCM_BITS-1:3]] [{addr[2],2'h1}],
                 dummy_iccm_preloader.ram [addr[`RV_ICCM_BITS-1:3]] [{addr[2],2'h0}]};
         //data = {`CPTRA_TOP_PATH.imem.mem[addr+3],`CPTRA_TOP_PATH.imem.mem[addr+2],`CPTRA_TOP_PATH.imem.mem[addr+1],`CPTRA_TOP_PATH.imem.mem[addr]};
+`ifdef RV_ICCM_ADDR_XOR
+        // Backdoor preload bypasses the core write path, which (with RV_ICCM_ADDR_XOR)
+        // XORs the replicated word address into the stored DATA bits (ECC stays plain,
+        // computed over the original data). Replicate that here so runtime fetches (which
+        // de-XOR the data with the same address before the ECC check) see a consistent
+        // codeword. Applied to every word (incl. data==0) so all of ICCM is in the XOR'd
+        // domain. word address = addr[ICCM_BITS-1:2], replicated to 32 bits.
+        slam_iccm_ram(addr, {riscv_ecc32(data), data ^ {addr[`RV_ICCM_BITS-1:2], addr[`RV_ICCM_BITS-1:2]}});
+`else
         slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+`endif
     end
     $display("ICCM pre-load completed");
 
@@ -3080,7 +3090,17 @@ task static preload_dccm ();
                 dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h2}],
                 dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h1}],
                 dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h0}]};
+`ifdef RV_DCCM_ADDR_XOR
+        // Backdoor preload bypasses the core write path, which (with RV_DCCM_ADDR_XOR)
+        // XORs the replicated word address into the stored DATA bits (ECC stays plain,
+        // computed over the original data). Replicate that here so runtime loads (which
+        // de-XOR the data with the same address before the ECC check) see a consistent
+        // codeword. Applied to every word (incl. data==0) so all of DCCM is in the XOR'd
+        // domain. word address = addr[DCCM_BITS-1:2], replicated to 32 bits.
+        slam_dccm_ram(addr, {riscv_ecc32(data), data ^ {addr[`RV_DCCM_BITS-1:2], addr[`RV_DCCM_BITS-1:2]}});
+`else
         slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+`endif
     end
     $display("DCCM pre-load completed");
     preload_dccm_done = 1;
