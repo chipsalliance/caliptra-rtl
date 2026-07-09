@@ -319,6 +319,7 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_adder.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_add_sub_mod.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_ntt_add_sub_mod.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_splitter.sv
+${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_recombiner.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/rej_bounded/rtl/rej_bounded_ctrl.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/rej_bounded/rtl/rej_bounded2.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/rej_sampler/rtl/rej_sampler_ctrl.sv
@@ -379,7 +380,6 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_sha3/rtl/abr_sha3pad.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_sha3/rtl/abr_sha3.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_sampler_top/rtl/abr_sampler_top.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/barrett_reduction/rtl/barrett_reduction.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_butterfly2x2.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_butterfly.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_mult_dsp.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_div2.sv
