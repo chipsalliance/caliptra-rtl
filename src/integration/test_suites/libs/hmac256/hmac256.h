@@ -41,5 +41,10 @@ void hmac256_flow(hmac256_io key, hmac256_io block, hmac256_io lfsr_seed,
                   hmac256_io tag, BOOL init, BOOL last, BOOL mode);
 void hmac256_zeroize(void);
 void wait_for_hmac256_intr(void);
+void hmac256_wait_ready(void);
+void hmac256_wait_valid(void);
+void hmac256_load_inputs(uint32_t *key, uint32_t *block, uint32_t *lfsr_seed);
+void hmac256_ctrl_write(uint32_t ctrl_bits, uint8_t mode);
+void write_hmac256_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size);
 
 #endif

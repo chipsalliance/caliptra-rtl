@@ -39,11 +39,33 @@ void hmac256_zeroize(void) {
                   HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK);
 }
 
-static void write_hmac256_reg(volatile uint32_t *base_addr,
-                              uint32_t *data, uint32_t size) {
+void write_hmac256_reg(volatile uint32_t *base_addr,
+                       uint32_t *data, uint32_t size) {
     for (uint32_t i = 0; i < size; i++) {
         base_addr[i] = data[i];
     }
+}
+
+void hmac256_wait_ready(void) {
+    while ((lsu_read_32(CLP_HMAC256_REG_HMAC256_STATUS) &
+            HMAC256_REG_HMAC256_STATUS_READY_MASK) == 0);
+}
+
+void hmac256_wait_valid(void) {
+    while ((lsu_read_32(CLP_HMAC256_REG_HMAC256_STATUS) &
+            HMAC256_REG_HMAC256_STATUS_VALID_MASK) == 0);
+}
+
+void hmac256_load_inputs(uint32_t *key, uint32_t *block, uint32_t *lfsr_seed) {
+    write_hmac256_reg((volatile uint32_t *)CLP_HMAC256_REG_HMAC256_KEY_0,       key,       HMAC256_KEY_SIZE);
+    write_hmac256_reg((volatile uint32_t *)CLP_HMAC256_REG_HMAC256_BLOCK_0,     block,     HMAC256_BLOCK_SIZE);
+    write_hmac256_reg((volatile uint32_t *)CLP_HMAC256_REG_HMAC256_LFSR_SEED_0, lfsr_seed, HMAC256_LFSR_SEED_SIZE);
+}
+
+void hmac256_ctrl_write(uint32_t ctrl_bits, uint8_t mode) {
+    uint32_t reg = ctrl_bits |
+                   ((uint32_t)mode << HMAC256_REG_HMAC256_CTRL_MODE_LOW);
+    lsu_write_32(CLP_HMAC256_REG_HMAC256_CTRL, reg);
 }
 
 void hmac256_flow(hmac256_io key, hmac256_io block, hmac256_io lfsr_seed,
