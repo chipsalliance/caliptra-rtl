@@ -3144,6 +3144,15 @@ endtask
 task static slam_dccm_ram(input [31:0] addr, input[38:0] data);
     int bank, indx;
     bank = get_dccm_bank(addr, indx);
+`ifdef RV_DCCM_ADDR_XOR
+    // Single point where backdoor writes enter the XOR'd domain. The core write path
+    // XORs the replicated word address into the stored DATA bits (ECC stays plain,
+    // computed over the original data); backdoor pokes bypass it, so apply the same
+    // fold here. Doing it in this task rather than at each call site keeps every
+    // caller correct by construction. Applied to every word (incl. data == 0): a plain
+    // zero word would de-XOR to {addr,addr} and fail the ECC check on the first read.
+    data[31:0] = data[31:0] ^ {addr[`RV_DCCM_BITS-1:2], addr[`RV_DCCM_BITS-1:2]};
+`endif
     `ifdef RV_DCCM_ENABLE
     case(bank)
     0: `DRAM(0)[indx] = data;
@@ -3170,6 +3179,10 @@ task static slam_iccm_ram( input[31:0] addr, input[38:0] data);
     int bank, idx;
 
     bank = get_iccm_bank(addr, idx);
+`ifdef RV_ICCM_ADDR_XOR
+    // See slam_dccm_ram: single point where backdoor writes enter the XOR'd domain.
+    data[31:0] = data[31:0] ^ {addr[`RV_ICCM_BITS-1:2], addr[`RV_ICCM_BITS-1:2]};
+`endif
     `ifdef RV_ICCM_ENABLE
     case(bank) // {
       0: `IRAM(0)[idx] = data;
@@ -3347,6 +3360,16 @@ task static dump_memory_contents;
                 ecc_data = 0;
             end
         endcase
+
+        // Undo the XOR address infection for DCCM and ICCM.
+`ifdef RV_DCCM_ADDR_XOR
+        if (mem_type == MEMTYPE_DCCM)
+            ecc_data[31:0] = ecc_data[31:0] ^ {addr[`RV_DCCM_BITS-1:2], addr[`RV_DCCM_BITS-1:2]};
+`endif
+`ifdef RV_ICCM_ADDR_XOR
+        if (mem_type == MEMTYPE_ICCM)
+            ecc_data[31:0] = ecc_data[31:0] ^ {addr[`RV_ICCM_BITS-1:2], addr[`RV_ICCM_BITS-1:2]};
+`endif
 
         case (mem_type)
             MEMTYPE_LMEM: begin
