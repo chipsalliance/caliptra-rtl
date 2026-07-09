@@ -442,6 +442,49 @@ module hmac256_drbg_tb();
   endtask
 
   //----------------------------------------------------------------
+  // hmac256_drbg_failure_injection_test()
+  //   Force the internal failure_check high while the DUT is in CHCK_ST
+  //   to exercise the rejection retry path (K3 -> V3 -> T). Confirms the
+  //   engine does not lock up when the DRBG output equals 0 or >= P-256
+  //   curve order.
+  //----------------------------------------------------------------
+  task hmac256_drbg_failure_injection_test();
+    begin
+      if (!ready_tb)
+        wait(ready_tb);
+
+      $display("HMAC256 DRBG failure injection");
+
+      entropy_tb   = random_gen();
+      nonce_tb     = random_gen();
+      lfsr_seed_tb = 192'(random_gen());
+
+      $display("*** entropy   : %064x", entropy_tb);
+      $display("*** nonce     : %064x", nonce_tb);
+      $display("*** lfsr_seed : %048x", lfsr_seed_tb);
+
+      # CLK_PERIOD;
+      init_tb = 1'b1;
+
+      # CLK_PERIOD;
+      init_tb = 1'b0;
+
+      # (2 * CLK_PERIOD);
+
+      wait(dut.drbg_st_reg == dut.CHCK_ST);
+      force dut.failure_check = 1'b1;
+      # CLK_PERIOD;
+      release dut.failure_check;
+      # CLK_PERIOD;
+
+      wait(valid_tb);
+      $display("*** TC %0d: rejection retry completed, valid asserted", tc_number);
+
+      tc_number = tc_number + 1;
+    end
+  endtask
+
+  //----------------------------------------------------------------
   // always_debug()
   //----------------------------------------------------------------
   always @(dut.drbg_st_reg)
@@ -472,6 +515,8 @@ module hmac256_drbg_tb();
       end
 
       hmac256_drbg_zeroize_test();
+
+      hmac256_drbg_failure_injection_test();
 
       display_test_results();
 

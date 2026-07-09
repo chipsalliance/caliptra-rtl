@@ -15,6 +15,7 @@ provides: [hmac256_drbg_tb]
 schema_version: 2.4.0
 requires:
   - hmac256_drbg
+  - hmac256_drbg_coverage
 targets:
   tb:
     directories:
@@ -31,4 +32,22 @@ global:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
         - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
+provides: [hmac256_drbg_coverage]
+schema_version: 2.4.0
+requires:
+  - hmac256_drbg
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/hmac256_drbg_cov_if.sv
+      - $COMPILE_ROOT/coverage/hmac256_drbg_cov_bind.sv
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
         - '-noinherit_timescale=1ns/1ps'
