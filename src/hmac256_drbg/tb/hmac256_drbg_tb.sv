@@ -236,7 +236,7 @@ module hmac256_drbg_tb();
   // hmac256_drbg_multi_rounds()
   //----------------------------------------------------------------
   task hmac256_drbg_multi_rounds(input [REG_SIZE-1 : 0] entropy, input [REG_SIZE-1 : 0] nonce,
-                  input [MAX_ROUND : 0][REG_SIZE-1 : 0] expected_drbg,
+                  input [MAX_ROUND-1 : 0][REG_SIZE-1 : 0] expected_drbg,
                   input [MAX_ROUND_W-1:0] num_rounds);
     begin
         if (!ready_tb)
@@ -314,6 +314,8 @@ module hmac256_drbg_tb();
 
       // Write test vectors to tb_inputs.hex
       file = $fopen("tb_inputs.hex", "w");
+      if (file == 0)
+        $fatal(1, "Can't open file tb_inputs.hex for writing");
       $fdisplay(file, "%d", num_rounds);
       $fdisplay(file, "%h", entropy);
       $fdisplay(file, "%h", nonce);
@@ -370,7 +372,9 @@ module hmac256_drbg_tb();
               1: test_vector.entropy    = val;
               2: test_vector.nonce      = val;
               default: begin
-                test_vector.drbg_outputs[test_vector_cnt]    = val;
+                if (test_vector_cnt >= MAX_ROUND)
+                  $fatal(1, "Too many DRBG outputs in %s (max %0d)", fname, MAX_ROUND);
+                test_vector.drbg_outputs[test_vector_cnt] = val;
                 test_vector_cnt++;
               end
           endcase
