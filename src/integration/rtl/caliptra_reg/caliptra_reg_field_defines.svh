@@ -1560,14 +1560,10 @@
 `define HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK                                                       (32'h4)
 `define HMAC256_REG_HMAC256_CTRL_MODE_LOW                                                           (3)
 `define HMAC256_REG_HMAC256_CTRL_MODE_MASK                                                          (32'h8)
-`define HMAC256_REG_HMAC256_CTRL_RESERVED4_LOW                                                      (4)
-`define HMAC256_REG_HMAC256_CTRL_RESERVED4_MASK                                                     (32'h10)
-`define HMAC256_REG_HMAC256_CTRL_LAST_LOW                                                           (5)
-`define HMAC256_REG_HMAC256_CTRL_LAST_MASK                                                          (32'h20)
-`define HMAC256_REG_HMAC256_CTRL_RESERVED6_LOW                                                      (6)
-`define HMAC256_REG_HMAC256_CTRL_RESERVED6_MASK                                                     (32'h40)
-`define HMAC256_REG_HMAC256_CTRL_RESTORE_LOW                                                        (7)
-`define HMAC256_REG_HMAC256_CTRL_RESTORE_MASK                                                       (32'h80)
+`define HMAC256_REG_HMAC256_CTRL_LAST_LOW                                                           (4)
+`define HMAC256_REG_HMAC256_CTRL_LAST_MASK                                                          (32'h10)
+`define HMAC256_REG_HMAC256_CTRL_RESTORE_LOW                                                        (5)
+`define HMAC256_REG_HMAC256_CTRL_RESTORE_MASK                                                       (32'h20)
 `endif
 `ifndef HMAC256_REG_HMAC256_STATUS
 `define HMAC256_REG_HMAC256_STATUS                                                                  (32'h18)

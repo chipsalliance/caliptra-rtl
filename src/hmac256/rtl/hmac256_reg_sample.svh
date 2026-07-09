@@ -78,13 +78,11 @@
             foreach(NEXT_bit_cg[bt]) this.NEXT_bit_cg[bt].sample(data[1 + bt]);
             foreach(ZEROIZE_bit_cg[bt]) this.ZEROIZE_bit_cg[bt].sample(data[2 + bt]);
             foreach(MODE_bit_cg[bt]) this.MODE_bit_cg[bt].sample(data[3 + bt]);
-            foreach(Reserved4_bit_cg[bt]) this.Reserved4_bit_cg[bt].sample(data[4 + bt]);
-            foreach(LAST_bit_cg[bt]) this.LAST_bit_cg[bt].sample(data[5 + bt]);
-            foreach(Reserved6_bit_cg[bt]) this.Reserved6_bit_cg[bt].sample(data[6 + bt]);
-            foreach(RESTORE_bit_cg[bt]) this.RESTORE_bit_cg[bt].sample(data[7 + bt]);
+            foreach(LAST_bit_cg[bt]) this.LAST_bit_cg[bt].sample(data[4 + bt]);
+            foreach(RESTORE_bit_cg[bt]) this.RESTORE_bit_cg[bt].sample(data[5 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*INIT*/  ,  data[1:1]/*NEXT*/  ,  data[2:2]/*ZEROIZE*/  ,  data[3:3]/*MODE*/  ,  data[4:4]/*Reserved4*/  ,  data[5:5]/*LAST*/  ,  data[6:6]/*Reserved6*/  ,  data[7:7]/*RESTORE*/   );
+            this.fld_cg.sample( data[0:0]/*INIT*/  ,  data[1:1]/*NEXT*/  ,  data[2:2]/*ZEROIZE*/  ,  data[3:3]/*MODE*/  ,  data[4:4]/*LAST*/  ,  data[5:5]/*RESTORE*/   );
         end
     endfunction
 
@@ -94,13 +92,11 @@
             foreach(NEXT_bit_cg[bt]) this.NEXT_bit_cg[bt].sample(NEXT.get_mirrored_value() >> bt);
             foreach(ZEROIZE_bit_cg[bt]) this.ZEROIZE_bit_cg[bt].sample(ZEROIZE.get_mirrored_value() >> bt);
             foreach(MODE_bit_cg[bt]) this.MODE_bit_cg[bt].sample(MODE.get_mirrored_value() >> bt);
-            foreach(Reserved4_bit_cg[bt]) this.Reserved4_bit_cg[bt].sample(Reserved4.get_mirrored_value() >> bt);
             foreach(LAST_bit_cg[bt]) this.LAST_bit_cg[bt].sample(LAST.get_mirrored_value() >> bt);
-            foreach(Reserved6_bit_cg[bt]) this.Reserved6_bit_cg[bt].sample(Reserved6.get_mirrored_value() >> bt);
             foreach(RESTORE_bit_cg[bt]) this.RESTORE_bit_cg[bt].sample(RESTORE.get_mirrored_value() >> bt);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( INIT.get_mirrored_value()  ,  NEXT.get_mirrored_value()  ,  ZEROIZE.get_mirrored_value()  ,  MODE.get_mirrored_value()  ,  Reserved4.get_mirrored_value()  ,  LAST.get_mirrored_value()  ,  Reserved6.get_mirrored_value()  ,  RESTORE.get_mirrored_value()   );
+            this.fld_cg.sample( INIT.get_mirrored_value()  ,  NEXT.get_mirrored_value()  ,  ZEROIZE.get_mirrored_value()  ,  MODE.get_mirrored_value()  ,  LAST.get_mirrored_value()  ,  RESTORE.get_mirrored_value()   );
         end
     endfunction
 
