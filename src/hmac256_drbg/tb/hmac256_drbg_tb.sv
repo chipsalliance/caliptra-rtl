@@ -60,7 +60,7 @@ module hmac256_drbg_tb();
   wire                       valid_tb;
 
   //Data
-  reg   [191 : 0]                   lfsr_seed_tb;
+  reg   [95 : 0]                    lfsr_seed_tb;
   reg   [REG_SIZE-1 : 0]            entropy_tb;
   reg   [REG_SIZE-1 : 0]            nonce_tb;
   wire  [REG_SIZE-1 : 0]            drbg_tb;
@@ -165,7 +165,7 @@ module hmac256_drbg_tb();
       $display("");
       $display("HMAC block: 0x%064x",dut.HMAC_block);
       $display("HMAC key:   0x%064x",dut.HMAC_key);
-      $display("HMAC seed:  0x%048x",dut.lfsr_seed);
+      $display("HMAC seed:  0x%024x",dut.lfsr_seed);
       $display("HMAC tag:   0x%064x",dut.HMAC_tag);
       $display("");
 
@@ -225,7 +225,7 @@ module hmac256_drbg_tb();
       next_tb           = 0;
 
       //Data
-      lfsr_seed_tb      = 192'h0;
+      lfsr_seed_tb      = 96'h0;
       entropy_tb        = 256'h0;
       nonce_tb          = 256'h0;
     end
@@ -251,8 +251,8 @@ module hmac256_drbg_tb();
         $display("*** nonce     : %064x", nonce_tb);
 
         for (int i = 0; i < num_rounds; i++) begin
-          lfsr_seed_tb = 192'(random_gen());
-          $display("*** lfsr_seed : %048x", lfsr_seed_tb);
+          lfsr_seed_tb = 96'(random_gen());
+          $display("*** lfsr_seed : %024x", lfsr_seed_tb);
 
           #(1 * CLK_PERIOD);
           if (i==0) begin
@@ -398,7 +398,7 @@ module hmac256_drbg_tb();
 
       entropy_tb   = random_gen();
       nonce_tb     = random_gen();
-      lfsr_seed_tb = 192'(random_gen());
+      lfsr_seed_tb = 96'(random_gen());
 
       # CLK_PERIOD;
       init_tb    = 1'b1;
@@ -461,11 +461,11 @@ module hmac256_drbg_tb();
 
       entropy_tb   = random_gen();
       nonce_tb     = random_gen();
-      lfsr_seed_tb = 192'(random_gen());
+      lfsr_seed_tb = 96'(random_gen());
 
       $display("*** entropy   : %064x", entropy_tb);
       $display("*** nonce     : %064x", nonce_tb);
-      $display("*** lfsr_seed : %048x", lfsr_seed_tb);
+      $display("*** lfsr_seed : %024x", lfsr_seed_tb);
 
       # CLK_PERIOD;
       init_tb = 1'b1;

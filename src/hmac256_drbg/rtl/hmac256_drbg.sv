@@ -83,22 +83,9 @@ module hmac256_drbg
   localparam [REG_SIZE-1 : 0] V_init = 256'h0101010101010101010101010101010101010101010101010101010101010101;
   localparam [REG_SIZE-1 : 0] K_init = 256'h0000000000000000000000000000000000000000000000000000000000000000;
 
-  // Zero fill between the '1' delimiter and the (low-12 bits of the)
-  // SHA-256 64-bit length field in the single-block V/T/K3 messages.
-  // BLOCK_SIZE minus V, minus delimiter, minus 12-bit length carrier.
-  localparam [((BLOCK_SIZE-REG_SIZE)-1)-12-1 : 0] ZERO_PAD_V = '0;
+  localparam [(((512-REG_SIZE)-1)-12)-1 : 0] ZERO_PAD_V         = '0; // 1 for header and 12 bit for message length
 
-  // Total length carried in the SHA-256 padding for the "V = HMAC_K(V)"
-  // messages: K_ipad block (BLOCK_SIZE) + V (REG_SIZE).
-  localparam [11 : 0] V_SIZE        = 12'(BLOCK_SIZE + REG_SIZE);
-
-  // Total length for the K10/K20 two-block messages:
-  // K_ipad (BLOCK_SIZE) + V + delimiter(8) + entropy + nonce.
-  localparam [11 : 0] K_LONG_LEN    = 12'(BLOCK_SIZE + REG_SIZE + 8 + REG_SIZE + REG_SIZE);
-
-  // Total length for the K3 single-block message:
-  // K_ipad (BLOCK_SIZE) + V + delimiter(8).
-  localparam [11 : 0] K3_LEN        = 12'(BLOCK_SIZE + REG_SIZE + 8);
+  localparam [11 : 0] V_SIZE        = {1'b0, 11'd512 + 11'(REG_SIZE)};
 
   /*STATES*/
   localparam [4 : 0] IDLE_ST        = 5'd0;   // IDLE WAIT and Return step
@@ -311,52 +298,20 @@ module hmac256_drbg
     end
   end // hmac_inputs_update
 
-  // Block-message layouts for HMAC-SHA-256 (BLOCK_SIZE = 512).
-  //
-  // K10/K20 (init block of K1/K2 long message):
-  //   msg body = V || 0x00 (or 0x01) || entropy || nonce  = 776 bits
-  //   Block 1 packs V || delim || entropy_high (top 248 of 256)
-  //     = 256 + 8 + 248 = 512 bits
-  //
-  // K11/K21 (final block with FIPS-180 pad):
-  //   Block 2 packs entropy_low(8) || nonce(256) || 1'h1 || zeros || low12(length)
-  //     Length = K_ipad(BLOCK_SIZE) + V + 8 + entropy + nonce = K_LONG_LEN
-  //
-  // V1/V2/V3/T (single-block "V = HMAC_K(V)"):
-  //   Block packs V || 1'h1 || ZERO_PAD_V || low12(V_SIZE)
-  //     Length = K_ipad(BLOCK_SIZE) + V = V_SIZE
-  //
-  // K3 (single-block "K = HMAC_K(V || 0x00)"):
-  //   Block packs V || 0x00 || 1'h1 || zeros || low12(K3_LEN)
-  //     Length = K_ipad(BLOCK_SIZE) + V + 8 = K3_LEN
-  //
-  // The 12-bit length carrier suffices because all messages here are
-  // well under 4 Kib; the upper 52 bits of the SHA-256 64-bit length
-  // field are covered by the trailing zeros of the preceding pad.
-
-  // Number of entropy bits that fit in block 1 (after V + delimiter).
-  localparam int ENTROPY_HI_BITS = BLOCK_SIZE - REG_SIZE - 8;
-  // Number of entropy bits that spill into block 2.
-  localparam int ENTROPY_LO_BITS = REG_SIZE - ENTROPY_HI_BITS;
-  // Zero pad in block 2 between the '1' delimiter and the length carrier.
-  localparam int LONG_PAD_BITS   = BLOCK_SIZE - ENTROPY_LO_BITS - REG_SIZE - 1 - 12;
-  // Zero pad in the K3 single-block message.
-  localparam int K3_PAD_BITS     = BLOCK_SIZE - REG_SIZE - 8 - 1 - 12;
-
   always_comb
   begin : hmac_block_update
     HMAC_key = K_reg;
     unique case(drbg_st_reg)
-      K10_ST:   HMAC_block = {V_reg, 8'h0, entropy[REG_SIZE-1 -: ENTROPY_HI_BITS]};
-      K11_ST:   HMAC_block = {entropy[ENTROPY_LO_BITS-1:0], nonce, 1'h1, {LONG_PAD_BITS{1'b0}}, K_LONG_LEN};
-      V1_ST:    HMAC_block = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
-      K20_ST:   HMAC_block = {V_reg, 8'h1, entropy[REG_SIZE-1 -: ENTROPY_HI_BITS]};
-      K21_ST:   HMAC_block = {entropy[ENTROPY_LO_BITS-1:0], nonce, 1'h1, {LONG_PAD_BITS{1'b0}}, K_LONG_LEN};
-      V2_ST:    HMAC_block = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
-      T_ST:     HMAC_block = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
-      K3_ST:    HMAC_block = {V_reg, 8'h0, 1'h1, {K3_PAD_BITS{1'b0}}, K3_LEN};
-      V3_ST:    HMAC_block = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
-      default:  HMAC_block = '0;
+      K10_ST:         HMAC_block  = {V_reg, 8'h0, entropy[255:8]};
+      K11_ST:         HMAC_block  = {entropy[7:0], nonce, 1'h1, 235'b0, 12'h508};
+      V1_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
+      K20_ST:         HMAC_block  = {V_reg, 8'h1, entropy[255:8]};
+      K21_ST:         HMAC_block  = {entropy[7:0], nonce, 1'h1, 235'b0, 12'h508};
+      V2_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
+      T_ST:           HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
+      K3_ST:          HMAC_block  = {V_reg, 8'h0, 1'h1, 235'b0, 12'h308};
+      V3_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
+      default:        HMAC_block  = '0;
     endcase
   end // hmac_block_update
 
