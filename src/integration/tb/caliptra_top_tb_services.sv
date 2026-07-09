@@ -1958,6 +1958,44 @@ endgenerate //IV_NO
         end
     endgenerate
 
+//========================================================================
+// FSM Glitch Injection Handlers
+// FW writes command byte 0x95 to STDOUT to trigger FSM glitch inject.
+// Upper byte encodes which FSM to glitch
+// Each handler forces the sparse FSM state register to an invalid encoding
+// for 1 clock cycle, then releases. The FSM should enter its ERROR state.
+//========================================================================
+    logic release_glitch = 0;
+    always @(negedge clk) begin
+        // DOE FSM glitch
+        if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h00) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.u_doe_state_regs_glitch_inject = 1'b1;
+            release_glitch <= 1'b1;
+        end
+        // Boot FSM glitch
+        else if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h01) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_boot_fsm.u_boot_state_regs_glitch_inject = 1'b1;
+            release_glitch <= 1'b1;
+        end
+        // Mailbox FSM glitch
+        else if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h02) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.soc_ifc_top1.i_mbox.u_mbox_state_regs_glitch_inject = 1'b1;
+            release_glitch <= 1'b1;
+        end
+        // SHA512 acc FSM glitch
+        else if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h03) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.soc_ifc_top1.i_sha512_acc_top.u_sha_state_regs_glitch_inject = 1'b1;
+            release_glitch <= 1'b1;
+        end
+        else if (release_glitch) begin
+            release_glitch <= 0;
+            release `CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.u_doe_state_regs_glitch_inject;
+            release `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_boot_fsm.u_boot_state_regs_glitch_inject;
+            release `CPTRA_TOP_PATH.soc_ifc_top1.i_mbox.u_mbox_state_regs_glitch_inject;
+            release `CPTRA_TOP_PATH.soc_ifc_top1.i_sha512_acc_top.u_sha_state_regs_glitch_inject;
+        end
+    end
+
     task sha256_wntz_testvector_generator();
         string file_name;
         int fd_r;
@@ -3422,45 +3460,5 @@ doe_cov_bind i_doe_cov_bind();
 /* verilator lint_off CASEINCOMPLETE */
 `include "dasm.svi"
 /* verilator lint_on CASEINCOMPLETE */
-
-//========================================================================
-// FSM Glitch Injection Handlers
-// FW writes command byte 0x95 to STDOUT to trigger FSM glitch inject.
-// Upper byte encodes which FSM to glitch
-// Each handler forces the sparse FSM state register to an invalid encoding
-// for 1 clock cycle, then releases. The FSM should enter its ERROR state.
-//========================================================================
-`ifndef VERILATOR
-    logic release_glitch = 0;
-    always @(negedge clk) begin
-        // DOE FSM glitch
-        if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h00) && mailbox_write) begin
-            force `CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.u_doe_state_regs_glitch_inject = 1'b1;
-            release_glitch <= 1'b1;
-        end
-        // Boot FSM glitch
-        else if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h01) && mailbox_write) begin
-            force `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_boot_fsm.u_boot_state_regs_glitch_inject = 1'b1;
-            release_glitch <= 1'b1;
-        end
-        // Mailbox FSM glitch
-        else if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h02) && mailbox_write) begin
-            force `CPTRA_TOP_PATH.soc_ifc_top1.i_mbox.u_mbox_state_regs_glitch_inject = 1'b1;
-            release_glitch <= 1'b1;
-        end
-        // SHA512 acc FSM glitch
-        else if ((WriteData[7:0] == 8'h95) && (WriteData[15:8] == 8'h03) && mailbox_write) begin
-            force `CPTRA_TOP_PATH.soc_ifc_top1.i_sha512_acc_top.u_sha_state_regs_glitch_inject = 1'b1;
-            release_glitch <= 1'b1;
-        end
-        else if (release_glitch) begin
-            release_glitch <= 0;
-            release `CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.u_doe_state_regs_glitch_inject;
-            release `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_boot_fsm.u_boot_state_regs_glitch_inject;
-            release `CPTRA_TOP_PATH.soc_ifc_top1.i_mbox.u_mbox_state_regs_glitch_inject;
-            release `CPTRA_TOP_PATH.soc_ifc_top1.i_sha512_acc_top.u_sha_state_regs_glitch_inject;
-        end
-    end
-`endif
 
 endmodule
