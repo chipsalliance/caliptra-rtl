@@ -82,8 +82,7 @@ static const uint32_t block_b[HMAC256_BLOCK_SIZE] = {
     0x00000000,0x00000000,0x00000000,0x00000240};
 
 static const uint32_t lfsr_seed_dwords[HMAC256_LFSR_SEED_SIZE] = {
-    0xC8F518D4,0xF3AA1BD4,0x6ED56C1C,
-    0x3C9E16FB,0x800AF504,0xC8F518D4};
+    0xC8F518D4,0xF3AA1BD4,0x6ED56C1C};
 
 static void read_dwords(uint32_t base, uint32_t *dst, int n) {
     volatile uint32_t *p = (uint32_t *)(uintptr_t)base;

@@ -69,7 +69,7 @@ module sha256_masked_core
                    input wire            mode,
 
                    // Data port.
-                   input wire [191 : 0]  entropy,
+                   input wire [95 : 0]   entropy,
 
 
                    input wire [511 : 0]  block_msg,
@@ -85,7 +85,7 @@ module sha256_masked_core
   // Internal constant and parameter definitions.
   //----------------------------------------------------------------
   localparam SHA256_ROUNDS = 63;
-  localparam SHA256_RNDs   = 4;
+  localparam SHA256_RNDs   = 8;
 
   localparam CTRL_IDLE   = 2'h0;
   localparam CTRL_RND    = 2'h1;
@@ -393,12 +393,9 @@ module sha256_masked_core
             sha256_ctrl_reg <= sha256_ctrl_new;
 
           if (masking_init) begin
-            masking_rnd[6*rnd_ctr_reg[1 : 0]  ] <= entropy[31  :   0];
-            masking_rnd[6*rnd_ctr_reg[1 : 0]+1] <= entropy[63  :  32];
-            masking_rnd[6*rnd_ctr_reg[1 : 0]+2] <= entropy[95  :  64];
-            masking_rnd[6*rnd_ctr_reg[1 : 0]+3] <= entropy[127 :  96];
-            masking_rnd[6*rnd_ctr_reg[1 : 0]+4] <= entropy[159 : 128];
-            masking_rnd[6*rnd_ctr_reg[1 : 0]+5] <= entropy[191 : 160];
+            masking_rnd[3*rnd_ctr_reg[2 : 0]  ] <= entropy[31  :   0];
+            masking_rnd[3*rnd_ctr_reg[2 : 0]+1] <= entropy[63  :  32];
+            masking_rnd[3*rnd_ctr_reg[2 : 0]+2] <= entropy[95  :  64];
           end
         end
     end // reg_update

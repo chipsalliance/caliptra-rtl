@@ -180,7 +180,7 @@ addrmap hmac256_reg {
         default resetsignal = reset_b;
         field {desc = "Input lfsr seed field";} LFSR_SEED[32] = 32'h0;
 
-    } HMAC256_LFSR_SEED[6] @0x000000E0;
+    } HMAC256_LFSR_SEED[3] @0x000000E0;
 
 
 

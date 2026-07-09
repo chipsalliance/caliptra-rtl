@@ -54,7 +54,7 @@ module sha256_masked_core_tb
   reg [255 : 0] restore_digest_tb;
   wire [255: 0] digest_tb;
 
-  reg [191 : 0] entropy_tb;
+  reg [95 : 0] entropy_tb;
 
   wire          ready_tb;
   wire          valid_tb;
@@ -87,7 +87,7 @@ module sha256_masked_core_tb
   //
   //
   //----------------------------------------------------------------
-  function logic [191 : 0] random_gen();
+  function logic [95 : 0] random_gen();
     return { $random, $random, $random, $random, $random, $random};
   endfunction
 

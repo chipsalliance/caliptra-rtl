@@ -122,12 +122,12 @@ module hmac256_core
   logic                    sha_digest_valid;
 
   // Entropy.
-  logic [LFSR_SEED_SIZE-1 : 0] entropy;
-  logic [LFSR_SEED_SIZE-1 : 0] lfsr_entropy;
-  logic [LFSR_SEED_SIZE-1 : 0] entropy_digest;
-  logic [63 : 0]               counter_reg;
-  logic [BLOCK_SIZE-1 : 0]     entropy_block;
-  logic                        set_entropy;
+  logic [LFSR_SEED_SIZE-1 : 0]        entropy;
+  logic [LFSR_SEED_SIZE-1 : 0]        lfsr_entropy;
+  logic [LFSR_SEED_SIZE-1 : 0]        entropy_digest;
+  logic [ENTROPY_COUNTER_SIZE-1 : 0]  counter_reg;
+  logic [BLOCK_SIZE-1 : 0]            entropy_block;
+  logic                               set_entropy;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.

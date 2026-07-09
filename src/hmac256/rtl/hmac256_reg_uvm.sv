@@ -1039,7 +1039,7 @@ package hmac256_reg_uvm;
         rand hmac256_reg__HMAC256_KEY HMAC256_KEY[16];
         rand hmac256_reg__HMAC256_BLOCK HMAC256_BLOCK[16];
         rand hmac256_reg__HMAC256_TAG HMAC256_TAG[8];
-        rand hmac256_reg__HMAC256_LFSR_SEED HMAC256_LFSR_SEED[6];
+        rand hmac256_reg__HMAC256_LFSR_SEED HMAC256_LFSR_SEED[3];
         rand hmac256_reg__intr_block_t intr_block_rf;
 
         function new(string name = "hmac256_reg");
