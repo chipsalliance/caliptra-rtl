@@ -35,7 +35,8 @@
     input bit [1-1:0] kv_error,
     input bit [1-1:0] shadow_storage_err,
     input bit [1-1:0] rv_dcls_err,
-    input bit [25-1:0] rsvd
+    input bit [1-1:0] dccm_wr_readback_err,
+    input bit [24-1:0] rsvd
     );
         option.per_instance = 1;
         iccm_ecc_unc_cp : coverpoint iccm_ecc_unc;
@@ -45,6 +46,7 @@
         kv_error_cp : coverpoint kv_error;
         shadow_storage_err_cp : coverpoint shadow_storage_err;
         rv_dcls_err_cp : coverpoint rv_dcls_err;
+        dccm_wr_readback_err_cp : coverpoint dccm_wr_readback_err;
         rsvd_cp : coverpoint rsvd;
 
     endgroup
@@ -2186,7 +2188,8 @@
     input bit [1-1:0] mask_crypto_err,
     input bit [1-1:0] mask_kv_error,
     input bit [1-1:0] mask_shadow_storage_err,
-    input bit [1-1:0] mask_rv_dcls_err
+    input bit [1-1:0] mask_rv_dcls_err,
+    input bit [1-1:0] mask_dccm_wr_readback_err
     );
         option.per_instance = 1;
         option.auto_bin_max = 64;
@@ -2197,6 +2200,7 @@
         mask_kv_error_cp : coverpoint mask_kv_error {illegal_bins ro_value = {1};}
         mask_shadow_storage_err_cp : coverpoint mask_shadow_storage_err {illegal_bins ro_value = {1};}
         mask_rv_dcls_err_cp : coverpoint mask_rv_dcls_err {illegal_bins ro_value = {1};}
+        mask_dccm_wr_readback_err_cp : coverpoint mask_dccm_wr_readback_err;
 
     endgroup
 
