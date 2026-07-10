@@ -37,8 +37,8 @@ module hmac256_ctrl_tb
   parameter CTRL_NEXT_VALUE    = 32'h00000002;  // bit 1
   parameter CTRL_ZEROIZE       = 32'h00000004;  // bit 2
   parameter CTRL_MODE_VALUE    = 32'h00000008;  // bit 3
-  parameter CTRL_LAST_VALUE    = 32'h00000020;  // bit 5
-  parameter CTRL_RESTORE_VALUE = 32'h00000080;  // bit 7
+  parameter CTRL_LAST_VALUE    = 32'h00000010;  // bit 4
+  parameter CTRL_RESTORE_VALUE = 32'h00000020;  // bit 5
 
   parameter HMAC256_MODE_VALUE = CTRL_MODE_VALUE;  // mode=1 → HMAC-SHA-256
   parameter HMAC224_MODE_VALUE = 32'h00000000;     // mode=0 → HMAC-SHA-224
