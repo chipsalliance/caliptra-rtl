@@ -29,7 +29,8 @@ Output layout per TC:
     line 8:  IV                 (unchanged; unused for nondet SIGN)
     line 9:  privkeyB           (overwritten with k drawn from
                                  HMAC-DRBG-SHA{256,384}(seed, nonce))
-    line 10: DH_sharedkey       (zeroed; unused for nondet SIGN)
+    line 10: DH_sharedkey       (passed through from raw mbedtls dump;
+                                 nondet SIGN tests don't consume it)
     line 11: TC counter         (replaces blank separator)
 
 Rationale: the RTL nondet SIGN DRBG entropy depends on a free-running
@@ -54,7 +55,9 @@ from make_nondet_kat import _pick_curve_and_hash, _draw_k, _ecdsa_sign  # noqa: 
 
 def _process_tc(buf):
     """Recompute (R, S) with k from HMAC-DRBG(seed, nonce) and return
-    the 11 output lines with privkeyB=k, R/S recomputed, DH zeroed."""
+    the 11 output lines with privkeyB=k, R/S recomputed. DH_sharedkey
+    (line 10) is passed through unchanged from the raw mbedtls dump
+    since nondet SIGN tests don't consume it."""
     curve, hash_fn, hash_len = _pick_curve_and_hash(len(buf[0]))
     hex_w = curve["nbytes"] * 2
 
@@ -71,7 +74,7 @@ def _process_tc(buf):
         f"{S:0{hex_w}x}".upper(),
         buf[8],
         f"{k:0{hex_w}x}".upper(),
-        "0" * hex_w,
+        buf[10],
     ]
 
 
