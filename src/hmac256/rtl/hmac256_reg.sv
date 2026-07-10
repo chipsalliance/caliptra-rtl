@@ -705,9 +705,6 @@ module hmac256_reg (
             if(decoded_reg_strb.HMAC256_KEY[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.HMAC256_KEY[i0].KEY.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
-            end else if(hwif_in.HMAC256_KEY[i0].KEY.we) begin // HW Write - we
-                next_c = hwif_in.HMAC256_KEY[i0].KEY.next;
-                load_next_c = '1;
             end else if(hwif_in.HMAC256_KEY[i0].KEY.hwclr) begin // HW Clear
                 next_c = '0;
                 load_next_c = '1;
@@ -733,9 +730,6 @@ module hmac256_reg (
             load_next_c = '0;
             if(decoded_reg_strb.HMAC256_BLOCK[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.HMAC256_BLOCK[i0].BLOCK.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end else if(hwif_in.HMAC256_BLOCK[i0].BLOCK.we) begin // HW Write - we
-                next_c = hwif_in.HMAC256_BLOCK[i0].BLOCK.next;
                 load_next_c = '1;
             end else if(hwif_in.HMAC256_BLOCK[i0].BLOCK.hwclr) begin // HW Clear
                 next_c = '0;

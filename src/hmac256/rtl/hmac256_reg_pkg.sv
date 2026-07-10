@@ -64,8 +64,6 @@ package hmac256_reg_pkg;
     } hmac256_reg__HMAC256_STATUS__in_t;
 
     typedef struct packed{
-        logic [31:0] next;
-        logic we;
         logic hwclr;
     } hmac256_reg__HMAC256_KEY__KEY__in_t;
 
@@ -74,8 +72,6 @@ package hmac256_reg_pkg;
     } hmac256_reg__HMAC256_KEY__in_t;
 
     typedef struct packed{
-        logic [31:0] next;
-        logic we;
         logic hwclr;
     } hmac256_reg__HMAC256_BLOCK__BLOCK__in_t;
 

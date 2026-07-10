@@ -145,7 +145,7 @@ class HMAC256_random_sequence extends HMAC256_bench_sequence_base;
     end
 
     // Drive each block. CTRL bit layout from src/hmac256/rtl/hmac256_reg.rdl:
-    //   [0]=INIT [1]=NEXT [3]=MODE [5]=LAST
+    //   [0]=INIT [1]=NEXT [3]=MODE [4]=LAST
     // BLOCK[] layout for block_length=B:
     //   BLOCK[0..B-2] : random message bytes (only present if B>1)
     //   BLOCK[B-1]   : FIPS-180 padding {1'b1, zeros, 128-bit length}
