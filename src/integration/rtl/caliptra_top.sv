@@ -330,7 +330,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
-    logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
+    logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy, hmac256_busy;
     logic aes_busy_filtered, ecc_busy_filtered;
     logic crypto_error;
     logic kv_monitor_alert;
@@ -383,12 +383,17 @@ module caliptra_top
                                 (hmac_busy & abr_busy)                  |
                                 (hmac_busy & doe_busy)                  |
                                 (hmac_busy & aes_busy_filtered)         |
+                                (hmac_busy & hmac256_busy)              |
                                 (ecc_busy_filtered & doe_busy)          |
                                 (ecc_busy_filtered & abr_busy)          |
                                 (ecc_busy_filtered & aes_busy_filtered) |
+                                (ecc_busy_filtered & hmac256_busy)      |
                                 (abr_busy & doe_busy)                   |
                                 (abr_busy & aes_busy_filtered)          |
-                                (doe_busy & aes_busy_filtered);
+                                (abr_busy & hmac256_busy)               |
+                                (doe_busy & aes_busy_filtered)          |
+                                (doe_busy & hmac256_busy)               |
+                                (aes_busy_filtered & hmac256_busy);
             
 
 always_comb begin
@@ -1172,7 +1177,7 @@ hmac256_ctrl #(
      .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hresp),
      .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hreadyout),
      .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hrdata),
-     .busy_o        (),
+     .busy_o        (hmac256_busy),
      .error_intr    (hmac256_error_intr),
      .notif_intr    (hmac256_notif_intr),
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
