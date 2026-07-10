@@ -239,6 +239,8 @@ module caliptra_top
 
     // Caliptra ECC status signals
     rv_ecc_sts_t rv_ecc_sts;
+    // DCCM write-readback mismatch (store corrupted) - fatal error
+    logic dccm_write_readback_error;
     // RISC-V dual-core lockstep error (MuBi encoded)
     el2_mubi_pkg::el2_mubi_t rv_dcls_error;
     // DCLS corruption detection disable control (MuBi4, from SW register)
@@ -418,7 +420,8 @@ module caliptra_top
         crypto_err:    crypto_error,
         kv_error:      kv_monitor_alert | mubi4_test_true_loose(boot_flow_error),
         fsm_error:     doe_fsm_error,
-        rv_dcls_error: ~el2_mubi_pkg::mubi_check_false(rv_dcls_error)
+        rv_dcls_error: ~el2_mubi_pkg::mubi_check_false(rv_dcls_error),
+        dccm_wr_readback_error: dccm_write_readback_error
     };
             
 
@@ -719,6 +722,7 @@ el2_veer_wrapper rvtop (
     .iccm_ecc_double_error  (rv_ecc_sts.cptra_iccm_ecc_double_error),
     .dccm_ecc_single_error  (rv_ecc_sts.cptra_dccm_ecc_single_error),
     .dccm_ecc_double_error  (rv_ecc_sts.cptra_dccm_ecc_double_error),
+    .dccm_write_readback_error (dccm_write_readback_error),
 
     .el2_icache_export      (el2_icache_stub.veer_icache_src),
 

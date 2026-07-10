@@ -11460,8 +11460,10 @@
 #define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_MASK                                             (0x40)
 #define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_LOW                                            (7)
 #define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_MASK                                           (0x80)
-#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (8)
-#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (0xffffff00)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_WR_READBACK_ERR_LOW                                   (8)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_WR_READBACK_ERR_MASK                                  (0x100)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (9)
+#define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (0xfffffe00)
 #endif
 #define CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL                                                    (0x30030004)
 #ifndef SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL
@@ -12632,6 +12634,8 @@
 #define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_FSM_ERROR_MASK                                     (0x40)
 #define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_RV_DCLS_ERR_LOW                               (7)
 #define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_RV_DCLS_ERR_MASK                              (0x80)
+#define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_DCCM_WR_READBACK_ERR_LOW                      (8)
+#define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_DCCM_WR_READBACK_ERR_MASK                     (0x100)
 #endif
 #define CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK                                            (0x30030634)
 #ifndef SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK
