@@ -127,8 +127,7 @@ addrmap hmac256_reg {
                 16 32-bit registers storing the 512-bit key in big-endian representation.";
 
         default sw = w;
-        default hw = rw;
-        default we = true;
+        default hw = r;
         default resetsignal = reset_b;
         field {desc = "Input HMAC key field"; hwclr;} KEY[32] = 32'b0;
 
@@ -143,8 +142,7 @@ addrmap hmac256_reg {
                 16 32-bit registers storing the 512-bit padded input in big-endian representation.";
 
         default sw = w;
-        default hw = rw;
-        default we = true;
+        default hw = r;
         default resetsignal = reset_b;
         field {desc = "Input message block field"; hwclr;} BLOCK[32] = 32'b0;
 
@@ -171,7 +169,7 @@ addrmap hmac256_reg {
     reg {
         name = "HMAC256 LFSR SEED";
         desc = "HMAC256 component lfsr seed register type definition
-                6 32-bit registers storing the 192-bit lfsr seed input.";
+                3 32-bit registers storing the 96-bit lfsr seed input.";
 
         default sw = w;
         default hw = r;

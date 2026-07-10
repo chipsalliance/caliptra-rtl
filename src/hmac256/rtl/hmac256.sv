@@ -236,14 +236,10 @@ always_comb begin
 
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++) begin
     key_reg[dword] = hwif_out.HMAC256_KEY[dword].KEY.value;
-    hwif_in.HMAC256_KEY[dword].KEY.we    = 1'b0;
-    hwif_in.HMAC256_KEY[dword].KEY.next  = '0;
     hwif_in.HMAC256_KEY[dword].KEY.hwclr = zeroize_reg;
   end
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++) begin
     block_reg[dword] = hwif_out.HMAC256_BLOCK[dword].BLOCK.value;
-    hwif_in.HMAC256_BLOCK[dword].BLOCK.we    = 1'b0;
-    hwif_in.HMAC256_BLOCK[dword].BLOCK.next  = '0;
     hwif_in.HMAC256_BLOCK[dword].BLOCK.hwclr = zeroize_reg;
   end
 
@@ -327,7 +323,7 @@ assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0;
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
-assign busy_o = ~core_ready;
+assign busy_o = ~core_ready | awaiting_zeroize;
 
 endmodule // hmac256
 
