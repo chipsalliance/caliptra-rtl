@@ -1,21 +1,3 @@
-//********************************************************************************
-// SPDX-License-Identifier: Apache-2.0
-// Copyright 2020 Western Digital Corporation or its affiliates.
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
-//********************************************************************************
-
-
 typedef struct packed {
 	logic [7:0]      BHT_ADDR_HI;
 	logic [5:0]      BHT_ADDR_LO;
@@ -168,6 +150,9 @@ typedef struct packed {
 	logic [35:0]     INST_ACCESS_MASK6;
 	logic [35:0]     INST_ACCESS_MASK7;
 	logic [4:0]      LOAD_TO_USE_PLUS1;
+	logic [6:0]      LOCKSTEP_DELAY;
+	logic [4:0]      LOCKSTEP_ENABLE;
+	logic [4:0]      LOCKSTEP_REGFILE_ENABLE;
 	logic [4:0]      LSU2DMA;
 	logic [4:0]      LSU_BUS_ID;
 	logic [5:0]      LSU_BUS_PRTY;
@@ -176,6 +161,9 @@ typedef struct packed {
 	logic [6:0]      LSU_NUM_NBLOAD_WIDTH;
 	logic [8:0]      LSU_SB_BITS;
 	logic [7:0]      LSU_STBUF_DEPTH;
+	logic [35:0]     MUBI_FALSE;
+	logic [35:0]     MUBI_TRUE;
+	logic [9:0]      MUBI_WIDTH;
 	logic [4:0]      NO_ICCM_NO_ICACHE;
 	logic [4:0]      PIC_2CYCLE;
 	logic [35:0]     PIC_BASE_ADDR;

@@ -381,7 +381,7 @@ module caliptra_top_tb_services
     //         8'hba        - Enable scan mode with KV write
     //         8'hbb        - Enable KV boot phase transition enforcement
     //         8'hbc        - Force MuBi4 glitch on boot_flow_fmc (invalid encoding, auto-release after 5 clocks)
-    //         8'hbd        - Unused
+    //         8'hbd        - Force DCLS lockstep corruption inject (lockstep_err_injection_en_i = El2MuBiTrue, auto-release after 5 clocks)
     //         8'hbe        - Force shadow storage bit-flip on ICCM fmc_start shadow register (auto-release after 5 clocks)
     //         8'hbf        - Unused
     //         8'hc0:       - Inject MLDSA_SEED to kv_key register
@@ -1855,6 +1855,53 @@ endgenerate //IV_NO
         end
     end
 
+`ifdef RV_LOCKSTEP_ENABLE
+    // DCLS lockstep corruption injection (auto-release after 5 clocks).
+    // Forces lockstep_err_injection_en_i = El2MuBiTrue (4'h6) to trigger corruption_detected_o.
+    // NOTE: FW must first enable detection (internal_dcls_ctrl.disable_corruption_detection = MuBiFalse 0x9),
+    //       otherwise corruption_detected_o stays suppressed by the disable gate.
+    logic [63:0] dcls_inject_cycle;
+    initial dcls_inject_cycle = '0;
+    always @(posedge clk) begin
+        if ((WriteData[7:0] == 8'hbd) && mailbox_write) begin
+            force `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i = 4'h6; // El2MuBiTrue
+            dcls_inject_cycle <= cycleCnt;
+            $display("TB: Forced lockstep_err_injection_en_i = El2MuBiTrue (DCLS corruption inject)");
+        end
+        else if (dcls_inject_cycle != '0 && cycleCnt == dcls_inject_cycle + 'd5) begin
+            release `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i;
+            dcls_inject_cycle <= '0;
+            $display("TB: Released lockstep_err_injection_en_i force (auto)");
+        end
+    end
+
+    // DCLS corruption self-check: after a 0xbd inject, verify the error latched and
+    // end the simulation. This test is self-terminating from the TB because the
+    // resulting cptra_error_fatal disrupts FW (so the FW cannot signal pass/fail itself).
+    logic [63:0] dcls_check_cycle;
+    initial dcls_check_cycle = '0;
+    always @(posedge clk) begin
+        if ((WriteData[7:0] == 8'hbd) && mailbox_write)
+            dcls_check_cycle <= cycleCnt;
+        else if (dcls_check_cycle != '0 && cycleCnt == dcls_check_cycle + 'd8) begin
+            dcls_check_cycle <= '0;
+            if ((`CPTRA_TOP_PATH.cptra_error_fatal === 1'b1) &&
+                (`CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_HW_ERROR_FATAL.rv_dcls_err.value === 4'h6)) begin
+                $display("TB: DCLS corruption latched (rv_dcls_err=0x6), cptra_error_fatal asserted");
+                $display("* TESTCASE PASSED");
+                $finish;
+            end
+            else begin
+                $error("TB: DCLS check FAILED - cptra_error_fatal=%0b rv_dcls_err=0x%0h (expected 1 / 0x6)",
+                       `CPTRA_TOP_PATH.cptra_error_fatal,
+                       `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_HW_ERROR_FATAL.rv_dcls_err.value);
+                $display("* TESTCASE FAILED");
+                $finish;
+            end
+        end
+    end
+`endif // RV_LOCKSTEP_ENABLE
+
     // Shadow storage bit-flip injection on ICCM fmc_start (auto-release after 5 clocks)
     logic [63:0] shadow_flip_cycle;
     initial shadow_flip_cycle = '0;
@@ -3002,7 +3049,17 @@ task static preload_iccm;
                 dummy_iccm_preloader.ram [addr[`RV_ICCM_BITS-1:3]] [{addr[2],2'h1}],
                 dummy_iccm_preloader.ram [addr[`RV_ICCM_BITS-1:3]] [{addr[2],2'h0}]};
         //data = {`CPTRA_TOP_PATH.imem.mem[addr+3],`CPTRA_TOP_PATH.imem.mem[addr+2],`CPTRA_TOP_PATH.imem.mem[addr+1],`CPTRA_TOP_PATH.imem.mem[addr]};
+`ifdef RV_ICCM_ADDR_XOR
+        // Backdoor preload bypasses the core write path, which (with RV_ICCM_ADDR_XOR)
+        // XORs the replicated word address into the stored DATA bits (ECC stays plain,
+        // computed over the original data). Replicate that here so runtime fetches (which
+        // de-XOR the data with the same address before the ECC check) see a consistent
+        // codeword. Applied to every word (incl. data==0) so all of ICCM is in the XOR'd
+        // domain. word address = addr[ICCM_BITS-1:2], replicated to 32 bits.
+        slam_iccm_ram(addr, {riscv_ecc32(data), data ^ {addr[`RV_ICCM_BITS-1:2], addr[`RV_ICCM_BITS-1:2]}});
+`else
         slam_iccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+`endif
     end
     $display("ICCM pre-load completed");
 
@@ -3033,7 +3090,17 @@ task static preload_dccm ();
                 dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h2}],
                 dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h1}],
                 dummy_dccm_preloader.ram [addr[`RV_DCCM_BITS:3]] [{addr[2],2'h0}]};
+`ifdef RV_DCCM_ADDR_XOR
+        // Backdoor preload bypasses the core write path, which (with RV_DCCM_ADDR_XOR)
+        // XORs the replicated word address into the stored DATA bits (ECC stays plain,
+        // computed over the original data). Replicate that here so runtime loads (which
+        // de-XOR the data with the same address before the ECC check) see a consistent
+        // codeword. Applied to every word (incl. data==0) so all of DCCM is in the XOR'd
+        // domain. word address = addr[DCCM_BITS-1:2], replicated to 32 bits.
+        slam_dccm_ram(addr, {riscv_ecc32(data), data ^ {addr[`RV_DCCM_BITS-1:2], addr[`RV_DCCM_BITS-1:2]}});
+`else
         slam_dccm_ram(addr, data == 0 ? 0 : {riscv_ecc32(data),data});
+`endif
     end
     $display("DCCM pre-load completed");
     preload_dccm_done = 1;

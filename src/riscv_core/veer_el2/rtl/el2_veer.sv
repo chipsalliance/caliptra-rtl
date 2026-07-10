@@ -103,7 +103,6 @@ import el2_pkg::*;
    output logic                  iccm_buf_correct_ecc,
    output logic                  iccm_correction_state,
 
-   input  logic [63:0]          iccm_rd_data,
    input  logic [77:0]           iccm_rd_data_ecc,
 
    // ICache , ITAG  ports
@@ -113,18 +112,18 @@ import el2_pkg::*;
    output logic                  ic_rd_en,
 
    output logic [pt.ICACHE_BANKS_WAY-1:0][70:0]               ic_wr_data,         // Data to fill to the Icache. With ECC
-   input  logic [63:0]               ic_rd_data ,        // Data read from Icache. 2x64bits + parity bits. F2 stage. With ECC
+   input  logic [141:0]              ic_rd_data ,              // Raw way-muxed 142-bit ECC-protected word pair. F2 stage.
+   input  logic [1:0]                ic_rd_addr_lo,            // F2-aligned ic_rw_addr_ff[2:1] for core-side rotate
+   input  logic [pt.ICACHE_BANKS_WAY-1:0] ic_rd_bank_check_en, // Per-bank ECC check enable for core-side decode
    input  logic [70:0]               ic_debug_rd_data ,        // Data read from Icache. 2x64bits + parity bits. F2 stage. With ECC
    input  logic [25:0]               ictag_debug_rd_data,// Debug icache tag.
    output logic [70:0]               ic_debug_wr_data,   // Debug wr cache.
 
-   input  logic [pt.ICACHE_BANKS_WAY-1:0] ic_eccerr,
-   input  logic [pt.ICACHE_BANKS_WAY-1:0] ic_parerr,
    output logic [63:0]               ic_premux_data,     // Premux data to be muxed with each way of the Icache.
    output logic                      ic_sel_premux_data, // Select premux data
 
 
-   output logic [pt.ICACHE_INDEX_HI:3]               ic_debug_addr,      // Read/Write addresss to the Icache.
+   output logic [pt.ICACHE_INDEX_HI:3]               ic_debug_addr,      // Read/Write address to the Icache.
    output logic                      ic_debug_rd_en,     // Icache debug rd
    output logic                      ic_debug_wr_en,     // Icache debug wr
    output logic                      ic_debug_tag_array, // Debug tag array
@@ -454,6 +453,11 @@ import el2_pkg::*;
    output logic                 iccm_ecc_double_error,
    output logic                 dccm_ecc_single_error,
    output logic                 dccm_ecc_double_error,
+
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+   // Register file
+   el2_regfile_if.veer_rf_src regfile,
+`endif
 
    input logic [pt.PIC_TOTAL_INT:1]           extintsrc_req,
    input logic                   timer_int,
@@ -1350,7 +1354,39 @@ import el2_pkg::*;
          .*
       );
 
-   end
+  end else begin : g_tie_unused_ahb
+    always_comb begin
+      haddr = '0;
+      hburst = '0;
+      hmastlock = '0;
+      hprot = '0;
+      hsize = '0;
+      htrans = '0;
+      hwrite = '0;
+
+      lsu_haddr = '0;
+      lsu_hburst = '0;
+      lsu_hmastlock = '0;
+      lsu_hprot = '0;
+      lsu_hsize = '0;
+      lsu_htrans = '0;
+      lsu_hwrite = '0;
+      lsu_hwdata = '0;
+
+      sb_haddr = '0;
+      sb_hburst = '0;
+      sb_hmastlock = '0;
+      sb_hprot = '0;
+      sb_hsize = '0;
+      sb_htrans = '0;
+      sb_hwrite = '0;
+      sb_hwdata = '0;
+
+      dma_hrdata = '0;
+      dma_hreadyout = '0;
+      dma_hresp = '0;
+    end
+  end
 
    // Drive the final AXI inputs
    assign lsu_axi_awready_int                 = pt.BUILD_AHB_LITE ? lsu_axi_awready_ahb : lsu_axi_awready;

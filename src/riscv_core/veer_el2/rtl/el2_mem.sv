@@ -51,7 +51,6 @@ import el2_pkg::*;
    input logic [2:0]   iccm_wr_size,
    input logic [77:0]  iccm_wr_data,
 
-   output logic [63:0] iccm_rd_data,
    output logic [77:0] iccm_rd_data_ecc,
 
    // Icache and Itag Ports
@@ -66,18 +65,19 @@ import el2_pkg::*;
    input  logic [pt.ICACHE_BANKS_WAY-1:0][70:0]               ic_wr_data,         // Data to fill to the Icache. With ECC
    input  logic [70:0]               ic_debug_wr_data,   // Debug wr cache.
    output logic [70:0]               ic_debug_rd_data ,  // Data read from Icache. 2x64bits + parity bits. F2 stage. With ECC
-   input  logic [pt.ICACHE_INDEX_HI:3]               ic_debug_addr,      // Read/Write addresss to the Icache.
+   input  logic [pt.ICACHE_INDEX_HI:3]               ic_debug_addr,      // Read/Write address to the Icache.
    input  logic                      ic_debug_rd_en,     // Icache debug rd
    input  logic                      ic_debug_wr_en,     // Icache debug wr
    input  logic                      ic_debug_tag_array, // Debug tag array
    input  logic [pt.ICACHE_NUM_WAYS-1:0]                ic_debug_way,       // Debug way. Rd or Wr.
 
-   output logic [63:0]              ic_rd_data ,        // Data read from Icache. 2x64bits + parity bits. F2 stage. With ECC
+   output logic [141:0]                   ic_rd_data ,         // Raw way-muxed 142-bit ECC-protected word pair. F2 stage.
+   output logic [1:0]                     ic_rd_addr_lo,       // F2-aligned ic_rw_addr_ff[2:1] for core-side rotate
+   output logic [pt.ICACHE_BANKS_WAY-1:0] ic_rd_bank_check_en, // Per-bank ECC check enable for core-side decode
+
    output logic [25:0]               ictag_debug_rd_data,// Debug icache tag.
 
 
-   output logic [pt.ICACHE_BANKS_WAY-1:0] ic_eccerr,    // ecc error per bank
-   output logic [pt.ICACHE_BANKS_WAY-1:0] ic_parerr,          // parity error per bank
    output logic [pt.ICACHE_NUM_WAYS-1:0]   ic_rd_hit,
    output logic         ic_tag_perr,        // Icache Tag parity error
 
@@ -99,7 +99,6 @@ import el2_pkg::*;
    assign mem_export_local.clk = clk;
 
    assign mem_export      .clk                = clk;
-
    assign mem_export      .iccm_clken         = mem_export_local.iccm_clken;
    assign mem_export      .iccm_wren_bank     = mem_export_local.iccm_wren_bank;
    assign mem_export      .iccm_addr_bank     = mem_export_local.iccm_addr_bank;
@@ -158,21 +157,10 @@ else  begin
    assign   ic_rd_hit[pt.ICACHE_NUM_WAYS-1:0] = '0;
    assign   ic_tag_perr    = '0 ;
    assign   ic_rd_data  = '0 ;
+   assign   ic_rd_addr_lo  = '0 ;
+   assign   ic_rd_bank_check_en  = '0 ;
    assign   ictag_debug_rd_data  = '0 ;
    assign   ic_debug_rd_data  = '0 ;
-   assign   ic_eccerr      = '0;
-   assign   ic_parerr      = '0;
-   assign   mem_export_local.ic_b_sb_wren = '0;
-   assign   mem_export_local.ic_b_sb_bit_en_vec = '0;
-   assign   mem_export_local.ic_sb_wr_data = '0;
-   assign   mem_export_local.ic_rw_addr_bank_q = '0;
-   assign   mem_export_local.ic_bank_way_clken_final = '0;
-   assign   mem_export_local.ic_bank_way_clken_final_up = '0;
-   assign   mem_export_local.ic_tag_clken_final = '0;
-   assign   mem_export_local.ic_tag_wren_q = '0;
-   assign   mem_export_local.ic_tag_wren_biten_vec = '0;
-   assign   mem_export_local.ic_tag_wr_data = '0;
-   assign   mem_export_local.ic_rw_addr_q = '0;
 end // else: !if( pt.ICACHE_ENABLE )
 
 
@@ -181,12 +169,10 @@ if (pt.ICCM_ENABLE) begin : iccm
    el2_ifu_iccm_mem  #(.pt(pt)) iccm (.*,
                   .clk_override(icm_clk_override),
                   .iccm_rw_addr(iccm_rw_addr[pt.ICCM_BITS-1:1]),
-                  .iccm_rd_data(iccm_rd_data[63:0]),
                   .iccm_mem_export(mem_export_local.veer_iccm)
                    );
 end
 else  begin
-   assign iccm_rd_data     = '0 ;
    assign iccm_rd_data_ecc = '0 ;
    assign mem_export_local.iccm_addr_bank = '0;
    assign mem_export_local.iccm_bank_wr_data = '0;
