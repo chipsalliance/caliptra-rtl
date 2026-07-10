@@ -89,6 +89,10 @@ The RISC-V core is highly configurable and has the following settings.
 | Fast Interrupt Redirect | Enabled       |
 | External Interrupts     | 31            |
 | PMP                     | Enabled       |
+| Dual-Core Lockstep      | Enabled       |
+| RF Read Port Comparison | Enabled       |
+| DCCM Address Infection  | Enabled       |
+| ICCM Address Infection  | Enabled       |
 
 ### Embedded memory export
 
@@ -203,6 +207,24 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 | ABR (MLDSA/MLKEM) (Notifications)                   | 24               | 7                                               |
 | AXI DMA (Errors)                                    | 25               | 8                                               |
 | AXI DMA (Notifications)                             | 26               | 7                                               |
+
+### Fault tolerance and FI hardening
+
+The Caliptra VeeR EL2 configuration enables several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. The dual-core lockstep feature additionally exposes a runtime firmware control, described below.
+
+#### Dual-core lockstep (DCLS)
+
+The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A redundant *shadow* core is driven with the same input stream as the main core, offset by a fixed number of pipeline stages. The main core's outputs are delayed by the same offset and compared cycle-by-cycle against the shadow core's outputs; any divergence indicates a fault in one of the cores. Optimization barriers are inserted on the shadow-core boundary so that synthesis cannot prove the redundant logic and comparison away. The shadow core is not architecturally visible and drives no system state; it exists solely for comparison.
+
+Corruption detection is gated by the [internal_dcls_ctrl](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.internal_dcls_ctrl) register, which is accessible to Caliptra firmware only (SoC writes are rejected). Its `disable_corruption_detection` field is MuBi4-encoded: `MuBiTrue` (`4'h6`) disables detection and `MuBiFalse` (`4'h9`) enables it. The field resets to `MuBiTrue`, so lockstep comparison is disabled out of reset and firmware must explicitly enable it after boot.
+
+While detection is enabled, a detected mismatch asserts [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL)`.rv_dcls_err` (bits [9:6], MuBi4-encoded; see [Error register summary](#error-register-summary)). This is a fatal error: it raises the `cptra_error_fatal` interrupt to the SoC, is sticky, and is cleared only by a Caliptra reset.
+
+#### DCCM / ICCM address-XOR integrity
+
+The core's tightly-coupled memories are protected by an address-XOR integrity scheme (enabled by `RV_DCCM_ADDR_XOR`, `RV_ICCM_ADDR_XOR`, and `RV_ICACHE_ADDR_XOR`). On a write, the replicated word address is XOR-folded into the stored data bits before the ECC codeword is formed; on a read, the same address is XOR-ed back out before the ECC check. When the read address matches the address used at write time, the original data is recovered and the ECC check passes. If a fault causes an access to resolve to the wrong line (for example, an address-decode glitch), the recovered data is garbled and the existing ECC logic flags it as an uncorrectable error — converting a silent mis-address into a detectable fault. Such errors surface through the standard uncorrectable-ECC reporting path (`CPTRA_HW_ERROR_FATAL.dccm_ecc_unc` for DCCM, `iccm_ecc_unc` for ICCM).
+
+> **Backdoor-access note:** any access to DCCM/ICCM that bypasses the core's normal datapath (testbench preload, external loader, debug read/write, memory dump) must apply the address-XOR itself - XOR the data with the replicated word address on write, and de-XOR it on read.
 
 ## Watchdog timer
 
@@ -2778,6 +2800,7 @@ Once the boot flow monitor detects that execution has transitioned to FMC or RT 
 | :------- | :-- | :---- | :------ |
 | CPTRA_HW_ERROR_FATAL | 4 | kv_error | Boot flow error OR KV monitor alert |
 | CPTRA_HW_ERROR_FATAL | 5 | shadow_storage_err | ICCM region shadow register storage fault |
+| CPTRA_HW_ERROR_FATAL | [9:6] | rv_dcls_err | RISC-V dual-core lockstep (DCLS) corruption detected (MuBi4-encoded); gated by `internal_dcls_ctrl` |
 | CPTRA_HW_ERROR_NON_FATAL | 3 | shadow_update_err | ICCM region shadow register phase mismatch |
 
 ### DICE slot assignments
