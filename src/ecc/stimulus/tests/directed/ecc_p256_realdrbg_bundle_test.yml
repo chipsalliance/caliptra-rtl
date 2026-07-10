@@ -12,10 +12,14 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# Bundle: chains 4 small P-256 realdrbg tests in one sim run.
+# Per TC: keygen (real-DRBG), sign (real-DRBG), ECDH, nondet SIGN
+# (Python-verified). Replaces the four individual ymls previously
+# named ecc_p256_{keygen_realdrbg,sign_realdrbg,ecdh,nondet_sign_p256}_test.yml.
 ---
 plusargs:
-  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/secp256_kat.hex'
-  - +ECC_TEST='ECC_p256_sign_test'
+  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/secp256_realdrbg_kat.hex'
+  - +ECC_TEST='ECC_p256_realdrbg_bundle_test'
 
-testname: ecc_p256_sign_test
+testname: ecc_p256_realdrbg_bundle_test
 seed: 1
