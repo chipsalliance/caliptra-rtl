@@ -1,2 +1,2 @@
 +incdir+${CALIPTRA_ROOT}/src/datavault/rtl
-${CALIPTRA_ROOT}/src/datavault/rtl/dv_reg_uvm.sv
+${CALIPTRA_ROOT}/src/datavault/dv/reg_model/dv_reg_uvm.sv

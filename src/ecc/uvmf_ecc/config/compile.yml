@@ -20,7 +20,7 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/ECC/tb/tests
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/ECC/tb/testbench
     files:
-#      - ${COMPILE_ROOT}/../rtl/ecc_reg_uvm.sv
+#      - ${COMPILE_ROOT}/../dv/reg_model/ecc_reg_uvm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ECC_in_pkg/ECC_in_pkg_hdl.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ECC_in_pkg/ECC_in_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/ECC_in_pkg/src/ECC_in_driver_bfm.sv

@@ -30,8 +30,11 @@ import argparse
 # Parse command line arguments
 parser = argparse.ArgumentParser(description='Generate register documentation from RDL files')
 parser.add_argument('files', nargs='+', help='RDL or JSON input files')
-parser.add_argument('--param', '-p', action='append', default=[], 
+parser.add_argument('--param', '-p', action='append', default=[],
                     help='Set RDL parameter (format: NAME=VALUE). Can be used multiple times.')
+parser.add_argument('--include-dir', '-I', action='append', default=[], metavar='DIR',
+                    help='Directory added to the RDL preprocessor include search path. '
+                         'May be given multiple times.')
 args = parser.parse_args()
 
 # Process input files from parsed args
@@ -148,7 +151,7 @@ try:
       if ext == ".json":
         json_importer.import_file(input_file)
       else:
-        rdlc.compile_file(input_file)
+        rdlc.compile_file(input_file, incl_search_paths=args.include_dir)
 
     # Build parameters dictionary from command line arguments
     parameters = {}
@@ -178,15 +181,18 @@ try:
 
     #output directory for dumping files
     filename = os.path.splitext(os.path.basename(input_files[0]))[0]
-    rtl_output_dir = os.path.abspath(os.path.dirname(input_files[0]))
+    # RDL sources live under src/<block>/data/; documentation outputs
+    # (headers, HTML) belong under the sibling rtl/ and docs/ trees.
+    block_dir = os.path.abspath(os.path.join(os.path.dirname(input_files[0]), '..'))
 
     # Append filename for ss mode
     if parameters.get("CALIPTRA_SS_MODE", False):
-        html_output_dir = os.path.join(rtl_output_dir, '..', 'docs', filename + "_ss" + "_html")
-        rtl_output_dir = os.path.join(rtl_output_dir, filename + "_ss")
+        html_output_dir = os.path.join(block_dir, 'docs', filename + "_ss" + "_html")
+        rtl_output_dir = os.path.join(block_dir, 'rtl', filename + "_ss")
     else:
-        html_output_dir = os.path.join(rtl_output_dir, '..', 'docs', filename + "_html")
-        rtl_output_dir = os.path.join(rtl_output_dir, filename)
+        html_output_dir = os.path.join(block_dir, 'docs', filename + "_html")
+        rtl_output_dir = os.path.join(block_dir, 'rtl', filename)
+    os.makedirs(rtl_output_dir, exist_ok=True)
 
     # Elaborate the design
     root = rdlc.elaborate(parameters=parameters if parameters else None)

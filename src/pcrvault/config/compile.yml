@@ -20,7 +20,7 @@ targets:
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/pv_reg_uvm.sv
+      - $COMPILE_ROOT/dv/reg_model/pv_reg_uvm.sv
 ---
 provides: [pcrvault_cov]
 schema_version: 2.4.0
@@ -42,8 +42,8 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/pv_reg_pkg.sv
-      - $COMPILE_ROOT/rtl/pv_reg.sv
+      - $COMPILE_ROOT/rtl/generated/pv_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/generated/pv_reg.sv
       - $COMPILE_ROOT/rtl/pv_defines_pkg.sv
       - $COMPILE_ROOT/rtl/pv.sv
     tops: [pv]

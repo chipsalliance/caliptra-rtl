@@ -17,7 +17,7 @@ targets:
   tb:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/kv_reg_uvm.sv
+      - $COMPILE_ROOT/dv/reg_model/kv_reg_uvm.sv
 ---
 provides: [keyvault_cov]
 schema_version: 2.4.0
@@ -41,8 +41,8 @@ targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/kv_reg_pkg.sv
-      - $COMPILE_ROOT/rtl/kv_reg.sv
+      - $COMPILE_ROOT/rtl/generated/kv_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/generated/kv_reg.sv
       - $COMPILE_ROOT/rtl/kv_defines_pkg.sv
       - $COMPILE_ROOT/rtl/kv.sv
       - $COMPILE_ROOT/rtl/kv_fsm.sv

@@ -110,7 +110,7 @@ ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_gf_mult.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_pkg.sv
-${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg_pkg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/generated/aes_clp_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_dec.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_secded_22_16_enc.sv
@@ -198,7 +198,7 @@ ${CALIPTRA_ROOT}/src/aes/rtl/aes_reduced_round.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_status.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_reg_top.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes.sv
-${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg.sv
+${CALIPTRA_ROOT}/src/aes/rtl/generated/aes_clp_reg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_wrapper.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_core.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_main_sm.sv

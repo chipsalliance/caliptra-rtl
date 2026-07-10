@@ -139,9 +139,9 @@ $(UVMF_PROJECT_DIR)/../../../../rtl/kv_fsm.sv \
 $(UVMF_PROJECT_DIR)/../../../../rtl/kv_macros.svh \
 $(UVMF_PROJECT_DIR)/../../../../rtl/kv_read_client.sv \
 $(UVMF_PROJECT_DIR)/../../../../rtl/kv_write_client.sv \
-$(UVMF_PROJECT_DIR)/../../../../rtl/kv_reg_pkg.sv \
-$(UVMF_PROJECT_DIR)/../../../../rtl/kv_reg.sv \
-$(UVMF_PROJECT_DIR)/../../../../rtl/kv_reg_uvm.sv \
+$(UVMF_PROJECT_DIR)/../../../../rtl/generated/kv_reg_pkg.sv \
+$(UVMF_PROJECT_DIR)/../../../../rtl/generated/kv_reg.sv \
+$(UVMF_PROJECT_DIR)/../../../../dv/reg_model/kv_reg_uvm.sv \
 $(UVMF_PROJECT_DIR)/../../../../rtl/kv.sv
 
 # UVMF_CHANGE_ME : Reference VHDL DUT source.
