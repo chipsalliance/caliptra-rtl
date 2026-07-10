@@ -1,0 +1,402 @@
+// Copyright lowRISC contributors (OpenTitan project).
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+
+// CSR suite of sequences that do writes and reads to CSRs
+// includes hw_reset, rw, bit_bash and aliasing tests for CSRs, and mem_walk for uvm_mems
+// The sequences perform csr writes and reads and follow the standard csr test suite. If external
+// checker is enabled, then the external entity is required to update the mirrored value on
+// writes. If not enabled, the sequences themselves call predict function to update the mirrored
+// value. Consequently, the read values are checked against the mirrored value and not the
+// previously written value. This approach is better since it takes care of special
+// register and field access policies. Also, we use csr_rd_check task instead of csr_mirror to take
+// field exclusions into account.
+//
+// Exclusions are to be provided using the csr_excl_item item (see class for more details).
+
+//--------------------------------------------------------------------------------------------------
+// Class: csr_write_seq
+// Brief Description: This sequence writes a random value to all CSRs. It does not perform any
+// checks. It is run as the first step of the CSR HW reset test.
+//--------------------------------------------------------------------------------------------------
+class csr_write_seq extends csr_base_seq;
+  static bit test_backdoor_path_done; // only run once
+  bit en_rand_backdoor_write;
+  `uvm_object_utils(csr_write_seq)
+
+  `uvm_object_new
+
+  virtual task body();
+    uvm_reg_data_t wdata;
+
+    // check all hdl paths are valid
+    if (!test_backdoor_path_done) begin
+      foreach (models[i]) begin
+        bkdr_reg_path_e path_kind;
+        uvm_reg_mem_hdl_paths_seq hdl_check_seq;
+
+        hdl_check_seq = uvm_reg_mem_hdl_paths_seq::type_id::create("hdl_check_seq");
+        do begin
+          // Test the HDL paths for correctness if they exist.
+          if (models[i].has_hdl_path(path_kind.name)) begin
+            hdl_check_seq.abstractions.push_back(path_kind.name);
+          end
+          path_kind = path_kind.next;
+        end while (path_kind != path_kind.first);
+        hdl_check_seq.model = models[i];
+        hdl_check_seq.start(null);
+      end
+      test_backdoor_path_done = 1;
+    end
+
+    foreach (test_csrs[i]) begin
+      dv_base_reg dv_csr;
+      bit         backdoor;
+      // check if parent block or register is excluded from write
+      if (is_excl(test_csrs[i], CsrExclWrite, CsrHwResetTest)) begin
+        `uvm_info(`gtn, $sformatf("Skipping register %0s due to CsrExclWrite exclusion",
+                                  test_csrs[i].get_full_name()), UVM_MEDIUM)
+        continue;
+      end
+
+      `uvm_info(`gtn, $sformatf("Writing random data to register %0s",
+                                test_csrs[i].get_full_name()), UVM_MEDIUM)
+
+      `DV_CHECK_STD_RANDOMIZE_FATAL(wdata)
+      wdata = get_csr_wdata_with_write_excl(test_csrs[i], wdata, CsrHwResetTest);
+
+      `downcast(dv_csr, test_csrs[i])
+      if (en_rand_backdoor_write && test_csrs[i].has_hdl_path() && !dv_csr.get_is_ext_reg()) begin
+        `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(backdoor, backdoor dist {0 :/ 7, 1 :/ 3};)
+      end
+
+      if (backdoor) begin
+        string str_kinds[$];
+
+        test_csrs[i].get_hdl_path_kinds(str_kinds);
+        str_kinds.shuffle();
+
+        foreach (str_kinds[j]) begin
+          bkdr_reg_path_e enum_kind;
+          // Convert string name to an enum
+          `DV_CHECK_FATAL(uvm_enum_wrapper#(bkdr_reg_path_e)::from_name(str_kinds[j], enum_kind))
+
+          csr_poke(.ptr(test_csrs[i]), .value(wdata), .kind(enum_kind));
+
+          `DV_CHECK_STD_RANDOMIZE_FATAL(wdata)
+          wdata = get_csr_wdata_with_write_excl(test_csrs[i], wdata, CsrHwResetTest);
+        end
+      end else begin
+        csr_wr(.ptr(test_csrs[i]), .value(wdata), .blocking(0));
+      end
+    end
+  endtask
+
+endclass
+
+
+//--------------------------------------------------------------------------------------------------
+// Class: csr_rw_seq
+// Brief Description: This seq writes a random value to a CSR and reads it back. The read value
+// is checked for correctness while adhering to its access policies. A random choice is made between
+// reading back the CSR as a whole or reading fields individually, so that partial accesses are made
+// into the DUT as well.
+//--------------------------------------------------------------------------------------------------
+class csr_rw_seq extends csr_base_seq;
+  `uvm_object_utils(csr_rw_seq)
+
+  `uvm_object_new
+
+  virtual task body();
+    foreach (test_csrs[i]) begin
+      uvm_reg_data_t wdata;
+      uvm_reg_field  test_fields[$];
+      dv_base_reg    test_dv_csr;
+      bit            supports_byte_enable;
+      bit            do_field_rd_check;
+
+      // The test_csrs list may be jumbled from different RAL models. Hence, we find at runtime, if
+      // the interface supports byte_accesses.
+      begin
+        uvm_reg_map map = test_csrs[i].get_default_map();
+        uvm_reg_adapter adapter = map.get_adapter();
+        if (adapter != null) begin
+          supports_byte_enable = adapter.supports_byte_enable;
+        end
+      end
+
+      // check if parent block or register is excluded from write
+      if (is_excl(test_csrs[i], CsrExclWrite, CsrRwTest)) begin
+        `uvm_info(`gtn, $sformatf("Skipping register %0s due to CsrExclWrite exclusion",
+                                  test_csrs[i].get_full_name()), UVM_MEDIUM)
+        continue;
+      end
+
+      `uvm_info(`gtn, $sformatf("Verifying register read/write for %0s",
+                                test_csrs[i].get_full_name()), UVM_MEDIUM)
+
+      `DV_CHECK_STD_RANDOMIZE_FATAL(wdata)
+      wdata = get_csr_wdata_with_write_excl(test_csrs[i], wdata, CsrRwTest);
+
+      // if external checker is not enabled and writes are made non-blocking, then we need to
+      // pre-predict so that the mirrored value will be updated. if we dont, then csr_rd_check task
+      // might pick up stale mirrored value
+      // the pre-predict also needs to happen after the register is being written, to make sure the
+      // register is getting the updated access information.
+      csr_wr(.ptr(test_csrs[i]), .value(wdata), .blocking(0), .predict(!external_checker));
+
+      // Shadow register requires two writes with the same value to write registers into DUT.
+      // In `csr_wr` task, the `predict` task is triggered after two shadow writes are done.
+      // To avoid non-blocking access where shadow register read might be triggered between two
+      // consecutive shadow register write, we will wait until all outstanding accesses finish,
+      // then issue a shadow register read.
+      `downcast(test_dv_csr, test_csrs[i])
+      if (test_dv_csr.get_is_shadowed) wait_no_outstanding_access();
+
+      `DV_CHECK_STD_RANDOMIZE_WITH_FATAL(do_field_rd_check,
+          !supports_byte_enable -> !do_field_rd_check;)
+      do_check_csr_or_field_rd(.csr(test_csrs[i]),
+                              .blocking(0),
+                              .compare(!external_checker),
+                              .compare_vs_ral(1),
+                              .do_csr_field_rd_check(do_field_rd_check),
+                              .csr_excl_type(CsrExclWriteCheck),
+                              .csr_test_type(CsrRwTest));
+
+      wait_if_max_outstanding_accesses_reached();
+    end
+  endtask
+
+endclass
+
+//--------------------------------------------------------------------------------------------------
+// Class: csr_bit_bash_seq
+// Brief Description: This sequence walks a 1 through each CSR by writing one bit at a time and
+// reading the CSR back. The read value is checked for correctness while adhering to its access
+// policies. This verifies that there is no aliasing within the fields / bits of a CSR.
+//--------------------------------------------------------------------------------------------------
+class csr_bit_bash_seq extends csr_base_seq;
+  `uvm_object_utils(csr_bit_bash_seq)
+
+  `uvm_object_new
+
+  virtual task body();
+    int unsigned total_count = test_csrs.size();
+    int unsigned done_count = 0;
+
+    `uvm_info(`gtn,
+              $sformatf("Running bit bash sequence for %0d registers", total_count),
+              UVM_MEDIUM)
+    foreach (test_csrs[i]) begin
+      done_count++;
+      `uvm_info(`gtn,
+                $sformatf("Verifying register bit bash for %0s (register %0d/%0d)",
+                          test_csrs[i].get_full_name(), done_count, total_count),
+                UVM_MEDIUM)
+
+      // check if parent block or register is excluded from write
+      if (is_excl(test_csrs[i], CsrExclWrite, CsrBitBashTest) ||
+          is_excl(test_csrs[i], CsrExclWriteCheck, CsrBitBashTest)) begin
+        `uvm_info(`gtn, $sformatf("Skipping register %0s due to CsrExclWrite/WriteCheck exclusion",
+                                  test_csrs[i].get_full_name()), UVM_MEDIUM)
+        continue;
+      end
+
+      bash_register(test_csrs[i]);
+    end
+
+  endtask
+
+  // Run bit bash test on the given register.
+  //
+  // The basic idea is that we test each bit of the register with the bash_kth_bit task, checking
+  // that we can set and clear the register as expected. This task takes field exclusions and
+  // read/write masks into account when calculating how to run the bash_kth_bit task across the
+  // register.
+  virtual task bash_register(uvm_reg csr);
+    uvm_reg_field   fields[$];
+    string          mode[`UVM_REG_DATA_WIDTH];
+    uvm_reg_data_t  dc_mask;  // dont write or read
+    uvm_reg_data_t  no_cmp_mask; // read but dont compare
+    int             n_bits;
+    string          field_access;
+    int             next_lsb;
+
+    n_bits = csr.get_n_bytes() * 8;
+
+    // Let's see what kind of bits we have...
+    csr.get_fields(fields);
+
+    next_lsb    = 0;
+    dc_mask     = 0;
+    no_cmp_mask = 0;
+
+    foreach (fields[j]) begin
+      int lsb, w, dc, no_cmp;
+
+      field_access = fields[j].get_access(csr.get_default_map());
+      no_cmp = (fields[j].get_compare() == UVM_NO_CHECK);
+      lsb    = fields[j].get_lsb_pos();
+      w      = fields[j].get_n_bits();
+
+      // Exclude write-only fields from compare because you are not supposed to read them
+      case (field_access)
+        "WO", "WOC", "WOS", "WO1", "NOACCESS", "": no_cmp = 1;
+        default:                                   no_cmp = 0;
+      endcase
+
+      // skip fields that are wr-excluded
+      if (is_excl(fields[j], CsrExclWrite, CsrBitBashTest)) begin
+        `uvm_info(`gtn, $sformatf("Skipping field %0s due to CsrExclWrite exclusion",
+                                  fields[j].get_full_name()), UVM_MEDIUM)
+        dc = 1;
+      end
+
+      // ignore fields that are init or rd-excluded
+      no_cmp = is_excl(fields[j], CsrExclInitCheck, CsrBitBashTest) ||
+               is_excl(fields[j], CsrExclWriteCheck, CsrBitBashTest) ;
+
+      // Any unused bits below the LSB of this field?
+      while (next_lsb < lsb) mode[next_lsb++] = "RO";
+
+      repeat (w) begin
+        mode[next_lsb] = field_access;
+        dc_mask[next_lsb] = dc;
+        no_cmp_mask[next_lsb] = no_cmp;
+        next_lsb++;
+      end
+    end
+
+    // Any unused bits above the top field, but that we will still look at with bash_kth_bit?
+    while (next_lsb < n_bits) begin
+      mode[next_lsb++] = "RO";
+    end
+
+    // Bash the kth bit
+    for (int k = 0; k < n_bits; k++) begin
+      // Cannot test unpredictable bit behavior
+      if (dc_mask[k]) continue;
+      bash_kth_bit(csr, k, mode[k], no_cmp_mask);
+    end
+  endtask
+
+  // A bit bashing sequence for bit k of register rg.
+  //
+  // This works by writing the bit as one value and reading it back, then writing the other value
+  // and reading that back, checking that each write sets the value as expected.
+  //
+  // The mask argument gives bits that won't be compared when reading the value back. Note that this
+  // task is still worth running even if the k'th bit of mask is set: it might be that writes to
+  // that bit of the register mess up other bits/fields in the register, and this task will spot if
+  // that happens.
+  task bash_kth_bit(uvm_reg        rg,
+                    int            k,
+                    string         mode,
+                    uvm_reg_data_t mask);
+
+    uvm_reg_data_t val;
+    string          err_msg;
+
+    `uvm_info(`gtn, $sformatf("bashing %0s bit #%0d", mode, k), UVM_HIGH)
+    repeat (2) begin
+      val = rg.get();
+      val[k]  = ~val[k];
+      err_msg = $sformatf("Wrote %0s[%0d]: %0b", rg.get_full_name(), k, val[k]);
+      csr_wr(.ptr(rg), .value(val), .blocking(1), .predict(!external_checker));
+
+      // uvm_reg waits until transaction is completed, before start another read/write in same reg
+      csr_rd_check(.ptr           (rg),
+                   .blocking      (0),
+                   .compare       (!external_checker),
+                   .compare_vs_ral(1'b1),
+                   .compare_mask  (~mask),
+                   .err_msg       (err_msg));
+    end
+  endtask: bash_kth_bit
+
+endclass
+
+//--------------------------------------------------------------------------------------------------
+// Class: csr_aliasing_seq
+// Brief Description: For each CSR, this sequence writes a random value to it and reads ALL CSRs
+// back. The read value of the CSR that was written is checked for correctness while adhering to its
+// access policies. The read value of all other CSRs are compared against their previous values.
+// This verifies that there is no aliasing across the address bits within the valid CSR space.
+//--------------------------------------------------------------------------------------------------
+class csr_aliasing_seq extends csr_base_seq;
+  `uvm_object_utils(csr_aliasing_seq)
+
+  `uvm_object_new
+
+  virtual task body();
+    foreach(test_csrs[i]) begin
+      uvm_reg_data_t wdata;
+
+      // check if parent block or register is excluded
+      if (is_excl(test_csrs[i], CsrExclWrite, CsrAliasingTest)) begin
+        `uvm_info(`gtn, $sformatf("Skipping register %0s due to CsrExclWrite exclusion",
+                                  test_csrs[i].get_full_name()), UVM_MEDIUM)
+        continue;
+      end
+
+      `uvm_info(`gtn,
+                $sformatf("Verifying register aliasing for %0s (register %0d / %0d)",
+                          test_csrs[i].get_full_name(), i + 1, test_csrs.size()),
+                UVM_MEDIUM)
+
+      `DV_CHECK_STD_RANDOMIZE_FATAL(wdata)
+      wdata = get_csr_wdata_with_write_excl(test_csrs[i], wdata, CsrAliasingTest);
+      csr_wr(.ptr(test_csrs[i]), .value(wdata), .blocking(0), .predict(!external_checker));
+
+      all_csrs.shuffle();
+
+      // If all_csrs queue size is larger than 100, randomly pick 100 CSRs to avoid chip level test
+      // runtime too long.
+      if (all_csrs.size() > 100) all_csrs = all_csrs[0 : 99];
+
+      foreach (all_csrs[j]) begin
+        uvm_reg_data_t compare_mask;
+
+        // check if parent block or register is excluded
+        if (is_excl(all_csrs[j], CsrExclInitCheck, CsrAliasingTest) ||
+            is_excl(all_csrs[j], CsrExclWriteCheck, CsrAliasingTest)) begin
+          `uvm_info(`gtn, $sformatf("Skipping register %0s due to CsrExclInit/WriteCheck exclusion",
+                                    all_csrs[j].get_full_name()), UVM_HIGH)
+          continue;
+        end
+
+        compare_mask = get_mask_excl_fields(all_csrs[j], CsrExclWriteCheck, CsrAliasingTest);
+        csr_rd_check(.ptr           (all_csrs[j]),
+                     .blocking      (0),
+                     .compare       (!external_checker),
+                     .compare_vs_ral(1'b1),
+                     .compare_mask  (compare_mask));
+      end
+      wait_no_outstanding_access();
+    end
+  endtask
+
+endclass
+
+//--------------------------------------------------------------------------------------------------
+// Class: csr_mem_walk_seq
+// Brief Description: This seq walks through each address of the memory by running the default
+// UVM mem walk sequence.
+//--------------------------------------------------------------------------------------------------
+class csr_mem_walk_seq extends csr_base_seq;
+  uvm_mem_walk_seq mem_walk_seq;
+
+  `uvm_object_utils(csr_mem_walk_seq)
+
+  `uvm_object_new
+
+  virtual task body();
+    mem_walk_seq = uvm_mem_walk_seq::type_id::create("mem_walk_seq");
+    foreach (models[i]) begin
+      `uvm_info(`gfn, $sformatf("Testing model %0s", models[i].get_full_name()), UVM_LOW)
+      mem_walk_seq.model = models[i];
+      mem_walk_seq.start(null);
+    end
+  endtask : body
+
+endclass
