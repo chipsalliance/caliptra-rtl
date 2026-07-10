@@ -1201,14 +1201,6 @@ module hmac_ctrl_tb
 
 
   //----------------------------------------------------------------
-  // init_next_conflict_test()
-  //
-  // Writes CTRL = mode|INIT|NEXT simultaneously from IDLE. Per the
-  // FSM (hmac_core CTRL_IDLE branch), INIT wins and NEXT is silently
-  // dropped. Verifies the engine completes a single-block op (the
-  // INIT path) and produces the expected digest -- proving the
-  // NEXT bit didn't divert flow or corrupt inner_digest_reg.
-  //----------------------------------------------------------------
   task init_next_conflict_test(input [31:0]  mode,
                                input [KEY_SIZE-1:0] key,
                                input [BLOCK_SIZE-1:0] block,
@@ -1221,26 +1213,44 @@ module hmac_ctrl_tb
       write_block(block);
       write_seed(seed);
 
-      // Drive INIT, NEXT and LAST together. FSM should treat as INIT|LAST
-      // (INIT wins over NEXT in the IDLE branch; LAST is latched as the
-      // last-block modifier).
       write_single_word(`HMAC_REG_HMAC512_CTRL,
                         mode | CTRL_INIT_VALUE | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD * 4);
+
+      read_single_word(`HMAC_REG_HMAC512_STATUS);
+      if ((read_data & `HMAC_REG_HMAC512_STATUS_READY_MASK) !== `HMAC_REG_HMAC512_STATUS_READY_MASK)
+        begin
+          $display("TC%01d: ERROR - STATUS.READY dropped after INIT|NEXT write.", tc_ctr);
+          error_ctr = error_ctr + 1;
+        end
+
+      read_single_word(`HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+      if ((read_data & `HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK) == 0) begin
+        $display("TC%01d: ERROR - error2_sts not set after INIT|NEXT write.", tc_ctr);
+        error_ctr = error_ctr + 1;
+      end
+
+      write_single_word(`HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R,
+                        `HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK);
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
       wait_ready();
       hmac_read_digest();
 
-      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE);
 
       if (digest_data == expected)
         begin
-          $display("TC%01d: OK (INIT won; NEXT silently dropped).", tc_ctr);
+          $display("TC%01d: OK (INIT|NEXT raised error2_sts; follow-up op produced expected digest).", tc_ctr);
         end
       else
         begin
-          $display("TC%01d: ERROR - INIT|NEXT|LAST produced wrong digest.", tc_ctr);
+          $display("TC%01d: ERROR - state corruption after INIT|NEXT write.", tc_ctr);
           $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
           $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
