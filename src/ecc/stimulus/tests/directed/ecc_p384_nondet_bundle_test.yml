@@ -12,10 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+# Bundle: chains 4 small P-384 nondet tests in one sim run.
+# Per TC: nondet SIGN (Python-verified) + nondet SIGN bypass
+# (bit-exact KAT compare). One-shot at TC0: distinct_k + pcr_sign_illegal.
+# Replaces the four individual ymls previously named
+# ecc_nondet_{sign_p384,sign_p384_bypass,distinct_k,pcr_sign_illegal}_test.yml.
 ---
 plusargs:
   - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/nondet/secp384_nondet_kat.hex'
-  - +ECC_TEST='ECC_nondet_distinct_k_test'
+  - +ECC_TEST='ECC_p384_nondet_bundle_test'
 
-testname: ecc_nondet_distinct_k_test
+testname: ecc_p384_nondet_bundle_test
 seed: 1

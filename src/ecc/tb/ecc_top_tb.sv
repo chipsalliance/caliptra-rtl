@@ -174,7 +174,9 @@ module ecc_top_tb
         ecc_test_to_run == "ECC_nondet_sign_p256_bypass_test" ||
         ecc_test_to_run == "ECC_nondet_sign_p256_test"   ||
         ecc_test_to_run == "ECC_cavp_sign_p256_test"     ||
-        ecc_test_to_run == "ECC_rfc6979_sign_p256_test") begin
+        ecc_test_to_run == "ECC_rfc6979_sign_p256_test"  ||
+        ecc_test_to_run == "ECC_p256_kat_bundle_test"    ||
+        ecc_test_to_run == "ECC_p256_realdrbg_bundle_test") begin
       curve_sel_g = 1'b1;
       $display("%m: CURVE_SEL=1 (P-256) enabled for this run");
     end
@@ -605,10 +607,11 @@ module ecc_top_tb
   //----------------------------------------------------------------
   // drbg_bypass_force_p384 / drbg_bypass_release_p384
   //
-  // P-384 variant used only for DRBG-cost measurement experiments.
-  // Forces the four real-DRBG output nets AND hmac_ready_p384=1 to
-  // short-circuit the DRBG wait; the delta vs the unforced baseline
-  // is exactly the cycles spent in HMAC-DRBG-P384.
+  // Forces the four P-384 real-DRBG output nets (drbg, lambda,
+  // scalar_rnd, masking_rnd) so KAT-driven tests get a deterministic
+  // (R,S) as a pure function of (k, d, hashed_msg). Mirrors the P-256
+  // `drbg_bypass_force_blind` semantics. Used by the P-384 CAVP,
+  // non-det bypass tests, and any future KAT-replay variants.
   //----------------------------------------------------------------
   task drbg_bypass_force_p384(input bit [383:0] drbg_val);
     begin
@@ -616,7 +619,6 @@ module ecc_top_tb
       force dut.ecc_dsa_ctrl_i.lambda_p384           = {{(384-1){1'b0}}, 1'b1};
       force dut.ecc_dsa_ctrl_i.scalar_rnd_p384       = '0;
       force dut.ecc_dsa_ctrl_i.masking_rnd_p384      = '0;
-      force dut.ecc_dsa_ctrl_i.hmac_ready_p384       = 1'b1;
     end
   endtask
 
@@ -626,7 +628,6 @@ module ecc_top_tb
       release dut.ecc_dsa_ctrl_i.lambda_p384;
       release dut.ecc_dsa_ctrl_i.scalar_rnd_p384;
       release dut.ecc_dsa_ctrl_i.masking_rnd_p384;
-      release dut.ecc_dsa_ctrl_i.hmac_ready_p384;
     end
   endtask
 
@@ -1905,6 +1906,82 @@ module ecc_top_tb
     end
   endtask // ecc_nondet_sign_p256_bypass_test
 
+  //----------------------------------------------------------------
+  // ecc_nondet_sign_p384_bypass_test()
+  //
+  // P-384 non-det SIGN with DRBG bypassed: forces hmac_drbg_result_p384
+  // with the pre-computed k (from gen_nondet_kat.py, carried in the KAT
+  // 'privkeyB' slot) plus identity blinding and hmac_ready_p384=1 to
+  // short-circuit the DRBG wait. RAND_K_EN+SIGN are written in one CTRL
+  // transaction so the dispatch edge samples non-det P-384 mode. (R,S)
+  // must bit-exactly match the mbedtls non-det KAT. Mirrors the P-256
+  // bypass path above; enables direct bit-exact KAT compare on the
+  // P-384 nondet SIGN path (which the plain ecc_nondet_signing_test
+  // can't do because it relies on external Python verify).
+  //----------------------------------------------------------------
+  task ecc_nondet_sign_p384_bypass_test(input [7 : 0]  tc_number,
+                                        input test_vector_t test_vector);
+    reg [31 : 0]    start_time;
+    reg [31 : 0]    end_time;
+    operand_t       R;
+    operand_t       S;
+    begin
+      wait_ready();
+
+      $display("*** TC %0d P-384 non-det sign-bypass test started.", tc_number);
+      tc_ctr = tc_ctr + 1;
+
+      start_time = cycle_ctr;
+
+      // privkeyB slot in the P-384 non-det KAT carries k (injected by
+      // gen_nondet_kat.py from HMAC-DRBG-SHA384(seed, nonce)).
+      drbg_bypass_force_p384(test_vector.privkeyB);
+
+      write_block(`ECC_REG_ECC_MSG_0,        test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
+      write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
+      write_block(`ECC_REG_ECC_SEED_0,       test_vector.seed);
+      write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
+
+      // CTRL=SIGN + RAND_K_EN=1 in a single APB transaction so the FSM
+      // samples both at the same dispatch edge. CURVE_SEL=0 (P-384).
+      write_single_word(`ECC_REG_ECC_CTRL,
+                        ECC_CMD_SIGNING
+                        | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK);
+      #(CLK_PERIOD);
+      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_SIGN_R_0); R = reg_read_data;
+      read_block(`ECC_REG_ECC_SIGN_S_0); S = reg_read_data;
+
+      drbg_bypass_release_p384();
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+
+      end_time = cycle_ctr - start_time;
+      $display("*** P-384 non-det sign-bypass processing time = %01d cycles.", end_time);
+      $display("R          : 0x%96x", R);
+      $display("S          : 0x%96x", S);
+
+      if ((R == test_vector.R) && (S == test_vector.S)) begin
+        $display("*** TC %0d P-384 non-det sign-bypass successful.", tc_number);
+        $display("");
+      end
+      else begin
+        $display("*** TC %0d P-384 non-det sign-bypass NOT successful.", tc_number);
+        $display("Expected_R: 0x%96x", test_vector.R);
+        $display("Got_R:      0x%96x", R);
+        $display("Expected_S: 0x%96x", test_vector.S);
+        $display("Got_S:      0x%96x", S);
+        $display("");
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask // ecc_nondet_sign_p384_bypass_test
+
 
   //----------------------------------------------------------------
   // ecc_cavp_sign_p384_test()
@@ -3091,6 +3168,9 @@ module ecc_top_tb
         else if (ecc_test_to_run == "ECC_nondet_sign_p256_bypass_test") begin
           ecc_nondet_sign_p256_bypass_test(i, test_vectors[i]);
         end
+        else if (ecc_test_to_run == "ECC_nondet_sign_p384_bypass_test") begin
+          ecc_nondet_sign_p384_bypass_test(i, test_vectors[i]);
+        end
         else if (ecc_test_to_run == "ECC_nondet_sign_p256_test") begin
           ecc_nondet_signing_test(i, test_vectors[i]);
         end
@@ -3117,6 +3197,43 @@ module ecc_top_tb
         else if (ecc_test_to_run == "ECC_curve_sel_stomp_test") begin
           if (i == 0) ecc_curve_sel_stomp_test();
         end
+        //--------------------------------------------------------------
+        // Bundle dispatchers: run several small directed tests in one
+        // sim to amortize LSF/VCS init overhead. Each bundle chains
+        // tests that share a single KAT hex file and takes <30 min
+        // total; larger tests are left as standalone ymls so they can
+        // still parallelize across LSF slots.
+        //--------------------------------------------------------------
+        else if (ecc_test_to_run == "ECC_p256_kat_bundle_test") begin
+          // secp256_kat.hex (bypass mode): keygen + sign + verify +
+          // keygen_blind per TC; kv_illegal one-shot at i==0.
+          ecc_p256_keygen_test      (i, test_vectors[i], 1'b1);
+          ecc_p256_sign_test        (i, test_vectors[i], 1'b1);
+          ecc_verifying_test        (i, test_vectors[i]);
+          ecc_p256_keygen_blind_test(i, test_vectors[i]);
+          if (i == 0) ecc_p256_kv_illegal_test();
+        end
+        else if (ecc_test_to_run == "ECC_p256_realdrbg_bundle_test") begin
+          // secp256_realdrbg_kat.hex (real HMAC-DRBG-SHA256): keygen +
+          // sign + ECDH + nondet SIGN per TC. All ops use per-TC
+          // fields (privkey, pubkey, msg, R, S, IV, privkeyB) and
+          // check independently.
+          ecc_p256_keygen_test    (i, test_vectors[i], 1'b0);
+          ecc_p256_sign_test      (i, test_vectors[i], 1'b0);
+          ecc_p256_DH_sharedkey_test(i, test_vectors[i]);
+          ecc_nondet_signing_test (i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_p384_nondet_bundle_test") begin
+          // secp384_nondet_kat.hex: real-DRBG nondet SIGN + DRBG-bypass
+          // nondet SIGN per TC; distinct_k + pcr_sign_illegal one-shot
+          // at i==0.
+          ecc_nondet_signing_test           (i, test_vectors[i]);
+          ecc_nondet_sign_p384_bypass_test  (i, test_vectors[i]);
+          if (i == 0) begin
+            ecc_nondet_distinct_k_test();
+            ecc_nondet_pcr_sign_illegal_test();
+          end
+        end
       end
       
       if ((ecc_test_to_run != "ECC_p256_verify_test")             &&
@@ -3137,13 +3254,17 @@ module ecc_top_tb
           (ecc_test_to_run != "ECC_nondet_distinct_k_test")       &&
           (ecc_test_to_run != "ECC_nondet_pcr_sign_illegal_test") &&
           (ecc_test_to_run != "ECC_nondet_sign_p256_bypass_test") &&
+          (ecc_test_to_run != "ECC_nondet_sign_p384_bypass_test") &&
           (ecc_test_to_run != "ECC_nondet_sign_p256_test")        &&
           (ecc_test_to_run != "ECC_cavp_sign_p384_test")          &&
           (ecc_test_to_run != "ECC_cavp_sign_p256_test")          &&
           (ecc_test_to_run != "ECC_rfc6979_sign_p256_test")       &&
           (ecc_test_to_run != "ECC_rfc6979_sign_p384_test")       &&
           (ecc_test_to_run != "ECC_sca_config_test")              &&
-          (ecc_test_to_run != "ECC_curve_sel_stomp_test")) begin
+          (ecc_test_to_run != "ECC_curve_sel_stomp_test")         &&
+          (ecc_test_to_run != "ECC_p256_kat_bundle_test")         &&
+          (ecc_test_to_run != "ECC_p256_realdrbg_bundle_test")    &&
+          (ecc_test_to_run != "ECC_p384_nondet_bundle_test")) begin
         continuous_cmd_test(test_vectors[0]);
         zeroize_test(test_vectors[1]);
         ecc_fault_test();

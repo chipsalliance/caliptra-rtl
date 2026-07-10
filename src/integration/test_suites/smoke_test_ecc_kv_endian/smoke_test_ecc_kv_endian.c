@@ -112,12 +112,15 @@ void main() {
     privkey.kv_id   = privkey_kv_id;
     make_io(&msg, ecc_msg);
     make_io(&iv,  ecc_iv);
-    // check_result=FALSE: KV-sourced sign should still be deterministic, but the
-    // lib's sign_r.data fields aren't pre-populated for the KV path. We compare
-    // manually below against sig_sw to catch any KV-read endian mismatch.
+    // Same (privkey, msg, iv) as Run 1 -> same deterministic signature.
+    // check_result=TRUE compares KV-sourced R,S against the golden KAT
+    // directly (catches KV-read endian bugs at the KAT boundary as
+    // well as via the sig_sw/sig_kv equality check below).
+    make_io(&sign_r,  ecc_sign_r_golden);
+    make_io(&sign_s,  ecc_sign_s_golden);
     sign_r.kv_intf = FALSE;
     sign_s.kv_intf = FALSE;
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, 0, 0);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE, 0, 0);
     cptra_intr_rcv.ecc_notif = 0;
     read_sign_rs(sig_kv);
     ecc_zeroize();

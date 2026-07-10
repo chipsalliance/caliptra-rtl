@@ -13,76 +13,66 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-Convert the raw output of the mbedtls non-det ECC vector tool
-(11 hex lines + 1 blank separator per TC) into the 12-line-per-TC
-format `ecc_top_tb::read_test_vectors` consumes:
+Bulk converter: raw mbedtls non-det ECC vector dump (11 hex lines + 1
+blank separator per TC) -> 12-line-per-TC KAT hex file consumed by
+`ecc_top_tb::read_test_vectors`.
 
+Output layout per TC:
     line 0:  hashed_msg
     line 1:  privkey
     line 2:  pubkey.x
     line 3:  pubkey.y
     line 4:  seed
     line 5:  nonce
-    line 6:  R
-    line 7:  S
-    line 8:  IV
-    line 9:  privkeyB           (for P-256: overwritten with the k value
-                                 produced by an HMAC-DRBG-SHA256 reseed
-                                 from (seed, nonce); used by
-                                 ecc_nondet_sign_p256_bypass_test which
-                                 SV-forces hmac_drbg_result_p256 = k
-                                 because the P-256 DRBG block is not yet
-                                 instantiated. For P-384: passed through
-                                 unchanged.)
-    line 10: DH_sharedkey       (unused for SIGN; passed through unchanged)
-    line 11: TC counter         (replaces the mbedtls blank-line separator)
+    line 6:  R                  (recomputed = ECDSA(msg, priv, k))
+    line 7:  S                  (recomputed = ECDSA(msg, priv, k))
+    line 8:  IV                 (unchanged; unused for nondet SIGN)
+    line 9:  privkeyB           (overwritten with k drawn from
+                                 HMAC-DRBG-SHA{256,384}(seed, nonce))
+    line 10: DH_sharedkey       (zeroed; unused for nondet SIGN)
+    line 11: TC counter         (replaces blank separator)
+
+Rationale: the RTL nondet SIGN DRBG entropy depends on a free-running
+clock counter (see ecc_hmac_drbg_interface.sv, sca_entropy =
+IV ^ lfsr_seed ^ counter_nonce), so no offline oracle can predict k.
+The bypass tests instead SV-force hmac_drbg_result_p{256,384} = k;
+that same k is placed here in the privkeyB slot, and (R,S) recomputed
+via ECDSA-with-explicit-k so the bit-exact compare is meaningful.
+
+All EC / DRBG primitives are re-used from `make_nondet_kat.py` in the
+same directory (single source of truth; mirrors RTL bit-exactly).
 
 Usage:
     gen_nondet_kat.py <raw.hex> <kat_out.hex>
 """
-import hashlib
-import hmac
+import os
 import sys
 
-
-# Group order for secp256r1; used by the P-256 k-injection path.
-N_P256 = int("ffffffff00000000ffffffffffffffffbce6faada7179e84f3b9cac2fc632551", 16)
-
-
-class _HmacDrbgSha256:
-    """Bit-exact mirror of src/hmac_drbg/rtl/hmac_drbg.sv parameterized
-    on SHA-256: V_init = 01..01, K_init = 00..00, NIST SP 800-90A."""
-    def __init__(self, entropy, nonce):
-        self.K = b"\x00" * 32
-        self.V = b"\x01" * 32
-        self._update(entropy + nonce)
-
-    def _hmac(self, k, m):
-        return hmac.new(k, m, hashlib.sha256).digest()
-
-    def _update(self, m=b""):
-        self.K = self._hmac(self.K, self.V + b"\x00" + m)
-        self.V = self._hmac(self.K, self.V)
-        if m:
-            self.K = self._hmac(self.K, self.V + b"\x01" + m)
-            self.V = self._hmac(self.K, self.V)
-
-    def generate(self, nbytes):
-        out = b""
-        while len(out) < nbytes:
-            self.V = self._hmac(self.K, self.V)
-            out += self.V
-        self._update(b"")
-        return out[:nbytes]
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
+from make_nondet_kat import _pick_curve_and_hash, _draw_k, _ecdsa_sign  # noqa: E402
 
 
-def _k_p256(seed_hex, nonce_hex):
-    """Re-run the HW reject loop until k in [1, n_p256 - 1]."""
-    drbg = _HmacDrbgSha256(bytes.fromhex(seed_hex), bytes.fromhex(nonce_hex))
-    while True:
-        k = int.from_bytes(drbg.generate(32), "big")
-        if 0 < k < N_P256:
-            return f"{k:064x}".upper()
+def _process_tc(buf):
+    """Recompute (R, S) with k from HMAC-DRBG(seed, nonce) and return
+    the 11 output lines with privkeyB=k, R/S recomputed, DH zeroed."""
+    curve, hash_fn, hash_len = _pick_curve_and_hash(len(buf[0]))
+    hex_w = curve["nbytes"] * 2
+
+    msg_int = int(buf[0], 16)
+    priv    = int(buf[1], 16)
+    seed_hex, nonce_hex = buf[4], buf[5]
+
+    k    = _draw_k(seed_hex, nonce_hex, curve, hash_fn, hash_len)
+    R, S = _ecdsa_sign(curve, priv, msg_int, k)
+
+    return [
+        buf[0], buf[1], buf[2], buf[3], buf[4], buf[5],
+        f"{R:0{hex_w}x}".upper(),
+        f"{S:0{hex_w}x}".upper(),
+        buf[8],
+        f"{k:0{hex_w}x}".upper(),
+        "0" * hex_w,
+    ]
 
 
 def convert(src, dst):
@@ -97,9 +87,7 @@ def convert(src, dst):
                 raise ValueError(
                     f"{src}: blank separator at unexpected position "
                     f"({len(buf)} hex lines buffered, TC={tc})")
-            if len(buf[0]) == 64:
-                buf[9] = _k_p256(buf[4], buf[5])
-            out.extend(buf)
+            out.extend(_process_tc(buf))
             out.append(f"{tc:012x}")
             tc += 1
             buf = []
@@ -109,9 +97,7 @@ def convert(src, dst):
         if len(buf) != 11:
             raise ValueError(
                 f"{src}: trailing partial TC with {len(buf)} hex lines")
-        if len(buf[0]) == 64:
-            buf[9] = _k_p256(buf[4], buf[5])
-        out.extend(buf)
+        out.extend(_process_tc(buf))
         out.append(f"{tc:012x}")
         tc += 1
     with open(dst, "w") as f:
