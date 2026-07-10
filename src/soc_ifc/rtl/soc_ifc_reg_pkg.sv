@@ -12,7 +12,7 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__rw_rw_sticky_hw__in_t;
 
     typedef struct packed{
-        logic [23:0] next;
+        logic [22:0] next;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t;
 
     typedef struct packed{
@@ -24,6 +24,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__rw_rw_sticky_hw__in_t shadow_storage_err;
         soc_ifc_reg__rw_rw_sticky_hw__in_t fsm_error;
         soc_ifc_reg__rw_rw_sticky_hw__in_t rv_dcls_err;
+        soc_ifc_reg__rw_rw_sticky_hw__in_t dccm_wr_readback_err;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t rsvd;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t;
 
@@ -833,6 +834,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__rw_rw_sticky_hw__out_t shadow_storage_err;
         soc_ifc_reg__rw_rw_sticky_hw__out_t fsm_error;
         soc_ifc_reg__rw_rw_sticky_hw__out_t rv_dcls_err;
+        soc_ifc_reg__rw_rw_sticky_hw__out_t dccm_wr_readback_err;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__out_t;
 
     typedef struct packed{
@@ -1486,6 +1488,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__rw_ro_hw__out_t mask_iccm_ecc_unc;
         soc_ifc_reg__rw_ro_hw__out_t mask_dccm_ecc_unc;
         soc_ifc_reg__rw_ro_hw__out_t mask_nmi_pin;
+        soc_ifc_reg__rw_ro_hw__out_t mask_dccm_wr_readback_err;
     } soc_ifc_reg__internal_hw_error_fatal_mask__out_t;
 
     typedef struct packed{

@@ -90,6 +90,7 @@ reg {
     ro_ro    shadow_storage_err=0;    /* Shadow register storage error - No Mask (reserved, read-only 0) */
     ro_ro    fsm_error=0;             /* Sparse FSM glitch/illegal-state error - No Mask (reserved, read-only 0) */
     ro_ro    mask_rv_dcls_err=0;      /* RISC-V dual-core lockstep (DCLS) corruption - No Mask (reserved, read-only 0) */
+    rw_ro_hw mask_dccm_wr_readback_err=0; /* DCCM write-readback mismatch detected - Maskable */
 } internal_hw_error_fatal_mask;
 reg {
     name = "Hardware Error Non-Fatal Mask";

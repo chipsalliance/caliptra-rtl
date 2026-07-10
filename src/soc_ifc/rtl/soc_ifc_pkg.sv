@@ -132,6 +132,7 @@ package soc_ifc_pkg;
         logic kv_error;         // Key vault monitor alert
         logic fsm_error;        // SPARSE FSM glitch detected
         logic rv_dcls_error;    // RV dual-core lockstep mismatch detected
+        logic dccm_wr_readback_error; // DCCM write-readback mismatch (store corrupted)
     } cptra_hw_fatal_error_t;
 
     //BOOT FSM
