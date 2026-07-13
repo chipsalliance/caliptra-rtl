@@ -26,7 +26,7 @@ typedef uint8_t BOOL;
 #define TRUE  1u
 #endif
 
-#define HMAC256_KEY_SIZE   16
+#define HMAC256_KEY_SIZE   8
 #define HMAC256_BLOCK_SIZE 16
 #define HMAC256_TAG_SIZE    8
 #define HMAC224_TAG_SIZE    7

@@ -44,9 +44,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 // --- Two-block test vector (hmac256_ctrl_tb.sv key4/data4_0/data4_1) ---
 static const uint32_t key_2blk[HMAC256_KEY_SIZE] = {
     0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,
-    0x0b0b0b0b,0x00000000,0x00000000,0x00000000,
-    0x00000000,0x00000000,0x00000000,0x00000000,
-    0x00000000,0x00000000,0x00000000,0x00000000};
+    0x0b0b0b0b,0x00000000,0x00000000,0x00000000};
 
 static const uint32_t block_a0_2blk[HMAC256_BLOCK_SIZE] = {
     0x61626364,0x62636465,0x63646566,0x64656667,
@@ -71,9 +69,7 @@ static const uint32_t expected_tag_224[HMAC224_TAG_SIZE] = {
 // --- Intervening single-block op (RFC 4231 #1) that must NOT affect op A ---
 static const uint32_t key_b[HMAC256_KEY_SIZE] = {
     0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,0x0b0b0b0b,
-    0x0b0b0b0b,0x00000000,0x00000000,0x00000000,
-    0x00000000,0x00000000,0x00000000,0x00000000,
-    0x00000000,0x00000000,0x00000000,0x00000000};
+    0x0b0b0b0b,0x00000000,0x00000000,0x00000000};
 
 static const uint32_t block_b[HMAC256_BLOCK_SIZE] = {
     0x48692054,0x68657265,0x80000000,0x00000000,

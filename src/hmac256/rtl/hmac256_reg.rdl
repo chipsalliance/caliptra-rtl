@@ -78,6 +78,7 @@ addrmap hmac256_reg {
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse; swwe;} NEXT = 1'b0;
         field {desc = "Zeroize all internal registers: Zeroize all internal registers after HMAC process, to avoid SCA leakage.
+                                ZEROIZE is mandatory between operations; STATUS.READY stays low until it fires.
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Control mode command bit: Selects the SHA-2 variant used by
@@ -124,14 +125,14 @@ addrmap hmac256_reg {
     reg {
         name = "HMAC256 KEY";
         desc = "HMAC256 component key register type definition
-                16 32-bit registers storing the 512-bit key in big-endian representation.";
+                8 32-bit registers storing the 256-bit key in big-endian representation.";
 
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Input HMAC key field"; hwclr;} KEY[32] = 32'b0;
 
-    } HMAC256_KEY[16] @0x00000040;
+    } HMAC256_KEY[8] @0x00000040;
 
 
 

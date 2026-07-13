@@ -1987,38 +1987,6 @@
 #ifndef HMAC256_REG_HMAC256_KEY_7
 #define HMAC256_REG_HMAC256_KEY_7                                                                   (0x5c)
 #endif
-#define CLP_HMAC256_REG_HMAC256_KEY_8                                                               (0x10012060)
-#ifndef HMAC256_REG_HMAC256_KEY_8
-#define HMAC256_REG_HMAC256_KEY_8                                                                   (0x60)
-#endif
-#define CLP_HMAC256_REG_HMAC256_KEY_9                                                               (0x10012064)
-#ifndef HMAC256_REG_HMAC256_KEY_9
-#define HMAC256_REG_HMAC256_KEY_9                                                                   (0x64)
-#endif
-#define CLP_HMAC256_REG_HMAC256_KEY_10                                                              (0x10012068)
-#ifndef HMAC256_REG_HMAC256_KEY_10
-#define HMAC256_REG_HMAC256_KEY_10                                                                  (0x68)
-#endif
-#define CLP_HMAC256_REG_HMAC256_KEY_11                                                              (0x1001206c)
-#ifndef HMAC256_REG_HMAC256_KEY_11
-#define HMAC256_REG_HMAC256_KEY_11                                                                  (0x6c)
-#endif
-#define CLP_HMAC256_REG_HMAC256_KEY_12                                                              (0x10012070)
-#ifndef HMAC256_REG_HMAC256_KEY_12
-#define HMAC256_REG_HMAC256_KEY_12                                                                  (0x70)
-#endif
-#define CLP_HMAC256_REG_HMAC256_KEY_13                                                              (0x10012074)
-#ifndef HMAC256_REG_HMAC256_KEY_13
-#define HMAC256_REG_HMAC256_KEY_13                                                                  (0x74)
-#endif
-#define CLP_HMAC256_REG_HMAC256_KEY_14                                                              (0x10012078)
-#ifndef HMAC256_REG_HMAC256_KEY_14
-#define HMAC256_REG_HMAC256_KEY_14                                                                  (0x78)
-#endif
-#define CLP_HMAC256_REG_HMAC256_KEY_15                                                              (0x1001207c)
-#ifndef HMAC256_REG_HMAC256_KEY_15
-#define HMAC256_REG_HMAC256_KEY_15                                                                  (0x7c)
-#endif
 #define CLP_HMAC256_REG_HMAC256_BLOCK_0                                                             (0x10012080)
 #ifndef HMAC256_REG_HMAC256_BLOCK_0
 #define HMAC256_REG_HMAC256_BLOCK_0                                                                 (0x80)

@@ -70,7 +70,7 @@ module hmac256_reg (
         logic [2-1:0]HMAC256_VERSION;
         logic HMAC256_CTRL;
         logic HMAC256_STATUS;
-        logic [16-1:0]HMAC256_KEY;
+        logic [8-1:0]HMAC256_KEY;
         logic [16-1:0]HMAC256_BLOCK;
         logic [8-1:0]HMAC256_TAG;
         logic [3-1:0]HMAC256_LFSR_SEED;
@@ -111,7 +111,7 @@ module hmac256_reg (
         end
         decoded_reg_strb.HMAC256_CTRL = cpuif_req_masked & (cpuif_addr == 12'h10);
         decoded_reg_strb.HMAC256_STATUS = cpuif_req_masked & (cpuif_addr == 12'h18);
-        for(int i0=0; i0<16; i0++) begin
+        for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.HMAC256_KEY[i0] = cpuif_req_masked & (cpuif_addr == 12'h40 + i0*12'h4);
         end
         for(int i0=0; i0<16; i0++) begin
@@ -185,7 +185,7 @@ module hmac256_reg (
                 logic [31:0] next;
                 logic load_next;
             } KEY;
-        } [16-1:0]HMAC256_KEY;
+        } [8-1:0]HMAC256_KEY;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -408,7 +408,7 @@ module hmac256_reg (
             struct packed{
                 logic [31:0] value;
             } KEY;
-        } [16-1:0]HMAC256_KEY;
+        } [8-1:0]HMAC256_KEY;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -695,7 +695,7 @@ module hmac256_reg (
         end
     end
     assign hwif_out.HMAC256_CTRL.RESTORE.value = field_storage.HMAC256_CTRL.RESTORE.value;
-    for(genvar i0=0; i0<16; i0++) begin
+    for(genvar i0=0; i0<8; i0++) begin
         // Field: hmac256_reg.HMAC256_KEY[].KEY
         always_comb begin
             automatic logic [31:0] next_c;

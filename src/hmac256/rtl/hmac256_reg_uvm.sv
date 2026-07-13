@@ -1026,7 +1026,7 @@ package hmac256_reg_uvm;
         rand hmac256_reg__HMAC256_VERSION HMAC256_VERSION[2];
         rand hmac256_reg__HMAC256_CTRL HMAC256_CTRL;
         rand hmac256_reg__HMAC256_STATUS HMAC256_STATUS;
-        rand hmac256_reg__HMAC256_KEY HMAC256_KEY[16];
+        rand hmac256_reg__HMAC256_KEY HMAC256_KEY[8];
         rand hmac256_reg__HMAC256_BLOCK HMAC256_BLOCK[16];
         rand hmac256_reg__HMAC256_TAG HMAC256_TAG[8];
         rand hmac256_reg__HMAC256_LFSR_SEED HMAC256_LFSR_SEED[3];

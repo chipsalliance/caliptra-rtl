@@ -41,9 +41,7 @@ void main() {
 
     uint32_t key_data[HMAC256_KEY_SIZE] = {
         0x0b0b0b0b, 0x0b0b0b0b, 0x0b0b0b0b, 0x0b0b0b0b,
-        0x0b0b0b0b, 0x00000000, 0x00000000, 0x00000000,
-        0x00000000, 0x00000000, 0x00000000, 0x00000000,
-        0x00000000, 0x00000000, 0x00000000, 0x00000000
+        0x0b0b0b0b, 0x00000000, 0x00000000, 0x00000000
     };
 
     uint32_t block_data[HMAC256_BLOCK_SIZE] = {

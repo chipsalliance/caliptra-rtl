@@ -49,9 +49,7 @@ void main() {
     // RFC 4231 test case 1: HMAC-SHA-256(key = 0x0b*20, msg = "Hi There").
     uint32_t hmac_key_data[HMAC256_KEY_SIZE] = {
         0x0b0b0b0b, 0x0b0b0b0b, 0x0b0b0b0b, 0x0b0b0b0b,
-        0x0b0b0b0b, 0x00000000, 0x00000000, 0x00000000,
-        0x00000000, 0x00000000, 0x00000000, 0x00000000,
-        0x00000000, 0x00000000, 0x00000000, 0x00000000
+        0x0b0b0b0b, 0x00000000, 0x00000000, 0x00000000
     };
 
     uint32_t hmac_block_data[HMAC256_BLOCK_SIZE] = {
