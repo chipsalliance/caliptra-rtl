@@ -1596,30 +1596,6 @@
 `ifndef HMAC256_REG_HMAC256_KEY_7
 `define HMAC256_REG_HMAC256_KEY_7                                                                   (32'h5c)
 `endif
-`ifndef HMAC256_REG_HMAC256_KEY_8
-`define HMAC256_REG_HMAC256_KEY_8                                                                   (32'h60)
-`endif
-`ifndef HMAC256_REG_HMAC256_KEY_9
-`define HMAC256_REG_HMAC256_KEY_9                                                                   (32'h64)
-`endif
-`ifndef HMAC256_REG_HMAC256_KEY_10
-`define HMAC256_REG_HMAC256_KEY_10                                                                  (32'h68)
-`endif
-`ifndef HMAC256_REG_HMAC256_KEY_11
-`define HMAC256_REG_HMAC256_KEY_11                                                                  (32'h6c)
-`endif
-`ifndef HMAC256_REG_HMAC256_KEY_12
-`define HMAC256_REG_HMAC256_KEY_12                                                                  (32'h70)
-`endif
-`ifndef HMAC256_REG_HMAC256_KEY_13
-`define HMAC256_REG_HMAC256_KEY_13                                                                  (32'h74)
-`endif
-`ifndef HMAC256_REG_HMAC256_KEY_14
-`define HMAC256_REG_HMAC256_KEY_14                                                                  (32'h78)
-`endif
-`ifndef HMAC256_REG_HMAC256_KEY_15
-`define HMAC256_REG_HMAC256_KEY_15                                                                  (32'h7c)
-`endif
 `ifndef HMAC256_REG_HMAC256_BLOCK_0
 `define HMAC256_REG_HMAC256_BLOCK_0                                                                 (32'h80)
 `endif

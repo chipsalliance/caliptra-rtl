@@ -42,14 +42,14 @@ class HMAC256_save_restore_sequence extends HMAC256_bench_sequence_base;
   constraint c_save  { save_point > 0; save_point < block_length_a; }
 
   // Context A (the saved / restored op).
-  bit [31:0] key_a       [16];
+  bit [31:0] key_a       [8];
   bit [31:0] blocks_a    [];   // sized to block_length_a * BENCH_BLOCK_DWORDS
   bit [31:0] ref_tag_a [8];
   bit [31:0] save_tag [8];
   bit [31:0] restore_tag [8];
 
   // Context B (the intervening op).
-  bit [31:0] key_b       [16];
+  bit [31:0] key_b       [8];
   bit [31:0] blocks_b    [];   // sized to block_length_b * 32
   bit [31:0] ref_tag_b [8];
   bit [31:0] mid_tag_b [8];

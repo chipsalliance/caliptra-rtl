@@ -32,7 +32,7 @@ class HMAC256_random_sequence extends HMAC256_bench_sequence_base;
   rand bit [3:0] block_length;
   constraint c_block_length { block_length > 0; }
   rand bit       mode;  //   mode = 1'b1 -> HMAC-SHA-256 mode = 1'b0 -> HMAC-SHA-224
-  bit [31:0] key_dwords   [16];
+  bit [31:0] key_dwords   [8];
   bit [31:0] block_dwords [];  
 
   function new(string name = "HMAC256_random_sequence");

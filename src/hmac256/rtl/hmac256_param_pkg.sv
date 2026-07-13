@@ -36,7 +36,7 @@ package hmac256_param_pkg;
   localparam bit HMAC256_MODE = 1'b1;
 
   localparam int BLOCK_SIZE     = 512;
-  localparam int KEY_SIZE       = 512;
+  localparam int KEY_SIZE       = 256;
   localparam int TAG_SIZE       = 256;
   localparam int LFSR_SEED_SIZE = 96;
   localparam int ENTROPY_COUNTER_SIZE = 32;

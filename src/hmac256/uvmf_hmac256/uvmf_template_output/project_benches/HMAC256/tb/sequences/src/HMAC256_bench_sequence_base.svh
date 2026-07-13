@@ -106,7 +106,7 @@ rand hmac256_env_sequence_base_t hmac256_env_seq;
       reg_model.HMAC256_BLOCK[i].write(status, blk[i]);
   endtask
 
-  task write_key_regs(input bit [31:0] k [16]);
+  task write_key_regs(input bit [31:0] k [8]);
     foreach (reg_model.HMAC256_KEY[i])
       reg_model.HMAC256_KEY[i].write(status, k[i]);
   endtask
