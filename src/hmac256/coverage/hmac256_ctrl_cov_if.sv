@@ -92,45 +92,19 @@ interface hmac256_ctrl_cov_if
 
         // Every combination of {restore, last, next, init, zeroize}.
         hmac256_cmd_cp: coverpoint hmac256_cmd {
-            bins idle                     = {5'h00};
-            bins zeroize_only             = {5'h01};
-            bins init                     = {5'h02};
-            bins init_zeroize             = {5'h03};
-            bins next                     = {5'h04};
-            bins next_zeroize             = {5'h05};
-            bins init_next                = {5'h06};
-            bins init_next_zeroize        = {5'h07};
-            bins last_alone               = {5'h08};
-            bins last_zeroize             = {5'h09};
-            bins init_last                = {5'h0A};
-            bins init_last_zeroize        = {5'h0B};
-            bins next_last                = {5'h0C};
-            bins next_last_zeroize        = {5'h0D};
-            bins init_next_last           = {5'h0E};
-            bins init_next_last_zeroize   = {5'h0F};
-            bins restore_alone            = {5'h10};
-            bins restore_zeroize          = {5'h11};
-            bins init_restore             = {5'h12};
-            bins init_restore_zeroize     = {5'h13};
-            bins next_restore             = {5'h14};
-            bins next_restore_zeroize     = {5'h15};
-            bins init_next_restore        = {5'h16};
-            bins init_next_restore_zero   = {5'h17};
-            bins last_restore             = {5'h18};
-            bins last_restore_zeroize     = {5'h19};
-            bins init_last_restore        = {5'h1A};
-            bins init_last_restore_zero   = {5'h1B};
-            bins next_last_restore        = {5'h1C};
-            bins next_last_restore_zero   = {5'h1D};
-            bins all_four                 = {5'h1E};
-            bins all_four_zeroize         = {5'h1F};
+            bins cmd[] = {[0:31]};
         }
 
         // Every CTRL encoding crossed with MODE (HMAC-224 x HMAC-256).
         hmac256_cmd_x_mode: cross hmac256_cmd_cp, mode_cp;
 
-        mode_ready_cp: cross ready, mode;
+        mode_ready_cp:    cross ready, mode;
         zeroize_ready_cp: cross ready, zeroize;
+
+        // Did zeroize, restore, and error0 all fire in both modes.
+        zeroize_x_mode_cp: cross zeroize_cp, mode_cp;
+        restore_x_mode_cp: cross restore_cp, mode_cp;
+        error0_x_mode_cp:  cross error0_sts_cp, mode_cp;
 
     endgroup
 
