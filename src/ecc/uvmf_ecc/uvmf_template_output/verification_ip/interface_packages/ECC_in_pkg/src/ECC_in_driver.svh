@@ -60,6 +60,12 @@ class ECC_in_driver  #(
   ECC_in_responder_s ECC_in_responder_struct;
 
 // pragma uvmf custom class_item_additional begin
+// Analysis port used to broadcast the DRIVER's true transaction to the
+// predictor. The default monitored_ap only sees test/op via interface
+// signals and cannot observe the new random axes (curve, nondet,
+// err_mode, kv_intf, kv_slot, pollute_upper). Environment connects this
+// to the predictor's ae so scoreboard queues stay curve/mode-aware.
+  uvm_analysis_port #(REQ) driver_ap;
 // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************
@@ -67,6 +73,7 @@ class ECC_in_driver  #(
 //
   function new( string name = "", uvm_component parent=null );
     super.new( name, parent );
+    driver_ap = new("driver_ap", this);
   endfunction
 
 // ****************************************************************************
@@ -102,6 +109,11 @@ class ECC_in_driver  #(
           txn.to_initiator_struct(), 
           ECC_in_responder_struct 
           );
+      // Broadcast the true transaction to the predictor BEFORE the
+      // responder-struct unpack below clobbers txn.test/txn.op (which
+      // would otherwise force the predictor to see ecc_reset_test=0 and
+      // emit zeros for every transaction).
+      driver_ap.write(txn);
       // Unpack transfer response information received by this initiator
       txn.from_responder_struct(ECC_in_responder_struct);
     end

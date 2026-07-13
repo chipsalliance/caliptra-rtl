@@ -28,10 +28,54 @@ class ECC_in_transaction #(
 
   rand ecc_in_test_transactions test ;
   rand ecc_in_op_transactions op ;
+  // New random axes for dual-curve + nondet-SIGN + error-injection coverage.
+  rand ecc_in_curve_e    curve;
+  rand ecc_in_err_mode_e err_mode;
+  rand bit               nondet;
+  rand bit               pcr_sign;
+  rand bit               kv_intf;
+  rand bit [4:0]         kv_slot;
+  rand bit               pollute_upper;
+  // Zeroize-mid-op axis: when set, BFM injects ZEROIZE cmd N clocks
+  // after dispatch (before ready reasserts) to fire zeroize_ready_cp
+  // [ready=0], zeroize_x_curve_cp, zeroize_cmd_cp, zeroize_pcr_cp bins.
+  rand bit               zeroize_mid_op;
+  rand bit [3:0]         zeroize_delay_clks;
 
   //Constraints for the transaction variables:
   constraint ecc_valid_test_contraints { test inside {ecc_normal_test, ecc_otf_reset_test}; }
   constraint ecc_valid_op_constraints { op inside {key_gen, key_sign, key_verify, ecdh_sharedkey}; }
+
+  // Legal-op constraints when err_mode == ERR_NONE. nondet/pcr_sign are
+  // only permitted in DUT-legal combinations. kv_intf is forced off because
+  // the block TB has no KV data source; only the KV-error modes arm KV ctrl.
+  constraint ecc_legal_axes_c {
+    (err_mode == ERR_NONE) -> {
+      nondet -> (op == key_sign);
+      pcr_sign  -> ((op == key_sign) && (curve == ecc_curve_p384) && (nondet == 1'b0));
+      kv_intf   == 1'b0;
+    }
+  }
+
+  // Zeroize-mid-op is a random-path-only feature. Disallow it in error
+  // paths (error already aborts the op) since combining them would
+  // race the two abort mechanisms.
+  constraint ecc_zeroize_legality_c {
+    (err_mode != ERR_NONE) -> (zeroize_mid_op == 1'b0);
+  }
+
+  // Force op/curve/rand_k/pcr/kv into the illegal combination that fires the
+  // targeted error gate. Non-listed axes remain free so each error test still
+  // covers a range of the "don't care" dimensions.
+  constraint ecc_err_mode_c {
+    (err_mode == ERR_PCR_P256)      -> ((op == key_sign) && (curve == ecc_curve_p256) && (pcr_sign == 1'b1));
+    (err_mode == ERR_RAND_K_PCR)    -> ((op == key_sign) && (pcr_sign == 1'b1) && (nondet == 1'b1));
+    (err_mode == ERR_RAND_K_KEYGEN) -> ((op == key_gen)         && (nondet == 1'b1));
+    (err_mode == ERR_RAND_K_VERIFY) -> ((op == key_verify)      && (nondet == 1'b1));
+    (err_mode == ERR_RAND_K_SHARED) -> ((op == ecdh_sharedkey)  && (nondet == 1'b1));
+    (err_mode == ERR_KV_P256)       -> ((kv_intf == 1'b1) && (curve == ecc_curve_p256));
+    (err_mode == ERR_KV_RAND_K)     -> ((kv_intf == 1'b1) && (op == key_sign) && (nondet == 1'b1));
+  }
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -112,7 +156,10 @@ class ECC_in_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("test:0x%x op:0x%x ",test,op);
+    return $sformatf("test:%s op:%s curve:%s err_mode:%s nondet:%0d pcr_sign:%0d kv_intf:%0d kv_slot:%0d pollute_upper:%0d zeroize_mid_op:%0d zeroize_delay_clks:%0d",
+                     test.name(), op.name(), curve.name(), err_mode.name(),
+                     nondet, pcr_sign, kv_intf, kv_slot, pollute_upper,
+                     zeroize_mid_op, zeroize_delay_clks);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -146,6 +193,15 @@ class ECC_in_transaction #(
     return (super.do_compare(rhs,comparer)
             &&(this.test == RHS.test)
             &&(this.op == RHS.op)
+            &&(this.curve == RHS.curve)
+            &&(this.err_mode == RHS.err_mode)
+            &&(this.nondet == RHS.nondet)
+            &&(this.pcr_sign == RHS.pcr_sign)
+            &&(this.kv_intf == RHS.kv_intf)
+            &&(this.kv_slot == RHS.kv_slot)
+            &&(this.pollute_upper == RHS.pollute_upper)
+            &&(this.zeroize_mid_op == RHS.zeroize_mid_op)
+            &&(this.zeroize_delay_clks == RHS.zeroize_delay_clks)
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -166,6 +222,15 @@ class ECC_in_transaction #(
     super.do_copy(rhs);
     this.test = RHS.test;
     this.op = RHS.op;
+    this.curve = RHS.curve;
+    this.err_mode = RHS.err_mode;
+    this.nondet = RHS.nondet;
+    this.pcr_sign = RHS.pcr_sign;
+    this.kv_intf = RHS.kv_intf;
+    this.kv_slot = RHS.kv_slot;
+    this.pollute_upper = RHS.pollute_upper;
+    this.zeroize_mid_op = RHS.zeroize_mid_op;
+    this.zeroize_delay_clks = RHS.zeroize_delay_clks;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -191,6 +256,15 @@ class ECC_in_transaction #(
     // UVMF_CHANGE_ME : Eliminate transaction variables not wanted in transaction viewing in the waveform viewer
     $add_attribute(transaction_view_h,test,"test");
     $add_attribute(transaction_view_h,op,"op");
+    $add_attribute(transaction_view_h,curve,"curve");
+    $add_attribute(transaction_view_h,err_mode,"err_mode");
+    $add_attribute(transaction_view_h,nondet,"nondet");
+    $add_attribute(transaction_view_h,pcr_sign,"pcr_sign");
+    $add_attribute(transaction_view_h,kv_intf,"kv_intf");
+    $add_attribute(transaction_view_h,kv_slot,"kv_slot");
+    $add_attribute(transaction_view_h,pollute_upper,"pollute_upper");
+    $add_attribute(transaction_view_h,zeroize_mid_op,"zeroize_mid_op");
+    $add_attribute(transaction_view_h,zeroize_delay_clks,"zeroize_delay_clks");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);

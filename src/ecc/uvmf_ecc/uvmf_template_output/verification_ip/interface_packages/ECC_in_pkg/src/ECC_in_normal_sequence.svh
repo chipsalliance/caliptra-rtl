@@ -52,7 +52,16 @@ class ECC_in_normal_sequence #(
                 )::type_id::create("req");
       start_item(req);
       // Randomize the transaction
-      if(!req.randomize() with { test == ecc_normal_test; }) `uvm_fatal("SEQ", "ECC_in_normal_sequence::body()-ECC_in_transaction randomization failed")
+      // Constrain new random axes to P-384 det defaults so the legacy
+      // ECC_normal_test continues to exercise its original stimulus.
+      if(!req.randomize() with { test == ecc_normal_test;
+                                 curve == ecc_curve_p384;
+                                 err_mode == ERR_NONE;
+                                 nondet == 1'b0;
+                                 pcr_sign == 1'b0;
+                                 kv_intf == 1'b0;
+                                 pollute_upper == 1'b0;
+                                 zeroize_mid_op == 1'b0; }) `uvm_fatal("SEQ", "ECC_in_normal_sequence::body()-ECC_in_transaction randomization failed")
       // set the operation
       //req.test = ecc_normal_test;
       //$display("*** ANJANA*** op = %h", req.test);

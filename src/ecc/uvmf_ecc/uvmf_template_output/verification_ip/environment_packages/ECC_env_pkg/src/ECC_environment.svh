@@ -90,7 +90,11 @@ class ECC_environment  extends uvmf_environment_base #(
 // pragma uvmf custom connect_phase_pre_super begin
 // pragma uvmf custom connect_phase_pre_super end
     super.connect_phase(phase);
-    ECC_in_agent.monitored_ap.connect(ECC_pred.ECC_in_agent_ae);
+    // Route the driver's TRUE transaction (with curve/rand_k/err_mode etc)
+    // to the predictor. The monitor-derived monitored_ap only carries
+    // test/op from the interface signals and would leave the new random
+    // axes at defaults, causing predictor/scoreboard mismatch.
+    ECC_in_agent.driver.driver_ap.connect(ECC_pred.ECC_in_agent_ae);
     ECC_pred.ECC_sb_ap.connect(ECC_sb.expected_analysis_export);
     ECC_out_agent.monitored_ap.connect(ECC_sb.actual_analysis_export);
     // pragma uvmf custom reg_model_connect_phase begin

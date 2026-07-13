@@ -1,0 +1,5 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=ECC_curve_switch_random_test'
+testname: ECC_curve_switch_random_test

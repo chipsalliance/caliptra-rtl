@@ -1,0 +1,5 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=ECC_kv_slot_random_test'
+testname: ECC_kv_slot_random_test

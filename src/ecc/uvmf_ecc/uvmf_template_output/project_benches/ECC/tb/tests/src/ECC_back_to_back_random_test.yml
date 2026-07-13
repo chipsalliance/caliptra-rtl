@@ -1,0 +1,5 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=ECC_back_to_back_random_test'
+testname: ECC_back_to_back_random_test

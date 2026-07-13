@@ -41,6 +41,14 @@ package ECC_tests_pkg;
    `include "src/example_derived_test.svh"
    `include "src/ECC_normal_test.svh"
    `include "src/ECC_otf_reset_test.svh"
+   `include "src/ECC_random_test_base.svh"
+   `include "src/ECC_dualcurve_random_test.svh"
+   `include "src/ECC_illegal_mode_random_test.svh"
+   `include "src/ECC_curve_switch_random_test.svh"
+   `include "src/ECC_otf_reset_dualcurve_random_test.svh"
+   `include "src/ECC_back_to_back_random_test.svh"
+   `include "src/ECC_kv_slot_random_test.svh"
+   `include "src/ECC_zeroize_random_test.svh"
 
   // pragma uvmf custom package_item_additional begin
   // UVMF_CHANGE_ME : When adding new tests to the src directory

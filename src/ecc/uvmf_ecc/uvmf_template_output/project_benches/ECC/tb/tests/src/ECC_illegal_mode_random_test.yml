@@ -1,0 +1,5 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=ECC_illegal_mode_random_test'
+testname: ECC_illegal_mode_random_test

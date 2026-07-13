@@ -78,6 +78,15 @@ def _process_tc(buf):
     ]
 
 
+def _k_p384(seed_hex, nonce_hex):
+    """Re-run the HW reject loop until k in [1, n_p384 - 1]."""
+    drbg = _HmacDrbgSha384(bytes.fromhex(seed_hex), bytes.fromhex(nonce_hex))
+    while True:
+        k = int.from_bytes(drbg.generate(48), "big")
+        if 0 < k < N_P384:
+            return f"{k:096x}".upper()
+
+
 def convert(src, dst):
     with open(src) as f:
         raw = [l.rstrip("\n") for l in f]
