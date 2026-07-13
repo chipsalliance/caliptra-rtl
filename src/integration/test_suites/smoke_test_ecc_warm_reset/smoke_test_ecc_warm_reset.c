@@ -100,7 +100,7 @@ void main() {
     rst_count++;
 
     uint32_t curve_p256 = (1 << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK;
-    uint32_t rand_k     = (1 << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) & ECC_REG_ECC_CTRL_RAND_K_EN_MASK;
+    uint32_t rand_k     = (1 << ECC_REG_ECC_CTRL_NONDETERMINISTIC_LOW) & ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK;
 
     switch (rst_count) {
         case 1:

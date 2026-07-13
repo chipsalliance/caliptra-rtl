@@ -6,8 +6,8 @@
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Negative test: arm KV privkey-read together with SIGN+RAND_K_EN=1.
-// The HW gate (kv_under_rand_k_invalid) must fire ecc_error.
+// Negative test: arm KV privkey-read together with SIGN+NONDETERMINISTIC=1.
+// The HW gate (kv_under_nondet_invalid) must fire ecc_error.
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -28,7 +28,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
     VPRINTF(LOW, "-------------------------------------------------\n");
-    VPRINTF(LOW, " ECC KV + RAND_K_EN illegal-combo error test\n");
+    VPRINTF(LOW, " ECC KV + NONDETERMINISTIC illegal-combo error test\n");
     VPRINTF(LOW, "-------------------------------------------------\n");
 
     ecc_io privkey, msg, iv, sign_r, sign_s;
@@ -43,7 +43,7 @@ void main() {
     init_interrupts();
 
     // Use KV-sourced privkey (kv_intf=TRUE) so ecc_signing_flow arms KV read,
-    // then issues SIGN with RAND_K_EN=1. HW must reject the combo.
+    // then issues SIGN with NONDETERMINISTIC=1. HW must reject the combo.
     privkey.kv_intf = TRUE;
     privkey.kv_id   = 0x3;
     msg.kv_intf     = FALSE;
@@ -60,19 +60,19 @@ void main() {
     VPRINTF(LOW, "Inject PRIVKEY into KV slot %0d\n", privkey.kv_id);
     lsu_write_32(STDOUT, (privkey.kv_id << 8) | 0xad);
 
-    // SIGN with KV-sourced privkey + RAND_K_EN=1 (P-384). check_result=FALSE
+    // SIGN with KV-sourced privkey + NONDETERMINISTIC=1 (P-384). check_result=FALSE
     // since the engine must error out before producing a signature.
     uint8_t curve_sel = 0;
-    uint8_t rand_k_en = 1;
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, curve_sel, rand_k_en);
+    uint8_t nondet = 1;
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, curve_sel, nondet);
 
     if (cptra_intr_rcv.ecc_error == 0) {
-        VPRINTF(ERROR, "FAIL: ecc_err intr not asserted for KV + RAND_K_EN combo\n");
+        VPRINTF(ERROR, "FAIL: ecc_err intr not asserted for KV + NONDETERMINISTIC combo\n");
         SEND_STDOUT_CTRL(0x1);
         while (1);
     }
 
-    VPRINTF(LOW, "PASS: ecc_err intr correctly asserted for KV + RAND_K_EN combo\n");
+    VPRINTF(LOW, "PASS: ecc_err intr correctly asserted for KV + NONDETERMINISTIC combo\n");
     ecc_zeroize();
     SEND_STDOUT_CTRL(0xff);
     while (1);

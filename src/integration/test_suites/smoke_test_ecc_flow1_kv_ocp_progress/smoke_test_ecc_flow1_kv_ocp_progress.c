@@ -60,7 +60,7 @@ void main(){
     BOOL kv_status_success;
     BOOL expect_kv_status_success;
     uint8_t curve_sel = 0;
-    uint8_t rand_k_en = 0;
+    uint8_t nondet = 0;
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -298,7 +298,7 @@ void main(){
         
         ecc_zeroize();
 
-        ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, curve_sel, rand_k_en);
+        ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, curve_sel, nondet);
         cptra_intr_rcv.ecc_error = 0;
         cptra_intr_rcv.ecc_notif = 0;
 

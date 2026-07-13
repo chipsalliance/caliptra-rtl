@@ -11,7 +11,7 @@
 // as src (KV-read into ECC) vs dst (ECC writes into KV):
 //
 //   [1] src privkey: arm KV_RD_PKEY, dispatch SIGN+CURVE_SEL=1
-//                    (RAND_K_EN randomized)
+//                    (NONDETERMINISTIC randomized)
 //         -> ecc_error via kv_privkey_read_ctrl.read_en + sticky
 //            kv_key_data_present (handled inside ecc_signing_flow).
 //   [2] src seed:    arm KV_RD_SEED standalone under CURVE_SEL=0, wait
@@ -95,15 +95,15 @@ void main() {
     const uint8_t kv_seed_slot = 0x4;
 
     // -----------------------------------------------------------------
-    // [1] src privkey: SIGN + KV-privkey + CURVE_SEL=1 (RAND_K_EN randomized)
+    // [1] src privkey: SIGN + KV-privkey + CURVE_SEL=1 (NONDETERMINISTIC randomized)
     // -----------------------------------------------------------------
     VPRINTF(LOW, "\n[1] src privkey: SIGN + KV-privkey + CURVE_SEL=1\n");
     lsu_write_32(STDOUT, (kv_slot << 8) | 0xad);
     privkey.kv_intf = TRUE;
     privkey.kv_id   = kv_slot;
-    uint8_t rand_k_en_rand = (uint8_t)(xorshift32() & 0x1);
-    VPRINTF(LOW, "    RAND_K_EN (randomized) = %0d\n", rand_k_en_rand);
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, /*curve_sel=*/1, rand_k_en_rand);
+    uint8_t nondet_rand = (uint8_t)(xorshift32() & 0x1);
+    VPRINTF(LOW, "    NONDETERMINISTIC (randomized) = %0d\n", nondet_rand);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, /*curve_sel=*/1, nondet_rand);
     expect_ecc_error("1 src-privkey");
     ecc_zeroize();
     cptra_intr_rcv.ecc_notif = 0;
@@ -126,7 +126,7 @@ void main() {
 
     privkey.kv_intf = FALSE;
     for (int i = 0; i < ECC_INPUT_SIZE; i++) privkey.data[i] = 0xDEADBEEF;
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, /*curve_sel=*/1, /*rand_k_en=*/0);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, /*curve_sel=*/1, /*nondet=*/0);
     expect_ecc_error("2 src-seed-sticky");
     ecc_zeroize();
     cptra_intr_rcv.ecc_notif = 0;

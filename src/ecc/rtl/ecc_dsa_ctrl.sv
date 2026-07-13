@@ -216,7 +216,7 @@ module ecc_dsa_ctrl
     logic signing_process;
     logic verifying_process;
     logic sharedkey_process;
-    logic rand_k_en_mode;
+    logic nondet_mode;
 
     logic privkey_input_outofrange;
     logic r_output_outofrange;
@@ -227,11 +227,11 @@ module ecc_dsa_ctrl
     logic pubkeyy_input_outofrange;
     logic pubkey_input_invalid;
     logic pcr_sign_input_invalid;
-    logic rand_k_pcr_sign_illegal;
+    logic nondet_pcr_sign_illegal;
     logic pcr_sign_under_p256_invalid;
-    logic rand_k_invalid_cmd;
+    logic nondet_invalid_cmd;
     logic kv_under_p256_invalid;
-    logic kv_under_rand_k_invalid;
+    logic kv_under_nondet_invalid;
     logic privkey_output_outofrange, pubkeyx_output_outofrange, pubkeyy_output_outofrange;
     logic sharedkey_outofrange;
 
@@ -324,7 +324,7 @@ module ecc_dsa_ctrl
         .privKey(privkey_reg),
         .hashed_msg(msg_reduced_reg),
         .IV(IV_reg),
-        .rand_k_en(rand_k_en_mode),
+        .nondet(nondet_mode),
         .lambda(lambda_p384),
         .scalar_rnd(scalar_rnd_p384),
         .masking_rnd(masking_rnd_p384),
@@ -355,7 +355,7 @@ module ecc_dsa_ctrl
         .privKey(privkey_reg[REG_NUM_DWORDS_P256-1 : 0]),
         .hashed_msg(msg_reduced_reg[REG_NUM_DWORDS_P256-1 : 0]),
         .IV(IV_reg[REG_NUM_DWORDS_P256-1 : 0]),
-        .rand_k_en(rand_k_en_mode),
+        .nondet(nondet_mode),
         .lambda(lambda_p256),
         .scalar_rnd(scalar_rnd_p256),
         .masking_rnd(masking_rnd_p256),
@@ -562,10 +562,10 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_CTRL.CTRL.hwclr = |cmd_reg;
     always_comb hwif_in.ECC_CTRL.DH_SHAREDKEY.hwclr = |cmd_reg;
     always_comb hwif_in.ECC_CTRL.PCR_SIGN.hwclr = hwif_out.ECC_CTRL.PCR_SIGN.value;
-    // RAND_K_EN is sticky across operations (symmetric to CURVE_SEL) so that the
+    // NONDETERMINISTIC is sticky across operations (symmetric to CURVE_SEL) so that the
     // ecc_kv_wr_pkey_ctrl swwe lockout below blocks SW from arming KV-dest under
     // nondet. Cleared only by ECC_CTRL.ZEROIZE (or explicit SW write when ready).
-    always_comb hwif_in.ECC_CTRL.RAND_K_EN.hwclr = zeroize_reg;
+    always_comb hwif_in.ECC_CTRL.NONDETERMINISTIC.hwclr = zeroize_reg;
     
     // TODO add other interrupt hwset signals (errors)
     always_comb hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset = error_flag_edge;
@@ -595,33 +595,33 @@ module ecc_dsa_ctrl
         hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = ~kv_write_ready;
     end
 
-    // KV path is P-384 only and forbidden under nondet (RAND_K_EN); SW cannot
-    // arm KV read/write while CURVE_SEL=P-256 or RAND_K_EN=1.
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    // KV path is P-384 only and forbidden under nondet (NONDETERMINISTIC); SW cannot
+    // arm KV read/write while CURVE_SEL=P-256 or NONDETERMINISTIC=1.
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = 0;
 
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = 0;
 
     // KV write control must be written before ECC core operation begins, even though
     // output isn't written to KV until the end of the operation.
     // Prevent partial-key attacks by blocking register modifications during core execution.
-    // Also block when CURVE_SEL=P256 (no KV path) or RAND_K_EN=1 (nondet mode has no KV path).
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
-    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.RAND_K_EN.value;
+    // Also block when CURVE_SEL=P256 (no KV path) or NONDETERMINISTIC=1 (nondet mode has no KV path).
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe              = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.write_entry.swwe           = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.swwe = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.swwe = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.swwe    = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.swwe = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.swwe  = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
+    always_comb hwif_in.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.swwe   = !busy_o && !curve_sel && !hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
     always_comb hwif_in.ecc_kv_wr_pkey_ctrl.rsvd.swwe                  = 0;
 
     //keyvault control reg macros for assigning to struct
@@ -819,12 +819,12 @@ module ecc_dsa_ctrl
     assign pubkey_input_invalid     = (verifying_process | sharedkey_process) & (pk_chk_reg != 0);
 
     assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & pcr_sign_mode;
-    assign rand_k_pcr_sign_illegal  = (cmd_reg == SIGN) & pcr_sign_mode & hwif_out.ECC_CTRL.RAND_K_EN.value;
+    assign nondet_pcr_sign_illegal  = (cmd_reg == SIGN) & pcr_sign_mode & hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
     // PCR_SIGN is P-384 deterministic only; block P-256 (both det and nondet).
     assign pcr_sign_under_p256_invalid = (cmd_reg == SIGN) & pcr_sign_mode & curve_sel;
 
-    // RAND_K_EN is only meaningful for SIGN; flag misuse on KEYGEN/VERIFY/SHARED_KEY (ECDH).
-    assign rand_k_invalid_cmd       = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & hwif_out.ECC_CTRL.RAND_K_EN.value;
+    // NONDETERMINISTIC is only meaningful for SIGN; flag misuse on KEYGEN/VERIFY/SHARED_KEY (ECDH).
+    assign nondet_invalid_cmd       = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
 
     // KV path is illegal under P-256: fire error if any KV transaction is armed while curve_sel_reg=1.
     assign kv_under_p256_invalid    = curve_sel_reg & (kv_privkey_read_ctrl_reg.read_en |
@@ -834,9 +834,9 @@ module ecc_dsa_ctrl
                                                           kv_seed_data_present            |
                                                           kv_key_data_present);
 
-    // KV path is illegal in nondet (RAND_K_EN) signing: fire error if any KV transaction is armed.
+    // KV path is illegal in nondet (NONDETERMINISTIC) signing: fire error if any KV transaction is armed.
     // The sticky *_data_present flags cover the window after read_en self-clears on KV ready.
-    assign kv_under_rand_k_invalid  = rand_k_en_mode & (kv_privkey_read_ctrl_reg.read_en |
+    assign kv_under_nondet_invalid  = nondet_mode & (kv_privkey_read_ctrl_reg.read_en |
                                                           kv_seed_read_ctrl_reg.read_en   |
                                                           kv_write_ctrl_reg.write_en      |
                                                           dest_keyvault                   |
@@ -851,7 +851,7 @@ module ecc_dsa_ctrl
 
     assign error_flag = privkey_input_outofrange | r_output_outofrange | s_output_outofrange | 
                         r_input_outofrange | s_input_outofrange | pubkeyx_input_outofrange | pubkeyy_input_outofrange | 
-                        pubkey_input_invalid | pcr_sign_input_invalid | rand_k_pcr_sign_illegal | pcr_sign_under_p256_invalid | rand_k_invalid_cmd | kv_under_p256_invalid | kv_under_rand_k_invalid |
+                        pubkey_input_invalid | pcr_sign_input_invalid | nondet_pcr_sign_illegal | pcr_sign_under_p256_invalid | nondet_invalid_cmd | kv_under_p256_invalid | kv_under_nondet_invalid |
                         privkey_output_outofrange | pubkeyx_output_outofrange | pubkeyy_output_outofrange |
                         sharedkey_outofrange;
 
@@ -888,7 +888,7 @@ module ecc_dsa_ctrl
             signing_process     <= 0;
             verifying_process   <= 0;
             sharedkey_process   <= 0;
-            rand_k_en_mode      <= 0;
+            nondet_mode      <= 0;
             pending_cmd_reg     <= '0;
         end
         else if(zeroize_reg) begin
@@ -904,7 +904,7 @@ module ecc_dsa_ctrl
             signing_process     <= 0;
             verifying_process   <= 0;
             sharedkey_process   <= 0;
-            rand_k_en_mode      <= 0;
+            nondet_mode      <= 0;
             pending_cmd_reg     <= '0;
         end
         else if (error_flag | error_flag_reg) begin
@@ -920,7 +920,7 @@ module ecc_dsa_ctrl
             signing_process     <= 0;
             verifying_process   <= 0;
             sharedkey_process   <= 0;
-            rand_k_en_mode      <= 0;
+            nondet_mode      <= 0;
             pending_cmd_reg     <= '0;
         end
         else begin
@@ -942,7 +942,7 @@ module ecc_dsa_ctrl
                         signing_process     <= 0;
                         verifying_process   <= 0;
                         sharedkey_process   <= 0;
-                        rand_k_en_mode      <= 0;
+                        nondet_mode      <= 0;
                         // Every new command re-runs ECC_RESET init so PM-RAM curve constants
                         // match the current curve_sel; cmd is latched into pending_cmd_reg and dispatched at end-of-init.
                         unique case (cmd_reg)
@@ -962,7 +962,7 @@ module ecc_dsa_ctrl
                                 scalar_G_sel <= 0;
                                 hmac_mode <= 2'b01;
                                 signing_process <= 1;
-                                rand_k_en_mode  <= hwif_out.ECC_CTRL.RAND_K_EN.value;
+                                nondet_mode  <= hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
                             end                                   
 
                             VERIFY : begin  // verifying

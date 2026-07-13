@@ -549,7 +549,7 @@ module ecc_top_tb
   // One-shot DRBG reject injector: forces HMAC_tag to bad_val during the
   // first CHCK_ST of the targeted draw so failure_check fires and the FSM
   // retries; release before retry so the final output is a genuine draw.
-  // Targets KEYGEN_ST=4'd6 (privkey) or SIGN_ST=4'd7 (k under rand_k_en).
+  // Targets KEYGEN_ST=4'd6 (privkey) or SIGN_ST=4'd7 (k under nondet).
   // Valid bad_vals: {0, n, n+1, 2^256-1}; 2*n omitted (2*n mod 2^256 < n).
   //----------------------------------------------------------------
   task drbg_inject_reject_keygen(input bit [255:0] bad_val);
@@ -566,7 +566,7 @@ module ecc_top_tb
 
   task drbg_inject_reject_sign(input bit [255:0] bad_val);
     begin
-      // Wait for wrapper to enter SIGN_ST (k-draw INIT under rand_k_en=1).
+      // Wait for wrapper to enter SIGN_ST (k-draw INIT under nondet=1).
       wait (dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.state_reg == 4'd7);
       wait (dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_drbg_sha256.drbg_st_reg == 5'd11);
       force dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_drbg_sha256.HMAC_tag = bad_val;
@@ -580,7 +580,7 @@ module ecc_top_tb
   //
   // P-384 one-shot DRBG reject injectors: force HMAC_tag to a bad value
   // during the first CHCK_ST of KEYGEN_ST (privkey draw) or SIGN_ST
-  // (k draw under rand_k_en), exercising the SHA-384 DRBG core's
+  // (k draw under nondet), exercising the SHA-384 DRBG core's
   // failure_check + retry path. Bad-val sweep is {0, n, n+1, 2^384-1};
   // 2*n omitted (2*n mod 2^384 < n, so failure_check would not fire).
   //----------------------------------------------------------------
@@ -992,14 +992,14 @@ module ecc_top_tb
       write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
       write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
 
-      // CTRL = SIGN + RAND_K_EN + CURVE_SEL=P256 in one transaction so the
+      // CTRL = SIGN + NONDETERMINISTIC + CURVE_SEL=P256 in one transaction so the
       // FSM dispatches into the non-det SIGN flow (k drawn by DRBG in SIGN_ST).
       fork
         drbg_inject_reject_sign(bad_val);
         begin
           write_single_word(`ECC_REG_ECC_CTRL,
                             ECC_CMD_SIGNING
-                            | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                            | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK
                             | `ECC_REG_ECC_CTRL_CURVE_SEL_MASK);
           #(CLK_PERIOD);
           hsel_i_tb = 0;
@@ -1164,14 +1164,14 @@ module ecc_top_tb
       write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
       write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
 
-      // CTRL = SIGN + RAND_K_EN in one transaction; CURVE_SEL stays 0
+      // CTRL = SIGN + NONDETERMINISTIC in one transaction; CURVE_SEL stays 0
       // (P-384) per the wrapper-instance hierarchical force above.
       fork
         drbg_inject_reject_sign_p384(bad_val);
         begin
           write_single_word(`ECC_REG_ECC_CTRL,
                             ECC_CMD_SIGNING
-                            | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK);
+                            | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK);
           #(CLK_PERIOD);
           hsel_i_tb = 0;
           #(CLK_PERIOD);
@@ -1459,8 +1459,8 @@ module ecc_top_tb
   //   C: KEYGEN+ write_pkey      (also drives dest_keyvault)
   //   D: ECDH  + read_pkey & write_pkey (multi-source)
   //   E: positive control - CURVE_SEL=0 arming must succeed, no error.
-  //   F: SIGN + PCR_SIGN + RAND_K_EN (rand_k_pcr_sign_illegal mutex)
-  //   G: SIGN + read_pkey + RAND_K_EN (RAND_K_EN must not bypass KV check)
+  //   F: SIGN + PCR_SIGN + NONDETERMINISTIC (nondet_pcr_sign_illegal mutex)
+  //   G: SIGN + read_pkey + NONDETERMINISTIC (NONDETERMINISTIC must not bypass KV check)
   //----------------------------------------------------------------
   task ecc_p256_kv_illegal_test();
     reg [31:0] rd_pkey_ctrl_val;
@@ -1548,25 +1548,25 @@ module ecc_top_tb
       $display("*** [KV-P256 E] clean run under CURVE_SEL=P384 as expected.");
     end
 
-    // Subtest F: SIGN + PCR_SIGN + RAND_K_EN under P-256 (rand_k_pcr_sign_illegal)
-    $display("\n*** [KV-P256] subtest F: SIGN + PCR_SIGN + RAND_K_EN under P-256");
+    // Subtest F: SIGN + PCR_SIGN + NONDETERMINISTIC under P-256 (nondet_pcr_sign_illegal)
+    $display("\n*** [KV-P256] subtest F: SIGN + PCR_SIGN + NONDETERMINISTIC under P-256");
     tc_ctr = tc_ctr + 1;
     kvp256_subtest_arm();
-    kvp256_dispatch_check_p256("F SIGN+PCR_SIGN+RAND_K_EN",
+    kvp256_dispatch_check_p256("F SIGN+PCR_SIGN+NONDETERMINISTIC",
                                ECC_CMD_SIGNING
                                | `ECC_REG_ECC_CTRL_PCR_SIGN_MASK
-                               | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK);
+                               | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK);
 
-    // Subtest G: SIGN + read_pkey + RAND_K_EN under P-256 (KV check must still fire)
-    $display("\n*** [KV-P256] subtest G: SIGN + read_pkey + RAND_K_EN under P-256");
+    // Subtest G: SIGN + read_pkey + NONDETERMINISTIC under P-256 (KV check must still fire)
+    $display("\n*** [KV-P256] subtest G: SIGN + read_pkey + NONDETERMINISTIC under P-256");
     tc_ctr = tc_ctr + 1;
     kvp256_subtest_arm();
     write_single_word(`ECC_REG_ECC_KV_RD_PKEY_CTRL, rd_pkey_ctrl_val);
     kvp256_check_armed("G", `ECC_REG_ECC_KV_RD_PKEY_CTRL,
                        `ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK);
-    kvp256_dispatch_check_p256("G SIGN+RAND_K_EN",
+    kvp256_dispatch_check_p256("G SIGN+NONDETERMINISTIC",
                                ECC_CMD_SIGNING
-                               | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK);
+                               | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK);
 
     // Leave curve_sel_g asserted to match ecc_test() loop default.
     curve_sel_g = 1'b1;
@@ -1714,7 +1714,7 @@ module ecc_top_tb
   //----------------------------------------------------------------
   // ecc_nondet_signing_test()
   //
-  // Non-deterministic SIGN: writes SEED/NONCE and sets RAND_K_EN=1, so
+  // Non-deterministic SIGN: writes SEED/NONCE and sets NONDETERMINISTIC=1, so
   // k is drawn through the DRBG with a whitened SIGN_NONCE_ST stage.
   // (R,S) is therefore not KAT-predictable. Validates correctness by
   // dumping (msg, priv, pub, seed, nonce, R, S, IV, ...) to a per-TC
@@ -1746,11 +1746,11 @@ module ecc_top_tb
       write_block(`ECC_REG_ECC_SEED_0,       test_vector.seed);
       write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
 
-      // CTRL=SIGN + RAND_K_EN=1 in a single APB transaction so the
+      // CTRL=SIGN + NONDETERMINISTIC=1 in a single APB transaction so the
       // FSM samples both at the same dispatch edge.
       write_single_word(`ECC_REG_ECC_CTRL,
                         ECC_CMD_SIGNING
-                        | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                        | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK
                         | (curve_sel_g ? `ECC_REG_ECC_CTRL_CURVE_SEL_MASK : 32'h0));
       #(CLK_PERIOD);
       hsel_i_tb = 0;
@@ -1837,7 +1837,7 @@ module ecc_top_tb
   //
   // P-256 non-det SIGN with DRBG bypassed: forces hmac_drbg_result_p256
   // with the pre-computed k (from gen_nondet_kat.py, carried in the
-  // KAT 'privkeyB' slot). RAND_K_EN+SIGN+CURVE_SEL are written in one
+  // KAT 'privkeyB' slot). NONDETERMINISTIC+SIGN+CURVE_SEL are written in one
   // CTRL transaction so the dispatch edge samples non-det P-256 mode.
   // (R,S) must bit-exactly match the mbedtls non-det KAT.
   //----------------------------------------------------------------
@@ -1865,11 +1865,11 @@ module ecc_top_tb
       write_block(`ECC_REG_ECC_SEED_0,       test_vector.seed);
       write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
 
-      // CTRL=SIGN + RAND_K_EN=1 + CURVE_SEL=1 in a single APB transaction
+      // CTRL=SIGN + NONDETERMINISTIC=1 + CURVE_SEL=1 in a single APB transaction
       // so the FSM samples all three at the same dispatch edge.
       write_single_word(`ECC_REG_ECC_CTRL,
                         ECC_CMD_SIGNING
-                        | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                        | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK
                         | `ECC_REG_ECC_CTRL_CURVE_SEL_MASK);
       #(CLK_PERIOD);
       hsel_i_tb = 0;
@@ -1912,7 +1912,7 @@ module ecc_top_tb
   // P-384 non-det SIGN with DRBG bypassed: forces hmac_drbg_result_p384
   // with the pre-computed k (from gen_nondet_kat.py, carried in the KAT
   // 'privkeyB' slot) plus identity blinding and hmac_ready_p384=1 to
-  // short-circuit the DRBG wait. RAND_K_EN+SIGN are written in one CTRL
+  // short-circuit the DRBG wait. NONDETERMINISTIC+SIGN are written in one CTRL
   // transaction so the dispatch edge samples non-det P-384 mode. (R,S)
   // must bit-exactly match the mbedtls non-det KAT. Mirrors the P-256
   // bypass path above; enables direct bit-exact KAT compare on the
@@ -1943,11 +1943,11 @@ module ecc_top_tb
       write_block(`ECC_REG_ECC_SEED_0,       test_vector.seed);
       write_block(`ECC_REG_ECC_NONCE_0,      test_vector.nonce);
 
-      // CTRL=SIGN + RAND_K_EN=1 in a single APB transaction so the FSM
+      // CTRL=SIGN + NONDETERMINISTIC=1 in a single APB transaction so the FSM
       // samples both at the same dispatch edge. CURVE_SEL=0 (P-384).
       write_single_word(`ECC_REG_ECC_CTRL,
                         ECC_CMD_SIGNING
-                        | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK);
+                        | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK);
       #(CLK_PERIOD);
       hsel_i_tb = 0;
       #(CLK_PERIOD);
@@ -1987,7 +1987,7 @@ module ecc_top_tb
   // ecc_cavp_sign_p384_test()
   //
   // CAVP ECDSA SigGen KAT replay for P-384. Runs deterministic SIGN
-  // (RAND_K_EN=0) with the HMAC-DRBG-P384 force-bypassed to the CAVP k
+  // (NONDETERMINISTIC=0) with the HMAC-DRBG-P384 force-bypassed to the CAVP k
   // (KAT 'privkeyB' slot) and identity blinding (lambda=1, rnds=0), so
   // (R,S) is a pure function of (k, d, hashed_msg) and must bit-exactly
   // equal the NIST CAVP (R,S).
@@ -2072,7 +2072,7 @@ module ecc_top_tb
       write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
       write_block(`ECC_REG_ECC_IV_0,         test_vector.IV);
 
-      // CTRL=SIGN + CURVE_SEL=1 (no RAND_K_EN -- det path).
+      // CTRL=SIGN + CURVE_SEL=1 (no NONDETERMINISTIC -- det path).
       write_single_word(`ECC_REG_ECC_CTRL,
                         ECC_CMD_SIGNING
                         | `ECC_REG_ECC_CTRL_CURVE_SEL_MASK);
@@ -2139,7 +2139,7 @@ module ecc_top_tb
 
         write_single_word(`ECC_REG_ECC_CTRL,
                           ECC_CMD_SIGNING
-                          | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                          | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK
                           | (curve_sel_g ? `ECC_REG_ECC_CTRL_CURVE_SEL_MASK : 32'h0));
         #(CLK_PERIOD);
         hsel_i_tb = 0;
@@ -2188,10 +2188,10 @@ module ecc_top_tb
   //----------------------------------------------------------------
   // ecc_nondet_pcr_sign_illegal_test()
   //
-  // Negative test for the PCR_SIGN + RAND_K_EN mutex check added in
-  // ecc_dsa_ctrl.sv (rand_k_pcr_sign_illegal). The two modes are
+  // Negative test for the PCR_SIGN + NONDETERMINISTIC mutex check added in
+  // ecc_dsa_ctrl.sv (nondet_pcr_sign_illegal). The two modes are
   // mutually exclusive: PCR signing must be deterministic. Asserting
-  // RAND_K_EN together with PCR_SIGN must:
+  // NONDETERMINISTIC together with PCR_SIGN must:
   //   1) set error_flag_reg
   //   2) raise the error interrupt
   //   3) prevent a sign from completing (no R/S produced)
@@ -2202,7 +2202,7 @@ module ecc_top_tb
     begin
       wait_ready();
 
-      $display("*** PCR_SIGN + RAND_K_EN illegal-combo test started.");
+      $display("*** PCR_SIGN + NONDETERMINISTIC illegal-combo test started.");
       tc_ctr = tc_ctr + 1;
 
       // Enable the internal-error interrupt.
@@ -2211,11 +2211,11 @@ module ecc_top_tb
       write_single_word(`ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,
                         `ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK);
 
-      // Single APB write: SIGN + PCR_SIGN + RAND_K_EN  (illegal combo).
+      // Single APB write: SIGN + PCR_SIGN + NONDETERMINISTIC  (illegal combo).
       write_single_word(`ECC_REG_ECC_CTRL,
                         ECC_CMD_SIGNING
                         | `ECC_REG_ECC_CTRL_PCR_SIGN_MASK
-                        | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                        | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK
                         | (curve_sel_g ? `ECC_REG_ECC_CTRL_CURVE_SEL_MASK : 32'h0));
       #(CLK_PERIOD);
       hsel_i_tb = 0;
@@ -2228,7 +2228,7 @@ module ecc_top_tb
       wait_ready();
 
       if (dut.ecc_dsa_ctrl_i.error_flag_reg & error_intr_seen) begin
-        $display("*** PCR_SIGN + RAND_K_EN correctly flagged as illegal (error_flag_reg=1, error_intr=1).");
+        $display("*** PCR_SIGN + NONDETERMINISTIC correctly flagged as illegal (error_flag_reg=1, error_intr=1).");
         $display("");
       end
       else begin
@@ -2686,7 +2686,7 @@ module ecc_top_tb
   // [+PCR_SIGN], readback) with two adjustments:
   //   - p256_mode=1 drops the inner PCR_SIGN trigger (KV path illegal
   //     under CURVE_SEL=P256, would lock the engine).
-  //   - nondet=1 OR's RAND_K_EN into SIGN writes; SIGN check relaxes
+  //   - nondet=1 OR's NONDETERMINISTIC into SIGN writes; SIGN check relaxes
   //     to (R!=0 && S!=0) since k varies. KEYGEN/VERIFY remain strict.
   //----------------------------------------------------------------
   task continuous_cmd_test_v2(input test_vector_t test_vector,
@@ -2702,7 +2702,7 @@ module ecc_top_tb
     begin
 
       sign_ctrl_nondet = ECC_CMD_SIGNING
-                       | `ECC_REG_ECC_CTRL_RAND_K_EN_MASK
+                       | `ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK
                        | (curve_sel_g ? `ECC_REG_ECC_CTRL_CURVE_SEL_MASK : 32'h0);
 
       $display("*** continuous_cmd_test_v2 started (nondet=%0d, p256_mode=%0d).",
@@ -2907,7 +2907,7 @@ module ecc_top_tb
   //
   // SCA-style stress sweep: runs continuous_cmd_test_v2 + zeroize_test +
   // ecc_fault_test across all four {curve, K-source} quadrants in one
-  // run (P-384/P-256 x det/RAND_K_EN). P-384 phases consume
+  // run (P-384/P-256 x det/NONDETERMINISTIC). P-384 phases consume
   // p384_test_vectors[], P-256 phases consume test_vectors[]. Each phase
   // ends in reset_dut() (via ecc_fault_test) for a clean start.
   //----------------------------------------------------------------
@@ -2921,7 +2921,7 @@ module ecc_top_tb
       zeroize_test(p384_test_vectors[1]);
       ecc_fault_test();
 
-      $display("*** SCA phase 2/4: P-384 RAND_K_EN");
+      $display("*** SCA phase 2/4: P-384 NONDETERMINISTIC");
       curve_sel_g = 1'b0;
       continuous_cmd_test_v2(p384_test_vectors[0], 1'b1, 1'b0);
       zeroize_test(p384_test_vectors[1]);
@@ -2933,7 +2933,7 @@ module ecc_top_tb
       zeroize_test(test_vectors[1]);
       ecc_fault_test();
 
-      $display("*** SCA phase 4/4: P-256 RAND_K_EN");
+      $display("*** SCA phase 4/4: P-256 NONDETERMINISTIC");
       curve_sel_g = 1'b1;
       continuous_cmd_test_v2(test_vectors[0], 1'b1, 1'b1);
       zeroize_test(test_vectors[1]);

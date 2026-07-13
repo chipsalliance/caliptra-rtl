@@ -57,7 +57,7 @@ pb fe sim ecc ecc_cavp_sign_p256_test
 
 CAVP SigGen records carry the test `k` and the expected `(R, S)`.
 The TB tasks `ecc_cavp_sign_p{256,384}_test` run the *deterministic*
-ECDSA SIGN micro-program (RAND_K_EN=0) but force-inject the CAVP `k`
+ECDSA SIGN micro-program (NONDETERMINISTIC=0) but force-inject the CAVP `k`
 on the HMAC-DRBG output net (`hmac_drbg_result_p{256,384}`) and zero
 the blinding entropy (lambda=1, scalar_rnd=masking_rnd=0). With those
 nets pinned, `(R, S)` becomes a deterministic function of

@@ -180,8 +180,8 @@ void main() {
     for (int i = 0; i < 12; i++) sign_s.data[i] = ecc_sign_s[i];
 
     uint8_t curve_sel = 1;
-    uint8_t rand_k_en = 0;
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE, curve_sel, rand_k_en);
+    uint8_t nondet = 0;
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE, curve_sel, nondet);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();

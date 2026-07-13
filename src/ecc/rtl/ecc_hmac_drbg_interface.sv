@@ -64,7 +64,7 @@ module ecc_hmac_drbg_interface#(
     input wire   [REG_SIZE-1 : 0]   privKey,
     input wire   [REG_SIZE-1 : 0]   hashed_msg,
     input wire   [REG_SIZE-1 : 0]   IV,
-    input wire                      rand_k_en,
+    input wire                      nondet,
 
     output wire  [REG_SIZE-1 : 0]   lambda,
     output wire  [REG_SIZE-1 : 0]   scalar_rnd,
@@ -181,7 +181,7 @@ module ecc_hmac_drbg_interface#(
             MASKING_RND_ST: hmac_drbg_entropy = sca_entropy_reg;
             SIGN_NONCE_ST:  hmac_drbg_entropy = sca_entropy_reg;
             KEYGEN_ST:      hmac_drbg_entropy = keygen_seed;
-            SIGN_ST:        hmac_drbg_entropy = rand_k_en ? keygen_seed : privKey; //seed from API
+            SIGN_ST:        hmac_drbg_entropy = nondet ? keygen_seed : privKey; //seed from API
             default:        hmac_drbg_entropy = sca_entropy_reg;
         endcase
     end // hmac_drbg_entropy_input
@@ -196,7 +196,7 @@ module ecc_hmac_drbg_interface#(
             SIGN_NONCE_ST:  hmac_drbg_nonce = counter_nonce_reg;
             KEYGEN_ST:      hmac_drbg_nonce = keygen_nonce;
             // non-deterministic sign: use freshly DRBG-generated nonce instead of API keygen_nonce
-            SIGN_ST:        hmac_drbg_nonce = rand_k_en ? sign_nonce_reg : hashed_msg;
+            SIGN_ST:        hmac_drbg_nonce = nondet ? sign_nonce_reg : hashed_msg;
             default:        hmac_drbg_nonce = counter_nonce_reg;
         endcase
     end // hmac_drbg_nonce_input
@@ -336,7 +336,7 @@ module ecc_hmac_drbg_interface#(
             RND_DONE_ST:    state_next = (hmac_mode == SIGN_CMD)? MASKING_RND_ST : (hmac_mode == KEYGEN_CMD)? KEYGEN_ST : DONE_ST;
             // For non-deterministic sign, take a detour through SIGN_NONCE_ST to
             // generate a fresh DRBG-quality nonce before running the k-gen DRBG init.
-            MASKING_RND_ST: state_next = (hmac_done_edge)? (rand_k_en ? SIGN_NONCE_ST : SIGN_ST) : MASKING_RND_ST;
+            MASKING_RND_ST: state_next = (hmac_done_edge)? (nondet ? SIGN_NONCE_ST : SIGN_ST) : MASKING_RND_ST;
             SIGN_NONCE_ST:  state_next = (hmac_done_edge)? SIGN_ST : SIGN_NONCE_ST;
             KEYGEN_ST:      state_next = (hmac_done_edge)? DONE_ST : KEYGEN_ST;
             SIGN_ST:        state_next = (hmac_done_edge)? DONE_ST: SIGN_ST;

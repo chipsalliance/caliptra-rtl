@@ -98,7 +98,6 @@ ecc_pe_first  #(.RADIX(4)) ecc_pe_first_reduced(
         .clk(clk),
         .zeroize(zeroize),
         .reset_n(reset_n),
-        .curve_sel_i(/* open */),
         .en_i(/* open */),
         .data_i(/* open */),
         .rnd_i(/* open */),

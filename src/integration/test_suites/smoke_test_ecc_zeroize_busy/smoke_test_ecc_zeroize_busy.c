@@ -133,8 +133,8 @@ void main() {
     write_12dw(CLP_ECC_REG_ECC_IV_0,  p256_iv);
     zeroize_mid_op(ECC_CMD_SIGNING | curve_p256, CLP_ECC_REG_ECC_SIGN_R_0, "P-256 SIGN det");
 
-    // ---- P-384 SIGN nondet (RAND_K_EN=1) ----
-    uint32_t rand_k = (1 << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) & ECC_REG_ECC_CTRL_RAND_K_EN_MASK;
+    // ---- P-384 SIGN nondet (NONDETERMINISTIC=1) ----
+    uint32_t rand_k = (1 << ECC_REG_ECC_CTRL_NONDETERMINISTIC_LOW) & ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK;
     write_12dw(CLP_ECC_REG_ECC_PRIVKEY_IN_0, p384_privkey);
     write_12dw(CLP_ECC_REG_ECC_MSG_0, p384_msg);
     write_12dw(CLP_ECC_REG_ECC_IV_0,  p384_iv);

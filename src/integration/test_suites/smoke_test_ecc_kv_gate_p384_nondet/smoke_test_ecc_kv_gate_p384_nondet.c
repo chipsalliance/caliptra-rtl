@@ -6,31 +6,31 @@
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// KV-gate matrix test for kv_under_rand_k_invalid (P-384 + RAND_K_EN=1).
+// KV-gate matrix test for kv_under_nondet_invalid (P-384 + NONDETERMINISTIC=1).
 // Covers every architecturally reachable OR-bit feeding the gate, organized
 // as src (KV-read into ECC) vs dst (ECC writes into KV):
 //
-//   [1] src privkey: arm KV_RD_PKEY, dispatch SIGN+RAND_K_EN
+//   [1] src privkey: arm KV_RD_PKEY, dispatch SIGN+NONDETERMINISTIC
 //         -> ecc_error via kv_privkey_read_ctrl.read_en + sticky
 //            kv_key_data_present (handled inside ecc_signing_flow).
 //   [2] src seed:    arm KV_RD_SEED standalone, wait for KV read to land
 //                    (sets kv_seed_data_present sticky), dispatch SIGN+
-//                    RAND_K_EN with SW privkey
+//                    NONDETERMINISTIC with SW privkey
 //         -> ecc_error via sticky kv_seed_data_present.
-//   [3] dst swwe:    with RAND_K_EN=1, attempt SW arm of WRITE_EN; the
+//   [3] dst swwe:    with NONDETERMINISTIC=1, attempt SW arm of WRITE_EN; the
 //                    new swwe lockout drops the write
 //         -> no ecc_error; readback bit==0.
 //
 // Notes on unreachable OR-bits (not tested here):
-//   - rand_k_en_mode only latches in the SIGN branch (ecc_dsa_ctrl.sv:969),
-//     so KEYGEN/VERIFY/ECDH paths are intercepted by rand_k_invalid_cmd
+//   - nondet_mode only latches in the SIGN branch (ecc_dsa_ctrl.sv:969),
+//     so KEYGEN/VERIFY/ECDH paths are intercepted by nondet_invalid_cmd
 //     (a different gate, tested elsewhere).
 //   - dest_keyvault and kv_write_ctrl.write_en cannot reach the gate
 //     because: SIGN never writes to KV, and the swwe lockout blocks SW
 //     from staging write_en before any SIGN dispatch.
 //
 // Each sub-case ends with ecc_zeroize to clear sticky state, the error
-// latch, and ECC_CTRL.RAND_K_EN.
+// latch, and ECC_CTRL.NONDETERMINISTIC.
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -85,7 +85,7 @@ static void load_io(ecc_io *io, const uint32_t *src) {
 
 void main() {
     VPRINTF(LOW, "--------------------------------------------------------\n");
-    VPRINTF(LOW, " ECC KV-gate matrix test (P-384 + RAND_K_EN=1)\n");
+    VPRINTF(LOW, " ECC KV-gate matrix test (P-384 + NONDETERMINISTIC=1)\n");
     VPRINTF(LOW, "--------------------------------------------------------\n");
 
     init_interrupts();
@@ -100,23 +100,23 @@ void main() {
     const uint8_t kv_seed_slot = 0x4;
 
     // -----------------------------------------------------------------
-    // [1] src privkey: SIGN + KV-sourced privkey + RAND_K_EN=1
+    // [1] src privkey: SIGN + KV-sourced privkey + NONDETERMINISTIC=1
     // -----------------------------------------------------------------
-    VPRINTF(LOW, "\n[1] src privkey: SIGN + KV-privkey + RAND_K_EN=1\n");
+    VPRINTF(LOW, "\n[1] src privkey: SIGN + KV-privkey + NONDETERMINISTIC=1\n");
     lsu_write_32(STDOUT, (kv_slot << 8) | 0xad);
     privkey.kv_intf = TRUE;
     privkey.kv_id   = kv_slot;
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, /*curve_sel=*/0, /*rand_k_en=*/1);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, /*curve_sel=*/0, /*nondet=*/1);
     expect_ecc_error("1 src-privkey");
     ecc_zeroize();
     cptra_intr_rcv.ecc_notif = 0;
 
     // -----------------------------------------------------------------
     // [2] src seed: arm KV_RD_SEED standalone, wait for KV read to land
-    // so kv_seed_data_present is sticky=1, then dispatch SIGN+RAND_K_EN
+    // so kv_seed_data_present is sticky=1, then dispatch SIGN+NONDETERMINISTIC
     // with SW-sourced privkey -> gate fires from sticky bit.
     // -----------------------------------------------------------------
-    VPRINTF(LOW, "\n[2] src seed sticky: arm KV_RD_SEED then SIGN+RAND_K_EN\n");
+    VPRINTF(LOW, "\n[2] src seed sticky: arm KV_RD_SEED then SIGN+NONDETERMINISTIC\n");
     poll_ecc_ready();
     lsu_write_32(STDOUT, (kv_seed_slot << 8) | 0x80);
     lsu_write_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL,
@@ -129,17 +129,17 @@ void main() {
 
     privkey.kv_intf = FALSE;
     for (int i = 0; i < ECC_INPUT_SIZE; i++) privkey.data[i] = 0xDEADBEEF;
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, /*curve_sel=*/0, /*rand_k_en=*/1);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, /*curve_sel=*/0, /*nondet=*/1);
     expect_ecc_error("2 src-seed-sticky");
     ecc_zeroize();
     cptra_intr_rcv.ecc_notif = 0;
 
     // -----------------------------------------------------------------
-    // [3] dst swwe: with RAND_K_EN=1 sticky, SW arm of WRITE_EN must drop.
+    // [3] dst swwe: with NONDETERMINISTIC=1 sticky, SW arm of WRITE_EN must drop.
     // -----------------------------------------------------------------
-    VPRINTF(LOW, "\n[3] dst swwe: arm WRITE_EN with RAND_K_EN=1\n");
+    VPRINTF(LOW, "\n[3] dst swwe: arm WRITE_EN with NONDETERMINISTIC=1\n");
     poll_ecc_ready();
-    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_REG_ECC_CTRL_RAND_K_EN_MASK);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK);
     uint32_t wr_arm = ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK |
                       ECC_REG_ECC_KV_WR_PKEY_CTRL_ECC_PKEY_DEST_VALID_MASK |
                       ((kv_slot << ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_ENTRY_LOW) &
@@ -147,7 +147,7 @@ void main() {
     lsu_write_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL, wr_arm);
     uint32_t wr_rd = lsu_read_32(CLP_ECC_REG_ECC_KV_WR_PKEY_CTRL);
     if ((wr_rd & ECC_REG_ECC_KV_WR_PKEY_CTRL_WRITE_EN_MASK) != 0) {
-        VPRINTF(ERROR, "FAIL[3]: WRITE_EN swwe did not block under RAND_K_EN=1 (readback=0x%x)\n", wr_rd);
+        VPRINTF(ERROR, "FAIL[3]: WRITE_EN swwe did not block under NONDETERMINISTIC=1 (readback=0x%x)\n", wr_rd);
         SEND_STDOUT_CTRL(0x1);
         while (1);
     }

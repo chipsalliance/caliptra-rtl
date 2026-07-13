@@ -316,7 +316,7 @@ void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubke
     
 }
 
-void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s, BOOL check_result, uint8_t curve_sel, uint8_t rand_k_en){
+void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s, BOOL check_result, uint8_t curve_sel, uint8_t nondet){
     uint8_t offset;
     volatile uint32_t * reg_ptr;
     uint8_t fail_cmd = 0x1;
@@ -380,7 +380,7 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     VPRINTF(LOW, "\nECC SIGNING\n");
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING |
                 ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK) |
-                ((rand_k_en << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) & ECC_REG_ECC_CTRL_RAND_K_EN_MASK));
+                ((nondet << ECC_REG_ECC_CTRL_NONDETERMINISTIC_LOW) & ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK));
     
     //Try to modify keyvault controls during operation
     lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL, (ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
@@ -399,7 +399,7 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }
-        // RAND_K_EN is sticky; clear it (preserve CURVE_SEL) before returning so
+        // NONDETERMINISTIC is sticky; clear it (preserve CURVE_SEL) before returning so
         // subsequent ops aren't surprised by lingering nondet mode.
         lsu_write_32(CLP_ECC_REG_ECC_CTRL,
                      ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK));
@@ -409,7 +409,7 @@ void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_
     // wait for ECC SIGNING process to be done
     wait_for_ecc_intr();
 
-    // RAND_K_EN is sticky across operations; clear it (preserve CURVE_SEL) once
+    // NONDETERMINISTIC is sticky across operations; clear it (preserve CURVE_SEL) once
     // the engine is back to ready so back-to-back ops don't carry nondet state.
     while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
     lsu_write_32(CLP_ECC_REG_ECC_CTRL,

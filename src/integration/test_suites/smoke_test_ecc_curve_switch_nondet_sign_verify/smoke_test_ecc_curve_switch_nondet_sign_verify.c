@@ -9,7 +9,7 @@
 // Curve-switch smoke (part 2 of 2): SIGN nondet + VERIFY.
 // Sequence: SIGN P-384 nondet -> SIGN P-256 nondet -> VERIFY P-384 -> VERIFY P-256.
 // 3 back-to-back CURVE_SEL transitions, no ecc_zeroize() in between.
-// Nondet SIGNs check completion only (output randomized by RAND_K_EN=1);
+// Nondet SIGNs check completion only (output randomized by NONDETERMINISTIC=1);
 // VERIFY deterministic outputs are checked against KATs. Validates
 // curve_sel_reg latching and no cross-curve datapath contamination for
 // SIGN-nondet + VERIFY paths. Companion: smoke_test_ecc_curve_switch_keygen_det_sign.

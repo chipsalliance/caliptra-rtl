@@ -252,8 +252,8 @@ void main() {
 
     //sign with the generated key
     uint8_t curve_sel = 0;
-    uint8_t rand_k_en = 0;
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE, curve_sel, rand_k_en);
+    uint8_t nondet = 0;
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE, curve_sel, nondet);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();
