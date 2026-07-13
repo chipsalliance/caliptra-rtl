@@ -130,13 +130,11 @@ module hmac256_drbg
   reg                    HMAC_next;
   reg                    HMAC_last;
   reg  [BLOCK_SIZE-1:0]  HMAC_block;
-  reg  [REG_SIZE-1:0]    HMAC_key;
-  logic [KEY_SIZE-1:0]   HMAC256_key;
+  reg  [KEY_SIZE-1:0]    HMAC_key;
 
   wire                   HMAC_ready;
   wire                   HMAC_tag_valid;
-  logic [REG_SIZE-1:0]   HMAC_tag;
-  logic [TAG_SIZE-1:0]   HMAC256_tag;
+  logic [TAG_SIZE-1:0]   HMAC_tag;
 
   logic                  failure_check;
 
@@ -155,11 +153,11 @@ module hmac256_drbg
     .restore_cmd(1'b0),
     .mode_cmd(1'b1),  //hardcoded to HMAC-SHA-256 mode
     .lfsr_seed(lfsr_seed),
-    .key(HMAC256_key),
+    .key(HMAC_key),
     .block_msg(HMAC_block),
     .restore_digest({TAG_SIZE{1'b0}}),
     .ready(HMAC_ready),
-    .tag(HMAC256_tag),
+    .tag(HMAC_tag),
     .tag_valid(HMAC_tag_valid)
     );
 
@@ -167,12 +165,6 @@ module hmac256_drbg
   // reg_update
   // Update functionality for all registers in the core.
   //----------------------------------------------------------------
-
-  always_comb
-  begin
-    HMAC256_key = {HMAC_key, {(KEY_SIZE-REG_SIZE){1'b0}}};
-    HMAC_tag    = HMAC256_tag;
-  end
 
   always_comb
   begin : edge_detector
