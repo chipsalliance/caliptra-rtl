@@ -73,14 +73,14 @@ interface ecc_top_cov_if
     logic kv_under_p256_invalid;
 
     logic pcr_sign_under_p256_invalid;
-    logic rand_k_pcr_sign_illegal;
-    logic rand_k_invalid_cmd;
-    logic rand_k_en_mode;
+    logic nondeterministic_pcr_sign_illegal;
+    logic nondeterministic_invalid_cmd;
+    logic nondeterministic_mode;
     logic curve_sel_to_p256_pulse;
 
     // Combinational hwif values (SW-requested state, sampled at SIGN dispatch cycle).
     logic curve_sel_hwif;
-    logic rand_k_en_hwif;
+    logic nondeterministic_hwif;
 
     kv_write_filter_metrics_t kv_write_metrics;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
@@ -154,13 +154,13 @@ interface ecc_top_cov_if
     assign kv_under_p256_invalid = ecc_top.ecc_dsa_ctrl_i.kv_under_p256_invalid;
 
     assign pcr_sign_under_p256_invalid = ecc_top.ecc_dsa_ctrl_i.pcr_sign_under_p256_invalid;
-    assign rand_k_pcr_sign_illegal     = ecc_top.ecc_dsa_ctrl_i.rand_k_pcr_sign_illegal;
-    assign rand_k_invalid_cmd          = ecc_top.ecc_dsa_ctrl_i.rand_k_invalid_cmd;
-    assign rand_k_en_mode              = ecc_top.ecc_dsa_ctrl_i.rand_k_en_mode;
+    assign nondeterministic_pcr_sign_illegal     = ecc_top.ecc_dsa_ctrl_i.nondeterministic_pcr_sign_illegal;
+    assign nondeterministic_invalid_cmd          = ecc_top.ecc_dsa_ctrl_i.nondeterministic_invalid_cmd;
+    assign nondeterministic_mode              = ecc_top.ecc_dsa_ctrl_i.nondeterministic_mode;
     assign curve_sel_to_p256_pulse     = ecc_top.ecc_dsa_ctrl_i.curve_sel_to_p256_pulse;
 
     assign curve_sel_hwif = ecc_top.ecc_dsa_ctrl_i.hwif_out.ECC_CTRL.CURVE_SEL.value;
-    assign rand_k_en_hwif = ecc_top.ecc_dsa_ctrl_i.hwif_out.ECC_CTRL.RAND_K_EN.value;
+    assign nondeterministic_hwif = ecc_top.ecc_dsa_ctrl_i.hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
@@ -246,20 +246,20 @@ interface ecc_top_cov_if
         add_result_greater_than_384_bit_cp: cross mod_p_q, add_sub_i, add_res_greater_than_384_bit;
 
         // RAND_K / PCR_SIGN dual-curve gates (reuse curve_active_cp, pcr_sign_cp, ecc_cmd_cp).
-        rand_k_en_mode_cp:              coverpoint rand_k_en_mode;
+        nondeterministic_mode_cp:              coverpoint nondeterministic_mode;
         pcr_sign_under_p256_invalid_cp: coverpoint pcr_sign_under_p256_invalid;
-        rand_k_pcr_sign_illegal_cp:     coverpoint rand_k_pcr_sign_illegal;
-        rand_k_invalid_cmd_cp:          coverpoint rand_k_invalid_cmd;
+        nondeterministic_pcr_sign_illegal_cp:     coverpoint nondeterministic_pcr_sign_illegal;
+        nondeterministic_invalid_cmd_cp:          coverpoint nondeterministic_invalid_cmd;
         curve_sel_to_p256_pulse_cp:     coverpoint curve_sel_to_p256_pulse;
 
         // Combinational SW-requested state (aligned with cmd_reg==SIGN dispatch
-        // cycle). curve_active_cp / rand_k_en_mode_cp track LATCHED state which
+        // cycle). curve_active_cp / nondeterministic_mode_cp track LATCHED state which
         // trails the write cycle by one edge and misaligns with the iff guard.
         curve_sel_hwif_cp: coverpoint curve_sel_hwif;
-        rand_k_en_hwif_cp: coverpoint rand_k_en_hwif;
+        nondeterministic_hwif_cp: coverpoint nondeterministic_hwif;
 
         // 8-cell (PCR_SIGN x curve x RAND_K) matrix for SIGN dispatches.
-        sign_illegal_matrix_cp: cross pcr_sign_cp, curve_sel_hwif_cp, rand_k_en_hwif_cp
+        sign_illegal_matrix_cp: cross pcr_sign_cp, curve_sel_hwif_cp, nondeterministic_hwif_cp
             iff (ecc_cmd == 3'b010);
 
         // Each RAND_K / PCR_SIGN error gate must be observed asserting error_flag.
@@ -268,12 +268,12 @@ interface ecc_top_cov_if
             illegal_bins invalid_no_error = binsof(pcr_sign_under_p256_invalid_cp) intersect {1} &&
                                             binsof(error_flag) intersect {0};
         }
-        rand_k_pcr_x_error_cp: cross rand_k_pcr_sign_illegal_cp, error_flag {
-            illegal_bins invalid_no_error = binsof(rand_k_pcr_sign_illegal_cp) intersect {1} &&
+        rand_k_pcr_x_error_cp: cross nondeterministic_pcr_sign_illegal_cp, error_flag {
+            illegal_bins invalid_no_error = binsof(nondeterministic_pcr_sign_illegal_cp) intersect {1} &&
                                             binsof(error_flag) intersect {0};
         }
-        rand_k_cmd_x_error_cp: cross rand_k_invalid_cmd_cp, error_flag {
-            illegal_bins invalid_no_error = binsof(rand_k_invalid_cmd_cp) intersect {1} &&
+        rand_k_cmd_x_error_cp: cross nondeterministic_invalid_cmd_cp, error_flag {
+            illegal_bins invalid_no_error = binsof(nondeterministic_invalid_cmd_cp) intersect {1} &&
                                             binsof(error_flag) intersect {0};
         }
 

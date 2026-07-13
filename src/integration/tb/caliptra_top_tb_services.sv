@@ -2290,7 +2290,7 @@ endgenerate //IV_NO
     logic ecc_ktap_armed;
     logic ecc_ktap_valid_d;
 
-    // Arm on SIGN-with-RAND_K_EN kickoff; fire on ecc_valid_reg rising edge.
+    // Arm on SIGN-with-NONDETERMINISTIC kickoff; fire on ecc_valid_reg rising edge.
     always_ff @(posedge `CPTRA_TOP_PATH.clk or negedge `CPTRA_TOP_PATH.cptra_rst_b) begin
         if (!`CPTRA_TOP_PATH.cptra_rst_b) begin
             ecc_ktap_armed   <= 1'b0;
@@ -2299,7 +2299,7 @@ endgenerate //IV_NO
         else if (!UVM_TB) begin
             ecc_ktap_valid_d <= `ECC_DSA.ecc_valid_reg;
             if ((`ECC_DSA.cmd_reg == 3'b010 /* ecc_params_pkg::SIGN, avoid TB-pkg link dep */) &&
-                `ECC_DSA.hwif_out.ECC_CTRL.RAND_K_EN.value)
+                `ECC_DSA.hwif_out.ECC_CTRL.NONDETERMINISTIC.value)
                 ecc_ktap_armed <= 1'b1;
             if (ecc_ktap_armed && !ecc_ktap_valid_d && `ECC_DSA.ecc_valid_reg) begin
                 ecc_ktap_armed <= 1'b0;

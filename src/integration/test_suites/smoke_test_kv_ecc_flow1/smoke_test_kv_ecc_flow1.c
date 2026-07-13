@@ -269,14 +269,14 @@ void main(){
     lsu_write_32(STDOUT, (seed.kv_id << 8) | 0x80);
 
     uint8_t curve_sel = 0;
-    uint8_t rand_k_en = 0;
+    uint8_t nondet = 0;
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE, curve_sel);
     cptra_intr_rcv.ecc_notif = 0;
 
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
         privkey.data[i] = ecc_privkey[i];
 
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE, curve_sel, rand_k_en);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE, curve_sel, nondet);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();

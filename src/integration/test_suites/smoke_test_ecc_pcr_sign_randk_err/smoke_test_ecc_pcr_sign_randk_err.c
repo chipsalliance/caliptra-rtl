@@ -6,14 +6,14 @@
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// Negative test: PCR_SIGN and RAND_K_EN illegal combos. Expect ecc_error for each.
-//   Subtest 1: SIGN + P-384 + PCR_SIGN + RAND_K_EN=1  -> rand_k_pcr_sign_illegal
-//   Subtest 2: SIGN + P-256 + PCR_SIGN + RAND_K_EN=1  -> rand_k_pcr_sign_illegal + pcr_sign_under_p256_invalid
-//   Subtest 3: SIGN + P-256 + PCR_SIGN + RAND_K_EN=0  -> pcr_sign_under_p256_invalid (P-256 det)
-//   Subtest 4: KEYGEN     + RAND_K_EN=1  -> rand_k_invalid_cmd
-//   Subtest 5: VERIFY     + RAND_K_EN=1  -> rand_k_invalid_cmd
-//   Subtest 6: SHARED_KEY + RAND_K_EN=1  -> rand_k_invalid_cmd
-// PCR_SIGN is architecturally P-384 deterministic SIGN only; RAND_K_EN is architecturally SIGN only.
+// Negative test: PCR_SIGN and NONDETERMINISTIC illegal combos. Expect ecc_error for each.
+//   Subtest 1: SIGN + P-384 + PCR_SIGN + NONDETERMINISTIC=1  -> nondet_pcr_sign_illegal
+//   Subtest 2: SIGN + P-256 + PCR_SIGN + NONDETERMINISTIC=1  -> nondet_pcr_sign_illegal + pcr_sign_under_p256_invalid
+//   Subtest 3: SIGN + P-256 + PCR_SIGN + NONDETERMINISTIC=0  -> pcr_sign_under_p256_invalid (P-256 det)
+//   Subtest 4: KEYGEN     + NONDETERMINISTIC=1  -> nondet_invalid_cmd
+//   Subtest 5: VERIFY     + NONDETERMINISTIC=1  -> nondet_invalid_cmd
+//   Subtest 6: SHARED_KEY + NONDETERMINISTIC=1  -> nondet_invalid_cmd
+// PCR_SIGN is architecturally P-384 deterministic SIGN only; NONDETERMINISTIC is architecturally SIGN only.
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -43,9 +43,9 @@ static const uint32_t p256_iv[] = {0x00000000,0x00000000,0x00000000,0x00000000,
                                    0xC8B3EDA5,0xE4FE8883,0xA5D6BB3E,0xA5D3173F};
 
 // Helper: set up PCR-sign inputs (privkey in KV slot 7, MSG via SHA512 digest)
-// and issue SIGN+PCR_SIGN with the given CURVE_SEL and RAND_K_EN. Expect ecc_error.
+// and issue SIGN+PCR_SIGN with the given CURVE_SEL and NONDETERMINISTIC. Expect ecc_error.
 static void run_pcr_sign_err(const uint32_t *iv, uint8_t curve_sel,
-                             uint8_t rand_k_en, const char *label) {
+                             uint8_t nondet, const char *label) {
     volatile uint32_t *reg_ptr;
 
     while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
@@ -61,9 +61,9 @@ static void run_pcr_sign_err(const uint32_t *iv, uint8_t curve_sel,
 
     uint32_t ctrl = ECC_CMD_SIGNING |
                     ((1u << ECC_REG_ECC_CTRL_PCR_SIGN_LOW)  & ECC_REG_ECC_CTRL_PCR_SIGN_MASK)  |
-                    ((rand_k_en  << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) & ECC_REG_ECC_CTRL_RAND_K_EN_MASK) |
+                    ((nondet  << ECC_REG_ECC_CTRL_NONDETERMINISTIC_LOW) & ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK) |
                     ((curve_sel << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK);
-    VPRINTF(LOW, "\nECC PCR SIGNING (CURVE_SEL=%0d, RAND_K_EN=%0d)\n", curve_sel, rand_k_en);
+    VPRINTF(LOW, "\nECC PCR SIGNING (CURVE_SEL=%0d, NONDETERMINISTIC=%0d)\n", curve_sel, nondet);
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ctrl);
 
     wait_for_ecc_intr();
@@ -75,19 +75,19 @@ static void run_pcr_sign_err(const uint32_t *iv, uint8_t curve_sel,
     ecc_zeroize();
 }
 
-// Helper: issue non-SIGN command (KEYGEN/VERIFY/SHARED_KEY) with RAND_K_EN=1.
-// Expect ecc_error via rand_k_invalid_cmd. No PCR/KV setup needed.
+// Helper: issue non-SIGN command (KEYGEN/VERIFY/SHARED_KEY) with NONDETERMINISTIC=1.
+// Expect ecc_error via nondet_invalid_cmd. No PCR/KV setup needed.
 static void run_rand_k_nonsign_err(uint32_t cmd, const char *label) {
     while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     VPRINTF(LOW, "\n %s\n", label);
-    uint32_t ctrl = cmd | ((1u << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) &
-                            ECC_REG_ECC_CTRL_RAND_K_EN_MASK);
+    uint32_t ctrl = cmd | ((1u << ECC_REG_ECC_CTRL_NONDETERMINISTIC_LOW) &
+                            ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK);
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ctrl);
 
     wait_for_ecc_intr();
     if (cptra_intr_rcv.ecc_error == 0) {
-        VPRINTF(ERROR, "\n%s: ecc_error not asserted for RAND_K_EN on non-SIGN\n", label);
+        VPRINTF(ERROR, "\n%s: ecc_error not asserted for NONDETERMINISTIC on non-SIGN\n", label);
         SEND_STDOUT_CTRL(0x1); while(1);
     }
     VPRINTF(LOW, "PASS: %s\n", label);
@@ -96,7 +96,7 @@ static void run_rand_k_nonsign_err(uint32_t cmd, const char *label) {
 
 void main() {
     VPRINTF(LOW, "----------------------------------------------------\n");
-    VPRINTF(LOW, " ECC PCR_SIGN / RAND_K_EN illegal-combo error test\n");
+    VPRINTF(LOW, " ECC PCR_SIGN / NONDETERMINISTIC illegal-combo error test\n");
     VPRINTF(LOW, "----------------------------------------------------\n");
 
     init_interrupts();
@@ -105,29 +105,29 @@ void main() {
     switch (rst_count) {
         case 1:
             run_pcr_sign_err(p384_iv, 0, 1,
-                             "P-384 PCR_SIGN + RAND_K_EN=1");
+                             "P-384 PCR_SIGN + NONDETERMINISTIC=1");
             SEND_STDOUT_CTRL(0xf6);
             break;
         case 2:
             run_pcr_sign_err(p256_iv, 1, 1,
-                             "P-256 PCR_SIGN + RAND_K_EN=1");
+                             "P-256 PCR_SIGN + NONDETERMINISTIC=1");
             SEND_STDOUT_CTRL(0xf6);
             break;
         case 3:
             run_pcr_sign_err(p256_iv, 1, 0,
-                             "P-256 PCR_SIGN + RAND_K_EN=0 (det)");
+                             "P-256 PCR_SIGN + NONDETERMINISTIC=0 (det)");
             SEND_STDOUT_CTRL(0xf6);
             break;
         case 4:
-            run_rand_k_nonsign_err(ECC_CMD_KEYGEN,    "KEYGEN + RAND_K_EN=1");
+            run_rand_k_nonsign_err(ECC_CMD_KEYGEN,    "KEYGEN + NONDETERMINISTIC=1");
             SEND_STDOUT_CTRL(0xf6);
             break;
         case 5:
-            run_rand_k_nonsign_err(ECC_CMD_VERIFYING, "VERIFY + RAND_K_EN=1");
+            run_rand_k_nonsign_err(ECC_CMD_VERIFYING, "VERIFY + NONDETERMINISTIC=1");
             SEND_STDOUT_CTRL(0xf6);
             break;
         case 6:
-            run_rand_k_nonsign_err(ECC_CMD_SHAREDKEY, "SHARED_KEY + RAND_K_EN=1");
+            run_rand_k_nonsign_err(ECC_CMD_SHAREDKEY, "SHARED_KEY + NONDETERMINISTIC=1");
             break;
         default:
             break;

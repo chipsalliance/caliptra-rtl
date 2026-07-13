@@ -404,7 +404,7 @@ int main( int argc, char *argv[] )
      *     nonce   = nonce_buf   (the value SW writes to ECC_NONCE)
      * This mirrors the on-chip KEYGEN seeding (entropy=ECC_SEED,
      * nonce=ECC_NONCE) and matches what ecc_hmac_drbg_interface.sv
-     * will drive in the SIGN_ST mux when ECC_CTRL.RAND_K_EN=1
+     * will drive in the SIGN_ST mux when ECC_CTRL.NONDETERMINISTIC=1
      * (see plans/non-deterministic-ecdsa.md, Option B revision).
      *
      * NOTE: hashed_msg is intentionally NOT mixed into the DRBG seed

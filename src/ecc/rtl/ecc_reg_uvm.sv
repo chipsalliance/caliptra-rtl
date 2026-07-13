@@ -75,14 +75,14 @@ package ecc_reg_uvm;
         ecc_reg__ECC_CTRL_bit_cg PCR_SIGN_bit_cg[1];
         ecc_reg__ECC_CTRL_bit_cg DH_SHAREDKEY_bit_cg[1];
         ecc_reg__ECC_CTRL_bit_cg CURVE_SEL_bit_cg[1];
-        ecc_reg__ECC_CTRL_bit_cg RAND_K_EN_bit_cg[1];
+        ecc_reg__ECC_CTRL_bit_cg NONDETERMINISTIC_bit_cg[1];
         ecc_reg__ECC_CTRL_fld_cg fld_cg;
         rand uvm_reg_field CTRL;
         rand uvm_reg_field ZEROIZE;
         rand uvm_reg_field PCR_SIGN;
         rand uvm_reg_field DH_SHAREDKEY;
         rand uvm_reg_field CURVE_SEL;
-        rand uvm_reg_field RAND_K_EN;
+        rand uvm_reg_field NONDETERMINISTIC;
 
         function new(string name = "ecc_reg__ECC_CTRL");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -104,15 +104,15 @@ package ecc_reg_uvm;
             this.DH_SHAREDKEY.configure(this, 1, 4, "WO", 1, 'h0, 1, 1, 0);
             this.CURVE_SEL = new("CURVE_SEL");
             this.CURVE_SEL.configure(this, 1, 5, "WO", 0, 'h0, 1, 1, 0);
-            this.RAND_K_EN = new("RAND_K_EN");
-            this.RAND_K_EN.configure(this, 1, 6, "WO", 1, 'h0, 1, 1, 0);
+            this.NONDETERMINISTIC = new("NONDETERMINISTIC");
+            this.NONDETERMINISTIC.configure(this, 1, 6, "WO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(CTRL_bit_cg[bt]) CTRL_bit_cg[bt] = new();
                 foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
                 foreach(PCR_SIGN_bit_cg[bt]) PCR_SIGN_bit_cg[bt] = new();
                 foreach(DH_SHAREDKEY_bit_cg[bt]) DH_SHAREDKEY_bit_cg[bt] = new();
                 foreach(CURVE_SEL_bit_cg[bt]) CURVE_SEL_bit_cg[bt] = new();
-                foreach(RAND_K_EN_bit_cg[bt]) RAND_K_EN_bit_cg[bt] = new();
+                foreach(NONDETERMINISTIC_bit_cg[bt]) NONDETERMINISTIC_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();

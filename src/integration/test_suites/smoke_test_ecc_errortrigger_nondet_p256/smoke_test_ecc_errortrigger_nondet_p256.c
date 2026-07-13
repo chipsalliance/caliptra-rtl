@@ -6,13 +6,13 @@
 //
 // http://www.apache.org/licenses/LICENSE-2.0
 //
-// P-256 half of nondet errortrigger (SIGN-only error paths with RAND_K_EN=1).
+// P-256 half of nondet errortrigger (SIGN-only error paths with NONDETERMINISTIC=1).
 // 4 subtests across warm resets via persistent rst_count:
 //   case 1: PRIVKEY=0           -> privkey_input_outofrange
 //   case 2: PRIVKEY>n           -> privkey_input_outofrange
 //   case 3: forced SIGN_R=0     -> r_output_outofrange
 //   case 4: forced SIGN_S=0     -> s_output_outofrange
-// KEYGEN/VERIFY/ECDH paths are skipped because rand_k_en_mode latches only
+// KEYGEN/VERIFY/ECDH paths are skipped because nondeterministic_mode latches only
 // on SIGN dispatch in RTL. Companion: smoke_test_ecc_errortrigger_nondet_p384.
 
 #include "caliptra_defines.h"
@@ -55,12 +55,12 @@ static void write_12dw(uintptr_t base_addr, const uint32_t *data) {
     for (uint8_t i = 0; i < 12; i++) reg_ptr[i] = data[i];
 }
 
-// Helper: run a P-256 SIGN+RAND_K_EN subtest with the given privkey, expect ecc_error.
+// Helper: run a P-256 SIGN+NONDETERMINISTIC subtest with the given privkey, expect ecc_error.
 static void run_p256_nondet_sign_err(const uint32_t *privkey, uint8_t inject_cmd,
                                      const char *label) {
     while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
-    VPRINTF(LOW, "\n %s (CURVE_SEL=1, RAND_K_EN=1)\n", label);
+    VPRINTF(LOW, "\n %s (CURVE_SEL=1, NONDETERMINISTIC=1)\n", label);
     write_12dw(CLP_ECC_REG_ECC_PRIVKEY_IN_0, privkey);
     write_12dw(CLP_ECC_REG_ECC_MSG_0,        p256_msg);
     write_12dw(CLP_ECC_REG_ECC_IV_0,         p256_iv);
@@ -71,7 +71,7 @@ static void run_p256_nondet_sign_err(const uint32_t *privkey, uint8_t inject_cmd
 
     uint32_t ctrl = ECC_CMD_SIGNING |
                     ((1u << ECC_REG_ECC_CTRL_CURVE_SEL_LOW) & ECC_REG_ECC_CTRL_CURVE_SEL_MASK) |
-                    ((1u << ECC_REG_ECC_CTRL_RAND_K_EN_LOW) & ECC_REG_ECC_CTRL_RAND_K_EN_MASK);
+                    ((1u << ECC_REG_ECC_CTRL_NONDETERMINISTIC_LOW) & ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK);
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, ctrl);
 
     wait_for_ecc_intr();

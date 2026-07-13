@@ -17,7 +17,7 @@
 // This test isolates the KV-read endianness for ECC PRIVKEY using deterministic
 // SIGN: SIGN_R/S writes are NOT gated by kv_key_data_present (ecc_dsa_ctrl.sv
 // lines 521/529), so a signature produced from a KV-sourced privkey is SW-
-// readable. With identical {privkey, msg, iv} and RAND_K_EN=0, the (R,S) pair
+// readable. With identical {privkey, msg, iv} and NONDETERMINISTIC=0, the (R,S) pair
 // is deterministic. We compute SIGN twice:
 //   Run 1: register-sourced privkey  -> signature_sw (also verified vs KAT)
 //   Run 2: KV-sourced privkey  (via TB 0xad)  -> signature_kv

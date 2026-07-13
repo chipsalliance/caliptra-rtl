@@ -1,7 +1,7 @@
 # Non-Deterministic ECDSA Test Vectors
 
 This directory holds KAT vectors for the non-deterministic ECDSA SIGN
-path (`ECC_CTRL.RAND_K_EN=1`). See
+path (`ECC_CTRL.NONDETERMINISTIC=1`). See
 `plans/non-deterministic-ecdsa.md` for the full spec.
 
 ## Files

@@ -8,7 +8,7 @@
 //
 // Negative test: arm KV privkey-read together with SIGN under CURVE_SEL=P256.
 // The HW gate (kv_under_p256_invalid in ecc_dsa_ctrl.sv) must fire ecc_error
-// regardless of RAND_K_EN, so rand_k_en is randomized between 0 (det) and 1 (nondet).
+// regardless of NONDETERMINISTIC, so nondet is randomized between 0 (det) and 1 (nondet).
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -63,12 +63,12 @@ void main() {
     VPRINTF(LOW, "Inject PRIVKEY into KV slot %0d\n", privkey.kv_id);
     lsu_write_32(STDOUT, (privkey.kv_id << 8) | 0xad);
 
-    // Randomize RAND_K_EN to cover both det and nondet P-256 KV-gate paths.
+    // Randomize NONDETERMINISTIC to cover both det and nondet P-256 KV-gate paths.
     // check_result=FALSE since the engine must error out before producing a signature.
     uint8_t curve_sel = 1;
-    uint8_t rand_k_en = (uint8_t)(xorshift32() & 0x1);
-    VPRINTF(LOW, "Selected RAND_K_EN = %0d\n", rand_k_en);
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, curve_sel, rand_k_en);
+    uint8_t nondet = (uint8_t)(xorshift32() & 0x1);
+    VPRINTF(LOW, "Selected NONDETERMINISTIC = %0d\n", nondet);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, curve_sel, nondet);
 
     if (cptra_intr_rcv.ecc_error == 0) {
         VPRINTF(ERROR, "FAIL: ecc_err intr not asserted for KV + P-256 combo\n");
