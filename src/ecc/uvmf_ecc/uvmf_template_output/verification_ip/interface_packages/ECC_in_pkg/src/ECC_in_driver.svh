@@ -62,7 +62,7 @@ class ECC_in_driver  #(
 // pragma uvmf custom class_item_additional begin
 // Analysis port used to broadcast the DRIVER's true transaction to the
 // predictor. The default monitored_ap only sees test/op via interface
-// signals and cannot observe the new random axes (curve, rand_k_en,
+// signals and cannot observe the new random axes (curve, nondet,
 // err_mode, kv_intf, kv_slot, pollute_upper). Environment connects this
 // to the predictor's ae so scoreboard queues stay curve/mode-aware.
   uvm_analysis_port #(REQ) driver_ap;

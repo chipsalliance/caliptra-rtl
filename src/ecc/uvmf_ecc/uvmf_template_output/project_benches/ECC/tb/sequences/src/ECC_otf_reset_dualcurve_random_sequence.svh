@@ -31,7 +31,7 @@ class ECC_otf_reset_dualcurve_random_sequence #(int AHB_DATA_WIDTH = 64,
       ECC_out_agent_config.wait_for_reset();
     join
 
-    // 40 OTF-reset transactions, curve + op + rand_k_en all free.
+    // 40 OTF-reset transactions, curve + op + nondet all free.
     // pollute_upper=1 forces routing through the random path (avoids
     // the timing-fragile legacy monitor).
     repeat (40) begin

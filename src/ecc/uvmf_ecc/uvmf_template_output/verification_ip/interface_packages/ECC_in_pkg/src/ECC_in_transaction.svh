@@ -31,7 +31,7 @@ class ECC_in_transaction #(
   // New random axes for dual-curve + nondet-SIGN + error-injection coverage.
   rand ecc_in_curve_e    curve;
   rand ecc_in_err_mode_e err_mode;
-  rand bit               rand_k_en;
+  rand bit               nondet;
   rand bit               pcr_sign;
   rand bit               kv_intf;
   rand bit [4:0]         kv_slot;
@@ -46,13 +46,13 @@ class ECC_in_transaction #(
   constraint ecc_valid_test_contraints { test inside {ecc_normal_test, ecc_otf_reset_test}; }
   constraint ecc_valid_op_constraints { op inside {key_gen, key_sign, key_verify, ecdh_sharedkey}; }
 
-  // Legal-op constraints when err_mode == ERR_NONE. rand_k_en/pcr_sign are
+  // Legal-op constraints when err_mode == ERR_NONE. nondet/pcr_sign are
   // only permitted in DUT-legal combinations. kv_intf is forced off because
   // the block TB has no KV data source; only the KV-error modes arm KV ctrl.
   constraint ecc_legal_axes_c {
     (err_mode == ERR_NONE) -> {
-      rand_k_en -> (op == key_sign);
-      pcr_sign  -> ((op == key_sign) && (curve == ecc_curve_p384) && (rand_k_en == 1'b0));
+      nondet -> (op == key_sign);
+      pcr_sign  -> ((op == key_sign) && (curve == ecc_curve_p384) && (nondet == 1'b0));
       kv_intf   == 1'b0;
     }
   }
@@ -69,12 +69,12 @@ class ECC_in_transaction #(
   // covers a range of the "don't care" dimensions.
   constraint ecc_err_mode_c {
     (err_mode == ERR_PCR_P256)      -> ((op == key_sign) && (curve == ecc_curve_p256) && (pcr_sign == 1'b1));
-    (err_mode == ERR_RAND_K_PCR)    -> ((op == key_sign) && (pcr_sign == 1'b1) && (rand_k_en == 1'b1));
-    (err_mode == ERR_RAND_K_KEYGEN) -> ((op == key_gen)         && (rand_k_en == 1'b1));
-    (err_mode == ERR_RAND_K_VERIFY) -> ((op == key_verify)      && (rand_k_en == 1'b1));
-    (err_mode == ERR_RAND_K_SHARED) -> ((op == ecdh_sharedkey)  && (rand_k_en == 1'b1));
+    (err_mode == ERR_RAND_K_PCR)    -> ((op == key_sign) && (pcr_sign == 1'b1) && (nondet == 1'b1));
+    (err_mode == ERR_RAND_K_KEYGEN) -> ((op == key_gen)         && (nondet == 1'b1));
+    (err_mode == ERR_RAND_K_VERIFY) -> ((op == key_verify)      && (nondet == 1'b1));
+    (err_mode == ERR_RAND_K_SHARED) -> ((op == ecdh_sharedkey)  && (nondet == 1'b1));
     (err_mode == ERR_KV_P256)       -> ((kv_intf == 1'b1) && (curve == ecc_curve_p256));
-    (err_mode == ERR_KV_RAND_K)     -> ((kv_intf == 1'b1) && (op == key_sign) && (rand_k_en == 1'b1));
+    (err_mode == ERR_KV_RAND_K)     -> ((kv_intf == 1'b1) && (op == key_sign) && (nondet == 1'b1));
   }
 
   // pragma uvmf custom class_item_additional begin
@@ -156,9 +156,9 @@ class ECC_in_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("test:%s op:%s curve:%s err_mode:%s rand_k_en:%0d pcr_sign:%0d kv_intf:%0d kv_slot:%0d pollute_upper:%0d zeroize_mid_op:%0d zeroize_delay_clks:%0d",
+    return $sformatf("test:%s op:%s curve:%s err_mode:%s nondet:%0d pcr_sign:%0d kv_intf:%0d kv_slot:%0d pollute_upper:%0d zeroize_mid_op:%0d zeroize_delay_clks:%0d",
                      test.name(), op.name(), curve.name(), err_mode.name(),
-                     rand_k_en, pcr_sign, kv_intf, kv_slot, pollute_upper,
+                     nondet, pcr_sign, kv_intf, kv_slot, pollute_upper,
                      zeroize_mid_op, zeroize_delay_clks);
     // pragma uvmf custom convert2string end
   endfunction
@@ -195,7 +195,7 @@ class ECC_in_transaction #(
             &&(this.op == RHS.op)
             &&(this.curve == RHS.curve)
             &&(this.err_mode == RHS.err_mode)
-            &&(this.rand_k_en == RHS.rand_k_en)
+            &&(this.nondet == RHS.nondet)
             &&(this.pcr_sign == RHS.pcr_sign)
             &&(this.kv_intf == RHS.kv_intf)
             &&(this.kv_slot == RHS.kv_slot)
@@ -224,7 +224,7 @@ class ECC_in_transaction #(
     this.op = RHS.op;
     this.curve = RHS.curve;
     this.err_mode = RHS.err_mode;
-    this.rand_k_en = RHS.rand_k_en;
+    this.nondet = RHS.nondet;
     this.pcr_sign = RHS.pcr_sign;
     this.kv_intf = RHS.kv_intf;
     this.kv_slot = RHS.kv_slot;
@@ -258,7 +258,7 @@ class ECC_in_transaction #(
     $add_attribute(transaction_view_h,op,"op");
     $add_attribute(transaction_view_h,curve,"curve");
     $add_attribute(transaction_view_h,err_mode,"err_mode");
-    $add_attribute(transaction_view_h,rand_k_en,"rand_k_en");
+    $add_attribute(transaction_view_h,nondet,"nondet");
     $add_attribute(transaction_view_h,pcr_sign,"pcr_sign");
     $add_attribute(transaction_view_h,kv_intf,"kv_intf");
     $add_attribute(transaction_view_h,kv_slot,"kv_slot");

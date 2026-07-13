@@ -81,7 +81,7 @@ typedef struct packed  { \
   ecc_in_op_transactions op ; \
   ecc_in_curve_e curve ; \
   ecc_in_err_mode_e err_mode ; \
-  bit rand_k_en ; \
+  bit nondet ; \
   bit pcr_sign ; \
   bit kv_intf ; \
   bit [4:0] kv_slot ; \
@@ -98,7 +98,7 @@ typedef struct packed  { \
            this.op , \
            this.curve , \
            this.err_mode , \
-           this.rand_k_en , \
+           this.nondet , \
            this.pcr_sign , \
            this.kv_intf , \
            this.kv_slot , \
@@ -116,7 +116,7 @@ typedef struct packed  { \
            this.op , \
            this.curve , \
            this.err_mode , \
-           this.rand_k_en , \
+           this.nondet , \
            this.pcr_sign , \
            this.kv_intf , \
            this.kv_slot , \

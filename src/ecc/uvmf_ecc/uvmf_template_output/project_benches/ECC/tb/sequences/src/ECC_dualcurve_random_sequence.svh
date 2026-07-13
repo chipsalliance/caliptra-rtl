@@ -1,7 +1,7 @@
 //----------------------------------------------------------------------
 // SPDX-License-Identifier: Apache-2.0
 //----------------------------------------------------------------------
-// Random legal (curve x op x rand_k_en) mix. Closes cmd_x_curve_cp,
+// Random legal (curve x op x nondet) mix. Closes cmd_x_curve_cp,
 // sign_illegal_matrix_cp[legal cells], and curve_transition_cp (all
 // four prev->curr combinations). Never fires an error gate.
 //----------------------------------------------------------------------

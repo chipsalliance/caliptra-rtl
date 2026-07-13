@@ -135,7 +135,7 @@ class ECC_predictor #(
     `uvm_info("PRED", "Transaction Received through ECC_in_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
 
-    is_nondet = t.rand_k_en;
+    is_nondet = t.nondet;
     is_err    = (t.err_mode != ERR_NONE);
     is_p256   = (t.curve == ecc_curve_p256);
 

@@ -57,7 +57,7 @@ class ECC_in_normal_sequence #(
       if(!req.randomize() with { test == ecc_normal_test;
                                  curve == ecc_curve_p384;
                                  err_mode == ERR_NONE;
-                                 rand_k_en == 1'b0;
+                                 nondet == 1'b0;
                                  pcr_sign == 1'b0;
                                  kv_intf == 1'b0;
                                  pollute_upper == 1'b0;

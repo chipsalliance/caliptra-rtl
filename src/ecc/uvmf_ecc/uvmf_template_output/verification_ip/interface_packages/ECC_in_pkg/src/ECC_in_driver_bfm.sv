@@ -369,7 +369,7 @@ end
   parameter CTRL_ZEROIZE_MASK      = 32'h00000004;
   parameter CTRL_PCR_SIGN_MASK     = 32'h00000008;
   parameter CTRL_CURVE_SEL_MASK    = 32'h00000020;
-  parameter CTRL_RAND_K_EN_MASK    = 32'h00000040;
+  parameter CTRL_NONDETERMINISTIC_MASK    = 32'h00000040;
 
   parameter REG_SIZE      = 384;
   parameter PRIME         = 384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff;
@@ -990,22 +990,22 @@ end
   // zeroize-mid-op and OTF-reset paths to confirm the DUT cleared
   // its outputs (the zeroize / reset contract).
   //----------------------------------------------------------------
-  task check_zero_outputs (input string context);
+  task check_zero_outputs (input string ctx);
     begin
       read_block(ADDR_PRIVKEY_OUT_START);
-      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":privkey_out"});
+      check_field(reg_read_data, '0, ecc_curve_p384, {ctx, ":privkey_out"});
       read_block(ADDR_PUBKEYX_START);
-      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":pubkey_x"});
+      check_field(reg_read_data, '0, ecc_curve_p384, {ctx, ":pubkey_x"});
       read_block(ADDR_PUBKEYY_START);
-      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":pubkey_y"});
+      check_field(reg_read_data, '0, ecc_curve_p384, {ctx, ":pubkey_y"});
       read_block(ADDR_SIGNR_START);
-      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":sign_R"});
+      check_field(reg_read_data, '0, ecc_curve_p384, {ctx, ":sign_R"});
       read_block(ADDR_SIGNS_START);
-      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":sign_S"});
+      check_field(reg_read_data, '0, ecc_curve_p384, {ctx, ":sign_S"});
       read_block(ADDR_VERIFY_R_START);
-      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":verify_R"});
+      check_field(reg_read_data, '0, ecc_curve_p384, {ctx, ":verify_R"});
       read_block(ADDR_DH_SHARED_KEY_START);
-      check_field(reg_read_data, '0, ecc_curve_p384, {context, ":DH_sharedkey"});
+      check_field(reg_read_data, '0, ecc_curve_p384, {ctx, ":DH_sharedkey"});
     end
   endtask
 
@@ -1019,7 +1019,7 @@ end
   // regardless of the k value the DRBG produced.
   //----------------------------------------------------------------
   task verify_signature (input bit [383:0] R_got, input bit [383:0] S_got,
-                         input ecc_in_curve_e curve, input string context);
+                         input ecc_in_curve_e curve, input string ctx);
     bit [31:0] cmd_word;
     begin
       // Give the SIGN op time to fully complete (ready should be up).
@@ -1038,7 +1038,7 @@ end
       wait_valid();
       read_block(ADDR_VERIFY_R_START);
       check_field(reg_read_data, R_got, curve,
-                  {context, ":nondet_self_verify_R"});
+                  {ctx, ":nondet_self_verify_R"});
     end
   endtask
 
@@ -1104,7 +1104,7 @@ end
   // Dispatch entry. Legacy P-384-det path preserved for backward compat
   // with ECC_normal_test / ECC_otf_reset_test; new random axes are
   // handled by ecc_random_test which selects curve/mode-aware KAT and
-  // drives ECC_CTRL with CURVE_SEL / RAND_K_EN / PCR_SIGN.
+  // drives ECC_CTRL with CURVE_SEL / NONDETERMINISTIC / PCR_SIGN.
   //----------------------------------------------------------------
   task ecc_test (
     input ecc_in_test_transactions test,
@@ -1130,7 +1130,7 @@ end
       // Any non-default random axis routes to the random-test path.
       if ((istruct.curve   != ecc_curve_p384) ||
           (istruct.err_mode != ERR_NONE)      ||
-          (istruct.rand_k_en != 1'b0)         ||
+          (istruct.nondet != 1'b0)         ||
           (istruct.pcr_sign  != 1'b0)         ||
           (istruct.kv_intf   != 1'b0)         ||
           (istruct.pollute_upper != 1'b0)     ||
@@ -1190,7 +1190,7 @@ end
       drbg_forced = 1'b0;
 
       is_p256   = (istruct.curve == ecc_curve_p256);
-      is_nondet = istruct.rand_k_en;
+      is_nondet = istruct.nondet;
       is_err    = (istruct.err_mode != ERR_NONE);
 
       // Load KAT.
@@ -1251,7 +1251,7 @@ end
         default         : cmd_word = KEYGEN_CMD;
       endcase
       if (is_p256)           cmd_word = cmd_word | CTRL_CURVE_SEL_MASK;
-      if (istruct.rand_k_en) cmd_word = cmd_word | CTRL_RAND_K_EN_MASK;
+      if (istruct.nondet) cmd_word = cmd_word | CTRL_NONDETERMINISTIC_MASK;
       if (istruct.pcr_sign)  cmd_word = cmd_word | CTRL_PCR_SIGN_MASK;
 
       // Drive operand CSRs then dispatch.
@@ -1399,7 +1399,7 @@ end
   // arm_kv_illegal()
   //
   // Programs one of the ECC_KV_*_CTRL registers with read_en/write_en=1
-  // to fire kv_under_p256_invalid / kv_under_rand_k_invalid at dispatch.
+  // to fire kv_under_p256_invalid / kv_under_nondet_invalid at dispatch.
   //----------------------------------------------------------------
   task arm_kv_illegal (input bit [4:0] slot, input ecc_in_op_transactions op);
     bit [31:0] v;

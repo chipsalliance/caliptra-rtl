@@ -4,7 +4,7 @@
 //
 // DESCRIPTION:
 //   Shared per-transaction sequence that randomizes the new dual-curve /
-//   RAND_K_EN / error-injection / KV-slot axes freely (subject to the
+//   NONDETERMINISTIC / error-injection / KV-slot axes freely (subject to the
 //   built-in legality constraints in ECC_in_transaction).
 //
 //   Higher-level top sequences (one per new UVM test) further constrain
@@ -31,7 +31,7 @@ class ECC_in_random_multiaxis_sequence #(
   rand ecc_in_curve_e           bias_curve;
   rand ecc_in_op_transactions   bias_op;
   rand ecc_in_err_mode_e        bias_err_mode;
-  rand bit                      bias_rand_k_en;
+  rand bit                      bias_nondet;
   rand bit                      bias_pcr_sign;
   rand bit                      bias_kv_intf;
   rand bit                      bias_pollute_upper;
@@ -43,7 +43,7 @@ class ECC_in_random_multiaxis_sequence #(
   bit pin_curve        = 1'b0;
   bit pin_op           = 1'b0;
   bit pin_err_mode     = 1'b0;
-  bit pin_rand_k_en    = 1'b0;
+  bit pin_nondet    = 1'b0;
   bit pin_pcr_sign     = 1'b0;
   bit pin_kv_intf      = 1'b0;
   bit pin_pollute      = 1'b0;
@@ -56,7 +56,7 @@ class ECC_in_random_multiaxis_sequence #(
     bias_curve           = ecc_curve_p384;
     bias_op              = key_sign;
     bias_err_mode        = ERR_NONE;
-    bias_rand_k_en       = 1'b0;
+    bias_nondet       = 1'b0;
     bias_pcr_sign        = 1'b0;
     bias_kv_intf         = 1'b0;
     bias_pollute_upper   = 1'b0;
@@ -75,7 +75,7 @@ class ECC_in_random_multiaxis_sequence #(
       if (pin_curve)     curve          == local::bias_curve;
       if (pin_op)        op             == local::bias_op;
       if (pin_err_mode)  err_mode       == local::bias_err_mode;
-      if (pin_rand_k_en) rand_k_en      == local::bias_rand_k_en;
+      if (pin_nondet) nondet      == local::bias_nondet;
       if (pin_pcr_sign)  pcr_sign       == local::bias_pcr_sign;
       if (pin_kv_intf)   kv_intf        == local::bias_kv_intf;
       if (pin_pollute)   pollute_upper  == local::bias_pollute_upper;

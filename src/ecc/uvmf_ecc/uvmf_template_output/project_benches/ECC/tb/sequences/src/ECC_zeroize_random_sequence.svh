@@ -34,7 +34,7 @@ class ECC_zeroize_random_sequence #(int AHB_DATA_WIDTH = 64,
 
     // 40 transactions. err_mode pinned to NONE (zeroize + error mutually
     // exclusive per transaction constraint). zeroize_mid_op pinned to 1.
-    // Curve/op/rand_k_en/pcr_sign free -> hit zeroize_x_curve_cp,
+    // Curve/op/nondet/pcr_sign free -> hit zeroize_x_curve_cp,
     // zeroize_cmd_cp, zeroize_pcr_cp bins across the full axis space.
     repeat (40) begin
       axis_s = axis_seq_t::type_id::create($sformatf("axis_s_%0d", $urandom));

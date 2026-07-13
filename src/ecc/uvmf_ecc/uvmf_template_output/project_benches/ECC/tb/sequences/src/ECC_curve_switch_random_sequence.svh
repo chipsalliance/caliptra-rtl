@@ -1,9 +1,9 @@
 //----------------------------------------------------------------------
 // SPDX-License-Identifier: Apache-2.0
 //----------------------------------------------------------------------
-// Rapid curve-switch mix. Alternates curve+rand_k_en on every legal
+// Rapid curve-switch mix. Alternates curve+nondet on every legal
 // transaction to close curve_transition_cp {01, 10, 11, 00}, the
-// scrub_x_cmd_cp per-op P-256 scrub pulse, and the RAND_K_EN latched
+// scrub_x_cmd_cp per-op P-256 scrub pulse, and the NONDETERMINISTIC latched
 // vs hwif combinational gate cells. Never fires an error gate.
 //----------------------------------------------------------------------
 
@@ -34,7 +34,7 @@ class ECC_curve_switch_random_sequence #(int AHB_DATA_WIDTH = 64,
     join
 
     // 60 transactions. Alternate curve every transaction so
-    // curve_transition_cp {01, 10} fire. Op is free, rand_k_en is only
+    // curve_transition_cp {01, 10} fire. Op is free, nondet is only
     // legal for SIGN so let the constraint solver pick. pollute_upper=1
     // forces routing through the random path (no legacy monitor).
     cur_curve = ecc_curve_p384;

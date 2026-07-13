@@ -27,12 +27,12 @@ typedef enum bit {ecc_curve_p384 = 1'b0, ecc_curve_p256 = 1'b1} ecc_in_curve_e;
 typedef enum bit [2:0] {
     ERR_NONE          = 3'd0,
     ERR_PCR_P256      = 3'd1,  // PCR_SIGN + CURVE_SEL=P256
-    ERR_RAND_K_PCR    = 3'd2,  // PCR_SIGN + RAND_K_EN
-    ERR_RAND_K_KEYGEN = 3'd3,  // RAND_K_EN + KEYGEN
-    ERR_RAND_K_VERIFY = 3'd4,  // RAND_K_EN + VERIFY
-    ERR_RAND_K_SHARED = 3'd5,  // RAND_K_EN + SHARED_KEY
+    ERR_RAND_K_PCR    = 3'd2,  // PCR_SIGN + NONDETERMINISTIC
+    ERR_RAND_K_KEYGEN = 3'd3,  // NONDETERMINISTIC + KEYGEN
+    ERR_RAND_K_VERIFY = 3'd4,  // NONDETERMINISTIC + VERIFY
+    ERR_RAND_K_SHARED = 3'd5,  // NONDETERMINISTIC + SHARED_KEY
     ERR_KV_P256       = 3'd6,  // KV path + CURVE_SEL=P256
-    ERR_KV_RAND_K     = 3'd7   // KV path + RAND_K_EN
+    ERR_KV_RAND_K     = 3'd7   // KV path + NONDETERMINISTIC
 } ecc_in_err_mode_e;
 // pragma uvmf custom additional end
 
