@@ -93,6 +93,151 @@ static const uint32_t expected_seq6[12] = {
 };
 
 
+// Wait for SHA512 controller STATUS.READY
+static uint8_t wait_sha512_ctrl_ready(void) {
+    uint32_t timeout = 20000;
+    while (timeout--) {
+        if (lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_READY_MASK)
+            return 1;
+    }
+    return 0;
+}
+
+// Wait for SHA512 controller STATUS.VALID
+static uint8_t wait_sha512_ctrl_valid(void) {
+    uint32_t timeout = 20000;
+    while (timeout--) {
+        if (lsu_read_32(CLP_SHA512_REG_SHA512_STATUS) & SHA512_REG_SHA512_STATUS_VALID_MASK)
+            return 1;
+    }
+    return 0;
+}
+
+// Recompute SHA-384 of the ICCM word stream using the SHA512 *controller*
+// (the same peripheral used to extend PCR0 via sha_ctrl_extend)
+// The SHA512 controller interprets its BLOCK registers as a
+// big-endian byte stream (standard SHA-512), whereas the ICCM hash is defined
+// over the little-endian bytes of each 32-bit ICCM word. Each ICCM word is
+// therefore byte-swapped before being written to a BLOCK register so the
+// controller hashes the same little-endian byte stream the HW snoop does.
+// Firmware performs the SHA-512 padding by hand (append 0x80..., zero-fill,
+// 128-bit big-endian bit length in the final block) and drives the multi-block
+// init/next/last sequence. Writes the 12-dword (384-bit) digest into
+// digest_out. Returns 1 on success, 0 on timeout.
+static uint8_t sha512_ctrl_hash_iccm(uint32_t num_words, uint32_t *digest_out) {
+    volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
+    const uint32_t WORDS_PER_BLOCK = 32;                 // 1024-bit SHA-512 block
+    uint32_t k = num_words + 1;                          // message words + 0x80 marker word
+    uint32_t total_blocks = ((k + 4) + (WORDS_PER_BLOCK - 1)) / WORDS_PER_BLOCK;
+    uint32_t total_words = total_blocks * WORDS_PER_BLOCK;
+    uint64_t bitlen = (uint64_t)num_words * 32;          // each ICCM word contributes 32 bits
+
+    for (uint32_t b = 0; b < total_blocks; b++) {
+        if (!wait_sha512_ctrl_ready()) return 0;
+
+        // Load one 1024-bit block into BLOCK[0:31], applying padding as needed.
+        for (uint32_t j = 0; j < WORDS_PER_BLOCK; j++) {
+            uint32_t w = b * WORDS_PER_BLOCK + j;
+            uint32_t val;
+            if (w < num_words) {
+                // Byte-swap so the controller's big-endian BLOCK interpretation
+                // hashes the little-endian bytes of the ICCM word.
+                val = __builtin_bswap32(iccm[w]);        // message word (read back from ICCM)
+            } else if (w == num_words) {
+                val = 0x80000000;                        // SHA padding: 1 bit followed by zeros
+            } else if (w >= total_words - 4) {
+                // 128-bit big-endian message bit length in the final 4 words.
+                uint32_t from_end = total_words - 1 - w; // 3,2,1,0
+                if (from_end == 0)      val = (uint32_t)bitlen;
+                else if (from_end == 1) val = (uint32_t)(bitlen >> 32);
+                else                    val = 0x00000000; // upper 64 bits of the length
+            } else {
+                val = 0x00000000;                        // zero padding
+            }
+            lsu_write_32(CLP_SHA512_REG_SHA512_BLOCK_0 + (j * 4), val);
+        }
+
+        // Drive INIT on the first block, NEXT on subsequent blocks, with LAST
+        // asserted on the final block so the core finalizes the digest.
+        uint32_t ctrl = (2 << SHA512_REG_SHA512_CTRL_MODE_LOW); // SHA-384 mode
+        if (b == 0) ctrl |= (1 << SHA512_REG_SHA512_CTRL_INIT_LOW);
+        else        ctrl |= (1 << SHA512_REG_SHA512_CTRL_NEXT_LOW);
+        if (b == total_blocks - 1) ctrl |= (1 << SHA512_REG_SHA512_CTRL_LAST_LOW);
+        lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, ctrl);
+    }
+
+    if (!wait_sha512_ctrl_valid()) return 0;
+
+    volatile uint32_t *digest = (volatile uint32_t *)CLP_SHA512_REG_SHA512_DIGEST_0;
+    for (int i = 0; i < ICCM_HASH_PCR_DWORDS; i++) {
+        digest_out[i] = digest[i];
+    }
+    return 1;
+}
+
+// Independent readback cross-check of the HW ICCM hash result:
+//   1. Read the ICCM contents back and recompute
+//      iccm_digest = SHA-384(LE bytes of the ICCM words) using the SHA512
+//      CONTROLLER (the same peripheral used to extend PCR0), independent of
+//      the ICCM-hash snoop engine.
+//   2. Clear spare PCR0 and extend it from zero with iccm_digest via the
+//      regular SHA512 controller (pcr_hash_extend), reproducing the same
+//      PCR = SHA-384(48_zeros || iccm_digest) computation the HW performs.
+//   3. Confirm PCR0 == expected test vector AND PCR0 == PCR4.
+// num_words is the number of ICCM dwords that were hashed by HW.
+// Returns 1 on pass, 0 on fail.
+static uint8_t iccm_readback_cross_check(uint32_t num_words,
+                                         const uint32_t *expected,
+                                         uint32_t iter) {
+    // The controller streaming path used here does not cover the zero-length
+    // case; the primary PCR4 check already validates it.
+    if (num_words == 0) {
+        VPRINTF(LOW, "Readback cross-check skipped for zero-length sequence\n");
+        return 1;
+    }
+
+    // Clear spare PCR0 so it extends from zero.
+    lsu_write_32(CLP_PV_REG_PCR_CTRL_0, PV_REG_PCR_CTRL_0_CLEAR_MASK);
+    if (!check_pcr_zero(CLP_PV_REG_PCR_ENTRY_0_0, 0)) {
+        VPRINTF(ERROR, "FAIL: PCR0 not cleared before cross-check\n");
+        return 0;
+    }
+
+    // Recompute the ICCM digest with the SHA512 controller (reads ICCM back
+    // from memory), independently of the HW snoop.
+    uint32_t iccm_digest[ICCM_HASH_PCR_DWORDS];
+    if (!sha512_ctrl_hash_iccm(num_words, iccm_digest)) {
+        VPRINTF(ERROR, "FAIL: SHA512 controller digest did not complete\n");
+        return 0;
+    }
+
+    // Extend spare PCR0 from zero: PCR0 = SHA-384(48_zeros || iccm_digest).
+    if (!sha_ctrl_extend(0, iccm_digest)) {
+        VPRINTF(ERROR, "FAIL: sha_ctrl_extend of PCR0 timed out\n");
+        return 0;
+    }
+
+    // PCR0 must equal the expected golden vector (proves readback + recompute
+    // reproduces the golden hash) ...
+    if (!check_pcr_match(CLP_PV_REG_PCR_ENTRY_0_0, expected, 0, iter)) {
+        VPRINTF(ERROR, "FAIL: readback PCR0 != expected vector\n");
+        return 0;
+    }
+    // ... and must equal PCR4 (proves the HW snoop hashed the same ICCM data).
+    volatile uint32_t *pcr0 = (volatile uint32_t *)CLP_PV_REG_PCR_ENTRY_0_0;
+    volatile uint32_t *pcr4 = (volatile uint32_t *)CLP_PV_REG_PCR_ENTRY_4_0;
+    for (int i = 0; i < ICCM_HASH_PCR_DWORDS; i++) {
+        if (pcr0[i] != pcr4[i]) {
+            VPRINTF(ERROR, "FAIL: readback PCR0[%d]=0x%x != PCR4[%d]=0x%x\n",
+                    i, pcr0[i], i, pcr4[i]);
+            return 0;
+        }
+    }
+    VPRINTF(LOW, "PASS: readback cross-check PCR0 == expected == PCR4\n");
+    return 1;
+}
+
+
 void main(void) {
 
     uint8_t fail_cmd = 0x1;
@@ -205,12 +350,13 @@ void main(void) {
 
     // Verify PCR4
     const uint32_t *expected;
-    if (iteration == 0) expected = expected_seq1;
-    else if (iteration == 1) expected = expected_seq2;
-    else if (iteration == 2) expected = expected_seq3;
-    else if (iteration == 3) expected = expected_seq4;
-    else if (iteration == 4) expected = expected_seq5;
-    else expected = expected_seq6;
+    uint32_t num_words;
+    if (iteration == 0)      { expected = expected_seq1; num_words = 64;  }
+    else if (iteration == 1) { expected = expected_seq2; num_words = 28;  }
+    else if (iteration == 2) { expected = expected_seq3; num_words = 0;   }
+    else if (iteration == 3) { expected = expected_seq4; num_words = 32;  }
+    else if (iteration == 4) { expected = expected_seq5; num_words = 260; }
+    else                     { expected = expected_seq6; num_words = 64;  }
 
     if (!check_pcr_match(CLP_PV_REG_PCR_ENTRY_4_0, expected, 4, iteration + 1)) {
         VPRINTF(ERROR, "FAIL: PCR4 mismatch on iteration %d\n", iteration);
@@ -218,6 +364,15 @@ void main(void) {
         while(1);
     }
     VPRINTF(LOW, "PASS: Iteration %d PCR4 matches expected hash\n", iteration);
+
+    // Independent cross-check: read ICCM back, recompute the hash with the
+    // SHA accelerator, extend spare PCR0, and confirm it equals both the
+    // expected vector and PCR4.
+    if (!iccm_readback_cross_check(num_words, expected, iteration + 1)) {
+        VPRINTF(ERROR, "FAIL: ICCM readback cross-check failed on iteration %d\n", iteration);
+        SEND_STDOUT_CTRL(fail_cmd);
+        while(1);
+    }
 
     iteration++;
 

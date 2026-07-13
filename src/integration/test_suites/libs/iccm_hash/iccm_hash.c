@@ -44,6 +44,14 @@ uint8_t wait_pcr4_ready(void) {
     return 0;
 }
 
+uint8_t wait_pcr5_ready(void) {
+    uint32_t timeout = 20000;
+    while (timeout--) {
+        if (lsu_read_32(CLP_PV_REG_PCR_ENTRY_5_0) != 0) return 1;
+    }
+    return 0;
+}
+
 uint8_t run_default_iccm_hash(void) {
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
     // ICCM-write snoop engages the hash automatically on the first write;

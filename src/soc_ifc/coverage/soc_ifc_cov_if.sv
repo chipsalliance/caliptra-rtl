@@ -546,7 +546,9 @@ interface soc_ifc_cov_if
             bins sub_block     = {[5:127]};     // < 1 SHA block
             bins one_block     = {[128:128]};   // exactly 1 block boundary
             bins multi_block   = {[129:1024]};  // 2-8 blocks
-            bins large_sz         = {[1025:$]};    // > 8 blocks (bulk FW load)
+            bins large_sz      = {[1025:262143]}; // > 8 blocks, below full ICCM
+            bins iccm_full     = {262144};      // exact ICCM size (256 KiB = RV_ICCM_SIZE*1024)
+            bins iccm_overflow = {[262145:$]};  // wrapped past ICCM end (> ICCM size)
         }
 
         // Extra padding block required (exercises PAD0-->PAD1 path)
