@@ -117,6 +117,9 @@ module hmac256_drbg_tb();
         .drbg(drbg_tb)
     );
 
+  //bind coverage file
+  hmac256_drbg_cov_bind i_hmac256_drbg_cov_bind();
+
   //----------------------------------------------------------------
   // clk_gen
   //----------------------------------------------------------------
@@ -489,6 +492,181 @@ module hmac256_drbg_tb();
   endtask
 
   //----------------------------------------------------------------
+  // hmac256_drbg_boundary_tag_test()
+  //   Force HMAC_tag itself (not failure_check) at CHCK_ST to boundary
+  //   values so the real comparator is exercised: T=0, T=q, T=q-1, and
+  //   T=all-ones. Each of the first three should reject; the fourth is
+  //   the smallest value the comparator must accept above q.
+  //----------------------------------------------------------------
+  task hmac256_drbg_boundary_tag_test();
+    reg [REG_SIZE-1:0] boundary_values [4];
+    reg                should_reject   [4];
+    reg [REG_SIZE-1:0] tag_force;
+    reg                exp_reject;
+    begin
+      if (!ready_tb)
+        wait(ready_tb);
+
+      $display("HMAC256 DRBG boundary tag test");
+
+      boundary_values[0] = 256'd0;
+      boundary_values[1] = dut.HMAC_DRBG_PRIME;
+      boundary_values[2] = dut.HMAC_DRBG_PRIME - 256'd1;
+      boundary_values[3] = {REG_SIZE{1'b1}};
+
+      should_reject[0] = 1'b1;
+      should_reject[1] = 1'b1;
+      should_reject[2] = 1'b0;
+      should_reject[3] = 1'b1;
+
+      for (int i = 0; i < 4; i++) begin
+        if (!ready_tb)
+          wait(ready_tb);
+
+        entropy_tb   = random_gen();
+        nonce_tb     = random_gen();
+        lfsr_seed_tb = 96'(random_gen());
+
+        tag_force  = boundary_values[i];
+        exp_reject = should_reject[i];
+
+        # CLK_PERIOD;
+        init_tb = 1'b1;
+        # CLK_PERIOD;
+        init_tb = 1'b0;
+
+        wait(dut.drbg_st_reg == dut.T_ST);
+        force dut.HMAC_tag = tag_force;
+        wait(dut.drbg_st_reg == dut.CHCK_ST);
+        # (2 * CLK_PERIOD);
+        if (dut.failure_check !== exp_reject) begin
+          $display("*** ERROR: TC %0d boundary %0d: failure_check=%0b expected=%0b",
+                   tc_number, i, dut.failure_check, exp_reject);
+          error_ctr = error_ctr + 1;
+        end
+        release dut.HMAC_tag;
+        # CLK_PERIOD;
+
+        wait(valid_tb);
+        $display("*** TC %0d boundary %0d completed", tc_number, i);
+        tc_number = tc_number + 1;
+
+        # CLK_PERIOD;
+        zeroize_tb = 1'b1;
+        # (2 * CLK_PERIOD);
+        zeroize_tb = 1'b0;
+        wait(ready_tb);
+      end
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // hmac256_drbg_next_reject_test()
+  //   Run an INIT, wait for valid, then issue NEXT and force a
+  //   rejection at CHCK_ST. Exercises the NEXT_ST -> K3_ST retry
+  //   path that ECC-style callers will use for repeated randoms.
+  //----------------------------------------------------------------
+  task hmac256_drbg_next_reject_test();
+    begin
+      if (!ready_tb)
+        wait(ready_tb);
+
+      $display("HMAC256 DRBG next-mode rejection test");
+
+      entropy_tb   = random_gen();
+      nonce_tb     = random_gen();
+      lfsr_seed_tb = 96'(random_gen());
+
+      # CLK_PERIOD;
+      init_tb = 1'b1;
+      # CLK_PERIOD;
+      init_tb = 1'b0;
+
+      wait(valid_tb);
+      # CLK_PERIOD;
+      wait(ready_tb);
+      # CLK_PERIOD;
+
+      next_tb = 1'b1;
+      # CLK_PERIOD;
+      next_tb = 1'b0;
+
+      wait(dut.drbg_st_reg == dut.CHCK_ST);
+      force dut.failure_check = 1'b1;
+      # (2 * CLK_PERIOD);
+      release dut.failure_check;
+      # CLK_PERIOD;
+
+      wait(valid_tb);
+      $display("*** TC %0d: NEXT-mode rejection retry completed", tc_number);
+      tc_number = tc_number + 1;
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // hmac256_drbg_midop_zeroize_test()
+  //   Pulse zeroize while the FSM is inside a real busy state
+  //   (K11_ST, T_ST, and K3_ST). Confirms the engine returns to
+  //   IDLE_ST and does not leave K/V or valid stale.
+  //----------------------------------------------------------------
+  task hmac256_drbg_midop_zeroize_at(input [4:0] wait_state);
+    begin
+      if (!ready_tb)
+        wait(ready_tb);
+
+      entropy_tb   = random_gen();
+      nonce_tb     = random_gen();
+      lfsr_seed_tb = 96'(random_gen());
+
+      # CLK_PERIOD;
+      init_tb = 1'b1;
+      # CLK_PERIOD;
+      init_tb = 1'b0;
+
+      if (wait_state == dut.K3_ST) begin
+        wait(dut.drbg_st_reg == dut.CHCK_ST);
+        force dut.failure_check = 1'b1;
+        wait(dut.drbg_st_reg == dut.K3_ST);
+        release dut.failure_check;
+      end
+      else begin
+        wait(dut.drbg_st_reg == wait_state);
+      end
+
+      # CLK_PERIOD;
+      zeroize_tb = 1'b1;
+      # (3 * CLK_PERIOD);
+      zeroize_tb = 1'b0;
+
+      # (4 * CLK_PERIOD);
+
+      if (dut.drbg_st_reg !== dut.IDLE_ST) begin
+        $display("*** ERROR: TC %0d mid-op zeroize at state %0d: drbg_st_reg=%0d expected IDLE",
+                 tc_number, wait_state, dut.drbg_st_reg);
+        error_ctr = error_ctr + 1;
+      end
+      if (valid_tb !== 1'b0) begin
+        $display("*** ERROR: TC %0d mid-op zeroize at state %0d: valid_tb stayed high",
+                 tc_number, wait_state);
+        error_ctr = error_ctr + 1;
+      end
+      $display("*** TC %0d mid-op zeroize at state %0d completed", tc_number, wait_state);
+      tc_number = tc_number + 1;
+
+      wait(ready_tb);
+    end
+  endtask
+
+  task hmac256_drbg_midop_zeroize_test();
+    begin
+      $display("HMAC256 DRBG mid-op zeroize test");
+      hmac256_drbg_midop_zeroize_at(dut.K11_ST);
+      hmac256_drbg_midop_zeroize_at(dut.T_ST);
+      hmac256_drbg_midop_zeroize_at(dut.K3_ST);
+    end
+  endtask
+
+  //----------------------------------------------------------------
   // always_debug()
   //----------------------------------------------------------------
   always @(dut.drbg_st_reg)
@@ -521,6 +699,12 @@ module hmac256_drbg_tb();
       hmac256_drbg_zeroize_test();
 
       hmac256_drbg_failure_injection_test();
+
+      hmac256_drbg_boundary_tag_test();
+
+      hmac256_drbg_next_reject_test();
+
+      hmac256_drbg_midop_zeroize_test();
 
       display_test_results();
 

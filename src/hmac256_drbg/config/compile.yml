@@ -32,6 +32,7 @@ global:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
         - +define+SIMULATION
+        - +define+FCOV
         - '-noinherit_timescale=1ns/1ps'
 ---
 provides: [hmac256_drbg_coverage]
