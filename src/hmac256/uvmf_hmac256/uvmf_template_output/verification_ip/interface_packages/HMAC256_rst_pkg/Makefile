@@ -4,21 +4,27 @@
 
 hmac256_rst_PKG         = \
 	+incdir+$(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC256_rst_pkg \
-	-F $(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC256_rst_pkg/hmac256_rst_filelist_hvl.f 
+	-F $(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC256_rst_pkg/HMAC256_rst_filelist_hvl.f 
 
 hmac256_rst_PKG_HDL         = \
 	+incdir+$(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC256_rst_pkg \
-	-F $(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC256_rst_pkg/hmac256_rst_filelist_hdl.f 
+	-F $(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC256_rst_pkg/HMAC256_rst_filelist_hdl.f 
 
 hmac256_rst_PKG_XRTL         = \
 	+incdir+$(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC256_rst_pkg \
-	-F $(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC256_rst_pkg/hmac256_rst_filelist_xrtl.f 
+	-F $(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC256_rst_pkg/HMAC256_rst_filelist_xrtl.f 
 
 COMP_hmac_rst_PKG_TGT_0 = q_comp_hmac_rst_pkg
 COMP_hmac_rst_PKG_TGT_1 = v_comp_hmac_rst_pkg
 COMP_hmac_rst_PKG_TGT = $(COMP_hmac_rst_PKG_TGT_$(USE_VELOCE))
 
 comp_hmac_rst_pkg: $(COMP_hmac_rst_PKG_TGT) 
+
+# Backward-compatible aliases (top-level sim/Makefile uses the capitalized
+# HMAC256_rst target names because the interface package name is HMAC256_rst).
+comp_HMAC256_rst_pkg:   comp_hmac_rst_pkg
+q_comp_HMAC256_rst_pkg: q_comp_hmac_rst_pkg
+v_comp_HMAC256_rst_pkg: v_comp_hmac_rst_pkg
 
 q_comp_hmac_rst_pkg:
 	$(HDL_COMP_CMD) $(hmac256_rst_PKG_HDL)

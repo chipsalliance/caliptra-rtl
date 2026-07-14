@@ -51,6 +51,7 @@ requires:
   - sha256_ctrl
   - doe_ctrl
   - hmac_ctrl
+  - hmac256_ctrl
   - ecc_top
   - abr_top
   - keyvault
@@ -101,6 +102,7 @@ requires:
   - sha256_ctrl
   - doe_ctrl
   - hmac_ctrl
+  - hmac256_ctrl
   - ecc_top
   - abr_top
   - keyvault
@@ -150,6 +152,7 @@ requires:
   - sha512_coverage
   - sha256_coverage
   - hmac_coverage
+  - hmac256_coverage
   - hmac_drbg_coverage
   - ecc_coverage
   - soc_ifc_coverage

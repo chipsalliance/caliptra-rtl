@@ -18,6 +18,8 @@
 +incdir+${CALIPTRA_ROOT}/src/doe/rtl
 +incdir+${CALIPTRA_ROOT}/src/sha512_masked/rtl
 +incdir+${CALIPTRA_ROOT}/src/hmac/rtl
++incdir+${CALIPTRA_ROOT}/src/sha256_masked/rtl
++incdir+${CALIPTRA_ROOT}/src/hmac256/rtl
 +incdir+${CALIPTRA_ROOT}/src/hmac_drbg/rtl
 +incdir+${CALIPTRA_ROOT}/src/ecc/rtl
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/rtl
@@ -256,6 +258,15 @@ ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_ctrl.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_core.sv
 ${CALIPTRA_ROOT}/src/hmac/rtl/hmac_reg.sv
+${CALIPTRA_ROOT}/src/sha256_masked/rtl/sha256_masked_defines_pkg.sv
+${CALIPTRA_ROOT}/src/sha256_masked/rtl/sha256_masked_core.sv
+${CALIPTRA_ROOT}/src/sha256_masked/rtl/sha256_masked_w_mem.sv
+${CALIPTRA_ROOT}/src/hmac256/rtl/hmac256_param_pkg.sv
+${CALIPTRA_ROOT}/src/hmac256/rtl/hmac256_reg_pkg.sv
+${CALIPTRA_ROOT}/src/hmac256/rtl/hmac256_ctrl.sv
+${CALIPTRA_ROOT}/src/hmac256/rtl/hmac256.sv
+${CALIPTRA_ROOT}/src/hmac256/rtl/hmac256_core.sv
+${CALIPTRA_ROOT}/src/hmac256/rtl/hmac256_reg.sv
 ${CALIPTRA_ROOT}/src/hmac_drbg/rtl/hmac_drbg.sv
 ${CALIPTRA_ROOT}/src/hmac_drbg/rtl/hmac_sha256_core.sv
 ${CALIPTRA_ROOT}/src/hmac_drbg/rtl/hmac_drbg_sha256.sv

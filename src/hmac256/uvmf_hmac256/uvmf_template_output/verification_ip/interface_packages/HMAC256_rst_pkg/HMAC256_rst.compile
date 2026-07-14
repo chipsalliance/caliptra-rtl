@@ -1,3 +1,3 @@
 needs:
-  - hmac256_rst_hvl.compile
-  - hmac256_rst_hdl.compile
+  - HMAC256_rst_hvl.compile
+  - HMAC256_rst_hdl.compile

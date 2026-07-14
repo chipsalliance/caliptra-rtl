@@ -26,6 +26,10 @@ contents:
         - ../test_suites/iccm_lock/iccm_lock.yml
         - ../test_suites/c_intr_handler/c_intr_handler.yml
         - ../test_suites/smoke_test_hmac/smoke_test_hmac.yml
+        - ../test_suites/smoke_test_hmac256/smoke_test_hmac256.yml
+        - ../test_suites/smoke_test_hmac256_errortrigger/smoke_test_hmac256_errortrigger.yml
+        - ../test_suites/smoke_test_hmac256_save_restore/smoke_test_hmac256_save_restore.yml
+        - ../test_suites/smoke_test_hmac256_to_aes/smoke_test_hmac256_to_aes.yml
         - ../test_suites/smoke_test_aes_gcm/smoke_test_aes_gcm.yml
         - ../test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
         - ../test_suites/smoke_test_dma_aes_kv/smoke_test_dma_aes_kv.yml

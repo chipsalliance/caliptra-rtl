@@ -1,6 +1,6 @@
 needs:
   - $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.compile
-  - ../../../../verification_ip/interface_packages/HMAC256_rst_pkg/hmac256_rst.compile
+  - ../../../../verification_ip/interface_packages/HMAC256_rst_pkg/HMAC256_rst.compile
   - ../../../../verification_ip/environment_packages/HMAC256_env_pkg/HMAC256_env_pkg.compile
   - ../parameters/HMAC256_parameters_pkg.compile
 src:

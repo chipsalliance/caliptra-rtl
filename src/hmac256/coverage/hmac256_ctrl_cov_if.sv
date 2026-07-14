@@ -33,7 +33,13 @@ interface hmac256_ctrl_cov_if
 
     logic core_tag_we;
 
-    logic [3 : 0] hmac256_cmd;
+    logic awaiting_zeroize;
+    logic invalid_cmd_error_edge;
+
+    logic error_intr;
+    logic notif_intr;
+
+    logic [4:0] hmac256_cmd;
 
     assign init       = hmac256_ctrl.hmac256_inst.init_reg;
     assign next       = hmac256_ctrl.hmac256_inst.next_reg;
@@ -47,40 +53,58 @@ interface hmac256_ctrl_cov_if
 
     assign core_tag_we = hmac256_ctrl.hmac256_inst.core_tag_we;
 
-    // hmac256_cmd bit layout: {restore, last, next, init}.
+    assign awaiting_zeroize       = hmac256_ctrl.hmac256_inst.awaiting_zeroize;
+    assign invalid_cmd_error_edge = hmac256_ctrl.hmac256_inst.invalid_cmd_error_edge;
+
+    assign error_intr = hmac256_ctrl.hmac256_inst.error_intr;
+    assign notif_intr = hmac256_ctrl.hmac256_inst.notif_intr;
+
+    // hmac256_cmd bit layout: {restore, last, next, init, zeroize}.
     assign hmac256_cmd = {hmac256_ctrl.hmac256_inst.hwif_out.HMAC256_CTRL.RESTORE.value,
                           hmac256_ctrl.hmac256_inst.hwif_out.HMAC256_CTRL.LAST.value,
                           hmac256_ctrl.hmac256_inst.hwif_out.HMAC256_CTRL.NEXT.value,
-                          hmac256_ctrl.hmac256_inst.hwif_out.HMAC256_CTRL.INIT.value};
+                          hmac256_ctrl.hmac256_inst.hwif_out.HMAC256_CTRL.INIT.value,
+                          hmac256_ctrl.hmac256_inst.hwif_out.HMAC256_CTRL.ZEROIZE.value};
 
     covergroup hmac256_ctrl_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
+        //cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
+        init_cp: coverpoint init;
+        next_cp: coverpoint next;
         zeroize_cp: coverpoint zeroize;
         mode_cp: coverpoint mode;
+        last_cp: coverpoint last;
+        restore_cp: coverpoint restore;
         ready_cp: coverpoint ready;
         valid_cp: coverpoint valid;
         is_last_op_cp: coverpoint is_last_op;
+        awaiting_zeroize_cp: coverpoint awaiting_zeroize;
 
         core_tag_we_cp: coverpoint core_tag_we;
 
+        // error0_sts is hwset by invalid_cmd_error_edge. error1/2/3 are
+        // reserved slots with no hardware source in hmac256.
+        error0_sts_cp: coverpoint invalid_cmd_error_edge { bins fired = {1'b1}; }
+
+        error_intr_cp: coverpoint error_intr { bins asserted = {1'b1}; }
+        notif_intr_cp: coverpoint notif_intr { bins asserted = {1'b1}; }
+
+        // Every combination of {restore, last, next, init, zeroize}.
         hmac256_cmd_cp: coverpoint hmac256_cmd {
-            bins init          = (0 => 'h1 => 0);
-            bins next          = (0 => 'h2 => 0);
-            bins last_alone    = (0 => 'h4 => 0);
-            bins init_last     = (0 => 'h5 => 0);
-            bins next_last     = (0 => 'h6 => 0);
-            bins restore_alone = (0 => 'h8 => 0);
-            bins restore_next  = (0 => 'hA => 0);
-            bins restore_last  = (0 => 'hC => 0);
+            bins cmd[] = {[0:31]};
         }
 
-        mode_ready_cp: cross ready, mode;
+        // Every CTRL encoding crossed with MODE (HMAC-224 x HMAC-256).
+        hmac256_cmd_x_mode: cross hmac256_cmd_cp, mode_cp;
+
+        mode_ready_cp:    cross ready, mode;
         zeroize_ready_cp: cross ready, zeroize;
-        zeroize_init_cp: cross zeroize, init;
-        zeroize_next_cp: cross zeroize, next;
-        init_mode_cp: cross init, mode;
-        next_mode_cp: cross next, mode;
+
+        // Did zeroize, restore, and error0 all fire in both modes.
+        zeroize_x_mode_cp: cross zeroize_cp, mode_cp;
+        restore_x_mode_cp: cross restore_cp, mode_cp;
+        error0_x_mode_cp:  cross error0_sts_cp, mode_cp;
 
     endgroup
 

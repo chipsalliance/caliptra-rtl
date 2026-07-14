@@ -64,8 +64,6 @@ package hmac256_reg_pkg;
     } hmac256_reg__HMAC256_STATUS__in_t;
 
     typedef struct packed{
-        logic [31:0] next;
-        logic we;
         logic hwclr;
     } hmac256_reg__HMAC256_KEY__KEY__in_t;
 
@@ -74,8 +72,6 @@ package hmac256_reg_pkg;
     } hmac256_reg__HMAC256_KEY__in_t;
 
     typedef struct packed{
-        logic [31:0] next;
-        logic we;
         logic hwclr;
     } hmac256_reg__HMAC256_BLOCK__BLOCK__in_t;
 
@@ -136,7 +132,7 @@ package hmac256_reg_pkg;
         hmac256_reg__HMAC256_VERSION__in_t [2-1:0]HMAC256_VERSION;
         hmac256_reg__HMAC256_CTRL__in_t HMAC256_CTRL;
         hmac256_reg__HMAC256_STATUS__in_t HMAC256_STATUS;
-        hmac256_reg__HMAC256_KEY__in_t [16-1:0]HMAC256_KEY;
+        hmac256_reg__HMAC256_KEY__in_t [8-1:0]HMAC256_KEY;
         hmac256_reg__HMAC256_BLOCK__in_t [16-1:0]HMAC256_BLOCK;
         hmac256_reg__HMAC256_TAG__in_t [8-1:0]HMAC256_TAG;
         hmac256_reg__intr_block_t__in_t intr_block_rf;
@@ -160,15 +156,7 @@ package hmac256_reg_pkg;
 
     typedef struct packed{
         logic value;
-    } hmac256_reg__HMAC256_CTRL__Reserved4__out_t;
-
-    typedef struct packed{
-        logic value;
     } hmac256_reg__HMAC256_CTRL__LAST__out_t;
-
-    typedef struct packed{
-        logic value;
-    } hmac256_reg__HMAC256_CTRL__Reserved6__out_t;
 
     typedef struct packed{
         logic value;
@@ -179,9 +167,7 @@ package hmac256_reg_pkg;
         hmac256_reg__HMAC256_CTRL__NEXT__out_t NEXT;
         hmac256_reg__HMAC256_CTRL__ZEROIZE__out_t ZEROIZE;
         hmac256_reg__HMAC256_CTRL__MODE__out_t MODE;
-        hmac256_reg__HMAC256_CTRL__Reserved4__out_t Reserved4;
         hmac256_reg__HMAC256_CTRL__LAST__out_t LAST;
-        hmac256_reg__HMAC256_CTRL__Reserved6__out_t Reserved6;
         hmac256_reg__HMAC256_CTRL__RESTORE__out_t RESTORE;
     } hmac256_reg__HMAC256_CTRL__out_t;
 
@@ -242,10 +228,10 @@ package hmac256_reg_pkg;
 
     typedef struct packed{
         hmac256_reg__HMAC256_CTRL__out_t HMAC256_CTRL;
-        hmac256_reg__HMAC256_KEY__out_t [16-1:0]HMAC256_KEY;
+        hmac256_reg__HMAC256_KEY__out_t [8-1:0]HMAC256_KEY;
         hmac256_reg__HMAC256_BLOCK__out_t [16-1:0]HMAC256_BLOCK;
         hmac256_reg__HMAC256_TAG__out_t [8-1:0]HMAC256_TAG;
-        hmac256_reg__HMAC256_LFSR_SEED__out_t [6-1:0]HMAC256_LFSR_SEED;
+        hmac256_reg__HMAC256_LFSR_SEED__out_t [3-1:0]HMAC256_LFSR_SEED;
         hmac256_reg__intr_block_t__out_t intr_block_rf;
     } hmac256_reg__out_t;
 

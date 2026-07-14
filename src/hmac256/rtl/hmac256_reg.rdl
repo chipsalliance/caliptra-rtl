@@ -78,24 +78,23 @@ addrmap hmac256_reg {
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse; swwe;} NEXT = 1'b0;
         field {desc = "Zeroize all internal registers: Zeroize all internal registers after HMAC process, to avoid SCA leakage.
+                                ZEROIZE is mandatory between operations; STATUS.READY stays low until it fires.
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
         field {desc = "Control mode command bit: Selects the SHA-2 variant used by
                                  the HMAC256 core:
                                  0 for HMAC-SHA-224
                                  1 for HMAC-SHA-256"; swwe;} MODE = 1'b1;
-        field {desc = "Reserved";} Reserved4 = 1'b0;
         field {desc = "Control last command bit: Marks the current INIT or NEXT
                                 command as the final message block. When set together
                                 with INIT or NEXT, the HMAC256 core completes the OPAD
                                 + final hash and produces the HMAC tag.
                                 [br] Software write generates only a single-cycle pulse on the
                                 hardware interface and then will be erased"; singlepulse; swwe;} LAST = 1'b0;
-        field {desc = "Reserved";} Reserved6 = 1'b0;
         field {desc = "Control restore command bit: Resumes HMAC processing from a
                                 saved intermediate inner-SHA chaining state. SW writes the
                                 previously-captured TAG back to HMAC256_TAG, re-supplies the
-                                same MODE/KEY, then asserts RESTORE together with NEXT or NEXT|LAST.
+                                same MODE/KEY, then asserts RESTORE together with LAST, NEXT, or NEXT|LAST.
                                 RESTORE skips ENTROPY/IPAD and loads the SHA core with TAG as the inner chaining state
                                 before processing BLOCK.
                                 [br] Software write generates only a single-cycle pulse on the
@@ -126,15 +125,14 @@ addrmap hmac256_reg {
     reg {
         name = "HMAC256 KEY";
         desc = "HMAC256 component key register type definition
-                16 32-bit registers storing the 512-bit key in big-endian representation.";
+                8 32-bit registers storing the 256-bit key in big-endian representation.";
 
         default sw = w;
-        default hw = rw;
-        default we = true;
+        default hw = r;
         default resetsignal = reset_b;
         field {desc = "Input HMAC key field"; hwclr;} KEY[32] = 32'b0;
 
-    } HMAC256_KEY[16] @0x00000040;
+    } HMAC256_KEY[8] @0x00000040;
 
 
 
@@ -145,8 +143,7 @@ addrmap hmac256_reg {
                 16 32-bit registers storing the 512-bit padded input in big-endian representation.";
 
         default sw = w;
-        default hw = rw;
-        default we = true;
+        default hw = r;
         default resetsignal = reset_b;
         field {desc = "Input message block field"; hwclr;} BLOCK[32] = 32'b0;
 
@@ -173,14 +170,14 @@ addrmap hmac256_reg {
     reg {
         name = "HMAC256 LFSR SEED";
         desc = "HMAC256 component lfsr seed register type definition
-                6 32-bit registers storing the 192-bit lfsr seed input.";
+                3 32-bit registers storing the 96-bit lfsr seed input.";
 
         default sw = w;
         default hw = r;
         default resetsignal = reset_b;
         field {desc = "Input lfsr seed field";} LFSR_SEED[32] = 32'h0;
 
-    } HMAC256_LFSR_SEED[6] @0x000000E0;
+    } HMAC256_LFSR_SEED[3] @0x000000E0;
 
 
 
@@ -241,7 +238,7 @@ addrmap hmac256_reg {
 
         // error0 is driven by invalid CTRL writes (LAST-alone or RESTORE-alone).
         // error1/error2/error3 are reserved slots with no hardware source.
-        field {desc = "Interrupt status bit set when CTRL.LAST or CTRL.RESTORE is written alone (invalid CTRL command)";} error0_sts = 1'b0;
+        field {desc = "Interrupt status bit set when an illegal CTRL encoding is written (e.g., LAST-only, RESTORE-only, INIT|NEXT, INIT|RESTORE)";} error0_sts = 1'b0;
         field {desc = "Reserved status bit (no hardware source)";} error1_sts = 1'b0;
         field {desc = "Reserved status bit (no hardware source)";} error2_sts = 1'b0;
         field {desc = "Reserved status bit (no hardware source)";} error3_sts = 1'b0;

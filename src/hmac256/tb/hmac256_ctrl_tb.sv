@@ -20,6 +20,9 @@
 //
 //======================================================================
 
+`include "caliptra_reg_defines.svh"
+`include "caliptra_reg_field_defines.svh"
+
 module hmac256_ctrl_tb
   import hmac256_param_pkg::*;
   ();
@@ -32,30 +35,8 @@ module hmac256_ctrl_tb
   parameter CLK_HALF_PERIOD = 2;
   parameter CLK_PERIOD = 2 * CLK_HALF_PERIOD;
 
-  // HMAC256_CTRL bit positions per hmac256_reg.rdl
-  parameter CTRL_INIT_VALUE    = 32'h00000001;  // bit 0
-  parameter CTRL_NEXT_VALUE    = 32'h00000002;  // bit 1
-  parameter CTRL_ZEROIZE       = 32'h00000004;  // bit 2
-  parameter CTRL_MODE_VALUE    = 32'h00000008;  // bit 3
-  parameter CTRL_LAST_VALUE    = 32'h00000020;  // bit 5
-  parameter CTRL_RESTORE_VALUE = 32'h00000080;  // bit 7
-
-  parameter HMAC256_MODE_VALUE = CTRL_MODE_VALUE;  // mode=1 → HMAC-SHA-256
-  parameter HMAC224_MODE_VALUE = 32'h00000000;     // mode=0 → HMAC-SHA-224
-
-  // Register offsets from generated hmac256_reg.sv
-  parameter ADDR_NAME0     = 32'h00000000;
-  parameter ADDR_VERSION0  = 32'h00000008;
-  parameter ADDR_CTRL      = 32'h00000010;
-  parameter ADDR_STATUS    = 32'h00000018;
-  parameter ADDR_KEY_BASE  = 32'h00000040;
-  parameter ADDR_BLOCK_BASE = 32'h00000080;
-  parameter ADDR_TAG_BASE  = 32'h000000C0;
-  parameter ADDR_LFSR_SEED_BASE = 32'h000000E0;
-  parameter ADDR_ERROR_INTERNAL_INTR_R = 32'h00000814;
-
-  parameter STATUS_READY_MASK = 32'h00000001;
-  parameter ERROR0_STS_MASK   = 32'h00000001;  // bit 0 in error_internal_intr_r: invalid_cmd_error
+  parameter HMAC256_MODE_VALUE = `HMAC256_REG_HMAC256_CTRL_MODE_MASK; // mode=1 -> HMAC-SHA-256
+  parameter HMAC224_MODE_VALUE = 32'h00000000;                        // mode=0 -> HMAC-SHA-224
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
@@ -262,7 +243,7 @@ module hmac256_ctrl_tb
 
       while (read_data == 0)
         begin
-          read_single_word(ADDR_STATUS);
+          read_single_word(`HMAC256_REG_HMAC256_STATUS);
         end
     end
   endtask // wait_ready
@@ -276,7 +257,7 @@ module hmac256_ctrl_tb
     begin
       for (i = 0; i < BLOCK_SIZE/32; i++) begin
         // dword 0 (i=0) gets the MSB-end 32 bits of block; dword 15 gets the LSB-end.
-        write_single_word(ADDR_BLOCK_BASE + i*4,
+        write_single_word(`HMAC256_REG_HMAC256_BLOCK_0 + i*4,
                           block[(BLOCK_SIZE - 1 - i*32) -: 32]);
       end
     end
@@ -290,7 +271,7 @@ module hmac256_ctrl_tb
     integer i;
     begin
       for (i = 0; i < KEY_SIZE/32; i++) begin
-        write_single_word(ADDR_KEY_BASE + i*4,
+        write_single_word(`HMAC256_REG_HMAC256_KEY_0 + i*4,
                           key[(KEY_SIZE - 1 - i*32) -: 32]);
       end
     end
@@ -304,7 +285,7 @@ module hmac256_ctrl_tb
     integer i;
     begin
       for (i = 0; i < LFSR_SEED_SIZE/32; i++) begin
-        write_single_word(ADDR_LFSR_SEED_BASE + i*4,
+        write_single_word(`HMAC256_REG_HMAC256_LFSR_SEED_0 + i*4,
                           seed[(LFSR_SEED_SIZE - 1 - i*32) -: 32]);
       end
     end
@@ -318,7 +299,7 @@ module hmac256_ctrl_tb
     integer i;
     begin
       for (i = 0; i < TAG_SIZE/32; i++) begin
-        read_single_word(ADDR_TAG_BASE + i*4);
+        read_single_word(`HMAC256_REG_HMAC256_TAG_0 + i*4);
         digest_data[(TAG_SIZE - 1 - i*32) -: 32] = read_data;
       end
     end
@@ -332,7 +313,7 @@ module hmac256_ctrl_tb
     integer i;
     begin
       for (i = 0; i < TAG_SIZE/32; i++) begin
-        write_single_word(ADDR_TAG_BASE + i*4,
+        write_single_word(`HMAC256_REG_HMAC256_TAG_0 + i*4,
                           tag[(TAG_SIZE - 1 - i*32) -: 32]);
       end
     end
@@ -344,9 +325,9 @@ module hmac256_ctrl_tb
   //----------------------------------------------------------------
   task check_name_version;
     begin
-      read_single_word(ADDR_NAME0);
+      read_single_word(`HMAC256_REG_HMAC256_NAME_0);
       $display("DUT NAME[0]    = 0x%08x", read_data);
-      read_single_word(ADDR_VERSION0);
+      read_single_word(`HMAC256_REG_HMAC256_VERSION_0);
       $display("DUT VERSION[0] = 0x%08x", read_data);
     end
   endtask // check_name_version
@@ -371,7 +352,7 @@ module hmac256_ctrl_tb
       write_block(block);
       write_seed(seed);
 
-      write_single_word(ADDR_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, mode | `HMAC256_REG_HMAC256_CTRL_INIT_MASK | `HMAC256_REG_HMAC256_CTRL_LAST_MASK);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
 
@@ -382,7 +363,7 @@ module hmac256_ctrl_tb
       end_time = cycle_ctr - start_time;
       $display("*** Single block test processing time = %01d cycles", end_time);
 
-      write_single_word(ADDR_CTRL, CTRL_ZEROIZE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, `HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK);
 
       if (digest_data == expected)
         begin
@@ -422,7 +403,7 @@ module hmac256_ctrl_tb
       write_block(block0);
       write_seed(seed);
 
-      write_single_word(ADDR_CTRL, mode | CTRL_INIT_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, mode | `HMAC256_REG_HMAC256_CTRL_INIT_MASK);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
@@ -431,14 +412,14 @@ module hmac256_ctrl_tb
       // Final block — finalize via NEXT|LAST.
       write_block(block1);
 
-      write_single_word(ADDR_CTRL, mode | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, mode | `HMAC256_REG_HMAC256_CTRL_NEXT_MASK | `HMAC256_REG_HMAC256_CTRL_LAST_MASK);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
       wait_ready();
       hmac_read_digest();
 
-      write_single_word(ADDR_CTRL, CTRL_ZEROIZE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, `HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK);
 
       end_time = cycle_ctr - start_time;
       $display("*** Double block test processing time = %01d cycles", end_time);
@@ -482,7 +463,7 @@ module hmac256_ctrl_tb
       hmac_write_key(keyA);
       write_block(blockA0);
       write_seed(seedA);
-      write_single_word(ADDR_CTRL, mode | CTRL_INIT_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, mode | `HMAC256_REG_HMAC256_CTRL_INIT_MASK);
       #CLK_PERIOD;
       hsel_i_tb = 0;
       #(CLK_PERIOD);
@@ -490,20 +471,20 @@ module hmac256_ctrl_tb
       hmac_read_digest();
       saved_tag = digest_data;
 
-      write_single_word(ADDR_CTRL, CTRL_ZEROIZE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, `HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK);
       #(4*CLK_PERIOD);
 
       // Unrelated operation B: single block with LAST
       hmac_write_key(keyB);
       write_block(blockB);
       write_seed(seedB);
-      write_single_word(ADDR_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, mode | `HMAC256_REG_HMAC256_CTRL_INIT_MASK | `HMAC256_REG_HMAC256_CTRL_LAST_MASK);
       #CLK_PERIOD;
       hsel_i_tb = 0;
       #(CLK_PERIOD);
       wait_ready();
 
-      write_single_word(ADDR_CTRL, CTRL_ZEROIZE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, `HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK);
       #(4*CLK_PERIOD);
 
       // Operation A, session 2: restore saved state + finalize
@@ -511,15 +492,15 @@ module hmac256_ctrl_tb
       write_block(blockA1);
       write_seed(seedA);
       write_tag(saved_tag);
-      write_single_word(ADDR_CTRL,
-                        mode | CTRL_RESTORE_VALUE | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL,
+                        mode | `HMAC256_REG_HMAC256_CTRL_RESTORE_MASK | `HMAC256_REG_HMAC256_CTRL_NEXT_MASK | `HMAC256_REG_HMAC256_CTRL_LAST_MASK);
       #CLK_PERIOD;
       hsel_i_tb = 0;
       #(CLK_PERIOD);
       wait_ready();
       hmac_read_digest();
 
-      write_single_word(ADDR_CTRL, CTRL_ZEROIZE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, `HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK);
 
       if (digest_data == expectedA)
         begin
@@ -555,37 +536,37 @@ module hmac256_ctrl_tb
       write_seed(seed);
 
       // Bogus write: LAST alone, no INIT or NEXT companion.
-      write_single_word(ADDR_CTRL, mode | CTRL_LAST_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, mode | `HMAC256_REG_HMAC256_CTRL_LAST_MASK);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD * 4);
 
       // Engine must still be IDLE/READY.
-      read_single_word(ADDR_STATUS);
-      if ((read_data & STATUS_READY_MASK) !== STATUS_READY_MASK)
+      read_single_word(`HMAC256_REG_HMAC256_STATUS);
+      if ((read_data & `HMAC256_REG_HMAC256_STATUS_READY_MASK) !== `HMAC256_REG_HMAC256_STATUS_READY_MASK)
         begin
           $display("TC%01d: ERROR - STATUS.READY dropped after LAST-alone write.", tc_ctr);
           error_ctr = error_ctr + 1;
         end
 
       // error0_sts must be set.
-      read_single_word(ADDR_ERROR_INTERNAL_INTR_R);
-      if ((read_data & ERROR0_STS_MASK) == 0) begin
+      read_single_word(`HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+      if ((read_data & `HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK) == 0) begin
         $display("TC%01d: ERROR - error0_sts not set after LAST-alone write.", tc_ctr);
         error_ctr = error_ctr + 1;
       end
       // W1C error0_sts so subsequent invalid-CTRL tests measure a fresh edge.
-      write_single_word(ADDR_ERROR_INTERNAL_INTR_R, ERROR0_STS_MASK);
+      write_single_word(`HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, `HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK);
 
       // Now drive a valid single-block op and confirm the digest.
-      write_single_word(ADDR_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, mode | `HMAC256_REG_HMAC256_CTRL_INIT_MASK | `HMAC256_REG_HMAC256_CTRL_LAST_MASK);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
       wait_ready();
       hmac_read_digest();
 
-      write_single_word(ADDR_CTRL, CTRL_ZEROIZE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, `HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK);
 
       if (digest_data == expected)
         begin
@@ -621,35 +602,35 @@ module hmac256_ctrl_tb
       write_seed(seed);
 
       // Bogus write: RESTORE alone, no NEXT companion.
-      write_single_word(ADDR_CTRL, mode | CTRL_RESTORE_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, mode | `HMAC256_REG_HMAC256_CTRL_RESTORE_MASK);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD * 4);
 
       // Engine must still be IDLE/READY.
-      read_single_word(ADDR_STATUS);
-      if ((read_data & STATUS_READY_MASK) !== STATUS_READY_MASK)
+      read_single_word(`HMAC256_REG_HMAC256_STATUS);
+      if ((read_data & `HMAC256_REG_HMAC256_STATUS_READY_MASK) !== `HMAC256_REG_HMAC256_STATUS_READY_MASK)
         begin
           $display("TC%01d: ERROR - STATUS.READY dropped after RESTORE-alone write.", tc_ctr);
           error_ctr = error_ctr + 1;
         end
 
-      read_single_word(ADDR_ERROR_INTERNAL_INTR_R);
-      if ((read_data & ERROR0_STS_MASK) == 0) begin
+      read_single_word(`HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+      if ((read_data & `HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK) == 0) begin
         $display("TC%01d: ERROR - error0_sts not set after RESTORE-alone write.", tc_ctr);
         error_ctr = error_ctr + 1;
       end
       // W1C error0_sts so subsequent invalid-CTRL tests measure a fresh edge.
-      write_single_word(ADDR_ERROR_INTERNAL_INTR_R, ERROR0_STS_MASK);
+      write_single_word(`HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R, `HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK);
 
-      write_single_word(ADDR_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, mode | `HMAC256_REG_HMAC256_CTRL_INIT_MASK | `HMAC256_REG_HMAC256_CTRL_LAST_MASK);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
       wait_ready();
       hmac_read_digest();
 
-      write_single_word(ADDR_CTRL, CTRL_ZEROIZE);
+      write_single_word(`HMAC256_REG_HMAC256_CTRL, `HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK);
 
       if (digest_data == expected)
         begin
@@ -683,21 +664,23 @@ module hmac256_ctrl_tb
       reg [TAG_SIZE-1   : 0] expected1, expected2, expected4;
 
       $display("\n\n*** Testcases for PRF-HMAC-SHA-256 functionality started.");
+      // Reference vectors: RFC 4231
+      // https://datatracker.ietf.org/doc/html/rfc4231
 
       // RFC 4231 #1: K = 20*0x0b, msg = "Hi There"
-      key1      = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+      key1      = 256'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b000000000000000000000000;
       data1     = 512'h48692054686572658000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000240;
       expected1 = 256'hb0344c61d8db38535ca8afceaf0bf12b881dc200c9833da726e9376c2e32cff7;
       seed1     = random_gen();
 
       // RFC 4231 #2: K = "Jefe", msg = "what do you want for nothing?"
-      key2      = 512'h4a656665000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+      key2      = 256'h4a65666500000000000000000000000000000000000000000000000000000000;
       data2     = 512'h7768617420646f20796f752077616e7420666f72206e6f7468696e673f80000000000000000000000000000000000000000000000000000000000000000002e8;
       expected2 = 256'h69b8522176ad44097a64ef3a923be45843ebde060f0bfb674bfbaf27092055e2;
       seed2     = random_gen();
 
       // Custom 2-block: K = 20*0x0b, msg = 56-byte alphabet
-      key4      = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+      key4      = 256'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b000000000000000000000000;
       data4_0   = 512'h6162636462636465636465666465666765666768666768696768696a68696a6b696a6b6c6a6b6c6d6b6c6d6e6c6d6e6f6d6e6f706e6f70718000000000000000;
       data4_1   = 512'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003c0;
       expected4 = 256'hcf86b015af9fadf1ec439642be2458fc7da3c8e4effce404a32ce41fd0e213d3;
@@ -735,18 +718,20 @@ module hmac256_ctrl_tb
       reg [HMAC224_TAG_SIZE-1 : 0] expected1_224, expected2_224, expected4_224;
 
       $display("\n\n*** Testcases for PRF-HMAC-SHA-224 functionality started.");
+      // Reference vectors: RFC 4231
+      // https://datatracker.ietf.org/doc/html/rfc4231
 
-      key1          = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+      key1          = 256'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b000000000000000000000000;
       data1         = 512'h48692054686572658000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000240;
       expected1_224 = 224'h896fb1128abbdf196832107cd49df33f47b4b1169912ba4f53684b22;
       seed1         = random_gen();
 
-      key2          = 512'h4a656665000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+      key2          = 256'h4a65666500000000000000000000000000000000000000000000000000000000;
       data2         = 512'h7768617420646f20796f752077616e7420666f72206e6f7468696e673f80000000000000000000000000000000000000000000000000000000000000000002e8;
       expected2_224 = 224'h1f03a69580f5b55fdcc43fe58a6d135b5fe1449ee09908ed59df9eea;
       seed2         = random_gen();
 
-      key4          = 512'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000;
+      key4          = 256'h0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b000000000000000000000000;
       data4_0       = 512'h6162636462636465636465666465666765666768666768696768696a68696a6b696a6b6c6a6b6c6d6b6c6d6e6c6d6e6f6d6e6f706e6f70718000000000000000;
       data4_1       = 512'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000003c0;
       expected4_224 = 224'h2f1b0d0c449f8b673657684becd7e519523286402f3aa9b8379d63ef;

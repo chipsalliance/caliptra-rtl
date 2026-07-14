@@ -128,7 +128,7 @@ package HMAC256_reg_model_top_pkg;
 // pragma uvmf custom instantiate_registers_within_block begin
       // All HMAC256 register handles are inherited from hmac256_reg
       // (HMAC256_CTRL, HMAC256_KEY[16], HMAC256_BLOCK[16],
-      // HMAC256_TAG[8], HMAC256_LFSR_SEED[6], HMAC256_STATUS, etc.).
+      // HMAC256_TAG[8], HMAC256_LFSR_SEED[3], HMAC256_STATUS, etc.).
       // Alias the PeakRDL parent's default_map under the name the
       // UVMF-generated HMAC256_environment.svh expects.
       uvm_reg_map ahb_map;

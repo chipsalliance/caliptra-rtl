@@ -6,5 +6,5 @@ ${UVM_HOME}/src/uvm_pkg.sv
 -f ${UVMF_HOME}/common/common_sve.f
 
 +incdir+.
--f ${UVMF_VIP_LIBRARY_HOME}/interface_packages/HMAC256_rst_pkg/hmac256_rst_filelist_hdl.f
--f ${UVMF_VIP_LIBRARY_HOME}/interface_packages/HMAC256_rst_pkg/hmac256_rst_filelist_hvl.f
+-f ${UVMF_VIP_LIBRARY_HOME}/interface_packages/HMAC256_rst_pkg/HMAC256_rst_filelist_hdl.f
+-f ${UVMF_VIP_LIBRARY_HOME}/interface_packages/HMAC256_rst_pkg/HMAC256_rst_filelist_hvl.f

@@ -26,8 +26,8 @@ class test_top extends uvmf_test_base #(.CONFIG_T(hmac256_env_configuration_t),
 
   `uvm_component_utils( test_top );
 
-// This message handler can be used to redirect QVIP Memeory Model messages through
-// the UVM messaging mecahanism.  How to enable and use it is described in 
+// This message handler can be used to redirect QVIP Memory Model messages through
+// the UVM messaging mechanism.  How to enable and use it is described in 
 //      $UVMF_HOME/common/utility_packages/qvip_utils_pkg/src/qvip_report_catcher.svh
 qvip_memory_message_handler message_handler;
 

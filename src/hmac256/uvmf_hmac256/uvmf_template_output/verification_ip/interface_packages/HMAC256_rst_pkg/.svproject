@@ -8,7 +8,7 @@
   </pluginPaths>
   <libraryPaths/>
   <argFilePaths>
-    <argFilePath path="${project_loc}/hmac256_rst_pkg_sve.F"/>
+    <argFilePath path="${project_loc}/HMAC256_rst_pkg_sve.F"/>
   </argFilePaths>
   <sourceCollections/>
   <projectRefs/>

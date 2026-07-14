@@ -32,7 +32,7 @@ class HMAC256_random_sequence extends HMAC256_bench_sequence_base;
   rand bit [3:0] block_length;
   constraint c_block_length { block_length > 0; }
   rand bit       mode;  //   mode = 1'b1 -> HMAC-SHA-256 mode = 1'b0 -> HMAC-SHA-224
-  bit [31:0] key_dwords   [16];
+  bit [31:0] key_dwords   [8];
   bit [31:0] block_dwords [];  
 
   function new(string name = "HMAC256_random_sequence");
@@ -139,13 +139,13 @@ class HMAC256_random_sequence extends HMAC256_bench_sequence_base;
       reg_model.HMAC256_KEY[i].write(status, key_dwords[i]);
     end
 
-    // LFSR seed (6 dwords). 
+    // LFSR seed (3 dwords).
     foreach (reg_model.HMAC256_LFSR_SEED[i]) begin
       reg_model.HMAC256_LFSR_SEED[i].write(status, $urandom());
     end
 
     // Drive each block. CTRL bit layout from src/hmac256/rtl/hmac256_reg.rdl:
-    //   [0]=INIT [1]=NEXT [3]=MODE [5]=LAST
+    //   [0]=INIT [1]=NEXT [3]=MODE [4]=LAST
     // BLOCK[] layout for block_length=B:
     //   BLOCK[0..B-2] : random message bytes (only present if B>1)
     //   BLOCK[B-1]   : FIPS-180 padding {1'b1, zeros, 128-bit length}
@@ -199,6 +199,8 @@ class HMAC256_random_sequence extends HMAC256_bench_sequence_base;
     end
     `uvm_info("HMAC256_RAND_CHECK",
       $sformatf("Op %0d/%0d TAG comparison done", op_i + 1, NUM_OPS), UVM_LOW)
+
+    zeroize_and_wait();
 
     end // for op_i
 

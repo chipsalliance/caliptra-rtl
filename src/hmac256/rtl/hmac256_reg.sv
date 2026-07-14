@@ -70,10 +70,10 @@ module hmac256_reg (
         logic [2-1:0]HMAC256_VERSION;
         logic HMAC256_CTRL;
         logic HMAC256_STATUS;
-        logic [16-1:0]HMAC256_KEY;
+        logic [8-1:0]HMAC256_KEY;
         logic [16-1:0]HMAC256_BLOCK;
         logic [8-1:0]HMAC256_TAG;
-        logic [6-1:0]HMAC256_LFSR_SEED;
+        logic [3-1:0]HMAC256_LFSR_SEED;
         struct packed{
             logic global_intr_en_r;
             logic error_intr_en_r;
@@ -111,7 +111,7 @@ module hmac256_reg (
         end
         decoded_reg_strb.HMAC256_CTRL = cpuif_req_masked & (cpuif_addr == 12'h10);
         decoded_reg_strb.HMAC256_STATUS = cpuif_req_masked & (cpuif_addr == 12'h18);
-        for(int i0=0; i0<16; i0++) begin
+        for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.HMAC256_KEY[i0] = cpuif_req_masked & (cpuif_addr == 12'h40 + i0*12'h4);
         end
         for(int i0=0; i0<16; i0++) begin
@@ -120,7 +120,7 @@ module hmac256_reg (
         for(int i0=0; i0<8; i0++) begin
             decoded_reg_strb.HMAC256_TAG[i0] = cpuif_req_masked & (cpuif_addr == 12'hc0 + i0*12'h4);
         end
-        for(int i0=0; i0<6; i0++) begin
+        for(int i0=0; i0<3; i0++) begin
             decoded_reg_strb.HMAC256_LFSR_SEED[i0] = cpuif_req_masked & (cpuif_addr == 12'he0 + i0*12'h4);
         end
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h800);
@@ -174,15 +174,7 @@ module hmac256_reg (
             struct packed{
                 logic next;
                 logic load_next;
-            } Reserved4;
-            struct packed{
-                logic next;
-                logic load_next;
             } LAST;
-            struct packed{
-                logic next;
-                logic load_next;
-            } Reserved6;
             struct packed{
                 logic next;
                 logic load_next;
@@ -193,7 +185,7 @@ module hmac256_reg (
                 logic [31:0] next;
                 logic load_next;
             } KEY;
-        } [16-1:0]HMAC256_KEY;
+        } [8-1:0]HMAC256_KEY;
         struct packed{
             struct packed{
                 logic [31:0] next;
@@ -211,7 +203,7 @@ module hmac256_reg (
                 logic [31:0] next;
                 logic load_next;
             } LFSR_SEED;
-        } [6-1:0]HMAC256_LFSR_SEED;
+        } [3-1:0]HMAC256_LFSR_SEED;
         struct packed{
             struct packed{
                 struct packed{
@@ -407,13 +399,7 @@ module hmac256_reg (
             } MODE;
             struct packed{
                 logic value;
-            } Reserved4;
-            struct packed{
-                logic value;
             } LAST;
-            struct packed{
-                logic value;
-            } Reserved6;
             struct packed{
                 logic value;
             } RESTORE;
@@ -422,7 +408,7 @@ module hmac256_reg (
             struct packed{
                 logic [31:0] value;
             } KEY;
-        } [16-1:0]HMAC256_KEY;
+        } [8-1:0]HMAC256_KEY;
         struct packed{
             struct packed{
                 logic [31:0] value;
@@ -437,7 +423,7 @@ module hmac256_reg (
             struct packed{
                 logic [31:0] value;
             } LFSR_SEED;
-        } [6-1:0]HMAC256_LFSR_SEED;
+        } [3-1:0]HMAC256_LFSR_SEED;
         struct packed{
             struct packed{
                 struct packed{
@@ -661,27 +647,6 @@ module hmac256_reg (
         end
     end
     assign hwif_out.HMAC256_CTRL.MODE.value = field_storage.HMAC256_CTRL.MODE.value;
-    // Field: hmac256_reg.HMAC256_CTRL.Reserved4
-    always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.HMAC256_CTRL.Reserved4.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.HMAC256_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.HMAC256_CTRL.Reserved4.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
-            load_next_c = '1;
-        end
-        field_combo.HMAC256_CTRL.Reserved4.next = next_c;
-        field_combo.HMAC256_CTRL.Reserved4.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.HMAC256_CTRL.Reserved4.value <= 1'h0;
-        end else if(field_combo.HMAC256_CTRL.Reserved4.load_next) begin
-            field_storage.HMAC256_CTRL.Reserved4.value <= field_combo.HMAC256_CTRL.Reserved4.next;
-        end
-    end
-    assign hwif_out.HMAC256_CTRL.Reserved4.value = field_storage.HMAC256_CTRL.Reserved4.value;
     // Field: hmac256_reg.HMAC256_CTRL.LAST
     always_comb begin
         automatic logic [0:0] next_c;
@@ -689,7 +654,7 @@ module hmac256_reg (
         next_c = field_storage.HMAC256_CTRL.LAST.value;
         load_next_c = '0;
         if(decoded_reg_strb.HMAC256_CTRL && decoded_req_is_wr && hwif_in.HMAC256_CTRL.LAST.swwe) begin // SW write
-            next_c = (field_storage.HMAC256_CTRL.LAST.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
+            next_c = (field_storage.HMAC256_CTRL.LAST.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
         end else begin // singlepulse clears back to 0
             next_c = '0;
@@ -706,27 +671,6 @@ module hmac256_reg (
         end
     end
     assign hwif_out.HMAC256_CTRL.LAST.value = field_storage.HMAC256_CTRL.LAST.value;
-    // Field: hmac256_reg.HMAC256_CTRL.Reserved6
-    always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.HMAC256_CTRL.Reserved6.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.HMAC256_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.HMAC256_CTRL.Reserved6.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
-            load_next_c = '1;
-        end
-        field_combo.HMAC256_CTRL.Reserved6.next = next_c;
-        field_combo.HMAC256_CTRL.Reserved6.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.HMAC256_CTRL.Reserved6.value <= 1'h0;
-        end else if(field_combo.HMAC256_CTRL.Reserved6.load_next) begin
-            field_storage.HMAC256_CTRL.Reserved6.value <= field_combo.HMAC256_CTRL.Reserved6.next;
-        end
-    end
-    assign hwif_out.HMAC256_CTRL.Reserved6.value = field_storage.HMAC256_CTRL.Reserved6.value;
     // Field: hmac256_reg.HMAC256_CTRL.RESTORE
     always_comb begin
         automatic logic [0:0] next_c;
@@ -734,7 +678,7 @@ module hmac256_reg (
         next_c = field_storage.HMAC256_CTRL.RESTORE.value;
         load_next_c = '0;
         if(decoded_reg_strb.HMAC256_CTRL && decoded_req_is_wr && hwif_in.HMAC256_CTRL.RESTORE.swwe) begin // SW write
-            next_c = (field_storage.HMAC256_CTRL.RESTORE.value & ~decoded_wr_biten[7:7]) | (decoded_wr_data[7:7] & decoded_wr_biten[7:7]);
+            next_c = (field_storage.HMAC256_CTRL.RESTORE.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
             load_next_c = '1;
         end else begin // singlepulse clears back to 0
             next_c = '0;
@@ -751,7 +695,7 @@ module hmac256_reg (
         end
     end
     assign hwif_out.HMAC256_CTRL.RESTORE.value = field_storage.HMAC256_CTRL.RESTORE.value;
-    for(genvar i0=0; i0<16; i0++) begin
+    for(genvar i0=0; i0<8; i0++) begin
         // Field: hmac256_reg.HMAC256_KEY[].KEY
         always_comb begin
             automatic logic [31:0] next_c;
@@ -760,9 +704,6 @@ module hmac256_reg (
             load_next_c = '0;
             if(decoded_reg_strb.HMAC256_KEY[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.HMAC256_KEY[i0].KEY.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end else if(hwif_in.HMAC256_KEY[i0].KEY.we) begin // HW Write - we
-                next_c = hwif_in.HMAC256_KEY[i0].KEY.next;
                 load_next_c = '1;
             end else if(hwif_in.HMAC256_KEY[i0].KEY.hwclr) begin // HW Clear
                 next_c = '0;
@@ -789,9 +730,6 @@ module hmac256_reg (
             load_next_c = '0;
             if(decoded_reg_strb.HMAC256_BLOCK[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.HMAC256_BLOCK[i0].BLOCK.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
-                load_next_c = '1;
-            end else if(hwif_in.HMAC256_BLOCK[i0].BLOCK.we) begin // HW Write - we
-                next_c = hwif_in.HMAC256_BLOCK[i0].BLOCK.next;
                 load_next_c = '1;
             end else if(hwif_in.HMAC256_BLOCK[i0].BLOCK.hwclr) begin // HW Clear
                 next_c = '0;
@@ -838,7 +776,7 @@ module hmac256_reg (
         end
         assign hwif_out.HMAC256_TAG[i0].TAG.value = field_storage.HMAC256_TAG[i0].TAG.value;
     end
-    for(genvar i0=0; i0<6; i0++) begin
+    for(genvar i0=0; i0<3; i0++) begin
         // Field: hmac256_reg.HMAC256_LFSR_SEED[].LFSR_SEED
         always_comb begin
             automatic logic [31:0] next_c;

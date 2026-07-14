@@ -74,18 +74,14 @@ package hmac256_reg_uvm;
         hmac256_reg__HMAC256_CTRL_bit_cg NEXT_bit_cg[1];
         hmac256_reg__HMAC256_CTRL_bit_cg ZEROIZE_bit_cg[1];
         hmac256_reg__HMAC256_CTRL_bit_cg MODE_bit_cg[1];
-        hmac256_reg__HMAC256_CTRL_bit_cg Reserved4_bit_cg[1];
         hmac256_reg__HMAC256_CTRL_bit_cg LAST_bit_cg[1];
-        hmac256_reg__HMAC256_CTRL_bit_cg Reserved6_bit_cg[1];
         hmac256_reg__HMAC256_CTRL_bit_cg RESTORE_bit_cg[1];
         hmac256_reg__HMAC256_CTRL_fld_cg fld_cg;
         rand uvm_reg_field INIT;
         rand uvm_reg_field NEXT;
         rand uvm_reg_field ZEROIZE;
         rand uvm_reg_field MODE;
-        rand uvm_reg_field Reserved4;
         rand uvm_reg_field LAST;
-        rand uvm_reg_field Reserved6;
         rand uvm_reg_field RESTORE;
 
         function new(string name = "hmac256_reg__HMAC256_CTRL");
@@ -106,22 +102,16 @@ package hmac256_reg_uvm;
             this.ZEROIZE.configure(this, 1, 2, "WO", 0, 'h0, 1, 1, 0);
             this.MODE = new("MODE");
             this.MODE.configure(this, 1, 3, "WO", 0, 'h1, 1, 1, 0);
-            this.Reserved4 = new("Reserved4");
-            this.Reserved4.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
             this.LAST = new("LAST");
-            this.LAST.configure(this, 1, 5, "WO", 0, 'h0, 1, 1, 0);
-            this.Reserved6 = new("Reserved6");
-            this.Reserved6.configure(this, 1, 6, "WO", 0, 'h0, 1, 1, 0);
+            this.LAST.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
             this.RESTORE = new("RESTORE");
-            this.RESTORE.configure(this, 1, 7, "WO", 0, 'h0, 1, 1, 0);
+            this.RESTORE.configure(this, 1, 5, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(INIT_bit_cg[bt]) INIT_bit_cg[bt] = new();
                 foreach(NEXT_bit_cg[bt]) NEXT_bit_cg[bt] = new();
                 foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
                 foreach(MODE_bit_cg[bt]) MODE_bit_cg[bt] = new();
-                foreach(Reserved4_bit_cg[bt]) Reserved4_bit_cg[bt] = new();
                 foreach(LAST_bit_cg[bt]) LAST_bit_cg[bt] = new();
-                foreach(Reserved6_bit_cg[bt]) Reserved6_bit_cg[bt] = new();
                 foreach(RESTORE_bit_cg[bt]) RESTORE_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
@@ -1036,10 +1026,10 @@ package hmac256_reg_uvm;
         rand hmac256_reg__HMAC256_VERSION HMAC256_VERSION[2];
         rand hmac256_reg__HMAC256_CTRL HMAC256_CTRL;
         rand hmac256_reg__HMAC256_STATUS HMAC256_STATUS;
-        rand hmac256_reg__HMAC256_KEY HMAC256_KEY[16];
+        rand hmac256_reg__HMAC256_KEY HMAC256_KEY[8];
         rand hmac256_reg__HMAC256_BLOCK HMAC256_BLOCK[16];
         rand hmac256_reg__HMAC256_TAG HMAC256_TAG[8];
-        rand hmac256_reg__HMAC256_LFSR_SEED HMAC256_LFSR_SEED[6];
+        rand hmac256_reg__HMAC256_LFSR_SEED HMAC256_LFSR_SEED[3];
         rand hmac256_reg__intr_block_t intr_block_rf;
 
         function new(string name = "hmac256_reg");

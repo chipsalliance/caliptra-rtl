@@ -94,6 +94,7 @@ module hmac256
   hmac256_reg__out_t hwif_out;
 
   logic invalid_cmd_error, invalid_cmd_error_reg, invalid_cmd_error_edge;
+  logic awaiting_zeroize;
 
   logic core_tag_we;
 
@@ -184,7 +185,7 @@ module hmac256
       else
         begin
           tag_valid_reg <= core_tag_valid;
-          ready_reg     <= core_ready;
+          ready_reg     <= core_ready & ~awaiting_zeroize;
 
           if (init_reg | next_reg | restore_reg)
             is_last_op_reg <= last_reg;
@@ -214,11 +215,13 @@ always_comb begin
   hwif_in.HMAC256_CTRL.RESTORE.swwe = ready_reg;
 
   //assign hardware readable registers to drive hmac core
-  init_reg    = hwif_out.HMAC256_CTRL.INIT.value;
-  next_reg    = hwif_out.HMAC256_CTRL.NEXT.value;
-  last_reg    = hwif_out.HMAC256_CTRL.LAST.value;
+  //refuse illegal CTRL combos so no engine control fires
+  init_reg    = hwif_out.HMAC256_CTRL.INIT.value & ~invalid_cmd_error;
+  next_reg    = hwif_out.HMAC256_CTRL.NEXT.value & ~invalid_cmd_error;
+  last_reg    = hwif_out.HMAC256_CTRL.LAST.value & ~invalid_cmd_error;
   restore_reg = hwif_out.HMAC256_CTRL.RESTORE.value &
-                (hwif_out.HMAC256_CTRL.NEXT.value | hwif_out.HMAC256_CTRL.LAST.value);
+                (hwif_out.HMAC256_CTRL.NEXT.value | hwif_out.HMAC256_CTRL.LAST.value) &
+                ~invalid_cmd_error;
   zeroize_reg = hwif_out.HMAC256_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
   mode_reg    = hwif_out.HMAC256_CTRL.MODE.value;
 
@@ -227,20 +230,16 @@ always_comb begin
   hwif_in.HMAC256_STATUS.VALID.next = tag_valid_reg;
   for (int dword=0; dword < TAG_NUM_DWORDS; dword++) begin
     hwif_in.HMAC256_TAG[dword].TAG.next  = tag_next[(TAG_NUM_DWORDS - 1)-dword];
-    hwif_in.HMAC256_TAG[dword].TAG.we    = core_tag_we;
+    hwif_in.HMAC256_TAG[dword].TAG.we    = core_tag_we & ~zeroize_reg;
     hwif_in.HMAC256_TAG[dword].TAG.hwclr = zeroize_reg;
   end
 
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++) begin
     key_reg[dword] = hwif_out.HMAC256_KEY[dword].KEY.value;
-    hwif_in.HMAC256_KEY[dword].KEY.we    = 1'b0;
-    hwif_in.HMAC256_KEY[dword].KEY.next  = '0;
     hwif_in.HMAC256_KEY[dword].KEY.hwclr = zeroize_reg;
   end
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++) begin
     block_reg[dword] = hwif_out.HMAC256_BLOCK[dword].BLOCK.value;
-    hwif_in.HMAC256_BLOCK[dword].BLOCK.we    = 1'b0;
-    hwif_in.HMAC256_BLOCK[dword].BLOCK.next  = '0;
     hwif_in.HMAC256_BLOCK[dword].BLOCK.hwclr = zeroize_reg;
   end
 
@@ -280,7 +279,9 @@ hmac256_reg i_hmac256_reg (
 );
 
 always_comb invalid_cmd_error = (hwif_out.HMAC256_CTRL.LAST.value    & ~hwif_out.HMAC256_CTRL.INIT.value & ~hwif_out.HMAC256_CTRL.NEXT.value & ~hwif_out.HMAC256_CTRL.RESTORE.value)
-                              | (hwif_out.HMAC256_CTRL.RESTORE.value & ~hwif_out.HMAC256_CTRL.NEXT.value & ~hwif_out.HMAC256_CTRL.LAST.value);
+                              | (hwif_out.HMAC256_CTRL.RESTORE.value & ~hwif_out.HMAC256_CTRL.NEXT.value & ~hwif_out.HMAC256_CTRL.LAST.value)
+                              | (hwif_out.HMAC256_CTRL.INIT.value    & hwif_out.HMAC256_CTRL.NEXT.value)
+                              | (hwif_out.HMAC256_CTRL.INIT.value    & hwif_out.HMAC256_CTRL.RESTORE.value);
 
 always_ff @(posedge clk or negedge reset_n)
 begin : error_detection
@@ -295,6 +296,20 @@ begin : error_detection
     end
 end // error_detection
 
+// Mandatory zeroize after each SW-visible operation. Latched on final
+// tag write, cleared only by zeroize. While set, gates ready_reg so
+// STATUS.READY=0 and swwe=ready_reg drops every CTRL write firmware
+// issues without a preceding ZEROIZE.
+always_ff @(posedge clk or negedge reset_n)
+begin : awaiting_zeroize_tracker
+    if (!reset_n)
+      awaiting_zeroize <= 1'b0;
+    else if (zeroize_reg)
+      awaiting_zeroize <= 1'b0;
+    else if (core_tag_we & is_last_op_reg)
+      awaiting_zeroize <= 1'b1;
+end
+
 always_comb invalid_cmd_error_edge = invalid_cmd_error & (!invalid_cmd_error_reg);
 
 //Interrupts hardware interface
@@ -308,7 +323,7 @@ assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0;
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
-assign busy_o = ~core_ready;
+assign busy_o = ~core_ready | awaiting_zeroize;
 
 endmodule // hmac256
 

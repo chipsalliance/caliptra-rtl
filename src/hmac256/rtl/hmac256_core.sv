@@ -122,12 +122,12 @@ module hmac256_core
   logic                    sha_digest_valid;
 
   // Entropy.
-  logic [LFSR_SEED_SIZE-1 : 0] entropy;
-  logic [LFSR_SEED_SIZE-1 : 0] lfsr_entropy;
-  logic [LFSR_SEED_SIZE-1 : 0] entropy_digest;
-  logic [63 : 0]               counter_reg;
-  logic [BLOCK_SIZE-1 : 0]     entropy_block;
-  logic                        set_entropy;
+  logic [LFSR_SEED_SIZE-1 : 0]        entropy;
+  logic [LFSR_SEED_SIZE-1 : 0]        lfsr_entropy;
+  logic [LFSR_SEED_SIZE-1 : 0]        entropy_digest;
+  logic [ENTROPY_COUNTER_SIZE-1 : 0]  counter_reg;
+  logic [BLOCK_SIZE-1 : 0]            entropy_block;
+  logic                               set_entropy;
 
   //----------------------------------------------------------------
   // Concurrent connectivity for ports etc.
@@ -292,8 +292,8 @@ module hmac256_core
   //----------------------------------------------------------------
   always_comb
     begin : state_logic
-      key_ipadded = key ^ IPAD;
-      key_opadded = key ^ OPAD;
+      key_ipadded = {key, {(BLOCK_SIZE-KEY_SIZE){1'b0}}} ^ IPAD;
+      key_opadded = {key, {(BLOCK_SIZE-KEY_SIZE){1'b0}}} ^ OPAD;
       HMAC_padded = mode_reg ? {inner_digest_reg, HMAC256_FINAL_PAD}
                              : {inner_digest_reg[TAG_SIZE-1 : HMAC224_TAG_PAD], HMAC224_FINAL_PAD};
 
