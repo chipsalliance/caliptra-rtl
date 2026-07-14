@@ -1,0 +1,61 @@
+---
+provides: [hmac256_ctrl]
+schema_version: 2.4.0
+requires:
+  - libs
+  - sha256_masked_core
+  - caliptra_prim
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/hmac256_param_pkg.sv
+      - $COMPILE_ROOT/rtl/hmac256_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/hmac256_ctrl.sv
+      - $COMPILE_ROOT/rtl/hmac256.sv
+      - $COMPILE_ROOT/rtl/hmac256_core.sv
+      - $COMPILE_ROOT/rtl/hmac256_reg.sv
+    tops: [hmac256_ctrl]
+---
+provides: [hmac256_uvm_pkg]
+schema_version: 2.4.0
+requires:
+  - hmac256_ctrl
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/hmac256_reg_uvm.sv
+---
+provides: [hmac256_ctrl_tb]
+schema_version: 2.4.0
+requires:
+  - hmac256_ctrl
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/rtl/hmac256_param_pkg.sv
+      - $COMPILE_ROOT/tb/hmac256_ctrl_tb.sv
+    tops: [hmac256_ctrl_tb]
+---
+provides: [hmac256_coverage]
+schema_version: 2.4.0
+requires:
+  - hmac256_ctrl
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/hmac256_ctrl_cov_if.sv
+      - $COMPILE_ROOT/coverage/hmac256_ctrl_cov_bind.sv
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'

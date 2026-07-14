@@ -1,0 +1,4 @@
+# DEPRECATED — use src/hmac256/uvmf_hmac256/config/compile.yml.
+# This standalone Questa-style filelist was inherited from the
+# HMAC-512 env (uvmf_2022). The canonical Playbook flow loads
+# compile.yml directly; this file is kept only as a reference.

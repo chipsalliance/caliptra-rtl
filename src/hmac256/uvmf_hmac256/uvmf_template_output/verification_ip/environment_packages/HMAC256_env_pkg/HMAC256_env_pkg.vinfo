@@ -1,0 +1,5 @@
+@use $UVMF_HOME/uvmf_base_pkg/uvmf_base_pkg.vinfo
+@use $UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC256_rst_pkg/HMAC256_rst_pkg.vinfo
+registers/HMAC256_reg_model_top_pkg.sv
++incdir+@vinfodir
+HMAC256_env_pkg.sv
