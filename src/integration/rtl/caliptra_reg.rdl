@@ -29,8 +29,6 @@ addrmap clp #(
 
     aes_clp_reg aes_clp_reg @ 0x1001_1800;
 
-    hmac256_reg hmac256_reg @ 0x1001_2000;
-
     kv_reg kv_reg @ 0x1001_8000;
 
     pv_reg pv_reg @ 0x1001_A000;
@@ -46,6 +44,8 @@ addrmap clp #(
     kmac_reg kmac @ 0x1004_0000;
 
     sha3_reg sha3 @ 0x1004_1000;
+
+    hmac256_reg hmac256_reg @ 0x1004_2000;
 
     csrng csrng_reg @ 0x2000_2000;
 
