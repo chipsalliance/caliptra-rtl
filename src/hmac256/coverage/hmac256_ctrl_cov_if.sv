@@ -36,9 +36,6 @@ interface hmac256_ctrl_cov_if
     logic awaiting_zeroize;
     logic invalid_cmd_error_edge;
 
-    logic error_intr;
-    logic notif_intr;
-
     logic [4:0] hmac256_cmd;
 
     assign init       = hmac256_ctrl.hmac256_inst.init_reg;
@@ -55,9 +52,6 @@ interface hmac256_ctrl_cov_if
 
     assign awaiting_zeroize       = hmac256_ctrl.hmac256_inst.awaiting_zeroize;
     assign invalid_cmd_error_edge = hmac256_ctrl.hmac256_inst.invalid_cmd_error_edge;
-
-    assign error_intr = hmac256_ctrl.hmac256_inst.error_intr;
-    assign notif_intr = hmac256_ctrl.hmac256_inst.notif_intr;
 
     // hmac256_cmd bit layout: {restore, last, next, init, zeroize}.
     assign hmac256_cmd = {hmac256_ctrl.hmac256_inst.hwif_out.HMAC256_CTRL.RESTORE.value,
@@ -86,9 +80,6 @@ interface hmac256_ctrl_cov_if
         // error0_sts is hwset by invalid_cmd_error_edge. error1/2/3 are
         // reserved slots with no hardware source in hmac256.
         error0_sts_cp: coverpoint invalid_cmd_error_edge { bins fired = {1'b1}; }
-
-        error_intr_cp: coverpoint error_intr { bins asserted = {1'b1}; }
-        notif_intr_cp: coverpoint notif_intr { bins asserted = {1'b1}; }
 
         // Every combination of {restore, last, next, init, zeroize}.
         hmac256_cmd_cp: coverpoint hmac256_cmd {
