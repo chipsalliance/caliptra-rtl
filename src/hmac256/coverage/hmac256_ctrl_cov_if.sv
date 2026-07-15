@@ -35,6 +35,7 @@ interface hmac256_ctrl_cov_if
 
     logic awaiting_zeroize;
     logic invalid_cmd_error_edge;
+    logic debug_scan_zeroize;
 
     logic [4:0] hmac256_cmd;
 
@@ -52,6 +53,7 @@ interface hmac256_ctrl_cov_if
 
     assign awaiting_zeroize       = hmac256_ctrl.hmac256_inst.awaiting_zeroize;
     assign invalid_cmd_error_edge = hmac256_ctrl.hmac256_inst.invalid_cmd_error_edge;
+    assign debug_scan_zeroize     = hmac256_ctrl.hmac256_inst.debugUnlock_or_scan_mode_switch;
 
     // hmac256_cmd bit layout: {restore, last, next, init, zeroize}.
     assign hmac256_cmd = {hmac256_ctrl.hmac256_inst.hwif_out.HMAC256_CTRL.RESTORE.value,
@@ -77,8 +79,7 @@ interface hmac256_ctrl_cov_if
 
         core_tag_we_cp: coverpoint core_tag_we;
 
-        // error0_sts is hwset by invalid_cmd_error_edge. error1/2/3 are
-        // reserved slots with no hardware source in hmac256.
+        // error0_sts is hwset by invalid_cmd_error_edge. 
         error0_sts_cp: coverpoint invalid_cmd_error_edge { bins fired = {1'b1}; }
 
         // Every combination of {restore, last, next, init, zeroize}.
@@ -89,13 +90,25 @@ interface hmac256_ctrl_cov_if
         // Every CTRL encoding crossed with MODE (HMAC-224 x HMAC-256).
         hmac256_cmd_x_mode: cross hmac256_cmd_cp, mode_cp;
 
-        mode_ready_cp:    cross ready, mode;
-        zeroize_ready_cp: cross ready, zeroize;
+        mode_ready_cp:    cross ready_cp, mode_cp;
+        zeroize_ready_cp: cross ready_cp, zeroize_cp;
 
-        // Did zeroize, restore, and error0 all fire in both modes.
-        zeroize_x_mode_cp: cross zeroize_cp, mode_cp;
-        restore_x_mode_cp: cross restore_cp, mode_cp;
-        error0_x_mode_cp:  cross error0_sts_cp, mode_cp;
+        // Did zeroize, restore, error0, init, next, last, and gatign teh tag
+        // all fire in both modes.
+        zeroize_x_mode_cp:     cross zeroize_cp,     mode_cp;
+        restore_x_mode_cp:     cross restore_cp,     mode_cp;
+        init_x_mode_cp:        cross init_cp,        mode_cp;
+        next_x_mode_cp:        cross next_cp,        mode_cp;
+        last_x_mode_cp:        cross last_cp,        mode_cp;
+        error0_x_mode_cp:      cross error0_sts_cp,  mode_cp;
+
+        // Debug unlock or scan mode switch coverage.
+        debug_scan_zeroize_cp: coverpoint debug_scan_zeroize;
+
+        // ready_reg lags awaiting_zeroize by one cycle when a pending zeroize
+        // is latched, so the {awaiting=1, ready=1} bin is briefly hit each op.
+        awaiting_zeroize_ready_cp: cross awaiting_zeroize_cp, ready_cp;
+
 
     endgroup
 
