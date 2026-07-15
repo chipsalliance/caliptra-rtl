@@ -96,6 +96,11 @@ void hmac256_flow(hmac256_io key, hmac256_io block, hmac256_io lfsr_seed,
 
     wait_for_hmac256_intr();
 
+    if (!last) {
+        VPRINTF(LOW, "HMAC256 intermediate block accepted\n");
+        return;
+    }
+
     reg_ptr = (uint32_t *) CLP_HMAC256_REG_HMAC256_TAG_0;
     for (uint8_t i = 0; i < tag_dwords; i++) {
         hmac256_tag[i] = reg_ptr[i];
