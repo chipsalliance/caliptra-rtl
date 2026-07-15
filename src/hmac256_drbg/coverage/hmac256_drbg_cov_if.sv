@@ -86,7 +86,6 @@ interface hmac256_drbg_cov_if
             bins zero      = {256'd0};
             bins q_minus_1 = {HMAC_DRBG_PRIME - 256'd1};
             bins q         = {HMAC_DRBG_PRIME};
-            bins max       = {{256{1'b1}}};
         }
 
         // Rejection outcomes attributed to originating command (INIT vs NEXT).

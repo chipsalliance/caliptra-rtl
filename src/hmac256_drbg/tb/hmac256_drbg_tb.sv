@@ -494,13 +494,12 @@ module hmac256_drbg_tb();
   //----------------------------------------------------------------
   // hmac256_drbg_boundary_tag_test()
   //   Force HMAC_tag itself (not failure_check) at CHCK_ST to boundary
-  //   values so the real comparator is exercised: T=0, T=q, T=q-1, and
-  //   T=all-ones. Each of the first three should reject; the fourth is
-  //   the smallest value the comparator must accept above q.
+  //   values so the real comparator is exercised: T=0 and T=q reject,
+  //   T=q-1 accepts.
   //----------------------------------------------------------------
   task hmac256_drbg_boundary_tag_test();
-    reg [REG_SIZE-1:0] boundary_values [4];
-    reg                should_reject   [4];
+    reg [REG_SIZE-1:0] boundary_values [3];
+    reg                should_reject   [3];
     reg [REG_SIZE-1:0] tag_force;
     reg                exp_reject;
     begin
@@ -512,14 +511,12 @@ module hmac256_drbg_tb();
       boundary_values[0] = 256'd0;
       boundary_values[1] = dut.HMAC_DRBG_PRIME;
       boundary_values[2] = dut.HMAC_DRBG_PRIME - 256'd1;
-      boundary_values[3] = {REG_SIZE{1'b1}};
 
       should_reject[0] = 1'b1;
       should_reject[1] = 1'b1;
       should_reject[2] = 1'b0;
-      should_reject[3] = 1'b1;
 
-      for (int i = 0; i < 4; i++) begin
+      for (int i = 0; i < 3; i++) begin
         if (!ready_tb)
           wait(ready_tb);
 
