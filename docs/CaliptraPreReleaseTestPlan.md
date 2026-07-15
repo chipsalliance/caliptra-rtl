@@ -164,7 +164,10 @@ Hardware-only SHA-384 measurement of all data written to ICCM during firmware lo
 | Test | Category | Description |
 | :--- | :------- | :---------- |
 | `smoke_test_iccm_hash` | Smoke | Write 4 known words to ICCM, verify PCR4 matches expected extend result, cross-check PCR0 extend with same digest |
-| `directed_test_iccm_hash` | Directed | 6 sequences (multi-block, extra pad, zero-length, exact boundary, large, tight memcpy) with fw_update_reset between each |
+| `directed_test_iccm_hash` | Directed | 6 sequences (multi-block, extra pad, zero-length, exact boundary, large, tight memcpy) with fw_update_reset between each; each non-zero-length sequence adds an independent PCR0 readback cross-check |
+| `directed_test_iccm_hash_sizes` | Directed | Size-boundary sequences (1, 60, 284 words) that close `iccm_hash_cov_grp` byte-count / extra-pad coverpoint and cross bins |
+| `directed_test_iccm_hash_fill` | Directed | Fill the ENTIRE ICCM (65536 dwords / 256 KiB) with an incrementing pattern; verify PCR4 & PCR5 match the full-ICCM extend-from-zero digest |
+| `directed_test_iccm_hash_overflow` | Directed | Fill the ICCM then write one extra dword past the end (wraps to address 0); verify PCR4 & PCR5 hash all 65537 writes |
 | `directed_test_iccm_pcr5_journey` | Directed | 3 boots separated by `fw_update_reset`; PCR4 clears each boot, PCR5 chains across boots (Journey property) |
 | `directed_test_iccm_fw_write_block` | Directed | FW AHB writes to PCR4/PCR5 are dropped both pre-hash (zero) and post-hash (populated digest unchanged) |
 | `directed_test_iccm_sha_ctrl_block` | Directed | `sha512_ctrl` `pcr_hash_extend` targeting PCR4 / PCR5 is blocked by `pv.sv` guard; same flow against PCR0 succeeds (control) |
@@ -196,6 +199,36 @@ Single iteration:
 | 5 | 64 words {0x10..0x4F} tight | Back-to-back `sw` pairs via inline asm (LSU merge test) | PCR4 matches seq 0 |
 
 Each iteration ends with `fw_update_reset`, which clears PCR4 via `pcr4_hwclr` and resets ICCM mode for the next sequence.
+
+After the primary PCR4 check, each non-zero-length iteration runs an independent **readback cross-check**: the ICCM contents are read back and re-hashed with the SHA512 *controller* (byte-swapped so its big-endian BLOCK interpretation matches the snoop's little-endian byte stream, with FW-driven padding), spare PCR0 is cleared and extended from zero with that digest via `pcr_hash_extend`, and the test asserts `PCR0 == expected vector == PCR4`. This proves the HW snoop hashed the same ICCM data an independent engine sees. (The zero-length sequence skips the cross-check; the primary PCR4 check already covers it.)
+
+#### `directed_test_iccm_hash_sizes`
+
+Size-boundary sequences (each separated by `fw_update_reset`) that hit `iccm_hash_cov_grp` coverpoint/cross bins the base test never reaches:
+
+| Seq | Sequence | Coverage Target |
+| :-- | :------- | :-------------- |
+| A | 1 word (4 bytes) | `iccm_byte_count_cp.min_write`; `byte_count×extra_pad.(min_write,0)` |
+| B | 60 words (240 bytes) | `byte_count×extra_pad.(multi_block,1)` — 112-byte last-block remainder forces an extra pad block |
+| C | 284 words (1136 bytes) | `byte_count×extra_pad.(large_sz,1)` — 112-byte last-block remainder forces an extra pad block |
+
+#### `directed_test_iccm_hash_fill`
+
+Single-shot measurement (no `fw_update_reset`):
+1. Fill the ENTIRE ICCM (`RV_ICCM_SIZE` = 256 KiB = 65536 dwords) with an incrementing pattern (dword `i` = `i`); HW arms on the first write
+2. Lock ICCM → hash finalization over the full stream `{0, 1, ..., 65535}` + PCR4/PCR5 extend
+3. Verify PCR4 (Current) and PCR5 (Journey) both equal `SHA-384(48_zeros || SHA-384(LE {0..65535}))` — both extend from zero, so PCR4 == PCR5
+
+Passive (non-subsystem) mode: feature absent — verifies PCR4/PCR5 stay zero.
+
+#### `directed_test_iccm_hash_overflow`
+
+Single-shot past-end boundary test (no `fw_update_reset`):
+1. Fill the entire ICCM (65536 dwords), then write one extra dword (value 65536) that physically wraps back to ICCM address 0
+2. Lock ICCM → the HW snoop still hashes every write, so the hashed stream is `{0, 1, ..., 65536}` (65537 dwords)
+3. Verify PCR4 and PCR5 both equal the extend-from-zero digest of the wrapped stream (PCR4 == PCR5)
+
+Passive mode: verifies PCR4/PCR5 stay zero.
 
 #### `directed_test_iccm_pcr5_journey`
 
@@ -262,4 +295,4 @@ Single iteration, 3 steps:
 ### Regression
 
 - `src/integration/stimulus/L0_regression.yml` -- smoke_test_iccm_hash
-- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- directed_test_iccm_hash, directed_test_iccm_pcr5_journey, directed_test_iccm_fw_write_block, directed_test_iccm_sha_ctrl_block, directed_test_iccm_clear_hatch, directed_test_iccm_sha_acc_reuse, directed_test_iccm_cold_reset_pcr5, directed_test_iccm_replay_block
+- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- directed_test_iccm_hash, directed_test_iccm_pcr5_journey, directed_test_iccm_fw_write_block, directed_test_iccm_sha_ctrl_block, directed_test_iccm_clear_hatch, directed_test_iccm_sha_acc_reuse, directed_test_iccm_cold_reset_pcr5, directed_test_iccm_replay_block, directed_test_iccm_hash_sizes, directed_test_iccm_hash_fill, directed_test_iccm_hash_overflow
