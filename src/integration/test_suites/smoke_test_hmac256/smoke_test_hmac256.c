@@ -18,6 +18,9 @@
 //   msg = "Hi There"  (8 bytes)
 //   tag = b0344c61 d8db3853 5ca8afce af0bf12b
 //         881dc200 c9833da7 26e9376c 2e32cff7
+//
+// Followed by a double-block flow with the same key and a 64-byte
+// zero message to exercise INIT + NEXT command sequencing.
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -36,6 +39,25 @@ volatile uint32_t* stdout     = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
+
+uint32_t block1[HMAC256_BLOCK_SIZE] = {
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000
+};
+
+uint32_t block2[HMAC256_BLOCK_SIZE] = {
+    0x80000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000400
+};
+
+uint32_t expected_tag2[HMAC256_TAG_SIZE] = {
+    0xa1f9d4ee, 0x2818e923, 0x0926e2a5, 0x188eb80f,
+    0x508b1fee, 0xb413a9a9, 0xc395dda7, 0x211198fb
+};
 
 void main() {
 
@@ -90,6 +112,21 @@ void main() {
         tag.data[i] = expected_tag[i];
 
     hmac256_flow(key, block, lfsr_seed, tag, TRUE, TRUE, TRUE);
+    hmac256_zeroize();
+
+    VPRINTF(LOW, "----------------------------------\n");
+    VPRINTF(LOW, " HMAC-SHA-256 double-block smoke test !!\n");
+    VPRINTF(LOW, "----------------------------------\n");
+
+    for (int i = 0; i < HMAC256_BLOCK_SIZE; i++)
+        block.data[i] = block1[i];
+    hmac256_flow(key, block, lfsr_seed, tag, TRUE, FALSE, TRUE);
+
+    for (int i = 0; i < HMAC256_BLOCK_SIZE; i++)
+        block.data[i] = block2[i];
+    for (int i = 0; i < HMAC256_TAG_SIZE; i++)
+        tag.data[i] = expected_tag2[i];
+    hmac256_flow(key, block, lfsr_seed, tag, FALSE, TRUE, TRUE);
     hmac256_zeroize();
 
     VPRINTF(LOW, "* TESTCASE PASSED\n");
