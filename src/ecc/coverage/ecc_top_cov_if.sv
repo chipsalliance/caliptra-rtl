@@ -64,6 +64,24 @@ interface ecc_top_cov_if
     logic mult_last_reduction;
     logic mult_final_subtraction;
 
+    logic curve_sel_reg;
+
+    logic kv_privkey_read_en;
+    logic kv_seed_read_en;
+    logic kv_write_en;
+    logic kv_seed_data_present;
+    logic kv_under_p256_invalid;
+
+    logic pcr_sign_under_p256_invalid;
+    logic nondet_pcr_sign_illegal;
+    logic nondet_invalid_cmd;
+    logic nondet_mode;
+    logic curve_sel_to_p256_pulse;
+
+    // Combinational hwif values (SW-requested state, sampled at SIGN dispatch cycle).
+    logic curve_sel_hwif;
+    logic nondet_hwif;
+
     kv_write_filter_metrics_t kv_write_metrics;
     kv_write_ctrl_reg_t kv_write_ctrl_reg;
 
@@ -99,6 +117,13 @@ interface ecc_top_cov_if
         end
     end
 
+    // Prev-cycle curve_sel_reg for curve_transition_cp (avoids $past in cp expr).
+    logic prev_curve_sel_reg;
+    always_ff @(posedge clk) begin
+        if (!reset_n) prev_curve_sel_reg <= 1'b0;
+        else          prev_curve_sel_reg <= ecc_top.ecc_dsa_ctrl_i.curve_sel_reg;
+    end
+
     assign dest_keyvault = ecc_top.ecc_dsa_ctrl_i.dest_keyvault;
 
     assign error_flag = ecc_top.ecc_dsa_ctrl_i.error_flag | ecc_top.ecc_dsa_ctrl_i.error_flag_reg;
@@ -119,6 +144,23 @@ interface ecc_top_cov_if
     assign pubkeyx_output_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyx_output_outofrange;
     assign pubkeyy_output_outofrange = ecc_top.ecc_dsa_ctrl_i.pubkeyy_output_outofrange;
     assign sharedkey_outofrange = ecc_top.ecc_dsa_ctrl_i.sharedkey_outofrange;
+
+    assign curve_sel_reg = ecc_top.ecc_dsa_ctrl_i.curve_sel_reg;
+
+    assign kv_privkey_read_en   = ecc_top.ecc_dsa_ctrl_i.kv_privkey_read_ctrl_reg.read_en;
+    assign kv_seed_read_en      = ecc_top.ecc_dsa_ctrl_i.kv_seed_read_ctrl_reg.read_en;
+    assign kv_write_en          = ecc_top.ecc_dsa_ctrl_i.kv_write_ctrl_reg.write_en;
+    assign kv_seed_data_present = ecc_top.ecc_dsa_ctrl_i.kv_seed_data_present;
+    assign kv_under_p256_invalid = ecc_top.ecc_dsa_ctrl_i.kv_under_p256_invalid;
+
+    assign pcr_sign_under_p256_invalid = ecc_top.ecc_dsa_ctrl_i.pcr_sign_under_p256_invalid;
+    assign nondet_pcr_sign_illegal     = ecc_top.ecc_dsa_ctrl_i.nondet_pcr_sign_illegal;
+    assign nondet_invalid_cmd          = ecc_top.ecc_dsa_ctrl_i.nondet_invalid_cmd;
+    assign nondet_mode              = ecc_top.ecc_dsa_ctrl_i.nondet_mode;
+    assign curve_sel_to_p256_pulse     = ecc_top.ecc_dsa_ctrl_i.curve_sel_to_p256_pulse;
+
+    assign curve_sel_hwif = ecc_top.ecc_dsa_ctrl_i.hwif_out.ECC_CTRL.CURVE_SEL.value;
+    assign nondet_hwif = ecc_top.ecc_dsa_ctrl_i.hwif_out.ECC_CTRL.NONDETERMINISTIC.value;
 
     covergroup ecc_top_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
@@ -165,17 +207,39 @@ interface ecc_top_cov_if
         pubkeyy_output_outofrange_cp: coverpoint pubkeyy_output_outofrange;
         sharedkey_outofrange_cp: coverpoint sharedkey_outofrange;
 
-        cmd_ready_cp: cross ecc_sw_cmd, ready{
-            ignore_bins illegal_sw_cmd = binsof(ecc_sw_cmd) intersect {5, 6, 7};
+        // ecc_sw_cmd is a 3-bit field so URG auto-generates 8 bins; mark
+        // {5,6,7} as illegal since only cmd_reg values 0..4 are legal.
+        ecc_sw_cmd_cp: coverpoint ecc_sw_cmd {
+            illegal_bins illegal_values = {5, 6, 7};
         }
+
+        cmd_ready_cp: cross ecc_sw_cmd_cp, ready;
         keygen_kv_cp: cross keygen_process, dest_keyvault;
-        pcr_ready_cp: cross ready, pcr_sign_mode;
+        // (ready=0, pcr_sign_mode=1) is architecturally unreachable: PCR_SIGN
+        // self-clears next cycle (hwclr = value), so pcr_sign_mode=1 is only
+        // observable on the SW write cycle — and SW can only write ECC_CTRL
+        // while READY=1. On the following edge, PCR_SIGN has cleared and READY
+        // has dropped (dsa_busy asserted), so (ready=0, pcr=1) is a phantom
+        // combination that cannot be sampled.
+        pcr_ready_cp: cross ready, pcr_sign_mode {
+            ignore_bins unreachable_notready_pcr = binsof(ready) intersect {1'b0} &&
+                                                   binsof(pcr_sign_mode) intersect {1'b1};
+        }
         pcr_cmd_cp: cross pcr_sign_mode, ecc_cmd_cp{
             ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
         }
         zeroize_pcr_cp: cross zeroize, pcr_sign_mode;
+        // (zeroize=1, cmd_reg != 0) is architecturally unreachable: cmd_reg is
+        // combinational (CTRL bits & KV-ready guards) and self-clears via
+        // hwclr = |cmd_reg the same cycle it fires. To sample both zeroize=1
+        // and cmd_reg != 0 on the same edge, SW would have to write both
+        // ECC_CTRL.ZEROIZE and ECC_CTRL.CTRL bits in a single 32-bit access;
+        // functionally, ZEROIZE resets state and CTRL launches a command, so
+        // this combination is not a legal SW pattern and no test exercises it.
         zeroize_cmd_cp: cross zeroize, ecc_cmd_cp{
             ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
+            ignore_bins unreachable_zeroize_cmd = binsof(zeroize) intersect {1'b1} &&
+                                                  binsof(ecc_cmd_cp) intersect {[3'b001:3'b100]};
         }
         zeroize_error_cp: cross zeroize, error_flag;
         zeroize_ready_cp: cross ready, zeroize;
@@ -187,11 +251,68 @@ interface ecc_top_cov_if
         error_verifying_cp: cross error_flag, verifying_process;
         error_sharedkey_cp: cross error_flag, sharedkey_process;
 
+        // Combinational SW-requested curve state (aligned with cmd_reg==<CMD>
+        // dispatch cycle). curve_active_cp / nondet_mode_cp track LATCHED state
+        // which trails the write cycle by one edge and misaligns with SW cmd.
+        curve_sel_hwif_cp: coverpoint curve_sel_hwif;
+        nondet_hwif_cp: coverpoint nondet_hwif;
+
+        curve_active_cp: coverpoint curve_sel_reg;
+        // Cross ecc_cmd_cp with the COMBINATIONAL curve_sel_hwif (not the
+        // 1-cycle-latched curve_sel_reg): cmd_reg is combinational and self-
+        // clears 1 cycle after the SW ECC_CTRL write (hwclr = |cmd_reg), so
+        // curve_sel_reg has always latched to zero by the time cmd_reg is
+        // non-zero on a *first-of-its-kind* command. Sampling against
+        // curve_sel_hwif catches (KEYGEN, P-256) and (SHARED_KEY, P-256) on
+        // the same clock edge as the SW write.
+        cmd_x_curve_cp: cross ecc_cmd_cp, curve_sel_hwif_cp {
+            ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
+        }
+        curve_transition_cp: coverpoint {prev_curve_sel_reg, curve_sel_reg};
+        error_keygen_curve_cp:    cross error_flag, keygen_process,    curve_active_cp;
+        error_signing_curve_cp:   cross error_flag, signing_process,   curve_active_cp;
+        error_verifying_curve_cp: cross error_flag, verifying_process, curve_active_cp;
+        error_sharedkey_curve_cp: cross error_flag, sharedkey_process, curve_active_cp;
+        zeroize_x_curve_cp: cross zeroize, curve_active_cp;
+
         // modular operation
         add_carry_cp: cross mod_p_q, add_sub_i, add_cout0, add_cout1;
         add_result_less_than_prime_cp: cross mod_p_q, add_sub_i, add_res_less_than_prime;
         add_result_greater_than_384_bit_cp: cross mod_p_q, add_sub_i, add_res_greater_than_384_bit;
-        
+
+        // RAND_K / PCR_SIGN dual-curve gates (reuse curve_active_cp, pcr_sign_cp, ecc_cmd_cp).
+        nondet_mode_cp:              coverpoint nondet_mode;
+        pcr_sign_under_p256_invalid_cp: coverpoint pcr_sign_under_p256_invalid;
+        nondet_pcr_sign_illegal_cp:     coverpoint nondet_pcr_sign_illegal;
+        nondet_invalid_cmd_cp:          coverpoint nondet_invalid_cmd;
+        curve_sel_to_p256_pulse_cp:     coverpoint curve_sel_to_p256_pulse;
+
+        // 8-cell (PCR_SIGN x curve x RAND_K) matrix for SIGN dispatches.
+        sign_illegal_matrix_cp: cross pcr_sign_cp, curve_sel_hwif_cp, nondet_hwif_cp
+            iff (ecc_cmd == 3'b010);
+
+        // Each RAND_K / PCR_SIGN error gate must be observed asserting error_flag.
+        // (invalid=1 & error=0) is impossible: invalid is OR'd into error_flag.
+        pcr_p256_x_error_cp: cross pcr_sign_under_p256_invalid_cp, error_flag {
+            illegal_bins invalid_no_error = binsof(pcr_sign_under_p256_invalid_cp) intersect {1} &&
+                                            binsof(error_flag) intersect {0};
+        }
+        rand_k_pcr_x_error_cp: cross nondet_pcr_sign_illegal_cp, error_flag {
+            illegal_bins invalid_no_error = binsof(nondet_pcr_sign_illegal_cp) intersect {1} &&
+                                            binsof(error_flag) intersect {0};
+        }
+        rand_k_cmd_x_error_cp: cross nondet_invalid_cmd_cp, error_flag {
+            illegal_bins invalid_no_error = binsof(nondet_invalid_cmd_cp) intersect {1} &&
+                                            binsof(error_flag) intersect {0};
+        }
+
+        // Per-op P-256 scrub pulse must fire across every legal cmd.
+        // (pulse=1, cmd=NOP) is impossible: pulse asserts only when cmd_reg!=0.
+        scrub_x_cmd_cp: cross curve_sel_to_p256_pulse_cp, ecc_cmd_cp {
+            ignore_bins illegal_crosses = binsof(ecc_cmd_cp.illegal_values);
+            illegal_bins pulse_with_nop = binsof(curve_sel_to_p256_pulse_cp) intersect {1} &&
+                                          binsof(ecc_cmd_cp) intersect {0};
+        }
 
     endgroup
 
@@ -237,6 +358,33 @@ interface ecc_top_cov_if
 
     ecc_top_cov_grp ecc_top_cov_grp1 = new();
     ecc_ocp_lock_cov_grp ecc_ocp_lock_cov_grp1 = new();
+
+    // Lockout of KV path when CURVE_SEL=P256 (curve_sel_reg=1).
+    covergroup ecc_kv_p256_lockout_cov_grp @(posedge clk);
+        curve_sel_reg_cp:        coverpoint curve_sel_reg;
+        kv_privkey_read_en_cp:   coverpoint kv_privkey_read_en;
+        kv_seed_read_en_cp:      coverpoint kv_seed_read_en;
+        kv_write_en_cp:          coverpoint kv_write_en;
+        dest_keyvault_cp:        coverpoint dest_keyvault;
+        kv_seed_data_present_cp: coverpoint kv_seed_data_present;
+        kv_under_p256_invalid_cp: coverpoint kv_under_p256_invalid;
+
+        // Each KV OR-term seen under both curves.
+        privkey_read_x_curve_cp: cross kv_privkey_read_en_cp,   curve_sel_reg_cp;
+        seed_read_x_curve_cp:    cross kv_seed_read_en_cp,      curve_sel_reg_cp;
+        write_en_x_curve_cp:     cross kv_write_en_cp,          curve_sel_reg_cp;
+        dest_kv_x_curve_cp:      cross dest_keyvault_cp,        curve_sel_reg_cp;
+        seed_present_x_curve_cp: cross kv_seed_data_present_cp, curve_sel_reg_cp;
+
+        // Lockout fires error and only under P-256.
+        invalid_x_error_cp: cross kv_under_p256_invalid_cp, error_flag;
+        invalid_x_curve_cp: cross kv_under_p256_invalid_cp, curve_sel_reg_cp {
+            illegal_bins p384_invalid = binsof(kv_under_p256_invalid_cp) intersect {1} &&
+                                        binsof(curve_sel_reg_cp) intersect {0};
+        }
+    endgroup
+
+    ecc_kv_p256_lockout_cov_grp ecc_kv_p256_lockout_cov_grp1 = new();
 
 endinterface
 

@@ -41,9 +41,8 @@
 
 module ecc_pm_ctrl 
     import ecc_pm_uop_pkg::*;
+    import ecc_params_pkg::*;
     #(
-    parameter REG_SIZE      = 384,
-    parameter RND_SIZE      = 192,
     parameter INSTR_SIZE    = 24
     )
     (
@@ -51,6 +50,9 @@ module ecc_pm_ctrl
     input  wire           clk,
     input  wire           reset_n,
     input  wire           zeroize,
+
+    // Curve select: 0 = P-384, 1 = P-256.
+    input  wire           curve_sel_i,
 
     // from arith_unit
     input  wire  [3  :   0]                 ecc_cmd_i,
@@ -66,9 +68,14 @@ module ecc_pm_ctrl
     //----------------------------------------------------------------
     localparam [7 : 0] MULT_DELAY          = 8'd27; //28 -1;
     localparam [7 : 0] ADD_DELAY           = 8'd1;  // 2 -1;
-    
-    localparam [9 : 0] Secp384_SCA_MONT_COUNT   = REG_SIZE[9 : 0] + RND_SIZE[9 : 0];
-    localparam [9 : 0] Secp384_MONT_COUNT       = REG_SIZE[9 : 0];
+
+    // Curve-selectable Montgomery / SCA-protected ladder lengths.
+    // For P-384: SCA = REG_SIZE+RND_SIZE = 576, plain = 384.
+    // For P-256: SCA = 256+RND_SIZE      = 448, plain = 256.
+    logic [9 : 0] sca_mont_count;
+    logic [9 : 0] mont_count_plain;
+    assign sca_mont_count   = curve_sel_i ? SCA_MONT_COUNT_P256 : SCA_MONT_COUNT_P384;
+    assign mont_count_plain = curve_sel_i ? MONT_COUNT_P256     : MONT_COUNT_P384;
     
     //----------------------------------------------------------------
     // Registers 
@@ -81,6 +88,8 @@ module ecc_pm_ctrl
     // Program pipeline signals
     logic [PROG_ADDR_W-1 : 0]        prog_addr;
     pm_instr_struct_t prog_instr;
+    pm_instr_struct_t prog_instr_p384;
+    pm_instr_struct_t prog_instr_p256;
     pm_instr_struct_t prog_instr_pipe1;
     pm_instr_struct_t prog_instr_pipe2;
     
@@ -91,6 +100,14 @@ module ecc_pm_ctrl
     logic mont_ladder;
     //----------------------------------------------------------------
     // pm sequencer fsm
+    //
+    // Dual-curve ROMs: two pm sequencer instances (one per curve) are
+    // instantiated in parallel and their outputs muxed by curve_sel_i.
+    // Both share the same address space and section labels (INV_S, etc.).
+    // The P-256 INV/INVq sections are shorter than P-384 (704 vs 1040/1044
+    // real entries); the FSM short-circuits the inversion via the curve-
+    // aware INV_E_P256 / INVq_E_P256 anchors so P-256 saves 336/340 cycles
+    // per inversion (676 cycles per sign or verify).
     //----------------------------------------------------------------
     assign prog_addr = prog_cntr;
 
@@ -98,14 +115,29 @@ module ecc_pm_ctrl
         .ADDR_WIDTH(PROG_ADDR_W),
         .DATA_WIDTH(INSTRUCTION_LENGTH)
         )
-        i_ecc_pm_sequencer(
+        i_ecc_pm_sequencer_p384(
         .clka(clk),
         .reset_n(reset_n),
         .zeroize(zeroize),
-        .ena(1'b1),
+        .ena(~curve_sel_i),
         .addra(prog_addr),
-        .douta(prog_instr)
+        .douta(prog_instr_p384)
     );
+
+    ecc_pm_sequencer_p256 #(
+        .ADDR_WIDTH(PROG_ADDR_W),
+        .DATA_WIDTH(INSTRUCTION_LENGTH)
+        )
+        i_ecc_pm_sequencer_p256(
+        .clka(clk),
+        .reset_n(reset_n),
+        .zeroize(zeroize),
+        .ena(curve_sel_i),
+        .addra(prog_addr),
+        .douta(prog_instr_p256)
+    );
+
+    assign prog_instr = curve_sel_i ? prog_instr_p256 : prog_instr_p384;
     
     always_ff @(posedge clk or negedge reset_n) 
     begin : ff_stalled_reg
@@ -166,12 +198,12 @@ module ecc_pm_ctrl
                         ecc_cmd_reg <= ecc_cmd_i;
                         unique case (ecc_cmd_i)
                             KEYGEN_CMD : begin  // keygen
-                                mont_cntr <= Secp384_SCA_MONT_COUNT;
+                                mont_cntr <= sca_mont_count;
                                 prog_cntr <= PM_INIT_G_S;
                             end   
 
                             SIGN_CMD : begin  // signing
-                                mont_cntr <= Secp384_SCA_MONT_COUNT;
+                                mont_cntr <= sca_mont_count;
                                 prog_cntr <= PM_INIT_G_S;
                             end                                   
 
@@ -180,7 +212,7 @@ module ecc_pm_ctrl
                             end
 
                             VER_PART1_CMD : begin  // verifying part1
-                                mont_cntr <= Secp384_MONT_COUNT;
+                                mont_cntr <= mont_count_plain;
                                 prog_cntr <= PM_INIT_G_S;
                             end
 
@@ -193,7 +225,7 @@ module ecc_pm_ctrl
                             end
 
                             DH_SHARED_CMD : begin  // DH shared key
-                                mont_cntr <= Secp384_SCA_MONT_COUNT;
+                                mont_cntr <= sca_mont_count;
                                 prog_cntr <= PM_INIT_DH_S;
                             end
 
@@ -204,7 +236,7 @@ module ecc_pm_ctrl
                     end
                     
                     VER1_ST_E : begin // Storing the VER1 MONT results before starting VER2
-                        mont_cntr <= Secp384_MONT_COUNT;
+                        mont_cntr <= mont_count_plain;
                         prog_cntr <= PM_INIT_PK_S;
                     end
 
@@ -254,11 +286,18 @@ module ecc_pm_ctrl
                         end
                     end
                     
-                    INV_E : begin // End of inversion mod p
+                    INV_E_P256 : begin // P-256 early-exit from inversion mod p
+                        if (curve_sel_i)
+                            prog_cntr <= CONV_S;
+                        else
+                            prog_cntr <= prog_cntr + 1;
+                    end
+
+                    INV_E_P384 : begin // End of inversion mod p (P-384)
                         prog_cntr <= CONV_S;
                     end
                     
-                    CONV_E : begin // End of conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
+                    CONV_E : begin // End of conversion from projective Mont (X,Y,Z) to affine normal (x,y)
                         unique case (ecc_cmd_reg)
                             SIGN_CMD : prog_cntr <= SIGN0_S;
                             default  : prog_cntr <= NOP;
@@ -269,7 +308,20 @@ module ecc_pm_ctrl
                         prog_cntr <= INVq_S;
                     end
 
-                    INVq_E : begin // End of inversion mod q
+                    INVq_E_P256 : begin // P-256 early-exit from inversion mod q
+                        if (curve_sel_i) begin
+                            unique case (ecc_cmd_reg)
+                                SIGN_CMD      : prog_cntr <= SIGN1_S;
+                                VER_PART0_CMD : prog_cntr <= VER0_P1_S;
+                                default       : prog_cntr <= NOP;
+                            endcase
+                        end
+                        else begin
+                            prog_cntr <= prog_cntr + 1;
+                        end
+                    end
+
+                    INVq_E_P384 : begin // End of inversion mod q (P-384)
                         unique case (ecc_cmd_reg)
                             SIGN_CMD      : prog_cntr <= SIGN1_S;
                             VER_PART0_CMD : prog_cntr <= VER0_P1_S;

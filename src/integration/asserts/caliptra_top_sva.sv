@@ -1285,27 +1285,43 @@ module caliptra_top_sva
                          else $display("SVA ERROR: SHA512 restore is not valid!");
 
   //SVA for modular operations
+  // Curve-aware compare: PM-RAM is a 384-bit RAM file holding P-256 values in
+  // the low 256 bits, with the upper 128 bits surviving cross-curve switches
+  // unless ecc_zeroize() is issued. Only the meaningful low bits matter for
+  // modular correctness, so under P-256 (curve_sel_i=1) compare just [255:0].
   ecc_opa_input:        assert property (
                                       @(posedge `SVA_RDC_CLK)
-                                      (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.add_en_i | `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.mult_en_i) |-> (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.opa_i < `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.prime_i)
+                                      (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.add_en_i | `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.mult_en_i) |->
+                                          (`ECC_PATH.ecc_arith_unit_i.curve_sel_i
+                                              ? (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.opa_i[255:0] < `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.prime_i[255:0])
+                                              : (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.opa_i        < `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.prime_i))
                                       )
                           else $display("SVA ERROR: ECC opa input is not valid!"); 
 
   ecc_opb_input:        assert property (
                                       @(posedge `SVA_RDC_CLK)
-                                      (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.add_en_i | `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.mult_en_i) |-> (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.opb_i < `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.prime_i)
+                                      (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.add_en_i | `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.mult_en_i) |->
+                                          (`ECC_PATH.ecc_arith_unit_i.curve_sel_i
+                                              ? (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.opb_i[255:0] < `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.prime_i[255:0])
+                                              : (`ECC_PATH.ecc_arith_unit_i.ecc_fau_i.opb_i        < `ECC_PATH.ecc_arith_unit_i.ecc_fau_i.prime_i))
                                       )
                           else $display("SVA ERROR: ECC opb input is not valid!"); 
 
   ecc_add_result:       assert property (
                                       @(posedge `SVA_RDC_CLK)
-                                      `ECC_PATH.ecc_arith_unit_i.ecc_instr_s.opcode.add_we |-> (`ECC_PATH.ecc_arith_unit_i.add_res_s < `ECC_PATH.ecc_arith_unit_i.adder_prime)
+                                      `ECC_PATH.ecc_arith_unit_i.ecc_instr_s.opcode.add_we |->
+                                          (`ECC_PATH.ecc_arith_unit_i.curve_sel_i
+                                              ? (`ECC_PATH.ecc_arith_unit_i.add_res_s[255:0] < `ECC_PATH.ecc_arith_unit_i.adder_prime[255:0])
+                                              : (`ECC_PATH.ecc_arith_unit_i.add_res_s        < `ECC_PATH.ecc_arith_unit_i.adder_prime))
                                       )
                           else $display("SVA ERROR: ECC adder result is not valid!"); 
 
   ecc_mult_result:       assert property (
                                       @(posedge `SVA_RDC_CLK)
-                                      `ECC_PATH.ecc_arith_unit_i.ecc_instr_s.opcode.mult_we |-> (`ECC_PATH.ecc_arith_unit_i.mult_res_s < `ECC_PATH.ecc_arith_unit_i.adder_prime)
+                                      `ECC_PATH.ecc_arith_unit_i.ecc_instr_s.opcode.mult_we |->
+                                          (`ECC_PATH.ecc_arith_unit_i.curve_sel_i
+                                              ? (`ECC_PATH.ecc_arith_unit_i.mult_res_s[255:0] < `ECC_PATH.ecc_arith_unit_i.adder_prime[255:0])
+                                              : (`ECC_PATH.ecc_arith_unit_i.mult_res_s        < `ECC_PATH.ecc_arith_unit_i.adder_prime))
                                       )
                           else $display("SVA ERROR: ECC multiplier result is not valid!"); 
 

@@ -278,10 +278,11 @@ void main(){
     VPRINTF(LOW, "privkey_dh.kv_id: 0x%x, privkey_dh.kv_id :0x%d\n",privkey_dh.kv_id, privkey_dh.kv_intf);
     VPRINTF(LOW, "sharedkey_dh.kv_id: 0x%x, sharedkey_dh.kv_id :0x%d\n",sharedkey_dh.kv_id, sharedkey_dh.kv_intf);
 
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
+    uint8_t curve_sel = 0;
+    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE, curve_sel);
     cptra_intr_rcv.ecc_notif = 0;
 
-    ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
+    ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh, curve_sel);
     cptra_intr_rcv.ecc_notif = 0;
 
     ecc_zeroize();

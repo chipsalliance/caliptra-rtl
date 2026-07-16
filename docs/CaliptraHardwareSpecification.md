@@ -115,7 +115,7 @@ The following table shows the memory map address ranges for each of the IP block
 | IP/Peripheral                       | Target \# | Address size | Start address | End address |
 | :---------------------------------- | :-------- | :----------- | :------------ | :---------- |
 | Cryptographic Initialization Engine | 0         | 32 KiB       | 0x1000_0000   | 0x1000_7FFF |
-| ECC Secp384                         | 1         | 32 KiB       | 0x1000_8000   | 0x1000_FFFF |
+| ECC (Secp384r1 / Secp256r1)         | 1         | 32 KiB       | 0x1000_8000   | 0x1000_FFFF |
 | HMAC512                             | 2         | 4 KiB        | 0x1001_0000   | 0x1001_0FFF |
 | Key Vault                           | 3         | 8 KiB        | 0x1001_8000   | 0x1001_9FFF |
 | PCR Vault                           | 4         | 8 KiB        | 0x1001_A000   | 0x1001_BFFF |
@@ -688,7 +688,8 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
     * HMAC512 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
     * SHA3 (based on [NIST FIPS 202](https://doi.org/10.6028/NIST.FIPS.202) [17])
 * Public-key cryptography
-    * NIST Secp384r1 Deterministic Digital Signature Algorithm (based on FIPS-186-4 [11] and RFC 6979 [7])
+    * NIST Secp384r1 Digital Signature Algorithm, deterministic (RFC 6979 [7]) and non-deterministic (FIPS 186-4 [11]) variants
+    * NIST Secp256r1 Digital Signature Algorithm, deterministic (RFC 6979 [7]) and non-deterministic (FIPS 186-4 [11]) variants
 * Key vault
     * Key slots
     * Key slot management
@@ -1237,7 +1238,7 @@ In this architecture, the HMAC interface and controller are implemented in RISC-
 
 Hash-based message authentication code (HMAC) deterministic random bit generator (DRBG) is a cryptographic random bit generator that uses a HMAC function. HMAC_DRBG involves a cryptographic HMAC function and a seed. This architecture is designed as specified in section 10.1.2. of NIST SP 800-90A [12]. For ECC signing operation, the implementation is compatible with section 3.1. of RFC 6979 [7].
 
-Caliptra HMAC_DRBG implementation uses HMAC384 as the HMAC function, accepts a 384-bit seed, and generates a 384-bit random value.
+Caliptra HMAC_DRBG is curve-dependent: the P-384 path uses HMAC-SHA-384 with a 384-bit seed/nonce and produces a 384-bit random value, while the P-256 path uses HMAC-SHA-256 with a 256-bit seed/nonce and produces a 256-bit random value (zero-extended into the engine's native 384-bit datapath). The active core is selected by `ECC_CTRL.CURVE_SEL`.
 
 The HMAC algorithm is described as follows:
 
@@ -1271,7 +1272,20 @@ For ECC KeyGen operation, HMAC_DRBG is used to generate privkey as follows:
 
 For ECC SIGNING operation, HMAC_DRBG is used to generate k as follows:
 
-    K = HMAC_DRBG(privkey, hashed_msg)
+* Deterministic (`ECC_CTRL.NONDETERMINISTIC = 0`, RFC 6979):
+
+        K = HMAC_DRBG(privkey, hashed_msg)
+
+* Non-deterministic (`ECC_CTRL.NONDETERMINISTIC = 1`, FIPS 186-4):
+
+        K = HMAC_DRBG(ECC_SEED, sign_nonce)
+
+    Both inputs to this HMAC_DRBG are ultimately iTRNG-sourced, so K is a fresh random secret per SIGN:
+
+    - `ECC_SEED` reuses the KeyGen `ECC_SEED` API register; firmware must load it with a fresh iTRNG draw before each non-deterministic SIGN.
+    - `sign_nonce` is a fresh DRBG output produced by a dedicated `SIGN_NONCE_ST` HMAC_DRBG run issued just before k-generation. Its entropy is the SCA entropy register (`ECC_IV ^ LFSR_seed ^ counter`, where `ECC_IV` is also iTRNG-loaded by firmware) and its nonce is the internal free-running counter; the result is captured into `sign_nonce_reg` and consumed as the nonce input to the k-generation DRBG.
+
+    `sign_nonce` width matches the active curve (384-bit for P-384, 256-bit for P-256, zero-extended into the engine's 384-bit datapath). The API-visible `ECC_NONCE` register is **not** consumed in SIGN; it is used only by KeyGen.
 
 ### Signal descriptions
 
@@ -1291,6 +1305,12 @@ The HMAC_DRBG architecture inputs and outputs are described in the following tab
 | drbg \[383:0\]       | output          | The hmac_drbg value of the given inputs.                                                |
 | valid                | output          | When HIGH, the signal indicates the result is ready.                                    |
 
+> **Note (dual-curve widths):** signal widths shown above are the physical bus
+> width (384 bits, sized for P-384). Under P-256 (`ECC_CTRL.CURVE_SEL=1`),
+> only the lower 256 bits carry curve-relevant data on `entropy`, `nonce`,
+> and `drbg`; the upper 128 bits are zero (hwclr'd on op dispatch — see the
+> `ECC_SEED`/`ECC_NONCE`/`ECC_IV` RDL descriptions).
+
 ### Address map
 
 The HMAC_DRBG is embedded into ECC architecture, since there is no address map to access it from FW.
@@ -1303,15 +1323,37 @@ For information, see SCA countermeasure in the [HMAC384](#hmac384) section.
 
 The ECC unit includes the ECDSA (Elliptic Curve Digital Signature Algorithm) engine and the ECDH (Elliptic Curve Diffie-Hellman Key-Exchange) engine, offering a variant of the cryptographically secure Digital Signature Algorithm (DSA) and Diffie-Hellman Key-Exchange (DH), which uses elliptic curve (ECC). A digital signature is an authentication method in which a public key pair and a digital certificate are used as a signature to verify the identity of a recipient or sender of information.
 
-The hardware implementation supports deterministic ECDSA, 384 Bits (Prime Field), also known as NIST-Secp384r1, described in RFC6979.
+The hardware implementation supports ECDSA over both NIST-Secp384r1 (P-384) and NIST-Secp256r1 (P-256), selected per-operation by the `ECC_CTRL.CURVE_SEL` field (0 = P-384, default; 1 = P-256). Two modes of generating the per-signature secret `k` are supported, selected by the `ECC_CTRL.NONDETERMINISTIC` field:
 
-The hardware implementation also supports ECDH, 384 Bits (Prime Field), also known as NIST-Secp384r1, described in SP800-56A.
+* `NONDETERMINISTIC = 0` (default): deterministic SIGN per RFC 6979. `k = HMAC_DRBG(privKey, h)`.
+* `NONDETERMINISTIC = 1`: non-deterministic SIGN per FIPS 186-4. `k = HMAC_DRBG(ECC_SEED, sign_nonce)`, where `ECC_SEED` is iTRNG-sourced (firmware loads a fresh iTRNG draw per SIGN) and `sign_nonce` is an internal DRBG output derived from `ECC_IV` (also iTRNG-loaded) XORed with the LFSR seed and a free-running counter (see the HMAC_DRBG section above for details).
+
+Firmware must write a fresh random value to `ECC_SEED` (and refresh `ECC_IV`, which feeds all SCA countermeasures) before each SIGN command.
+
+The hardware implementation also supports ECDH over the same two curves, described in SP800-56A.
 
 Secp384r1 parameters are shown in the following figure.
 
 *Figure: Secp384r1 parameters*
 
 ![](./images/secp384r1_params.png)
+
+#### Curve selection
+
+`ECC_CTRL.CURVE_SEL` (bit 5, `swwe = ecc_ready`) gates the curve for every ECC operation. The field is sampled together with the operation `CTRL[1:0]` and `NONDETERMINISTIC` on the same `ECC_CTRL` write, so firmware can switch curves between back-to-back operations with no reset required. Every command triggers an init flow that refreshes internal PM-RAM contents with the appropriate initialization for the selected curve. The internal latched `curve_sel_reg` is cleared on `ZEROIZE` and re-sampled from `ECC_CTRL.CURVE_SEL` at the next command dispatch; firmware should set `CURVE_SEL` on every run.
+
+Per-curve effective widths and parameters:
+
+| Property                       | P-384 (`CURVE_SEL=0`)                                         | P-256 (`CURVE_SEL=1`)                                         |
+| :----------------------------- | :------------------------------------------------------------- | :------------------------------------------------------------- |
+| Scalar / coordinate width      | 384 bits                                                       | 256 bits                                                       |
+| Prime p                        | p<sub>P-384</sub> (FIPS 186-5 D.1.2.4)                         | p<sub>P-256</sub> (FIPS 186-5 D.1.2.3)                         |
+| Group order n                  | n<sub>P-384</sub>                                              | n<sub>P-256</sub>                                              |
+| Message hash function          | SHA-384 (digest = 384 b)                                       | SHA-256 (digest = 256 b)                                       |
+| HMAC_DRBG primitive            | HMAC-SHA-384                                                   | HMAC-SHA-256                                                   |
+| Register-bank dword usage      | All 12 dwords used                                             | Lower 8 dwords carry data; upper 4 dwords held at zero for API registers |
+
+`PCR_SIGN` (PCR-vault-sourced privkey) is supported only for P-384 deterministic SIGN. Firmware requests that combine `PCR_SIGN=1` with any of `CURVE_SEL=1` (P-256), `NONDETERMINISTIC=1` (nondet), or any non-SIGN command raise an `ecc_error`.
 
 ### Operation
 
@@ -1327,15 +1369,15 @@ The ECDH also consists of the sharedkey generation.
 
 In the deterministic key generation, the paired key of (privKey, pubKey) is generated by KeyGen(seed, nonce), taking a deterministic seed and nonce. The KeyGen algorithm is as follows:
 
-* Compute privKey = HMAC_DRBG(seed, nonce) to generate a random integer in the interval [1, n-1] where n is the group order of Secp384 curve.
-* Generate pubKey(x,y) as a point on ECC calculated by pubKey=privKey × G, while G is the generator point over the curve.
+* Compute privKey = HMAC_DRBG(seed, nonce) to generate a random integer in the interval [1, n-1] where n is the group order of the curve selected by `ECC_CTRL.CURVE_SEL`.
+* Generate pubKey(x,y) as a point on ECC calculated by pubKey = privKey × G, where G is the generator point of the selected curve.
 
 
 #### Signing
 
-In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), taking a privKey and hash of message m, h = hash(m), using a cryptographic hash function, SHA512. The signing algorithm includes:
+In the signing algorithm, a signature (r, s) is generated by Sign(privKey, h), taking a privKey and hash h = hash(msg). The message-digest hash function is firmware's responsibility (SHA-384 for P-384, SHA-256 for P-256); the engine consumes only the digest. The signing algorithm includes:
 
-* Generate a random number k in the range [1..n-1], while k = HMAC\_DRBG(privKey, h)
+* Generate a random number k in the range [1..n-1]: k = HMAC\_DRBG(privKey, h) when `ECC_CTRL.NONDETERMINISTIC = 0`; or k = HMAC\_DRBG(ECC\_SEED, sign\_nonce) when `ECC_CTRL.NONDETERMINISTIC = 1`.
 * Calculate the random point R = k × G
 * Take r = Rx mod n, where Rx is x coordinate of R=(Rx, Ry)
 * Calculate the signature proof: s = k<sup>-1 </sup>× (h + r × privKey) mod n
@@ -1377,11 +1419,11 @@ The ECC architecture inputs and outputs are described in the following table.
 | reset_n                    | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal.                                    |
 | ctrl\[1:0\]                | input           | Indicates the AES type of the function. This can be: <br>− 0b00: No Operation <br>− 0b01: KeyGen <br>− 0b10: Signing <br>− 0b11: Verifying |
 | zeroize                    | input           | The core clears all internal registers to avoid any SCA information leakage.                                               |
-| seed \[383:0\]             | input           | The deterministic seed for HMAC_DRBG in the KeyGen operation.                                                              |
-| nonce \[383:0\]            | input           | The deterministic nonce for HMAC_DRBG in the KeyGen operation.                                                             |
+| seed \[383:0\]             | input           | **KeyGen:** deterministic seed input to HMAC_DRBG (paired with `nonce`) to derive `privKey`. **SIGN (`NONDETERMINISTIC = 1`, non-deterministic):** iTRNG-sourced entropy input to the k-generation HMAC_DRBG; firmware must load a fresh iTRNG value before each such SIGN. **SIGN (`NONDETERMINISTIC = 0`, deterministic RFC 6979):** unused. |
+| nonce \[383:0\]            | input           | **KeyGen:** deterministic nonce input to HMAC_DRBG (paired with `seed`). **SIGN (both modes):** unused. The non-deterministic SIGN nonce (`sign_nonce`) is derived internally from `ECC_IV` (iTRNG-loaded), the LFSR seed, and a free-running counter, not from this register. |
 | privKey_in\[383:0\]        | input           | The input private key used in the signing operation.                                                                       |
 | pubKey_in\[1:0\]\[383:0\]  | input           | The input public key(x,y) used in the verifying operation.                                                                 |
-| hashed_msg\[383:0\]        | input           | The hash of message using SHA512.                                                                                          |
+| hashed_msg\[383:0\]        | input           | The message digest. P-384 uses SHA-384 digest; P-256 uses SHA-256 digest. |
 | ready                      | output          | When HIGH, the signal indicates the core is ready.                                                                         |
 | privKey_out\[383:0\]       | output          | The generated private key in the KeyGen operation.                                                                         |
 | pubKey_out\[1:0\]\[383:0\] | output          | The generated public key(x,y) in the KeyGen operation.                                                                     |
@@ -1390,6 +1432,11 @@ The ECC architecture inputs and outputs are described in the following table.
 | r’\[383:0\]                | Output          | The signature verification result.                                                                                         |
 | DH_sharedkey\[383:0\]      | output          | The generated shared key in the ECDH sharedkey operation.                                                                  |
 | valid                      | output          | When HIGH, the signal indicates the result is ready.                                                                       |
+
+> **Note (dual-curve widths):** all `[383:0]` signals above are physical
+> bus widths sized for P-384. Under P-256 (`ECC_CTRL.CURVE_SEL=1`), only the
+> lower 256 bits carry curve-relevant data; the upper 128 bits are held at
+> zero (see the "Register-bank dword usage" row in the Curve selection table).
 
 ### Address map
 
@@ -1410,6 +1457,10 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 *Figure: Signing pseudocode*
 
 ![](./images/signing_pseudo.png)
+
+The pseudocode above shows the deterministic SIGN flow (`ECC_CTRL.NONDETERMINISTIC = 0`). When `NONDETERMINISTIC = 1`, the only change is the `k` generation step: replace `k = HMAC_DRBG(privKey, h)` with `k = HMAC_DRBG(ECC_SEED, sign_nonce)`, where both inputs are iTRNG-derived (firmware writes a fresh iTRNG value to `ECC_SEED` and refreshes `ECC_IV` before each SIGN; `sign_nonce` is generated internally from `ECC_IV` + LFSR seed + a free-running counter via a `SIGN_NONCE_ST` HMAC_DRBG run). This makes `k` non-deterministic even for identical `(privKey, h)`.
+
+Signing with `NONDETERMINISTIC = 1` is not permitted when inputs are sourced from the Key Vault (either private key or seed), when the result is destined for the Key Vault (any `ecc_kv_wr_pkey_ctrl.write_en` armed or the latched `dest_keyvault`), or when the PCR vault is used (`PCR_SIGN` mode); any such combination raises `ecc_error`.
 
 #### Verifying
 
