@@ -14,4 +14,4 @@
 #
 ---
 seed: 1
-testname: smoke_test_hmac256_to_aes
+testname: smoke_test_hmac256_chain

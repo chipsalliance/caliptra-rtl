@@ -13,23 +13,27 @@
 // limitations under the License.
 //
 
-// HMAC-SHA-256 -> AES-256-ECB chain smoke test.
+// SHA-256 -> HMAC-SHA-256 -> AES-256-ECB chain smoke test.
 //
-// Step 1: run HMAC-SHA-256 on RFC 4231 test case 1 and confirm the
-//         256-bit tag matches the RFC vector.
-// Step 2: reuse those 8 dwords as an AES-256 key, encrypt a fixed
+// Step 1: SHA-256("SmokeCPT") produces a 256-bit digest. The 8-byte
+//         message plus FIPS-180 padding fills one SHA-256 block.
+// Step 2: run HMAC-SHA-256 with the Step 1 digest as the key and
+//         RFC 4231 test case 1 message ("Hi There") as the payload,
+//         and confirm the 256-bit tag matches the offline reference.
+// Step 3: reuse those 8 tag dwords as an AES-256 key, encrypt a fixed
 //         plaintext (16 zero bytes) with AES-256-ECB, and confirm the
 //         16 ciphertext bytes match an offline openssl reference.
 //
-// A byte- or dword-ordering bug at the HMAC256->AES boundary shows up
-// as an AES ciphertext mismatch, so this test acts as an end-to-end
-// endianness check between the two blocks.
+// A byte- or dword-ordering bug at the SHA256->HMAC256 or HMAC256->AES
+// boundary shows up as a downstream mismatch, so this test acts as an
+// end-to-end endianness check across all three blocks.
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
+#include "sha256.h"
 #include "hmac256.h"
 #include "aes.h"
 
@@ -46,12 +50,31 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
 
-    // RFC 4231 test case 1: HMAC-SHA-256(key = 0x0b*20, msg = "Hi There").
-    uint32_t hmac_key_data[HMAC256_KEY_SIZE] = {
-        0x0b0b0b0b, 0x0b0b0b0b, 0x0b0b0b0b, 0x0b0b0b0b,
-        0x0b0b0b0b, 0x00000000, 0x00000000, 0x00000000
+    // ----- Step 1 inputs -----
+    // SHA-256 of the 8-byte ASCII message "SmokeCPT" ({0x53, 0x6d, 0x6f,
+    // 0x6b, 0x65, 0x43, 0x50, 0x54}), padded into one 512-bit block per
+    // FIPS 180-4 https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.180-4.pdf.
+    // Length field = 0x40 (64 bits).
+    uint32_t sha256_block_data[16] = {
+        0x536d6f6b, 0x65435054, 0x80000000, 0x00000000,
+        0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        0x00000000, 0x00000000, 0x00000000, 0x00000000,
+        0x00000000, 0x00000000, 0x00000000, 0x00000040
     };
 
+    // Reference from python hashlib.sha256(b"SmokeCPT").
+    uint32_t sha256_expected_digest[8] = {
+        0x31af9dbf, 0xf003ff14, 0xe16953e1, 0xdc0688f9,
+        0xf8d21237, 0xf9e2b03b, 0xc4508a48, 0x4372e69c
+    };
+
+    // ----- Step 2 inputs -----
+    // HMAC-SHA-256 payload: RFC 4231 test case 1 message "Hi There"
+    // ({0x48, 0x69, 0x20, 0x54, 0x68, 0x65, 0x72, 0x65}), padded and
+    // tagged with the FIPS-180 length. The HMAC core prepends its own
+    // K_ipad block internally, so the length field is 0x240
+    // (K_ipad 512 b + msg 64 b = 576 b).
+    // See RFC 4231 https://datatracker.ietf.org/doc/html/rfc4231.
     uint32_t hmac_block_data[HMAC256_BLOCK_SIZE] = {
         0x48692054, 0x68657265, 0x80000000, 0x00000000,
         0x00000000, 0x00000000, 0x00000000, 0x00000000,
@@ -59,35 +82,54 @@ void main() {
         0x00000000, 0x00000000, 0x00000000, 0x00000240
     };
 
+    // Reference from python hmac.new(sha256_expected_digest,
+    // b"Hi There", hashlib.sha256).
     uint32_t hmac_expected_tag[HMAC256_TAG_SIZE] = {
-        0xb0344c61, 0xd8db3853, 0x5ca8afce, 0xaf0bf12b,
-        0x881dc200, 0xc9833da7, 0x26e9376c, 0x2e32cff7
+        0x3e1981bf, 0x1d687b16, 0x422648e3, 0xbfdb4d15,
+        0xf9f45314, 0x9461f8bf, 0xaac2ddc7, 0xe70faf2f
     };
 
     uint32_t hmac_lfsr_seed_data[HMAC256_LFSR_SEED_SIZE] = {
         0xC8F518D4, 0xF3AA1BD4, 0x6ED56C1C
     };
 
-    // AES-256-ECB(key = HMAC256 tag, plaintext = 16 zero bytes).
-    // The AES CLP wrapper interprets key bytes in software-memory order
-    // (per-dword little-endian), so the effective key is the HMAC256 tag
-    // with each dword byte-swapped. Reference computed offline via python
-    // cryptography.hazmat with that key derivation.
+    // ----- Step 3 inputs -----
+    // AES-256-ECB(key = HMAC256 tag, plaintext = 16 zero bytes). The
+    // AES CLP wrapper interprets key bytes in software-memory order
+    // (per-dword little-endian), so the effective key is the HMAC256
+    // tag with each dword byte-swapped. Reference from python
+    // cryptography.hazmat AES-256-ECB with that byte-swapped key.
     uint32_t aes_plaintext[4] = {0, 0, 0, 0};
     uint32_t aes_expected_ct[4] = {
-        0x4b132fe8, 0x12275e7f, 0x7868093d, 0x1d56ed00
+        0x229a7f3d, 0x7d466ad5, 0xabfc1d5c, 0x0ea62a01
     };
 
     SEND_STDOUT_CTRL(0x7F);
 
     VPRINTF(LOW, "----------------------------------\n");
-    VPRINTF(LOW, " HMAC256 -> AES-256 chain smoke test\n");
+    VPRINTF(LOW, " SHA256 -> HMAC256 -> AES chain smoke test\n");
     VPRINTF(LOW, "----------------------------------\n");
 
     init_interrupts();
 
-    // ----- Step 1: HMAC-SHA-256 -----
-    VPRINTF(LOW, "Step 1: HMAC-SHA-256 of RFC 4231 test case 1\n");
+    // ----- Step 1: SHA-256 of "SmokeCPT" -----
+    VPRINTF(LOW, "Step 1: SHA-256 of \"SmokeCPT\"\n");
+
+    sha256_io sha_block;
+    sha256_io sha_digest;
+
+    sha_block.data_size = 16;
+    for (int i = 0; i < 16; i++)
+        sha_block.data[i] = sha256_block_data[i];
+
+    sha_digest.data_size = 8;
+    for (int i = 0; i < 8; i++)
+        sha_digest.data[i] = sha256_expected_digest[i];
+
+    sha256_flow(sha_block, SHA256_MODE_SHA_256, 0, 0, 0, sha_digest);
+
+    // ----- Step 2: HMAC-SHA-256 keyed with the Step 1 digest -----
+    VPRINTF(LOW, "Step 2: HMAC-SHA-256 with SHA-256 digest as key\n");
 
     hmac256_io hmac_key;
     hmac256_io hmac_block;
@@ -96,7 +138,7 @@ void main() {
 
     hmac_key.data_size = HMAC256_KEY_SIZE;
     for (int i = 0; i < HMAC256_KEY_SIZE; i++)
-        hmac_key.data[i] = hmac_key_data[i];
+        hmac_key.data[i] = sha256_expected_digest[i];
 
     hmac_block.data_size = HMAC256_BLOCK_SIZE;
     for (int i = 0; i < HMAC256_BLOCK_SIZE; i++)
@@ -114,8 +156,8 @@ void main() {
                  TRUE, TRUE, TRUE);
     hmac256_zeroize();
 
-    // ----- Step 2: AES-256-ECB using the HMAC256 tag as the key -----
-    VPRINTF(LOW, "Step 2: AES-256-ECB with HMAC256 tag as key\n");
+    // ----- Step 3: AES-256-ECB using the HMAC256 tag as the key -----
+    VPRINTF(LOW, "Step 3: AES-256-ECB with HMAC256 tag as key\n");
 
     // Reseed the AES entropy interface once before the first op.
     lsu_write_32(CLP_AES_CLP_REG_ENTROPY_IF_SEED_0, 0x30000567);
