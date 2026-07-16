@@ -211,6 +211,10 @@ module caliptra_top_tb_services
     logic                       inject_zero_sign_r_needs_release;
     logic                       inject_zero_sign_s;
     logic                       inject_zero_sign_s_needs_release;
+    logic                       inject_high_sign_r;
+    logic                       inject_high_sign_r_needs_release;
+    logic                       inject_high_sign_s;
+    logic                       inject_high_sign_s_needs_release;
     logic                       inject_invalid_privkey;
     logic                       inject_invalid_privkey_needs_release;
     logic                       inject_invalid_dhkey;
@@ -359,7 +363,9 @@ module caliptra_top_tb_services
     //         8'h9f        - Inject AES key into KV
     //         8'ha0        - Inject HMAC384_KEY to kv_key register
     //         8'ha1        - Inject zero as MLDSA_SEED/MLKEM_MSG to kv_key register (8 dwords)
-    //         8'ha2: 8'ha7 - Unused
+    //         8'ha2        - Inject sign_r >= group_order (all-ones) into ECC (test read_reg >= group_order branch)
+    //         8'ha3        - Inject sign_s >= group_order (all-ones) into ECC (test read_reg >= group_order branch)
+    //         8'ha4: 8'ha7 - Unused
     //         8'ha8        - Inject zero as HMAC_KEY/MLKEM_SEED to kv_key register (16 dwords)
     //         8'ha9        - Inject HMAC512_KEY to kv_key register
     //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
@@ -1062,6 +1068,10 @@ module caliptra_top_tb_services
             inject_zero_sign_r_needs_release <= 1'b0;
             inject_zero_sign_s <= 1'b0;
             inject_zero_sign_s_needs_release <= 1'b0;
+            inject_high_sign_r <= 1'b0;
+            inject_high_sign_r_needs_release <= 1'b0;
+            inject_high_sign_s <= 1'b0;
+            inject_high_sign_s_needs_release <= 1'b0;
             inject_invalid_privkey <= 1'b0;
             inject_invalid_privkey_needs_release <= 1'b0;
             inject_invalid_dhkey <= 1'b0;
@@ -1076,6 +1086,12 @@ module caliptra_top_tb_services
         end
         else if((WriteData[7:0] == 8'h9a) && mailbox_write) begin
             inject_zero_sign_s <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'ha2) && mailbox_write) begin
+            inject_high_sign_r <= 1'b1;
+        end
+        else if((WriteData[7:0] == 8'ha3) && mailbox_write) begin
+            inject_high_sign_s <= 1'b1;
         end
         else if((WriteData[7:0] == 8'h9c) && mailbox_write) begin
             inject_invalid_privkey <= 1'b1;
@@ -1105,6 +1121,28 @@ module caliptra_top_tb_services
             end
             else if (inject_zero_sign_s_needs_release) begin
                 inject_zero_sign_s <= 1'b0;
+            end
+        end
+        else if(inject_high_sign_r) begin
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd21) begin //R_ID
+                // Force sign_r output to all-ones (>= group_order for both P-256 and P-384)
+                // to exercise the r_output_outofrange (read_reg >= group_order) branch.
+                force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '1;
+                inject_high_sign_r_needs_release <= 1'b1;
+            end
+            else if (inject_high_sign_r_needs_release) begin
+                inject_high_sign_r <= 1'b0;
+            end
+        end
+        else if(inject_high_sign_s) begin
+            if (`CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.prog_instr.reg_id == 6'd22) begin //S_ID
+                // Force sign_s output to all-ones (>= group_order for both P-256 and P-384)
+                // to exercise the s_output_outofrange (read_reg >= group_order) branch.
+                force `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_arith_unit_i.d_o = '1;
+                inject_high_sign_s_needs_release <= 1'b1;
+            end
+            else if (inject_high_sign_s_needs_release) begin
+                inject_high_sign_s <= 1'b0;
             end
         end
         else if(inject_invalid_privkey) begin
