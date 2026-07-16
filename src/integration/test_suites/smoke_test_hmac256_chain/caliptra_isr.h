@@ -63,8 +63,29 @@ inline void service_kv_notif_intr() {return;}
 inline void service_sha512_error_intr() {return;}
 inline void service_sha512_notif_intr() {return;}
 
-inline void service_sha256_error_intr() {return;}
-inline void service_sha256_notif_intr() {return;}
+inline void service_sha256_error_intr() {
+    volatile uint32_t * reg = (volatile uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK) {
+        *reg = SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK;
+        cptra_intr_rcv.sha256_error |= SHA256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK;
+    }
+}
+inline void service_sha256_notif_intr() {
+    volatile uint32_t * reg = (volatile uint32_t *) (CLP_SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
+        *reg = SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+        cptra_intr_rcv.sha256_notif |= SHA256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+    }
+    if (sts == 0) {
+        VPRINTF(ERROR,"bad sha256_notif_intr sts:%x\n", sts);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+}
 
 inline void service_sha3_error_intr() {return;}
 inline void service_sha3_notif_intr() {return;}
