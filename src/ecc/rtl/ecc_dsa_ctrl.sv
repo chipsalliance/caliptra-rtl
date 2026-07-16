@@ -331,14 +331,10 @@ module ecc_dsa_ctrl
         .drbg(hmac_drbg_result_p384)
         );
 
-    // P-256 HMAC-DRBG via swap-boundary wrapper.
-    //
-    //   *** TEMPORARY *** ecc_hmac_drbg_p256_wrap currently wraps
-    //   the hmac_drbg_sha256 block cherry-picked from
-    //   user/mojtabab/hmac-drbg-sha256 @d8765bdf. The final
-    //   production P-256 HMAC-DRBG will replace ONLY the inner
-    //   instantiation inside the wrapper -- this site stays put.
-    //   See src/hmac_drbg/TEMPORARY_DO_NOT_MERGE.md.
+    // P-256 HMAC-DRBG via swap-boundary wrapper. The wrapper
+    // instantiates the production `hmac256_drbg` primitive from
+    // src/hmac256_drbg/ (contributed by Merve Karabulut). Same
+    // primitive shape as the P-384 `hmac_drbg` above.
     ecc_hmac_drbg_p256_wrap #(
         .REG_SIZE   (256),
         .GROUP_ORDER(GROUP_ORDER_P256[255:0])

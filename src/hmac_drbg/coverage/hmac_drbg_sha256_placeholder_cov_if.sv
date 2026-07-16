@@ -14,7 +14,7 @@
 
 `ifndef VERILATOR
 
-interface hmac_drbg_sha256_cov_if
+interface hmac_drbg_sha256_placeholder_cov_if
     (
     input logic           clk,
     input logic           reset_n
@@ -31,18 +31,18 @@ interface hmac_drbg_sha256_cov_if
     logic [255 : 0] prime;
     logic [255 : 0] drbg;
 
-    parameter logic [255:0] HMAC_DRBG_PRIME = hmac_drbg_sha256.HMAC_DRBG_PRIME;
+    parameter logic [255:0] HMAC_DRBG_PRIME = hmac_drbg_sha256_placeholder.HMAC_DRBG_PRIME;
 
-    assign init = hmac_drbg_sha256.init_cmd;
-    assign next = hmac_drbg_sha256.next_cmd;
-    assign zeroize = hmac_drbg_sha256.zeroize;
-    assign ready = hmac_drbg_sha256.ready_reg;
-    assign valid = hmac_drbg_sha256.valid_reg;
+    assign init = hmac_drbg_sha256_placeholder.init_cmd;
+    assign next = hmac_drbg_sha256_placeholder.next_cmd;
+    assign zeroize = hmac_drbg_sha256_placeholder.zeroize;
+    assign ready = hmac_drbg_sha256_placeholder.ready_reg;
+    assign valid = hmac_drbg_sha256_placeholder.valid_reg;
 
     assign hmac_drbg_cmd = {next, init};
 
-    assign drbg_state = hmac_drbg_sha256.drbg_st_reg;
-    assign drbg = hmac_drbg_sha256.drbg;
+    assign drbg_state = hmac_drbg_sha256_placeholder.drbg_st_reg;
+    assign drbg = hmac_drbg_sha256_placeholder.drbg;
 
     covergroup hmac_drbg_sha256_control_cg @(posedge clk);
         reset_cp: coverpoint reset_n;

@@ -28,14 +28,19 @@
 //   - masking_rnd : signature masking (SIGN only)
 //   - drbg        : private scalar (KEYGEN) / k (SIGN)
 //
-// FSM mirrors ecc_hmac_drbg_interface.sv exactly. The only structural
-// difference is the underlying primitive: this wrapper drives
-// `hmac_drbg_sha256` (HMAC-SHA-256, no lfsr_seed port) instead of
-// `hmac_drbg` (HMAC-SHA-384, takes lfsr_seed).
+// FSM mirrors ecc_hmac_drbg_interface.sv exactly. The underlying
+// primitive is `hmac256_drbg` (production HMAC-DRBG-SHA-256 from
+// `src/hmac256_drbg/`, contributed by Merve Karabulut). Same primitive
+// shape as the P-384 `hmac_drbg`: takes an `lfsr_seed` whitening input
+// (96 b = LFSR_SEED_SIZE from `hmac256_param_pkg`), driven by a bank
+// of `caliptra_prim_lfsr` instances seeded off `sca_entropy` (this
+// matches how ecc_hmac_drbg_interface.sv drives the P-384 primitive).
 //
 //======================================================================
 
-module ecc_hmac_drbg_p256_wrap #(
+module ecc_hmac_drbg_p256_wrap
+    import hmac256_param_pkg::*;
+#(
     parameter                  REG_SIZE     = 256,
     parameter [REG_SIZE-1 : 0] GROUP_ORDER  = 256'hFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551
     )
@@ -63,8 +68,8 @@ module ecc_hmac_drbg_p256_wrap #(
     //----------------------------------------------------------------
     // Local declarations.
     //----------------------------------------------------------------
-    logic [REG_SIZE-1 : 0]  lfsr_seed_reg;
-    logic [REG_SIZE-1 : 0]  hmac_lfsr_seed;
+    logic [REG_SIZE-1 : 0]        lfsr_seed_reg;
+    logic [LFSR_SEED_SIZE-1 : 0]  hmac_lfsr_seed;
 
     logic                   hmac_drbg_init;
     logic                   hmac_drbg_next;
@@ -108,13 +113,14 @@ module ecc_hmac_drbg_p256_wrap #(
     localparam [3 : 0] SIGN_NONCE_ST  = 4'd9;
 
     //----------------------------------------------------------------
-    // P-256 HMAC-DRBG primitive instantiation.
+    // P-256 HMAC-DRBG primitive instantiation (production module from
+    // src/hmac256_drbg/; imports hmac256_param_pkg for LFSR_SEED_SIZE).
     //----------------------------------------------------------------
-    hmac_drbg_sha256 #(
+    hmac256_drbg #(
         .REG_SIZE(REG_SIZE),
         .HMAC_DRBG_PRIME(GROUP_ORDER)
         )
-        u_drbg_sha256 (
+        u_hmac256_drbg (
         .clk(clk),
         .reset_n(reset_n),
         .zeroize(zeroize),
@@ -122,17 +128,19 @@ module ecc_hmac_drbg_p256_wrap #(
         .next_cmd(hmac_drbg_next),
         .ready(hmac_drbg_ready),
         .valid(hmac_drbg_valid),
+        .lfsr_seed(hmac_lfsr_seed),
         .entropy(hmac_drbg_entropy),
         .nonce(hmac_drbg_nonce),
         .drbg(hmac_drbg_result)
         );
 
     //----------------------------------------------------------------
-    // LFSR-based SCA entropy whitening (same as P-384 interface).
+    // LFSR-based SCA entropy whitening (same pattern as P-384
+    // interface; LFSR bank width sized to LFSR_SEED_SIZE = 96 b).
     //----------------------------------------------------------------
     genvar i;
     generate
-        for (i = 0; i < (REG_SIZE/32); i++) begin : gen_lfsr
+        for (i = 0; i < (LFSR_SEED_SIZE/32); i++) begin : gen_lfsr
             caliptra_prim_lfsr #(
                 .LfsrType("FIB_XNOR"),
                 .LfsrDw(32),

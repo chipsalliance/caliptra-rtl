@@ -9,7 +9,7 @@ schema_version: 2.4.0
 requires:
   - libs
   - hmac_drbg
-  - hmac_drbg_sha256
+  - hmac256_drbg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

@@ -14,7 +14,7 @@
 //
 //======================================================================
 //
-// hmac_drbg_sha256.sv
+// hmac_drbg_sha256_placeholder.sv
 // -------------------
 // HMAC256-drbg top-level wrapper with 256-bit data access.
 //
@@ -45,7 +45,7 @@
 //   - NEXT: Re-run HMAC_DRBG_Generate with the existing K/V state.
 //======================================================================
 
-module hmac_drbg_sha256
+module hmac_drbg_sha256_placeholder
 #(
   parameter                  REG_SIZE        = 256,
   parameter [REG_SIZE-1 : 0] GROUP_ORDER_P256 = { {(REG_SIZE-256){1'b0}}, 256'hFFFFFFFF00000000FFFFFFFFFFFFFFFFBCE6FAADA7179E84F3B9CAC2FC632551 },
@@ -399,8 +399,8 @@ module hmac_drbg_sha256
   assign valid = valid_reg;
   assign drbg  = drbg_reg;
 
-endmodule // hmac_drbg_sha256
+endmodule // hmac_drbg_sha256_placeholder
 
 //======================================================================
-// EOF hmac_drbg_sha256.sv
+// EOF hmac_drbg_sha256_placeholder.sv
 //======================================================================

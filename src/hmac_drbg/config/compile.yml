@@ -57,7 +57,7 @@ global:
       #sim:
         #- '-ucli -i dump.ucli'
 ---
-provides: [hmac_drbg_sha256]
+provides: [hmac_drbg_sha256_placeholder]
 schema_version: 2.4.0
 requires:
   - libs
@@ -67,23 +67,23 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/hmac_sha256_core.sv
-      - $COMPILE_ROOT/rtl/hmac_drbg_sha256.sv
-    tops: [hmac_drbg_sha256]
+      - $COMPILE_ROOT/rtl/hmac_drbg_sha256_placeholder.sv
+    tops: [hmac_drbg_sha256_placeholder]
 ---
-provides: [hmac_drbg_sha256_tb]
+provides: [hmac_drbg_sha256_placeholder_tb]
 schema_version: 2.4.0
 requires:
-  - hmac_drbg_sha256
-  - hmac_drbg_sha256_coverage
+  - hmac_drbg_sha256_placeholder
+  - hmac_drbg_sha256_placeholder_coverage
 targets:
   tb:
     directories:
       - $COMPILE_ROOT/tb
     files:
-      - $COMPILE_ROOT/tb/hmac_drbg_sha256_tb.sv
-    tops: [hmac_drbg_sha256_tb]
+      - $COMPILE_ROOT/tb/hmac_drbg_sha256_placeholder_tb.sv
+    tops: [hmac_drbg_sha256_placeholder_tb]
   sim:
-    pre_exec: 'echo "[PRE-EXEC] Copying HMAC_DRBG_SHA256 vector generator to $(pwd)" && cp $COMPILE_ROOT/tb/hmac_drbg_sha256_ref.py .'
+    pre_exec: 'echo "[PRE-EXEC] Copying HMAC_DRBG_SHA256 vector generator to $(pwd)" && cp $COMPILE_ROOT/tb/hmac_drbg_sha256_placeholder_ref.py .'
 global:
   tool:
     vcs:
@@ -93,17 +93,17 @@ global:
         - +define+SIMULATION
         - '-noinherit_timescale=1ns/1ps'
 ---
-provides: [hmac_drbg_sha256_coverage]
+provides: [hmac_drbg_sha256_placeholder_coverage]
 schema_version: 2.4.0
 requires:
-  - hmac_drbg_sha256
+  - hmac_drbg_sha256_placeholder
 targets:
   tb:
     directories:
       - $COMPILE_ROOT/coverage
     files:
-      - $COMPILE_ROOT/coverage/hmac_drbg_sha256_cov_if.sv
-      - $COMPILE_ROOT/coverage/hmac_drbg_sha256_cov_bind.sv
+      - $COMPILE_ROOT/coverage/hmac_drbg_sha256_placeholder_cov_if.sv
+      - $COMPILE_ROOT/coverage/hmac_drbg_sha256_placeholder_cov_bind.sv
 global:
   tool:
     vcs:

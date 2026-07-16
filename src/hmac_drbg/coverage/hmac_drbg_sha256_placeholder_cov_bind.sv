@@ -13,8 +13,8 @@
 // limitations under the License.
 
 
-module hmac_drbg_sha256_cov_bind;
+module hmac_drbg_sha256_placeholder_cov_bind;
     `ifdef FCOV
-    bind hmac_drbg_sha256 hmac_drbg_sha256_cov_if i_hmac_drbg_sha256_cov_if(.*);
+    bind hmac_drbg_sha256_placeholder hmac_drbg_sha256_placeholder_cov_if i_hmac_drbg_sha256_cov_if(.*);
     `endif
 endmodule

@@ -557,10 +557,10 @@ module ecc_top_tb
       // Wait for wrapper to enter KEYGEN_ST (privkey-draw INIT).
       wait (dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.state_reg == 4'd6);
       // Wait for the DRBG core's first CHCK_ST inside that draw.
-      wait (dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_drbg_sha256.drbg_st_reg == 5'd11);
-      force dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_drbg_sha256.HMAC_tag = bad_val;
+      wait (dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_hmac256_drbg.drbg_st_reg == 5'd11);
+      force dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_hmac256_drbg.HMAC_tag = bad_val;
       @(posedge clk_tb);
-      release dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_drbg_sha256.HMAC_tag;
+      release dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_hmac256_drbg.HMAC_tag;
     end
   endtask
 
@@ -568,10 +568,10 @@ module ecc_top_tb
     begin
       // Wait for wrapper to enter SIGN_ST (k-draw INIT under nondet=1).
       wait (dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.state_reg == 4'd7);
-      wait (dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_drbg_sha256.drbg_st_reg == 5'd11);
-      force dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_drbg_sha256.HMAC_tag = bad_val;
+      wait (dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_hmac256_drbg.drbg_st_reg == 5'd11);
+      force dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_hmac256_drbg.HMAC_tag = bad_val;
       @(posedge clk_tb);
-      release dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_drbg_sha256.HMAC_tag;
+      release dut.ecc_dsa_ctrl_i.ecc_hmac_drbg_p256_wrap_i.u_hmac256_drbg.HMAC_tag;
     end
   endtask
 

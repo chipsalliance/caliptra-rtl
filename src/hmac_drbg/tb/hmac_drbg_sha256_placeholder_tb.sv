@@ -14,15 +14,15 @@
 //
 //======================================================================
 //
-// hmac_drbg_sha256_tb.sv
+// hmac_drbg_sha256_placeholder_tb.sv
 //
 // Self-checking testbench for HMAC-DRBG-SHA256.  Mirrors
 // `hmac_drbg_tb.sv` (the SHA-384 version) but with 256-bit widths and
-// KAT vectors produced by `hmac_drbg_sha256_ref.py`.
+// KAT vectors produced by `hmac_drbg_sha256_placeholder_ref.py`.
 //
 //======================================================================
 
-module hmac_drbg_sha256_tb();
+module hmac_drbg_sha256_placeholder_tb();
 
   //----------------------------------------------------------------
   // Local Parameters.
@@ -67,10 +67,10 @@ module hmac_drbg_sha256_tb();
 
   initial begin
     if ($value$plusargs("HMAC_DRBG_SHA256_TEST=%s", hmac_drbg_test_to_run)) begin
-      $display("%m: Running hmac_drbg_sha256 test = %s", hmac_drbg_test_to_run);
+      $display("%m: Running hmac_drbg_sha256_placeholder test = %s", hmac_drbg_test_to_run);
     end else begin
       hmac_drbg_test_to_run = "HMAC_DRBG_SHA256_directed_test";
-      $display("%m: Running hmac_drbg_sha256 test = %s", hmac_drbg_test_to_run);
+      $display("%m: Running hmac_drbg_sha256_placeholder test = %s", hmac_drbg_test_to_run);
     end
 
     if (hmac_drbg_test_to_run == "HMAC_DRBG_SHA256_directed_test") begin
@@ -96,7 +96,7 @@ module hmac_drbg_sha256_tb();
   //----------------------------------------------------------------
   // Device Under Test.
   //----------------------------------------------------------------
-  hmac_drbg_sha256
+  hmac_drbg_sha256_placeholder
   #(
         .REG_SIZE(REG_SIZE),
         .HMAC_DRBG_PRIME(HMAC_DRBG_PRIME)
@@ -115,7 +115,7 @@ module hmac_drbg_sha256_tb();
     );
 
   // Bind coverage interface.
-  hmac_drbg_sha256_cov_bind i_hmac_drbg_sha256_cov_bind();
+  hmac_drbg_sha256_placeholder_cov_bind i_hmac_drbg_sha256_cov_bind();
 
   //----------------------------------------------------------------
   // clk_gen
@@ -461,7 +461,7 @@ module hmac_drbg_sha256_tb();
 
   //----------------------------------------------------------------
   // hmac_drbg_directed_test
-  // Caliptra-style KATs computed by hmac_drbg_sha256_ref.py.
+  // Caliptra-style KATs computed by hmac_drbg_sha256_placeholder_ref.py.
   //----------------------------------------------------------------
   task hmac_drbg_directed_test;
     begin
@@ -539,7 +539,7 @@ module hmac_drbg_sha256_tb();
       $fdisplay(file, "%h", nonce);
       $fclose(file);
 
-      $system($sformatf("python3 hmac_drbg_sha256_ref.py"));
+      $system($sformatf("python3 hmac_drbg_sha256_placeholder_ref.py"));
 
       read_test_vectors("hmac_drbg_sha256_test_vector.hex");
 
@@ -591,5 +591,5 @@ module hmac_drbg_sha256_tb();
 endmodule
 
 //======================================================================
-// EOF hmac_drbg_sha256_tb.sv
+// EOF hmac_drbg_sha256_placeholder_tb.sv
 //======================================================================

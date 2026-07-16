@@ -286,7 +286,7 @@ ${CALIPTRA_ROOT}/src/hmac256/rtl/hmac256_core.sv
 ${CALIPTRA_ROOT}/src/hmac256/rtl/hmac256_reg.sv
 ${CALIPTRA_ROOT}/src/hmac_drbg/rtl/hmac_drbg.sv
 ${CALIPTRA_ROOT}/src/hmac_drbg/rtl/hmac_sha256_core.sv
-${CALIPTRA_ROOT}/src/hmac_drbg/rtl/hmac_drbg_sha256.sv
+${CALIPTRA_ROOT}/src/hmac256_drbg/rtl/hmac256_drbg.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/ecc/rtl/ecc_params_pkg.sv
