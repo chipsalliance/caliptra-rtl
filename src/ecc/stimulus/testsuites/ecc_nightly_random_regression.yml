@@ -11,5 +11,12 @@ contents:
         generate: "reseed {template}.yml -seed {seed}"
         path: "{template_basename}__{seed}.yml"
       templates:
-        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_otf_reset_test   : { weight 2 }
-        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_normal_test      : { weight 98 }
+        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_otf_reset_test                    : { weight 2 }
+        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_otf_reset_dualcurve_random_test  : { weight 2 }
+        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_zeroize_random_test              : { weight 2 }
+        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_illegal_mode_random_test         : { weight 2 }
+        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_kv_slot_random_test              : { weight 2 }
+        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_curve_switch_random_test         : { weight 15 }
+        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_back_to_back_random_test         : { weight 15 }
+        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_dualcurve_random_test            : { weight 30 }
+        $CALIPTRA_ROOT/src/ecc/uvmf_ecc/uvmf_template_output/project_benches/ECC/tb/tests/src/ECC_normal_test                      : { weight 30 }
