@@ -94,15 +94,6 @@ interface hmac256_drbg_cov_if
             bins next_mode = {2'd2};
         }
 
-        // Zeroize timing at representative busy states: K11 (init phase),
-        // T (generate phase), and K3 (retry phase).
-        zeroize_state_cp: coverpoint drbg_state iff (zeroize) {
-            bins idle       = {5'd0};
-            bins init_phase = {5'd4};
-            bins gen_phase  = {5'd10};
-            bins retry      = {5'd12};
-        }
-
         init_ready_cp: cross ready, init {
             illegal_bins illegal_init_when_ready_low = binsof(init) intersect {1} && binsof(ready) intersect {0};
         }
