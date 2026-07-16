@@ -174,6 +174,17 @@ void main() {
     check_cleared(CLP_ECC_REG_ECC_SIGN_R_0,   "P-256 VERIFY SIGN_R");
     check_cleared(CLP_ECC_REG_ECC_SIGN_S_0,   "P-256 VERIFY SIGN_S");
 
+    // ---- Coverage: (zeroize=1, pcr_sign_mode=1) same-cycle ----
+    // ECC_CTRL.PCR_SIGN self-clears next cycle (hwclr = value), so a single
+    // ECC_CTRL write that sets BOTH PCR_SIGN and ZEROIZE is the only way both
+    // fields sample high on the same edge. Purely a coverage-only stimulus:
+    // ZEROIZE resets state, so no functional side-effects to validate here.
+    VPRINTF(LOW, "\nCoverage: ECC_CTRL write with PCR_SIGN | ZEROIZE.\n");
+    while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL,
+                 ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK) |
+                 ((1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW)  & ECC_REG_ECC_CTRL_ZEROIZE_MASK));
+
     VPRINTF(LOW, "\nAll zeroize-while-busy variants passed.\n");
     SEND_STDOUT_CTRL(0xff);
 }
