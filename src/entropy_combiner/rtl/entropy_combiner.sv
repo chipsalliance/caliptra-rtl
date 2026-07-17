@@ -11,10 +11,12 @@
 //
 // The AHB port exposes a purpose-built minimal KAT register map plus combiner
 // policy registers from entropy_combiner_reg.rdl. ROM can run a power-on KAT by
-// writing KAT_MSG/KAT_MSG_LEN and pulsing KAT_CTRL.start; the KAT hashes through
-// the same ot_sha3 gates used operationally. After KAT, ROM sets the W1S AHB_LOCK bit.
-// `ahb_lock_o` is driven from that W1S register so step-3 integration can block
-// runtime firmware reads of combiner entropy state.
+// writing up to 96 bytes into KAT_MSG, programming beat-aligned KAT_MSG_LEN,
+// and pulsing KAT_CTRL.start; hardware hashes that bounded single-block message
+// through the same ot_sha3 gates used operationally and exposes the digest through
+// KAT_DIGEST. After KAT, ROM sets the W1S AHB_LOCK bit. `ahb_lock_o` is driven
+// from that W1S register; this module silently ignores later AHB accesses so
+// runtime firmware cannot read combiner state.
 
 `include "caliptra_prim_assert.sv"
 
@@ -54,7 +56,6 @@ module entropy_combiner
   output logic hreadyout_o,
   output logic [AHB_DATA_WIDTH-1:0] hrdata_o,
 
-  output logic busy_o,
   output logic error_intr_o,
   output logic notif_intr_o,
   output logic ahb_lock_o
@@ -66,13 +67,11 @@ module entropy_combiner
   localparam int unsigned combine_sha3_words = combine_msg_width / sha3_word_width;
   localparam int unsigned kat_msg_words32 = combine_msg_width / 32;
   localparam int unsigned kat_digest_words32 = seed_width / 32;
-  localparam int unsigned kat_msg_max_bytes = combine_msg_width / 8;
   localparam logic [3:0] combine_sha3_words_c = combine_sha3_words;
-  localparam logic [6:0] kat_msg_max_bytes_c = kat_msg_max_bytes;
 
   // FSM state and datapath latches. ES response latches hold each upstream seed
-  // until both have arrived; KAT message/digest latches snapshot the
-  // combiner-owned KAT registers while the shared SHA3 datapath is busy.
+  // until both have arrived; KAT latches snapshot the bounded 0..96 byte message
+  // and hold the digest for ROM readback until W1S AHB_LOCK zeroizes them.
   entropy_combiner_state_e state_q, state_d;
 
   logic op_is_kat_q, op_is_kat_d;
@@ -89,23 +88,24 @@ module entropy_combiner
   logic [seed_width-1:0] kat_digest_q, kat_digest_d;
   logic [6:0] kat_msg_len_q, kat_msg_len_d;
   logic kat_digest_valid_q, kat_digest_valid_d;
-  logic error_q, error_d;
 
-  // COMBINER_STATUS strap capture-enable, mirroring soc_ifc's strap_we: a flop reset
-  // to 1 that clears to 0 after the first cycle, so combine_en_i is captured once at
-  // power-good, then held.
-  logic combine_en_strap_we;
+  // The static combine_en_i strap is registered inside the register block: hardware
+  // continuously loads it into COMBINER_STATUS.combine_en (hw=rw) and reads it back
+  // here as the single registered copy that drives the bypass/combine datapath.
+  logic combine_en_status;
 
   logic [3:0] feed_idx_q, feed_idx_d;
   logic [3:0] feed_words_q, feed_words_d;
-  logic [MsgStrbW-1:0] kat_last_strb_q, kat_last_strb_d;
 
   logic ahb_dv;
+  logic reg_req;
   logic ahb_hold;
   logic ahb_err;
+  logic ahb_locked;
   logic ahb_write;
   logic [31:0] ahb_wdata;
   logic [31:0] ahb_rdata;
+  logic [31:0] reg_rdata;
   logic [AHB_ADDR_WIDTH-1:0] ahb_addr;
 
   logic reg_rd_err;
@@ -117,7 +117,8 @@ module entropy_combiner
   entropy_combiner_reg__out_t hwif_out;
 
   logic kat_start_cmd;
-  logic kat_msg_len_valid;
+  logic kat_done_event;
+  logic [31:0] kat_msg_len_value;
 
   logic sha3_msg_valid;
   logic [MsgWidth-1:0] sha3_msg_data [1];
@@ -138,48 +139,51 @@ module entropy_combiner
   logic sha3_count_error;
   logic sha3_storage_rst_error;
 
-  logic normal_op_busy;
   logic bypass_active;
   logic [MsgWidth-1:0] feed_word;
-  logic [MsgStrbW-1:0] feed_strb;
   logic feed_accept;
   logic fips_combined;
   logic [3:0] kat_feed_words;
-  logic kat_last_word_partial;
-  logic [MsgStrbW-1:0] kat_last_strb;
-  logic error_event;
-  logic notif_event;
 
   assign ahb_hold = 1'b0;
+  assign ahb_locked = hwif_out.AHB_LOCK.lock.value;
+  // ROM's W1S AHB_LOCK: after ROM finishes the KAT it sets the lock. AHB accesses
+  // (reads AND writes) stay forwarded to the register block; the lock is enforced
+  // by targeted, per-function gates rather than a coarse bus write-drop, so no
+  // separate reg_req masking is needed:
+  //   - KAT operation      : kat_start_cmd = start && !ahb_locked (no KAT can run)
+  //   - KAT internal state : kat_msg_q/kat_digest_q/kat_msg_len_q/valid held 0
+  //                          while locked (see always_ff), so sha3 is never fed
+  //   - KAT readback       : KAT_DIGEST/KAT_STATUS.busy/valid forced 0 at hwif
+  //   - FIPS policy         : COMBINER_CTRL.es_fips_policy/es_fips_cfg swwe=!lock
+  //                          freezes the ROM-programmed value
+  // Entropy never appears in any register (it flows ES0/ES1->ot_sha3->CSRNG), so
+  // forwarding writes leaks nothing. Reads stay serviced (status/error observable)
+  // and every transfer completes OKAY (ahb_hold=0).
+  assign reg_req = ahb_dv;
   assign ahb_err = reg_rd_err | reg_wr_err;
+  assign ahb_rdata = reg_rdata;
 
-  assign kat_start_cmd = hwif_out.KAT_CTRL.start.value;
-  assign kat_msg_len_valid = hwif_out.KAT_MSG_LEN.msg_len.value <= kat_msg_max_bytes_c;
+  assign kat_start_cmd = hwif_out.KAT_CTRL.start.value && !ahb_locked;
+  assign kat_msg_len_value = hwif_out.KAT_MSG_LEN.msg_len.value;
+  assign kat_feed_words = kat_msg_len_q[6:3];
 
-  // ROM writes up to 96 bytes into KAT_MSG and programs KAT_MSG_LEN. The SHA3
-  // core consumes 64b beats, so the byte length is converted into a beat count
-  // plus a final-byte strobe for non-64b-aligned KAT vectors.
-  assign kat_feed_words = (kat_msg_len_q[2:0] != 3'b000) ?
-                          kat_msg_len_q[6:3] + 4'h1 :
-                          kat_msg_len_q[6:3];
-  assign kat_last_word_partial = kat_msg_len_q[2:0] != 3'b000;
-
-  // Bypass is only allowed when no combine operation is in flight. This avoids
-  // switching CSRNG's handshake partner mid-request if `combine_en_i` changes
-  // while the combiner is gathering entropy or waiting for SHA3.
-  assign normal_op_busy = !op_is_kat_q && !(state_q inside {
-      combiner_st_idle, combiner_st_kat_done, combiner_st_error});
-  assign bypass_active = !combine_en_i && !normal_op_busy;
-  assign busy_o = (state_q != combiner_st_idle) && (state_q != combiner_st_kat_done) &&
-                  (state_q != combiner_st_error);
-  assign error_event = error_q | sha3_error.valid | sha3_sparse_fsm_error |
-                       sha3_count_error | sha3_storage_rst_error;
-  assign notif_event = kat_digest_valid_d & !kat_digest_valid_q;
-  // The purpose-built combiner map has no interrupt status/enable registers.
-  // Interrupt outputs are direct combiner-local event pulses/levels: errors are
-  // level-sensitive until reset, notification pulses when a KAT digest becomes valid.
-  assign error_intr_o = error_event;
-  assign notif_intr_o = notif_event;
+  // Read the registered strap back from COMBINER_STATUS.combine_en (hw=rw) to drive
+  // the datapath. When deasserted, the combiner is transparent and only ES0 is used;
+  // when asserted, all CSRNG requests use the dual-ES SHA3-384 combine path.
+  assign combine_en_status = hwif_out.COMBINER_STATUS.combine_en.value;
+  assign bypass_active = !combine_en_status;
+  // Standard Caliptra interrupt block (intr_block_rf) aggregates the sticky error
+  // events (power-good/error_reset_b domain) into error_intr_o. Errors stay
+  // observable regardless of the AHB lock, since the combiner keeps combining for
+  // CSRNG after ROM locks the AHB. The notification interrupt (KAT-done) is only
+  // meaningful during ROM time; it is disabled once ROM sets W1S AHB_LOCK so RT FW
+  // is never interrupted by combiner activity.
+  assign error_intr_o = hwif_out.intr_block_rf.error_global_intr_r.intr;
+  assign notif_intr_o = hwif_out.intr_block_rf.notif_global_intr_r.intr && !ahb_locked;
+  // KAT-done notification: single-cycle pulse when a ROM KAT digest is captured
+  // (the cycle the KAT operation leaves sha_wait with a valid ot_sha3 state).
+  assign kat_done_event = (state_q == combiner_st_sha_wait) && op_is_kat_q && sha3_state_valid;
   // W1S AHB_LOCK resets to 0, sets on a write-1, and clears only on reset in
   // the generated register block. Integration uses this output to disable AHB
   // reads after ROM finishes KAT.
@@ -198,38 +202,20 @@ module entropy_combiner
     endcase
   end
 
-  // Last-beat byte strobes for shorter KAT vectors. KAT_MSG bytes are consumed
-  // little-endian within each 64b beat, matching the operational ES bit packing.
+  // SHA3 message-source mux: normal operation feeds twelve 64b beats,
+  // ES0[383:0] followed by ES1[383:0]. KAT feeds a snapped KAT_MSG window for
+  // KAT_MSG_LEN/8 full 64b beats. ROM is trusted to program KAT_MSG_LEN as a
+  // multiple of 8 in the range 0..96.
   always_comb begin
-    unique case (kat_msg_len_q[2:0])
-      3'd1:   kat_last_strb = 8'h01;
-      3'd2:   kat_last_strb = 8'h03;
-      3'd3:   kat_last_strb = 8'h07;
-      3'd4:   kat_last_strb = 8'h0f;
-      3'd5:   kat_last_strb = 8'h1f;
-      3'd6:   kat_last_strb = 8'h3f;
-      3'd7:   kat_last_strb = 8'h7f;
-      default: kat_last_strb = 8'hff;
-    endcase
-  end
-
-  // SHA3 message-source mux. Normal operation feeds twelve 64b beats:
-  // ES0[383:0] followed by ES1[383:0]. KAT mode feeds the latched KAT_MSG
-  // register contents and honors KAT_MSG_LEN for shorter standard vectors.
-  always_comb begin
-    feed_word = '0;
-    feed_strb = '0;
-
+    // feed_word is only consumed in combiner_st_sha_feed, where the valid/ready
+    // handshake and the feed_words_q counter bound feed_idx_q to 0..feed_words_q-1
+    // (<= 11). No range guard is needed - the FSM never indexes past the message.
     if (op_is_kat_q) begin
       feed_word = kat_msg_q[(feed_idx_q * MsgWidth) +: MsgWidth];
-      feed_strb = ((feed_idx_q + 4'h1) == feed_words_q) && kat_last_word_partial ?
-                  kat_last_strb_q : 8'hff;
-    end else if (feed_idx_q < 4'd6) begin
+    end else if (feed_idx_q < 4'd6) begin // the first half of 768-bit
       feed_word = es0_bits_q[(feed_idx_q * MsgWidth) +: MsgWidth];
-      feed_strb = 8'hff;
-    end else begin
+    end else begin // the second half of 768-bit
       feed_word = es1_bits_q[((feed_idx_q - 4'd6) * MsgWidth) +: MsgWidth];
-      feed_strb = 8'hff;
     end
   end
 
@@ -262,14 +248,14 @@ module entropy_combiner
     sha3_done = MuBi4False;
     sha3_msg_valid = 1'b0;
     sha3_msg_data[0] = feed_word;
-    sha3_msg_strb = feed_strb;
+    sha3_msg_strb = '1;
 
     unique case (state_q)
       combiner_st_sha_start: begin
         sha3_start = 1'b1;
       end
       combiner_st_sha_feed: begin
-        sha3_msg_valid = (feed_words_q != 4'h0);
+        sha3_msg_valid = 1'b1;
       end
       combiner_st_sha_process: begin
         sha3_process = 1'b1;
@@ -283,14 +269,15 @@ module entropy_combiner
       default: begin
       end
     endcase
+
   end
 
   // Main FSM:
   //   idle          : wait for ROM KAT start or CSRNG entropy request.
   //   req_entropy   : assert es_req to both ES instances until each ack/data is captured.
   //   sha_start     : pulse SHA3 start.
-  //   sha_feed      : feed either ES0||ES1 or KAT message beats into SHA3.
-  //   sha_process   : pulse SHA3 process; 768b combine input fits in one L384 block.
+  //   sha_feed      : feed ES0||ES1 or bounded KAT message beats into SHA3.
+  //   sha_process   : pulse SHA3 process; both operation types fit in one L384 block.
   //   sha_wait      : wait for SHA3 state_valid and latch digest.
   //   comb_ack      : present digest/es_fips to CSRNG for one ack cycle.
   //   wait_req_low  : wait for CSRNG to drop es_req before accepting a new request.
@@ -311,38 +298,30 @@ module entropy_combiner
     kat_digest_d = kat_digest_q;
     kat_msg_len_d = kat_msg_len_q;
     kat_digest_valid_d = kat_digest_valid_q;
-    error_d = error_q;
     feed_idx_d = feed_idx_q;
     feed_words_d = feed_words_q;
-    kat_last_strb_d = kat_last_strb_q;
 
     unique case (state_q)
       combiner_st_idle: begin
         // Prefer ROM KAT START over HW entropy work. Normal combine starts only
-        // on a CSRNG request while combine mode is enabled. A KAT start snapshots
-        // the purpose-built KAT_MSG/KAT_MSG_LEN registers before hashing so later
-        // AHB writes cannot perturb an in-flight KAT.
+        // on a CSRNG request while combine mode is enabled. A KAT start
+        // snapshots the ROM-programmed 0..96 byte KAT window before hashing so
+        // later AHB writes cannot perturb an in-flight KAT.
         op_is_kat_d = 1'b0;
         es0_valid_d = 1'b0;
         es1_valid_d = 1'b0;
         feed_idx_d = '0;
-        feed_words_d = '0;
-        kat_last_strb_d = 8'hff;
 
         if (kat_start_cmd) begin
           kat_digest_d = '0;
           kat_digest_valid_d = 1'b0;
-          if (kat_msg_len_valid) begin
-            op_is_kat_d = 1'b1;
-            kat_msg_len_d = hwif_out.KAT_MSG_LEN.msg_len.value;
-            for (int word_idx = 0; word_idx < kat_msg_words32; word_idx++) begin
-              kat_msg_d[(word_idx * 32) +: 32] = hwif_out.KAT_MSG[word_idx].data.value;
-            end
-            state_d = combiner_st_sha_start;
-          end else begin
-            error_d = 1'b1;
+          for (int word_idx = 0; word_idx < kat_msg_words32; word_idx++) begin
+            kat_msg_d[(word_idx * 32) +: 32] = hwif_out.KAT_MSG[word_idx].data.value;
           end
-        end else if (combine_en_i && csrng_hw_if_req_i.es_req) begin
+          kat_msg_len_d = kat_msg_len_value[6:0];
+          op_is_kat_d = 1'b1;
+          state_d = combiner_st_sha_start;
+        end else if (combine_en_status && csrng_hw_if_req_i.es_req) begin
           op_is_kat_d = 1'b0;
           state_d = combiner_st_req_entropy;
         end
@@ -363,41 +342,42 @@ module entropy_combiner
         end
         if (es0_valid_d && es1_valid_d) begin
           feed_idx_d = '0;
-          feed_words_d = combine_sha3_words_c;
-          kat_last_strb_d = 8'hff;
           state_d = combiner_st_sha_start;
         end
       end
 
       combiner_st_sha_start: begin
-        // Both KAT and normal combine have their messages latched by this point.
-        // Program the shared feed counter, then stream directly into ot_sha3.
+        // KAT streams KAT_MSG_LEN/8 full beats from the snapped KAT_MSG window;
+        // length 0 skips feed and processes the empty message. Normal combine
+        // streams the fixed 12-beat ES0||ES1 message.
+        feed_idx_d = '0;
         if (op_is_kat_q) begin
-          feed_idx_d = '0;
           feed_words_d = kat_feed_words;
-          kat_last_strb_d = kat_last_strb;
+          state_d = (kat_feed_words == 4'h0) ? combiner_st_sha_process :
+                                                combiner_st_sha_feed;
         end else begin
-          feed_idx_d = '0;
           feed_words_d = combine_sha3_words_c;
-          kat_last_strb_d = 8'hff;
+          state_d = combiner_st_sha_feed;
         end
-        state_d = combiner_st_sha_feed;
       end
 
       combiner_st_sha_feed: begin
-        // Advance one 64b beat per SHA3 ready/valid acceptance.
-        if (feed_words_q == 4'h0) begin
-          state_d = combiner_st_sha_process;
-        end else if (feed_accept) begin
+        // Advance one 64b beat per SHA3 ready/valid acceptance. Operational
+        // combine always feeds 12 beats; KAT feeds 0..12 beats from KAT_MSG.
+        // Do not increment on the final beat (we move to process anyway) so
+        // feed_idx_q never exceeds the message bound and the feed_word mux
+        // needs no range guard.
+        if (feed_accept) begin
           if ((feed_idx_q + 4'h1) == feed_words_q) begin
             state_d = combiner_st_sha_process;
+          end else begin
+            feed_idx_d = feed_idx_q + 4'h1;
           end
-          feed_idx_d = feed_idx_q + 4'h1;
         end
       end
 
       combiner_st_sha_process: begin
-        // A single process pulse finalizes the current SHA3 message.
+        // A single process pulse finalizes the current single-block SHA3 message.
         state_d = combiner_st_sha_wait;
       end
 
@@ -440,23 +420,12 @@ module entropy_combiner
 
       combiner_st_error: begin
         state_d = combiner_st_error;
-        error_d = 1'b1;
       end
 
       default: begin
         state_d = combiner_st_error;
-        error_d = 1'b1;
       end
     endcase
-
-    if ((state_q != combiner_st_idle) && kat_start_cmd) begin
-      error_d = 1'b1;
-    end
-
-    if (sha3_error.valid || sha3_sparse_fsm_error || sha3_count_error || sha3_storage_rst_error) begin
-      error_d = error_q | sha3_error.valid | sha3_sparse_fsm_error |
-                sha3_count_error | sha3_storage_rst_error;
-    end
   end
 
   always_ff @(posedge clk or negedge reset_n) begin
@@ -475,11 +444,12 @@ module entropy_combiner
       kat_digest_q <= '0;
       kat_msg_len_q <= '0;
       kat_digest_valid_q <= 1'b0;
-      error_q <= 1'b0;
       feed_idx_q <= '0;
       feed_words_q <= '0;
-      kat_last_strb_q <= 8'hff;
     end else begin
+      // Default update: every register takes its computed next value once.
+      // Security overrides below wipe only the register-visible KAT residuals
+      // when ROM has set W1S AHB_LOCK.
       state_q <= state_d;
       op_is_kat_q <= op_is_kat_d;
       es0_valid_q <= es0_valid_d;
@@ -494,22 +464,25 @@ module entropy_combiner
       kat_digest_q <= kat_digest_d;
       kat_msg_len_q <= kat_msg_len_d;
       kat_digest_valid_q <= kat_digest_valid_d;
-      error_q <= error_d;
       feed_idx_q <= feed_idx_d;
       feed_words_q <= feed_words_d;
-      kat_last_strb_q <= kat_last_strb_d;
+
+      if (ahb_locked) begin
+        // RoT zeroization: after ROM sets W1S AHB_LOCK, wipe and hold clear all
+        // register-visible KAT residuals. Operational combine state/digest is
+        // not register-visible and is left untouched.
+        kat_msg_q <= '0;
+        kat_digest_q <= '0;
+        kat_msg_len_q <= '0;
+        kat_digest_valid_q <= 1'b0;
+        if (!op_is_kat_q && (state_q == combiner_st_idle)) begin
+          feed_idx_q <= '0;
+          feed_words_q <= '0;
+        end
+      end
     end
   end
 
-
-  always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n) begin
-      combine_en_strap_we <= 1'b1;
-    end else begin
-      if (combine_en_strap_we)
-        combine_en_strap_we <= 1'b0;
-    end
-  end
 
   // AHB slave shim mirrors other Caliptra blocks: AHB-Lite is converted into
   // the generated register block's 32b CPU interface. The register layout is
@@ -544,12 +517,13 @@ module entropy_combiner
   // Expected generated register module from entropy_combiner_reg.rdl.
   // Step-4 regeneration must provide entropy_combiner_reg_pkg with
   // entropy_combiner_reg__in_t/out_t and flat paths such as COMBINER_NAME,
-  // KAT_CTRL, KAT_MSG, KAT_DIGEST, COMBINER_CTRL, AHB_LOCK, COMBINER_STATUS.
+  // KAT_CTRL, KAT_MSG_LEN, KAT_MSG, KAT_DIGEST, COMBINER_CTRL, AHB_LOCK,
+  // COMBINER_STATUS.
   entropy_combiner_reg u_entropy_combiner_reg (
     .clk(clk),
     .rst(1'b0),
 
-    .s_cpuif_req(ahb_dv),
+    .s_cpuif_req(reg_req),
     .s_cpuif_req_is_wr(ahb_write),
     .s_cpuif_addr(ahb_addr[entropy_combiner_reg_pkg::ENTROPY_COMBINER_REG_MIN_ADDR_WIDTH-1:0]),
     .s_cpuif_wr_data(ahb_wdata),
@@ -558,7 +532,7 @@ module entropy_combiner
     .s_cpuif_req_stall_rd(),
     .s_cpuif_rd_ack(reg_rd_ack),
     .s_cpuif_rd_err(reg_rd_err),
-    .s_cpuif_rd_data(ahb_rdata),
+    .s_cpuif_rd_data(reg_rdata),
     .s_cpuif_wr_ack(reg_wr_ack),
     .s_cpuif_wr_err(reg_wr_err),
 
@@ -568,12 +542,13 @@ module entropy_combiner
 
   // Drive hardware-owned register fields. KAT_DIGEST and KAT_STATUS are derived
   // only from the real shared ot_sha3 datapath and the combiner FSM. KAT_MSG and
-  // KAT_MSG_LEN are SW-owned inputs read from hwif_out and latched on KAT start.
+  // KAT_MSG_LEN are normally SW-owned, but hardware clears them while locked so
+  // register storage does not retain KAT residuals after ROM sets W1S AHB_LOCK.
   always_comb begin
     hwif_in = '0;
 
-    hwif_in.error_reset_b = cptra_pwrgood_i;
     hwif_in.reset_b = reset_n;
+    hwif_in.error_reset_b = cptra_pwrgood_i;
 
     // Advertise the combiner's own identity, not a reused SHA3/kmac identity.
     hwif_in.COMBINER_NAME[0].NAME.next = ENTROPY_COMBINER_CORE_NAME[31:0];
@@ -582,23 +557,46 @@ module entropy_combiner
     hwif_in.COMBINER_VERSION[1].VERSION.next = ENTROPY_COMBINER_CORE_VERSION[63:32];
 
     // KAT digest readback is hardware-owned storage populated from the real
-    // ot_sha3 state output after state_valid. It is cleared only by reset or by
-    // the next KAT start invalidating `kat_digest_valid_q`.
+    // ot_sha3 state output after state_valid. When W1S AHB_LOCK is set, force
+    // the hwif value to zero as belt-and-suspenders protection on top of AHB
+    // read-data masking and flop zeroization.
     for (int word_idx = 0; word_idx < kat_digest_words32; word_idx++) begin
-      hwif_in.KAT_DIGEST[word_idx].data.next = kat_digest_q[(word_idx * 32) +: 32];
+      hwif_in.KAT_DIGEST[word_idx].data.next =
+          ahb_locked ? '0 : kat_digest_q[(word_idx * 32) +: 32];
     end
 
-    // KAT_STATUS exposes real datapath/FSM state. The SHA3 FSM bits are direct
-    // comparisons against ot_sha3's exported sparse FSM state.
-    hwif_in.KAT_STATUS.busy.next = op_is_kat_q && (state_q != combiner_st_kat_done);
-    hwif_in.KAT_STATUS.valid.next = kat_digest_valid_q;
-    hwif_in.KAT_STATUS.error.next = error_event;
-    hwif_in.KAT_STATUS.sha3_idle.next = sha3_fsm == ot_sha3_pkg::StIdle;
-    hwif_in.KAT_STATUS.sha3_absorb.next = sha3_fsm == ot_sha3_pkg::StAbsorb;
-    hwif_in.KAT_STATUS.sha3_squeeze.next = sha3_fsm == ot_sha3_pkg::StSqueeze;
+    // KAT busy = a KAT operation is in flight (the FSM has left idle for a KAT
+    // and has not yet returned). op_is_kat_q is set the cycle a KAT leaves idle
+    // and cleared only when the FSM returns to idle after kat_done, so it is
+    // asserted for exactly the non-idle KAT states and 0 in idle -- i.e. it is
+    // already "KAT active and not idle", so no fragile per-state compare is
+    // needed. It also isolates KAT status from operational ES0||ES1 combine
+    // traffic (which never sets op_is_kat_q). valid rises at kat_done and holds,
+    // so ROM polls busy==0 and then reads valid + KAT_DIGEST.
+    hwif_in.KAT_STATUS.busy.next  = !ahb_locked && op_is_kat_q;
+    hwif_in.KAT_STATUS.valid.next = !ahb_locked && kat_digest_valid_q;
+
+    // Standard interrupt block hwset sources. Each ot_sha3 error latches its own
+    // sticky bit in the power-good (error_reset_b) reset domain; SW clears via W1C.
+    // Errors are not gated by the AHB lock so a fault stays observable and
+    // survives warm reset. The KAT-done notification pulses for one cycle when a
+    // ROM KAT digest is captured.
+    hwif_in.intr_block_rf.error_internal_intr_r.sha3_error_sts.hwset        = sha3_error.valid;
+    hwif_in.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.hwset  = sha3_sparse_fsm_error;
+    hwif_in.intr_block_rf.error_internal_intr_r.count_error_sts.hwset       = sha3_count_error;
+    hwif_in.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.hwset = sha3_storage_rst_error;
+    hwif_in.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.hwset    = kat_done_event;
 
     hwif_in.COMBINER_STATUS.combine_en.next = combine_en_i;
-    hwif_in.COMBINER_STATUS.combine_en.we   = combine_en_strap_we;
+    hwif_in.COMBINER_STATUS.combine_en.we   = 1'b1;
+
+    // Freeze the FIPS combine policy once ROM sets W1S AHB_LOCK. swwe gates SW
+    // writes at the register-block level (idiomatic Caliptra pattern, see
+    // hmac.sv), keeping the ROM-programmed value intact so RT FW cannot weaken
+    // the ES0/ES1 FIPS combination after boot. Defense-in-depth on top of the
+    // AHB write-drop in the bus shim.
+    hwif_in.COMBINER_CTRL.es_fips_policy.swwe = !ahb_locked;
+    hwif_in.COMBINER_CTRL.es_fips_cfg.swwe    = !ahb_locked;
   end
 
   ot_sha3 #(
@@ -639,8 +637,8 @@ module entropy_combiner
   );
 
   logic unused_signals;
-  assign unused_signals = ^{sha3_absorbed, sha3_squeezing, sha3_block_processed, sha3_run_req,
-                            reg_rd_ack, reg_wr_ack};
+  assign unused_signals = ^{sha3_absorbed, sha3_squeezing, sha3_block_processed, sha3_fsm,
+                            sha3_run_req, reg_rd_ack, reg_wr_ack};
 
   `CALIPTRA_ASSERT_KNOWN(AhbRespKnownO_A, hresp_o, clk, !reset_n)
   `CALIPTRA_ASSERT_KNOWN(AhbReadyKnownO_A, hreadyout_o, clk, !reset_n)
@@ -648,5 +646,24 @@ module entropy_combiner
   `CALIPTRA_ASSERT_KNOWN(Es0ReqKnownO_A, es0_hw_if_req_o.es_req, clk, !reset_n)
   `CALIPTRA_ASSERT_KNOWN(Es1ReqKnownO_A, es1_hw_if_req_o.es_req, clk, !reset_n)
   `CALIPTRA_ASSERT_KNOWN(AhbLockKnownO_A, ahb_lock_o, clk, !reset_n)
+  `CALIPTRA_ASSERT_KNOWN(ErrorIntrKnownO_A, error_intr_o, clk, !reset_n)
+  `CALIPTRA_ASSERT_KNOWN(NotifIntrKnownO_A, notif_intr_o, clk, !reset_n)
+
+  // ot_sha3 is instantiated standalone here (not via kmac), so its prim_count /
+  // sparse-FSM security countermeasures need their "connected" assertions wired
+  // up by this parent, mirroring kmac.sv. Every ot_sha3 CM error latches into the
+  // sticky error interrupt status (intr_block_rf.error_internal_intr_r) and drives
+  // error_intr_o, so the _TRIGGER_ERR variants point at error_intr_o and use this
+  // module's clk / !reset_n.
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ERR(SentMsgCountCheck_A, u_sha3.u_pad.u_sentmsg_count,
+                                                error_intr_o, 1'b0, 30, clk, !reset_n)
+  `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ERR(RoundCountCheck_A, u_sha3.u_keccak.u_round_count,
+                                                error_intr_o, 1'b0, 30, clk, !reset_n)
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(SHA3FsmCheck_A, u_sha3.u_state_regs,
+                                              error_intr_o, 1'b0, 30, clk, !reset_n)
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(SHA3padFsmCheck_A, u_sha3.u_pad.u_state_regs,
+                                              error_intr_o, 1'b0, 30, clk, !reset_n)
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(KeccakFsmCheck_A, u_sha3.u_keccak.u_state_regs,
+                                              error_intr_o, 1'b0, 30, clk, !reset_n)
 
 endmodule
