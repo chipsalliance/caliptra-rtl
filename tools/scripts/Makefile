@@ -258,7 +258,6 @@ endif
 TB_DEFS += +define+CALIPTRA_TOP_TB
 TB_DEFS += +define+CALIPTRA_TOP=caliptra_top_tb
 TB_DEFS += +define+RV_TOP=caliptra_top_tb.caliptra_top_dut.rvtop
-TB_DEFS += +define+SIMULATION
 
 # Run time arguments from command line
 VERILATOR_RUN_ARGS ?= ""

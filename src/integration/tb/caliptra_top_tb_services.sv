@@ -1965,6 +1965,7 @@ endgenerate //IV_NO
 // Each handler forces the sparse FSM state register to an invalid encoding
 // for 1 clock cycle, then releases. The FSM should enter its ERROR state.
 //========================================================================
+`ifndef VERILATOR
     logic release_glitch = 0;
     always @(negedge clk) begin
         // DOE FSM glitch
@@ -1995,7 +1996,8 @@ endgenerate //IV_NO
             release `CPTRA_TOP_PATH.soc_ifc_top1.i_sha512_acc_top.u_sha_state_regs_glitch_inject;
         end
     end
-
+`endif
+    
     task sha256_wntz_testvector_generator();
         string file_name;
         int fd_r;
