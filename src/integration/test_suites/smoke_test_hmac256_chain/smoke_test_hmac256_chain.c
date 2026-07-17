@@ -27,6 +27,27 @@
 // A byte- or dword-ordering bug at the SHA256->HMAC256 or HMAC256->AES
 // boundary shows up as a downstream mismatch, so this test acts as an
 // end-to-end endianness check across all three blocks.
+//
+/* SHA-256 test vector (Step 1)
+BLOCK = 536d6f6b65435054800000000000000000000000000000000000000000000000
+        000000000000000000000000000000000000000000000000000000000000000000000040
+DIGEST = 31af9dbff003ff14e16953e1dc0688f9f8d21237f9e2b03bc4508a484372e69c
+*/
+//
+/* HMAC-SHA-256 test vector (Step 2)
+KEY    = 31af9dbff003ff14e16953e1dc0688f9f8d21237f9e2b03bc4508a484372e69c
+BLOCK  = 4869205468657265800000000000000000000000000000000000000000000000
+         000000000000000000000000000000000000000000000000000000000000000000000240
+TAG    = 3e1981bf1d687b16422648e3bfdb4d15f9f453149461f8bfaac2ddc7e70faf2f
+*/
+//
+/* AES-256-ECB test vector (Step 3)
+KEY_BE = 3e1981bf1d687b16422648e3bfdb4d15f9f453149461f8bfaac2ddc7e70faf2f
+   (AES CLP consumes bytes in per-dword little-endian order, so the
+    effective key is the tag with each dword byte-swapped)
+PT     = 00000000000000000000000000000000
+CT     = 229a7f3d7d466ad5abfc1d5c0ea62a01
+*/
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -123,10 +144,18 @@ void main() {
         sha_block.data[i] = sha256_block_data[i];
 
     sha_digest.data_size = 8;
+    // sha256_flow() reads the DUT digest and compares against sha_digest.data,
+    // so pass the offline reference here as the expected value.
     for (int i = 0; i < 8; i++)
         sha_digest.data[i] = sha256_expected_digest[i];
 
     sha256_flow(sha_block, SHA256_MODE_SHA_256, 0, 0, 0, sha_digest);
+
+    // Read the SHA-256 digest produced by the DUT so it can drive Step 2.
+    uint32_t sha256_digest[8];
+    volatile uint32_t *sha_reg = (volatile uint32_t *) CLP_SHA256_REG_SHA256_DIGEST_0;
+    for (int i = 0; i < 8; i++)
+        sha256_digest[i] = sha_reg[i];
 
     // ----- Step 2: HMAC-SHA-256 keyed with the Step 1 digest -----
     VPRINTF(LOW, "Step 2: HMAC-SHA-256 with SHA-256 digest as key\n");
@@ -138,7 +167,7 @@ void main() {
 
     hmac_key.data_size = HMAC256_KEY_SIZE;
     for (int i = 0; i < HMAC256_KEY_SIZE; i++)
-        hmac_key.data[i] = sha256_expected_digest[i];
+        hmac_key.data[i] = sha256_digest[i];
 
     hmac_block.data_size = HMAC256_BLOCK_SIZE;
     for (int i = 0; i < HMAC256_BLOCK_SIZE; i++)
@@ -149,11 +178,20 @@ void main() {
         hmac_lfsr_seed.data[i] = hmac_lfsr_seed_data[i];
 
     hmac_tag.data_size = HMAC256_TAG_SIZE;
+    // hmac256_flow() reads the DUT tag and compares against hmac_tag.data,
+    // so pass the offline reference here as the expected value.
     for (int i = 0; i < HMAC256_TAG_SIZE; i++)
         hmac_tag.data[i] = hmac_expected_tag[i];
 
     hmac256_flow(hmac_key, hmac_block, hmac_lfsr_seed, hmac_tag,
                  TRUE, TRUE, TRUE);
+
+    // Read the HMAC-256 tag produced by the DUT so it can drive Step 3.
+    uint32_t hmac256_tag[HMAC256_TAG_SIZE];
+    volatile uint32_t *tag_reg = (volatile uint32_t *) CLP_HMAC256_REG_HMAC256_TAG_0;
+    for (int i = 0; i < HMAC256_TAG_SIZE; i++)
+        hmac256_tag[i] = tag_reg[i];
+
     hmac256_zeroize();
 
     // ----- Step 3: AES-256-ECB using the HMAC256 tag as the key -----
@@ -173,7 +211,7 @@ void main() {
     aes_key_t aes_key = {0};
     aes_key.kv_intf = FALSE;
     for (int i = 0; i < 8; i++) {
-        aes_key.key_share0[i] = hmac_expected_tag[i];
+        aes_key.key_share0[i] = hmac256_tag[i];
         aes_key.key_share1[i] = 0x00000000;
     }
 
