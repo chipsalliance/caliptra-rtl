@@ -248,7 +248,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   always_comb mbox_mode_block_we = (mailbox_mode & mbox_block_we);
   always_comb stream_mode_block_we = (streaming_mode & datain_write & ~stall_write);
 
-  always_comb block_we = mbox_mode_block_we | stream_mode_block_we;
+  always_comb block_we = mbox_mode_block_we | stream_mode_block_we | iccm_mode_block_we;
   
   genvar b;
   generate
@@ -499,7 +499,7 @@ always_comb mailbox_address_err = (mbox_end_addr < mbox_start_addr); //calculate
 assign hwif_in.cptra_rst_b = rst_b;
 assign hwif_in.cptra_pwrgood = cptra_pwrgood;
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ~soc_has_lock & ~iccm_mode & (arc_SHA_PAD0_SHA_DONE | arc_SHA_PAD1_SHA_DONE);
-assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // TODO
+assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = sha_fsm_error; // FSM glitch/invalid encoding detected
 assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
