@@ -357,6 +357,15 @@ import aaxi_uvm_pkg::*;
         .iccm_lock(cptra_status_agent_bus.iccm_lock),
         .iccm_axs_blocked(cptra_ctrl_agent_bus.iccm_axs_blocked),
 
+        // ICCM hash mode
+        .iccm_hash_dv(1'b0),
+        .iccm_hash_data(32'b0),
+        .pv_write(),
+        .iccm_unlock_o(),
+        // ICCM PCR extend
+        .pv_read(),
+        .pv_rd_resp('0),
+
         //Other blocks reset
         .cptra_noncore_rst_b (cptra_status_agent_bus.cptra_noncore_rst_b),
         //uC reset

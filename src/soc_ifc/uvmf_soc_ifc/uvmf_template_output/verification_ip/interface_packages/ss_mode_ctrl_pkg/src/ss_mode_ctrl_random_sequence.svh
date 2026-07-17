@@ -35,6 +35,7 @@ class ss_mode_ctrl_random_sequence
   `uvm_object_utils( ss_mode_ctrl_random_sequence )
 
   // pragma uvmf custom class_item_additional begin
+  bit itrng_profile = 0;
   // pragma uvmf custom class_item_additional end
   
   //*****************************************************************
@@ -53,7 +54,9 @@ class ss_mode_ctrl_random_sequence
       req=ss_mode_ctrl_transaction::type_id::create("req");
       start_item(req);
       // Randomize the transaction
-      if(!req.randomize()) `uvm_fatal("SEQ", "ss_mode_ctrl_random_sequence::body()-ss_mode_ctrl_transaction randomization failed")
+      // Force all strap_generic_2 bits to be 0, except for 16-18, which control
+      // rng single-bit enable/select
+      if(!req.randomize() with {itrng_profile -> strap_ss_strap_generic_2[15:0] == 0;itrng_profile -> strap_ss_strap_generic_2[31:19] == 0;}) `uvm_fatal("SEQ", "ss_mode_ctrl_random_sequence::body()-ss_mode_ctrl_transaction randomization failed")
       // Send the transaction to the ss_mode_ctrl_driver_bfm via the sequencer and ss_mode_ctrl_driver.
       finish_item(req);
       `uvm_info("SEQ", {"Response:",req.convert2string()},UVM_MEDIUM)

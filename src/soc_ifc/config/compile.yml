@@ -72,6 +72,7 @@ targets:
       - $COMPILE_ROOT/rtl/soc_ifc_reg.sv
       - $COMPILE_ROOT/rtl/mbox.sv
       - $COMPILE_ROOT/rtl/mbox_csr.sv
+      - $COMPILE_ROOT/rtl/sha512_acc_iccm_hash.sv
       - $COMPILE_ROOT/rtl/sha512_acc_top.sv
       - $COMPILE_ROOT/rtl/sha512_acc_csr.sv
       - $COMPILE_ROOT/rtl/wdt.sv
