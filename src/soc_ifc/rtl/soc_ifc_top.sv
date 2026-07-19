@@ -280,6 +280,7 @@ logic scan_mode_p;
 logic sram_single_ecc_error;
 logic sram_double_ecc_error;
 logic soc_req_mbox_lock;
+logic soc_mbox_lock;
 logic [1:0] generic_input_toggle;
 mbox_protocol_error_t mbox_protocol_error;
 logic mbox_inv_user_p;
@@ -1393,6 +1394,7 @@ i_mbox (
     .sram_single_ecc_error(sram_single_ecc_error),
     .sram_double_ecc_error(sram_double_ecc_error),
     .uc_mbox_lock(uc_mbox_lock),
+    .soc_mbox_lock(soc_mbox_lock),
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail(uc_mbox_data_avail),
     .soc_req_mbox_lock(soc_req_mbox_lock),
@@ -1426,7 +1428,7 @@ axi_dma_top #(
     .recovery_image_activated(recovery_image_activated),
 
     // SOC_IFC Internal Signaling
-    .mbox_lock(uc_mbox_lock),
+    .mbox_lock(uc_mbox_lock | soc_mbox_lock),
     .sha_lock (1'b0        ), // SHA direct-access (internally) not implemented; DMA can use AXI-side for SHA operations
     .debugUnlock_or_scan_mode_switch(debugUnlock_or_scan_mode_switch                               ),
     .ocp_lock_in_progress           (ss_ocp_lock_in_progress                                       ),
