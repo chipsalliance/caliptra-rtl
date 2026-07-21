@@ -36,13 +36,78 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
   rand soc_ifc_env_axi_user_init_sequence_t soc_ifc_env_axi_user_init_seq;
   // Local handle to register model for convenience
   soc_ifc_reg_model_top reg_model;
+  caliptra_axi_user axi_user_obj;
 
   int sts_rsp_count = 0;
 
   function new(string name = "" );
     super.new(name);
     reg_model = top_configuration.soc_ifc_subenv_config.soc_ifc_rm;
+    axi_user_obj = new();
   endfunction
+
+  // ****************************************************************************
+  virtual task monitor_fatal_error(ref bit body_done, ref bit monitor_ready,
+                                   ref bit monitor_done);
+    uvm_status_e fw_sts, hw_sts;
+    uvm_reg_data_t fw_fatal, hw_fatal;
+    bit fatal_handled = 1'b0;
+
+    monitor_ready = 1'b1;
+    `uvm_info("CALIPTRA_TOP_ROM_TEST", "Entering poll for cptra_error_fatal", UVM_HIGH)
+    forever begin
+      bit rsp_seen = 1'b0;
+      fork : wait_for_rsp_or_done
+        begin
+          @(soc_ifc_subenv_soc_ifc_status_agent_responder_seq.new_rsp);
+          rsp_seen = 1'b1;
+        end
+        wait(body_done);
+      join_any
+      #0;
+      disable wait_for_rsp_or_done;
+
+      `uvm_info("CALIPTRA_TOP_ROM_TEST", "wait_for_rsp_or_done hit a condition", UVM_DEBUG)
+      if (body_done && !rsp_seen) begin
+        `uvm_info("CALIPTRA_TOP_ROM_TEST", "monitor_fatal_error returning due to body_done && !rsp_seen", UVM_HIGH)
+        monitor_done = 1'b1;
+        return;
+      end
+      `uvm_info("CALIPTRA_TOP_ROM_TEST", "wait_for_rsp_or_done observed new_rsp", UVM_DEBUG)
+
+      if (soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.cptra_error_fatal_intr_pending && !fatal_handled) begin
+        fatal_handled = 1'b1;
+        reg_model.soc_ifc_reg_rm.CPTRA_FW_ERROR_FATAL.read(fw_sts, fw_fatal, UVM_FRONTDOOR,
+                                                          reg_model.soc_ifc_AXI_map, this,
+                                                          .extension(axi_user_obj));
+        reg_model.soc_ifc_reg_rm.CPTRA_HW_ERROR_FATAL.read(hw_sts, hw_fatal, UVM_FRONTDOOR,
+                                                          reg_model.soc_ifc_AXI_map, this,
+                                                          .extension(axi_user_obj));
+
+        if ((fw_sts != UVM_IS_OK) || (hw_sts != UVM_IS_OK))
+          `uvm_fatal("CALIPTRA_TOP_ROM_TEST",
+                     $sformatf("Fatal error pin asserted but fatal register attribution is unavailable: CPTRA_FW_ERROR_FATAL read status=%s value(if valid)=0x%0x, CPTRA_HW_ERROR_FATAL read status=%s value(if valid)=0x%0x",
+                               fw_sts.name(), fw_fatal, hw_sts.name(), hw_fatal))
+        else if ((|fw_fatal) && (|hw_fatal))
+          `uvm_fatal("CALIPTRA_TOP_ROM_TEST",
+                     $sformatf("Fatal error pin asserted by both FW_ERROR_FATAL and HW_ERROR_FATAL: CPTRA_FW_ERROR_FATAL=0x%0x, CPTRA_HW_ERROR_FATAL=0x%0x",
+                               fw_fatal, hw_fatal))
+        else if (|fw_fatal)
+          `uvm_fatal("CALIPTRA_TOP_ROM_TEST",
+                     $sformatf("Fatal error pin asserted by FW_ERROR_FATAL: CPTRA_FW_ERROR_FATAL=0x%0x, CPTRA_HW_ERROR_FATAL=0x%0x",
+                               fw_fatal, hw_fatal))
+        else if (|hw_fatal)
+          `uvm_fatal("CALIPTRA_TOP_ROM_TEST",
+                     $sformatf("Fatal error pin asserted by HW_ERROR_FATAL: CPTRA_FW_ERROR_FATAL=0x%0x, CPTRA_HW_ERROR_FATAL=0x%0x",
+                               fw_fatal, hw_fatal))
+        else
+          `uvm_fatal("CALIPTRA_TOP_ROM_TEST",
+                     $sformatf("Fatal error pin/register mismatch: pin asserted while CPTRA_FW_ERROR_FATAL=0x%0x and CPTRA_HW_ERROR_FATAL=0x%0x",
+                               fw_fatal, hw_fatal))
+      end
+      `uvm_info("CALIPTRA_TOP_ROM_TEST", $sformatf("skipped reading ERROR_FATAL regs due to %s", soc_ifc_subenv_soc_ifc_status_agent_responder_seq.rsp.convert2string()), UVM_DEBUG)
+    end
+  endtask
 
   // ****************************************************************************
   virtual task run_firmware_init(soc_ifc_env_mbox_rom_fw_sequence_t rom_seq);
@@ -65,6 +130,9 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     // pragma uvmf custom body begin
     // Construct sequences here
     uvm_object obj;
+    bit body_done = 1'b0;
+    bit monitor_ready = 1'b0;
+    bit monitor_done = 1'b0;
 
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
     soc_ifc_env_bringup_seq = soc_ifc_env_rom_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
@@ -85,6 +153,13 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     soc_ifc_env_axi_user_init_seq.soc_ifc_status_agent_rsp_seq = soc_ifc_subenv_soc_ifc_status_agent_responder_seq;
 
     reg_model.reset();
+    axi_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[0].AXI_USER.get_reset("HARD"));
+    fork
+        monitor_fatal_error(body_done, monitor_ready, monitor_done);
+    join_none
+    wait(monitor_ready);
+    #0;
+
     // Start RESPONDER sequences here
     fork
         soc_ifc_subenv_soc_ifc_status_agent_responder_seq.start(soc_ifc_subenv_soc_ifc_status_agent_sequencer);
@@ -141,6 +216,9 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
       soc_ifc_subenv_ss_mode_status_agent_config.wait_for_num_clocks(4000);
       soc_ifc_subenv_mbox_sram_agent_config.wait_for_num_clocks(4000);
     join
+
+    body_done = 1'b1;
+    wait(monitor_done);
 
     // pragma uvmf custom body end
   endtask
