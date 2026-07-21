@@ -64,10 +64,11 @@ static uint32_t sw_key[16] = {
 static uint32_t lfsr_seed_dwords[6] = {
     0xfeedface,0xdeadbeef,0xcafef00d,0x12345678,0x9abcdef0,0x0badc0de};
 
-static void run_subtest(const char *label, BOOL key_from_kv, BOOL block_from_kv, BOOL dest_to_kv) {
+static void run_subtest(const char *label, BOOL key_from_kv, BOOL block_from_kv, BOOL dest_to_kv, uint8_t mode) {
     const uint8_t KV_KEY_SLOT   = 0;
     const uint8_t KV_BLOCK_SLOT = 1;
     const uint8_t KV_DEST_SLOT  = 2;
+    const uint8_t tag_dwords    = (mode == HMAC512_MODE) ? 16 : 12;
 
     VPRINTF(LOW, "--- %s ---\n", label);
     hmac_wait_ready();
@@ -96,10 +97,10 @@ static void run_subtest(const char *label, BOOL key_from_kv, BOOL block_from_kv,
     }
 
     write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_LFSR_SEED_0, lfsr_seed_dwords, 6);
-    hmac512_ctrl_write(HMAC_REG_HMAC512_CTRL_INIT_MASK, FALSE);
+    hmac_ctrl_write(HMAC_REG_HMAC512_CTRL_INIT_MASK, mode, FALSE);
     hmac_wait_valid();
 
-    if (hmac_read_tag_or(16) != 0) {
+    if (hmac_read_tag_or(tag_dwords) != 0) {
         VPRINTF(LOW, "FAIL: %s leaked intermediate TAG\n", label);
         SEND_STDOUT_CTRL(0x1);
         while (1);
@@ -128,11 +129,11 @@ static void run_subtest(const char *label, BOOL key_from_kv, BOOL block_from_kv,
             ((KV_DEST_SLOT << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
              HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK));
     }
-    hmac512_ctrl_write(HMAC_REG_HMAC512_CTRL_NEXT_MASK |
-                       HMAC_REG_HMAC512_CTRL_LAST_MASK, FALSE);
+    hmac_ctrl_write(HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+                    HMAC_REG_HMAC512_CTRL_LAST_MASK, mode, FALSE);
     hmac_wait_valid();
 
-    if (hmac_read_tag_or(16) != 0) {
+    if (hmac_read_tag_or(tag_dwords) != 0) {
         VPRINTF(LOW, "FAIL: %s leaked final TAG\n", label);
         SEND_STDOUT_CTRL(0x1);
         while (1);
@@ -146,10 +147,17 @@ static void run_subtest(const char *label, BOOL key_from_kv, BOOL block_from_kv,
 void main(void) {
     VPRINTF(LOW, "HMAC KV tag-hidden test\n");
 
-    run_subtest("KV key, SW block",          TRUE,  FALSE, FALSE);
-    run_subtest("SW key, KV block",          FALSE, TRUE,  FALSE);
-    run_subtest("KV key, KV block",          TRUE,  TRUE,  FALSE);
-    run_subtest("SW key, SW block, KV dest", FALSE, FALSE, TRUE);
+    VPRINTF(LOW, "== HMAC-512 mode ==\n");
+    run_subtest("KV key, SW block",          TRUE,  FALSE, FALSE, HMAC512_MODE);
+    run_subtest("SW key, KV block",          FALSE, TRUE,  FALSE, HMAC512_MODE);
+    run_subtest("KV key, KV block",          TRUE,  TRUE,  FALSE, HMAC512_MODE);
+    run_subtest("SW key, SW block, KV dest", FALSE, FALSE, TRUE,  HMAC512_MODE);
+
+    VPRINTF(LOW, "== HMAC-384 mode ==\n");
+    run_subtest("KV key, SW block",          TRUE,  FALSE, FALSE, HMAC384_MODE);
+    run_subtest("SW key, KV block",          FALSE, TRUE,  FALSE, HMAC384_MODE);
+    run_subtest("KV key, KV block",          TRUE,  TRUE,  FALSE, HMAC384_MODE);
+    run_subtest("SW key, SW block, KV dest", FALSE, FALSE, TRUE,  HMAC384_MODE);
 
     SEND_STDOUT_CTRL(0xff);
     while (1);
