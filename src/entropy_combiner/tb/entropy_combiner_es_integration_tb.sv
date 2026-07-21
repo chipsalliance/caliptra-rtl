@@ -47,7 +47,6 @@
 
 module entropy_combiner_es_integration_tb
   import entropy_src_pkg::*;
-  import caliptra_prim_mubi_pkg::*;
   ();
 
   //----------------------------------------------------------------
@@ -129,16 +128,24 @@ module entropy_combiner_es_integration_tb
 
   logic          comb_hresp, comb_hreadyout;
   logic [31:0]   comb_hrdata;
-  logic          comb_error_intr, comb_ahb_lock;
+  logic          comb_error_intr, comb_notif_intr, comb_ahb_lock;
 
   //----------------------------------------------------------------
-  // Bookkeeping / snoop
+  // Bookkeeping / snoop / timing control
   //----------------------------------------------------------------
   integer            error_ctr, tc_ctr;
   logic [SEED_W-1:0] got_digest;
   logic              got_fips;
   logic [SEED_W-1:0] es0_seed_seen, es1_seed_seen;
   logic              es0_seen, es1_seen;
+
+  // TB-controlled itrng start gates: hold a source idle to delay when its
+  // entropy_src produces a seed, stressing ES0-vs-ES1 arrival misalignment.
+  logic rng0_go, rng1_go;
+
+  // Ack-cycle timestamps (reset per case) to prove the combiner waits for both.
+  integer cycle_ctr;
+  integer es0_ack_cyc, es1_ack_cyc, csrng_ack_cyc;
 
   //----------------------------------------------------------------
   // DUT: entropy combiner (combine mode)
@@ -174,83 +181,59 @@ module entropy_combiner_es_integration_tb
     .hrdata_o         (comb_hrdata),
 
     .error_intr_o     (comb_error_intr),
+    .notif_intr_o     (comb_notif_intr),
     .ahb_lock_o       (comb_ahb_lock)
   );
 
   //----------------------------------------------------------------
-  // Real entropy_src IP #0 (primary)
+  // Real entropy_src IP #0 (primary), via the RTL wrapper that ties off the
+  // MuBi enable straps and other unused interfaces inside the design partition.
   //----------------------------------------------------------------
-  entropy_src #(
+  entropy_src_raw_wrap #(
     .AHBDataWidth(ES_AHB_DATA_W),
     .AHBAddrWidth(ES_AHB_ADDR_W)
   ) u_es0 (
-    .clk_i                        (clk_tb),
-    .rst_ni                       (reset_n_tb),
-    .haddr_i                      (es_haddr),
-    .hwdata_i                     (es_hwdata),
-    .hsel_i                       (es_hsel),
-    .hwrite_i                     (es_hwrite),
-    .hready_i                     (es_hready),
-    .htrans_i                     (es_htrans),
-    .hsize_i                      (es_hsize),
-    .hresp_o                      (es0_hresp),
-    .hreadyout_o                  (es0_hreadyout),
-    .hrdata_o                     (es0_hrdata),
-    .otp_en_entropy_src_fw_read_i (MuBi8True),
-    .otp_en_entropy_src_fw_over_i (MuBi8True),
-    .rng_fips_o                   (),
-    .entropy_src_hw_if_i          (es0_hw_req),
-    .entropy_src_hw_if_o          (es0_hw_rsp),
-    .entropy_src_rng_o            (es0_rng_req),
-    .entropy_src_rng_i            (es0_rng_rsp),
-    .cs_aes_halt_o                (),
-    .cs_aes_halt_i                (cs_aes_halt_rsp_t'('0)),
-    .entropy_src_xht_o            (),
-    .entropy_src_xht_i            (entropy_src_xht_rsp_t'('0)),
-    .alert_rx_i                   ('0),
-    .alert_tx_o                   (),
-    .intr_es_entropy_valid_o      (),
-    .intr_es_health_test_failed_o (),
-    .intr_es_observe_fifo_ready_o (),
-    .intr_es_fatal_err_o          ()
+    .clk_i               (clk_tb),
+    .rst_ni              (reset_n_tb),
+    .haddr_i             (es_haddr),
+    .hwdata_i            (es_hwdata),
+    .hsel_i              (es_hsel),
+    .hwrite_i            (es_hwrite),
+    .hready_i            (es_hready),
+    .htrans_i            (es_htrans),
+    .hsize_i             (es_hsize),
+    .hresp_o             (es0_hresp),
+    .hreadyout_o         (es0_hreadyout),
+    .hrdata_o            (es0_hrdata),
+    .entropy_src_hw_if_i (es0_hw_req),
+    .entropy_src_hw_if_o (es0_hw_rsp),
+    .entropy_src_rng_o   (es0_rng_req),
+    .entropy_src_rng_i   (es0_rng_rsp)
   );
 
   //----------------------------------------------------------------
-  // Real entropy_src IP #1 (secondary)
+  // Real entropy_src IP #1 (secondary), via the same RTL wrapper.
   //----------------------------------------------------------------
-  entropy_src #(
+  entropy_src_raw_wrap #(
     .AHBDataWidth(ES_AHB_DATA_W),
     .AHBAddrWidth(ES_AHB_ADDR_W)
   ) u_es1 (
-    .clk_i                        (clk_tb),
-    .rst_ni                       (reset_n_tb),
-    .haddr_i                      (es_haddr),
-    .hwdata_i                     (es_hwdata),
-    .hsel_i                       (es_hsel),
-    .hwrite_i                     (es_hwrite),
-    .hready_i                     (es_hready),
-    .htrans_i                     (es_htrans),
-    .hsize_i                      (es_hsize),
-    .hresp_o                      (es1_hresp),
-    .hreadyout_o                  (es1_hreadyout),
-    .hrdata_o                     (es1_hrdata),
-    .otp_en_entropy_src_fw_read_i (MuBi8True),
-    .otp_en_entropy_src_fw_over_i (MuBi8True),
-    .rng_fips_o                   (),
-    .entropy_src_hw_if_i          (es1_hw_req),
-    .entropy_src_hw_if_o          (es1_hw_rsp),
-    .entropy_src_rng_o            (es1_rng_req),
-    .entropy_src_rng_i            (es1_rng_rsp),
-    .cs_aes_halt_o                (),
-    .cs_aes_halt_i                (cs_aes_halt_rsp_t'('0)),
-    .entropy_src_xht_o            (),
-    .entropy_src_xht_i            (entropy_src_xht_rsp_t'('0)),
-    .alert_rx_i                   ('0),
-    .alert_tx_o                   (),
-    .intr_es_entropy_valid_o      (),
-    .intr_es_health_test_failed_o (),
-    .intr_es_observe_fifo_ready_o (),
-    .intr_es_fatal_err_o          ()
+    .clk_i               (clk_tb),
+    .rst_ni              (reset_n_tb),
+    .haddr_i             (es_haddr),
+    .hwdata_i            (es_hwdata),
+    .hsel_i              (es_hsel),
+    .hwrite_i            (es_hwrite),
+    .hready_i            (es_hready),
+    .htrans_i            (es_htrans),
+    .hsize_i             (es_hsize),
+    .hresp_o             (es1_hresp),
+    .hreadyout_o         (es1_hreadyout),
+    .hrdata_o            (es1_hrdata),
+    .entropy_src_hw_if_i (es1_hw_req),
+    .entropy_src_hw_if_o (es1_hw_rsp),
+    .entropy_src_rng_o   (es1_rng_req),
+    .entropy_src_rng_i   (es1_rng_rsp)
   );
 
   //----------------------------------------------------------------
@@ -262,7 +245,7 @@ module entropy_combiner_es_integration_tb
     .DutyCycle     (RNG_DUTY_CYCLE)
   ) u_rng0 (
     .clk    (clk_tb),
-    .enable (es0_rng_req.rng_enable),
+    .enable (es0_rng_req.rng_enable & rng0_go),
     .data   (es0_rng_rsp.rng_b),
     .valid  (es0_rng_rsp.rng_valid)
   );
@@ -273,7 +256,7 @@ module entropy_combiner_es_integration_tb
     .DutyCycle     (RNG_DUTY_CYCLE)
   ) u_rng1 (
     .clk    (clk_tb),
-    .enable (es1_rng_req.rng_enable),
+    .enable (es1_rng_req.rng_enable & rng1_go),
     .data   (es1_rng_rsp.rng_b),
     .valid  (es1_rng_rsp.rng_valid)
   );
@@ -284,22 +267,36 @@ module entropy_combiner_es_integration_tb
   always #CLK_HALF_PERIOD clk_tb = ~clk_tb;
 
   //----------------------------------------------------------------
-  // Snoop the seed each entropy_src delivers to the combiner.
+  // Snoop the seed each entropy_src delivers, and timestamp the ES/CSRNG
+  // acks (relative to the per-case reset) to check arrival ordering.
+  //
+  // entropy_src es_ack and the combiner csrng ack are one-cycle COMBINATIONAL
+  // pulses, so they are sampled on the negedge (mid-cycle, stable) to avoid a
+  // posedge race. cycle_ctr is a posedge counter, stable when read at negedge.
   //----------------------------------------------------------------
   always @(posedge clk_tb or negedge reset_n_tb) begin
+    if (!reset_n_tb) cycle_ctr <= 0;
+    else             cycle_ctr <= cycle_ctr + 1;
+  end
+
+  always @(negedge clk_tb or negedge reset_n_tb) begin
     if (!reset_n_tb) begin
       es0_seen      <= 1'b0;
       es1_seen      <= 1'b0;
       es0_seed_seen <= '0;
       es1_seed_seen <= '0;
+      es0_ack_cyc   <= -1;
+      es1_ack_cyc   <= -1;
     end else begin
       if (es0_hw_rsp.es_ack && !es0_seen) begin
         es0_seed_seen <= es0_hw_rsp.es_bits;
         es0_seen      <= 1'b1;
+        es0_ack_cyc   <= cycle_ctr;
       end
       if (es1_hw_rsp.es_ack && !es1_seen) begin
         es1_seed_seen <= es1_hw_rsp.es_bits;
         es1_seen      <= 1'b1;
+        es1_ack_cyc   <= cycle_ctr;
       end
     end
   end
@@ -324,10 +321,14 @@ module entropy_combiner_es_integration_tb
       csrng_req        = '0;
       combine_en_tb    = 1'b0;
 
+      rng0_go          = 1'b0;
+      rng1_go          = 1'b0;
+
       error_ctr        = 0;
       tc_ctr           = 0;
       got_digest       = '0;
       got_fips         = 1'b0;
+      csrng_ack_cyc    = -1;
     end
   endtask
 
@@ -393,8 +394,9 @@ module entropy_combiner_es_integration_tb
       forever begin
         @(negedge clk_tb);
         if (csrng_rsp.es_ack) begin
-          got_digest = csrng_rsp.es_bits;
-          got_fips   = csrng_rsp.es_fips;
+          got_digest    = csrng_rsp.es_bits;
+          got_fips      = csrng_rsp.es_fips;
+          csrng_ack_cyc = cycle_ctr;   // capture cleanly (comb ack, race-free at negedge)
           disable wait_combiner_ack;
         end
         timeout = timeout + 1;
@@ -424,74 +426,98 @@ module entropy_combiner_es_integration_tb
   endtask
 
   //----------------------------------------------------------------
-  // Main
+  // run_case() - one deterministic combine with a controlled ES0/ES1
+  // arrival skew. es{0,1}_delay = cycles each itrng source is held idle
+  // (after the CSRNG request) before it starts streaming its InitialSeed.
+  // A full reset precedes each case so both seeds are the deterministic
+  // InitialSeed again (physical_rng re-arms while its enable is low).
+  //----------------------------------------------------------------
+  task run_case(input integer es0_delay,
+                input integer es1_delay,
+                input string  tag);
+    integer err_at_entry;
+    begin
+      err_at_entry = error_ctr;
+
+      // Hold both itrng sources idle, reset, then bring both ES up. With the
+      // sources gated, neither entropy_src collects until released below.
+      rng0_go = 1'b0;
+      rng1_go = 1'b0;
+      reset_dut();
+      repeat (50) @(posedge clk_tb);
+      configure_es();
+      repeat (20) @(posedge clk_tb);
+
+      // Start the combine, then release the sources with the requested skew
+      // (one delay is always 0, so this stays sequential).
+      @(negedge clk_tb);
+      csrng_req.es_req = 1'b1;
+      if (es0_delay <= es1_delay) begin
+        rng0_go = 1'b1;
+        repeat (es1_delay - es0_delay) @(posedge clk_tb);
+        rng1_go = 1'b1;
+      end else begin
+        rng1_go = 1'b1;
+        repeat (es0_delay - es1_delay) @(posedge clk_tb);
+        rng0_go = 1'b1;
+      end
+
+      wait_combiner_ack();
+
+      // Seeds are deterministic regardless of arrival timing.
+      if (!es0_seen || (es0_seed_seen !== IS0)) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] ES0 seed MISMATCH seen=%0b got=%096h", tag, es0_seen, es0_seed_seen);
+      end
+      if (!es1_seen || (es1_seed_seen !== IS1)) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] ES1 seed MISMATCH seen=%0b got=%096h", tag, es1_seen, es1_seed_seen);
+      end
+      // Digest is order-independent: SHA3-384(IS0 || IS1).
+      if (got_digest !== EXP_DIGEST) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] DIGEST MISMATCH", tag);
+        $display("      exp = %096h", EXP_DIGEST);
+        $display("      got = %096h", got_digest);
+      end
+      if (got_fips !== 1'b0) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] es_fips expected 0 (raw mode) got %0b", tag, got_fips);
+      end
+      // The combiner must ack only after BOTH ES seeds arrived.
+      if (!((csrng_ack_cyc > es0_ack_cyc) && (csrng_ack_cyc > es1_ack_cyc))) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] ORDER VIOLATION es0@%0d es1@%0d csrng@%0d",
+                 tag, es0_ack_cyc, es1_ack_cyc, csrng_ack_cyc);
+      end
+
+      if (error_ctr == err_at_entry)
+        $display("    [TC %0d] %-16s PASS  es0@%0d es1@%0d csrng@%0d  digest OK",
+                 tc_ctr, tag, es0_ack_cyc, es1_ack_cyc, csrng_ack_cyc);
+      tc_ctr = tc_ctr + 1;
+
+      @(negedge clk_tb);
+      csrng_req.es_req = 1'b0;
+      repeat (10) @(posedge clk_tb);
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // Main - re-run the same deterministic combine under several ES0/ES1
+  // arrival-timing skews.
   //----------------------------------------------------------------
   initial begin
     init_sim();
 
-    // combine_en_i is a static strap sampled at reset.
+    // combine_en_i strap = 1; re-sampled by each per-case reset in run_case.
     combine_en_tb = 1'b1;
-    reset_dut();
 
-    // Let the entropy_src register blocks settle, then configure both to
-    // raw/bypass mode and enable them.
-    repeat (50) @(posedge clk_tb);
-    configure_es();
-    repeat (20) @(posedge clk_tb);
-
-    // Issue a single CSRNG combine request. The combiner fans it out to ES0
-    // and ES1; each streams its InitialSeed in through itrng, and the combiner
-    // returns SHA3-384(ES0 || ES1).
-    $display("*** [integration] Requesting one combine seed from dual entropy_src");
-    @(negedge clk_tb);
-    csrng_req.es_req = 1'b1;
-
-    wait_combiner_ack();
-
-    // 1) Each entropy_src must have delivered its deterministic raw seed.
-    if (!es0_seen || (es0_seed_seen !== IS0)) begin
-      error_ctr = error_ctr + 1;
-      $display("*** ES0 seed MISMATCH  seen=%0b", es0_seen);
-      $display("      exp = %096h", IS0);
-      $display("      got = %096h", es0_seed_seen);
-    end else begin
-      $display("    ES0 raw seed OK = %096h", es0_seed_seen);
-    end
-    tc_ctr = tc_ctr + 1;
-
-    if (!es1_seen || (es1_seed_seen !== IS1)) begin
-      error_ctr = error_ctr + 1;
-      $display("*** ES1 seed MISMATCH  seen=%0b", es1_seen);
-      $display("      exp = %096h", IS1);
-      $display("      got = %096h", es1_seed_seen);
-    end else begin
-      $display("    ES1 raw seed OK = %096h", es1_seed_seen);
-    end
-    tc_ctr = tc_ctr + 1;
-
-    // 2) Combined digest must equal SHA3-384(IS0 || IS1).
-    if (got_digest !== EXP_DIGEST) begin
-      error_ctr = error_ctr + 1;
-      $display("*** COMBINE DIGEST MISMATCH");
-      $display("      exp = %096h", EXP_DIGEST);
-      $display("      got = %096h", got_digest);
-    end else begin
-      $display("    COMBINE digest OK = %096h", got_digest);
-    end
-    tc_ctr = tc_ctr + 1;
-
-    // 3) Raw/bypass ES output is non-FIPS, so the combined fips bit is 0.
-    if (got_fips !== 1'b0) begin
-      error_ctr = error_ctr + 1;
-      $display("*** COMBINE es_fips expected 0 (raw mode) got %0b", got_fips);
-    end else begin
-      $display("    COMBINE es_fips = 0 (raw/bypass, as expected)");
-    end
-    tc_ctr = tc_ctr + 1;
-
-    @(negedge clk_tb);
-    csrng_req.es_req = 1'b0;
-    repeat (10) @(posedge clk_tb);
+    $display("*** [integration] Dual entropy_src -> combiner, itrng-driven, timing sweep");
+    run_case(0,   0,   "simultaneous");
+    run_case(0,   120, "ES0-first-small");
+    run_case(120, 0,   "ES1-first-small");
+    run_case(0,   600, "ES0-first-large");
+    run_case(600, 0,   "ES1-first-large");
 
     display_test_result();
     $finish;
@@ -501,7 +527,7 @@ module entropy_combiner_es_integration_tb
   // Global watchdog
   //----------------------------------------------------------------
   initial begin
-    #40_000_000;
+    #80_000_000;
     $display("*** ERROR: global simulation timeout.");
     $display("* TESTCASE FAILED");
     $finish;
