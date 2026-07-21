@@ -80,3 +80,5 @@ contents:
         - ../test_suites/smoke_test_mlkem_kv_endian/smoke_test_mlkem_kv_endian.yml
         # KV boot flow monitor smoke test
         - ../test_suites/smoke_test_kv_boot_flow_monitor/smoke_test_kv_boot_flow_monitor.yml
+        # ICCM write hash measurement smoke test
+        - ../test_suites/smoke_test_iccm_hash/smoke_test_iccm_hash.yml
