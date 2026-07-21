@@ -129,16 +129,16 @@ addrmap entropy_combiner_reg {
     } COMBINER_CTRL @ 0x00AC;
 
     reg {
-        name = "Entropy combiner W1S AHB_LOCK register";
-        desc = "W1S lock register. Writing 1 sets the lock; the lock clears only on reset. RTL drives ahb_lock_o from this field so integration can disable combiner AHB reads after ROM KAT.";
+        name = "Entropy combiner MuBi4 AHB_LOCK register";
+        desc = "MuBi4 AHB lock. MuBi4False(0x9)=unlocked (reset), MuBi4True(0x6)=locked; ROM writes MuBi4True after the KAT. Write-once-sticky (swwe=strict-False); clears only on reset. RTL treats any non-strict-False code (True or invalid) as locked (fail-safe).";
 
         field {
             sw = rw;
             hw = r;
-            onwrite = woset;
-            reset = 0x0;
-            desc = "W1S lock bit. Write 1 to set. Clears only on reset.";
-        } lock[0:0];
+            swwe;
+            reset = 0x9;
+            desc = "MuBi4 AHB lock: 0x9=unlocked, 0x6=locked; any non-strict-False code is locked.";
+        } lock[3:0];
     } AHB_LOCK @ 0x00B0;
 
     reg {
@@ -152,7 +152,7 @@ addrmap entropy_combiner_reg {
             hw = rw;
             we;
             reset = 0x0;
-            desc = "combine_en_i strap registered by hardware (SW read-only). Hardware continuously loads the strap and reads this field back to drive the bypass/combine datapath, so this register is the single registered copy of combine_en. 1 = two entropy_src instances combined via SHA3-384, 0 = single entropy_src (combiner bypassed).";
+            desc = "combine_en_i strap registered by hardware (SW read-only). 1 = two entropy_src instances combined via SHA3-384, 0 = single entropy_src (combiner bypassed).";
         } combine_en[0:0];
     } COMBINER_STATUS @ 0x00B4;
 

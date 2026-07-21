@@ -14,9 +14,9 @@
 // writing up to 96 bytes into KAT_MSG, programming beat-aligned KAT_MSG_LEN,
 // and pulsing KAT_CTRL.start; hardware hashes that bounded single-block message
 // through the same ot_sha3 gates used operationally and exposes the digest through
-// KAT_DIGEST. After KAT, ROM sets the W1S AHB_LOCK bit. `ahb_lock_o` is driven
-// from that W1S register; this module silently ignores later AHB accesses so
-// runtime firmware cannot read combiner state.
+// KAT_DIGEST. After KAT, ROM locks the MuBi4 AHB_LOCK (writes MuBi4True); while
+// locked, KAT state is zeroized and reads return zero. FI hardening: MuBi4 lock
+// (fail-safe to locked) and a sparse HD-3 FSM.
 
 `include "caliptra_prim_assert.sv"
 
@@ -89,9 +89,7 @@ module entropy_combiner
   logic [6:0] kat_msg_len_q, kat_msg_len_d;
   logic kat_digest_valid_q, kat_digest_valid_d;
 
-  // The static combine_en_i strap is registered inside the register block: hardware
-  // continuously loads it into COMBINER_STATUS.combine_en (hw=rw) and reads it back
-  // here as the single registered copy that drives the bypass/combine datapath.
+  // combine_en_i strap registered in COMBINER_STATUS.combine_en and read back.
   logic combine_en_status;
 
   logic [3:0] feed_idx_q, feed_idx_d;
@@ -101,6 +99,8 @@ module entropy_combiner
   logic reg_req;
   logic ahb_hold;
   logic ahb_err;
+  // MuBi4 AHB lock: locked unless stored value is strict MuBi4False (fail-safe).
+  mubi4_t ahb_lock_mubi;
   logic ahb_locked;
   logic ahb_write;
   logic [31:0] ahb_wdata;
@@ -119,6 +119,7 @@ module entropy_combiner
   logic kat_start_cmd;
   logic kat_done_event;
   logic any_sha3_cm_error;
+  logic combiner_fsm_error;
   logic [31:0] kat_msg_len_value;
 
   logic sha3_msg_valid;
@@ -147,8 +148,11 @@ module entropy_combiner
   logic [3:0] kat_feed_words;
 
   assign ahb_hold = 1'b0;
-  assign ahb_locked = hwif_out.AHB_LOCK.lock.value;
-  // ROM's W1S AHB_LOCK: after ROM finishes the KAT it sets the lock. AHB accesses
+  // MuBi4 AHB lock: locked unless stored value is strict MuBi4False (fail-safe:
+  // True or any glitched/invalid code => locked).
+  assign ahb_lock_mubi = mubi4_t'(hwif_out.AHB_LOCK.lock.value);
+  assign ahb_locked = ~mubi4_test_false_strict(ahb_lock_mubi);
+  // ROM's MuBi AHB_LOCK: ROM writes MuBi4True to lock after the KAT. AHB accesses
   // (reads AND writes) stay forwarded to the register block; the lock is enforced
   // by targeted, per-function gates rather than a coarse bus write-drop, so no
   // separate reg_req masking is needed:
@@ -174,9 +178,7 @@ module entropy_combiner
   assign kat_feed_words = (kat_msg_len_q[6:3] > combine_sha3_words_c) ?
                           combine_sha3_words_c : kat_msg_len_q[6:3];
 
-  // Read the registered strap back from COMBINER_STATUS.combine_en (hw=rw) to drive
-  // the datapath. When deasserted, the combiner is transparent and only ES0 is used;
-  // when asserted, all CSRNG requests use the dual-ES SHA3-384 combine path.
+  // combine_en read back from COMBINER_STATUS drives bypass vs combine.
   assign combine_en_status = hwif_out.COMBINER_STATUS.combine_en.value;
   assign bypass_active = !combine_en_status;
   // Standard Caliptra interrupt block (intr_block_rf) aggregates the sticky error
@@ -187,20 +189,20 @@ module entropy_combiner
   // is never interrupted by combiner activity.
   assign error_intr_o = hwif_out.intr_block_rf.error_global_intr_r.intr;
   assign notif_intr_o = hwif_out.intr_block_rf.notif_global_intr_r.intr && !ahb_locked;
-  // Unmaskable aggregate of the raw ot_sha3 security-countermeasure errors. This
-  // mirrors what kmac's alert_tx_o[1] represents (an alert that SW interrupt
-  // enables cannot gate). error_intr_o is software-maskable (per-event + global
-  // enables reset to 0), so it must NOT be used as the target for the prim-CM
-  // FPV assertions; those point at this raw OR instead.
+  // Combiner sparse-FSM glitch (trapped to error state) is a CM error.
+  assign combiner_fsm_error = (state_q == combiner_st_error);
+  // Unmaskable CM-error aggregate (ot_sha3 errors + combiner FSM glitch); target
+  // for the prim-CM FPV assertions. error_intr_o is SW-maskable so is not used here.
   assign any_sha3_cm_error = sha3_error.valid | sha3_sparse_fsm_error |
-                             sha3_count_error | sha3_storage_rst_error;
+                             sha3_count_error | sha3_storage_rst_error |
+                             combiner_fsm_error;
   // KAT-done notification: single-cycle pulse when a ROM KAT digest is captured
   // (the cycle the KAT operation leaves sha_wait with a valid ot_sha3 state).
   assign kat_done_event = (state_q == combiner_st_sha_wait) && op_is_kat_q && sha3_state_valid;
-  // W1S AHB_LOCK resets to 0, sets on a write-1, and clears only on reset in
-  // the generated register block. Integration uses this output to disable AHB
-  // reads after ROM finishes KAT.
-  assign ahb_lock_o = hwif_out.AHB_LOCK.lock.value;
+  // MuBi4 AHB_LOCK resets to MuBi4False (unlocked), is set to MuBi4True by ROM
+  // after the KAT, and clears only on reset. ahb_lock_o exposes the fail-safe
+  // decoded locked condition so integration can disable AHB reads after ROM KAT.
+  assign ahb_lock_o = ahb_locked;
   assign feed_accept = sha3_msg_valid && sha3_msg_ready;
 
   // Combined es_fips policy is register-controlled. Reset/default is
@@ -443,7 +445,6 @@ module entropy_combiner
 
   always_ff @(posedge clk or negedge reset_n) begin
     if (!reset_n) begin
-      state_q <= combiner_st_idle;
       op_is_kat_q <= 1'b0;
       es0_valid_q <= 1'b0;
       es1_valid_q <= 1'b0;
@@ -460,10 +461,8 @@ module entropy_combiner
       feed_idx_q <= '0;
       feed_words_q <= '0;
     end else begin
-      // Default update: every register takes its computed next value once.
-      // Security overrides below wipe only the register-visible KAT residuals
-      // when ROM has set W1S AHB_LOCK.
-      state_q <= state_d;
+      // Default update: every register takes its computed next value once; KAT
+      // residuals are wiped below when locked. state_q lives in u_combiner_state_regs.
       op_is_kat_q <= op_is_kat_d;
       es0_valid_q <= es0_valid_d;
       es1_valid_q <= es1_valid_d;
@@ -495,6 +494,19 @@ module entropy_combiner
       end
     end
   end
+
+  // Sparse (HD-3) state register: a single-bit glitch yields an undefined code
+  // trapped by the always_comb default into combiner_st_error.
+  caliptra_prim_sparse_fsm_flop #(
+    .StateEnumT(entropy_combiner_state_e),
+    .Width(CombinerStateWidth),
+    .ResetValue(combiner_st_idle)
+  ) u_combiner_state_regs (
+    .clk_i(clk),
+    .rst_ni(reset_n),
+    .state_i(state_d),
+    .state_o(state_q)
+  );
 
 
   // AHB slave shim mirrors other Caliptra blocks: AHB-Lite is converted into
@@ -603,11 +615,14 @@ module entropy_combiner
     hwif_in.COMBINER_STATUS.combine_en.next = combine_en_i;
     hwif_in.COMBINER_STATUS.combine_en.we   = 1'b1;
 
-    // Freeze the FIPS combine policy once ROM sets W1S AHB_LOCK. swwe gates SW
+    // Write-once-sticky lock: writable only while strict MuBi4False; freezes once
+    // it leaves the unlocked encoding.
+    hwif_in.AHB_LOCK.lock.swwe = mubi4_test_false_strict(ahb_lock_mubi);
+
+    // Freeze the FIPS combine policy once ROM sets the AHB lock. swwe gates SW
     // writes at the register-block level (idiomatic Caliptra pattern, see
     // hmac.sv), keeping the ROM-programmed value intact so RT FW cannot weaken
-    // the ES0/ES1 FIPS combination after boot. Defense-in-depth on top of the
-    // AHB write-drop in the bus shim.
+    // the ES0/ES1 FIPS combination after boot.
     hwif_in.COMBINER_CTRL.es_fips_policy.swwe = !ahb_locked;
     hwif_in.COMBINER_CTRL.es_fips_cfg.swwe    = !ahb_locked;
   end
@@ -679,6 +694,10 @@ module entropy_combiner
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(SHA3padFsmCheck_A, u_sha3.u_pad.u_state_regs,
                                               any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(KeccakFsmCheck_A, u_sha3.u_keccak.u_state_regs,
+                                              any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
+
+  // Combiner sparse FSM: undefined state code must reach the CM aggregate.
+  `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(CombinerFsmCheck_A, u_combiner_state_regs,
                                               any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
 
 endmodule

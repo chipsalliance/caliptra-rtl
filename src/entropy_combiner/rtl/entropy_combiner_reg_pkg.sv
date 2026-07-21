@@ -57,6 +57,14 @@ package entropy_combiner_reg_pkg;
     } entropy_combiner_reg__COMBINER_CTRL__in_t;
 
     typedef struct packed{
+        logic swwe;
+    } entropy_combiner_reg__AHB_LOCK__lock__in_t;
+
+    typedef struct packed{
+        entropy_combiner_reg__AHB_LOCK__lock__in_t lock;
+    } entropy_combiner_reg__AHB_LOCK__in_t;
+
+    typedef struct packed{
         logic next;
         logic we;
     } entropy_combiner_reg__COMBINER_STATUS__combine_en__in_t;
@@ -109,6 +117,7 @@ package entropy_combiner_reg_pkg;
         entropy_combiner_reg__KAT_STATUS__in_t KAT_STATUS;
         entropy_combiner_reg__KAT_DIGEST__in_t [12-1:0]KAT_DIGEST;
         entropy_combiner_reg__COMBINER_CTRL__in_t COMBINER_CTRL;
+        entropy_combiner_reg__AHB_LOCK__in_t AHB_LOCK;
         entropy_combiner_reg__COMBINER_STATUS__in_t COMBINER_STATUS;
         entropy_combiner_reg__intr_block_t__in_t intr_block_rf;
     } entropy_combiner_reg__in_t;
@@ -151,7 +160,7 @@ package entropy_combiner_reg_pkg;
     } entropy_combiner_reg__COMBINER_CTRL__out_t;
 
     typedef struct packed{
-        logic value;
+        logic [3:0] value;
     } entropy_combiner_reg__AHB_LOCK__lock__out_t;
 
     typedef struct packed{

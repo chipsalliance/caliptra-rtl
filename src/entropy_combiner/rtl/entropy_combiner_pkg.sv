@@ -9,17 +9,21 @@ package entropy_combiner_pkg;
   // are captured, feeds ES0||ES1 as a single SHA3-384 block, then returns one
   // 384b digest with one CSRNG ack. KAT states reuse the same SHA3 datapath for
   // one fixed POST vector of 0..768 bits, bounded to one SHA3-384 block.
-  typedef enum logic [3:0] {
-    combiner_st_idle,
-    combiner_st_req_entropy,
-    combiner_st_sha_start,
-    combiner_st_sha_feed,
-    combiner_st_sha_process,
-    combiner_st_sha_wait,
-    combiner_st_comb_ack,
-    combiner_st_wait_req_low,
-    combiner_st_kat_done,
-    combiner_st_error
+  //
+  // Sparse Hamming-distance-3 encoding (codes reused from entropy_src_main_sm_pkg)
+  // so a single-bit glitch yields an undefined code trapped to combiner_st_error.
+  localparam int unsigned CombinerStateWidth = 9;
+  typedef enum logic [CombinerStateWidth-1:0] {
+    combiner_st_idle         = 9'b011110101,
+    combiner_st_req_entropy  = 9'b111010010,
+    combiner_st_sha_start    = 9'b000101100,
+    combiner_st_sha_feed     = 9'b001011001,
+    combiner_st_sha_process  = 9'b011111000,
+    combiner_st_sha_wait     = 9'b010111111,
+    combiner_st_comb_ack     = 9'b110011000,
+    combiner_st_wait_req_low = 9'b010001110,
+    combiner_st_kat_done     = 9'b100001111,
+    combiner_st_error        = 9'b001110011
   } entropy_combiner_state_e;
 
   // Reset default is fips_policy_and_both. The configurable value mode is for

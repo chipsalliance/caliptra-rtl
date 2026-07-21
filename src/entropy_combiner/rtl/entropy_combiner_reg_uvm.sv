@@ -260,7 +260,7 @@ package entropy_combiner_reg_uvm;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        entropy_combiner_reg__AHB_LOCK_bit_cg lock_bit_cg[1];
+        entropy_combiner_reg__AHB_LOCK_bit_cg lock_bit_cg[4];
         entropy_combiner_reg__AHB_LOCK_fld_cg fld_cg;
         rand uvm_reg_field lock;
 
@@ -275,7 +275,7 @@ package entropy_combiner_reg_uvm;
 
         virtual function void build();
             this.lock = new("lock");
-            this.lock.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.lock.configure(this, 4, 0, "RW", 0, 'h9, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(lock_bit_cg[bt]) lock_bit_cg[bt] = new();
             end

@@ -184,7 +184,7 @@ module entropy_combiner_reg (
         } COMBINER_CTRL;
         struct packed{
             struct packed{
-                logic next;
+                logic [3:0] next;
                 logic load_next;
             } lock;
         } AHB_LOCK;
@@ -399,7 +399,7 @@ module entropy_combiner_reg (
         } COMBINER_CTRL;
         struct packed{
             struct packed{
-                logic value;
+                logic [3:0] value;
             } lock;
         } AHB_LOCK;
         struct packed{
@@ -639,10 +639,10 @@ module entropy_combiner_reg (
     assign hwif_out.COMBINER_CTRL.es_fips_cfg.value = field_storage.COMBINER_CTRL.es_fips_cfg.value;
     // Field: entropy_combiner_reg.AHB_LOCK.lock
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.AHB_LOCK.lock.value;
+        automatic logic [3:0] next_c = field_storage.AHB_LOCK.lock.value;
         automatic logic load_next_c = '0;
-        if(decoded_reg_strb.AHB_LOCK && decoded_req_is_wr) begin // SW write 1 set
-            next_c = field_storage.AHB_LOCK.lock.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+        if(decoded_reg_strb.AHB_LOCK && decoded_req_is_wr && hwif_in.AHB_LOCK.lock.swwe) begin // SW write
+            next_c = (field_storage.AHB_LOCK.lock.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
             load_next_c = '1;
         end
         field_combo.AHB_LOCK.lock.next = next_c;
@@ -650,7 +650,7 @@ module entropy_combiner_reg (
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.AHB_LOCK.lock.value <= 1'h0;
+            field_storage.AHB_LOCK.lock.value <= 4'h9;
         end else if(field_combo.AHB_LOCK.lock.load_next) begin
             field_storage.AHB_LOCK.lock.value <= field_combo.AHB_LOCK.lock.next;
         end
@@ -1413,8 +1413,8 @@ module entropy_combiner_reg (
     assign readback_array[18][7:2] = '0;
     assign readback_array[18][8:8] = (decoded_reg_strb.COMBINER_CTRL && !decoded_req_is_wr) ? field_storage.COMBINER_CTRL.es_fips_cfg.value : '0;
     assign readback_array[18][31:9] = '0;
-    assign readback_array[19][0:0] = (decoded_reg_strb.AHB_LOCK && !decoded_req_is_wr) ? field_storage.AHB_LOCK.lock.value : '0;
-    assign readback_array[19][31:1] = '0;
+    assign readback_array[19][3:0] = (decoded_reg_strb.AHB_LOCK && !decoded_req_is_wr) ? field_storage.AHB_LOCK.lock.value : '0;
+    assign readback_array[19][31:4] = '0;
     assign readback_array[20][0:0] = (decoded_reg_strb.COMBINER_STATUS && !decoded_req_is_wr) ? field_storage.COMBINER_STATUS.combine_en.value : '0;
     assign readback_array[20][31:1] = '0;
     assign readback_array[21][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
