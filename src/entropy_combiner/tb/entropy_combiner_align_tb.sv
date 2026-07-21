@@ -76,6 +76,7 @@ module entropy_combiner_align_tb
   logic          hreadyout_tb;
   logic [31:0]   hrdata_tb;
   logic          error_intr_tb;
+  logic          notif_intr_tb;
   logic          ahb_lock_tb;
 
   //----------------------------------------------------------------
@@ -127,6 +128,7 @@ module entropy_combiner_align_tb
     .hrdata_o         (hrdata_tb),
 
     .error_intr_o     (error_intr_tb),
+    .notif_intr_o     (notif_intr_tb),
     .ahb_lock_o       (ahb_lock_tb)
   );
 
@@ -144,18 +146,16 @@ module entropy_combiner_align_tb
   integer cycle_ctr;
   integer last_es0_ack_cyc;
   integer last_es1_ack_cyc;
-  integer last_csrng_ack_cyc;
+  integer last_csrng_ack_cyc;   // captured in wait_csrng_ack (comb signal; avoids posedge race)
   always @(posedge clk_tb or negedge reset_n_tb) begin
     if (!reset_n_tb) begin
       cycle_ctr          <= 0;
       last_es0_ack_cyc   <= -1;
       last_es1_ack_cyc   <= -1;
-      last_csrng_ack_cyc <= -1;
     end else begin
       cycle_ctr <= cycle_ctr + 1;
       if (es0_rsp_tb.es_ack)   last_es0_ack_cyc   <= cycle_ctr;
       if (es1_rsp_tb.es_ack)   last_es1_ack_cyc   <= cycle_ctr;
-      if (csrng_rsp_tb.es_ack) last_csrng_ack_cyc <= cycle_ctr;
     end
   end
 
@@ -256,6 +256,7 @@ module entropy_combiner_align_tb
 
       got_digest       = '0;
       got_fips         = 1'b0;
+      last_csrng_ack_cyc = -1;
 
       error_ctr        = 0;
       tc_ctr           = 0;
@@ -289,8 +290,9 @@ module entropy_combiner_align_tb
       forever begin
         @(negedge clk_tb);
         if (csrng_rsp_tb.es_ack) begin
-          got_digest = csrng_rsp_tb.es_bits;
-          got_fips   = csrng_rsp_tb.es_fips;
+          got_digest         = csrng_rsp_tb.es_bits;
+          got_fips           = csrng_rsp_tb.es_fips;
+          last_csrng_ack_cyc = cycle_ctr;   // capture cleanly (comb ack, race-free at negedge)
           disable wait_csrng_ack;
         end
         timeout = timeout + 1;
