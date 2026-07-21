@@ -224,6 +224,9 @@ module caliptra_top
     security_state_t            cptra_security_state_Latched;
     security_state_t            cptra_security_state_Latched_d;
     security_state_t            cptra_security_state_Latched_f;
+    caliptra_prim_mubi_pkg::mubi4_t debug_locked_d;
+    caliptra_prim_mubi_pkg::mubi4_t debug_locked_f;
+
     logic                       cptra_dmi_reg_en_preQ;
     
     logic                       fw_update_rst_window;
@@ -834,6 +837,24 @@ el2_veer_wrapper rvtop (
         end
     end
 
+    //MUBI4 buffer
+    caliptra_prim_mubi4_sender #(
+        .AsyncOn (0)
+    ) u_debug_locked_d_sender (
+        .clk_i   (clk),
+        .rst_ni  (cptra_noncore_rst_b),
+        .mubi_i  (cptra_security_state_Latched_d.debug_locked),
+        .mubi_o  (debug_locked_d)
+    );
+    caliptra_prim_mubi4_sender #(
+        .AsyncOn (0)
+    ) u_debug_locked_f_sender (
+        .clk_i   (clk),
+        .rst_ni  (cptra_noncore_rst_b),
+        .mubi_i  (cptra_security_state_Latched_f.debug_locked),
+        .mubi_o  (debug_locked_f)
+    );
+
     always_ff @(posedge clk or negedge cptra_pwrgood) begin
         if (~cptra_pwrgood) begin
             cptra_scan_mode_Latched_d <= '0;
@@ -846,7 +867,7 @@ el2_veer_wrapper rvtop (
     end
 
     //Lock debug unless both flops are unlocked (MuBi4 OR: result is True/locked if either input is True/locked)
-    always_comb cptra_security_state_Latched.debug_locked = mubi4_or_hi(cptra_security_state_Latched_d.debug_locked, cptra_security_state_Latched_f.debug_locked);
+    always_comb cptra_security_state_Latched.debug_locked = mubi4_or_hi(debug_locked_d, debug_locked_f);
     //Pass on the latched value of device lifecycle
     always_comb cptra_security_state_Latched.device_lifecycle = cptra_security_state_Latched_f.device_lifecycle;
     //Only assert scan mode once both flops have set
@@ -857,7 +878,7 @@ el2_veer_wrapper rvtop (
     // gets messed up. So switch to scan is destructive (obvious! Duh!)
     always_comb scan_mode_switch = cptra_scan_mode_Latched_d & ~cptra_scan_mode_Latched_f;
     // Detect transition of debug mode
-    always_comb debug_lock_switch = mubi4_test_true_loose(cptra_security_state_Latched_d.debug_locked) ^ mubi4_test_true_loose(cptra_security_state_Latched_f.debug_locked);
+    always_comb debug_lock_switch = mubi4_test_true_loose(debug_locked_d) ^ mubi4_test_true_loose(debug_locked_f);
     // Detect transition from valid lifecycle state to invalid
     always_comb device_lifecycle_switch = (cptra_security_state_Latched_f.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION}) &
                                          ~(cptra_security_state_Latched_d.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION});
