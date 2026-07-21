@@ -118,6 +118,7 @@ module entropy_combiner
 
   logic kat_start_cmd;
   logic kat_done_event;
+  logic any_sha3_cm_error;
   logic [31:0] kat_msg_len_value;
 
   logic sha3_msg_valid;
@@ -166,7 +167,12 @@ module entropy_combiner
 
   assign kat_start_cmd = hwif_out.KAT_CTRL.start.value && !ahb_locked;
   assign kat_msg_len_value = hwif_out.KAT_MSG_LEN.msg_len.value;
-  assign kat_feed_words = kat_msg_len_q[6:3];
+  // KAT beats = KAT_MSG_LEN/8, clamped to the 768-bit (12-beat) KAT_MSG window.
+  // ROM is trusted to program a multiple of 8 in 0..96, but the clamp guarantees
+  // the feed_word part-select can never index past kat_msg_q even if ROM
+  // misprograms a length above 96 (up to 127 fits in the 7-bit field).
+  assign kat_feed_words = (kat_msg_len_q[6:3] > combine_sha3_words_c) ?
+                          combine_sha3_words_c : kat_msg_len_q[6:3];
 
   // Read the registered strap back from COMBINER_STATUS.combine_en (hw=rw) to drive
   // the datapath. When deasserted, the combiner is transparent and only ES0 is used;
@@ -181,6 +187,13 @@ module entropy_combiner
   // is never interrupted by combiner activity.
   assign error_intr_o = hwif_out.intr_block_rf.error_global_intr_r.intr;
   assign notif_intr_o = hwif_out.intr_block_rf.notif_global_intr_r.intr && !ahb_locked;
+  // Unmaskable aggregate of the raw ot_sha3 security-countermeasure errors. This
+  // mirrors what kmac's alert_tx_o[1] represents (an alert that SW interrupt
+  // enables cannot gate). error_intr_o is software-maskable (per-event + global
+  // enables reset to 0), so it must NOT be used as the target for the prim-CM
+  // FPV assertions; those point at this raw OR instead.
+  assign any_sha3_cm_error = sha3_error.valid | sha3_sparse_fsm_error |
+                             sha3_count_error | sha3_storage_rst_error;
   // KAT-done notification: single-cycle pulse when a ROM KAT digest is captured
   // (the cycle the KAT operation leaves sha_wait with a valid ot_sha3 state).
   assign kat_done_event = (state_q == combiner_st_sha_wait) && op_is_kat_q && sha3_state_valid;
@@ -651,19 +664,21 @@ module entropy_combiner
 
   // ot_sha3 is instantiated standalone here (not via kmac), so its prim_count /
   // sparse-FSM security countermeasures need their "connected" assertions wired
-  // up by this parent, mirroring kmac.sv. Every ot_sha3 CM error latches into the
-  // sticky error interrupt status (intr_block_rf.error_internal_intr_r) and drives
-  // error_intr_o, so the _TRIGGER_ERR variants point at error_intr_o and use this
-  // module's clk / !reset_n.
+  // up by this parent, mirroring kmac.sv. kmac targets its unmaskable alert
+  // (alert_tx_o[1]); this block has no alert port, so the equivalent unmaskable
+  // target is any_sha3_cm_error (the raw OR of the ot_sha3 error signals). We do
+  // NOT use error_intr_o here: it is software-maskable (per-event + global
+  // interrupt enables reset to 0), so a CM error would not be guaranteed to
+  // propagate to it.
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ERR(SentMsgCountCheck_A, u_sha3.u_pad.u_sentmsg_count,
-                                                error_intr_o, 1'b0, 30, clk, !reset_n)
+                                                any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
   `CALIPTRA_ASSERT_PRIM_COUNT_ERROR_TRIGGER_ERR(RoundCountCheck_A, u_sha3.u_keccak.u_round_count,
-                                                error_intr_o, 1'b0, 30, clk, !reset_n)
+                                                any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(SHA3FsmCheck_A, u_sha3.u_state_regs,
-                                              error_intr_o, 1'b0, 30, clk, !reset_n)
+                                              any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(SHA3padFsmCheck_A, u_sha3.u_pad.u_state_regs,
-                                              error_intr_o, 1'b0, 30, clk, !reset_n)
+                                              any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(KeccakFsmCheck_A, u_sha3.u_keccak.u_state_regs,
-                                              error_intr_o, 1'b0, 30, clk, !reset_n)
+                                              any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
 
 endmodule
