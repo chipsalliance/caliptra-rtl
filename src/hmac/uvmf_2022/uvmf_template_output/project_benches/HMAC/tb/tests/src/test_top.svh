@@ -17,25 +17,29 @@
 //----------------------------------------------------------------------
 //
 
-typedef HMAC_env_configuration HMAC_env_configuration_t;
-typedef HMAC_environment HMAC_environment_t;
+typedef HMAC_env_configuration hmac_env_configuration_t;
+typedef HMAC_environment hmac_environment_t;
 
-class test_top extends uvmf_test_base #(.CONFIG_T(HMAC_env_configuration_t), 
-                                        .ENV_T(HMAC_environment_t), 
+class test_top extends uvmf_test_base #(.CONFIG_T(hmac_env_configuration_t), 
+                                        .ENV_T(hmac_environment_t), 
                                         .TOP_LEVEL_SEQ_T(HMAC_bench_sequence_base));
 
   `uvm_component_utils( test_top );
 
+// This message handler can be used to redirect QVIP Memory Model messages through
+// the UVM messaging mechanism.  How to enable and use it is described in 
+//      $UVMF_HOME/common/utility_packages/qvip_utils_pkg/src/qvip_report_catcher.svh
+qvip_memory_message_handler message_handler;
 
 
   string interface_names[] = {
-    HMAC_in_agent_BFM /* HMAC_in_agent     [0] */ , 
-    HMAC_out_agent_BFM /* HMAC_out_agent     [1] */ 
+    uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */ , 
+    hmac_rst_agent_BFM /* HMAC_rst_agent     [1] */ 
 };
 
 uvmf_active_passive_t interface_activities[] = { 
-    ACTIVE /* HMAC_in_agent     [0] */ , 
-    PASSIVE /* HMAC_out_agent     [1] */   };
+    ACTIVE /* ahb_lite_slave_0     [0] */ , 
+    ACTIVE /* HMAC_rst_agent     [1] */   };
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -64,10 +68,11 @@ uvmf_active_passive_t interface_activities[] = {
   //
   virtual function void build_phase(uvm_phase phase);
 // pragma uvmf custom build_phase_pre_super begin
+    uvm_reg::include_coverage("*", UVM_CVR_ALL);
+    uvm_top.set_report_id_action_hier("reg2bus", UVM_NO_ACTION);
+    uvm_top.set_report_id_action_hier("bus2reg", UVM_NO_ACTION);
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
-    // pragma uvmf custom configuration_settings_post_randomize begin
-    // pragma uvmf custom configuration_settings_post_randomize end
     configuration.initialize(NA, "uvm_test_top.environment", interface_names, null, interface_activities);
   endfunction
 

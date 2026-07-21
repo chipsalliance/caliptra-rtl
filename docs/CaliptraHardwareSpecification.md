@@ -1168,12 +1168,15 @@ The HMAC architecture inputs and outputs are described in the following table.
 | reset_n                     | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal.                                                                                     |
 | init                        | input           | The core is initialized and processes the key and the first block of the message.                                                                                           |
 | next                        | input           | The core processes the rest of the message blocks using the result from the previous blocks.                                                                                |
+| last                        | input           | Modifier bit indicating the current message block is the last one; drives OPAD and HMAC finalization after MSG.                                                             |
+| restore                     | input           | Restore a previously saved inner-hash digest instead of computing it from IPAD and MSG. Must be paired with next or last.                                                   |
 | zeroize                     | input           | The core clears all internal registers to avoid any SCA information leakage.                                                                                                |
 | csr_mode                    | input           | When set, the key comes from the cptra_csr_hmac_key interface pins. This key is valid only during MANUFACTURING mode.                                                       |
 | mode                        | input           | Indicates the hmac type of the function. This can be: <br>- HMAC384 <br>- HMAC512.                                                                                          |
 | cptra_csr_hmac_key\[511:0\] | input           | The key to be used during csr mode.                                                                                                                                         |
 | key\[511:0\]                | input           | The input key.                                                                                                                                                              |
 | block\[1023:0\]             | input           | The input padded block of message.                                                                                                                                          |
+| restore_digest\[511:0\]     | input           | The inner-hash digest to restore when restore is asserted.                                                                                                                  |
 | LFSR_seed\[383:0\]          | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
 | ready                       | output          | When HIGH, the signal indicates the core is ready.                                                                                                                          |
 | tag\[511:0\]                | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-512, a 512-bit tag is required. For HMAC-SHA-512-256, the host is responsible for reading 256 bits from the MSB. |
@@ -1211,13 +1214,13 @@ In this architecture, the HMAC interface and controller are implemented in hardw
 
 | Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
 | :-------------------- | :------------------ | :-------------------- | :------------------ |
-| Data_In transmission  | 44                  | 0.11                  | -                   |
-| Process               | 254                 | 0.635                 | -                   |
+| Data_In transmission  | 50                  | 0.125                 | -                   |
+| Process               | 463                 | 1.158                 | -                   |
 | Data_Out transmission | 12                  | 0.03                  | -                   |
-| Single block          | 310                 | 0.775                 | 1,290,322           |
-| Double block          | 513                 | 1.282                 | 780,031             |
-| 1 KiB message         | 1,731               | 4.327                 | 231,107             |
-| 128 KiB message       | 207,979             | 519.947               | 1,923               |
+| Single block          | 525                 | 1.313                 | 761,905             |
+| Double block          | 652                 | 1.630                 | 613,497             |
+| 1 KiB message         | 1,462               | 3.655                 | 273,598             |
+| 128 KiB message       | 138,622             | 346.555               | 2,886               |
 
 #### Hardware/software architecture
 
@@ -1226,12 +1229,12 @@ In this architecture, the HMAC interface and controller are implemented in RISC-
 | Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
 | :-------------------- | :------------------ | :-------------------- | :------------------ |
 | Data_In transmission  | 1389                | 3.473                 | -                   |
-| Process               | 253                 | 0.633                 | -                   |
+| Process               | 463                 | 1.158                 | -                   |
 | Data_Out transmission | 290                 | 0.725                 | -                   |
-| Single block          | 1932                | 4.83                  | 207,039             |
-| Double block          | 3166                | 7.915                 | 136,342             |
-| 1 KiB message         | 10,570              | 26.425                | 37,842              |
-| 128 KiB message       | 1,264,314           | 3,160.785             | 316                 |
+| Single block          | 2,142               | 5.355                 | 186,741             |
+| Double block          | 3,249               | 8.123                 | 123,115             |
+| 1 KiB message         | 9,903               | 24.758                | 40,392              |
+| 128 KiB message       | 1,136,647           | 2,841.618             | 352                 |
 
 ## HMAC_DRBG
 

@@ -1,38 +1,60 @@
 uvmf:
   environments:
-    HMAC:
-    
+    hmac:
+      imports:
+      - name: "rw_txn_pkg"
+      - name: "mvc_pkg"
+      - name: "mgc_ahb_v2_0_pkg"
+
       agents:
-      - name: HMAC_in_agent
-        type: HMAC_in
+      - name: HMAC_rst_agent
+        type: hmac_rst
         initiator_responder: "INITIATOR"
-      - name: HMAC_out_agent
-        type: HMAC_out
-        initiator_responder: "RESPONDER"
-    
+
       analysis_components:
-      - name: HMAC_pred
+      - name: hmac_pred
         type: HMAC_predictor
-      analysis_exports: []
+      - name: hmac_sb
+        type: HMAC_scoreboard
+
       analysis_ports: []
-    
+
       config_constraints: []
       config_vars: []
-    
-      parameters: []
-    
-      scoreboards:
-      - name: HMAC_sb
-        sb_type: uvmf_in_order_scoreboard
-        trans_type: HMAC_out_transaction
-    
-      subenvs: []
-    
-      tlm_connections:
-      - driver: HMAC_in_agent.monitored_ap            # connection 00
-        receiver: HMAC_pred.HMAC_in_agent_ae
-      - driver: HMAC_pred.HMAC_sb_ap                   # connection 01
-        receiver: HMAC_sb.expected_analysis_export
-      - driver: HMAC_out_agent.monitored_ap           # connection 02
-        receiver: HMAC_sb.actual_analysis_export
 
+      parameters: []
+
+      scoreboards: []
+
+      subenvs: []
+
+      qvip_subenvs:
+      - { name: "qvip_ahb_lite_slave_subenv", type: "qvip_ahb_lite_slave" }
+
+      qvip_connections:
+      - driver: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+        ap_key: "burst_transfer"
+        receiver: "hmac_pred.ahb_slave_0_ae"
+        validate: "false"
+      - driver: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+        ap_key: "burst_transfer_sb"
+        receiver: "hmac_sb.actual_ahb_analysis_export"
+        validate: "false"
+
+      tlm_connections:
+      - driver: HMAC_rst_agent.monitored_ap
+        receiver: hmac_pred.hmac_rst_agent_ae
+
+      - driver: hmac_pred.hmac_sb_ahb_ap
+        receiver: hmac_sb.expected_ahb_analysis_export
+
+
+      register_model:
+        use_adapter: "True"
+        use_explicit_prediction: "True"
+        reg_block_class: hmac_reg_model_top
+        reg_model_package: HMAC_reg_model_top_pkg
+        maps:
+          - name: "ahb_map"
+            interface: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+            qvip_agent: "True"

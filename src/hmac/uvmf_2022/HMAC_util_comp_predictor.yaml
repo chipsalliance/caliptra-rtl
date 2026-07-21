@@ -1,0 +1,29 @@
+uvmf:
+  util_components:
+    HMAC_predictor:
+      type: predictor
+      analysis_exports:
+      # RST
+      - name: hmac_rst_agent_ae
+        type: 'HMAC_rst_transaction'
+      # AHB QVIP master transactions: predictor sees every register
+      qvip_analysis_exports:
+      - name: ahb_slave_0_ae
+        type: 'ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                            ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                            ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                            ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                            ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                            ahb_lite_slave_0_params::AHB_RDATA_WIDTH)'
+
+      analysis_ports:
+      # Predictor emits expected AHB read responses (e.g. expected TAG
+      # bytes) for the scoreboard to compare against the QVIP-observed
+      # actual AHB read responses.
+      - name: hmac_sb_ahb_ap
+        type: 'ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                            ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                            ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                            ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                            ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                            ahb_lite_slave_0_params::AHB_RDATA_WIDTH)'

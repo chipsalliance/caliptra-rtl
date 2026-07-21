@@ -1,5 +1,6 @@
 ---
-# Random seed desired...
+# Per-test yaml for HMAC_random_test -- consumed by `pb fe regress`.
+# Replaces the obsolete uvmf_2022 HMAC_random_test.yml.
 seed: ${PLAYBOOK_RANDOM_SEED}
 plusargs:
 - '+UVM_TESTNAME=HMAC_random_test'

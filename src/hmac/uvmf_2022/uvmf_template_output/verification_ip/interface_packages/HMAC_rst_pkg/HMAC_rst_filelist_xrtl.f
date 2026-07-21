@@ -1,0 +1,3 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC_rst_pkg/src/HMAC_rst_if.sv
+$UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC_rst_pkg/src/HMAC_rst_monitor_bfm.sv
+$UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC_rst_pkg/src/HMAC_rst_driver_bfm.sv

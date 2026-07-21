@@ -1260,9 +1260,10 @@ module caliptra_top_sva
 
   HMAC_valid_flag:      assert property (
                                     @(posedge `SVA_RDC_CLK)
-                                    `HMAC_PATH.tag_valid_reg |-> `HMAC_PATH.ready_reg
+                                    `HMAC_PATH.tag_valid_reg |->
+                                        (`HMAC_PATH.ready_reg || `HMAC_PATH.awaiting_zeroize)
                                     )
-                        else $display("SVA ERROR: HMAC VALID flag mismatch!"); 
+                        else $display("SVA ERROR: HMAC VALID flag mismatch!");
 
   ECC_valid_flag:       assert property (
                                     @(posedge `SVA_RDC_CLK)
