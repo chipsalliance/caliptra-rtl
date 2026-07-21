@@ -1,0 +1,39 @@
+CAPI=2:
+# Copyright lowRISC contributors.
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+name: "lowrisc:dv:ahb_agent:0.1"
+description: "AHB agent"
+filesets:
+  files_dv:
+    depend:
+      - lowrisc:dv:dv_utils
+    files:
+      - ahb_if.sv
+      - ahb_agent_pkg.sv
+
+      - ahb_status_item.svh: {is_include_file: true}
+      - ahb_reg_op_item.svh: {is_include_file: true}
+
+      - ahb_txn_request_item.svh: {is_include_file: true}
+      - ahb_txn_response_item.svh: {is_include_file: true}
+      - ahb_txn_item.svh: {is_include_file: true}
+
+      - ahb_monitor.svh: {is_include_file: true}
+
+      - ahb_mgr_driver.svh: {is_include_file: true}
+      - ahb_mgr_reg_adapter.svh: {is_include_file: true}
+
+      - ahb_mgr_agent.svh: {is_include_file: true}
+
+      - seq_lib/ahb_transfer_seq.svh: {is_include_file: true}
+      - seq_lib/ahb_single_read_seq.svh: {is_include_file: true}
+      - seq_lib/ahb_single_write_seq.svh: {is_include_file: true}
+      - seq_lib/ahb_mgr_register_layer_vseq.svh: {is_include_file: true}
+
+    file_type: systemVerilogSource
+
+targets:
+  default:
+    filesets:
+      - files_dv
