@@ -71,6 +71,7 @@ COMP_LIB_NAMES := aes \
 		  mldsa \
 		  mlkem \
 		  hmac \
+		  hmac256 \
 		  keyvault \
 		  datavault \
 		  sha256 \

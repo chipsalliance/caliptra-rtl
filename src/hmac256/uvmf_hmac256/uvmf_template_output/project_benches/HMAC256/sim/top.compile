@@ -1,0 +1,4 @@
+needs:
+  - qvip.compile
+  - hvl.compile
+  - hdl.compile

@@ -236,12 +236,18 @@ module caliptra_top
     el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
+
+    // ICCM hash mode: AND-OR mux combines bank writes into single data stream
+    logic        iccm_hash_dv;
+    logic [31:0] iccm_hash_data;
+    logic        iccm_unlock;
+
+    // ICCM region registers for boot flow monitor
     logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr;
     logic [pt.ICCM_BITS-1:0] iccm_fmc_end_addr;
     logic [pt.ICCM_BITS-1:0] iccm_rt_start_addr;
     logic [pt.ICCM_BITS-1:0] iccm_rt_end_addr;
     logic        iccm_region_lock;
-
     // AES status signals
     logic aes_input_ready;
     logic aes_output_valid;
@@ -261,6 +267,8 @@ module caliptra_top
     wire ecc_notif_intr;
     wire hmac_error_intr;
     wire hmac_notif_intr;
+    wire hmac256_error_intr;
+    wire hmac256_notif_intr;
     wire kv_error_intr;
     wire kv_notif_intr;
     wire sha512_error_intr;
@@ -328,7 +336,7 @@ module caliptra_top
     logic lsu_addr_ph, lsu_data_ph, lsu_sel;
     logic ic_addr_ph, ic_data_ph, ic_sel;
 
-    logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
+    logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy, hmac256_busy;
     logic aes_busy_filtered, ecc_busy_filtered;
     logic crypto_error;
     logic kv_monitor_alert;
@@ -381,12 +389,17 @@ module caliptra_top
                                 (hmac_busy & abr_busy)                  |
                                 (hmac_busy & doe_busy)                  |
                                 (hmac_busy & aes_busy_filtered)         |
+                                (hmac_busy & hmac256_busy)              |
                                 (ecc_busy_filtered & doe_busy)          |
                                 (ecc_busy_filtered & abr_busy)          |
                                 (ecc_busy_filtered & aes_busy_filtered) |
+                                (ecc_busy_filtered & hmac256_busy)      |
                                 (abr_busy & doe_busy)                   |
                                 (abr_busy & aes_busy_filtered)          |
-                                (doe_busy & aes_busy_filtered);
+                                (abr_busy & hmac256_busy)               |
+                                (doe_busy & aes_busy_filtered)          |
+                                (doe_busy & hmac256_busy)               |
+                                (aes_busy_filtered & hmac256_busy);
             
 
 always_comb begin
@@ -469,6 +482,35 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_MLDSA]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_AES]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA3]   = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_HMAC256] = 1'b0;
+
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    //=========================================================================-
+    // ICCM Hash AND-OR Mux (subsystem mode only)
+    //=========================================================================-
+    // Combines per-bank write enables and data into a single stream for SHA acc.
+    //
+    // Multi-bank simultaneous writes CANNOT occur in this architecture:
+    //   1. BUILD_AHB_LITE=1 unconditionally disables LSU store merging
+    //      (bus_coalescing_disable = ... | pt.BUILD_AHB_LITE in el2_lsu_bus_buffer.sv)
+    //   2. The only masters with a path to the ICCM DMA slave are the CPU LSU
+    //      (32-bit, merging disabled) and System/Debug bus (32-bit only)
+    //   3. The AXI DMA engine faces outward to SoC and has no path to ICCM
+    // Therefore at most one iccm_wren_bank bit is asserted per cycle, and the
+    // OR-mux produces the correct single-bank data word.
+    //=========================================================================-
+    always_comb begin
+        iccm_hash_dv   = |el2_mem_export.iccm_wren_bank;
+        iccm_hash_data = '0;
+        for (int i = 0; i < pt.ICCM_NUM_BANKS; i++) begin
+            iccm_hash_data |= el2_mem_export.iccm_wren_bank[i] ?
+                              el2_mem_export.iccm_bank_wr_data[i] : '0;
+        end
+    end
+`else
+    always_comb iccm_hash_dv   = 1'b0;
+    always_comb iccm_hash_data = '0;
+`endif
 
    //=========================================================================-
    // RTL instance
@@ -515,6 +557,8 @@ always_comb begin
     intr[`VEER_INTR_VEC_ABR_NOTIF    -1]          = abr_notif_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_ERROR-1]          = dma_error_intr;
     intr[`VEER_INTR_VEC_AXI_DMA_NOTIF-1]          = dma_notif_intr;
+    intr[`VEER_INTR_VEC_HMAC256_ERROR-1]          = hmac256_error_intr;
+    intr[`VEER_INTR_VEC_HMAC256_NOTIF-1]          = hmac256_notif_intr;
     intr[NUM_INTR-1:`VEER_INTR_VEC_MAX_ASSIGNED]  = '0;
 end
 
@@ -987,10 +1031,10 @@ sha512_ctrl #(
     .hresp_o        (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hresp),
     .hreadyout_o    (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hreadyout),
     .hrdata_o       (responder_inst[`CALIPTRA_SLAVE_SEL_SHA512].hrdata),
-    .pv_read        (pv_read),
-    .pv_write       (pv_write),
-    .pv_rd_resp     (pv_rd_resp),
-    .pv_wr_resp     (pv_wr_resp),
+    .pv_read        (pv_read[0]),
+    .pv_write       (pv_write[0]),
+    .pv_rd_resp     (pv_rd_resp[0]),
+    .pv_wr_resp     (pv_wr_resp[0]),
     .pcr_signing_hash(pcr_signing_data.pcr_hash),
 
     .error_intr(sha512_error_intr),
@@ -1150,6 +1194,29 @@ hmac_ctrl #(
 
 );
 
+hmac256_ctrl #(
+     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
+     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_HMAC256))
+) hmac256 (
+     .clk(clk_cg),
+     .reset_n       (cptra_noncore_rst_b),
+     .cptra_pwrgood (cptra_pwrgood),
+     .haddr_i       (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_HMAC256)-1:0]),
+     .hwdata_i      (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hwdata),
+     .hsel_i        (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hsel),
+     .hwrite_i      (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hwrite),
+     .hready_i      (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hready),
+     .htrans_i      (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].htrans),
+     .hsize_i       (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hsize),
+     .hresp_o       (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hresp),
+     .hreadyout_o   (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hreadyout),
+     .hrdata_o      (responder_inst[`CALIPTRA_SLAVE_SEL_HMAC256].hrdata),
+     .busy_o        (hmac256_busy),
+     .error_intr    (hmac256_error_intr),
+     .notif_intr    (hmac256_notif_intr),
+     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
+);
+
 abr_top #(
     .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
     .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_MLDSA))
@@ -1300,7 +1367,9 @@ pcr_vault1
     .pv_read              (pv_read),
     .pv_write             (pv_write),
     .pv_rd_resp           (pv_rd_resp),
-    .pv_wr_resp           (pv_wr_resp)
+    .pv_wr_resp           (pv_wr_resp),
+
+    .iccm_unlock          (iccm_unlock)
 );
 
 dv #(
@@ -1577,6 +1646,14 @@ soc_ifc_top1
     // ICCM Lock
     .iccm_lock       (iccm_lock                                    ),
     .iccm_axs_blocked(ahb_lite_resp_access_blocked[`CALIPTRA_SLAVE_SEL_IDMA]),
+    // ICCM hash mode
+    .iccm_hash_dv    (iccm_hash_dv),
+    .iccm_hash_data  (iccm_hash_data),
+    .pv_write        (pv_write[1]),
+    .iccm_unlock_o   (iccm_unlock),
+    // ICCM PCR extend
+    .pv_read         (pv_read[1]),
+    .pv_rd_resp      (pv_rd_resp[1]),
     // ICCM Region Registers for Boot Flow Monitor
     .iccm_fmc_start_addr(iccm_fmc_start_addr),
     .iccm_fmc_end_addr  (iccm_fmc_end_addr),
@@ -1641,5 +1718,10 @@ endgenerate
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, !cptra_noncore_rst_b)
+
+// Safety assertion: verify single-bank-at-a-time ICCM write invariant
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+`CALIPTRA_ASSERT_MUTEX(IccmHashSingleBank_A, el2_mem_export.iccm_wren_bank, clk, !cptra_noncore_rst_b)
+`endif
 
 endmodule

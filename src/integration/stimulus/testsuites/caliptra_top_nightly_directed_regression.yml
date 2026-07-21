@@ -31,6 +31,10 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_verify/smoke_test_ecc_verify.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecdh/smoke_test_ecdh.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac256/smoke_test_hmac256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac256_errortrigger/smoke_test_hmac256_errortrigger.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac256_save_restore/smoke_test_hmac256_save_restore.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac256_chain/smoke_test_hmac256_chain.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_short_1_dword/smoke_test_dma_aes_gcm_short_1_dword.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm_long/smoke_test_dma_aes_gcm_long.yml
@@ -128,3 +132,16 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_iccm_region/directed_kv_iccm_region.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_debug_scan_bypass/directed_kv_debug_scan_bypass.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_kv_glitch_inject/directed_kv_glitch_inject.yml
+        # ICCM write hash measurement tests
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_hash/smoke_test_iccm_hash.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash/directed_test_iccm_hash.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_pcr5_journey/directed_test_iccm_pcr5_journey.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_fw_write_block/directed_test_iccm_fw_write_block.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_sha_ctrl_block/directed_test_iccm_sha_ctrl_block.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_clear_hatch/directed_test_iccm_clear_hatch.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_sha_acc_reuse/directed_test_iccm_sha_acc_reuse.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_cold_reset_pcr5/directed_test_iccm_cold_reset_pcr5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_replay_block/directed_test_iccm_replay_block.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash_sizes/directed_test_iccm_hash_sizes.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash_fill/directed_test_iccm_hash_fill.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash_overflow/directed_test_iccm_hash_overflow.yml

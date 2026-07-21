@@ -107,6 +107,7 @@ class soc_ifc_env_rom_bringup_sequence extends soc_ifc_env_reset_sequence_base;
     uvm_object obj;
     int fd;
     super.new(name);
+    ss_mode_ctrl_seq.itrng_profile = 1;
     obj = soc_ifc_ctrl_agent_poweron_sequence_t::get_type().create_object("soc_ifc_ctrl_agent_poweron_seq");
     if (!$cast(soc_ifc_ctrl_seq,obj))
         `uvm_fatal("SOC_IFC_BRINGUP", "Failed to cast object as poweron sequence!")

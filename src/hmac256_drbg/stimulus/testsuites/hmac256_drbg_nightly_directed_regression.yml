@@ -1,0 +1,8 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "HMAC256_DRBG"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/hmac256_drbg/stimulus/tests/directed/hmac256_drbg_directed_test.yml

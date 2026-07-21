@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+---
+seed: 1
+testname: smoke_test_hmac256_errortrigger
