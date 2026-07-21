@@ -32,6 +32,7 @@
 
 
 `ifndef VERILATOR
+`include "caliptra_macros.svh"
 
 `include "caliptra_macros.svh"
 

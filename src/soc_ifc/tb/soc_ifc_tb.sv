@@ -22,6 +22,7 @@
 // Probably should be deprecated and utilize UVMF environment only
 //======================================================================
 
+`include "caliptra_macros.svh"
 
 import "DPI-C" function string getenv(input string env_name);
 

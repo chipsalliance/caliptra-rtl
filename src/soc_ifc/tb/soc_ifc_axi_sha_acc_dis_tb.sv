@@ -19,6 +19,7 @@
 // Test to make sure SHA acc is not accessible over SoC AXI interface
 
 `include "config_defines.svh"
+`include "caliptra_macros.svh"
 
 module soc_ifc_axi_sha_acc_dis_tb
     import soc_ifc_pkg::*;
