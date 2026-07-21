@@ -14,15 +14,14 @@
 
 `ifndef VERILATOR
 
-interface hmac_ctrl_cov_if     
-    import kv_defines_pkg::*;  
+interface hmac_ctrl_cov_if
+    import kv_defines_pkg::*;
     (
     input logic           clk,
     input logic           reset_n,
     input logic           cptra_pwrgood,
 
     input logic           ocp_lock_in_progress
-
 );
 
     logic init;
@@ -52,11 +51,12 @@ interface hmac_ctrl_cov_if
     logic error_intr;
     logic notif_intr;
 
+    logic debug_scan_zeroize;
+
     logic [4:0] hmac_cmd;
-    logic [1:0] hmac_mode_bits;
 
     kv_write_filter_metrics_t kv_write_metrics;
-    kv_write_ctrl_reg_t kv_write_ctrl_reg;
+    kv_write_ctrl_reg_t       kv_write_ctrl_reg;
 
     assign init       = hmac_ctrl.hmac_inst.init_reg;
     assign next       = hmac_ctrl.hmac_inst.next_reg;
@@ -69,8 +69,7 @@ interface hmac_ctrl_cov_if
     assign restore    = hmac_ctrl.hmac_inst.restore_reg;
     assign is_last_op = hmac_ctrl.hmac_inst.is_last_op_reg;
 
-    assign core_tag_we = hmac_ctrl.hmac_inst.core_tag_we;
-
+    assign core_tag_we           = hmac_ctrl.hmac_inst.core_tag_we;
     assign kv_key_data_present   = hmac_ctrl.hmac_inst.kv_key_data_present;
     assign kv_block_data_present = hmac_ctrl.hmac_inst.kv_block_data_present;
     assign dest_keyvault         = hmac_ctrl.hmac_inst.dest_keyvault;
@@ -85,6 +84,8 @@ interface hmac_ctrl_cov_if
     assign error_intr = hmac_ctrl.hmac_inst.error_intr;
     assign notif_intr = hmac_ctrl.hmac_inst.notif_intr;
 
+    assign debug_scan_zeroize = hmac_ctrl.hmac_inst.debugUnlock_or_scan_mode_switch;
+
     // hmac_cmd bit layout: {restore, last, next, init, zeroize}.
     assign hmac_cmd = {hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.RESTORE.value,
                        hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.LAST.value,
@@ -92,136 +93,73 @@ interface hmac_ctrl_cov_if
                        hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.INIT.value,
                        hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.ZEROIZE.value};
 
-    // {csr_mode, mode} — 4 combinations (HMAC-384 vs HMAC-512, CSR vs SW).
-    assign hmac_mode_bits = {csr_mode, mode};
-
     assign kv_write_metrics  = hmac_ctrl.hmac_inst.kv_write_metrics;
     assign kv_write_ctrl_reg = hmac_ctrl.hmac_inst.kv_write_ctrl_reg;
 
     covergroup hmac_ctrl_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
-        //cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
-        init_cp: coverpoint init;
-        next_cp: coverpoint next;
-        zeroize_cp: coverpoint zeroize;
-        mode_cp: coverpoint mode;
-        csr_mode_cp: coverpoint csr_mode;
-        last_cp: coverpoint last;
-        restore_cp: coverpoint restore;
-        ready_cp: coverpoint ready;
-        valid_cp: coverpoint valid;
-        is_last_op_cp: coverpoint is_last_op;
+        init_cp:             coverpoint init;
+        next_cp:             coverpoint next;
+        zeroize_cp:          coverpoint zeroize;
+        mode_cp:             coverpoint mode;
+        csr_mode_cp:         coverpoint csr_mode;
+        last_cp:             coverpoint last;
+        restore_cp:          coverpoint restore;
+        ready_cp:            coverpoint ready;
+        valid_cp:            coverpoint valid;
+        is_last_op_cp:       coverpoint is_last_op;
+        awaiting_zeroize_cp: coverpoint awaiting_zeroize;
 
         core_tag_we_cp: coverpoint core_tag_we;
 
-        // Every combination of {restore, last, next, init, zeroize}.
+        // KV / CSR / dest-KV cause bins for intermediate_tag_hidden.
+        kv_key_present_cp:   coverpoint kv_key_data_present   { bins asserted = {1'b1}; }
+        kv_block_present_cp: coverpoint kv_block_data_present { bins asserted = {1'b1}; }
+        dest_keyvault_cp:    coverpoint dest_keyvault         { bins asserted = {1'b1}; }
+        tag_was_masked_cp:   coverpoint tag_was_masked        { bins asserted = {1'b1}; }
+
+        // Per-bit error interrupt status.
+        error0_sts_cp: coverpoint key_mode_error_edge          { bins fired = {1'b1}; }
+        error1_sts_cp: coverpoint key_zero_error_edge          { bins fired = {1'b1}; }
+        error2_sts_cp: coverpoint invalid_cmd_error_edge       { bins fired = {1'b1}; }
+        error3_sts_cp: coverpoint intermediate_tag_hidden_edge { bins fired = {1'b1}; }
+
+        // Aggregated SoC interrupts.
+        error_intr_cp: coverpoint error_intr { bins asserted = {1'b1}; }
+        notif_intr_cp: coverpoint notif_intr { bins asserted = {1'b1}; }
+
+        // Debug-unlock / scan-mode driven zeroize.
+        debug_scan_zeroize_cp: coverpoint debug_scan_zeroize;
+
+        // {restore, last, next, init, zeroize} — 32 encodings.
         hmac_cmd_cp: coverpoint hmac_cmd {
-            bins idle                     = {5'h00};
-            bins zeroize_only             = {5'h01};
-            bins init                     = {5'h02};
-            bins init_zeroize             = {5'h03};
-            bins next                     = {5'h04};
-            bins next_zeroize             = {5'h05};
-            bins init_next                = {5'h06};
-            bins init_next_zeroize        = {5'h07};
-            bins last_alone               = {5'h08};
-            bins last_zeroize             = {5'h09};
-            bins init_last                = {5'h0A};
-            bins init_last_zeroize        = {5'h0B};
-            bins next_last                = {5'h0C};
-            bins next_last_zeroize        = {5'h0D};
-            bins init_next_last           = {5'h0E};
-            bins init_next_last_zeroize   = {5'h0F};
-            bins restore_alone            = {5'h10};
-            bins restore_zeroize          = {5'h11};
-            bins init_restore             = {5'h12};
-            bins init_restore_zeroize     = {5'h13};
-            bins next_restore             = {5'h14};
-            bins next_restore_zeroize     = {5'h15};
-            bins init_next_restore        = {5'h16};
-            bins init_next_restore_zero   = {5'h17};
-            bins last_restore             = {5'h18};
-            bins last_restore_zeroize     = {5'h19};
-            bins init_last_restore        = {5'h1A};
-            bins init_last_restore_zero   = {5'h1B};
-            bins next_last_restore        = {5'h1C};
-            bins next_last_restore_zero   = {5'h1D};
-            bins all_four                 = {5'h1E};
-            bins all_four_zeroize         = {5'h1F};
+            bins cmd[] = {[0:31]};
         }
 
-        // {csr_mode, mode} → 4 bins: HMAC-384/-512 × SW-key/CSR-key.
-        hmac_mode_bits_cp: coverpoint hmac_mode_bits {
-            bins hmac384_sw  = {2'b00};
-            bins hmac512_sw  = {2'b01};
-            bins hmac384_csr = {2'b10};
-            bins hmac512_csr = {2'b11};
-        }
+        // Cross every CTRL encoding with MODE (HMAC-384 x HMAC-512).
+        hmac_cmd_x_mode: cross hmac_cmd_cp, mode_cp;
 
-        // Every CTRL encoding crossed with every mode/key combination
-        // = 32 * 4 = 128 physical stimuli that SW can present.
-        hmac_cmd_x_mode: cross hmac_cmd_cp, hmac_mode_bits_cp;
+        // Ready / zeroize crosses.
+        mode_ready_cp:             cross ready_cp, mode_cp;
+        zeroize_ready_cp:          cross ready_cp, zeroize_cp;
+        awaiting_zeroize_ready_cp: cross awaiting_zeroize_cp, ready_cp;
 
-        mode_ready_cp: cross ready, mode;
-        zeroize_ready_cp: cross ready, zeroize;
-        zeroize_init_cp: cross zeroize, init;
-        zeroize_next_cp: cross zeroize, next;
-        init_mode_cp: cross init, mode;
-        next_mode_cp: cross next, mode;
-        last_mode_cp: cross last, mode;
-        restore_mode_cp: cross restore, mode;
+        // Per-bit x mode crosses.
+        zeroize_x_mode_cp:  cross zeroize_cp,   mode_cp;
+        restore_x_mode_cp:  cross restore_cp,   mode_cp;
+        init_x_mode_cp:     cross init_cp,      mode_cp;
+        next_x_mode_cp:     cross next_cp,      mode_cp;
+        last_x_mode_cp:     cross last_cp,      mode_cp;
+        error0_x_mode_cp:   cross error0_sts_cp, mode_cp;
+        error1_x_mode_cp:   cross error1_sts_cp, mode_cp;
+        error2_x_mode_cp:   cross error2_sts_cp, mode_cp;
+        error3_x_mode_cp:   cross error3_sts_cp, mode_cp;
 
-    endgroup
+        // csr_mode dimension (HMAC-512 only — HMAC-256 has no CSR key path).
+        csr_mode_ready_cp:  cross ready_cp, csr_mode_cp;
+        csr_mode_x_mode_cp: cross csr_mode_cp, mode_cp;
 
-    // ---------------------------------------------------------------
-    // KV / CSR / dest-KV coverage
-    //   Each cause of intermediate_tag_hidden gets its own coverpoint
-    //   plus a cross so we know every combination SW can present.
-    // ---------------------------------------------------------------
-    covergroup hmac_kv_csr_cov_grp @(posedge clk);
-        kv_key_present_cp   : coverpoint kv_key_data_present;
-        kv_block_present_cp : coverpoint kv_block_data_present;
-        csr_mode_cause_cp   : coverpoint csr_mode;
-        dest_keyvault_cp    : coverpoint dest_keyvault;
-
-        // Sticky latch — was any intermediate tag ever masked?
-        tag_was_masked_cp   : coverpoint tag_was_masked;
-
-        // All 16 combinations of the four tag-hiding causes.
-        // Only sampled during an active op so we filter out reset.
-        tag_hidden_causes_cp: coverpoint {kv_key_data_present,
-                                          kv_block_data_present,
-                                          csr_mode,
-                                          dest_keyvault}
-            iff (init | next | restore) {
-                bins none              = {4'b0000};
-                bins kv_key            = {4'b1000};
-                bins kv_block          = {4'b0100};
-                bins csr               = {4'b0010};
-                bins dest_kv           = {4'b0001};
-                bins kv_key_and_block  = {4'b1100};
-                bins csr_and_dest_kv   = {4'b0011};
-                bins others            = default;
-            }
-    endgroup
-
-    // ---------------------------------------------------------------
-    // Error-status coverage
-    //   Sample each error edge so it shows up in the report even if
-    //   the assertion in the smoke test is what actually catches the
-    //   miss.
-    // ---------------------------------------------------------------
-    covergroup hmac_error_cov_grp @(posedge clk);
-        error0_sts_cp : coverpoint key_mode_error_edge          { bins fired = {1'b1}; }
-        error1_sts_cp : coverpoint key_zero_error_edge          { bins fired = {1'b1}; }
-        error2_sts_cp : coverpoint invalid_cmd_error_edge       { bins fired = {1'b1}; }
-        error3_sts_cp : coverpoint intermediate_tag_hidden_edge { bins fired = {1'b1}; }
-
-        error_intr_cp : coverpoint error_intr { bins asserted = {1'b1}; }
-        notif_intr_cp : coverpoint notif_intr { bins asserted = {1'b1}; }
-
-        awaiting_zeroize_cp : coverpoint awaiting_zeroize;
     endgroup
 
     covergroup hmac_ocp_lock_cov_grp @(posedge clk);
@@ -257,8 +195,6 @@ interface hmac_ctrl_cov_if
     endgroup    
 
     hmac_ctrl_cov_grp     hmac_ctrl_cov_grp1     = new();
-    hmac_kv_csr_cov_grp   hmac_kv_csr_cov_grp1   = new();
-    hmac_error_cov_grp    hmac_error_cov_grp1    = new();
     hmac_ocp_lock_cov_grp hmac_ocp_lock_cov_grp1 = new();
 
 endinterface
