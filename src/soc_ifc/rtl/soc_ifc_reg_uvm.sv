@@ -4958,6 +4958,166 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t
 
+    // Reg - soc_ifc_reg::STASH_BANK_SLOT_DATA
+    class soc_ifc_reg__STASH_BANK_SLOT_DATA extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__STASH_BANK_SLOT_DATA_bit_cg data_bit_cg[32];
+        soc_ifc_reg__STASH_BANK_SLOT_DATA_fld_cg fld_cg;
+        rand uvm_reg_field data;
+
+        function new(string name = "soc_ifc_reg__STASH_BANK_SLOT_DATA");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.data = new("data");
+            this.data.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(data_bit_cg[bt]) data_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__STASH_BANK_SLOT_DATA
+
+    // Reg - soc_ifc_reg::STASH_BANK_SOC_LOCK
+    class soc_ifc_reg__STASH_BANK_SOC_LOCK extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__STASH_BANK_SOC_LOCK_bit_cg lock_bit_cg[8];
+        soc_ifc_reg__STASH_BANK_SOC_LOCK_fld_cg fld_cg;
+        rand uvm_reg_field lock;
+
+        function new(string name = "soc_ifc_reg__STASH_BANK_SOC_LOCK");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.lock = new("lock");
+            this.lock.configure(this, 8, 0, "WO", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_bit_cg[bt]) lock_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__STASH_BANK_SOC_LOCK
+
+    // Reg - soc_ifc_reg::STASH_END_STASH
+    class soc_ifc_reg__STASH_END_STASH extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__STASH_END_STASH_bit_cg end_stash_bit_cg[1];
+        soc_ifc_reg__STASH_END_STASH_fld_cg fld_cg;
+        rand uvm_reg_field end_stash;
+
+        function new(string name = "soc_ifc_reg__STASH_END_STASH");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.end_stash = new("end_stash");
+            this.end_stash.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(end_stash_bit_cg[bt]) end_stash_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__STASH_END_STASH
+
+    // Reg - soc_ifc_reg::STASH_BANK_CPTRA_LOCK
+    class soc_ifc_reg__STASH_BANK_CPTRA_LOCK extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__STASH_BANK_CPTRA_LOCK_bit_cg cptra_lock_bit_cg[1];
+        soc_ifc_reg__STASH_BANK_CPTRA_LOCK_fld_cg fld_cg;
+        rand uvm_reg_field cptra_lock;
+
+        function new(string name = "soc_ifc_reg__STASH_BANK_CPTRA_LOCK");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.cptra_lock = new("cptra_lock");
+            this.cptra_lock.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cptra_lock_bit_cg[bt]) cptra_lock_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__STASH_BANK_CPTRA_LOCK
+
+    // Reg - soc_ifc_reg::STASH_BANK_STATUS
+    class soc_ifc_reg__STASH_BANK_STATUS extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__STASH_BANK_STATUS_bit_cg slot_locked_bit_cg[8];
+        soc_ifc_reg__STASH_BANK_STATUS_bit_cg end_stash_bit_cg[1];
+        soc_ifc_reg__STASH_BANK_STATUS_bit_cg cptra_lock_bit_cg[1];
+        soc_ifc_reg__STASH_BANK_STATUS_fld_cg fld_cg;
+        rand uvm_reg_field slot_locked;
+        rand uvm_reg_field end_stash;
+        rand uvm_reg_field cptra_lock;
+
+        function new(string name = "soc_ifc_reg__STASH_BANK_STATUS");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.slot_locked = new("slot_locked");
+            this.slot_locked.configure(this, 8, 0, "RO", 1, 'h0, 1, 1, 0);
+            this.end_stash = new("end_stash");
+            this.end_stash.configure(this, 1, 8, "RO", 1, 'h0, 1, 1, 0);
+            this.cptra_lock = new("cptra_lock");
+            this.cptra_lock.configure(this, 1, 9, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(slot_locked_bit_cg[bt]) slot_locked_bit_cg[bt] = new();
+                foreach(end_stash_bit_cg[bt]) end_stash_bit_cg[bt] = new();
+                foreach(cptra_lock_bit_cg[bt]) cptra_lock_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__STASH_BANK_STATUS
+
     // Addrmap - soc_ifc_reg
     class soc_ifc_reg extends uvm_reg_block;
         rand soc_ifc_reg__CPTRA_HW_ERROR_FATAL CPTRA_HW_ERROR_FATAL;
@@ -5067,6 +5227,11 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__internal_iccm_rt_end_addr internal_iccm_rt_end_addr;
         rand soc_ifc_reg__internal_iccm_region_lock internal_iccm_region_lock;
         rand soc_ifc_reg__intr_block_t intr_block_rf;
+        rand soc_ifc_reg__STASH_BANK_SLOT_DATA STASH_BANK_SLOT_DATA[208];
+        rand soc_ifc_reg__STASH_BANK_SOC_LOCK STASH_BANK_SOC_LOCK;
+        rand soc_ifc_reg__STASH_END_STASH STASH_END_STASH;
+        rand soc_ifc_reg__STASH_BANK_CPTRA_LOCK STASH_BANK_CPTRA_LOCK;
+        rand soc_ifc_reg__STASH_BANK_STATUS STASH_BANK_STATUS;
 
         function new(string name = "soc_ifc_reg");
             super.new(name);
@@ -5658,6 +5823,33 @@ package soc_ifc_reg_uvm;
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();
             this.default_map.add_submap(this.intr_block_rf.default_map, 'h800);
+            foreach(this.STASH_BANK_SLOT_DATA[i0]) begin
+                this.STASH_BANK_SLOT_DATA[i0] = new($sformatf("STASH_BANK_SLOT_DATA[%0d]", i0));
+                this.STASH_BANK_SLOT_DATA[i0].configure(this);
+                
+                this.STASH_BANK_SLOT_DATA[i0].build();
+                this.default_map.add_reg(this.STASH_BANK_SLOT_DATA[i0], 'hc00 + i0*'h4);
+            end
+            this.STASH_BANK_SOC_LOCK = new("STASH_BANK_SOC_LOCK");
+            this.STASH_BANK_SOC_LOCK.configure(this);
+
+            this.STASH_BANK_SOC_LOCK.build();
+            this.default_map.add_reg(this.STASH_BANK_SOC_LOCK, 'hf40);
+            this.STASH_END_STASH = new("STASH_END_STASH");
+            this.STASH_END_STASH.configure(this);
+
+            this.STASH_END_STASH.build();
+            this.default_map.add_reg(this.STASH_END_STASH, 'hf44);
+            this.STASH_BANK_CPTRA_LOCK = new("STASH_BANK_CPTRA_LOCK");
+            this.STASH_BANK_CPTRA_LOCK.configure(this);
+
+            this.STASH_BANK_CPTRA_LOCK.build();
+            this.default_map.add_reg(this.STASH_BANK_CPTRA_LOCK, 'hf48);
+            this.STASH_BANK_STATUS = new("STASH_BANK_STATUS");
+            this.STASH_BANK_STATUS.configure(this);
+
+            this.STASH_BANK_STATUS.build();
+            this.default_map.add_reg(this.STASH_BANK_STATUS, 'hf4c);
         endfunction : build
     endclass : soc_ifc_reg
 

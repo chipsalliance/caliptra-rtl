@@ -311,12 +311,25 @@ vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
 
 ############ TEST Simulation ###############################
 
+# Stash measurement register bank smoke tests (RFC #673) pass a runtime
+# plusarg to opt into the SoC BFM's write_stash_bank() flow. Auto-set by
+# TESTNAME match so users don't have to remember to pass it manually.
+# Consumed by both simv (VCS) and Vcaliptra_top_tb (Verilator) since both
+# simulators handle $test$plusargs identically.
+RUN_PLUSARGS ?=
+ifneq (,$(findstring smoke_test_stash_bank,$(TESTNAME)))
+RUN_PLUSARGS += +CALIPTRA_TEST_STASH_BANK
+endif
+ifneq (,$(findstring smoke_test_stash_bank_negative,$(TESTNAME)))
+RUN_PLUSARGS += +CALIPTRA_TEST_STASH_BANK_NEG
+endif
+
 verilator: program.hex verilator-build
-	set -eo pipefail; ./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS) 2>&1 | tee verilator_sim.log
+	set -eo pipefail; ./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS) $(RUN_PLUSARGS) 2>&1 | tee verilator_sim.log
 
 vcs: program.hex vcs-build
 	cp -r $(TEST_GEN_FILES) $(BUILD_DIR)
-	./simv.caliptra_top_tb $(COVERAGE_ARGS)
+	./simv.caliptra_top_tb $(COVERAGE_ARGS) $(RUN_PLUSARGS)
 
 ############ TEST build ###############################
 
