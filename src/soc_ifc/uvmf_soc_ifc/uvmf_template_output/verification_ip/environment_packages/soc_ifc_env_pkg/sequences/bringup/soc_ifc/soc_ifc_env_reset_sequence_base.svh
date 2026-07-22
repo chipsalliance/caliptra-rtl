@@ -263,7 +263,8 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
 
     // If set_bootfsm_breakpoint is randomized to 1, we need to release bootfsm by writing GO
     // bootfsm_breakpoint is qualified by debug mode and device_lifecycle, so incorporate that here
-    if (ctrl_rst_ctx.set_bootfsm_breakpoint && (!ctrl_rst_ctx.security_state.debug_locked || (ctrl_rst_ctx.security_state.debug_locked && ctrl_rst_ctx.security_state.device_lifecycle == DEVICE_MANUFACTURING))) begin
+    // (debug unlocked) OR (manufacturing lifecycle)
+    if (ctrl_rst_ctx.set_bootfsm_breakpoint && (mubi4_test_false_strict(ctrl_rst_ctx.security_state.debug_locked) || (ctrl_rst_ctx.security_state.device_lifecycle == DEVICE_MANUFACTURING))) begin
       //Poll boot status until we are in FSM state BOOT_WAIT
       reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.read(sts, data, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
       while ((data & data_mask) != data_check) begin

@@ -72,6 +72,7 @@ module caliptra_top_sva
   import kv_defines_pkg::*;
   import axi_dma_reg_pkg::*;
   import keymgr_pkg::*;
+  import caliptra_prim_mubi_pkg::*;
   ();
 
   //TODO: pass these parameters from their architecture into here
@@ -87,6 +88,10 @@ module caliptra_top_sva
   localparam SHA256_DIG_NUM_DWORDS    = 8;    //`SHA256_PATH.DIG_NUM_DWORDS;
   localparam SHA256_BLOCK_NUM_DWORDS  = 16;   //`SHA256_PATH.BLOCK_NUM_DWORDS;
   localparam DOE_256_NUM_ROUNDS       = 14;   //`DOE_INST_PATH.i_doe_core_cbc.keymem.DOE_256_NUM_ROUNDS
+
+  // Local boolean signals for debug_locked (validation collateral — reduce MuBi4 once here)
+  logic debug_unlocked_latched = mubi4_test_false_strict(`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked);
+  logic debug_unlocked_input   = mubi4_test_false_strict(`CPTRA_TOP_PATH.security_state.debug_locked);
   localparam SEED_NUM_DWORDS = 8;
   localparam MSG_NUM_DWORDS = 16;
   localparam PRIVKEY_NUM_DWORDS = 1224;
@@ -205,7 +210,7 @@ module caliptra_top_sva
   function automatic logic check_kv_slot_debug_value(int entry);
     logic sel_value = `KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value;
     logic [31:0] expected_value = sel_value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
-    if ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && `KEYVAULT_PATH.cptra_pwrgood) begin
+    if ((debug_unlocked_latched || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && `KEYVAULT_PATH.cptra_pwrgood) begin
       for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
         if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
           $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", entry, dword, expected_value, `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
@@ -223,7 +228,7 @@ module caliptra_top_sva
       KV_debug_slot: assert property (
         @(posedge `SVA_RDC_CLK)
         disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-        ($rose( ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked) || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) &&
+        ($rose( ((debug_unlocked_latched) || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) &&
                `KEYVAULT_PATH.cptra_pwrgood) |=> check_kv_slot_debug_value(entry)))
       else $display("SVA ERROR: KV[%0d] debug flush comprehensive check failed", entry);
     end
@@ -592,7 +597,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < `CLP_OBF_UDS_DWORDS; dword++) begin
       DOE_UDS_data_check:  assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
                                             (`SERVICES_PATH.WriteData == 'hEC && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_uds_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.uds_plaintext[dword])
                                 
                                           )
@@ -606,7 +611,7 @@ module caliptra_top_sva
   
       DOE_FE_data_check:   assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
                                             (`SERVICES_PATH.WriteData == 'hED && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_fe_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.fe_plaintext[dword])
                                           )
                                   else $display("SVA ERROR: DOE FE output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.fe_plaintext[dword]);
@@ -620,7 +625,7 @@ module caliptra_top_sva
 
       DOE_HEK_data_check:  assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
                                             (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
                                           )
                                   else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
@@ -768,7 +773,7 @@ module caliptra_top_sva
   // Consolidated assertions
   MLDSA_keygen_privkey_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK)
-    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
     (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> 
      check_mldsa_privkey())
   )
@@ -776,7 +781,7 @@ module caliptra_top_sva
 
   MLDSA_keygen_pubkey_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK)
-    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
     (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> 
      check_mldsa_pubkey())
   )
@@ -784,7 +789,7 @@ module caliptra_top_sva
 
   MLDSA_signature_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK)
-    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input || `SERVICES_PATH.disable_mldsa_sva)
     (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing || `SERVICES_PATH.check_pcr_mldsa_signing) && `ABR_PATH.abr_status_done) |=> 
      check_mldsa_signature())
   )
@@ -792,7 +797,7 @@ module caliptra_top_sva
 
   MLDSA_verify_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK iff (`SERVICES_PATH.mldsa_verify || `ABR_PATH.abr_status_done))
-    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
     ((`SERVICES_PATH.mldsa_verify && `ABR_PATH.abr_status_done) |=> 
      check_mldsa_verify_results())
   )

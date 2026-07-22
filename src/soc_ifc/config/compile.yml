@@ -4,6 +4,7 @@ schema_version: 2.4.0
 requires:
   - caliptra_top_defines
   - caliptra_top_reg_defines
+  - caliptra_prim_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]

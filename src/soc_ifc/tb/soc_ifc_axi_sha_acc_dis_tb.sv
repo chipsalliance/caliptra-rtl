@@ -146,7 +146,7 @@ module soc_ifc_axi_sha_acc_dis_tb
     .recovery_data_avail(1'b0),
     .recovery_image_activated(1'b0),
 
-    .security_state({2'b11, 1'b0}),
+    .security_state('{debug_locked: caliptra_prim_mubi_pkg::MuBi4False, device_lifecycle: soc_ifc_pkg::DEVICE_PRODUCTION}),
 
     .generic_input_wires(64'h0),
     .BootFSM_BrkPoint(1'b0),
@@ -260,8 +260,7 @@ module soc_ifc_axi_sha_acc_dis_tb
     .clk_gating_en(),
     .rdc_clk_dis(),
     .fw_update_rst_window(),
-    .crypto_error(1'b0),
-    .kv_error(1'b0),
+    .cptra_hw_fatal_errors('0),
     
     .cptra_uncore_dmi_reg_en(1'b0),
     .cptra_uncore_dmi_reg_wr_en(1'b0),

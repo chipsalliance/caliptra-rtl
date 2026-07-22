@@ -15,7 +15,26 @@
 package mbox_pkg;
 
   //MAILBOX FSM
-  typedef enum logic [2:0] {
+  // Encoding generated with
+  // $ python3 sparse_fsm_encode.py -d 5 -m 8 -n 10 -s 23571113
+  //
+  // Minimum Hamming distance: 5
+  // Maximum Hamming distance: 6
+  //
+  localparam int MboxStateWidth = 10;
+  typedef enum logic [MboxStateWidth-1:0] {
+    MBOX_IDLE_SPARSE         = 10'b0111010111,
+    MBOX_RDY_FOR_CMD_SPARSE  = 10'b0111101001,
+    MBOX_RDY_FOR_DLEN_SPARSE = 10'b0010111100,
+    MBOX_RDY_FOR_DATA_SPARSE = 10'b1110011010,
+    MBOX_EXECUTE_UC_SPARSE   = 10'b1101101110,
+    MBOX_EXECUTE_SOC_SPARSE  = 10'b1010100011,
+    MBOX_EXECUTE_TAP_SPARSE  = 10'b1100110101,
+    MBOX_ERROR_SPARSE        = 10'b1001011001
+  } mbox_fsm_state_sparse_e;
+
+  localparam int MboxStateWidthLogic = 3;
+  typedef enum logic [MboxStateWidthLogic-1:0] {
     MBOX_IDLE         = 3'b000,
     MBOX_RDY_FOR_CMD  = 3'b001,
     MBOX_RDY_FOR_DLEN = 3'b011,
@@ -25,6 +44,22 @@ package mbox_pkg;
     MBOX_EXECUTE_TAP  = 3'b101,
     MBOX_ERROR        = 3'b111
   } mbox_fsm_state_e;
+
+
+// Encode sparse mbox FSM state to 3-bit value matching mbox_csr.rdl enum (mbox_fsm_e)
+  function automatic logic [MboxStateWidthLogic-1:0] mboxsparse2logic(mbox_fsm_state_sparse_e st);
+    unique case (st)
+      MBOX_IDLE_SPARSE         : return MBOX_IDLE;
+      MBOX_RDY_FOR_CMD_SPARSE  : return MBOX_RDY_FOR_CMD;
+      MBOX_RDY_FOR_DLEN_SPARSE : return MBOX_RDY_FOR_DLEN;
+      MBOX_RDY_FOR_DATA_SPARSE : return MBOX_RDY_FOR_DATA;
+      MBOX_EXECUTE_UC_SPARSE   : return MBOX_EXECUTE_UC;
+      MBOX_EXECUTE_SOC_SPARSE  : return MBOX_EXECUTE_SOC;
+      MBOX_EXECUTE_TAP_SPARSE  : return MBOX_EXECUTE_TAP;
+      MBOX_ERROR_SPARSE        : return MBOX_ERROR;
+      default            : return MBOX_ERROR;
+    endcase
+  endfunction : mboxsparse2logic
 
   //MAILBOX Status
   typedef enum logic [3:0] {

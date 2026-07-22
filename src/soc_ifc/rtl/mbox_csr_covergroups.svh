@@ -230,13 +230,14 @@
         ecc_single_error_cp : coverpoint ecc_single_error;
         ecc_double_error_cp : coverpoint ecc_double_error;
         mbox_fsm_ps_cp : coverpoint mbox_fsm_ps {
-            bins MBOX_IDLE                                    = {mbox_fsm_state_e'(MBOX_IDLE        )};
-            bins MBOX_RDY_FOR_CMD                             = {mbox_fsm_state_e'(MBOX_RDY_FOR_CMD )};
+            bins MBOX_IDLE                                    = {mbox_fsm_state_e'(MBOX_IDLE)};
+            bins MBOX_RDY_FOR_CMD                             = {mbox_fsm_state_e'(MBOX_RDY_FOR_CMD)};
             bins MBOX_RDY_FOR_DLEN                            = {mbox_fsm_state_e'(MBOX_RDY_FOR_DLEN)};
             bins MBOX_RDY_FOR_DATA                            = {mbox_fsm_state_e'(MBOX_RDY_FOR_DATA)};
-            bins MBOX_EXECUTE_UC                              = {mbox_fsm_state_e'(MBOX_EXECUTE_UC  )};
-            bins MBOX_EXECUTE_SOC                             = {mbox_fsm_state_e'(MBOX_EXECUTE_SOC )};
-            bins MBOX_ERROR                                   = {mbox_fsm_state_e'(MBOX_ERROR       )};
+            bins MBOX_EXECUTE_UC                              = {mbox_fsm_state_e'(MBOX_EXECUTE_UC)};
+            bins MBOX_EXECUTE_SOC                             = {mbox_fsm_state_e'(MBOX_EXECUTE_SOC)};
+            bins MBOX_EXECUTE_TAP                             = {mbox_fsm_state_e'(MBOX_EXECUTE_TAP)};
+            bins MBOX_ERROR                                   = {mbox_fsm_state_e'(MBOX_ERROR)};
         }
         mbox_fsm_ps_edge_cp : coverpoint mbox_fsm_ps {
             bins TRANSITION_IDLE_RDY_FOR_CMD                  = (mbox_fsm_state_e'(MBOX_IDLE)         => mbox_fsm_state_e'(MBOX_RDY_FOR_CMD));

@@ -267,11 +267,21 @@ The RISC-V processor is able to access the SoC mailbox SRAM using a direct acces
 
 ## Security state
 
-Caliptra uses the MSB of the security state input to determine whether or not Caliptra is in debug mode.
+The security state input is a packed value encoded as `{debug_locked[3:0], device_lifecycle[1:0]}`. Caliptra uses the `debug_locked` field to determine whether or not Caliptra is in debug mode.
 
-When Caliptra is in debug mode:
+To harden this security-critical decision against fault-injection (glitch) attacks, `debug_locked` is a multi-bit (MuBi4) encoded value rather than a single bit:
 
-* Security state MSB is set to 0.
+* `debug_locked` = `4'h6` (MuBi4True) &rarr; debug is **locked** (secure).
+* `debug_locked` = `4'h9` (MuBi4False) &rarr; debug is **unlocked** (debug mode).
+
+The two legal encodings are bitwise complements, so a single- or multi-bit glitch is unlikely to convert one legal value into the other. Caliptra evaluates the field with a fail-secure policy:
+
+* The "debug unlocked" decision uses a *strict* test: only the exact `4'h9` encoding unlocks debug. Any other value (including any invalid encoding) leaves debug locked.
+* The "debug locked" decision uses a *loose* test: `4'h6` and any invalid encoding are all treated as locked.
+
+Consequently, any value other than the two legal MuBi4 encodings resolves to debug **locked**. Integrators must drive one of the two legal MuBi4 values on the external `security_state` strap; see the Caliptra Integration Specification for the strap layout.
+
+When Caliptra is in debug mode (`debug_locked` = MuBi4False):
 
 * Caliptra JTAG is opened for the microcontroller and HW debug.
 
@@ -2992,6 +3002,27 @@ Caliptra's AXI DMA supports a hardware path to write **KV23 (MEK)** to the SoC v
 - **Enable AES ↔ KV write path** only if `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set.
 
 
+
+## Fatal hardware errors
+
+The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditions. Assertion of any bit drives the SoC `cptra_error_fatal` interrupt pin (unless the bit is masked by `internal_hw_error_fatal_mask`). Once the interrupt is asserted, clearing the register bit does **not** deassert the interrupt — only a Caliptra reset clears a fatal error interrupt. All fields are sticky (RW1C by Caliptra and SoC).
+
+| Bit | Field | Maskable | Trigger |
+| :-- | :---- | :------- | :------ |
+| 0 | iccm_ecc_unc | Yes (`mask_iccm_ecc_unc`) | Uncorrectable double-bit ECC error in ICCM |
+| 1 | dccm_ecc_unc | Yes (`mask_dccm_ecc_unc`) | Uncorrectable double-bit ECC error in DCCM |
+| 2 | nmi_pin | Yes (`mask_nmi_pin`) | NMI asserted by WDT Timer2 timeout |
+| 3 | crypto_err | No | Multiple concurrent cryptographic operations using the Key Vault |
+| 4 | kv_error | No | KV boot-flow monitor `dest_valid` mismatch or boot-flow error |
+| 5 | shadow_storage_err | No | ICCM region shadow-register storage fault (register/shadow corrupted) |
+| 6 | fsm_error | No | Sparse-encoded security FSM entered an invalid/illegal state (fault-injection/glitch detection) |
+| 31:7 | rsvd | — | Reserved |
+
+**Masking behavior:** Only `iccm_ecc_unc`, `dccm_ecc_unc`, and `nmi_pin` are maskable via the writable fields of `internal_hw_error_fatal_mask`. The remaining fields (`crypto_err`, `kv_error`, `shadow_storage_err`, `fsm_error`) are unmaskable; their corresponding mask bits are read-only zero. Firmware cannot suppress an already-triggered fatal interrupt by setting a mask bit.
+
+**`fsm_error` — sparse-FSM glitch detection:** Security-critical FSMs (for example, the mailbox FSM) are sparse-encoded with Hamming-distance-separated state values. If a fault-injection/glitch drives an FSM into an unused encoding, the sparse-FSM guard forces the machine to its error state and asserts `fsm_error`. This is an unmaskable, reset-only fatal error.
+
+The recoverable counterpart, `CPTRA_HW_ERROR_NON_FATAL`, aggregates non-fatal conditions (mailbox protocol violations, mailbox uncorrectable ECC, and the ICCM region shadow-register phase mismatch `shadow_update_err`); firmware may deassert `cptra_error_non_fatal` by clearing or masking all set non-fatal bits.
 
 ## Cryptographic blocks fatal and non-fatal errors
 

@@ -82,11 +82,13 @@ reg {
             interrupt.
             [br]Caliptra Access: RW
             [br]SOC Access:      RO";
-    rw_ro_hw mask_iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM */
-    rw_ro_hw mask_dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM */
-    rw_ro_hw mask_nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout */
-    ro_ro    mask_crypto_err=0;       /* Crypto parallel operation error No Mask */
-    ro_ro    mask_kv_error=0;         /* KV boot flow monitor No Mask */
+    rw_ro_hw mask_iccm_ecc_unc=0;     /* Uncorrectable double-bit error in ICCM - Maskable */
+    rw_ro_hw mask_dccm_ecc_unc=0;     /* Uncorrectable double-bit error in DCCM - Maskable */
+    rw_ro_hw mask_nmi_pin=0;          /* Non-Maskable Interrupt due to WDT timeout - Maskable */
+    ro_ro    mask_crypto_err=0;       /* Crypto parallel operation error - No Mask (reserved, read-only 0) */
+    ro_ro    mask_kv_error=0;         /* KV boot flow monitor error - No Mask (reserved, read-only 0) */
+    ro_ro    shadow_storage_err=0;    /* Shadow register storage error - No Mask (reserved, read-only 0) */
+    ro_ro    fsm_error=0;             /* Sparse FSM glitch/illegal-state error - No Mask (reserved, read-only 0) */
 } internal_hw_error_fatal_mask;
 reg {
     name = "Hardware Error Non-Fatal Mask";

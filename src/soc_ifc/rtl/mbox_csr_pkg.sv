@@ -259,6 +259,7 @@ package mbox_csr_pkg;
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_RDY_FOR_DATA = 'h2,
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_EXECUTE_UC = 'h6,
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_EXECUTE_SOC = 'h4,
+        mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_EXECUTE_TAP = 'h5,
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_ERROR = 'h7
     } mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e_e;
 

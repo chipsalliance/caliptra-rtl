@@ -168,6 +168,9 @@ addrmap mbox_csr {
                 MBOX_EXECUTE_SOC = 3'b100 {
                     desc = "Mailbox has data for SoC";
                 };
+                MBOX_EXECUTE_TAP = 3'b101 {
+                    desc = "Mailbox has data for TAP";
+                };
                 MBOX_ERROR = 3'b111 {
                     desc = "Mailbox Protocol Error detected";
                 };
