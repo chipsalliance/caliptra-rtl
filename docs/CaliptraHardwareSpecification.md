@@ -125,6 +125,7 @@ The following table shows the memory map address ranges for each of the IP block
 | ABR (MLDSA/MLKEM)                   | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
 | AES                                 | 15        | 4 KiB        | 0x1001_1000   | 0x1001_1FFF |
 | SHA3                                | 16        | 4 KiB        | 0x1004_0000   | 0x1004_0FFF |
+| HMAC256                             | 17        | 4 KiB        | 0x1004_2000   | 0x1004_2FFF |
 
 #### Peripherals subsystem
 
@@ -686,6 +687,7 @@ The architecture of Caliptra cryptographic subsystem includes the following comp
     * SHA512/384 (based on NIST FIPS 180-4 [2])
     * SHA256 (based on NIST FIPS 180-4 [2])
     * HMAC512 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
+    * HMAC256 (based on [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and [RFC 4868](https://tools.ietf.org/html/rfc4868) [6])
     * SHA3 (based on [NIST FIPS 202](https://doi.org/10.6028/NIST.FIPS.202) [17])
 * Public-key cryptography
     * NIST Secp384r1 Deterministic Digital Signature Algorithm (based on FIPS-186-4 [11] and RFC 6979 [7])
@@ -1232,6 +1234,108 @@ In this architecture, the HMAC interface and controller are implemented in RISC-
 | Double block          | 3166                | 7.915                 | 136,342             |
 | 1 KiB message         | 10,570              | 26.425                | 37,842              |
 | 128 KiB message       | 1,264,314           | 3,160.785             | 316                 |
+
+## HMAC256/HMAC224
+
+Caliptra also provides an HMAC engine based on SHA-256. The implementation supports HMAC-SHA-256 and HMAC-SHA-224 as specified in [NIST FIPS 198-1](https://nvlpubs.nist.gov/nistpubs/FIPS/NIST.FIPS.198-1.pdf) [5] and is compatible with the HMAC-SHA-256 and HMAC-SHA-224 authentication and integrity functions defined in [RFC 4868](https://tools.ietf.org/html/rfc4868) [6].
+
+Caliptra HMAC256 implementation uses SHA256 as the hash function, accepts a 256-bit key, and generates a 256-bit tag. In HMAC-224 mode the tag is truncated to 224 bits and only the first 7 dwords of `HMAC256_TAG` are valid.
+
+Unlike the HMAC512 core, HMAC256 has no Key Vault interface and no CSR mode. The key always comes from software through the register interface. This simplified attack surface removes the `HMAC256_KV_*` registers, the `csr_mode` control field, and the `cptra_csr_hmac_key` strap.
+
+The HMAC algorithm is described as follows:
+* The key is fed to the HMAC core to be padded
+* The message is broken into 512-bit chunks by the host
+* For each chunk:
+     * The message is fed to the HMAC core
+     * The HMAC core should be triggered by the host
+     * The HMAC core status is changed to ready after hash processing
+* The result digest can be read after feeding all message chunks
+
+
+### Operation
+
+#### Padding
+
+The message is padded before being fed to the HMAC core, following the same scheme as HMAC512 but scaled to the SHA-256 block size. Internally, the i_padded key is concatenated with the message. The input message is taken, and some padding bits are appended to it to reach the desired length. The bits that are used for padding are simply `0` bits with a leading `1` (100000…000).
+
+The total size must be equal to 64 bits short of a multiple of 512, because the formatted message size has to be a multiple of 512 bits (N × 512).
+
+
+#### Hashing
+
+The HMAC256 core performs the SHA-256 function to process the hash value of the given message. The algorithm processes each block of 512 bits from the message, using the result from the previous block.
+
+The HMAC224 core performs the SHA-224 function using the same hardware, with the output truncated to 224 bits per FIPS 180-4.
+
+### FSM
+
+The HMAC256 architecture uses the same finite-state machine structure as HMAC512, scaled to the SHA-256 block size.
+
+### Save and restore
+
+The HMAC256 controller supports save/restore of the intermediate SHA-256 chaining state through the `CTRL.RESTORE` bit combined with `CTRL.NEXT` or `CTRL.LAST`. Software reads the eight `HMAC256_TAG` dwords after any non-final block to snapshot the inner hash state, then writes those dwords back through the `HMAC256_BLOCK` register slots and pulses `CTRL.RESTORE|NEXT` (or `CTRL.RESTORE|LAST` for the final block) to continue a paused operation. This mirrors the HMAC512 save/restore mechanic and lets firmware handle long messages without holding the block busy across other operations.
+
+### Signal descriptions
+
+The HMAC256 architecture inputs and outputs are described in the following table.
+
+| Name                | Input or output | Description  |
+| :------------------ | :-------------- | :----------- |
+| clk                 | input           | All signal timings are related to the rising edge of clk. |
+| reset_n             | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal. |
+| init                | input           | The core is initialized and processes the key and the first block of the message. |
+| next                | input           | The core processes the rest of the message blocks using the result from the previous blocks. |
+| last                | input           | Marks the final block of the message so the outer hash is produced. |
+| restore             | input           | Combined with `next` or `last`, resumes an operation from a previously saved intermediate SHA-256 state written into the `HMAC256_BLOCK` slots. |
+| zeroize             | input           | The core clears all internal registers to avoid any SCA information leakage. |
+| mode                | input           | Selects the hmac variant. This can be: <br>- HMAC-SHA-224 (`0`) <br>- HMAC-SHA-256 (`1`). |
+| key\[255:0\]        | input           | The input key. |
+| block\[511:0\]      | input           | The input padded block of message, or the intermediate SHA-256 chaining state during a restore. |
+| LFSR_seed\[191:0\]  | input           | The input to seed PRNG to enable the masking countermeasure for SCA protection. |
+| ready               | output          | When HIGH, the signal indicates the core is ready. |
+| tag\[255:0\]        | output          | The HMAC value of the given key and message. In HMAC-224 mode only the upper 224 bits are meaningful. |
+| tag_valid           | output          | When HIGH, the signal indicates the result is ready. |
+
+### Address map
+
+The HMAC256 address map is shown here: [hmac256\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac256_reg).
+
+### SCA countermeasure
+
+HMAC256 uses the same masking countermeasure as HMAC512, scaled to SHA-256. Random values from a lightweight LFSR mask the intermediate variables so that side-channel signals do not reveal information about them. The LFSR is seeded from a 192-bit `LFSR_SEED` input provided by software, and is reseeded each INIT by hashing the seed together with the previous entropy digest through the internal SHA-256 primitive. This produces a per-session masking stream that depends on both the software seed and prior hardware state.
+
+### Performance
+
+The HMAC256 core performance is reported considering two different architectures: pure hardware architecture, and hardware/software architecture. These are described next.
+
+#### Pure hardware architecture
+
+In this architecture, the HMAC256 interface and controller are implemented in hardware. The performance specification of the HMAC256 architecture is reported as shown in the following table.
+
+| Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
+| :-------------------- | :------------------ | :-------------------- | :------------------ |
+| Data_In transmission  | 27                  | 0.068                 | -                   |
+| Process               | 381                 | 0.953                 | -                   |
+| Data_Out transmission | 8                   | 0.020                 | -                   |
+| Single block          | 416                 | 1.040                 | 961,538             |
+| Double block          | 509                 | 1.273                 | 785,855             |
+| 1 KiB message         | 1,797               | 4.493                 | 222,593             |
+| 128 KiB message       | 188,741             | 471.853               | 2,119               |
+
+#### Hardware/software architecture
+
+In this architecture, the HMAC256 interface and controller are implemented in the RISC-V core. The performance specification of the HMAC256 architecture is reported as shown in the following table.
+
+| Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
+| :-------------------- | :------------------ | :-------------------- | :------------------ |
+| Data_In transmission  | 591                 | 1.478                 | -                   |
+| Process               | 381                 | 0.953                 | -                   |
+| Data_Out transmission | 54                  | 0.135                 | -                   |
+| Single block          | 1,026               | 2.565                 | 389,864             |
+| Double block          | 1,493               | 3.733                 | 267,911             |
+| 1 KiB message         | 8,017               | 20.043                | 49,894              |
+| 128 KiB message       | 954,929             | 2,387.323             | 419                 |
 
 ## HMAC_DRBG
 
