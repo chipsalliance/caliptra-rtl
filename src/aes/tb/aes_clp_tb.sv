@@ -846,7 +846,8 @@ module aes_clp_tb
     logic [127:0] key_save, ct_save, pt_save;
     logic [255:0] key256_save;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-ECB.txt";
+      if (!$value$plusargs("AES_ECB_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-ECB.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -940,7 +941,8 @@ module aes_clp_tb
     logic [127:0] pt_prev;
     logic [255:0] key256_save;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-CBC.txt";
+      if (!$value$plusargs("AES_CBC_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-CBC.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -1087,7 +1089,8 @@ module aes_clp_tb
     logic [127:0] iv_save, pt_save;
     logic [255:0] key256_save;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-CFB128.txt";
+      if (!$value$plusargs("AES_CFB128_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-CFB128.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -1188,7 +1191,8 @@ module aes_clp_tb
     logic [127:0] iv_save, pt_save;
     logic [255:0] key256_save;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-OFB.txt";
+      if (!$value$plusargs("AES_OFB_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-OFB.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -1291,7 +1295,8 @@ module aes_clp_tb
     logic [127:0] data_in  [];
     logic [127:0] data_out [];
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-CTR.txt";
+      if (!$value$plusargs("AES_CTR_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-CTR.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -1381,7 +1386,8 @@ module aes_clp_tb
     int           n_aad, n_pt;
     int           aad_len, pt_len;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-GCM.txt";
+      if (!$value$plusargs("AES_GCM_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-GCM.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin

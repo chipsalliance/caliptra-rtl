@@ -551,7 +551,8 @@ module csrng_tb
   // Runs ACVP CTR-DRBG (AES-256, no-df, PR=true) test vectors
   // against the CSRNG IP via the SW interface.
   //
-  // Stimulus file: ../stimulus/acvp/ctrDRBG.txt
+  // Stimulus file: ../stimulus/acvp/ctrDRBG.txt (default; override with
+  //   +CSRNG_ACVP_FILE=<path>, e.g. ${CALIPTRA_ROOT}/src/csrng/stimulus/acvp/ctrDRBG.txt)
   //   Format — one line per test case, 10 space-separated fields:
   //   AFT <tgid> <tcid> <predResistance> <ins_ent_96h> <perso_96h>
   //       <f7_96h> <f8_96h> <f9_96h> <f10_96h>
@@ -561,7 +562,8 @@ module csrng_tb
   //   fill with 96 zeros.  All other hex fields are zero-padded.
   //   perso_96h = 96 zeros when persoString is empty.
   //
-  // Response file: ../stimulus/acvp/ctrDRBG_resp.txt
+  // Response file: ../stimulus/acvp/ctrDRBG_resp.txt (default; override with
+  //   +CSRNG_ACVP_RESP_FILE=<path>)
   //   Format: AFT <tcid> <returnedBits_1024hex>
   //   (compare externally against the ACVP .rsp file; the TB does not
   //   embed or check expected results.)
@@ -627,8 +629,10 @@ module csrng_tb
     bit           is_instantiated;
 
     begin
-      in_fname        = "../stimulus/acvp/ctrDRBG.txt";
-      out_fname       = "../stimulus/acvp/ctrDRBG_resp.txt";
+      if (!$value$plusargs("CSRNG_ACVP_FILE=%s", in_fname))
+        in_fname = "../stimulus/acvp/ctrDRBG.txt";
+      if (!$value$plusargs("CSRNG_ACVP_RESP_FILE=%s", out_fname))
+        out_fname = "../stimulus/acvp/ctrDRBG_resp.txt";
       is_instantiated = 1'b0;
 
       fin = $fopen(in_fname, "r");

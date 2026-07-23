@@ -668,16 +668,23 @@ module hmac_drbg_tb();
     string en0, nonce;
     reg [383 : 0] en0_hex, nonce_hex;
     string test_type;//AFT or MCT
+    string acvp_in_file, acvp_out_file;
 
     $display("   -- Testbench for HMAC DRBG started --");
 
-    fin  = $fopen("../stimulus/acvp/hmacDRBG.txt","r");
+    // e.g. +HMAC_DRBG_ACVP_FILE=${CALIPTRA_ROOT}/src/hmac_drbg/stimulus/acvp/hmacDRBG.txt
+    if (!$value$plusargs("HMAC_DRBG_ACVP_FILE=%s", acvp_in_file))
+      acvp_in_file = "../stimulus/acvp/hmacDRBG.txt";
+    if (!$value$plusargs("HMAC_DRBG_ACVP_RESP_FILE=%s", acvp_out_file))
+      acvp_out_file = "../stimulus/acvp/hmacDRBG_digest.txt";
+
+    fin  = $fopen(acvp_in_file,"r");
     if (fin == 0)
     begin
       $display("ERROR: ACVP input file not found — skipping acvp_test()");
       disable acvp_test_block;
     end
-    fout = $fopen("../stimulus/acvp/hmacDRBG_digest.txt","w");
+    fout = $fopen(acvp_out_file,"w");
     if (fout == 0)
     begin
       $display("ERROR: ACVP output file could not be opened — skipping acvp_test()");
