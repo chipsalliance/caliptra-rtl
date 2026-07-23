@@ -1110,7 +1110,7 @@ module sha256_ctrl_tb();
                  $fwrite(fout, "%s %0d %064h\n", test_type, tcid, digest[255:0]);
               end
           endcase
-          write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+          write_single_word(ADDR_CTRL, {28'h0, 1'b1, 3'b0}); //zeroize
         end
         else//MCT
         begin
@@ -1176,7 +1176,7 @@ module sha256_ctrl_tb();
                    c = $sformatf("%064h", digest[255:0]);
                 end
               endcase
-              write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+              write_single_word(ADDR_CTRL, {28'h0, 1'b1, 3'b0}); //zeroize
             end//end inner loop
             case (test_mode)
             SHA224_MODE:
