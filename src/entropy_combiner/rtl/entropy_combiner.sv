@@ -37,6 +37,17 @@ module entropy_combiner
   input entropy_src_hw_if_req_t csrng_hw_if_req_i,
   output entropy_src_hw_if_rsp_t csrng_hw_if_rsp_o,
 
+  // cs_aes_halt: the ES0/ES1 SHA3 conditioners (inside entropy_src) assert a halt
+  // request before each Keccak permutation and STALL until they see the ack. The
+  // halt only reduces CSRNG-AES/ES-SHA3 current overlap - it has no functional
+  // role - so the combiner terminates the handshake locally, granting each ES its
+  // ack immediately. This guarantees the conditioners never dead-lock waiting on
+  // CSRNG (whose own cs_aes_halt input is tied off at the top level).
+  input  cs_aes_halt_req_t es0_cs_aes_halt_i,
+  input  cs_aes_halt_req_t es1_cs_aes_halt_i,
+  output cs_aes_halt_rsp_t es0_cs_aes_halt_o,
+  output cs_aes_halt_rsp_t es1_cs_aes_halt_o,
+
   output entropy_src_hw_if_req_t es0_hw_if_req_o,
   input entropy_src_hw_if_rsp_t es0_hw_if_rsp_i,
   output entropy_src_hw_if_req_t es1_hw_if_req_o,
@@ -204,6 +215,13 @@ module entropy_combiner
   // decoded locked condition so integration can disable AHB reads after ROM KAT.
   assign ahb_lock_o = ahb_locked;
   assign feed_accept = sha3_msg_valid && sha3_msg_ready;
+
+  // Grant each ES SHA3-conditioner halt request immediately (ack == req): the
+  // conditioner permutes as soon as it asks and never stalls. cs_aes_halt is inert
+  // (current-overlap mitigation only), so no arbitration or CSRNG round-trip is
+  // needed. The ES req is a registered signal, so ack==req is not a comb loop.
+  assign es0_cs_aes_halt_o.cs_aes_halt_ack = es0_cs_aes_halt_i.cs_aes_halt_req;
+  assign es1_cs_aes_halt_o.cs_aes_halt_ack = es1_cs_aes_halt_i.cs_aes_halt_req;
 
   // Combined es_fips policy is register-controlled. Reset/default is
   // AND_OF_BOTH_ES, PRIMARY_ES0_ONLY preserves ES0's FIPS bit, and CONFIG_VALUE

@@ -107,6 +107,12 @@ module entropy_combiner_align_tb
     .csrng_hw_if_req_i(csrng_req_tb),
     .csrng_hw_if_rsp_o(csrng_rsp_tb),
 
+    // Behavioral ES responders (no real SHA3 conditioner): tie halt reqs off.
+    .es0_cs_aes_halt_i('0),
+    .es1_cs_aes_halt_i('0),
+    .es0_cs_aes_halt_o(),
+    .es1_cs_aes_halt_o(),
+
     .es0_hw_if_req_o  (es0_req_tb),
     .es0_hw_if_rsp_i  (es0_rsp_tb),
     .es1_hw_if_req_o  (es1_req_tb),

@@ -110,6 +110,13 @@ module entropy_combiner_tb
     .csrng_hw_if_req_i(csrng_req_tb),
     .csrng_hw_if_rsp_o(csrng_rsp_tb),
 
+    // No real entropy_src here (behavioral ES responders), so there is no SHA3
+    // conditioner to request a halt: tie the requests off, leave acks open.
+    .es0_cs_aes_halt_i('0),
+    .es1_cs_aes_halt_i('0),
+    .es0_cs_aes_halt_o(),
+    .es1_cs_aes_halt_o(),
+
     .es0_hw_if_req_o  (es0_req_tb),
     .es0_hw_if_rsp_i  (es0_rsp_tb),
     .es1_hw_if_req_o  (es1_req_tb),

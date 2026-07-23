@@ -20,13 +20,14 @@
 // integration testbench.
 //
 // Its only job is to keep the caliptra_prim_mubi_pkg enum ports (otp_en_*)
-// and the other unused interfaces (cs_aes_halt / xht / alerts / interrupts)
-// tied off *inside RTL*, mirroring how caliptra_top.sv drives them. Because
-// this module is pure structural RTL, it compiles in the design partition, so
-// its MuBi8True reference binds to the same caliptra_prim_mubi_pkg as the
-// entropy_src port. The testbench then instantiates this wrapper and never
-// crosses the TB/RTL enum-type boundary that a direct entropy_src instance
-// would (VCS partition compile treats them as different enum types).
+// and the other unused interfaces (xht / alerts / interrupts) tied off *inside
+// RTL*, mirroring how caliptra_top.sv drives them, while passing the
+// cs_aes_halt handshake through to the combiner. Because this module is pure
+// structural RTL, it compiles in the design partition, so its MuBi8True
+// reference binds to the same caliptra_prim_mubi_pkg as the entropy_src port.
+// The testbench then instantiates this wrapper and never crosses the TB/RTL
+// enum-type boundary that a direct entropy_src instance would (VCS partition
+// compile treats them as different enum types).
 //
 //======================================================================
 
@@ -54,6 +55,12 @@ module entropy_src_raw_wrap
   // CSRNG-facing entropy interface (to the combiner)
   input  entropy_src_hw_if_req_t   entropy_src_hw_if_i,
   output entropy_src_hw_if_rsp_t   entropy_src_hw_if_o,
+
+  // cs_aes_halt handshake (to the combiner, which terminates it locally). The
+  // SHA3 conditioner asserts cs_aes_halt_o before a Keccak run and waits on
+  // cs_aes_halt_i; in raw/bypass mode the conditioner is unused so this is idle.
+  output cs_aes_halt_req_t         cs_aes_halt_o,
+  input  cs_aes_halt_rsp_t         cs_aes_halt_i,
 
   // itrng interface (to physical_rng)
   output entropy_src_rng_req_t     entropy_src_rng_o,
@@ -88,8 +95,8 @@ module entropy_src_raw_wrap
     .entropy_src_rng_o            (entropy_src_rng_o),
     .entropy_src_rng_i            (entropy_src_rng_i),
 
-    .cs_aes_halt_o                (),
-    .cs_aes_halt_i                (cs_aes_halt_rsp_t'('0)),
+    .cs_aes_halt_o                (cs_aes_halt_o),
+    .cs_aes_halt_i                (cs_aes_halt_i),
     .entropy_src_xht_o            (),
     .entropy_src_xht_i            (entropy_src_xht_rsp_t'('0)),
     .alert_rx_i                   ('0),

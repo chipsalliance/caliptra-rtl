@@ -133,6 +133,10 @@ module entropy_combiner_es_csrng_tb
   entropy_src_hw_if_req_t comb_csrng_req;           // CSRNG -> combiner (es_req)
   entropy_src_hw_if_rsp_t comb_csrng_rsp;           // combiner -> CSRNG (es_ack/es_bits)
 
+  // cs_aes_halt handshake: ES -> combiner request, combiner -> ES ack.
+  cs_aes_halt_req_t es0_cs_halt_req, es1_cs_halt_req;
+  cs_aes_halt_rsp_t es0_cs_halt_ack, es1_cs_halt_ack;
+
   //----------------------------------------------------------------
   // itrng wiring
   //----------------------------------------------------------------
@@ -171,6 +175,11 @@ module entropy_combiner_es_csrng_tb
 
     .csrng_hw_if_req_i(comb_csrng_req),
     .csrng_hw_if_rsp_o(comb_csrng_rsp),
+
+    .es0_cs_aes_halt_i(es0_cs_halt_req),
+    .es1_cs_aes_halt_i(es1_cs_halt_req),
+    .es0_cs_aes_halt_o(es0_cs_halt_ack),
+    .es1_cs_aes_halt_o(es1_cs_halt_ack),
 
     .es0_hw_if_req_o  (es0_hw_req),
     .es0_hw_if_rsp_i  (es0_hw_rsp),
@@ -216,6 +225,8 @@ module entropy_combiner_es_csrng_tb
     .hrdata_o            (es0_hrdata),
     .entropy_src_hw_if_i (es0_hw_req),
     .entropy_src_hw_if_o (es0_hw_rsp),
+    .cs_aes_halt_o       (es0_cs_halt_req),
+    .cs_aes_halt_i       (es0_cs_halt_ack),
     .entropy_src_rng_o   (es0_rng_req),
     .entropy_src_rng_i   (es0_rng_rsp)
   );
@@ -238,6 +249,8 @@ module entropy_combiner_es_csrng_tb
     .hrdata_o            (es1_hrdata),
     .entropy_src_hw_if_i (es1_hw_req),
     .entropy_src_hw_if_o (es1_hw_rsp),
+    .cs_aes_halt_o       (es1_cs_halt_req),
+    .cs_aes_halt_i       (es1_cs_halt_ack),
     .entropy_src_rng_o   (es1_rng_req),
     .entropy_src_rng_i   (es1_rng_rsp)
   );
