@@ -1,0 +1,8 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "SHA3"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/sha3/stimulus/tests/directed/sha3_acvp_test.yml
