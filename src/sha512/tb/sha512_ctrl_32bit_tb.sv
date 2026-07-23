@@ -1163,6 +1163,11 @@ module sha512_ctrl_32bit_tb
       end
     endcase
 
+    // Allow explicit path override regardless of mode, e.g.
+    // +SHA512_ACVP_FILE=${CALIPTRA_ROOT}/src/sha512/stimulus/acvp/SHA2-512.txt
+    void'($value$plusargs("SHA512_ACVP_FILE=%s", acvp_in_file));
+    void'($value$plusargs("SHA512_ACVP_RESP_FILE=%s", acvp_out_file));
+
     fin  = $fopen(acvp_in_file,"r");
     if (fin == 0)
     begin

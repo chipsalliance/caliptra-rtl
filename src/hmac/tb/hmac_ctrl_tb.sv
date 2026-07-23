@@ -962,6 +962,11 @@ module hmac_ctrl_tb();
         end
       endcase
 
+      // Allow explicit path override regardless of mode, e.g.
+      // +HMAC_ACVP_FILE=${CALIPTRA_ROOT}/src/hmac/stimulus/acvp/HMAC-SHA2-512.txt
+      void'($value$plusargs("HMAC_ACVP_FILE=%s", acvp_in_file));
+      void'($value$plusargs("HMAC_ACVP_RESP_FILE=%s", acvp_out_file));
+
       fin  = $fopen(acvp_in_file,"r");
       if (fin == 0)
       begin

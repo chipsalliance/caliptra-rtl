@@ -798,6 +798,7 @@ module sha3_ctrl_tb ();
   //----------------------------------------------------------------
   task acvp_test;
     int fin, fout, scan_result;
+    string in_file, out_file;
     string pt, test_type;
     int tcid;
     int pt_len;
@@ -830,17 +831,23 @@ module sha3_ctrl_tb ();
       else
         $display("   -- cSHAKE-%0d ACVP testbench started --", SHAKE_BITS);
 
-      fin  = $fopen(IN_FILE,  "r");
+      // e.g. +SHA3_ACVP_FILE=${CALIPTRA_ROOT}/src/sha3/stimulus/acvp/cSHAKE-256-635502_test.txt
+      if (!$value$plusargs("SHA3_ACVP_FILE=%s", in_file))
+        in_file = IN_FILE;
+      if (!$value$plusargs("SHA3_ACVP_RESP_FILE=%s", out_file))
+        out_file = OUT_FILE;
+
+      fin  = $fopen(in_file,  "r");
       if (fin == 0)
         begin
-          $display("ERROR: Input file %s not found", IN_FILE);
+          $display("ERROR: Input file %s not found", in_file);
           $stop;
         end
 
-      fout = $fopen(OUT_FILE, "w");
+      fout = $fopen(out_file, "w");
       if (fout == 0)
         begin
-          $display("ERROR: Cannot open output file %s", OUT_FILE);
+          $display("ERROR: Cannot open output file %s", out_file);
           $fclose(fin);
           $stop;
         end
