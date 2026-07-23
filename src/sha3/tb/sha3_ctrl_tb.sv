@@ -572,9 +572,9 @@ module sha3_ctrl_tb ();
                 (msg_endianness << 8) |
                 (state_endianness << 9);
 
-      write_single_word(SHA3_CFG, cfg_val);
-      write_single_word(SHA3_CFG, cfg_val);
-      // SHA3_CFG (0x1024) aliases PREFIX_1 via the VH adapter - do NOT write here.
+      // CFG_SHADOWED must be programmed via the KMAC register file (SHA3_CFG_KMAC).
+      // SHA3_CFG (0x1024) is the internal sha3_reg alias of CFG_SHADOWED; sha3_ctrl
+      // ties hwif_in.CFG_SHADOWED to '0 (no wr_ack), so it must never be written.
       // CFG_SHADOWED requires two consecutive identical writes to commit (shadow protocol).
       write_single_word(SHA3_CFG_KMAC, cfg_val);
       write_single_word(SHA3_CFG_KMAC, cfg_val);
