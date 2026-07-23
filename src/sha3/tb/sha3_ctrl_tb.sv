@@ -28,7 +28,7 @@ module sha3_ctrl_tb ();
   parameter DEBUG = 0;
 
   // Algorithm selector: 0=SHA3, 1=SHAKE, 2=cSHAKE
-  parameter int    ALGO_TYPE  = 1;
+  parameter int    ALGO_TYPE  = 2;
 
   // SHA3 variant selector: set to 224, 256, 384, or 512
   parameter int    SHA3_MODE = 512;
@@ -36,8 +36,8 @@ module sha3_ctrl_tb ();
   // Security strength for SHAKE/cSHAKE: 128 or 256
   parameter int    SHAKE_BITS = 256;
 
-  parameter string IN_FILE   = "../stimulus/acvp/SHAKE-256.txt";
-  parameter string OUT_FILE  = "../stimulus/acvp/SHAKE-256_digest.txt";
+  parameter string IN_FILE   = "../stimulus/acvp/cSHAKE-256-635502_test.txt";
+  parameter string OUT_FILE  = "../stimulus/acvp/cSHAKE-256-635502_test_digest.txt";
 
 
   parameter CLK_HALF_PERIOD = 1;
@@ -67,9 +67,9 @@ module sha3_ctrl_tb ();
   parameter SHA3_STATE_BASE      = 32'h00001200;  // 0x40 words (1600 bits)
   parameter SHA3_STATE_BASE_KMAC = 32'h00000400;  // 0x40 words (1600 bits)
   parameter SHA3_MSG_FIFO_KMAC   = 32'h00000800;  // write-only message FIFO
-  // PREFIX registers: 11 x 32-bit words at AHB 0x1020..0x1048
-  // (= KMAC offsets 0x20..0x48 + VH_REGISTER_ADDRESS_OFFSET 0x1000)
-  parameter SHA3_PREFIX_BASE     = 32'h00001020;  // PREFIX_0
+  // PREFIX registers live in the KMAC TLUL space (< 0x1000); the VH adapter
+  // routes addresses >= 0x1000 only to the internal sha3_reg block, never to KMAC.
+  parameter SHA3_PREFIX_BASE_KMAC = 32'h00000020;  // PREFIX_0 in KMAC register space
 
   // CMD sparse encoding (6-bit field, written to CMD[5:0])
   parameter CMD_START   = 32'h0000001D;  // 6'b011101 = 29
@@ -663,30 +663,107 @@ module sha3_ctrl_tb ();
 
 
   //----------------------------------------------------------------
-  // write_prefix()
+  // left_encode_fn()
+  // encode_string_sv()
+  // parse_lenhex()
+  // build_and_write_prefix()
   //
-  // Write the cSHAKE PREFIX registers PREFIX_0..PREFIX_10 (11 words,
-  // AHB 0x1020..0x1048) from a pre-encoded 88-character hex string.
+  // Implement NIST SP 800-185 §2.3 encoding in the TB so that the
+  // input file carries raw N and S (as length-prefixed hex tokens)
+  // and the TB builds the bytepad prefix itself.
   //
-  // prefix_hex is produced by convert_cshake_req.py and contains
-  //   encode_string(N) || encode_string(S)
-  // zero-padded to 44 bytes per NIST SP 800-185.
+  // Input token format from convert_cshake_req.py:
+  //   <2-hex-char byte count><data hex>
+  //   e.g. "00" = empty, "044b4d4143" = "KMAC"
   //
   // Must be called after configure_sha3() and before sha3_start().
   //----------------------------------------------------------------
-  task write_prefix(input string prefix_hex);
-    string       word_str;
-    logic [31:0] word_val;
-    int i;
-    begin
-      for (i = 0; i < 11; i++)
-        begin
-          word_str = prefix_hex.substr(i * 8, i * 8 + 7);
-          word_val = word_str.atohex();
-          write_single_word(SHA3_PREFIX_BASE + (i * 4), word_val);
-        end
+
+  // left_encode(x): returns bytes in a queue per SP 800-185 §2.3.1
+  function automatic void left_encode_fn(
+      input  int unsigned x,
+      output logic [7:0]  result[$]);
+    logic [7:0] b[$];
+    result.delete();
+    if (x == 0) begin
+      result.push_back(8'h01);
+      result.push_back(8'h00);
+      return;
     end
-  endtask // write_prefix
+    while (x > 0) begin
+      b.push_back(x[7:0]);
+      x >>= 8;
+    end
+    result.push_back(logic'(b.size()));
+    for (int j = int'(b.size()) - 1; j >= 0; j--)
+      result.push_back(b[j]);
+  endfunction
+
+  // encode_string(X) = left_encode(len(X)*8) || X  per SP 800-185 §2.3.2
+  function automatic void encode_string_sv(
+      input  logic [7:0] str_in[],
+      output logic [7:0] result[$]);
+    logic [7:0] len_enc[$];
+    result.delete();
+    left_encode_fn(str_in.size() * 8, len_enc);
+    foreach (len_enc[i]) result.push_back(len_enc[i]);
+    foreach (str_in[i]  ) result.push_back(str_in[i]);
+  endfunction
+
+  // Parse a length-prefixed hex token into a byte array.
+  // Token format: first 2 chars = byte count as hex, remaining = data.
+  function automatic void parse_lenhex(
+      input  string      lenhex,
+      output logic [7:0] result[]);
+    int n;
+    n = lenhex.substr(0, 1).atohex();
+    result = new[n];
+    for (int j = 0; j < n; j++)
+      result[j] = lenhex.substr(2 + j*2, 3 + j*2).atohex();
+  endfunction
+
+  // Build encode_string(N)||encode_string(S), check the 44-byte hardware
+  // limit, then write the zero-padded result to the 11 KMAC PREFIX registers
+  // in little-endian word order.
+  task automatic build_and_write_prefix(
+      input  string n_lenhex,
+      input  string s_lenhex,
+      input  int    tcid,
+      output bit    ok);
+    logic [7:0]  n_bytes[], s_bytes[];
+    logic [7:0]  enc_n[$],  enc_s[$];
+    logic [7:0]  prefix_arr[44];
+    logic [31:0] word_val;
+    int          idx;
+
+    ok = 1;
+
+    parse_lenhex(n_lenhex, n_bytes);
+    parse_lenhex(s_lenhex, s_bytes);
+
+    encode_string_sv(n_bytes, enc_n);
+    encode_string_sv(s_bytes, enc_s);
+
+    if ((enc_n.size() + enc_s.size()) > 44) begin
+      $display("WARNING: tcId=%0d prefix (%0d bytes) exceeds 44-byte hardware limit — vector skipped",
+               tcid, enc_n.size() + enc_s.size());
+      ok = 0;
+      return;
+    end
+
+    for (int j = 0; j < 44; j++) prefix_arr[j] = 8'h00;
+    idx = 0;
+    foreach (enc_n[j]) prefix_arr[idx++] = enc_n[j];
+    foreach (enc_s[j]) prefix_arr[idx++] = enc_s[j];
+
+    // Write little-endian 32-bit words to KMAC TLUL space (< 0x1000).
+    // VH adapter routes addresses >= 0x1000 to sha3_reg only.
+    for (int j = 0; j < 11; j++) begin
+      word_val = {prefix_arr[j*4+3], prefix_arr[j*4+2],
+                  prefix_arr[j*4+1], prefix_arr[j*4+0]};
+      write_single_word(SHA3_PREFIX_BASE_KMAC + (j * 4), word_val);
+    end
+  endtask
 
 
   //----------------------------------------------------------------
@@ -734,7 +811,17 @@ module sha3_ctrl_tb ();
     int unsigned msg_len_bits;      // message length in bits (0 = empty message)
     int unsigned xof_outLen_bits;   // requested XOF output length in bits
     int unsigned words_to_write;    // = xof_outLen_bits / 32
-    string prefix_hex;              // 88-char cSHAKE PREFIX (pre-encoded by Python)
+    string n_lenhex, s_lenhex;      // length-prefixed hex tokens for N and S
+    // MCT variables
+    int unsigned mct_min_out_len, mct_max_out_len, mct_out_len_incr;
+    int unsigned mct_range, mct_output_len, mct_saved_output_len, mct_out_words;
+    int unsigned mct_rightmost_int;
+    logic [7:0]  mct_inner_msg[16];
+    logic [7:0]  mct_cust[18];
+    logic [31:0] mct_word_buf;
+    string       mct_s_lenhex;
+    string       mct_md_hex;
+    bit          mct_prefix_ok;
     begin
       if (ALGO_TYPE == 0)
         $display("   -- SHA3-%0d ACVP testbench started --", SHA3_MODE);
@@ -998,84 +1085,219 @@ module sha3_ctrl_tb ();
         end // ALGO_TYPE == 1
 
       // ================================================================
-      // cSHAKE branch (ALGO_TYPE == 2): AFT only, variable-length output
-      // Input format: AFT <tgId> <tcId> <len_bits> <outLen_bits> <prefix_88hex> <msg_hex>
-      // Comment lines beginning with '#' (skipped overlength vectors) are ignored.
+      // cSHAKE branch (ALGO_TYPE == 2): AFT and MCT, variable-length output
+      // AFT format: AFT <tgId> <tcId> <len_bits> <outLen_bits> <n_lenhex> <s_lenhex> <msg_hex>
+      // MCT format: MCT <tgId> <tcId> <minOut> <maxOut> <incr> <n_lenhex> <s_lenhex> <msg_hex>
+      //   n_lenhex / s_lenhex: length-prefixed hex (2-char byte count + data hex)
+      // Overlength-prefix vectors are skipped at sim time by build_and_write_prefix().
       // ================================================================
       else if (ALGO_TYPE == 2)
         begin
           while (1)
             begin
-              scan_result = $fscanf(fin, "%s %*d %d %*d %d %s %s",
-                                    test_type, tcid, xof_outLen_bits, prefix_hex, pt);
+              // Read test_type token first, then parse remaining fields based on it
+              scan_result = $fscanf(fin, " %s", test_type);
               if (scan_result < 1)
                 begin
                   $display("End of file reached after %0d test vectors", tc_ctr);
                   break;
                 end
 
-              // Skip comment lines emitted for overlength-customization vectors
-              if (test_type == "#")
+              if (test_type == "AFT")
+                begin
+                  scan_result = $fscanf(fin, " %*d %d %*d %d %s %s %s",
+                                        tcid, xof_outLen_bits, n_lenhex, s_lenhex, pt);
+                  if (scan_result != 5)
+                    begin
+                      $display("End of file reached after %0d test vectors", tc_ctr);
+                      break;
+                    end
+                end
+              else if (test_type == "MCT")
+                begin
+                  scan_result = $fscanf(fin, " %*d %d %d %d %d %s %s %s",
+                                        tcid, mct_min_out_len, mct_max_out_len,
+                                        mct_out_len_incr, n_lenhex, s_lenhex, pt);
+                  if (scan_result != 7)
+                    begin
+                      $display("End of file reached after %0d test vectors", tc_ctr);
+                      break;
+                    end
+                end
+              else
                 begin
                   void'($fgets(dummy_str, fin));
                   continue;
                 end
 
-              if (scan_result != 5)
+              // ---- AFT ----
+              if (test_type == "AFT")
                 begin
-                  $display("End of file reached after %0d test vectors", tc_ctr);
-                  break;
-                end
+                  $display("MSG: Running cSHAKE-%0d AFT vector %4d (outLen=%0d bits)",
+                           SHAKE_BITS, tcid, xof_outLen_bits);
 
-              $display("MSG: Running cSHAKE-%0d AFT vector %4d (outLen=%0d bits)",
-                       SHAKE_BITS, tcid, xof_outLen_bits);
+                  pt_len = pt.len();
 
-              pt_len = pt.len();
+                  // SP 800-185 §3.3: when N="" AND S="", cSHAKE degenerates
+                  // to SHAKE — use SHAKE domain (0x1F), no prefix written.
+                  if (n_lenhex == "00" && s_lenhex == "00") begin
+                    configure_sha3(CFG_MODE_SHAKE, KSTRENGTH, 1'b1, 1'b1);
+                  end else begin
+                    configure_sha3(CFG_MODE_CSHAKE, KSTRENGTH, 1'b1, 1'b1);
+                    begin
+                      bit prefix_ok;
+                      build_and_write_prefix(n_lenhex, s_lenhex, tcid, prefix_ok);
+                      if (!prefix_ok) begin
+                        tc_ctr = tc_ctr + 1;
+                        continue;
+                      end
+                    end
+                  end
 
-              // Step 1: Configure cSHAKE
-              configure_sha3(CFG_MODE_SEL, KSTRENGTH, 1'b1, 1'b1);
+                  sha3_start();
 
-              // Step 2: Write PREFIX registers (before START)
-              write_prefix(prefix_hex);
+                  num_words = (pt_len + 7) / 8;
+                  for (i = 0; i < num_words; i++)
+                    begin
+                      if ((i * 8 + 8) <= pt_len)
+                        word_str = pt.substr(i * 8, i * 8 + 7);
+                      else
+                        begin
+                          word_str = pt.substr(i * 8, pt_len - 1);
+                          while (word_str.len() < 8)
+                            word_str = {word_str, "0"};
+                        end
+                      word_val = word_str.atohex();
+                      write_single_word(SHA3_MSG_FIFO_KMAC, word_val);
+                    end
 
-              // Step 3: START
-              sha3_start();
+                  sha3_process();
+                  wait_sha3_done();
+                  read_xof_n(xof_outLen_bits);
 
-              // Step 4: Write message words
-              num_words = (pt_len + 7) / 8;
-              for (i = 0; i < num_words; i++)
+                  words_to_write = xof_outLen_bits / 32;
+                  $fwrite(fout, "%s %0d ", test_type, tcid);
+                  for (int ww = 0; ww < words_to_write; ww++)
+                    $fwrite(fout, "%08h", xof_data[(words_to_write - 1 - ww) * 32 +: 32]);
+                  $fwrite(fout, "\n");
+
+                  tc_ctr = tc_ctr + 1;
+                end // AFT
+
+              // ---- MCT ----
+              else if (test_type == "MCT")
                 begin
-                  if ((i * 8 + 8) <= pt_len)
-                    begin
-                      word_str = pt.substr(i * 8, i * 8 + 7);
+                  $display("MSG: Running cSHAKE-%0d MCT vector %4d",
+                           SHAKE_BITS, tcid);
+
+                  // Initialise MCT state per spec:
+                  //   OutputLen = MaxOutLen; N = ""; S = ""
+                  mct_range      = mct_max_out_len - mct_min_out_len + 1;
+                  mct_output_len = mct_max_out_len;
+                  mct_s_lenhex   = "00"; // S="" initially
+
+                  // Seed → first InnerMsg: Left(seed || zeros, 128 bits)
+                  begin
+                    int seed_bytes;
+                    seed_bytes = pt.len() / 2;
+                    for (int k = 0; k < 16; k++) begin
+                      if (k < seed_bytes)
+                        mct_inner_msg[k] = pt.substr(k*2, k*2+1).atohex();
+                      else
+                        mct_inner_msg[k] = 8'h00;
                     end
-                  else
+                  end
+
+                  // 100 outer iterations
+                  for (int mct_j = 0; mct_j < 100; mct_j++)
                     begin
-                      word_str = pt.substr(i * 8, pt_len - 1);
-                      while (word_str.len() < 8)
-                        word_str = {word_str, "0"};
-                    end
-                  word_val = word_str.atohex();
-                  write_single_word(SHA3_MSG_FIFO_KMAC, word_val);
-                end
+                      // 1000 inner iterations
+                      for (int mct_i = 1; mct_i <= 1000; mct_i++)
+                        begin
+                          // Save OutputLen used for this call (recorded with OutputJ[j])
+                          mct_saved_output_len = mct_output_len;
+                          mct_out_words        = mct_saved_output_len / 32;
 
-              // Step 5: PROCESS
-              sha3_process();
+                          // Mode: SHAKE when N="" and S="" (first inner iteration only),
+                          // cSHAKE otherwise. SP 800-185 §3.3 mandates the SHAKE fallback.
+                          // read_xof_n calls sha3_done internally — no explicit call needed.
+                          if (mct_s_lenhex == "00")
+                            configure_sha3(CFG_MODE_SHAKE, KSTRENGTH, 1'b1, 1'b1);
+                          else
+                            begin
+                              configure_sha3(CFG_MODE_CSHAKE, KSTRENGTH, 1'b1, 1'b1);
+                              build_and_write_prefix("00", mct_s_lenhex, tcid, mct_prefix_ok);
+                              if (!mct_prefix_ok) begin
+                                $display("ERROR: MCT prefix failed j=%0d i=%0d", mct_j, mct_i);
+                                disable fork;
+                              end
+                            end
 
-              // Step 6: Wait for squeeze
-              wait_sha3_done();
+                          sha3_start();
 
-              // Step 7: Read XOF output
-              read_xof_n(xof_outLen_bits);
+                          // Write 16-byte InnerMsg as 4 × 32-bit words
+                          for (int k = 0; k < 4; k++) begin
+                            mct_word_buf = {mct_inner_msg[k*4+0], mct_inner_msg[k*4+1],
+                                            mct_inner_msg[k*4+2], mct_inner_msg[k*4+3]};
+                            write_single_word(SHA3_MSG_FIFO_KMAC, mct_word_buf);
+                          end
 
-              // Step 8: Write output line
-              words_to_write = xof_outLen_bits / 32;
-              $fwrite(fout, "%s %0d ", test_type, tcid);
-              for (int ww = 0; ww < words_to_write; ww++)
-                $fwrite(fout, "%08h", xof_data[(words_to_write - 1 - ww) * 32 +: 32]);
-              $fwrite(fout, "\n");
+                          sha3_process();
+                          wait_sha3_done();
+                          read_xof_n(mct_saved_output_len);
 
-              tc_ctr = tc_ctr + 1;
+                          // Rightmost 16 bits of Output[i] — big-endian uint16
+                          mct_rightmost_int = int'(xof_data[15:0]);
+
+                          // Customization = BitsToString(InnerMsg_i || Rightmost)
+                          // BitsToString maps each byte b → chr((b % 26) + 65) = 'A'..'Z'
+                          // InnerMsg_i = CURRENT mct_inner_msg (INPUT to this call).
+                          // Must be captured BEFORE mct_inner_msg is overwritten below.
+                          for (int k = 0; k < 16; k++)
+                            mct_cust[k] = (mct_inner_msg[k] % 8'd26) + 8'd65;
+                          mct_cust[16] = (xof_data[15:8] % 8'd26) + 8'd65;
+                          mct_cust[17] = (xof_data[7:0]  % 8'd26) + 8'd65;
+                          mct_s_lenhex = "12"; // 18 bytes
+                          for (int k = 0; k < 18; k++)
+                            mct_s_lenhex = {mct_s_lenhex, $sformatf("%02h", mct_cust[k])};
+
+                          // New OutputLen
+                          mct_output_len = mct_min_out_len +
+                            ((mct_rightmost_int % mct_range) / mct_out_len_incr)
+                            * mct_out_len_incr;
+
+                          // Next InnerMsg = Left(Output[i] || zeros, 128)
+                          // mct_inner_msg is overwritten only after customization is captured
+                          for (int k = 0; k < 4; k++) begin
+                            if (k < int'(mct_out_words)) begin
+                              mct_word_buf = xof_data[(mct_out_words-1-k)*32 +: 32];
+                              mct_inner_msg[k*4+0] = mct_word_buf[31:24];
+                              mct_inner_msg[k*4+1] = mct_word_buf[23:16];
+                              mct_inner_msg[k*4+2] = mct_word_buf[15:8];
+                              mct_inner_msg[k*4+3] = mct_word_buf[7:0];
+                            end else begin
+                              mct_inner_msg[k*4+0] = 8'h00;
+                              mct_inner_msg[k*4+1] = 8'h00;
+                              mct_inner_msg[k*4+2] = 8'h00;
+                              mct_inner_msg[k*4+3] = 8'h00;
+                            end
+                          end
+
+                        end // inner loop
+
+                      // Record OutputJ[mct_j] = Output[1000] with mct_saved_output_len bits
+                      mct_md_hex = "";
+                      for (int ww = 0; ww < int'(mct_out_words); ww++)
+                        mct_md_hex = {mct_md_hex,
+                          $sformatf("%08h", xof_data[(mct_out_words-1-ww)*32 +: 32])};
+                      $fwrite(fout, "MCT %0d %0d %s\n", tcid, mct_saved_output_len, mct_md_hex);
+                      $display("MSG: MCT tcId=%0d outer=%0d outLen=%0d bits",
+                               tcid, mct_j, mct_saved_output_len);
+                    end // outer loop
+
+                  tc_ctr = tc_ctr + 1;
+                end // MCT
+
             end // while(1) cSHAKE
         end // ALGO_TYPE == 2
 
