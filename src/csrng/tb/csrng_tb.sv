@@ -41,6 +41,11 @@ module csrng_tb
 
   parameter CLK_HALF_PERIOD = 2;
 
+  // Max number of poll_register_value() iterations (each iteration burns
+  // ~12 clk_tb cycles) before giving up and $fatal'ing instead of hanging
+  // the simulation forever.
+  parameter POLL_TIMEOUT_ITERS = 5000;
+
   // The address map.
   parameter ADDR_INTR_STATE                   = 32'h0;
   parameter ADDR_INTR_ENABLE                  = 32'h4;
@@ -257,7 +262,6 @@ module csrng_tb
   task write_single_word(input [31 : 0]  address,
                   input [31 : 0] word);
     begin
-      $display("[%t] write_single_word(addr=0x%x, word=0x%x)", $time, address, word);
       hsel_i_tb       = 1;
       haddr_i_tb      = address;
       hwdata_i_tb     = word;
@@ -266,14 +270,14 @@ module csrng_tb
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hsize_i_tb      = 3'b010;
 
-      @(posedge clk_tb);
+      @(posedge clk_tb); #1;
+      wait(hreadyout_o_tb == 1'b1);
       haddr_i_tb      = 'Z;
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
-      wait(hreadyout_o_tb == 1'b1);
-
-      @(posedge clk_tb);
       hsel_i_tb       = 0;
+
+      @(posedge clk_tb); #1;
     end
   endtask // write_single_word
 
@@ -293,16 +297,15 @@ module csrng_tb
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hsize_i_tb      = 3'b010;
 
-      @(posedge clk_tb);
+      @(posedge clk_tb); #1;
+      wait(hreadyout_o_tb == 1'b1);
+      read_data       = hrdata_o_tb;
       hwdata_i_tb     = 0;
       haddr_i_tb      = 'Z;
       htrans_i_tb     = AHB_HTRANS_IDLE;
-      read_data       = hrdata_o_tb;
-      wait(hreadyout_o_tb == 1'b1);
-
-      @(posedge clk_tb);
       hsel_i_tb       = 0;
-      $display("[%t] read_single_word(addr=0x%x) = 0x%x", $time, address, read_data);
+
+      @(posedge clk_tb); #1;
 
     end
   endtask // read_single_word
@@ -333,13 +336,31 @@ module csrng_tb
   //----------------------------------------------------------------
   task poll_register_value(
       input logic [31:0] addr,
-      input logic [31:0] value
+      input logic [31:0] value,
+      input logic [31:0] mask = 32'hFFFF_FFFF
   );
-
-    do begin
-      read_single_word(addr);
-      repeat(10) @(posedge clk_tb);
-    end while (read_data != value);
+    int poll_iters;
+    begin
+      poll_iters = 0;
+      do begin
+        read_single_word(addr);
+        repeat(10) @(posedge clk_tb);
+        poll_iters++;
+        if (poll_iters >= POLL_TIMEOUT_ITERS) begin
+          $display("[TB] ERROR: poll_register_value TIMEOUT @%0t: addr=0x%0h want=0x%0h (mask=0x%0h) got=0x%0h after %0d iterations",
+                    $time, addr, value, mask, read_data, poll_iters);
+          read_single_word(ADDR_MAIN_SM_STATE);
+          $display("[TB]   ADDR_MAIN_SM_STATE   (0x5c) = 0x%0h", read_data);
+          read_single_word(ADDR_ERR_CODE);
+          $display("[TB]   ADDR_ERR_CODE        (0x54) = 0x%0h", read_data);
+          read_single_word(ADDR_RECOV_ALERT_STS);
+          $display("[TB]   ADDR_RECOV_ALERT_STS (0x50) = 0x%0h", read_data);
+          read_single_word(ADDR_HW_EXC_STS);
+          $display("[TB]   ADDR_HW_EXC_STS      (0x4c) = 0x%0h", read_data);
+          $fatal(1, "poll_register_value timeout");
+        end
+      end while ((read_data & mask) != (value & mask));
+    end
   endtask
 
   //----------------------------------------------------------------
@@ -456,11 +477,38 @@ module csrng_tb
   //----------------------------------------------------------------
   task run_entropy_source_seed_test;
 
+    // Reset es_fips: acvp_csrng_test() leaves this latched at 1 (it marks
+    // its injected entropy as FIPS-qualifying) and never clears it. This
+    // task's poll below expects GENBITS_VLD to read exactly 0x1; if
+    // es_fips is still 1 from a prior test, GENBITS_VLD legitimately
+    // reads 0x3 (valid+fips) and the unmasked poll never matches.
+    entropy_src_hw_if_rsp.es_fips = 1'b0;
+
+    // Uninstantiate first: this task assumes a fresh instance, but it may
+    // now run after acvp_csrng_test(), which leaves the SW app instance
+    // still instantiated. Without this, the INSTANTIATE below is rejected
+    // as an invalid command sequence and never reaches es_req, hanging the
+    // wait() below forever.
+    $display("Uninitiate Command");
+    write_single_word(ADDR_CMD_REQ, 32'h0905);
+    repeat (200) @(posedge clk_tb);
+    poll_register_value(ADDR_SW_CMD_STS, 32'h6);
+
     $display("Instantiate Command - Use entropy Source Seed");
     write_single_word(ADDR_CMD_REQ, 32'h901);
 
     $display("Wait for Request");
-    wait (entropy_src_hw_if_req.es_req == 1'b1);
+    fork
+      begin
+        wait (entropy_src_hw_if_req.es_req == 1'b1);
+      end
+      begin
+        repeat (POLL_TIMEOUT_ITERS*12) @(posedge clk_tb);
+        $display("[TB] ERROR: timeout waiting for entropy_src_hw_if_req.es_req @%0t", $time);
+        $fatal(1, "es_req timeout");
+      end
+    join_any
+    disable fork;
     repeat (5000) @(posedge clk_tb);
 
     entropy_src_hw_if_rsp.es_ack = 1'b1;
@@ -484,6 +532,285 @@ module csrng_tb
   endtask // run_entropy_source_seed_test
 
   //----------------------------------------------------------------
+  // hexstr_to_32
+  //
+  // Extract a 32-bit value from 8 consecutive hex characters in
+  // string s starting at character index 'start'.
+  //----------------------------------------------------------------
+  function automatic logic [31:0] hexstr_to_32(input string s, input int start);
+    automatic logic [31:0] val;
+    automatic string       sub;
+    sub = s.substr(start, start + 7);
+    if ($sscanf(sub, "%h", val) != 1) val = '0;
+    return val;
+  endfunction
+
+  //----------------------------------------------------------------
+  // acvp_csrng_test
+  //
+  // Runs ACVP CTR-DRBG (AES-256, no-df, PR=true) test vectors
+  // against the CSRNG IP via the SW interface.
+  //
+  // Stimulus file: ../stimulus/acvp/ctrDRBG.txt (default; override with
+  //   +CSRNG_ACVP_FILE=<path>, e.g. ${CALIPTRA_ROOT}/src/csrng/stimulus/acvp/ctrDRBG.txt)
+  //   Format — one line per test case, 10 space-separated fields:
+  //   AFT <tgid> <tcid> <predResistance> <ins_ent_96h> <perso_96h>
+  //       <f7_96h> <f8_96h> <f9_96h> <f10_96h>
+  //
+  //   <predResistance> = true | false  (copied directly from JSON)
+  //   For false lines: res1_ent_96h and res2_ent_96h are unused;
+  //   fill with 96 zeros.  All other hex fields are zero-padded.
+  //   perso_96h = 96 zeros when persoString is empty.
+  //
+  // Response file: ../stimulus/acvp/ctrDRBG_resp.txt (default; override with
+  //   +CSRNG_ACVP_RESP_FILE=<path>)
+  //   Format: AFT <tcid> <returnedBits_1024hex>
+  //   (compare externally against the ACVP .rsp file; the TB does not
+  //   embed or check expected results.)
+  //
+  // Stimulus field mapping (fields 7-10):
+  //                    field7      field8      field9      field10
+  //   PR=true:        gen1_adata  res1_ent    gen2_adata  res2_ent
+  //   PR=false:       res_adata   res_ent     gen1_adata  gen2_adata
+  //
+  //   In the TB variables: adata1=f7, res1_entropy=f8, adata2=f9, res2_entropy=f10
+  //   For PR=false res2_entropy_val holds gen2_adata (no entropy in GEN calls).
+  //
+  // Per-test sequence, PR=true (SP 800-90A §10.2.1.5.2):
+  //   [UNI]  Uninstantiate previous state (skipped on first test)
+  //    INS   clen=12  entropy(ins) XOR perso
+  //    RES1  clen=12  res1_ent XOR adata1   → GEN1 clen=0  (discard)
+  //    RES2  clen=12  res2_ent XOR adata2   → GEN2 clen=0  (capture)
+  //
+  // Per-test sequence, PR=false:
+  //   [UNI]  Uninstantiate previous state (skipped on first test)
+  //    INS   clen=12  entropy(ins) XOR perso
+  //    RES   clen=12  res1_ent XOR adata1
+  //    GEN1  clen=12  adata2                               (discard)
+  //    GEN2  clen=12  res2_entropy (= gen2_adata in JSON)  (capture)
+  //
+  // Command header encoding (SP 800-90A / csrng_pkg.sv):
+  //   [2:0]  acmd  INS=1  RES=2  GEN=3  UNI=5
+  //   [3]    gap   always 0
+  //   [7:4]  clen  number of 32-bit adata words (0-12)
+  //   [11:8] flag0 MuBi4: 0x9=False (use entropy_src), 0x6=True
+  //   [23:12] glen generate length in 128-bit blocks
+  //
+  //   INS clen=0  flag0=9 (perso discarded): 32'h0000_0901
+  //   RES clen=12 flag0=9:                  32'h0000_09C2
+  //   GEN clen=0  flag0=9 glen=32 (PR):     32'h0002_0903
+  //   GEN clen=12 flag0=9 glen=32 (no-PR):  32'h0002_09C3
+  //   UNI clen=0  flag0=9:                  32'h0000_0905
+  //
+  // Additional-data words are written to CMD_REQ in reverse chunk order
+  // (LSB chunk first) because caliptra_prim_packer_fifo packs 32-bit
+  // words LSB-first; GENBITS reads are reassembled the same way in
+  // reverse for the same reason (see caliptra-sw's massage_seed()/Words
+  // iterator for the reference convention).
+  //----------------------------------------------------------------
+  task automatic acvp_csrng_test;
+    integer fin, fout;
+    string  in_fname, out_fname;
+    integer result;
+    string  test_type;
+    int     tgid, tcid;
+    string  pr_str;
+    string  entropy_str, perso_str;
+    string  adata1_str, res1_entropy_str;
+    string  adata2_str, res2_entropy_str;
+    bit     pr_flag;
+
+    logic [383:0] entropy_val;
+    logic [383:0] adata1_val;
+    logic [383:0] res1_entropy_val;
+    logic [383:0] adata2_val;
+    logic [383:0] res2_entropy_val;
+    logic [4095:0] got_val;
+    bit           is_instantiated;
+
+    begin
+      if (!$value$plusargs("CSRNG_ACVP_FILE=%s", in_fname))
+        in_fname = "../stimulus/acvp/ctrDRBG.txt";
+      if (!$value$plusargs("CSRNG_ACVP_RESP_FILE=%s", out_fname))
+        out_fname = "../stimulus/acvp/ctrDRBG_resp.txt";
+      is_instantiated = 1'b0;
+
+      fin = $fopen(in_fname, "r");
+      if (fin == 0) begin
+        $display("[TB] acvp_csrng_test: input file not found, skipping.");
+        return;
+      end
+      fout = $fopen(out_fname, "w");
+      if (fout == 0) begin
+        $display("[TB] acvp_csrng_test: cannot open output file.");
+        $fclose(fin);
+        return;
+      end
+
+      // Prevent reseed-interval errors across all test cases
+      write_single_word(ADDR_RESEED_INTERVAL, 32'hFFFF_FFFF);
+
+      // Prime sw_rdy_sts_q so cmd_rdy asserts before the first INS.
+      // Without this, INS is dropped because sw_rdy_sts_q starts at 0.
+      write_single_word(ADDR_CMD_REQ, 32'h0000_0905); // UNI
+      repeat (200) @(posedge clk_tb);
+      poll_register_value(ADDR_SW_CMD_STS, 32'h6);
+
+      while (1) begin
+        result = $fscanf(fin, "%s %d %d %s %s %s %s %s %s %s",
+                         test_type, tgid, tcid,
+                         pr_str,
+                         entropy_str,   perso_str,
+                         adata1_str,    res1_entropy_str,
+                         adata2_str,    res2_entropy_str);
+        if (result < 10) break;  // file has exactly 10 fields per line, no embedded expected data
+        pr_flag       = (pr_str == "true");
+
+        // Parse 96-hex-char (384-bit) fields, MSB-first (8 chars per word)
+        for (int w = 0; w < 12; w++) begin
+          entropy_val     [383 - w*32 -: 32] = hexstr_to_32(entropy_str,      w*8);
+          adata1_val      [383 - w*32 -: 32] = hexstr_to_32(adata1_str,       w*8);
+          res1_entropy_val[383 - w*32 -: 32] = hexstr_to_32(res1_entropy_str, w*8);
+          adata2_val      [383 - w*32 -: 32] = hexstr_to_32(adata2_str,       w*8);
+          res2_entropy_val[383 - w*32 -: 32] = hexstr_to_32(res2_entropy_str, w*8);
+        end
+
+        //------------------------------------------------------------
+        // UNI — uninstantiate previous state (skip on first test case
+        // because no instance exists after reset)
+        //------------------------------------------------------------
+        if (is_instantiated) begin
+          write_single_word(ADDR_CMD_REQ, 32'h0000_0905); // UNI
+          repeat (200) @(posedge clk_tb);
+          poll_register_value(ADDR_SW_CMD_STS, 32'h6);
+        end
+
+        //------------------------------------------------------------
+        // INS — instantiate with entropy XOR personalization string
+        //
+        // All 13 words (header + 12 adata) are written before we
+        // wait for es_req.  The DUT cannot assert es_req until the
+        // packer FIFO has accumulated all 12 adata words, so the
+        // command write always completes before the entropy request.
+        //------------------------------------------------------------
+        write_single_word(ADDR_CMD_REQ, 32'h0000_0901); // INS clen=0 (perso always zero)
+
+        // Respond to entropy request with test vector entropy
+        wait (entropy_src_hw_if_req.es_req == 1'b1);
+        entropy_src_hw_if_rsp.es_bits = entropy_val;
+        entropy_src_hw_if_rsp.es_fips = 1'b1;
+        entropy_src_hw_if_rsp.es_ack  = 1'b1;
+        @(posedge clk_tb);
+        entropy_src_hw_if_rsp.es_ack  = 1'b0;
+        entropy_src_hw_if_rsp.es_bits = '0;
+
+        poll_register_value(ADDR_SW_CMD_STS, 32'h6);
+        is_instantiated = 1'b1;
+
+        //------------------------------------------------------------
+        // GEN 1 — PR=true: RES first, then GEN clen=0
+        //         PR=false: GEN clen=12 directly
+        //         discard all output
+        //------------------------------------------------------------
+        if (pr_flag) begin
+          write_single_word(ADDR_CMD_REQ, 32'h0000_09C2); // RES clen=12
+          for (int w = 11; w >= 0; w--)
+            write_single_word(ADDR_CMD_REQ, adata1_val[383 - w*32 -: 32]);
+          wait (entropy_src_hw_if_req.es_req == 1'b1);
+          entropy_src_hw_if_rsp.es_bits = res1_entropy_val;
+          entropy_src_hw_if_rsp.es_fips = 1'b1;
+          entropy_src_hw_if_rsp.es_ack  = 1'b1;
+          @(posedge clk_tb);
+          entropy_src_hw_if_rsp.es_ack  = 1'b0;
+          entropy_src_hw_if_rsp.es_bits = '0;
+          poll_register_value(ADDR_SW_CMD_STS, 32'h6);
+          write_single_word(ADDR_CMD_REQ, 32'h0002_0903); // GEN clen=0 glen=32
+        end else begin
+          // PR=false: one shared RES before GEN1
+          write_single_word(ADDR_CMD_REQ, 32'h0000_09C2); // RES clen=12
+          for (int w = 11; w >= 0; w--)
+            write_single_word(ADDR_CMD_REQ, adata1_val[383 - w*32 -: 32]);
+          wait (entropy_src_hw_if_req.es_req == 1'b1);
+          entropy_src_hw_if_rsp.es_bits = res1_entropy_val;
+          entropy_src_hw_if_rsp.es_fips = 1'b1;
+          entropy_src_hw_if_rsp.es_ack  = 1'b1;
+          @(posedge clk_tb);
+          entropy_src_hw_if_rsp.es_ack  = 1'b0;
+          entropy_src_hw_if_rsp.es_bits = '0;
+          poll_register_value(ADDR_SW_CMD_STS, 32'h6);
+          write_single_word(ADDR_CMD_REQ, 32'h0002_09C3); // GEN clen=12 glen=32
+          for (int w = 11; w >= 0; w--)
+            write_single_word(ADDR_CMD_REQ, adata2_val[383 - w*32 -: 32]);
+        end
+
+        // Drain 32 x 128-bit blocks (128 x 32-bit reads)
+        // Mask to bit 0 only: genbits_fips (bit 1) is legitimately 1 here
+        // since the injected entropy is marked FIPS-qualifying.
+        for (int b = 0; b < 32; b++) begin
+          poll_register_value(ADDR_GENBITS_VLD, 32'h1, 32'h1);
+          for (int w = 0; w < 4; w++)
+            read_single_word(ADDR_GENBITS); // discard
+        end
+        poll_register_value(ADDR_SW_CMD_STS, 32'h6);
+
+        //------------------------------------------------------------
+        // GEN 2 — PR=true: RES first, then GEN clen=0
+        //         PR=false: GEN clen=12 directly
+        //         capture output for comparison
+        //------------------------------------------------------------
+        if (pr_flag) begin
+          write_single_word(ADDR_CMD_REQ, 32'h0000_09C2); // RES clen=12
+          for (int w = 11; w >= 0; w--)
+            write_single_word(ADDR_CMD_REQ, adata2_val[383 - w*32 -: 32]);
+          wait (entropy_src_hw_if_req.es_req == 1'b1);
+          entropy_src_hw_if_rsp.es_bits = res2_entropy_val;
+          entropy_src_hw_if_rsp.es_fips = 1'b1;
+          entropy_src_hw_if_rsp.es_ack  = 1'b1;
+          @(posedge clk_tb);
+          entropy_src_hw_if_rsp.es_ack  = 1'b0;
+          entropy_src_hw_if_rsp.es_bits = '0;
+          poll_register_value(ADDR_SW_CMD_STS, 32'h6);
+          write_single_word(ADDR_CMD_REQ, 32'h0002_0903); // GEN clen=0 glen=32
+        end else begin
+          // PR=false: GEN2 adata is field10 (res2_entropy_val = gen2_adata from JSON)
+          write_single_word(ADDR_CMD_REQ, 32'h0002_09C3); // GEN clen=12 glen=32
+          for (int w = 11; w >= 0; w--)
+            write_single_word(ADDR_CMD_REQ, res2_entropy_val[383 - w*32 -: 32]);
+        end
+
+        // Capture 32 x 128-bit blocks into got_val (MSB-first)
+        // Mask to bit 0 only (see drain-loop comment above).
+        for (int b = 0; b < 32; b++) begin
+          poll_register_value(ADDR_GENBITS_VLD, 32'h1, 32'h1);
+          for (int w = 0; w < 4; w++) begin
+            read_single_word(ADDR_GENBITS);
+            got_val[4095 - (b*4 + (3-w))*32 -: 32] = read_data;
+          end
+        end
+        poll_register_value(ADDR_SW_CMD_STS, 32'h6);
+
+        //------------------------------------------------------------
+        // Write response file for external comparison against the ACVP
+        // .rsp file (the TB does not embed or check expected results).
+        //------------------------------------------------------------
+        $fwrite(fout, "AFT %0d ", tcid);
+        for (int w = 0; w < 128; w++)
+          $fwrite(fout, "%08h", got_val[4095 - w*32 -: 32]);
+        $fwrite(fout, "\n");
+        $fflush(fout);
+
+        $display("[TB] DONE tgid=%0d tcid=%0d", tgid, tcid);
+        tc_ctr++;
+      end
+
+      $fclose(fin);
+      $fclose(fout);
+      $display("[TB] acvp_csrng_test complete. %0d tests, %0d errors.",
+               tc_ctr, error_ctr);
+    end
+  endtask // acvp_csrng_test
+
+  //----------------------------------------------------------------
   // The main test functionality.
   //----------------------------------------------------------------
   initial
@@ -496,6 +823,8 @@ module csrng_tb
 
       repeat (1000) @(posedge clk_tb);
       enable_csrng();
+
+      acvp_csrng_test();
 
       run_entropy_source_seed_test();
       run_smoke_test();

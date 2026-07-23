@@ -37,6 +37,77 @@ module sha512_ctrl_32bit_tb
   parameter CLK_HALF_PERIOD = 1;
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
 
+  // The address map.
+  parameter BASE_ADDR            = 32'h10020000;
+
+  parameter ADDR_NAME0           = BASE_ADDR + 32'h00000000;
+  parameter ADDR_NAME1           = BASE_ADDR + 32'h00000004;
+  parameter ADDR_VERSION0        = BASE_ADDR + 32'h00000008;
+  parameter ADDR_VERSION1        = BASE_ADDR + 32'h0000000c;
+
+  parameter ADDR_CTRL            = BASE_ADDR + 32'h00000010;
+  parameter CTRL_INIT_BIT        = 0;
+  parameter CTRL_NEXT_BIT        = 1;
+  parameter CTRL_MODE_LOW_BIT    = 2;
+  parameter CTRL_MODE_HIGH_BIT   = 3;
+  parameter CTRL_WORK_FACTOR_BIT = 7;
+
+  parameter ADDR_STATUS          = BASE_ADDR + 32'h00000018;
+  parameter STATUS_READY_BIT     = 0;
+  parameter STATUS_VALID_BIT     = 1;
+
+  parameter ADDR_WORK_FACTOR_NUM = BASE_ADDR + 32'h00000020;
+
+  parameter ADDR_BLOCK0          = BASE_ADDR + 32'h00000080;
+  parameter ADDR_BLOCK1          = BASE_ADDR + 32'h00000084;
+  parameter ADDR_BLOCK2          = BASE_ADDR + 32'h00000088;
+  parameter ADDR_BLOCK3          = BASE_ADDR + 32'h0000008c;
+  parameter ADDR_BLOCK4          = BASE_ADDR + 32'h00000090;
+  parameter ADDR_BLOCK5          = BASE_ADDR + 32'h00000094;
+  parameter ADDR_BLOCK6          = BASE_ADDR + 32'h00000098;
+  parameter ADDR_BLOCK7          = BASE_ADDR + 32'h0000009c;
+  parameter ADDR_BLOCK8          = BASE_ADDR + 32'h000000a0;
+  parameter ADDR_BLOCK9          = BASE_ADDR + 32'h000000a4;
+  parameter ADDR_BLOCK10         = BASE_ADDR + 32'h000000a8;
+  parameter ADDR_BLOCK11         = BASE_ADDR + 32'h000000ac;
+  parameter ADDR_BLOCK12         = BASE_ADDR + 32'h000000b0;
+  parameter ADDR_BLOCK13         = BASE_ADDR + 32'h000000b4;
+  parameter ADDR_BLOCK14         = BASE_ADDR + 32'h000000b8;
+  parameter ADDR_BLOCK15         = BASE_ADDR + 32'h000000bc;
+  parameter ADDR_BLOCK16         = BASE_ADDR + 32'h000000c0;
+  parameter ADDR_BLOCK17         = BASE_ADDR + 32'h000000c4;
+  parameter ADDR_BLOCK18         = BASE_ADDR + 32'h000000c8;
+  parameter ADDR_BLOCK19         = BASE_ADDR + 32'h000000cc;
+  parameter ADDR_BLOCK20         = BASE_ADDR + 32'h000000d0;
+  parameter ADDR_BLOCK21         = BASE_ADDR + 32'h000000d4;
+  parameter ADDR_BLOCK22         = BASE_ADDR + 32'h000000d8;
+  parameter ADDR_BLOCK23         = BASE_ADDR + 32'h000000dc;
+  parameter ADDR_BLOCK24         = BASE_ADDR + 32'h000000e0;
+  parameter ADDR_BLOCK25         = BASE_ADDR + 32'h000000e4;
+  parameter ADDR_BLOCK26         = BASE_ADDR + 32'h000000e8;
+  parameter ADDR_BLOCK27         = BASE_ADDR + 32'h000000ec;
+  parameter ADDR_BLOCK28         = BASE_ADDR + 32'h000000f0;
+  parameter ADDR_BLOCK29         = BASE_ADDR + 32'h000000f4;
+  parameter ADDR_BLOCK30         = BASE_ADDR + 32'h000000f8;
+  parameter ADDR_BLOCK31         = BASE_ADDR + 32'h000000fc;
+
+  parameter ADDR_DIGEST0         = BASE_ADDR + 32'h00000100;
+  parameter ADDR_DIGEST1         = BASE_ADDR + 32'h00000104;
+  parameter ADDR_DIGEST2         = BASE_ADDR + 32'h00000108;
+  parameter ADDR_DIGEST3         = BASE_ADDR + 32'h0000010c;
+  parameter ADDR_DIGEST4         = BASE_ADDR + 32'h00000110;
+  parameter ADDR_DIGEST5         = BASE_ADDR + 32'h00000114;
+  parameter ADDR_DIGEST6         = BASE_ADDR + 32'h00000118;
+  parameter ADDR_DIGEST7         = BASE_ADDR + 32'h0000011c;
+  parameter ADDR_DIGEST8         = BASE_ADDR + 32'h00000120;
+  parameter ADDR_DIGEST9         = BASE_ADDR + 32'h00000124;
+  parameter ADDR_DIGEST10        = BASE_ADDR + 32'h00000128;
+  parameter ADDR_DIGEST11        = BASE_ADDR + 32'h0000012c;
+  parameter ADDR_DIGEST12        = BASE_ADDR + 32'h00000130;
+  parameter ADDR_DIGEST13        = BASE_ADDR + 32'h00000134;
+  parameter ADDR_DIGEST14        = BASE_ADDR + 32'h00000138;
+  parameter ADDR_DIGEST15        = BASE_ADDR + 32'h0000013c;
+
   parameter MODE_SHA_512_224     = 2'h0;
   parameter MODE_SHA_512_256     = 2'h1;
   parameter MODE_SHA_384         = 2'h2;
@@ -1001,6 +1072,257 @@ module sha512_ctrl_32bit_tb
   endtask // zeroize_test
 
   //----------------------------------------------------------------
+  // pad_pt()
+  //
+  //----------------------------------------------------------------
+  task pad_pt(input string pt,
+              input int pt_len,
+              output string pad_out
+            );
+  begin
+    int pad_len;
+    string padding, len_str;
+    pad_len = 256 - ((pt_len + 32) % 256);
+    padding = "8";
+    for (int i = 1; i < pad_len; i++)
+    begin
+      padding = {padding, "0"};
+    end
+    len_str = $sformatf("%032h", pt_len*4);
+    pad_out = {pt,padding,len_str};
+  end
+  endtask //pad_pt
+
+  //----------------------------------------------------------------
+  // vect_test()
+  // Input lab vectors to IP
+  //----------------------------------------------------------------
+  task vect_test(input [1:0] mode,
+                 input [1:0] ctrl_val,
+                 input [1023:0] block,
+                 output [511:0] digest
+                 );
+  begin
+
+    $display("vect block hex in: %0h",block);
+    write_block(block);
+    $display("vect mode: %0h, ctrl_val: %0h",mode, ctrl_val);
+    write_single_word(ADDR_CTRL, {28'h0, mode, ctrl_val});
+    #CLK_PERIOD;
+    hsel_i_tb = 0;
+
+    #(CLK_PERIOD);
+    wait_ready();
+    read_digest();
+
+    digest = digest_data;
+    $display("digest_int: %0h", digest);
+
+  end
+  endtask //vect_test
+
+  //----------------------------------------------------------------
+  // acvp_test()
+  // Input lab vectors to IP
+  //----------------------------------------------------------------
+  task acvp_test();
+  begin : acvp_test_block
+    int fin, fout, result, pt_len;
+    string pt, sha_in, sha_blk_str, sha_blk_str_slice;
+    reg [1023:0] sha_blk_hex;
+    reg [31:0] sha_blk_hex_slice;
+    reg [1:0] ctrl_val; //1: init val, 2: next val
+    reg [511:0] digest;
+    int tcid;
+    string test_type;//AFT or MCT
+    reg [1:0] test_mode;
+
+    string seed, a, b, c, msg;
+    int msg_len;
+    string acvp_mode_str, acvp_in_file, acvp_out_file;
+
+    $display("   -- Testbench for sha512 started --");
+
+    if (!$value$plusargs("SHA512_ACVP_MODE=%s", acvp_mode_str))
+      acvp_mode_str = "384";
+
+    case (acvp_mode_str)
+      "384": begin
+        test_mode    = MODE_SHA_384;
+        acvp_in_file  = "../stimulus/acvp/SHA2-384.txt";
+        acvp_out_file = "../stimulus/acvp/SHA2-384_digest.txt";
+      end
+      "512": begin
+        test_mode    = MODE_SHA_512;
+        acvp_in_file  = "../stimulus/acvp/SHA2-512.txt";
+        acvp_out_file = "../stimulus/acvp/SHA2-512_digest.txt";
+      end
+      default: begin
+        $display("ERROR: unknown SHA512_ACVP_MODE '%s' (valid: 384, 512)", acvp_mode_str);
+        disable acvp_test_block;
+      end
+    endcase
+
+    // Allow explicit path override regardless of mode, e.g.
+    // +SHA512_ACVP_FILE=${CALIPTRA_ROOT}/src/sha512/stimulus/acvp/SHA2-512.txt
+    void'($value$plusargs("SHA512_ACVP_FILE=%s", acvp_in_file));
+    void'($value$plusargs("SHA512_ACVP_RESP_FILE=%s", acvp_out_file));
+
+    fin  = $fopen(acvp_in_file,"r");
+    if (fin == 0)
+    begin
+      $display("ERROR: ACVP input file not found — skipping acvp_test()");
+      disable acvp_test_block;
+    end
+    fout = $fopen(acvp_out_file,"w");
+    if (fout == 0)
+    begin
+      $display("ERROR: ACVP output file could not be opened — skipping acvp_test()");
+      disable acvp_test_block;
+    end
+
+    while(1)
+    begin
+      result = $fscanf(fin, "%s %*d %d %*d %s", test_type, tcid, pt);
+      if (result != 3)
+      begin
+        $display("End of file");
+        break;
+      end
+      else
+      begin
+        if (test_type == "AFT")//AFT
+        begin
+          $display("MSG: Running AFT vector %4d", tcid);
+          pt_len = pt.len();
+          pad_pt(pt, pt_len, sha_in);
+          //convert string to hex and feed it to IP
+            for (int j = 0; j < (sha_in.len())/256; j++)
+          begin
+            sha_blk_str = sha_in.substr(j*256,(j*256)+255);
+            //in vcs, atohex works only on 32 bits.
+            //so slicing the 1024 bit string and performing
+            //the conversion
+            for (int k=0; k < 32; k++)
+            begin
+               sha_blk_str_slice = sha_blk_str.substr(k*8, (k*8)+7);
+               sha_blk_hex_slice = sha_blk_str_slice.atohex();
+               sha_blk_hex = {sha_blk_hex[991:0], sha_blk_hex_slice};
+            end
+            if (j == 0) 
+            begin
+              ctrl_val = 2'd1;
+            end
+            else
+            begin
+              ctrl_val = 2'd2;
+            end
+            vect_test(test_mode, ctrl_val, sha_blk_hex, digest);
+          end//processed 1 pt input
+          $display("digest: %0h",digest);
+          //write digest to file
+          case (test_mode)
+              MODE_SHA_512:
+              begin
+                   $fwrite(fout, "%s %0d %0128h\n", test_type, tcid, digest[511:0]);
+              end
+              MODE_SHA_384:
+              begin
+                   $fwrite(fout, "%s %0d %096h\n", test_type, tcid, digest[511:128]);
+              end
+          endcase
+          write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+        end
+        else//MCT
+        begin
+          //Standard MCT Pseudo code
+          //For j = 0 to 99
+          //A = B = C = SEED
+          //For i = 0 to 999
+          //    MSG = A || B || C
+          //    MD = SHA(MSG)
+          //    A = B
+          //    B = C
+          //    C = MD
+          //Output MD
+          //SEED = MD
+          $display("MSG: Running MCT vector");
+          seed = pt;//from text file
+          for (int ol = 0; ol < 100; ol++)
+          begin
+            a = seed;
+            b = seed;
+            c = seed;
+            for (int il = 0; il < 1000; il++)
+            begin
+              msg = {a,b,c};
+              if (il%100 == 0)
+                  $display("ol count: %3d il count: %3d", ol, il);
+
+              //perform HASHING
+              msg_len = msg.len();
+              pad_pt(msg, msg_len, sha_in);
+              //convert string to hex and feed it to IP
+              for (int j = 0; j < (sha_in.len())/256; j++)
+              begin
+                sha_blk_str = sha_in.substr(j*256, (j*256)+255);
+                //in vcs, atohex is working on 32 bits only.
+                //so slicing the 1024 bit string and performing
+                //the conversion
+                for (int k=0; k < 32; k++)
+                begin
+                   sha_blk_str_slice = sha_blk_str.substr(k*8, (k*8)+7);
+                   sha_blk_hex_slice = sha_blk_str_slice.atohex();
+                   sha_blk_hex = {sha_blk_hex[991:0], sha_blk_hex_slice};
+                end
+                if (j == 0) 
+                begin
+                  ctrl_val = 2'd1;
+                end
+                else
+                begin
+                  ctrl_val = 2'd2;
+                end
+                vect_test(test_mode, ctrl_val, sha_blk_hex, digest);
+              end//processed 1 pt input
+              a = b;
+              b = c;
+              case (test_mode)
+                  MODE_SHA_512:
+                begin
+                    c = $sformatf("%0128h", digest[511:0]);
+                end
+                  MODE_SHA_384:
+                  begin
+                    c = $sformatf("%096h", digest[511:128]);
+                end
+              endcase
+              write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+            end//end inner loop
+            case (test_mode)
+              MODE_SHA_512:
+              begin
+                  $fwrite(fout, "%s %0d %0128h\n", test_type, tcid, digest[511:0]);
+                  $display("writing ol: %0d to file",ol);
+                  seed = $sformatf("%0128h", digest[511:0]);
+              end
+              MODE_SHA_384:
+              begin
+                  $fwrite(fout, "%s %0d %096h\n", test_type, tcid, digest[511:128]);
+                  $display("writing ol: %0d to file",ol);
+                  seed = $sformatf("%096h", digest[511:128]);
+              end
+            endcase
+          end//end outer loop
+        end
+      end//processed 1 line from file
+    end //end while
+    $fclose(fin);
+    $fclose(fout);
+  end
+  endtask //acvp_test
+
+  //----------------------------------------------------------------
   // sha512_test
   // The main test functionality.
   //
@@ -1031,7 +1353,6 @@ module sha512_ctrl_32bit_tb
       init_sim();
       reset_dut();
       check_name_version();
-
 
       // Single block test mesage.
       single_block = 1024'h6162638000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018;
@@ -1091,7 +1412,9 @@ module sha512_ctrl_32bit_tb
       restore_test(8'h0e, MODE_SHA_512_256, double_block_one, double_block_two, tc9_expected, tc10_expected);
 
       restore_test(8'h0f, MODE_SHA_384, double_block_one, double_block_two, tc11_expected, tc12_expected);
-      
+
+      acvp_test();
+
       display_test_result();
       
       $display("   -- Testbench for sha512 done. --");

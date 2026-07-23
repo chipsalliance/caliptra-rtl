@@ -85,3 +85,16 @@ targets:
     directories: []
     waiver_files: []
     tops: [aes_cipher_core]
+---
+provides: [aes_clp_tb]
+schema_version: 2.4.0
+requires:
+  - aes
+  - aes_coverage
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/aes_clp_tb.sv
+    tops: [aes_clp_tb]

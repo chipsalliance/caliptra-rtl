@@ -1,0 +1,9 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "CSRNG"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/csrng/stimulus/tests/directed/csrng_test.yml
+        - ${CALIPTRA_ROOT}/src/csrng/stimulus/tests/directed/csrng_acvp_test.yml
