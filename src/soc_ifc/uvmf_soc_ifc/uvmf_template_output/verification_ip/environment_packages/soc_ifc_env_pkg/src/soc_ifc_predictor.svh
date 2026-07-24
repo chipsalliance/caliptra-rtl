@@ -2182,6 +2182,20 @@ class soc_ifc_predictor #(
         soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
         soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
     end
+    else if (axs_reg.get_parent().get_name() == "axi_dma_reg_rm") begin
+        // The AXI (SoC) interface has no access to the DMA registers; the DMA
+        // assist is accessible only by Caliptra's microcontroller (over AHB).
+        // Any AXI access to the DMA block is rejected (SLVERR) with no effect on
+        // the register state. A rejected read returns 0; for a rejected write the
+        // expected payload is left as observed (the master still drives WDATA) so
+        // the scoreboard flags on the response rather than the write data.
+        do_reg_prediction = 1'b0;
+        if (!axi_txn.is_write()) begin
+            soc_ifc_sb_axi_ap_output_transaction.data  = {0,0,0,0};
+            soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+        end
+        soc_ifc_sb_axi_ap_output_transaction.resp  = AAXI_RESP_SLVERR;
+    end
     else begin
         case (axs_reg.get_name()) inside
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
@@ -2411,6 +2425,9 @@ class soc_ifc_predictor #(
     end
     else if (axs_reg == null) begin
         `uvm_error("PRED_AXI", $sformatf("AXI transaction to address: 0x%x decodes to null from soc_ifc_AXI_map", axi_txn.addr))
+    end
+    else if (axs_reg.get_parent().get_name() == "axi_dma_reg_rm") begin
+        `uvm_info("PRED_AXI", {"AXI access to DMA register ", axs_reg.get_full_name(), " is rejected (Caliptra-uC-only); no system effect"}, UVM_MEDIUM)
     end
     else begin
         `uvm_info("PRED_AXI", {"Detected access to register: ", axs_reg.get_full_name()}, UVM_MEDIUM)

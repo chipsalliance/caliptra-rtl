@@ -573,7 +573,12 @@ class soc_ifc_scoreboard #(
 
     if (axi_expected_q.size() > 0) begin
         t_exp = axi_expected_q.pop_front();
-        txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind);
+        // Compare the AXI response in addition to the payload so that response
+        // predictions (e.g. an expected SLVERR for a rejected access) are checked
+        // and not just the data. For valid accesses the predicted response equals
+        // the observed response, so this does not affect existing comparisons.
+        txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind) &&
+                 (t.resp[$bits(axi_resp_e)-1:0] === t_exp.resp[$bits(axi_resp_e)-1:0]);
         if (txn_eq) begin
             match_count++;
             `uvm_info ("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} matches expected",t.addr,t.beatQ[0],t.kind), UVM_HIGH)

@@ -316,6 +316,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence.svh"
   typedef soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence_t;
+  `include "sequences/dma/soc_ifc_env_dma_reg_axs_invalid_sequence.svh"
+  typedef soc_ifc_env_dma_reg_axs_invalid_sequence soc_ifc_env_dma_reg_axs_invalid_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_multi_agent_sequence.svh"
   typedef soc_ifc_env_top_mbox_multi_agent_sequence soc_ifc_env_top_mbox_multi_agent_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_dlen_violation_sequence.svh"
