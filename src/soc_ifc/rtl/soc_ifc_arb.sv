@@ -154,8 +154,13 @@ always_comb uc_sha_req = (uc_req_dv & (uc_req_data.addr inside {[SHA_REG_START_A
 always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]})) & valid_sha_user;
 
 // Requests to DMA
+// The AXI DMA register block is owned exclusively by Caliptra uC firmware (the
+// DMA assist is Caliptra's AXI manager, per the Caliptra Integration/Hardware
+// Specifications). SoC AXI agents are not permitted to reach it, so the SoC->DMA
+// path is held off here. SoC accesses to the DMA address range then fall through
+// to the unmapped-access term in soc_error below, returning SLVERR.
 always_comb uc_dma_req = (uc_req_dv & (uc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}));
-always_comb soc_dma_req = (soc_req_dv & (soc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}));
+always_comb soc_dma_req = 1'b0;
 
 //Check if SoC request is coming from a valid user
 //There are 5 valid user registers, check if user attribute matches any of them

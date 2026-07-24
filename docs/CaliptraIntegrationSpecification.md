@@ -352,6 +352,7 @@ All accesses that are outside of the defined address space of Caliptra are respo
 * Access to mailbox memory region with invalid AXI_USER are dropped.
 * Access to a fuse with invalid AXI_USER are dropped.
 * Access to the trng with invalid AXI_USER are dropped.
+* Access to the AXI DMA via the AXI interface are dropped.
 * SLVERR is asserted for any of the above conditions.
 
 All accesses must be 32-bit aligned. Misaligned writes are dropped and reads return 0x0.

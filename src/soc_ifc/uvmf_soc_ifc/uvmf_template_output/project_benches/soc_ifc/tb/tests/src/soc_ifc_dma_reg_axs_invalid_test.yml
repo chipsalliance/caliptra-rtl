@@ -1,0 +1,9 @@
+---
+# Prosecutor test for AXI DMA access: drive SoC-AXI accesses to the
+# Caliptra AXI DMA register block with a foreign AxUSER. The bound SVA
+# soc_ifc_dma_access_assert.a_dma_soc_reject is the checker.
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=soc_ifc_cmdline_test'
+- '+CLP_SEQ=soc_ifc_env_dma_reg_axs_invalid_sequence'
+testname: soc_ifc_dma_reg_axs_invalid_test

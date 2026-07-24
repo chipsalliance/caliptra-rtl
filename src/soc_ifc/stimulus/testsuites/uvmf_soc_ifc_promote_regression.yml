@@ -7,3 +7,4 @@ contents:
       paths:
         - $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_cmdline_test.yml
         - $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test.yml
+        - $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_dma_reg_axs_invalid_test.yml
