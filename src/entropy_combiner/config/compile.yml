@@ -1,0 +1,131 @@
+---
+provides: [entropy_combiner]
+schema_version: 2.4.0
+requires:
+  - libs
+  - caliptra_prim
+  - lc_ctrl_pkg
+  - entropy_src_pkg
+  - sha3_ctrl
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/entropy_combiner_pkg.sv
+      - $COMPILE_ROOT/rtl/entropy_combiner_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/entropy_combiner_reg.sv
+      - $COMPILE_ROOT/rtl/entropy_combiner.sv
+    tops: [entropy_combiner]
+  rtl_lint:
+    directories: []
+    waiver_files: []
+    tops: [entropy_combiner]
+---
+provides: [entropy_combiner_tb]
+schema_version: 2.4.0
+requires:
+  - entropy_combiner
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/entropy_combiner_tb.sv
+    tops: [entropy_combiner_tb]
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying entropy_combiner test vectors to $PWD" && cp $COMPILE_ROOT/tb/entropy_combiner_test_vectors.hex .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
+provides: [entropy_combiner_align_tb]
+schema_version: 2.4.0
+requires:
+  - entropy_combiner
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/entropy_combiner_align_tb.sv
+    tops: [entropy_combiner_align_tb]
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying entropy_combiner align vectors to $PWD" && cp $COMPILE_ROOT/tb/entropy_combiner_align_vectors.hex .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
+provides: [entropy_src_raw_wrap]
+schema_version: 2.4.0
+requires:
+  - entropy_src
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/entropy_src_raw_wrap.sv
+    tops: [entropy_src_raw_wrap]
+---
+provides: [entropy_combiner_es_integration_tb]
+schema_version: 2.4.0
+requires:
+  - entropy_combiner
+  - entropy_src_raw_wrap
+  - physical_rng
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/entropy_combiner_es_integration_tb.sv
+    tops: [entropy_combiner_es_integration_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
+provides: [csrng_raw_wrap]
+schema_version: 2.4.0
+requires:
+  - csrng
+  - caliptra_top_reg_defines
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/csrng_raw_wrap.sv
+    tops: [csrng_raw_wrap]
+---
+provides: [entropy_combiner_es_csrng_tb]
+schema_version: 2.4.0
+requires:
+  - entropy_combiner
+  - entropy_src_raw_wrap
+  - csrng_raw_wrap
+  - physical_rng
+  - caliptra_top_reg_defines
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/tb]
+    files:
+      - $COMPILE_ROOT/tb/entropy_combiner_es_csrng_tb.sv
+    tops: [entropy_combiner_es_csrng_tb]
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'

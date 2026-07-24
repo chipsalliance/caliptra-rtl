@@ -1,0 +1,413 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Purpose-built register map for the SHA3-384 entropy combiner.
+// This map intentionally does not include or instantiate sha3_reg.rdl: the
+// combiner owns a separate ot_sha3 datapath and exposes only the minimal ROM KAT
+// and combiner policy registers needed for that datapath.
+
+addrmap entropy_combiner_reg {
+    desc = "SHA3-384 entropy combiner register map with purpose-built KAT, policy, status, and W1S AHB lock registers.";
+    addressing = compact;
+    lsb0 = true;
+
+    default hw = na;
+    default regwidth = 32;
+    default accesswidth = 32;
+
+    signal {activelow; async; cpuif_reset; field_reset;} reset_b;
+    signal {activelow; async;} error_reset_b; // Driven by Caliptra pwrgood from SoC
+
+    reg {
+        name = "Entropy combiner component name";
+        desc = "Two 32-bit read-only words identifying the entropy combiner.";
+
+        default sw = r;
+        default hw = w;
+        field {desc = "Combiner name word";} NAME[32];
+    } COMBINER_NAME[2] @ 0x0000;
+
+    reg {
+        name = "Entropy combiner component version";
+        desc = "Two 32-bit read-only words identifying the entropy combiner version.";
+
+        default sw = r;
+        default hw = w;
+        field {desc = "Combiner version word";} VERSION[32];
+    } COMBINER_VERSION[2] @ 0x0008;
+
+    reg {
+        name = "Entropy combiner KAT control";
+        desc = "Controls the purpose-built SHA3-384 single-block KAT.";
+
+        field {
+            sw = w;
+            hw = r;
+            reset = 0x0;
+            singlepulse = true;
+            desc = "Write 1 to pulse-start a SHA3-384 KAT over KAT_MSG[0..23], using KAT_MSG_LEN bytes, through the same ot_sha3 datapath used for operational entropy combine.";
+        } start[0:0];
+    } KAT_CTRL @ 0x0010;
+
+    reg {
+        name = "Entropy combiner KAT message length";
+        desc = "Message length in bytes for the purpose-built single-block KAT. ROM is trusted to program a multiple of 8 in 0..96 bytes so the KAT remains within the 768-bit window.";
+
+        field {
+            sw = rw;
+            hw = r;
+            reset = 0x0;
+            desc = "KAT message length in bytes. ROM programs a multiple of 8 in 0..96 inclusive, matching the 768-bit KAT_MSG window and staying below the 832-bit SHA3-384 rate.";
+        } msg_len[31:0];
+    } KAT_MSG_LEN @ 0x0014;
+
+    reg {
+        name = "Entropy combiner KAT status";
+        desc = "Status for the purpose-built KAT path. Fields reflect the real combiner FSM and ot_sha3 error/FSM signals.";
+
+        default sw = r;
+        default hw = w;
+
+        field {
+            reset = 0x0;
+            desc = "A KAT hash is currently using the shared ot_sha3 datapath.";
+        } busy[0:0];
+
+        field {
+            reset = 0x0;
+            desc = "KAT_DIGEST holds a valid digest from the most recent successful KAT.";
+        } valid[1:1];
+    } KAT_STATUS @ 0x0018;
+
+    reg {
+        name = "Entropy combiner KAT message word";
+        desc = "Twenty-four 32-bit words containing the bounded 768-bit KAT message window written by ROM and snapped by hardware on KAT start.";
+
+        default sw = w;
+        default hw = r;
+        field {
+            reset = 0x0;
+            desc = "KAT message data word. ROM (SW) writes the KAT vector; hardware only reads it on KAT start. No hardware write path, so there is no SW/HW write collision.";
+        } data[32];
+    } KAT_MSG[24] @ 0x001C;
+
+    reg {
+        name = "Entropy combiner KAT digest word";
+        desc = "Twelve 32-bit read-only words containing the 384-bit SHA3-384 KAT digest written by hardware.";
+
+        default sw = r;
+        default hw = w;
+        field {
+            reset = 0x0;
+            desc = "KAT digest data word from the real ot_sha3 state output.";
+        } data[32];
+    } KAT_DIGEST[12] @ 0x007C;
+
+    reg {
+        name = "Entropy combiner control register";
+        desc = "Controls entropy combiner policy fields. Reset default for es_fips_policy is AND_OF_BOTH_ES.";
+
+        field {
+            sw = rw;
+            hw = r;
+            swwe;
+            reset = 0x0;
+            desc = "Selects combined es_fips policy: 0=AND_OF_BOTH_ES (default), 1=PRIMARY_ES0_ONLY, 2=CONFIG_VALUE overriden by ROM, 3=reserved treated as AND_OF_BOTH_ES by RTL. SW writes are gated by hardware swwe (=!AHB_LOCK), so ROM freezes this policy at its programmed value once it sets W1S AHB_LOCK.";
+            enum es_fips_policy_type {
+                AND_OF_BOTH_ES = 0x0;
+                PRIMARY_ES0_ONLY = 0x1;
+                CONFIG_VALUE = 0x2;
+            };
+        } es_fips_policy[1:0];
+
+        field {
+            sw = rw;
+            hw = r;
+            swwe;
+            reset = 0x0;
+            desc = "es_fips value used when es_fips_policy is CONFIG_VALUE. SW writes are gated by hardware swwe (=!AHB_LOCK) and frozen once ROM sets W1S AHB_LOCK.";
+        } es_fips_cfg[8:8];
+    } COMBINER_CTRL @ 0x00AC;
+
+    reg {
+        name = "Entropy combiner MuBi4 AHB_LOCK register";
+        desc = "MuBi4 AHB lock. MuBi4False(0x9)=unlocked (reset), MuBi4True(0x6)=locked; ROM writes MuBi4True after the KAT. Write-once-sticky (swwe=strict-False); clears only on reset. RTL treats any non-strict-False code (True or invalid) as locked (fail-safe).";
+
+        field {
+            sw = rw;
+            hw = r;
+            swwe;
+            reset = 0x9;
+            desc = "MuBi4 AHB lock: 0x9=unlocked, 0x6=locked; any non-strict-False code is locked.";
+        } lock[3:0];
+    } AHB_LOCK @ 0x00B0;
+
+    reg {
+        name = "Entropy combiner status register";
+        desc = "Read-only hardware status. combine_en reflects the combine_en_i strap sampled by hardware, letting ROM/SW discover the entropy-source topology (two entropy sources vs one).";
+
+        default sw = r;
+        default hw = w;
+
+        field {
+            hw = rw;
+            we;
+            reset = 0x0;
+            desc = "combine_en_i strap registered by hardware (SW read-only). 1 = two entropy_src instances combined via SHA3-384, 0 = single entropy_src (combiner bypassed).";
+        } combine_en[0:0];
+    } COMBINER_STATUS @ 0x00B4;
+
+    /* ------------------------------------------------------------------------
+     * Standard Caliptra interrupt register block (matches sha3/hmac/sha512).
+     * Two interrupt types: Error (4 ot_sha3 error events) and Notification
+     * (1 KAT-done event). Sticky error status is held in the power-good
+     * (error_reset_b) reset domain. Instantiated at the standard 0x400 offset.
+     * ---------------------------------------------------------------------- */
+
+    /* ---- Global Interrupt Enable ---- */
+    reg global_intr_en_t {
+        name = "Per-Type Interrupt Enable Register";
+        desc = "Dedicated register with one bit for each event type that may produce an interrupt.";
+
+        default hw = na;
+        default sw = rw;
+
+        field {desc = "Global enable bit for all events of type 'Error'";       } error_en = 1'b0;
+        field {desc = "Global enable bit for all events of type 'Notification'";} notif_en = 1'b0;
+    };
+
+    /* ---- Error Interrupt Enable ---- */
+    reg error_intr_en_t {
+        name = "Per-Event Interrupt Enable Register";
+        desc = "Dedicated register with one bit for each event that may produce an interrupt.";
+
+        default hw = na;
+        default sw = rw;
+
+        field {desc = "Enable bit for ot_sha3 error_o.valid.";}          sha3_error_en = 1'b0;
+        field {desc = "Enable bit for ot_sha3 sparse-FSM error.";}       sparse_fsm_error_en = 1'b0;
+        field {desc = "Enable bit for ot_sha3 counter error.";}          count_error_en = 1'b0;
+        field {desc = "Enable bit for ot_sha3 keccak storage-reset error.";} storage_rst_error_en = 1'b0;
+    };
+
+    /* ---- Notification Interrupt Enable ---- */
+    reg notif_intr_en_t {
+        name = "Per-Event Interrupt Enable Register";
+        desc = "Dedicated register with one bit for each event that may produce an interrupt.";
+
+        default hw = na;
+        default sw = rw;
+
+        field {desc = "Enable bit for KAT-done notification. Asserted when a ROM KAT digest becomes valid.";} notif_kat_done_en = 1'b0;
+    };
+
+    /* ---- Error Interrupt Status ---- */
+    reg error_intr_t {
+        name = "Interrupt Status Register type definition";
+        desc = "Single bit indicating occurrence of each interrupt event.
+                Sticky, level assertion, write-1-to-clear.";
+
+        default precedence = hw;
+        default hw = w;
+        default hwset = true;
+        default sw = rw;
+        default woclr = true;
+        default level intr;
+
+        field {desc = "ot_sha3 error_o.valid latched.";}                sha3_error_sts = 1'b0;
+        field {desc = "ot_sha3 sparse-FSM error latched.";}             sparse_fsm_error_sts = 1'b0;
+        field {desc = "ot_sha3 counter error latched.";}                count_error_sts = 1'b0;
+        field {desc = "ot_sha3 keccak storage-reset error latched.";}   storage_rst_error_sts = 1'b0;
+    };
+
+    /* ---- Notification Interrupt Status ---- */
+    reg notif_intr_t {
+        name = "Interrupt Status Register type definition";
+        desc = "Single bit indicating occurrence of each interrupt event.
+                Sticky, level assertion, write-1-to-clear.";
+
+        default precedence = hw;
+        default hw = w;
+        default hwset = true;
+        default sw = rw;
+        default woclr = true;
+        default level intr;
+
+        field {desc = "KAT-done notification. Set when a ROM KAT digest becomes valid.";} notif_kat_done_sts = 1'b0;
+    };
+
+    /* ---- Aggregated Interrupt Status ---- */
+    reg global_intr_t {
+        name = "Interrupt Status Aggregation Register type definition";
+        desc = "Single bit indicating occurrence of any interrupt event
+                of a given type. Non-sticky assertion.";
+
+        default hw = w;
+        default sw = r;
+        default nonsticky intr;
+
+        field {desc = "Interrupt Event Aggregation status bit";} agg_sts = 1'b0;
+    };
+
+    /* ---- Error Interrupt Trigger ---- */
+    reg error_intr_trig_t {
+        name = "Interrupt Trigger Register type definition";
+        desc = "Single bit for each interrupt event allows SW to manually
+                trigger occurrence of that event. Upon SW write, the trigger bit
+                will pulse for 1 cycle then clear to 0.";
+
+        default hw = na;
+        default sw = rw;
+        default woset = true;
+        default singlepulse = true;
+
+        field {desc = "Interrupt Trigger 0 bit";} sha3_error_trig = 1'b0;
+        field {desc = "Interrupt Trigger 1 bit";} sparse_fsm_error_trig = 1'b0;
+        field {desc = "Interrupt Trigger 2 bit";} count_error_trig = 1'b0;
+        field {desc = "Interrupt Trigger 3 bit";} storage_rst_error_trig = 1'b0;
+    };
+
+    /* ---- Notification Interrupt Trigger ---- */
+    reg notif_intr_trig_t {
+        name = "Interrupt Trigger Register type definition";
+        desc = "Single bit for each interrupt event allows SW to manually
+                trigger occurrence of that event. Upon SW write, the trigger bit
+                will pulse for 1 cycle then clear to 0.";
+
+        default hw = na;
+        default sw = rw;
+        default woset = true;
+        default singlepulse = true;
+
+        field {desc = "KAT-done notification trigger bit";} notif_kat_done_trig = 1'b0;
+    };
+
+    /* ---- Interrupt Statistics Counter Incrementor ---- */
+    reg intr_count_incr_t {
+        name = "Interrupt Event Count Incrementor";
+        desc = "Trigger the event counter to increment based on observing the
+                rising edge of an interrupt event input from the hardware.
+                Implemented as a 1-bit down-counter that decrements immediately
+                on being set, producing a pulse.";
+
+        default hw = w;
+        default sw = r;
+        default hwset = true;
+        default decrvalue = 1;
+        default counter;
+
+        field {desc = "Pulse mirrors interrupt event occurrence";} pulse = 1'b0;
+    };
+
+    /* ---- Interrupt Statistics Counter ---- */
+    reg intr_count_t {
+        name = "Interrupt Event Counter";
+        desc = "Provides statistics about the number of events that have
+                occurred. Will not overflow ('incrsaturate').";
+
+        default sw = rw;
+        default hw = na;
+        default incrvalue = 1;
+        default incrsaturate = true;
+        default counter;
+
+        field {desc = "Count field";} cnt[32] = 32'h0;
+    };
+
+    /* -----------------------
+     * Register File definitive definition
+     * ----------------------- */
+    regfile intr_block_t {
+        name = "Interrupt Register Block";
+        desc = "Set of registers to implement interrupt functionality";
+
+        global_intr_en_t  global_intr_en_r;      /* 1-bit per event type */
+        error_intr_en_t   error_intr_en_r;       /* 1-bit per error */
+        notif_intr_en_t   notif_intr_en_r;       /* 1-bit per notification */
+        global_intr_t     error_global_intr_r;   /* aggregates all error interrupts with global enable */
+        global_intr_t     notif_global_intr_r;   /* aggregates all notification interrupts with global enable */
+        error_intr_t      error_internal_intr_r; /* Error pending, SW write 1 to clear */
+        notif_intr_t      notif_internal_intr_r; /* Notification pending, SW write 1 to clear */
+        error_intr_trig_t error_intr_trig_r;     /* SW sets error bit for interrupt testing */
+        notif_intr_trig_t notif_intr_trig_r;     /* SW sets notification bit for interrupt testing */
+
+        intr_count_t      sha3_error_intr_count_r @0x100;  /* Per error */
+        intr_count_t      sparse_fsm_error_intr_count_r;   /* Per error */
+        intr_count_t      count_error_intr_count_r;        /* Per error */
+        intr_count_t      storage_rst_error_intr_count_r;  /* Per error */
+        intr_count_t      notif_kat_done_intr_count_r @0x180; /* Per notification */
+
+        intr_count_incr_t sha3_error_intr_count_incr_r @0x200; /* Per error count incrementor pulse */
+        intr_count_incr_t sparse_fsm_error_intr_count_incr_r;  /* Per error count incrementor pulse */
+        intr_count_incr_t count_error_intr_count_incr_r;       /* Per error count incrementor pulse */
+        intr_count_incr_t storage_rst_error_intr_count_incr_r; /* Per error count incrementor pulse */
+        intr_count_incr_t notif_kat_done_intr_count_incr_r;    /* Per notification count incrementor pulse */
+
+        /* ---- Reset assignment for Error Events (power-good domain) ---- */
+        error_internal_intr_r.sha3_error_sts        -> resetsignal = error_reset_b;
+        error_internal_intr_r.sparse_fsm_error_sts  -> resetsignal = error_reset_b;
+        error_internal_intr_r.count_error_sts       -> resetsignal = error_reset_b;
+        error_internal_intr_r.storage_rst_error_sts -> resetsignal = error_reset_b;
+        sha3_error_intr_count_r.cnt        -> resetsignal = error_reset_b;
+        sparse_fsm_error_intr_count_r.cnt  -> resetsignal = error_reset_b;
+        count_error_intr_count_r.cnt       -> resetsignal = error_reset_b;
+        storage_rst_error_intr_count_r.cnt -> resetsignal = error_reset_b;
+
+        /* ---- Interrupt Event Dynamic Assignments ---- */
+        error_internal_intr_r.sha3_error_sts        -> enable = error_intr_en_r.sha3_error_en;
+        error_internal_intr_r.sparse_fsm_error_sts  -> enable = error_intr_en_r.sparse_fsm_error_en;
+        error_internal_intr_r.count_error_sts       -> enable = error_intr_en_r.count_error_en;
+        error_internal_intr_r.storage_rst_error_sts -> enable = error_intr_en_r.storage_rst_error_en;
+        notif_internal_intr_r.notif_kat_done_sts    -> enable = notif_intr_en_r.notif_kat_done_en;
+
+        error_internal_intr_r.sha3_error_sts        -> next = error_intr_trig_r.sha3_error_trig;
+        error_internal_intr_r.sparse_fsm_error_sts  -> next = error_intr_trig_r.sparse_fsm_error_trig;
+        error_internal_intr_r.count_error_sts       -> next = error_intr_trig_r.count_error_trig;
+        error_internal_intr_r.storage_rst_error_sts -> next = error_intr_trig_r.storage_rst_error_trig;
+        notif_internal_intr_r.notif_kat_done_sts    -> next = notif_intr_trig_r.notif_kat_done_trig;
+
+        // NOTE: hwset for events is implicitly defined as module input
+
+        /* ---- Global Interrupt Dynamic Assignments ---- */
+        error_global_intr_r.agg_sts -> enable = global_intr_en_r.error_en;
+        notif_global_intr_r.agg_sts -> enable = global_intr_en_r.notif_en;
+
+        error_global_intr_r.agg_sts -> next = error_internal_intr_r -> intr;
+        notif_global_intr_r.agg_sts -> next = notif_internal_intr_r -> intr;
+
+        /* ---- Event Statistics Tracker Assignments ---- */
+        sha3_error_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.sha3_error_sts -> hwset;
+        sha3_error_intr_count_incr_r.pulse -> next  = error_internal_intr_r.sha3_error_sts -> next;
+        sha3_error_intr_count_incr_r.pulse -> we    = error_internal_intr_r.sha3_error_sts -> next;
+        sha3_error_intr_count_incr_r.pulse -> decr  = sha3_error_intr_count_incr_r.pulse;
+        sha3_error_intr_count_r.cnt        -> incr  = sha3_error_intr_count_incr_r.pulse;
+
+        sparse_fsm_error_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.sparse_fsm_error_sts -> hwset;
+        sparse_fsm_error_intr_count_incr_r.pulse -> next  = error_internal_intr_r.sparse_fsm_error_sts -> next;
+        sparse_fsm_error_intr_count_incr_r.pulse -> we    = error_internal_intr_r.sparse_fsm_error_sts -> next;
+        sparse_fsm_error_intr_count_incr_r.pulse -> decr  = sparse_fsm_error_intr_count_incr_r.pulse;
+        sparse_fsm_error_intr_count_r.cnt        -> incr  = sparse_fsm_error_intr_count_incr_r.pulse;
+
+        count_error_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.count_error_sts -> hwset;
+        count_error_intr_count_incr_r.pulse -> next  = error_internal_intr_r.count_error_sts -> next;
+        count_error_intr_count_incr_r.pulse -> we    = error_internal_intr_r.count_error_sts -> next;
+        count_error_intr_count_incr_r.pulse -> decr  = count_error_intr_count_incr_r.pulse;
+        count_error_intr_count_r.cnt        -> incr  = count_error_intr_count_incr_r.pulse;
+
+        storage_rst_error_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.storage_rst_error_sts -> hwset;
+        storage_rst_error_intr_count_incr_r.pulse -> next  = error_internal_intr_r.storage_rst_error_sts -> next;
+        storage_rst_error_intr_count_incr_r.pulse -> we    = error_internal_intr_r.storage_rst_error_sts -> next;
+        storage_rst_error_intr_count_incr_r.pulse -> decr  = storage_rst_error_intr_count_incr_r.pulse;
+        storage_rst_error_intr_count_r.cnt        -> incr  = storage_rst_error_intr_count_incr_r.pulse;
+
+        notif_kat_done_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_kat_done_sts -> hwset;
+        notif_kat_done_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_kat_done_sts -> next;
+        notif_kat_done_intr_count_incr_r.pulse -> we    = notif_internal_intr_r.notif_kat_done_sts -> next;
+        notif_kat_done_intr_count_incr_r.pulse -> decr  = notif_kat_done_intr_count_incr_r.pulse;
+        notif_kat_done_intr_count_r.cnt        -> incr  = notif_kat_done_intr_count_incr_r.pulse;
+    };
+
+    /* -----------------------
+     * Register File instance (standard 0x400 offset)
+     * ----------------------- */
+    intr_block_t intr_block_rf @0x400;
+};

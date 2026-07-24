@@ -165,6 +165,11 @@ module soc_ifc_top
     output logic         ss_ocp_lock_in_progress,
     output logic [15:0]  ss_key_release_key_size,
 
+    // Dual iTRNG enable strap: reflected in CPTRA_HW_CONFIG.dual_iTRNG_en and
+    // exported (dual_itrng_en_o) to drive the entropy combiner's combine_en.
+    input  logic         dual_itrng_en,
+    output logic         dual_itrng_en_o,
+
     // Stable owner key enable (subsystem_mode & strap_generic_3[0] & !ocp_lock)
     output logic         stable_owner_key_en,
 
@@ -541,10 +546,22 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
 `ifdef CALIPTRA_MODE_SUBSYSTEM
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b1;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = ss_ocp_lock_en;
+    // Dual iTRNG (secondary entropy_src + SHA3 combiner) is only enabled in
+    // subsystem mode with the internal TRNG present; the strap then reflects into
+    // the SW-readable register and drives combine_en. Any other config => bypass (0).
+  `ifdef CALIPTRA_INTERNAL_TRNG
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = dual_itrng_en;
+  `else
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
+  `endif
 `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b0;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
 `endif
+// dual_iTRNG_en stored value exported to drive the entropy combiner's combine_en
+// (0 unless subsystem mode + internal TRNG).
+always_comb dual_itrng_en_o = soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.dual_iTRNG_en.value;
 
 //SOC Stepping ID update
 always_comb begin

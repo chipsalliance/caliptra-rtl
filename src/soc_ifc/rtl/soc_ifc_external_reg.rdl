@@ -339,6 +339,7 @@ reg {
     field {desc = "LMS accelerator available"; sw=r; hw=w;} LMS_acc_en;
     field {desc = "Caliptra configured in Subsystem Mode"; sw=r; hw=rw;} SUBSYSTEM_MODE_en;
     field {desc = "Caliptra configured to operate in OCP LOCK Mode"; sw=r; hw=rw;} OCP_LOCK_MODE_en;
+    field {desc = "Dual iTRNG enabled: secondary entropy_src + SHA3-384 entropy combiner active"; sw=r; hw=rw;} dual_iTRNG_en;
 } CPTRA_HW_CONFIG;
 
 //Timer1
