@@ -7259,6 +7259,250 @@
 `define SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                               (0)
 `define SHA3_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                              (32'h1)
 `endif
+`ifndef HMAC256_REG_HMAC256_NAME_0
+`define HMAC256_REG_HMAC256_NAME_0                                                                  (32'h0)
+`endif
+`ifndef HMAC256_REG_HMAC256_NAME_1
+`define HMAC256_REG_HMAC256_NAME_1                                                                  (32'h4)
+`endif
+`ifndef HMAC256_REG_HMAC256_VERSION_0
+`define HMAC256_REG_HMAC256_VERSION_0                                                               (32'h8)
+`endif
+`ifndef HMAC256_REG_HMAC256_VERSION_1
+`define HMAC256_REG_HMAC256_VERSION_1                                                               (32'hc)
+`endif
+`ifndef HMAC256_REG_HMAC256_CTRL
+`define HMAC256_REG_HMAC256_CTRL                                                                    (32'h10)
+`define HMAC256_REG_HMAC256_CTRL_INIT_LOW                                                           (0)
+`define HMAC256_REG_HMAC256_CTRL_INIT_MASK                                                          (32'h1)
+`define HMAC256_REG_HMAC256_CTRL_NEXT_LOW                                                           (1)
+`define HMAC256_REG_HMAC256_CTRL_NEXT_MASK                                                          (32'h2)
+`define HMAC256_REG_HMAC256_CTRL_ZEROIZE_LOW                                                        (2)
+`define HMAC256_REG_HMAC256_CTRL_ZEROIZE_MASK                                                       (32'h4)
+`define HMAC256_REG_HMAC256_CTRL_MODE_LOW                                                           (3)
+`define HMAC256_REG_HMAC256_CTRL_MODE_MASK                                                          (32'h8)
+`define HMAC256_REG_HMAC256_CTRL_LAST_LOW                                                           (4)
+`define HMAC256_REG_HMAC256_CTRL_LAST_MASK                                                          (32'h10)
+`define HMAC256_REG_HMAC256_CTRL_RESTORE_LOW                                                        (5)
+`define HMAC256_REG_HMAC256_CTRL_RESTORE_MASK                                                       (32'h20)
+`endif
+`ifndef HMAC256_REG_HMAC256_STATUS
+`define HMAC256_REG_HMAC256_STATUS                                                                  (32'h18)
+`define HMAC256_REG_HMAC256_STATUS_READY_LOW                                                        (0)
+`define HMAC256_REG_HMAC256_STATUS_READY_MASK                                                       (32'h1)
+`define HMAC256_REG_HMAC256_STATUS_VALID_LOW                                                        (1)
+`define HMAC256_REG_HMAC256_STATUS_VALID_MASK                                                       (32'h2)
+`endif
+`ifndef HMAC256_REG_HMAC256_KEY_0
+`define HMAC256_REG_HMAC256_KEY_0                                                                   (32'h40)
+`endif
+`ifndef HMAC256_REG_HMAC256_KEY_1
+`define HMAC256_REG_HMAC256_KEY_1                                                                   (32'h44)
+`endif
+`ifndef HMAC256_REG_HMAC256_KEY_2
+`define HMAC256_REG_HMAC256_KEY_2                                                                   (32'h48)
+`endif
+`ifndef HMAC256_REG_HMAC256_KEY_3
+`define HMAC256_REG_HMAC256_KEY_3                                                                   (32'h4c)
+`endif
+`ifndef HMAC256_REG_HMAC256_KEY_4
+`define HMAC256_REG_HMAC256_KEY_4                                                                   (32'h50)
+`endif
+`ifndef HMAC256_REG_HMAC256_KEY_5
+`define HMAC256_REG_HMAC256_KEY_5                                                                   (32'h54)
+`endif
+`ifndef HMAC256_REG_HMAC256_KEY_6
+`define HMAC256_REG_HMAC256_KEY_6                                                                   (32'h58)
+`endif
+`ifndef HMAC256_REG_HMAC256_KEY_7
+`define HMAC256_REG_HMAC256_KEY_7                                                                   (32'h5c)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_0
+`define HMAC256_REG_HMAC256_BLOCK_0                                                                 (32'h80)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_1
+`define HMAC256_REG_HMAC256_BLOCK_1                                                                 (32'h84)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_2
+`define HMAC256_REG_HMAC256_BLOCK_2                                                                 (32'h88)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_3
+`define HMAC256_REG_HMAC256_BLOCK_3                                                                 (32'h8c)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_4
+`define HMAC256_REG_HMAC256_BLOCK_4                                                                 (32'h90)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_5
+`define HMAC256_REG_HMAC256_BLOCK_5                                                                 (32'h94)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_6
+`define HMAC256_REG_HMAC256_BLOCK_6                                                                 (32'h98)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_7
+`define HMAC256_REG_HMAC256_BLOCK_7                                                                 (32'h9c)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_8
+`define HMAC256_REG_HMAC256_BLOCK_8                                                                 (32'ha0)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_9
+`define HMAC256_REG_HMAC256_BLOCK_9                                                                 (32'ha4)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_10
+`define HMAC256_REG_HMAC256_BLOCK_10                                                                (32'ha8)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_11
+`define HMAC256_REG_HMAC256_BLOCK_11                                                                (32'hac)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_12
+`define HMAC256_REG_HMAC256_BLOCK_12                                                                (32'hb0)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_13
+`define HMAC256_REG_HMAC256_BLOCK_13                                                                (32'hb4)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_14
+`define HMAC256_REG_HMAC256_BLOCK_14                                                                (32'hb8)
+`endif
+`ifndef HMAC256_REG_HMAC256_BLOCK_15
+`define HMAC256_REG_HMAC256_BLOCK_15                                                                (32'hbc)
+`endif
+`ifndef HMAC256_REG_HMAC256_TAG_0
+`define HMAC256_REG_HMAC256_TAG_0                                                                   (32'hc0)
+`endif
+`ifndef HMAC256_REG_HMAC256_TAG_1
+`define HMAC256_REG_HMAC256_TAG_1                                                                   (32'hc4)
+`endif
+`ifndef HMAC256_REG_HMAC256_TAG_2
+`define HMAC256_REG_HMAC256_TAG_2                                                                   (32'hc8)
+`endif
+`ifndef HMAC256_REG_HMAC256_TAG_3
+`define HMAC256_REG_HMAC256_TAG_3                                                                   (32'hcc)
+`endif
+`ifndef HMAC256_REG_HMAC256_TAG_4
+`define HMAC256_REG_HMAC256_TAG_4                                                                   (32'hd0)
+`endif
+`ifndef HMAC256_REG_HMAC256_TAG_5
+`define HMAC256_REG_HMAC256_TAG_5                                                                   (32'hd4)
+`endif
+`ifndef HMAC256_REG_HMAC256_TAG_6
+`define HMAC256_REG_HMAC256_TAG_6                                                                   (32'hd8)
+`endif
+`ifndef HMAC256_REG_HMAC256_TAG_7
+`define HMAC256_REG_HMAC256_TAG_7                                                                   (32'hdc)
+`endif
+`ifndef HMAC256_REG_HMAC256_LFSR_SEED_0
+`define HMAC256_REG_HMAC256_LFSR_SEED_0                                                             (32'he0)
+`endif
+`ifndef HMAC256_REG_HMAC256_LFSR_SEED_1
+`define HMAC256_REG_HMAC256_LFSR_SEED_1                                                             (32'he4)
+`endif
+`ifndef HMAC256_REG_HMAC256_LFSR_SEED_2
+`define HMAC256_REG_HMAC256_LFSR_SEED_2                                                             (32'he8)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
+`define HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (32'h800)
+`define HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                     (0)
+`define HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK                                    (32'h1)
+`define HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_LOW                                     (1)
+`define HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK                                    (32'h2)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                                   (32'h804)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_LOW                                     (0)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_MASK                                    (32'h1)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR1_EN_LOW                                     (1)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR1_EN_MASK                                    (32'h2)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR2_EN_LOW                                     (2)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR2_EN_MASK                                    (32'h4)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_LOW                                     (3)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_MASK                                    (32'h8)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                                   (32'h808)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_LOW                             (0)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK                            (32'h1)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                               (32'h80c)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_LOW                                   (0)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_MASK                                  (32'h1)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                               (32'h810)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_LOW                                   (0)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_MASK                                  (32'h1)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                             (32'h814)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_LOW                              (0)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK                             (32'h1)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_LOW                              (1)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK                             (32'h2)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_LOW                              (2)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK                             (32'h4)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_LOW                              (3)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK                             (32'h8)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                             (32'h818)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_LOW                      (0)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK                     (32'h1)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                                 (32'h81c)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR0_TRIG_LOW                                 (0)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR0_TRIG_MASK                                (32'h1)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR1_TRIG_LOW                                 (1)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR1_TRIG_MASK                                (32'h2)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR2_TRIG_LOW                                 (2)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR2_TRIG_MASK                                (32'h4)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_LOW                                 (3)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_ERROR3_TRIG_MASK                                (32'h8)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                                 (32'h820)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_LOW                         (0)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_CMD_DONE_TRIG_MASK                        (32'h1)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_R                                               (32'h900)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_R                                               (32'h904)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_R                                               (32'h908)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_R                                               (32'h90c)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_R                                       (32'h980)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R                                          (32'ha00)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R_PULSE_LOW                                (0)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR0_INTR_COUNT_INCR_R_PULSE_MASK                               (32'h1)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R                                          (32'ha04)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R_PULSE_LOW                                (0)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR1_INTR_COUNT_INCR_R_PULSE_MASK                               (32'h1)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R                                          (32'ha08)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R_PULSE_LOW                                (0)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR2_INTR_COUNT_INCR_R_PULSE_MASK                               (32'h1)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R                                          (32'ha0c)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_LOW                                (0)
+`define HMAC256_REG_INTR_BLOCK_RF_ERROR3_INTR_COUNT_INCR_R_PULSE_MASK                               (32'h1)
+`endif
+`ifndef HMAC256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R                                  (32'ha10)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_LOW                        (0)
+`define HMAC256_REG_INTR_BLOCK_RF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R_PULSE_MASK                       (32'h1)
+`endif
 `ifndef CSRNG_REG_INTERRUPT_STATE
 `define CSRNG_REG_INTERRUPT_STATE                                                                   (32'h0)
 `define CSRNG_REG_INTERRUPT_STATE_CS_CMD_REQ_DONE_LOW                                               (0)

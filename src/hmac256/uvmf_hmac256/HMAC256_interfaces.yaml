@@ -1,0 +1,48 @@
+uvmf:
+  interfaces:
+    hmac256_rst:
+      clock: clk
+      reset: dummy
+      reset_assertion_level: 'False'
+
+      config_constraints: []
+      config_vars: []
+
+      hdl_typedefs: []
+      hvl_typedefs: []
+
+      parameters: []
+
+      ports:
+      - name: cptra_pwrgood
+        dir: output
+        width: '1'
+      - name: rst_b
+        dir: output
+        width: '1'
+      - name: debugUnlock_or_scan_mode_switch
+        dir: output
+        width: '1'
+
+      transaction_constraints:
+      - name: wait_cycles_c
+        value: '{ wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }'
+
+      transaction_vars:
+      - name: set_pwrgood
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: assert_rst
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: assert_debug_scan
+        type: bit
+        iscompare: 'False'
+        isrand: 'False'
+      - name: wait_cycles
+        type: 'int unsigned'
+        iscompare: 'False'
+        isrand: 'True'
+

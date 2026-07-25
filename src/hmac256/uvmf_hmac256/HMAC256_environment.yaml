@@ -1,0 +1,60 @@
+uvmf:
+  environments:
+    hmac256:
+      imports:
+      - name: "rw_txn_pkg"
+      - name: "mvc_pkg"
+      - name: "mgc_ahb_v2_0_pkg"
+
+      agents:
+      - name: HMAC256_rst_agent
+        type: hmac256_rst
+        initiator_responder: "INITIATOR"
+
+      analysis_components:
+      - name: hmac256_pred
+        type: HMAC256_predictor
+      - name: hmac256_sb
+        type: HMAC256_scoreboard
+
+      analysis_ports: []
+
+      config_constraints: []
+      config_vars: []
+
+      parameters: []
+
+      scoreboards: []
+
+      subenvs: []
+
+      qvip_subenvs:
+      - { name: "qvip_ahb_lite_slave_subenv", type: "qvip_ahb_lite_slave" }
+
+      qvip_connections:
+      - driver: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+        ap_key: "burst_transfer"
+        receiver: "hmac256_pred.ahb_slave_0_ae"
+        validate: "false"
+      - driver: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+        ap_key: "burst_transfer_sb"
+        receiver: "hmac256_sb.actual_ahb_analysis_export"
+        validate: "false"
+
+      tlm_connections:
+      - driver: HMAC256_rst_agent.monitored_ap
+        receiver: hmac256_pred.hmac256_rst_agent_ae
+
+      - driver: hmac256_pred.hmac256_sb_ahb_ap
+        receiver: hmac256_sb.expected_ahb_analysis_export
+
+
+      register_model:
+        use_adapter: "True"
+        use_explicit_prediction: "True"
+        reg_block_class: hmac256_reg_model_top
+        reg_model_package: HMAC256_reg_model_top_pkg
+        maps:
+          - name: "ahb_map"
+            interface: "qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"
+            qvip_agent: "True"

@@ -30,6 +30,7 @@ src/soc_ifc/rtl/sha512_acc_csr.rdl \
 src/axi/rtl/axi_dma_reg.rdl \
 src/soc_ifc/rtl/soc_ifc_reg.rdl \
 src/hmac/rtl/hmac_reg.rdl \
+src/hmac256/rtl/hmac256_reg.rdl \
 src/doe/rtl/doe_reg.rdl \
 src/entropy_src/data/entropy_src.rdl \
 src/csrng/data/csrng.rdl \
@@ -55,6 +56,7 @@ src/soc_ifc/rtl/sha512_acc_csr.rdl \
 src/axi/rtl/axi_dma_reg.rdl \
 src/soc_ifc/rtl/soc_ifc_reg.rdl \
 src/hmac/rtl/hmac_reg.rdl \
+src/hmac256/rtl/hmac256_reg.rdl \
 src/doe/rtl/doe_reg.rdl \
 src/entropy_src/data/entropy_src.rdl \
 src/csrng/data/csrng.rdl \

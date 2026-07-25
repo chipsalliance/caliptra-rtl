@@ -182,4 +182,7 @@ inline void service_sha512_acc_notif_intr() {
 inline void service_abr_error_intr() {return;}
 inline void service_abr_notif_intr() {return;}
 
+inline void service_hmac256_error_intr() {return;}
+inline void service_hmac256_notif_intr() {return;}
+
 #endif //CALIPTRA_ISR_H
