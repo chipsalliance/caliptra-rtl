@@ -212,6 +212,7 @@ targets:
         $MSFT_SCRIPTS_DIR/run_test_makefile
         echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}"
         cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe .
+        cp $COMPILE_ROOT/../ecc/tb/ecdsa_sign_with_k_tool.exe ./ecdsa_sign_with_k_tool
 
         echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}"
         cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
@@ -287,6 +288,7 @@ targets:
         $MSFT_SCRIPTS_DIR/run_test_makefile
         echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}"
         cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe .
+        cp $COMPILE_ROOT/../ecc/tb/ecdsa_sign_with_k_tool.exe ./ecdsa_sign_with_k_tool
 
         echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}"
         cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .
@@ -352,6 +354,7 @@ targets:
         $MSFT_SCRIPTS_DIR/run_test_makefile
         echo "[PRE-EXEC] Copying ECC vector generator to ${pwd}"
         cp $COMPILE_ROOT/../ecc/tb/ecc_secp384r1.exe .
+        cp $COMPILE_ROOT/../ecc/tb/ecdsa_sign_with_k_tool.exe ./ecdsa_sign_with_k_tool
 
         echo "[PRE-EXEC] Copying DOE vector generator to ${pwd}"
         cp $COMPILE_ROOT/../doe/tb/doe_test_gen.py .

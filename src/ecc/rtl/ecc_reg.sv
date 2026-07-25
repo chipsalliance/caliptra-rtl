@@ -203,6 +203,14 @@ module ecc_reg (
                 logic next;
                 logic load_next;
             } DH_SHAREDKEY;
+            struct packed{
+                logic next;
+                logic load_next;
+            } CURVE_SEL;
+            struct packed{
+                logic next;
+                logic load_next;
+            } NONDETERMINISTIC;
         } ECC_CTRL;
         struct packed{
             struct packed{
@@ -489,6 +497,12 @@ module ecc_reg (
             struct packed{
                 logic value;
             } DH_SHAREDKEY;
+            struct packed{
+                logic value;
+            } CURVE_SEL;
+            struct packed{
+                logic value;
+            } NONDETERMINISTIC;
         } ECC_CTRL;
         struct packed{
             struct packed{
@@ -800,6 +814,51 @@ module ecc_reg (
         end
     end
     assign hwif_out.ECC_CTRL.DH_SHAREDKEY.value = field_storage.ECC_CTRL.DH_SHAREDKEY.value;
+    // Field: ecc_reg.ECC_CTRL.CURVE_SEL
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.ECC_CTRL.CURVE_SEL.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+            next_c = (field_storage.ECC_CTRL.CURVE_SEL.value & ~decoded_wr_biten[5:5]) | (decoded_wr_data[5:5] & decoded_wr_biten[5:5]);
+            load_next_c = '1;
+        end
+        field_combo.ECC_CTRL.CURVE_SEL.next = next_c;
+        field_combo.ECC_CTRL.CURVE_SEL.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ECC_CTRL.CURVE_SEL.value <= 1'h0;
+        end else if(field_combo.ECC_CTRL.CURVE_SEL.load_next) begin
+            field_storage.ECC_CTRL.CURVE_SEL.value <= field_combo.ECC_CTRL.CURVE_SEL.next;
+        end
+    end
+    assign hwif_out.ECC_CTRL.CURVE_SEL.value = field_storage.ECC_CTRL.CURVE_SEL.value;
+    // Field: ecc_reg.ECC_CTRL.NONDETERMINISTIC
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.ECC_CTRL.NONDETERMINISTIC.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.ECC_CTRL && decoded_req_is_wr && hwif_in.ecc_ready) begin // SW write
+            next_c = (field_storage.ECC_CTRL.NONDETERMINISTIC.value & ~decoded_wr_biten[6:6]) | (decoded_wr_data[6:6] & decoded_wr_biten[6:6]);
+            load_next_c = '1;
+        end else if(hwif_in.ECC_CTRL.NONDETERMINISTIC.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.ECC_CTRL.NONDETERMINISTIC.next = next_c;
+        field_combo.ECC_CTRL.NONDETERMINISTIC.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.ECC_CTRL.NONDETERMINISTIC.value <= 1'h0;
+        end else if(field_combo.ECC_CTRL.NONDETERMINISTIC.load_next) begin
+            field_storage.ECC_CTRL.NONDETERMINISTIC.value <= field_combo.ECC_CTRL.NONDETERMINISTIC.next;
+        end
+    end
+    assign hwif_out.ECC_CTRL.NONDETERMINISTIC.value = field_storage.ECC_CTRL.NONDETERMINISTIC.value;
     for(genvar i0=0; i0<12; i0++) begin
         // Field: ecc_reg.ECC_SEED[].SEED
         always_comb begin

@@ -152,15 +152,19 @@ localparam [PROG_ADDR_W-1 : 0] PA_E                 = PA_S + 79;
 localparam [PROG_ADDR_W-1 : 0] PD_S                 = PA_E + 2;        // Point Doubling
 localparam [PROG_ADDR_W-1 : 0] PD_E                 = PD_S + 83;
 localparam [PROG_ADDR_W-1 : 0] INV_S                = PD_E + 2;        // Inversion mod p
-localparam [PROG_ADDR_W-1 : 0] INV_E                = INV_S + 1039;
-localparam [PROG_ADDR_W-1 : 0] CONV_S               = INV_E + 2;       // PM result conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
+localparam [PROG_ADDR_W-1 : 0] INV_E_P256           = INV_S + 703;     // P-256 early-exit: last real ST_MUL_p of INV_OUT
+localparam [PROG_ADDR_W-1 : 0] INV_E_P384                = INV_S + 1039;    // P-384 end of inversion mod p
+localparam [PROG_ADDR_W-1 : 0] INV_E                = INV_E_P384;      // TODO: remove after FPV update
+localparam [PROG_ADDR_W-1 : 0] CONV_S               = INV_E_P384 + 2;       // PM result conversion from projective Mont (X,Y,Z) to affine normal (x,y)
 localparam [PROG_ADDR_W-1 : 0] CONV_E               = CONV_S + 11;
 
 localparam [PROG_ADDR_W-1 : 0] SIGN0_S              = CONV_E + 2;     // signing proof r part0
 localparam [PROG_ADDR_W-1 : 0] SIGN0_E              = SIGN0_S + 27;
 localparam [PROG_ADDR_W-1 : 0] INVq_S               = SIGN0_E + 2;    // Inversion mod q
-localparam [PROG_ADDR_W-1 : 0] INVq_E               = INVq_S + 1043;
-localparam [PROG_ADDR_W-1 : 0] SIGN1_S              = INVq_E + 2;     // signing proof r part1
+localparam [PROG_ADDR_W-1 : 0] INVq_E_P256          = INVq_S + 703;   // P-256 early-exit: last real ST_MUL_q of INV_OUT
+localparam [PROG_ADDR_W-1 : 0] INVq_E_P384               = INVq_S + 1043;  // P-384 end of inversion mod q
+localparam [PROG_ADDR_W-1 : 0] INVq_E               = INVq_E_P384;     // TODO: remove after FPV update
+localparam [PROG_ADDR_W-1 : 0] SIGN1_S              = INVq_E_P384 + 2;     // signing proof r part1
 localparam [PROG_ADDR_W-1 : 0] SIGN1_E              = SIGN1_S + 11;
 
 localparam [PROG_ADDR_W-1 : 0] CHK_PK_S             = SIGN1_E + 2;    // check the given public key is a valid curve point

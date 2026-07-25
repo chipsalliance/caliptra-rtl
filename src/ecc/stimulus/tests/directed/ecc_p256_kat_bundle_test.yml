@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Bundle: chains 5 small P-256 KAT-based tests in one sim run to
+# amortize LSF/VCS init cost. Per TC: keygen (bypass), sign (bypass),
+# verify, keygen_blind. One-shot at TC0: kv_illegal. Replaces the
+# five individual ymls previously named ecc_p256_{keygen,sign,verify,
+# keygen_blind,kv_illegal}_test.yml.
+---
+plusargs:
+  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/secp256_kat.hex'
+  - +ECC_TEST='ECC_p256_kat_bundle_test'
+
+testname: ecc_p256_kat_bundle_test
+seed: 1

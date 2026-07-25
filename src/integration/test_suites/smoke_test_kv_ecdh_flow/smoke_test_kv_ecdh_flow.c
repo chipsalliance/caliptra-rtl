@@ -83,7 +83,8 @@ void kv_ecc_flow(uint8_t privkey_kv_id, uint8_t sharedkey_kv_id){
     sharedkey_dh.kv_intf = TRUE;
     sharedkey_dh.kv_id = sharedkey_kv_id;
 
-    ecc_sharedkey_flow(iv, privkey, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
+    uint8_t curve_sel = 0;
+    ecc_sharedkey_flow(iv, privkey, pubkey_x_dh, pubkey_y_dh, sharedkey_dh, curve_sel);
     cptra_intr_rcv.ecc_notif = 0;
     VPRINTF(LOW, "Stored ECDH sharedkey into KV ID %d\n", sharedkey_kv_id);
 

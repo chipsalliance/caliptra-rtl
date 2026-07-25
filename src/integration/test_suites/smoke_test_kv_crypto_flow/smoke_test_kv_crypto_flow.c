@@ -467,7 +467,9 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
         pubkey_y.data[i] = ecc_pubkey_y[i];
 
-    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
+    uint8_t curve_sel = 0;
+    uint8_t nondet = 0;
+    ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE, curve_sel);
     cptra_intr_rcv.ecc_notif = 0;
 
     //******************************************************************
@@ -493,7 +495,7 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
         sign_s.data[i] = ecc_sign_s[i];
     
-    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE);
+    ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE, curve_sel, nondet);
     cptra_intr_rcv.ecc_notif = 0;
 }
 

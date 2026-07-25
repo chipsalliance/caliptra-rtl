@@ -59,6 +59,8 @@ void main(){
     uint8_t ocp_progress_bit;
     BOOL kv_status_success;
     BOOL expect_kv_status_success;
+    uint8_t curve_sel = 0;
+    uint8_t nondet = 0;
 
     uint32_t ecc_msg[] =           {0xC8F518D4,
                                     0xF3AA1BD4,
@@ -258,7 +260,7 @@ void main(){
             VPRINTF(LOW,"OCP lock not in progress\n");
         }
 
-        ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, FALSE);
+        ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, FALSE, curve_sel);
         cptra_intr_rcv.ecc_error = 0;
         cptra_intr_rcv.ecc_notif = 0;
 
@@ -280,7 +282,7 @@ void main(){
             seed.kv_intf = FALSE;
             seed.kv_id = seed_kv_id;
 
-            ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, FALSE);
+            ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, FALSE, curve_sel);
             cptra_intr_rcv.ecc_error = 0;
             cptra_intr_rcv.ecc_notif = 0;
         }
@@ -296,7 +298,7 @@ void main(){
         
         ecc_zeroize();
 
-        ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE);
+        ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, FALSE, curve_sel, nondet);
         cptra_intr_rcv.ecc_error = 0;
         cptra_intr_rcv.ecc_notif = 0;
 

@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Dual-curve interleave (P-384 VERIFY <-> P-256 KEYGEN/SIGN) with the
+# P-256 path driven by the real HMAC-DRBG wrapper (no SV force). Stresses
+# CURVE_SEL runtime switching and ECC_INIT_LAST re-init across the two
+# DRBG wrappers in a single sim with no reset between ops.
+---
+plusargs:
+  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/secp256_realdrbg_kat.hex'
+  - +ECC_P384_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex'
+  - +ECC_TEST='ECC_p256_dualcurve_realdrbg_test'
+
+testname: ecc_p256_dualcurve_realdrbg_test
+seed: 1

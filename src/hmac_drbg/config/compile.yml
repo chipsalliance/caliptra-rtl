@@ -56,3 +56,57 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+---
+provides: [hmac_drbg_sha256]
+schema_version: 2.4.0
+requires:
+  - libs
+  - sha256_ctrl
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/hmac_sha256_core.sv
+      - $COMPILE_ROOT/rtl/hmac_drbg_sha256.sv
+    tops: [hmac_drbg_sha256]
+---
+provides: [hmac_drbg_sha256_tb]
+schema_version: 2.4.0
+requires:
+  - hmac_drbg_sha256
+  - hmac_drbg_sha256_coverage
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/hmac_drbg_sha256_tb.sv
+    tops: [hmac_drbg_sha256_tb]
+  sim:
+    pre_exec: 'echo "[PRE-EXEC] Copying HMAC_DRBG_SHA256 vector generator to $(pwd)" && cp $COMPILE_ROOT/tb/hmac_drbg_sha256_ref.py .'
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - +define+CLP_ASSERT_ON
+        - +define+SIMULATION
+        - '-noinherit_timescale=1ns/1ps'
+---
+provides: [hmac_drbg_sha256_coverage]
+schema_version: 2.4.0
+requires:
+  - hmac_drbg_sha256
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/hmac_drbg_sha256_cov_if.sv
+      - $COMPILE_ROOT/coverage/hmac_drbg_sha256_cov_bind.sv
+global:
+  tool:
+    vcs:
+      default:
+        - '-assert svaext'
+        - '-noinherit_timescale=1ns/1ps'

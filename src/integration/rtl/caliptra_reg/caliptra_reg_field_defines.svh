@@ -181,6 +181,10 @@
 `define ECC_REG_ECC_CTRL_PCR_SIGN_MASK                                                              (32'h8)
 `define ECC_REG_ECC_CTRL_DH_SHAREDKEY_LOW                                                           (4)
 `define ECC_REG_ECC_CTRL_DH_SHAREDKEY_MASK                                                          (32'h10)
+`define ECC_REG_ECC_CTRL_CURVE_SEL_LOW                                                              (5)
+`define ECC_REG_ECC_CTRL_CURVE_SEL_MASK                                                             (32'h20)
+`define ECC_REG_ECC_CTRL_NONDETERMINISTIC_LOW                                                       (6)
+`define ECC_REG_ECC_CTRL_NONDETERMINISTIC_MASK                                                      (32'h40)
 `endif
 `ifndef ECC_REG_ECC_STATUS
 `define ECC_REG_ECC_STATUS                                                                          (32'h18)

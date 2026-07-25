@@ -67,6 +67,34 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger3/smoke_test_ecc_errortrigger3.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger4/smoke_test_ecc_errortrigger4.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger5/smoke_test_ecc_errortrigger5.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger6/smoke_test_ecc_errortrigger6.yml
+        # ECC P-256 baseline
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_keygen_p256/smoke_test_ecc_keygen_p256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_sign_p256/smoke_test_ecc_sign_p256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_verify_p256/smoke_test_ecc_verify_p256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_sign_p256_nondet/smoke_test_ecc_sign_p256_nondet.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_sign_nondet/smoke_test_ecc_sign_nondet.yml
+        # ECC curve-switch chained-op
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_curve_switch_keygen_det_sign/smoke_test_ecc_curve_switch_keygen_det_sign.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_curve_switch_nondet_sign_verify/smoke_test_ecc_curve_switch_nondet_sign_verify.yml
+        # ECC P-256 error triggers
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger1_p256/smoke_test_ecc_errortrigger1_p256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger4_p256/smoke_test_ecc_errortrigger4_p256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger5_p256/smoke_test_ecc_errortrigger5_p256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger_nondet_p256/smoke_test_ecc_errortrigger_nondet_p256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger_nondet_p384/smoke_test_ecc_errortrigger_nondet_p384.yml
+        # ECC KV / PCR / gate
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_kv_gate_p256/smoke_test_ecc_kv_gate_p256.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_kv_gate_p384_nondet/smoke_test_ecc_kv_gate_p384_nondet.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_kv_endian/smoke_test_ecc_kv_endian.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_sign_p256_kv_error/smoke_test_ecc_sign_p256_kv_error.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_sign_nondet_kv_error/smoke_test_ecc_sign_nondet_kv_error.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_pcr_sign_randk_err/smoke_test_ecc_pcr_sign_randk_err.yml
+        # ECC state-transition / mid-op stress
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_zeroize_busy/smoke_test_ecc_zeroize_busy.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_warm_reset/smoke_test_ecc_warm_reset.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_debug_lock/smoke_test_ecc_debug_lock.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_p256_back_to_back/smoke_test_ecc_p256_back_to_back.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml

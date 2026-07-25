@@ -1,0 +1,10 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Dual-curve scalar blinding smoke: drives ecc_scalar_blinding with
+# both P-384 and P-256 group_order, KAT and constant-time checks.
+#
+---
+plusargs: []
+
+testname: ecc_scalar_blinding_dualcurve_smoke_test
+seed: 1

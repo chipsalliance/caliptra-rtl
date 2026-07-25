@@ -1294,7 +1294,7 @@ module ecc_pm_sequencer
                     INV_S+ 1038  : douta <= {UOP_DO_MUL_p,   UOP_OPR_A_INV,      UOP_OPR_INV_PRE5};    // INV_OUT = fp_mult(a_inv, precompute[5], p)
                     INV_S+ 1039  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_INV_OUT};
 
-                    //Conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
+                    //Conversion from projective Mont (X,Y,Z) to affine normal (x,y)
                     CONV_S      : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_OUT,    UOP_OPR_R0_Y};          // y_MONT = fp_mult(Z_inv, Y_MONT, p)
                     CONV_S+ 1   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_Qy_MONT};
                     CONV_S+ 2   : douta <= {UOP_DO_MUL_p,   UOP_OPR_INV_OUT,    UOP_OPR_R0_X};          // x_MONT = fp_mult(Z_inv, X_MONT, p)

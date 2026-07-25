@@ -1,0 +1,31 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# P-256 on-the-fly reset test. Triggers a P-256 SIGN under
+# CURVE_SEL=P256, waits 500 clk_tb cycles into the op, hard-resets the
+# DUT, then asserts every output register (SIGN_R, SIGN_S, PRIVKEY_OUT,
+# PUBKEY_X, PUBKEY_Y) reads back zero. Verifies that an in-flight P-256
+# op tears down cleanly: PM-RAM clears, P-256 DRBG FSM exits, ECC_INIT_
+# LAST replays on the next ECC_CTRL write.
+#
+# Reuses the existing curve-agnostic ecc_onthefly_reset_test task --
+# trig_ECC auto-applies CURVE_SEL because the test name is enrolled in
+# the CURVE_SEL=P256 enable list in ecc_top_tb.sv.
+---
+plusargs:
+  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/secp256_realdrbg_kat.hex'
+  - +ECC_TEST='ECC_p256_otf_reset_test'
+
+testname: ecc_p256_otf_reset_test
+seed: 1
