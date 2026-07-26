@@ -338,7 +338,7 @@ import kv_defines_pkg::*;
         hwif_in.cptra_pwrgood = cptra_pwrgood;
         hwif_in.cptra_rst_b   = rst_n;
         hwif_in.soc_req       = req_data.soc_req;
-        hwif_in.dma_swwel     = req_data.soc_req || ctrl_fsm_ps != DMA_IDLE;
+        hwif_in.dma_swwel     = ctrl_fsm_ps != DMA_IDLE;
     end
 
 

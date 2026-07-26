@@ -155,7 +155,7 @@ always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_STAR
 
 // Requests to DMA
 always_comb uc_dma_req = (uc_req_dv & (uc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}));
-always_comb soc_dma_req = (soc_req_dv & (soc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}));
+always_comb soc_dma_req = (soc_req_dv & (soc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]})) & valid_mbox_req;
 
 //Check if SoC request is coming from a valid user
 //There are 5 valid user registers, check if user attribute matches any of them
