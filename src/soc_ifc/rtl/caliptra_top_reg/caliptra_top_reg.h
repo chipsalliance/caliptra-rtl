@@ -398,6 +398,8 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK                                 (0x20)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_LOW                                   (6)
 #define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                  (0x40)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_LOW                                      (7)
+#define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_MASK                                     (0x80)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                   (0x300e4)
 #ifndef GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN

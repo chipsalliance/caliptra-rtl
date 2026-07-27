@@ -340,6 +340,10 @@ import aaxi_uvm_pkg::*;
         .ss_ocp_lock_in_progress(    /*TODO*/),
         .ss_key_release_key_size(    /*TODO*/),
 
+        // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out
+        .dual_itrng_en          (1'b0/*TODO*/),
+        .dual_itrng_en_o        (    /*TODO*/),
+
         .stable_owner_key_en(       /*TODO*/),
 
         // NMI Vector 
