@@ -7896,6 +7896,688 @@
 `define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                             (0)
 `define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                            (32'h1ff)
 `endif
+`ifndef ENTROPY_SRC1_REG_INTERRUPT_STATE
+`define ENTROPY_SRC1_REG_INTERRUPT_STATE                                                            (32'h0)
+`define ENTROPY_SRC1_REG_INTERRUPT_STATE_ES_ENTROPY_VALID_LOW                                       (0)
+`define ENTROPY_SRC1_REG_INTERRUPT_STATE_ES_ENTROPY_VALID_MASK                                      (32'h1)
+`define ENTROPY_SRC1_REG_INTERRUPT_STATE_ES_HEALTH_TEST_FAILED_LOW                                  (1)
+`define ENTROPY_SRC1_REG_INTERRUPT_STATE_ES_HEALTH_TEST_FAILED_MASK                                 (32'h2)
+`define ENTROPY_SRC1_REG_INTERRUPT_STATE_ES_OBSERVE_FIFO_READY_LOW                                  (2)
+`define ENTROPY_SRC1_REG_INTERRUPT_STATE_ES_OBSERVE_FIFO_READY_MASK                                 (32'h4)
+`define ENTROPY_SRC1_REG_INTERRUPT_STATE_ES_FATAL_ERR_LOW                                           (3)
+`define ENTROPY_SRC1_REG_INTERRUPT_STATE_ES_FATAL_ERR_MASK                                          (32'h8)
+`endif
+`ifndef ENTROPY_SRC1_REG_INTERRUPT_ENABLE
+`define ENTROPY_SRC1_REG_INTERRUPT_ENABLE                                                           (32'h4)
+`define ENTROPY_SRC1_REG_INTERRUPT_ENABLE_ES_ENTROPY_VALID_LOW                                      (0)
+`define ENTROPY_SRC1_REG_INTERRUPT_ENABLE_ES_ENTROPY_VALID_MASK                                     (32'h1)
+`define ENTROPY_SRC1_REG_INTERRUPT_ENABLE_ES_HEALTH_TEST_FAILED_LOW                                 (1)
+`define ENTROPY_SRC1_REG_INTERRUPT_ENABLE_ES_HEALTH_TEST_FAILED_MASK                                (32'h2)
+`define ENTROPY_SRC1_REG_INTERRUPT_ENABLE_ES_OBSERVE_FIFO_READY_LOW                                 (2)
+`define ENTROPY_SRC1_REG_INTERRUPT_ENABLE_ES_OBSERVE_FIFO_READY_MASK                                (32'h4)
+`define ENTROPY_SRC1_REG_INTERRUPT_ENABLE_ES_FATAL_ERR_LOW                                          (3)
+`define ENTROPY_SRC1_REG_INTERRUPT_ENABLE_ES_FATAL_ERR_MASK                                         (32'h8)
+`endif
+`ifndef ENTROPY_SRC1_REG_INTERRUPT_TEST
+`define ENTROPY_SRC1_REG_INTERRUPT_TEST                                                             (32'h8)
+`define ENTROPY_SRC1_REG_INTERRUPT_TEST_ES_ENTROPY_VALID_LOW                                        (0)
+`define ENTROPY_SRC1_REG_INTERRUPT_TEST_ES_ENTROPY_VALID_MASK                                       (32'h1)
+`define ENTROPY_SRC1_REG_INTERRUPT_TEST_ES_HEALTH_TEST_FAILED_LOW                                   (1)
+`define ENTROPY_SRC1_REG_INTERRUPT_TEST_ES_HEALTH_TEST_FAILED_MASK                                  (32'h2)
+`define ENTROPY_SRC1_REG_INTERRUPT_TEST_ES_OBSERVE_FIFO_READY_LOW                                   (2)
+`define ENTROPY_SRC1_REG_INTERRUPT_TEST_ES_OBSERVE_FIFO_READY_MASK                                  (32'h4)
+`define ENTROPY_SRC1_REG_INTERRUPT_TEST_ES_FATAL_ERR_LOW                                            (3)
+`define ENTROPY_SRC1_REG_INTERRUPT_TEST_ES_FATAL_ERR_MASK                                           (32'h8)
+`endif
+`ifndef ENTROPY_SRC1_REG_ALERT_TEST
+`define ENTROPY_SRC1_REG_ALERT_TEST                                                                 (32'hc)
+`define ENTROPY_SRC1_REG_ALERT_TEST_RECOV_ALERT_LOW                                                 (0)
+`define ENTROPY_SRC1_REG_ALERT_TEST_RECOV_ALERT_MASK                                                (32'h1)
+`define ENTROPY_SRC1_REG_ALERT_TEST_FATAL_ALERT_LOW                                                 (1)
+`define ENTROPY_SRC1_REG_ALERT_TEST_FATAL_ALERT_MASK                                                (32'h2)
+`endif
+`ifndef ENTROPY_SRC1_REG_ME_REGWEN
+`define ENTROPY_SRC1_REG_ME_REGWEN                                                                  (32'h10)
+`define ENTROPY_SRC1_REG_ME_REGWEN_ME_REGWEN_LOW                                                    (0)
+`define ENTROPY_SRC1_REG_ME_REGWEN_ME_REGWEN_MASK                                                   (32'h1)
+`endif
+`ifndef ENTROPY_SRC1_REG_SW_REGUPD
+`define ENTROPY_SRC1_REG_SW_REGUPD                                                                  (32'h14)
+`define ENTROPY_SRC1_REG_SW_REGUPD_SW_REGUPD_LOW                                                    (0)
+`define ENTROPY_SRC1_REG_SW_REGUPD_SW_REGUPD_MASK                                                   (32'h1)
+`endif
+`ifndef ENTROPY_SRC1_REG_REGWEN
+`define ENTROPY_SRC1_REG_REGWEN                                                                     (32'h18)
+`define ENTROPY_SRC1_REG_REGWEN_REGWEN_LOW                                                          (0)
+`define ENTROPY_SRC1_REG_REGWEN_REGWEN_MASK                                                         (32'h1)
+`endif
+`ifndef ENTROPY_SRC1_REG_REV
+`define ENTROPY_SRC1_REG_REV                                                                        (32'h1c)
+`define ENTROPY_SRC1_REG_REV_ABI_REVISION_LOW                                                       (0)
+`define ENTROPY_SRC1_REG_REV_ABI_REVISION_MASK                                                      (32'hff)
+`define ENTROPY_SRC1_REG_REV_HW_REVISION_LOW                                                        (8)
+`define ENTROPY_SRC1_REG_REV_HW_REVISION_MASK                                                       (32'hff00)
+`define ENTROPY_SRC1_REG_REV_CHIP_TYPE_LOW                                                          (16)
+`define ENTROPY_SRC1_REG_REV_CHIP_TYPE_MASK                                                         (32'hff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_MODULE_ENABLE
+`define ENTROPY_SRC1_REG_MODULE_ENABLE                                                              (32'h20)
+`define ENTROPY_SRC1_REG_MODULE_ENABLE_MODULE_ENABLE_LOW                                            (0)
+`define ENTROPY_SRC1_REG_MODULE_ENABLE_MODULE_ENABLE_MASK                                           (32'hf)
+`endif
+`ifndef ENTROPY_SRC1_REG_CONF
+`define ENTROPY_SRC1_REG_CONF                                                                       (32'h24)
+`define ENTROPY_SRC1_REG_CONF_FIPS_ENABLE_LOW                                                       (0)
+`define ENTROPY_SRC1_REG_CONF_FIPS_ENABLE_MASK                                                      (32'hf)
+`define ENTROPY_SRC1_REG_CONF_FIPS_FLAG_LOW                                                         (4)
+`define ENTROPY_SRC1_REG_CONF_FIPS_FLAG_MASK                                                        (32'hf0)
+`define ENTROPY_SRC1_REG_CONF_RNG_FIPS_LOW                                                          (8)
+`define ENTROPY_SRC1_REG_CONF_RNG_FIPS_MASK                                                         (32'hf00)
+`define ENTROPY_SRC1_REG_CONF_RNG_BIT_ENABLE_LOW                                                    (12)
+`define ENTROPY_SRC1_REG_CONF_RNG_BIT_ENABLE_MASK                                                   (32'hf000)
+`define ENTROPY_SRC1_REG_CONF_RNG_BIT_SEL_LOW                                                       (16)
+`define ENTROPY_SRC1_REG_CONF_RNG_BIT_SEL_MASK                                                      (32'h30000)
+`define ENTROPY_SRC1_REG_CONF_THRESHOLD_SCOPE_LOW                                                   (18)
+`define ENTROPY_SRC1_REG_CONF_THRESHOLD_SCOPE_MASK                                                  (32'h3c0000)
+`define ENTROPY_SRC1_REG_CONF_ENTROPY_DATA_REG_ENABLE_LOW                                           (22)
+`define ENTROPY_SRC1_REG_CONF_ENTROPY_DATA_REG_ENABLE_MASK                                          (32'h3c00000)
+`endif
+`ifndef ENTROPY_SRC1_REG_ENTROPY_CONTROL
+`define ENTROPY_SRC1_REG_ENTROPY_CONTROL                                                            (32'h28)
+`define ENTROPY_SRC1_REG_ENTROPY_CONTROL_ES_ROUTE_LOW                                               (0)
+`define ENTROPY_SRC1_REG_ENTROPY_CONTROL_ES_ROUTE_MASK                                              (32'hf)
+`define ENTROPY_SRC1_REG_ENTROPY_CONTROL_ES_TYPE_LOW                                                (4)
+`define ENTROPY_SRC1_REG_ENTROPY_CONTROL_ES_TYPE_MASK                                               (32'hf0)
+`endif
+`ifndef ENTROPY_SRC1_REG_ENTROPY_DATA
+`define ENTROPY_SRC1_REG_ENTROPY_DATA                                                               (32'h2c)
+`endif
+`ifndef ENTROPY_SRC1_REG_HEALTH_TEST_WINDOWS
+`define ENTROPY_SRC1_REG_HEALTH_TEST_WINDOWS                                                        (32'h30)
+`define ENTROPY_SRC1_REG_HEALTH_TEST_WINDOWS_FIPS_WINDOW_LOW                                        (0)
+`define ENTROPY_SRC1_REG_HEALTH_TEST_WINDOWS_FIPS_WINDOW_MASK                                       (32'hffff)
+`define ENTROPY_SRC1_REG_HEALTH_TEST_WINDOWS_BYPASS_WINDOW_LOW                                      (16)
+`define ENTROPY_SRC1_REG_HEALTH_TEST_WINDOWS_BYPASS_WINDOW_MASK                                     (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_REPCNT_THRESHOLDS
+`define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS                                                          (32'h34)
+`define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS_FIPS_THRESH_LOW                                          (0)
+`define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS_FIPS_THRESH_MASK                                         (32'hffff)
+`define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS_BYPASS_THRESH_LOW                                        (16)
+`define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS_BYPASS_THRESH_MASK                                       (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS
+`define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS                                                         (32'h38)
+`define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS_FIPS_THRESH_LOW                                         (0)
+`define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS_FIPS_THRESH_MASK                                        (32'hffff)
+`define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS_BYPASS_THRESH_LOW                                       (16)
+`define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS_BYPASS_THRESH_MASK                                      (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS
+`define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS                                                       (32'h3c)
+`define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS_FIPS_THRESH_LOW                                       (0)
+`define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS_FIPS_THRESH_MASK                                      (32'hffff)
+`define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS_BYPASS_THRESH_LOW                                     (16)
+`define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS_BYPASS_THRESH_MASK                                    (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS
+`define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS                                                       (32'h40)
+`define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS_FIPS_THRESH_LOW                                       (0)
+`define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS_FIPS_THRESH_MASK                                      (32'hffff)
+`define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS_BYPASS_THRESH_LOW                                     (16)
+`define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS_BYPASS_THRESH_MASK                                    (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_BUCKET_THRESHOLDS
+`define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS                                                          (32'h44)
+`define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS_FIPS_THRESH_LOW                                          (0)
+`define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS_FIPS_THRESH_MASK                                         (32'hffff)
+`define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS_BYPASS_THRESH_LOW                                        (16)
+`define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS_BYPASS_THRESH_MASK                                       (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS
+`define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS                                                       (32'h48)
+`define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS_FIPS_THRESH_LOW                                       (0)
+`define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS_FIPS_THRESH_MASK                                      (32'hffff)
+`define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS_BYPASS_THRESH_LOW                                     (16)
+`define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS_BYPASS_THRESH_MASK                                    (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS
+`define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS                                                       (32'h4c)
+`define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS_FIPS_THRESH_LOW                                       (0)
+`define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS_FIPS_THRESH_MASK                                      (32'hffff)
+`define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS_BYPASS_THRESH_LOW                                     (16)
+`define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS_BYPASS_THRESH_MASK                                    (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS
+`define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS                                                        (32'h50)
+`define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS_FIPS_THRESH_LOW                                        (0)
+`define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS_FIPS_THRESH_MASK                                       (32'hffff)
+`define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS_BYPASS_THRESH_LOW                                      (16)
+`define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS_BYPASS_THRESH_MASK                                     (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS
+`define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS                                                        (32'h54)
+`define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS_FIPS_THRESH_LOW                                        (0)
+`define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS_FIPS_THRESH_MASK                                       (32'hffff)
+`define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS_BYPASS_THRESH_LOW                                      (16)
+`define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS_BYPASS_THRESH_MASK                                     (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS
+`define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS                                                       (32'h58)
+`define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
+`define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS_FIPS_WATERMARK_MASK                                   (32'hffff)
+`define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
+`define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                 (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS
+`define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS                                                      (32'h5c)
+`define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS_FIPS_WATERMARK_LOW                                   (0)
+`define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS_FIPS_WATERMARK_MASK                                  (32'hffff)
+`define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                 (16)
+`define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS
+`define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS                                                       (32'h60)
+`define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
+`define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS_FIPS_WATERMARK_MASK                                   (32'hffff)
+`define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
+`define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                 (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS
+`define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS                                                       (32'h64)
+`define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
+`define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS_FIPS_WATERMARK_MASK                                   (32'hffff)
+`define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
+`define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS_BYPASS_WATERMARK_MASK                                 (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS
+`define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS                                                        (32'h68)
+`define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
+`define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS_FIPS_WATERMARK_MASK                                    (32'hffff)
+`define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
+`define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                  (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS
+`define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS                                                        (32'h6c)
+`define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
+`define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS_FIPS_WATERMARK_MASK                                    (32'hffff)
+`define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
+`define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS_BYPASS_WATERMARK_MASK                                  (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS
+`define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS                                                       (32'h70)
+`define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
+`define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS_FIPS_WATERMARK_MASK                                   (32'hffff)
+`define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
+`define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                 (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS
+`define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS                                                       (32'h74)
+`define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
+`define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS_FIPS_WATERMARK_MASK                                   (32'hffff)
+`define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
+`define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                 (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS
+`define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS                                                       (32'h78)
+`define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
+`define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS_FIPS_WATERMARK_MASK                                   (32'hffff)
+`define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
+`define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS_BYPASS_WATERMARK_MASK                                 (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_REPCNT_TOTAL_FAILS
+`define ENTROPY_SRC1_REG_REPCNT_TOTAL_FAILS                                                         (32'h7c)
+`endif
+`ifndef ENTROPY_SRC1_REG_REPCNTS_TOTAL_FAILS
+`define ENTROPY_SRC1_REG_REPCNTS_TOTAL_FAILS                                                        (32'h80)
+`endif
+`ifndef ENTROPY_SRC1_REG_ADAPTP_HI_TOTAL_FAILS
+`define ENTROPY_SRC1_REG_ADAPTP_HI_TOTAL_FAILS                                                      (32'h84)
+`endif
+`ifndef ENTROPY_SRC1_REG_ADAPTP_LO_TOTAL_FAILS
+`define ENTROPY_SRC1_REG_ADAPTP_LO_TOTAL_FAILS                                                      (32'h88)
+`endif
+`ifndef ENTROPY_SRC1_REG_BUCKET_TOTAL_FAILS
+`define ENTROPY_SRC1_REG_BUCKET_TOTAL_FAILS                                                         (32'h8c)
+`endif
+`ifndef ENTROPY_SRC1_REG_MARKOV_HI_TOTAL_FAILS
+`define ENTROPY_SRC1_REG_MARKOV_HI_TOTAL_FAILS                                                      (32'h90)
+`endif
+`ifndef ENTROPY_SRC1_REG_MARKOV_LO_TOTAL_FAILS
+`define ENTROPY_SRC1_REG_MARKOV_LO_TOTAL_FAILS                                                      (32'h94)
+`endif
+`ifndef ENTROPY_SRC1_REG_EXTHT_HI_TOTAL_FAILS
+`define ENTROPY_SRC1_REG_EXTHT_HI_TOTAL_FAILS                                                       (32'h98)
+`endif
+`ifndef ENTROPY_SRC1_REG_EXTHT_LO_TOTAL_FAILS
+`define ENTROPY_SRC1_REG_EXTHT_LO_TOTAL_FAILS                                                       (32'h9c)
+`endif
+`ifndef ENTROPY_SRC1_REG_ALERT_THRESHOLD
+`define ENTROPY_SRC1_REG_ALERT_THRESHOLD                                                            (32'ha0)
+`define ENTROPY_SRC1_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_LOW                                        (0)
+`define ENTROPY_SRC1_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_MASK                                       (32'hffff)
+`define ENTROPY_SRC1_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_INV_LOW                                    (16)
+`define ENTROPY_SRC1_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_INV_MASK                                   (32'hffff0000)
+`endif
+`ifndef ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS
+`define ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS                                                  (32'ha4)
+`define ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS_ANY_FAIL_COUNT_LOW                               (0)
+`define ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS_ANY_FAIL_COUNT_MASK                              (32'hffff)
+`endif
+`ifndef ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS                                                          (32'ha8)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_LOW                                    (4)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_MASK                                   (32'hf0)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTP_HI_FAIL_COUNT_LOW                                 (8)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTP_HI_FAIL_COUNT_MASK                                (32'hf00)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTP_LO_FAIL_COUNT_LOW                                 (12)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTP_LO_FAIL_COUNT_MASK                                (32'hf000)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_LOW                                    (16)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_MASK                                   (32'hf0000)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_LOW                                 (20)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_MASK                                (32'hf00000)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_LOW                                 (24)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_MASK                                (32'hf000000)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_LOW                                   (28)
+`define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_MASK                                  (32'hf0000000)
+`endif
+`ifndef ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS
+`define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS                                                          (32'hac)
+`define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS_EXTHT_HI_FAIL_COUNT_LOW                                  (0)
+`define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS_EXTHT_HI_FAIL_COUNT_MASK                                 (32'hf)
+`define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS_EXTHT_LO_FAIL_COUNT_LOW                                  (4)
+`define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS_EXTHT_LO_FAIL_COUNT_MASK                                 (32'hf0)
+`endif
+`ifndef ENTROPY_SRC1_REG_FW_OV_CONTROL
+`define ENTROPY_SRC1_REG_FW_OV_CONTROL                                                              (32'hb0)
+`define ENTROPY_SRC1_REG_FW_OV_CONTROL_FW_OV_MODE_LOW                                               (0)
+`define ENTROPY_SRC1_REG_FW_OV_CONTROL_FW_OV_MODE_MASK                                              (32'hf)
+`define ENTROPY_SRC1_REG_FW_OV_CONTROL_FW_OV_ENTROPY_INSERT_LOW                                     (4)
+`define ENTROPY_SRC1_REG_FW_OV_CONTROL_FW_OV_ENTROPY_INSERT_MASK                                    (32'hf0)
+`endif
+`ifndef ENTROPY_SRC1_REG_FW_OV_SHA3_START
+`define ENTROPY_SRC1_REG_FW_OV_SHA3_START                                                           (32'hb4)
+`define ENTROPY_SRC1_REG_FW_OV_SHA3_START_FW_OV_INSERT_START_LOW                                    (0)
+`define ENTROPY_SRC1_REG_FW_OV_SHA3_START_FW_OV_INSERT_START_MASK                                   (32'hf)
+`endif
+`ifndef ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL
+`define ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL                                                         (32'hb8)
+`define ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL_FW_OV_WR_FIFO_FULL_LOW                                  (0)
+`define ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL_FW_OV_WR_FIFO_FULL_MASK                                 (32'h1)
+`endif
+`ifndef ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW
+`define ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW                                                     (32'hbc)
+`define ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW_FW_OV_RD_FIFO_OVERFLOW_LOW                          (0)
+`define ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW_FW_OV_RD_FIFO_OVERFLOW_MASK                         (32'h1)
+`endif
+`ifndef ENTROPY_SRC1_REG_FW_OV_RD_DATA
+`define ENTROPY_SRC1_REG_FW_OV_RD_DATA                                                              (32'hc0)
+`endif
+`ifndef ENTROPY_SRC1_REG_FW_OV_WR_DATA
+`define ENTROPY_SRC1_REG_FW_OV_WR_DATA                                                              (32'hc4)
+`endif
+`ifndef ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH
+`define ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH                                                        (32'hc8)
+`define ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH_OBSERVE_FIFO_THRESH_LOW                                (0)
+`define ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH_OBSERVE_FIFO_THRESH_MASK                               (32'h3f)
+`endif
+`ifndef ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH
+`define ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH                                                         (32'hcc)
+`define ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH_OBSERVE_FIFO_DEPTH_LOW                                  (0)
+`define ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH_OBSERVE_FIFO_DEPTH_MASK                                 (32'h3f)
+`endif
+`ifndef ENTROPY_SRC1_REG_DEBUG_STATUS
+`define ENTROPY_SRC1_REG_DEBUG_STATUS                                                               (32'hd0)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_ENTROPY_FIFO_DEPTH_LOW                                        (0)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_ENTROPY_FIFO_DEPTH_MASK                                       (32'h3)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_FSM_LOW                                                  (3)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_FSM_MASK                                                 (32'h38)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_BLOCK_PR_LOW                                             (6)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_BLOCK_PR_MASK                                            (32'h40)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_SQUEEZING_LOW                                            (7)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_SQUEEZING_MASK                                           (32'h80)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_ABSORBED_LOW                                             (8)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_ABSORBED_MASK                                            (32'h100)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_ERR_LOW                                                  (9)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_ERR_MASK                                                 (32'h200)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_MAIN_SM_IDLE_LOW                                              (16)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_MAIN_SM_IDLE_MASK                                             (32'h10000)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_MAIN_SM_BOOT_DONE_LOW                                         (17)
+`define ENTROPY_SRC1_REG_DEBUG_STATUS_MAIN_SM_BOOT_DONE_MASK                                        (32'h20000)
+`endif
+`ifndef ENTROPY_SRC1_REG_RECOV_ALERT_STS
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS                                                            (32'hd4)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FIPS_ENABLE_FIELD_ALERT_LOW                                (0)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FIPS_ENABLE_FIELD_ALERT_MASK                               (32'h1)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ENTROPY_DATA_REG_EN_FIELD_ALERT_LOW                        (1)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ENTROPY_DATA_REG_EN_FIELD_ALERT_MASK                       (32'h2)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_MODULE_ENABLE_FIELD_ALERT_LOW                              (2)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_MODULE_ENABLE_FIELD_ALERT_MASK                             (32'h4)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_THRESHOLD_SCOPE_FIELD_ALERT_LOW                            (3)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_THRESHOLD_SCOPE_FIELD_ALERT_MASK                           (32'h8)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_RNG_BIT_ENABLE_FIELD_ALERT_LOW                             (5)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_RNG_BIT_ENABLE_FIELD_ALERT_MASK                            (32'h20)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FW_OV_SHA3_START_FIELD_ALERT_LOW                           (7)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FW_OV_SHA3_START_FIELD_ALERT_MASK                          (32'h80)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FW_OV_MODE_FIELD_ALERT_LOW                                 (8)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FW_OV_MODE_FIELD_ALERT_MASK                                (32'h100)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FW_OV_ENTROPY_INSERT_FIELD_ALERT_LOW                       (9)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FW_OV_ENTROPY_INSERT_FIELD_ALERT_MASK                      (32'h200)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_ROUTE_FIELD_ALERT_LOW                                   (10)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_ROUTE_FIELD_ALERT_MASK                                  (32'h400)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_TYPE_FIELD_ALERT_LOW                                    (11)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_TYPE_FIELD_ALERT_MASK                                   (32'h800)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_MAIN_SM_ALERT_LOW                                       (12)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_MAIN_SM_ALERT_MASK                                      (32'h1000)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_BUS_CMP_ALERT_LOW                                       (13)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_BUS_CMP_ALERT_MASK                                      (32'h2000)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_THRESH_CFG_ALERT_LOW                                    (14)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_THRESH_CFG_ALERT_MASK                                   (32'h4000)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_FW_OV_WR_ALERT_LOW                                      (15)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_FW_OV_WR_ALERT_MASK                                     (32'h8000)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_FW_OV_DISABLE_ALERT_LOW                                 (16)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ES_FW_OV_DISABLE_ALERT_MASK                                (32'h10000)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FIPS_FLAG_FIELD_ALERT_LOW                                  (17)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FIPS_FLAG_FIELD_ALERT_MASK                                 (32'h20000)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_RNG_FIPS_FIELD_ALERT_LOW                                   (18)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_RNG_FIPS_FIELD_ALERT_MASK                                  (32'h40000)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_POSTHT_ENTROPY_DROP_ALERT_LOW                              (31)
+`define ENTROPY_SRC1_REG_RECOV_ALERT_STS_POSTHT_ENTROPY_DROP_ALERT_MASK                             (32'h80000000)
+`endif
+`ifndef ENTROPY_SRC1_REG_ERR_CODE
+`define ENTROPY_SRC1_REG_ERR_CODE                                                                   (32'hd8)
+`define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_ESRNG_ERR_LOW                                               (0)
+`define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_ESRNG_ERR_MASK                                              (32'h1)
+`define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_DISTR_ERR_LOW                                               (1)
+`define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_DISTR_ERR_MASK                                              (32'h2)
+`define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_OBSERVE_ERR_LOW                                             (2)
+`define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_OBSERVE_ERR_MASK                                            (32'h4)
+`define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_ESFINAL_ERR_LOW                                             (3)
+`define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_ESFINAL_ERR_MASK                                            (32'h8)
+`define ENTROPY_SRC1_REG_ERR_CODE_ES_ACK_SM_ERR_LOW                                                 (20)
+`define ENTROPY_SRC1_REG_ERR_CODE_ES_ACK_SM_ERR_MASK                                                (32'h100000)
+`define ENTROPY_SRC1_REG_ERR_CODE_ES_MAIN_SM_ERR_LOW                                                (21)
+`define ENTROPY_SRC1_REG_ERR_CODE_ES_MAIN_SM_ERR_MASK                                               (32'h200000)
+`define ENTROPY_SRC1_REG_ERR_CODE_ES_CNTR_ERR_LOW                                                   (22)
+`define ENTROPY_SRC1_REG_ERR_CODE_ES_CNTR_ERR_MASK                                                  (32'h400000)
+`define ENTROPY_SRC1_REG_ERR_CODE_SHA3_STATE_ERR_LOW                                                (23)
+`define ENTROPY_SRC1_REG_ERR_CODE_SHA3_STATE_ERR_MASK                                               (32'h800000)
+`define ENTROPY_SRC1_REG_ERR_CODE_SHA3_RST_STORAGE_ERR_LOW                                          (24)
+`define ENTROPY_SRC1_REG_ERR_CODE_SHA3_RST_STORAGE_ERR_MASK                                         (32'h1000000)
+`define ENTROPY_SRC1_REG_ERR_CODE_FIFO_WRITE_ERR_LOW                                                (28)
+`define ENTROPY_SRC1_REG_ERR_CODE_FIFO_WRITE_ERR_MASK                                               (32'h10000000)
+`define ENTROPY_SRC1_REG_ERR_CODE_FIFO_READ_ERR_LOW                                                 (29)
+`define ENTROPY_SRC1_REG_ERR_CODE_FIFO_READ_ERR_MASK                                                (32'h20000000)
+`define ENTROPY_SRC1_REG_ERR_CODE_FIFO_STATE_ERR_LOW                                                (30)
+`define ENTROPY_SRC1_REG_ERR_CODE_FIFO_STATE_ERR_MASK                                               (32'h40000000)
+`endif
+`ifndef ENTROPY_SRC1_REG_ERR_CODE_TEST
+`define ENTROPY_SRC1_REG_ERR_CODE_TEST                                                              (32'hdc)
+`define ENTROPY_SRC1_REG_ERR_CODE_TEST_ERR_CODE_TEST_LOW                                            (0)
+`define ENTROPY_SRC1_REG_ERR_CODE_TEST_ERR_CODE_TEST_MASK                                           (32'h1f)
+`endif
+`ifndef ENTROPY_SRC1_REG_MAIN_SM_STATE
+`define ENTROPY_SRC1_REG_MAIN_SM_STATE                                                              (32'he0)
+`define ENTROPY_SRC1_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                            (0)
+`define ENTROPY_SRC1_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                           (32'h1ff)
+`endif
+`ifndef ENTROPY_COMBINER_REG_COMBINER_NAME_0
+`define ENTROPY_COMBINER_REG_COMBINER_NAME_0                                                        (32'h0)
+`endif
+`ifndef ENTROPY_COMBINER_REG_COMBINER_NAME_1
+`define ENTROPY_COMBINER_REG_COMBINER_NAME_1                                                        (32'h4)
+`endif
+`ifndef ENTROPY_COMBINER_REG_COMBINER_VERSION_0
+`define ENTROPY_COMBINER_REG_COMBINER_VERSION_0                                                     (32'h8)
+`endif
+`ifndef ENTROPY_COMBINER_REG_COMBINER_VERSION_1
+`define ENTROPY_COMBINER_REG_COMBINER_VERSION_1                                                     (32'hc)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_CTRL
+`define ENTROPY_COMBINER_REG_KAT_CTRL                                                               (32'h10)
+`define ENTROPY_COMBINER_REG_KAT_CTRL_START_LOW                                                     (0)
+`define ENTROPY_COMBINER_REG_KAT_CTRL_START_MASK                                                    (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_LEN
+`define ENTROPY_COMBINER_REG_KAT_MSG_LEN                                                            (32'h14)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_STATUS
+`define ENTROPY_COMBINER_REG_KAT_STATUS                                                             (32'h18)
+`define ENTROPY_COMBINER_REG_KAT_STATUS_BUSY_LOW                                                    (0)
+`define ENTROPY_COMBINER_REG_KAT_STATUS_BUSY_MASK                                                   (32'h1)
+`define ENTROPY_COMBINER_REG_KAT_STATUS_VALID_LOW                                                   (1)
+`define ENTROPY_COMBINER_REG_KAT_STATUS_VALID_MASK                                                  (32'h2)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_0
+`define ENTROPY_COMBINER_REG_KAT_MSG_0                                                              (32'h1c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_1
+`define ENTROPY_COMBINER_REG_KAT_MSG_1                                                              (32'h20)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_2
+`define ENTROPY_COMBINER_REG_KAT_MSG_2                                                              (32'h24)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_3
+`define ENTROPY_COMBINER_REG_KAT_MSG_3                                                              (32'h28)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_4
+`define ENTROPY_COMBINER_REG_KAT_MSG_4                                                              (32'h2c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_5
+`define ENTROPY_COMBINER_REG_KAT_MSG_5                                                              (32'h30)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_6
+`define ENTROPY_COMBINER_REG_KAT_MSG_6                                                              (32'h34)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_7
+`define ENTROPY_COMBINER_REG_KAT_MSG_7                                                              (32'h38)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_8
+`define ENTROPY_COMBINER_REG_KAT_MSG_8                                                              (32'h3c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_9
+`define ENTROPY_COMBINER_REG_KAT_MSG_9                                                              (32'h40)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_10
+`define ENTROPY_COMBINER_REG_KAT_MSG_10                                                             (32'h44)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_11
+`define ENTROPY_COMBINER_REG_KAT_MSG_11                                                             (32'h48)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_12
+`define ENTROPY_COMBINER_REG_KAT_MSG_12                                                             (32'h4c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_13
+`define ENTROPY_COMBINER_REG_KAT_MSG_13                                                             (32'h50)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_14
+`define ENTROPY_COMBINER_REG_KAT_MSG_14                                                             (32'h54)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_15
+`define ENTROPY_COMBINER_REG_KAT_MSG_15                                                             (32'h58)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_16
+`define ENTROPY_COMBINER_REG_KAT_MSG_16                                                             (32'h5c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_17
+`define ENTROPY_COMBINER_REG_KAT_MSG_17                                                             (32'h60)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_18
+`define ENTROPY_COMBINER_REG_KAT_MSG_18                                                             (32'h64)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_19
+`define ENTROPY_COMBINER_REG_KAT_MSG_19                                                             (32'h68)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_20
+`define ENTROPY_COMBINER_REG_KAT_MSG_20                                                             (32'h6c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_21
+`define ENTROPY_COMBINER_REG_KAT_MSG_21                                                             (32'h70)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_22
+`define ENTROPY_COMBINER_REG_KAT_MSG_22                                                             (32'h74)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_MSG_23
+`define ENTROPY_COMBINER_REG_KAT_MSG_23                                                             (32'h78)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_0
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_0                                                           (32'h7c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_1
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_1                                                           (32'h80)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_2
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_2                                                           (32'h84)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_3
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_3                                                           (32'h88)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_4
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_4                                                           (32'h8c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_5
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_5                                                           (32'h90)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_6
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_6                                                           (32'h94)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_7
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_7                                                           (32'h98)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_8
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_8                                                           (32'h9c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_9
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_9                                                           (32'ha0)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_10
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_10                                                          (32'ha4)
+`endif
+`ifndef ENTROPY_COMBINER_REG_KAT_DIGEST_11
+`define ENTROPY_COMBINER_REG_KAT_DIGEST_11                                                          (32'ha8)
+`endif
+`ifndef ENTROPY_COMBINER_REG_COMBINER_CTRL
+`define ENTROPY_COMBINER_REG_COMBINER_CTRL                                                          (32'hac)
+`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_POLICY_LOW                                       (0)
+`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_POLICY_MASK                                      (32'h3)
+`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_LOW                                          (8)
+`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_MASK                                         (32'h100)
+`endif
+`ifndef ENTROPY_COMBINER_REG_AHB_LOCK
+`define ENTROPY_COMBINER_REG_AHB_LOCK                                                               (32'hb0)
+`define ENTROPY_COMBINER_REG_AHB_LOCK_LOCK_LOW                                                      (0)
+`define ENTROPY_COMBINER_REG_AHB_LOCK_LOCK_MASK                                                     (32'hf)
+`endif
+`ifndef ENTROPY_COMBINER_REG_COMBINER_STATUS
+`define ENTROPY_COMBINER_REG_COMBINER_STATUS                                                        (32'hb4)
+`define ENTROPY_COMBINER_REG_COMBINER_STATUS_COMBINE_EN_LOW                                         (0)
+`define ENTROPY_COMBINER_REG_COMBINER_STATUS_COMBINE_EN_MASK                                        (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                         (32'h400)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                            (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK                           (32'h1)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_LOW                            (1)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK                           (32'h2)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R                                          (32'h404)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_SHA3_ERROR_EN_LOW                        (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_SHA3_ERROR_EN_MASK                       (32'h1)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_SPARSE_FSM_ERROR_EN_LOW                  (1)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_SPARSE_FSM_ERROR_EN_MASK                 (32'h2)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_COUNT_ERROR_EN_LOW                       (2)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_COUNT_ERROR_EN_MASK                      (32'h4)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_STORAGE_RST_ERROR_EN_LOW                 (3)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_STORAGE_RST_ERROR_EN_MASK                (32'h8)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R                                          (32'h408)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_KAT_DONE_EN_LOW                    (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_KAT_DONE_EN_MASK                   (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R                                      (32'h40c)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_LOW                          (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_GLOBAL_INTR_R_AGG_STS_MASK                         (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R                                      (32'h410)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_LOW                          (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_GLOBAL_INTR_R_AGG_STS_MASK                         (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R                                    (32'h414)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_SHA3_ERROR_STS_LOW                 (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_SHA3_ERROR_STS_MASK                (32'h1)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_SPARSE_FSM_ERROR_STS_LOW           (1)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_SPARSE_FSM_ERROR_STS_MASK          (32'h2)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_COUNT_ERROR_STS_LOW                (2)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_COUNT_ERROR_STS_MASK               (32'h4)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_STORAGE_RST_ERROR_STS_LOW          (3)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_STORAGE_RST_ERROR_STS_MASK         (32'h8)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R                                    (32'h418)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_KAT_DONE_STS_LOW             (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_KAT_DONE_STS_MASK            (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R                                        (32'h41c)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_SHA3_ERROR_TRIG_LOW                    (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_SHA3_ERROR_TRIG_MASK                   (32'h1)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_SPARSE_FSM_ERROR_TRIG_LOW              (1)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_SPARSE_FSM_ERROR_TRIG_MASK             (32'h2)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_COUNT_ERROR_TRIG_LOW                   (2)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_COUNT_ERROR_TRIG_MASK                  (32'h4)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_STORAGE_RST_ERROR_TRIG_LOW             (3)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_ERROR_INTR_TRIG_R_STORAGE_RST_ERROR_TRIG_MASK            (32'h8)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R                                        (32'h420)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_KAT_DONE_TRIG_LOW                (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_INTR_TRIG_R_NOTIF_KAT_DONE_TRIG_MASK               (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_R                                  (32'h500)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SPARSE_FSM_ERROR_INTR_COUNT_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SPARSE_FSM_ERROR_INTR_COUNT_R                            (32'h504)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_COUNT_ERROR_INTR_COUNT_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_COUNT_ERROR_INTR_COUNT_R                                 (32'h508)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_STORAGE_RST_ERROR_INTR_COUNT_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_STORAGE_RST_ERROR_INTR_COUNT_R                           (32'h50c)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_KAT_DONE_INTR_COUNT_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_KAT_DONE_INTR_COUNT_R                              (32'h580)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_INCR_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_INCR_R                             (32'h600)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_INCR_R_PULSE_LOW                   (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SHA3_ERROR_INTR_COUNT_INCR_R_PULSE_MASK                  (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SPARSE_FSM_ERROR_INTR_COUNT_INCR_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SPARSE_FSM_ERROR_INTR_COUNT_INCR_R                       (32'h604)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SPARSE_FSM_ERROR_INTR_COUNT_INCR_R_PULSE_LOW             (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_SPARSE_FSM_ERROR_INTR_COUNT_INCR_R_PULSE_MASK            (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_COUNT_ERROR_INTR_COUNT_INCR_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_COUNT_ERROR_INTR_COUNT_INCR_R                            (32'h608)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_COUNT_ERROR_INTR_COUNT_INCR_R_PULSE_LOW                  (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_COUNT_ERROR_INTR_COUNT_INCR_R_PULSE_MASK                 (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_STORAGE_RST_ERROR_INTR_COUNT_INCR_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_STORAGE_RST_ERROR_INTR_COUNT_INCR_R                      (32'h60c)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_STORAGE_RST_ERROR_INTR_COUNT_INCR_R_PULSE_LOW            (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_STORAGE_RST_ERROR_INTR_COUNT_INCR_R_PULSE_MASK           (32'h1)
+`endif
+`ifndef ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_KAT_DONE_INTR_COUNT_INCR_R
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_KAT_DONE_INTR_COUNT_INCR_R                         (32'h610)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_KAT_DONE_INTR_COUNT_INCR_R_PULSE_LOW               (0)
+`define ENTROPY_COMBINER_REG_INTR_BLOCK_RF_NOTIF_KAT_DONE_INTR_COUNT_INCR_R_PULSE_MASK              (32'h1)
+`endif
 `ifndef MBOX_CSR_MBOX_LOCK
 `define MBOX_CSR_MBOX_LOCK                                                                          (32'h0)
 `define MBOX_CSR_MBOX_LOCK_LOCK_LOW                                                                 (0)
@@ -8738,6 +9420,8 @@
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK                                          (32'h20)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_LOW                                            (6)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                           (32'h40)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_LOW                                               (7)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_MASK                                              (32'h80)
 `endif
 `ifndef SOC_IFC_REG_CPTRA_WDT_TIMER1_EN
 `define SOC_IFC_REG_CPTRA_WDT_TIMER1_EN                                                             (32'he4)
