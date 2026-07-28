@@ -351,7 +351,14 @@ physical_rng physical_rng (
     .valid  (itrng_valid)
 );
 
-physical_rng physical_rng1 (
+// Secondary iTRNG source uses a distinct InitialSeed (IS1) so that the two
+// entropy_src blocks feed different 384-bit seeds into the entropy_combiner.
+// This makes combine mode a meaningful test: the combined seed is
+// SHA3-384(IS0 || IS1) rather than SHA3-384(IS0 || IS0). IS1 matches the value
+// used by the isolated entropy_combiner_es_csrng_tb golden vectors.
+physical_rng #(
+    .InitialSeed(384'h9e3779b97f4a7c15f39cc0605cedc8341082276bf3a27251f86c6a11d0c18e9587f9e1a34b2d0c7658493a1fbe6d2c0a)
+) physical_rng1 (
     .clk    (core_clk),
     .enable (etrng1_req & second_RNG_triggered),
     .data   (itrng_data1),
