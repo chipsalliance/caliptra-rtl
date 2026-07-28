@@ -96,8 +96,9 @@ module caliptra_top
     output logic             cptra_error_non_fatal,
 
     // TRNG Interface
-    // External Request
-    output logic             etrng_req,
+    // External Request (one per entropy_src)
+    output logic             etrng0_req,
+    output logic             etrng1_req,
     // Physical Source for Internal TRNG
     input  logic [3:0]       itrng0_data,
     input  logic             itrng0_valid,
@@ -1351,8 +1352,8 @@ entropy_src_rng_rsp_t   entropy_src_rng_rsp;
 entropy_src_rng_req_t   entropy_src_rng_req1;
 entropy_src_rng_rsp_t   entropy_src_rng_rsp1;
 
-assign etrng_req = entropy_src_rng_req.rng_enable |
-                   (itrng1_en & entropy_src_rng_req1.rng_enable);
+assign etrng0_req = entropy_src_rng_req.rng_enable;
+assign etrng1_req = itrng1_en & entropy_src_rng_req1.rng_enable;
 assign entropy_src_rng_rsp.rng_valid = itrng0_valid;
 assign entropy_src_rng_rsp.rng_b = itrng0_data;
 assign entropy_src_rng_rsp1.rng_valid = itrng1_en & itrng1_valid;
@@ -1543,6 +1544,10 @@ entropy_combiner #(
     );
 
 `else
+// External-TRNG (passive) mode uses a single external TRNG; the second entropy_src
+// and dual-iTRNG combiner are an internal-TRNG-only feature, so ES1's external
+// request is tied off here. etrng0_req is driven by soc_ifc.trng_req below.
+assign etrng1_req = 1'b0;
 
 `endif
 
@@ -1630,7 +1635,7 @@ soc_ifc_top1
 `ifdef CALIPTRA_INTERNAL_TRNG
     .trng_req             (),
 `else
-    .trng_req             (etrng_req),
+    .trng_req             (etrng0_req),
 `endif
     // uC Interrupts
     .soc_ifc_error_intr(soc_ifc_error_intr),

@@ -119,9 +119,14 @@ module caliptra_top_tb (
     ras_test_ctrl_t ras_test_ctrl;
     axi_complex_ctrl_t axi_complex_ctrl;
     logic [63:0] generic_input_wires;
-    logic        etrng_req;
+    logic        etrng0_req;
+    logic        etrng1_req;
     logic  [3:0] itrng_data;
     logic        itrng_valid;
+    logic        itrng1_en;
+    logic        second_RNG_triggered;
+    logic  [3:0] itrng_data1;
+    logic        itrng_valid1;
 
     logic cptra_error_fatal;
     logic cptra_error_non_fatal;
@@ -162,6 +167,9 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .strap_ss_key_release_key_size,
     .strap_ss_key_release_base_addr,
     .ss_ocp_lock_en,
+    .itrng1_en,
+    .etrng1_req, // ES1 entropy request observed by the BFM to time second_RNG_triggered
+    .second_RNG_triggered, // To control when the second RNG triggers, for testing the combiner. The first RNG is always triggered by the DUT.
     .strap_ss_strap_generic_0,
     .strap_ss_strap_generic_1,
     .strap_ss_strap_generic_2,
@@ -270,13 +278,21 @@ caliptra_top caliptra_top_dut (
     .cptra_error_non_fatal(cptra_error_non_fatal),
 
 `ifdef CALIPTRA_INTERNAL_TRNG
-    .etrng_req             (etrng_req),
-    .itrng_data            (itrng_data),
-    .itrng_valid           (itrng_valid),
+    .etrng0_req            (etrng0_req),
+    .etrng1_req            (etrng1_req),
+    .itrng0_data           (itrng_data),
+    .itrng0_valid          (itrng_valid),
+    .itrng1_data           (itrng_data1),
+    .itrng1_valid          (itrng_valid1),
+    .itrng1_en             (itrng1_en),
 `else
-    .etrng_req             (),
-    .itrng_data            (4'b0),
-    .itrng_valid           (1'b0),
+    .etrng0_req            (),
+    .etrng1_req            (),
+    .itrng0_data           (4'b0),
+    .itrng0_valid          (1'b0),
+    .itrng1_en             (1'b0),
+    .itrng1_data           (4'b0),
+    .itrng1_valid          (1'b0),
 `endif
 
     // Subsystem mode straps, tested in subsystem bench
@@ -330,9 +346,16 @@ caliptra_top caliptra_top_dut (
     //=========================================================================-
 physical_rng physical_rng (
     .clk    (core_clk),
-    .enable (etrng_req),
+    .enable (etrng0_req),
     .data   (itrng_data),
     .valid  (itrng_valid)
+);
+
+physical_rng physical_rng1 (
+    .clk    (core_clk),
+    .enable (etrng1_req & second_RNG_triggered),
+    .data   (itrng_data1),
+    .valid  (itrng_valid1)
 );
 `endif
 
