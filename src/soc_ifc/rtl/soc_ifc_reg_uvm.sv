@@ -969,7 +969,7 @@ package soc_ifc_reg_uvm;
             this.OCP_LOCK_MODE_en = new("OCP_LOCK_MODE_en");
             this.OCP_LOCK_MODE_en.configure(this, 1, 6, "RO", 1, 'h0, 0, 1, 0);
             this.dual_iTRNG_en = new("dual_iTRNG_en");
-            this.dual_iTRNG_en.configure(this, 1, 7, "RO", 1, 'h0, 0, 1, 0);
+            this.dual_iTRNG_en.configure(this, 1, 7, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(iTRNG_en_bit_cg[bt]) iTRNG_en_bit_cg[bt] = new();
                 foreach(Fuse_Granularity_bit_cg[bt]) Fuse_Granularity_bit_cg[bt] = new();

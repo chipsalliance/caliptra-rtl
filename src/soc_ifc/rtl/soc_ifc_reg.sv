@@ -3502,9 +3502,10 @@ module soc_ifc_reg (
         field_combo.CPTRA_HW_CONFIG.dual_iTRNG_en.next = next_c;
         field_combo.CPTRA_HW_CONFIG.dual_iTRNG_en.load_next = load_next_c;
     end
-
-    always_ff @(posedge clk) begin
-        if(field_combo.CPTRA_HW_CONFIG.dual_iTRNG_en.load_next) begin
+    always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
+        if(~hwif_in.cptra_pwrgood) begin
+            field_storage.CPTRA_HW_CONFIG.dual_iTRNG_en.value <= 1'h0;
+        end else if(field_combo.CPTRA_HW_CONFIG.dual_iTRNG_en.load_next) begin
             field_storage.CPTRA_HW_CONFIG.dual_iTRNG_en.value <= field_combo.CPTRA_HW_CONFIG.dual_iTRNG_en.next;
         end
     end
