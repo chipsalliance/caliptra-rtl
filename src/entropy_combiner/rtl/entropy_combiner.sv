@@ -639,6 +639,10 @@ module entropy_combiner
     hwif_in.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.hwset  = sha3_sparse_fsm_error;
     hwif_in.intr_block_rf.error_internal_intr_r.count_error_sts.hwset       = sha3_count_error;
     hwif_in.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.hwset = sha3_storage_rst_error;
+    // Combiner's own sparse-FSM glitch: report it (not just feed the FPV CM
+    // assertions) so a detected fault raises error_intr_o instead of silently
+    // stalling CSRNG in the terminal error state.
+    hwif_in.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.hwset = combiner_fsm_error;
     hwif_in.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.hwset    = kat_done_event;
 
     hwif_in.COMBINER_STATUS.combine_en.next = combine_en_i;
@@ -728,5 +732,98 @@ module entropy_combiner
   // Combiner sparse FSM: undefined state code must reach the CM aggregate.
   `CALIPTRA_ASSERT_PRIM_FSM_ERROR_TRIGGER_ERR(CombinerFsmCheck_A, u_combiner_state_regs,
                                               any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
+
+  //==========================================================================
+  // Behavioral SVAs (bypass / combine / KAT / AHB-lock / cs_aes_halt).
+  // All use CALIPTRA_ASSERT and are disabled during reset (!reset_n).
+  //==========================================================================
+
+  // --- Bypass mode -------------------------------------------------------
+  // What: in bypass, ES0 is fully transparent to CSRNG (req and rsp pass through).
+  // Why:  bypass must be a pure wire so the single-iTRNG datapath is unchanged.
+  `CALIPTRA_ASSERT(BypassTransparent_A,
+      bypass_active |-> ((es0_hw_if_req_o == csrng_hw_if_req_i) &&
+                         (csrng_hw_if_rsp_o == es0_hw_if_rsp_i)),
+      clk, !reset_n)
+  // What: ES1 is never requested while bypassed.
+  `CALIPTRA_ASSERT(BypassEs1Quiescent_A,
+      bypass_active |-> !es1_hw_if_req_o.es_req,
+      clk, !reset_n)
+
+  // --- Combine mode ------------------------------------------------------
+  // What: a combine hash never starts unless BOTH ES seeds were captured.
+  // Why:  the digest must always be SHA3-384(ES0||ES1); one seed => weak entropy.
+  `CALIPTRA_ASSERT(CombineWaitsBothSeeds_A,
+      (state_q == combiner_st_sha_start && !op_is_kat_q) |-> (es0_valid_q && es1_valid_q),
+      clk, !reset_n)
+  // What: the CSRNG ack is exactly one cycle (no back-to-back acks).
+  // Timing: |=> because comb_ack always advances to wait_req_low the next cycle.
+  `CALIPTRA_ASSERT(CombineSingleAck_A,
+      (csrng_hw_if_rsp_o.es_ack && !bypass_active) |=> !csrng_hw_if_rsp_o.es_ack,
+      clk, !reset_n)
+  // What: the combine ack returns the captured SHA3-384 digest.
+  `CALIPTRA_ASSERT(CombineAckCarriesDigest_A,
+      (csrng_hw_if_rsp_o.es_ack && !bypass_active) |-> (csrng_hw_if_rsp_o.es_bits == digest_q),
+      clk, !reset_n)
+
+  // --- ROM KAT -----------------------------------------------------------
+  // What: a KAT never starts while the AHB lock is set.
+  `CALIPTRA_ASSERT(KatOnlyWhenUnlocked_A,
+      kat_start_cmd |-> !ahb_locked,
+      clk, !reset_n)
+  // What: reaching KAT-done implies the KAT digest was captured/valid.
+  `CALIPTRA_ASSERT(KatDigestValidAtDone_A,
+      (state_q == combiner_st_kat_done) |-> kat_digest_valid_q,
+      clk, !reset_n)
+  // What: the KAT-done notification is a single-cycle pulse.
+  // Timing: |=> because the FSM leaves sha_wait for kat_done the next cycle.
+  `CALIPTRA_ASSERT(KatDoneNotifPulse_A,
+      kat_done_event |=> !kat_done_event,
+      clk, !reset_n)
+
+  // --- AHB lock (RoT / FIPS) ---------------------------------------------
+  // What: the AHB lock is write-once-sticky (stays set until reset).
+  `CALIPTRA_ASSERT(AhbLockSticky_A,
+      ahb_locked |=> ahb_locked,
+      clk, !reset_n)
+  // What: the lock defaults to unlocked out of reset (reset-value correctness).
+  `CALIPTRA_ASSERT(AhbUnlockedAtReset_A,
+      $rose(reset_n) |-> !ahb_locked,
+      clk, !reset_n)
+  // What: once locked, all register-visible KAT residuals are zeroized and held.
+  // Timing: |=> because the scrub is registered (takes effect the cycle after lock).
+  `CALIPTRA_ASSERT(AhbLockScrubsKat_A,
+      ahb_locked |=> (kat_digest_q == '0 && kat_msg_q == '0 &&
+                      kat_msg_len_q == '0 && !kat_digest_valid_q),
+      clk, !reset_n)
+  // What: no KAT command is honored while locked.
+  `CALIPTRA_ASSERT(AhbLockBlocksKat_A,
+      ahb_locked |-> !kat_start_cmd,
+      clk, !reset_n)
+  // What: KAT status readback is forced quiet while locked.
+  `CALIPTRA_ASSERT(AhbLockKatStatusZero_A,
+      ahb_locked |-> (!hwif_in.KAT_STATUS.busy.next && !hwif_in.KAT_STATUS.valid.next),
+      clk, !reset_n)
+  // What: KAT digest readback is forced to zero while locked (every word).
+  for (genvar gi = 0; gi < kat_digest_words32; gi++) begin : gen_ahb_lock_digest_zero
+    `CALIPTRA_ASSERT(AhbLockKatDigestZero_A,
+        ahb_locked |-> (hwif_in.KAT_DIGEST[gi].data.next == '0),
+        clk, !reset_n)
+  end
+  // What: SW writes to the combined FIPS policy are frozen once locked.
+  `CALIPTRA_ASSERT(AhbLockFreezesFipsPolicy_A,
+      ahb_locked |-> (!hwif_in.COMBINER_CTRL.es_fips_policy.swwe &&
+                      !hwif_in.COMBINER_CTRL.es_fips_cfg.swwe),
+      clk, !reset_n)
+
+  // --- cs_aes_halt local grant (deadlock freedom) ------------------------
+  // What: the combiner grants each ES conditioner's halt request locally (ack=req),
+  //       so an ES conditioner is never left waiting on a halt ack.
+  `CALIPTRA_ASSERT(CsAesHaltGrantEs0_A,
+      (es0_cs_aes_halt_o.cs_aes_halt_ack == es0_cs_aes_halt_i.cs_aes_halt_req),
+      clk, !reset_n)
+  `CALIPTRA_ASSERT(CsAesHaltGrantEs1_A,
+      (es1_cs_aes_halt_o.cs_aes_halt_ack == es1_cs_aes_halt_i.cs_aes_halt_req),
+      clk, !reset_n)
 
 endmodule
