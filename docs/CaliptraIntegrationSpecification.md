@@ -209,6 +209,13 @@ Trace ports have been directly connected from Caliptra's instance of the VeeR-EL
 | trace_rv_i_interrupt_ip |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 | trace_rv_i_tval_ip      | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 
+The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration, so both the main core and the redundant shadow core produce a trace stream. The `trace_rv_i_*` ports above expose one of them at a time, selected by a software-controlled mux inside `caliptra_top`. The select is the `internal_trace_ctrl.trace_shadow_core_sel` register field, which is accessible to Caliptra firmware only (SoC writes are rejected):
+
+- `0` (reset default): the **main core** trace is driven onto the `trace_rv_i_*` ports.
+- `1`: the **shadow (lockstep) core** trace is driven onto the ports. The shadow core runs a fixed number of cycles behind the main core, so its trace is identical in content but shifted later in time.
+
+The mux only re-sources these observation-only ports; it does not affect functional behavior, lockstep comparison, or error reporting, and it resets to the main core so default trace behavior is unchanged. The integration guidance above is unaffected — these ports remain unvalidated and integrators shall leave them unconnected regardless of the selected core.
+
 *Table 11: Subsystem Straps, Controls, and iTRNG Configuration*
 
 | Signal name | Width      | Driver     | Synchronous (as viewed from Caliptra’s boundary) | Description |

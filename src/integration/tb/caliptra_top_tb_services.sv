@@ -2718,6 +2718,9 @@ endgenerate //IV_NO
 
 
     // trace monitor
+    // Muxed by the internal_trace_ctrl.trace_shadow_core_sel register bit.
+    // The register write-back fields (wb_valid/wb_dest/wb_data) are always sampled
+    // from the main core.
     always @(posedge clk) begin
         wb_valid  <= `DEC.dec_i0_wen_r;
         wb_dest   <= `DEC.dec_i0_waddr_r;

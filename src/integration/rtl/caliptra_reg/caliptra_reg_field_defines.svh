@@ -10184,6 +10184,11 @@
 `define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_LOW                             (0)
 `define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_MASK                            (32'hf)
 `endif
+`ifndef SOC_IFC_REG_INTERNAL_TRACE_CTRL
+`define SOC_IFC_REG_INTERNAL_TRACE_CTRL                                                             (32'h668)
+`define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_LOW                                   (0)
+`define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_MASK                                  (32'h1)
+`endif
 `ifndef SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
 `define SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (32'h800)
 `define SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                     (0)

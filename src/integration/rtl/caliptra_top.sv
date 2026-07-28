@@ -246,6 +246,24 @@ module caliptra_top
     // DCLS corruption detection disable control (MuBi4, from SW register)
     el2_mubi_pkg::el2_mubi_t dcls_disable_corruption_detection;
 
+    // RISC-V trace-port core select (from SW register): 0 = main core (default), 1 = shadow core
+    logic        trace_shadow_core_sel;
+    // Per-core trace bundles, muxed onto the caliptra_top trace_rv_i_* outputs below
+    logic [31:0] main_trace_rv_i_insn_ip;
+    logic [31:0] main_trace_rv_i_address_ip;
+    logic        main_trace_rv_i_valid_ip;
+    logic        main_trace_rv_i_exception_ip;
+    logic [4:0]  main_trace_rv_i_ecause_ip;
+    logic        main_trace_rv_i_interrupt_ip;
+    logic [31:0] main_trace_rv_i_tval_ip;
+    logic [31:0] shadow_trace_rv_i_insn_ip;
+    logic [31:0] shadow_trace_rv_i_address_ip;
+    logic        shadow_trace_rv_i_valid_ip;
+    logic        shadow_trace_rv_i_exception_ip;
+    logic [4:0]  shadow_trace_rv_i_ecause_ip;
+    logic        shadow_trace_rv_i_interrupt_ip;
+    logic [31:0] shadow_trace_rv_i_tval_ip;
+
     el2_mem_if el2_icache_stub ();
 
     logic iccm_lock;
@@ -726,13 +744,13 @@ el2_veer_wrapper rvtop (
 
     .el2_icache_export      (el2_icache_stub.veer_icache_src),
 
-    .trace_rv_i_insn_ip     (trace_rv_i_insn_ip),
-    .trace_rv_i_address_ip  (trace_rv_i_address_ip),
-    .trace_rv_i_valid_ip    (trace_rv_i_valid_ip),
-    .trace_rv_i_exception_ip(trace_rv_i_exception_ip),
-    .trace_rv_i_ecause_ip   (trace_rv_i_ecause_ip),
-    .trace_rv_i_interrupt_ip(trace_rv_i_interrupt_ip),
-    .trace_rv_i_tval_ip     (trace_rv_i_tval_ip),
+    .trace_rv_i_insn_ip     (main_trace_rv_i_insn_ip),
+    .trace_rv_i_address_ip  (main_trace_rv_i_address_ip),
+    .trace_rv_i_valid_ip    (main_trace_rv_i_valid_ip),
+    .trace_rv_i_exception_ip(main_trace_rv_i_exception_ip),
+    .trace_rv_i_ecause_ip   (main_trace_rv_i_ecause_ip),
+    .trace_rv_i_interrupt_ip(main_trace_rv_i_interrupt_ip),
+    .trace_rv_i_tval_ip     (main_trace_rv_i_tval_ip),
 
     .jtag_tck               ( jtag_tck  ),
     .jtag_tms               ( jtag_tms  ),
@@ -756,14 +774,14 @@ el2_veer_wrapper rvtop (
     .lockstep_err_injection_en_i    (el2_mubi_pkg::El2MuBiFalse),
     .corruption_detected_o          (rv_dcls_error),
 
-    // Shadow core trace (DCLS) - currently not connected
-    .shadow_core_trace_rv_i_insn_ip     (),
-    .shadow_core_trace_rv_i_address_ip  (),
-    .shadow_core_trace_rv_i_valid_ip    (),
-    .shadow_core_trace_rv_i_exception_ip(),
-    .shadow_core_trace_rv_i_ecause_ip   (),
-    .shadow_core_trace_rv_i_interrupt_ip(),
-    .shadow_core_trace_rv_i_tval_ip     (),
+    // Shadow core trace (DCLS) - selectable onto trace_rv_i_* via internal_trace_ctrl.trace_shadow_core_sel
+    .shadow_core_trace_rv_i_insn_ip     (shadow_trace_rv_i_insn_ip),
+    .shadow_core_trace_rv_i_address_ip  (shadow_trace_rv_i_address_ip),
+    .shadow_core_trace_rv_i_valid_ip    (shadow_trace_rv_i_valid_ip),
+    .shadow_core_trace_rv_i_exception_ip(shadow_trace_rv_i_exception_ip),
+    .shadow_core_trace_rv_i_ecause_ip   (shadow_trace_rv_i_ecause_ip),
+    .shadow_core_trace_rv_i_interrupt_ip(shadow_trace_rv_i_interrupt_ip),
+    .shadow_core_trace_rv_i_tval_ip     (shadow_trace_rv_i_tval_ip),
 
     .mpc_debug_halt_ack     ( mpc_debug_halt_ack),
     .mpc_debug_halt_req     ( 1'b0),
@@ -792,6 +810,30 @@ el2_veer_wrapper rvtop (
     .mbist_mode             ( 1'b0 )        // to enable mbist
 
 );
+
+    // Mux the RISC-V main and shadow core trace ports. Controllable via
+    // the SW-writable internal_trace_ctrl.trace_shadow_core_sel register bit.
+    always_comb begin
+        if (trace_shadow_core_sel) begin
+            trace_rv_i_insn_ip      = shadow_trace_rv_i_insn_ip;
+            trace_rv_i_address_ip   = shadow_trace_rv_i_address_ip;
+            trace_rv_i_valid_ip     = shadow_trace_rv_i_valid_ip;
+            trace_rv_i_exception_ip = shadow_trace_rv_i_exception_ip;
+            trace_rv_i_ecause_ip    = shadow_trace_rv_i_ecause_ip;
+            trace_rv_i_interrupt_ip = shadow_trace_rv_i_interrupt_ip;
+            trace_rv_i_tval_ip      = shadow_trace_rv_i_tval_ip;
+        end
+        else begin
+            trace_rv_i_insn_ip      = main_trace_rv_i_insn_ip;
+            trace_rv_i_address_ip   = main_trace_rv_i_address_ip;
+            trace_rv_i_valid_ip     = main_trace_rv_i_valid_ip;
+            trace_rv_i_exception_ip = main_trace_rv_i_exception_ip;
+            trace_rv_i_ecause_ip    = main_trace_rv_i_ecause_ip;
+            trace_rv_i_interrupt_ip = main_trace_rv_i_interrupt_ip;
+            trace_rv_i_tval_ip      = main_trace_rv_i_tval_ip;
+        end
+    end
+
     // Duplicate ICCM/DCCM accesses, using only hsel to differentiate
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hrdata    = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hrdata;
     always_comb responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hresp     = responder_inst[`CALIPTRA_SLAVE_SEL_DDMA].hresp;
@@ -1824,6 +1866,7 @@ soc_ifc_top1
     .cptra_hw_fatal_errors(cptra_hw_fatal_errors),
     // DCLS disable corruption detection control
     .dcls_disable_corruption_detection(dcls_disable_corruption_detection),
+    .trace_shadow_core_sel(trace_shadow_core_sel),
     //caliptra uncore jtag ports
     .cptra_uncore_dmi_reg_en( cptra_uncore_dmi_reg_en ),
     .cptra_uncore_dmi_reg_wr_en( cptra_uncore_dmi_reg_wr_en ),

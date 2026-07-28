@@ -181,6 +181,9 @@ module soc_ifc_top
     // DCLS Control
     output logic [3:0] dcls_disable_corruption_detection,
 
+    // Trace Control (0 = main core, 1 = shadow core)
+    output logic trace_shadow_core_sel,
+
     // ICCM Lock
     output logic iccm_lock,
     input  logic iccm_axs_blocked,
@@ -1125,6 +1128,7 @@ assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 assign iccm_unlock_o = iccm_unlock;
 assign dcls_disable_corruption_detection = soc_ifc_reg_hwif_out.internal_dcls_ctrl.disable_corruption_detection.value;
+assign trace_shadow_core_sel = soc_ifc_reg_hwif_out.internal_trace_ctrl.trace_shadow_core_sel.value;
 
 // iccm_fmc_start_addr, iccm_fmc_end_addr, iccm_rt_start_addr, iccm_rt_end_addr
 // are driven directly by the caliptra_prim_subreg_shadow .q outputs below.
