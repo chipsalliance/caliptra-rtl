@@ -301,6 +301,18 @@ reg {
         hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;
     } disable_corruption_detection[4] = 4'h6;
 } internal_dcls_ctrl;
+reg {
+    name = "Trace Control";
+    desc = "Selects which RISC-V core is muxed onto the caliptra_top trace_rv_i_* ports.
+            [br]0 = main core (default), 1 = shadow (lockstep) core.
+            [br]Reset value selects the main core.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      None (writes rejected via swwel)";
+    field {
+        desc = "Trace port core select: 0 = main core, 1 = shadow (lockstep) core.";
+        hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;
+    } trace_shadow_core_sel = 1'b0;
+} internal_trace_ctrl;
 
 
 ////////////////////////////////////////////////////////////////
