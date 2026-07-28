@@ -9476,20 +9476,6 @@
 `ifndef SOC_IFC_REG_CPTRA_WDT_CFG_1
 `define SOC_IFC_REG_CPTRA_WDT_CFG_1                                                                 (32'h114)
 `endif
-`ifndef SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0                                                    (32'h118)
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_LOW_THRESHOLD_LOW                                  (0)
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_LOW_THRESHOLD_MASK                                 (32'hffff)
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_HIGH_THRESHOLD_LOW                                 (16)
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_HIGH_THRESHOLD_MASK                                (32'hffff0000)
-`endif
-`ifndef SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1                                                    (32'h11c)
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_LOW                               (0)
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_MASK                              (32'hffff)
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_LOW                                           (16)
-`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_MASK                                          (32'hffff0000)
-`endif
 `ifndef SOC_IFC_REG_CPTRA_RSVD_REG_0
 `define SOC_IFC_REG_CPTRA_RSVD_REG_0                                                                (32'h120)
 `endif
@@ -9547,6 +9533,60 @@
 `define SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK                                                        (32'h170)
 `define SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_LOW                                               (0)
 `define SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK                                              (32'h1)
+`endif
+`ifndef SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0                                                    (32'h180)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_LOW_THRESHOLD_LOW                                  (0)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_LOW_THRESHOLD_MASK                                 (32'hffff)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_HIGH_THRESHOLD_LOW                                 (16)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_HIGH_THRESHOLD_MASK                                (32'hffff0000)
+`endif
+`ifndef SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1                                                    (32'h184)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_LOW                               (0)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_MASK                              (32'hffff)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_LOW                                           (16)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_MASK                                          (32'hffff0000)
+`endif
+`ifndef SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2                                                    (32'h188)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_FIPS_WINDOW_SIZE_LOW                               (0)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_FIPS_WINDOW_SIZE_MASK                              (32'hffff)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_SINGLE_BIT_MODE_LOW                                (16)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_SINGLE_BIT_MODE_MASK                               (32'h10000)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_RNG_BIT_SEL_LOW                                    (17)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_RNG_BIT_SEL_MASK                                   (32'h60000)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_RSVD_LOW                                           (19)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_RSVD_MASK                                          (32'h7ff80000)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_BYPASS_MODE_LOW                                    (31)
+`define SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_BYPASS_MODE_MASK                                   (32'h80000000)
+`endif
+`ifndef SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0                                                   (32'h18c)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0_LOW_THRESHOLD_LOW                                 (0)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0_LOW_THRESHOLD_MASK                                (32'hffff)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0_HIGH_THRESHOLD_LOW                                (16)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0_HIGH_THRESHOLD_MASK                               (32'hffff0000)
+`endif
+`ifndef SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1                                                   (32'h190)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_REPETITION_COUNT_LOW                              (0)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_REPETITION_COUNT_MASK                             (32'hffff)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_RSVD_LOW                                          (16)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_RSVD_MASK                                         (32'hffff0000)
+`endif
+`ifndef SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2                                                   (32'h194)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_FIPS_WINDOW_SIZE_LOW                              (0)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_FIPS_WINDOW_SIZE_MASK                             (32'hffff)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_SINGLE_BIT_MODE_LOW                               (16)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_SINGLE_BIT_MODE_MASK                              (32'h10000)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_RNG_BIT_SEL_LOW                                   (17)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_RNG_BIT_SEL_MASK                                  (32'h60000)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_RSVD_LOW                                          (19)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_RSVD_MASK                                         (32'h7ff80000)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_BYPASS_MODE_LOW                                   (31)
+`define SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_BYPASS_MODE_MASK                                  (32'h80000000)
 `endif
 `ifndef SOC_IFC_REG_FUSE_UDS_SEED_0
 `define SOC_IFC_REG_FUSE_UDS_SEED_0                                                                 (32'h200)
