@@ -359,11 +359,13 @@ package entropy_combiner_reg_uvm;
         entropy_combiner_reg__error_intr_en_t_bit_cg sparse_fsm_error_en_bit_cg[1];
         entropy_combiner_reg__error_intr_en_t_bit_cg count_error_en_bit_cg[1];
         entropy_combiner_reg__error_intr_en_t_bit_cg storage_rst_error_en_bit_cg[1];
+        entropy_combiner_reg__error_intr_en_t_bit_cg combiner_fsm_error_en_bit_cg[1];
         entropy_combiner_reg__error_intr_en_t_fld_cg fld_cg;
         rand uvm_reg_field sha3_error_en;
         rand uvm_reg_field sparse_fsm_error_en;
         rand uvm_reg_field count_error_en;
         rand uvm_reg_field storage_rst_error_en;
+        rand uvm_reg_field combiner_fsm_error_en;
 
         function new(string name = "entropy_combiner_reg__error_intr_en_t");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -383,11 +385,14 @@ package entropy_combiner_reg_uvm;
             this.count_error_en.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
             this.storage_rst_error_en = new("storage_rst_error_en");
             this.storage_rst_error_en.configure(this, 1, 3, "RW", 0, 'h0, 1, 1, 0);
+            this.combiner_fsm_error_en = new("combiner_fsm_error_en");
+            this.combiner_fsm_error_en.configure(this, 1, 4, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(sha3_error_en_bit_cg[bt]) sha3_error_en_bit_cg[bt] = new();
                 foreach(sparse_fsm_error_en_bit_cg[bt]) sparse_fsm_error_en_bit_cg[bt] = new();
                 foreach(count_error_en_bit_cg[bt]) count_error_en_bit_cg[bt] = new();
                 foreach(storage_rst_error_en_bit_cg[bt]) storage_rst_error_en_bit_cg[bt] = new();
+                foreach(combiner_fsm_error_en_bit_cg[bt]) combiner_fsm_error_en_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -484,23 +489,25 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - entropy_combiner_reg::error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40
-    class entropy_combiner_reg__error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40 extends uvm_reg;
+    // Reg - entropy_combiner_reg::error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40
+    class entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
         protected bit            m_is_read;
 
-        entropy_combiner_reg__error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_bit_cg sha3_error_sts_bit_cg[1];
-        entropy_combiner_reg__error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_bit_cg sparse_fsm_error_sts_bit_cg[1];
-        entropy_combiner_reg__error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_bit_cg count_error_sts_bit_cg[1];
-        entropy_combiner_reg__error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_bit_cg storage_rst_error_sts_bit_cg[1];
-        entropy_combiner_reg__error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_fld_cg fld_cg;
+        entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_bit_cg sha3_error_sts_bit_cg[1];
+        entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_bit_cg sparse_fsm_error_sts_bit_cg[1];
+        entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_bit_cg count_error_sts_bit_cg[1];
+        entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_bit_cg storage_rst_error_sts_bit_cg[1];
+        entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_bit_cg combiner_fsm_error_sts_bit_cg[1];
+        entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40_fld_cg fld_cg;
         rand uvm_reg_field sha3_error_sts;
         rand uvm_reg_field sparse_fsm_error_sts;
         rand uvm_reg_field count_error_sts;
         rand uvm_reg_field storage_rst_error_sts;
+        rand uvm_reg_field combiner_fsm_error_sts;
 
-        function new(string name = "entropy_combiner_reg__error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40");
+        function new(string name = "entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
         endfunction : new
         extern virtual function void sample_values();
@@ -518,16 +525,19 @@ package entropy_combiner_reg_uvm;
             this.count_error_sts.configure(this, 1, 2, "W1C", 1, 'h0, 1, 1, 0);
             this.storage_rst_error_sts = new("storage_rst_error_sts");
             this.storage_rst_error_sts.configure(this, 1, 3, "W1C", 1, 'h0, 1, 1, 0);
+            this.combiner_fsm_error_sts = new("combiner_fsm_error_sts");
+            this.combiner_fsm_error_sts.configure(this, 1, 4, "W1C", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(sha3_error_sts_bit_cg[bt]) sha3_error_sts_bit_cg[bt] = new();
                 foreach(sparse_fsm_error_sts_bit_cg[bt]) sparse_fsm_error_sts_bit_cg[bt] = new();
                 foreach(count_error_sts_bit_cg[bt]) count_error_sts_bit_cg[bt] = new();
                 foreach(storage_rst_error_sts_bit_cg[bt]) storage_rst_error_sts_bit_cg[bt] = new();
+                foreach(combiner_fsm_error_sts_bit_cg[bt]) combiner_fsm_error_sts_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
         endfunction : build
-    endclass : entropy_combiner_reg__error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40
+    endclass : entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40
 
     // Reg - entropy_combiner_reg::notif_intr_t_notif_kat_done_sts_50d04acb
     class entropy_combiner_reg__notif_intr_t_notif_kat_done_sts_50d04acb extends uvm_reg;
@@ -569,11 +579,13 @@ package entropy_combiner_reg_uvm;
         entropy_combiner_reg__error_intr_trig_t_bit_cg sparse_fsm_error_trig_bit_cg[1];
         entropy_combiner_reg__error_intr_trig_t_bit_cg count_error_trig_bit_cg[1];
         entropy_combiner_reg__error_intr_trig_t_bit_cg storage_rst_error_trig_bit_cg[1];
+        entropy_combiner_reg__error_intr_trig_t_bit_cg combiner_fsm_error_trig_bit_cg[1];
         entropy_combiner_reg__error_intr_trig_t_fld_cg fld_cg;
         rand uvm_reg_field sha3_error_trig;
         rand uvm_reg_field sparse_fsm_error_trig;
         rand uvm_reg_field count_error_trig;
         rand uvm_reg_field storage_rst_error_trig;
+        rand uvm_reg_field combiner_fsm_error_trig;
 
         function new(string name = "entropy_combiner_reg__error_intr_trig_t");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -593,11 +605,14 @@ package entropy_combiner_reg_uvm;
             this.count_error_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
             this.storage_rst_error_trig = new("storage_rst_error_trig");
             this.storage_rst_error_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.combiner_fsm_error_trig = new("combiner_fsm_error_trig");
+            this.combiner_fsm_error_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(sha3_error_trig_bit_cg[bt]) sha3_error_trig_bit_cg[bt] = new();
                 foreach(sparse_fsm_error_trig_bit_cg[bt]) sparse_fsm_error_trig_bit_cg[bt] = new();
                 foreach(count_error_trig_bit_cg[bt]) count_error_trig_bit_cg[bt] = new();
                 foreach(storage_rst_error_trig_bit_cg[bt]) storage_rst_error_trig_bit_cg[bt] = new();
+                foreach(combiner_fsm_error_trig_bit_cg[bt]) combiner_fsm_error_trig_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();
@@ -754,6 +769,36 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_t_cnt_2f455042
 
+    // Reg - entropy_combiner_reg::intr_count_t_cnt_77a9f3e0
+    class entropy_combiner_reg__intr_count_t_cnt_77a9f3e0 extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        entropy_combiner_reg__intr_count_t_cnt_77a9f3e0_bit_cg cnt_bit_cg[32];
+        entropy_combiner_reg__intr_count_t_cnt_77a9f3e0_fld_cg fld_cg;
+        rand uvm_reg_field cnt;
+
+        function new(string name = "entropy_combiner_reg__intr_count_t_cnt_77a9f3e0");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.cnt = new("cnt");
+            this.cnt.configure(this, 32, 0, "RW", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(cnt_bit_cg[bt]) cnt_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : entropy_combiner_reg__intr_count_t_cnt_77a9f3e0
+
     // Reg - entropy_combiner_reg::intr_count_t_cnt_dd5595d5
     class entropy_combiner_reg__intr_count_t_cnt_dd5595d5 extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -904,6 +949,36 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_incr_t_pulse_e5766d33
 
+    // Reg - entropy_combiner_reg::intr_count_incr_t_pulse_484eaecd
+    class entropy_combiner_reg__intr_count_incr_t_pulse_484eaecd extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        entropy_combiner_reg__intr_count_incr_t_pulse_484eaecd_bit_cg pulse_bit_cg[1];
+        entropy_combiner_reg__intr_count_incr_t_pulse_484eaecd_fld_cg fld_cg;
+        rand uvm_reg_field pulse;
+
+        function new(string name = "entropy_combiner_reg__intr_count_incr_t_pulse_484eaecd");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.pulse = new("pulse");
+            this.pulse.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(pulse_bit_cg[bt]) pulse_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : entropy_combiner_reg__intr_count_incr_t_pulse_484eaecd
+
     // Reg - entropy_combiner_reg::intr_count_incr_t_pulse_4d47d41f
     class entropy_combiner_reg__intr_count_incr_t_pulse_4d47d41f extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -941,7 +1016,7 @@ package entropy_combiner_reg_uvm;
         rand entropy_combiner_reg__notif_intr_en_t notif_intr_en_r;
         rand entropy_combiner_reg__global_intr_t_agg_sts_dd3dcf0a error_global_intr_r;
         rand entropy_combiner_reg__global_intr_t_agg_sts_e6399b4a notif_global_intr_r;
-        rand entropy_combiner_reg__error_intr_t_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40 error_internal_intr_r;
+        rand entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40 error_internal_intr_r;
         rand entropy_combiner_reg__notif_intr_t_notif_kat_done_sts_50d04acb notif_internal_intr_r;
         rand entropy_combiner_reg__error_intr_trig_t error_intr_trig_r;
         rand entropy_combiner_reg__notif_intr_trig_t notif_intr_trig_r;
@@ -949,11 +1024,13 @@ package entropy_combiner_reg_uvm;
         rand entropy_combiner_reg__intr_count_t_cnt_d64d6c2f sparse_fsm_error_intr_count_r;
         rand entropy_combiner_reg__intr_count_t_cnt_855566f4 count_error_intr_count_r;
         rand entropy_combiner_reg__intr_count_t_cnt_2f455042 storage_rst_error_intr_count_r;
+        rand entropy_combiner_reg__intr_count_t_cnt_77a9f3e0 combiner_fsm_error_intr_count_r;
         rand entropy_combiner_reg__intr_count_t_cnt_dd5595d5 notif_kat_done_intr_count_r;
         rand entropy_combiner_reg__intr_count_incr_t_pulse_d65b5e88 sha3_error_intr_count_incr_r;
         rand entropy_combiner_reg__intr_count_incr_t_pulse_a1bb0d16 sparse_fsm_error_intr_count_incr_r;
         rand entropy_combiner_reg__intr_count_incr_t_pulse_d619a058 count_error_intr_count_incr_r;
         rand entropy_combiner_reg__intr_count_incr_t_pulse_e5766d33 storage_rst_error_intr_count_incr_r;
+        rand entropy_combiner_reg__intr_count_incr_t_pulse_484eaecd combiner_fsm_error_intr_count_incr_r;
         rand entropy_combiner_reg__intr_count_incr_t_pulse_4d47d41f notif_kat_done_intr_count_incr_r;
 
         function new(string name = "entropy_combiner_reg__intr_block_t");
@@ -1027,6 +1104,11 @@ package entropy_combiner_reg_uvm;
 
             this.storage_rst_error_intr_count_r.build();
             this.default_map.add_reg(this.storage_rst_error_intr_count_r, 'h10c);
+            this.combiner_fsm_error_intr_count_r = new("combiner_fsm_error_intr_count_r");
+            this.combiner_fsm_error_intr_count_r.configure(this);
+
+            this.combiner_fsm_error_intr_count_r.build();
+            this.default_map.add_reg(this.combiner_fsm_error_intr_count_r, 'h110);
             this.notif_kat_done_intr_count_r = new("notif_kat_done_intr_count_r");
             this.notif_kat_done_intr_count_r.configure(this);
 
@@ -1052,11 +1134,16 @@ package entropy_combiner_reg_uvm;
 
             this.storage_rst_error_intr_count_incr_r.build();
             this.default_map.add_reg(this.storage_rst_error_intr_count_incr_r, 'h20c);
+            this.combiner_fsm_error_intr_count_incr_r = new("combiner_fsm_error_intr_count_incr_r");
+            this.combiner_fsm_error_intr_count_incr_r.configure(this);
+
+            this.combiner_fsm_error_intr_count_incr_r.build();
+            this.default_map.add_reg(this.combiner_fsm_error_intr_count_incr_r, 'h210);
             this.notif_kat_done_intr_count_incr_r = new("notif_kat_done_intr_count_incr_r");
             this.notif_kat_done_intr_count_incr_r.configure(this);
 
             this.notif_kat_done_intr_count_incr_r.build();
-            this.default_map.add_reg(this.notif_kat_done_intr_count_incr_r, 'h210);
+            this.default_map.add_reg(this.notif_kat_done_intr_count_incr_r, 'h214);
         endfunction : build
     endclass : entropy_combiner_reg__intr_block_t
 

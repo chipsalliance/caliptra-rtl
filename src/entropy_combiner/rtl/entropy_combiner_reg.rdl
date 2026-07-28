@@ -187,6 +187,7 @@ addrmap entropy_combiner_reg {
         field {desc = "Enable bit for ot_sha3 sparse-FSM error.";}       sparse_fsm_error_en = 1'b0;
         field {desc = "Enable bit for ot_sha3 counter error.";}          count_error_en = 1'b0;
         field {desc = "Enable bit for ot_sha3 keccak storage-reset error.";} storage_rst_error_en = 1'b0;
+        field {desc = "Enable bit for combiner sparse-FSM error.";}          combiner_fsm_error_en = 1'b0;
     };
 
     /* ---- Notification Interrupt Enable ---- */
@@ -217,6 +218,7 @@ addrmap entropy_combiner_reg {
         field {desc = "ot_sha3 sparse-FSM error latched.";}             sparse_fsm_error_sts = 1'b0;
         field {desc = "ot_sha3 counter error latched.";}                count_error_sts = 1'b0;
         field {desc = "ot_sha3 keccak storage-reset error latched.";}   storage_rst_error_sts = 1'b0;
+        field {desc = "Combiner sparse-FSM glitch: FSM trapped to the terminal error state (HD-3 detection). Latched so a detected fault is reported instead of silently stalling CSRNG.";} combiner_fsm_error_sts = 1'b0;
     };
 
     /* ---- Notification Interrupt Status ---- */
@@ -264,6 +266,7 @@ addrmap entropy_combiner_reg {
         field {desc = "Interrupt Trigger 1 bit";} sparse_fsm_error_trig = 1'b0;
         field {desc = "Interrupt Trigger 2 bit";} count_error_trig = 1'b0;
         field {desc = "Interrupt Trigger 3 bit";} storage_rst_error_trig = 1'b0;
+        field {desc = "Interrupt Trigger 4 bit";} combiner_fsm_error_trig = 1'b0;
     };
 
     /* ---- Notification Interrupt Trigger ---- */
@@ -334,12 +337,14 @@ addrmap entropy_combiner_reg {
         intr_count_t      sparse_fsm_error_intr_count_r;   /* Per error */
         intr_count_t      count_error_intr_count_r;        /* Per error */
         intr_count_t      storage_rst_error_intr_count_r;  /* Per error */
+        intr_count_t      combiner_fsm_error_intr_count_r; /* Per error */
         intr_count_t      notif_kat_done_intr_count_r @0x180; /* Per notification */
 
         intr_count_incr_t sha3_error_intr_count_incr_r @0x200; /* Per error count incrementor pulse */
         intr_count_incr_t sparse_fsm_error_intr_count_incr_r;  /* Per error count incrementor pulse */
         intr_count_incr_t count_error_intr_count_incr_r;       /* Per error count incrementor pulse */
         intr_count_incr_t storage_rst_error_intr_count_incr_r; /* Per error count incrementor pulse */
+        intr_count_incr_t combiner_fsm_error_intr_count_incr_r;/* Per error count incrementor pulse */
         intr_count_incr_t notif_kat_done_intr_count_incr_r;    /* Per notification count incrementor pulse */
 
         /* ---- Reset assignment for Error Events (power-good domain) ---- */
@@ -347,22 +352,26 @@ addrmap entropy_combiner_reg {
         error_internal_intr_r.sparse_fsm_error_sts  -> resetsignal = error_reset_b;
         error_internal_intr_r.count_error_sts       -> resetsignal = error_reset_b;
         error_internal_intr_r.storage_rst_error_sts -> resetsignal = error_reset_b;
+        error_internal_intr_r.combiner_fsm_error_sts -> resetsignal = error_reset_b;
         sha3_error_intr_count_r.cnt        -> resetsignal = error_reset_b;
         sparse_fsm_error_intr_count_r.cnt  -> resetsignal = error_reset_b;
         count_error_intr_count_r.cnt       -> resetsignal = error_reset_b;
         storage_rst_error_intr_count_r.cnt -> resetsignal = error_reset_b;
+        combiner_fsm_error_intr_count_r.cnt -> resetsignal = error_reset_b;
 
         /* ---- Interrupt Event Dynamic Assignments ---- */
         error_internal_intr_r.sha3_error_sts        -> enable = error_intr_en_r.sha3_error_en;
         error_internal_intr_r.sparse_fsm_error_sts  -> enable = error_intr_en_r.sparse_fsm_error_en;
         error_internal_intr_r.count_error_sts       -> enable = error_intr_en_r.count_error_en;
         error_internal_intr_r.storage_rst_error_sts -> enable = error_intr_en_r.storage_rst_error_en;
+        error_internal_intr_r.combiner_fsm_error_sts -> enable = error_intr_en_r.combiner_fsm_error_en;
         notif_internal_intr_r.notif_kat_done_sts    -> enable = notif_intr_en_r.notif_kat_done_en;
 
         error_internal_intr_r.sha3_error_sts        -> next = error_intr_trig_r.sha3_error_trig;
         error_internal_intr_r.sparse_fsm_error_sts  -> next = error_intr_trig_r.sparse_fsm_error_trig;
         error_internal_intr_r.count_error_sts       -> next = error_intr_trig_r.count_error_trig;
         error_internal_intr_r.storage_rst_error_sts -> next = error_intr_trig_r.storage_rst_error_trig;
+        error_internal_intr_r.combiner_fsm_error_sts -> next = error_intr_trig_r.combiner_fsm_error_trig;
         notif_internal_intr_r.notif_kat_done_sts    -> next = notif_intr_trig_r.notif_kat_done_trig;
 
         // NOTE: hwset for events is implicitly defined as module input
@@ -398,6 +407,12 @@ addrmap entropy_combiner_reg {
         storage_rst_error_intr_count_incr_r.pulse -> we    = error_internal_intr_r.storage_rst_error_sts -> next;
         storage_rst_error_intr_count_incr_r.pulse -> decr  = storage_rst_error_intr_count_incr_r.pulse;
         storage_rst_error_intr_count_r.cnt        -> incr  = storage_rst_error_intr_count_incr_r.pulse;
+
+        combiner_fsm_error_intr_count_incr_r.pulse -> hwset = error_internal_intr_r.combiner_fsm_error_sts -> hwset;
+        combiner_fsm_error_intr_count_incr_r.pulse -> next  = error_internal_intr_r.combiner_fsm_error_sts -> next;
+        combiner_fsm_error_intr_count_incr_r.pulse -> we    = error_internal_intr_r.combiner_fsm_error_sts -> next;
+        combiner_fsm_error_intr_count_incr_r.pulse -> decr  = combiner_fsm_error_intr_count_incr_r.pulse;
+        combiner_fsm_error_intr_count_r.cnt        -> incr  = combiner_fsm_error_intr_count_incr_r.pulse;
 
         notif_kat_done_intr_count_incr_r.pulse -> hwset = notif_internal_intr_r.notif_kat_done_sts -> hwset;
         notif_kat_done_intr_count_incr_r.pulse -> next  = notif_internal_intr_r.notif_kat_done_sts -> next;
