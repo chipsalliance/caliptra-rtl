@@ -1,5 +1,17 @@
 // SPDX-License-Identifier: Apache-2.0
 //
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
 // SHA3-384 entropy combiner for dual entropy_src instances.
 //
 // In bypass mode (`combine_en_i == 0`), the combiner is transparent: CSRNG's
@@ -162,7 +174,7 @@ module entropy_combiner
   // MuBi4 AHB lock: locked unless stored value is strict MuBi4False (fail-safe:
   // True or any glitched/invalid code => locked).
   assign ahb_lock_mubi = mubi4_t'(hwif_out.AHB_LOCK.lock.value);
-  assign ahb_locked = ~mubi4_test_false_strict(ahb_lock_mubi);
+  assign ahb_locked = mubi4_test_true_loose(ahb_lock_mubi);
   // ROM's MuBi AHB_LOCK: ROM writes MuBi4True to lock after the KAT. AHB accesses
   // (reads AND writes) stay forwarded to the register block; the lock is enforced
   // by targeted, per-function gates rather than a coarse bus write-drop, so no
@@ -514,17 +526,16 @@ module entropy_combiner
   end
 
   // Sparse (HD-3) state register: a single-bit glitch yields an undefined code
-  // trapped by the always_comb default into combiner_st_error.
-  caliptra_prim_sparse_fsm_flop #(
-    .StateEnumT(entropy_combiner_state_e),
-    .Width(CombinerStateWidth),
-    .ResetValue(combiner_st_idle)
-  ) u_combiner_state_regs (
-    .clk_i(clk),
-    .rst_ni(reset_n),
-    .state_i(state_d),
-    .state_o(state_q)
-  );
+  // trapped by the always_comb default into combiner_st_error. Uses the shared
+  // CALIPTRA_PRIM_FLOP_SPARSE_FSM macro (same as ot_sha3/kmac/csrng) so sim tools
+  // can infer the FSM for coverage and the standard CM force/equivalence SVA apply.
+  // The macro defaults its clock/reset to clk_i/rst_ni (the sibling-block naming);
+  // this block's ports are clk/reset_n, so alias them to the names the macro expects.
+  logic clk_i;
+  logic rst_ni;
+  assign clk_i  = clk;
+  assign rst_ni = reset_n;
+  `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_combiner_state_regs, state_d, state_q, entropy_combiner_state_e, combiner_st_idle)
 
 
   // AHB slave shim mirrors other Caliptra blocks: AHB-Lite is converted into
