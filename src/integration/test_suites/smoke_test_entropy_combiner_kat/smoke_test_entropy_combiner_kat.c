@@ -146,6 +146,28 @@ void poll_reg(uint32_t addr, uint32_t expected_data) {
   } while (read_data != expected_data);
 }
 
+// The entropy_combiner (and its AHB slave window) only exists in an
+// internal-TRNG build (CALIPTRA_INTERNAL_TRNG). Without it caliptra_top ties the
+// COMBINER responder's hreadyout low, so the very first combiner register access
+// would never complete and this test would hang until the global simulation
+// timeout instead of failing or skipping cleanly. CPTRA_HW_CONFIG.iTRNG_en is a
+// direct proxy for that define and lives in the soc_ifc window, so it is
+// readable even when the combiner is absent. Skip gracefully when it is clear,
+// which lets this test sit in the generic L0 list that also runs against the
+// non-internal-TRNG caliptra_top_tb build.
+void end_sim_if_itrng_disabled() {
+  uint32_t hw_cfg;
+  hw_cfg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+  if (hw_cfg & SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK) {
+    VPRINTF(LOW, "Internal TRNG is enabled, running entropy combiner KAT\n");
+  } else {
+    VPRINTF(FATAL, "Internal TRNG is not enabled, skipping entropy combiner KAT\n");
+    SEND_STDOUT_CTRL(0xFF);
+    while (1)
+      ;
+  }
+}
+
 // Program one KAT vector, run it, and check the digest. msg_len is the KAT
 // message length in bytes (96 for a full block, 0 for an empty message). Returns
 // error count.
@@ -340,6 +362,11 @@ void main() {
   // programs COMBINER_CTRL in the lock test), then the KAT functional test, then
   // sweep the COMBINER_CTRL policy values (all while unlocked). The AHB lock is
   // sticky until reset, so the lock enforcement test must run last.
+  //
+  // Must run before any combiner register access: in a non-internal-TRNG build
+  // the combiner is absent and its AHB window never completes a transfer.
+  end_sim_if_itrng_disabled();
+
   error += check_combiner_identity_and_fips();
   error += run_kat_tests();
   error += run_combiner_ctrl_policy_test();
