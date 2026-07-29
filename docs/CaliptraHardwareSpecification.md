@@ -440,8 +440,11 @@ These are the top level signals defined in caliptra\_top.
 
 | Name        | Input or output | Description                                                                                             |
 | :---------- | :-------------- | :------------ |
-| itrng_data  | input           | Physical true random noise source data                                                                  |
-| itrng_valid | input           | Valid is asserted high for one cycle when data is valid. The expected valid output rate is about 50KHz. |
+| itrng0_data  | input           | Primary physical true random noise source (ES0) data. |
+| itrng0_valid | input           | Primary source valid, asserted high for one cycle when data is valid. The expected valid output rate is about 50KHz. |
+| itrng1_data  | input           | Secondary physical true random noise source (ES1) data, used only when the dual iTRNG entropy combiner is enabled; tie to 0 if unused. |
+| itrng1_valid | input           | Secondary source valid, asserted high for one cycle when data is valid. Used only in dual-iTRNG mode; tie to 0 if unused. |
+| itrng1_en    | input           | Dual iTRNG enable strap: enables the secondary entropy source (ES1) and the SHA3-384 entropy combiner. Tie to 0 for a single iTRNG. See [Dual iTRNG entropy combiner](#dual-itrng-entropy-combiner). |
 
 The following figure shows the top level signals defined in caliptra\_top.
 
@@ -590,6 +593,69 @@ count tests:
 The methodology used for calculating the repetition count threshold in the
 ROM boot phase can be directly applied for this test as well. The threshold is
 applied on a per-noise-source basis.
+
+
+## Dual iTRNG entropy combiner
+
+Some integrations require a **second physical noise source** — for example, a
+secondary noise-generation technology deployed alongside the primary one. To
+support this, Caliptra can instantiate a **second `entropy_src` (ES1)** next to
+the primary source (`ES0`) while still feeding a **single CSRNG**. A dedicated
+**SHA3-384 entropy combiner** sits between the two entropy sources and the CSRNG
+and merges their conditioned outputs. This feature is only available when the
+integrated TRNG is instantiated (`CALIPTRA_INTERNAL_TRNG`) and, per the interface
+rules, is only enabled in Subsystem mode.
+
+The combiner presents a single `entropy_src_hw_if` interface to CSRNG
+and drives one such interface to each of ES0 and ES1. It operates in one of two
+modes, selected by `CPTRA_HW_CONFIG.dual_iTRNG_en`:
+
+* **Bypass mode (`dual_iTRNG_en == 0`, default):** the combiner is transparent.
+  A CSRNG entropy request is forwarded to ES0 and ES0's response is returned
+  unchanged; ES1 is never requested. This is functionally identical to the
+  single-iTRNG datapath, so the default behavior of existing integrations is
+  unchanged.
+* **Combine mode (`dual_iTRNG_en == 1`):** one CSRNG request is fanned out to
+  both ES0 and ES1. The combiner waits until both 384-bit conditioned seeds are
+  captured, concatenates them as `ES0 || ES1` (768 bits — one SHA3-384 block,
+  because 768 < the 832-bit SHA3-384 rate), hashes them through the shared
+  `ot_sha3` gates, and returns the single 384-bit digest to CSRNG with one
+  acknowledge. The FIPS status returned to CSRNG follows a configurable policy
+  (AND of both sources by default, ES0-only, or a firmware-programmed value).
+
+### Enabling the feature
+
+Combine mode is enabled by `CPTRA_HW_CONFIG.dual_iTRNG_en`, a software-readable
+bit that hardware drives from a dedicated `itrng1_en` integration input. The bit
+resolves to 1 only in Subsystem mode with the internal TRNG present; in any other
+configuration it reads 0 and the combiner stays in bypass. The same `itrng1_en`
+input also gates the secondary physical-source pins (`itrng1_data` /
+`itrng1_valid`). Each entropy source has its own external request output
+(`etrng0_req` for ES0, `etrng1_req` for ES1).
+
+### Power-on known-answer test (KAT) and AHB lock
+
+Because FIPS certification requires a power-on KAT of every cryptographic block,
+the combiner exposes an AHB-lite register interface used **only** by ROM. ROM
+runs a self-contained KAT by writing a fixed message into `KAT_MSG`, programming
+`KAT_MSG_LEN`, and pulsing `KAT_CTRL.start`; the combiner hashes that bounded
+single-block message through the same `ot_sha3` datapath used operationally and
+exposes the result in `KAT_DIGEST`. After the KAT, ROM sets the write-once
+multi-bit (MuBi4) `AHB_LOCK`. Once locked, the KAT registers are zeroized and
+read back as 0, and the FIPS combine policy is frozen, so runtime firmware cannot
+observe KAT state or weaken the combination. Entropy never appears in any
+AHB-readable register — the ES0/ES1 → combiner → CSRNG path is internal only.
+
+### Fault handling
+
+The combiner is fault-hardened consistently with the surrounding OpenTitan
+blocks: `AHB_LOCK` uses a MuBi4 encoding that is fail-safe to *locked*, and the
+datapath sequencer uses a sparse Hamming-distance-3 (HD-3) FSM encoding. A
+single-bit glitch that produces an undefined FSM code is trapped to a terminal
+error state and latched into the combiner's error-interrupt status (alongside the
+`ot_sha3` countermeasure errors). The `cs_aes_halt` current-management
+handshake between each entropy source and CSRNG is terminated locally inside the
+combiner so that a conditioner is never left waiting on an acknowledge.
 
 
 ## External-TRNG REQ HW API
