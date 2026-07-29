@@ -528,11 +528,98 @@ module entropy_combiner_es_csrng_tb
   endtask
 
   //----------------------------------------------------------------
-  // Main - same inputs (IS0/IS1), four ES timing/config cases.
+  // run_force_fsm_error() - error-injection case.
+  //
+  // Glitch the combiner's sparse-FSM state register to an UNDEFINED encoding
+  // mid-combine and prove the fail-safe behavior:
+  //   1) the FSM traps to combiner_st_error (default: state_d = combiner_st_error)
+  //      and STAYS there (self-loop),
+  //   2) the combiner emits NO es_ack to CSRNG after the glitch (never returns a
+  //      corrupt/partial seed),
+  //   3) only reset recovers it (back to combiner_st_idle).
+  //
+  // The combiner's prim sparse-FSM CM assertions are expected to fire on the
+  // forced invalid code, so they are silenced (scope-level $assertoff) around the
+  // injection and re-enabled after recovery. Guarded for VCS (force/hierarchy).
+  //----------------------------------------------------------------
+  task run_force_fsm_error(input string tag);
+    integer err_at_entry;
+    integer waited;
+    begin
+      err_at_entry = error_ctr;
+`ifdef VERILATOR
+      $display("    [%s] SKIP: force-based FSM error injection needs VCS", tag);
+`else
+      // Bring up a normal combine and start an instantiate.
+      rng0_go = 1'b0; rng1_go = 1'b0;
+      combine_en_tb = 1'b1;
+      reset_dut();
+      repeat (50) @(posedge clk_tb);
+      configure_es();
+      repeat (20) @(posedge clk_tb);
+      write_cs(CS_ADDR_CTRL, CS_CTRL_ENABLE);
+      repeat (20) @(posedge clk_tb);
+      $display("*** [%s] INSTANTIATE then inject FSM glitch", tag);
+      write_cs(CS_ADDR_CMD_REQ, CS_CMD_INSTANTIATE);
+      rng0_go = 1'b1; rng1_go = 1'b1;
+
+      // Wait until the combiner FSM is mid-operation (has left idle).
+      wait (u_combiner.state_q != entropy_combiner_pkg::combiner_st_idle);
+
+      // Silence the combiner's CM assertions during the deliberate fault, force an
+      // undefined 9-bit state code (not any valid enum), then release.
+      $assertoff(0, u_combiner);
+      force u_combiner.state_q = entropy_combiner_pkg::entropy_combiner_state_e'(9'b101010101);
+      repeat (2) @(posedge clk_tb);
+      release u_combiner.state_q;
+
+      // 1) The FSM must trap to combiner_st_error and hold there.
+      repeat (5) @(posedge clk_tb);
+      if (u_combiner.state_q !== entropy_combiner_pkg::combiner_st_error) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] FAIL: FSM did not trap to combiner_st_error (state=%b)",
+                 tag, u_combiner.state_q);
+      end
+
+      // 2) Safety: no es_ack to CSRNG after the fault (no corrupt/partial seed).
+      for (waited = 0; waited < 500; waited = waited + 1) begin
+        @(posedge clk_tb);
+        if (comb_csrng_rsp.es_ack) begin
+          error_ctr = error_ctr + 1;
+          $display("*** [%s] FAIL: es_ack asserted after FSM error", tag);
+          waited = 500;
+        end
+        if (u_combiner.state_q !== entropy_combiner_pkg::combiner_st_error) begin
+          error_ctr = error_ctr + 1;
+          $display("*** [%s] FAIL: FSM left error state without reset (state=%b)",
+                   tag, u_combiner.state_q);
+          waited = 500;
+        end
+      end
+
+      // 3) Recovery only via reset.
+      reset_dut();
+      if (u_combiner.state_q !== entropy_combiner_pkg::combiner_st_idle) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] FAIL: FSM not idle after reset (state=%b)",
+                 tag, u_combiner.state_q);
+      end
+      $asserton(0, u_combiner);
+
+      if (error_ctr == err_at_entry)
+        $display("    [%s] PASS: glitch -> combiner_st_error, no ack, reset recovers", tag);
+`endif
+      tc_ctr = tc_ctr + 1;
+      repeat (30) @(posedge clk_tb);
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // Main - same inputs (IS0/IS1), four ES timing/config cases + 1 error case.
   //----------------------------------------------------------------
   initial begin
     init_sim();
-    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 4 cases");
+    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 5 cases");
 
     // 1) ES1 (primary/ES0) arrives faster than ES2 (secondary/ES1).
     run_case(1'b1, 0,   257, 1'b1, "case1-ES1-faster-than-ES2");
@@ -542,6 +629,8 @@ module entropy_combiner_es_csrng_tb
     run_case(1'b1, 0,   0,   1'b1, "case3-both-same-time");
     // 4) ES2 (secondary/ES1) disabled -> combiner bypass, seed = ES1(ES0) only.
     run_case(1'b0, 0,   0,   1'b0, "case4-ES2-disabled");
+    // 5) Error injection: glitch combiner FSM -> combiner_st_error dead-end.
+    run_force_fsm_error("case5-force-fsm-error");
 
     display_test_result();
     $finish;
