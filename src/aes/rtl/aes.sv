@@ -254,6 +254,7 @@ module aes
   end
   assign aes2caliptra.kv_data_out_valid = aes2caliptra_kv_data_out_valid;
   assign aes2caliptra.kv_key_in_use = hw2reg.ctrl_shadowed.sideload.d;
+  assign aes2caliptra.key_len = key_len_e'(hw2reg.ctrl_shadowed.key_len.d);
   // TODO: Qualify this with anything?
   //       Probably not needed. Timing of the kv write request is tightly controlled, and that's the only
   //       place this signal is used.

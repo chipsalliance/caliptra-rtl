@@ -132,6 +132,18 @@ kv_error_code_e kv_key_error;
 logic kv_key_ready, kv_key_done;
 logic [KV_ENTRY_ADDR_W-1:0] kv_key_present_slot;
 
+//KV key-length-mismatch
+logic [KV_ENTRY_SIZE_W-1:0] aes_expected_key_size;
+
+always_comb begin
+    unique case (aes2caliptra.key_len)
+        aes_pkg::AES_128: aes_expected_key_size = KV_ENTRY_SIZE_W'(aes_pkg::AES128_KV_LAST_DWORD);
+        aes_pkg::AES_192: aes_expected_key_size = KV_ENTRY_SIZE_W'(aes_pkg::AES192_KV_LAST_DWORD);
+        aes_pkg::AES_256: aes_expected_key_size = KV_ENTRY_SIZE_W'(aes_pkg::AES256_KV_LAST_DWORD);
+        default:          aes_expected_key_size = KV_ENTRY_SIZE_W'(aes_pkg::AES256_KV_LAST_DWORD);
+    endcase
+end
+
 logic kv_key_write_en;
 logic [AES_KV_KEY_DW_WIDTH-1:0] kv_key_write_offset;
 logic [3:0][7:0] kv_key_write_data;
@@ -146,8 +158,8 @@ edn_pkg::edn_req_t edn_req;
 
 keymgr_pkg::hw_key_req_t keymgr_key;
 
-assign error_intr = '0; // Unused
-assign notif_intr = '0;  // Unused 
+assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
+assign notif_intr = '0;  // Unused
 
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle) || ~kv_key_ready || ~kv_write_ready;
 assign status_idle_o = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
@@ -373,7 +385,12 @@ always_comb begin
   hwif_in.AES_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
 
   hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = '0; //unused
-  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // unused
+  // Wire KV read error into the AES error interrupt so FW no longer needs to
+  // poll AES_KV_RD_KEY_STATUS.ERROR to detect a KV_RD_LEN_MISMATCH or other
+  // KV read failure. Pulses on kv_key_done when the KV read finished with
+  // an error.
+  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset =
+      kv_key_done && (kv_key_error != KV_SUCCESS);
   hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // unused
@@ -426,7 +443,9 @@ end
 kv_read_client #(
   .DATA_WIDTH(keymgr_pkg::KeyWidth),
   .AES(1),
-  .PAD(0)
+  .PAD(0),
+  .LEN_CHECK_AT_KEY_USE(1)  //AES key_len is runtime-selectable per operation;
+                           //check when the engine commits to using the key.
 )
 aes_key_kv_read
 (
@@ -451,7 +470,9 @@ aes_key_kv_read
 
     .error_code(kv_key_error),
     .kv_ready(kv_key_ready),
-    .read_done(kv_key_done)
+    .read_done(kv_key_done),
+    .check_key_size(kv_key_done | keymgr_key.valid),
+    .expected_key_size(aes_expected_key_size)
 );
 
 logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
@@ -537,12 +558,12 @@ always_ff @(posedge clk or negedge reset_n) begin
     keymgr_key.valid <= '0;
     keymgr_key.key <= '0;
   end
-  else if (kv_key_read_ctrl_reg.read_en || (kv_key_error == KV_READ_FAIL) || debugUnlock_or_scan_mode_switch) begin //new request, invalidate old key
+  else if (kv_key_read_ctrl_reg.read_en || (kv_key_error != KV_SUCCESS) || debugUnlock_or_scan_mode_switch) begin //new request, invalidate old key
     keymgr_key.valid <= '0;
     keymgr_key.key[0] <= '0;
     keymgr_key.key[1] <= '0;
   end
-  else if (kv_key_done) begin //key is copied, drive valid to aes
+  else if (kv_key_done && (kv_key_error == KV_SUCCESS)) begin //key is copied, drive valid to aes
     keymgr_key.valid <= '1;
     keymgr_key.key[0] <= kv_key_reg;
     keymgr_key.key[1] <= '0;

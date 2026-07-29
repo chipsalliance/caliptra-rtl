@@ -307,7 +307,7 @@ module sha512
                                              gen_hash_ip ? gen_hash_block_write_en & (gen_hash_block_write_offset == dword) :
                                              (kv_src_write_en & (kv_src_write_offset == dword));
       hwif_in.SHA512_BLOCK[dword].BLOCK.next = gen_hash_ip ? gen_hash_block_write_data : kv_src_write_data;
-      hwif_in.SHA512_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_read_data_present_reset;
+      hwif_in.SHA512_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_read_data_present_reset | (kv_src_error != KV_SUCCESS);
       //lock the block during gen hash operation
       hwif_in.SHA512_BLOCK[dword].BLOCK.swwel = gen_hash_ip ? '1 : block_reg_lock[dword];
     end
@@ -425,7 +425,8 @@ always_comb vault_rd_resp = pv_rd_resp;
 
 kv_read_client #(
     .DATA_WIDTH(BLOCK_SIZE),
-    .PAD(1)
+    .PAD(1),
+    .LEN_CHECK(0)
 )
 sha512_block_kv_read
 (

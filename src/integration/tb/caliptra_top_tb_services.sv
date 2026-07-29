@@ -359,7 +359,8 @@ module caliptra_top_tb_services
     //         8'h9f        - Inject AES key into KV
     //         8'ha0        - Inject HMAC384_KEY to kv_key register
     //         8'ha1        - Inject zero as MLDSA_SEED/MLKEM_MSG to kv_key register (8 dwords)
-    //         8'ha2: 8'ha7 - Unused
+    //         8'ha2        - Randomizable KV inject: slot=[12:8], last_dword=[16:13], dest_valid=[24:17]
+    //         8'ha3: 8'ha7 - Unused
     //         8'ha8        - Inject zero as HMAC_KEY/MLKEM_SEED to kv_key register (16 dwords)
     //         8'ha9        - Inject HMAC512_KEY to kv_key register
     //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
@@ -731,6 +732,19 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd11;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac384_key_tb[dword_i][31 : 0];
+                        end
+                    end
+                    //Randomizable KV inject for length-mismatch tests.
+                    //Encoding: WriteData[7:0]=0xa2, [12:8]=slot, [16:13]=last_dword, [24:17]=dest_valid.
+                    else if((WriteData[7:0] == 8'ha2) && mailbox_write) begin
+                        release_kv_inject_flags <= '0;
+                        if (WriteData[12:8] == slot_id) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = WriteData[24:17];
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = WriteData[16:13];
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = $urandom();
                         end
                     end
                     //inject valid hmac_key dest and hmac512_key value to key reg

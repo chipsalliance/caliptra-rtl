@@ -1473,4 +1473,61 @@ module caliptra_top_sva
       `HMAC_PATH.hmac_key_kv_read.kv_read_rules.read_en_o &&
       ~`HMAC_PATH.hmac_key_kv_read.kv_read_rules.read_allow);
 
+  // -----------------------------------------------------------------
+  // KV key-length-mismatch (per-consumer, per RFC)
+  // -----------------------------------------------------------------
+  // The stored last_dword captured inside kv_read_client must equal the
+  // entry's stored last_dword whenever the read completes without error.
+  KV_hmac_stored_len_matches_entry: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      $rose(`HMAC_PATH.kv_key_done) && (`HMAC_PATH.kv_key_error == 0) |->
+      (`HMAC_PATH.hmac_key_kv_read.stored_last_dword ==
+       `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].last_dword.value))
+      else $display("SVA ERROR: KV stored_last_dword internal != KEY_CTRL.last_dword on HMAC read");
+
+  // HMAC key path uses relaxed (entry-too-small) check: mismatch fires only
+  // when the stored entry is smaller than what the mode requires.
+  KV_hmac_len_mismatch_iff_mode_differs: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.hmac_key_kv_read.length_mismatch |->
+      `HMAC_PATH.kv_key_data_present &&
+      (`HMAC_PATH.init_reg || `HMAC_PATH.next_reg) &&
+      (`HMAC_PATH.hmac_key_kv_read.stored_last_dword < `HMAC_PATH.hmac_expected_key_size))
+      else $display("SVA ERROR: HMAC length_mismatch fired without a real mismatch");
+
+  // When mismatch fires, key regs clear via hwclr within a few cycles
+  // (mismatch cycle N → error_code registers cycle N+1 → hwclr cycle N+1
+  // → key_reg zero cycle N+2). Use a small window to absorb the pipeline.
+  KV_hmac_key_cleared_on_mismatch: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.hmac_key_kv_read.length_mismatch |-> ##[1:5] (`HMAC_PATH.key_reg == '0))
+      else $display("SVA ERROR: HMAC key not cleared within 5 cycles after KV length mismatch");
+
+  KV_ecc_len_mismatch_clears_privkey: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ECC_PATH.ecc_privkey_kv_read.length_mismatch |-> ##[1:5] (`ECC_PATH.privkey_reg == '0))
+      else $display("SVA ERROR: ECC privkey not cleared within 5 cycles after KV length mismatch");
+
+  KV_ecc_len_mismatch_clears_seed: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ECC_PATH.ecc_seed_kv_read.length_mismatch |-> ##[1:5] (`ECC_PATH.seed_reg == '0))
+      else $display("SVA ERROR: ECC seed not cleared within 5 cycles after KV length mismatch");
+
+  // Covers: each consumer exercises both match and mismatch.
+  KV_hmac_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      (`HMAC_PATH.init_reg || `HMAC_PATH.next_reg) && `HMAC_PATH.kv_key_data_present && !`HMAC_PATH.hmac_key_kv_read.length_mismatch);
+  KV_hmac_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.hmac_key_kv_read.length_mismatch);
+  KV_ecc_privkey_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      |`ECC_PATH.cmd_reg && `ECC_PATH.kv_key_data_present && !`ECC_PATH.ecc_privkey_kv_read.length_mismatch);
+  KV_ecc_privkey_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ECC_PATH.ecc_privkey_kv_read.length_mismatch);
+  KV_ecc_seed_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ECC_PATH.ecc_seed_kv_read.length_mismatch);
+
 endmodule
