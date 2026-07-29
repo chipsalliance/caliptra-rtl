@@ -259,7 +259,7 @@ Trace ports have been directly connected from Caliptra's instance of the VeeR-EL
 | itrng0_valid | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: primary RNG bit valid. This is valid per transaction. itrng0_data can be sampled whenever this bit is high. The expected valid output rate is dependent on the process node technology. For 40nm, it is expected to be at least 50kHz. For latest industry standard, moderately advanced technology, it is expected to be greater than 400kHz. |
 | itrng1_data | 4 | Input | Synchronous to clk | Secondary PTRNG digital bit stream (ES1), used only when the dual iTRNG entropy combiner is enabled. Integrators using a single iTRNG shall tie this input to 0. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#dual-itrng-entropy-combiner). |
 | itrng1_valid | 1 | Input | Synchronous to clk | Secondary RNG bit valid (ES1). itrng1_data is sampled whenever this bit is high. Used only in dual-iTRNG mode; tie to 0 if the secondary source is not present. |
-| itrng1_en | 1 | Input Strap | Synchronous to clk | Dual iTRNG enable strap. When set, enables the secondary entropy source (ES1) and the SHA3-384 entropy combiner (combine mode); when 0, the combiner is bypassed (ES0 only). Only takes effect in Subsystem mode with CALIPTRA_INTERNAL_TRNG. Integrators using a single iTRNG shall tie this input to 0. Reflected in CPTRA_HW_CONFIG.dual_iTRNG_en. |
+| itrng1_en | 1 | Input Strap | Synchronous to clk | Dual iTRNG enable strap. When set, enables the secondary entropy source (ES1) and the SHA3-384 entropy combiner (combine mode); when 0, the combiner is bypassed (ES0 only). Only takes effect in Subsystem mode with CALIPTRA_INTERNAL_TRNG. Must be tied to a constant value. For example, driving this input from a programmable register, a package pin, or any other source that can change while Caliptra is out of reset is not permitted. Integrators using a single iTRNG shall tie this input to 0. Reflected in CPTRA_HW_CONFIG.dual_iTRNG_en. |
 
 ## Dual iTRNG (secondary entropy source)
 
@@ -278,10 +278,11 @@ To use the dual iTRNG feature correctly, an integrator must:
 2. Connect the primary physical noise source to `itrng0_data` / `itrng0_valid` and
    the secondary source to `itrng1_data` / `itrng1_valid`. Each source has its own
    external request output (`etrng0_req`, `etrng1_req`).
-3. Drive the `itrng1_en` strap to 1 to enable combine mode. This is reflected in
-   the software-readable `CPTRA_HW_CONFIG.dual_iTRNG_en` bit, which the hardware
-   uses to enable ES1 and the combiner. Leaving `itrng1_en` at 0 keeps the
-   combiner in bypass (ES0 only).
+3. Tie the `itrng1_en` strap to a constant 1 to enable combine mode. This is
+   reflected in the software-readable `CPTRA_HW_CONFIG.dual_iTRNG_en` bit, which
+   the hardware uses to enable ES1 and the combiner. Tying `itrng1_en` to a
+   constant 0 keeps the combiner in bypass (ES0 only). This strap must not be
+   driven dynamically or changed while Caliptra is out of reset.
 4. Provide the ROM-time entropy-source configuration through the architectural
    registers described below (rather than a strap).
 
