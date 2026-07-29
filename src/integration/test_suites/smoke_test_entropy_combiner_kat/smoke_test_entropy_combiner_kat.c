@@ -65,14 +65,27 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define ES_FIPS_POLICY_ES0    0x1  // PRIMARY_ES0_ONLY (programmed before lock)
 #define ES_FIPS_POLICY_ALT    0x2  // CONFIG_VALUE     (rejected after lock)
 
-#define NUM_KAT_VECTORS 4
+// entropy_combiner identity register reset values (from entropy_combiner_pkg.sv:
+// ENTROPY_COMBINER_CORE_NAME="sha3comb"=64'h6d62636f_61337368,
+// ENTROPY_COMBINER_CORE_VERSION="2.20"=64'h00000000_3032322e).
+#define COMBINER_NAME_0_EXP    0x61337368
+#define COMBINER_NAME_1_EXP    0x6d62636f
+#define COMBINER_VERSION_0_EXP 0x3032322e
+#define COMBINER_VERSION_1_EXP 0x00000000
+
+#define NUM_KAT_VECTORS 5
 
 // Golden KAT vectors from tb/entropy_combiner_test_vectors.hex, split into
 // 32-bit words with word 0 = least-significant 32 bits of the 384-bit field.
-//   A: ES0=0, ES1=0                      (baseline)
+//   A: ES0=0, ES1=0                      (baseline, full 768-bit block)
 //   B: ES0 word0=1, ES1=0               (ES0-half ordering guard)
 //   C: ES0=0, ES1 word0=1               (ES1-half ordering guard)
 //   D: fully asymmetric byte-ramp       (intra-half word/byte ordering guard)
+//   E: empty message (KAT_MSG_LEN=0)    (SHA3-384("") -> no beats fed)
+// Per-vector KAT_MSG_LEN in bytes: 96 for A-D (full block), 0 for E (empty).
+static const uint32_t kat_msg_len_bytes[NUM_KAT_VECTORS] = {
+  KAT_MSG_LEN_BYTES, KAT_MSG_LEN_BYTES, KAT_MSG_LEN_BYTES, KAT_MSG_LEN_BYTES, 0x0
+};
 static const uint32_t kat_es0[NUM_KAT_VECTORS][12] = {
   { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
     0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
@@ -82,6 +95,8 @@ static const uint32_t kat_es0[NUM_KAT_VECTORS][12] = {
     0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
   { 0x03020100, 0x07060504, 0x0b0a0908, 0x0f0e0d0c, 0x13121110, 0x17161514,
     0x1b1a1918, 0x1f1e1d1c, 0x23222120, 0x27262524, 0x2b2a2928, 0x2f2e2d2c },
+  { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
 };
 static const uint32_t kat_es1[NUM_KAT_VECTORS][12] = {
   { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
@@ -92,6 +107,8 @@ static const uint32_t kat_es1[NUM_KAT_VECTORS][12] = {
     0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
   { 0x33323130, 0x37363534, 0x3b3a3938, 0x3f3e3d3c, 0x43424140, 0x47464544,
     0x4b4a4948, 0x4f4e4d4c, 0x53525150, 0x57565554, 0x5b5a5958, 0x5f5e5d5c },
+  { 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000, 0x00000000 },
 };
 static const uint32_t kat_digest[NUM_KAT_VECTORS][12] = {
   { 0x3f9645f1, 0x50f31c99, 0xe2980056, 0x63800b09, 0x0ea1501b, 0xc0a6226f,
@@ -102,6 +119,9 @@ static const uint32_t kat_digest[NUM_KAT_VECTORS][12] = {
     0x77eec90d, 0x8a9bb77e, 0x668dd7aa, 0xc4d2d741, 0xaf6f1897, 0x75bb7a63 },
   { 0x9766e2d6, 0xd4dc3f0a, 0x86da33a8, 0x9a179915, 0x69570b06, 0xb493e959,
     0x30298569, 0x238ce34e, 0x702a10c7, 0x68d5c484, 0x2355d9b1, 0xe77740d1 },
+  // SHA3-384("") -- empty message, LSW-first (from hashlib.sha3_384(b'')).
+  { 0x5ba7630c, 0x7d4f5e84, 0x857d1001, 0x85244c2e, 0xaa501ac5, 0x61fc94aa,
+    0xbb715e99, 0x2a3a98ee, 0x313871c3, 0x47db4a26, 0xe0d16bfb, 0x04f0d558 },
 };
 
 // read data and compare against expected value. If there is no error, return 0
@@ -126,9 +146,11 @@ void poll_reg(uint32_t addr, uint32_t expected_data) {
   } while (read_data != expected_data);
 }
 
-// Program one KAT vector, run it, and check the digest. Returns error count.
+// Program one KAT vector, run it, and check the digest. msg_len is the KAT
+// message length in bytes (96 for a full block, 0 for an empty message). Returns
+// error count.
 int run_kat(const uint32_t es0[12], const uint32_t es1[12],
-            const uint32_t exp_digest[12]) {
+            const uint32_t exp_digest[12], uint32_t msg_len) {
   int error = 0;
   int i;
 
@@ -142,7 +164,9 @@ int run_kat(const uint32_t es0[12], const uint32_t es1[12],
                  es1[i]);
   }
 
-  lsu_write_32(CLP_ENTROPY_COMBINER_REG_KAT_MSG_LEN, KAT_MSG_LEN_BYTES);
+  lsu_write_32(CLP_ENTROPY_COMBINER_REG_KAT_MSG_LEN, msg_len);
+  // KAT_MSG_LEN is SW-readable (sw=rw): confirm the (differing) length took.
+  error += read_and_compare(CLP_ENTROPY_COMBINER_REG_KAT_MSG_LEN, msg_len);
 
   // START is a W1 single-pulse; it also clears any previous KAT_STATUS.VALID.
   lsu_write_32(CLP_ENTROPY_COMBINER_REG_KAT_CTRL,
@@ -167,9 +191,74 @@ int run_kat_tests() {
 
   VPRINTF(LOW, "\nEntropy Combiner SHA3-384 KAT\n");
   for (v = 0; v < NUM_KAT_VECTORS; v++) {
-    VPRINTF(LOW, "  - KAT vector %d\n", v);
-    error += run_kat(kat_es0[v], kat_es1[v], kat_digest[v]);
+    VPRINTF(LOW, "  - KAT vector %d (msg_len=%d)\n", v, kat_msg_len_bytes[v]);
+    error += run_kat(kat_es0[v], kat_es1[v], kat_digest[v], kat_msg_len_bytes[v]);
   }
+  return error;
+}
+
+// Read the entropy_combiner identity (NAME/VERSION) and FIPS-flag config
+// (COMBINER_CTRL) registers and verify they read back their expected values.
+// Note: the entropy_src blocks have no NAME/VERSION registers; the combiner does,
+// and this is the combiner KAT test, so these are the combiner's identity regs.
+int check_combiner_identity_and_fips() {
+  int error = 0;
+  uint32_t ctrl, pol, flag;
+
+  VPRINTF(LOW, "\nReading entropy_combiner identity and FIPS-flag registers\n");
+  error += read_and_compare(CLP_ENTROPY_COMBINER_REG_COMBINER_NAME_0,
+                            COMBINER_NAME_0_EXP);
+  error += read_and_compare(CLP_ENTROPY_COMBINER_REG_COMBINER_NAME_1,
+                            COMBINER_NAME_1_EXP);
+  error += read_and_compare(CLP_ENTROPY_COMBINER_REG_COMBINER_VERSION_0,
+                            COMBINER_VERSION_0_EXP);
+  error += read_and_compare(CLP_ENTROPY_COMBINER_REG_COMBINER_VERSION_1,
+                            COMBINER_VERSION_1_EXP);
+
+  // FIPS flag: COMBINER_CTRL.es_fips_policy[1:0] selects how the ES0/ES1 FIPS
+  // flags combine; es_fips_cfg[8] is the FIPS flag value in CONFIG_VALUE policy.
+  // At reset both are 0 (AND_OF_BOTH_ES policy, flag 0).
+  ctrl = lsu_read_32(CLP_ENTROPY_COMBINER_REG_COMBINER_CTRL);
+  pol  = ctrl & ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_POLICY_MASK;
+  flag = (ctrl & ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_MASK) ? 1 : 0;
+  VPRINTF(LOW, "  COMBINER_CTRL=%x (es_fips_policy=%x es_fips_flag=%x)\n", ctrl,
+          pol, flag);
+  if (ctrl != 0x0) {
+    VPRINTF(ERROR, "  COMBINER_CTRL reset FIPS flag not 0: %x\n", ctrl);
+    error += 1;
+  }
+  return error;
+}
+
+// Exercise COMBINER_CTRL.es_fips_policy / es_fips_cfg with several values while
+// UNLOCKED, verifying each reads back. This proves the combine-policy config
+// register is writable with different values. es_fips_policy selects how the two
+// ES FIPS bits merge: 0=AND_OF_BOTH_ES (reset), 1=PRIMARY_ES0_ONLY,
+// 2=CONFIG_VALUE (uses es_fips_cfg), 3=reserved (RTL treats as AND_OF_BOTH_ES but
+// the register still stores 3). es_fips_cfg[8] is the FIPS flag used under
+// CONFIG_VALUE. Leaves COMBINER_CTRL at the reset default so the lock test starts
+// from a known state.
+int run_combiner_ctrl_policy_test() {
+  int error = 0;
+  int i;
+  static const uint32_t vals[] = {
+    0x000,  // es_fips_policy=AND_OF_BOTH_ES, es_fips_cfg=0
+    0x001,  // es_fips_policy=PRIMARY_ES0_ONLY
+    0x002,  // es_fips_policy=CONFIG_VALUE, es_fips_cfg=0
+    0x003,  // es_fips_policy=reserved
+    0x100,  // es_fips_policy=AND_OF_BOTH_ES, es_fips_cfg=1 (FIPS flag)
+    0x102,  // es_fips_policy=CONFIG_VALUE, es_fips_cfg=1
+  };
+
+  VPRINTF(LOW, "\nSweeping COMBINER_CTRL es_fips_policy/es_fips_cfg (unlocked)\n");
+  for (i = 0; i < (int)(sizeof(vals) / sizeof(vals[0])); i++) {
+    lsu_write_32(CLP_ENTROPY_COMBINER_REG_COMBINER_CTRL, vals[i]);
+    error += read_and_compare(CLP_ENTROPY_COMBINER_REG_COMBINER_CTRL, vals[i]);
+  }
+
+  // Restore reset default (AND_OF_BOTH_ES, flag 0).
+  lsu_write_32(CLP_ENTROPY_COMBINER_REG_COMBINER_CTRL, 0x0);
+  error += read_and_compare(CLP_ENTROPY_COMBINER_REG_COMBINER_CTRL, 0x0);
   return error;
 }
 
@@ -247,9 +336,13 @@ void main() {
   VPRINTF(LOW, " Entropy Combiner KAT + AHB_LOCK Test \n");
   VPRINTF(LOW, "----------------------------------------\n");
 
-  // KAT functional test first; the AHB lock is sticky until reset, so the lock
-  // enforcement test must run last.
+  // Read the combiner identity + FIPS-flag registers first (before the KAT
+  // programs COMBINER_CTRL in the lock test), then the KAT functional test, then
+  // sweep the COMBINER_CTRL policy values (all while unlocked). The AHB lock is
+  // sticky until reset, so the lock enforcement test must run last.
+  error += check_combiner_identity_and_fips();
   error += run_kat_tests();
+  error += run_combiner_ctrl_policy_test();
   error += run_ahb_lock_test();
 
   if (error > 0) {
