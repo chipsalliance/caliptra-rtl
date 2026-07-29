@@ -242,6 +242,15 @@ interface soc_ifc_cov_if
   assign soc_rd = soc_req_dv & ~soc_req.write;
   assign soc_wr = soc_req_dv & soc_req.write;
 
+  // ---- SoC-AXI access to the DMA register block ----
+  // The DMA block is Caliptra-uC-only, so any SoC-AXI access here must be rejected.
+  // soc_dma_access flags such an access; soc_dma_offset is the targeted register
+  // offset within the DMA block (base = DMA_REG_START_ADDR).
+  logic        soc_dma_access;
+  logic [11:0] soc_dma_offset;
+  assign soc_dma_access = soc_req_dv & (soc_req.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]});
+  assign soc_dma_offset = 12'(soc_req.addr - DMA_REG_START_ADDR);
+
   assign generic_input_wires_flat  = {generic_input_wires [1],generic_input_wires [0]};
   assign generic_output_wires_flat = {generic_output_wires[1],generic_output_wires[0]};
 
@@ -716,6 +725,52 @@ interface soc_ifc_cov_if
       AXItoSHAxMailbox: cross AXItoSHA_ip_cp, MBOX_ip_cp;
       AXItoSHAxTRNG: cross AXItoSHA_ip_cp, TRNG_ip_cp;
       AXItoSHAxREG: cross AXItoSHA_ip_cp, REG_ip_cp;
+
+    // ---- SoC-AXI accesses targeting the DMA register block (all rejected) ----
+    // The DMA block is Caliptra-uC-only; these coverpoints record the (rejected)
+    // SoC-AXI attempts and cross them with the DMA transaction state via the
+    // *_ip_cp coverpoints above.
+    //
+    // Which DMA register the SoC-AXI access targeted. Bin values come from the
+    // RDL-generated CLP_AXI_DMA_REG_* addresses (block-relative), so they cannot
+    // drift from the map; the default bin flags a register added/removed in RDL.
+    soc_dma_reg_cp: coverpoint soc_dma_offset iff (soc_dma_access) {
+      bins id         = {(`CLP_AXI_DMA_REG_ID         - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins cap        = {(`CLP_AXI_DMA_REG_CAP        - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins ctrl       = {(`CLP_AXI_DMA_REG_CTRL       - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins status0    = {(`CLP_AXI_DMA_REG_STATUS0    - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins status1    = {(`CLP_AXI_DMA_REG_STATUS1    - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins src_addr_l = {(`CLP_AXI_DMA_REG_SRC_ADDR_L - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins src_addr_h = {(`CLP_AXI_DMA_REG_SRC_ADDR_H - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins dst_addr_l = {(`CLP_AXI_DMA_REG_DST_ADDR_L - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins dst_addr_h = {(`CLP_AXI_DMA_REG_DST_ADDR_H - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins byte_count = {(`CLP_AXI_DMA_REG_BYTE_COUNT - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins block_size = {(`CLP_AXI_DMA_REG_BLOCK_SIZE - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins write_data = {(`CLP_AXI_DMA_REG_WRITE_DATA - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins read_data  = {(`CLP_AXI_DMA_REG_READ_DATA  - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins intr_block = {[(`CLP_AXI_DMA_REG_INTR_BLOCK_RF_START - `CLP_AXI_DMA_REG_BASE_ADDR):12'hfff]};
+      bins unmapped_or_new = default; // flags register-map drift (added/removed regs)
+    }
+    // Attempted AXI direction (read vs write). "Attempted" because the arbiter
+    // rejects the access regardless of grant.
+    soc_dma_rnw_cp: coverpoint soc_req.write iff (soc_dma_access) {
+      bins rd = {1'b0};
+      bins wr = {1'b1};
+    }
+    // DMA disabled (idle) context, to pair with the active *_ip_cp transfer types.
+    soc_dma_disabled_cp: coverpoint (dma_ctrl_fsm_ps == DMA_IDLE) iff (soc_dma_access) {
+      bins one = {1'b1};
+    }
+
+    // Each DMA register, attempted by an AXI read AND an AXI write, while the DMA
+    // is: disabled, or active in each transaction type (reusing the *_ip_cp
+    // coverpoints). KV/AES routes have no *_ip_cp and are intentionally not crossed.
+    soc_access_x_disabled:  cross soc_dma_reg_cp, soc_dma_rnw_cp, soc_dma_disabled_cp;
+    soc_access_x_WR_FIFO:   cross soc_dma_reg_cp, soc_dma_rnw_cp, AHBtoAXI_ip_cp;
+    soc_access_x_RD_FIFO:   cross soc_dma_reg_cp, soc_dma_rnw_cp, AXItoAHB_ip_cp;
+    soc_access_x_AXItoAXI:  cross soc_dma_reg_cp, soc_dma_rnw_cp, AXItoAXI_ip_cp;
+    soc_access_x_MBOXtoAXI: cross soc_dma_reg_cp, soc_dma_rnw_cp, MBOXtoAXI_ip_cp;
+    soc_access_x_AXItoMBOX: cross soc_dma_reg_cp, soc_dma_rnw_cp, AXItoMBOX_ip_cp;
   endgroup
 
     soc_ifc_top_cov_grp soc_ifc_top_cov_grp1 = new();

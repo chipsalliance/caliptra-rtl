@@ -536,6 +536,11 @@ class soc_ifc_scoreboard #(
     if (ahb_expected_q.size() > 0) begin
         t_exp = ahb_expected_q.pop_front();
         txn_eq = t.compare(t_exp);
+        // DEBUG: confirm the scoreboard actually compares DMA-register AHB reads
+        // (expected data comes from the predictor's model-based read-check).
+        if (t.RnW == AHB_READ && (t.address inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}))
+            `uvm_info("DMA_RDCHK", $sformatf("SCOREBOARD compared DMA-reg AHB read @0x%0x: actual=0x%08x expected=0x%08x -> %s",
+                      t.address, t.data[0], t_exp.data[0], (txn_eq ? "MATCH" : "MISMATCH")), UVM_HIGH)
         if (txn_eq) begin
             match_count++;
             `uvm_info ("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} matches expected",t.address,t.data[0],t.RnW), UVM_HIGH)

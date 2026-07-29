@@ -261,4 +261,10 @@ always_comb soc_error = (soc_mbox_gnt & mbox_error) |
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_DMA_ACCESS_MUTEX , {uc_dma_gnt,soc_dma_gnt}, clk, !rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_MBOX_REG_AND_DIR_ACCESS_MUTEX, {mbox_req_dv,mbox_dir_req_dv}, clk, !rst_b)
 
+// The AXI DMA register block is Caliptra-uC-only (owned over AHB); no SoC-AXI
+// agent may reach it. The SoC->DMA path is held off (soc_dma_req=1'b0), so the
+// DMA client must never be granted to the SoC. This guards against any future
+// re-introduction of a SoC->DMA path, independent of DMA state.
+`CALIPTRA_ASSERT_NEVER(ERR_ARB_SOC_DMA_GNT, soc_dma_gnt, clk, !rst_b)
+
 endmodule
