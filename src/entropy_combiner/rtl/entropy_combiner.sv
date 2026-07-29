@@ -211,7 +211,12 @@ module entropy_combiner
   // meaningful during ROM time; it is disabled once ROM sets W1S AHB_LOCK so RT FW
   // is never interrupted by combiner activity.
   assign error_intr_o = hwif_out.intr_block_rf.error_global_intr_r.intr;
-  assign notif_intr_o = hwif_out.intr_block_rf.notif_global_intr_r.intr && !ahb_locked;
+  // notif_intr_o is intentionally NOT driven to the core.
+  // The entropy_combiner is only a bridge between entropy_src and CSRNG; it is not
+  // a caliptra-core crypto service block, so notification reporting to the
+  // core is the responsibility of CSRNG, not this bridge. 
+  // assign notif_intr_o = hwif_out.intr_block_rf.notif_global_intr_r.intr && !ahb_locked;
+  assign notif_intr_o = 1'b0;
   // Combiner sparse-FSM glitch (trapped to error state) is a CM error.
   assign combiner_fsm_error = (state_q == combiner_st_error);
   // Unmaskable CM-error aggregate (ot_sha3 errors + combiner FSM glitch); target
@@ -697,9 +702,16 @@ module entropy_combiner
     .keccak_storage_rst_error_o(sha3_storage_rst_error)
   );
 
+  // notif_global_intr_r.intr is intentionally consumed here rather than driven to
+  // the core: notif_intr_o is tied off because the combiner is an entropy_src<->CSRNG
+  // bridge, not a core crypto service, so CSRNG owns notification reporting. The
+  // notif register bits stay SW-readable over AHB; folding the aggregate into the
+  // standard "intentionally unused" pattern keeps the integrator lint/opt report
+  // clean (no stray dangling net) instead of showing an optimized-away signal.
   logic unused_signals;
   assign unused_signals = ^{sha3_absorbed, sha3_squeezing, sha3_block_processed, sha3_fsm,
-                            sha3_run_req, reg_rd_ack, reg_wr_ack};
+                            sha3_run_req, reg_rd_ack, reg_wr_ack,
+                            hwif_out.intr_block_rf.notif_global_intr_r.intr};
 
   `CALIPTRA_ASSERT_KNOWN(AhbRespKnownO_A, hresp_o, clk, !reset_n)
   `CALIPTRA_ASSERT_KNOWN(AhbReadyKnownO_A, hreadyout_o, clk, !reset_n)
@@ -741,9 +753,11 @@ module entropy_combiner
   // --- Bypass mode -------------------------------------------------------
   // What: in bypass, ES0 is fully transparent to CSRNG (req and rsp pass through).
   // Why:  bypass must be a pure wire so the single-iTRNG datapath is unchanged.
+  // Note: === (not ==) because these are direct struct copies; unused fields
+  //       (es_bits/es_fips when idle) carry X and == would evaluate X -> fail.
   `CALIPTRA_ASSERT(BypassTransparent_A,
-      bypass_active |-> ((es0_hw_if_req_o == csrng_hw_if_req_i) &&
-                         (csrng_hw_if_rsp_o == es0_hw_if_rsp_i)),
+      bypass_active |-> ((es0_hw_if_req_o === csrng_hw_if_req_i) &&
+                         (csrng_hw_if_rsp_o === es0_hw_if_rsp_i)),
       clk, !reset_n)
   // What: ES1 is never requested while bypassed.
   `CALIPTRA_ASSERT(BypassEs1Quiescent_A,
@@ -762,8 +776,9 @@ module entropy_combiner
       (csrng_hw_if_rsp_o.es_ack && !bypass_active) |=> !csrng_hw_if_rsp_o.es_ack,
       clk, !reset_n)
   // What: the combine ack returns the captured SHA3-384 digest.
+  // Note: === because es_bits is a direct copy of digest_q (X-safe identity check).
   `CALIPTRA_ASSERT(CombineAckCarriesDigest_A,
-      (csrng_hw_if_rsp_o.es_ack && !bypass_active) |-> (csrng_hw_if_rsp_o.es_bits == digest_q),
+      (csrng_hw_if_rsp_o.es_ack && !bypass_active) |-> (csrng_hw_if_rsp_o.es_bits === digest_q),
       clk, !reset_n)
 
   // --- ROM KAT -----------------------------------------------------------
@@ -819,11 +834,12 @@ module entropy_combiner
   // --- cs_aes_halt local grant (deadlock freedom) ------------------------
   // What: the combiner grants each ES conditioner's halt request locally (ack=req),
   //       so an ES conditioner is never left waiting on a halt ack.
+  // Note: === because ack is a direct copy of req (X-safe identity check).
   `CALIPTRA_ASSERT(CsAesHaltGrantEs0_A,
-      (es0_cs_aes_halt_o.cs_aes_halt_ack == es0_cs_aes_halt_i.cs_aes_halt_req),
+      (es0_cs_aes_halt_o.cs_aes_halt_ack === es0_cs_aes_halt_i.cs_aes_halt_req),
       clk, !reset_n)
   `CALIPTRA_ASSERT(CsAesHaltGrantEs1_A,
-      (es1_cs_aes_halt_o.cs_aes_halt_ack == es1_cs_aes_halt_i.cs_aes_halt_req),
+      (es1_cs_aes_halt_o.cs_aes_halt_ack === es1_cs_aes_halt_i.cs_aes_halt_req),
       clk, !reset_n)
 
 endmodule
