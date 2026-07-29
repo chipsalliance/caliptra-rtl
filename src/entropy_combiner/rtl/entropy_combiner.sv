@@ -169,6 +169,17 @@ module entropy_combiner
   logic feed_accept;
   logic fips_combined;
   logic [3:0] kat_feed_words;
+  // Word-granular views of the two 384-bit seeds. Selecting a 64-bit beat with a
+  // constant index into these arrays avoids a variable +: part-select on the flat
+  // vectors: any variable base into a 384b vector is inferred wider than
+  // $clog2(384)=9 once the 64b window is included, which lint reports as
+  // ImproperRangeIndex. es0_words[i] == es0_bits_q[i*MsgWidth +: MsgWidth].
+  logic [combine_sha3_words/2-1:0][MsgWidth-1:0] es0_words;
+  logic [combine_sha3_words/2-1:0][MsgWidth-1:0] es1_words;
+  logic [MsgWidth-1:0] es_word;
+  // Next feed index, widened by one bit so the completion compare is not a
+  // self-determined 4-bit add that could wrap (fixes SelfDeterminedExpr lint).
+  logic [4:0] feed_idx_next;
 
   assign ahb_hold = 1'b0;
   // MuBi4 AHB lock: locked unless stored value is strict MuBi4False (fail-safe:
@@ -232,6 +243,12 @@ module entropy_combiner
   // decoded locked condition so integration can disable AHB reads after ROM KAT.
   assign ahb_lock_o = ahb_locked;
   assign feed_accept = sha3_msg_valid && sha3_msg_ready;
+  // Zero-extended +1 so the completion compare in combiner_st_sha_feed is an
+  // explicit 5-bit operation (no self-determined 4-bit add that could wrap).
+  assign feed_idx_next = {1'b0, feed_idx_q} + 5'h1;
+  // Word-granular views of the seed registers, used by the constant-index beat mux.
+  assign es0_words = es0_bits_q;
+  assign es1_words = es1_bits_q;
 
   // Grant each ES SHA3-conditioner halt request immediately (ack == req): the
   // conditioner permutes as soon as it asks and never stalls. cs_aes_halt is inert
@@ -260,12 +277,29 @@ module entropy_combiner
     // feed_word is only consumed in combiner_st_sha_feed, where the valid/ready
     // handshake and the feed_words_q counter bound feed_idx_q to 0..feed_words_q-1
     // (<= 11). No range guard is needed - the FSM never indexes past the message.
+    // The ES beat mux uses constant word indices only: beats 0..5 take ES0 words
+    // 0..5, beats 6..11 take ES1 words 0..5. This is equivalent to the flat
+    // part-selects es0_bits_q[idx*MsgWidth +: MsgWidth] and
+    // es1_bits_q[(idx-6)*MsgWidth +: MsgWidth], but generates no variable index.
+    unique case (feed_idx_q)
+      4'd0:    es_word = es0_words[0];
+      4'd1:    es_word = es0_words[1];
+      4'd2:    es_word = es0_words[2];
+      4'd3:    es_word = es0_words[3];
+      4'd4:    es_word = es0_words[4];
+      4'd5:    es_word = es0_words[5];
+      4'd6:    es_word = es1_words[0];
+      4'd7:    es_word = es1_words[1];
+      4'd8:    es_word = es1_words[2];
+      4'd9:    es_word = es1_words[3];
+      4'd10:   es_word = es1_words[4];
+      4'd11:   es_word = es1_words[5];
+      default: es_word = es0_words[0];
+    endcase
     if (op_is_kat_q) begin
       feed_word = kat_msg_q[(feed_idx_q * MsgWidth) +: MsgWidth];
-    end else if (feed_idx_q < 4'd6) begin // the first half of 768-bit
-      feed_word = es0_bits_q[(feed_idx_q * MsgWidth) +: MsgWidth];
-    end else begin // the second half of 768-bit
-      feed_word = es1_bits_q[((feed_idx_q - 4'd6) * MsgWidth) +: MsgWidth];
+    end else begin
+      feed_word = es_word;
     end
   end
 
@@ -418,10 +452,10 @@ module entropy_combiner
         // feed_idx_q never exceeds the message bound and the feed_word mux
         // needs no range guard.
         if (feed_accept) begin
-          if ((feed_idx_q + 4'h1) == feed_words_q) begin
+          if (feed_idx_next == {1'b0, feed_words_q}) begin
             state_d = combiner_st_sha_process;
           end else begin
-            feed_idx_d = feed_idx_q + 4'h1;
+            feed_idx_d = feed_idx_next[3:0];
           end
         end
       end
