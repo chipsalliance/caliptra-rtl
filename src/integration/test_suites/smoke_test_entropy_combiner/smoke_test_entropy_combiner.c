@@ -67,6 +67,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 // streamed by physical_rng (identity packing). Same values as smoke_test_trng.
 #define ES_CONF_RAW          0x2649999
 #define ES_MODULE_ENABLE      0x6
+// ES1's register map is ES0's base + 0x1000.
+#define ES1_OFFSET (CLP_ENTROPY_SRC1_REG_BASE_ADDR - CLP_ENTROPY_SRC_REG_BASE_ADDR)
 
 // read data and compare against expected value. If there is no error, return 0
 int read_and_compare(uint32_t addr, uint32_t exp_data) {
@@ -123,20 +125,30 @@ void end_sim_if_dual_itrng_disabled() {
   }
 }
 
-// Enable one entropy_src block with the raw (deterministic) config.
-void enable_entropy_src(uint32_t conf_addr, uint32_t module_enable_addr) {
-  lsu_write_32(conf_addr, ES_CONF_RAW);
-  lsu_write_32(module_enable_addr, ES_MODULE_ENABLE);
+// Enable one entropy_src block with the raw (deterministic) config, then verify
+// the config read-back is as expected (CONF/MODULE_ENABLE took, no recoverable
+// config alert). es_offset is 0 for ES0, ES1_OFFSET for ES1. Returns error count.
+int enable_entropy_src(uint32_t es_offset) {
+  int error = 0;
+  lsu_write_32(CLP_ENTROPY_SRC_REG_CONF + es_offset, ES_CONF_RAW);
+  lsu_write_32(CLP_ENTROPY_SRC_REG_MODULE_ENABLE + es_offset, ES_MODULE_ENABLE);
+
+  error += read_and_compare(CLP_ENTROPY_SRC_REG_CONF + es_offset, ES_CONF_RAW);
+  error += read_and_compare(CLP_ENTROPY_SRC_REG_MODULE_ENABLE + es_offset,
+                            ES_MODULE_ENABLE);
+  error += read_and_compare(CLP_ENTROPY_SRC_REG_RECOV_ALERT_STS + es_offset, 0x0);
+  return error;
 }
 
-void enable_combiner_chain() {
+int enable_combiner_chain() {
+  int error = 0;
   // Both entropy_src blocks feed the combiner in combine mode, so both must be
   // enabled with the same raw config before CSRNG requests a seed.
   VPRINTF(LOW, "Enabling entropy_src ES0\n");
-  enable_entropy_src(CLP_ENTROPY_SRC_REG_CONF, CLP_ENTROPY_SRC_REG_MODULE_ENABLE);
+  error += enable_entropy_src(0);
 
   VPRINTF(LOW, "Enabling entropy_src ES1\n");
-  enable_entropy_src(CLP_ENTROPY_SRC1_REG_CONF, CLP_ENTROPY_SRC1_REG_MODULE_ENABLE);
+  error += enable_entropy_src(ES1_OFFSET);
 
   VPRINTF(LOW, "Enabling csrng\n");
   lsu_write_32(CLP_CSRNG_REG_CTRL, 0x666);
@@ -149,6 +161,7 @@ void enable_combiner_chain() {
   VPRINTF(LOW, "  - Waiting for ES1 boot done...\n");
   poll_reg(CLP_ENTROPY_SRC1_REG_DEBUG_STATUS,
            ENTROPY_SRC1_REG_DEBUG_STATUS_MAIN_SM_BOOT_DONE_MASK);
+  return error;
 }
 
 int run_combine_seed_test() {
@@ -170,6 +183,22 @@ int run_combine_seed_test() {
   return error;
 }
 
+// Read the entropy_combiner FIPS-flag config (COMBINER_CTRL): es_fips_policy[1:0]
+// selects how the ES0/ES1 FIPS flags combine, es_fips_cfg[8] is the FIPS flag
+// value used in CONFIG_VALUE policy. Verify + print it (reset = 0: AND_OF_BOTH_ES,
+// flag 0).
+int check_combiner_fips_flag(uint32_t expected) {
+  uint32_t ctrl = lsu_read_32(CLP_ENTROPY_COMBINER_REG_COMBINER_CTRL);
+  VPRINTF(LOW, "  COMBINER_CTRL(FIPS)=%x (es_fips_policy=%x es_fips_flag=%x)\n",
+          ctrl, ctrl & ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_POLICY_MASK,
+          (ctrl & ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_MASK) ? 1 : 0);
+  if (ctrl != expected) {
+    VPRINTF(ERROR, "  COMBINER_CTRL FIPS flag got %x want %x\n", ctrl, expected);
+    return 1;
+  }
+  return 0;
+}
+
 void main() {
   int error = 0;
 
@@ -179,7 +208,9 @@ void main() {
 
   end_sim_if_itrng_disabled();
   end_sim_if_dual_itrng_disabled();
-  enable_combiner_chain();
+  error += enable_combiner_chain();
+  // Combiner FIPS flag is at its reset default (this test does not program it).
+  error += check_combiner_fips_flag(0x0);
   error += run_combine_seed_test();
 
   if (error > 0) {
