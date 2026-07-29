@@ -7,7 +7,7 @@
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl
 +incdir+${CALIPTRA_ROOT}/src/csrng/rtl
 +incdir+${CALIPTRA_ROOT}/src/edn/rtl
-+incdir+${CALIPTRA_ROOT}/src/entropy_src/tb
++incdir+${CALIPTRA_ROOT}/src/entropy_combiner/tb
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_main_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_reg_pkg.sv
@@ -123,6 +123,4 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_core.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_repcnt_ht.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src.sv
-${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng.sv
-${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng_deterministic.sv
-${CALIPTRA_ROOT}/src/entropy_src/tb/entropy_src_tb.sv
+${CALIPTRA_ROOT}/src/entropy_combiner/tb/entropy_src_raw_wrap.sv
