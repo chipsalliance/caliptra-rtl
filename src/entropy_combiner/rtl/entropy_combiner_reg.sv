@@ -590,8 +590,10 @@ module entropy_combiner_reg (
 
     // Field: entropy_combiner_reg.KAT_CTRL.start
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.KAT_CTRL.start.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.KAT_CTRL.start.value;
+        load_next_c = '0;
         if(decoded_reg_strb.KAT_CTRL && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.KAT_CTRL.start.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -612,8 +614,10 @@ module entropy_combiner_reg (
     assign hwif_out.KAT_CTRL.start.value = field_storage.KAT_CTRL.start.value;
     // Field: entropy_combiner_reg.KAT_MSG_LEN.msg_len
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.KAT_MSG_LEN.msg_len.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.KAT_MSG_LEN.msg_len.value;
+        load_next_c = '0;
         if(decoded_reg_strb.KAT_MSG_LEN && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.KAT_MSG_LEN.msg_len.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -632,8 +636,10 @@ module entropy_combiner_reg (
     for(genvar i0=0; i0<24; i0++) begin
         // Field: entropy_combiner_reg.KAT_MSG[].data
         always_comb begin
-            automatic logic [31:0] next_c = field_storage.KAT_MSG[i0].data.value;
-            automatic logic load_next_c = '0;
+            automatic logic [31:0] next_c;
+            automatic logic load_next_c;
+            next_c = field_storage.KAT_MSG[i0].data.value;
+            load_next_c = '0;
             if(decoded_reg_strb.KAT_MSG[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.KAT_MSG[i0].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
                 load_next_c = '1;
@@ -652,8 +658,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.COMBINER_CTRL.es_fips_policy
     always_comb begin
-        automatic logic [1:0] next_c = field_storage.COMBINER_CTRL.es_fips_policy.value;
-        automatic logic load_next_c = '0;
+        automatic logic [1:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.COMBINER_CTRL.es_fips_policy.value;
+        load_next_c = '0;
         if(decoded_reg_strb.COMBINER_CTRL && decoded_req_is_wr && hwif_in.COMBINER_CTRL.es_fips_policy.swwe) begin // SW write
             next_c = (field_storage.COMBINER_CTRL.es_fips_policy.value & ~decoded_wr_biten[1:0]) | (decoded_wr_data[1:0] & decoded_wr_biten[1:0]);
             load_next_c = '1;
@@ -671,8 +679,10 @@ module entropy_combiner_reg (
     assign hwif_out.COMBINER_CTRL.es_fips_policy.value = field_storage.COMBINER_CTRL.es_fips_policy.value;
     // Field: entropy_combiner_reg.COMBINER_CTRL.es_fips_cfg
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.COMBINER_CTRL.es_fips_cfg.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.COMBINER_CTRL.es_fips_cfg.value;
+        load_next_c = '0;
         if(decoded_reg_strb.COMBINER_CTRL && decoded_req_is_wr && hwif_in.COMBINER_CTRL.es_fips_cfg.swwe) begin // SW write
             next_c = (field_storage.COMBINER_CTRL.es_fips_cfg.value & ~decoded_wr_biten[8:8]) | (decoded_wr_data[8:8] & decoded_wr_biten[8:8]);
             load_next_c = '1;
@@ -690,8 +700,10 @@ module entropy_combiner_reg (
     assign hwif_out.COMBINER_CTRL.es_fips_cfg.value = field_storage.COMBINER_CTRL.es_fips_cfg.value;
     // Field: entropy_combiner_reg.AHB_LOCK.lock
     always_comb begin
-        automatic logic [3:0] next_c = field_storage.AHB_LOCK.lock.value;
-        automatic logic load_next_c = '0;
+        automatic logic [3:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.AHB_LOCK.lock.value;
+        load_next_c = '0;
         if(decoded_reg_strb.AHB_LOCK && decoded_req_is_wr && hwif_in.AHB_LOCK.lock.swwe) begin // SW write
             next_c = (field_storage.AHB_LOCK.lock.value & ~decoded_wr_biten[3:0]) | (decoded_wr_data[3:0] & decoded_wr_biten[3:0]);
             load_next_c = '1;
@@ -709,8 +721,10 @@ module entropy_combiner_reg (
     assign hwif_out.AHB_LOCK.lock.value = field_storage.AHB_LOCK.lock.value;
     // Field: entropy_combiner_reg.COMBINER_STATUS.combine_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.COMBINER_STATUS.combine_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.COMBINER_STATUS.combine_en.value;
+        load_next_c = '0;
         if(hwif_in.COMBINER_STATUS.combine_en.we) begin // HW Write - we
             next_c = hwif_in.COMBINER_STATUS.combine_en.next;
             load_next_c = '1;
@@ -728,8 +742,10 @@ module entropy_combiner_reg (
     assign hwif_out.COMBINER_STATUS.combine_en.value = field_storage.COMBINER_STATUS.combine_en.value;
     // Field: entropy_combiner_reg.intr_block_rf.global_intr_en_r.error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.error_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -746,8 +762,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.global_intr_en_r.notif_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.global_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.global_intr_en_r.notif_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -764,8 +782,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.sha3_error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.sha3_error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.sha3_error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.sha3_error_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -782,8 +802,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.sparse_fsm_error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.value & ~decoded_wr_biten[1:1]) | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -800,8 +822,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.count_error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.count_error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.count_error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.count_error_en.value & ~decoded_wr_biten[2:2]) | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -818,8 +842,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.storage_rst_error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.storage_rst_error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.storage_rst_error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.storage_rst_error_en.value & ~decoded_wr_biten[3:3]) | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -836,8 +862,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.combiner_fsm_error_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.value & ~decoded_wr_biten[4:4]) | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -854,8 +882,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.notif_intr_en_r.notif_kat_done_en
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_kat_done_en.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_intr_en_r.notif_kat_done_en.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_en_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_intr_en_r.notif_kat_done_en.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -872,8 +902,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        load_next_c = '0;
         
         // HW Write
         next_c = hwif_out.intr_block_rf.error_internal_intr_r.intr;
@@ -892,8 +924,10 @@ module entropy_combiner_reg (
         |(field_storage.intr_block_rf.error_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.error_en.value);
     // Field: entropy_combiner_reg.intr_block_rf.notif_global_intr_r.agg_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        load_next_c = '0;
         
         // HW Write
         next_c = hwif_out.intr_block_rf.notif_internal_intr_r.intr;
@@ -912,8 +946,10 @@ module entropy_combiner_reg (
         |(field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value & field_storage.intr_block_rf.global_intr_en_r.notif_en.value);
     // Field: entropy_combiner_reg.intr_block_rf.error_internal_intr_r.sha3_error_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value;
             load_next_c = '1;
@@ -936,8 +972,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value;
             load_next_c = '1;
@@ -960,8 +998,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_internal_intr_r.count_error_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value;
             load_next_c = '1;
@@ -984,8 +1024,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_internal_intr_r.storage_rst_error_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value;
             load_next_c = '1;
@@ -1008,8 +1050,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value;
             load_next_c = '1;
@@ -1038,8 +1082,10 @@ module entropy_combiner_reg (
         || |(field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value & field_storage.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.value);
     // Field: entropy_combiner_reg.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value != '0) begin // stickybit
             next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value;
             load_next_c = '1;
@@ -1064,8 +1110,10 @@ module entropy_combiner_reg (
         |(field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value & field_storage.intr_block_rf.notif_intr_en_r.notif_kat_done_en.value);
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_trig_r.sha3_error_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1085,8 +1133,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value | (decoded_wr_data[1:1] & decoded_wr_biten[1:1]);
             load_next_c = '1;
@@ -1106,8 +1156,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_trig_r.count_error_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value | (decoded_wr_data[2:2] & decoded_wr_biten[2:2]);
             load_next_c = '1;
@@ -1127,8 +1179,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_trig_r.storage_rst_error_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value | (decoded_wr_data[3:3] & decoded_wr_biten[3:3]);
             load_next_c = '1;
@@ -1148,8 +1202,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.error_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value | (decoded_wr_data[4:4] & decoded_wr_biten[4:4]);
             load_next_c = '1;
@@ -1169,8 +1225,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_intr_trig_r && decoded_req_is_wr) begin // SW write 1 set
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
@@ -1190,8 +1248,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.sha3_error_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.sha3_error_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1222,8 +1282,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.sparse_fsm_error_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.sparse_fsm_error_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1254,8 +1316,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.count_error_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.count_error_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.count_error_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.count_error_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.count_error_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1286,8 +1350,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.storage_rst_error_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.storage_rst_error_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1318,8 +1384,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.combiner_fsm_error_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.combiner_fsm_error_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1350,8 +1418,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.notif_kat_done_intr_count_r.cnt
     always_comb begin
-        automatic logic [31:0] next_c = field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value;
-        automatic logic load_next_c = '0;
+        automatic logic [31:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value;
+        load_next_c = '0;
         if(decoded_reg_strb.intr_block_rf.notif_kat_done_intr_count_r && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
@@ -1382,8 +1452,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.sha3_error_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.sha3_error_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.sha3_error_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value;
             load_next_c = '1;
@@ -1411,8 +1483,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value;
             load_next_c = '1;
@@ -1440,8 +1514,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.count_error_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.count_error_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.count_error_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value;
             load_next_c = '1;
@@ -1469,8 +1545,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value;
             load_next_c = '1;
@@ -1498,8 +1576,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value;
             load_next_c = '1;
@@ -1527,8 +1607,10 @@ module entropy_combiner_reg (
     end
     // Field: entropy_combiner_reg.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse
     always_comb begin
-        automatic logic [0:0] next_c = field_storage.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.value;
-        automatic logic load_next_c = '0;
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.value;
+        load_next_c = '0;
         if(field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value) begin // HW Write - we
             next_c = field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value;
             load_next_c = '1;
@@ -1569,7 +1651,7 @@ module entropy_combiner_reg (
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-    
+
     // Assign readback values to a flattened array
     logic [42-1:0][31:0] readback_array;
     for(genvar i0=0; i0<2; i0++) begin
