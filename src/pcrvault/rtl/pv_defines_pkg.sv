@@ -23,9 +23,17 @@ parameter PV_ADDR_W = 13;
 parameter PV_DATA_W = 32;
 parameter PV_ENTRY_ADDR_W = $clog2(PV_NUM_PCR);
 parameter PV_ENTRY_SIZE_WIDTH = $clog2(PV_NUM_DWORDS);
-parameter PV_NUM_READ = 1;
-parameter PV_NUM_WRITE = 1;
+parameter PV_NUM_READ = 2;
+parameter PV_NUM_WRITE = 2;
 parameter PV_SIZE_OF_NONCE = 256;
+
+//pv_write client identifiers
+parameter PV_SHA_CLIENT  = 0;
+parameter PV_ICCM_CLIENT = 1;
+
+//PCR entries reserved for the HW ICCM hash measurement
+parameter PV_PCR_CUR = 4;
+parameter PV_PCR_JRN = 5;
 
 
 typedef struct packed {
