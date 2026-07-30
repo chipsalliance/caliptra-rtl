@@ -1,7 +1,18 @@
 // SPDX-License-Identifier: Apache-2.0
 //
 // KV length-mismatch — AES key path (single-shot randomized).
-// Round-6 rewrite. Each invocation exercises exactly ONE KV read.
+// Exercises BOTH check-timing orderings on each invocation:
+//   Order A — set CTRL_SHADOWED.key_len → then KV read.
+//             Fires the first-edge check on kv_key_done.
+//   Order B — set an initial permissive key_len (AES-128) → KV read →
+//             then reprogram CTRL_SHADOWED.key_len to the target size.
+//             Fires the deferred check via keymgr_key.valid
+//             (LEN_CHECK_AT_KEY_USE=1 arms check_key_size on this edge too).
+//
+// Regression obtains ordering/consumer/slot/last_dword diversity through
+// PLAYBOOK_RANDOM_SEED across nightly runs; the deferred-check hit window
+// (last_dword ∈ [3, expected(target)-1] under Order B) is covered
+// probabilistically.
 //
 // AES key expected sizes (from CTRL_SHADOWED.key_len):
 //   AES-128 → expected=3   (4 dwords)
@@ -9,10 +20,11 @@
 //   AES-256 → expected=7   (8 dwords)
 // dest_valid bit5 = AES_KEY (encoded 0x20).
 //
-// Note: AES gates check_key_size on (kv_key_done | keymgr_key.valid).
-// To ensure aes_expected_key_size is set correctly for the KV read, we
-// shadow-write CTRL_SHADOWED.key_len BEFORE issuing kv_read_ctrl. AES has
-// no error_intr — we poll AES_KV_RD_KEY_STATUS.VALID and read ERROR.
+// AES has no CPU-visible interrupt: error_intr/notif_intr are tied off in
+// aes_clp_wrapper.sv and dropped at caliptra_top.sv:1268. FW MUST poll
+// AES_KV_RD_KEY_STATUS.ERROR — both after VALID rises AND after any
+// reprogram of CTRL_SHADOWED.KEY_LEN that follows a KV key read
+// (LEN_CHECK_AT_KEY_USE=1 fires the deferred check at the second edge).
 //
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -116,22 +128,50 @@ void main(void) {
     default:      key_len_code = AES_KEY_LEN_256; expected = 7;  break;
     }
 
+    int order = rand() & 0x1;   // 0 = set-then-read (Order A); 1 = read-then-set (Order B)
     int expect_mismatch = (last_dword < expected);
 
     VPRINTF(LOW,
-        "PARAMS: consumer=%s slot=%u last_dword=%u expected=%u expect_mismatch=%d\n",
-        consumer_name(consumer), slot, last_dword, expected, expect_mismatch);
+        "PARAMS: order=%c consumer=%s slot=%u last_dword=%u expected=%u expect_mismatch=%d\n",
+        order ? 'B' : 'A', consumer_name(consumer), slot, last_dword,
+        expected, expect_mismatch);
 
-    // Inject KV entry first.
+    // Inject KV entry.
     kv_inject(slot, last_dword, DV_AES_KEY);
 
-    // Program AES CTRL_SHADOWED.key_len BEFORE triggering the KV read so that
-    // aes_expected_key_size latches the correct value when the key arrives.
-    aes_set_key_len(key_len_code);
+    uint32_t st;
+    uint32_t err;
 
-    // Trigger KV read + bounded wait on AES_KV_RD_KEY_STATUS.VALID.
-    uint32_t st  = aes_kv_read_and_wait(slot);
-    uint32_t err = kv_get_err(st);
+    if (order == 0) {
+        // ---------- Order A: set key_len BEFORE KV read ----------
+        aes_set_key_len(key_len_code);
+        st  = aes_kv_read_and_wait(slot);
+        err = kv_get_err(st);
+    } else {
+        // ---------- Order B: KV read BEFORE final key_len ----------
+        aes_set_key_len(AES_KEY_LEN_128);
+        st = aes_kv_read_and_wait(slot);
+        uint32_t first_err = kv_get_err(st);
+        int first_edge_mismatch = (last_dword < 3);
+
+        if (first_edge_mismatch) {
+            if (first_err != KV_ERR_LEN_MISMATCH) {
+                VPRINTF(FATAL, "first-edge STATUS=0x%x err=%u\n", st, first_err);
+                fail_test("Order B first-edge expected LEN_MISMATCH");
+            }
+            err = first_err;
+        } else {
+            if (first_err != KV_ERR_SUCCESS) {
+                VPRINTF(FATAL, "first-edge STATUS=0x%x err=%u\n", st, first_err);
+                fail_test("Order B first-edge expected SUCCESS");
+            }
+            // Deferred trigger: reprogram key_len to target size.
+            aes_set_key_len(key_len_code);
+            for (volatile int i = 0; i < 64; i++) __asm__ volatile("nop");
+            st  = lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
+            err = kv_get_err(st);
+        }
+    }
 
     if (expect_mismatch) {
         if (err != KV_ERR_LEN_MISMATCH) {
@@ -146,10 +186,10 @@ void main(void) {
     }
 
     VPRINTF(LOW,
-        "PASS: consumer=%s slot=%u last_dword=%u expected=%u "
+        "PASS: order=%c consumer=%s slot=%u last_dword=%u expected=%u "
         "expect_mismatch=%d STATUS=0x%x err=%u\n",
-        consumer_name(consumer), slot, last_dword, expected,
-        expect_mismatch, st, err);
+        order ? 'B' : 'A', consumer_name(consumer), slot, last_dword,
+        expected, expect_mismatch, st, err);
 
     // Cleanup.
     lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, 0);

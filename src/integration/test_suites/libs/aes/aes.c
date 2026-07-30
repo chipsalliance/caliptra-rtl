@@ -226,6 +226,22 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
   lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
 
+  if (aes_input.key.kv_intf && !aes_input.key.kv_reuse_key) {
+      uint32_t kv_rd_status_late = lsu_read_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
+      uint32_t kv_rd_err_late    = (kv_rd_status_late & AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_MASK)
+                                   >> AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_LOW;
+      if (kv_rd_err_late != 0) {
+          if (aes_input.key.kv_expect_err) {
+              VPRINTF(LOW, "AES KV deferred read error observed as expected (code = 0x%x)\n", kv_rd_err_late);
+              return;
+          } else {
+              VPRINTF(FATAL, "Unexpected AES KV deferred read error (code = 0x%x)\n", kv_rd_err_late);
+              SEND_STDOUT_CTRL(0x01);
+              while (1);
+          }
+      }
+  }
+
   if (aes_input.key_o.kv_intf && !aes_input.key.kv_expect_err){
     // Try to program KEY Read during engine operation
     lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL, AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |

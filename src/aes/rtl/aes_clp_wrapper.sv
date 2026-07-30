@@ -158,7 +158,7 @@ edn_pkg::edn_req_t edn_req;
 
 keymgr_pkg::hw_key_req_t keymgr_key;
 
-assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
+assign error_intr = '0; // Unused
 assign notif_intr = '0;  // Unused
 
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle) || ~kv_key_ready || ~kv_write_ready;
@@ -385,12 +385,7 @@ always_comb begin
   hwif_in.AES_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
 
   hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = '0; //unused
-  // Wire KV read error into the AES error interrupt so FW no longer needs to
-  // poll AES_KV_RD_KEY_STATUS.ERROR to detect a KV_RD_LEN_MISMATCH or other
-  // KV read failure. Pulses on kv_key_done when the KV read finished with
-  // an error.
-  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset =
-      kv_key_done && (kv_key_error != KV_SUCCESS);
+  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // unused
