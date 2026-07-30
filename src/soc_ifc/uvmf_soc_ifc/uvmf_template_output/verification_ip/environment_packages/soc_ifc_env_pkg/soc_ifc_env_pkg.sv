@@ -99,6 +99,7 @@ package soc_ifc_env_pkg;
   import kv_defines_pkg::*;
   import mbox_pkg::*;
   import soc_ifc_pkg::*;
+  import caliptra_prim_mubi_pkg::*;
   `include "caliptra_macros.svh"
   `include "caliptra_reg_defines.svh"
   // pragma uvmf custom package_imports_additional end
