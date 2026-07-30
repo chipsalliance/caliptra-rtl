@@ -46,6 +46,7 @@
 `define SHA256_PATH         `CPTRA_TOP_PATH.sha256.sha256_inst
 `define SHA512_MASKED_PATH  `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
 `define SOC_IFC_TOP_PATH    `CPTRA_TOP_PATH.soc_ifc_top1
+`define MBOX_PATH           `SOC_IFC_TOP_PATH.i_mbox
 `define AXI_DMA_CTRL_PATH   `SOC_IFC_TOP_PATH.i_axi_dma.i_axi_dma_ctrl
 `define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
 `define ABR_RAMS_PATH       `SERVICES_PATH.abr_mem_top_inst
@@ -104,6 +105,33 @@ module caliptra_top_sva
   localparam MLDSA_ENTROPY_NUM_DWORDS   = 16;
   localparam MLDSA_SIGN_RND_NUM_DWORDS  = 8; 
 
+
+  // What: An ECC read-check may only follow a genuine mailbox SRAM read.
+  // Why: The mailbox DMA write path must not trigger the ECC read-check on a write.
+  // Timing: 1 cycle because the ECC check is sampled from the prior request cycle.
+  `CALIPTRA_ASSERT(MboxEccCheckFollowsSramRead_A,
+      `MBOX_PATH.sram_rd_ecc_en |-> $past(`MBOX_PATH.mbox_sram_req_cs & ~`MBOX_PATH.mbox_sram_req_we),
+      `MBOX_PATH.clk, ~`MBOX_PATH.rst_b);
+
+  // What: Any mailbox SRAM write must not generate an ECC read-check on the next cycle.
+  // Why: The #1183 regression was caused by a DMA write into mailbox SRAM.
+  // Timing: 1 cycle because the read-check is sampled from the prior request cycle.
+  `CALIPTRA_ASSERT(MboxSramWriteNoEccCheck_A,
+      $past(`MBOX_PATH.mbox_sram_req_cs & `MBOX_PATH.mbox_sram_req_we) |-> !`MBOX_PATH.sram_rd_ecc_en,
+      `MBOX_PATH.clk, ~`MBOX_PATH.rst_b);
+
+  // What: ECC decode inputs must be known whenever a read-check is enabled.
+  // Why: The SRAM model returns X on non-read cycles; unknown inputs must not be consumed.
+  // Timing: 0 cycles because the property is checked on the same cycle as the enable.
+  `CALIPTRA_ASSERT(MboxEccInputKnown_A,
+      `MBOX_PATH.sram_rd_ecc_en |-> (!$isunknown(`MBOX_PATH.sram_rdata) && !$isunknown(`MBOX_PATH.sram_rdata_ecc)),
+      `MBOX_PATH.clk, ~`MBOX_PATH.rst_b);
+
+  // What: Cover the DMA-write-into-mailbox path that triggered the regression.
+  // Why: This prevents a false pass when the functional path is never exercised.
+  // Timing: 0 cycles because the cover is sampled on the write cycle itself.
+  MboxDmaSramWrite_C: cover property (@(posedge `MBOX_PATH.clk) disable iff (~`MBOX_PATH.rst_b)
+      `MBOX_PATH.dma_sram_req_dv_q && `MBOX_PATH.dma_sram_req_write && `MBOX_PATH.mbox_sram_req_cs && `MBOX_PATH.mbox_sram_req_we);
 
   //Create a flopped version of hmac kv_data_present to be used to disable tag write OCP SVAs in case result is not expected to go to KV
   logic hmac_kv_data_present_f;
