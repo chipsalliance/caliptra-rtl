@@ -305,9 +305,11 @@ verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_VERILATOR_SRCS) $(TBD
 vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
 	vlogan -full64 -sverilog -kdb -incr_vlogan \
 	  $(VCS_COMP_OPTS) \
+	  -l vcs_compile.log \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf
 	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 $(COVERAGE_ARGS) \
-	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb +dpi -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)
+	  -l vcs_elab.log \
+	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)
 
 ############ TEST Simulation ###############################
 
@@ -316,7 +318,8 @@ verilator: program.hex verilator-build
 
 vcs: program.hex vcs-build
 	cp -r $(TEST_GEN_FILES) $(BUILD_DIR)
-	./simv.caliptra_top_tb $(COVERAGE_ARGS)
+	mkdir $(BUILD_DIR)/ml-kem/tv
+	./simv.caliptra_top_tb $(COVERAGE_ARGS) -l vcs_sim.log
 
 ############ TEST build ###############################
 
