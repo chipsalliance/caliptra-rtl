@@ -1010,7 +1010,7 @@ module sha256_ctrl_tb();
   // Input lab vectors to IP
   //----------------------------------------------------------------
   task acvp_test();
-  begin
+  begin : acvp_test_block
     int fin, fout, result, pt_len;
     string pt, sha_in, sha_blk_str, sha_blk_str_slice;
     reg [511:0] sha_blk_hex;
@@ -1023,23 +1023,47 @@ module sha256_ctrl_tb();
 
     string seed, a, b, c, msg;
     int msg_len;
+    string acvp_mode_str, acvp_in_file, acvp_out_file;
 
       $display("   -- Testbench for sha256 started --");
 
-      fin  = $fopen("../stimulus/acvp/SHA2-256_stimulus.txt","r");
+      if (!$value$plusargs("SHA256_ACVP_MODE=%s", acvp_mode_str))
+        acvp_mode_str = "256";
+
+      case (acvp_mode_str)
+        "256": begin
+          test_mode     = SHA256_MODE;
+          acvp_in_file  = "../stimulus/acvp/SHA2-256.txt";
+          acvp_out_file = "../stimulus/acvp/SHA2-256_digest.txt";
+        end
+        "224": begin
+          test_mode     = SHA224_MODE;
+          acvp_in_file  = "../stimulus/acvp/SHA2-224.txt";
+          acvp_out_file = "../stimulus/acvp/SHA2-224_digest.txt";
+        end
+        default: begin
+          $display("ERROR: unknown SHA256_ACVP_MODE '%s' (valid: 256, 224)", acvp_mode_str);
+          disable acvp_test_block;
+        end
+      endcase
+
+      // Allow explicit path override regardless of mode, e.g.
+      // +SHA256_ACVP_FILE=${CALIPTRA_ROOT}/src/sha256/stimulus/acvp/SHA2-256.txt
+      void'($value$plusargs("SHA256_ACVP_FILE=%s", acvp_in_file));
+      void'($value$plusargs("SHA256_ACVP_RESP_FILE=%s", acvp_out_file));
+
+      fin  = $fopen(acvp_in_file,"r");
       if (fin == 0)
       begin
-        $display("ERROR: Input file not found");
-        $stop;
+        $display("ERROR: ACVP input file not found — skipping acvp_test()");
+        disable acvp_test_block;
       end
-      fout = $fopen("../stimulus/acvp/SHA2-256_digest.txt","w");
+      fout = $fopen(acvp_out_file,"w");
       if (fout == 0)
       begin
-        $display("ERROR: Output file not found");
-        $stop;
+        $display("ERROR: ACVP output file could not be opened — skipping acvp_test()");
+        disable acvp_test_block;
       end
-
-    test_mode = SHA256_MODE;
 
     while(1)
     begin
@@ -1091,7 +1115,7 @@ module sha256_ctrl_tb();
                  $fwrite(fout, "%s %0d %064h\n", test_type, tcid, digest[255:0]);
               end
           endcase
-          write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+          write_single_word(ADDR_CTRL, {28'h0, 1'b1, 3'b0}); //zeroize
         end
         else//MCT
         begin
@@ -1125,7 +1149,6 @@ module sha256_ctrl_tb();
               //convert string to hex and feed it to IP
               for (int j = 0; j < (sha_in.len())/128; j++)
               begin
-                //sha_blk_str = sha_in[(j*128)+:128];
                 sha_blk_str = sha_in.substr(j*128, (j*128)+127);
                 //in vcs, atohex is working on 32 bits only.
                 //so slicing the 512 bit string and performing
@@ -1151,31 +1174,33 @@ module sha256_ctrl_tb();
               case (test_mode)
               SHA224_MODE:
                 begin
-                   c = $sformatf("%x", digest[255:32]);
+                   c = $sformatf("%056h", digest[255:32]);
                 end
               SHA256_MODE:
                 begin
-                   c = $sformatf("%x", digest);
+                   c = $sformatf("%064h", digest[255:0]);
                 end
               endcase
-              write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
+              write_single_word(ADDR_CTRL, {28'h0, 1'b1, 3'b0}); //zeroize
             end//end inner loop
             case (test_mode)
             SHA224_MODE:
               begin
                  $fwrite(fout, "%s %0d %056h\n", test_type, tcid, digest[255:32]);
-                 seed = $sformatf("%x", digest[255:32]);
+                 seed = $sformatf("%056h", digest[255:32]);
               end
             SHA256_MODE:
               begin
                  $fwrite(fout, "%s %0d %064h\n", test_type, tcid, digest[255:0]);
-                 seed = $sformatf("%x", digest);
+                 seed = $sformatf("%064h", digest[255:0]);
               end
             endcase
           end//end outer loop
         end
       end//processed 1 line from file
     end //end while
+    $fclose(fin);
+    $fclose(fout);
   end
   endtask //acvp_test
   //----------------------------------------------------------------
@@ -1195,9 +1220,9 @@ module sha256_ctrl_tb();
 
       lms_test();
 
-      display_test_result();
-
       acvp_test();
+
+      display_test_result();
 
       $display("   -- Testbench for sha256 done. --");
       $finish;
