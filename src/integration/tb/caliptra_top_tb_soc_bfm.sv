@@ -453,11 +453,20 @@ import caliptra_top_tb_pkg::*; #(
                             else if (rdata[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_CRYPTO_ERR_LOW]) begin
                                 generic_input_wires = {32'h0, CRYPTO_ERROR_OBSERVED};
                             end
+                            else if (rdata[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_LOW]) begin // fsm_error bit
+                                generic_input_wires = {32'h0, FSM_ERROR_OBSERVED};
+                            end
                             else begin
                                 generic_input_wires = {32'h0, ERROR_NONE_SET};
                             end
                             // HW ERROR registers are W1C, capture the set bits
                             soc_ifc_hw_error_wdata = rdata;
+
+                            if (soc_ifc_hw_error_wdata) begin
+                                $display("SoC: Observed cptra_error_fatal; writing to clear Caliptra register\n");
+                                m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL), .data(soc_ifc_hw_error_wdata), .resp(wresp), .resp_user(buser));
+                                soc_ifc_hw_error_wdata = '0;
+                            end
                             //wait for reset stuff
                             assert_rst_flag_from_fatal = 1;
                             wait(cptra_rst_b == 0);
@@ -477,13 +486,14 @@ import caliptra_top_tb_pkg::*; #(
                             else begin
                                 generic_input_wires = {32'h0, ERROR_NONE_SET};
                             end
-                            $display("SoC: Observed cptra_error_non_fatal; writing to clear Caliptra register\n");
-                            m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL), .data(rdata), .resp(wresp), .resp_user(buser));
-                        end
-                        else if (soc_ifc_hw_error_wdata) begin
-                            $display("SoC: Observed cptra_error_fatal; writing to clear Caliptra register\n");
-                            m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL), .data(soc_ifc_hw_error_wdata), .resp(wresp), .resp_user(buser));
-                            soc_ifc_hw_error_wdata = '0;
+                            // HW ERROR registers are W1C, capture the set bits
+                            soc_ifc_hw_error_wdata = rdata;
+
+                            if (soc_ifc_hw_error_wdata) begin
+                                $display("SoC: Observed cptra_error_non_fatal; writing to clear Caliptra register\n");
+                                m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL), .data(soc_ifc_hw_error_wdata), .resp(wresp), .resp_user(buser));
+                                soc_ifc_hw_error_wdata = '0;
+                            end
                         end
                         else if (ras_test_ctrl.do_no_lock_access) begin
                             fork

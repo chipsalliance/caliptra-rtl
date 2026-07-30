@@ -127,8 +127,30 @@ module boot_flow_monitor
         end
     end
 
-    assign boot_flow_fmc_o   = boot_flow_fmc_q;
-    assign boot_flow_rt_o    = boot_flow_rt_q;
-    assign boot_flow_error_o = boot_flow_error_q;
+    //MUBI4 buffer
+    caliptra_prim_mubi4_sender #(
+        .AsyncOn (0)
+    ) u_boot_flow_fmc_sender (
+        .clk_i   (clk),
+        .rst_ni  (cptra_uc_rst_b),
+        .mubi_i  (boot_flow_fmc_q),
+        .mubi_o  (boot_flow_fmc_o)
+    );
+    caliptra_prim_mubi4_sender #(
+        .AsyncOn (0)
+    ) u_boot_flow_rt_sender (
+        .clk_i   (clk),
+        .rst_ni  (cptra_uc_rst_b),
+        .mubi_i  (boot_flow_rt_q),
+        .mubi_o  (boot_flow_rt_o)
+    );
+    caliptra_prim_mubi4_sender #(
+        .AsyncOn (0)
+    ) u_boot_flow_error_sender (
+        .clk_i   (clk),
+        .rst_ni  (cptra_uc_rst_b),
+        .mubi_i  (boot_flow_error_q),
+        .mubi_o  (boot_flow_error_o)
+    );
 
 endmodule

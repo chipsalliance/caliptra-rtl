@@ -45,6 +45,7 @@ import aaxi_pkg::*;
 import aaxi_pkg_xactor::*;
 import aaxi_pkg_test::*;
 import aaxi_pll::*;
+import soc_ifc_pkg::*;
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
@@ -199,6 +200,12 @@ import aaxi_uvm_pkg::*;
         .IW(CPTRA_AXI_DMA_ID_WIDTH      ),
         .UW(CPTRA_AXI_DMA_USER_WIDTH    )
     ) m_axi_if (.clk(clk), .rst_n(soc_ifc_ctrl_agent_bus.cptra_rst_b));
+
+    // Construct the HW fatal error struct from UVMF interface signals
+    cptra_hw_fatal_error_t cptra_hw_fatal_errors_i;
+    assign cptra_hw_fatal_errors_i.crypto_err = cptra_ctrl_agent_bus.crypto_error;
+    assign cptra_hw_fatal_errors_i.kv_error   = 1'b0;
+    assign cptra_hw_fatal_errors_i.fsm_error  = 1'b0;
 
     // DUT
     soc_ifc_top #(
@@ -367,13 +374,12 @@ import aaxi_uvm_pkg::*;
         .clk_gating_en        (                                           ), // TODO
         .rdc_clk_dis          (                                           ), // TODO
         .fw_update_rst_window (cptra_status_agent_bus.fw_update_rst_window),
-        .crypto_error         (cptra_ctrl_agent_bus.crypto_error          ),
+        .cptra_hw_fatal_errors(cptra_hw_fatal_errors_i                  ),
         .iccm_fmc_start_addr  (                                           ),
         .iccm_fmc_end_addr    (                                           ),
         .iccm_rt_start_addr   (                                           ),
         .iccm_rt_end_addr     (                                           ),
         .iccm_region_lock     (                                           ),
-        .kv_error             (1'b0                                       ),
 
         //caliptra uncore jtag ports
         .cptra_uncore_dmi_reg_en   (1'b0 ),

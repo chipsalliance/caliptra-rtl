@@ -20,7 +20,7 @@
 `include "caliptra_reg_field_defines.svh"
 
 package soc_ifc_pkg;
-    
+
     parameter SOC_IFC_ADDR_W = 19;
     parameter SOC_IFC_DATA_W = 32;
     parameter SOC_IFC_USER_W = 32;
@@ -126,23 +126,46 @@ package soc_ifc_pkg;
     // timing in a reset event.
     parameter SOC_IFC_CPTRA_RST_NONCORE_RST_DELAY = 4;
 
+    // Fatal error struct — consolidates error inputs into soc_ifc_top
+    typedef struct packed {
+        logic crypto_err;       // Crypto engine collision (e.g., HMAC busy & ECC busy)
+        logic kv_error;         // Key vault monitor alert
+        logic fsm_error;        // SPARSE FSM glitch detected
+    } cptra_hw_fatal_error_t;
+
     //BOOT FSM
-    typedef enum logic [2:0] {
-        BOOT_IDLE   = 3'b000,
-        BOOT_FUSE   = 3'b001,
-        BOOT_FW_RST = 3'b010,
-        BOOT_WAIT   = 3'b011,
-        BOOT_DONE   = 3'b100
+    // Encoding generated with
+    // $ python3 sparse_fsm_encode.py -d 5 -m 6 -n 10 -s 14142135
+    //
+    // Minimum Hamming distance: 5
+    // Maximum Hamming distance: 8
+    //
+    localparam int BootStateWidth = 10;
+    typedef enum logic [BootStateWidth-1:0] {
+        BOOT_IDLE   = 10'b1000110011,
+        BOOT_FUSE   = 10'b1101100101,
+        BOOT_FW_RST = 10'b1011000110,
+        BOOT_WAIT   = 10'b0110011011,
+        BOOT_DONE   = 10'b0001011101,
+        BOOT_ERROR  = 10'b1011111000
     } boot_fsm_state_e;
 
     //SHA FSM
-    typedef enum logic [2:0] {
-        SHA_IDLE    = 3'b000,
-        SHA_BLOCK_0 = 3'b001,
-        SHA_BLOCK_N = 3'b011,
-        SHA_PAD0    = 3'b010,
-        SHA_PAD1    = 3'b110,
-        SHA_DONE    = 3'b100
+    // Encoding generated with
+    // $ python3 sparse_fsm_encode.py -d 5 -m 7 -n 10 -s 16180339
+    //
+    // Minimum Hamming distance: 5
+    // Maximum Hamming distance: 9
+    //
+    localparam int ShaStateWidth = 10;
+    typedef enum logic [ShaStateWidth-1:0] {
+        SHA_IDLE    = 10'b0110011110,
+        SHA_BLOCK_0 = 10'b1001101001,
+        SHA_BLOCK_N = 10'b1011010011,
+        SHA_PAD0    = 10'b0001110110,
+        SHA_PAD1    = 10'b1100000111,
+        SHA_DONE    = 10'b1111100100,
+        SHA_ERROR   = 10'b0110110001
       } sha_fsm_state_e;
 
     //Any request into soc ifc block
@@ -170,7 +193,7 @@ package soc_ifc_pkg;
     } device_lifecycle_e;
 
     typedef struct packed {
-        logic debug_locked;
+        caliptra_prim_mubi_pkg::mubi4_t debug_locked;
         device_lifecycle_e device_lifecycle;
     } security_state_t;
 

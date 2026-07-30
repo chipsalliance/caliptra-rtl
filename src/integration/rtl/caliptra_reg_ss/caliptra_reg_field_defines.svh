@@ -8492,8 +8492,10 @@
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK                                              (32'h10)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_LOW                                     (5)
 `define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_MASK                                    (32'h20)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (6)
-`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (32'hffffffc0)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_LOW                                              (6)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_MASK                                             (32'h40)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                                   (7)
+`define SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                                  (32'hffffff80)
 `endif
 `ifndef SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL
 `define SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL                                                        (32'h4)
@@ -9374,6 +9376,10 @@
 `define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_CRYPTO_ERR_MASK                               (32'h8)
 `define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_KV_ERROR_LOW                                  (4)
 `define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_KV_ERROR_MASK                                 (32'h10)
+`define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_SHADOW_STORAGE_ERR_LOW                             (5)
+`define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_SHADOW_STORAGE_ERR_MASK                            (32'h20)
+`define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_FSM_ERROR_LOW                                      (6)
+`define SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_FSM_ERROR_MASK                                     (32'h40)
 `endif
 `ifndef SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK
 `define SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK                                                (32'h634)

@@ -141,3 +141,4 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash_sizes/directed_test_iccm_hash_sizes.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash_fill/directed_test_iccm_hash_fill.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash_overflow/directed_test_iccm_hash_overflow.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_fsm_glitch_inject/directed_fsm_glitch_inject.yml
