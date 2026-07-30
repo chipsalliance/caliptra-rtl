@@ -493,13 +493,15 @@ always_comb begin
 end
 
 //Read Block
+// Length check disabled on the BLOCK path: the HMAC block is a message chunk,
+// not a security-sized key. Legitimate consumers (e.g., OCP LOCK HEK seed,
+// OCP_LOCK_HEK_NUM_DWORDS=8) may write KV entries shorter than the mode's
+// key size and rely on PAD=1 zero-extension.
 kv_read_client #(
   .DATA_WIDTH(BLOCK_SIZE),
   .HMAC(1),
   .PAD(1),
-  .LEN_CHECK_AT_KEY_USE(1)  //HMAC mode_reg (→ expected length) may be
-                            //programmed after the KV read completes, same
-                            //as the key path.
+  .LEN_CHECK(0)
 )
 hmac_block_kv_read
 (
@@ -522,9 +524,7 @@ hmac_block_kv_read
 
     .error_code(kv_block_error),
     .kv_ready(kv_block_ready),
-    .read_done(kv_block_done),
-    .check_key_size((init_reg | next_reg) & kv_block_data_present),
-    .expected_key_size(hmac_expected_key_size)
+    .read_done(kv_block_done)
 );
 
 //write 512 or 384 result based on mode bit

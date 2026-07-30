@@ -2564,11 +2564,14 @@ consumed with undefined-tail bits) by a wider engine.
   commits (HMAC and AES, whose mode/key_len may be programmed after
   the KV read completes).
 
-**HMAC** enables the check on both the key path and the block path
-(`hmac_key_kv_read` and `hmac_block_kv_read` both use
-`LEN_CHECK_AT_KEY_USE=1` with `check_key_size = (init_reg | next_reg) &
-kv_*_data_present` and `expected_key_size = hmac_expected_key_size`,
-which is 11 for HMAC-384 and 15 for HMAC-512).
+**HMAC** enables the check on the key path only. `hmac_key_kv_read`
+uses `LEN_CHECK_AT_KEY_USE=1` with `check_key_size = (init_reg |
+next_reg) & kv_key_data_present` and `expected_key_size =
+hmac_expected_key_size` (11 for HMAC-384, 15 for HMAC-512). The HMAC
+block is a message chunk, not a security-sized key, and legitimate
+consumers (notably the OCP LOCK HEK seed at `OCP_LOCK_HEK_NUM_DWORDS=8`
+dwords routed to `KV_DEST_IDX_HMAC_BLOCK`) may supply KV entries
+shorter than the mode's key size.
 
 **AES** derives `expected_key_size` from the runtime-selectable
 `CTRL_SHADOWED.key_len` (128/192/256 → 3/5/7), exposed to the CLP

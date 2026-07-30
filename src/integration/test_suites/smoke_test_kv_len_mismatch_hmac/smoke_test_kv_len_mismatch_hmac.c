@@ -1,17 +1,21 @@
 // SPDX-License-Identifier: Apache-2.0
 //
-// KV length-mismatch — HMAC key/block path (single-shot randomized).
-// Round-6 rewrite. Each invocation exercises exactly ONE KV read; the
-// regression obtains diversity by running the test many times with
-// distinct random seeds. Multi-phase looping was removed because it
-// caused stale STATUS.VALID observations between phases.
+// KV length-mismatch — HMAC KEY path (single-shot randomized).
+// Each invocation exercises exactly ONE KV read; the regression obtains
+// diversity by running the test many times with distinct random seeds.
 //
 // Under universal relaxed semantics:
 //   length_mismatch = (stored_last_dword < expected_key_size)
 //
+// HMAC KEY-side length check is enforced (crypto correctness: wrong-size
+// key would produce a wrong HMAC). BLOCK-side length check is intentionally
+// disabled — the HMAC block is a message chunk (not a security-sized key)
+// and legitimate consumers (e.g., OCP LOCK HEK seed, 8 dwords → HMAC_BLOCK)
+// rely on PAD=1 zero-extension for short entries.
+//
 // HMAC consumer expected sizes:
-//   HMAC-384 key/block → 11
-//   HMAC-512 key/block → 15
+//   HMAC-384 key → 11
+//   HMAC-512 key → 15
 // dest_valid bits: bit0=HMAC_KEY, bit1=HMAC_BLOCK
 //
 #include "caliptra_defines.h"
@@ -41,15 +45,13 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define DV_HMAC_KEY   0x01u
 #define DV_HMAC_BLOCK 0x02u
 
-// Consumer enumeration.
-enum { HMAC_384_KEY = 0, HMAC_512_KEY, HMAC_384_BLOCK, HMAC_512_BLOCK };
+// Consumer enumeration (KEY paths only — BLOCK-side length check removed).
+enum { HMAC_384_KEY = 0, HMAC_512_KEY };
 
 static const char* consumer_name(int c) {
     switch (c) {
     case HMAC_384_KEY:   return "HMAC_384_KEY";
     case HMAC_512_KEY:   return "HMAC_512_KEY";
-    case HMAC_384_BLOCK: return "HMAC_384_BLOCK";
-    case HMAC_512_BLOCK: return "HMAC_512_BLOCK";
     default:             return "?";
     }
 }
@@ -104,8 +106,8 @@ void main(void) {
     uint8_t slot       = (uint8_t)(rand() % 24);
     uint8_t last_dword = (uint8_t)(rand() & 0xF);
 
-    // 2. Pick consumer (HMAC-384/512, KEY/BLOCK).
-    int consumer = rand() & 0x3;
+    // 2. Pick consumer (HMAC-384/512 KEY only).
+    int consumer = rand() & 0x1;
     uint32_t rd_ctrl, rd_status;
     uint8_t  dv;
     uint8_t  expected;
@@ -117,22 +119,10 @@ void main(void) {
         expected  = 11;
         break;
     case HMAC_512_KEY:
+    default:
         rd_ctrl   = CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL;
         rd_status = CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS;
         dv        = DV_HMAC_KEY;
-        expected  = 15;
-        break;
-    case HMAC_384_BLOCK:
-        rd_ctrl   = CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL;
-        rd_status = CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS;
-        dv        = DV_HMAC_BLOCK;
-        expected  = 11;
-        break;
-    case HMAC_512_BLOCK:
-    default:
-        rd_ctrl   = CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL;
-        rd_status = CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_STATUS;
-        dv        = DV_HMAC_BLOCK;
         expected  = 15;
         break;
     }
@@ -156,11 +146,7 @@ void main(void) {
             st_after_read);
 
     // 6. Preload block + LFSR seed and trigger INIT with the chosen mode.
-    //    For the block-path consumer we still need a FW-loaded key; do that too.
-    if (consumer == HMAC_384_BLOCK || consumer == HMAC_512_BLOCK) {
-        volatile uint32_t* kp = (uint32_t*) CLP_HMAC_REG_HMAC512_KEY_0;
-        for (int i = 0; i < 16; i++) *kp++ = 0x0b0b0b0b;
-    }
+    //    KEY-side test — block is FW-loaded.
     volatile uint32_t* bp = (uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_0;
     for (int i = 0; i < 32; i++) *bp++ = (i == 31) ? 0x00000440u : 0;
     volatile uint32_t* lp = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
@@ -176,7 +162,7 @@ void main(void) {
     // elsewhere.
     lsu_write_32(CLP_HMAC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R, 0);
 
-    uint32_t hmac_mode = (consumer == HMAC_512_KEY || consumer == HMAC_512_BLOCK) ? 1u : 0u;
+    uint32_t hmac_mode = (consumer == HMAC_512_KEY) ? 1u : 0u;
     // Set MODE and INIT together (per the HMAC engine's programming model).
     uint32_t ctrl_val  = HMAC_REG_HMAC512_CTRL_INIT_MASK
                        | ((hmac_mode & 1u) << HMAC_REG_HMAC512_CTRL_MODE_LOW);
@@ -201,11 +187,10 @@ void main(void) {
     uint32_t hs  = lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS);
 
     // 9. Verify.
-    //    Security contract: FW must observe KV_RD_STATUS.ERROR=KV_RD_LEN_MISMATCH
-    //    after triggering the operation. HMAC completion is a secondary
-    //    signal — for KEY path the cleared key generally prevents completion,
-    //    but for BLOCK path HMAC may still produce HMAC(key, 0). Both paths
-    //    are correctly caught by checking KV_RD_STATUS.ERROR.
+    //    Security contract: on KEY-path mismatch, FW must observe
+    //    KV_RD_STATUS.ERROR=KV_RD_LEN_MISMATCH after INIT, and HMAC must
+    //    NOT complete (cleared key prevents the engine from advancing).
+    //    BLOCK-path length check is intentionally disabled — see hmac.sv.
     if (expect_mismatch) {
         if (err != KV_ERR_LEN_MISMATCH) {
             VPRINTF(FATAL, "post-INIT STATUS=0x%x err=%u HMAC_STATUS=0x%x\n", st, err, hs);
