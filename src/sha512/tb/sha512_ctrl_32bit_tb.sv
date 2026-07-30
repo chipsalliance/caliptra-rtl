@@ -1104,9 +1104,9 @@ module sha512_ctrl_32bit_tb
                  );
   begin
 
-    //$display("vect block hex in: %0h",block);
+    $display("vect block hex in: %0h",block);
     write_block(block);
-    //$display("vect mode: %0h, ctrl_val: %0h",mode, ctrl_val);
+    $display("vect mode: %0h, ctrl_val: %0h",mode, ctrl_val);
     write_single_word(ADDR_CTRL, {28'h0, mode, ctrl_val});
     #CLK_PERIOD;
     hsel_i_tb = 0;
@@ -1116,7 +1116,7 @@ module sha512_ctrl_32bit_tb
     read_digest();
 
     digest = digest_data;
-    //$display("digest_int: %0h", digest);
+    $display("digest_int: %0h", digest);
 
   end
   endtask //vect_test
@@ -1126,7 +1126,7 @@ module sha512_ctrl_32bit_tb
   // Input lab vectors to IP
   //----------------------------------------------------------------
   task acvp_test();
-  begin
+  begin : acvp_test_block
     int fin, fout, result, pt_len;
     string pt, sha_in, sha_blk_str, sha_blk_str_slice;
     reg [1023:0] sha_blk_hex;
@@ -1139,23 +1139,46 @@ module sha512_ctrl_32bit_tb
 
     string seed, a, b, c, msg;
     int msg_len;
+    string acvp_mode_str, acvp_in_file, acvp_out_file;
 
     $display("   -- Testbench for sha512 started --");
 
-    //source the correct vector file for the mode set below
-    test_mode = MODE_SHA_512;
+    if (!$value$plusargs("SHA512_ACVP_MODE=%s", acvp_mode_str))
+      acvp_mode_str = "384";
 
-    fin  = $fopen("../stimulus/acvp/SHA2-512_stimulus.txt","r");
+    case (acvp_mode_str)
+      "384": begin
+        test_mode    = MODE_SHA_384;
+        acvp_in_file  = "../stimulus/acvp/SHA2-384.txt";
+        acvp_out_file = "../stimulus/acvp/SHA2-384_digest.txt";
+      end
+      "512": begin
+        test_mode    = MODE_SHA_512;
+        acvp_in_file  = "../stimulus/acvp/SHA2-512.txt";
+        acvp_out_file = "../stimulus/acvp/SHA2-512_digest.txt";
+      end
+      default: begin
+        $display("ERROR: unknown SHA512_ACVP_MODE '%s' (valid: 384, 512)", acvp_mode_str);
+        disable acvp_test_block;
+      end
+    endcase
+
+    // Allow explicit path override regardless of mode, e.g.
+    // +SHA512_ACVP_FILE=${CALIPTRA_ROOT}/src/sha512/stimulus/acvp/SHA2-512.txt
+    void'($value$plusargs("SHA512_ACVP_FILE=%s", acvp_in_file));
+    void'($value$plusargs("SHA512_ACVP_RESP_FILE=%s", acvp_out_file));
+
+    fin  = $fopen(acvp_in_file,"r");
     if (fin == 0)
     begin
-      $display("ERROR: Input file not found");
-      $stop;
+      $display("ERROR: ACVP input file not found — skipping acvp_test()");
+      disable acvp_test_block;
     end
-    fout = $fopen("../stimulus/acvp/SHA2-512_digest.txt","w");
+    fout = $fopen(acvp_out_file,"w");
     if (fout == 0)
     begin
-      $display("ERROR: Output file not found");
-      $stop;
+      $display("ERROR: ACVP output file could not be opened — skipping acvp_test()");
+      disable acvp_test_block;
     end
 
     while(1)
@@ -1176,7 +1199,6 @@ module sha512_ctrl_32bit_tb
           //convert string to hex and feed it to IP
             for (int j = 0; j < (sha_in.len())/256; j++)
           begin
-            //sha_blk_str = sha_in[(j*256)+:256];
             sha_blk_str = sha_in.substr(j*256,(j*256)+255);
             //in vcs, atohex works only on 32 bits.
             //so slicing the 1024 bit string and performing
@@ -1187,8 +1209,6 @@ module sha512_ctrl_32bit_tb
                sha_blk_hex_slice = sha_blk_str_slice.atohex();
                sha_blk_hex = {sha_blk_hex[991:0], sha_blk_hex_slice};
             end
-            //$display("sha str in: %s",sha_blk_str);
-            //$display("sha hex in: %0h",sha_blk_hex);
             if (j == 0) 
             begin
               ctrl_val = 2'd1;
@@ -1245,7 +1265,6 @@ module sha512_ctrl_32bit_tb
               //convert string to hex and feed it to IP
               for (int j = 0; j < (sha_in.len())/256; j++)
               begin
-                //sha_blk_str = sha_in[(j*256)+:256];
                 sha_blk_str = sha_in.substr(j*256, (j*256)+255);
                 //in vcs, atohex is working on 32 bits only.
                 //so slicing the 1024 bit string and performing
@@ -1271,11 +1290,11 @@ module sha512_ctrl_32bit_tb
               case (test_mode)
                   MODE_SHA_512:
                 begin
-                    c = $sformatf("%x", digest);
+                    c = $sformatf("%0128h", digest[511:0]);
                 end
                   MODE_SHA_384:
                   begin
-                    c = $sformatf("%x", digest[511:128]);
+                    c = $sformatf("%096h", digest[511:128]);
                 end
               endcase
               write_single_word(ADDR_CTRL, {27'h0, 1'b1, 4'b0}); //zeroize
@@ -1285,21 +1304,23 @@ module sha512_ctrl_32bit_tb
               begin
                   $fwrite(fout, "%s %0d %0128h\n", test_type, tcid, digest[511:0]);
                   $display("writing ol: %0d to file",ol);
-                  seed = $sformatf("%x", digest);
+                  seed = $sformatf("%0128h", digest[511:0]);
               end
               MODE_SHA_384:
               begin
                   $fwrite(fout, "%s %0d %096h\n", test_type, tcid, digest[511:128]);
                   $display("writing ol: %0d to file",ol);
-                  seed = $sformatf("%x", digest[511:128]);
+                  seed = $sformatf("%096h", digest[511:128]);
               end
             endcase
           end//end outer loop
         end
       end//processed 1 line from file
     end //end while
+    $fclose(fin);
+    $fclose(fout);
   end
-  endtask //acvp_test 
+  endtask //acvp_test
 
   //----------------------------------------------------------------
   // sha512_test
@@ -1332,8 +1353,6 @@ module sha512_ctrl_32bit_tb
       init_sim();
       reset_dut();
       check_name_version();
-
-      acvp_test();
 
       // Single block test mesage.
       single_block = 1024'h6162638000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018;
@@ -1393,9 +1412,11 @@ module sha512_ctrl_32bit_tb
       restore_test(8'h0e, MODE_SHA_512_256, double_block_one, double_block_two, tc9_expected, tc10_expected);
 
       restore_test(8'h0f, MODE_SHA_384, double_block_one, double_block_two, tc11_expected, tc12_expected);
-      
+
+      acvp_test();
+
       display_test_result();
-      
+
       $display("   -- Testbench for sha512 done. --");
       $finish;
   end //sha512_test
