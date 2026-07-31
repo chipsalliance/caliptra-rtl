@@ -1500,23 +1500,23 @@ module caliptra_top_sva
       (`HMAC_PATH.hmac_key_kv_read.stored_last_dword < `HMAC_PATH.hmac_expected_key_size))
       else $display("SVA ERROR: HMAC length_mismatch fired without a real mismatch");
 
-  // When mismatch fires, key regs clear via hwclr within a few cycles
-  // (mismatch cycle N → error_code registers cycle N+1 → hwclr cycle N+1
-  // → key_reg zero cycle N+2). Use a small window to absorb the pipeline.
+  // When mismatch fires, key regs clear via hwclr with a fixed 2-cycle
+  // pipeline (mismatch cycle N → error_code registers cycle N+1 →
+  // hwclr cycle N+1 → key_reg zero cycle N+2).
   KV_hmac_key_cleared_on_mismatch: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `HMAC_PATH.hmac_key_kv_read.length_mismatch |-> ##[1:5] (`HMAC_PATH.key_reg == '0))
-      else $display("SVA ERROR: HMAC key not cleared within 5 cycles after KV length mismatch");
+      `HMAC_PATH.hmac_key_kv_read.length_mismatch |-> ##2 (`HMAC_PATH.key_reg == '0))
+      else $display("SVA ERROR: HMAC key not cleared 2 cycles after KV length mismatch");
 
   KV_ecc_len_mismatch_clears_privkey: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ECC_PATH.ecc_privkey_kv_read.length_mismatch |-> ##[1:5] (`ECC_PATH.privkey_reg == '0))
-      else $display("SVA ERROR: ECC privkey not cleared within 5 cycles after KV length mismatch");
+      `ECC_PATH.ecc_privkey_kv_read.length_mismatch |-> ##2 (`ECC_PATH.privkey_reg == '0))
+      else $display("SVA ERROR: ECC privkey not cleared 2 cycles after KV length mismatch");
 
   KV_ecc_len_mismatch_clears_seed: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ECC_PATH.ecc_seed_kv_read.length_mismatch |-> ##[1:5] (`ECC_PATH.seed_reg == '0))
-      else $display("SVA ERROR: ECC seed not cleared within 5 cycles after KV length mismatch");
+      `ECC_PATH.ecc_seed_kv_read.length_mismatch |-> ##2 (`ECC_PATH.seed_reg == '0))
+      else $display("SVA ERROR: ECC seed not cleared 2 cycles after KV length mismatch");
 
   // Covers: each consumer exercises both match and mismatch.
   KV_hmac_len_match_C: cover property (
