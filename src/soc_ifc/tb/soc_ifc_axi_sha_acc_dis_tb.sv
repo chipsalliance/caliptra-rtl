@@ -715,13 +715,66 @@ end
 
 endtask
 
+task passive_axi_sha_access_test;
+  logic access_error;
+
+  access_error = 1'b0;
+
+  #(10*CLK_PERIOD);
+  $display("Clearing SHA LOCK over AHB\n");
+  write_single_word(`CLP_SHA512_ACC_CSR_LOCK, 32'h1);
+
+  #(CLK_PERIOD);
+  hsel_i_tb = 0;
+
+  #(2*CLK_PERIOD);
+
+  $display("Attempting passive-mode SHA ACC LOCK access with AxUSER zero\n");
+  axi_sub_if.axi_read_single(
+    .addr(`CLP_SHA512_ACC_CSR_LOCK),
+    .user('0),
+    .id($urandom()),
+    .lock(0),
+    .data(rdata),
+    .resp_user(resp_user),
+    .resp(resp)
+  );
+
+  if (resp !== AXI_RESP_SLVERR) begin
+    $error("Passive-mode SHA AXI access returned %s instead of SLVERR", resp.name());
+    access_error = 1'b1;
+  end
+
+  if (dut.i_sha512_acc_top.hwif_out.LOCK.LOCK.value !== 1'b0) begin
+    $error("Passive-mode SHA AXI access changed the SHA lock state");
+    access_error = 1'b1;
+  end
+
+  if (access_error) begin
+    $display("* TESTCASE FAILED");
+    $finish;
+  end
+endtask
+
+task mode_aware_axi_sha_access_test;
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+  axi_sha_access_test();
+`else
+  passive_axi_sha_access_test();
+`endif
+endtask
+
 initial begin
   $display("Starting AXI sha access test\n");
+`ifdef CALIPTRA_MODE_SUBSYSTEM
   strap_tb = $urandom();
+`else
+  strap_tb = '0;
+`endif
   init_sim();
   reset_dut();
   $display("Init and reset done\n");
-  axi_sha_access_test();
+  mode_aware_axi_sha_access_test();
   
   $display("Issuing cold reset\n");
   init_sim();
@@ -729,7 +782,7 @@ initial begin
   #(CLK_PERIOD);
   
   $display("Restarting AXI sha access test\n");
-  axi_sha_access_test();
+  mode_aware_axi_sha_access_test();
 
   $display("Issuing warm reset\n");
   init_sim();
@@ -737,7 +790,7 @@ initial begin
   #(CLK_PERIOD);
 
   $display("Restarting AXI sha access test\n");
-  axi_sha_access_test();
+  mode_aware_axi_sha_access_test();
 
   repeat(100) @(posedge clk_tb);
   $display("* TESTCASE PASSED");

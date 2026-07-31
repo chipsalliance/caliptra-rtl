@@ -2380,9 +2380,17 @@ class soc_ifc_predictor #(
                 end
             end
             // SHA Accelerator Functions are screened based on AXI_USER
+            // AND on integration mode: the SoC-AXI SHA route is only available in
+            // subsystem mode (CALIPTRA_SS_MODE_C). In passive mode every SoC-AXI
+            // SHA access is rejected regardless of AxUSER.
             "LOCK",
             "USER": begin
-                if (axi_txn.is_read() && (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                if (axi_txn.is_write() && (axs_reg.get_name() == "LOCK")) begin
+                    // Only the current subsystem-mode SHA owner may clear the lock.
+                    do_reg_prediction = sha_valid_user(axi_txn);
+                    soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
+                end
+                else if (axi_txn.is_read() && (!CALIPTRA_SS_MODE_C || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value()))) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
@@ -2397,7 +2405,7 @@ class soc_ifc_predictor #(
                     // "Expected" resp is SLVERR for blocked writes
                     soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
-                else if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                else if ((!CALIPTRA_SS_MODE_C) || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
@@ -2418,7 +2426,7 @@ class soc_ifc_predictor #(
                     // "Expected" resp is SLVERR for blocked writes
                     soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
-                else if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                else if ((!CALIPTRA_SS_MODE_C) || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
@@ -3968,7 +3976,8 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
         return sha_valid_user;
     end
     else if ($cast(axi_txn,txn)) begin
-        sha_valid_user = p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
+        sha_valid_user = CALIPTRA_SS_MODE_C &&
+                         p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
                          p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value() &&
                          p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_mirrored_value() == (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser);
         if (!sha_valid_user) begin

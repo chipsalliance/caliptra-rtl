@@ -78,6 +78,23 @@ extends uvmf_environment_configuration_base;
   soc_ifc_vsqr_t vsqr;
 
   // pragma uvmf custom class_item_additional begin
+  // -------------------------------------------------------------------------
+  // Global environment facts, captured ONCE by the bringup sequence after the
+  // fuses are written (which locks the SoC-DMA AxUSER strap). Every sequence and
+  // component can read these instead of re-deriving them:
+  //   * subsystem_mode      - integration mode (passive vs subsystem).
+  //   * ss_dma_axi_user     - effective (post-fuse) SoC DMA AxUSER identity, i.e.
+  //                           the authorized SoC-AXI SHA/DMA requester.
+  //   * global_straps_captured - set once the above have been captured.
+  // -------------------------------------------------------------------------
+  bit        subsystem_mode;
+  bit [31:0] ss_dma_axi_user;
+  bit        global_straps_captured;
+  // Set by the bringup sequence when the SHA accelerator boot lock has been
+  // released via the ICCM-content-hash flow (enabled by default in subsystem
+  // mode; disable with +DISABLE_ICCM_SHA_UNLOCK). When set, SoC-AXI sequences can
+  // acquire a free SHA lock and run a real hash.
+  bit        sha_acc_unlocked;
   // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************
