@@ -145,6 +145,10 @@ module entropy_combiner_es_csrng_tb
 
   logic combine_en_tb;
 
+  // SEC_CM backstop stimulus: models caliptra_top's
+  // (boot_flow_fmc | boot_flow_rt) into the combiner's rt_active_i.
+  logic rt_active_tb;
+
   // TB-controlled itrng start gates (hold a source idle to skew ES0/ES1
   // arrival, or to keep the secondary source disabled).
   logic rng0_go, rng1_go;
@@ -187,6 +191,8 @@ module entropy_combiner_es_csrng_tb
     .es1_hw_if_rsp_i  (es1_hw_rsp),
 
     .combine_en_i     (combine_en_tb),
+
+    .rt_active_i      (rt_active_tb),
 
     .haddr_i          (32'h0),
     .hwdata_i         (32'h0),
@@ -335,6 +341,7 @@ module entropy_combiner_es_csrng_tb
       cs_hready = 1'b1; cs_htrans = AHB_HTRANS_IDLE; cs_hsize = 3'b010;
 
       combine_en_tb = 1'b0;
+      rt_active_tb  = 1'b0;
       rng0_go       = 1'b0;
       rng1_go       = 1'b0;
       read_data     = '0;
@@ -459,6 +466,7 @@ module entropy_combiner_es_csrng_tb
                 input integer es0_delay,
                 input integer es1_delay,
                 input logic   secondary_en,
+                input logic   rt_active,
                 input string  tag);
     integer err_at_entry;
     integer j;
@@ -472,6 +480,11 @@ module entropy_combiner_es_csrng_tb
       rng1_go = 1'b0;
       combine_en_tb = combine_en;
       reset_dut();
+      // rt_active_i is driven only AFTER reset release. In silicon it comes from
+      // the boot-flow monitor, whose flops reset with the core, so it can never be
+      // asserted at the combiner's reset-release edge -- asserting it across reset
+      // would model an unrealizable state and trips AhbUnlockedAtReset_A.
+      rt_active_tb = rt_active;
       repeat (50) @(posedge clk_tb);
       configure_es();
       repeat (20) @(posedge clk_tb);
@@ -548,7 +561,7 @@ module entropy_combiner_es_csrng_tb
     begin
       err_at_entry = error_ctr;
 `ifdef VERILATOR
-      $display("    [%s] SKIP: force-based FSM error injection needs VCS", tag);
+      $display("    [%s] SKIP: force-based FSM e**or injection needs VCS", tag);
 `else
       // Bring up a normal combine and start an instantiate.
       rng0_go = 1'b0; rng1_go = 1'b0;
@@ -607,10 +620,81 @@ module entropy_combiner_es_csrng_tb
       $asserton(0, u_combiner);
 
       if (error_ctr == err_at_entry)
-        $display("    [%s] PASS: glitch -> combiner_st_error, no ack, reset recovers", tag);
+        $display("    [%s] PASS: glitch -> combiner_st_e**or, no ack, reset recovers", tag);
 `endif
       tc_ctr = tc_ctr + 1;
       repeat (30) @(posedge clk_tb);
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // run_rt_active_lock()
+  //
+  // SEC_CM backstop check for the AHB lock. rt_active_i models caliptra_top's
+  // (boot_flow_fmc | boot_flow_rt): once FMC/RT starts fetching from ICCM the
+  // combiner's KAT register file must close, even though ROM never wrote the
+  // MuBi4 AHB_LOCK (e.g. that store was skipped by a glitch).
+  //
+  // Checks:
+  //   1. Out of reset, with no AHB_LOCK write and rt_active_i=0, ahb_lock_o == 0.
+  //   2. Asserting rt_active_i drives ahb_lock_o to 1.
+  //   3. De-asserting rt_active_i leaves ahb_lock_o at 1. The boot-flow monitor
+  //      flops reset on cptra_uc_rst_b and clear on fw_update_rst_window, so a
+  //      FW-update reset drops rt_active_i while the combiner (on
+  //      cptra_noncore_rst_b) is NOT reset -- the lock must not re-open.
+  //   4. A combiner reset does clear it, so the next boot's ROM KAT can run.
+  //----------------------------------------------------------------
+  task run_rt_active_lock(input string tag);
+    begin
+      $display("*** %0s: rt_active_i AHB-lock backstop.", tag);
+      rt_active_tb = 1'b0;
+      reset_dut();
+
+      // 1) Unlocked out of reset.
+      @(negedge clk_tb);
+      if (comb_ahb_lock !== 1'b0) begin
+        $display("*** ERROR [%s]: ahb_lock_o=%0b out of reset, expected 0.", tag, comb_ahb_lock);
+        error_ctr = error_ctr + 1;
+      end
+
+      // 2) rt_active_i asserted -> combiner AHB locked.
+      rt_active_tb = 1'b1;
+      @(posedge clk_tb);
+      @(negedge clk_tb);
+      if (comb_ahb_lock !== 1'b1) begin
+        $display("*** ERROR [%s]: ahb_lock_o=%0b with rt_active_i=1, expected 1.", tag, comb_ahb_lock);
+        error_ctr = error_ctr + 1;
+      end
+      else begin
+        $display("    [%s] rt_active_i=1 -> combiner AHB locked", tag);
+      end
+
+      // 3) rt_active_i drops (FW-update reset clears the monitor) -> stays locked.
+      rt_active_tb = 1'b0;
+      repeat (4) @(posedge clk_tb);
+      @(negedge clk_tb);
+      if (comb_ahb_lock !== 1'b1) begin
+        $display("*** ERROR [%s]: ahb_lock_o=%0b after rt_active_i deassert, expected 1 (latched).",
+                 tag, comb_ahb_lock);
+        error_ctr = error_ctr + 1;
+      end
+      else begin
+        $display("    [%s] lock latched: survived rt_active_i deassert", tag);
+      end
+
+      // 4) Combiner (noncore) reset clears the latch for the next boot.
+      reset_dut();
+      @(negedge clk_tb);
+      if (comb_ahb_lock !== 1'b0) begin
+        $display("*** ERROR [%s]: ahb_lock_o=%0b after reset, expected 0.", tag, comb_ahb_lock);
+        error_ctr = error_ctr + 1;
+      end
+      else begin
+        $display("    [%s] PASS: set by rt_active_i, latched, cleared by reset", tag);
+      end
+
+      tc_ctr = tc_ctr + 1;
+      repeat (10) @(posedge clk_tb);
     end
   endtask
 
@@ -619,18 +703,27 @@ module entropy_combiner_es_csrng_tb
   //----------------------------------------------------------------
   initial begin
     init_sim();
-    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 5 cases");
+    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 7 cases");
 
     // 1) ES1 (primary/ES0) arrives faster than ES2 (secondary/ES1).
-    run_case(1'b1, 0,   257, 1'b1, "case1-ES1-faster-than-ES2");
+    run_case(1'b1, 0,   257, 1'b1, 1'b0, "case1-ES1-faster-than-ES2");
     // 2) ES1 (primary/ES0) arrives slower than ES2 (secondary/ES1).
-    run_case(1'b1, 139, 0,   1'b1, "case2-ES1-slower-than-ES2");
+    run_case(1'b1, 139, 0,   1'b1, 1'b0, "case2-ES1-slower-than-ES2");
     // 3) Both entropy_src outputs arrive at the same time.
-    run_case(1'b1, 0,   0,   1'b1, "case3-both-same-time");
+    run_case(1'b1, 0,   0,   1'b1, 1'b0, "case3-both-same-time");
     // 4) ES2 (secondary/ES1) disabled -> combiner bypass, seed = ES1(ES0) only.
-    run_case(1'b0, 0,   0,   1'b0, "case4-ES2-disabled");
+    run_case(1'b0, 0,   0,   1'b0, 1'b0, "case4-ES2-disabled");
     // 5) Error injection: glitch combiner FSM -> combiner_st_error dead-end.
     run_force_fsm_error("case5-force-fsm-error");
+
+    // 6) SEC_CM: rt_active_i (boot_flow_fmc|rt) locks the combiner AHB without any
+    //    ROM AHB_LOCK write, and the lock latches across an rt_active_i deassert.
+    run_rt_active_lock("case6-rt-active-ahb-lock");
+
+    // 7) The lock must not disturb the operational ES->combiner->CSRNG datapath:
+    //    re-run the both-arrive-together combine with rt_active_i asserted after
+    //    reset release, and expect the same combined seed/genbits as case3.
+    run_case(1'b1, 0,   0,   1'b1, 1'b1, "case7-combine-while-rt-active");
 
     display_test_result();
     $finish;

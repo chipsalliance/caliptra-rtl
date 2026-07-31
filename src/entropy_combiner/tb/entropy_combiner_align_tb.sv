@@ -120,6 +120,9 @@ module entropy_combiner_align_tb
 
     .combine_en_i     (combine_en_tb),
 
+    // Hardware AHB-lock backstop unused here (no AHB traffic in this TB).
+    .rt_active_i      (1'b0),
+
     // AHB port unused.
     .haddr_i          (32'h0),
     .hwdata_i         (32'h0),
