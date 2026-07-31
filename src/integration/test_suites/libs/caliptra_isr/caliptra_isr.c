@@ -232,8 +232,8 @@ void init_interrupts(void) {
     meipls[VEER_INTR_VEC_SHA512_NOTIF    ] = VEER_INTR_PRIO_SHA512_NOTIF    ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA256_ERROR    ] = VEER_INTR_PRIO_SHA256_ERROR    ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA256_NOTIF    ] = VEER_INTR_PRIO_SHA256_NOTIF    ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_RSVD0_ERROR     ] = VEER_INTR_PRIO_RSVD0_ERROR     ; __asm__ volatile ("fence");
-    meipls[VEER_INTR_VEC_RSVD0_NOTIF     ] = VEER_INTR_PRIO_RSVD0_NOTIF     ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_AES_ERROR       ] = VEER_INTR_PRIO_AES_ERROR       ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_AES_NOTIF       ] = VEER_INTR_PRIO_AES_NOTIF       ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_RSVD1_ERROR     ] = VEER_INTR_PRIO_RSVD1_ERROR     ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_RSVD1_NOTIF     ] = VEER_INTR_PRIO_RSVD1_NOTIF     ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_SHA3_ERROR      ] = VEER_INTR_PRIO_SHA3_ERROR      ; __asm__ volatile ("fence");
