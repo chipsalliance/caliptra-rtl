@@ -106,14 +106,16 @@ end
  reg [KV_ENTRY_SIZE_W-1:0] read_offset_o = 'h0;
  reg error_o = 'h0;
  reg last_o = 'h0;
+ reg [KV_ENTRY_SIZE_W-1:0] entry_last_dword_o = 'h0;
  reg [KV_DATA_W-1:0] read_data_o = 'h0;
   function bit any_signal_changed();
 
     return  |(kv_read_i[8:4] ^ read_entry_o ) ||
             |(kv_read_i[3:0] ^ read_offset_o) ||
-            |(kv_rd_resp_i[33] ^ error_o    ) ||
-            |(kv_rd_resp_i[32] ^ last_o    ) ||
-            |(kv_rd_resp_i[31:0] ^ read_data_o);
+            |(kv_rd_resp_i[KV_DATA_W+KV_ENTRY_SIZE_W+1] ^ error_o) ||
+            |(kv_rd_resp_i[KV_DATA_W+KV_ENTRY_SIZE_W]   ^ last_o ) ||
+            |(kv_rd_resp_i[KV_DATA_W+KV_ENTRY_SIZE_W-1:KV_DATA_W] ^ entry_last_dword_o) ||
+            |(kv_rd_resp_i[KV_DATA_W-1:0]               ^ read_data_o);
 
   endfunction
   // pragma uvmf custom interface_item_additional end
@@ -208,19 +210,21 @@ end
     read_entry_o <= kv_read_i[8:4];
     read_offset_o <= kv_read_i[3:0];
     
-    error_o <= kv_rd_resp_i[33];
-    last_o <= kv_rd_resp_i[32];
-    read_data_o <= kv_rd_resp_i[31:0];
+    error_o            <= kv_rd_resp_i[KV_DATA_W+KV_ENTRY_SIZE_W+1];
+    last_o             <= kv_rd_resp_i[KV_DATA_W+KV_ENTRY_SIZE_W];
+    entry_last_dword_o <= kv_rd_resp_i[KV_DATA_W+KV_ENTRY_SIZE_W-1:KV_DATA_W];
+    read_data_o        <= kv_rd_resp_i[KV_DATA_W-1:0];
 
     
     // kv_read_monitor_struct.read_entry   = kv_read_i[3:1];
     // kv_read_monitor_struct.read_offset  = kv_read_i[7:4];
-    kv_read_monitor_struct.read_entry   = kv_read_i[8:4];
-    kv_read_monitor_struct.read_offset  = kv_read_i[3:0];
+    kv_read_monitor_struct.read_entry        = kv_read_i[8:4];
+    kv_read_monitor_struct.read_offset       = kv_read_i[3:0];
 
-    kv_read_monitor_struct.error        = kv_rd_resp_i[33];
-    kv_read_monitor_struct.last        = kv_rd_resp_i[32];
-    kv_read_monitor_struct.read_data    = kv_rd_resp_i[31:0];
+    kv_read_monitor_struct.error             = kv_rd_resp_i[KV_DATA_W+KV_ENTRY_SIZE_W+1];
+    kv_read_monitor_struct.last              = kv_rd_resp_i[KV_DATA_W+KV_ENTRY_SIZE_W];
+    kv_read_monitor_struct.entry_last_dword  = kv_rd_resp_i[KV_DATA_W+KV_ENTRY_SIZE_W-1:KV_DATA_W];
+    kv_read_monitor_struct.read_data         = kv_rd_resp_i[KV_DATA_W-1:0];
 
     // pragma uvmf custom do_monitor end
   endtask         

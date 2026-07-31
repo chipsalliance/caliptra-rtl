@@ -67,6 +67,7 @@ typedef struct packed  { \
   logic [KV_ENTRY_SIZE_W-1:0] read_offset ; \
   logic error ; \
   logic last ; \
+  logic [KV_ENTRY_SIZE_W-1:0] entry_last_dword ; \
   logic [KV_DATA_W-1:0] read_data ; \
      } kv_read_monitor_s;
 
@@ -78,6 +79,7 @@ typedef struct packed  { \
             this.read_offset , \
             this.error , \
             this.last , \
+            this.entry_last_dword , \
             this.read_data  \
             };\
     return ( kv_read_monitor_struct);\
@@ -90,6 +92,7 @@ typedef struct packed  { \
             this.read_offset , \
             this.error , \
             this.last , \
+            this.entry_last_dword , \
             this.read_data  \
             } = kv_read_monitor_struct;\
   endfunction

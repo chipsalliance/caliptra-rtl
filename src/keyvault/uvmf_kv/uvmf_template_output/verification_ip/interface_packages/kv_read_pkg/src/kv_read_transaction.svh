@@ -42,6 +42,7 @@ class kv_read_transaction #(
   rand logic [KV_ENTRY_SIZE_W-1:0] read_offset ;
   logic error;
   logic last;
+  logic [KV_ENTRY_SIZE_W-1:0] entry_last_dword;
   logic [KV_DATA_W-1:0] read_data ;
 
   //Constraints for the transaction variables:
@@ -127,7 +128,7 @@ class kv_read_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("read_entry:0x%x read_offset:0x%x read_resp_err: 0x%x last_dword: 0x%x read_data:0x%x ",read_entry,read_offset,error,last,read_data);
+    return $sformatf("read_entry:0x%x read_offset:0x%x read_resp_err: 0x%x last_dword: 0x%x entry_last_dword: 0x%x read_data:0x%x ",read_entry,read_offset,error,last,entry_last_dword,read_data);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -162,6 +163,7 @@ class kv_read_transaction #(
             &&(this.read_offset === RHS.read_offset)
             &&(this.error === RHS.error)
             &&(this.last === RHS.last)
+            &&(this.entry_last_dword === RHS.entry_last_dword)
             &&(this.read_data === RHS.read_data)
             );
     // pragma uvmf custom do_compare end
@@ -184,6 +186,7 @@ class kv_read_transaction #(
     this.read_offset = RHS.read_offset;
     this.error = RHS.error;
     this.last = RHS.last;
+    this.entry_last_dword = RHS.entry_last_dword;
     this.read_data = RHS.read_data;
     // pragma uvmf custom do_copy end
   endfunction
@@ -212,6 +215,7 @@ class kv_read_transaction #(
     $add_attribute(transaction_view_h,read_offset,"read_offset");
     $add_attribute(transaction_view_h,error,"error");
     $add_attribute(transaction_view_h,last,"last");
+    $add_attribute(transaction_view_h,entry_last_dword,"entry_last_dword");
     $add_attribute(transaction_view_h,read_data,"read_data");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);

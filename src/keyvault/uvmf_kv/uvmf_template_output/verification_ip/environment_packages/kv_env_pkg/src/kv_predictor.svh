@@ -994,6 +994,7 @@ endclass
     // end
 
     t_expected.last = (last_dword_written[t_received.read_entry] == t_received.read_offset); 
+    t_expected.entry_last_dword = last_dword_written[t_received.read_entry];
     t_expected.read_entry = t_received.read_entry;
     t_expected.read_offset = t_received.read_offset;
     `uvm_info("KV_DBG", $sformatf("expected last = %h, received last = %h, last_dword_written = %h, received offset = %h", t_expected.last, t_received.last, last_dword_written[t_received.read_entry], t_received.read_offset), UVM_DEBUG)
