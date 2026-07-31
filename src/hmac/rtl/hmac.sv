@@ -524,7 +524,9 @@ hmac_block_kv_read
 
     .error_code(kv_block_error),
     .kv_ready(kv_block_ready),
-    .read_done(kv_block_done)
+    .read_done(kv_block_done),
+    .check_key_size(1'b0),
+    .expected_key_size('0)
 );
 
 //write 512 or 384 result based on mode bit

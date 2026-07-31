@@ -449,7 +449,9 @@ sha512_block_kv_read
 
     .error_code(kv_src_error),
     .kv_ready(kv_src_ready),
-    .read_done(kv_src_done)
+    .read_done(kv_src_done),
+    .check_key_size(1'b0),
+    .expected_key_size('0)
 );
 
 always_comb begin

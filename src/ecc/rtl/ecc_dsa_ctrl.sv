@@ -922,6 +922,7 @@ module ecc_dsa_ctrl
         .error_code(kv_privkey_error),
         .kv_ready(kv_privkey_ready),
         .read_done(kv_privkey_done),
+        .check_key_size(1'b0),
         .expected_key_size(KV_ENTRY_SIZE_W'((REG_SIZE/32)-1))
     );
 
@@ -958,6 +959,7 @@ module ecc_dsa_ctrl
         .error_code(kv_seed_error),
         .kv_ready(kv_seed_ready),
         .read_done(kv_seed_done),
+        .check_key_size(1'b0),
         .expected_key_size(KV_ENTRY_SIZE_W'((REG_SIZE/32)-1))
     );
 
