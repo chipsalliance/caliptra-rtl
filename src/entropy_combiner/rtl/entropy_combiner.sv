@@ -67,6 +67,14 @@ module entropy_combiner
 
   input logic combine_en_i,
 
+  // SEC_CM: hardware backstop for the AHB lock. Driven at the integration level
+  // from the boot-flow monitor (MuBi4 boot_flow_fmc | boot_flow_rt), which detects
+  // the first ICCM instruction fetch from the FMC/RT regions. Unlike ROM's W1S
+  // AHB_LOCK write, this cannot be skipped by software, so the combiner's KAT
+  // register file is closed as soon as FMC/RT begins executing even if ROM never
+  // set AHB_LOCK. Tie to 0 in integrations without a boot-flow monitor.
+  input logic rt_active_i,
+
   input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
   input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
   input logic hsel_i,
@@ -125,6 +133,8 @@ module entropy_combiner
   // MuBi4 AHB lock: locked unless stored value is strict MuBi4False (fail-safe).
   mubi4_t ahb_lock_mubi;
   logic ahb_locked;
+  // Latched rt_active_i backstop (see rt_active_i port comment).
+  logic rt_active_q, rt_active_d;
   logic ahb_write;
   logic [31:0] ahb_wdata;
   logic [31:0] ahb_rdata;
@@ -185,7 +195,14 @@ module entropy_combiner
   // MuBi4 AHB lock: locked unless stored value is strict MuBi4False (fail-safe:
   // True or any glitched/invalid code => locked).
   assign ahb_lock_mubi = mubi4_t'(hwif_out.AHB_LOCK.lock.value);
-  assign ahb_locked = mubi4_test_true_loose(ahb_lock_mubi);
+  // rt_active_i is latched in the combiner's own reset domain before it gates the
+  // lock. The boot-flow monitor flops reset on cptra_uc_rst_b and clear
+  // synchronously on fw_update_rst_window, whereas the combiner runs on
+  // cptra_noncore_rst_b (not asserted by a uc-only FW-update reset). Without the
+  // latch a FW-update reset would re-open a combiner that was locked only by this
+  // backstop. Sticky until noncore reset, matching AHB_LOCK's own W1S semantics.
+  assign rt_active_d = rt_active_q | rt_active_i;
+  assign ahb_locked = mubi4_test_true_loose(ahb_lock_mubi) | rt_active_q;
   // ROM's MuBi AHB_LOCK: ROM writes MuBi4True to lock after the KAT. AHB accesses
   // (reads AND writes) stay forwarded to the register block; the lock is enforced
   // by targeted, per-function gates rather than a coarse bus write-drop, so no
@@ -529,6 +546,7 @@ module entropy_combiner
       kat_digest_valid_q <= 1'b0;
       feed_idx_q <= '0;
       feed_words_q <= '0;
+      rt_active_q <= 1'b0;
     end else begin
       // Default update: every register takes its computed next value once; KAT
       // residuals are wiped below when locked. state_q lives in u_combiner_state_regs.
@@ -547,6 +565,7 @@ module entropy_combiner
       kat_digest_valid_q <= kat_digest_valid_d;
       feed_idx_q <= feed_idx_d;
       feed_words_q <= feed_words_d;
+      rt_active_q <= rt_active_d;
 
       if (ahb_locked) begin
         // RoT zeroization: after ROM sets W1S AHB_LOCK, wipe and hold clear all

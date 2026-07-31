@@ -1591,6 +1591,10 @@ entropy_combiner #(
     // Dedicated strap: enable ES1 and combine, else bypass ES0
     // Dual iTRNG enable, sourced from CPTRA_HW_CONFIG.dual_iTRNG_en (via soc_ifc)
     .combine_en_i           (dual_itrng_en_reg),
+    // SEC_CM: hardware AHB-lock backstop. Mirrors the DOE doe_cmd_lock pattern:
+    // once the boot-flow monitor observes the first FMC/RT instruction fetch, the
+    // combiner's KAT register file is closed even if ROM never set AHB_LOCK.
+    .rt_active_i            (mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
     // AMBA AHB Lite Interface (ROM power-on KAT only)
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_COMBINER)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hwdata),
