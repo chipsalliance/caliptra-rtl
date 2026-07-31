@@ -127,7 +127,8 @@ typedef enum logic [7:0] {
     KV_SUCCESS = 8'h00,
     KV_READ_FAIL = 8'h01,
     KV_WRITE_FAIL = 8'h02,
-    KV_RD_LEN_MISMATCH = 8'h03
+    KV_RD_LEN_MISMATCH = 8'h03,
+    KV_FSM_ERROR = 8'h04
 } kv_error_code_e;
 
 typedef struct packed {

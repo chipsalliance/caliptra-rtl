@@ -53,6 +53,7 @@ package soc_ifc_ctrl_pkg;
 
    // pragma uvmf custom package_imports_additional begin 
    import soc_ifc_pkg::*;
+   import caliptra_prim_mubi_pkg::*;
    // pragma uvmf custom package_imports_additional end
    `include "src/soc_ifc_ctrl_macros.svh"
 

@@ -121,8 +121,8 @@ end
   reg  cptra_obf_uds_seed_vld_o = 'bz;
   tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed_i;
   reg [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed_o = 'bz;
-  tri [2:0] security_state_i;
-  reg [2:0] security_state_o = 'bz;
+  tri [5:0] security_state_i;
+  reg [5:0] security_state_o = 'bz;
   tri  BootFSM_BrkPoint_i;
   reg  BootFSM_BrkPoint_o = 'bz;
   tri [63:0] generic_input_wires_i;

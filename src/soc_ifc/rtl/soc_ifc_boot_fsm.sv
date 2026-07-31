@@ -28,7 +28,7 @@ module soc_ifc_boot_fsm
     input logic BootFSM_Continue,
 
     output logic ready_for_fuses,
-    output boot_fsm_state_e boot_fsm_ps,
+    output logic [2:0] boot_fsm_ps_encoded,
 
     input logic fuse_done,
     input logic fuse_wr_done_observed,
@@ -38,16 +38,18 @@ module soc_ifc_boot_fsm
     output logic iccm_unlock,
     output logic fw_upd_rst_executed,
     output logic rdc_clk_dis,
-    output logic fw_update_rst_window
+    output logic fw_update_rst_window,
+    output logic fsm_error
 );
 
 `include "caliptra_sva.svh"
+`include "caliptra_prim_assert.sv"
 
 logic cptra_uc_rst_b_nq;
 logic cptra_noncore_rst_b_nq;
 
 //present and next state
-boot_fsm_state_e boot_fsm_ns;
+boot_fsm_state_e boot_fsm_ps, boot_fsm_ns;
 //arcs between states - global rst
 logic arc_BOOT_IDLE_BOOT_FUSE;
 logic arc_BOOT_FUSE_BOOT_DONE;
@@ -112,6 +114,7 @@ always_comb begin
     fsm_synch_uc_rst_b = '0;
     wait_count_decr = 0;
     wait_count_rst = 0;
+    fsm_error = '0;
 
     unique case (boot_fsm_ps) inside
         BOOT_IDLE: begin
@@ -192,23 +195,34 @@ always_comb begin
             wait_count_rst = 0;
             wait_count_decr = 0;
         end
-        default: begin
-            boot_fsm_ns = boot_fsm_ps;
-            fw_upd_rst_executed = '0;
-            fsm_synch_noncore_rst_b = '0;
-            fsm_iccm_unlock = '0;
+        BOOT_ERROR: begin
+            // Terminal error state — hold resets asserted, only exit via cptra_pwrgood
+            boot_fsm_ns = BOOT_ERROR;
+            fsm_error = 1'b1;
             fsm_synch_uc_rst_b = '0;
-            wait_count_decr = 0;
-            wait_count_rst = 0;
+            fsm_synch_noncore_rst_b = '1;
+        end
+        default: begin
+            // Invalid encoding detected — go to terminal error
+            boot_fsm_ns = BOOT_ERROR;
+            fsm_error = 1'b1;
+            fsm_synch_uc_rst_b = '0;
+            fsm_synch_noncore_rst_b = '1;
         end
     endcase
 end
 
 //next state -> present state
 //reset boot fsm to idle on cptra_pwrgood
+// Sparse FSM flop for glitch hardening (invalid encoding -> BOOT_ERROR)
+// arc_IDLE (warm reset) forces BOOT_IDLE
+boot_fsm_state_e boot_fsm_ns_muxed;
+always_comb boot_fsm_ns_muxed = arc_IDLE ? BOOT_IDLE : boot_fsm_ns;
+
+`CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_boot_state_regs, boot_fsm_ns_muxed, boot_fsm_ps, boot_fsm_state_e, BOOT_IDLE, clk, cptra_pwrgood, 0)
+
 always_ff @(posedge clk or negedge cptra_pwrgood) begin
     if (~cptra_pwrgood) begin
-        boot_fsm_ps <= BOOT_IDLE;
         synch_noncore_rst_b <= '0;
         synch_uc_rst_b <= 0;
         cptra_noncore_rst_b_nq <= '0;
@@ -218,7 +232,6 @@ always_ff @(posedge clk or negedge cptra_pwrgood) begin
         cptra_rst_window_sync_2f <= '1;
     end
     else begin
-        boot_fsm_ps <= arc_IDLE ? BOOT_IDLE : boot_fsm_ns;
         synch_noncore_rst_b <= fsm_synch_noncore_rst_b;
         synch_uc_rst_b <= fsm_synch_uc_rst_b;
         cptra_noncore_rst_b_nq <= synch_noncore_rst_b;
@@ -268,8 +281,21 @@ caliptra_2ff_sync #(.WIDTH(1), .RST_VAL('d1)) i_rst_window_sync (.clk(clk), .rst
 `CALIPTRA_ASSERT_KNOWN(ERR_UC_RST_X, cptra_noncore_rst_b, clk, !cptra_rst_b)
 `CALIPTRA_ASSERT_KNOWN(ERR_UC_FWRST_X, cptra_uc_rst_b, clk, !cptra_rst_b)
 
+// Encode sparse state to 3-bit sequential value for register visibility
+always_comb begin
+    unique case (boot_fsm_ps)
+        BOOT_IDLE:   boot_fsm_ps_encoded = 3'd0;
+        BOOT_FUSE:   boot_fsm_ps_encoded = 3'd1;
+        BOOT_FW_RST: boot_fsm_ps_encoded = 3'd2;
+        BOOT_WAIT:   boot_fsm_ps_encoded = 3'd3;
+        BOOT_DONE:   boot_fsm_ps_encoded = 3'd4;
+        BOOT_ERROR:  boot_fsm_ps_encoded = 3'd5;
+        default:     boot_fsm_ps_encoded = 3'd5;
+    endcase
+end
+
 //Reset got asserted, but cptra rst window wasn't asserted to protect RDC
-`CALIPTRA_ASSERT_NEVER(ERR_RST_ASSERT_NO_WINDOW, $fell(cptra_noncore_rst_b) && ~rdc_clk_dis, clk, !(cptra_pwrgood && ~scan_mode))
-`CALIPTRA_ASSERT_NEVER(ERR_UC_RST_ASSERT_NO_WINDOW, $fell(cptra_uc_rst_b) && ~(fw_update_rst_window || rdc_clk_dis), clk, !(cptra_pwrgood && ~scan_mode))
+`CALIPTRA_ASSERT_NEVER(ERR_RST_ASSERT_NO_WINDOW, $fell(cptra_noncore_rst_b) && ~rdc_clk_dis && (boot_fsm_ps != BOOT_ERROR) && ~fsm_error, clk, !(cptra_pwrgood && ~scan_mode))
+`CALIPTRA_ASSERT_NEVER(ERR_UC_RST_ASSERT_NO_WINDOW, $fell(cptra_uc_rst_b) && ~(fw_update_rst_window || rdc_clk_dis) && (boot_fsm_ps != BOOT_ERROR) && ~fsm_error, clk, !(cptra_pwrgood && ~scan_mode))
 
 endmodule

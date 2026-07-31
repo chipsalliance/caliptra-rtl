@@ -86,7 +86,11 @@ interface caliptra_top_cov_if
         warm_rst:           coverpoint cptra_rst_b;
 
         scan:               coverpoint scan_mode;
-        debug:              coverpoint security_state.debug_locked;
+        debug:              coverpoint security_state.debug_locked {
+            bins locked   = {caliptra_prim_mubi_pkg::MuBi4True};
+            bins unlocked = {caliptra_prim_mubi_pkg::MuBi4False};
+            bins invalid  = default;
+        }
         fatal_error:        coverpoint cptra_error_fatal;
         nmi:                coverpoint nmi_int;
         generic:            coverpoint generic_input_wires {
