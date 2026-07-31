@@ -1531,8 +1531,57 @@ module caliptra_top_sva
   KV_ecc_privkey_len_mismatch_C: cover property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       `ECC_PATH.ecc_privkey_kv_read.length_mismatch);
+  KV_ecc_seed_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      |`ECC_PATH.cmd_reg && `ECC_PATH.kv_seed_data_present && !`ECC_PATH.ecc_seed_kv_read.length_mismatch);
   KV_ecc_seed_len_mismatch_C: cover property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       `ECC_PATH.ecc_seed_kv_read.length_mismatch);
+
+  // AES key path — length check deferred to key-use (LEN_CHECK_AT_KEY_USE=1).
+  // check_key_size pulses on kv_key_done | keymgr_key.valid.
+  KV_aes_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `CPTRA_TOP_PATH.aes_inst.aes_key_kv_read.check_key_size &&
+      !`CPTRA_TOP_PATH.aes_inst.aes_key_kv_read.length_mismatch);
+  KV_aes_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `CPTRA_TOP_PATH.aes_inst.aes_key_kv_read.length_mismatch);
+
+  // MLDSA seed path
+  KV_mldsa_seed_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mldsa_seed_read_inst.read_done &&
+      !`ABR_PATH.kv_mldsa_seed_read_inst.length_mismatch);
+  KV_mldsa_seed_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mldsa_seed_read_inst.length_mismatch);
+
+  // MLKEM seed path
+  KV_mlkem_seed_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mlkem_seed_read_inst.read_done &&
+      !`ABR_PATH.kv_mlkem_seed_read_inst.length_mismatch);
+  KV_mlkem_seed_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mlkem_seed_read_inst.length_mismatch);
+
+  // MLKEM msg path
+  KV_mlkem_msg_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mlkem_msg_read_inst.read_done &&
+      !`ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
+  KV_mlkem_msg_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
+
+  // DMA key-release path (MEK)
+  KV_dma_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AXI_DMA_CTRL_PATH.dma_data_kv_read.read_done &&
+      !`AXI_DMA_CTRL_PATH.dma_data_kv_read.length_mismatch);
+  KV_dma_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AXI_DMA_CTRL_PATH.dma_data_kv_read.length_mismatch);
 
 endmodule
