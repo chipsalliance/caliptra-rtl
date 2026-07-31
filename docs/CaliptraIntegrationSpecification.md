@@ -285,6 +285,13 @@ To use the dual iTRNG feature correctly, an integrator must:
    driven dynamically or changed while Caliptra is out of reset.
 4. Provide the ROM-time entropy-source configuration through the architectural
    registers described below (rather than a strap).
+5. Configure **each** entropy source independently for the noise source connected
+   to it. The combiner uses two `entropy_src` instances (ES0 and ES1), and each
+   has its own health-test thresholds, window size, and mode controls. Because
+   the two physical noise sources may use different noise-generation technologies
+   with different statistical behavior (bit rate, bias, correlation), their
+   health-test parameters may differ and must each be derived from the
+   corresponding source's characterization.
 
 Single-iTRNG integrations shall tie `itrng1_en`, `itrng1_data`, and `itrng1_valid`
 to 0; the secondary entropy source and combiner then remain inactive.

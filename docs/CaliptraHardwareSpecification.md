@@ -615,6 +615,11 @@ the primary source (`ES0`) while still feeding a **single CSRNG**. A dedicated
 and merges their conditioned outputs. This feature is only available when the
 integrated TRNG is instantiated (`CALIPTRA_INTERNAL_TRNG`) and, per the interface
 rules, is only enabled in Subsystem mode.
+The following figure shows the dual iTRNG entropy combiner block.
+
+*Figure: Dual iTRNG entropy combiner block*
+
+![](./images/dual_entropy.png)
 
 The combiner presents a single `entropy_src_hw_if` interface to CSRNG
 and drives one such interface to each of ES0 and ES1. It operates in one of two
