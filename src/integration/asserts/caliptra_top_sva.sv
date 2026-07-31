@@ -133,6 +133,19 @@ module caliptra_top_sva
   MboxDmaSramWrite_C: cover property (@(posedge `MBOX_PATH.clk) disable iff (~`MBOX_PATH.rst_b)
       `MBOX_PATH.dma_sram_req_dv_q && `MBOX_PATH.dma_sram_req_write && `MBOX_PATH.mbox_sram_req_cs && `MBOX_PATH.mbox_sram_req_we);
 
+  // What: Cover the protocol/pointer-path analog of the #1183 hazard: a genuine mailbox
+  //       SRAM write (mbox_protocol_sram_we, i.e. inc_wrptr) landing in the same cycle as
+  //       a mailbox SRAM read/pointer-reset request (mbox_protocol_sram_rd, i.e.
+  //       inc_rdptr | rst_mbox_rdptr). This can arise if the current lock-holder (uC, SoC,
+  //       or TAP) issues an out-of-order datain/wrptr-increment write in the same cycle its
+  //       own status/execute write causes an EXECUTE-state transition arc to fire.
+  // Why: If reachable, this is the same failure signature as #1183 (a write cycle
+  //      simultaneously satisfying a read-enable term) via a different trigger than DMA.
+  //      MboxSramWriteNoEccCheck_A above is the decisive pass/fail check for this path.
+  // Timing: 0 cycles because the cover is sampled on the overlap cycle itself.
+  MboxProtocolWriteReadOverlap_C: cover property (@(posedge `MBOX_PATH.clk) disable iff (~`MBOX_PATH.rst_b)
+      `MBOX_PATH.mbox_protocol_sram_we && `MBOX_PATH.mbox_protocol_sram_rd);
+
   //Create a flopped version of hmac kv_data_present to be used to disable tag write OCP SVAs in case result is not expected to go to KV
   logic hmac_kv_data_present_f;
 

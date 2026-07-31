@@ -300,7 +300,12 @@ always_comb rdptr_inc_valid = ({1'b0,mbox_rdptr} < dlen_in_dws) & (mbox_rdptr < 
 // No more valid reads if we read the last entry
 // On pre-load of entry 0, ensure that next dlen isn't 0
 // Restrict reads once read pointer has passed the dlen
-always_comb mbox_rd_valid = (rst_mbox_rdptr & (dlen_in_dws_nxt != 0)) | (~rst_mbox_rdptr & ~mbox_rd_full & ({1'b0,mbox_rdptr} < dlen_in_dws));
+// ONLY set this signal on an actual sram read event, to avoid driving X
+// values into the mbox_dataout register.
+// Use mbox_protocol_sram_rd instead of a global "cs & !we" calculation because
+// the purpsoe of mbox_rd_valid is to gate data being updated to mbox_dataout
+// due to a mailbox protocol request.
+always_comb mbox_rd_valid = mbox_protocol_sram_rd && ((rst_mbox_rdptr & (dlen_in_dws_nxt != 0)) | (~rst_mbox_rdptr & ~mbox_rd_full & ({1'b0,mbox_rdptr} < dlen_in_dws)));
 // Restrict the write pointer from rolling over
 always_comb wrptr_inc_valid = mbox_wrptr < (MBOX_SIZE_DWORDS-1);
 
@@ -537,8 +542,14 @@ always_ff @(posedge clk or negedge rst_b) begin
                              
         dlen_in_dws <= latch_dlen_in_dws ? dlen_in_dws_nxt : dlen_in_dws;                    
         mbox_protocol_error <= mbox_protocol_error_nxt;
-        //enable ecc for mbox protocol, direct reads, or SHA direct reads
-        sram_rd_ecc_en <= mbox_protocol_sram_rd | (dir_req_dv_q & ~sha_sram_req_dv & ~dma_sram_req_dv_q & ~req_data_write) | (dma_sram_req_dv_q & ~dma_sram_req_write) | sha_sram_req_dv;
+        //enable ecc read-check iff this cycle issued a genuine SRAM read (cs asserted,
+        //we deasserted). Tying directly to the SRAM's own cs/we control signals (rather
+        //than re-deriving equivalent per-agent read conditions) ensures the read-check can
+        //never be enabled on a write cycle, regardless of which agent (protocol pointer,
+        //direct uC, DMA, or SHA) issues the request. See issue #1183 (DMA-write case) and
+        //the structurally analogous protocol/pointer-path case caught by
+        //MboxProtocolWriteReadOverlap_C / MboxSramWriteNoEccCheck_A in caliptra_top_sva.sv.
+        sram_rd_ecc_en <= mbox_sram_req_cs & ~mbox_sram_req_we;
     end
 end
 
