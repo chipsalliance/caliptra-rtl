@@ -1640,6 +1640,10 @@ class soc_ifc_predictor #(
                 ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
                 "CPTRA_iTRNG_ENTROPY_CONFIG_0",
                 "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+                "CPTRA_iTRNG_ENTROPY_CONFIG_2",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
                 ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                     `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
@@ -2825,6 +2829,10 @@ class soc_ifc_predictor #(
             ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
             "CPTRA_iTRNG_ENTROPY_CONFIG_0",
             "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+            "CPTRA_iTRNG_ENTROPY_CONFIG_2",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
             ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                 `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
             end

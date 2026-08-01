@@ -96,11 +96,15 @@ module caliptra_top
     output logic             cptra_error_non_fatal,
 
     // TRNG Interface
-    // External Request
-    output logic             etrng_req,
+    // External Request (one per entropy_src)
+    output logic             etrng0_req,
+    output logic             etrng1_req,
     // Physical Source for Internal TRNG
-    input  logic [3:0]       itrng_data,
-    input  logic             itrng_valid,
+    input  logic [3:0]       itrng0_data,
+    input  logic             itrng0_valid,
+    input  logic [3:0]       itrng1_data,
+    input  logic             itrng1_valid,
+    input  logic             itrng1_en,
 
     // Subsystem mode straps
     input logic [63:0] strap_ss_caliptra_base_addr,
@@ -321,6 +325,8 @@ module caliptra_top
     logic ss_ocp_lock_in_progress;
     // Key release size (used as input to AES operation)
     logic [15:0] ss_key_release_key_size;
+    // Dual iTRNG enable from soc_ifc CPTRA_HW_CONFIG.dual_iTRNG_en (drives combiner combine_en)
+    logic dual_itrng_en_reg;
     // Stable owner key enable (from soc_ifc, used by KV enforcement)
     logic stable_owner_key_en;
 
@@ -491,6 +497,8 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_MLDSA]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_AES]    = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA3]   = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1] = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_COMBINER]     = 1'b0;
 
 `ifdef CALIPTRA_MODE_SUBSYSTEM
     //=========================================================================-
@@ -1394,14 +1402,32 @@ data_vault1
 `ifdef CALIPTRA_INTERNAL_TRNG
 entropy_src_hw_if_req_t entropy_src_hw_if_req;
 entropy_src_hw_if_rsp_t entropy_src_hw_if_rsp;
-cs_aes_halt_req_t       csrng_cs_aes_halt_req;
-cs_aes_halt_rsp_t       csrng_cs_aes_halt_rsp;
+entropy_src_hw_if_req_t entropy_src_hw_if_req1;
+entropy_src_hw_if_rsp_t entropy_src_hw_if_rsp1;
+// CSRNG <-> combiner entropy_src_hw_if. The combiner sits between CSRNG and the
+// two entropy_src instances: it fans one CSRNG request out to ES0/ES1 and returns
+// either ES0 (bypass) or SHA3-384(ES0||ES1) (combine) to CSRNG.
+entropy_src_hw_if_req_t csrng_hw_if_req;
+entropy_src_hw_if_rsp_t csrng_hw_if_rsp;
+cs_aes_halt_req_t       entropy_src_cs_aes_halt_req;
+cs_aes_halt_req_t       entropy_src_cs_aes_halt_req1;
+cs_aes_halt_rsp_t       combiner_es0_cs_aes_halt_rsp;
+cs_aes_halt_rsp_t       combiner_es1_cs_aes_halt_rsp;
 entropy_src_rng_req_t   entropy_src_rng_req;
 entropy_src_rng_rsp_t   entropy_src_rng_rsp;
+entropy_src_rng_req_t   entropy_src_rng_req1;
+entropy_src_rng_rsp_t   entropy_src_rng_rsp1;
 
-assign etrng_req = entropy_src_rng_req.rng_enable;
-assign entropy_src_rng_rsp.rng_valid = itrng_valid;
-assign entropy_src_rng_rsp.rng_b = itrng_data;
+assign etrng0_req = entropy_src_rng_req.rng_enable;
+assign etrng1_req = itrng1_en & entropy_src_rng_req1.rng_enable;
+assign entropy_src_rng_rsp.rng_valid = itrng0_valid;
+assign entropy_src_rng_rsp.rng_b = itrng0_data;
+assign entropy_src_rng_rsp1.rng_valid = itrng1_en & itrng1_valid;
+assign entropy_src_rng_rsp1.rng_b = itrng1_en ? itrng1_data : '0;
+// cs_aes_halt is functionally inert (only a CSRNG-AES/ES-SHA3 current-overlap
+// mitigation). The entropy_combiner grants each ES conditioner's halt request
+// locally (see combiner) so the conditioners never stall; CSRNG's cs_aes_halt
+// input is tied off below and its AES is left free-running.
 
 // TODO: Revisit ports and verify connectivity
 
@@ -1428,10 +1454,10 @@ csrng #(
     // Lifecycle broadcast inputs
     .lc_hw_debug_en_i       (lc_ctrl_pkg::On),
     // Entropy Interface
-    .entropy_src_hw_if_o    (entropy_src_hw_if_req),
-    .entropy_src_hw_if_i    (entropy_src_hw_if_rsp),
-    .cs_aes_halt_i          (csrng_cs_aes_halt_req),
-    .cs_aes_halt_o          (csrng_cs_aes_halt_rsp),
+    .entropy_src_hw_if_o    (csrng_hw_if_req),
+    .entropy_src_hw_if_i    (csrng_hw_if_rsp),
+    .cs_aes_halt_i          (cs_aes_halt_req_t'('0)),
+    .cs_aes_halt_o          (),
     // Application Interfaces
     .csrng_cmd_i            ('0),
     .csrng_cmd_o            (),
@@ -1474,8 +1500,8 @@ entropy_src #(
     .entropy_src_rng_o                (entropy_src_rng_req),
     .entropy_src_rng_i                (entropy_src_rng_rsp),
     // CSRNG Interface
-    .cs_aes_halt_o                    (csrng_cs_aes_halt_req),
-    .cs_aes_halt_i                    (csrng_cs_aes_halt_rsp),
+    .cs_aes_halt_o                    (entropy_src_cs_aes_halt_req),
+    .cs_aes_halt_i                    (combiner_es0_cs_aes_halt_rsp),
     // External Health Test Interface
     .entropy_src_xht_o                (),
     .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
@@ -1488,6 +1514,110 @@ entropy_src #(
     .intr_es_observe_fifo_ready_o     (),
     .intr_es_fatal_err_o              ()
     );
+
+entropy_src #(
+    .AHBDataWidth(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHBAddrWidth(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1))
+) entropy_src1 (
+    .clk_i                  (clk_cg),
+    .rst_ni                 (cptra_noncore_rst_b),
+    // AMBA AHB Lite Interface
+    .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1)-1:0]),
+    .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hwdata),
+    .hsel_i                 (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hsel),
+    .hwrite_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hwrite),
+    .hready_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hready),
+    .htrans_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].htrans),
+    .hsize_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hsize),
+    .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hresp),
+    .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hreadyout),
+    .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hrdata),
+    // OTP Interface
+    .otp_en_entropy_src_fw_read_i(caliptra_prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_over_i(caliptra_prim_mubi_pkg::MuBi8True),
+    // RNG Interface
+    .rng_fips_o                       (),
+    // Entropy Interface
+    .entropy_src_hw_if_i              (entropy_src_hw_if_req1),
+    .entropy_src_hw_if_o              (entropy_src_hw_if_rsp1),
+    // RNG Interface
+    .entropy_src_rng_o                (entropy_src_rng_req1),
+    .entropy_src_rng_i                (entropy_src_rng_rsp1),
+    // CSRNG Interface
+    .cs_aes_halt_o                    (entropy_src_cs_aes_halt_req1),
+    .cs_aes_halt_i                    (combiner_es1_cs_aes_halt_rsp),
+    // External Health Test Interface
+    .entropy_src_xht_o                (),
+    .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
+    // Alerts
+    .alert_rx_i                       ({caliptra_prim_alert_pkg::ALERT_RX_DEFAULT, caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_tx_o                       (),
+    // Interrupts
+    .intr_es_entropy_valid_o          (),
+    .intr_es_health_test_failed_o     (),
+    .intr_es_observe_fifo_ready_o     (),
+    .intr_es_fatal_err_o              ()
+    );
+
+// SHA3-384 entropy combiner: inserted between CSRNG and ES0/ES1.
+//  - combine_en_i = CPTRA_HW_CONFIG.dual_iTRNG_en (SW-readable, strapped by itrng1_en):
+//    1 => digest = SHA3-384(ES0||ES1); 0 => ES0 bypass.
+//  - AHB slave (COMBINER window) is used only by ROM for the power-on KAT. The
+//    combiner's own MuBi4 AHB_LOCK scrubs the KAT registers internally once ROM
+//    locks it (KAT_MSG/KAT_DIGEST/busy/valid read 0), and entropy never appears in
+//    any register (ES0/ES1 -> ot_sha3 -> CSRNG is internal-only), so no bus-level
+//    resp_disable gating is needed. error_intr_o/notif_intr_o/ahb_lock_o follow the
+//    entropy_src/csrng siblings and are left unconnected (ROM polls status over AHB).
+entropy_combiner #(
+    .AHB_DATA_WIDTH(`CALIPTRA_AHB_HDATA_SIZE),
+    .AHB_ADDR_WIDTH(`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_COMBINER))
+) entropy_combiner (
+    .clk                    (clk_cg),
+    .reset_n                (cptra_noncore_rst_b),
+    .cptra_pwrgood_i        (cptra_pwrgood),
+    // CSRNG-facing entropy_src_hw_if
+    .csrng_hw_if_req_i      (csrng_hw_if_req),
+    .csrng_hw_if_rsp_o      (csrng_hw_if_rsp),
+    // cs_aes_halt: combiner grants each ES conditioner's halt request locally (no stall)
+    .es0_cs_aes_halt_i      (entropy_src_cs_aes_halt_req),
+    .es1_cs_aes_halt_i      (entropy_src_cs_aes_halt_req1),
+    .es0_cs_aes_halt_o      (combiner_es0_cs_aes_halt_rsp),
+    .es1_cs_aes_halt_o      (combiner_es1_cs_aes_halt_rsp),
+    // ES0/ES1-facing entropy_src_hw_if
+    .es0_hw_if_req_o        (entropy_src_hw_if_req),
+    .es0_hw_if_rsp_i        (entropy_src_hw_if_rsp),
+    .es1_hw_if_req_o        (entropy_src_hw_if_req1),
+    .es1_hw_if_rsp_i        (entropy_src_hw_if_rsp1),
+    // Dedicated strap: enable ES1 and combine, else bypass ES0
+    // Dual iTRNG enable, sourced from CPTRA_HW_CONFIG.dual_iTRNG_en (via soc_ifc)
+    .combine_en_i           (dual_itrng_en_reg),
+    // SEC_CM: hardware AHB-lock backstop. Mirrors the DOE doe_cmd_lock pattern:
+    // once the boot-flow monitor observes the first FMC/RT instruction fetch, the
+    // combiner's KAT register file is closed even if ROM never set AHB_LOCK.
+    .rt_active_i            (mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
+    // AMBA AHB Lite Interface (ROM power-on KAT only)
+    .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_COMBINER)-1:0]),
+    .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hwdata),
+    .hsel_i                 (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hsel),
+    .hwrite_i               (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hwrite),
+    .hready_i               (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hready),
+    .htrans_i               (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].htrans),
+    .hsize_i                (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hsize),
+    .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hresp),
+    .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hreadyout),
+    .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hrdata),
+    // Interrupts (unconnected: ROM polls status over AHB, matching ES/CSRNG)
+    .error_intr_o           (),
+    .notif_intr_o           (),
+    // AHB lock status (unused: internal lock scrubs KAT regs; no bus gating needed)
+    .ahb_lock_o             ()
+    );
+
+`else
+// External-TRNG (passive) mode uses a single external TRNG; the second entropy_src
+// and dual-iTRNG combiner are an internal-TRNG-only feature, so ES1's external
+// request is tied off here. etrng0_req is driven by soc_ifc.trng_req below.
+assign etrng1_req = 1'b0;
 
 `endif
 
@@ -1575,7 +1705,7 @@ soc_ifc_top1
 `ifdef CALIPTRA_INTERNAL_TRNG
     .trng_req             (),
 `else
-    .trng_req             (etrng_req),
+    .trng_req             (etrng0_req),
 `endif
     // uC Interrupts
     .soc_ifc_error_intr(soc_ifc_error_intr),
@@ -1635,6 +1765,9 @@ soc_ifc_top1
     .ss_ocp_lock_en(ss_ocp_lock_en),
     .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
     .ss_key_release_key_size(ss_key_release_key_size),
+    // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out (-> combiner)
+    .dual_itrng_en(itrng1_en),
+    .dual_itrng_en_o(dual_itrng_en_reg),
     .stable_owner_key_en(stable_owner_key_en),
 
     // NMI Vector 
@@ -1684,6 +1817,12 @@ always_comb begin: tie_off_slaves
     responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hresp = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hrdata = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hresp = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hrdata = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hresp = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hrdata = '0;
 `endif
 end
 

@@ -442,6 +442,10 @@ module soc_ifc_tb
              .ss_ocp_lock_in_progress(),
              .ss_key_release_key_size(),
 
+             // Dual iTRNG enable strap in / register value out
+             .dual_itrng_en(1'b0),
+             .dual_itrng_en_o(),
+
              .stable_owner_key_en(),
 
              .nmi_vector(),

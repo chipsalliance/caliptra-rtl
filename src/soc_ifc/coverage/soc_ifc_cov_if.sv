@@ -949,6 +949,22 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_CPTRA_iTRNG_ENTROPY_CONFIG_1;
   logic [31:0]   full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_1 = `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1;
 
+  logic          hit_CPTRA_iTRNG_ENTROPY_CONFIG_2;
+  logic [3:0]    bus_CPTRA_iTRNG_ENTROPY_CONFIG_2;
+  logic [31:0]   full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_2 = `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2;
+
+  logic          hit_CPTRA_iTRNG1_ENTROPY_CONFIG_0;
+  logic [3:0]    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_0;
+  logic [31:0]   full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_0 = `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0;
+
+  logic          hit_CPTRA_iTRNG1_ENTROPY_CONFIG_1;
+  logic [3:0]    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_1;
+  logic [31:0]   full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_1 = `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1;
+
+  logic          hit_CPTRA_iTRNG1_ENTROPY_CONFIG_2;
+  logic [3:0]    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_2;
+  logic [31:0]   full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_2 = `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2;
+
   logic          hit_CPTRA_RSVD_REG[0:1];
   logic [3:0]    bus_CPTRA_RSVD_REG[0:1];
   logic [31:0]   full_addr_CPTRA_RSVD_REG[0:1];
@@ -1685,6 +1701,18 @@ interface soc_ifc_cov_if
 
   assign hit_CPTRA_iTRNG_ENTROPY_CONFIG_1 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_1[AXI_ADDR_WIDTH-1:0]);
   assign bus_CPTRA_iTRNG_ENTROPY_CONFIG_1 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG_ENTROPY_CONFIG_1}};
+
+  assign hit_CPTRA_iTRNG_ENTROPY_CONFIG_2 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_2[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG_ENTROPY_CONFIG_2 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG_ENTROPY_CONFIG_2}};
+
+  assign hit_CPTRA_iTRNG1_ENTROPY_CONFIG_0 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_0[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG1_ENTROPY_CONFIG_0 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG1_ENTROPY_CONFIG_0}};
+
+  assign hit_CPTRA_iTRNG1_ENTROPY_CONFIG_1 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_1[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG1_ENTROPY_CONFIG_1 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG1_ENTROPY_CONFIG_1}};
+
+  assign hit_CPTRA_iTRNG1_ENTROPY_CONFIG_2 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_2[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG1_ENTROPY_CONFIG_2 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG1_ENTROPY_CONFIG_2}};
 
   assign hit_CPTRA_RSVD_REG[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_RSVD_REG[0][18-1:0]);
   assign bus_CPTRA_RSVD_REG[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_RSVD_REG[0]}};
@@ -2834,6 +2862,42 @@ interface soc_ifc_cov_if
   covergroup soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_1_cg (ref logic [3:0] bus_event) @(posedge clk);
     CPTRA_iTRNG_ENTROPY_CONFIG_1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1;
     bus_CPTRA_iTRNG_ENTROPY_CONFIG_1_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG_ENTROPY_CONFIG_2 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_2_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG_ENTROPY_CONFIG_2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_2;
+    bus_CPTRA_iTRNG_ENTROPY_CONFIG_2_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG1_ENTROPY_CONFIG_0 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_0_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG1_ENTROPY_CONFIG_0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG1_ENTROPY_CONFIG_0;
+    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_0_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG1_ENTROPY_CONFIG_1 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_1_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG1_ENTROPY_CONFIG_1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG1_ENTROPY_CONFIG_1;
+    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_1_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG1_ENTROPY_CONFIG_2 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_2_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG1_ENTROPY_CONFIG_2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG1_ENTROPY_CONFIG_2;
+    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_2_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -4329,6 +4393,10 @@ interface soc_ifc_cov_if
   soc_ifc_CPTRA_WDT_CFG_cg CPTRA_WDT_CFG_cg = new(bus_CPTRA_WDT_CFG);
   soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_0_cg CPTRA_iTRNG_ENTROPY_CONFIG_0_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_0);
   soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_1_cg CPTRA_iTRNG_ENTROPY_CONFIG_1_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_1);
+  soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_2_cg CPTRA_iTRNG_ENTROPY_CONFIG_2_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_2);
+  soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_0_cg CPTRA_iTRNG1_ENTROPY_CONFIG_0_cg = new(bus_CPTRA_iTRNG1_ENTROPY_CONFIG_0);
+  soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_1_cg CPTRA_iTRNG1_ENTROPY_CONFIG_1_cg = new(bus_CPTRA_iTRNG1_ENTROPY_CONFIG_1);
+  soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_2_cg CPTRA_iTRNG1_ENTROPY_CONFIG_2_cg = new(bus_CPTRA_iTRNG1_ENTROPY_CONFIG_2);
   soc_ifc_CPTRA_RSVD_REG_cg CPTRA_RSVD_REG_cg = new(bus_CPTRA_RSVD_REG);
   soc_ifc_CPTRA_HW_CAPABILITIES_cg CPTRA_HW_CAPABILITIES_cg = new(bus_CPTRA_HW_CAPABILITIES);
   soc_ifc_CPTRA_FW_CAPABILITIES_cg CPTRA_FW_CAPABILITIES_cg = new(bus_CPTRA_FW_CAPABILITIES);

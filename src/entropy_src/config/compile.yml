@@ -56,6 +56,7 @@ targets:
     directories: [$COMPILE_ROOT/tb]
     files:
       - $COMPILE_ROOT/tb/physical_rng.sv
+      - $COMPILE_ROOT/tb/physical_rng_deterministic.sv
 ---
 provides: [entropy_src_tb]
 schema_version: 2.4.0
