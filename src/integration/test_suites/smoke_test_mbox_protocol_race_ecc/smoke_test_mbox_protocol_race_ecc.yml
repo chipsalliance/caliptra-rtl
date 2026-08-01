@@ -13,13 +13,20 @@
 # limitations under the License.
 #
 ---
-seed: 1
+seed: 1717171717
 testname: smoke_test_mbox_protocol_race_ecc
-# NOTE: NOT YET REGISTERED in caliptra_top_nightly_directed_regression.yml.
-# This test currently fails with an unrelated, separately-discovered
-# ERR_HWIF_IN (X-propagation) assertion in mbox_csr.sv whenever the mailbox
-# reaches MBOX_EXECUTE_SOC, independent of the protocol-path race this test
-# targets. See smoke_test_mbox_protocol_race_ecc.c header comment for full
-# details. Register this test in the nightly regression once that separate
-# bug has been root-caused and fixed (or the test has been reworked to avoid
-# triggering it), so it does not introduce an unrelated failure into CI.
+# NOTE: registered in caliptra_top_nightly_directed_regression.yml.
+# The previously-blocking, unrelated ERR_HWIF_IN (X-propagation) assertion in
+# mbox_csr.sv (fired whenever the mailbox reached MBOX_EXECUTE_SOC) has since
+# been fixed (see mbox_rd_valid gating in mbox.sv). Re-validated with the
+# sram_rd_ecc_en fix both reverted and reapplied, using this same seed
+# (MY_RANDOM_SEED / VCS ntb_random_seed = 1717171717) and a delay sweep
+# (RACE_DELAY_CYCLES = 0..8, see smoke_test_mbox_protocol_race_ecc.c): no
+# ERR_HWIF_IN in any run, and MboxProtocolWriteReadOverlap_C never fired in
+# either configuration -- the hypothesized protocol/pointer-path race has
+# still NOT been empirically reproduced from firmware alone (see the C file's
+# header comment for the full history and the arbiter-contention repro idea
+# noted in plan.md as a follow-on for a future session). The RTL fix, SVA
+# cover, and this directed test are kept as permanent regression
+# instrumentation regardless, since the fix is sound and cheap, and the cover
+# property will fire and flag the condition if it is ever reached in CI.

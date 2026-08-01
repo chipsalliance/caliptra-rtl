@@ -83,6 +83,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma/smoke_test_dma.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox_dma_ecc/smoke_test_mbox_dma_ecc.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox_protocol_race_ecc/smoke_test_mbox_protocol_race_ecc.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hek_flow/smoke_test_hek_flow.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/kv_entry_read_err/kv_entry_read_err.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_swwe_lock/smoke_test_kv_swwe_lock.yml

@@ -65,6 +65,20 @@
 // check in this C code -- if the race is not hit on this single attempt,
 // this test will still report PASS (a negative/inconclusive result), and
 // reachability must be judged from the cover/assertion outcome.
+//
+// Validation update (later session): the separate, pre-existing
+// ERR_HWIF_IN X-propagation bug that previously blocked ANY test from
+// reaching MBOX_EXECUTE_SOC has since been fixed. Re-run with that fix in
+// place across seed=1717171717 and RACE_DELAY_CYCLES=0..8 (both with the
+// sram_rd_ecc_en fix reverted and reapplied): no ERR_HWIF_IN in any run,
+// but MboxProtocolWriteReadOverlap_C also never fired in any run -- the
+// race remains unreproduced from firmware alone via this mechanism. This
+// is consistent with (and does not contradict) the possibility that the
+// AHB-Lite interface enforces a mandatory bubble cycle between back-to-back
+// uC stores that structurally prevents this exact alignment; see plan.md's
+// "Repro technique idea" (arbiter-level backpressure in soc_ifc_arb.sv) for
+// a follow-on approach that has cycle-accurate control instead of relying
+// on firmware instruction timing.
 // ---------------------------------------------------------------------
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -85,6 +99,17 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #endif
 
 #define MBOX_DLEN_VAL 8
+
+// Cycle delay (extra nops) inserted between the uC's own mbox_status write
+// (which arms the EXECUTE_UC -> EXECUTE_SOC transition arc) and the extra,
+// out-of-order mbox_datain write that attempts to land in that transition
+// cycle. Because the TB's SoC BFM only issues a single command push per
+// simulation run, this test cannot sweep multiple attempts within one run;
+// instead, override this at build time (-DRACE_DELAY_CYCLES=N) to scan the
+// race window across separate runs while keeping everything else fixed.
+#ifndef RACE_DELAY_CYCLES
+#define RACE_DELAY_CYCLES 0
+#endif
 
 void nmi_handler() {
     VPRINTF(FATAL, "NMI");
@@ -128,6 +153,12 @@ void main(void) {
     // ~tap_mode, status != CMD_BUSY), asserting rst_mbox_rdptr on the next
     // evaluation while mbox_fsm_ps is still MBOX_EXECUTE_UC.
     soc_ifc_set_mbox_status_field(DATA_READY);
+
+    // Sweepable delay (0 by default) to scan for the exact cycle alignment
+    // of the transition arc, per RACE_DELAY_CYCLES above.
+    for (volatile int d = 0; d < RACE_DELAY_CYCLES; d++) {
+        __asm__ volatile ("nop");
+    }
 
     // Extra, protocol-out-of-order DATAIN write, issued immediately
     // (back-to-back store, no artificial delay) to attempt to land in the
