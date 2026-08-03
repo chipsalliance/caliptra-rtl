@@ -541,12 +541,28 @@ end
     // Therefore at most one iccm_wren_bank bit is asserted per cycle, and the
     // OR-mux produces the correct single-bank data word.
     //=========================================================================-
+    // The RV_ICCM_ADDR_XOR features XOR the write address into the data that is
+    // stored in the ICCM. Undo this XOR when reading back the data.
+    logic [pt.ICCM_BITS-1:2] iccm_hash_wa [pt.ICCM_NUM_BANKS];
+    logic [31:0]             iccm_hash_unxor [pt.ICCM_NUM_BANKS];
+
+    for (genvar i = 0; i < pt.ICCM_NUM_BANKS; i++) begin: gen_iccm_hash_unxor
+        assign iccm_hash_wa[i] = {el2_mem_export.iccm_addr_bank[i],
+                                  (pt.ICCM_BANK_INDEX_LO-2)'(i)};
+`ifdef RV_ICCM_ADDR_XOR
+        assign iccm_hash_unxor[i] = el2_mem_export.iccm_bank_wr_data[i] ^
+                                    32'({iccm_hash_wa[i], iccm_hash_wa[i]});
+`else
+        assign iccm_hash_unxor[i] = el2_mem_export.iccm_bank_wr_data[i];
+`endif
+    end
+
     always_comb begin
         iccm_hash_dv   = |el2_mem_export.iccm_wren_bank;
         iccm_hash_data = '0;
         for (int i = 0; i < pt.ICCM_NUM_BANKS; i++) begin
             iccm_hash_data |= el2_mem_export.iccm_wren_bank[i] ?
-                              el2_mem_export.iccm_bank_wr_data[i] : '0;
+                              iccm_hash_unxor[i] : '0;
         end
     end
 `else
