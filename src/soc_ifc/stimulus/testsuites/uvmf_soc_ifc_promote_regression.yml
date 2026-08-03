@@ -9,3 +9,4 @@ contents:
         - $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_rand_test.yml
         - $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_dma_xfer_stress_test.yml
         - $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_dma_wr_fifo_directed_test.yml
+        - $CALIPTRA_ROOT/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/src/soc_ifc_sha_acc_axi_user_test.yml
