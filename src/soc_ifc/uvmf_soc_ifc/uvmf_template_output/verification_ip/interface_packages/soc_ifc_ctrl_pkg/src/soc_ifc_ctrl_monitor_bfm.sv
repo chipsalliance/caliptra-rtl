@@ -91,7 +91,7 @@ end
   tri [`CLP_OBF_FE_DWORDS-1:0][31:0] cptra_obf_field_entropy_i;
   tri  cptra_obf_uds_seed_vld_i;
   tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed_i;
-  tri [2:0] security_state_i;
+  tri [5:0] security_state_i;
   tri  BootFSM_BrkPoint_i;
   tri [63:0] generic_input_wires_i;
   tri  recovery_data_avail_i;

@@ -1075,6 +1075,126 @@
         end
     endfunction
 
+    /*----------------------- SOC_IFC_REG__CPTRA_ITRNG_ENTROPY_CONFIG_2 SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(fips_window_size_bit_cg[bt]) this.fips_window_size_bit_cg[bt].sample(data[0 + bt]);
+            foreach(single_bit_mode_bit_cg[bt]) this.single_bit_mode_bit_cg[bt].sample(data[16 + bt]);
+            foreach(rng_bit_sel_bit_cg[bt]) this.rng_bit_sel_bit_cg[bt].sample(data[17 + bt]);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(data[19 + bt]);
+            foreach(bypass_mode_bit_cg[bt]) this.bypass_mode_bit_cg[bt].sample(data[31 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[15:0]/*fips_window_size*/  ,  data[16:16]/*single_bit_mode*/  ,  data[18:17]/*rng_bit_sel*/  ,  data[30:19]/*RSVD*/  ,  data[31:31]/*bypass_mode*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(fips_window_size_bit_cg[bt]) this.fips_window_size_bit_cg[bt].sample(fips_window_size.get_mirrored_value() >> bt);
+            foreach(single_bit_mode_bit_cg[bt]) this.single_bit_mode_bit_cg[bt].sample(single_bit_mode.get_mirrored_value() >> bt);
+            foreach(rng_bit_sel_bit_cg[bt]) this.rng_bit_sel_bit_cg[bt].sample(rng_bit_sel.get_mirrored_value() >> bt);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(RSVD.get_mirrored_value() >> bt);
+            foreach(bypass_mode_bit_cg[bt]) this.bypass_mode_bit_cg[bt].sample(bypass_mode.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( fips_window_size.get_mirrored_value()  ,  single_bit_mode.get_mirrored_value()  ,  rng_bit_sel.get_mirrored_value()  ,  RSVD.get_mirrored_value()  ,  bypass_mode.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__CPTRA_ITRNG1_ENTROPY_CONFIG_0 SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(low_threshold_bit_cg[bt]) this.low_threshold_bit_cg[bt].sample(data[0 + bt]);
+            foreach(high_threshold_bit_cg[bt]) this.high_threshold_bit_cg[bt].sample(data[16 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[15:0]/*low_threshold*/  ,  data[31:16]/*high_threshold*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(low_threshold_bit_cg[bt]) this.low_threshold_bit_cg[bt].sample(low_threshold.get_mirrored_value() >> bt);
+            foreach(high_threshold_bit_cg[bt]) this.high_threshold_bit_cg[bt].sample(high_threshold.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( low_threshold.get_mirrored_value()  ,  high_threshold.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__CPTRA_ITRNG1_ENTROPY_CONFIG_1 SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(repetition_count_bit_cg[bt]) this.repetition_count_bit_cg[bt].sample(data[0 + bt]);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(data[16 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[15:0]/*repetition_count*/  ,  data[31:16]/*RSVD*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(repetition_count_bit_cg[bt]) this.repetition_count_bit_cg[bt].sample(repetition_count.get_mirrored_value() >> bt);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(RSVD.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( repetition_count.get_mirrored_value()  ,  RSVD.get_mirrored_value()   );
+        end
+    endfunction
+
+    /*----------------------- SOC_IFC_REG__CPTRA_ITRNG1_ENTROPY_CONFIG_2 SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(fips_window_size_bit_cg[bt]) this.fips_window_size_bit_cg[bt].sample(data[0 + bt]);
+            foreach(single_bit_mode_bit_cg[bt]) this.single_bit_mode_bit_cg[bt].sample(data[16 + bt]);
+            foreach(rng_bit_sel_bit_cg[bt]) this.rng_bit_sel_bit_cg[bt].sample(data[17 + bt]);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(data[19 + bt]);
+            foreach(bypass_mode_bit_cg[bt]) this.bypass_mode_bit_cg[bt].sample(data[31 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[15:0]/*fips_window_size*/  ,  data[16:16]/*single_bit_mode*/  ,  data[18:17]/*rng_bit_sel*/  ,  data[30:19]/*RSVD*/  ,  data[31:31]/*bypass_mode*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(fips_window_size_bit_cg[bt]) this.fips_window_size_bit_cg[bt].sample(fips_window_size.get_mirrored_value() >> bt);
+            foreach(single_bit_mode_bit_cg[bt]) this.single_bit_mode_bit_cg[bt].sample(single_bit_mode.get_mirrored_value() >> bt);
+            foreach(rng_bit_sel_bit_cg[bt]) this.rng_bit_sel_bit_cg[bt].sample(rng_bit_sel.get_mirrored_value() >> bt);
+            foreach(RSVD_bit_cg[bt]) this.RSVD_bit_cg[bt].sample(RSVD.get_mirrored_value() >> bt);
+            foreach(bypass_mode_bit_cg[bt]) this.bypass_mode_bit_cg[bt].sample(bypass_mode.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( fips_window_size.get_mirrored_value()  ,  single_bit_mode.get_mirrored_value()  ,  rng_bit_sel.get_mirrored_value()  ,  RSVD.get_mirrored_value()  ,  bypass_mode.get_mirrored_value()   );
+        end
+    endfunction
+
     /*----------------------- SOC_IFC_REG__CPTRA_RSVD_REG SAMPLE FUNCTIONS -----------------------*/
     function void soc_ifc_reg__CPTRA_RSVD_REG::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,

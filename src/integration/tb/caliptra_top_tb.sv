@@ -119,9 +119,14 @@ module caliptra_top_tb (
     ras_test_ctrl_t ras_test_ctrl;
     axi_complex_ctrl_t axi_complex_ctrl;
     logic [63:0] generic_input_wires;
-    logic        etrng_req;
+    logic        etrng0_req;
+    logic        etrng1_req;
     logic  [3:0] itrng_data;
     logic        itrng_valid;
+    logic        itrng1_en;
+    logic        second_RNG_triggered;
+    logic  [3:0] itrng_data1;
+    logic        itrng_valid1;
 
     logic cptra_error_fatal;
     logic cptra_error_non_fatal;
@@ -162,6 +167,9 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .strap_ss_key_release_key_size,
     .strap_ss_key_release_base_addr,
     .ss_ocp_lock_en,
+    .itrng1_en,
+    .etrng1_req, // ES1 entropy request observed by the BFM to time second_RNG_triggered
+    .second_RNG_triggered, // To control when the second RNG triggers, for testing the combiner. The first RNG is always triggered by the DUT.
     .strap_ss_strap_generic_0,
     .strap_ss_strap_generic_1,
     .strap_ss_strap_generic_2,
@@ -270,13 +278,21 @@ caliptra_top caliptra_top_dut (
     .cptra_error_non_fatal(cptra_error_non_fatal),
 
 `ifdef CALIPTRA_INTERNAL_TRNG
-    .etrng_req             (etrng_req),
-    .itrng_data            (itrng_data),
-    .itrng_valid           (itrng_valid),
+    .etrng0_req            (etrng0_req),
+    .etrng1_req            (etrng1_req),
+    .itrng0_data           (itrng_data),
+    .itrng0_valid          (itrng_valid),
+    .itrng1_data           (itrng_data1),
+    .itrng1_valid          (itrng_valid1),
+    .itrng1_en             (itrng1_en),
 `else
-    .etrng_req             (),
-    .itrng_data            (4'b0),
-    .itrng_valid           (1'b0),
+    .etrng0_req            (),
+    .etrng1_req            (),
+    .itrng0_data           (4'b0),
+    .itrng0_valid          (1'b0),
+    .itrng1_en             (1'b0),
+    .itrng1_data           (4'b0),
+    .itrng1_valid          (1'b0),
 `endif
 
     // Subsystem mode straps, tested in subsystem bench
@@ -327,13 +343,65 @@ caliptra_top caliptra_top_dut (
 `ifdef CALIPTRA_INTERNAL_TRNG
     //=========================================================================-
     // Physical RNG used for Internal TRNG
+    //
+    // Two RNG models are instantiated per source and MUXed by det_rng_sel:
+    //   - physical_rng               : default model (InitialSeed then $urandom)
+    //   - physical_rng_deterministic : fully deterministic LFSR stream, for
+    //                                  reproducible conditioned / multi-seed tests
+    // det_rng_sel is set by the +CLP_DETERMINISTIC_RNG plusarg, so the choice is
+    // per-test. Without the plusarg the default model is selected and existing
+    // tests are unaffected.
     //=========================================================================-
-physical_rng physical_rng (
-    .clk    (core_clk),
-    .enable (etrng_req),
-    .data   (itrng_data),
-    .valid  (itrng_valid)
-);
+    logic       det_rng_sel;
+    logic [3:0] itrng0_rand_data,  itrng0_det_data;
+    logic       itrng0_rand_valid, itrng0_det_valid;
+    logic [3:0] itrng1_rand_data,  itrng1_det_data;
+    logic       itrng1_rand_valid, itrng1_det_valid;
+
+    initial det_rng_sel = $test$plusargs("CLP_DETERMINISTIC_RNG") ? 1'b1 : 1'b0;
+
+    // ---- Source 0 ----
+    physical_rng physical_rng (
+        .clk    (core_clk),
+        .enable (etrng0_req),
+        .data   (itrng0_rand_data),
+        .valid  (itrng0_rand_valid)
+    );
+    physical_rng_deterministic #(
+        .LfsrSeed(32'hDEADBEEF)
+    ) physical_rng_det (
+        .clk    (core_clk),
+        .enable (etrng0_req),
+        .data   (itrng0_det_data),
+        .valid  (itrng0_det_valid)
+    );
+    assign itrng_data  = det_rng_sel ? itrng0_det_data  : itrng0_rand_data;
+    assign itrng_valid = det_rng_sel ? itrng0_det_valid : itrng0_rand_valid;
+
+    // ---- Source 1 ----
+    // Secondary iTRNG source uses a distinct seed so the two entropy_src blocks
+    // feed different 384-bit seeds into the entropy_combiner (combined seed is
+    // SHA3-384(IS0 || IS1), not SHA3-384(IS0 || IS0)). The default-model IS1
+    // matches the isolated entropy_combiner_es_csrng_tb golden vectors; the
+    // deterministic model uses a distinct LFSR seed for the same reason.
+    physical_rng #(
+        .InitialSeed(384'h9e3779b97f4a7c15f39cc0605cedc8341082276bf3a27251f86c6a11d0c18e9587f9e1a34b2d0c7658493a1fbe6d2c0a)
+    ) physical_rng1 (
+        .clk    (core_clk),
+        .enable (etrng1_req & second_RNG_triggered),
+        .data   (itrng1_rand_data),
+        .valid  (itrng1_rand_valid)
+    );
+    physical_rng_deterministic #(
+        .LfsrSeed(32'h12345678)
+    ) physical_rng1_det (
+        .clk    (core_clk),
+        .enable (etrng1_req & second_RNG_triggered),
+        .data   (itrng1_det_data),
+        .valid  (itrng1_det_valid)
+    );
+    assign itrng_data1  = det_rng_sel ? itrng1_det_data  : itrng1_rand_data;
+    assign itrng_valid1 = det_rng_sel ? itrng1_det_valid : itrng1_rand_valid;
 `endif
 
    //=========================================================================-
