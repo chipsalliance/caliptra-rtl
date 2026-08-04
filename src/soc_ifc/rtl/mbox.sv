@@ -90,8 +90,8 @@ module mbox
     // Status
     output logic uc_mbox_lock,
 
-    // Mailbox activity indicator (keep-alive for clock gating).
-    output logic active,
+    // Mailbox busy indicator (keep-alive for clock gating).
+    output logic busy,
 
     //interrupts
     output logic uc_mbox_data_avail,
@@ -614,17 +614,17 @@ always_comb begin: mbox_sram_inf
     sha_sram_resp_data = sram_rdata_cor;
 end
 
-// Mailbox activity indicator used to keep the soc_ifc clock alive so the clock
+// Mailbox busy indicator used to keep the soc_ifc clock alive so the clock
 // cannot be gated mid-operation. High whenever the mailbox is:
 //   (a) servicing a request on any interface (raw DVs stay asserted through their
 //       read-data phase because the hold/stall mechanism holds them high)
 //   (b) running an ECC read-check
 //   (c) driving an SRAM access
 //   (d) transitioning FSM state
-always_comb active = req_dv | dir_req_dv | dma_sram_req_dv | sha_sram_req_dv |
-                     sram_rd_ecc_en |
-                     mbox_sram_req_cs |
-                     (mbox_fsm_ns != mbox_fsm_ps);
+always_comb busy = req_dv | dir_req_dv | dma_sram_req_dv | sha_sram_req_dv |
+                   sram_rd_ecc_en |
+                   mbox_sram_req_cs |
+                   (mbox_fsm_ns != mbox_fsm_ps);
 
 // From RISC-V core beh_lib.sv
 // 32-bit data width hardcoded
