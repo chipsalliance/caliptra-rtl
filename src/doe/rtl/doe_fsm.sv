@@ -14,6 +14,7 @@
 //
 //`include "kv_defines.svh"
 `include "caliptra_macros.svh"
+`include "caliptra_prim_assert.sv"
 
 module doe_fsm 
     import doe_defines_pkg::*;
@@ -61,6 +62,7 @@ module doe_fsm
 
     output logic flow_done,
     output logic flow_error,
+    output logic fsm_error,
     output logic flow_in_progress,
     output logic lock_uds_flow,
     output logic lock_fe_flow,
@@ -77,14 +79,22 @@ localparam BLOCK_OFFSET_W = `CLP_MAX_OF(HEK_BLOCK_OFFSET_W, `CLP_MAX_OF(FE_BLOCK
 localparam DEST_WR_OFFSET_W = $clog2(512/32);
 
 //declare fsm state variables
-typedef enum logic [2:0] {
-    DOE_IDLE    = 3'b000,
-    DOE_INIT    = 3'b001,
-    DOE_BLOCK   = 3'b011,
-    DOE_NEXT    = 3'b010,
-    DOE_WAIT    = 3'b110,
-    DOE_WRITE   = 3'b100,
-    DOE_DONE    = 3'b101
+// Encoding generated with
+// $ python3 sparse_fsm_encode.py -d 5 -m 8 -n 10 -s 31415926
+//
+// Minimum Hamming distance: 5
+// Maximum Hamming distance: 7
+//
+localparam int DoeStateWidth = 10;
+typedef enum logic [DoeStateWidth-1:0] {
+    DOE_IDLE  = 10'b1010101010,
+    DOE_INIT  = 10'b1111011110,
+    DOE_BLOCK = 10'b0100011011,
+    DOE_NEXT  = 10'b1010010101,
+    DOE_WAIT  = 10'b0110101101,
+    DOE_WRITE = 10'b0001100111,
+    DOE_DONE  = 10'b1001111001,
+    DOE_ERROR = 10'b0111110000
 } kv_doe_fsm_state_e;
 
 logic running_uds, running_fe, running_hek;
@@ -166,27 +176,33 @@ always_comb begin : kv_doe_fsm
     dest_write_offset_nxt = dest_write_offset;
     flow_done = '0;
     flow_error = '0;
+    fsm_error = '0;
 
     unique case (kv_doe_fsm_ps)
         DOE_IDLE: begin
-            if (arc_DOE_IDLE_DOE_INIT) kv_doe_fsm_ns = DOE_INIT;
+            if (zeroize ) kv_doe_fsm_ns = DOE_IDLE;
+            else if (arc_DOE_IDLE_DOE_INIT) kv_doe_fsm_ns = DOE_INIT;
             //assert flow done if a locked flow is attempted
             flow_done = (running_uds & lock_uds_flow) | (running_fe & lock_fe_flow) | (running_hek & lock_hek_flow);
         end
         DOE_INIT: begin
-            kv_doe_fsm_ns = DOE_WAIT;
+            if (zeroize ) kv_doe_fsm_ns = DOE_IDLE;
+            else kv_doe_fsm_ns = DOE_WAIT;
             doe_init = '1;
         end
         DOE_BLOCK: begin
-            kv_doe_fsm_ns = DOE_NEXT;
+            if (zeroize ) kv_doe_fsm_ns = DOE_IDLE;
+            else kv_doe_fsm_ns = DOE_NEXT;
             src_write_en = '1;
         end
         DOE_NEXT: begin
-            kv_doe_fsm_ns = DOE_WAIT;
+            if (zeroize ) kv_doe_fsm_ns = DOE_IDLE;
+            else kv_doe_fsm_ns = DOE_WAIT;
             doe_next = '1;
         end
         DOE_WAIT: begin
-            if (arc_DOE_WAIT_DOE_WRITE) kv_doe_fsm_ns = DOE_WRITE;
+            if      (zeroize ) kv_doe_fsm_ns = DOE_IDLE;
+            else if (arc_DOE_WAIT_DOE_WRITE) kv_doe_fsm_ns = DOE_WRITE;
             else if (arc_DOE_WAIT_DOE_BLOCK) kv_doe_fsm_ns = DOE_BLOCK;
         end
         DOE_WRITE: begin
@@ -197,7 +213,8 @@ always_comb begin : kv_doe_fsm
             flow_error = !kv_write_allow;
 
             //go back to idle if dest done, and done with blocks
-            if (arc_DOE_WRITE_DOE_DONE) kv_doe_fsm_ns = DOE_DONE;
+            if      (zeroize ) kv_doe_fsm_ns = DOE_IDLE;
+            else if (arc_DOE_WRITE_DOE_DONE) kv_doe_fsm_ns = DOE_DONE;
             //go back to block stage for next block if not done with blocks
             else if (arc_DOE_WRITE_DOE_BLOCK) begin 
                 kv_doe_fsm_ns = DOE_BLOCK;
@@ -215,18 +232,13 @@ always_comb begin : kv_doe_fsm
             dest_write_offset_en = '1;
             dest_write_offset_nxt = '0;
         end
+        DOE_ERROR: begin
+            kv_doe_fsm_ns = DOE_ERROR; // Terminal — sticky until reset
+            fsm_error = 1'b1;
+        end
         default: begin
-            kv_doe_fsm_ns = kv_doe_fsm_ps;
-            src_write_en = '0;
-            block_offset_nxt = block_offset;
-            block_offset_en = '0;
-            doe_init = '0;
-            doe_next = '0;
-            dest_write_en = '0;
-            dest_write_offset_en ='0;
-            dest_write_offset_nxt = dest_write_offset;
-            flow_done = '0;
-            flow_error = '0;
+            kv_doe_fsm_ns = DOE_ERROR; // Invalid encoding detected
+            fsm_error = 1'b1;
         end
     endcase
 end
@@ -277,21 +289,21 @@ always_comb src_write_data = running_uds ? obf_uds_seed[block_offset[UDS_BLOCK_O
                              running_hek ? obf_hek_seed[block_offset[HEK_BLOCK_OFFSET_W-1:0]] : '0;
 
 //state flops
+// Sparse FSM flop for glitch hardening (invalid encoding -> DOE_ERROR)
+`CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_doe_state_regs, kv_doe_fsm_ns, kv_doe_fsm_ps, kv_doe_fsm_state_e, DOE_IDLE, clk, rst_b, 0)
+
 always_ff @(posedge clk or negedge rst_b) begin
     if (~rst_b) begin
-        kv_doe_fsm_ps <= DOE_IDLE;
         dest_write_offset <= '0;
         block_offset <= '0;
         dest_addr <= '0;
     end
     else if (zeroize_reg) begin
-        kv_doe_fsm_ps <= DOE_IDLE;
         dest_write_offset <= '0;
         block_offset <= '0;
         dest_addr <= '0;
     end
     else begin
-        kv_doe_fsm_ps <= kv_doe_fsm_ns;
         dest_write_offset <= dest_write_offset_en ? dest_write_offset_nxt : dest_write_offset;
         block_offset <= block_offset_en ? block_offset_nxt : block_offset;
         dest_addr <= dest_addr_en ? dest_addr_nxt : dest_addr;

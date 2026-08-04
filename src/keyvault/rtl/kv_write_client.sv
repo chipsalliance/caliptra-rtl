@@ -60,6 +60,7 @@ logic dest_write_en;
 logic [31:0] pad_data;
 logic write_pad;
 logic write_last;
+logic fsm_error;
 
 kv_write_rule_check kv_write_rules
 (
@@ -92,7 +93,8 @@ kv_dest_write_fsm
     .write_last(write_last),
     .pad_data(pad_data),
     .ready(kv_ready),
-    .done(dest_done)
+    .done(dest_done),
+    .fsm_error(fsm_error)
 );
 
 always_comb dest_keyvault = write_ctrl_reg.write_en;
@@ -110,6 +112,9 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
     else if (zeroize) begin
         error_code <= KV_SUCCESS;
+    end
+    else if (fsm_error) begin
+        error_code <= KV_FSM_ERROR;
     end
     else begin
         // On first beat of kv write, latch any error conditions.

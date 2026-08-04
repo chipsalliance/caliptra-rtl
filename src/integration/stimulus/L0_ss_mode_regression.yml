@@ -1,0 +1,12 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0_ss_mode", "entropy_combiner", "top_ss_mode_regression"]
+      paths:
+        - ../test_suites/smoke_test_entropy_combiner_kat/smoke_test_entropy_combiner_kat.yml
+        - ../test_suites/smoke_test_entropy_combiner/smoke_test_entropy_combiner.yml
+        - ../test_suites/smoke_test_entropy_combiner_conditioned/smoke_test_entropy_combiner_conditioned.yml
+        - ../test_suites/smoke_test_entropy_combiner_multiseed/smoke_test_entropy_combiner_multiseed.yml
+        - ../test_suites/smoke_test_entropy_combiner_lock_op/smoke_test_entropy_combiner_lock_op.yml
