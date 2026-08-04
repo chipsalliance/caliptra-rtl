@@ -17,8 +17,8 @@
 // Interface:  AHB-Lite (no hierarchical force/release)
 //
 // Register address map (all addresses are absolute AHB addresses):
-//   AES registers are at base 0x0000_0800 (VH_REGISTER_ADDRESS_OFFSET)
-//   CLP registers (ENTROPY_IF_SEED) are at base 0x0000_0000
+//   AES registers (TLUL space) are at base 0x0000_0000 (AHB addr < 0x800)
+//   CLP registers (ENTROPY_IF_SEED, CTRL0, etc.) are at base 0x0000_0800 (VH_REGISTER_ADDRESS_OFFSET, AHB addr >= 0x800)
 //
 // CTRL_SHADOWED [15:0]:
 //   [1:0]  operation       (AES_ENC=01, AES_DEC=10)
@@ -132,9 +132,8 @@ module aes_clp_tb
   parameter [2:0]  AES_KEY_128 = 3'b001;
   parameter [2:0]  AES_KEY_192 = 3'b010;
   parameter [2:0]  AES_KEY_256 = 3'b100;
-  // prng_reseed_rate
+  // prng_reseed_rate: PER_1 = 3'b001
   parameter [2:0]  PRNG_PER_1  = 3'b001;
-  parameter [2:0]  PRNG_PER_8K = 3'b100;
   // STATUS bit positions
   parameter        ST_IDLE          = 0;
   parameter        ST_OUTPUT_VALID  = 3;
@@ -339,31 +338,13 @@ module aes_clp_tb
         end
         read_single_word(AES_STATUS);
       end
-      $display("[TB] STATUS[%0d] (%s) asserted after %0d polls.", bit_pos, label, timeout);
+     $display("[TB] STATUS[%0d] (%s) asserted after %0d polls.", bit_pos, label, timeout);
     end
   endtask
 
   task wait_idle;        wait_status_bit(ST_IDLE,         "IDLE");         endtask
   task wait_input_ready; wait_status_bit(ST_INPUT_READY,  "INPUT_READY");  endtask
   task wait_output_valid;wait_status_bit(ST_OUTPUT_VALID, "OUTPUT_VALID"); endtask
-
-  // Poll STATUS until IDLE goes LOW (DUT has started processing).
-  // Used after triggering a GCM INIT in auto mode to ensure the DUT has
-  // started Op1 before we call wait_idle() which checks for IDLE=1.
-  task wait_not_idle;
-    int timeout;
-    begin
-      timeout = 0;
-      read_single_word(AES_STATUS);
-      while (read_data[ST_IDLE]) begin
-        timeout++;
-        if (timeout > 10000)
-          $fatal(1, "[TB] TIMEOUT waiting for IDLE to deassert (DUT never started)");
-        read_single_word(AES_STATUS);
-      end
-      $display("[TB] IDLE deasserted after %0d polls (DUT started).", timeout);
-    end
-  endtask
 
   //--------------------------------------------------------------------------
   // Alternatively, wait on the combinational busy_o port (faster in sim)
@@ -401,20 +382,6 @@ module aes_clp_tb
     begin
       w = ctrl_word(op, mode, key_len, 1'b1);
       $display("[TB] Writing CTRL_SHADOWED = 0x%08h (op=%0d mode=%06b key_len=%03b)",
-               w, op, mode, key_len);
-      write_single_word(AES_CTRL_SHADOWED, w);  // first write
-      write_single_word(AES_CTRL_SHADOWED, w);  // confirm write (shadowed protocol)
-    end
-  endtask
-
-  // Automatic-mode CTRL write for GCM (no manual_op bit; PER_8K reseed rate)
-  task write_ctrl_auto(input [1:0] op, input [5:0] mode, input [2:0] key_len);
-    logic [31:0] w;
-    begin
-      // [1:0]=op, [7:2]=mode, [10:8]=key_len, [11]=sideload=0,
-      // [14:12]=prng_reseed_rate=PRNG_PER_8K, [15]=manual_op=0 (auto)
-      w = {1'b0 /*manual*/, PRNG_PER_8K, 1'b0 /*sideload*/, key_len, mode, op};
-      $display("[TB] Writing CTRL_SHADOWED (auto) = 0x%08h (op=%0d mode=%06b key_len=%03b)",
                w, op, mode, key_len);
       write_single_word(AES_CTRL_SHADOWED, w);  // first write
       write_single_word(AES_CTRL_SHADOWED, w);  // confirm write (shadowed protocol)
@@ -578,7 +545,7 @@ module aes_clp_tb
       $display("[TB] FAIL: %s", test_name);
       $display("[TB]   got      = %032h", got);
       $display("[TB]   expected = %032h", expected);
-      $display("[TB] Test FAILED: %s", test_name);
+      $fatal(1, "[TB] Test FAILED: %s", test_name);
     end
   endtask
 
@@ -685,9 +652,7 @@ module aes_clp_tb
 
   //==========================================================================
   // aes_run_gcm
-  // GCM encrypt via AHB using automatic operation mode.
-  // Follows the same sequence as the OpenTitan UVM GCM vseq.
-  // IV field in ACVP is a 96-bit nonce.
+  // GCM encrypt via AHB. IV field in ACVP is a 96-bit nonce.
   //==========================================================================
   task automatic aes_run_gcm(
     input  [2:0]   key_len,
@@ -701,100 +666,79 @@ module aes_clp_tb
     output [127:0] tag
   );
     int n_aad, n_pt, i;
-    logic [63:0]  aad_bits, ct_bits;
-    logic [127:0] len_block;
     begin
       n_aad = aad.size();
       n_pt  = pt.size();
       ct    = new[n_pt];
 
-      // ----------------------------------------------------------------
-      // INIT: Automatic mode - DUT auto-starts both INIT cipher blocks
-      // (Op1: Enc(0) - H; Op2: Enc(IV+1) - S) after IV_3 is registered.
-      // After write_iv() the DUT drops IDLE within 1-2 cycles; we call
-      // wait_not_idle() to confirm IDLE has dropped (DUT started Op1)
-      // before calling wait_idle() which polls until INIT completes.
-      // H and S are stored internally - no DATA_OUT during INIT.
-      // ----------------------------------------------------------------
+      // Step 1: wait idle
       wait_idle();
-      write_ctrl_auto(AES_OP_ENC, AES_MODE_GCM, key_len);
+
+      // Step 2: write CTRL in automatic mode (manual_op=0) so INIT self-completes.
+      // INIT runs two internal AES operations (H and S) that produce no DATA_OUT;
+      // a manual trigger would persist and cause an infinite S-recomputation loop.
+      begin
+        logic [31:0] w;
+        w = ctrl_word(AES_OP_ENC, AES_MODE_GCM, key_len, 1'b0);
+        write_single_word(AES_CTRL_SHADOWED, w);
+        write_single_word(AES_CTRL_SHADOWED, w);
+      end
+
+      // Step 3: GCM INIT — write key then IV; DUT auto-starts H then S derivation.
+      // Counter advances from 0 -> 1 (H step) -> 2 = J0+1 (S step).
       write_gcm_ctrl(GCM_INIT, 5'd16);
       write_key(key);
       wait_idle();
-      write_iv({nonce, 32'h0000_0000});   // J0 = {nonce, 0}
-      wait_not_idle();                     // confirm DUT has started INIT (IDLE dropped)
-      wait_idle();                         // wait for both auto INIT ops (H + S)
+      write_iv({nonce, 32'h0000_0000});
+      wait_idle(); // blocks until both H and S are derived and core is idle
 
-      // ----------------------------------------------------------------
-      // AAD: Automatic mode - DUT auto-starts GHASH as soon as data_in_new.
-      // Poll INPUT_READY before each write; wait IDLE after the loop so
-      // the last GHASH update completes before transitioning to TEXT.
-      // ----------------------------------------------------------------
-      if (n_aad > 0) begin
-        // Set phase for first block (with last-block nvb if n_aad==1)
-        write_gcm_ctrl(GCM_AAD,
-          (n_aad == 1) ? aad_nvb : 5'd16);
+      // Step 4: process AAD blocks.
+      // AAD is GHASH-only; the cipher core is not used and DATA_OUT is never written.
+      // Poll input_ready (not output_valid) between blocks.
+      for (i = 0; i < n_aad; i++) begin
+        automatic logic [4:0] nvb;
+        nvb = (i == n_aad - 1) ? aad_nvb : 5'd16;
+        wait_input_ready();
+        write_gcm_ctrl(GCM_AAD, nvb);
+        write_data_in(aad[i]);
+      end
+      // Wait for the GHASH to fully complete the last AAD block before changing phase.
+      // ctrl_gcm_we_o is only granted in CTRL_IDLE; wait_input_ready() returns while
+      // the FSM is still in CTRL_GHASH_READY (GHASH multiply in progress), causing
+      // the GCM_TEXT write to be silently dropped. wait_idle() blocks until
+      // ghash_in_ready_i=1 (GHASH back in GHASH_IDLE) AND FSM is in CTRL_IDLE.
+      if (n_aad > 0) wait_idle();
 
-        for (i = 0; i < n_aad; i++) begin
-          // For last block, update nvb if partial and > 1 block total
-          if (i == n_aad - 1 && n_aad > 1 && aad_nvb != 5'd16) begin
-            wait_idle();
-            write_gcm_ctrl(GCM_AAD, aad_nvb);
-          end
-          wait_input_ready();
-          write_data_in(aad[i]);
-          // No trigger needed: DUT auto-starts on data_in_new
-          // No wait_output_valid: AAD goes to GHASH only
-        end
-        wait_idle();   // ensure last AAD block completes
+      // Step 5: process PT blocks.
+      // Counter is already at J0+1 from INIT; do not re-write IV.
+      // In auto mode each write_data_in triggers the operation.
+      for (i = 0; i < n_pt; i++) begin
+        automatic logic [4:0] nvb;
+        nvb = (i == n_pt - 1) ? text_nvb : 5'd16;
+        wait_input_ready();
+        write_gcm_ctrl(GCM_TEXT, nvb);
+        write_data_in(pt[i]);
+        wait_output_valid();
+        read_data_out(ct[i]);
       end
 
-      // ----------------------------------------------------------------
-      // TEXT: Automatic mode - DUT auto-starts cipher when data_in_new.
-      // output_valid asserts for every block.
-      // ----------------------------------------------------------------
-      if (n_pt > 0) begin
-        // Set phase for first block (with last-block nvb if n_pt==1)
-        write_gcm_ctrl(GCM_TEXT,
-          (n_pt == 1) ? text_nvb : 5'd16);
-
-        for (i = 0; i < n_pt; i++) begin
-          // For last block, update nvb if partial and > 1 block total
-          if (i == n_pt - 1 && n_pt > 1 && text_nvb != 5'd16) begin
-            wait_idle();
-            write_gcm_ctrl(GCM_TEXT, text_nvb);
-          end
-          wait_input_ready();
-          write_data_in(pt[i]);
-          wait_output_valid();
-          read_data_out(ct[i]);
-        end
+      // Step 6: write length block [len(AAD) in bits || len(CT) in bits], then read tag.
+      // Must wait for full GHASH idle before writing GCM_TAG: the GHASH samples
+      // gcm_phase_i in GHASH_MASKED_ADD_CORR to decide GHASH_IDLE vs GHASH_OUT.
+      // If GCM_TAG is written while the last CT block's GHASH multiply is still
+      // running, the GHASH prematurely takes the TAG path and deadlocks with the FSM.
+      begin
+        automatic logic [127:0] len_block;
+        automatic int           aad_bytes, ct_bytes;
+        aad_bytes = (n_aad == 0) ? 0 : (n_aad - 1) * 16 + int'(aad_nvb);
+        ct_bytes  = (n_pt  == 0) ? 0 : (n_pt  - 1) * 16 + int'(text_nvb);
+        len_block = {64'(aad_bytes * 8), 64'(ct_bytes * 8)};
+        wait_idle();
+        write_gcm_ctrl(GCM_TAG, 5'd16);
+        write_data_in(len_block);
+        wait_output_valid();
+        read_data_out(tag);
       end
-
-      // ----------------------------------------------------------------
-      // TAG: provide the 128-bit GHASH length block {len(A)||len(C)} where
-      // both lengths are in bits as 64-bit big-endian integers (NIST 800-38D).
-      // Automatic mode: DUT auto-starts on data_in_new.
-      // output_valid asserts with the 128-bit authentication tag.
-      // wait_idle() before writing GCM_TAG ctrl is mandatory: the AES
-      // cipher and GHASH pipelines are decoupled, so output_valid for the
-      // last TEXT block asserts before the GHASH update of that CT is done.
-      // Writing GCM_TAG ctrl while GHASH is still running corrupts state.
-      // ----------------------------------------------------------------
-      wait_idle();              // ensure last GHASH update (from TEXT/AAD) is complete
-      aad_bits = 64'h0;
-      ct_bits  = 64'h0;
-      if (n_aad > 0) aad_bits = (64'(n_aad) - 64'h1) * 64'd128 + 64'(aad_nvb)  * 64'd8;
-      if (n_pt  > 0) ct_bits  = (64'(n_pt)  - 64'h1) * 64'd128 + 64'(text_nvb) * 64'd8;
-      len_block = {aad_bits, ct_bits};
-      $display("[TB] GCM TAG: n_aad=%0d aad_nvb=%0d n_pt=%0d text_nvb=%0d aad_bits=%0d ct_bits=%0d len_block=%032h",
-               n_aad, aad_nvb, n_pt, text_nvb, aad_bits, ct_bits, len_block);
-
-      write_gcm_ctrl(GCM_TAG, 5'd16);
-      wait_input_ready();
-      write_data_in(len_block);
-      wait_output_valid();
-      read_data_out(tag);
     end
   endtask
 
@@ -816,7 +760,7 @@ module aes_clp_tb
       end
       192: begin
         // NIST: new_key = old_key XOR last-192-bits-of-{CT[j-1]||CT[j]}
-        // {CT[j-1]||CT[j]} = 32 bytes; last 24 bytes = CT[j-1][63:0] + CT[j]
+        // Last 192 bits of the 256-bit concat = {CT[j-1][63:0], CT[j]}
         // key is stored in bits [255:64] of the 256-bit container
         update_key[255:64] = key[255:64] ^ {ct_prev[63:0], ct};
         update_key[ 63: 0] = key[63:0];
@@ -853,7 +797,8 @@ module aes_clp_tb
     logic [127:0] key_save, ct_save, pt_save;
     logic [255:0] key256_save;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-ECB.txt";
+      if (!$value$plusargs("AES_ECB_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-ECB.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -879,7 +824,7 @@ module aes_clp_tb
 
         if (test_type == "AFT") begin
           automatic int nblocks;
-          nblocks  = data_str.len() / 32; // 32 hex chars per 128-bit block
+          nblocks  = data_str.len() / 32;
           data_in  = new[nblocks];
           data_out = new[nblocks];
           for (int b = 0; b < nblocks; b++) begin
@@ -941,12 +886,14 @@ module aes_clp_tb
     logic [2:0]   key_len;
     logic [127:0] data_in  [];
     logic [127:0] data_out [];
-    logic [127:0] iv_dummy, iv_dec_dummy;
+    logic [127:0] iv_dummy;
+    logic [127:0] iv_dec_dummy;
     logic [127:0] iv_save, pt_save, ct_save;
     logic [127:0] pt_prev;
     logic [255:0] key256_save;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-CBC.txt";
+      if (!$value$plusargs("AES_CBC_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-CBC.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -996,12 +943,11 @@ module aes_clp_tb
             $fwrite(fout, "AFT %0d %s\n", tcid, ct_hex);
           end
         end else if (test_type == "MCT") begin
-          ct      = 128'h0;
-          ct_prev = 128'h0;
           if (op == AES_OP_ENC) begin
-            // ---- CBC ENCRYPT MCT ----
-            // data_str = PT seed
-            pt = hexstr_to_128(data_str);
+            // CBC ENCRYPT MCT
+            pt      = hexstr_to_128(data_str);
+            ct      = 128'h0;
+            ct_prev = 128'h0;
             for (int i = 0; i < 100; i++) begin
               automatic string key_hex;
               key256_save = key;
@@ -1021,8 +967,8 @@ module aes_clp_tb
                 wait_output_valid();
                 ct_prev = ct;
                 read_data_out(ct);
-                iv = ct;       // CBC enc: next IV = current CT
-                pt = iv_prev;  // CBC MCT enc: next PT = previous IV
+                iv = ct;
+                pt = iv_prev;
               end
               key = update_key(key, ct, ct_prev, key_len_int);
               case (key_len_int)
@@ -1035,47 +981,32 @@ module aes_clp_tb
               $fflush(fout);
             end
           end else begin
-            // ---- CBC DECRYPT MCT ----
-            // data_str = CT seed; output variable is PT
-            ct = hexstr_to_128(data_str);
-            pt = 128'h0;
+            // CBC DECRYPT MCT (NIST SP 800-38A)
+            ct      = hexstr_to_128(data_str);
+            pt      = 128'h0;
+            pt_prev = 128'h0;
             for (int i = 0; i < 100; i++) begin
               automatic string key_hex;
               key256_save = key;
               iv_save     = iv;
               ct_save     = ct;
-              case (key_len_int)
-                192:    key_hex = $sformatf("%048h", key[255:64]);
-                256:    key_hex = $sformatf("%064h", key[255:0]);
-                default:key_hex = $sformatf("%032h", key[255:128]);
-              endcase
-              // CBC decrypt: use aes_run_one_block per block so IV is explicitly
-              // written each iteration (iv_j = CT[j-1] = previous ciphertext input).
-              // This avoids relying on DUT auto-chain for decrypt in manual mode.
               for (int j = 0; j < 1000; j++) begin
-                pt_prev = pt;   // save PT[j-1] BEFORE overwriting pt
+                pt_prev = pt;
                 aes_run_one_block(AES_OP_DEC, AES_MODE_CBC, key_len, key, iv, ct, pt, iv_dec_dummy);
-                // CBC decrypt IV for next block = CT[j] (the input just decrypted)
-                iv = ct;        // iv_{j+1} = CT[j]
+                iv = ct;
                 if (j == 0)
-                  ct = iv_save;   // CT[1] = IV[i] (NIST MCT decrypt)
+                  ct = iv_save;
                 else
-                  ct = pt_prev;   // CT[j+1] = PT[j-1] (NIST MCT decrypt)
+                  ct = pt_prev;
               end
-              // After 1000 blocks:
-              //   pt      = PT[999]   ct_prev = PT[998] (last CT input = second-to-last PT)
-              // Seed next outer iteration per NIST CBC decrypt MCT:
-              //   IV[i+1] = PT[999],  CT[i+1][0] = PT[998]
-              iv = pt;        // IV[i+1] = PT[999]
-              ct = pt_prev;   // CT seed[i+1] = PT[998]
-              // Key update uses PT[999] and PT[998]
+              iv = pt;
+              ct = pt_prev;
               key = update_key(key, pt, pt_prev, key_len_int);
               case (key_len_int)
                 192:    key_hex = $sformatf("%048h", key256_save[255:64]);
                 256:    key_hex = $sformatf("%064h", key256_save[255:0]);
                 default:key_hex = $sformatf("%032h", key256_save[255:128]);
               endcase
-              // Response format: key iv pt ct  (pt=PT[999], ct=CT[i][0] seed)
               $fwrite(fout, "MCT %0d %s %032h %032h %032h\n",
                       tcid, key_hex, iv_save, pt, ct_save);
               $fflush(fout);
@@ -1109,7 +1040,8 @@ module aes_clp_tb
     logic [127:0] iv_save, pt_save;
     logic [255:0] key256_save;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-CFB128.txt";
+      if (!$value$plusargs("AES_CFB128_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-CFB128.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -1134,21 +1066,29 @@ module aes_clp_tb
         iv      = hexstr_to_128(iv_str);
 
         if (test_type == "AFT") begin
-          automatic int nblocks;
-          nblocks  = data_str.len() / 32;
-          data_in  = new[nblocks];
-          data_out = new[nblocks];
-          for (int b = 0; b < nblocks; b++) begin
-            data_in[b][127:96] = hexstr_to_32(data_str, b*32 +  0);
-            data_in[b][ 95:64] = hexstr_to_32(data_str, b*32 +  8);
-            data_in[b][ 63:32] = hexstr_to_32(data_str, b*32 + 16);
-            data_in[b][ 31: 0] = hexstr_to_32(data_str, b*32 + 24);
+          begin
+            int n_blk;
+            string ct_hex;
+            n_blk    = (data_str.len() + 31) / 32;
+            data_in  = new[n_blk];
+            data_out = new[n_blk];
+            for (int b = 0; b < n_blk; b++) begin
+              automatic int    bs = b * 32;
+              automatic string blk;
+              if (bs + 32 <= data_str.len())
+                blk = data_str.substr(bs, bs + 31);
+              else begin
+                blk = data_str.substr(bs, data_str.len() - 1);
+                while (blk.len() < 32) blk = {blk, "0"};
+              end
+              data_in[b] = hexstr_to_128(blk);
+            end
+            aes_run(AES_OP_ENC, AES_MODE_CFB, key_len, key, iv, data_in, data_out, n_blk);
+            ct_hex = "";
+            for (int b = 0; b < n_blk; b++)
+              ct_hex = $sformatf("%s%032h", ct_hex, data_out[b]);
+            $fwrite(fout, "AFT %0d %s\n", tcid, ct_hex);
           end
-          aes_run(AES_OP_ENC, AES_MODE_CFB, key_len, key, iv, data_in, data_out, nblocks);
-          $fwrite(fout, "AFT %0d ", tcid);
-          for (int b = 0; b < nblocks; b++)
-            $fwrite(fout, "%032h", data_out[b]);
-          $fwrite(fout, "\n");
         end else if (test_type == "MCT") begin
           pt      = hexstr_to_128(data_str);
           ct_prev = 128'h0;
@@ -1202,7 +1142,8 @@ module aes_clp_tb
     logic [127:0] iv_save, pt_save;
     logic [255:0] key256_save;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-OFB.txt";
+      if (!$value$plusargs("AES_OFB_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-OFB.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -1227,21 +1168,29 @@ module aes_clp_tb
         iv      = hexstr_to_128(iv_str);
 
         if (test_type == "AFT") begin
-          automatic int nblocks;
-          nblocks  = data_str.len() / 32;
-          data_in  = new[nblocks];
-          data_out = new[nblocks];
-          for (int b = 0; b < nblocks; b++) begin
-            data_in[b][127:96] = hexstr_to_32(data_str, b*32 +  0);
-            data_in[b][ 95:64] = hexstr_to_32(data_str, b*32 +  8);
-            data_in[b][ 63:32] = hexstr_to_32(data_str, b*32 + 16);
-            data_in[b][ 31: 0] = hexstr_to_32(data_str, b*32 + 24);
+          begin
+            int n_blk;
+            string ct_hex;
+            n_blk    = (data_str.len() + 31) / 32;
+            data_in  = new[n_blk];
+            data_out = new[n_blk];
+            for (int b = 0; b < n_blk; b++) begin
+              automatic int    bs = b * 32;
+              automatic string blk;
+              if (bs + 32 <= data_str.len())
+                blk = data_str.substr(bs, bs + 31);
+              else begin
+                blk = data_str.substr(bs, data_str.len() - 1);
+                while (blk.len() < 32) blk = {blk, "0"};
+              end
+              data_in[b] = hexstr_to_128(blk);
+            end
+            aes_run(AES_OP_ENC, AES_MODE_OFB, key_len, key, iv, data_in, data_out, n_blk);
+            ct_hex = "";
+            for (int b = 0; b < n_blk; b++)
+              ct_hex = $sformatf("%s%032h", ct_hex, data_out[b]);
+            $fwrite(fout, "AFT %0d %s\n", tcid, ct_hex);
           end
-          aes_run(AES_OP_ENC, AES_MODE_OFB, key_len, key, iv, data_in, data_out, nblocks);
-          $fwrite(fout, "AFT %0d ", tcid);
-          for (int b = 0; b < nblocks; b++)
-            $fwrite(fout, "%032h", data_out[b]);
-          $fwrite(fout, "\n");
         end else if (test_type == "MCT") begin
           pt      = hexstr_to_128(data_str);
           ct_prev = 128'h0;
@@ -1297,7 +1246,8 @@ module aes_clp_tb
     logic [127:0] data_in  [];
     logic [127:0] data_out [];
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-CTR.txt";
+      if (!$value$plusargs("AES_CTR_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-CTR.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -1351,7 +1301,6 @@ module aes_clp_tb
           aes_run(AES_OP_ENC, AES_MODE_CTR, key_len, key, iv, data_in, data_out, nblocks);
           $fwrite(fout, "AFT %0d ", tcid);
           for (int b = 0; b < nblocks; b++) begin
-            // For the last partial block output only the valid bytes (not the padded zeros)
             if (b == nblocks - 1 && last_nvb < 16) begin
               automatic string full_hex;
               full_hex = $sformatf("%032h", data_out[b]);
@@ -1388,7 +1337,8 @@ module aes_clp_tb
     int           n_aad, n_pt;
     int           aad_len, pt_len;
     begin
-      in_fname  = "../stimulus/acvp/ACVP-AES-GCM.txt";
+      if (!$value$plusargs("AES_GCM_ACVP_FILE=%s", in_fname))
+        in_fname  = "../stimulus/acvp/ACVP-AES-GCM.txt";
       out_fname = make_resp_filename(in_fname);
       fin  = $fopen(in_fname, "r");
       if (fin == 0) begin
@@ -1406,7 +1356,8 @@ module aes_clp_tb
         result = $fscanf(fin, "%s %s %s %d %d %d %s %s %s %s",
                          mode_str, test_type, direction, key_len_int, tgid, tcid,
                          iv_str, aad_str, pt_str, key_str);
-        if (result != 10) break;
+        if (result != 10)
+            break;
 
         key_len = keylen_int_to_param(key_len_int);
         key     = hexstr_to_256(key_str, key_len_int / 32);
@@ -1414,7 +1365,7 @@ module aes_clp_tb
         // Parse 96-bit nonce (24 hex chars)
         nonce = {hexstr_to_32(iv_str, 0), hexstr_to_32(iv_str, 8), hexstr_to_32(iv_str, 16)};
 
-        // Parse AAD blocks. "empty" in the stimulus file signals no AAD.
+        // Parse AAD blocks. The keyword "empty" in the stimulus file signals no AAD.
         aad_len = (aad_str == "empty") ? 0 : aad_str.len();
         if (aad_len == 0) begin
           n_aad   = 0;
@@ -1437,7 +1388,7 @@ module aes_clp_tb
           end
         end
 
-        // Parse PT blocks. "empty" in the stimulus file signals no plaintext.
+        // Parse PT blocks. The keyword "empty" in the stimulus file signals no plaintext.
         pt_len = (pt_str == "empty") ? 0 : pt_str.len();
         if (pt_len == 0) begin
           n_pt   = 0;
