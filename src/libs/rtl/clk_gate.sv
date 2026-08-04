@@ -19,6 +19,7 @@ module clk_gate (
     input logic cptra_rst_b,
     input logic psel,
     input logic clk_gate_en,
+    input logic soc_ifc_active,
     input logic rdc_clk_dis,
     input logic rdc_clk_dis_uc,
     input logic cpu_halt_status,
@@ -75,7 +76,7 @@ always_comb begin
     change_in_generic_wires = ((generic_input_wires ^ generic_input_wires_f) != 'h0);
     sleep_condition         = (cpu_halt_status && !change_in_generic_wires && !cptra_error_fatal && !cptra_in_debug_scan_mode && !cptra_dmi_reg_en_preQ);
     disable_clk             = (clk_gate_en && sleep_condition) | rdc_clk_dis;
-    disable_soc_ifc_clk     = (clk_gate_en && (sleep_condition && !psel)) | rdc_clk_dis;
+    disable_soc_ifc_clk     = (clk_gate_en && (sleep_condition && !psel && !soc_ifc_active)) | rdc_clk_dis;
     disable_uc_clk          = (rdc_clk_dis | rdc_clk_dis_uc);
 end
 

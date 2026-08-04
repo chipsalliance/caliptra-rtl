@@ -42,6 +42,10 @@ module soc_ifc_top
     input logic soc_ifc_clk_cg,
     input logic rdc_clk_cg,
 
+    // Mailbox activity indicator, routed to the clock gate so the soc_ifc clock
+    // cannot be gated while the mailbox has an operation in flight.
+    output logic mbox_clk_active,
+
     //SoC boot signals
     input logic cptra_pwrgood,
     input logic cptra_rst_b,
@@ -1393,6 +1397,7 @@ i_mbox (
     .sram_single_ecc_error(sram_single_ecc_error),
     .sram_double_ecc_error(sram_double_ecc_error),
     .uc_mbox_lock(uc_mbox_lock),
+    .active(mbox_clk_active),
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail(uc_mbox_data_avail),
     .soc_req_mbox_lock(soc_req_mbox_lock),
