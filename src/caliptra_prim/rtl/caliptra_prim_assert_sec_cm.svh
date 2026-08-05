@@ -7,6 +7,13 @@
 `ifndef CALIPTRA_PRIM_ASSERT_SEC_CM_SVH
 `define CALIPTRA_PRIM_ASSERT_SEC_CM_SVH
 
+// Explicitly include the files that define the macros referenced below
+// (CALIPTRA_ASSERT from caliptra_sva.svh; CALIPTRA_ASSUME_FPV from
+// caliptra_prim_assert.sv). Both are include-guarded, so these are no-ops when
+// this fragment is pulled in via caliptra_prim_assert.sv.
+`include "caliptra_sva.svh"
+`include "caliptra_prim_assert.sv"
+
 `define _CALIPTRA_SEC_CM_ALERT_MAX_CYC 30
 
 // When a named error signal rises, expect to see an associated error in at most MAX_CYCLES_ cycles.

@@ -5,6 +5,13 @@
 `ifndef CALIPTRA_PRIM_FLOP_MACROS_SV
 `define CALIPTRA_PRIM_FLOP_MACROS_SV
 
+// Explicitly include the files that define the macros referenced below
+// (CALIPTRA_ASSERT from caliptra_sva.svh; CALIPTRA_PRIM_STRINGIFY from
+// caliptra_prim_assert.sv). Both are include-guarded, so these are no-ops when
+// this fragment is pulled in via caliptra_prim_assert.sv.
+`include "caliptra_sva.svh"
+`include "caliptra_prim_assert.sv"
+
 /////////////////////////////////////
 // Default Values for Macros below //
 /////////////////////////////////////

@@ -478,8 +478,8 @@ end
         .ahb_lite_initiator            ( initiator_inst              ),
         .ahb_lite_resp_disable_i       ( ahb_lite_resp_disable       ),
         .ahb_lite_resp_access_blocked_o( ahb_lite_resp_access_blocked),
-        .ahb_lite_start_addr_i         ( `CALIPTRA_SLAVE_BASE_ADDR   ),
-        .ahb_lite_end_addr_i           ( `CALIPTRA_SLAVE_MASK_ADDR   )
+        .ahb_lite_start_addr_i         ( (`CALIPTRA_AHB_SLAVES_NUM*`CALIPTRA_AHB_HADDR_SIZE)'(`CALIPTRA_SLAVE_BASE_ADDR) ),
+        .ahb_lite_end_addr_i           ( (`CALIPTRA_AHB_SLAVES_NUM*`CALIPTRA_AHB_HADDR_SIZE)'(`CALIPTRA_SLAVE_MASK_ADDR) )
     );
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_DOE]     = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ECC]     = 1'b0;
@@ -1465,7 +1465,7 @@ csrng #(
     .csrng_cmd_o            (),
     // Alerts
     .alert_tx_o             (),
-    .alert_rx_i             ({caliptra_prim_alert_pkg::ALERT_RX_DEFAULT, caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_rx_i             ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
     // Interrupt
     .intr_cs_cmd_req_done_o (),
     .intr_cs_entropy_req_o  (),
@@ -1508,7 +1508,7 @@ entropy_src #(
     .entropy_src_xht_o                (),
     .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
     // Alerts
-    .alert_rx_i                       ({caliptra_prim_alert_pkg::ALERT_RX_DEFAULT, caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_rx_i                       ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
     .alert_tx_o                       (),
     // Interrupts
     .intr_es_entropy_valid_o          (),
@@ -1552,7 +1552,7 @@ entropy_src #(
     .entropy_src_xht_o                (),
     .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
     // Alerts
-    .alert_rx_i                       ({caliptra_prim_alert_pkg::ALERT_RX_DEFAULT, caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}),
+    .alert_rx_i                       ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
     .alert_tx_o                       (),
     // Interrupts
     .intr_es_entropy_valid_o          (),
