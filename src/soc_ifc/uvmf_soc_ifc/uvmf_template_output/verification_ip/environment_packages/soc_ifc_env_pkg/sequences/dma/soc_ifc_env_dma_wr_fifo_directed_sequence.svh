@@ -37,7 +37,6 @@ class soc_ifc_env_dma_wr_fifo_directed_sequence extends soc_ifc_env_dma_sequence
 
   // Deterministic transfer / stimulus parameters (no randomization).
   localparam int unsigned NUM_WORDS = 256;                // longer transfer -> more overlap
-  localparam bit [63:0]   DST_ADDR  = 64'h0000_1000;      // fixed, inside the SRAM window
   localparam bit [31:0]   SOC_WDATA = 32'hDEAD_BEEF;      // fixed SoC-AXI write payload
 
   function new(string name = "" );
@@ -49,17 +48,23 @@ class soc_ifc_env_dma_wr_fifo_directed_sequence extends soc_ifc_env_dma_sequence
     uvm_reg           soc_regs[$];
     bit               err;
     bit               xfer_done;
-    bit [31:0]        payload[$];
+    soc_ifc_dma_xfer_item item;
 
     if (reg_model == null)
       reg_model = configuration.soc_ifc_rm;
 
     dma_read_cap(); // FIFO max depth, needed by the AHB_FIFO write route
 
-    // Deterministic payload (fixed pattern) and SoC-AXI setup (fixed AxUSER).
-    payload.delete();
-    for (int w = 0; w < NUM_WORDS; w++)
-      payload.push_back(32'hA5A5_0000 | w);
+    // Directed item: fixed route/size/offsets and a fixed-pattern payload.
+    item = soc_ifc_dma_xfer_item::type_id::create("item");
+    item.configure(configuration.dma_axi_sram_backdoor.get_base_addr(),
+                   configuration.dma_axi_sram_backdoor.get_size_bytes());
+    item.route      = XFER_WR_FIFO;
+    item.num_words  = NUM_WORDS;
+    item.src_offset = 0;
+    item.dst_offset = 0;
+    item.payload    = new[NUM_WORDS];
+    foreach (item.payload[w]) item.payload[w] = 32'hA5A5_0000 | w;
 
     axi_user_obj = new("axi_user_obj");
     axi_user_obj.set_addr_user('1); // any SoC user is rejected for the DMA block
@@ -72,7 +77,7 @@ class soc_ifc_env_dma_wr_fifo_directed_sequence extends soc_ifc_env_dma_sequence
     xfer_done = 1'b0;
     fork
       begin : UC_WR_FIFO_XFER
-        dma_transfer_and_verify(.route(XFER_WR_FIFO), .payload(payload), .dst_addr(DST_ADDR), .err(err));
+        dma_transfer_and_verify(item, err);
         if (err)
           `uvm_error("DMA_WRFIFO_DIR", "uC WR_FIFO transfer through write_data reported a DMA error")
         xfer_done = 1'b1; // signal the SoC-AXI writer to stop

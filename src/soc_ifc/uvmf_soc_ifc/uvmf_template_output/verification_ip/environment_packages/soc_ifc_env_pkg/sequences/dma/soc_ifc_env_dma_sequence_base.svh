@@ -15,44 +15,23 @@
 //----------------------------------------------------------------------
 // DESCRIPTION: Reusable base for soc_ifc AXI DMA environment sequences.
 //
-// Encapsulates the DMA transaction-level API so derived DMA sequences/tests
-// compose it instead of re-implementing it (mirrors the reuse pattern of
-// soc_ifc_env_mbox_sequence_base):
-//   - dma_arm / dma_read_status / dma_wait_idle / dma_fifo_push / dma_fifo_pop
-//   - dma_read_cap (FIFO max depth), dma_transfer_and_verify (one transfer +
-//     self-check across the AXI2AXI / AHB_FIFO / MBOX routes), and the
-//     dma_transfer_rand wrapper (drives a constrained-random soc_ifc_dma_xfer_item)
-//   - dma_mbox_lock_acquire / dma_mbox_unlock for the MBOX route
-//   - the bounded AXI SRAM backdoor (sram_bkdr_write / sram_bkdr_read)
-//
-// The DMA AXI manager port is backed in hdl_top by a caliptra_axi_sram
-// (i_dma_axi_sram) with AW=18 (256KB window); its storage is the caliptra_sram
-// byte array i_sram.ram, indexed [word][byte].
+// Provides the DMA transaction API (arm/status/fifo/mbox helpers,
+// dma_transfer_and_verify, dma_transfer_rand) for derived DMA sequences. SRAM
+// access goes through configuration.dma_axi_sram_backdoor, so no SRAM geometry
+// or hierarchy path is hard-coded here.
 //----------------------------------------------------------------------
 
 class soc_ifc_env_dma_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_T(soc_ifc_env_configuration_t));
 
   `uvm_object_utils( soc_ifc_env_dma_sequence_base )
 
-  // ---- Bounded AXI SRAM (hdl_top.i_dma_axi_sram) geometry / backdoor ----
-  // AW=18 -> 256KB window. Storage is caliptra_sram's byte array:
-  //   logic [7:0] ram [DEPTH][NUM_BYTES-1:0], indexed [word][byte].
-  localparam int          SRAM_LOCAL_AW = 18;
-  localparam bit [63:0]   SRAM_WIN_MASK = (64'h1 << SRAM_LOCAL_AW) - 1;
-  localparam string       SRAM_PATH     = "hdl_top.i_dma_axi_sram.i_sram.ram";
-
-  // Non-overlapping source/destination windows (4-byte aligned, high bits zero).
-  localparam bit [63:0]   SRC_BASE = 64'h0000_0000;
-  localparam bit [63:0]   DST_BASE = 64'h0001_0000; // 64KB offset
-
-  // Mailbox address used as the intermediate for MBOX-route transfers (within the
-  // mailbox direct-access span).
-  localparam bit [63:0]   MBOX_ADDR = 64'h0000_0000;
+  // SRAM access is delegated to configuration.dma_axi_sram_backdoor, so this
+  // sequence holds no SRAM geometry or hierarchy path.
 
   // DMA internal FIFO max depth (in words), read once from cap.fifo_max_depth.
   protected int unsigned fifo_max_depth;
 
-  // Running count of transfers issued via this sequence, used for log/error context.
+  // Running count of transfers issued, used for log/error context.
   protected int unsigned transfer_id;
 
   function new(string name = "" );
@@ -62,42 +41,10 @@ class soc_ifc_env_dma_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_
   virtual task pre_body();
     super.pre_body();
     reg_model = configuration.soc_ifc_rm;
+    if (configuration.dma_axi_sram_backdoor == null)
+      `uvm_fatal("DMA_SEQ_BASE",
+        "configuration.dma_axi_sram_backdoor is null; test_top must configure it before DMA sequences run")
   endtask
-
-  //==========================================
-  // Backdoor helpers into the bounded AXI SRAM.
-  // caliptra_sram stores per byte: ram[word][byte] = word_data[8*byte +: 8].
-  //==========================================
-  protected function int unsigned sram_word_index(input bit [63:0] byte_addr);
-    return int'((byte_addr & SRAM_WIN_MASK) >> 2);
-  endfunction
-
-  virtual task sram_bkdr_write(input bit [63:0] byte_addr, input bit [31:0] data);
-    string path;
-    int unsigned idx;
-    idx = sram_word_index(byte_addr);
-    for (int b = 0; b < 4; b++) begin
-      path = $sformatf("%s[%0d][%0d]", SRAM_PATH, idx, b);
-      if (!uvm_hdl_deposit(path, data[8*b +: 8]))
-        `uvm_error("DMA_SEQ_BASE", $sformatf("uvm_hdl_deposit failed for %s", path))
-    end
-  endtask
-
-  virtual function bit [31:0] sram_bkdr_read(input bit [63:0] byte_addr);
-    string path;
-    int unsigned idx;
-    logic [63:0] val;
-    bit [31:0]   word;
-    idx = sram_word_index(byte_addr);
-    word = '0;
-    for (int b = 0; b < 4; b++) begin
-      path = $sformatf("%s[%0d][%0d]", SRAM_PATH, idx, b);
-      if (!uvm_hdl_read(path, val))
-        `uvm_error("DMA_SEQ_BASE", $sformatf("uvm_hdl_read failed for %s", path))
-      word[8*b +: 8] = val[7:0];
-    end
-    return word;
-  endfunction
 
   //==========================================
   // DMA register API (uC / AHB side).
@@ -219,26 +166,23 @@ class soc_ifc_env_dma_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_
   endtask
 
   //==========================================
-  // Core: run one DMA transfer for `route`, moving caller-supplied `payload`
-  // from `src_addr` to `dst_addr`, then verify the moved data. byte_count is
-  // derived from the payload length; `err` returns a DMA status error
-  // (status0.error) and data mismatches are reported as uvm_errors. block_size
-  // is fixed at 0; a non-zero block_size selects SS recovery mode, which stalls
-  // waiting for recovery_data_avail (see axi_dma_ctrl.sv).
+  // Run and verify one DMA transfer described by item.
   //==========================================
-  virtual task dma_transfer_and_verify(input  dma_route_e route,
-                                       input  bit [31:0]  payload[$],
-                                       input  bit [63:0]  src_addr = SRC_BASE,
-                                       input  bit [63:0]  dst_addr = DST_BASE,
-                                       output bit         err);
+  virtual task dma_transfer_and_verify(input  soc_ifc_dma_xfer_item item,
+                                       output bit                   err);
     int unsigned num_words;
     int unsigned byte_count;
     localparam int unsigned block_size = 0;
+    localparam bit [63:0] mbox_addr = 64'h0;
+    bit [63:0]   src_addr;
+    bit [63:0]   dst_addr;
     bit [31:0]   rd_data;
     bit          lock_ok;
 
     err       = 1'b0;
-    num_words = payload.size();
+    num_words = item.payload.size();
+    src_addr  = item.src_addr();
+    dst_addr  = item.dst_addr();
     if (num_words == 0) begin
       `uvm_fatal("DMA_XFER_SEQ", "dma_transfer_and_verify called with empty payload")
     end
@@ -250,44 +194,44 @@ class soc_ifc_env_dma_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_
     // into this one and mask/inflate the real failure count.
     dma_flush();
 
-    case (route)
+    case (item.route)
       XFER_AXI2AXI: begin
         // Source SRAM -> DMA -> destination SRAM (both over AXI).
         for (int w = 0; w < num_words; w++)
-          sram_bkdr_write(src_addr + (w*4), payload[w]);
+          configuration.dma_axi_sram_backdoor.write32_offset(item.src_offset + (w*4), item.payload[w]);
         dma_arm(src_addr, dst_addr, byte_count, block_size,
                 axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR,
                 axi_dma_reg__ctrl__wr_route__wr_route_e__AXI_RD);
         dma_wait_idle(err);
         if (err) begin
-          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, route.name()))
+          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, item.route.name()))
           return;
         end
         for (int w = 0; w < num_words; w++) begin
-          rd_data = sram_bkdr_read(dst_addr + (w*4));
-          if (rd_data !== payload[w])
-            `uvm_error("DMA_XFER_SEQ", $sformatf("AXI2AXI xfer %0d word %0d mismatch: exp=0x%08x got=0x%08x", transfer_id, w, payload[w], rd_data))
+          configuration.dma_axi_sram_backdoor.read32_offset(item.dst_offset + (w*4), rd_data);
+          if (rd_data !== item.payload[w])
+            `uvm_error("DMA_XFER_SEQ", $sformatf("AXI2AXI xfer %0d word %0d mismatch: exp=0x%08x got=0x%08x", transfer_id, w, item.payload[w], rd_data))
         end
       end
       XFER_RD_FIFO: begin
         // Source SRAM -> DMA FIFO; uC pops each word over AHB and compares.
         for (int w = 0; w < num_words; w++)
-          sram_bkdr_write(src_addr + (w*4), payload[w]);
+          configuration.dma_axi_sram_backdoor.write32_offset(item.src_offset + (w*4), item.payload[w]);
         dma_arm(src_addr, 64'h0, byte_count, block_size,
                 axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO,
                 axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE);
         for (int w = 0; w < num_words; w++) begin
           dma_fifo_pop(rd_data, err);
           if (err) begin
-            `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, route.name()))
+            `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, item.route.name()))
             return;
           end
-          if (rd_data !== payload[w])
-            `uvm_error("DMA_XFER_SEQ", $sformatf("RD_FIFO xfer %0d word %0d mismatch: exp=0x%08x got=0x%08x", transfer_id, w, payload[w], rd_data))
+          if (rd_data !== item.payload[w])
+            `uvm_error("DMA_XFER_SEQ", $sformatf("RD_FIFO xfer %0d word %0d mismatch: exp=0x%08x got=0x%08x", transfer_id, w, item.payload[w], rd_data))
         end
         dma_wait_idle(err);
         if (err) begin
-          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, route.name()))
+          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, item.route.name()))
           return;
         end
       end
@@ -297,85 +241,80 @@ class soc_ifc_env_dma_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_
                 axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE,
                 axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO);
         for (int w = 0; w < num_words; w++) begin
-          dma_fifo_push(payload[w], err);
+          dma_fifo_push(item.payload[w], err);
           if (err) begin
-            `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, route.name()))
+            `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, item.route.name()))
             return;
           end
         end
         dma_wait_idle(err);
         if (err) begin
-          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, route.name()))
+          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s", transfer_id, item.route.name()))
           return;
         end
         for (int w = 0; w < num_words; w++) begin
-          rd_data = sram_bkdr_read(dst_addr + (w*4));
-          if (rd_data !== payload[w])
-            `uvm_error("DMA_XFER_SEQ", $sformatf("WR_FIFO xfer %0d word %0d mismatch: exp=0x%08x got=0x%08x", transfer_id, w, payload[w], rd_data))
+          configuration.dma_axi_sram_backdoor.read32_offset(item.dst_offset + (w*4), rd_data);
+          if (rd_data !== item.payload[w])
+            `uvm_error("DMA_XFER_SEQ", $sformatf("WR_FIFO xfer %0d word %0d mismatch: exp=0x%08x got=0x%08x", transfer_id, w, item.payload[w], rd_data))
         end
       end
       XFER_MBOX: begin
-        // Mailbox round-trip (both MBOX directions) under one uC lock:
-        //   src SRAM -> mailbox (rd_route=MBOX), then mailbox -> dst SRAM
-        //   (wr_route=MBOX). Verified via the SRAM backdoor.
+        // Mailbox round-trip under one uC lock: src SRAM -> mailbox (rd MBOX),
+        // then mailbox -> dst SRAM (wr MBOX).
         dma_mbox_lock_acquire(lock_ok);
         if (!lock_ok) begin
           `uvm_error("DMA_XFER_SEQ", $sformatf("Failed to acquire mailbox lock for xfer %0d", transfer_id))
           return;
         end
         for (int w = 0; w < num_words; w++)
-          sram_bkdr_write(src_addr + (w*4), payload[w]);
-        dma_arm(src_addr, MBOX_ADDR, byte_count, block_size,
+          configuration.dma_axi_sram_backdoor.write32_offset(item.src_offset + (w*4), item.payload[w]);
+        dma_arm(src_addr, mbox_addr, byte_count, block_size,
                 axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX,
                 axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE);
         dma_wait_idle(err);
         if (err) begin
           dma_mbox_unlock();
-          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s (SRAM->mbox)", transfer_id, route.name()))
+          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s (SRAM->mbox)", transfer_id, item.route.name()))
           return;
         end
-        dma_arm(MBOX_ADDR, dst_addr, byte_count, block_size,
+        dma_arm(mbox_addr, dst_addr, byte_count, block_size,
                 axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE,
                 axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX);
         dma_wait_idle(err);
         dma_mbox_unlock();
         if (err) begin
-          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s (mbox->SRAM)", transfer_id, route.name()))
+          `uvm_error("DMA_XFER_SEQ", $sformatf("DMA reported error (status0.error) during xfer %0d route=%s (mbox->SRAM)", transfer_id, item.route.name()))
           return;
         end
         for (int w = 0; w < num_words; w++) begin
-          rd_data = sram_bkdr_read(dst_addr + (w*4));
-          if (rd_data !== payload[w])
-            `uvm_error("DMA_XFER_SEQ", $sformatf("MBOX xfer %0d word %0d mismatch: exp=0x%08x got=0x%08x", transfer_id, w, payload[w], rd_data))
+          configuration.dma_axi_sram_backdoor.read32_offset(item.dst_offset + (w*4), rd_data);
+          if (rd_data !== item.payload[w])
+            `uvm_error("DMA_XFER_SEQ", $sformatf("MBOX xfer %0d word %0d mismatch: exp=0x%08x got=0x%08x", transfer_id, w, item.payload[w], rd_data))
         end
       end
       default: begin
-        `uvm_fatal("DMA_XFER_SEQ", $sformatf("dma_transfer_and_verify called with non-concrete route %s", route.name()))
+        `uvm_fatal("DMA_XFER_SEQ", $sformatf("dma_transfer_and_verify called with non-concrete route %s", item.route.name()))
       end
     endcase
 
-    `uvm_info("DMA_XFER_SEQ", $sformatf("Completed DMA transfer %0d route=%s byte_count=%0d", transfer_id, route.name(), byte_count), UVM_LOW)
+    `uvm_info("DMA_XFER_SEQ", $sformatf("Completed DMA transfer %0d route=%s byte_count=%0d", transfer_id, item.route.name(), byte_count), UVM_LOW)
   endtask
 
   //==========================================
-  // Convenience wrapper: randomize a soc_ifc_dma_xfer_item (route, size, and
-  // non-overlapping window-fitted addresses) and a payload, then run+verify.
+  // Randomize a soc_ifc_dma_xfer_item, then run+verify.
   //==========================================
   virtual task dma_transfer_rand(output bit err);
     soc_ifc_dma_xfer_item item;
-    bit [31:0]            payload[$];
 
     item = soc_ifc_dma_xfer_item::type_id::create("item");
+    item.configure(configuration.dma_axi_sram_backdoor.get_base_addr(),
+                   configuration.dma_axi_sram_backdoor.get_size_bytes());
     if (!item.randomize())
       `uvm_fatal("DMA_XFER_SEQ", "Failed to randomize soc_ifc_dma_xfer_item")
 
     `uvm_info("DMA_XFER_SEQ", $sformatf("Randomized transfer: %s", item.convert2string()), UVM_HIGH)
 
-    payload.delete();
-    for (int w = 0; w < item.num_words; w++)
-      payload.push_back($urandom());
-
-    dma_transfer_and_verify(item.route, payload, item.src_addr, item.dst_addr, err);
+    dma_transfer_and_verify(item, err);
   endtask
 
 endclass

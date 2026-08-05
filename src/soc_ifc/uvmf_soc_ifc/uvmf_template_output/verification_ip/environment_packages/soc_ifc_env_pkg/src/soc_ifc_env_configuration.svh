@@ -78,6 +78,8 @@ extends uvmf_environment_configuration_base;
   soc_ifc_vsqr_t vsqr;
 
   // pragma uvmf custom class_item_additional begin
+  // DMA AXI SRAM backdoor (factory-swappable). Configured by test_top.
+  soc_ifc_mem_backdoor dma_axi_sram_backdoor;
   // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************
@@ -253,4 +255,3 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

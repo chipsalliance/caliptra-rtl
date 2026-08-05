@@ -50,6 +50,15 @@ package soc_ifc_parameters_pkg;
   parameter string mbox_sram_agent_BFM  = "mbox_sram_agent_BFM"; /* [8] */
 
   // pragma uvmf custom package_item_additional begin
+  // DMA AXI SRAM geometry (bench-owned). AW is the single knob; size/depth are
+  // derived as caliptra_axi_sram derives them. Word bytes come from soc_ifc_pkg
+  // (DUT-owned) so the TB stride tracks the DMA data width.
+  parameter int DMA_AXI_SRAM_ADDR_WIDTH = 18; // 2**18 = 256KB window
+  parameter int DMA_AXI_SRAM_WORD_BYTES = soc_ifc_pkg::CPTRA_AXI_DMA_DATA_WIDTH / 8;
+  parameter longint unsigned DMA_AXI_SRAM_SIZE_BYTES = longint'(1) << DMA_AXI_SRAM_ADDR_WIDTH;
+  parameter int DMA_AXI_SRAM_DEPTH = int'(DMA_AXI_SRAM_SIZE_BYTES / DMA_AXI_SRAM_WORD_BYTES);
+  parameter bit [63:0] DMA_AXI_SRAM_BASE_ADDR = 64'h0; // local/aliased AXI window
+  parameter string DMA_AXI_SRAM_HDL_PATH = "hdl_top.i_dma_axi_sram.i_sram.ram";
   // pragma uvmf custom package_item_additional end
 
 endpackage

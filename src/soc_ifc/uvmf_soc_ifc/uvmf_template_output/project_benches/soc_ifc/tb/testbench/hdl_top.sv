@@ -393,11 +393,11 @@ import aaxi_uvm_pkg::*;
         .cptra_uncore_dmi_reg_wdata(32'h0)
     );
 
-    // AXI subordinate memory on the DMA AXI manager port (m_axi_if). AW=18 bounds
-    // the storage to a 256KB window; axi_sub slices the DMA's wide address down to
-    // AW (upper bits alias), keeping the SRAM simulatable on the 48-bit port.
+    // AXI subordinate memory on the DMA AXI manager port. Geometry is owned by
+    // soc_ifc_parameters_pkg; axi_sub aliases the DMA's wide address into the AW
+    // window.
     caliptra_axi_sram #(
-        .AW(18                        ),
+        .AW(DMA_AXI_SRAM_ADDR_WIDTH   ),
         .DW(CPTRA_AXI_DMA_DATA_WIDTH  ),
         .IW(CPTRA_AXI_DMA_ID_WIDTH    ),
         .UW(CPTRA_AXI_DMA_USER_WIDTH  )
