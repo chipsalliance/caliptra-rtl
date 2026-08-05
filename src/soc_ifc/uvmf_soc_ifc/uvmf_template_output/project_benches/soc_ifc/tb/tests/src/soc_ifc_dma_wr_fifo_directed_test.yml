@@ -1,10 +1,10 @@
 ---
 # Directed WR_FIFO / write_data test: a single deterministic (no randomization),
-# fast DMA write-FIFO transfer through write_data over AHB, plus a SoC-AXI write to
-# write_data that must be rejected (SLVERR). Checkers: the transfer self-checks its
-# data; the predictor+scoreboard verify the SoC-AXI write_data access is rejected;
-# and the bound assertion soc_ifc_arb.ERR_ARB_SOC_DMA_GNT flags any grant of the DMA
-# client to the SoC.
+# fast DMA write-FIFO transfer through write_data over AHB, while the SoC-AXI side
+# continuously attempts writes to all DMA registers (including write_data), all of
+# which must be rejected (SLVERR). Checkers: the transfer self-checks its data; the
+# predictor+scoreboard verify the SoC-AXI accesses are rejected; and the bound assertion
+# soc_ifc_arb.ERR_ARB_SOC_DMA_GNT flags any grant of the DMA client to the SoC.
 seed: ${PLAYBOOK_RANDOM_SEED}
 plusargs:
 - '+UVM_TESTNAME=soc_ifc_cmdline_test'
