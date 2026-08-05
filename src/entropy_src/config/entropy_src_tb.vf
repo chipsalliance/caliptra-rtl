@@ -124,4 +124,5 @@ ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_repcnt_ht.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng.sv
+${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng_deterministic.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/entropy_src_tb.sv

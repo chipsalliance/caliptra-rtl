@@ -197,7 +197,9 @@ module ahb_lite_address_decoder #(
             `else
                 // CSRNG/Entopy_src ahb interfaces are tied to 0 when not enabled
                 localparam logic LOCAL_ASSERT_RSPR_RDY = !(rspr_ii inside {`CALIPTRA_SLAVE_SEL_CSRNG,
-                                                                           `CALIPTRA_SLAVE_SEL_ENTROPY_SRC});
+                                                                           `CALIPTRA_SLAVE_SEL_ENTROPY_SRC,
+                                                                           `CALIPTRA_SLAVE_SEL_ENTROPY_SRC1,
+                                                                           `CALIPTRA_SLAVE_SEL_COMBINER});
             `endif
             if (LOCAL_ASSERT_RSPR_RDY) begin: rspr_ready_do_assert
                 `CALIPTRA_ASSERT(AHB_RSPR_RST_READY           , $rose(hreset_n)        |-> (hreadyout_i[rspr_ii] == 1'b1), hclk, !hreset_n)
