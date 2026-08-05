@@ -43,6 +43,9 @@ module soc_ifc_top
     input logic soc_ifc_clk_cg,
     input logic rdc_clk_cg,
 
+    // Busy indicator and clocks cannot be gated
+    output logic busy,
+
     //SoC boot signals
     input logic cptra_pwrgood,
     input logic cptra_rst_b,
@@ -233,6 +236,7 @@ soc_ifc_req_t uc_req;
 logic mbox_req_dv;
 logic mbox_dir_req_dv;
 logic mbox_req_hold;
+logic mbox_busy;
 soc_ifc_req_t mbox_req_data;
 logic [SOC_IFC_DATA_W-1:0] mbox_rdata;
 logic [SOC_IFC_DATA_W-1:0] mbox_dir_rdata;
@@ -1417,6 +1421,7 @@ i_mbox (
     .sram_single_ecc_error(sram_single_ecc_error),
     .sram_double_ecc_error(sram_double_ecc_error),
     .uc_mbox_lock(uc_mbox_lock),
+    .busy(mbox_busy),
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail(uc_mbox_data_avail),
     .soc_req_mbox_lock(soc_req_mbox_lock),
@@ -1432,6 +1437,9 @@ i_mbox (
     .dmi_reg_wdata(cptra_uncore_dmi_reg_wdata),
     .dmi_reg(mbox_dmi_reg)
 );
+
+// Aggregate soc_ifc busy sources for the clock gate
+always_comb busy = mbox_busy;
 
 // AXI Manager (DMA)
 axi_dma_top #(

@@ -166,6 +166,7 @@ module caliptra_top
     logic                       soc_ifc_clk_cg  ;
     logic                       rdc_clk_cg      ;
     logic                       uc_clk_cg       ;
+    logic                       soc_ifc_top_busy;
 
     logic        [2:0]          s_axi_active    ;
 
@@ -947,6 +948,7 @@ clk_gate cg (
     .cptra_rst_b(cptra_noncore_rst_b),
     .psel(|s_axi_active || s_axi_r_if.arvalid || s_axi_w_if.awvalid),
     .clk_gate_en(clk_gating_en),
+    .soc_ifc_top_busy(soc_ifc_top_busy),
     .cpu_halt_status(o_cpu_halt_status),
     .rdc_clk_dis(rdc_clk_dis),
     .rdc_clk_dis_uc (fw_update_rst_window),
@@ -1640,6 +1642,8 @@ soc_ifc_top1
     .clk_cg        (clk_cg        ),
     .soc_ifc_clk_cg(soc_ifc_clk_cg),
     .rdc_clk_cg    (rdc_clk_cg    ),
+
+    .busy(soc_ifc_top_busy),
 
     .cptra_pwrgood(cptra_pwrgood),
     .cptra_rst_b  (cptra_rst_b  ),
