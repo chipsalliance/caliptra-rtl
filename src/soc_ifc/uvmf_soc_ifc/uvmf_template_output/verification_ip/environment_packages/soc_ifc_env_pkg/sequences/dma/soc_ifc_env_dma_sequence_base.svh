@@ -303,12 +303,13 @@ class soc_ifc_env_dma_sequence_base extends soc_ifc_env_sequence_base #(.CONFIG_
   //==========================================
   // Randomize a soc_ifc_dma_xfer_item, then run+verify.
   //==========================================
-  virtual task dma_transfer_rand(output bit err);
+  virtual task dma_transfer_rand(int unsigned dma_max_words, output bit err);
     soc_ifc_dma_xfer_item item;
 
     item = soc_ifc_dma_xfer_item::type_id::create("item");
     item.configure(configuration.dma_axi_sram_backdoor.get_base_addr(),
-                   configuration.dma_axi_sram_backdoor.get_size_bytes());
+                   configuration.dma_axi_sram_backdoor.get_size_bytes(),
+                   dma_max_words);
     if (!item.randomize())
       `uvm_fatal("DMA_XFER_SEQ", "Failed to randomize soc_ifc_dma_xfer_item")
 

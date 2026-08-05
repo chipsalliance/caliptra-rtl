@@ -139,5 +139,5 @@
   // hold a soc_ifc_mem_backdoor handle. The environment stays independent of the
   // bench parameter package: test_top configures the concrete backend.
   `include "src/soc_ifc_mem_backdoor.svh"
+  `include "src/soc_ifc_caliptra_sram_backdoor.svh"
   // pragma uvmf custom additional end
-

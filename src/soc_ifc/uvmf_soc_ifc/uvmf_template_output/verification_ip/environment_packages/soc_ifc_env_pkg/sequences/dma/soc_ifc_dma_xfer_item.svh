@@ -28,9 +28,10 @@ class soc_ifc_dma_xfer_item extends uvm_object;
   bit [63:0]       base_addr;
   longint unsigned window_bytes;
   protected bit    configured;
-  // Max transfer size in words. Exceeds the 512B (128-word) DMA FIFO to exercise
-  // wrap, stays under mailbox capacity, and caps sim runtime.
-  int unsigned     max_words    = 160;
+  // Max transfer size in words, supplied via configure(). Default exceeds the
+  // 512B (128-word) DMA FIFO to exercise wrap, stays under mailbox capacity, and
+  // caps sim runtime.
+  int unsigned     max_words;
 
   // ---- Randomized transfer fields (SRAM-relative byte offsets) ----
   rand dma_route_e  route;
@@ -48,9 +49,17 @@ class soc_ifc_dma_xfer_item extends uvm_object;
   endfunction
 
   virtual function void configure(input bit [63:0]       base_addr,
-                                  input longint unsigned window_bytes);
+                                  input longint unsigned window_bytes,
+                                  input int unsigned     max_words = 160);
+    // Sanity check: max_words (words) must fit the SRAM window. Compare against
+    // window_bytes/4 so the multiply-by-4 cannot overflow.
+    if (max_words == 0 || max_words > (window_bytes / 4))
+      `uvm_fatal(get_type_name(),
+        $sformatf("Illegal geometry: max_words=%0d must be >0 and <= window_bytes/4=%0d (window_bytes=%0d)",
+                  max_words, (window_bytes / 4), window_bytes))
     this.base_addr    = base_addr;
     this.window_bytes = window_bytes;
+    this.max_words    = max_words;
     configured = 1'b1;
   endfunction
 

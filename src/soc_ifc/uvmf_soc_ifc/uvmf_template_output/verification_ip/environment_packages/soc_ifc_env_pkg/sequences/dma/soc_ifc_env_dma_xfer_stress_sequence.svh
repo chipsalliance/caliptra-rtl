@@ -15,7 +15,7 @@
 //----------------------------------------------------------------------
 // DESCRIPTION: DMA transfer stress scenario.
 //
-// Runs 100 constrained-random DMA transfers (configured
+// Runs 50 constrained-random DMA transfers (configured
 // by the microcontroller over AHB) while concurrently running the reusable
 // soc_ifc_env_dma_reg_soc_access_sequence against the DMA registers from SoC-AXI.
 // Proves both that every transfer moves its data correctly and that every
@@ -36,7 +36,7 @@ class soc_ifc_env_dma_xfer_stress_sequence extends soc_ifc_env_dma_sequence_base
   virtual task body();
     soc_ifc_env_dma_reg_soc_access_sequence soc_seq;
     bit err;
-    int unsigned num_transfers = 100; 
+    int unsigned num_transfers = 50; 
 
     if (reg_model == null)
       reg_model = configuration.soc_ifc_rm;
@@ -51,7 +51,7 @@ class soc_ifc_env_dma_xfer_stress_sequence extends soc_ifc_env_dma_sequence_base
       soc_seq.start(get_sequencer(), this);
       begin
         for (int i = 0; i < num_transfers; i++)
-          dma_transfer_rand(err);
+          dma_transfer_rand(2048, err);
         soc_seq.stop();
       end
     join
