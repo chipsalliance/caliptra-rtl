@@ -15,17 +15,14 @@
 //----------------------------------------------------------------------
 // DESCRIPTION: Constrained-random DMA transfer descriptor.
 //
-// Captures the randomizable inputs of one AXI DMA transfer (route, size, and
-// source/destination addresses) with constraints that keep the transfer legal
-// for the bounded TB AXI SRAM and the DMA command-decode rules:
-//   - byte_count = num_words*4 is non-zero, 4-byte aligned, and bounded by
-//     max_words (a sim-runtime knob, well within DMA_MAX_XFER_SIZE = 1MiB).
-//   - src/dst are 4-byte aligned and their [addr, addr+byte_count) ranges fit
-//     inside the bounded SRAM window (window_bytes).
-//   - For AXI2AXI (both source and destination are live) the two ranges must
-//     not overlap.
+// Captures one AXI DMA transfer (route, size, src/dst) with constraints that
+// keep it legal for the bounded TB AXI SRAM and DMA command-decode rules:
+//   - num_words is non-zero and <= max_words; byte_count = num_words*4.
+//   - src/dst 4-byte aligned; [addr, addr+byte_count) fits window_bytes.
+//   - AXI2AXI src/dst ranges must not overlap.
 //
-// window_bytes / max_words are plain (non-rand) knobs a test can override.
+// window_bytes / max_words are non-rand knobs a test can override; pre_randomize
+// rejects an oversized max_words so a misconfig fails loudly.
 // NOTE: window_bytes must track the hdl_top DMA SRAM size (caliptra_axi_sram
 // AW in hdl_top; AW=18 -> 256KB).
 //----------------------------------------------------------------------
@@ -35,11 +32,10 @@ class soc_ifc_dma_xfer_item extends uvm_object;
   `uvm_object_utils( soc_ifc_dma_xfer_item )
 
   // ---- Tunable, non-random geometry knobs ----
-  // Bounded SRAM window size in bytes (must match hdl_top i_dma_axi_sram AW).
+  // SRAM window size in bytes (must match hdl_top i_dma_axi_sram AW).
   int unsigned window_bytes = (1 << 18); // 256KB
-  // Upper bound on transfer size (words). Default caps sim runtime while still
-  // exceeding the 512B (128-word) internal DMA FIFO to exercise FIFO wrap. Also
-  // stays well under the mailbox capacity, so MBOX transfers need no size cap.
+  // Max transfer size in words. Default exceeds the 512B (128-word) DMA FIFO to
+  // exercise wrap, yet stays under mailbox capacity, and caps sim runtime.
   int unsigned max_words    = 160;
 
   // ---- Randomized transfer fields ----
@@ -50,6 +46,15 @@ class soc_ifc_dma_xfer_item extends uvm_object;
 
   function new(string name = "soc_ifc_dma_xfer_item");
     super.new(name);
+  endfunction
+
+  // Reject knob overrides the window cannot hold. Compare via window_bytes/4
+  // (never max_words*4) so the check cannot overflow in 32-bit unsigned math.
+  function void pre_randomize();
+    if (max_words == 0 || max_words > (window_bytes / 4))
+      `uvm_fatal(get_type_name(),
+        $sformatf("Illegal geometry knobs: max_words=%0d must be >0 and <= window_bytes/4=%0d (window_bytes=%0d)",
+                  max_words, (window_bytes / 4), window_bytes))
   endfunction
 
   function int unsigned byte_count();
@@ -66,20 +71,19 @@ class soc_ifc_dma_xfer_item extends uvm_object;
     dst_addr[1:0] == 2'b0;
   }
 
-  // Keep each transfer inside the bounded SRAM window. Bound the BASE address
-  // directly (rather than "addr + size <= window") because src_addr/dst_addr are
-  // 64-bit: "addr + size <= window" can be satisfied by a huge addr whose 64-bit
-  // sum WRAPS AROUND to a small value, admitting out-of-range addresses that the
-  // DMA rejects as a command-decode error. Bounding addr <= window - size forces
-  // the upper address bits to zero and cannot overflow (size << window_bytes).
+  // Keep each transfer inside the SRAM window. Bound the BASE address (not
+  // "addr + size <= window"): src/dst are 64-bit, so "addr + size" could wrap
+  // to a small value and admit an out-of-range addr. The num_words bound also
+  // stops window_bytes - (num_words*4) from underflowing; using window_bytes/4
+  // (a constant, floor is safe for non-power-of-2 windows) cannot overflow.
   constraint c_window_fit {
+    num_words <= (window_bytes / 4);
     src_addr <= window_bytes - (num_words * 4);
     dst_addr <= window_bytes - (num_words * 4);
   }
 
-  // Only AXI2AXI needs disjoint windows: it copies src->dst directly within the
-  // SRAM, so overlap would corrupt the in-flight data. MBOX buffers the whole
-  // payload in the mailbox, and FIFO routes touch only one address, so neither needs it.
+  // Only AXI2AXI copies src->dst within the SRAM, so its ranges must be disjoint
+  // to avoid corrupting in-flight data. MBOX and FIFO routes do not need this.
   constraint c_no_overlap {
     (route == XFER_AXI2AXI) ->
       ((src_addr + (num_words * 4) <= dst_addr) ||
