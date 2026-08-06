@@ -108,12 +108,13 @@ package soc_ifc_env_pkg;
   // Parameters defined as HVL parameters
 
   // Single shared compile-time mode constant for the soc_ifc environment.
-  // Derived from the CALIPTRA_MODE_SUBSYSTEM build define. 
+  // Derived from the CALIPTRA_MODE_SUBSYSTEM build define.
 `ifdef CALIPTRA_MODE_SUBSYSTEM
   localparam bit CALIPTRA_SS_MODE_C = 1'b1;
 `else
   localparam bit CALIPTRA_SS_MODE_C = 1'b0;
 `endif
+  localparam string SOC_IFC_SHA_STATUS_VIF = "soc_ifc_sha_status_vif";
 
   `include "src/soc_ifc_env_typedefs.svh"
   `include "src/soc_ifc_env_configuration.svh"
@@ -360,4 +361,3 @@ endpackage
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

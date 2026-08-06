@@ -319,15 +319,13 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     // Download Fuses when ready
     download_fuses();
 
-    // Capture global environment facts now that the fuses are written and the
-    // SoC-DMA AxUSER strap is latched/locked. Stored in the environment
-    // configuration so every sequence and component shares one consistent view.
+    // Capture runtime straps now that the fuses are written and the SoC-DMA
+    // AxUSER strap is latched/locked.
     capture_global_straps();
 
-    // Release the SHA accelerator boot lock via the HW ICCM-content-hash flow so
-    // SoC-AXI sequences can run a real hash in subsystem mode. Enabled by default
-    // in subsystem mode; opt out with +DISABLE_ICCM_SHA_UNLOCK.
-    if (CALIPTRA_SS_MODE_C && !$test$plusargs("DISABLE_ICCM_SHA_UNLOCK"))
+    // Tests that need legal subsystem SHA traffic explicitly request release of
+    // the SHA accelerator boot lock through the HW ICCM-content-hash flow.
+    if (configuration.enable_sha_iccm_unlock)
         unlock_sha_accelerator();
 
     // Breakpoint configuration
@@ -337,17 +335,28 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
 
   //==========================================
   // Name:        capture_global_straps
-  // Description: Record environment-wide facts (integration mode and the
-  //              effective SoC-DMA AxUSER strap) into the configuration object.
+  // Description: Record the effective SoC-DMA AxUSER strap.
   //              Read from the predicted RAL mirror (no bus traffic), which the
   //              predictor populates from the strap transaction during bringup.
   //==========================================
   virtual task capture_global_straps();
-    configuration.subsystem_mode         = CALIPTRA_SS_MODE_C;
     configuration.ss_dma_axi_user        = reg_model.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value();
     configuration.global_straps_captured = 1'b1;
-    `uvm_info("SOC_IFC_RST", $sformatf("Captured global straps: subsystem_mode=%0b ss_dma_axi_user=0x%08x", configuration.subsystem_mode, configuration.ss_dma_axi_user), UVM_LOW)
+    `uvm_info("SOC_IFC_RST", $sformatf("Captured runtime strap: ss_dma_axi_user=0x%08x", configuration.ss_dma_axi_user), UVM_LOW)
   endtask
+
+  //==========================================
+  // Name:        sync_sha_model_after_iccm_unlock
+  // Description: Synchronize model state after hardware confirms ICCM unlock.
+  //==========================================
+  virtual function void sync_sha_model_after_iccm_unlock();
+    if (!reg_model.sha512_acc_csr_rm.LOCK.LOCK.predict(1'b0))
+        `uvm_fatal("SOC_IFC_RST", "Failed to predict SHA LOCK after ICCM unlock")
+    if (!reg_model.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.predict(1'b0))
+        `uvm_fatal("SOC_IFC_RST", "Failed to predict SHA SOC_HAS_LOCK after ICCM unlock")
+    if (!reg_model.sha512_acc_csr_rm.USER.USER.predict(32'h0))
+        `uvm_fatal("SOC_IFC_RST", "Failed to predict SHA USER after ICCM unlock")
+  endfunction
 
   //==========================================
   // Name:        unlock_sha_accelerator
@@ -355,46 +364,37 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   //              and is released by the HW ICCM-content-hash flow once it has
   //              measured ICCM and extended PCR4/PCR5. Trigger that flow with a
   //              zero-length measurement by writing INTERNAL_ICCM_LOCK over the
-  //              AHB (uC) map, then wait (backdoor, to avoid the LOCK set-on-read
-  //              side effect) until the HW clears the SHA lock.
+  //              AHB (uC) map, then observe the lock through a passive TB
+  //              interface until hardware clears it.
   //==========================================
   virtual task unlock_sha_accelerator();
-    uvm_reg_data_t data;
     uvm_status_e   sts;
-    logic [63:0]   lock_val;
     int unsigned   attempts;
-    string         lock_path = "hdl_top.dut.i_sha512_acc_top.hwif_out.LOCK.LOCK.value";
+
+    if (!configuration.subsystem_mode)
+        `uvm_fatal("SOC_IFC_RST", "SHA ICCM unlock was requested outside subsystem mode")
+    if ((configuration.sha_status_vif == null) &&
+        !uvm_config_db #(virtual soc_ifc_sha_status_if)::get(
+            null, UVMF_VIRTUAL_INTERFACES, SOC_IFC_SHA_STATUS_VIF,
+            configuration.sha_status_vif))
+        `uvm_fatal("SOC_IFC_RST", "SHA ICCM unlock requested, but soc_ifc_sha_status_vif is unavailable")
 
     `uvm_info("SOC_IFC_RST", "Releasing SHA accelerator boot lock via ICCM zero-length hash (writing INTERNAL_ICCM_LOCK)", UVM_LOW)
     reg_model.soc_ifc_reg_rm.internal_iccm_lock.write(sts, uvm_reg_data_t'(1), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     if (sts != UVM_IS_OK)
-        `uvm_error("SOC_IFC_RST", "Failed to write INTERNAL_ICCM_LOCK to release the SHA accelerator lock")
+        `uvm_fatal("SOC_IFC_RST", "Failed to write INTERNAL_ICCM_LOCK to release the SHA accelerator lock")
 
-    lock_val = 64'h1;
-    attempts = 0;
-    forever begin
+    for (attempts = 0; attempts < 200; attempts++) begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(20);
-        if (!uvm_hdl_read(lock_path, lock_val))
-            `uvm_error("SOC_IFC_RST", $sformatf("uvm_hdl_read failed for %s", lock_path))
-        if (lock_val[0] == 1'b0) break;
-        attempts++;
-        if (attempts > 200) begin
-            `uvm_warning("SOC_IFC_RST", "SHA accelerator did not release its boot lock within timeout after INTERNAL_ICCM_LOCK write (ICCM extend may not have completed)")
-            break;
+        if ($isunknown(configuration.sha_status_vif.sha_lock))
+            `uvm_fatal("SOC_IFC_RST", "Observed X/Z on SHA lock while waiting for ICCM unlock")
+        if (configuration.sha_status_vif.sha_lock === 1'b0) begin
+            sync_sha_model_after_iccm_unlock();
+            `uvm_info("SOC_IFC_RST", "SHA accelerator boot lock released (LOCK cleared by ICCM PCR extend)", UVM_LOW)
+            return;
         end
     end
-    if (lock_val[0] == 1'b0) begin
-        configuration.sha_acc_unlocked = 1'b1;
-        // The HW ICCM flow cleared the DUT SHA lock, but the predictor does not
-        // model that flow, so sync the SHA lock mirrors to the actual post-unlock
-        // state (free, no owner). This lets the first authorized acquire register
-        // correctly in the model.
-        void'(reg_model.sha512_acc_csr_rm.LOCK.LOCK.predict(1'b0));
-        void'(reg_model.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.predict(1'b0));
-        void'(reg_model.sha512_acc_csr_rm.USER.USER.predict(32'h0));
-        `uvm_info("SOC_IFC_RST", "SHA accelerator boot lock released (LOCK cleared by ICCM PCR extend)", UVM_LOW)
-    end
+    `uvm_fatal("SOC_IFC_RST", "Timed out waiting for SHA accelerator ICCM unlock")
   endtask
 
 endclass
-

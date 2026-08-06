@@ -15,4 +15,7 @@ seed: ${PLAYBOOK_RANDOM_SEED}
 plusargs:
 - '+UVM_TESTNAME=soc_ifc_cmdline_test'
 - '+CLP_SEQ=soc_ifc_env_sha_accel_sequence'
+# The configuration gates this request with CALIPTRA_MODE_SUBSYSTEM, so passive
+# runs remain side-effect free while the shared test explicitly opts in for SS.
+- '+ENABLE_SHA_ICCM_UNLOCK'
 testname: soc_ifc_sha_acc_axi_user_test

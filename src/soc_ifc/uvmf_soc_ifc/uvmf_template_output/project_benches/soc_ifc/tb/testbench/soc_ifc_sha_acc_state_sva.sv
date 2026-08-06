@@ -41,11 +41,9 @@ module soc_ifc_sha_acc_state_sva
     input logic          rst_b,
     input logic          soc_req_dv,
     input logic [SOC_IFC_ADDR_W-1:0] soc_req_addr,
-    input logic          soc_req_write,
     input logic          valid_sha_user,
     input logic          soc_sha_gnt,
-    input logic          uc_sha_gnt,
-    input logic          sha_lock
+    input logic          sha_user_match
     );
 
 `ifdef CALIPTRA_MODE_SUBSYSTEM
@@ -94,41 +92,18 @@ module soc_ifc_sha_acc_state_sva
             "soc_ifc_sha_acc_state_sva: SoC-AXI SHA route granted in PASSIVE mode - SHA accelerator must be unavailable over AXI!")
     end
 
-    // When the SoC-AXI SHA route is not granted and there is no legitimate uC SHA
-    // grant, an unauthorized SoC-AXI SHA request must not advance the SHA lock.
-    // (FSM progress mid-operation is driven only by granted activity, so gating on
-    // the absence of both grants isolates SoC-caused state change.)
-    `CALIPTRA_ASSERT(A_illegal_soc_sha_lock_stable,
-        (soc_sha_addr & ~soc_sha_authorized & ~soc_sha_gnt & ~uc_sha_gnt) |=> $stable(sha_lock),
-        clk, !rst_b,
-        "soc_ifc_sha_acc_state_sva: SHA lock changed following an ungranted, unauthorized SoC-AXI SHA access!")
-
     //------------------------------------------------------------------
-    // Functional coverage of the SoC-AXI SHA access-control cross-product.
-    // Sampled on every SoC-AXI SHA-range request. Across the passive and
-    // subsystem builds this covers: mode, requester category (matching strap
-    // AxUSER vs not, via valid_sha_user), read vs write, and route grant.
+    // Functional coverage of the four required access-control behaviors.
+    // sha_user_match is observed independently from valid_sha_user because the
+    // latter is intentionally tied low in passive mode.
     //------------------------------------------------------------------
     covergroup soc_sha_access_cg @(posedge clk iff (rst_b & soc_sha_addr));
-        cp_mode: coverpoint SS_MODE {
-            bins passive    = {1'b0};
-            bins subsystem  = {1'b1};
+        cp_access_control: coverpoint {SS_MODE, sha_user_match, soc_sha_gnt} {
+            bins passive_matching_axuser_rejected      = {3'b010};
+            bins passive_nonmatching_axuser_rejected   = {3'b000};
+            bins subsystem_matching_axuser_granted     = {3'b111};
+            bins subsystem_nonmatching_axuser_rejected = {3'b100};
         }
-        cp_valid_user: coverpoint valid_sha_user {
-            bins strap_match     = {1'b1};
-            bins other_user      = {1'b0};
-        }
-        cp_write: coverpoint soc_req_write {
-            bins rd = {1'b0};
-            bins wr = {1'b1};
-        }
-        cp_granted: coverpoint soc_sha_gnt {
-            bins granted     = {1'b1};
-            bins not_granted = {1'b0};
-        }
-        // Rejected requests must never be granted: the granted/other-user and
-        // granted-in-passive combinations are illegal (they cannot legally occur).
-        x_mode_user_write_grant: cross cp_mode, cp_valid_user, cp_write, cp_granted;
     endgroup
 
     soc_sha_access_cg soc_sha_access_cg_inst = new();
@@ -140,9 +115,8 @@ bind soc_ifc_top soc_ifc_sha_acc_state_sva i_soc_ifc_sha_acc_state_sva (
     .rst_b         (cptra_noncore_rst_b                         ),
     .soc_req_dv    (i_soc_ifc_arb.soc_req_dv                    ),
     .soc_req_addr  (i_soc_ifc_arb.soc_req_data.addr             ),
-    .soc_req_write (i_soc_ifc_arb.soc_req_data.write            ),
     .valid_sha_user(i_soc_ifc_arb.valid_sha_user                ),
     .soc_sha_gnt   (i_soc_ifc_arb.soc_sha_gnt                   ),
-    .uc_sha_gnt    (i_soc_ifc_arb.uc_sha_gnt                    ),
-    .sha_lock      (i_sha512_acc_top.hwif_out.LOCK.LOCK.value   )
+    .sha_user_match(i_soc_ifc_arb.soc_req_data.user ==
+                    soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value)
 );

@@ -33,6 +33,8 @@ module soc_ifc_axi_sha_acc_dis_tb
   parameter CLK_HALF_PERIOD = 5000;
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
   parameter MAX_CYCLES = 20_0000;
+  localparam logic [1:0] DEVICE_PRODUCTION_ENCODING =
+      soc_ifc_pkg::DEVICE_PRODUCTION;
 
   parameter AHB_HTRANS_IDLE      = 0;
   parameter AHB_HTRANS_BUSY      = 1;
@@ -146,7 +148,9 @@ module soc_ifc_axi_sha_acc_dis_tb
     .recovery_data_avail(1'b0),
     .recovery_image_activated(1'b0),
 
-    .security_state('{debug_locked: caliptra_prim_mubi_pkg::MuBi4False, device_lifecycle: soc_ifc_pkg::DEVICE_PRODUCTION}),
+    // Packed lifecycle bits avoid distinct TB/RTL enum images under VCS partcomp.
+    .security_state({caliptra_prim_mubi_pkg::MuBi4False,
+                     DEVICE_PRODUCTION_ENCODING}),
 
     .generic_input_wires(64'h0),
     .BootFSM_BrkPoint(1'b0),

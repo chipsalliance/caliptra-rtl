@@ -61,6 +61,7 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src/mbox_sram_driver_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src/mbox_sram_if.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src/mbox_sram_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/testbench/soc_ifc_sha_status_if.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers/soc_ifc_reg_model_top_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.sv
 ---
@@ -70,9 +71,6 @@ requires:
   - uvmf_soc_ifc_vip
   - soc_ifc_coverage
   - caliptra_axi_sram
-  # PCR vault, instantiated in hdl_top so the subsystem ICCM-hash flow can
-  # extend PCR4/PCR5 and release the SHA accelerator boot lock.
-  - pcrvault
 targets:
   tb:
     directories:
@@ -168,6 +166,8 @@ provides: [uvmf_soc_ifc_ss]
 schema_version: 2.4.0
 requires:
   - uvmf_soc_ifc
+  # The subsystem-only ICCM hash flow extends PCR4/PCR5 before releasing SHA.
+  - pcrvault
 targets:
   tb:
     tops:
@@ -183,10 +183,9 @@ global:
         # Subsystem-mode defines (delta vs uvmf_soc_ifc)
         - +define+CALIPTRA_MODE_SUBSYSTEM
         - +define+CALIPTRA_INTERNAL_TRNG
-        # The remainder mirrors the uvmf_soc_ifc global options. A separate
-        # 'provides' target does not inherit the required target's global option
-        # list, so the full set (including the AVERY defines needed to compile
-        # the Avery AXI UVM VIP) must be repeated here.
+        # Compile schema 2.4.0 does not compose a required provider's global
+        # tool options into this provider. Keep the required Avery/UVM options
+        # duplicated rather than relying on unsupported YAML composition.
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
         - +define+SIMULATION

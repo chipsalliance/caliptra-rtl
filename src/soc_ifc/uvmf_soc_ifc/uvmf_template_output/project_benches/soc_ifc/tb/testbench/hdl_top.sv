@@ -50,7 +50,9 @@ import soc_ifc_pkg::*;
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 import aaxi_uvm_pkg::*;
+`ifdef CALIPTRA_MODE_SUBSYSTEM
 import pv_defines_pkg::*;
+`endif
 `include "config_defines.svh"
 
   // pragma attribute hdl_top partition_module_xrtl                                            
@@ -202,11 +204,8 @@ import pv_defines_pkg::*;
         .UW(CPTRA_AXI_DMA_USER_WIDTH    )
     ) m_axi_if (.clk(clk), .rst_n(soc_ifc_ctrl_agent_bus.cptra_rst_b));
 
-    // -----------------------------------------------------------------------
-    // PCR-vault plumbing for the subsystem ICCM-content-hash flow. Declared here
-    // (before the DUT) so the DUT port map connects to correctly-sized struct
-    // signals rather than implicit 1-bit nets. See the pv instance below.
-    // -----------------------------------------------------------------------
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    // PCR-vault plumbing for the subsystem ICCM-content-hash flow.
     pv_read_t                     dut_pv_read;    // DUT PCR read request  (output)
     pv_write_t                    dut_pv_write;   // DUT PCR write request (output)
     logic                         dut_iccm_unlock;// DUT iccm_unlock_o      (output)
@@ -214,6 +213,7 @@ import pv_defines_pkg::*;
     pv_write_t   [PV_NUM_WRITE-1:0] pv_write_arr;
     pv_rd_resp_t [PV_NUM_READ-1:0]  pv_rd_resp_arr;
     pv_wr_resp_t [PV_NUM_WRITE-1:0] pv_wr_resp_arr;
+`endif
 
     // Construct the HW fatal error struct from UVMF interface signals
     cptra_hw_fatal_error_t cptra_hw_fatal_errors_i;
@@ -378,11 +378,18 @@ import pv_defines_pkg::*;
         // ICCM hash mode
         .iccm_hash_dv(1'b0),
         .iccm_hash_data(32'b0),
+`ifdef CALIPTRA_MODE_SUBSYSTEM
         .pv_write(dut_pv_write),
         .iccm_unlock_o(dut_iccm_unlock),
         // ICCM PCR extend
         .pv_read(dut_pv_read),
         .pv_rd_resp(pv_rd_resp_arr[1]),
+`else
+        .pv_write(),
+        .iccm_unlock_o(),
+        .pv_read(),
+        .pv_rd_resp('0),
+`endif
 
         //Other blocks reset
         .cptra_noncore_rst_b (cptra_status_agent_bus.cptra_noncore_rst_b),
@@ -407,6 +414,12 @@ import pv_defines_pkg::*;
         .cptra_uncore_dmi_reg_wdata(32'h0)
     );
 
+    soc_ifc_sha_status_if sha_status_if (
+        .clk     (clk                                           ),
+        .sha_lock(dut.i_sha512_acc_top.hwif_out.LOCK.LOCK.value )
+    );
+
+`ifdef CALIPTRA_MODE_SUBSYSTEM
     // -----------------------------------------------------------------------
     // PCR Vault (pcrvault) instance.
     //
@@ -414,12 +427,11 @@ import pv_defines_pkg::*;
     // HW ICCM-content-hash flow (sha512_acc_iccm_hash) releases it only after it
     // measures ICCM and extends PCR4/PCR5 to EXTEND_DONE. That PCR extend needs a
     // PCR vault to answer reads and accept writes. This instance provides it so
-    // the reset flow can unlock the SHA accelerator (default-on in subsystem mode;
-    // opt out with +DISABLE_ICCM_SHA_UNLOCK).
+    // the explicitly requested reset flow can unlock the SHA accelerator.
     //
     // soc_ifc presents a single PCR read/write client; connect it to client index
     // 1 (matching caliptra_top) and tie off the unused client and the SW AHB
-    // interface. In passive mode soc_ifc drives these idle, so this is inert.
+    // interface.
     // -----------------------------------------------------------------------
     always_comb begin
         pv_read_arr        = '0;
@@ -454,6 +466,7 @@ import pv_defines_pkg::*;
         .pv_wr_resp          (pv_wr_resp_arr ),
         .iccm_unlock         (dut_iccm_unlock)
     );
+`endif
 
     // AXI subordinate memory on the DMA AXI manager port. Geometry is owned by
     // soc_ifc_parameters_pkg; axi_sub aliases the DMA's wide address into the AW
@@ -566,6 +579,9 @@ import pv_defines_pkg::*;
     uvm_config_db #( virtual cptra_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_status_agent_BFM , cptra_status_agent_drv_bfm  );
     uvm_config_db #( virtual ss_mode_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , ss_mode_status_agent_BFM , ss_mode_status_agent_drv_bfm  );
     uvm_config_db #( virtual mbox_sram_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , mbox_sram_agent_BFM , mbox_sram_agent_drv_bfm  );
+    uvm_config_db #( virtual soc_ifc_sha_status_if )::set(
+        null, UVMF_VIRTUAL_INTERFACES,
+        soc_ifc_env_pkg::SOC_IFC_SHA_STATUS_VIF, sha_status_if);
   end
 
 endmodule

@@ -115,6 +115,10 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
   endfunction
 
   virtual function void do_kill();
+    // do_kill() runs before UVM terminates this sequence's process. Replace the
+    // semaphore so a killed frontdoor operation cannot strand its only key if
+    // this sequence object is subsequently reused.
+    ral_bus_sem = new(1);
     reg_model.soc_ifc_AXI_map.get_sequencer().stop_sequences(); // Kill any pending AXI transfers
   endfunction
 
@@ -138,6 +142,8 @@ class soc_ifc_env_sha_accel_sequence extends soc_ifc_env_sequence_base #(.CONFIG
     // captured once by the bringup sequence into the environment configuration.
     if (!configuration.global_straps_captured)
         `uvm_fatal("SHA_ACCEL_SEQ", "Global straps were not captured by the bringup sequence before this sequence ran!")
+    if (configuration.subsystem_mode && !configuration.enable_sha_iccm_unlock)
+        `uvm_fatal("SHA_ACCEL_SEQ", "Subsystem SHA sequence requires enable_sha_iccm_unlock before bringup")
 
     // Load a SHA test vector (used for the subsystem-mode legal flow).
     load_vector();
@@ -413,10 +419,9 @@ task soc_ifc_env_sha_accel_sequence::run_legal_flow(input caliptra_axi_user owne
             if (op_sts != CPTRA_SUCCESS) begin
                 // The authorized (strap) user must be able to acquire the SHA lock
                 // in subsystem mode. The bringup/reset flow releases the SHA
-                // accelerator boot lock via the HW ICCM-content-hash flow (enabled
-                // by default in subsystem mode; disable with
-                // +DISABLE_ICCM_SHA_UNLOCK). Failing to acquire it is a hard error.
-                `uvm_error("SHA_ACCEL_SEQ", "Authorized user failed to acquire the SHA lock in subsystem mode. The reset flow must release the SHA accelerator boot lock (ICCM-content-hash release) before this sequence runs (was +DISABLE_ICCM_SHA_UNLOCK set, or did the ICCM extend not complete?).")
+                // accelerator boot lock via the requested HW ICCM-content-hash
+                // flow. Failing to acquire it is a hard error.
+                `uvm_error("SHA_ACCEL_SEQ", "Authorized user failed to acquire the SHA lock after the requested ICCM-content-hash release.")
             end
             else begin
                 sha_accel_set_cmd(sha_accel_op_rand);

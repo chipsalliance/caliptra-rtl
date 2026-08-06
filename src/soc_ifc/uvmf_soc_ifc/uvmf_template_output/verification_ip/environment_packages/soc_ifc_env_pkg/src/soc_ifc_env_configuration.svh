@@ -79,22 +79,20 @@ extends uvmf_environment_configuration_base;
 
   // pragma uvmf custom class_item_additional begin
   // -------------------------------------------------------------------------
-  // Global environment facts, captured ONCE by the bringup sequence after the
-  // fuses are written (which locks the SoC-DMA AxUSER strap). Every sequence and
-  // component can read these instead of re-deriving them:
-  //   * subsystem_mode      - integration mode (passive vs subsystem).
+  // Global environment facts shared by every sequence and component:
+  //   * subsystem_mode      - compile-time integration mode, initialized when
+  //                           this configuration object is created.
   //   * ss_dma_axi_user     - effective (post-fuse) SoC DMA AxUSER identity, i.e.
   //                           the authorized SoC-AXI SHA/DMA requester.
-  //   * global_straps_captured - set once the above have been captured.
+  //   * global_straps_captured - set once runtime straps have been captured.
   // -------------------------------------------------------------------------
   bit        subsystem_mode;
   bit [31:0] ss_dma_axi_user;
   bit        global_straps_captured;
-  // Set by the bringup sequence when the SHA accelerator boot lock has been
-  // released via the ICCM-content-hash flow (enabled by default in subsystem
-  // mode; disable with +DISABLE_ICCM_SHA_UNLOCK). When set, SoC-AXI sequences can
-  // acquire a free SHA lock and run a real hash.
-  bit        sha_acc_unlocked;
+  // SHA boot-lock release is opt-in and is requested only by tests that need
+  // legal subsystem-mode SHA traffic.
+  bit enable_sha_iccm_unlock;
+  virtual soc_ifc_sha_status_if sha_status_vif;
 
   // DMA AXI SRAM backdoor (factory-swappable). Configured by test_top.
   soc_ifc_mem_backdoor dma_axi_sram_backdoor;
@@ -123,6 +121,9 @@ extends uvmf_environment_configuration_base;
     `uvm_info("COVERAGE_MODEL_REVIEW", "TODO!!!!!!!!! A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this message after the covergroup has been reviewed.", UVM_NONE)
 
   // pragma uvmf custom new begin
+    subsystem_mode = CALIPTRA_SS_MODE_C;
+    enable_sha_iccm_unlock =
+        subsystem_mode && $test$plusargs("ENABLE_SHA_ICCM_UNLOCK");
   // pragma uvmf custom new end
   endfunction
 
@@ -246,6 +247,12 @@ extends uvmf_environment_configuration_base;
 
 
   // pragma uvmf custom initialize begin
+     // Retry in the unlock task if time-zero initialization ordering means the
+     // interface has not reached the config DB yet.
+     void'(uvm_config_db #(virtual soc_ifc_sha_status_if)::get(
+         null, UVMF_VIRTUAL_INTERFACES, SOC_IFC_SHA_STATUS_VIF,
+         sha_status_vif));
+
      qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.slave = 1'b1;
      qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.master = 1'b1;
      qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.response = 1'b1;
