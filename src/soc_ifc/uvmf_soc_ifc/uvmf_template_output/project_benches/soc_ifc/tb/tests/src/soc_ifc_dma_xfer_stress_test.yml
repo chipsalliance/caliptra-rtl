@@ -1,0 +1,12 @@
+---
+# DMA transfer stress test: run constrained-random DMA transfers while SoC-AXI
+# accesses drive all DMA registers (which must be rejected). Checkers: each
+# transfer self-checks its data; the predictor+scoreboard verify SLVERR on every
+# SoC-AXI DMA access; and the bound assertion soc_ifc_arb.ERR_ARB_SOC_DMA_GNT
+# flags any grant of the DMA client to the SoC.
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=soc_ifc_cmdline_test'
+- '+CLP_SEQ=soc_ifc_env_dma_xfer_stress_sequence'
+- '+UVM_VERBOSITY=UVM_LOW'
+testname: soc_ifc_dma_xfer_stress_test

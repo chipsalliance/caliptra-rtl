@@ -70,6 +70,28 @@ uvmf_active_passive_t interface_activities[] = {
     ACTIVE /* mbox_sram_agent     [8] */   };
 
   // pragma uvmf custom class_item_additional begin
+  // Create/configure the DMA AXI SRAM backdoor from the bench parameter package.
+  // Keeps the env package independent of soc_ifc_parameters_pkg.
+  virtual function void build_dma_axi_sram_backdoor();
+    soc_ifc_mem_backdoor bkdr;
+    // Install the bench default without replacing a backend override selected by
+    // a derived test.
+    soc_ifc_mem_backdoor::type_id::set_type_override(
+      soc_ifc_caliptra_sram_backdoor::get_type(), 1'b0);
+    bkdr = soc_ifc_mem_backdoor::type_id::create("dma_axi_sram_backdoor");
+    bkdr.configure(.path  (DMA_AXI_SRAM_HDL_PATH),
+                   .base  (DMA_AXI_SRAM_BASE_ADDR),
+                   .size  (DMA_AXI_SRAM_SIZE_BYTES),
+                   .wbytes(DMA_AXI_SRAM_WORD_BYTES));
+    configuration.dma_axi_sram_backdoor = bkdr;
+  endfunction
+
+  virtual function void start_of_simulation_phase(uvm_phase phase);
+    super.start_of_simulation_phase(phase);
+    // Fail fast on an SRAM path/geometry mismatch before stimulus.
+    if (configuration.dma_axi_sram_backdoor != null)
+      configuration.dma_axi_sram_backdoor.validate_path();
+  endfunction
   // pragma uvmf custom class_item_additional end
 
   // ****************************************************************************
@@ -99,6 +121,7 @@ uvmf_active_passive_t interface_activities[] = {
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
     // pragma uvmf custom configuration_settings_post_randomize begin
+    build_dma_axi_sram_backdoor();
     // pragma uvmf custom configuration_settings_post_randomize end
     configuration.initialize(NA, "uvm_test_top.environment", interface_names, null, interface_activities);
   endfunction
@@ -107,4 +130,3 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

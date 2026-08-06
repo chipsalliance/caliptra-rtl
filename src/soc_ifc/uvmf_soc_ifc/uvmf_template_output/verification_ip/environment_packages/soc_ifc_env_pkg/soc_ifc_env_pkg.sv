@@ -99,6 +99,7 @@ package soc_ifc_env_pkg;
   import kv_defines_pkg::*;
   import mbox_pkg::*;
   import soc_ifc_pkg::*;
+  import axi_dma_reg_pkg::*;
   import caliptra_prim_mubi_pkg::*;
   `include "caliptra_macros.svh"
   `include "caliptra_reg_defines.svh"
@@ -317,6 +318,18 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence.svh"
   typedef soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence_t;
+  // DMA transfer route selector (package scope so the item and base share it).
+  typedef enum int { XFER_AXI2AXI, XFER_RD_FIFO, XFER_WR_FIFO, XFER_MBOX } dma_route_e;
+  `include "sequences/dma/soc_ifc_dma_xfer_item.svh"
+  typedef soc_ifc_dma_xfer_item soc_ifc_dma_xfer_item_t;
+  `include "sequences/dma/soc_ifc_env_dma_sequence_base.svh"
+  typedef soc_ifc_env_dma_sequence_base soc_ifc_env_dma_sequence_base_t;
+  `include "sequences/dma/soc_ifc_env_dma_reg_soc_access_sequence.svh"
+  typedef soc_ifc_env_dma_reg_soc_access_sequence soc_ifc_env_dma_reg_soc_access_sequence_t;
+  `include "sequences/dma/soc_ifc_env_dma_xfer_stress_sequence.svh"
+  typedef soc_ifc_env_dma_xfer_stress_sequence soc_ifc_env_dma_xfer_stress_sequence_t;
+  `include "sequences/dma/soc_ifc_env_dma_wr_fifo_directed_sequence.svh"
+  typedef soc_ifc_env_dma_wr_fifo_directed_sequence soc_ifc_env_dma_wr_fifo_directed_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_multi_agent_sequence.svh"
   typedef soc_ifc_env_top_mbox_multi_agent_sequence soc_ifc_env_top_mbox_multi_agent_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_dlen_violation_sequence.svh"
