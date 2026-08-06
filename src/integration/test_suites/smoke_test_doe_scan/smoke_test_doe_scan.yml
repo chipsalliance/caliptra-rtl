@@ -15,5 +15,6 @@
 ---
 plusargs:
   - +RAND_DOE_VALUES
+  - +CLP_OCP_LOCK_DIS
 seed: 1
 testname: smoke_test_doe_scan
