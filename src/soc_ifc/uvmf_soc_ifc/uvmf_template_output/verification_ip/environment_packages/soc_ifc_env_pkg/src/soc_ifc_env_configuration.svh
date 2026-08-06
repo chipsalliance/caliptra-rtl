@@ -95,6 +95,9 @@ extends uvmf_environment_configuration_base;
   // mode; disable with +DISABLE_ICCM_SHA_UNLOCK). When set, SoC-AXI sequences can
   // acquire a free SHA lock and run a real hash.
   bit        sha_acc_unlocked;
+
+  // DMA AXI SRAM backdoor (factory-swappable). Configured by test_top.
+  soc_ifc_mem_backdoor dma_axi_sram_backdoor;
   // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************
@@ -270,4 +273,3 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

@@ -15,80 +15,108 @@
 //----------------------------------------------------------------------
 // DESCRIPTION: Constrained-random DMA transfer descriptor.
 //
-// Captures the randomizable inputs of one AXI DMA transfer (route, size, and
-// source/destination addresses) with constraints that keep the transfer legal
-// for the bounded TB AXI SRAM and the DMA command-decode rules:
-//   - byte_count = num_words*4 is non-zero, 4-byte aligned, and bounded by
-//     max_words (a sim-runtime knob, well within DMA_MAX_XFER_SIZE = 1MiB).
-//   - src/dst are 4-byte aligned and their [addr, addr+byte_count) ranges fit
-//     inside the bounded SRAM window (window_bytes).
-//   - For AXI2AXI (both source and destination are live) the two ranges must
-//     not overlap.
-//
-// window_bytes / max_words are plain (non-rand) knobs a test can override.
-// NOTE: window_bytes must track the hdl_top DMA SRAM size (caliptra_axi_sram
-// AW in hdl_top; AW=18 -> 256KB).
+// One AXI DMA transfer constrained legal for the SRAM window. Relative offsets
+// are randomized for backdoor access; src_addr()/dst_addr() derive the absolute
+// DMA addresses.
 //----------------------------------------------------------------------
 
 class soc_ifc_dma_xfer_item extends uvm_object;
 
   `uvm_object_utils( soc_ifc_dma_xfer_item )
 
-  // ---- Tunable, non-random geometry knobs ----
-  // Bounded SRAM window size in bytes (must match hdl_top i_dma_axi_sram AW).
-  int unsigned window_bytes = (1 << 18); // 256KB
-  // Upper bound on transfer size (words). Default caps sim runtime while still
-  // exceeding the 512B (128-word) internal DMA FIFO to exercise FIFO wrap. Also
-  // stays well under the mailbox capacity, so MBOX transfers need no size cap.
-  int unsigned max_words    = 160;
+  // ---- Non-random geometry knobs ----
+  bit [63:0]       base_addr;
+  longint unsigned window_bytes;
+  protected bit    configured;
+  // Max transfer size in words, supplied via configure(). Default exceeds the
+  // 512B (128-word) DMA FIFO to exercise wrap, stays under mailbox capacity, and
+  // caps sim runtime.
+  int unsigned     max_words;
 
-  // ---- Randomized transfer fields ----
+  // ---- Randomized transfer fields (SRAM-relative byte offsets) ----
   rand dma_route_e  route;
   rand int unsigned num_words;
-  rand bit [63:0]   src_addr;
-  rand bit [63:0]   dst_addr;
+  rand longint unsigned src_offset;
+  rand longint unsigned dst_offset;
+
+  // Payload words moved by the transfer. Auto-filled by post_randomize; set
+  // directly for a directed transfer.
+  bit [31:0] payload[];
 
   function new(string name = "soc_ifc_dma_xfer_item");
     super.new(name);
+    configured = 1'b0;
+  endfunction
+
+  virtual function void configure(input bit [63:0]       base_addr,
+                                  input longint unsigned window_bytes,
+                                  input int unsigned     max_words = 160);
+    // Sanity check: max_words (words) must fit the SRAM window. Compare against
+    // window_bytes/4 so the multiply-by-4 cannot overflow.
+    if (max_words == 0 || max_words > (window_bytes / 4))
+      `uvm_fatal(get_type_name(),
+        $sformatf("Illegal geometry: max_words=%0d must be >0 and <= window_bytes/4=%0d (window_bytes=%0d)",
+                  max_words, (window_bytes / 4), window_bytes))
+    this.base_addr    = base_addr;
+    this.window_bytes = window_bytes;
+    this.max_words    = max_words;
+    configured = 1'b1;
+  endfunction
+
+  // Reject a max_words the window cannot hold (compare via window_bytes/4 so the
+  // check cannot overflow).
+  function void pre_randomize();
+    if (!configured)
+      `uvm_fatal(get_type_name(), "DMA SRAM geometry must be configured before randomize()")
+    if (max_words == 0 || max_words > (window_bytes / 4))
+      `uvm_fatal(get_type_name(),
+        $sformatf("Illegal geometry knobs: max_words=%0d must be >0 and <= window_bytes/4=%0d (window_bytes=%0d)",
+                  max_words, (window_bytes / 4), window_bytes))
+  endfunction
+
+  function void post_randomize();
+    payload = new[num_words];
+    foreach (payload[i]) payload[i] = $urandom();
   endfunction
 
   function int unsigned byte_count();
     return num_words * 4;
   endfunction
 
+  function bit [63:0] src_addr();
+    return base_addr + src_offset;
+  endfunction
+
+  function bit [63:0] dst_addr();
+    return base_addr + dst_offset;
+  endfunction
+
   // Transfer size: at least one word, bounded by the runtime knob.
   constraint c_num_words { num_words inside {[1:max_words]}; }
 
-  // 4-byte alignment (DMA requires byte_count and addresses aligned to the
-  // data-width byte count; DW=32 -> 4 bytes).
+  // 4-byte alignment (DMA requires byte_count/addresses aligned to DW bytes).
   constraint c_align {
-    src_addr[1:0] == 2'b0;
-    dst_addr[1:0] == 2'b0;
+    src_offset[1:0] == 2'b0;
+    dst_offset[1:0] == 2'b0;
   }
 
-  // Keep each transfer inside the bounded SRAM window. Bound the BASE address
-  // directly (rather than "addr + size <= window") because src_addr/dst_addr are
-  // 64-bit: "addr + size <= window" can be satisfied by a huge addr whose 64-bit
-  // sum WRAPS AROUND to a small value, admitting out-of-range addresses that the
-  // DMA rejects as a command-decode error. Bounding addr <= window - size forces
-  // the upper address bits to zero and cannot overflow (size << window_bytes).
   constraint c_window_fit {
-    src_addr <= window_bytes - (num_words * 4);
-    dst_addr <= window_bytes - (num_words * 4);
+    num_words <= (window_bytes / 4);
+    src_offset <= (window_bytes - (num_words * 4));
+    dst_offset <= (window_bytes - (num_words * 4));
   }
 
-  // Only AXI2AXI needs disjoint windows: it copies src->dst directly within the
-  // SRAM, so overlap would corrupt the in-flight data. MBOX buffers the whole
-  // payload in the mailbox, and FIFO routes touch only one address, so neither needs it.
+  // AXI2AXI copies src->dst within the SRAM, so its ranges must be disjoint.
   constraint c_no_overlap {
     (route == XFER_AXI2AXI) ->
-      ((src_addr + (num_words * 4) <= dst_addr) ||
-       (dst_addr + (num_words * 4) <= src_addr));
+      ((src_offset + (num_words * 4) <= dst_offset) ||
+       (dst_offset + (num_words * 4) <= src_offset));
   }
 
   virtual function string convert2string();
-    return $sformatf("route=%s num_words=%0d byte_count=%0d src=0x%0h dst=0x%0h",
-                     route.name(), num_words, byte_count(), src_addr, dst_addr);
+    return $sformatf("route=%s num_words=%0d byte_count=%0d src_addr=0x%0h src_offset=0x%0h dst_addr=0x%0h dst_offset=0x%0h",
+                     route.name(), num_words, byte_count(),
+                     src_addr(), src_offset, dst_addr(), dst_offset);
   endfunction
 
 endclass

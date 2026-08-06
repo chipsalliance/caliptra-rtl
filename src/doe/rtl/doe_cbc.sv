@@ -65,6 +65,7 @@ module doe_cbc
    // Interrupt Outputs
    output logic error_intr,
    output logic notif_intr,
+   output logic doe_fsm_error,
 
    output logic clear_obf_secrets,
 
@@ -199,7 +200,7 @@ assign hwif_in.DOE_STATUS.READY.hwset = ready_reg & ~(flow_in_progress);
 assign hwif_in.DOE_STATUS.READY.hwclr = ~ready_reg;
 assign hwif_in.DOE_STATUS.VALID.hwset = flow_done | clear_obf_secrets;
 assign hwif_in.DOE_STATUS.VALID.hwclr = hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod;
-assign hwif_in.DOE_STATUS.ERROR.hwset = flow_error;
+assign hwif_in.DOE_STATUS.ERROR.hwset = flow_error || doe_fsm_error;
 assign hwif_in.DOE_STATUS.ERROR.hwclr = clear_obf_secrets || hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod;
 
 // Wire doe_cmd_lock to the register block swwel -- blocks SW writes to CMD/CMD_EXT
@@ -264,6 +265,7 @@ doe_fsm1
 
   .flow_done(flow_done),
   .flow_error(flow_error),
+  .fsm_error(doe_fsm_error),
   .flow_in_progress(flow_in_progress),
   .lock_uds_flow(lock_uds_flow),
   .lock_fe_flow (lock_fe_flow ),
@@ -276,10 +278,10 @@ always_comb hwif_in.reset_b = reset_n;
 always_comb hwif_in.cptra_pwrgood = cptra_pwrgood;
 
 // Pulse input to intr_regs to set the interrupt status bit and generate interrupt output (if enabled)
-always_comb hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset  = 1'b0; // TODO please assign
-always_comb hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset  = 1'b0; // TODO please assign
-always_comb hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset  = 1'b0; // TODO please assign
-always_comb hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset  = 1'b0; // TODO please assign
+always_comb hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset  = doe_fsm_error; // FSM glitch/invalid encoding detected
+always_comb hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset  = flow_error; // KV write failed
+always_comb hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset  = 1'b0;
+always_comb hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset  = 1'b0;
 always_comb hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = flow_done;
 
 doe_reg i_doe_reg (

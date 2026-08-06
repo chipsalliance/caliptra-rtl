@@ -46,7 +46,6 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | Counter stable on lock_use (slot 7) | RT | Crypto write to lock_use'd slot 7 | write_count_fmc_ecdsa unchanged (SVA) |
 | DOE lockdown (RT) | RT | Issue DOE command after RT entry | Command rejected |
 
-
 #### `directed_kv_iccm_region`
 
 | Iter | Description | Pass Criteria |
@@ -150,6 +149,150 @@ Covergroups verify enforcement correctness, flush source attribution, monitor pa
 
 - `src/integration/stimulus/L0_regression.yml` -- smoke/kv_boot_flow_monitor
 - `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- all 4 tests
+
+---
+
+## Dual-iTRNG SHA3-384 Entropy Combiner
+
+### Feature Summary
+
+A second internal TRNG (secondary `entropy_src`, ES1) is added alongside the primary
+(ES0) to support different noise-generation technologies. To keep a single CSRNG,
+a SHA3-384 `entropy_combiner` is inserted between the two `entropy_src` blocks and
+CSRNG: when the secondary source is enabled (`dual_iTRNG_en` strap =
+`CPTRA_HW_CONFIG.dual_iTRNG_en`, subsystem-mode only) the combiner delivers
+`seed = SHA3-384(ES0 || ES1)`; otherwise it bypasses ES1 and passes the ES0 seed
+through unchanged. The combiner also exposes an AHB slave used only by ROM for a
+power-on SHA3-384 KAT; after the KAT, ROM sets a W1S MuBi4 `AHB_LOCK` that scrubs
+the KAT registers and freezes the FIPS combine policy so RT FW cannot read KAT
+residuals or weaken the policy. The combiner never exposes raw entropy on any
+readable register (ES0/ES1 -> SHA3 -> CSRNG is internal only).
+
+### Test Suite
+
+| Test | Category | Description |
+| :--- | :------- | :---------- |
+| `smoke_test_entropy_combiner` | Smoke | End-to-end combine: 2x `entropy_src` (raw/bypass) -> combiner -> CSRNG, genbits vs golden `SHA3-384(IS0\|\|IS1)` |
+| `smoke_test_entropy_combiner_kat` | Smoke | Combiner power-on SHA3-384 KAT (incl. empty message), identity (NAME/VERSION), FIPS-policy sweep, and MuBi4 `AHB_LOCK` enforcement |
+| `smoke_test_entropy_combiner_lock_op` | Directed | Operational-after-lock: combine datapath still produces a seed while the combiner is AHB-locked; lock enforcement persists |
+| `smoke_test_entropy_combiner_conditioned` | Directed | Conditioner-ENABLED (FIPS) combine with deterministic entropy; power-on KAT -> lock -> conditioned combine through the locked combiner |
+| `smoke_test_entropy_combiner_multiseed` | Directed | Back-to-back multi-seed: 4 consecutive combined seeds (startup + steady-state) exercise the FSM re-request path |
+
+Build/run notes: combine mode requires the subsystem build
+(`caliptra_top_ss_mode_tb`: `CALIPTRA_MODE_SUBSYSTEM` + `CALIPTRA_INTERNAL_TRNG`)
+plus `+CLP_ITRNG1_EN`. `smoke_test_entropy_combiner_kat` runs in the default
+`caliptra_top_tb` build (no plusargs) since the combiner KAT/AHB path is
+independent of the ES/CSRNG datapath. The conditioned and multiseed tests add
+`+CLP_DETERMINISTIC_RNG` to select the deterministic RNG model
+(`physical_rng_deterministic`) so the conditioned output is reproducible.
+
+### Test Cases
+
+#### `smoke_test_entropy_combiner`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| Combine genbits | Enable ES0/ES1 raw, CSRNG instantiate-from-entropy, generate 128b | genbits == golden `EXP_GENBITS_COMBINE` |
+| ES config readback | Read back `CONF`/`MODULE_ENABLE`/`RECOV_ALERT_STS` on both ES | Config took; no recoverable alert |
+| Combine topology | Read `COMBINER_STATUS.combine_en` and `COMBINER_CTRL` (policy) | combine_en=1; policy at reset default |
+
+#### `smoke_test_entropy_combiner_kat`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| Identity | Read `COMBINER_NAME_0/1`, `COMBINER_VERSION_0/1` | Match "sha3comb" / "2.20" reset constants |
+| KAT vectors A-D | Program `KAT_MSG[0..23]`, `KAT_MSG_LEN=96`, pulse START, poll VALID | `KAT_DIGEST` == `SHA3-384(ES0\|\|ES1)` golden (ordering guards) |
+| KAT empty message | `KAT_MSG_LEN=0`, START | `KAT_DIGEST` == `SHA3-384("")`; `KAT_MSG_LEN` reads back per value |
+| Policy sweep | Write `COMBINER_CTRL.es_fips_policy`/`es_fips_cfg` = {0,1,2,3, cfg} unlocked | Each value reads back |
+| Lock + scrub | Write `AHB_LOCK`=MuBi4True | `KAT_DIGEST`/`KAT_STATUS` read 0; lock reads locked |
+| KAT blocked when locked | Program fresh message + START while locked | `KAT_STATUS` never busy/valid; digest stays 0 |
+| Policy frozen | Write different policy while locked | Read back unchanged (swwe=!lock) |
+| Lock sticky | Write MuBi4False (unlock) while locked | Reads back still locked (clears only on reset) |
+
+#### `smoke_test_entropy_combiner_lock_op`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| Bring-up (bypass) | Enable ES0/ES1 raw (one boot seed each), no instantiate yet | Both ES boot-done |
+| Pre-lock policy | Program `COMBINER_CTRL.es_fips_policy` unlocked | Reads back programmed value |
+| Lock | Set `AHB_LOCK`=MuBi4True | Reads locked |
+| Enforcement (pre-combine) | KAT scrubbed, policy frozen, lock sticky | All hold |
+| Combine while locked | Instantiate-from-entropy + generate through the locked combiner | genbits == golden `EXP_GENBITS_COMBINE`; no CSRNG exception/error |
+| Enforcement (post-combine) | Re-check KAT scrubbed / policy frozen / lock sticky | Live combine did not disturb the lock |
+
+#### `smoke_test_entropy_combiner_conditioned`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| Power-on KAT | Empty-message KAT before lock (populates `KAT_DIGEST`) | `KAT_DIGEST` == `SHA3-384("")` |
+| Program policy + lock | Program `es_fips_policy`, set `AHB_LOCK` before entropy flows | Policy took; reads locked |
+| FIPS ES config | Both ES: `CONF.FIPS_ENABLE`=MuBi4True, `FIPS_WINDOW=1024`, widen REPCNT/ADAPTP | Config readback OK; `RECOV_ALERT_STS`=0 |
+| Conditioned combine (locked) | Instantiate + generate through the locked combiner | genbits == golden `EXP_GENBITS_CONDITIONED` (from `es_conditioner_model.py`) |
+| Post-lock enforcement | KAT digest scrubbed to 0, policy frozen, lock sticky | All hold (confidential KAT data not readable) |
+
+#### `smoke_test_entropy_combiner_multiseed`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| FIPS ES config | Configure both ES in FIPS/conditioned mode | Config readback OK |
+| Seed 0 (startup) | Instantiate + generate; startup seed absorbs 2x`FIPS_WINDOW` | genbits == `EXP_GENBITS_SEED_0` |
+| Seeds 1-3 (steady-state) | uninstantiate -> re-instantiate -> generate per seed | genbits == `EXP_GENBITS_SEED_k`; no CSRNG exception/error |
+| Re-request path | Consecutive combines re-arm the combiner FSM | Each seed distinct and correct |
+
+### Direct (Unit-level) Testbenches
+
+Location: `src/entropy_combiner/tb/`
+
+| Testbench | Description |
+| :-------- | :---------- |
+| `entropy_combiner_tb.sv` | Combiner datapath TB: combine (`SHA3-384(ES0\|\|ES1)`) and bypass (ES1 ignored) modes against file vectors |
+| `entropy_combiner_align_tb.sv` | ES0/ES1 arrival-skew stress (directed matrix + randomized); checks digest correctness and ES/CSRNG ack ordering |
+| `entropy_combiner_es_integration_tb.sv` | 2x real `entropy_src` -> combiner, ES0/ES1 arrival-timing sweep via itrng release gates |
+| `entropy_combiner_es_csrng_tb.sv` | Full chain 2x `entropy_src` -> combiner -> real CSRNG; 5 cases (see below) |
+
+#### `entropy_combiner_es_csrng_tb.sv` cases
+
+| Case | Description | Pass Criteria |
+| :--- | :---------- | :------------ |
+| case1 ES1-faster-than-ES2 | Combine; release ES0 first, ES1 after a skew | seed==`EXP_SEED_COMBINE`; genbits==`EXP_GENBITS_COMBINE` |
+| case2 ES1-slower-than-ES2 | Combine; release ES1 first, ES0 after a skew | seed/genbits match combine golden |
+| case3 both-same-time | Combine; ES0/ES1 released together | seed/genbits match combine golden |
+| case4 ES2-disabled | Bypass (`combine_en=0`); ES1 disabled | seed==`EXP_SEED_BYPASS`(=IS0); genbits==`EXP_GENBITS_BYPASS` |
+| case5 force-fsm-error | Glitch the combiner sparse-FSM state to an undefined code mid-combine | FSM traps to `combiner_st_error` and holds; NO `es_ack` to CSRNG (no corrupt/partial seed); only reset recovers to `combiner_st_idle` (VCS-only; CM assertions silenced around the forced fault) |
+
+### Reference Models
+
+Location: `src/entropy_combiner/tb/`
+
+| Model | Purpose |
+| :---- | :------ |
+| `gen_test_vectors.py` | SHA3-384 combiner reference: generates `entropy_combiner_test_vectors.hex` (ES0, ES1, digest) |
+| `csrng_drbg_model.py` | AES-256 CTR_DRBG (CSRNG) + combiner digest; validated against AES FIPS-197 and CSRNG KATs |
+| `es_conditioner_model.py` | `entropy_src` SHA3-384 conditioner front-end (startup = 2x window, little-nibble packing) + full chain; emits conditioned/multi-seed goldens (sim-validated at `FIPS_WINDOW=1024`) |
+
+### Deterministic RNG Infrastructure
+
+| Component | Location | Description |
+| :-------- | :------- | :---------- |
+| `physical_rng_deterministic` | `src/entropy_src/tb/physical_rng_deterministic.sv` | Fully deterministic LFSR nibble stream (holds on disable), for reproducible conditioned/multi-seed tests |
+| RNG source MUX | `src/integration/tb/caliptra_top_tb.sv` | Per-source MUX between `physical_rng` and `physical_rng_deterministic`, selected by `+CLP_DETERMINISTIC_RNG` (default off, existing tests unaffected) |
+
+### Security Enforcement
+
+| Mechanism | RTL Location | Description |
+| :-------- | :----------- | :---------- |
+| KAT register scrub on lock | `entropy_combiner.sv` | On W1S `AHB_LOCK`, `KAT_MSG`/`KAT_MSG_LEN`/`KAT_DIGEST`/`KAT_STATUS` are held 0 so RT FW cannot read KAT residuals |
+| KAT blocked when locked | `entropy_combiner.sv` | `kat_start_cmd = start && !ahb_locked` -- no KAT can run once locked |
+| FIPS policy freeze | `entropy_combiner.sv` | `COMBINER_CTRL.es_fips_policy/es_fips_cfg` `swwe = !ahb_locked` -- ROM freezes the combine policy after lock |
+| Lock write-once-sticky | `entropy_combiner_reg.rdl` | MuBi4 `AHB_LOCK` `swwe=strict-False`; any non-strict-False code is treated as locked (fail-safe); clears only on reset |
+| No raw entropy on bus | `entropy_combiner.sv` | ES0/ES1 -> SHA3 -> CSRNG is internal only; no readable register exposes raw entropy |
+| Sparse-FSM fail-safe | `entropy_combiner.sv` | An undefined FSM state traps to `combiner_st_error` (self-loop), emits no CSRNG ack, and recovers only on reset (verified by `entropy_combiner_es_csrng_tb` case5) |
+
+### Regression
+
+- Standalone: the combiner C tests are launched directly (subsystem build +
+  plusargs as noted above); `smoke_test_entropy_combiner_kat` runs in the default
+  build.
 
 ---
 
