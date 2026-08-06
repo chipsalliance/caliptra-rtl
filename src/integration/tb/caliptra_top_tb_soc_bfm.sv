@@ -48,6 +48,14 @@ import caliptra_top_tb_pkg::*; #(
 
     output logic ss_ocp_lock_en,
 
+    output logic itrng1_en,
+
+    // Secondary iTRNG (ES1) source control for the entropy-combiner bench:
+    // observe the ES1 entropy request (etrng1_req) and assert second_RNG_triggered
+    // a random number of cycles (0-100) later to model a late-arriving noise source.
+    input  logic etrng1_req,
+    output logic second_RNG_triggered,
+
     output logic [31:0] strap_ss_strap_generic_0,
     output logic [31:0] strap_ss_strap_generic_1,
     output logic [31:0] strap_ss_strap_generic_2,
@@ -146,6 +154,41 @@ import caliptra_top_tb_pkg::*; #(
     // Leave reset asserted for 32 clock cycles
     always_comb deassert_rst_flag_from_fatal = count_deassert_rst_flag_from_fatal == 31;
 
+    // -------------------------------------------------------------------------
+    // Secondary iTRNG (ES1) source trigger for the entropy-combiner bench.
+    // The primary iTRNG source is enabled directly by the DUT's etrng0_req. The
+    // secondary source is modeled as coming online a random number of cycles
+    // (0-100) after ES1 first asserts etrng1_req, so the combiner observes
+    // ES1 entropy arriving later than ES0. Once triggered it latches high until
+    // reset. The delay is randomized by default; +CLP_SECOND_RNG_DELAY overrides
+    // it for reproducible runs. itrng1_en (set above) separately controls whether
+    // the DUT actually consumes/combines ES1.
+    // -------------------------------------------------------------------------
+    int unsigned second_rng_delay;
+    int unsigned second_rng_count;
+
+    initial begin
+        second_RNG_triggered = 1'b0;
+        second_rng_count     = 0;
+        if (!$value$plusargs("CLP_SECOND_RNG_DELAY=%d", second_rng_delay)) begin
+            second_rng_delay = $urandom_range(0, 100);
+        end
+        $display("SECOND_RNG_TRIGGERED will assert ~%0d cycle(s) after etrng1_req", second_rng_delay);
+    end
+
+    always @(posedge core_clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            second_RNG_triggered <= 1'b0;
+            second_rng_count     <= 0;
+        end
+        else if (!second_RNG_triggered && etrng1_req) begin
+            if (second_rng_count >= second_rng_delay)
+                second_RNG_triggered <= 1'b1;
+            else
+                second_rng_count <= second_rng_count + 1;
+        end
+    end
+
     initial begin
         // Initialize strap_ss_key_release_key_size based on plusargs
         if ($test$plusargs("STRAP_SS_KEY_RELEASE_KEY_SIZE_MANUAL")) begin
@@ -192,6 +235,13 @@ import caliptra_top_tb_pkg::*; #(
         else begin
             // Randomize when neither plusarg is set
             ss_ocp_lock_en = $urandom();
+        end
+
+        if ($test$plusargs("CLP_ITRNG1_EN")) begin
+            itrng1_en = 1'b1;
+        end
+        else begin
+            itrng1_en = 1'b0;
         end
 
         // Initialize SS strap generics: randomize by default, plusarg overrides

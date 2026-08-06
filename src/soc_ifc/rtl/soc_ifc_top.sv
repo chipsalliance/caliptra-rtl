@@ -43,6 +43,9 @@ module soc_ifc_top
     input logic soc_ifc_clk_cg,
     input logic rdc_clk_cg,
 
+    // Busy indicator and clocks cannot be gated
+    output logic busy,
+
     //SoC boot signals
     input logic cptra_pwrgood,
     input logic cptra_rst_b,
@@ -166,6 +169,11 @@ module soc_ifc_top
     output logic         ss_ocp_lock_in_progress,
     output logic [15:0]  ss_key_release_key_size,
 
+    // Dual iTRNG enable strap: reflected in CPTRA_HW_CONFIG.dual_iTRNG_en and
+    // exported (dual_itrng_en_o) to drive the entropy combiner's combine_en.
+    input  logic         dual_itrng_en,
+    output logic         dual_itrng_en_o,
+
     // Stable owner key enable (subsystem_mode & strap_generic_3[0] & !ocp_lock)
     output logic         stable_owner_key_en,
 
@@ -228,6 +236,7 @@ soc_ifc_req_t uc_req;
 logic mbox_req_dv;
 logic mbox_dir_req_dv;
 logic mbox_req_hold;
+logic mbox_busy;
 soc_ifc_req_t mbox_req_data;
 logic [SOC_IFC_DATA_W-1:0] mbox_rdata;
 logic [SOC_IFC_DATA_W-1:0] mbox_dir_rdata;
@@ -545,10 +554,22 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
 `ifdef CALIPTRA_MODE_SUBSYSTEM
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b1;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = ss_ocp_lock_en;
+    // Dual iTRNG (secondary entropy_src + SHA3 combiner) is only enabled in
+    // subsystem mode with the internal TRNG present; the strap then reflects into
+    // the SW-readable register and drives combine_en. Any other config => bypass (0).
+  `ifdef CALIPTRA_INTERNAL_TRNG
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = dual_itrng_en;
+  `else
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
+  `endif
 `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b0;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
 `endif
+// dual_iTRNG_en stored value exported to drive the entropy combiner's combine_en
+// (0 unless subsystem mode + internal TRNG).
+always_comb dual_itrng_en_o = soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.dual_iTRNG_en.value;
 
 //SOC Stepping ID update
 always_comb begin
@@ -1400,6 +1421,7 @@ i_mbox (
     .sram_single_ecc_error(sram_single_ecc_error),
     .sram_double_ecc_error(sram_double_ecc_error),
     .uc_mbox_lock(uc_mbox_lock),
+    .busy(mbox_busy),
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail(uc_mbox_data_avail),
     .soc_req_mbox_lock(soc_req_mbox_lock),
@@ -1415,6 +1437,9 @@ i_mbox (
     .dmi_reg_wdata(cptra_uncore_dmi_reg_wdata),
     .dmi_reg(mbox_dmi_reg)
 );
+
+// Aggregate soc_ifc busy sources for the clock gate
+always_comb busy = mbox_busy;
 
 // AXI Manager (DMA)
 axi_dma_top #(

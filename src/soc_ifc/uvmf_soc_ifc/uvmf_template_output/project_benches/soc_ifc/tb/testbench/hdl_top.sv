@@ -347,6 +347,10 @@ import aaxi_uvm_pkg::*;
         .ss_ocp_lock_in_progress(    /*TODO*/),
         .ss_key_release_key_size(    /*TODO*/),
 
+        // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out
+        .dual_itrng_en          (1'b0/*TODO*/),
+        .dual_itrng_en_o        (    /*TODO*/),
+
         .stable_owner_key_en(       /*TODO*/),
 
         // NMI Vector 
@@ -387,6 +391,21 @@ import aaxi_uvm_pkg::*;
         .cptra_uncore_dmi_reg_rdata(     ),
         .cptra_uncore_dmi_reg_addr (7'h0 ),
         .cptra_uncore_dmi_reg_wdata(32'h0)
+    );
+
+    // AXI subordinate memory on the DMA AXI manager port. Geometry is owned by
+    // soc_ifc_parameters_pkg; axi_sub aliases the DMA's wide address into the AW
+    // window.
+    caliptra_axi_sram #(
+        .AW(DMA_AXI_SRAM_ADDR_WIDTH   ),
+        .DW(CPTRA_AXI_DMA_DATA_WIDTH  ),
+        .IW(CPTRA_AXI_DMA_ID_WIDTH    ),
+        .UW(CPTRA_AXI_DMA_USER_WIDTH  )
+    ) i_dma_axi_sram (
+        .clk       (clk                              ),
+        .rst_n     (soc_ifc_ctrl_agent_bus.cptra_rst_b),
+        .s_axi_w_if(m_axi_if.w_sub                   ),
+        .s_axi_r_if(m_axi_if.r_sub                   )
     );
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;
@@ -459,51 +478,6 @@ import aaxi_uvm_pkg::*;
         ports[0].BUSER  = s_axi_if.buser ;
         ports[0].BVALID = s_axi_if.bvalid;
         s_axi_if.bready = ports[0].BREADY;
-    end
-    // TODO
-    always_comb begin
-        // AXI AR
-//        ports[0].ARADDR  = m_axi_if.araddr;
-//        ports[0].ARBURST = m_axi_if.arburst;
-//        ports[0].ARSIZE  = m_axi_if.arsize;
-//        ports[0].ARLEN   = m_axi_if.arlen;
-//        ports[0].ARUSER  = m_axi_if.aruser;
-//        ports[0].ARID    = m_axi_if.arid;
-//        ports[0].ARLOCK  = m_axi_if.arlock;
-//        ports[0].ARVALID = m_axi_if.arvalid;
-        m_axi_if.arready = '0;//ports[0].ARREADY;
-
-        // AXI R
-        m_axi_if.rdata  = '0; //ports[0].RDATA;
-        m_axi_if.rresp  = '0; //ports[0].RRESP;
-        m_axi_if.rid    = '0; //ports[0].RID;
-        m_axi_if.rlast  = '0; //ports[0].RLAST;
-        m_axi_if.rvalid = '0; //ports[0].RVALID;
-//        ports[0].RREADY = s_axi_if.rready;
-
-        // AXI AW
-//        ports[0].AWADDR  = m_axi_if.awaddr;
-//        ports[0].AWBURST = m_axi_if.awburst;
-//        ports[0].AWSIZE  = m_axi_if.awsize;
-//        ports[0].AWLEN   = m_axi_if.awlen;
-//        ports[0].AWUSER  = m_axi_if.awuser;
-//        ports[0].AWID    = m_axi_if.awid;
-//        ports[0].AWLOCK  = m_axi_if.awlock;
-//        ports[0].AWVALID = m_axi_if.awvalid;
-        m_axi_if.awready = '0; //ports[0].AWREADY;
-
-        // AXI W
-//        ports[0].WDATA  = m_axi_if.wdata;
-//        ports[0].WSTRB  = m_axi_if.wstrb;
-//        ports[0].WVALID = m_axi_if.wvalid;
-//        ports[0].WLAST  = m_axi_if.wlast;
-        m_axi_if.wready = '0; //ports[0].WREADY;
-
-        // AXI B
-        m_axi_if.bresp  = '0; //ports[0].BRESP;
-        m_axi_if.bid    = '0; //ports[0].BID;
-        m_axi_if.bvalid = '0; //ports[0].BVALID;
-//        ports[0].BREADY = m_axi_if.bready;
     end
 
 

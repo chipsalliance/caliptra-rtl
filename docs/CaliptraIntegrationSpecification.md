@@ -226,7 +226,7 @@ Trace ports have been directly connected from Caliptra's instance of the VeeR-EL
 |  strap_ss_caliptra_dma_axi_user                           | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Provides Caliptra ROM with entropy source (CSRNG) configuration used during initialization when `CALIPTRA_INTERNAL_TRNG` is enabled, including Passive mode. If this configuration is not used, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Formerly provided the Caliptra ROM with entropy source (CSRNG) configuration. That configuration has moved to the `CPTRA_iTRNG_ENTROPY_CONFIG_*` (ES0) and `CPTRA_iTRNG1_ENTROPY_CONFIG_*` (ES1) architectural registers and this strap is **no longer used for entropy-source configuration**. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
 |  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
 |  ss_ocp_lock_en                                           | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC enables OCP LOCK features of Caliptra. Must be tied to a constant value. For example, driving this input from a programmable register or from a package pin is not permitted. |
@@ -253,9 +253,66 @@ Trace ports have been directly connected from Caliptra's instance of the VeeR-EL
 | cptra_error_fatal | 1 | Output | Synchronous to clk | Indicates a fatal error from Caliptra. |
 | cptra_error_non_fatal | 1 | Output | Synchronous to clk | Indicates a non fatal error from Caliptra. |
 | BootFSM_BrkPoint | 1 | Input Strap | Asynchronous | Stops the BootFSM to allow TAP writes set up behavior. Examples of these behaviors are skipping or running ROM flows, or stepping through BootFSM. |
-| etrng_req | 1 | Output | Synchronous to clk | External source mode: TRNG_REQ to SoC. SoC writes to TRNG architectural registers with a NIST-compliant entropy.<br> Internal source mode: TRNG_REQ to SoC. SoC enables external RNG digital bitstream input into itrng_data/itrng_valid. |
-| itrng_data | 4 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: Physical True Random Noise Source (PTRNG for "Number Generator") digital bit stream from SoC, which is sampled when itrng_valid is high. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#integrated-trng) for details on PTRNG expectations and iTRNG entropy capabilities. |
-| itrng_valid | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: RNG bit valid. This is valid per transaction. itrng_data can be sampled whenever this bit is high. The expected itrng_valid output rate is dependent on the process node technology. For 40nm, it is expected to be at least 50kHz. For latest industry standard, moderately advanced technology, it is expected to be greater than 400kHz. |
+| etrng0_req | 1 | Output | Synchronous to clk | External source mode: TRNG_REQ to SoC. SoC writes to TRNG architectural registers with a NIST-compliant entropy.<br> Internal source mode: request for the primary internal entropy source (ES0). SoC enables external RNG digital bitstream input into itrng0_data/itrng0_valid. |
+| etrng1_req | 1 | Output | Synchronous to clk | Internal source, dual-iTRNG mode only: request for the secondary internal entropy source (ES1). Only meaningful when the dual iTRNG entropy combiner is enabled (see itrng1_en); held 0 in External source mode and when dual iTRNG is disabled. |
+| itrng0_data | 4 | Input | Synchronous to clk | External source mode: Not used. Internal source mode only: primary Physical True Random Noise Source (PTRNG) digital bit stream from SoC, which is sampled when itrng0_valid is high. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#integrated-trng) for details on PTRNG expectations and iTRNG entropy capabilities. |
+| itrng0_valid | 1 | Input | Synchronous to clk | External source mode: Not used.<br> Internal source mode only: primary RNG bit valid. This is valid per transaction. itrng0_data can be sampled whenever this bit is high. The expected valid output rate is dependent on the process node technology. For 40nm, it is expected to be at least 50kHz. For latest industry standard, moderately advanced technology, it is expected to be greater than 400kHz. |
+| itrng1_data | 4 | Input | Synchronous to clk | Secondary PTRNG digital bit stream (ES1), used only when the dual iTRNG entropy combiner is enabled. Integrators using a single iTRNG shall tie this input to 0. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#dual-itrng-entropy-combiner). |
+| itrng1_valid | 1 | Input | Synchronous to clk | Secondary RNG bit valid (ES1). itrng1_data is sampled whenever this bit is high. Used only in dual-iTRNG mode; tie to 0 if the secondary source is not present. |
+| itrng1_en | 1 | Input Strap | Synchronous to clk | Dual iTRNG enable strap. When set, enables the secondary entropy source (ES1) and the SHA3-384 entropy combiner (combine mode); when 0, the combiner is bypassed (ES0 only). Only takes effect in Subsystem mode with CALIPTRA_INTERNAL_TRNG. Must be tied to a constant value. For example, driving this input from a programmable register, a package pin, or any other source that can change while Caliptra is out of reset is not permitted. Integrators using a single iTRNG shall tie this input to 0. Reflected in CPTRA_HW_CONFIG.dual_iTRNG_en. |
+
+## Dual iTRNG (secondary entropy source)
+
+Integrators that need a second physical noise source (for example, a different
+noise-generation technology) can enable Caliptra's dual iTRNG feature, which adds
+a secondary entropy source (ES1) and a SHA3-384 entropy combiner ahead of the
+single CSRNG. See the [Hardware Specification](https://github.com/chipsalliance/caliptra-rtl/blob/main/docs/CaliptraHardwareSpecification.md#dual-itrng-entropy-combiner)
+for the architecture. When the feature is disabled the combiner is bypassed and
+behavior is identical to a single iTRNG, so single-source integrations need only
+tie off the unused inputs.
+
+To use the dual iTRNG feature correctly, an integrator must:
+
+1. Instantiate the internal TRNG (`CALIPTRA_INTERNAL_TRNG`) in Subsystem mode. The
+   feature only takes effect in Subsystem mode with the internal TRNG present.
+2. Connect the primary physical noise source to `itrng0_data` / `itrng0_valid` and
+   the secondary source to `itrng1_data` / `itrng1_valid`. Each source has its own
+   external request output (`etrng0_req`, `etrng1_req`).
+3. Tie the `itrng1_en` strap to a constant 1 to enable combine mode. This is
+   reflected in the software-readable `CPTRA_HW_CONFIG.dual_iTRNG_en` bit, which
+   the hardware uses to enable ES1 and the combiner. Tying `itrng1_en` to a
+   constant 0 keeps the combiner in bypass (ES0 only). This strap must not be
+   driven dynamically or changed while Caliptra is out of reset.
+4. Provide the ROM-time entropy-source configuration through the architectural
+   registers described below (rather than a strap).
+5. Configure **each** entropy source independently for the noise source connected
+   to it. The combiner uses two `entropy_src` instances (ES0 and ES1), and each
+   has its own health-test thresholds, window size, and mode controls. Because
+   the two physical noise sources may use different noise-generation technologies
+   with different statistical behavior (bit rate, bias, correlation), their
+   health-test parameters may differ and must each be derived from the
+   corresponding source's characterization.
+
+Single-iTRNG integrations shall tie `itrng1_en`, `itrng1_data`, and `itrng1_valid`
+to 0; the secondary entropy source and combiner then remain inactive.
+
+### Entropy source configuration registers
+
+Earlier revisions delivered the ROM-time entropy-source (CSRNG) configuration
+through the `strap_ss_strap_generic_2` late-binding strap. That strap is **no
+longer used for entropy-source configuration**; the configuration is now provided
+through dedicated architectural registers so that each entropy source can be
+configured independently and so the values are software-readable:
+
+* `CPTRA_iTRNG_ENTROPY_CONFIG_0/1/2` — primary entropy source (ES0).
+* `CPTRA_iTRNG1_ENTROPY_CONFIG_0/1/2` — secondary entropy source (ES1).
+
+For each source, `..._CONFIG_0` carries the adaptive-proportion low/high
+thresholds, `..._CONFIG_1` carries the repetition-count threshold, and
+`..._CONFIG_2` carries the health-test window size, single-bit mode /
+`rng_bit_sel`, and entropy bypass (`es_type`) controls — the same fields
+previously encoded in the strap. Refer to the Caliptra ROM Specification for the
+programming sequence.
 
 ## Architectural registers and fuses
 
@@ -352,6 +409,7 @@ All accesses that are outside of the defined address space of Caliptra are respo
 * Access to mailbox memory region with invalid AXI_USER are dropped.
 * Access to a fuse with invalid AXI_USER are dropped.
 * Access to the trng with invalid AXI_USER are dropped.
+* Access to the AXI DMA via the AXI interface are dropped.
 * SLVERR is asserted for any of the above conditions.
 
 All accesses must be 32-bit aligned. Misaligned writes are dropped and reads return 0x0.
@@ -414,7 +472,7 @@ The following table describes the allocation of functionality to strap\_ss\_stra
 | :--------- | :---------         | :---------                                                                                                                  |
 | 0          | strap_ss_strap_generic_0           | Provides the Caliptra ROM with a 32-bit pointer that encodes the location of the fuse controller's status register and the bit position of the idle indicator. Upper 16 bits: Bit index of the IDLE_BIT_STATUS within SOC_OTP_CTRL_STATUS. Lower 16 bits: Offset address of SOC_OTP_CTRL_STATUS within the SOC_IFC_REG space, relative to SOC_OTP_CTRL_BASE_ADDR.|
 | 1          | strap_ss_strap_generic_1           | Provides the Caliptra ROM with a 32-bit pointer to the fuse controller’s command register (CMD), enabling ROM-level control or triggering of fuse operations. |
-| 2          | strap_ss_strap_generic_2           | Provides the Caliptra ROM with entropy source (CSRNG) configuration used during initialization when `CALIPTRA_INTERNAL_TRNG` is enabled, including Passive mode. Bits [15:0]: Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane. Bit [16]: Entropy source single-bit mode. ROM clears `threshold_scope` during entropy source initialization. When this bit is set to 1, ROM enables `rng_bit_enable`. Bits [18:17]: Entropy source single-bit mode `rng_bit_sel`. Selects which RNG bit stream to process when single-bit mode is enabled. Bits [30:19]: RESERVED/unused, must be tied to 0. Bit [31]: Entropy bypass mode. When set to 1, enables bypass mode (`es_type`) to allow entropy characterization directly without passing through conditioning. Refer to the Caliptra ROM Specification for additional details. |
+| 2          | strap_ss_strap_generic_2           | Formerly provided the Caliptra ROM with entropy source (CSRNG) configuration during initialization. That configuration (health-test window size, single-bit mode / `rng_bit_sel`, and entropy bypass `es_type`) has moved to the `CPTRA_iTRNG_ENTROPY_CONFIG_2` (ES0) and `CPTRA_iTRNG1_ENTROPY_CONFIG_2` (ES1) architectural registers, with thresholds/repetition count in the `..._CONFIG_0`/`..._CONFIG_1` registers. This strap is **no longer used for entropy-source configuration** and is available as a general-purpose late-binding strap. Refer to the Caliptra ROM Specification for additional details. |
 | 3          | strap_ss_strap_generic_3           | Provides the Caliptra ROM with Stable Owner Key controls. Bit [0]: Stable Owner Key enable. When set to 1, ROM derives the Stable Owner Root Key from the HEK seed and allows `CM_DERIVE_STABLE_KEY` with `key_type = OwnerKey` when the other availability requirements are met (subsystem mode active and OCP LOCK disabled). When clear, Stable Owner Key derivation is disabled. Bits [31:1]: RESERVED/unused, must be tied to 0. Refer to the Caliptra ROM Specification for additional details. |
 
 # SoC interface operation

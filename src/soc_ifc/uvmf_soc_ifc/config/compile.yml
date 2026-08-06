@@ -69,6 +69,7 @@ schema_version: 2.4.0
 requires:
   - uvmf_soc_ifc_vip
   - soc_ifc_coverage
+  - caliptra_axi_sram
 targets:
   tb:
     directories:

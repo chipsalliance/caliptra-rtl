@@ -305,6 +305,8 @@ class soc_ifc_predictor #(
   extern function bit  valid_requester(input uvm_transaction txn);
   extern function bit  valid_receiver(input uvm_transaction txn);
   extern function bit  sha_valid_user(input uvm_transaction txn);
+  extern function bit  is_axi_dma_reg(uvm_reg r);
+  extern function uvm_reg_data_t dma_reg_masked_expected_rdata(uvm_reg r, uvm_reg_data_t observed);
   extern function void predict_boot_wait_boot_done();
   extern task          handle_reset(input string kind = "HARD", output uvm_event reset_synchro);
   extern function void predict_reset(input string kind = "HARD");
@@ -900,6 +902,9 @@ class soc_ifc_predictor #(
     uvm_reg axs_reg;
     uvm_mem axs_mem;
     uvm_reg_data_t previous_mirror;
+    uvm_reg_data_t dma_lane_mask;
+    uvm_reg_data_t dma_exp_masked;
+    int unsigned   dma_lane_shift;
     bit do_reg_prediction = 1;
     bit [SOC_IFC_DATA_W-1:0] data_active;
     bit [ahb_lite_slave_0_params::AHB_WDATA_WIDTH-1:0] address_aligned;
@@ -976,6 +981,31 @@ class soc_ifc_predictor #(
         do_reg_prediction = 1'b0;
     end
     else if (axs_reg != null) begin
+        // Identify the DMA registers by block ancestry (is_axi_dma_reg), NOT by
+        // name, so a DMA register whose short name happens to match an mbox/sha
+        // case label below can never be mishandled. Passive integrity check: on a
+        // successful AHB read, drive the scoreboard's expected read data from the
+        // register model for NON-VOLATILE fields only (volatile/reserved bits keep
+        // the observed value so they never false-fail). This catches any illegal
+        // write (e.g. from SoC-AXI) that changed a DMA config register.
+        if (is_axi_dma_reg(axs_reg)) begin
+            if (ahb_txn.RnW == AHB_READ && ahb_txn.resp[0] == AHB_OKAY) begin
+                // Substitute ONLY the active 32-bit lane's non-volatile field bits
+                // with the model value; keep the observed data everywhere else (the
+                // inactive lane of the 64-bit AHB word and volatile/reserved bits)
+                // so only the checked bits can ever drive a scoreboard mismatch.
+                dma_lane_shift = 8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8));
+                dma_lane_mask  = uvm_reg_data_t'({SOC_IFC_DATA_W{1'b1}}) << dma_lane_shift;
+                dma_exp_masked = dma_reg_masked_expected_rdata(axs_reg, data_active);
+                soc_ifc_sb_ahb_ap_output_transaction.data[0] =
+                    (ahb_txn.data[0] & ~dma_lane_mask) |
+                    ((dma_exp_masked << dma_lane_shift) & dma_lane_mask);
+                // DEBUG: confirm the predictor read-check fired and what expected value it injected.
+                `uvm_info("DMA_RDCHK", $sformatf("PREDICTOR fired DMA read-check on %s @0x%0x: observed=0x%08x expected(masked)=0x%08x",
+                          axs_reg.get_name(), ahb_txn.address, data_active, dma_exp_masked), UVM_HIGH)
+            end
+        end
+        else
         case (axs_reg.get_name()) inside
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
             // setting a new bit, so we need the previous value to catch the edges
@@ -1640,6 +1670,10 @@ class soc_ifc_predictor #(
                 ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
                 "CPTRA_iTRNG_ENTROPY_CONFIG_0",
                 "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+                "CPTRA_iTRNG_ENTROPY_CONFIG_2",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
                 ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                     `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
@@ -2182,6 +2216,20 @@ class soc_ifc_predictor #(
         soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
         soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
     end
+    else if (is_axi_dma_reg(axs_reg)) begin
+        // The AXI (SoC) interface has no access to the DMA registers; the DMA
+        // assist is accessible only by Caliptra's microcontroller (over AHB).
+        // Any AXI access to the DMA block is rejected (SLVERR) with no effect on
+        // the register state. A rejected read returns 0; for a rejected write the
+        // expected payload is left as observed (the master still drives WDATA) so
+        // the scoreboard flags on the response rather than the write data.
+        do_reg_prediction = 1'b0;
+        if (!axi_txn.is_write()) begin
+            soc_ifc_sb_axi_ap_output_transaction.data  = {0,0,0,0};
+            soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+        end
+        soc_ifc_sb_axi_ap_output_transaction.resp  = AAXI_RESP_SLVERR;
+    end
     else begin
         case (axs_reg.get_name()) inside
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
@@ -2411,6 +2459,9 @@ class soc_ifc_predictor #(
     end
     else if (axs_reg == null) begin
         `uvm_error("PRED_AXI", $sformatf("AXI transaction to address: 0x%x decodes to null from soc_ifc_AXI_map", axi_txn.addr))
+    end
+    else if (is_axi_dma_reg(axs_reg)) begin
+        `uvm_info("PRED_AXI", {"AXI access to DMA register ", axs_reg.get_full_name(), " is rejected (Caliptra-uC-only); no system effect"}, UVM_MEDIUM)
     end
     else begin
         `uvm_info("PRED_AXI", {"Detected access to register: ", axs_reg.get_full_name()}, UVM_MEDIUM)
@@ -2825,6 +2876,10 @@ class soc_ifc_predictor #(
             ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
             "CPTRA_iTRNG_ENTROPY_CONFIG_0",
             "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+            "CPTRA_iTRNG_ENTROPY_CONFIG_2",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
             ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                 `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
             end
@@ -3942,6 +3997,40 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
         sha_valid_user = 0;
         return sha_valid_user;
     end
+endfunction
+
+// Returns 1 if register `r` belongs anywhere within the AXI DMA register block
+// (axi_dma_reg_rm), including its interrupt register sub-block (intr_block_rf_ext).
+// Used to reject all SoC-AXI accesses to the DMA block, which is Caliptra-uC-only.
+function bit soc_ifc_predictor::is_axi_dma_reg(uvm_reg r);
+    uvm_reg_block blk;
+    if (r == null) return 1'b0;
+    blk = r.get_parent();
+    while (blk != null) begin
+        if (blk.get_name() == "axi_dma_reg_rm") return 1'b1;
+        blk = blk.get_parent();
+    end
+    return 1'b0;
+endfunction
+
+// Build the scoreboard's expected read data for a register: start from the
+// observed (DUT) value and overwrite only the NON-VOLATILE field bits with the
+// register model's mirrored value. Volatile fields and reserved/unmapped bits
+// keep the observed value, so they are never compared (no false mismatches).
+function uvm_reg_data_t soc_ifc_predictor::dma_reg_masked_expected_rdata(uvm_reg r, uvm_reg_data_t observed);
+    uvm_reg_field flds[$];
+    uvm_reg_data_t exp;
+    uvm_reg_data_t fmask;
+    exp = observed;
+    if (r == null) return exp;
+    r.get_fields(flds);
+    foreach (flds[i]) begin
+        if (!flds[i].is_volatile()) begin
+            fmask = ((uvm_reg_data_t'(1) << flds[i].get_n_bits()) - 1) << flds[i].get_lsb_pos();
+            exp = (exp & ~fmask) | ((flds[i].get_mirrored_value() << flds[i].get_lsb_pos()) & fmask);
+        end
+    end
+    return exp;
 endfunction
 
 function void soc_ifc_predictor::predict_boot_wait_boot_done();
