@@ -50,8 +50,8 @@ module kv_read_client
     output kv_error_code_e error_code,
     output logic kv_ready,
     output logic read_done,
-    input  logic                       check_key_size = 1'b0,
-    input  logic [KV_ENTRY_SIZE_W-1:0] expected_key_size = KV_ENTRY_SIZE_W'((DATA_WIDTH/32)-1)
+    input  logic                       check_key_size,
+    input  logic [KV_ENTRY_SIZE_W-1:0] expected_key_size
 );
 
 logic [KV_ENTRY_SIZE_W-1:0] stored_last_dword;
