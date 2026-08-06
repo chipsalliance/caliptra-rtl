@@ -1544,19 +1544,23 @@ module caliptra_top_sva
   // When mismatch fires, key regs clear via hwclr with a fixed 2-cycle
   // pipeline (mismatch cycle N → error_code registers cycle N+1 →
   // hwclr cycle N+1 → key_reg zero cycle N+2).
+  // Note: expressed via $past(..., 2) instead of `|-> ##2` because Verilator
+  // does not support "implication with sequence expression" on the RHS.
+  // Logically equivalent: if length_mismatch fired 2 cycles ago, the key
+  // register must be zero now.
   KV_hmac_key_cleared_on_mismatch: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `HMAC_PATH.hmac_key_kv_read.length_mismatch |-> ##2 (`HMAC_PATH.key_reg == '0))
+      $past(`HMAC_PATH.hmac_key_kv_read.length_mismatch, 2) |-> (`HMAC_PATH.key_reg == '0))
       else $display("SVA ERROR: HMAC key not cleared 2 cycles after KV length mismatch");
 
   KV_ecc_len_mismatch_clears_privkey: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ECC_PATH.ecc_privkey_kv_read.length_mismatch |-> ##2 (`ECC_PATH.privkey_reg == '0))
+      $past(`ECC_PATH.ecc_privkey_kv_read.length_mismatch, 2) |-> (`ECC_PATH.privkey_reg == '0))
       else $display("SVA ERROR: ECC privkey not cleared 2 cycles after KV length mismatch");
 
   KV_ecc_len_mismatch_clears_seed: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ECC_PATH.ecc_seed_kv_read.length_mismatch |-> ##2 (`ECC_PATH.seed_reg == '0))
+      $past(`ECC_PATH.ecc_seed_kv_read.length_mismatch, 2) |-> (`ECC_PATH.seed_reg == '0))
       else $display("SVA ERROR: ECC seed not cleared 2 cycles after KV length mismatch");
 
   // Covers: each consumer exercises both match and mismatch.
