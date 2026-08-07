@@ -1,0 +1,21 @@
+---
+# Mode-aware SoC-AXI SHA accelerator access-control test.
+#
+# Runs the mode-aware soc_ifc_env_sha_accel_sequence via the command-line test.
+# The SAME test is used with both build targets:
+#   * integration_lib::uvmf_soc_ifc     (passive mode)    -> every SoC-AXI SHA
+#                                          access is expected to be rejected.
+#   * integration_lib::uvmf_soc_ifc_ss  (subsystem mode)  -> only the requester
+#                                          matching SS_CALIPTRA_DMA_AXI_USER may
+#                                          operate the accelerator.
+#
+# Requester AxUSER values are randomized 50% toward the randomized
+# strap_ss_caliptra_dma_axi_user value and 50% toward other values in both modes.
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=soc_ifc_cmdline_test'
+- '+CLP_SEQ=soc_ifc_env_sha_accel_sequence'
+# The configuration gates this request with CALIPTRA_MODE_SUBSYSTEM, so passive
+# runs remain side-effect free while the shared test explicitly opts in for SS.
+- '+ENABLE_SHA_ICCM_UNLOCK'
+testname: soc_ifc_sha_acc_axi_user_test

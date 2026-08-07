@@ -536,6 +536,11 @@ class soc_ifc_scoreboard #(
     if (ahb_expected_q.size() > 0) begin
         t_exp = ahb_expected_q.pop_front();
         txn_eq = t.compare(t_exp);
+        // DEBUG: confirm the scoreboard actually compares DMA-register AHB reads
+        // (expected data comes from the predictor's model-based read-check).
+        if (t.RnW == AHB_READ && (t.address inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}))
+            `uvm_info("DMA_RDCHK", $sformatf("SCOREBOARD compared DMA-reg AHB read @0x%0x: actual=0x%08x expected=0x%08x -> %s",
+                      t.address, t.data[0], t_exp.data[0], (txn_eq ? "MATCH" : "MISMATCH")), UVM_HIGH)
         if (txn_eq) begin
             match_count++;
             `uvm_info ("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} matches expected",t.address,t.data[0],t.RnW), UVM_HIGH)
@@ -573,7 +578,12 @@ class soc_ifc_scoreboard #(
 
     if (axi_expected_q.size() > 0) begin
         t_exp = axi_expected_q.pop_front();
-        txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind);
+        // Compare the AXI response in addition to the payload so that response
+        // predictions (e.g. an expected SLVERR for a rejected access) are checked
+        // and not just the data. For valid accesses the predicted response equals
+        // the observed response, so this does not affect existing comparisons.
+        txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind) &&
+                 (t.resp[$bits(axi_resp_e)-1:0] === t_exp.resp[$bits(axi_resp_e)-1:0]);
         if (txn_eq) begin
             match_count++;
             `uvm_info ("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} matches expected",t.addr,t.beatQ[0],t.kind), UVM_HIGH)

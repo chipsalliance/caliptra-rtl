@@ -1380,7 +1380,9 @@ import kv_defines_pkg::*;
 
         .error_code(kv_data_error_code),
         .kv_ready  (kv_data_kv_ready  ),
-        .read_done (kv_data_read_done )
+        .read_done (kv_data_read_done ),
+        .check_key_size(1'b0),
+        .expected_key_size(KV_ENTRY_SIZE_W'(OCP_LOCK_MEK_NUM_DWORDS-1))
     );
 
     // --------------------------------------- //

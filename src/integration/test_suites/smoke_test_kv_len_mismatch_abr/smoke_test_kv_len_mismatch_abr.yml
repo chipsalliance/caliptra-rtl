@@ -1,0 +1,4 @@
+# SPDX-License-Identifier: Apache-2.0
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+testname: smoke_test_kv_len_mismatch_abr

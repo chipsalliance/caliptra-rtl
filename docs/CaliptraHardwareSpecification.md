@@ -2609,6 +2609,61 @@ When a key is read from the key vault, the API register is locked and any result
 
 Key vault read errors will prevent the crypto engine from accepting new commands. The engine will require zeroization in order to clear the error and resume normal operation.
 
+### Key vault key-length-mismatch detection
+
+Each cryptographic consumer that reads from KV performs a length check
+between the KV entry's stored `last_dword` and the consumer's
+`expected_key_size` port (derived from mode, e.g., HMAC-384 vs HMAC-512,
+or fixed by the consumer, e.g., ECC P-384, MLDSA/MLKEM seed, OCP LOCK
+MEK). The KV read-mux broadcasts each addressed entry's stored
+`last_dword` on `kv_rd_resp_t.entry_last_dword`, and every
+`kv_read_client` latches that value into a local `stored_last_dword`
+register.
+A stored entry *larger* than the
+consumer's expected size is accepted. A stored entry *smaller* than the
+consumer's expected size triggers `KV_RD_LEN_MISMATCH`. Access-control
+(`dest_valid` + `kv_read_rule_check`) still gates which slots each
+consumer may touch, so prefix use of an oversized entry does not
+widen attack surface.
+
+When mismatch fires, `error_code` is registered to `KV_RD_LEN_MISMATCH`
+and self-holds via the existing mux fall-through (cleared only by
+`rst_b` or `zeroize`). The length check enforces *how much of
+the slot is meaningful* and closes a key-substitution class where a
+shorter stored key would otherwise be silently zero-padded (or worse,
+consumed with undefined-tail bits) by a wider engine.
+
+**Two check-time modes**, selected by parameter `LEN_CHECK_AT_KEY_USE`:
+- `LEN_CHECK_AT_KEY_USE=0` (default) — check fires on `read_done` (KV
+  FSM's `KV_DONE` state), comparing `stored_last_dword` to the fixed
+  `expected_key_size` the consumer wires. Used by consumers whose
+  expected size is stable at KV-read time (ECC privkey/seed, AXI-DMA
+  MEK, MLDSA/MLKEM seeds and message).
+- `LEN_CHECK_AT_KEY_USE=1` — check fires on the consumer's
+  `check_key_size` strobe (typically at `INIT`/`START`/op-commit).
+  Used by consumers whose expected size is not stable until the op
+  commits (HMAC and AES, whose mode/key_len may be programmed after
+  the KV read completes).
+
+**HMAC** enables the check on the key path only. `hmac_key_kv_read`
+uses `LEN_CHECK_AT_KEY_USE=1` with `check_key_size = (init_reg |
+next_reg) & kv_key_data_present` and `expected_key_size =
+hmac_expected_key_size` (11 for HMAC-384, 15 for HMAC-512). The HMAC
+block is a message chunk, not a security-sized key, and legitimate
+consumers (notably the OCP LOCK HEK seed at `OCP_LOCK_HEK_NUM_DWORDS=8`
+dwords routed to `KV_DEST_IDX_HMAC_BLOCK`) may supply KV entries
+shorter than the mode's key size.
+
+**AES** derives `expected_key_size` from the runtime-selectable
+`CTRL_SHADOWED.key_len` (128/192/256 → 3/5/7), exposed to the CLP
+wrapper via `aes2caliptra.key_len`. The check is armed at
+`kv_key_done | keymgr_key.valid`, so any FW re-program of `key_len`
+that would create an entry-too-small condition is caught before AES
+samples the key. AES does not raise an interrupt on KV errors; FW
+must observe `AES_KV_RD_KEY_STATUS.ERROR` after the status VALID bit
+sets. The `AES_KV_RD_KEY_STATUS.ERROR` field encodes the KV error
+code (`KV_SUCCESS=0`, `KV_READ_FAIL=1`, `KV_RD_LEN_MISMATCH=3`).
+
 If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
 
 The following tables describe read, write, and status values for key vault blocks.

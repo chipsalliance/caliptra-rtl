@@ -1042,7 +1042,18 @@ generate
     end
 endgenerate
 
-always_comb valid_sha_user = soc_req_dv & (soc_req.user == soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value);
+// SoC-AXI access to the SHA accelerator is only available in Caliptra Subsystem
+// mode (per the Integration Specification). In passive builds the SoC-AXI SHA
+// route is compiled out (valid_sha_user tied to 0) so no AxUSER - including the
+// reset-value SS_CALIPTRA_DMA_AXI_USER of 0 - can authorize it. The uC/AHB path
+// to the accelerator is unaffected and remains available in both modes.
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+always_comb valid_sha_user = soc_req_dv &
+                             (soc_req.user == soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value);
+`else
+always_comb valid_sha_user = '0;
+`endif
+
 
 
 // Generate a pulse to set the interrupt bit
