@@ -179,7 +179,7 @@ import caliptra_top_tb_pkg::*; #(
         end
     end
     // Pulse fires about 640ns after the original error interrupt occurs
-    always_comb cptra_error_fatal_dly_p     = (cptra_error_fatal_counter     == 16'h0040) && !route_fatal_to_nmi;
+    always_comb cptra_error_fatal_dly_p     = (cptra_error_fatal_counter    == 16'h0040) && !route_fatal_to_nmi;
     always_comb cptra_error_non_fatal_dly_p = cptra_error_non_fatal_counter == 16'h0040;
 
     always@(negedge core_clk) begin
