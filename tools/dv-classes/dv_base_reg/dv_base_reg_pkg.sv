@@ -11,7 +11,7 @@ package dv_base_reg_pkg;
   `include "uvm_macros.svh"
   `include "dv_macros.svh"
 
-   // global paramters for number of csr tests (including memory test)
+   // global parameters for number of csr tests (including memory test)
   parameter uint NUM_CSR_TESTS = 4;
 
   // csr field struct - hold field specific params

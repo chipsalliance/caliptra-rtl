@@ -11,7 +11,7 @@ class dv_reactive_agent_cfg extends dv_base_agent_cfg;
   bit has_req_fifo = 1'b0;
 
   // True if agent's sequencer has a response fifo. If so, the agent will connect its monitor's
-  // req_analysis_port to the sequencer's response fifo.
+  // rsp_analysis_port to the sequencer's response fifo.
   bit has_rsp_fifo = 1'b0;
 
   `uvm_object_utils_begin(dv_reactive_agent_cfg)
