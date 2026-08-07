@@ -167,9 +167,7 @@ targets:
       - $COMPILE_ROOT/test_suites/libs/tcp_server
       - $COMPILE_ROOT/test_suites/libs/jtagdpi
     files:
-      - $COMPILE_ROOT/test_suites/libs/tcp_server/tcp_server.h
       - $COMPILE_ROOT/test_suites/libs/tcp_server/tcp_server.c
-      - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.h
       - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.c
     options:
       - '-Wno-unused-variable'
