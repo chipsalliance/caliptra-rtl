@@ -289,6 +289,7 @@ always_comb begin : keyvault_readmux
         kv_rd_resp[client].read_data = '0;
         kv_rd_resp[client].error = '0;
         kv_rd_resp[client].last = '0;
+        kv_rd_resp[client].entry_last_dword = '0;
         for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
             for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
                 kv_rd_resp[client].read_data |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == dword) &
@@ -297,6 +298,9 @@ always_comb begin : keyvault_readmux
             end
         //signal last when reading the last dword
         kv_rd_resp[client].last |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == kv_reg_hwif_out.KEY_CTRL[entry].last_dword.value);
+        // Broadcast the addressed entry's stored last_dword to the consumer's length-mismatch check 
+        kv_rd_resp[client].entry_last_dword |= (kv_read[client].read_entry == entry) ?
+                                               kv_reg_hwif_out.KEY_CTRL[entry].last_dword.value : '0;
         kv_rd_resp[client].error |= (kv_read[client].read_entry == entry) & 
                                     (lock_use_q[entry] | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
         end

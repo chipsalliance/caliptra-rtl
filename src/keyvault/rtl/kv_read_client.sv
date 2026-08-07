@@ -22,6 +22,8 @@ module kv_read_client
    ,parameter HMAC = 0
    ,parameter AES = 0
    ,parameter PAD = 0
+   ,parameter LEN_CHECK = 1
+   ,parameter LEN_CHECK_AT_KEY_USE = 0
 
    ,localparam DATA_OFFSET_W = $clog2(DATA_WIDTH/32)
 )
@@ -47,8 +49,13 @@ module kv_read_client
 
     output kv_error_code_e error_code,
     output logic kv_ready,
-    output logic read_done
+    output logic read_done,
+    input  logic                       check_key_size,
+    input  logic [KV_ENTRY_SIZE_W-1:0] expected_key_size
 );
+
+logic [KV_ENTRY_SIZE_W-1:0] stored_last_dword;
+logic length_mismatch;
 
 logic validated_read_en;
 logic read_allow;
@@ -123,7 +130,8 @@ always_ff @(posedge clk or negedge rst_b) begin
         // flagged or decode new error conditions
         error_code <= validated_read_en && ~read_allow ? KV_READ_FAIL :
                       write_en && |write_offset && (error_code != KV_SUCCESS) ? error_code :
-                      write_en && kv_resp.error ? KV_READ_FAIL : 
+                      write_en && kv_resp.error ? KV_READ_FAIL :
+                      length_mismatch ? KV_RD_LEN_MISMATCH :
                       write_en && ~kv_resp.error ? KV_SUCCESS : error_code;
     end
 end
@@ -137,6 +145,27 @@ generate
         always_comb kv_ready = kv_fsm_ready & (error_code == KV_SUCCESS) & ~validated_read_en;
     end
 endgenerate
+
+// Latch the addressed KV entry's stored last_dword during the read.
+// Sourced from the readmux (kv_resp.entry_last_dword) — independent of the
+// consumer's own DATA_WIDTH, so a consumer whose read window does not reach
+// the entry's true end still sees the correct stored size.
+always_ff @(posedge clk or negedge rst_b) begin
+    if (!rst_b)              stored_last_dword <= '0;
+    else if (zeroize)        stored_last_dword <= '0;
+    else if (write_en)       stored_last_dword <= kv_resp.entry_last_dword;
+end
+
+logic length_check_trigger;
+always_comb length_check_trigger = (LEN_CHECK_AT_KEY_USE != 0) ? check_key_size
+                                                              : read_done;
+
+// Length-mismatch: consumer requires a KV entry of at least `expected_key_size`
+// dwords. A larger entry is accepted. A smaller entry triggers the
+// error and refuses the op. Once error_code latches KV_RD_LEN_MISMATCH the
+// mux self-holds until rst_b/zeroize (same discipline as KV_READ_FAIL).
+always_comb length_mismatch = (LEN_CHECK != 0) && length_check_trigger &&
+                              (stored_last_dword < expected_key_size);
 
 `CALIPTRA_ASSERT_KNOWN(READ_METRICS_X,  read_metrics, clk, !rst_b)
 
