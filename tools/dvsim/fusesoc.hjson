@@ -6,7 +6,7 @@
     // Generate fusesoc .core files from the Caliptra compile.yaml files into a
     // temporary directory in the build dir. This is then passed via --cores-root
     // to allow cores there to be discovered and resolved by fusesoc.
-    "cd {proj_root} && compile-to-core . {scratch_path}/cores",
+    "cd {proj_root} && compile-to-core . {build_dir}/cores",
 
     // Generate the UVM RAL files
     "true",
@@ -16,7 +16,7 @@
 
   sv_flist_gen_cmd: "fusesoc"
   sv_flist_gen_opts: [
-    "--cores-root={scratch_path}/cores",
+    "--cores-root={build_dir}/cores",
     "--cores-root={proj_root}/src",
     "--cores-root={proj_root}/tools/dv-classes",
     "run",

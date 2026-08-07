@@ -53,7 +53,7 @@
       #   CALIPTRA_WORKSPACE — user-specific parent dir for verilator scratch output
       #   RV_ROOT            — external VeeR-EL2 checkout (not a submodule)
       commonShellHook = ''
-        export CALIPTRA_ROOT="$(git rev-parse --show-toplevel)"
+        export CALIPTRA_ROOT="$(${pkgs.lib.getExe pkgs.git} rev-parse --show-toplevel)"
         export ADAMSBRIDGE_ROOT="$CALIPTRA_ROOT/submodules/adams-bridge"
       '';
     in {
@@ -65,6 +65,7 @@
             python_dvsim
           ]) ++ (with pkgs; [
             uv
+            git # dvsim
           ]);
           shellHook = commonShellHook;
         };
