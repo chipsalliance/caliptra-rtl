@@ -160,7 +160,6 @@ void main() {
         VPRINTF(LOW,"------------------------------------\n");
 
         VPRINTF(LOW,"\nINFO. Using random seed = %d\n\n", seed);
-        srand(seed);
 
         populate_wr_exp_values(seed);
         write_dv_regs();

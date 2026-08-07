@@ -20,6 +20,7 @@
 #include "caliptra_rtl_lib.h"
 #include "riscv-csr.h"
 #include <string.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "printf.h"
@@ -100,7 +101,6 @@ void main() {
 
 
     VPRINTF(LOW,"\nINFO. Using random seed = %d\n", seed);
-    srand(seed);
 
     VPRINTF(LOW,"\n** Phase 1. Basic random writes and reads **\n"); 
 

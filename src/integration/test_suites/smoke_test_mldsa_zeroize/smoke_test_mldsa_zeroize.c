@@ -15,6 +15,7 @@
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
+#include "caliptra_rtl_lib.h"
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
 #include "printf.h"
@@ -86,6 +87,7 @@ void main() {
 
     /* Intializes random number generator */  //TODO    
     srand(time);
+    xorshift32_init(time);
 
     //Call interrupt init
     init_interrupts();

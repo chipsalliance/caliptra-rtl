@@ -15,16 +15,17 @@
 //
 
 #include <stdint.h>
+#include "caliptra_rtl_lib.h"
 
-uint32_t __xorshift32_state = (unsigned) MY_RANDOM_SEED;
+uint32_t xorshift32_state = (unsigned) MY_RANDOM_SEED;
 
 void xorshift32_init(uint32_t seed) {
-    __xorshift32_state = seed;
+    xorshift32_state = seed;
 }
 
 uint32_t xorshift32(void) {
-    __xorshift32_state ^= __xorshift32_state << 13;
-    __xorshift32_state ^= __xorshift32_state >> 17;
-    __xorshift32_state ^= __xorshift32_state << 5;
-    return __xorshift32_state;
+    xorshift32_state ^= xorshift32_state << 13;
+    xorshift32_state ^= xorshift32_state >> 17;
+    xorshift32_state ^= xorshift32_state << 5;
+    return xorshift32_state;
 }

@@ -182,11 +182,11 @@ int sm_exercise_unlocked() {
         } else if (curr == 0) { 
             // VPRINTF (LOW, "found fully unlocked registers at sm_dv_regs[%d]...(curr status is 0x%-3x):\n", i, curr);
             found_unlocked = 1;
-            pos = rand() % dv_ptr->width; 
+            pos = xorshift32() % dv_ptr->width;
         } else {
             // VPRINTF (LOW, "found partially unlocked registers at sm_dv_regs[%d]...(curr status is 0x%-3x):\n", i, curr);
             for (int j = 0; j < dv_ptr->width; j++) {
-                pos = rand() % dv_ptr-> width;
+                pos = xorshift32() % dv_ptr-> width;
                 if ( (curr & (1 << pos)) == 0 ) { 
                     found_unlocked = 1;
                     break;
@@ -289,7 +289,6 @@ void main() {
     VPRINTF(LOW,"-------------------------------------------------------------------\n");
 
     VPRINTF(LOW,"\nINFO. Using random seed = %d\n", seed);
-    srand(seed);
 
     // We have up to 4 array of pairings of Control and Data registers that are lockable 
     ctrl_reg_t *dv_ctrl_ptr;
