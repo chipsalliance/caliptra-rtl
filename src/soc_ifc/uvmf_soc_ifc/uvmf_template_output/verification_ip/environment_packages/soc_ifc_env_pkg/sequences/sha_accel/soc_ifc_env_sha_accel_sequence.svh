@@ -207,9 +207,13 @@ task soc_ifc_env_sha_accel_sequence::load_vector();
     string line_read;
     string tmp_str1;
     string tmp_str2;
+    string extra_str;
     string file_name;
+    int line_num;
+    int parse_count;
 
     cnt_tmp = 0;
+    line_num = 0;
 
     if (this.sha_accel_op_rand.sha512_mode) begin
         case(this.test_case) inside
@@ -225,17 +229,45 @@ task soc_ifc_env_sha_accel_sequence::load_vector();
     end
 
     fd_r = $fopen(file_name,"r");
+    if (fd_r == 0)
+        `uvm_fatal("SHA_ACCEL_VEC", $sformatf("Unable to open SHA vector file '%s' for test_case %0d", file_name, test_case))
 
     while (cnt_tmp <= line_skip) begin
         cnt_tmp = cnt_tmp + 1;
-        $fgets(line_read,fd_r);
+        line_num++;
+        if ($fgets(line_read,fd_r) == 0) begin
+            $fclose(fd_r);
+            `uvm_fatal("SHA_ACCEL_VEC", $sformatf("Premature EOF in '%s' while seeking length record for test_case %0d (line %0d)", file_name, test_case, line_num))
+        end
     end
 
-    $sscanf( line_read, "%s %s %d", tmp_str1, tmp_str2, vec_block_len);
-    $fgets(line_read,fd_r);
-    $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, vec_block_data);
-    $fgets(line_read,fd_r);
-    $sscanf( line_read, "%s %s %h", tmp_str1, tmp_str2, vec_digest);
+    parse_count = $sscanf(line_read, "%s %s %d %s", tmp_str1, tmp_str2, vec_block_len, extra_str);
+    if ((parse_count != 3) || (tmp_str1 != "Len") || (tmp_str2 != "=")) begin
+        $fclose(fd_r);
+        `uvm_fatal("SHA_ACCEL_VEC", $sformatf("Malformed length record in '%s' for test_case %0d at line %0d: '%s'", file_name, test_case, line_num, line_read))
+    end
+
+    line_num++;
+    if ($fgets(line_read,fd_r) == 0) begin
+        $fclose(fd_r);
+        `uvm_fatal("SHA_ACCEL_VEC", $sformatf("Premature EOF in '%s' before data record for test_case %0d (line %0d)", file_name, test_case, line_num))
+    end
+    parse_count = $sscanf(line_read, "%s %s %h %s", tmp_str1, tmp_str2, vec_block_data, extra_str);
+    if ((parse_count != 3) || (tmp_str1 != "Msg") || (tmp_str2 != "=")) begin
+        $fclose(fd_r);
+        `uvm_fatal("SHA_ACCEL_VEC", $sformatf("Malformed data record in '%s' for test_case %0d at line %0d: '%s'", file_name, test_case, line_num, line_read))
+    end
+
+    line_num++;
+    if ($fgets(line_read,fd_r) == 0) begin
+        $fclose(fd_r);
+        `uvm_fatal("SHA_ACCEL_VEC", $sformatf("Premature EOF in '%s' before digest record for test_case %0d (line %0d)", file_name, test_case, line_num))
+    end
+    parse_count = $sscanf(line_read, "%s %s %h %s", tmp_str1, tmp_str2, vec_digest, extra_str);
+    if ((parse_count != 3) || (tmp_str1 != "MD") || (tmp_str2 != "=")) begin
+        $fclose(fd_r);
+        `uvm_fatal("SHA_ACCEL_VEC", $sformatf("Malformed digest record in '%s' for test_case %0d at line %0d: '%s'", file_name, test_case, line_num, line_read))
+    end
 
     $fclose(fd_r);
 
@@ -446,8 +478,9 @@ task soc_ifc_env_sha_accel_sequence::run_legal_flow(input caliptra_axi_user owne
 endtask
 
 //----------------------------------------------------------------------
-// Rejected-access battery: exercise representative reads and writes across the
-// SHA CSR map with the given requester and prove every access is rejected. Used
+// Rejected-access battery: exercise reads and writes across the SHA CSR map,
+// including CSRs with distinct internal RDL policy, and prove every access is
+// rejected by the route policy for the given requester. Used
 // for all passive-mode requesters, all non-strap subsystem-mode requesters, and
 // as the continuous parallel hijack thread in run_legal_flow. Uses only local
 // state so it is safe to run concurrently with the authorized owner.
@@ -496,6 +529,19 @@ task soc_ifc_env_sha_accel_sequence::run_rejected_battery(input caliptra_axi_use
     // Attempt to clear the lock. An unauthorized requester must not affect the owner.
     ral_write(reg_model.sha512_acc_csr_rm.LOCK, lsts, uvm_reg_data_t'(1), user);
     report_reg_sts_u(lsts, "LOCK", 1'b0, user);
+
+    // CONTROL has a distinct internal RDL policy, but the route policy must
+    // still reject this requester. Writing zero avoids requesting zeroization.
+    ral_write(reg_model.sha512_acc_csr_rm.CONTROL, lsts, '0, user);
+    report_reg_sts_u(lsts, "CONTROL", 1'b0, user);
+    ral_read(reg_model.sha512_acc_csr_rm.CONTROL, lsts, data, user);
+    report_reg_sts_u(lsts, "CONTROL", 1'b0, user);
+
+    // SHA interrupt CSRs also have distinct internal RDL policy, but remain
+    // unreachable when the route rejects this requester.
+    ral_read(reg_model.sha512_acc_csr_rm.intr_block_rf_ext.global_intr_en_r,
+             lsts, data, user);
+    report_reg_sts_u(lsts, "global_intr_en_r", 1'b0, user);
 endtask
 
 function void soc_ifc_env_sha_accel_sequence::report_reg_sts(uvm_status_e reg_sts, string name);

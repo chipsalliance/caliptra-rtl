@@ -84,7 +84,9 @@ extends uvmf_environment_configuration_base;
   //                           this configuration object is created.
   //   * ss_dma_axi_user     - effective (post-fuse) SoC DMA AxUSER identity, i.e.
   //                           the authorized SoC-AXI SHA/DMA requester.
-  //   * global_straps_captured - set once runtime straps have been captured.
+  //   * global_straps_captured - valid only for the current boot; cleared on
+  //                           cold reset and set after fuse download recaptures
+  //                           the runtime straps.
   // -------------------------------------------------------------------------
   bit        subsystem_mode;
   bit [31:0] ss_dma_axi_user;
@@ -154,7 +156,9 @@ extends uvmf_environment_configuration_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     return {
-     
+     $sformatf("\nsubsystem_mode=%0b ss_dma_axi_user=0x%08x global_straps_captured=%0b enable_sha_iccm_unlock=%0b sha_status_vif_configured=%0b",
+               subsystem_mode, ss_dma_axi_user, global_straps_captured,
+               enable_sha_iccm_unlock, (sha_status_vif != null)),
      "\n", soc_ifc_ctrl_agent_config.convert2string,
      "\n", cptra_ctrl_agent_config.convert2string,
      "\n", ss_mode_ctrl_agent_config.convert2string,

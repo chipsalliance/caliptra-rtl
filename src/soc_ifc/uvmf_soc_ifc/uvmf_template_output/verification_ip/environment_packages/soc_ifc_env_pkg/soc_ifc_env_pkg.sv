@@ -79,6 +79,7 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_cov_soc_ifc_ctrl_ae)
   `uvm_analysis_imp_decl(_cov_soc_ifc_status_ae)
   `uvm_analysis_imp_decl(_cov_axi_ae)
+  `uvm_analysis_imp_decl(_cov_axi_completed_ae)
   `uvm_analysis_imp_decl(_cov_cptra_ctrl_ae)
   `uvm_analysis_imp_decl(_cov_cptra_status_ae)
   `uvm_analysis_imp_decl(_cov_ahb_ae)
