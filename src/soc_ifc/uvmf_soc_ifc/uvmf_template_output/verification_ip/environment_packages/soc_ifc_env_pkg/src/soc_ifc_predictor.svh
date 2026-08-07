@@ -304,7 +304,9 @@ class soc_ifc_predictor #(
   extern task          wdt_counter_task();
   extern function bit  valid_requester(input uvm_transaction txn);
   extern function bit  valid_receiver(input uvm_transaction txn);
+  extern function bit  sha_route_valid_user(input aaxi_master_tr txn);
   extern function bit  sha_valid_user(input uvm_transaction txn);
+  extern function bit  is_sha_interrupt_reg(uvm_reg r);
   extern function bit  is_axi_dma_reg(uvm_reg r);
   extern function uvm_reg_data_t dma_reg_masked_expected_rdata(uvm_reg r, uvm_reg_data_t observed);
   extern function void predict_boot_wait_boot_done();
@@ -2230,6 +2232,18 @@ class soc_ifc_predictor #(
         end
         soc_ifc_sb_axi_ap_output_transaction.resp  = AAXI_RESP_SLVERR;
     end
+    else if (is_sha_interrupt_reg(axs_reg) &&
+             !sha_route_valid_user(axi_txn)) begin
+        // Interrupt CSRs retain their soc_req-based RDL behavior once a request
+        // reaches SHA, but the subsystem-mode route and strap AxUSER gate still
+        // apply before that point.
+        do_reg_prediction = 1'b0;
+        if (!axi_txn.is_write()) begin
+            soc_ifc_sb_axi_ap_output_transaction.data  = {0,0,0,0};
+            soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+        end
+        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+    end
     else begin
         case (axs_reg.get_name()) inside
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
@@ -2383,10 +2397,32 @@ class soc_ifc_predictor #(
                     end
                 end
             end
-            // SHA Accelerator Functions are screened based on AXI_USER
-            "LOCK",
+            // SHA datapath registers are screened based on integration mode,
+            // route-authorized AxUSER, and SHA lock ownership. CONTROL and the
+            // interrupt register block retain their distinct RDL policies.
+            "LOCK": begin
+                if (axi_txn.is_write() && (axs_reg.get_name() == "LOCK")) begin
+                    // Only the current subsystem-mode SHA owner may clear the lock.
+                    do_reg_prediction = sha_valid_user(axi_txn);
+                    soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
+                end
+                else if (axi_txn.is_read() && (!configuration.subsystem_mode || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value()))) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                    soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                    // "Expected" resp is SLVERR
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                end
+            end
             "USER": begin
-                if (axi_txn.is_read() && (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                if (axi_txn.is_write()) begin
+                    // USER is read-only. An authorized route acknowledges the write
+                    // without changing state; all other routes are rejected.
+                    do_reg_prediction = 1'b0;
+                    soc_ifc_sb_axi_ap_output_transaction.resp = sha_route_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
+                end
+                else if (!sha_route_valid_user(axi_txn)) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
@@ -2401,7 +2437,7 @@ class soc_ifc_predictor #(
                     // "Expected" resp is SLVERR for blocked writes
                     soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
-                else if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                else if ((!configuration.subsystem_mode) || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
@@ -2422,7 +2458,7 @@ class soc_ifc_predictor #(
                     // "Expected" resp is SLVERR for blocked writes
                     soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
-                else if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                else if ((!configuration.subsystem_mode) || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
@@ -2432,6 +2468,19 @@ class soc_ifc_predictor #(
                 end
             end
             "CONTROL": begin
+                // Intentionally not lock-owner screened. CONTROL is SoC-RW in
+                // sha512_acc_external_csr.rdl; route authorization is enforced
+                // before the request reaches the SHA block. SHA interrupt
+                // registers similarly fall through to their soc_req-based
+                // policy from sha512_acc_csr.rdl.
+                if (!sha_route_valid_user(axi_txn)) begin
+                    do_reg_prediction = 1'b0;
+                    if (!axi_txn.is_write()) begin
+                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                    end
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                end
             end
             default: begin
                 `uvm_info("PRED_AXI", {"Enable reg prediction on access to ", axs_reg.get_name()}, UVM_FULL)
@@ -3958,6 +4007,12 @@ function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
     end
 endfunction
 
+function bit soc_ifc_predictor::sha_route_valid_user(input aaxi_master_tr txn);
+    return configuration.subsystem_mode &&
+           ((txn.is_write() ? txn.awuser : txn.aruser) ==
+            p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value());
+endfunction
+
 function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
     soc_ifc_sb_ahb_ap_output_transaction_t ahb_txn;
     aaxi_master_tr                         axi_txn;
@@ -3976,7 +4031,10 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
         return sha_valid_user;
     end
     else if ($cast(axi_txn,txn)) begin
-        sha_valid_user = p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
+        // AXI datapath access requires subsystem mode, a lock owned by the SoC,
+        // and requester AxUSER matching the owner captured in SHA USER.
+        sha_valid_user = sha_route_valid_user(axi_txn) &&
+                         p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
                          p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value() &&
                          p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_mirrored_value() == (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser);
         if (!sha_valid_user) begin
@@ -3997,6 +4055,19 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
         sha_valid_user = 0;
         return sha_valid_user;
     end
+endfunction
+
+function bit soc_ifc_predictor::is_sha_interrupt_reg(uvm_reg r);
+    uvm_reg_block blk;
+    if (r == null) return 1'b0;
+    blk = r.get_parent();
+    while (blk != null) begin
+        if (blk.get_name() == "intr_block_rf_ext")
+            return (blk.get_parent() != null) &&
+                   (blk.get_parent().get_name() == "sha512_acc_csr_rm");
+        blk = blk.get_parent();
+    end
+    return 1'b0;
 endfunction
 
 // Returns 1 if register `r` belongs anywhere within the AXI DMA register block
