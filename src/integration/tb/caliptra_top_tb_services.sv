@@ -398,94 +398,6 @@ module caliptra_top_tb_services
     //         8'h2 : 8'h5  - Do nothing
     //         8'h6 : 8'h7E - WriteData is an ASCII character - dump to console.log
     //         8'h7F        - Switch to MANUF device lifecycle state
-    //      16'h017F        - Setup SoC Access address from CPTRA_GENERIC_OUTPUT_WIRES[1]
-    //      16'h027F        - Push SoC Access wdata from CPTRA_GENERIC_OUTPUT_WIRES[1] into a wdata queue
-    //      16'h037F        - Send SoC access
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][0]     - write transaction
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][1]     - read transaction
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][2]     - write address only
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][3]     - write data only
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][4]     - write response only
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][5]     - read address only
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][6]     - read response only
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][7]     - use operation ID, random otherwise
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][15:8]  - AXLEN
-    //          CPTRA_GENERIC_OUTPUT_WIRES[1][23:16] - Operation ID
-    //          If partial transfers are used, only one can be executed at any
-    //          given time, and it cannot be combined with full transfer.
-    //          ID must be specified and correct for partial transfers,
-    //          otherwise BFM will lockup
-    //      16'h047F        - Get SoC Access status, 0-In progress, 1-Done
-    //      16'h057F        - Pop SoC Access read response onto generic_input_wires
-    //      16'h067F        - Push SoC Access wuser from CPTRA_GENERIC_OUTPUT_WIRES[1] into a wuser queue
-    //      16'h077F        - Setup SoC Access aXuser from CPTRA_GENERIC_OUTPUT_WIRES[1]
-    //      16'h087F        - Setup SoC Access burst from CPTRA_GENERIC_OUTPUT_WIRES[1]: (0)fixed, (1,default)incr, (2)wrap
-    //      16'h097F        - Push SoC Access wstrb from CPTRA_GENERIC_OUTPUT_WIRES[1] into a wstrb queue
-    //      16'h0A7F        - Clear SoC Access wdata, wuser and wstrb queues
-    //      16'h0D7F        - Force DMI enable (OpenOCD requires JTAG to be active to correctly examine device)
-    //      16'h0E7F        - Set route_fatal_to_nmi
-    //      16'h0F7F        - Clear route_fatal_to_nmi
-    //      16'h107F        - Force re-enable strap write
-    //      16'h117F        - Release strap write
-    //      16'h127F        - Enable debug intent
-    //      16'h137F        - Disable debug intent
-    //      16'h147F        - Switch to Manufacturing mode
-    //      16'h157F        - Switch to Production mode
-    //      16'h167F        - Force ss_debug intent
-    //      16'h177F        - Release ss_debug intent
-    //      16'h187F        - Switch to debug unlocked
-    //      16'h197F        - Switch to debug locked
-    //      16'h1A7F        - Force re-enable fuse write
-    //      16'h1B7F        - Force unlock caliptra security state
-    //      16'h1C7F        - Release unlock caliptra security state
-    //      16'h1D7F        - Force override mailbox pointer reset value to CPTRA_GENERIC_OUTPUT_WIRES[1]
-    //      16'h1E7F        - Release override mailbox pointer reset value
-    //      16'h1F7F        - Switch to Unprovisioned mode
-    //      16'h207F        - Get UDS[0] and UDS[1] value from HW
-    //      16'h217F        - Get UDS[2] and UDS[3] value from HW
-    //      16'h227F        - Get UDS[4] and UDS[5] value from HW
-    //      16'h237F        - Get UDS[6] and UDS[7] value from HW
-    //      16'h247F        - Get UDS[8] and UDS[9] value from HW
-    //      16'h257F        - Get UDS[10] and UDS[11] value from HW
-    //      16'h267F        - Get UDS[12] and UDS[13] value from HW
-    //      16'h277F        - Get UDS[14] and UDS[15] value from HW
-    //      16'h307F        - Get FE[0] and FE[1] value from HW
-    //      16'h317F        - Get FE[2] and FE[3] value from HW
-    //      16'h327F        - Get FE[4] and FE[5] value from HW
-    //      16'h337F        - Get FE[6] and FE[7] value from HW
-    //      16'h407F        - Set OBF_KEY[0] value from generic wire 1
-    //      16'h417F        - Set OBF_KEY[1] value from generic wire 1
-    //      16'h427F        - Set OBF_KEY[2] value from generic wire 1
-    //      16'h437F        - Set OBF_KEY[3] value from generic wire 1
-    //      16'h447F        - Set OBF_KEY[4] value from generic wire 1
-    //      16'h457F        - Set OBF_KEY[5] value from generic wire 1
-    //      16'h467F        - Set OBF_KEY[6] value from generic wire 1
-    //      16'h477F        - Set OBF_KEY[7] value from generic wire 1
-    //      16'h487F        - Get OBF_KEY[0] value from HW
-    //      16'h497F        - Get OBF_KEY[1] value from HW
-    //      16'h4A7F        - Get OBF_KEY[2] value from HW
-    //      16'h4B7F        - Get OBF_KEY[3] value from HW
-    //      16'h4C7F        - Get OBF_KEY[4] value from HW
-    //      16'h4D7F        - Get OBF_KEY[5] value from HW
-    //      16'h4E7F        - Get OBF_KEY[6] value from HW
-    //      16'h4F7F        - Set OBF_KEY[7] value from HW
-    //      16'h507F        - Enable injection of single mailbox access request from SoC when TAP locks mailbox
-    //      16'h517F        - Disable injection of single mailbox access request from SoC when TAP locks mailbox
-    //      16'h527F        - Inject FIFO AXI read errors
-    //      16'h537F        - Inject FIFO AXI write errors
-    //      16'h547F        - Stop injecting FIFO AXI read errors
-    //      16'h557F        - Stop injecting FIFO AXI write errors
-    //      16'h567F        - Kill kv_hmac_tag_w_flow assertions (e.g. when write into KV doesn't succeed deliberately)
-    //      16'h577F        - Kill kv_ecc_privkey_w_flow assertions (e.g. when write into KV doesn't succeed deliberately)
-    //      16'h587F        - Enable injection of single mailbox lock request from TAP when FW locks mailbox
-    //      16'h597F        - Disable injection of single mailbox lock request from TAP when FW locks mailbox
-    //      16'h5A7F        - Enable injection of single mailbox lock request from SoC when mailbox is being unlocked
-    //      16'h5B7F        - Disable injection of single mailbox lock request from SoC when mailbox is being unlocked
-    //      16'h5C7F        - Enable injection of mailbox unlock when FW accesses mailbox SRAM directly
-    //      16'h5D7F        - Disable injection of mailbox unlock when FW accesses mailbox SRAM directly
-    //      16'h807F:'h9F7F - Inject a valid hmac_key dest and hmac512_key into Nth kv slot (where slot is encoded as (N & 0x1F) << 8)
-    //      16'hA07F:'hBF7F - Check if Nth kv slot (where slot is encoded as (N & 0x1F) << 8) is all zero
-    //      16'hC07F        - Force clear of all KV slots, when DOE FSM starts to write
     //         8'h80: 8'h87 - Inject ECC_SEED to kv_key register
     //         8'h88        - Toggle recovery interface emulation in AXI complex
     //         8'h89        - Use same msg in SHA512 digest for ECC/MLDSA PCR signing (used where both cryptos are running in parallel)
@@ -512,8 +424,96 @@ module caliptra_top_tb_services
     //         8'h9f        - Inject AES key into KV
     //         8'ha0        - Inject HMAC384_KEY to kv_key register
     //         8'ha1        - Inject zero as MLDSA_SEED/MLKEM_MSG to kv_key register (8 dwords)
-    //         8'ha2        - Randomizable KV inject: slot=[12:8], last_dword=[16:13], dest_valid=[24:17]
-    //         8'ha3: 8'ha7 - Unused
+    //         8'ha2        - RESERVED (used by 16-bit commands)
+    //      16'h01A2        - Setup SoC Access address from CPTRA_GENERIC_OUTPUT_WIRES[1]
+    //      16'h02A2        - Push SoC Access wdata from CPTRA_GENERIC_OUTPUT_WIRES[1] into a wdata queue
+    //      16'h03A2        - Send SoC access
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][0]     - write transaction
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][1]     - read transaction
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][2]     - write address only
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][3]     - write data only
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][4]     - write response only
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][5]     - read address only
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][6]     - read response only
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][7]     - use operation ID, random otherwise
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][15:8]  - AXLEN
+    //          CPTRA_GENERIC_OUTPUT_WIRES[1][23:16] - Operation ID
+    //          If partial transfers are used, only one can be executed at any
+    //          given time, and it cannot be combined with full transfer.
+    //          ID must be specified and correct for partial transfers,
+    //          otherwise BFM will lockup
+    //      16'h04A2        - Get SoC Access status, 0-In progress, 1-Done
+    //      16'h05A2        - Pop SoC Access read response onto generic_input_wires
+    //      16'h06A2        - Push SoC Access wuser from CPTRA_GENERIC_OUTPUT_WIRES[1] into a wuser queue
+    //      16'h07A2        - Setup SoC Access aXuser from CPTRA_GENERIC_OUTPUT_WIRES[1]
+    //      16'h08A2        - Setup SoC Access burst from CPTRA_GENERIC_OUTPUT_WIRES[1]: (0)fixed, (1,default)incr, (2)wrap
+    //      16'h09A2        - Push SoC Access wstrb from CPTRA_GENERIC_OUTPUT_WIRES[1] into a wstrb queue
+    //      16'h0AA2        - Clear SoC Access wdata, wuser and wstrb queues
+    //      16'h0DA2        - Force DMI enable (OpenOCD requires JTAG to be active to correctly examine device)
+    //      16'h0EA2        - Set route_fatal_to_nmi
+    //      16'h0FA2        - Clear route_fatal_to_nmi
+    //      16'h10A2        - Force re-enable strap write
+    //      16'h11A2        - Release strap write
+    //      16'h12A2        - Enable debug intent
+    //      16'h13A2        - Disable debug intent
+    //      16'h15A2        - Switch to Production mode
+    //      16'h16A2        - Force ss_debug intent
+    //      16'h17A2        - Release ss_debug intent
+    //      16'h18A2        - Switch to debug unlocked
+    //      16'h19A2        - Switch to debug locked
+    //      16'h1AA2        - Force re-enable fuse write
+    //      16'h1BA2        - Force unlock caliptra security state
+    //      16'h1CA2        - Release unlock caliptra security state
+    //      16'h1DA2        - Force override mailbox pointer reset value to CPTRA_GENERIC_OUTPUT_WIRES[1]
+    //      16'h1EA2        - Release override mailbox pointer reset value
+    //      16'h1FA2        - Switch to Unprovisioned mode
+    //      16'h20A2        - Get UDS[0] and UDS[1] value from HW
+    //      16'h21A2        - Get UDS[2] and UDS[3] value from HW
+    //      16'h22A2        - Get UDS[4] and UDS[5] value from HW
+    //      16'h23A2        - Get UDS[6] and UDS[7] value from HW
+    //      16'h24A2        - Get UDS[8] and UDS[9] value from HW
+    //      16'h25A2        - Get UDS[10] and UDS[11] value from HW
+    //      16'h26A2        - Get UDS[12] and UDS[13] value from HW
+    //      16'h27A2        - Get UDS[14] and UDS[15] value from HW
+    //      16'h30A2        - Get FE[0] and FE[1] value from HW
+    //      16'h31A2        - Get FE[2] and FE[3] value from HW
+    //      16'h32A2        - Get FE[4] and FE[5] value from HW
+    //      16'h33A2        - Get FE[6] and FE[7] value from HW
+    //      16'h40A2        - Set OBF_KEY[0] value from generic wire 1
+    //      16'h41A2        - Set OBF_KEY[1] value from generic wire 1
+    //      16'h42A2        - Set OBF_KEY[2] value from generic wire 1
+    //      16'h43A2        - Set OBF_KEY[3] value from generic wire 1
+    //      16'h44A2        - Set OBF_KEY[4] value from generic wire 1
+    //      16'h45A2        - Set OBF_KEY[5] value from generic wire 1
+    //      16'h46A2        - Set OBF_KEY[6] value from generic wire 1
+    //      16'h47A2        - Set OBF_KEY[7] value from generic wire 1
+    //      16'h48A2        - Get OBF_KEY[0] value from HW
+    //      16'h49A2        - Get OBF_KEY[1] value from HW
+    //      16'h4AA2        - Get OBF_KEY[2] value from HW
+    //      16'h4BA2        - Get OBF_KEY[3] value from HW
+    //      16'h4CA2        - Get OBF_KEY[4] value from HW
+    //      16'h4DA2        - Get OBF_KEY[5] value from HW
+    //      16'h4EA2        - Get OBF_KEY[6] value from HW
+    //      16'h4FA2        - Set OBF_KEY[7] value from HW
+    //      16'h50A2        - Enable injection of single mailbox access request from SoC when TAP locks mailbox
+    //      16'h51A2        - Disable injection of single mailbox access request from SoC when TAP locks mailbox
+    //      16'h52A2        - Inject FIFO AXI read errors
+    //      16'h53A2        - Inject FIFO AXI write errors
+    //      16'h54A2        - Stop injecting FIFO AXI read errors
+    //      16'h55A2        - Stop injecting FIFO AXI write errors
+    //      16'h56A2        - Kill kv_hmac_tag_w_flow assertions (e.g. when write into KV doesn't succeed deliberately)
+    //      16'h57A2        - Kill kv_ecc_privkey_w_flow assertions (e.g. when write into KV doesn't succeed deliberately)
+    //      16'h58A2        - Enable injection of single mailbox lock request from TAP when FW locks mailbox
+    //      16'h59A2        - Disable injection of single mailbox lock request from TAP when FW locks mailbox
+    //      16'h5AA2        - Enable injection of single mailbox lock request from SoC when mailbox is being unlocked
+    //      16'h5BA2        - Disable injection of single mailbox lock request from SoC when mailbox is being unlocked
+    //      16'h5CA2        - Enable injection of mailbox unlock when FW accesses mailbox SRAM directly
+    //      16'h5DA2        - Disable injection of mailbox unlock when FW accesses mailbox SRAM directly
+    //      16'h80A2:'h9FA2 - Inject a valid hmac_key dest and hmac512_key into Nth kv slot (where slot is encoded as (N & 0x1F) << 8)
+    //      16'hA0A2:'hBFA2 - Check if Nth kv slot (where slot is encoded as (N & 0x1F) << 8) is all zero
+    //      16'hC0A2        - Force clear of all KV slots, when DOE FSM starts to write
+    //         8'ha3        - Randomizable KV inject: slot=[12:8], last_dword=[16:13], dest_valid=[24:17]
+    //         8'ha4: 8'ha7 - Unused
     //         8'ha8        - Inject zero as HMAC_KEY/MLKEM_SEED to kv_key register (16 dwords)
     //         8'ha9        - Inject HMAC512_KEY to kv_key register
     //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
@@ -620,11 +620,11 @@ module caliptra_top_tb_services
         axi_put_status <= 1'b0;
         axi_use_id     <= 1'b0;
         axi_put_rdata <= 1'b0;
-        if ((WriteData[15:0] == 16'h017F) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h01A2) && mailbox_write) begin
             axi_addr <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1];
-        end else if ((WriteData[15:0] == 16'h027F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h02A2) && mailbox_write) begin
             axi_wdata.push_back(`CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1]);
-        end else if ((WriteData[15:0] == 16'h037F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h03A2) && mailbox_write) begin
             axi_write      <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1][0];
             axi_read       <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1][1];
             axi_write_addr <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1][2];
@@ -635,19 +635,19 @@ module caliptra_top_tb_services
             axi_use_id     <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1][7];
             axi_len        <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1][15:8];
             axi_id         <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1][23:16];
-        end else if ((WriteData[15:0] == 16'h047F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h04A2) && mailbox_write) begin
             axi_put_status <= 1'b1;
-        end else if ((WriteData[15:0] == 16'h057F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h05A2) && mailbox_write) begin
             axi_put_rdata <= 1'b1;
-        end else if ((WriteData[15:0] == 16'h067F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h06A2) && mailbox_write) begin
             axi_wuser.push_back(`CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1]);
-        end else if ((WriteData[15:0] == 16'h077F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h07A2) && mailbox_write) begin
             axi_axuser <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1];
-        end else if ((WriteData[15:0] == 16'h087F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h08A2) && mailbox_write) begin
             axi_burst <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1];
-        end else if ((WriteData[15:0] == 16'h097F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h09A2) && mailbox_write) begin
             axi_wstrb.push_back(`CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1]);
-        end else if ((WriteData[15:0] == 16'h0A7F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h0AA2) && mailbox_write) begin
             axi_wdata = {};
             axi_wuser = {};
             axi_wstrb = {};
@@ -656,14 +656,14 @@ module caliptra_top_tb_services
 
     //  Fuse re-enable access
     always @(negedge clk) begin
-        if ((WriteData[15:0] == 16'h107F) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h10A2) && mailbox_write) begin
             force `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_FUSE_WR_DONE.done.value = 1'h0;
             force `CPTRA_TOP_PATH.soc_ifc_top1.strap_we = 1'h1;
             repeat (10) @(negedge clk);
             release `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_FUSE_WR_DONE.done.value;
-        end else if ((WriteData[15:0] == 16'h117F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h11A2) && mailbox_write) begin
             release `CPTRA_TOP_PATH.soc_ifc_top1.strap_we;
-        end else if ((WriteData[15:0] == 16'h1A7F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h1AA2) && mailbox_write) begin
             force `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_FUSE_WR_DONE.done.value = 1'h0;
             repeat (10) @(negedge clk);
             release `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_FUSE_WR_DONE.done.value;
@@ -671,7 +671,7 @@ module caliptra_top_tb_services
     end
 
     always @(negedge clk) begin
-        if ((WriteData[15:0] == 16'h0D7F) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h0DA2) && mailbox_write) begin
             force `CPTRA_TOP_PATH.rvtop.dmi_core_enable = 1'h1;
             $display("Force enable JTAG/DMI to be active");
         end
@@ -682,35 +682,35 @@ module caliptra_top_tb_services
         route_fatal_to_nmi = 1'b0;
     end
     always @(negedge clk) begin
-        if ((WriteData[15:0] == 16'h0E7F) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h0EA2) && mailbox_write) begin
             route_fatal_to_nmi <= 1'b1;
             force `CPTRA_TOP_PATH.nmi_int = `CPTRA_TOP_PATH.cptra_error_fatal;
             $display("Route fatal error to nmi pin");
-        end else if ((WriteData[15:0] == 16'h0F7F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h0FA2) && mailbox_write) begin
             route_fatal_to_nmi <= 1'b0;
             release `CPTRA_TOP_PATH.nmi_int;
             $display("Return NMI to normal use");
         end
     end
     always @(negedge clk) begin
-        if ((WriteData[15:0] == 16'h127F) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h12A2) && mailbox_write) begin
             debug_intent <= 1'b1;
             $display("Enabling debug_intent");
-        end else if ((WriteData[15:0] == 16'h137F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h13A2) && mailbox_write) begin
             debug_intent <= 1'b0;
             $display("Disabling debug_intent");
         end
     end
 
     always @(negedge clk) begin
-        if ((WriteData[15:0] == 16'h167F) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h16A2) && mailbox_write) begin
             force `CPTRA_TOP_PATH.soc_ifc_top1.soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.next = 1'h1;
-        end else if ((WriteData[15:0] == 16'h177F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h17A2) && mailbox_write) begin
             release `CPTRA_TOP_PATH.soc_ifc_top1.soc_ifc_reg_hwif_in.SS_DEBUG_INTENT.debug_intent.next;
         end
-        if ((WriteData[15:0] == 16'h1B7F) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h1BA2) && mailbox_write) begin
             force `CPTRA_TOP_PATH.unlock_caliptra_security_state = 1'h1;
-        end else if ((WriteData[15:0] == 16'h1C7F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h1CA2) && mailbox_write) begin
             release `CPTRA_TOP_PATH.unlock_caliptra_security_state;
         end
     end
@@ -718,7 +718,7 @@ module caliptra_top_tb_services
     // Prevent from setting ptr reset value to mailboxes max capacity
     `CALIPTRA_ASSERT_NEVER(
         no_mbox_ptr_rst_value_override_full_capacity,
-        (WriteData[15:0] == 16'h1D7F) && mailbox_write &&
+        (WriteData[15:0] == 16'h1DA2) && mailbox_write &&
         (`CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1] == 32'hFFFFFFFF),
         !clk, cptra_rst_b
     )
@@ -728,12 +728,12 @@ module caliptra_top_tb_services
             force_mbox_ptr_reset_value <= 0;
             release_mbox_ptr_reset_value <= 0;
         end
-        if ((WriteData[15:0] == 16'h1D7F) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h1DA2) && mailbox_write) begin
             $display("Force MBOX pointers reset value to %x\n", `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1]);
             mbox_ptr_reset_value <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1];
             force_mbox_ptr_reset_value <= 1;
             release_mbox_ptr_reset_value <= 0;
-        end else if ((WriteData[15:0] == 16'h1E7F) && mailbox_write) begin
+        end else if ((WriteData[15:0] == 16'h1EA2) && mailbox_write) begin
             $display("Release MBOX pointers reset value\n");
             force_mbox_ptr_reset_value <= 0;
             release_mbox_ptr_reset_value <= 1;
@@ -745,7 +745,7 @@ module caliptra_top_tb_services
             get_uds_value <= 1'b0;
             uds_idx <= 3'h0;
         end
-        else if ((WriteData[15:0] inside {16'h207F, 16'h217F, 16'h227F, 16'h237F, 16'h247F, 16'h257F, 16'h267F, 16'h277F}) && mailbox_write) begin
+        else if ((WriteData[15:0] inside {16'h20A2, 16'h21A2, 16'h22A2, 16'h23A2, 16'h24A2, 16'h25A2, 16'h26A2, 16'h27A2}) && mailbox_write) begin
             get_uds_value <= 1'b1;
             uds_idx <= WriteData[10:8];
         end else begin
@@ -758,7 +758,7 @@ module caliptra_top_tb_services
             get_fe_value <= 1'b0;
             fe_idx <= 2'h0;
         end
-        else if ((WriteData[15:0] inside {16'h307F, 16'h317F, 16'h327F, 16'h337F}) && mailbox_write) begin
+        else if ((WriteData[15:0] inside {16'h30A2, 16'h31A2, 16'h32A2, 16'h33A2}) && mailbox_write) begin
             get_fe_value <= 1'b1;
             fe_idx <= WriteData[9:8];
         end else begin
@@ -771,12 +771,12 @@ module caliptra_top_tb_services
             set_obf_key <= 1'b0;
             get_obf_key <= 1'b0;
         end
-        else if ((WriteData[15:0] & 16'hF8FF) == 16'h407F  && mailbox_write) begin
+        else if ((WriteData[15:0] & 16'hF8FF) == 16'h40A2  && mailbox_write) begin
             set_obf_key   <= 1'b1;
             obf_key_value <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1];
             obf_key_idx   <= WriteData[10:8];
         end
-        else if ((WriteData[15:0] & 16'hF8FF) == 16'h487F  && mailbox_write) begin
+        else if ((WriteData[15:0] & 16'hF8FF) == 16'h48A2  && mailbox_write) begin
             get_obf_key   <= 1'b1;
             obf_key_value <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1];
             obf_key_idx   <= WriteData[10:8];
@@ -790,10 +790,10 @@ module caliptra_top_tb_services
         if (!cptra_rst_b) begin
             inject_mbox_soc_req_on_tap_lock <= 1'b0;
         end
-        else if ((WriteData[15:0] == 16'h507F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h50A2) && mailbox_write) begin
             inject_mbox_soc_req_on_tap_lock <= 1'b1;
         end
-        else if ((WriteData[15:0] == 16'h517F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h51A2) && mailbox_write) begin
             inject_mbox_soc_req_on_tap_lock <= 1'b0;
         end
     end
@@ -802,10 +802,10 @@ module caliptra_top_tb_services
         if (!cptra_rst_b) begin
             inject_mbox_tap_lock_read_on_fw_lock <= 1'b0;
         end
-        else if ((WriteData[15:0] == 16'h587F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h58A2) && mailbox_write) begin
             inject_mbox_tap_lock_read_on_fw_lock <= 1'b1;
         end
-        else if ((WriteData[15:0] == 16'h597F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h59A2) && mailbox_write) begin
             inject_mbox_tap_lock_read_on_fw_lock <= 1'b0;
         end
     end
@@ -814,10 +814,10 @@ module caliptra_top_tb_services
         if (!cptra_rst_b) begin
             inject_mbox_soc_lock_on_mbox_unlock <= 1'b0;
         end
-        else if ((WriteData[15:0] == 16'h5A7F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h5AA2) && mailbox_write) begin
             inject_mbox_soc_lock_on_mbox_unlock <= 1'b1;
         end
-        else if ((WriteData[15:0] == 16'h5B7F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h5BA2) && mailbox_write) begin
             inject_mbox_soc_lock_on_mbox_unlock <= 1'b0;
         end
     end
@@ -826,10 +826,10 @@ module caliptra_top_tb_services
         if (!cptra_rst_b) begin
             inject_mbox_unlock_on_dir_acc <= 1'b0;
         end
-        else if ((WriteData[15:0] == 16'h5C7F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h5CA2) && mailbox_write) begin
             inject_mbox_unlock_on_dir_acc <= 1'b1;
         end
-        else if ((WriteData[15:0] == 16'h5D7F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h5DA2) && mailbox_write) begin
             inject_mbox_unlock_on_dir_acc <= 1'b0;
         end
     end
@@ -918,11 +918,7 @@ module caliptra_top_tb_services
 
     initial ras_test_ctrl.error_injection_seen = 1'b0;
     always @(negedge clk) begin
-<<<<<<< HEAD
-        if (mailbox_write && WriteData[7:0] inside {8'hfd, 8'h95}) begin
-=======
         if (mailbox_write && WriteData[7:0] inside {8'he5, 8'he6, 8'hfd, 8'hfe}) begin
->>>>>>> 3c19526ab (Extend TB & services)
             ras_test_ctrl.error_injection_seen <= 1'b1;
         end
     end
@@ -965,16 +961,16 @@ module caliptra_top_tb_services
         else if((WriteData[7:0] == 8'h8f) && mailbox_write) begin
             axi_complex_ctrl.rand_delays    <= ~axi_complex_ctrl.rand_delays; // Toggle option
         end
-        else if((WriteData[15:0] == 16'h527F) && mailbox_write) begin
+        else if((WriteData[15:0] == 16'h52A2) && mailbox_write) begin
             axi_complex_ctrl.fifo_rd_error  <= 1'b1;
         end
-        else if((WriteData[15:0] == 16'h537F) && mailbox_write) begin
+        else if((WriteData[15:0] == 16'h53A2) && mailbox_write) begin
             axi_complex_ctrl.fifo_wr_error  <= 1'b1;
         end
-        else if((WriteData[15:0] == 16'h547F) && mailbox_write) begin
+        else if((WriteData[15:0] == 16'h54A2) && mailbox_write) begin
             axi_complex_ctrl.fifo_rd_error  <= 1'b0;
         end
-        else if((WriteData[15:0] == 16'h557F) && mailbox_write) begin
+        else if((WriteData[15:0] == 16'h55A2) && mailbox_write) begin
             axi_complex_ctrl.fifo_wr_error  <= 1'b0;
         end
         else begin
@@ -1029,7 +1025,7 @@ module caliptra_top_tb_services
                         kv_idx <= '0;
                         check_kv_clear <= '0;
                     end
-                    else if(((WriteData[15:0] & 16'hE07F) == 16'hA07F) && mailbox_write) begin
+                    else if(((WriteData[15:0] & 16'hE0A2) == 16'hA0A2) && mailbox_write) begin
                         kv_idx <= (WriteData[15:0] & 16'h1F00) >> 8;
                         check_kv_clear <= '1;
                     end else begin
@@ -1043,7 +1039,7 @@ module caliptra_top_tb_services
     always @(negedge clk) begin
         if (!cptra_rst_b) begin
             timed_kv_clear <= '0;
-        end else if (WriteData[15:0] == 16'hC07F) begin
+        end else if (WriteData[15:0] == 16'hC0A2) begin
             timed_kv_clear <= '1;
         end else begin
             timed_kv_clear <= '0;
@@ -1077,7 +1073,7 @@ module caliptra_top_tb_services
     always @(negedge clk) begin
         if (!cptra_rst_b) begin
             hmac_tag_mismatch_kill <= '0;
-        end else if (WriteData[15:0] == 16'h567F) begin
+        end else if (WriteData[15:0] == 16'h56A2) begin
             hmac_tag_mismatch_kill <= '1;
         end else begin
             hmac_tag_mismatch_kill <= '0;
@@ -1110,7 +1106,7 @@ module caliptra_top_tb_services
     always @(negedge clk) begin
         if (!cptra_rst_b) begin
             ecc_privkey_mismatch_kill <= '0;
-        end else if (WriteData[15:0] == 16'h577F) begin
+        end else if (WriteData[15:0] == 16'h57A2) begin
             ecc_privkey_mismatch_kill <= '1;
         end else begin
             ecc_privkey_mismatch_kill <= '0;
@@ -1146,7 +1142,7 @@ module caliptra_top_tb_services
             for (genvar dword_i=0; dword_i < 16; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
                     //inject valid hmac_key dest and hmac512_key value to key reg (but extend the mask to permit all 24 kv slots)
-                    if(((WriteData[15:0] & 16'hE07F) == 16'h807F) && mailbox_write) begin
+                    if(((WriteData[15:0] & 16'hE0A2) == 16'h80A2) && mailbox_write) begin
                         inject_mldsa_seed <= 1'b1;
                         if ((((WriteData[15:0] & 16'h1F00) >> 8) == slot_id)) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
@@ -1267,8 +1263,8 @@ module caliptra_top_tb_services
                         end
                     end
                     //Randomizable KV inject for length-mismatch tests.
-                    //Encoding: WriteData[7:0]=0xa2, [12:8]=slot, [16:13]=last_dword, [24:17]=dest_valid.
-                    else if((WriteData[7:0] == 8'ha2) && mailbox_write) begin
+                    //Encoding: WriteData[7:0]=0xa3, [12:8]=slot, [16:13]=last_dword, [24:17]=dest_valid.
+                    else if((WriteData[7:0] == 8'ha3) && mailbox_write) begin
                         release_kv_inject_flags <= '0;
                         if (WriteData[12:8] == slot_id) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
@@ -1696,17 +1692,6 @@ module caliptra_top_tb_services
 
     //TIE-OFF device lifecycle
     logic assert_ss_tran;
-<<<<<<< HEAD
-`ifdef CALIPTRA_DEBUG_UNLOCKED
-    initial security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4False}; // DebugUnlocked & Production
-`else
-    initial begin
-        if ($test$plusargs("CALIPTRA_DEBUG_UNLOCKED"))
-            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4False}; // DebugUnlocked & Production
-        else
-            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4True}; // DebugLocked & Production
-=======
->>>>>>> 3c19526ab (Extend TB & services)
 
     initial begin
         if (!$test$plusargs("CALIPTRA_DEBUG_UNLOCKED")) begin
@@ -1746,18 +1731,13 @@ module caliptra_top_tb_services
     end
 
     always @(negedge clk) begin
-        //Switch to Manufacturing mode mode
-        if ((WriteData[15:0] == 16'h147F) && mailbox_write) begin
-            security_state.device_lifecycle <= DEVICE_MANUFACTURING;
-            $display("Setting lifecycle to DEVICE_MANUFACTURING\n");
-        end
         //Switch to Production mode mode
-        else if ((WriteData[15:0] == 16'h157F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h15A2) && mailbox_write) begin
             security_state.device_lifecycle <= DEVICE_PRODUCTION;
             $display("Setting lifecycle to DEVICE_PRODUCTION\n");
         end
         //Switch to Unprovisioned mode mode
-        else if ((WriteData[15:0] == 16'h1F7F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h1FA2) && mailbox_write) begin
             security_state.device_lifecycle <= DEVICE_UNPROVISIONED;
             $display("Setting lifecycle to DEVICE_UNPROVISIONED\n");
         end
@@ -1765,12 +1745,12 @@ module caliptra_top_tb_services
 
     always @(negedge clk) begin
         //Switch to debug unlocked
-        if ((WriteData[15:0] == 16'h187F) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h18A2) && mailbox_write) begin
             security_state.debug_locked <= 1'b0;
             $display("Setting debug_locked to 0");
         end
         //Switch to debug locked
-        else if ((WriteData[15:0] == 16'h197F) && mailbox_write) begin
+        else if ((WriteData[15:0] == 16'h19A2) && mailbox_write) begin
             security_state.debug_locked <= 1'b1;
             $display("Setting debug_locked to 1");
         end
