@@ -164,12 +164,16 @@ assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle) || ~kv_key_ready || ~kv_write_ready;
 assign status_idle_o = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
 
-logic aes_idle_r, aes_cmd_done_pulse;
+// Register the full mubi4 encoding of aes_idle (preserve encoded protection),
+// and derive the single-bit not-idle→idle pulse at the read side.
+caliptra_prim_mubi_pkg::mubi4_t aes_idle_r;
+logic aes_cmd_done_pulse;
 always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n) aes_idle_r <= 1'b1;
-    else          aes_idle_r <= caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
+    if (!reset_n) aes_idle_r <= caliptra_prim_mubi_pkg::MuBi4True;
+    else          aes_idle_r <= aes_idle;
 end
-assign aes_cmd_done_pulse = ~aes_idle_r && caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
+assign aes_cmd_done_pulse = ~caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle_r)
+                         &&  caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
 
 
 //AHB interface
@@ -392,7 +396,8 @@ always_comb begin
   hwif_in.AES_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
 
   hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = aes_cmd_done_pulse;
-  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // unused
+  // Raise AES error interrupt on any KV read error (e.g. KV_RD_LEN_MISMATCH).
+  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = kv_key_done && (kv_key_error != KV_SUCCESS);
   hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // unused

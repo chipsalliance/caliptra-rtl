@@ -1524,22 +1524,20 @@ module caliptra_top_sva
   // -----------------------------------------------------------------
   // The stored last_dword captured inside kv_read_client must equal the
   // entry's stored last_dword whenever the read completes without error.
-  KV_hmac_stored_len_matches_entry: assert property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+  `CALIPTRA_ASSERT(KV_hmac_stored_len_matches_entry,
       $rose(`HMAC_PATH.kv_key_done) && (`HMAC_PATH.kv_key_error == 0) |->
       (`HMAC_PATH.hmac_key_kv_read.stored_last_dword ==
-       `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].last_dword.value))
-      else $display("SVA ERROR: KV stored_last_dword internal != KEY_CTRL.last_dword on HMAC read");
+       `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].last_dword.value),
+      `SVA_RDC_CLK, ~`SVA_RST)
 
   // HMAC key path uses relaxed (entry-too-small) check: mismatch fires only
   // when the stored entry is smaller than what the mode requires.
-  KV_hmac_len_mismatch_iff_mode_differs: assert property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+  `CALIPTRA_ASSERT(KV_hmac_len_mismatch_iff_mode_differs,
       `HMAC_PATH.hmac_key_kv_read.length_mismatch |->
       `HMAC_PATH.kv_key_data_present &&
       (`HMAC_PATH.init_reg || `HMAC_PATH.next_reg) &&
-      (`HMAC_PATH.hmac_key_kv_read.stored_last_dword < `HMAC_PATH.hmac_expected_key_size))
-      else $display("SVA ERROR: HMAC length_mismatch fired without a real mismatch");
+      (`HMAC_PATH.hmac_key_kv_read.stored_last_dword < `HMAC_PATH.hmac_expected_key_size),
+      `SVA_RDC_CLK, ~`SVA_RST)
 
   // When mismatch fires, key regs clear via hwclr with a fixed 2-cycle
   // pipeline (mismatch cycle N → error_code registers cycle N+1 →
@@ -1548,20 +1546,17 @@ module caliptra_top_sva
   // does not support "implication with sequence expression" on the RHS.
   // Logically equivalent: if length_mismatch fired 2 cycles ago, the key
   // register must be zero now.
-  KV_hmac_key_cleared_on_mismatch: assert property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      $past(`HMAC_PATH.hmac_key_kv_read.length_mismatch, 2) |-> (`HMAC_PATH.key_reg == '0))
-      else $display("SVA ERROR: HMAC key not cleared 2 cycles after KV length mismatch");
+  `CALIPTRA_ASSERT(KV_hmac_key_cleared_on_mismatch,
+      $past(`HMAC_PATH.hmac_key_kv_read.length_mismatch, 2) |-> (`HMAC_PATH.key_reg == '0),
+      `SVA_RDC_CLK, ~`SVA_RST)
 
-  KV_ecc_len_mismatch_clears_privkey: assert property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      $past(`ECC_PATH.ecc_privkey_kv_read.length_mismatch, 2) |-> (`ECC_PATH.privkey_reg == '0))
-      else $display("SVA ERROR: ECC privkey not cleared 2 cycles after KV length mismatch");
+  `CALIPTRA_ASSERT(KV_ecc_len_mismatch_clears_privkey,
+      $past(`ECC_PATH.ecc_privkey_kv_read.length_mismatch, 2) |-> (`ECC_PATH.privkey_reg == '0),
+      `SVA_RDC_CLK, ~`SVA_RST)
 
-  KV_ecc_len_mismatch_clears_seed: assert property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      $past(`ECC_PATH.ecc_seed_kv_read.length_mismatch, 2) |-> (`ECC_PATH.seed_reg == '0))
-      else $display("SVA ERROR: ECC seed not cleared 2 cycles after KV length mismatch");
+  `CALIPTRA_ASSERT(KV_ecc_len_mismatch_clears_seed,
+      $past(`ECC_PATH.ecc_seed_kv_read.length_mismatch, 2) |-> (`ECC_PATH.seed_reg == '0),
+      `SVA_RDC_CLK, ~`SVA_RST)
 
   // Covers: each consumer exercises both match and mismatch.
   KV_hmac_len_match_C: cover property (
