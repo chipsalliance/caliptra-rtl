@@ -12,13 +12,13 @@
     end
 
 // Formal tools will ignore the initial construct, so use static assertion as a workaround.
-// This workaround terminates design elaboration if the __prop predict is false.
+// This workaround terminates design elaboration if the __prop predicate is false.
 // It calls $fatal() with the first argument equal to 2, it outputs the statistics about the memory
 // and CPU time.
 `define ASSERT_INIT(__name, __prop)                                                  \
 `ifdef FPV_ON                                                                        \
   if (!(__prop)) $fatal(2, "Fatal static assertion [%s]: (%s) is not true.",         \
-                        (__name), (__prop));                                         \
+                        `"__name`", `"__prop`");                                     \
 `else                                                                                \
   initial begin                                                                      \
     __name: assert (__prop)                                                          \

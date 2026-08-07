@@ -83,13 +83,16 @@ package str_utils_pkg;
 
     if (lstrip) begin
       int i = 0;
-      while (s.getc(i) inside {chars_q}) i++;
+      while (i < s.len() && (s.getc(i) inside {chars_q})) i++;
+      // The whole string consisted of strippable characters (or was empty).
+      if (i >= s.len()) return "";
       s = s.substr(i, s.len() - 1);
     end
 
     if (rstrip) begin
       int i = s.len() - 1;
-      while (s.getc(i) inside {chars_q}) i--;
+      while (i >= 0 && (s.getc(i) inside {chars_q})) i--;
+      if (i < 0) return "";
       s = s.substr(0, i);
     end
     return s;
@@ -154,12 +157,15 @@ package str_utils_pkg;
       start_idx = str_utils_pkg::str_find(s, start_delim);
       while (start_idx != -1) begin
         int rm_start_idx, rm_end_idx;
-        rm_start_idx = remove_start_delim ? start_idx : start_idx + start_delim.len() - 1;
+        // When not removing the start delimiter, begin removal *after* it so it is preserved.
+        rm_start_idx = remove_start_delim ? start_idx : start_idx + start_delim.len();
         end_idx = str_utils_pkg::str_find(s, end_delim, .range_lo(start_idx + start_delim.len()));
         if (end_idx == -1) break;
         rm_end_idx = remove_end_delim ? end_idx + end_delim.len() - 1 : end_idx - 1;
         s = str_utils_pkg::str_replace(s, s.substr(rm_start_idx, rm_end_idx), "");
-        start_idx = str_utils_pkg::str_find(s, start_delim, .range_lo(end_idx + end_delim.len()));
+        // The removal shifts string indices, but everything up to rm_start_idx is unchanged, so
+        // resume the search from there (searching from the stale end_idx could skip matches).
+        start_idx = str_utils_pkg::str_find(s, start_delim, .range_lo(rm_start_idx));
       end
       return s;
   endfunction
