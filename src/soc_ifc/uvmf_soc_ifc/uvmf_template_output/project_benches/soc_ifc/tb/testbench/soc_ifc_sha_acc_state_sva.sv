@@ -61,15 +61,6 @@ module soc_ifc_sha_acc_state_sva
     logic soc_sha_authorized;
     always_comb soc_sha_authorized = SS_MODE & valid_sha_user;
 
-    // ------------------------------------------------------------------
-    // Assertions, written with the Caliptra SVA macros so they are gated by
-    // CLP_ASSERT_ON (disable-able, and never elaborated when assertions are off,
-    // in addition to being a TB-only bind that is not in the RTL synthesis
-    // filelist) and reported through the standard Caliptra/UVM mechanism. The
-    // optional trailing `msg` argument carries a custom, value-bearing failure
-    // message.
-    // ------------------------------------------------------------------
-
     // The SoC-AXI SHA route must only ever be granted to an authorized requester.
     // In passive mode soc_sha_authorized is always 0, so no SoC-AXI SHA access
     // may be granted at all.
