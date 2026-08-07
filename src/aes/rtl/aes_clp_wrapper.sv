@@ -166,7 +166,7 @@ assign status_idle_o = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
 
 logic aes_idle_r, aes_cmd_done_pulse;
 always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n) aes_idle_r <= 1'b0;
+    if (!reset_n) aes_idle_r <= 1'b1;
     else          aes_idle_r <= caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
 end
 assign aes_cmd_done_pulse = ~aes_idle_r && caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);

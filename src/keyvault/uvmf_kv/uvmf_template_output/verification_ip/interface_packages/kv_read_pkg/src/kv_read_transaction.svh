@@ -128,7 +128,7 @@ class kv_read_transaction #(
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("read_entry:0x%x read_offset:0x%x read_resp_err: 0x%x last_dword: 0x%x entry_last_dword: 0x%x read_data:0x%x ",read_entry,read_offset,error,last,entry_last_dword,read_data);
+    return $sformatf("read_entry:0x%x read_offset:0x%x read_resp_err: 0x%x last: 0x%x entry_last_dword: 0x%x read_data:0x%x ",read_entry,read_offset,error,last,entry_last_dword,read_data);
     // pragma uvmf custom convert2string end
   endfunction
 
