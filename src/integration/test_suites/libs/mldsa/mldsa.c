@@ -286,16 +286,16 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
     VPRINTF(LOW, "Writing privkey\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR, privkey, MLDSA87_PRIVKEY_SIZE);
 
-    reg_ptr = (uint32_t*) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
-    while (reg_ptr < CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR) {
+    reg_ptr = (volatile uint32_t *)CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR;
+    for (offset = 0; offset < MLDSA87_PRIVKEY_SIZE; offset++, reg_ptr++) {
         actual_data = *reg_ptr;
-        if (actual_data) {
-            printf("MLDSA_PRIVKEY_IN at address: 0x%0x doesn't return 0 on read!\n", reg_ptr);
-            printf("%c", fail_cmd);
+        if (actual_data != 0) {
+            VPRINTF(ERROR, "MLDSA_PRIVKEY_IN at address: %p returned 0x%x on read (expected 0)\n", (void *)reg_ptr, actual_data);
+            SEND_STDOUT_CTRL(fail_cmd);
+            while (1);
         }
-        reg_ptr++;
     }
-    
+
     // Program MLDSA MSG
     VPRINTF(LOW, "Writing msg\n");
     write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_MSG_0, msg, MLDSA87_MSG_SIZE);
