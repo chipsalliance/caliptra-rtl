@@ -2400,14 +2400,29 @@ class soc_ifc_predictor #(
             // SHA datapath registers are screened based on integration mode,
             // route-authorized AxUSER, and SHA lock ownership. CONTROL and the
             // interrupt register block retain their distinct RDL policies.
-            "LOCK",
-            "USER": begin
+            "LOCK": begin
                 if (axi_txn.is_write() && (axs_reg.get_name() == "LOCK")) begin
                     // Only the current subsystem-mode SHA owner may clear the lock.
                     do_reg_prediction = sha_valid_user(axi_txn);
                     soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
                 else if (axi_txn.is_read() && (!configuration.subsystem_mode || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value()))) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                    soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                    // "Expected" resp is SLVERR
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                end
+            end
+            "USER": begin
+                if (axi_txn.is_write()) begin
+                    // USER is read-only. An authorized route acknowledges the write
+                    // without changing state; all other routes are rejected.
+                    do_reg_prediction = 1'b0;
+                    soc_ifc_sb_axi_ap_output_transaction.resp = sha_route_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
+                end
+                else if (!sha_route_valid_user(axi_txn)) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};

@@ -23,6 +23,8 @@
 // uvm_reg_item.extension member
 //
 //---------------------------------------------------------------
+`include "uvm_macros.svh"
+
 class caliptra_axi_user extends uvm_object;
 
   rand bit unsigned [aaxi_pkg::AAXI_AWUSER_WIDTH-1:0] addr_user = '1;

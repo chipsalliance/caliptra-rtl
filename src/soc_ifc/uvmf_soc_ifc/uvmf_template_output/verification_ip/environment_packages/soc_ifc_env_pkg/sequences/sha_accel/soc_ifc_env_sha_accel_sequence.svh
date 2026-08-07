@@ -517,7 +517,8 @@ task soc_ifc_env_sha_accel_sequence::run_rejected_battery(input caliptra_axi_use
     report_reg_sts_u(lsts, "DATAIN", 1'b0, user);
 
     // Attempt to trigger execution. Must be rejected.
-    ral_write(reg_model.sha512_acc_csr_rm.EXECUTE, lsts, uvm_reg_data_t'(1), user);
+    data = uvm_reg_data_t'(1) << reg_model.sha512_acc_csr_rm.EXECUTE.EXECUTE.get_lsb_pos();
+    ral_write(reg_model.sha512_acc_csr_rm.EXECUTE, lsts, data, user);
     report_reg_sts_u(lsts, "EXECUTE", 1'b0, user);
 
     // Read STATUS and a DIGEST word. Must be rejected.
@@ -527,7 +528,8 @@ task soc_ifc_env_sha_accel_sequence::run_rejected_battery(input caliptra_axi_use
     report_reg_sts_u(lsts, "DIGEST", 1'b0, user);
 
     // Attempt to clear the lock. An unauthorized requester must not affect the owner.
-    ral_write(reg_model.sha512_acc_csr_rm.LOCK, lsts, uvm_reg_data_t'(1), user);
+    data = uvm_reg_data_t'(1) << reg_model.sha512_acc_csr_rm.LOCK.LOCK.get_lsb_pos();
+    ral_write(reg_model.sha512_acc_csr_rm.LOCK, lsts, data, user);
     report_reg_sts_u(lsts, "LOCK", 1'b0, user);
 
     // CONTROL has a distinct internal RDL policy, but the route policy must
