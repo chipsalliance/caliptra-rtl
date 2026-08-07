@@ -396,8 +396,7 @@ always_comb begin
   hwif_in.AES_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
 
   hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = aes_cmd_done_pulse;
-  // Raise AES error interrupt on any KV read error (e.g. KV_RD_LEN_MISMATCH).
-  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = kv_key_done && (kv_key_error != KV_SUCCESS);
+  hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // unused
   hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // unused
