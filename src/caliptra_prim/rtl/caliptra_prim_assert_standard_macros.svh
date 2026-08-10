@@ -5,12 +5,27 @@
 // Macro bodies included by caliptra_prim_assert.sv for tools that support full SystemVerilog and SVA syntax.
 // See caliptra_prim_assert.sv for documentation for each of the macros.
 
-// Explicitly include the files that define the macros referenced below
-// (CALIPTRA_ASSERT_DEFAULT_CLK/RST, CALIPTRA_ASSERT_ERROR from caliptra_sva.svh;
-// complex macros from caliptra_prim_assert.sv). Both are include-guarded, so
-// these are no-ops when this fragment is pulled in via caliptra_prim_assert.sv.
+// caliptra_sva.svh defines CALIPTRA_ASSERT_DEFAULT_CLK/RST. This fragment also
+// uses CALIPTRA_ASSERT_ERROR (which expands CALIPTRA_PRIM_STRINGIFY). Those are
+// normally provided by caliptra_prim_assert.sv, but including that here would be
+// circular (it includes this fragment), so define them locally. The `ifndef
+// guards make these no-ops when the fragment is pulled in via
+// caliptra_prim_assert.sv, and self-contained for standalone compilation.
 `include "caliptra_sva.svh"
-`include "caliptra_prim_assert.sv"
+
+`ifndef CALIPTRA_PRIM_STRINGIFY
+`define CALIPTRA_PRIM_STRINGIFY(__x) `"__x`"
+`endif
+`ifndef CALIPTRA_ASSERT_ERROR
+`define CALIPTRA_ASSERT_ERROR(__name)                                                             \
+`ifdef UVM                                                                                        \
+  uvm_pkg::uvm_report_error("CALIPTRA_ASSERT FAILED", `CALIPTRA_PRIM_STRINGIFY(__name), uvm_pkg::UVM_NONE, \
+                            `__FILE__, `__LINE__);                                                \
+`else                                                                                             \
+  $error("%0t: (%0s:%0d) [%m] [CALIPTRA_ASSERT FAILED] %0s", $time, `__FILE__, `__LINE__,         \
+         `CALIPTRA_PRIM_STRINGIFY(__name));                                                                \
+`endif
+`endif
 
 `define CALIPTRA_ASSERT_I(__name, __prop) \
   __name: assert (__prop)        \

@@ -5,12 +5,11 @@
 // Macro bodies included by caliptra_prim_assert.sv for formal verification with Yosys. See caliptra_prim_assert.sv
 // for documentation for each of the macros.
 
-// Explicitly include the files that define the macros referenced below
-// (CALIPTRA_ASSERT_DEFAULT_CLK/RST from caliptra_sva.svh; complex macros from
-// caliptra_prim_assert.sv). Both are include-guarded, so these are no-ops when
-// this fragment is pulled in via caliptra_prim_assert.sv.
+// This fragment only references the default clk/rst macros
+// (CALIPTRA_ASSERT_DEFAULT_CLK/RST), which are defined in caliptra_sva.svh.
+// Do NOT include caliptra_prim_assert.sv here: it includes this fragment, so
+// doing so would create a circular include.
 `include "caliptra_sva.svh"
-`include "caliptra_prim_assert.sv"
 
 `define CALIPTRA_ASSERT_I(__name, __prop)    \
   always_comb begin : __name        \

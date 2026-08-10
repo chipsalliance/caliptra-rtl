@@ -294,6 +294,21 @@ VCS_COMP_OPTS += -noinherit_timescale=1ns/1ps
 VCS_COMP_OPTS += +define+SIMULATION
 VCS_COMP_OPTS += $(TB_DEFS)
 
+############# VCS Elab options #############
+# These mirror the elab-step suppressions in
+# src/integration/config/compile.yml so the local Makefile flow behaves the
+# same as the pipeline flow.
+# Suppress "Bit Size Exceeded" coverage warning for large ram signals under
+# caliptra_top_tb_services that we intentionally don't collect coverage on.
+VCS_ELAB_OPTS += -suppress=VCM-BSZEX
+# Suppress erroneous "unmatched wildcard pattern" warning for nested struct
+# signals in generated reg files (the signal is still represented in the vdb).
+VCS_ELAB_OPTS += -suppress=VCM-HFUFR
+# Suppress "Interface not instantiated" warning: axi_if.sv is compiled into both
+# the RTL filelist and caliptra_top_tb_pkg; the TB binds the package copy, so the
+# RTL-library copy is unused and harmlessly ignored by VCS.
+VCS_ELAB_OPTS += -suppress=UII-L
+
 # Targets
 all: clean verilator
 
@@ -329,6 +344,7 @@ vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf
 	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 $(COVERAGE_ARGS) \
 	  -l vcs_elab.log \
+	  $(VCS_ELAB_OPTS) \
 	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)
 
 ############ TEST Simulation ###############################
