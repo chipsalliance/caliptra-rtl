@@ -13,7 +13,11 @@
 # limitations under the License.
 #
 ---
+# Fully randomized DOE test (random UDS/FE values + randomized OCP-lock state).
+# Belongs in the nightly random regression, NOT the deterministic promote list.
+# The OCP-lock enable is intentionally left to the TB ($urandom of ss_ocp_lock_en)
+# so this test covers both OCP-lock-enabled and disabled configurations.
 plusargs:
   - +RAND_DOE_VALUES
-seed: 1
-testname: smoke_test_doe_scan
+seed: ${PLAYBOOK_RANDOM_SEED}
+testname: rand_test_doe

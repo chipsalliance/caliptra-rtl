@@ -78,9 +78,9 @@ void main() {
 
     rst_count++;
 
-    VPRINTF(LOW,"---------------------------\n");
-    VPRINTF(LOW," DOE Smoke Test With Rand UDS/FE !!\n");
-    VPRINTF(LOW,"---------------------------\n");
+    VPRINTF(LOW,"------------------------------------------\n");
+    VPRINTF(LOW," DOE Directed Scan/Debug-Mode Test        \n");
+    VPRINTF(LOW,"------------------------------------------\n");
 
     //Call interrupt init
     init_interrupts();
