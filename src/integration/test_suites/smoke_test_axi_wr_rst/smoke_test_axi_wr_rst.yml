@@ -13,7 +13,7 @@
 # limitations under the License.
 #
 ---
-plusargs:         
+plusargs:
   - +SOC_WRITE_RST
 seed: 1
 testname: smoke_test_axi_wr_rst

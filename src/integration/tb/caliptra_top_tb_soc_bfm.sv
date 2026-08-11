@@ -730,7 +730,7 @@ initial begin
                 begin
                     assert (`CPTRA_TOP_PATH.cptra_noncore_rst_b == 0) else begin
                         $display("* TEST FAILED");
-                        $error("cptra_noncore_rst_b asserted for the SoC access under reset test");
+                        $error("cptra_noncore_rst_b deasserted for the SoC access under reset test");
                         $finish;
                     end
                     m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FW_EXTENDED_ERROR_INFO_0), .user(32'hFFFF_FFFF), .data(32'hBAADB000), .resp(wresp), .resp_user(buser));
