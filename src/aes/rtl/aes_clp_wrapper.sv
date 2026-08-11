@@ -272,7 +272,7 @@ caliptra_tlul_adapter_vh_inst
   // Valid-Hold device interface (VH to TLUL).
   .dv_i(aes_cif_req_dv),
   .hld_o(aes_cif_req_hold),
-  .addr_i({ {caliptra_tlul_pkg::TL_AW-AHB_ADDR_WIDTH{1'b0}}, aes_cif_req_addr}),
+  .addr_i(caliptra_tlul_pkg::TL_AW'(aes_cif_req_addr)),
   .write_i(aes_cif_req_write),
   .wdata_i(aes_cif_req_wdata_post_endian),
   .wstrb_i('1),
@@ -362,7 +362,7 @@ aes_inst (
   .tl_o(aes_to_adapter_tl),
 
   // Alerts
-  .alert_rx_i({caliptra_prim_alert_pkg::ALERT_RX_DEFAULT, caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}),
+  .alert_rx_i((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
   .alert_tx_o()
 );
 
