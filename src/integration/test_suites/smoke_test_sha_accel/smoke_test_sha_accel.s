@@ -112,7 +112,7 @@ _start:
         equal4:
             addi x3, x3, 4
             addi t3, t3, 4
-            blt x3, x1, read_result_loop4
+            ble x3, x1, read_result_loop4
 
     //Release SHA lock
     li x3, CLP_SHA512_ACC_CSR_LOCK
