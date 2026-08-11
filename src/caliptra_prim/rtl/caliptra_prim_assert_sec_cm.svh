@@ -7,11 +7,11 @@
 `ifndef CALIPTRA_PRIM_ASSERT_SEC_CM_SVH
 `define CALIPTRA_PRIM_ASSERT_SEC_CM_SVH
 
-// Explicitly include the files that define the macros referenced below
-// (CALIPTRA_ASSERT from caliptra_sva.svh; CALIPTRA_ASSUME_FPV from
-// caliptra_prim_assert.sv). Both are include-guarded, so these are no-ops when
-// this fragment is pulled in via caliptra_prim_assert.sv.
-`include "caliptra_sva.svh"
+// This fragment references shared macros (CALIPTRA_ASSERT,
+// CALIPTRA_ASSERT_DEFAULT_CLK/RST, CALIPTRA_ASSUME_FPV) that are defined by
+// caliptra_prim_assert.sv. Include it so the fragment is self-contained for
+// standalone lint; the top guard in caliptra_prim_assert.sv makes this a no-op
+// when the fragment is pulled in via that header.
 `include "caliptra_prim_assert.sv"
 
 `define _CALIPTRA_SEC_CM_ALERT_MAX_CYC 30

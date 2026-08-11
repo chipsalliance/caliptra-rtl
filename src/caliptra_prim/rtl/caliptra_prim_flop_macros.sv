@@ -5,16 +5,11 @@
 `ifndef CALIPTRA_PRIM_FLOP_MACROS_SV
 `define CALIPTRA_PRIM_FLOP_MACROS_SV
 
-// caliptra_sva.svh defines CALIPTRA_ASSERT. This fragment also uses
-// CALIPTRA_PRIM_STRINGIFY, normally provided by caliptra_prim_assert.sv, but
-// including that here would be circular (it includes this fragment), so define
-// it locally. The `ifndef guard makes it a no-op when the fragment is pulled in
-// via caliptra_prim_assert.sv, and self-contained for standalone compilation.
-`include "caliptra_sva.svh"
-
-`ifndef CALIPTRA_PRIM_STRINGIFY
-`define CALIPTRA_PRIM_STRINGIFY(__x) `"__x`"
-`endif
+// This fragment uses shared macros (CALIPTRA_ASSERT, CALIPTRA_PRIM_STRINGIFY)
+// that are defined by caliptra_prim_assert.sv. Include it so the fragment is
+// self-contained for standalone lint; the top guard in caliptra_prim_assert.sv
+// makes this a no-op when the fragment is pulled in via that header.
+`include "caliptra_prim_assert.sv"
 
 /////////////////////////////////////
 // Default Values for Macros below //
