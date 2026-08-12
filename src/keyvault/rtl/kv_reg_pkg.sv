@@ -5,6 +5,7 @@ package kv_reg_pkg;
 
     localparam KV_REG_DATA_WIDTH = 32;
     localparam KV_REG_MIN_ADDR_WIDTH = 12;
+    localparam KV_REG_SIZE = 'hc04;
 
     typedef struct packed{
         logic swwel;

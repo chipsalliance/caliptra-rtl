@@ -5,6 +5,7 @@ package sha256_reg_pkg;
 
     localparam SHA256_REG_DATA_WIDTH = 32;
     localparam SHA256_REG_MIN_ADDR_WIDTH = 12;
+    localparam SHA256_REG_SIZE = 'ha14;
 
     typedef struct packed{
         logic [31:0] next;

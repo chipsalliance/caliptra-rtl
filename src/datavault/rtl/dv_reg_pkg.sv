@@ -5,6 +5,7 @@ package dv_reg_pkg;
 
     localparam DV_REG_DATA_WIDTH = 32;
     localparam DV_REG_MIN_ADDR_WIDTH = 11;
+    localparam DV_REG_SIZE = 'h4c0;
 
     typedef struct packed{
         logic swwel;

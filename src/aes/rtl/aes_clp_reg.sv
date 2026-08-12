@@ -97,31 +97,37 @@ module aes_clp_reg (
         } intr_block_rf;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
+    logic decoded_err;
+    logic [10:0] decoded_addr;
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [31:0] decoded_wr_data;
     logic [31:0] decoded_wr_biten;
 
     always_comb begin
+        automatic logic is_valid_addr;
+        automatic logic is_valid_rw;
+        is_valid_addr = '1; // No valid address check
+        is_valid_rw = '1; // No valid RW check
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.AES_NAME[i0] = cpuif_req_masked & (cpuif_addr == 11'h0 + i0*11'h4);
+            decoded_reg_strb.AES_NAME[i0] = cpuif_req_masked & (cpuif_addr == 11'h0 + (11)'(i0) * 11'h4) & !cpuif_req_is_wr;
         end
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.AES_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 11'h8 + i0*11'h4);
+            decoded_reg_strb.AES_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 11'h8 + (11)'(i0) * 11'h4) & !cpuif_req_is_wr;
         end
         for(int i0=0; i0<9; i0++) begin
-            decoded_reg_strb.ENTROPY_IF_SEED[i0] = cpuif_req_masked & (cpuif_addr == 11'h110 + i0*11'h4);
+            decoded_reg_strb.ENTROPY_IF_SEED[i0] = cpuif_req_masked & (cpuif_addr == 11'h110 + (11)'(i0) * 11'h4) & cpuif_req_is_wr;
         end
         decoded_reg_strb.CTRL0 = cpuif_req_masked & (cpuif_addr == 11'h134);
         decoded_reg_strb.AES_KV_RD_KEY_CTRL = cpuif_req_masked & (cpuif_addr == 11'h200);
-        decoded_reg_strb.AES_KV_RD_KEY_STATUS = cpuif_req_masked & (cpuif_addr == 11'h204);
+        decoded_reg_strb.AES_KV_RD_KEY_STATUS = cpuif_req_masked & (cpuif_addr == 11'h204) & !cpuif_req_is_wr;
         decoded_reg_strb.AES_KV_WR_CTRL = cpuif_req_masked & (cpuif_addr == 11'h208);
-        decoded_reg_strb.AES_KV_WR_STATUS = cpuif_req_masked & (cpuif_addr == 11'h20c);
+        decoded_reg_strb.AES_KV_WR_STATUS = cpuif_req_masked & (cpuif_addr == 11'h20c) & !cpuif_req_is_wr;
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h400);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h404);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h408);
-        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 11'h40c);
-        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 11'h410);
+        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 11'h40c) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 11'h410) & !cpuif_req_is_wr;
         decoded_reg_strb.intr_block_rf.error_internal_intr_r = cpuif_req_masked & (cpuif_addr == 11'h414);
         decoded_reg_strb.intr_block_rf.notif_internal_intr_r = cpuif_req_masked & (cpuif_addr == 11'h418);
         decoded_reg_strb.intr_block_rf.error_intr_trig_r = cpuif_req_masked & (cpuif_addr == 11'h41c);
@@ -131,14 +137,16 @@ module aes_clp_reg (
         decoded_reg_strb.intr_block_rf.error2_intr_count_r = cpuif_req_masked & (cpuif_addr == 11'h508);
         decoded_reg_strb.intr_block_rf.error3_intr_count_r = cpuif_req_masked & (cpuif_addr == 11'h50c);
         decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r = cpuif_req_masked & (cpuif_addr == 11'h580);
-        decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h600);
-        decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h604);
-        decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h608);
-        decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h60c);
-        decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h610);
+        decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h600) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h604) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h608) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h60c) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h610) & !cpuif_req_is_wr;
+        decoded_err = '0;
     end
 
     // Pass down signals to next stage
+    assign decoded_addr = cpuif_addr;
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
@@ -636,14 +644,13 @@ module aes_clp_reg (
             field_combo.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.next = next_c;
             field_combo.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.load_next = load_next_c;
         end
-
         always_ff @(posedge clk) begin
             if(field_combo.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.load_next) begin
                 field_storage.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.value <= field_combo.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.next;
             end
         end
         assign hwif_out.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.value = field_storage.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.value;
-        assign hwif_out.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.swmod = decoded_reg_strb.ENTROPY_IF_SEED[i0] && decoded_req_is_wr;
+        assign hwif_out.ENTROPY_IF_SEED[i0].ENTROPY_IF_SEED.swmod = decoded_reg_strb.ENTROPY_IF_SEED[i0] && decoded_req_is_wr && |(decoded_wr_biten[31:0]);
     end
     // Field: aes_clp_reg.CTRL0.ENDIAN_SWAP
     always_comb begin
@@ -661,8 +668,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.CTRL0.ENDIAN_SWAP.value <= 1'h0;
-        end else if(field_combo.CTRL0.ENDIAN_SWAP.load_next) begin
-            field_storage.CTRL0.ENDIAN_SWAP.value <= field_combo.CTRL0.ENDIAN_SWAP.next;
+        end else begin
+            if(field_combo.CTRL0.ENDIAN_SWAP.load_next) begin
+                field_storage.CTRL0.ENDIAN_SWAP.value <= field_combo.CTRL0.ENDIAN_SWAP.next;
+            end
         end
     end
     assign hwif_out.CTRL0.ENDIAN_SWAP.value = field_storage.CTRL0.ENDIAN_SWAP.value;
@@ -685,8 +694,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_RD_KEY_CTRL.read_en.value <= 1'h0;
-        end else if(field_combo.AES_KV_RD_KEY_CTRL.read_en.load_next) begin
-            field_storage.AES_KV_RD_KEY_CTRL.read_en.value <= field_combo.AES_KV_RD_KEY_CTRL.read_en.next;
+        end else begin
+            if(field_combo.AES_KV_RD_KEY_CTRL.read_en.load_next) begin
+                field_storage.AES_KV_RD_KEY_CTRL.read_en.value <= field_combo.AES_KV_RD_KEY_CTRL.read_en.next;
+            end
         end
     end
     assign hwif_out.AES_KV_RD_KEY_CTRL.read_en.value = field_storage.AES_KV_RD_KEY_CTRL.read_en.value;
@@ -706,8 +717,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_RD_KEY_CTRL.read_entry.value <= 5'h0;
-        end else if(field_combo.AES_KV_RD_KEY_CTRL.read_entry.load_next) begin
-            field_storage.AES_KV_RD_KEY_CTRL.read_entry.value <= field_combo.AES_KV_RD_KEY_CTRL.read_entry.next;
+        end else begin
+            if(field_combo.AES_KV_RD_KEY_CTRL.read_entry.load_next) begin
+                field_storage.AES_KV_RD_KEY_CTRL.read_entry.value <= field_combo.AES_KV_RD_KEY_CTRL.read_entry.next;
+            end
         end
     end
     assign hwif_out.AES_KV_RD_KEY_CTRL.read_entry.value = field_storage.AES_KV_RD_KEY_CTRL.read_entry.value;
@@ -727,8 +740,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_RD_KEY_CTRL.pcr_hash_extend.value <= 1'h0;
-        end else if(field_combo.AES_KV_RD_KEY_CTRL.pcr_hash_extend.load_next) begin
-            field_storage.AES_KV_RD_KEY_CTRL.pcr_hash_extend.value <= field_combo.AES_KV_RD_KEY_CTRL.pcr_hash_extend.next;
+        end else begin
+            if(field_combo.AES_KV_RD_KEY_CTRL.pcr_hash_extend.load_next) begin
+                field_storage.AES_KV_RD_KEY_CTRL.pcr_hash_extend.value <= field_combo.AES_KV_RD_KEY_CTRL.pcr_hash_extend.next;
+            end
         end
     end
     assign hwif_out.AES_KV_RD_KEY_CTRL.pcr_hash_extend.value = field_storage.AES_KV_RD_KEY_CTRL.pcr_hash_extend.value;
@@ -748,8 +763,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_RD_KEY_CTRL.rsvd.value <= 25'h0;
-        end else if(field_combo.AES_KV_RD_KEY_CTRL.rsvd.load_next) begin
-            field_storage.AES_KV_RD_KEY_CTRL.rsvd.value <= field_combo.AES_KV_RD_KEY_CTRL.rsvd.next;
+        end else begin
+            if(field_combo.AES_KV_RD_KEY_CTRL.rsvd.load_next) begin
+                field_storage.AES_KV_RD_KEY_CTRL.rsvd.value <= field_combo.AES_KV_RD_KEY_CTRL.rsvd.next;
+            end
         end
     end
     assign hwif_out.AES_KV_RD_KEY_CTRL.rsvd.value = field_storage.AES_KV_RD_KEY_CTRL.rsvd.value;
@@ -772,8 +789,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_RD_KEY_STATUS.VALID.value <= 1'h0;
-        end else if(field_combo.AES_KV_RD_KEY_STATUS.VALID.load_next) begin
-            field_storage.AES_KV_RD_KEY_STATUS.VALID.value <= field_combo.AES_KV_RD_KEY_STATUS.VALID.next;
+        end else begin
+            if(field_combo.AES_KV_RD_KEY_STATUS.VALID.load_next) begin
+                field_storage.AES_KV_RD_KEY_STATUS.VALID.value <= field_combo.AES_KV_RD_KEY_STATUS.VALID.next;
+            end
         end
     end
     // Field: aes_clp_reg.AES_KV_WR_CTRL.write_en
@@ -795,8 +814,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.write_en.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.write_en.load_next) begin
-            field_storage.AES_KV_WR_CTRL.write_en.value <= field_combo.AES_KV_WR_CTRL.write_en.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.write_en.load_next) begin
+                field_storage.AES_KV_WR_CTRL.write_en.value <= field_combo.AES_KV_WR_CTRL.write_en.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.write_en.value = field_storage.AES_KV_WR_CTRL.write_en.value;
@@ -816,8 +837,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.write_entry.value <= 5'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.write_entry.load_next) begin
-            field_storage.AES_KV_WR_CTRL.write_entry.value <= field_combo.AES_KV_WR_CTRL.write_entry.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.write_entry.load_next) begin
+                field_storage.AES_KV_WR_CTRL.write_entry.value <= field_combo.AES_KV_WR_CTRL.write_entry.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.write_entry.value = field_storage.AES_KV_WR_CTRL.write_entry.value;
@@ -837,8 +860,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.hmac_key_dest_valid.load_next) begin
-            field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value <= field_combo.AES_KV_WR_CTRL.hmac_key_dest_valid.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.hmac_key_dest_valid.load_next) begin
+                field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value <= field_combo.AES_KV_WR_CTRL.hmac_key_dest_valid.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.hmac_key_dest_valid.value = field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value;
@@ -858,8 +883,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.hmac_block_dest_valid.load_next) begin
-            field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value <= field_combo.AES_KV_WR_CTRL.hmac_block_dest_valid.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.hmac_block_dest_valid.load_next) begin
+                field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value <= field_combo.AES_KV_WR_CTRL.hmac_block_dest_valid.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.hmac_block_dest_valid.value = field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value;
@@ -879,8 +906,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.mldsa_seed_dest_valid.load_next) begin
-            field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value <= field_combo.AES_KV_WR_CTRL.mldsa_seed_dest_valid.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.mldsa_seed_dest_valid.load_next) begin
+                field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value <= field_combo.AES_KV_WR_CTRL.mldsa_seed_dest_valid.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value = field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value;
@@ -900,8 +929,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.ecc_pkey_dest_valid.load_next) begin
-            field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value <= field_combo.AES_KV_WR_CTRL.ecc_pkey_dest_valid.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.ecc_pkey_dest_valid.load_next) begin
+                field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value <= field_combo.AES_KV_WR_CTRL.ecc_pkey_dest_valid.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value = field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value;
@@ -921,8 +952,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.ecc_seed_dest_valid.load_next) begin
-            field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value <= field_combo.AES_KV_WR_CTRL.ecc_seed_dest_valid.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.ecc_seed_dest_valid.load_next) begin
+                field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value <= field_combo.AES_KV_WR_CTRL.ecc_seed_dest_valid.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.ecc_seed_dest_valid.value = field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value;
@@ -942,8 +975,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.aes_key_dest_valid.load_next) begin
-            field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value <= field_combo.AES_KV_WR_CTRL.aes_key_dest_valid.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.aes_key_dest_valid.load_next) begin
+                field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value <= field_combo.AES_KV_WR_CTRL.aes_key_dest_valid.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.aes_key_dest_valid.value = field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value;
@@ -963,8 +998,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.mlkem_seed_dest_valid.load_next) begin
-            field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value <= field_combo.AES_KV_WR_CTRL.mlkem_seed_dest_valid.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.mlkem_seed_dest_valid.load_next) begin
+                field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value <= field_combo.AES_KV_WR_CTRL.mlkem_seed_dest_valid.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value = field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value;
@@ -984,8 +1021,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.mlkem_msg_dest_valid.load_next) begin
-            field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value <= field_combo.AES_KV_WR_CTRL.mlkem_msg_dest_valid.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.mlkem_msg_dest_valid.load_next) begin
+                field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value <= field_combo.AES_KV_WR_CTRL.mlkem_msg_dest_valid.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value = field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value;
@@ -1005,8 +1044,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.dma_data_dest_valid.load_next) begin
-            field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value <= field_combo.AES_KV_WR_CTRL.dma_data_dest_valid.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.dma_data_dest_valid.load_next) begin
+                field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value <= field_combo.AES_KV_WR_CTRL.dma_data_dest_valid.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.dma_data_dest_valid.value = field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value;
@@ -1026,8 +1067,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_CTRL.rsvd.value <= 17'h0;
-        end else if(field_combo.AES_KV_WR_CTRL.rsvd.load_next) begin
-            field_storage.AES_KV_WR_CTRL.rsvd.value <= field_combo.AES_KV_WR_CTRL.rsvd.next;
+        end else begin
+            if(field_combo.AES_KV_WR_CTRL.rsvd.load_next) begin
+                field_storage.AES_KV_WR_CTRL.rsvd.value <= field_combo.AES_KV_WR_CTRL.rsvd.next;
+            end
         end
     end
     assign hwif_out.AES_KV_WR_CTRL.rsvd.value = field_storage.AES_KV_WR_CTRL.rsvd.value;
@@ -1050,8 +1093,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AES_KV_WR_STATUS.VALID.value <= 1'h0;
-        end else if(field_combo.AES_KV_WR_STATUS.VALID.load_next) begin
-            field_storage.AES_KV_WR_STATUS.VALID.value <= field_combo.AES_KV_WR_STATUS.VALID.next;
+        end else begin
+            if(field_combo.AES_KV_WR_STATUS.VALID.load_next) begin
+                field_storage.AES_KV_WR_STATUS.VALID.value <= field_combo.AES_KV_WR_STATUS.VALID.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.global_intr_en_r.error_en
@@ -1070,8 +1115,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.global_intr_en_r.notif_en
@@ -1090,8 +1137,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_intr_en_r.error0_en
@@ -1110,8 +1159,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error0_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= field_combo.intr_block_rf.error_intr_en_r.error0_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error0_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= field_combo.intr_block_rf.error_intr_en_r.error0_en.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_intr_en_r.error1_en
@@ -1130,8 +1181,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error1_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= field_combo.intr_block_rf.error_intr_en_r.error1_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error1_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= field_combo.intr_block_rf.error_intr_en_r.error1_en.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_intr_en_r.error2_en
@@ -1150,8 +1203,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error2_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error2_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error2_en.value <= field_combo.intr_block_rf.error_intr_en_r.error2_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error2_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error2_en.value <= field_combo.intr_block_rf.error_intr_en_r.error2_en.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_intr_en_r.error3_en
@@ -1170,8 +1225,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error3_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error3_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error3_en.value <= field_combo.intr_block_rf.error_intr_en_r.error3_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error3_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error3_en.value <= field_combo.intr_block_rf.error_intr_en_r.error3_en.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.notif_intr_en_r.notif_cmd_done_en
@@ -1190,8 +1247,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.load_next) begin
-            field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.load_next) begin
+                field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_global_intr_r.agg_sts
@@ -1210,8 +1269,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_global_intr_r.intr =
@@ -1232,8 +1293,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_global_intr_r.intr =
@@ -1244,8 +1307,8 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1260,8 +1323,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error0_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error0_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error0_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error0_sts.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_internal_intr_r.error1_sts
@@ -1270,8 +1335,8 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1286,8 +1351,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error1_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error1_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error1_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error1_sts.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_internal_intr_r.error2_sts
@@ -1296,8 +1363,8 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1312,8 +1379,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error2_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error2_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error2_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error2_sts.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_internal_intr_r.error3_sts
@@ -1322,8 +1391,8 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1338,8 +1407,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error3_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error3_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error3_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error3_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_internal_intr_r.intr =
@@ -1353,8 +1424,8 @@ module aes_clp_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1369,8 +1440,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.load_next) begin
-            field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.load_next) begin
+                field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_internal_intr_r.intr =
@@ -1394,8 +1467,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error0_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error0_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error0_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error0_trig.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_intr_trig_r.error1_trig
@@ -1417,8 +1492,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error1_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error1_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error1_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error1_trig.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_intr_trig_r.error2_trig
@@ -1440,8 +1517,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error2_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error2_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error2_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error2_trig.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error_intr_trig_r.error3_trig
@@ -1463,8 +1542,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error3_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error3_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error3_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error3_trig.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig
@@ -1486,8 +1567,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.load_next) begin
-            field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.load_next) begin
+                field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error0_intr_count_r.cnt
@@ -1510,18 +1593,16 @@ module aes_clp_reg (
         end
         field_combo.intr_block_rf.error0_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error0_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error0_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= field_combo.intr_block_rf.error0_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= field_combo.intr_block_rf.error0_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error1_intr_count_r.cnt
@@ -1544,18 +1625,16 @@ module aes_clp_reg (
         end
         field_combo.intr_block_rf.error1_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error1_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error1_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= field_combo.intr_block_rf.error1_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= field_combo.intr_block_rf.error1_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error2_intr_count_r.cnt
@@ -1578,18 +1657,16 @@ module aes_clp_reg (
         end
         field_combo.intr_block_rf.error2_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error2_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error2_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error2_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error2_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error2_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error2_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error2_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error2_intr_count_r.cnt.value <= field_combo.intr_block_rf.error2_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error2_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error2_intr_count_r.cnt.value <= field_combo.intr_block_rf.error2_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error3_intr_count_r.cnt
@@ -1612,18 +1689,16 @@ module aes_clp_reg (
         end
         field_combo.intr_block_rf.error3_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error3_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error3_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error3_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error3_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error3_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error3_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error3_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error3_intr_count_r.cnt.value <= field_combo.intr_block_rf.error3_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error3_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error3_intr_count_r.cnt.value <= field_combo.intr_block_rf.error3_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.notif_cmd_done_intr_count_r.cnt
@@ -1646,18 +1721,16 @@ module aes_clp_reg (
         end
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error0_intr_count_incr_r.pulse
@@ -1687,8 +1760,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error1_intr_count_incr_r.pulse
@@ -1718,8 +1793,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error2_intr_count_incr_r.pulse
@@ -1749,8 +1826,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.error3_intr_count_incr_r.pulse
@@ -1780,8 +1859,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: aes_clp_reg.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse
@@ -1811,8 +1892,10 @@ module aes_clp_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.next;
+            end
         end
     end
 
@@ -1827,96 +1910,128 @@ module aes_clp_reg (
     // Readback
     //--------------------------------------------------------------------------
 
+    logic [10:0] rd_mux_addr;
+    assign rd_mux_addr = decoded_addr;
+
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-
-    // Assign readback values to a flattened array
-    logic [28-1:0][31:0] readback_array;
-    for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.AES_NAME[i0] && !decoded_req_is_wr) ? hwif_in.AES_NAME[i0].NAME.next : '0;
-    end
-    for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 2][31:0] = (decoded_reg_strb.AES_VERSION[i0] && !decoded_req_is_wr) ? hwif_in.AES_VERSION[i0].VERSION.next : '0;
-    end
-    assign readback_array[4][0:0] = (decoded_reg_strb.CTRL0 && !decoded_req_is_wr) ? field_storage.CTRL0.ENDIAN_SWAP.value : '0;
-    assign readback_array[4][31:1] = '0;
-    assign readback_array[5][0:0] = (decoded_reg_strb.AES_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_RD_KEY_CTRL.read_en.value : '0;
-    assign readback_array[5][5:1] = (decoded_reg_strb.AES_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_RD_KEY_CTRL.read_entry.value : '0;
-    assign readback_array[5][6:6] = (decoded_reg_strb.AES_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_RD_KEY_CTRL.pcr_hash_extend.value : '0;
-    assign readback_array[5][31:7] = (decoded_reg_strb.AES_KV_RD_KEY_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_RD_KEY_CTRL.rsvd.value : '0;
-    assign readback_array[6][0:0] = (decoded_reg_strb.AES_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? hwif_in.AES_KV_RD_KEY_STATUS.READY.next : '0;
-    assign readback_array[6][1:1] = (decoded_reg_strb.AES_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? field_storage.AES_KV_RD_KEY_STATUS.VALID.value : '0;
-    assign readback_array[6][9:2] = (decoded_reg_strb.AES_KV_RD_KEY_STATUS && !decoded_req_is_wr) ? hwif_in.AES_KV_RD_KEY_STATUS.ERROR.next : '0;
-    assign readback_array[6][31:10] = '0;
-    assign readback_array[7][0:0] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.write_en.value : '0;
-    assign readback_array[7][5:1] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.write_entry.value : '0;
-    assign readback_array[7][6:6] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value : '0;
-    assign readback_array[7][7:7] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value : '0;
-    assign readback_array[7][8:8] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value : '0;
-    assign readback_array[7][9:9] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value : '0;
-    assign readback_array[7][10:10] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
-    assign readback_array[7][11:11] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value : '0;
-    assign readback_array[7][12:12] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value : '0;
-    assign readback_array[7][13:13] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value : '0;
-    assign readback_array[7][14:14] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value : '0;
-    assign readback_array[7][31:15] = (decoded_reg_strb.AES_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.AES_KV_WR_CTRL.rsvd.value : '0;
-    assign readback_array[8][0:0] = (decoded_reg_strb.AES_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.AES_KV_WR_STATUS.READY.next : '0;
-    assign readback_array[8][1:1] = (decoded_reg_strb.AES_KV_WR_STATUS && !decoded_req_is_wr) ? field_storage.AES_KV_WR_STATUS.VALID.value : '0;
-    assign readback_array[8][9:2] = (decoded_reg_strb.AES_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.AES_KV_WR_STATUS.ERROR.next : '0;
-    assign readback_array[8][31:10] = '0;
-    assign readback_array[9][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[9][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[9][31:2] = '0;
-    assign readback_array[10][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
-    assign readback_array[10][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
-    assign readback_array[10][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
-    assign readback_array[10][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
-    assign readback_array[10][31:4] = '0;
-    assign readback_array[11][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
-    assign readback_array[11][31:1] = '0;
-    assign readback_array[12][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
-    assign readback_array[12][31:1] = '0;
-    assign readback_array[13][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
-    assign readback_array[13][31:1] = '0;
-    assign readback_array[14][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
-    assign readback_array[14][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
-    assign readback_array[14][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
-    assign readback_array[14][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
-    assign readback_array[14][31:4] = '0;
-    assign readback_array[15][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
-    assign readback_array[15][31:1] = '0;
-    assign readback_array[16][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
-    assign readback_array[16][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
-    assign readback_array[16][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
-    assign readback_array[16][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
-    assign readback_array[16][31:4] = '0;
-    assign readback_array[17][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
-    assign readback_array[17][31:1] = '0;
-    assign readback_array[18][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
-    assign readback_array[19][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
-    assign readback_array[20][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
-    assign readback_array[21][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
-    assign readback_array[22][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
-    assign readback_array[23][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[23][31:1] = '0;
-    assign readback_array[24][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[24][31:1] = '0;
-    assign readback_array[25][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[25][31:1] = '0;
-    assign readback_array[26][0:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[26][31:1] = '0;
-    assign readback_array[27][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[27][31:1] = '0;
-
-    // Reduce the array
     always_comb begin
         automatic logic [31:0] readback_data_var;
+        readback_data_var = '0;
+        for(int i0=0; i0<2; i0++) begin
+            if(rd_mux_addr == 11'h0 + (11)'(i0) * 11'h4) begin
+                readback_data_var[31:0] = hwif_in.AES_NAME[i0].NAME.next;
+            end
+        end
+        for(int i0=0; i0<2; i0++) begin
+            if(rd_mux_addr == 11'h8 + (11)'(i0) * 11'h4) begin
+                readback_data_var[31:0] = hwif_in.AES_VERSION[i0].VERSION.next;
+            end
+        end
+        if(rd_mux_addr == 11'h134) begin
+            readback_data_var[0] = field_storage.CTRL0.ENDIAN_SWAP.value;
+        end
+        if(rd_mux_addr == 11'h200) begin
+            readback_data_var[0] = field_storage.AES_KV_RD_KEY_CTRL.read_en.value;
+            readback_data_var[5:1] = field_storage.AES_KV_RD_KEY_CTRL.read_entry.value;
+            readback_data_var[6] = field_storage.AES_KV_RD_KEY_CTRL.pcr_hash_extend.value;
+            readback_data_var[31:7] = field_storage.AES_KV_RD_KEY_CTRL.rsvd.value;
+        end
+        if(rd_mux_addr == 11'h204) begin
+            readback_data_var[0] = hwif_in.AES_KV_RD_KEY_STATUS.READY.next;
+            readback_data_var[1] = field_storage.AES_KV_RD_KEY_STATUS.VALID.value;
+            readback_data_var[9:2] = hwif_in.AES_KV_RD_KEY_STATUS.ERROR.next;
+        end
+        if(rd_mux_addr == 11'h208) begin
+            readback_data_var[0] = field_storage.AES_KV_WR_CTRL.write_en.value;
+            readback_data_var[5:1] = field_storage.AES_KV_WR_CTRL.write_entry.value;
+            readback_data_var[6] = field_storage.AES_KV_WR_CTRL.hmac_key_dest_valid.value;
+            readback_data_var[7] = field_storage.AES_KV_WR_CTRL.hmac_block_dest_valid.value;
+            readback_data_var[8] = field_storage.AES_KV_WR_CTRL.mldsa_seed_dest_valid.value;
+            readback_data_var[9] = field_storage.AES_KV_WR_CTRL.ecc_pkey_dest_valid.value;
+            readback_data_var[10] = field_storage.AES_KV_WR_CTRL.ecc_seed_dest_valid.value;
+            readback_data_var[11] = field_storage.AES_KV_WR_CTRL.aes_key_dest_valid.value;
+            readback_data_var[12] = field_storage.AES_KV_WR_CTRL.mlkem_seed_dest_valid.value;
+            readback_data_var[13] = field_storage.AES_KV_WR_CTRL.mlkem_msg_dest_valid.value;
+            readback_data_var[14] = field_storage.AES_KV_WR_CTRL.dma_data_dest_valid.value;
+            readback_data_var[31:15] = field_storage.AES_KV_WR_CTRL.rsvd.value;
+        end
+        if(rd_mux_addr == 11'h20c) begin
+            readback_data_var[0] = hwif_in.AES_KV_WR_STATUS.READY.next;
+            readback_data_var[1] = field_storage.AES_KV_WR_STATUS.VALID.value;
+            readback_data_var[9:2] = hwif_in.AES_KV_WR_STATUS.ERROR.next;
+        end
+        if(rd_mux_addr == 11'h400) begin
+            readback_data_var[0] = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+            readback_data_var[1] = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        end
+        if(rd_mux_addr == 11'h404) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_en_r.error0_en.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_intr_en_r.error1_en.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_intr_en_r.error2_en.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_intr_en_r.error3_en.value;
+        end
+        if(rd_mux_addr == 11'h408) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
+        end
+        if(rd_mux_addr == 11'h40c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 11'h410) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 11'h414) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
+        end
+        if(rd_mux_addr == 11'h418) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
+        end
+        if(rd_mux_addr == 11'h41c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
+        end
+        if(rd_mux_addr == 11'h420) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        end
+        if(rd_mux_addr == 11'h500) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error0_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h504) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error1_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h508) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error2_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h50c) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error3_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h580) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h600) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 11'h604) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 11'h608) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 11'h60c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 11'h610) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value;
+        end
+        readback_data = readback_data_var;
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
-        readback_data_var = '0;
-        for(int i=0; i<28; i++) readback_data_var |= readback_array[i];
-        readback_data = readback_data_var;
     end
 
     assign cpuif_rd_ack = readback_done;

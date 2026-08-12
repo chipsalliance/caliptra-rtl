@@ -101,35 +101,41 @@ module entropy_combiner_reg (
         } intr_block_rf;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
+    logic decoded_err;
+    logic [10:0] decoded_addr;
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [31:0] decoded_wr_data;
     logic [31:0] decoded_wr_biten;
 
     always_comb begin
+        automatic logic is_valid_addr;
+        automatic logic is_valid_rw;
+        is_valid_addr = '1; // No valid address check
+        is_valid_rw = '1; // No valid RW check
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.COMBINER_NAME[i0] = cpuif_req_masked & (cpuif_addr == 11'h0 + i0*11'h4);
+            decoded_reg_strb.COMBINER_NAME[i0] = cpuif_req_masked & (cpuif_addr == 11'h0 + (11)'(i0) * 11'h4) & !cpuif_req_is_wr;
         end
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.COMBINER_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 11'h8 + i0*11'h4);
+            decoded_reg_strb.COMBINER_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 11'h8 + (11)'(i0) * 11'h4) & !cpuif_req_is_wr;
         end
-        decoded_reg_strb.KAT_CTRL = cpuif_req_masked & (cpuif_addr == 11'h10);
+        decoded_reg_strb.KAT_CTRL = cpuif_req_masked & (cpuif_addr == 11'h10) & cpuif_req_is_wr;
         decoded_reg_strb.KAT_MSG_LEN = cpuif_req_masked & (cpuif_addr == 11'h14);
-        decoded_reg_strb.KAT_STATUS = cpuif_req_masked & (cpuif_addr == 11'h18);
+        decoded_reg_strb.KAT_STATUS = cpuif_req_masked & (cpuif_addr == 11'h18) & !cpuif_req_is_wr;
         for(int i0=0; i0<24; i0++) begin
-            decoded_reg_strb.KAT_MSG[i0] = cpuif_req_masked & (cpuif_addr == 11'h1c + i0*11'h4);
+            decoded_reg_strb.KAT_MSG[i0] = cpuif_req_masked & (cpuif_addr == 11'h1c + (11)'(i0) * 11'h4) & cpuif_req_is_wr;
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.KAT_DIGEST[i0] = cpuif_req_masked & (cpuif_addr == 11'h7c + i0*11'h4);
+            decoded_reg_strb.KAT_DIGEST[i0] = cpuif_req_masked & (cpuif_addr == 11'h7c + (11)'(i0) * 11'h4) & !cpuif_req_is_wr;
         end
         decoded_reg_strb.COMBINER_CTRL = cpuif_req_masked & (cpuif_addr == 11'hac);
         decoded_reg_strb.AHB_LOCK = cpuif_req_masked & (cpuif_addr == 11'hb0);
-        decoded_reg_strb.COMBINER_STATUS = cpuif_req_masked & (cpuif_addr == 11'hb4);
+        decoded_reg_strb.COMBINER_STATUS = cpuif_req_masked & (cpuif_addr == 11'hb4) & !cpuif_req_is_wr;
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h400);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h404);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 11'h408);
-        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 11'h40c);
-        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 11'h410);
+        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 11'h40c) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 11'h410) & !cpuif_req_is_wr;
         decoded_reg_strb.intr_block_rf.error_internal_intr_r = cpuif_req_masked & (cpuif_addr == 11'h414);
         decoded_reg_strb.intr_block_rf.notif_internal_intr_r = cpuif_req_masked & (cpuif_addr == 11'h418);
         decoded_reg_strb.intr_block_rf.error_intr_trig_r = cpuif_req_masked & (cpuif_addr == 11'h41c);
@@ -140,15 +146,17 @@ module entropy_combiner_reg (
         decoded_reg_strb.intr_block_rf.storage_rst_error_intr_count_r = cpuif_req_masked & (cpuif_addr == 11'h50c);
         decoded_reg_strb.intr_block_rf.combiner_fsm_error_intr_count_r = cpuif_req_masked & (cpuif_addr == 11'h510);
         decoded_reg_strb.intr_block_rf.notif_kat_done_intr_count_r = cpuif_req_masked & (cpuif_addr == 11'h580);
-        decoded_reg_strb.intr_block_rf.sha3_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h600);
-        decoded_reg_strb.intr_block_rf.sparse_fsm_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h604);
-        decoded_reg_strb.intr_block_rf.count_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h608);
-        decoded_reg_strb.intr_block_rf.storage_rst_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h60c);
-        decoded_reg_strb.intr_block_rf.combiner_fsm_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h610);
-        decoded_reg_strb.intr_block_rf.notif_kat_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h614);
+        decoded_reg_strb.intr_block_rf.sha3_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h600) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.sparse_fsm_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h604) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.count_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h608) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.storage_rst_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h60c) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.combiner_fsm_error_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h610) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_kat_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 11'h614) & !cpuif_req_is_wr;
+        decoded_err = '0;
     end
 
     // Pass down signals to next stage
+    assign decoded_addr = cpuif_addr;
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
@@ -607,8 +615,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.KAT_CTRL.start.value <= 1'h0;
-        end else if(field_combo.KAT_CTRL.start.load_next) begin
-            field_storage.KAT_CTRL.start.value <= field_combo.KAT_CTRL.start.next;
+        end else begin
+            if(field_combo.KAT_CTRL.start.load_next) begin
+                field_storage.KAT_CTRL.start.value <= field_combo.KAT_CTRL.start.next;
+            end
         end
     end
     assign hwif_out.KAT_CTRL.start.value = field_storage.KAT_CTRL.start.value;
@@ -628,8 +638,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.KAT_MSG_LEN.msg_len.value <= 32'h0;
-        end else if(field_combo.KAT_MSG_LEN.msg_len.load_next) begin
-            field_storage.KAT_MSG_LEN.msg_len.value <= field_combo.KAT_MSG_LEN.msg_len.next;
+        end else begin
+            if(field_combo.KAT_MSG_LEN.msg_len.load_next) begin
+                field_storage.KAT_MSG_LEN.msg_len.value <= field_combo.KAT_MSG_LEN.msg_len.next;
+            end
         end
     end
     assign hwif_out.KAT_MSG_LEN.msg_len.value = field_storage.KAT_MSG_LEN.msg_len.value;
@@ -650,8 +662,10 @@ module entropy_combiner_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.KAT_MSG[i0].data.value <= 32'h0;
-            end else if(field_combo.KAT_MSG[i0].data.load_next) begin
-                field_storage.KAT_MSG[i0].data.value <= field_combo.KAT_MSG[i0].data.next;
+            end else begin
+                if(field_combo.KAT_MSG[i0].data.load_next) begin
+                    field_storage.KAT_MSG[i0].data.value <= field_combo.KAT_MSG[i0].data.next;
+                end
             end
         end
         assign hwif_out.KAT_MSG[i0].data.value = field_storage.KAT_MSG[i0].data.value;
@@ -672,8 +686,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.COMBINER_CTRL.es_fips_policy.value <= 2'h0;
-        end else if(field_combo.COMBINER_CTRL.es_fips_policy.load_next) begin
-            field_storage.COMBINER_CTRL.es_fips_policy.value <= field_combo.COMBINER_CTRL.es_fips_policy.next;
+        end else begin
+            if(field_combo.COMBINER_CTRL.es_fips_policy.load_next) begin
+                field_storage.COMBINER_CTRL.es_fips_policy.value <= field_combo.COMBINER_CTRL.es_fips_policy.next;
+            end
         end
     end
     assign hwif_out.COMBINER_CTRL.es_fips_policy.value = field_storage.COMBINER_CTRL.es_fips_policy.value;
@@ -693,8 +709,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.COMBINER_CTRL.es_fips_cfg.value <= 1'h0;
-        end else if(field_combo.COMBINER_CTRL.es_fips_cfg.load_next) begin
-            field_storage.COMBINER_CTRL.es_fips_cfg.value <= field_combo.COMBINER_CTRL.es_fips_cfg.next;
+        end else begin
+            if(field_combo.COMBINER_CTRL.es_fips_cfg.load_next) begin
+                field_storage.COMBINER_CTRL.es_fips_cfg.value <= field_combo.COMBINER_CTRL.es_fips_cfg.next;
+            end
         end
     end
     assign hwif_out.COMBINER_CTRL.es_fips_cfg.value = field_storage.COMBINER_CTRL.es_fips_cfg.value;
@@ -714,8 +732,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.AHB_LOCK.lock.value <= 4'h9;
-        end else if(field_combo.AHB_LOCK.lock.load_next) begin
-            field_storage.AHB_LOCK.lock.value <= field_combo.AHB_LOCK.lock.next;
+        end else begin
+            if(field_combo.AHB_LOCK.lock.load_next) begin
+                field_storage.AHB_LOCK.lock.value <= field_combo.AHB_LOCK.lock.next;
+            end
         end
     end
     assign hwif_out.AHB_LOCK.lock.value = field_storage.AHB_LOCK.lock.value;
@@ -735,8 +755,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.COMBINER_STATUS.combine_en.value <= 1'h0;
-        end else if(field_combo.COMBINER_STATUS.combine_en.load_next) begin
-            field_storage.COMBINER_STATUS.combine_en.value <= field_combo.COMBINER_STATUS.combine_en.next;
+        end else begin
+            if(field_combo.COMBINER_STATUS.combine_en.load_next) begin
+                field_storage.COMBINER_STATUS.combine_en.value <= field_combo.COMBINER_STATUS.combine_en.next;
+            end
         end
     end
     assign hwif_out.COMBINER_STATUS.combine_en.value = field_storage.COMBINER_STATUS.combine_en.value;
@@ -756,8 +778,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.global_intr_en_r.notif_en
@@ -776,8 +800,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.sha3_error_en
@@ -796,8 +822,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.sha3_error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.sha3_error_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.sha3_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.sha3_error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.sha3_error_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.sha3_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.sha3_error_en.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.sparse_fsm_error_en
@@ -816,8 +844,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.count_error_en
@@ -836,8 +866,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.count_error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.count_error_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.count_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.count_error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.count_error_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.count_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.count_error_en.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.storage_rst_error_en
@@ -856,8 +888,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.storage_rst_error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.storage_rst_error_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.storage_rst_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.storage_rst_error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.storage_rst_error_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.storage_rst_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.storage_rst_error_en.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_en_r.combiner_fsm_error_en
@@ -876,8 +910,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.value <= field_combo.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.notif_intr_en_r.notif_kat_done_en
@@ -896,8 +932,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_en_r.notif_kat_done_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_en_r.notif_kat_done_en.load_next) begin
-            field_storage.intr_block_rf.notif_intr_en_r.notif_kat_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_kat_done_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_en_r.notif_kat_done_en.load_next) begin
+                field_storage.intr_block_rf.notif_intr_en_r.notif_kat_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_kat_done_en.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_global_intr_r.agg_sts
@@ -916,8 +954,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_global_intr_r.intr =
@@ -938,8 +978,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_global_intr_r.intr =
@@ -950,8 +992,8 @@ module entropy_combiner_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.sha3_error_sts.hwset) begin // HW Set
             next_c = '1;
@@ -966,8 +1008,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.sha3_error_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.sha3_error_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.sha3_error_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.sha3_error_sts.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts
@@ -976,8 +1020,8 @@ module entropy_combiner_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.hwset) begin // HW Set
             next_c = '1;
@@ -992,8 +1036,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_internal_intr_r.count_error_sts
@@ -1002,8 +1048,8 @@ module entropy_combiner_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.count_error_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1018,8 +1064,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.count_error_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.count_error_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.count_error_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.count_error_sts.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_internal_intr_r.storage_rst_error_sts
@@ -1028,8 +1076,8 @@ module entropy_combiner_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1044,8 +1092,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts
@@ -1054,8 +1104,8 @@ module entropy_combiner_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value | field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1070,8 +1120,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_internal_intr_r.intr =
@@ -1086,8 +1138,8 @@ module entropy_combiner_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value;
+        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1102,8 +1154,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.load_next) begin
-            field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.load_next) begin
+                field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_internal_intr_r.intr =
@@ -1127,8 +1181,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.sha3_error_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.sha3_error_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.sha3_error_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.sha3_error_trig.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig
@@ -1150,8 +1206,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_trig_r.count_error_trig
@@ -1173,8 +1231,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.count_error_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.count_error_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.count_error_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.count_error_trig.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_trig_r.storage_rst_error_trig
@@ -1196,8 +1256,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig
@@ -1219,8 +1281,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig
@@ -1242,8 +1306,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.load_next) begin
-            field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.load_next) begin
+                field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.sha3_error_intr_count_r.cnt
@@ -1266,18 +1332,16 @@ module entropy_combiner_reg (
         end
         field_combo.intr_block_rf.sha3_error_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.sha3_error_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.sha3_error_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.sha3_error_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.sha3_error_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.sha3_error_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.sha3_error_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.sha3_error_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.sparse_fsm_error_intr_count_r.cnt
@@ -1300,18 +1364,16 @@ module entropy_combiner_reg (
         end
         field_combo.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.count_error_intr_count_r.cnt
@@ -1334,18 +1396,16 @@ module entropy_combiner_reg (
         end
         field_combo.intr_block_rf.count_error_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.count_error_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.count_error_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.count_error_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.count_error_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.count_error_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.count_error_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.count_error_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.count_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.count_error_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.count_error_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.count_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.count_error_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.storage_rst_error_intr_count_r.cnt
@@ -1368,18 +1428,16 @@ module entropy_combiner_reg (
         end
         field_combo.intr_block_rf.storage_rst_error_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.storage_rst_error_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.storage_rst_error_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.storage_rst_error_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.storage_rst_error_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.storage_rst_error_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.storage_rst_error_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.storage_rst_error_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.combiner_fsm_error_intr_count_r.cnt
@@ -1402,18 +1460,16 @@ module entropy_combiner_reg (
         end
         field_combo.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value <= field_combo.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.notif_kat_done_intr_count_r.cnt
@@ -1436,18 +1492,16 @@ module entropy_combiner_reg (
         end
         field_combo.intr_block_rf.notif_kat_done_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.notif_kat_done_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.notif_kat_done_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.notif_kat_done_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.notif_kat_done_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_kat_done_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_kat_done_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_kat_done_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.sha3_error_intr_count_incr_r.pulse
@@ -1477,8 +1531,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.sha3_error_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.sha3_error_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.sha3_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.sha3_error_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.sha3_error_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.sha3_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.sha3_error_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse
@@ -1508,8 +1564,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.count_error_intr_count_incr_r.pulse
@@ -1539,8 +1597,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.count_error_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.count_error_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.count_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.count_error_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.count_error_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.count_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.count_error_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse
@@ -1570,8 +1630,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse
@@ -1601,8 +1663,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: entropy_combiner_reg.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse
@@ -1632,8 +1696,10 @@ module entropy_combiner_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.next;
+            end
         end
     end
 
@@ -1648,91 +1714,126 @@ module entropy_combiner_reg (
     // Readback
     //--------------------------------------------------------------------------
 
+    logic [10:0] rd_mux_addr;
+    assign rd_mux_addr = decoded_addr;
+
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-
-    // Assign readback values to a flattened array
-    logic [42-1:0][31:0] readback_array;
-    for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.COMBINER_NAME[i0] && !decoded_req_is_wr) ? hwif_in.COMBINER_NAME[i0].NAME.next : '0;
-    end
-    for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 2][31:0] = (decoded_reg_strb.COMBINER_VERSION[i0] && !decoded_req_is_wr) ? hwif_in.COMBINER_VERSION[i0].VERSION.next : '0;
-    end
-    assign readback_array[4][31:0] = (decoded_reg_strb.KAT_MSG_LEN && !decoded_req_is_wr) ? field_storage.KAT_MSG_LEN.msg_len.value : '0;
-    assign readback_array[5][0:0] = (decoded_reg_strb.KAT_STATUS && !decoded_req_is_wr) ? hwif_in.KAT_STATUS.busy.next : '0;
-    assign readback_array[5][1:1] = (decoded_reg_strb.KAT_STATUS && !decoded_req_is_wr) ? hwif_in.KAT_STATUS.valid.next : '0;
-    assign readback_array[5][31:2] = '0;
-    for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 6][31:0] = (decoded_reg_strb.KAT_DIGEST[i0] && !decoded_req_is_wr) ? hwif_in.KAT_DIGEST[i0].data.next : '0;
-    end
-    assign readback_array[18][1:0] = (decoded_reg_strb.COMBINER_CTRL && !decoded_req_is_wr) ? field_storage.COMBINER_CTRL.es_fips_policy.value : '0;
-    assign readback_array[18][7:2] = '0;
-    assign readback_array[18][8:8] = (decoded_reg_strb.COMBINER_CTRL && !decoded_req_is_wr) ? field_storage.COMBINER_CTRL.es_fips_cfg.value : '0;
-    assign readback_array[18][31:9] = '0;
-    assign readback_array[19][3:0] = (decoded_reg_strb.AHB_LOCK && !decoded_req_is_wr) ? field_storage.AHB_LOCK.lock.value : '0;
-    assign readback_array[19][31:4] = '0;
-    assign readback_array[20][0:0] = (decoded_reg_strb.COMBINER_STATUS && !decoded_req_is_wr) ? field_storage.COMBINER_STATUS.combine_en.value : '0;
-    assign readback_array[20][31:1] = '0;
-    assign readback_array[21][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[21][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[21][31:2] = '0;
-    assign readback_array[22][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.sha3_error_en.value : '0;
-    assign readback_array[22][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.value : '0;
-    assign readback_array[22][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.count_error_en.value : '0;
-    assign readback_array[22][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.storage_rst_error_en.value : '0;
-    assign readback_array[22][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.value : '0;
-    assign readback_array[22][31:5] = '0;
-    assign readback_array[23][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_kat_done_en.value : '0;
-    assign readback_array[23][31:1] = '0;
-    assign readback_array[24][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
-    assign readback_array[24][31:1] = '0;
-    assign readback_array[25][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
-    assign readback_array[25][31:1] = '0;
-    assign readback_array[26][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value : '0;
-    assign readback_array[26][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value : '0;
-    assign readback_array[26][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value : '0;
-    assign readback_array[26][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value : '0;
-    assign readback_array[26][4:4] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value : '0;
-    assign readback_array[26][31:5] = '0;
-    assign readback_array[27][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value : '0;
-    assign readback_array[27][31:1] = '0;
-    assign readback_array[28][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value : '0;
-    assign readback_array[28][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value : '0;
-    assign readback_array[28][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value : '0;
-    assign readback_array[28][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value : '0;
-    assign readback_array[28][4:4] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value : '0;
-    assign readback_array[28][31:5] = '0;
-    assign readback_array[29][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value : '0;
-    assign readback_array[29][31:1] = '0;
-    assign readback_array[30][31:0] = (decoded_reg_strb.intr_block_rf.sha3_error_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value : '0;
-    assign readback_array[31][31:0] = (decoded_reg_strb.intr_block_rf.sparse_fsm_error_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value : '0;
-    assign readback_array[32][31:0] = (decoded_reg_strb.intr_block_rf.count_error_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.count_error_intr_count_r.cnt.value : '0;
-    assign readback_array[33][31:0] = (decoded_reg_strb.intr_block_rf.storage_rst_error_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value : '0;
-    assign readback_array[34][31:0] = (decoded_reg_strb.intr_block_rf.combiner_fsm_error_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value : '0;
-    assign readback_array[35][31:0] = (decoded_reg_strb.intr_block_rf.notif_kat_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value : '0;
-    assign readback_array[36][0:0] = (decoded_reg_strb.intr_block_rf.sha3_error_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.sha3_error_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[36][31:1] = '0;
-    assign readback_array[37][0:0] = (decoded_reg_strb.intr_block_rf.sparse_fsm_error_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[37][31:1] = '0;
-    assign readback_array[38][0:0] = (decoded_reg_strb.intr_block_rf.count_error_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.count_error_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[38][31:1] = '0;
-    assign readback_array[39][0:0] = (decoded_reg_strb.intr_block_rf.storage_rst_error_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[39][31:1] = '0;
-    assign readback_array[40][0:0] = (decoded_reg_strb.intr_block_rf.combiner_fsm_error_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[40][31:1] = '0;
-    assign readback_array[41][0:0] = (decoded_reg_strb.intr_block_rf.notif_kat_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[41][31:1] = '0;
-
-    // Reduce the array
     always_comb begin
         automatic logic [31:0] readback_data_var;
+        readback_data_var = '0;
+        for(int i0=0; i0<2; i0++) begin
+            if(rd_mux_addr == 11'h0 + (11)'(i0) * 11'h4) begin
+                readback_data_var[31:0] = hwif_in.COMBINER_NAME[i0].NAME.next;
+            end
+        end
+        for(int i0=0; i0<2; i0++) begin
+            if(rd_mux_addr == 11'h8 + (11)'(i0) * 11'h4) begin
+                readback_data_var[31:0] = hwif_in.COMBINER_VERSION[i0].VERSION.next;
+            end
+        end
+        if(rd_mux_addr == 11'h14) begin
+            readback_data_var[31:0] = field_storage.KAT_MSG_LEN.msg_len.value;
+        end
+        if(rd_mux_addr == 11'h18) begin
+            readback_data_var[0] = hwif_in.KAT_STATUS.busy.next;
+            readback_data_var[1] = hwif_in.KAT_STATUS.valid.next;
+        end
+        for(int i0=0; i0<12; i0++) begin
+            if(rd_mux_addr == 11'h7c + (11)'(i0) * 11'h4) begin
+                readback_data_var[31:0] = hwif_in.KAT_DIGEST[i0].data.next;
+            end
+        end
+        if(rd_mux_addr == 11'hac) begin
+            readback_data_var[1:0] = field_storage.COMBINER_CTRL.es_fips_policy.value;
+            readback_data_var[8] = field_storage.COMBINER_CTRL.es_fips_cfg.value;
+        end
+        if(rd_mux_addr == 11'hb0) begin
+            readback_data_var[3:0] = field_storage.AHB_LOCK.lock.value;
+        end
+        if(rd_mux_addr == 11'hb4) begin
+            readback_data_var[0] = field_storage.COMBINER_STATUS.combine_en.value;
+        end
+        if(rd_mux_addr == 11'h400) begin
+            readback_data_var[0] = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+            readback_data_var[1] = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        end
+        if(rd_mux_addr == 11'h404) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_en_r.sha3_error_en.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_intr_en_r.sparse_fsm_error_en.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_intr_en_r.count_error_en.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_intr_en_r.storage_rst_error_en.value;
+            readback_data_var[4] = field_storage.intr_block_rf.error_intr_en_r.combiner_fsm_error_en.value;
+        end
+        if(rd_mux_addr == 11'h408) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_en_r.notif_kat_done_en.value;
+        end
+        if(rd_mux_addr == 11'h40c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 11'h410) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 11'h414) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_internal_intr_r.sha3_error_sts.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_internal_intr_r.sparse_fsm_error_sts.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_internal_intr_r.count_error_sts.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_internal_intr_r.storage_rst_error_sts.value;
+            readback_data_var[4] = field_storage.intr_block_rf.error_internal_intr_r.combiner_fsm_error_sts.value;
+        end
+        if(rd_mux_addr == 11'h418) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_internal_intr_r.notif_kat_done_sts.value;
+        end
+        if(rd_mux_addr == 11'h41c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_trig_r.sha3_error_trig.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_intr_trig_r.sparse_fsm_error_trig.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_intr_trig_r.count_error_trig.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_intr_trig_r.storage_rst_error_trig.value;
+            readback_data_var[4] = field_storage.intr_block_rf.error_intr_trig_r.combiner_fsm_error_trig.value;
+        end
+        if(rd_mux_addr == 11'h420) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_trig_r.notif_kat_done_trig.value;
+        end
+        if(rd_mux_addr == 11'h500) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.sha3_error_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h504) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.sparse_fsm_error_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h508) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.count_error_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h50c) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.storage_rst_error_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h510) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.combiner_fsm_error_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h580) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.notif_kat_done_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 11'h600) begin
+            readback_data_var[0] = field_storage.intr_block_rf.sha3_error_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 11'h604) begin
+            readback_data_var[0] = field_storage.intr_block_rf.sparse_fsm_error_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 11'h608) begin
+            readback_data_var[0] = field_storage.intr_block_rf.count_error_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 11'h60c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.storage_rst_error_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 11'h610) begin
+            readback_data_var[0] = field_storage.intr_block_rf.combiner_fsm_error_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 11'h614) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_kat_done_intr_count_incr_r.pulse.value;
+        end
+        readback_data = readback_data_var;
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
-        readback_data_var = '0;
-        for(int i=0; i<42; i++) readback_data_var |= readback_array[i];
-        readback_data = readback_data_var;
     end
 
     assign cpuif_rd_ack = readback_done;

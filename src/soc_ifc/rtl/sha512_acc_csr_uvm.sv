@@ -4,7 +4,7 @@ package sha512_acc_csr_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "sha512_acc_csr_covergroups.svh"
-    // Reg - sha512_acc_csr::LOCK
+    // reg - sha512_acc_csr::LOCK
     class sha512_acc_csr__LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__LOCK
 
-    // Reg - sha512_acc_csr::USER
+    // reg - sha512_acc_csr::USER
     class sha512_acc_csr__USER extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -64,7 +64,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__USER
 
-    // Reg - sha512_acc_csr::MODE
+    // reg - sha512_acc_csr::MODE
     class sha512_acc_csr__MODE extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -99,7 +99,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__MODE
 
-    // Reg - sha512_acc_csr::START_ADDRESS
+    // reg - sha512_acc_csr::START_ADDRESS
     class sha512_acc_csr__START_ADDRESS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -129,7 +129,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__START_ADDRESS
 
-    // Reg - sha512_acc_csr::DLEN
+    // reg - sha512_acc_csr::DLEN
     class sha512_acc_csr__DLEN extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -159,7 +159,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__DLEN
 
-    // Reg - sha512_acc_csr::DATAIN
+    // reg - sha512_acc_csr::DATAIN
     class sha512_acc_csr__DATAIN extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -189,7 +189,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__DATAIN
 
-    // Reg - sha512_acc_csr::EXECUTE
+    // reg - sha512_acc_csr::EXECUTE
     class sha512_acc_csr__EXECUTE extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -219,7 +219,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__EXECUTE
 
-    // Reg - sha512_acc_csr::STATUS
+    // reg - sha512_acc_csr::STATUS
     class sha512_acc_csr__STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -254,7 +254,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__STATUS
 
-    // Reg - sha512_acc_csr::DIGEST
+    // reg - sha512_acc_csr::DIGEST
     class sha512_acc_csr__DIGEST extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -284,7 +284,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__DIGEST
 
-    // Reg - sha512_acc_csr::CONTROL
+    // reg - sha512_acc_csr::CONTROL
     class sha512_acc_csr__CONTROL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -305,7 +305,7 @@ package sha512_acc_csr_uvm;
 
         virtual function void build();
             this.ZEROIZE = new("ZEROIZE");
-            this.ZEROIZE.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.ZEROIZE.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
             end
@@ -314,7 +314,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__CONTROL
 
-    // Reg - sha512_acc_csr::global_intr_en_t
+    // reg - sha512_acc_csr::global_intr_en_t
     class sha512_acc_csr__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -349,7 +349,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__global_intr_en_t
 
-    // Reg - sha512_acc_csr::error_intr_en_t
+    // reg - sha512_acc_csr::error_intr_en_t
     class sha512_acc_csr__error_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -394,7 +394,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__error_intr_en_t
 
-    // Reg - sha512_acc_csr::notif_intr_en_t
+    // reg - sha512_acc_csr::notif_intr_en_t
     class sha512_acc_csr__notif_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -424,7 +424,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__notif_intr_en_t
 
-    // Reg - sha512_acc_csr::global_intr_t_agg_sts_dd3dcf0a
+    // reg - sha512_acc_csr::global_intr_t_agg_sts_dd3dcf0a
     class sha512_acc_csr__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -454,7 +454,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__global_intr_t_agg_sts_dd3dcf0a
 
-    // Reg - sha512_acc_csr::global_intr_t_agg_sts_e6399b4a
+    // reg - sha512_acc_csr::global_intr_t_agg_sts_e6399b4a
     class sha512_acc_csr__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -484,7 +484,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - sha512_acc_csr::error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
+    // reg - sha512_acc_csr::error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
     class sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -529,7 +529,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
 
-    // Reg - sha512_acc_csr::notif_intr_t_notif_cmd_done_sts_1c68637e
+    // reg - sha512_acc_csr::notif_intr_t_notif_cmd_done_sts_1c68637e
     class sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -559,7 +559,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__notif_intr_t_notif_cmd_done_sts_1c68637e
 
-    // Reg - sha512_acc_csr::error_intr_trig_t
+    // reg - sha512_acc_csr::error_intr_trig_t
     class sha512_acc_csr__error_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -586,13 +586,13 @@ package sha512_acc_csr_uvm;
 
         virtual function void build();
             this.error0_trig = new("error0_trig");
-            this.error0_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.error0_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.error1_trig = new("error1_trig");
-            this.error1_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.error1_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.error2_trig = new("error2_trig");
-            this.error2_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.error2_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.error3_trig = new("error3_trig");
-            this.error3_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.error3_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(error0_trig_bit_cg[bt]) error0_trig_bit_cg[bt] = new();
                 foreach(error1_trig_bit_cg[bt]) error1_trig_bit_cg[bt] = new();
@@ -604,7 +604,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__error_intr_trig_t
 
-    // Reg - sha512_acc_csr::notif_intr_trig_t
+    // reg - sha512_acc_csr::notif_intr_trig_t
     class sha512_acc_csr__notif_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -625,7 +625,7 @@ package sha512_acc_csr_uvm;
 
         virtual function void build();
             this.notif_cmd_done_trig = new("notif_cmd_done_trig");
-            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_cmd_done_trig_bit_cg[bt]) notif_cmd_done_trig_bit_cg[bt] = new();
             end
@@ -634,7 +634,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__notif_intr_trig_t
 
-    // Reg - sha512_acc_csr::intr_count_t_cnt_130ab269
+    // reg - sha512_acc_csr::intr_count_t_cnt_130ab269
     class sha512_acc_csr__intr_count_t_cnt_130ab269 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -664,7 +664,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_t_cnt_130ab269
 
-    // Reg - sha512_acc_csr::intr_count_t_cnt_324dfc53
+    // reg - sha512_acc_csr::intr_count_t_cnt_324dfc53
     class sha512_acc_csr__intr_count_t_cnt_324dfc53 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -694,7 +694,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_t_cnt_324dfc53
 
-    // Reg - sha512_acc_csr::intr_count_t_cnt_791a4799
+    // reg - sha512_acc_csr::intr_count_t_cnt_791a4799
     class sha512_acc_csr__intr_count_t_cnt_791a4799 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -724,7 +724,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_t_cnt_791a4799
 
-    // Reg - sha512_acc_csr::intr_count_t_cnt_e9de7334
+    // reg - sha512_acc_csr::intr_count_t_cnt_e9de7334
     class sha512_acc_csr__intr_count_t_cnt_e9de7334 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -754,7 +754,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_t_cnt_e9de7334
 
-    // Reg - sha512_acc_csr::intr_count_t_cnt_be67d6d5
+    // reg - sha512_acc_csr::intr_count_t_cnt_be67d6d5
     class sha512_acc_csr__intr_count_t_cnt_be67d6d5 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -784,7 +784,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_t_cnt_be67d6d5
 
-    // Reg - sha512_acc_csr::intr_count_incr_t_pulse_37026c97
+    // reg - sha512_acc_csr::intr_count_incr_t_pulse_37026c97
     class sha512_acc_csr__intr_count_incr_t_pulse_37026c97 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -814,7 +814,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_incr_t_pulse_37026c97
 
-    // Reg - sha512_acc_csr::intr_count_incr_t_pulse_d860d977
+    // reg - sha512_acc_csr::intr_count_incr_t_pulse_d860d977
     class sha512_acc_csr__intr_count_incr_t_pulse_d860d977 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -844,7 +844,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_incr_t_pulse_d860d977
 
-    // Reg - sha512_acc_csr::intr_count_incr_t_pulse_87b45fe7
+    // reg - sha512_acc_csr::intr_count_incr_t_pulse_87b45fe7
     class sha512_acc_csr__intr_count_incr_t_pulse_87b45fe7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -874,7 +874,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_incr_t_pulse_87b45fe7
 
-    // Reg - sha512_acc_csr::intr_count_incr_t_pulse_c1689ee6
+    // reg - sha512_acc_csr::intr_count_incr_t_pulse_c1689ee6
     class sha512_acc_csr__intr_count_incr_t_pulse_c1689ee6 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -904,7 +904,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_incr_t_pulse_c1689ee6
 
-    // Reg - sha512_acc_csr::intr_count_incr_t_pulse_6173128e
+    // reg - sha512_acc_csr::intr_count_incr_t_pulse_6173128e
     class sha512_acc_csr__intr_count_incr_t_pulse_6173128e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -934,7 +934,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_count_incr_t_pulse_6173128e
 
-    // Regfile - sha512_acc_csr::intr_block_t
+    // regfile - sha512_acc_csr::intr_block_t
     class sha512_acc_csr__intr_block_t extends uvm_reg_block;
         rand sha512_acc_csr__global_intr_en_t global_intr_en_r;
         rand sha512_acc_csr__error_intr_en_t error_intr_en_r;
@@ -1060,7 +1060,7 @@ package sha512_acc_csr_uvm;
         endfunction : build
     endclass : sha512_acc_csr__intr_block_t
 
-    // Addrmap - sha512_acc_csr
+    // addrmap - sha512_acc_csr
     class sha512_acc_csr extends uvm_reg_block;
         rand sha512_acc_csr__LOCK LOCK;
         rand sha512_acc_csr__USER USER;

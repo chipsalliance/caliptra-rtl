@@ -95,31 +95,37 @@ module sha256_reg (
         } intr_block_rf;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
+    logic decoded_err;
+    logic [11:0] decoded_addr;
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [31:0] decoded_wr_data;
     logic [31:0] decoded_wr_biten;
 
     always_comb begin
+        automatic logic is_valid_addr;
+        automatic logic is_valid_rw;
+        is_valid_addr = '1; // No valid address check
+        is_valid_rw = '1; // No valid RW check
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.SHA256_NAME[i0] = cpuif_req_masked & (cpuif_addr == 12'h0 + i0*12'h4);
+            decoded_reg_strb.SHA256_NAME[i0] = cpuif_req_masked & (cpuif_addr == 12'h0 + (12)'(i0) * 12'h4) & !cpuif_req_is_wr;
         end
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.SHA256_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 12'h8 + i0*12'h4);
+            decoded_reg_strb.SHA256_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 12'h8 + (12)'(i0) * 12'h4) & !cpuif_req_is_wr;
         end
-        decoded_reg_strb.SHA256_CTRL = cpuif_req_masked & (cpuif_addr == 12'h10);
-        decoded_reg_strb.SHA256_STATUS = cpuif_req_masked & (cpuif_addr == 12'h18);
+        decoded_reg_strb.SHA256_CTRL = cpuif_req_masked & (cpuif_addr == 12'h10) & cpuif_req_is_wr;
+        decoded_reg_strb.SHA256_STATUS = cpuif_req_masked & (cpuif_addr == 12'h18) & !cpuif_req_is_wr;
         for(int i0=0; i0<16; i0++) begin
-            decoded_reg_strb.SHA256_BLOCK[i0] = cpuif_req_masked & (cpuif_addr == 12'h80 + i0*12'h4);
+            decoded_reg_strb.SHA256_BLOCK[i0] = cpuif_req_masked & (cpuif_addr == 12'h80 + (12)'(i0) * 12'h4) & cpuif_req_is_wr;
         end
         for(int i0=0; i0<8; i0++) begin
-            decoded_reg_strb.SHA256_DIGEST[i0] = cpuif_req_masked & (cpuif_addr == 12'h100 + i0*12'h4);
+            decoded_reg_strb.SHA256_DIGEST[i0] = cpuif_req_masked & (cpuif_addr == 12'h100 + (12)'(i0) * 12'h4) & !cpuif_req_is_wr;
         end
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h800);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h804);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h808);
-        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h80c);
-        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h810);
+        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h80c) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h810) & !cpuif_req_is_wr;
         decoded_reg_strb.intr_block_rf.error_internal_intr_r = cpuif_req_masked & (cpuif_addr == 12'h814);
         decoded_reg_strb.intr_block_rf.notif_internal_intr_r = cpuif_req_masked & (cpuif_addr == 12'h818);
         decoded_reg_strb.intr_block_rf.error_intr_trig_r = cpuif_req_masked & (cpuif_addr == 12'h81c);
@@ -129,14 +135,16 @@ module sha256_reg (
         decoded_reg_strb.intr_block_rf.error2_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h908);
         decoded_reg_strb.intr_block_rf.error3_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h90c);
         decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h980);
-        decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha00);
-        decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha04);
-        decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha08);
-        decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha0c);
-        decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha10);
+        decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha00) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha04) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha08) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha0c) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha10) & !cpuif_req_is_wr;
+        decoded_err = '0;
     end
 
     // Pass down signals to next stage
+    assign decoded_addr = cpuif_addr;
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
@@ -550,8 +558,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.SHA256_CTRL.INIT.value <= 1'h0;
-        end else if(field_combo.SHA256_CTRL.INIT.load_next) begin
-            field_storage.SHA256_CTRL.INIT.value <= field_combo.SHA256_CTRL.INIT.next;
+        end else begin
+            if(field_combo.SHA256_CTRL.INIT.load_next) begin
+                field_storage.SHA256_CTRL.INIT.value <= field_combo.SHA256_CTRL.INIT.next;
+            end
         end
     end
     assign hwif_out.SHA256_CTRL.INIT.value = field_storage.SHA256_CTRL.INIT.value;
@@ -574,8 +584,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.SHA256_CTRL.NEXT.value <= 1'h0;
-        end else if(field_combo.SHA256_CTRL.NEXT.load_next) begin
-            field_storage.SHA256_CTRL.NEXT.value <= field_combo.SHA256_CTRL.NEXT.next;
+        end else begin
+            if(field_combo.SHA256_CTRL.NEXT.load_next) begin
+                field_storage.SHA256_CTRL.NEXT.value <= field_combo.SHA256_CTRL.NEXT.next;
+            end
         end
     end
     assign hwif_out.SHA256_CTRL.NEXT.value = field_storage.SHA256_CTRL.NEXT.value;
@@ -595,8 +607,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.SHA256_CTRL.MODE.value <= 1'h1;
-        end else if(field_combo.SHA256_CTRL.MODE.load_next) begin
-            field_storage.SHA256_CTRL.MODE.value <= field_combo.SHA256_CTRL.MODE.next;
+        end else begin
+            if(field_combo.SHA256_CTRL.MODE.load_next) begin
+                field_storage.SHA256_CTRL.MODE.value <= field_combo.SHA256_CTRL.MODE.next;
+            end
         end
     end
     assign hwif_out.SHA256_CTRL.MODE.value = field_storage.SHA256_CTRL.MODE.value;
@@ -619,8 +633,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.SHA256_CTRL.ZEROIZE.value <= 1'h0;
-        end else if(field_combo.SHA256_CTRL.ZEROIZE.load_next) begin
-            field_storage.SHA256_CTRL.ZEROIZE.value <= field_combo.SHA256_CTRL.ZEROIZE.next;
+        end else begin
+            if(field_combo.SHA256_CTRL.ZEROIZE.load_next) begin
+                field_storage.SHA256_CTRL.ZEROIZE.value <= field_combo.SHA256_CTRL.ZEROIZE.next;
+            end
         end
     end
     assign hwif_out.SHA256_CTRL.ZEROIZE.value = field_storage.SHA256_CTRL.ZEROIZE.value;
@@ -643,8 +659,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.SHA256_CTRL.WNTZ_MODE.value <= 1'h0;
-        end else if(field_combo.SHA256_CTRL.WNTZ_MODE.load_next) begin
-            field_storage.SHA256_CTRL.WNTZ_MODE.value <= field_combo.SHA256_CTRL.WNTZ_MODE.next;
+        end else begin
+            if(field_combo.SHA256_CTRL.WNTZ_MODE.load_next) begin
+                field_storage.SHA256_CTRL.WNTZ_MODE.value <= field_combo.SHA256_CTRL.WNTZ_MODE.next;
+            end
         end
     end
     assign hwif_out.SHA256_CTRL.WNTZ_MODE.value = field_storage.SHA256_CTRL.WNTZ_MODE.value;
@@ -664,8 +682,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.SHA256_CTRL.WNTZ_W.value <= 4'h4;
-        end else if(field_combo.SHA256_CTRL.WNTZ_W.load_next) begin
-            field_storage.SHA256_CTRL.WNTZ_W.value <= field_combo.SHA256_CTRL.WNTZ_W.next;
+        end else begin
+            if(field_combo.SHA256_CTRL.WNTZ_W.load_next) begin
+                field_storage.SHA256_CTRL.WNTZ_W.value <= field_combo.SHA256_CTRL.WNTZ_W.next;
+            end
         end
     end
     assign hwif_out.SHA256_CTRL.WNTZ_W.value = field_storage.SHA256_CTRL.WNTZ_W.value;
@@ -685,8 +705,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.SHA256_CTRL.WNTZ_N_MODE.value <= 1'h0;
-        end else if(field_combo.SHA256_CTRL.WNTZ_N_MODE.load_next) begin
-            field_storage.SHA256_CTRL.WNTZ_N_MODE.value <= field_combo.SHA256_CTRL.WNTZ_N_MODE.next;
+        end else begin
+            if(field_combo.SHA256_CTRL.WNTZ_N_MODE.load_next) begin
+                field_storage.SHA256_CTRL.WNTZ_N_MODE.value <= field_combo.SHA256_CTRL.WNTZ_N_MODE.next;
+            end
         end
     end
     assign hwif_out.SHA256_CTRL.WNTZ_N_MODE.value = field_storage.SHA256_CTRL.WNTZ_N_MODE.value;
@@ -710,8 +732,10 @@ module sha256_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.SHA256_BLOCK[i0].BLOCK.value <= 32'h0;
-            end else if(field_combo.SHA256_BLOCK[i0].BLOCK.load_next) begin
-                field_storage.SHA256_BLOCK[i0].BLOCK.value <= field_combo.SHA256_BLOCK[i0].BLOCK.next;
+            end else begin
+                if(field_combo.SHA256_BLOCK[i0].BLOCK.load_next) begin
+                    field_storage.SHA256_BLOCK[i0].BLOCK.value <= field_combo.SHA256_BLOCK[i0].BLOCK.next;
+                end
             end
         end
         assign hwif_out.SHA256_BLOCK[i0].BLOCK.value = field_storage.SHA256_BLOCK[i0].BLOCK.value;
@@ -736,8 +760,10 @@ module sha256_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.SHA256_DIGEST[i0].DIGEST.value <= 32'h0;
-            end else if(field_combo.SHA256_DIGEST[i0].DIGEST.load_next) begin
-                field_storage.SHA256_DIGEST[i0].DIGEST.value <= field_combo.SHA256_DIGEST[i0].DIGEST.next;
+            end else begin
+                if(field_combo.SHA256_DIGEST[i0].DIGEST.load_next) begin
+                    field_storage.SHA256_DIGEST[i0].DIGEST.value <= field_combo.SHA256_DIGEST[i0].DIGEST.next;
+                end
             end
         end
     end
@@ -757,8 +783,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.global_intr_en_r.notif_en
@@ -777,8 +805,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_intr_en_r.error0_en
@@ -797,8 +827,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error0_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= field_combo.intr_block_rf.error_intr_en_r.error0_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error0_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= field_combo.intr_block_rf.error_intr_en_r.error0_en.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_intr_en_r.error1_en
@@ -817,8 +849,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error1_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= field_combo.intr_block_rf.error_intr_en_r.error1_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error1_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= field_combo.intr_block_rf.error_intr_en_r.error1_en.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_intr_en_r.error2_en
@@ -837,8 +871,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error2_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error2_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error2_en.value <= field_combo.intr_block_rf.error_intr_en_r.error2_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error2_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error2_en.value <= field_combo.intr_block_rf.error_intr_en_r.error2_en.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_intr_en_r.error3_en
@@ -857,8 +893,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error3_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error3_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error3_en.value <= field_combo.intr_block_rf.error_intr_en_r.error3_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error3_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error3_en.value <= field_combo.intr_block_rf.error_intr_en_r.error3_en.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.notif_intr_en_r.notif_cmd_done_en
@@ -877,8 +915,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.load_next) begin
-            field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.load_next) begin
+                field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_global_intr_r.agg_sts
@@ -897,8 +937,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_global_intr_r.intr =
@@ -919,8 +961,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_global_intr_r.intr =
@@ -931,8 +975,8 @@ module sha256_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset) begin // HW Set
             next_c = '1;
@@ -947,8 +991,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error0_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error0_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error0_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error0_sts.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_internal_intr_r.error1_sts
@@ -957,8 +1003,8 @@ module sha256_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset) begin // HW Set
             next_c = '1;
@@ -973,8 +1019,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error1_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error1_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error1_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error1_sts.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_internal_intr_r.error2_sts
@@ -983,8 +1031,8 @@ module sha256_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset) begin // HW Set
             next_c = '1;
@@ -999,8 +1047,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error2_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error2_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error2_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error2_sts.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_internal_intr_r.error3_sts
@@ -1009,8 +1059,8 @@ module sha256_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1025,8 +1075,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error3_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error3_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error3_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error3_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_internal_intr_r.intr =
@@ -1040,8 +1092,8 @@ module sha256_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1056,8 +1108,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.load_next) begin
-            field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.load_next) begin
+                field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_internal_intr_r.intr =
@@ -1081,8 +1135,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error0_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error0_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error0_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error0_trig.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_intr_trig_r.error1_trig
@@ -1104,8 +1160,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error1_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error1_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error1_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error1_trig.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_intr_trig_r.error2_trig
@@ -1127,8 +1185,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error2_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error2_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error2_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error2_trig.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error_intr_trig_r.error3_trig
@@ -1150,8 +1210,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error3_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error3_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error3_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error3_trig.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig
@@ -1173,8 +1235,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.load_next) begin
-            field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.load_next) begin
+                field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error0_intr_count_r.cnt
@@ -1197,18 +1261,16 @@ module sha256_reg (
         end
         field_combo.intr_block_rf.error0_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error0_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error0_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= field_combo.intr_block_rf.error0_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= field_combo.intr_block_rf.error0_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error1_intr_count_r.cnt
@@ -1231,18 +1293,16 @@ module sha256_reg (
         end
         field_combo.intr_block_rf.error1_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error1_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error1_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= field_combo.intr_block_rf.error1_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= field_combo.intr_block_rf.error1_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error2_intr_count_r.cnt
@@ -1265,18 +1325,16 @@ module sha256_reg (
         end
         field_combo.intr_block_rf.error2_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error2_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error2_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error2_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error2_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error2_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error2_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error2_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error2_intr_count_r.cnt.value <= field_combo.intr_block_rf.error2_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error2_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error2_intr_count_r.cnt.value <= field_combo.intr_block_rf.error2_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error3_intr_count_r.cnt
@@ -1299,18 +1357,16 @@ module sha256_reg (
         end
         field_combo.intr_block_rf.error3_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error3_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error3_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error3_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error3_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error3_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.error_reset_b) begin
         if(~hwif_in.error_reset_b) begin
             field_storage.intr_block_rf.error3_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error3_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error3_intr_count_r.cnt.value <= field_combo.intr_block_rf.error3_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error3_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error3_intr_count_r.cnt.value <= field_combo.intr_block_rf.error3_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.notif_cmd_done_intr_count_r.cnt
@@ -1333,18 +1389,16 @@ module sha256_reg (
         end
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error0_intr_count_incr_r.pulse
@@ -1374,8 +1428,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error1_intr_count_incr_r.pulse
@@ -1405,8 +1461,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error2_intr_count_incr_r.pulse
@@ -1436,8 +1494,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.error3_intr_count_incr_r.pulse
@@ -1467,8 +1527,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: sha256_reg.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse
@@ -1498,8 +1560,10 @@ module sha256_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.next;
+            end
         end
     end
 
@@ -1514,77 +1578,105 @@ module sha256_reg (
     // Readback
     //--------------------------------------------------------------------------
 
+    logic [11:0] rd_mux_addr;
+    assign rd_mux_addr = decoded_addr;
+
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-
-    // Assign readback values to a flattened array
-    logic [32-1:0][31:0] readback_array;
-    for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.SHA256_NAME[i0] && !decoded_req_is_wr) ? hwif_in.SHA256_NAME[i0].NAME.next : '0;
-    end
-    for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 2][31:0] = (decoded_reg_strb.SHA256_VERSION[i0] && !decoded_req_is_wr) ? hwif_in.SHA256_VERSION[i0].VERSION.next : '0;
-    end
-    assign readback_array[4][0:0] = (decoded_reg_strb.SHA256_STATUS && !decoded_req_is_wr) ? hwif_in.SHA256_STATUS.READY.next : '0;
-    assign readback_array[4][1:1] = (decoded_reg_strb.SHA256_STATUS && !decoded_req_is_wr) ? hwif_in.SHA256_STATUS.VALID.next : '0;
-    assign readback_array[4][2:2] = (decoded_reg_strb.SHA256_STATUS && !decoded_req_is_wr) ? hwif_in.SHA256_STATUS.WNTZ_BUSY.next : '0;
-    assign readback_array[4][31:3] = '0;
-    for(genvar i0=0; i0<8; i0++) begin
-        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.SHA256_DIGEST[i0] && !decoded_req_is_wr) ? field_storage.SHA256_DIGEST[i0].DIGEST.value : '0;
-    end
-    assign readback_array[13][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[13][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[13][31:2] = '0;
-    assign readback_array[14][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
-    assign readback_array[14][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
-    assign readback_array[14][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
-    assign readback_array[14][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
-    assign readback_array[14][31:4] = '0;
-    assign readback_array[15][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
-    assign readback_array[15][31:1] = '0;
-    assign readback_array[16][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
-    assign readback_array[16][31:1] = '0;
-    assign readback_array[17][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
-    assign readback_array[17][31:1] = '0;
-    assign readback_array[18][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
-    assign readback_array[18][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
-    assign readback_array[18][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
-    assign readback_array[18][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
-    assign readback_array[18][31:4] = '0;
-    assign readback_array[19][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
-    assign readback_array[19][31:1] = '0;
-    assign readback_array[20][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
-    assign readback_array[20][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
-    assign readback_array[20][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
-    assign readback_array[20][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
-    assign readback_array[20][31:4] = '0;
-    assign readback_array[21][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
-    assign readback_array[21][31:1] = '0;
-    assign readback_array[22][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
-    assign readback_array[23][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
-    assign readback_array[24][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
-    assign readback_array[25][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
-    assign readback_array[26][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
-    assign readback_array[27][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[27][31:1] = '0;
-    assign readback_array[28][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[28][31:1] = '0;
-    assign readback_array[29][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[29][31:1] = '0;
-    assign readback_array[30][0:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[30][31:1] = '0;
-    assign readback_array[31][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[31][31:1] = '0;
-
-    // Reduce the array
     always_comb begin
         automatic logic [31:0] readback_data_var;
+        readback_data_var = '0;
+        for(int i0=0; i0<2; i0++) begin
+            if(rd_mux_addr == 12'h0 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = hwif_in.SHA256_NAME[i0].NAME.next;
+            end
+        end
+        for(int i0=0; i0<2; i0++) begin
+            if(rd_mux_addr == 12'h8 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = hwif_in.SHA256_VERSION[i0].VERSION.next;
+            end
+        end
+        if(rd_mux_addr == 12'h18) begin
+            readback_data_var[0] = hwif_in.SHA256_STATUS.READY.next;
+            readback_data_var[1] = hwif_in.SHA256_STATUS.VALID.next;
+            readback_data_var[2] = hwif_in.SHA256_STATUS.WNTZ_BUSY.next;
+        end
+        for(int i0=0; i0<8; i0++) begin
+            if(rd_mux_addr == 12'h100 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = field_storage.SHA256_DIGEST[i0].DIGEST.value;
+            end
+        end
+        if(rd_mux_addr == 12'h800) begin
+            readback_data_var[0] = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+            readback_data_var[1] = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        end
+        if(rd_mux_addr == 12'h804) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_en_r.error0_en.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_intr_en_r.error1_en.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_intr_en_r.error2_en.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_intr_en_r.error3_en.value;
+        end
+        if(rd_mux_addr == 12'h808) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
+        end
+        if(rd_mux_addr == 12'h80c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 12'h810) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 12'h814) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
+        end
+        if(rd_mux_addr == 12'h818) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
+        end
+        if(rd_mux_addr == 12'h81c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
+        end
+        if(rd_mux_addr == 12'h820) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        end
+        if(rd_mux_addr == 12'h900) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error0_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'h904) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error1_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'h908) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error2_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'h90c) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error3_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'h980) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'ha00) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 12'ha04) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 12'ha08) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 12'ha0c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 12'ha10) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value;
+        end
+        readback_data = readback_data_var;
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
-        readback_data_var = '0;
-        for(int i=0; i<32; i++) readback_data_var |= readback_array[i];
-        readback_data = readback_data_var;
     end
 
     assign cpuif_rd_ack = readback_done;

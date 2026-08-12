@@ -5,6 +5,7 @@ package ecc_reg_pkg;
 
     localparam ECC_REG_DATA_WIDTH = 32;
     localparam ECC_REG_MIN_ADDR_WIDTH = 12;
+    localparam ECC_REG_SIZE = 'ha08;
 
     typedef struct packed{
         logic [31:0] next;
@@ -558,7 +559,7 @@ package ecc_reg_pkg;
         ecc_reg__intr_block_t__out_t intr_block_rf;
     } ecc_reg__out_t;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [2:0] {
         kv_status_reg__ERROR__kv_error_e__SUCCESS = 'h0,
         kv_status_reg__ERROR__kv_error_e__KV_READ_FAIL = 'h1,
         kv_status_reg__ERROR__kv_error_e__KV_WRITE_FAIL = 'h2,

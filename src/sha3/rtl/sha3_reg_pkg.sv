@@ -5,6 +5,7 @@ package sha3_reg_pkg;
 
     localparam SHA3_REG_DATA_WIDTH = 32;
     localparam SHA3_REG_MIN_ADDR_WIDTH = 12;
+    localparam SHA3_REG_SIZE = 'hd00;
 
     typedef struct packed{
         logic [31:0] next;
@@ -30,9 +31,19 @@ package sha3_reg_pkg;
         sha3_reg__CFG_REGWEN__en__in_t en;
     } sha3_reg__CFG_REGWEN__in_t;
 
+    typedef struct packed {
+        logic [21:0] _reserved_31_10;
+        logic state_endianness;
+        logic msg_endianness;
+        logic [1:0] _reserved_7_6;
+        logic [1:0] mode;
+        logic [2:0] kstrength;
+        logic _reserved_0_0;
+    } sha3_reg__CFG_SHADOWED__external__fields__in_t;
+
     typedef struct packed{
         logic rd_ack;
-        logic [31:0] rd_data;
+        sha3_reg__CFG_SHADOWED__external__fields__in_t rd_data;
         logic wr_ack;
     } sha3_reg__CFG_SHADOWED__external__in_t;
 
@@ -162,11 +173,21 @@ package sha3_reg_pkg;
         sha3_reg__CFG_REGWEN__en__out_t en;
     } sha3_reg__CFG_REGWEN__out_t;
 
+    typedef struct packed {
+        logic [21:0] _reserved_31_10;
+        logic state_endianness;
+        logic msg_endianness;
+        logic [1:0] _reserved_7_6;
+        logic [1:0] mode;
+        logic [2:0] kstrength;
+        logic _reserved_0_0;
+    } sha3_reg__CFG_SHADOWED__external__fields__out_t;
+
     typedef struct packed{
         logic req;
         logic req_is_wr;
-        logic [31:0] wr_data;
-        logic [31:0] wr_biten;
+        sha3_reg__CFG_SHADOWED__external__fields__out_t wr_data;
+        sha3_reg__CFG_SHADOWED__external__fields__out_t wr_biten;
     } sha3_reg__CFG_SHADOWED__external__out_t;
 
     typedef struct packed{

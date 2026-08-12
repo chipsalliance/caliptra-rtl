@@ -5,6 +5,7 @@ package axi_dma_reg_pkg;
 
     localparam AXI_DMA_REG_DATA_WIDTH = 32;
     localparam AXI_DMA_REG_MIN_ADDR_WIDTH = 12;
+    localparam AXI_DMA_REG_SIZE = 'ha3c;
 
     typedef struct packed{
         logic [11:0] next;
@@ -338,14 +339,14 @@ package axi_dma_reg_pkg;
         axi_dma_reg__intr_block_t__out_t intr_block_rf;
     } axi_dma_reg__out_t;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [1:0] {
         axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE = 'h0,
         axi_dma_reg__ctrl__rd_route__rd_route_e__MBOX = 'h1,
         axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO = 'h2,
         axi_dma_reg__ctrl__rd_route__rd_route_e__AXI_WR = 'h3
     } axi_dma_reg__ctrl__rd_route__rd_route_e_e;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [2:0] {
         axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE = 'h0,
         axi_dma_reg__ctrl__wr_route__wr_route_e__MBOX = 'h1,
         axi_dma_reg__ctrl__wr_route__wr_route_e__AHB_FIFO = 'h2,
@@ -353,14 +354,14 @@ package axi_dma_reg_pkg;
         axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT = 'h4
     } axi_dma_reg__ctrl__wr_route__wr_route_e_e;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [1:0] {
         axi_dma_reg__status0__axi_dma_fsm_ps__axi_dma_fsm_e__DMA_IDLE = 'h0,
         axi_dma_reg__status0__axi_dma_fsm_ps__axi_dma_fsm_e__DMA_WAIT_DATA = 'h1,
         axi_dma_reg__status0__axi_dma_fsm_ps__axi_dma_fsm_e__DMA_DONE = 'h2,
         axi_dma_reg__status0__axi_dma_fsm_ps__axi_dma_fsm_e__DMA_ERROR = 'h3
     } axi_dma_reg__status0__axi_dma_fsm_ps__axi_dma_fsm_e_e;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [3:0] {
         axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e__AES_IDLE = 'h0,
         axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e__AES_WAIT_INPUT_READY = 'h1,
         axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e__AES_WAIT_IDLE = 'h2,

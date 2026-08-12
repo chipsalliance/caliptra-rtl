@@ -4,7 +4,7 @@ package doe_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "doe_reg_covergroups.svh"
-    // Reg - doe_reg::DOE_IV
+    // reg - doe_reg::DOE_IV
     class doe_reg__DOE_IV extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__DOE_IV
 
-    // Reg - doe_reg::DOE_CTRL
+    // reg - doe_reg::DOE_CTRL
     class doe_reg__DOE_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -74,7 +74,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__DOE_CTRL
 
-    // Reg - doe_reg::DOE_STATUS
+    // reg - doe_reg::DOE_STATUS
     class doe_reg__DOE_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -134,7 +134,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__DOE_STATUS
 
-    // Reg - doe_reg::global_intr_en_t
+    // reg - doe_reg::global_intr_en_t
     class doe_reg__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -169,7 +169,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__global_intr_en_t
 
-    // Reg - doe_reg::error_intr_en_t
+    // reg - doe_reg::error_intr_en_t
     class doe_reg__error_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -214,7 +214,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__error_intr_en_t
 
-    // Reg - doe_reg::notif_intr_en_t
+    // reg - doe_reg::notif_intr_en_t
     class doe_reg__notif_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -244,7 +244,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__notif_intr_en_t
 
-    // Reg - doe_reg::global_intr_t_agg_sts_dd3dcf0a
+    // reg - doe_reg::global_intr_t_agg_sts_dd3dcf0a
     class doe_reg__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -274,7 +274,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__global_intr_t_agg_sts_dd3dcf0a
 
-    // Reg - doe_reg::global_intr_t_agg_sts_e6399b4a
+    // reg - doe_reg::global_intr_t_agg_sts_e6399b4a
     class doe_reg__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -304,7 +304,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - doe_reg::error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
+    // reg - doe_reg::error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
     class doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -349,7 +349,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__error_intr_t_error0_sts_5ee134bf_error1_sts_aad9583f_error2_sts_6cad4575_error3_sts_735bbeba
 
-    // Reg - doe_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
+    // reg - doe_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
     class doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -379,7 +379,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__notif_intr_t_notif_cmd_done_sts_1c68637e
 
-    // Reg - doe_reg::error_intr_trig_t
+    // reg - doe_reg::error_intr_trig_t
     class doe_reg__error_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -406,13 +406,13 @@ package doe_reg_uvm;
 
         virtual function void build();
             this.error0_trig = new("error0_trig");
-            this.error0_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.error0_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.error1_trig = new("error1_trig");
-            this.error1_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.error1_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.error2_trig = new("error2_trig");
-            this.error2_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.error2_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.error3_trig = new("error3_trig");
-            this.error3_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.error3_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(error0_trig_bit_cg[bt]) error0_trig_bit_cg[bt] = new();
                 foreach(error1_trig_bit_cg[bt]) error1_trig_bit_cg[bt] = new();
@@ -424,7 +424,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__error_intr_trig_t
 
-    // Reg - doe_reg::notif_intr_trig_t
+    // reg - doe_reg::notif_intr_trig_t
     class doe_reg__notif_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -445,7 +445,7 @@ package doe_reg_uvm;
 
         virtual function void build();
             this.notif_cmd_done_trig = new("notif_cmd_done_trig");
-            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_cmd_done_trig_bit_cg[bt]) notif_cmd_done_trig_bit_cg[bt] = new();
             end
@@ -454,7 +454,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__notif_intr_trig_t
 
-    // Reg - doe_reg::intr_count_t_cnt_130ab269
+    // reg - doe_reg::intr_count_t_cnt_130ab269
     class doe_reg__intr_count_t_cnt_130ab269 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -484,7 +484,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_130ab269
 
-    // Reg - doe_reg::intr_count_t_cnt_324dfc53
+    // reg - doe_reg::intr_count_t_cnt_324dfc53
     class doe_reg__intr_count_t_cnt_324dfc53 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -514,7 +514,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_324dfc53
 
-    // Reg - doe_reg::intr_count_t_cnt_791a4799
+    // reg - doe_reg::intr_count_t_cnt_791a4799
     class doe_reg__intr_count_t_cnt_791a4799 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -544,7 +544,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_791a4799
 
-    // Reg - doe_reg::intr_count_t_cnt_e9de7334
+    // reg - doe_reg::intr_count_t_cnt_e9de7334
     class doe_reg__intr_count_t_cnt_e9de7334 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -574,7 +574,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_e9de7334
 
-    // Reg - doe_reg::intr_count_t_cnt_be67d6d5
+    // reg - doe_reg::intr_count_t_cnt_be67d6d5
     class doe_reg__intr_count_t_cnt_be67d6d5 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -604,7 +604,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_t_cnt_be67d6d5
 
-    // Reg - doe_reg::intr_count_incr_t_pulse_37026c97
+    // reg - doe_reg::intr_count_incr_t_pulse_37026c97
     class doe_reg__intr_count_incr_t_pulse_37026c97 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -634,7 +634,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_37026c97
 
-    // Reg - doe_reg::intr_count_incr_t_pulse_d860d977
+    // reg - doe_reg::intr_count_incr_t_pulse_d860d977
     class doe_reg__intr_count_incr_t_pulse_d860d977 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -664,7 +664,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_d860d977
 
-    // Reg - doe_reg::intr_count_incr_t_pulse_87b45fe7
+    // reg - doe_reg::intr_count_incr_t_pulse_87b45fe7
     class doe_reg__intr_count_incr_t_pulse_87b45fe7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -694,7 +694,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_87b45fe7
 
-    // Reg - doe_reg::intr_count_incr_t_pulse_c1689ee6
+    // reg - doe_reg::intr_count_incr_t_pulse_c1689ee6
     class doe_reg__intr_count_incr_t_pulse_c1689ee6 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -724,7 +724,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_c1689ee6
 
-    // Reg - doe_reg::intr_count_incr_t_pulse_6173128e
+    // reg - doe_reg::intr_count_incr_t_pulse_6173128e
     class doe_reg__intr_count_incr_t_pulse_6173128e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -754,7 +754,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_count_incr_t_pulse_6173128e
 
-    // Regfile - doe_reg::intr_block_t
+    // regfile - doe_reg::intr_block_t
     class doe_reg__intr_block_t extends uvm_reg_block;
         rand doe_reg__global_intr_en_t global_intr_en_r;
         rand doe_reg__error_intr_en_t error_intr_en_r;
@@ -880,7 +880,7 @@ package doe_reg_uvm;
         endfunction : build
     endclass : doe_reg__intr_block_t
 
-    // Addrmap - doe_reg
+    // addrmap - doe_reg
     class doe_reg extends uvm_reg_block;
         rand doe_reg__DOE_IV DOE_IV[4];
         rand doe_reg__DOE_CTRL DOE_CTRL;

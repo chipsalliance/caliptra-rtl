@@ -78,14 +78,20 @@ module mbox_csr (
         logic tap_mode;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
+    logic decoded_err;
+    logic [5:0] decoded_addr;
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [31:0] decoded_wr_data;
     logic [31:0] decoded_wr_biten;
 
     always_comb begin
-        decoded_reg_strb.mbox_lock = cpuif_req_masked & (cpuif_addr == 6'h0);
-        decoded_reg_strb.mbox_user = cpuif_req_masked & (cpuif_addr == 6'h4);
+        automatic logic is_valid_addr;
+        automatic logic is_valid_rw;
+        is_valid_addr = '1; // No valid address check
+        is_valid_rw = '1; // No valid RW check
+        decoded_reg_strb.mbox_lock = cpuif_req_masked & (cpuif_addr == 6'h0) & !cpuif_req_is_wr;
+        decoded_reg_strb.mbox_user = cpuif_req_masked & (cpuif_addr == 6'h4) & !cpuif_req_is_wr;
         decoded_reg_strb.mbox_cmd = cpuif_req_masked & (cpuif_addr == 6'h8);
         decoded_reg_strb.mbox_dlen = cpuif_req_masked & (cpuif_addr == 6'hc);
         decoded_reg_strb.mbox_datain = cpuif_req_masked & (cpuif_addr == 6'h10);
@@ -94,9 +100,11 @@ module mbox_csr (
         decoded_reg_strb.mbox_status = cpuif_req_masked & (cpuif_addr == 6'h1c);
         decoded_reg_strb.mbox_unlock = cpuif_req_masked & (cpuif_addr == 6'h20);
         decoded_reg_strb.tap_mode = cpuif_req_masked & (cpuif_addr == 6'h24);
+        decoded_err = '0;
     end
 
     // Pass down signals to next stage
+    assign decoded_addr = cpuif_addr;
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
@@ -287,8 +295,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_lock.lock.value <= 1'h0;
-        end else if(field_combo.mbox_lock.lock.load_next) begin
-            field_storage.mbox_lock.lock.value <= field_combo.mbox_lock.lock.next;
+        end else begin
+            if(field_combo.mbox_lock.lock.load_next) begin
+                field_storage.mbox_lock.lock.value <= field_combo.mbox_lock.lock.next;
+            end
         end
     end
     assign hwif_out.mbox_lock.lock.value = field_storage.mbox_lock.lock.value;
@@ -309,8 +319,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_user.user.value <= 32'h0;
-        end else if(field_combo.mbox_user.user.load_next) begin
-            field_storage.mbox_user.user.value <= field_combo.mbox_user.user.next;
+        end else begin
+            if(field_combo.mbox_user.user.load_next) begin
+                field_storage.mbox_user.user.value <= field_combo.mbox_user.user.next;
+            end
         end
     end
     assign hwif_out.mbox_user.user.value = field_storage.mbox_user.user.value;
@@ -333,12 +345,14 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_cmd.command.value <= 32'h0;
-        end else if(field_combo.mbox_cmd.command.load_next) begin
-            field_storage.mbox_cmd.command.value <= field_combo.mbox_cmd.command.next;
+        end else begin
+            if(field_combo.mbox_cmd.command.load_next) begin
+                field_storage.mbox_cmd.command.value <= field_combo.mbox_cmd.command.next;
+            end
         end
     end
     assign hwif_out.mbox_cmd.command.value = field_storage.mbox_cmd.command.value;
-    assign hwif_out.mbox_cmd.command.swmod = decoded_reg_strb.mbox_cmd && decoded_req_is_wr;
+    assign hwif_out.mbox_cmd.command.swmod = decoded_reg_strb.mbox_cmd && decoded_req_is_wr && |(decoded_wr_biten[31:0]);
     // Field: mbox_csr.mbox_dlen.length
     always_comb begin
         automatic logic [31:0] next_c;
@@ -358,12 +372,14 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_dlen.length.value <= 32'h0;
-        end else if(field_combo.mbox_dlen.length.load_next) begin
-            field_storage.mbox_dlen.length.value <= field_combo.mbox_dlen.length.next;
+        end else begin
+            if(field_combo.mbox_dlen.length.load_next) begin
+                field_storage.mbox_dlen.length.value <= field_combo.mbox_dlen.length.next;
+            end
         end
     end
     assign hwif_out.mbox_dlen.length.value = field_storage.mbox_dlen.length.value;
-    assign hwif_out.mbox_dlen.length.swmod = decoded_reg_strb.mbox_dlen && decoded_req_is_wr;
+    assign hwif_out.mbox_dlen.length.swmod = decoded_reg_strb.mbox_dlen && decoded_req_is_wr && |(decoded_wr_biten[31:0]);
     // Field: mbox_csr.mbox_datain.datain
     always_comb begin
         automatic logic [31:0] next_c;
@@ -380,11 +396,13 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_datain.datain.value <= 32'h0;
-        end else if(field_combo.mbox_datain.datain.load_next) begin
-            field_storage.mbox_datain.datain.value <= field_combo.mbox_datain.datain.next;
+        end else begin
+            if(field_combo.mbox_datain.datain.load_next) begin
+                field_storage.mbox_datain.datain.value <= field_combo.mbox_datain.datain.next;
+            end
         end
     end
-    assign hwif_out.mbox_datain.datain.swmod = decoded_reg_strb.mbox_datain && decoded_req_is_wr;
+    assign hwif_out.mbox_datain.datain.swmod = decoded_reg_strb.mbox_datain && decoded_req_is_wr && |(decoded_wr_biten[31:0]);
     // Field: mbox_csr.mbox_dataout.dataout
     always_comb begin
         automatic logic [31:0] next_c;
@@ -404,8 +422,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_dataout.dataout.value <= 32'h0;
-        end else if(field_combo.mbox_dataout.dataout.load_next) begin
-            field_storage.mbox_dataout.dataout.value <= field_combo.mbox_dataout.dataout.next;
+        end else begin
+            if(field_combo.mbox_dataout.dataout.load_next) begin
+                field_storage.mbox_dataout.dataout.value <= field_combo.mbox_dataout.dataout.next;
+            end
         end
     end
     assign hwif_out.mbox_dataout.dataout.value = field_storage.mbox_dataout.dataout.value;
@@ -432,12 +452,14 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_execute.execute.value <= 1'h0;
-        end else if(field_combo.mbox_execute.execute.load_next) begin
-            field_storage.mbox_execute.execute.value <= field_combo.mbox_execute.execute.next;
+        end else begin
+            if(field_combo.mbox_execute.execute.load_next) begin
+                field_storage.mbox_execute.execute.value <= field_combo.mbox_execute.execute.next;
+            end
         end
     end
     assign hwif_out.mbox_execute.execute.value = field_storage.mbox_execute.execute.value;
-    assign hwif_out.mbox_execute.execute.swmod = decoded_reg_strb.mbox_execute && decoded_req_is_wr;
+    assign hwif_out.mbox_execute.execute.swmod = decoded_reg_strb.mbox_execute && decoded_req_is_wr && |(decoded_wr_biten[0:0]);
     // Field: mbox_csr.mbox_status.status
     always_comb begin
         automatic logic [3:0] next_c;
@@ -460,12 +482,14 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.status.value <= 4'h0;
-        end else if(field_combo.mbox_status.status.load_next) begin
-            field_storage.mbox_status.status.value <= field_combo.mbox_status.status.next;
+        end else begin
+            if(field_combo.mbox_status.status.load_next) begin
+                field_storage.mbox_status.status.value <= field_combo.mbox_status.status.next;
+            end
         end
     end
     assign hwif_out.mbox_status.status.value = field_storage.mbox_status.status.value;
-    assign hwif_out.mbox_status.status.swmod = decoded_reg_strb.mbox_status && decoded_req_is_wr;
+    assign hwif_out.mbox_status.status.swmod = decoded_reg_strb.mbox_status && decoded_req_is_wr && |(decoded_wr_biten[3:0]);
     // Field: mbox_csr.mbox_status.ecc_single_error
     always_comb begin
         automatic logic [0:0] next_c;
@@ -485,8 +509,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.ecc_single_error.value <= 1'h0;
-        end else if(field_combo.mbox_status.ecc_single_error.load_next) begin
-            field_storage.mbox_status.ecc_single_error.value <= field_combo.mbox_status.ecc_single_error.next;
+        end else begin
+            if(field_combo.mbox_status.ecc_single_error.load_next) begin
+                field_storage.mbox_status.ecc_single_error.value <= field_combo.mbox_status.ecc_single_error.next;
+            end
         end
     end
     assign hwif_out.mbox_status.ecc_single_error.value = field_storage.mbox_status.ecc_single_error.value;
@@ -509,8 +535,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.ecc_double_error.value <= 1'h0;
-        end else if(field_combo.mbox_status.ecc_double_error.load_next) begin
-            field_storage.mbox_status.ecc_double_error.value <= field_combo.mbox_status.ecc_double_error.next;
+        end else begin
+            if(field_combo.mbox_status.ecc_double_error.load_next) begin
+                field_storage.mbox_status.ecc_double_error.value <= field_combo.mbox_status.ecc_double_error.next;
+            end
         end
     end
     assign hwif_out.mbox_status.ecc_double_error.value = field_storage.mbox_status.ecc_double_error.value;
@@ -530,8 +558,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.mbox_fsm_ps.value <= 3'h0;
-        end else if(field_combo.mbox_status.mbox_fsm_ps.load_next) begin
-            field_storage.mbox_status.mbox_fsm_ps.value <= field_combo.mbox_status.mbox_fsm_ps.next;
+        end else begin
+            if(field_combo.mbox_status.mbox_fsm_ps.load_next) begin
+                field_storage.mbox_status.mbox_fsm_ps.value <= field_combo.mbox_status.mbox_fsm_ps.next;
+            end
         end
     end
     assign hwif_out.mbox_status.mbox_fsm_ps.value = field_storage.mbox_status.mbox_fsm_ps.value;
@@ -551,8 +581,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.soc_has_lock.value <= 1'h0;
-        end else if(field_combo.mbox_status.soc_has_lock.load_next) begin
-            field_storage.mbox_status.soc_has_lock.value <= field_combo.mbox_status.soc_has_lock.next;
+        end else begin
+            if(field_combo.mbox_status.soc_has_lock.load_next) begin
+                field_storage.mbox_status.soc_has_lock.value <= field_combo.mbox_status.soc_has_lock.next;
+            end
         end
     end
     assign hwif_out.mbox_status.soc_has_lock.value = field_storage.mbox_status.soc_has_lock.value;
@@ -572,8 +604,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.mbox_rdptr.value <= 16'h0;
-        end else if(field_combo.mbox_status.mbox_rdptr.load_next) begin
-            field_storage.mbox_status.mbox_rdptr.value <= field_combo.mbox_status.mbox_rdptr.next;
+        end else begin
+            if(field_combo.mbox_status.mbox_rdptr.load_next) begin
+                field_storage.mbox_status.mbox_rdptr.value <= field_combo.mbox_status.mbox_rdptr.next;
+            end
         end
     end
     assign hwif_out.mbox_status.mbox_rdptr.value = field_storage.mbox_status.mbox_rdptr.value;
@@ -593,8 +627,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_status.tap_has_lock.value <= 1'h0;
-        end else if(field_combo.mbox_status.tap_has_lock.load_next) begin
-            field_storage.mbox_status.tap_has_lock.value <= field_combo.mbox_status.tap_has_lock.next;
+        end else begin
+            if(field_combo.mbox_status.tap_has_lock.load_next) begin
+                field_storage.mbox_status.tap_has_lock.value <= field_combo.mbox_status.tap_has_lock.next;
+            end
         end
     end
     assign hwif_out.mbox_status.tap_has_lock.value = field_storage.mbox_status.tap_has_lock.value;
@@ -617,8 +653,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.mbox_unlock.unlock.value <= 1'h0;
-        end else if(field_combo.mbox_unlock.unlock.load_next) begin
-            field_storage.mbox_unlock.unlock.value <= field_combo.mbox_unlock.unlock.next;
+        end else begin
+            if(field_combo.mbox_unlock.unlock.load_next) begin
+                field_storage.mbox_unlock.unlock.value <= field_combo.mbox_unlock.unlock.next;
+            end
         end
     end
     assign hwif_out.mbox_unlock.unlock.value = field_storage.mbox_unlock.unlock.value;
@@ -638,8 +676,10 @@ module mbox_csr (
     always_ff @(posedge clk or negedge hwif_in.cptra_rst_b) begin
         if(~hwif_in.cptra_rst_b) begin
             field_storage.tap_mode.enabled.value <= 1'h0;
-        end else if(field_combo.tap_mode.enabled.load_next) begin
-            field_storage.tap_mode.enabled.value <= field_combo.tap_mode.enabled.next;
+        end else begin
+            if(field_combo.tap_mode.enabled.load_next) begin
+                field_storage.tap_mode.enabled.value <= field_combo.tap_mode.enabled.next;
+            end
         end
     end
     assign hwif_out.tap_mode.enabled.value = field_storage.tap_mode.enabled.value;
@@ -655,42 +695,54 @@ module mbox_csr (
     // Readback
     //--------------------------------------------------------------------------
 
+    logic [5:0] rd_mux_addr;
+    assign rd_mux_addr = decoded_addr;
+
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-
-    // Assign readback values to a flattened array
-    logic [10-1:0][31:0] readback_array;
-    assign readback_array[0][0:0] = (decoded_reg_strb.mbox_lock && !decoded_req_is_wr) ? field_storage.mbox_lock.lock.value : '0;
-    assign readback_array[0][31:1] = '0;
-    assign readback_array[1][31:0] = (decoded_reg_strb.mbox_user && !decoded_req_is_wr) ? field_storage.mbox_user.user.value : '0;
-    assign readback_array[2][31:0] = (decoded_reg_strb.mbox_cmd && !decoded_req_is_wr) ? field_storage.mbox_cmd.command.value : '0;
-    assign readback_array[3][31:0] = (decoded_reg_strb.mbox_dlen && !decoded_req_is_wr) ? field_storage.mbox_dlen.length.value : '0;
-    assign readback_array[4][31:0] = (decoded_reg_strb.mbox_datain && !decoded_req_is_wr) ? field_storage.mbox_datain.datain.value : '0;
-    assign readback_array[5][31:0] = (decoded_reg_strb.mbox_dataout && !decoded_req_is_wr) ? field_storage.mbox_dataout.dataout.value : '0;
-    assign readback_array[6][0:0] = (decoded_reg_strb.mbox_execute && !decoded_req_is_wr) ? field_storage.mbox_execute.execute.value : '0;
-    assign readback_array[6][31:1] = '0;
-    assign readback_array[7][3:0] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.status.value : '0;
-    assign readback_array[7][4:4] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.ecc_single_error.value : '0;
-    assign readback_array[7][5:5] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.ecc_double_error.value : '0;
-    assign readback_array[7][8:6] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.mbox_fsm_ps.value : '0;
-    assign readback_array[7][9:9] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.soc_has_lock.value : '0;
-    assign readback_array[7][25:10] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.mbox_rdptr.value : '0;
-    assign readback_array[7][26:26] = (decoded_reg_strb.mbox_status && !decoded_req_is_wr) ? field_storage.mbox_status.tap_has_lock.value : '0;
-    assign readback_array[7][31:27] = '0;
-    assign readback_array[8][0:0] = (decoded_reg_strb.mbox_unlock && !decoded_req_is_wr) ? field_storage.mbox_unlock.unlock.value : '0;
-    assign readback_array[8][31:1] = '0;
-    assign readback_array[9][0:0] = (decoded_reg_strb.tap_mode && !decoded_req_is_wr) ? field_storage.tap_mode.enabled.value : '0;
-    assign readback_array[9][31:1] = '0;
-
-    // Reduce the array
     always_comb begin
         automatic logic [31:0] readback_data_var;
+        readback_data_var = '0;
+        if(rd_mux_addr == 6'h0) begin
+            readback_data_var[0] = field_storage.mbox_lock.lock.value;
+        end
+        if(rd_mux_addr == 6'h4) begin
+            readback_data_var[31:0] = field_storage.mbox_user.user.value;
+        end
+        if(rd_mux_addr == 6'h8) begin
+            readback_data_var[31:0] = field_storage.mbox_cmd.command.value;
+        end
+        if(rd_mux_addr == 6'hc) begin
+            readback_data_var[31:0] = field_storage.mbox_dlen.length.value;
+        end
+        if(rd_mux_addr == 6'h10) begin
+            readback_data_var[31:0] = field_storage.mbox_datain.datain.value;
+        end
+        if(rd_mux_addr == 6'h14) begin
+            readback_data_var[31:0] = field_storage.mbox_dataout.dataout.value;
+        end
+        if(rd_mux_addr == 6'h18) begin
+            readback_data_var[0] = field_storage.mbox_execute.execute.value;
+        end
+        if(rd_mux_addr == 6'h1c) begin
+            readback_data_var[3:0] = field_storage.mbox_status.status.value;
+            readback_data_var[4] = field_storage.mbox_status.ecc_single_error.value;
+            readback_data_var[5] = field_storage.mbox_status.ecc_double_error.value;
+            readback_data_var[8:6] = field_storage.mbox_status.mbox_fsm_ps.value;
+            readback_data_var[9] = field_storage.mbox_status.soc_has_lock.value;
+            readback_data_var[25:10] = field_storage.mbox_status.mbox_rdptr.value;
+            readback_data_var[26] = field_storage.mbox_status.tap_has_lock.value;
+        end
+        if(rd_mux_addr == 6'h20) begin
+            readback_data_var[0] = field_storage.mbox_unlock.unlock.value;
+        end
+        if(rd_mux_addr == 6'h24) begin
+            readback_data_var[0] = field_storage.tap_mode.enabled.value;
+        end
+        readback_data = readback_data_var;
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
-        readback_data_var = '0;
-        for(int i=0; i<10; i++) readback_data_var |= readback_array[i];
-        readback_data = readback_data_var;
     end
 
     assign cpuif_rd_ack = readback_done;

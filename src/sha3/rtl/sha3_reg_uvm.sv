@@ -4,7 +4,7 @@ package sha3_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "sha3_reg_covergroups.svh"
-    // Reg - sha3_reg::SHA3_NAME
+    // reg - sha3_reg::SHA3_NAME
     class sha3_reg__SHA3_NAME extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__SHA3_NAME
 
-    // Reg - sha3_reg::SHA3_VERSION
+    // reg - sha3_reg::SHA3_VERSION
     class sha3_reg__SHA3_VERSION extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -64,7 +64,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__SHA3_VERSION
 
-    // Reg - sha3_reg::ALERT_TEST
+    // reg - sha3_reg::ALERT_TEST
     class sha3_reg__ALERT_TEST extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -99,7 +99,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__ALERT_TEST
 
-    // Reg - sha3_reg::CFG_REGWEN
+    // reg - sha3_reg::CFG_REGWEN
     class sha3_reg__CFG_REGWEN extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -129,7 +129,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__CFG_REGWEN
 
-    // Reg - sha3_reg::CFG_SHADOWED
+    // reg - sha3_reg::CFG_SHADOWED
     class sha3_reg__CFG_SHADOWED extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -174,7 +174,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__CFG_SHADOWED
 
-    // Reg - sha3_reg::CMD
+    // reg - sha3_reg::CMD
     class sha3_reg__CMD extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -209,7 +209,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__CMD
 
-    // Reg - sha3_reg::STATUS
+    // reg - sha3_reg::STATUS
     class sha3_reg__STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -274,7 +274,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__STATUS
 
-    // Reg - sha3_reg::ERR_CODE
+    // reg - sha3_reg::ERR_CODE
     class sha3_reg__ERR_CODE extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -304,7 +304,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__ERR_CODE
 
-    // Mem - sha3_reg::STATE
+    // mem - sha3_reg::STATE
     class sha3_reg__STATE extends uvm_reg_block;
         rand uvm_mem m_mem;
         
@@ -320,7 +320,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__STATE
 
-    // Reg - sha3_reg::global_intr_en_t
+    // reg - sha3_reg::global_intr_en_t
     class sha3_reg__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -355,7 +355,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__global_intr_en_t
 
-    // Reg - sha3_reg::error_intr_en_t
+    // reg - sha3_reg::error_intr_en_t
     class sha3_reg__error_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -400,7 +400,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__error_intr_en_t
 
-    // Reg - sha3_reg::notif_intr_en_t
+    // reg - sha3_reg::notif_intr_en_t
     class sha3_reg__notif_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -435,7 +435,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__notif_intr_en_t
 
-    // Reg - sha3_reg::global_intr_t_agg_sts_dd3dcf0a
+    // reg - sha3_reg::global_intr_t_agg_sts_dd3dcf0a
     class sha3_reg__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -465,7 +465,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__global_intr_t_agg_sts_dd3dcf0a
 
-    // Reg - sha3_reg::global_intr_t_agg_sts_e6399b4a
+    // reg - sha3_reg::global_intr_t_agg_sts_e6399b4a
     class sha3_reg__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -495,7 +495,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - sha3_reg::error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2
+    // reg - sha3_reg::error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2
     class sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -540,7 +540,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__error_intr_t_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378_sha3_error_sts_a3cfdcf2
 
-    // Reg - sha3_reg::notif_intr_t_notif_cmd_done_sts_1c68637e_notif_msg_fifo_empty_sts_df694e73
+    // reg - sha3_reg::notif_intr_t_notif_cmd_done_sts_1c68637e_notif_msg_fifo_empty_sts_df694e73
     class sha3_reg__notif_intr_t_notif_cmd_done_sts_1c68637e_notif_msg_fifo_empty_sts_df694e73 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -575,7 +575,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__notif_intr_t_notif_cmd_done_sts_1c68637e_notif_msg_fifo_empty_sts_df694e73
 
-    // Reg - sha3_reg::error_intr_trig_t
+    // reg - sha3_reg::error_intr_trig_t
     class sha3_reg__error_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -602,13 +602,13 @@ package sha3_reg_uvm;
 
         virtual function void build();
             this.sha3_error_trig = new("sha3_error_trig");
-            this.sha3_error_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.sha3_error_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.error1_trig = new("error1_trig");
-            this.error1_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.error1_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.error2_trig = new("error2_trig");
-            this.error2_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.error2_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.error3_trig = new("error3_trig");
-            this.error3_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.error3_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(sha3_error_trig_bit_cg[bt]) sha3_error_trig_bit_cg[bt] = new();
                 foreach(error1_trig_bit_cg[bt]) error1_trig_bit_cg[bt] = new();
@@ -620,7 +620,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__error_intr_trig_t
 
-    // Reg - sha3_reg::notif_intr_trig_t
+    // reg - sha3_reg::notif_intr_trig_t
     class sha3_reg__notif_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -643,9 +643,9 @@ package sha3_reg_uvm;
 
         virtual function void build();
             this.notif_cmd_done_trig = new("notif_cmd_done_trig");
-            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_msg_fifo_empty_trig = new("notif_msg_fifo_empty_trig");
-            this.notif_msg_fifo_empty_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_msg_fifo_empty_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_cmd_done_trig_bit_cg[bt]) notif_cmd_done_trig_bit_cg[bt] = new();
                 foreach(notif_msg_fifo_empty_trig_bit_cg[bt]) notif_msg_fifo_empty_trig_bit_cg[bt] = new();
@@ -655,7 +655,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__notif_intr_trig_t
 
-    // Reg - sha3_reg::intr_count_t_cnt_9198fa18
+    // reg - sha3_reg::intr_count_t_cnt_9198fa18
     class sha3_reg__intr_count_t_cnt_9198fa18 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -685,7 +685,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_t_cnt_9198fa18
 
-    // Reg - sha3_reg::intr_count_t_cnt_73c42c28
+    // reg - sha3_reg::intr_count_t_cnt_73c42c28
     class sha3_reg__intr_count_t_cnt_73c42c28 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -715,7 +715,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_t_cnt_73c42c28
 
-    // Reg - sha3_reg::intr_count_t_cnt_d8af96ff
+    // reg - sha3_reg::intr_count_t_cnt_d8af96ff
     class sha3_reg__intr_count_t_cnt_d8af96ff extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -745,7 +745,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_t_cnt_d8af96ff
 
-    // Reg - sha3_reg::intr_count_t_cnt_9bd7f809
+    // reg - sha3_reg::intr_count_t_cnt_9bd7f809
     class sha3_reg__intr_count_t_cnt_9bd7f809 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -775,7 +775,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_t_cnt_9bd7f809
 
-    // Reg - sha3_reg::intr_count_t_cnt_be67d6d5
+    // reg - sha3_reg::intr_count_t_cnt_be67d6d5
     class sha3_reg__intr_count_t_cnt_be67d6d5 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -805,7 +805,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_t_cnt_be67d6d5
 
-    // Reg - sha3_reg::intr_count_incr_t_pulse_d65b5e88
+    // reg - sha3_reg::intr_count_incr_t_pulse_d65b5e88
     class sha3_reg__intr_count_incr_t_pulse_d65b5e88 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -835,7 +835,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_incr_t_pulse_d65b5e88
 
-    // Reg - sha3_reg::intr_count_incr_t_pulse_d860d977
+    // reg - sha3_reg::intr_count_incr_t_pulse_d860d977
     class sha3_reg__intr_count_incr_t_pulse_d860d977 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -865,7 +865,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_incr_t_pulse_d860d977
 
-    // Reg - sha3_reg::intr_count_incr_t_pulse_87b45fe7
+    // reg - sha3_reg::intr_count_incr_t_pulse_87b45fe7
     class sha3_reg__intr_count_incr_t_pulse_87b45fe7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -895,7 +895,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_incr_t_pulse_87b45fe7
 
-    // Reg - sha3_reg::intr_count_incr_t_pulse_c1689ee6
+    // reg - sha3_reg::intr_count_incr_t_pulse_c1689ee6
     class sha3_reg__intr_count_incr_t_pulse_c1689ee6 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -925,7 +925,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_incr_t_pulse_c1689ee6
 
-    // Reg - sha3_reg::intr_count_incr_t_pulse_6173128e
+    // reg - sha3_reg::intr_count_incr_t_pulse_6173128e
     class sha3_reg__intr_count_incr_t_pulse_6173128e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -955,7 +955,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_count_incr_t_pulse_6173128e
 
-    // Regfile - sha3_reg::intr_block_t
+    // regfile - sha3_reg::intr_block_t
     class sha3_reg__intr_block_t extends uvm_reg_block;
         rand sha3_reg__global_intr_en_t global_intr_en_r;
         rand sha3_reg__error_intr_en_t error_intr_en_r;
@@ -1081,7 +1081,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__intr_block_t
 
-    // Mem - sha3_reg::MSG_FIFO
+    // mem - sha3_reg::MSG_FIFO
     class sha3_reg__MSG_FIFO extends uvm_reg_block;
         rand uvm_mem m_mem;
         
@@ -1097,7 +1097,7 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__MSG_FIFO
 
-    // Addrmap - sha3_reg
+    // addrmap - sha3_reg
     class sha3_reg extends uvm_reg_block;
         rand sha3_reg__SHA3_NAME SHA3_NAME[2];
         rand sha3_reg__SHA3_VERSION SHA3_VERSION[2];

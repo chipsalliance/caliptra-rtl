@@ -92,22 +92,28 @@ module doe_reg (
         } intr_block_rf;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
+    logic decoded_err;
+    logic [11:0] decoded_addr;
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [31:0] decoded_wr_data;
     logic [31:0] decoded_wr_biten;
 
     always_comb begin
+        automatic logic is_valid_addr;
+        automatic logic is_valid_rw;
+        is_valid_addr = '1; // No valid address check
+        is_valid_rw = '1; // No valid RW check
         for(int i0=0; i0<4; i0++) begin
-            decoded_reg_strb.DOE_IV[i0] = cpuif_req_masked & (cpuif_addr == 12'h0 + i0*12'h4);
+            decoded_reg_strb.DOE_IV[i0] = cpuif_req_masked & (cpuif_addr == 12'h0 + (12)'(i0) * 12'h4);
         end
         decoded_reg_strb.DOE_CTRL = cpuif_req_masked & (cpuif_addr == 12'h10);
-        decoded_reg_strb.DOE_STATUS = cpuif_req_masked & (cpuif_addr == 12'h14);
+        decoded_reg_strb.DOE_STATUS = cpuif_req_masked & (cpuif_addr == 12'h14) & !cpuif_req_is_wr;
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h800);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h804);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h808);
-        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h80c);
-        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h810);
+        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h80c) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h810) & !cpuif_req_is_wr;
         decoded_reg_strb.intr_block_rf.error_internal_intr_r = cpuif_req_masked & (cpuif_addr == 12'h814);
         decoded_reg_strb.intr_block_rf.notif_internal_intr_r = cpuif_req_masked & (cpuif_addr == 12'h818);
         decoded_reg_strb.intr_block_rf.error_intr_trig_r = cpuif_req_masked & (cpuif_addr == 12'h81c);
@@ -117,14 +123,16 @@ module doe_reg (
         decoded_reg_strb.intr_block_rf.error2_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h908);
         decoded_reg_strb.intr_block_rf.error3_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h90c);
         decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h980);
-        decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha00);
-        decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha04);
-        decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha08);
-        decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha0c);
-        decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha10);
+        decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha00) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha04) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha08) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha0c) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha10) & !cpuif_req_is_wr;
+        decoded_err = '0;
     end
 
     // Pass down signals to next stage
+    assign decoded_addr = cpuif_addr;
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
@@ -532,12 +540,14 @@ module doe_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.DOE_IV[i0].IV.value <= 32'h0;
-            end else if(field_combo.DOE_IV[i0].IV.load_next) begin
-                field_storage.DOE_IV[i0].IV.value <= field_combo.DOE_IV[i0].IV.next;
+            end else begin
+                if(field_combo.DOE_IV[i0].IV.load_next) begin
+                    field_storage.DOE_IV[i0].IV.value <= field_combo.DOE_IV[i0].IV.next;
+                end
             end
         end
         assign hwif_out.DOE_IV[i0].IV.value = field_storage.DOE_IV[i0].IV.value;
-        assign hwif_out.DOE_IV[i0].IV.swmod = decoded_reg_strb.DOE_IV[i0] && decoded_req_is_wr;
+        assign hwif_out.DOE_IV[i0].IV.swmod = decoded_reg_strb.DOE_IV[i0] && decoded_req_is_wr && |(decoded_wr_biten[31:0]);
     end
     // Field: doe_reg.DOE_CTRL.CMD
     always_comb begin
@@ -558,12 +568,14 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.DOE_CTRL.CMD.value <= 2'h0;
-        end else if(field_combo.DOE_CTRL.CMD.load_next) begin
-            field_storage.DOE_CTRL.CMD.value <= field_combo.DOE_CTRL.CMD.next;
+        end else begin
+            if(field_combo.DOE_CTRL.CMD.load_next) begin
+                field_storage.DOE_CTRL.CMD.value <= field_combo.DOE_CTRL.CMD.next;
+            end
         end
     end
     assign hwif_out.DOE_CTRL.CMD.value = field_storage.DOE_CTRL.CMD.value;
-    assign hwif_out.DOE_CTRL.CMD.swmod = decoded_reg_strb.DOE_CTRL && decoded_req_is_wr;
+    assign hwif_out.DOE_CTRL.CMD.swmod = decoded_reg_strb.DOE_CTRL && decoded_req_is_wr && |(decoded_wr_biten[1:0]);
     // Field: doe_reg.DOE_CTRL.DEST
     always_comb begin
         automatic logic [4:0] next_c;
@@ -580,8 +592,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.DOE_CTRL.DEST.value <= 5'h0;
-        end else if(field_combo.DOE_CTRL.DEST.load_next) begin
-            field_storage.DOE_CTRL.DEST.value <= field_combo.DOE_CTRL.DEST.next;
+        end else begin
+            if(field_combo.DOE_CTRL.DEST.load_next) begin
+                field_storage.DOE_CTRL.DEST.value <= field_combo.DOE_CTRL.DEST.next;
+            end
         end
     end
     assign hwif_out.DOE_CTRL.DEST.value = field_storage.DOE_CTRL.DEST.value;
@@ -604,12 +618,14 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.DOE_CTRL.CMD_EXT.value <= 2'h0;
-        end else if(field_combo.DOE_CTRL.CMD_EXT.load_next) begin
-            field_storage.DOE_CTRL.CMD_EXT.value <= field_combo.DOE_CTRL.CMD_EXT.next;
+        end else begin
+            if(field_combo.DOE_CTRL.CMD_EXT.load_next) begin
+                field_storage.DOE_CTRL.CMD_EXT.value <= field_combo.DOE_CTRL.CMD_EXT.next;
+            end
         end
     end
     assign hwif_out.DOE_CTRL.CMD_EXT.value = field_storage.DOE_CTRL.CMD_EXT.value;
-    assign hwif_out.DOE_CTRL.CMD_EXT.swmod = decoded_reg_strb.DOE_CTRL && decoded_req_is_wr;
+    assign hwif_out.DOE_CTRL.CMD_EXT.swmod = decoded_reg_strb.DOE_CTRL && decoded_req_is_wr && |(decoded_wr_biten[8:7]);
     // Field: doe_reg.DOE_STATUS.READY
     always_comb begin
         automatic logic [0:0] next_c;
@@ -629,8 +645,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.DOE_STATUS.READY.value <= 1'h0;
-        end else if(field_combo.DOE_STATUS.READY.load_next) begin
-            field_storage.DOE_STATUS.READY.value <= field_combo.DOE_STATUS.READY.next;
+        end else begin
+            if(field_combo.DOE_STATUS.READY.load_next) begin
+                field_storage.DOE_STATUS.READY.value <= field_combo.DOE_STATUS.READY.next;
+            end
         end
     end
     // Field: doe_reg.DOE_STATUS.VALID
@@ -652,8 +670,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.DOE_STATUS.VALID.value <= 1'h0;
-        end else if(field_combo.DOE_STATUS.VALID.load_next) begin
-            field_storage.DOE_STATUS.VALID.value <= field_combo.DOE_STATUS.VALID.next;
+        end else begin
+            if(field_combo.DOE_STATUS.VALID.load_next) begin
+                field_storage.DOE_STATUS.VALID.value <= field_combo.DOE_STATUS.VALID.next;
+            end
         end
     end
     // Field: doe_reg.DOE_STATUS.DEOBF_SECRETS_CLEARED
@@ -672,8 +692,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
             field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value <= 1'h0;
-        end else if(field_combo.DOE_STATUS.DEOBF_SECRETS_CLEARED.load_next) begin
-            field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value <= field_combo.DOE_STATUS.DEOBF_SECRETS_CLEARED.next;
+        end else begin
+            if(field_combo.DOE_STATUS.DEOBF_SECRETS_CLEARED.load_next) begin
+                field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value <= field_combo.DOE_STATUS.DEOBF_SECRETS_CLEARED.next;
+            end
         end
     end
     // Field: doe_reg.DOE_STATUS.ERROR
@@ -695,8 +717,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.DOE_STATUS.ERROR.value <= 1'h0;
-        end else if(field_combo.DOE_STATUS.ERROR.load_next) begin
-            field_storage.DOE_STATUS.ERROR.value <= field_combo.DOE_STATUS.ERROR.next;
+        end else begin
+            if(field_combo.DOE_STATUS.ERROR.load_next) begin
+                field_storage.DOE_STATUS.ERROR.value <= field_combo.DOE_STATUS.ERROR.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.global_intr_en_r.error_en
@@ -715,8 +739,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.global_intr_en_r.notif_en
@@ -735,8 +761,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_intr_en_r.error0_en
@@ -755,8 +783,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error0_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= field_combo.intr_block_rf.error_intr_en_r.error0_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error0_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error0_en.value <= field_combo.intr_block_rf.error_intr_en_r.error0_en.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_intr_en_r.error1_en
@@ -775,8 +805,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error1_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= field_combo.intr_block_rf.error_intr_en_r.error1_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error1_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error1_en.value <= field_combo.intr_block_rf.error_intr_en_r.error1_en.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_intr_en_r.error2_en
@@ -795,8 +827,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error2_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error2_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error2_en.value <= field_combo.intr_block_rf.error_intr_en_r.error2_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error2_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error2_en.value <= field_combo.intr_block_rf.error_intr_en_r.error2_en.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_intr_en_r.error3_en
@@ -815,8 +849,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error3_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error3_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error3_en.value <= field_combo.intr_block_rf.error_intr_en_r.error3_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error3_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error3_en.value <= field_combo.intr_block_rf.error_intr_en_r.error3_en.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.notif_intr_en_r.notif_cmd_done_en
@@ -835,8 +871,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.load_next) begin
-            field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.load_next) begin
+                field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_global_intr_r.agg_sts
@@ -855,8 +893,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_global_intr_r.intr =
@@ -877,8 +917,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_global_intr_r.intr =
@@ -889,8 +931,8 @@ module doe_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset) begin // HW Set
             next_c = '1;
@@ -905,8 +947,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
             field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error0_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error0_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error0_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error0_sts.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_internal_intr_r.error1_sts
@@ -915,8 +959,8 @@ module doe_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset) begin // HW Set
             next_c = '1;
@@ -931,8 +975,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
             field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error1_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error1_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error1_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error1_sts.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_internal_intr_r.error2_sts
@@ -941,8 +987,8 @@ module doe_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset) begin // HW Set
             next_c = '1;
@@ -957,8 +1003,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
             field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error2_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error2_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error2_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error2_sts.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_internal_intr_r.error3_sts
@@ -967,8 +1015,8 @@ module doe_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset) begin // HW Set
             next_c = '1;
@@ -983,8 +1031,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
             field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error3_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error3_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error3_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error3_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_internal_intr_r.intr =
@@ -998,8 +1048,8 @@ module doe_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1014,8 +1064,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.load_next) begin
-            field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.load_next) begin
+                field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_internal_intr_r.intr =
@@ -1039,8 +1091,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error0_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error0_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error0_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error0_trig.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_intr_trig_r.error1_trig
@@ -1062,8 +1116,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error1_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error1_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error1_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error1_trig.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_intr_trig_r.error2_trig
@@ -1085,8 +1141,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error2_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error2_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error2_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error2_trig.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error_intr_trig_r.error3_trig
@@ -1108,8 +1166,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error3_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error3_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error3_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error3_trig.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig
@@ -1131,8 +1191,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.load_next) begin
-            field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.load_next) begin
+                field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error0_intr_count_r.cnt
@@ -1155,18 +1217,16 @@ module doe_reg (
         end
         field_combo.intr_block_rf.error0_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error0_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error0_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error0_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
             field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= field_combo.intr_block_rf.error0_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error0_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error0_intr_count_r.cnt.value <= field_combo.intr_block_rf.error0_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error1_intr_count_r.cnt
@@ -1189,18 +1249,16 @@ module doe_reg (
         end
         field_combo.intr_block_rf.error1_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error1_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error1_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error1_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
             field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= field_combo.intr_block_rf.error1_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error1_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error1_intr_count_r.cnt.value <= field_combo.intr_block_rf.error1_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error2_intr_count_r.cnt
@@ -1223,18 +1281,16 @@ module doe_reg (
         end
         field_combo.intr_block_rf.error2_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error2_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error2_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error2_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error2_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error2_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
             field_storage.intr_block_rf.error2_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error2_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error2_intr_count_r.cnt.value <= field_combo.intr_block_rf.error2_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error2_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error2_intr_count_r.cnt.value <= field_combo.intr_block_rf.error2_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error3_intr_count_r.cnt
@@ -1257,18 +1313,16 @@ module doe_reg (
         end
         field_combo.intr_block_rf.error3_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error3_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error3_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error3_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error3_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error3_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.cptra_pwrgood) begin
         if(~hwif_in.cptra_pwrgood) begin
             field_storage.intr_block_rf.error3_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error3_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error3_intr_count_r.cnt.value <= field_combo.intr_block_rf.error3_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error3_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error3_intr_count_r.cnt.value <= field_combo.intr_block_rf.error3_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.notif_cmd_done_intr_count_r.cnt
@@ -1291,18 +1345,16 @@ module doe_reg (
         end
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error0_intr_count_incr_r.pulse
@@ -1332,8 +1384,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error0_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error1_intr_count_incr_r.pulse
@@ -1363,8 +1417,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error1_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error2_intr_count_incr_r.pulse
@@ -1394,8 +1450,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error2_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.error3_intr_count_incr_r.pulse
@@ -1425,8 +1483,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error3_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: doe_reg.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse
@@ -1456,8 +1516,10 @@ module doe_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.next;
+            end
         end
     end
 
@@ -1472,80 +1534,104 @@ module doe_reg (
     // Readback
     //--------------------------------------------------------------------------
 
+    logic [11:0] rd_mux_addr;
+    assign rd_mux_addr = decoded_addr;
+
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-
-    // Assign readback values to a flattened array
-    logic [25-1:0][31:0] readback_array;
-    for(genvar i0=0; i0<4; i0++) begin
-        assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.DOE_IV[i0] && !decoded_req_is_wr) ? field_storage.DOE_IV[i0].IV.value : '0;
-    end
-    assign readback_array[4][1:0] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.CMD.value : '0;
-    assign readback_array[4][6:2] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.DEST.value : '0;
-    assign readback_array[4][8:7] = (decoded_reg_strb.DOE_CTRL && !decoded_req_is_wr) ? field_storage.DOE_CTRL.CMD_EXT.value : '0;
-    assign readback_array[4][31:9] = '0;
-    assign readback_array[5][0:0] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.READY.value : '0;
-    assign readback_array[5][1:1] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.VALID.value : '0;
-    assign readback_array[5][2:2] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? hwif_in.DOE_STATUS.UDS_FLOW_DONE.next : '0;
-    assign readback_array[5][3:3] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? hwif_in.DOE_STATUS.FE_FLOW_DONE.next : '0;
-    assign readback_array[5][4:4] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value : '0;
-    assign readback_array[5][5:5] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? hwif_in.DOE_STATUS.HEK_FLOW_DONE.next : '0;
-    assign readback_array[5][7:6] = '0;
-    assign readback_array[5][8:8] = (decoded_reg_strb.DOE_STATUS && !decoded_req_is_wr) ? field_storage.DOE_STATUS.ERROR.value : '0;
-    assign readback_array[5][31:9] = '0;
-    assign readback_array[6][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[6][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[6][31:2] = '0;
-    assign readback_array[7][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error0_en.value : '0;
-    assign readback_array[7][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error1_en.value : '0;
-    assign readback_array[7][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error2_en.value : '0;
-    assign readback_array[7][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error3_en.value : '0;
-    assign readback_array[7][31:4] = '0;
-    assign readback_array[8][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
-    assign readback_array[8][31:1] = '0;
-    assign readback_array[9][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
-    assign readback_array[9][31:1] = '0;
-    assign readback_array[10][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
-    assign readback_array[10][31:1] = '0;
-    assign readback_array[11][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value : '0;
-    assign readback_array[11][1:1] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value : '0;
-    assign readback_array[11][2:2] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value : '0;
-    assign readback_array[11][3:3] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value : '0;
-    assign readback_array[11][31:4] = '0;
-    assign readback_array[12][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
-    assign readback_array[12][31:1] = '0;
-    assign readback_array[13][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value : '0;
-    assign readback_array[13][1:1] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value : '0;
-    assign readback_array[13][2:2] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value : '0;
-    assign readback_array[13][3:3] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value : '0;
-    assign readback_array[13][31:4] = '0;
-    assign readback_array[14][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
-    assign readback_array[14][31:1] = '0;
-    assign readback_array[15][31:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_r.cnt.value : '0;
-    assign readback_array[16][31:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_r.cnt.value : '0;
-    assign readback_array[17][31:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_r.cnt.value : '0;
-    assign readback_array[18][31:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_r.cnt.value : '0;
-    assign readback_array[19][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
-    assign readback_array[20][0:0] = (decoded_reg_strb.intr_block_rf.error0_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[20][31:1] = '0;
-    assign readback_array[21][0:0] = (decoded_reg_strb.intr_block_rf.error1_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[21][31:1] = '0;
-    assign readback_array[22][0:0] = (decoded_reg_strb.intr_block_rf.error2_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[22][31:1] = '0;
-    assign readback_array[23][0:0] = (decoded_reg_strb.intr_block_rf.error3_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[23][31:1] = '0;
-    assign readback_array[24][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[24][31:1] = '0;
-
-    // Reduce the array
     always_comb begin
         automatic logic [31:0] readback_data_var;
+        readback_data_var = '0;
+        for(int i0=0; i0<4; i0++) begin
+            if(rd_mux_addr == 12'h0 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = field_storage.DOE_IV[i0].IV.value;
+            end
+        end
+        if(rd_mux_addr == 12'h10) begin
+            readback_data_var[1:0] = field_storage.DOE_CTRL.CMD.value;
+            readback_data_var[6:2] = field_storage.DOE_CTRL.DEST.value;
+            readback_data_var[8:7] = field_storage.DOE_CTRL.CMD_EXT.value;
+        end
+        if(rd_mux_addr == 12'h14) begin
+            readback_data_var[0] = field_storage.DOE_STATUS.READY.value;
+            readback_data_var[1] = field_storage.DOE_STATUS.VALID.value;
+            readback_data_var[2] = hwif_in.DOE_STATUS.UDS_FLOW_DONE.next;
+            readback_data_var[3] = hwif_in.DOE_STATUS.FE_FLOW_DONE.next;
+            readback_data_var[4] = field_storage.DOE_STATUS.DEOBF_SECRETS_CLEARED.value;
+            readback_data_var[5] = hwif_in.DOE_STATUS.HEK_FLOW_DONE.next;
+            readback_data_var[8] = field_storage.DOE_STATUS.ERROR.value;
+        end
+        if(rd_mux_addr == 12'h800) begin
+            readback_data_var[0] = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+            readback_data_var[1] = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        end
+        if(rd_mux_addr == 12'h804) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_en_r.error0_en.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_intr_en_r.error1_en.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_intr_en_r.error2_en.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_intr_en_r.error3_en.value;
+        end
+        if(rd_mux_addr == 12'h808) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
+        end
+        if(rd_mux_addr == 12'h80c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 12'h810) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 12'h814) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value;
+        end
+        if(rd_mux_addr == 12'h818) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
+        end
+        if(rd_mux_addr == 12'h81c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value;
+            readback_data_var[1] = field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value;
+            readback_data_var[2] = field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value;
+            readback_data_var[3] = field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value;
+        end
+        if(rd_mux_addr == 12'h820) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        end
+        if(rd_mux_addr == 12'h900) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error0_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'h904) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error1_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'h908) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error2_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'h90c) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error3_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'h980) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'ha00) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error0_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 12'ha04) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error1_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 12'ha08) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error2_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 12'ha0c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error3_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 12'ha10) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value;
+        end
+        readback_data = readback_data_var;
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
-        readback_data_var = '0;
-        for(int i=0; i<25; i++) readback_data_var |= readback_array[i];
-        readback_data = readback_data_var;
     end
 
     assign cpuif_rd_ack = readback_done;

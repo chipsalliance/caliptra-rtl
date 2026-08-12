@@ -4,7 +4,7 @@ package mbox_csr_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "mbox_csr_covergroups.svh"
-    // Reg - mbox_csr::mbox_lock
+    // reg - mbox_csr::mbox_lock
     class mbox_csr__mbox_lock extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_lock
 
-    // Reg - mbox_csr::mbox_user
+    // reg - mbox_csr::mbox_user
     class mbox_csr__mbox_user extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -64,7 +64,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_user
 
-    // Reg - mbox_csr::mbox_cmd
+    // reg - mbox_csr::mbox_cmd
     class mbox_csr__mbox_cmd extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -94,7 +94,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_cmd
 
-    // Reg - mbox_csr::mbox_dlen
+    // reg - mbox_csr::mbox_dlen
     class mbox_csr__mbox_dlen extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -124,7 +124,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_dlen
 
-    // Reg - mbox_csr::mbox_datain
+    // reg - mbox_csr::mbox_datain
     class mbox_csr__mbox_datain extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -154,7 +154,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_datain
 
-    // Reg - mbox_csr::mbox_dataout
+    // reg - mbox_csr::mbox_dataout
     class mbox_csr__mbox_dataout extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -184,7 +184,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_dataout
 
-    // Reg - mbox_csr::mbox_execute
+    // reg - mbox_csr::mbox_execute
     class mbox_csr__mbox_execute extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -214,7 +214,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_execute
 
-    // Reg - mbox_csr::mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760
+    // reg - mbox_csr::mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760
     class mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -274,7 +274,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_status_ecc_double_error_38cec4b0_ecc_single_error_9c62b760
 
-    // Reg - mbox_csr::mbox_unlock
+    // reg - mbox_csr::mbox_unlock
     class mbox_csr__mbox_unlock extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -295,7 +295,7 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.unlock = new("unlock");
-            this.unlock.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.unlock.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(unlock_bit_cg[bt]) unlock_bit_cg[bt] = new();
             end
@@ -304,7 +304,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__mbox_unlock
 
-    // Reg - mbox_csr::tap_mode
+    // reg - mbox_csr::tap_mode
     class mbox_csr__tap_mode extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -334,7 +334,7 @@ package mbox_csr_uvm;
         endfunction : build
     endclass : mbox_csr__tap_mode
 
-    // Addrmap - mbox_csr
+    // addrmap - mbox_csr
     class mbox_csr extends uvm_reg_block;
         rand mbox_csr__mbox_lock mbox_lock;
         rand mbox_csr__mbox_user mbox_user;

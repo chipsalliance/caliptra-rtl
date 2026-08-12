@@ -4,7 +4,7 @@ package aes_clp_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "aes_clp_reg_covergroups.svh"
-    // Reg - aes_clp_reg::AES_NAME
+    // reg - aes_clp_reg::AES_NAME
     class aes_clp_reg__AES_NAME extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__AES_NAME
 
-    // Reg - aes_clp_reg::AES_VERSION
+    // reg - aes_clp_reg::AES_VERSION
     class aes_clp_reg__AES_VERSION extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -64,7 +64,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__AES_VERSION
 
-    // Reg - aes_clp_reg::ENTROPY_IF_SEED
+    // reg - aes_clp_reg::ENTROPY_IF_SEED
     class aes_clp_reg__ENTROPY_IF_SEED extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -94,7 +94,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__ENTROPY_IF_SEED
 
-    // Reg - aes_clp_reg::CTRL0
+    // reg - aes_clp_reg::CTRL0
     class aes_clp_reg__CTRL0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -124,7 +124,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__CTRL0
 
-    // Reg - kv_read_ctrl_reg
+    // reg - kv_read_ctrl_reg
     class kv_read_ctrl_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -169,7 +169,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : kv_read_ctrl_reg
 
-    // Reg - kv_status_reg
+    // reg - kv_status_reg
     class kv_status_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -209,7 +209,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : kv_status_reg
 
-    // Reg - kv_write_ctrl_reg
+    // reg - kv_write_ctrl_reg
     class kv_write_ctrl_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -294,7 +294,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : kv_write_ctrl_reg
 
-    // Reg - aes_clp_reg::global_intr_en_t
+    // reg - aes_clp_reg::global_intr_en_t
     class aes_clp_reg__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -329,7 +329,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__global_intr_en_t
 
-    // Reg - aes_clp_reg::error_intr_en_t
+    // reg - aes_clp_reg::error_intr_en_t
     class aes_clp_reg__error_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -374,7 +374,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__error_intr_en_t
 
-    // Reg - aes_clp_reg::notif_intr_en_t
+    // reg - aes_clp_reg::notif_intr_en_t
     class aes_clp_reg__notif_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -404,7 +404,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__notif_intr_en_t
 
-    // Reg - aes_clp_reg::global_intr_t_agg_sts_dd3dcf0a
+    // reg - aes_clp_reg::global_intr_t_agg_sts_dd3dcf0a
     class aes_clp_reg__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -434,7 +434,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__global_intr_t_agg_sts_dd3dcf0a
 
-    // Reg - aes_clp_reg::global_intr_t_agg_sts_e6399b4a
+    // reg - aes_clp_reg::global_intr_t_agg_sts_e6399b4a
     class aes_clp_reg__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -464,7 +464,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - aes_clp_reg::error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
+    // reg - aes_clp_reg::error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
     class aes_clp_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -509,7 +509,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__error_intr_t_error0_sts_28545624_error1_sts_40e0d3e1_error2_sts_b1cf2205_error3_sts_74a35378
 
-    // Reg - aes_clp_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
+    // reg - aes_clp_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
     class aes_clp_reg__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -539,7 +539,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__notif_intr_t_notif_cmd_done_sts_1c68637e
 
-    // Reg - aes_clp_reg::error_intr_trig_t
+    // reg - aes_clp_reg::error_intr_trig_t
     class aes_clp_reg__error_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -566,13 +566,13 @@ package aes_clp_reg_uvm;
 
         virtual function void build();
             this.error0_trig = new("error0_trig");
-            this.error0_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.error0_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.error1_trig = new("error1_trig");
-            this.error1_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.error1_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.error2_trig = new("error2_trig");
-            this.error2_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.error2_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.error3_trig = new("error3_trig");
-            this.error3_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.error3_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(error0_trig_bit_cg[bt]) error0_trig_bit_cg[bt] = new();
                 foreach(error1_trig_bit_cg[bt]) error1_trig_bit_cg[bt] = new();
@@ -584,7 +584,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__error_intr_trig_t
 
-    // Reg - aes_clp_reg::notif_intr_trig_t
+    // reg - aes_clp_reg::notif_intr_trig_t
     class aes_clp_reg__notif_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -605,7 +605,7 @@ package aes_clp_reg_uvm;
 
         virtual function void build();
             this.notif_cmd_done_trig = new("notif_cmd_done_trig");
-            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_cmd_done_trig_bit_cg[bt]) notif_cmd_done_trig_bit_cg[bt] = new();
             end
@@ -614,7 +614,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__notif_intr_trig_t
 
-    // Reg - aes_clp_reg::intr_count_t_cnt_35ace267
+    // reg - aes_clp_reg::intr_count_t_cnt_35ace267
     class aes_clp_reg__intr_count_t_cnt_35ace267 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -644,7 +644,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_t_cnt_35ace267
 
-    // Reg - aes_clp_reg::intr_count_t_cnt_73c42c28
+    // reg - aes_clp_reg::intr_count_t_cnt_73c42c28
     class aes_clp_reg__intr_count_t_cnt_73c42c28 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -674,7 +674,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_t_cnt_73c42c28
 
-    // Reg - aes_clp_reg::intr_count_t_cnt_d8af96ff
+    // reg - aes_clp_reg::intr_count_t_cnt_d8af96ff
     class aes_clp_reg__intr_count_t_cnt_d8af96ff extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -704,7 +704,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_t_cnt_d8af96ff
 
-    // Reg - aes_clp_reg::intr_count_t_cnt_9bd7f809
+    // reg - aes_clp_reg::intr_count_t_cnt_9bd7f809
     class aes_clp_reg__intr_count_t_cnt_9bd7f809 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -734,7 +734,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_t_cnt_9bd7f809
 
-    // Reg - aes_clp_reg::intr_count_t_cnt_be67d6d5
+    // reg - aes_clp_reg::intr_count_t_cnt_be67d6d5
     class aes_clp_reg__intr_count_t_cnt_be67d6d5 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -764,7 +764,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_t_cnt_be67d6d5
 
-    // Reg - aes_clp_reg::intr_count_incr_t_pulse_37026c97
+    // reg - aes_clp_reg::intr_count_incr_t_pulse_37026c97
     class aes_clp_reg__intr_count_incr_t_pulse_37026c97 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -794,7 +794,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_incr_t_pulse_37026c97
 
-    // Reg - aes_clp_reg::intr_count_incr_t_pulse_d860d977
+    // reg - aes_clp_reg::intr_count_incr_t_pulse_d860d977
     class aes_clp_reg__intr_count_incr_t_pulse_d860d977 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -824,7 +824,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_incr_t_pulse_d860d977
 
-    // Reg - aes_clp_reg::intr_count_incr_t_pulse_87b45fe7
+    // reg - aes_clp_reg::intr_count_incr_t_pulse_87b45fe7
     class aes_clp_reg__intr_count_incr_t_pulse_87b45fe7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -854,7 +854,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_incr_t_pulse_87b45fe7
 
-    // Reg - aes_clp_reg::intr_count_incr_t_pulse_c1689ee6
+    // reg - aes_clp_reg::intr_count_incr_t_pulse_c1689ee6
     class aes_clp_reg__intr_count_incr_t_pulse_c1689ee6 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -884,7 +884,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_incr_t_pulse_c1689ee6
 
-    // Reg - aes_clp_reg::intr_count_incr_t_pulse_6173128e
+    // reg - aes_clp_reg::intr_count_incr_t_pulse_6173128e
     class aes_clp_reg__intr_count_incr_t_pulse_6173128e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -914,7 +914,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_count_incr_t_pulse_6173128e
 
-    // Regfile - aes_clp_reg::intr_block_t
+    // regfile - aes_clp_reg::intr_block_t
     class aes_clp_reg__intr_block_t extends uvm_reg_block;
         rand aes_clp_reg__global_intr_en_t global_intr_en_r;
         rand aes_clp_reg__error_intr_en_t error_intr_en_r;
@@ -1040,7 +1040,7 @@ package aes_clp_reg_uvm;
         endfunction : build
     endclass : aes_clp_reg__intr_block_t
 
-    // Addrmap - aes_clp_reg
+    // addrmap - aes_clp_reg
     class aes_clp_reg extends uvm_reg_block;
         rand aes_clp_reg__AES_NAME AES_NAME[2];
         rand aes_clp_reg__AES_VERSION AES_VERSION[2];

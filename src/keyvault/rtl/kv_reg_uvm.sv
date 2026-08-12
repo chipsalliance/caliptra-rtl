@@ -4,7 +4,7 @@ package kv_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "kv_reg_covergroups.svh"
-    // Reg - kv_reg::kvCtrl
+    // reg - kv_reg::kvCtrl
     class kv_reg__kvCtrl extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -41,7 +41,7 @@ package kv_reg_uvm;
             this.lock_use = new("lock_use");
             this.lock_use.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
             this.clear = new("clear");
-            this.clear.configure(this, 1, 2, "RW", 0, 'h0, 1, 1, 0);
+            this.clear.configure(this, 1, 2, "RW", 1, 'h0, 1, 1, 0);
             this.rsvd0 = new("rsvd0");
             this.rsvd0.configure(this, 1, 3, "RW", 1, 'h0, 1, 1, 0);
             this.rsvd1 = new("rsvd1");
@@ -64,7 +64,7 @@ package kv_reg_uvm;
         endfunction : build
     endclass : kv_reg__kvCtrl
 
-    // Reg - kv_reg::keyReg
+    // reg - kv_reg::keyReg
     class kv_reg__keyReg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -94,7 +94,7 @@ package kv_reg_uvm;
         endfunction : build
     endclass : kv_reg__keyReg
 
-    // Reg - kv_reg::CLEAR_SECRETS
+    // reg - kv_reg::CLEAR_SECRETS
     class kv_reg__CLEAR_SECRETS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -117,7 +117,7 @@ package kv_reg_uvm;
 
         virtual function void build();
             this.wr_debug_values = new("wr_debug_values");
-            this.wr_debug_values.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.wr_debug_values.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             this.sel_debug_value = new("sel_debug_value");
             this.sel_debug_value.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
@@ -129,7 +129,7 @@ package kv_reg_uvm;
         endfunction : build
     endclass : kv_reg__CLEAR_SECRETS
 
-    // Addrmap - kv_reg
+    // addrmap - kv_reg
     class kv_reg extends uvm_reg_block;
         rand kv_reg__kvCtrl KEY_CTRL[24];
         rand kv_reg__keyReg KEY_ENTRY[24][16];

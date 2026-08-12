@@ -4,7 +4,7 @@ package axi_dma_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "axi_dma_reg_covergroups.svh"
-    // Reg - axi_dma_reg::id
+    // reg - axi_dma_reg::id
     class axi_dma_reg__id extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__id
 
-    // Reg - axi_dma_reg::cap
+    // reg - axi_dma_reg::cap
     class axi_dma_reg__cap extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -69,7 +69,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__cap
 
-    // Reg - axi_dma_reg::ctrl
+    // reg - axi_dma_reg::ctrl
     class axi_dma_reg__ctrl extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -159,7 +159,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__ctrl
 
-    // Reg - axi_dma_reg::status0
+    // reg - axi_dma_reg::status0
     class axi_dma_reg__status0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -229,7 +229,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__status0
 
-    // Reg - axi_dma_reg::status1
+    // reg - axi_dma_reg::status1
     class axi_dma_reg__status1 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -259,7 +259,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__status1
 
-    // Reg - axi_dma_reg::src_addr_l
+    // reg - axi_dma_reg::src_addr_l
     class axi_dma_reg__src_addr_l extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -289,7 +289,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__src_addr_l
 
-    // Reg - axi_dma_reg::src_addr_h
+    // reg - axi_dma_reg::src_addr_h
     class axi_dma_reg__src_addr_h extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -319,7 +319,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__src_addr_h
 
-    // Reg - axi_dma_reg::dst_addr_l
+    // reg - axi_dma_reg::dst_addr_l
     class axi_dma_reg__dst_addr_l extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -349,7 +349,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__dst_addr_l
 
-    // Reg - axi_dma_reg::dst_addr_h
+    // reg - axi_dma_reg::dst_addr_h
     class axi_dma_reg__dst_addr_h extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -379,7 +379,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__dst_addr_h
 
-    // Reg - axi_dma_reg::byte_count
+    // reg - axi_dma_reg::byte_count
     class axi_dma_reg__byte_count extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -409,7 +409,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__byte_count
 
-    // Reg - axi_dma_reg::block_size
+    // reg - axi_dma_reg::block_size
     class axi_dma_reg__block_size extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -444,7 +444,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__block_size
 
-    // Reg - axi_dma_reg::write_data
+    // reg - axi_dma_reg::write_data
     class axi_dma_reg__write_data extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -474,7 +474,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__write_data
 
-    // Reg - axi_dma_reg::read_data
+    // reg - axi_dma_reg::read_data
     class axi_dma_reg__read_data extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -504,7 +504,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__read_data
 
-    // Reg - axi_dma_reg::intr_block_t::global_intr_en_t
+    // reg - axi_dma_reg::intr_block_t::global_intr_en_t
     class axi_dma_reg__intr_block_t__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -539,7 +539,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__global_intr_en_t
 
-    // Reg - axi_dma_reg::intr_block_t::error_intr_en_t
+    // reg - axi_dma_reg::intr_block_t::error_intr_en_t
     class axi_dma_reg__intr_block_t__error_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -614,7 +614,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__error_intr_en_t
 
-    // Reg - axi_dma_reg::intr_block_t::notif_intr_en_t
+    // reg - axi_dma_reg::intr_block_t::notif_intr_en_t
     class axi_dma_reg__intr_block_t__notif_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -664,7 +664,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__notif_intr_en_t
 
-    // Reg - axi_dma_reg::intr_block_t::global_intr_t_agg_sts_dd3dcf0a
+    // reg - axi_dma_reg::intr_block_t::global_intr_t_agg_sts_dd3dcf0a
     class axi_dma_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -694,7 +694,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a
 
-    // Reg - axi_dma_reg::intr_block_t::global_intr_t_agg_sts_e6399b4a
+    // reg - axi_dma_reg::intr_block_t::global_intr_t_agg_sts_e6399b4a
     class axi_dma_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -724,7 +724,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - axi_dma_reg::intr_block_t::error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_kv_rd_large_sts_aa293a66_error_kv_rd_sts_df1ad5dd_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0
+    // reg - axi_dma_reg::intr_block_t::error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_kv_rd_large_sts_aa293a66_error_kv_rd_sts_df1ad5dd_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0
     class axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_kv_rd_large_sts_aa293a66_error_kv_rd_sts_df1ad5dd_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -799,7 +799,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__error_intr_t_error_aes_cif_sts_63385a16_error_axi_rd_sts_927e49cd_error_axi_wr_sts_f84e5c07_error_cmd_dec_sts_46039d92_error_fifo_oflow_sts_71b29a77_error_fifo_uflow_sts_119d122a_error_kv_rd_large_sts_aa293a66_error_kv_rd_sts_df1ad5dd_error_mbox_lock_sts_9e18c395_error_sha_lock_sts_4c7993a0
 
-    // Reg - axi_dma_reg::intr_block_t::notif_intr_t_notif_fifo_empty_sts_d87d1786_notif_fifo_full_sts_64c66862_notif_fifo_not_empty_sts_1a0e2460_notif_fifo_not_full_sts_0266fe07_notif_txn_done_sts_0ee2f120
+    // reg - axi_dma_reg::intr_block_t::notif_intr_t_notif_fifo_empty_sts_d87d1786_notif_fifo_full_sts_64c66862_notif_fifo_not_empty_sts_1a0e2460_notif_fifo_not_full_sts_0266fe07_notif_txn_done_sts_0ee2f120
     class axi_dma_reg__intr_block_t__notif_intr_t_notif_fifo_empty_sts_d87d1786_notif_fifo_full_sts_64c66862_notif_fifo_not_empty_sts_1a0e2460_notif_fifo_not_full_sts_0266fe07_notif_txn_done_sts_0ee2f120 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -849,7 +849,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__notif_intr_t_notif_fifo_empty_sts_d87d1786_notif_fifo_full_sts_64c66862_notif_fifo_not_empty_sts_1a0e2460_notif_fifo_not_full_sts_0266fe07_notif_txn_done_sts_0ee2f120
 
-    // Reg - axi_dma_reg::intr_block_t::error_intr_trig_t
+    // reg - axi_dma_reg::intr_block_t::error_intr_trig_t
     class axi_dma_reg__intr_block_t__error_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -888,25 +888,25 @@ package axi_dma_reg_uvm;
 
         virtual function void build();
             this.error_cmd_dec_trig = new("error_cmd_dec_trig");
-            this.error_cmd_dec_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_cmd_dec_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.error_axi_rd_trig = new("error_axi_rd_trig");
-            this.error_axi_rd_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_axi_rd_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.error_axi_wr_trig = new("error_axi_wr_trig");
-            this.error_axi_wr_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_axi_wr_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.error_mbox_lock_trig = new("error_mbox_lock_trig");
-            this.error_mbox_lock_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_mbox_lock_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             this.error_sha_lock_trig = new("error_sha_lock_trig");
-            this.error_sha_lock_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_sha_lock_trig.configure(this, 1, 4, "W1S", 1, 'h0, 1, 1, 0);
             this.error_fifo_oflow_trig = new("error_fifo_oflow_trig");
-            this.error_fifo_oflow_trig.configure(this, 1, 5, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_fifo_oflow_trig.configure(this, 1, 5, "W1S", 1, 'h0, 1, 1, 0);
             this.error_fifo_uflow_trig = new("error_fifo_uflow_trig");
-            this.error_fifo_uflow_trig.configure(this, 1, 6, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_fifo_uflow_trig.configure(this, 1, 6, "W1S", 1, 'h0, 1, 1, 0);
             this.error_aes_cif_trig = new("error_aes_cif_trig");
-            this.error_aes_cif_trig.configure(this, 1, 7, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_aes_cif_trig.configure(this, 1, 7, "W1S", 1, 'h0, 1, 1, 0);
             this.error_kv_rd_trig = new("error_kv_rd_trig");
-            this.error_kv_rd_trig.configure(this, 1, 8, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_kv_rd_trig.configure(this, 1, 8, "W1S", 1, 'h0, 1, 1, 0);
             this.error_kv_rd_large_trig = new("error_kv_rd_large_trig");
-            this.error_kv_rd_large_trig.configure(this, 1, 9, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_kv_rd_large_trig.configure(this, 1, 9, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(error_cmd_dec_trig_bit_cg[bt]) error_cmd_dec_trig_bit_cg[bt] = new();
                 foreach(error_axi_rd_trig_bit_cg[bt]) error_axi_rd_trig_bit_cg[bt] = new();
@@ -924,7 +924,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__error_intr_trig_t
 
-    // Reg - axi_dma_reg::intr_block_t::notif_intr_trig_t
+    // reg - axi_dma_reg::intr_block_t::notif_intr_trig_t
     class axi_dma_reg__intr_block_t__notif_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -953,15 +953,15 @@ package axi_dma_reg_uvm;
 
         virtual function void build();
             this.notif_txn_done_trig = new("notif_txn_done_trig");
-            this.notif_txn_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_txn_done_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_fifo_empty_trig = new("notif_fifo_empty_trig");
-            this.notif_fifo_empty_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_fifo_empty_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_fifo_not_empty_trig = new("notif_fifo_not_empty_trig");
-            this.notif_fifo_not_empty_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_fifo_not_empty_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_fifo_full_trig = new("notif_fifo_full_trig");
-            this.notif_fifo_full_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_fifo_full_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_fifo_not_full_trig = new("notif_fifo_not_full_trig");
-            this.notif_fifo_not_full_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_fifo_not_full_trig.configure(this, 1, 4, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_txn_done_trig_bit_cg[bt]) notif_txn_done_trig_bit_cg[bt] = new();
                 foreach(notif_fifo_empty_trig_bit_cg[bt]) notif_fifo_empty_trig_bit_cg[bt] = new();
@@ -974,7 +974,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__notif_intr_trig_t
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_fc5260b0
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_fc5260b0
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_fc5260b0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1004,7 +1004,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_fc5260b0
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_f6d7de6b
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_f6d7de6b
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_f6d7de6b extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1034,7 +1034,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_f6d7de6b
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_aba31562
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_aba31562
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_aba31562 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1064,7 +1064,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_aba31562
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_f73463f1
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_f73463f1
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_f73463f1 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1094,7 +1094,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_f73463f1
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_5381f2ed
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_5381f2ed
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_5381f2ed extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1124,7 +1124,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_5381f2ed
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_b056182d
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_b056182d
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_b056182d extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1154,7 +1154,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_b056182d
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_91ebc86d
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_91ebc86d
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_91ebc86d extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1184,7 +1184,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_91ebc86d
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_30af74c6
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_30af74c6
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_30af74c6 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1214,7 +1214,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_30af74c6
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_57bf69a0
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_57bf69a0
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_57bf69a0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1244,7 +1244,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_57bf69a0
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_8fbc7b72
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_8fbc7b72
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_8fbc7b72 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1274,7 +1274,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_8fbc7b72
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_61104c6c
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_61104c6c
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_61104c6c extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1304,7 +1304,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_61104c6c
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_9b030582
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_9b030582
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_9b030582 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1334,7 +1334,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_9b030582
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_3709cb5b
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_3709cb5b
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_3709cb5b extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1364,7 +1364,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_3709cb5b
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_e250b023
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_e250b023
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_e250b023 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1394,7 +1394,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_e250b023
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_fed3ae2d
+    // reg - axi_dma_reg::intr_block_t::intr_count_t_cnt_fed3ae2d
     class axi_dma_reg__intr_block_t__intr_count_t_cnt_fed3ae2d extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1424,7 +1424,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_t_cnt_fed3ae2d
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_08678f4e
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_08678f4e
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_08678f4e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1454,7 +1454,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_08678f4e
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_e1020031
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_e1020031
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e1020031 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1484,7 +1484,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e1020031
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_cfe70385
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_cfe70385
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_cfe70385 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1514,7 +1514,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_cfe70385
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_9a8b3fa0
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_9a8b3fa0
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_9a8b3fa0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1544,7 +1544,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_9a8b3fa0
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_f530dcc5
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_f530dcc5
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_f530dcc5 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1574,7 +1574,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_f530dcc5
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_60d6f4e7
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_60d6f4e7
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_60d6f4e7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1604,7 +1604,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_60d6f4e7
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_6907af43
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_6907af43
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_6907af43 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1634,7 +1634,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_6907af43
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_e2da7281
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_e2da7281
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1664,7 +1664,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e2da7281
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_3b30ac93
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_3b30ac93
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_3b30ac93 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1694,7 +1694,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_3b30ac93
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_1ab3c91c
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_1ab3c91c
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_1ab3c91c extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1724,7 +1724,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_1ab3c91c
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_f1bdde05
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_f1bdde05
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_f1bdde05 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1754,7 +1754,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_f1bdde05
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_236c6006
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_236c6006
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_236c6006 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1784,7 +1784,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_236c6006
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_e5e89525
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_e5e89525
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e5e89525 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1814,7 +1814,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_e5e89525
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_bfb3930b
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_bfb3930b
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_bfb3930b extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1844,7 +1844,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_bfb3930b
 
-    // Reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_2aa328ea
+    // reg - axi_dma_reg::intr_block_t::intr_count_incr_t_pulse_2aa328ea
     class axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_2aa328ea extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1874,7 +1874,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t__intr_count_incr_t_pulse_2aa328ea
 
-    // Regfile - axi_dma_reg::intr_block_t
+    // regfile - axi_dma_reg::intr_block_t
     class axi_dma_reg__intr_block_t extends uvm_reg_block;
         rand axi_dma_reg__intr_block_t__global_intr_en_t global_intr_en_r;
         rand axi_dma_reg__intr_block_t__error_intr_en_t error_intr_en_r;
@@ -2120,7 +2120,7 @@ package axi_dma_reg_uvm;
         endfunction : build
     endclass : axi_dma_reg__intr_block_t
 
-    // Addrmap - axi_dma_reg
+    // addrmap - axi_dma_reg
     class axi_dma_reg extends uvm_reg_block;
         rand axi_dma_reg__id id;
         rand axi_dma_reg__cap cap;

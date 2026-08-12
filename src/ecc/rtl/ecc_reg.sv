@@ -105,78 +105,86 @@ module ecc_reg (
         } intr_block_rf;
     } decoded_reg_strb_t;
     decoded_reg_strb_t decoded_reg_strb;
+    logic decoded_err;
+    logic [11:0] decoded_addr;
     logic decoded_req;
     logic decoded_req_is_wr;
     logic [31:0] decoded_wr_data;
     logic [31:0] decoded_wr_biten;
 
     always_comb begin
+        automatic logic is_valid_addr;
+        automatic logic is_valid_rw;
+        is_valid_addr = '1; // No valid address check
+        is_valid_rw = '1; // No valid RW check
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.ECC_NAME[i0] = cpuif_req_masked & (cpuif_addr == 12'h0 + i0*12'h4);
+            decoded_reg_strb.ECC_NAME[i0] = cpuif_req_masked & (cpuif_addr == 12'h0 + (12)'(i0) * 12'h4) & !cpuif_req_is_wr;
         end
         for(int i0=0; i0<2; i0++) begin
-            decoded_reg_strb.ECC_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 12'h8 + i0*12'h4);
+            decoded_reg_strb.ECC_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 12'h8 + (12)'(i0) * 12'h4) & !cpuif_req_is_wr;
         end
-        decoded_reg_strb.ECC_CTRL = cpuif_req_masked & (cpuif_addr == 12'h10);
-        decoded_reg_strb.ECC_STATUS = cpuif_req_masked & (cpuif_addr == 12'h18);
+        decoded_reg_strb.ECC_CTRL = cpuif_req_masked & (cpuif_addr == 12'h10) & cpuif_req_is_wr;
+        decoded_reg_strb.ECC_STATUS = cpuif_req_masked & (cpuif_addr == 12'h18) & !cpuif_req_is_wr;
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_SEED[i0] = cpuif_req_masked & (cpuif_addr == 12'h80 + i0*12'h4);
-        end
-        for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_MSG[i0] = cpuif_req_masked & (cpuif_addr == 12'h100 + i0*12'h4);
+            decoded_reg_strb.ECC_SEED[i0] = cpuif_req_masked & (cpuif_addr == 12'h80 + (12)'(i0) * 12'h4) & cpuif_req_is_wr;
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_PRIVKEY_OUT[i0] = cpuif_req_masked & (cpuif_addr == 12'h180 + i0*12'h4);
+            decoded_reg_strb.ECC_MSG[i0] = cpuif_req_masked & (cpuif_addr == 12'h100 + (12)'(i0) * 12'h4) & cpuif_req_is_wr;
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_PUBKEY_X[i0] = cpuif_req_masked & (cpuif_addr == 12'h200 + i0*12'h4);
+            decoded_reg_strb.ECC_PRIVKEY_OUT[i0] = cpuif_req_masked & (cpuif_addr == 12'h180 + (12)'(i0) * 12'h4) & !cpuif_req_is_wr;
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_PUBKEY_Y[i0] = cpuif_req_masked & (cpuif_addr == 12'h280 + i0*12'h4);
+            decoded_reg_strb.ECC_PUBKEY_X[i0] = cpuif_req_masked & (cpuif_addr == 12'h200 + (12)'(i0) * 12'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_SIGN_R[i0] = cpuif_req_masked & (cpuif_addr == 12'h300 + i0*12'h4);
+            decoded_reg_strb.ECC_PUBKEY_Y[i0] = cpuif_req_masked & (cpuif_addr == 12'h280 + (12)'(i0) * 12'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_SIGN_S[i0] = cpuif_req_masked & (cpuif_addr == 12'h380 + i0*12'h4);
+            decoded_reg_strb.ECC_SIGN_R[i0] = cpuif_req_masked & (cpuif_addr == 12'h300 + (12)'(i0) * 12'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_VERIFY_R[i0] = cpuif_req_masked & (cpuif_addr == 12'h400 + i0*12'h4);
+            decoded_reg_strb.ECC_SIGN_S[i0] = cpuif_req_masked & (cpuif_addr == 12'h380 + (12)'(i0) * 12'h4);
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_IV[i0] = cpuif_req_masked & (cpuif_addr == 12'h480 + i0*12'h4);
+            decoded_reg_strb.ECC_VERIFY_R[i0] = cpuif_req_masked & (cpuif_addr == 12'h400 + (12)'(i0) * 12'h4) & !cpuif_req_is_wr;
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_NONCE[i0] = cpuif_req_masked & (cpuif_addr == 12'h500 + i0*12'h4);
+            decoded_reg_strb.ECC_IV[i0] = cpuif_req_masked & (cpuif_addr == 12'h480 + (12)'(i0) * 12'h4) & cpuif_req_is_wr;
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_PRIVKEY_IN[i0] = cpuif_req_masked & (cpuif_addr == 12'h580 + i0*12'h4);
+            decoded_reg_strb.ECC_NONCE[i0] = cpuif_req_masked & (cpuif_addr == 12'h500 + (12)'(i0) * 12'h4) & cpuif_req_is_wr;
         end
         for(int i0=0; i0<12; i0++) begin
-            decoded_reg_strb.ECC_DH_SHARED_KEY[i0] = cpuif_req_masked & (cpuif_addr == 12'h5c0 + i0*12'h4);
+            decoded_reg_strb.ECC_PRIVKEY_IN[i0] = cpuif_req_masked & (cpuif_addr == 12'h580 + (12)'(i0) * 12'h4) & cpuif_req_is_wr;
+        end
+        for(int i0=0; i0<12; i0++) begin
+            decoded_reg_strb.ECC_DH_SHARED_KEY[i0] = cpuif_req_masked & (cpuif_addr == 12'h5c0 + (12)'(i0) * 12'h4) & !cpuif_req_is_wr;
         end
         decoded_reg_strb.ecc_kv_rd_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 12'h600);
-        decoded_reg_strb.ecc_kv_rd_pkey_status = cpuif_req_masked & (cpuif_addr == 12'h604);
+        decoded_reg_strb.ecc_kv_rd_pkey_status = cpuif_req_masked & (cpuif_addr == 12'h604) & !cpuif_req_is_wr;
         decoded_reg_strb.ecc_kv_rd_seed_ctrl = cpuif_req_masked & (cpuif_addr == 12'h608);
-        decoded_reg_strb.ecc_kv_rd_seed_status = cpuif_req_masked & (cpuif_addr == 12'h60c);
+        decoded_reg_strb.ecc_kv_rd_seed_status = cpuif_req_masked & (cpuif_addr == 12'h60c) & !cpuif_req_is_wr;
         decoded_reg_strb.ecc_kv_wr_pkey_ctrl = cpuif_req_masked & (cpuif_addr == 12'h610);
-        decoded_reg_strb.ecc_kv_wr_pkey_status = cpuif_req_masked & (cpuif_addr == 12'h614);
+        decoded_reg_strb.ecc_kv_wr_pkey_status = cpuif_req_masked & (cpuif_addr == 12'h614) & !cpuif_req_is_wr;
         decoded_reg_strb.intr_block_rf.global_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h800);
         decoded_reg_strb.intr_block_rf.error_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h804);
         decoded_reg_strb.intr_block_rf.notif_intr_en_r = cpuif_req_masked & (cpuif_addr == 12'h808);
-        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h80c);
-        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h810);
+        decoded_reg_strb.intr_block_rf.error_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h80c) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_global_intr_r = cpuif_req_masked & (cpuif_addr == 12'h810) & !cpuif_req_is_wr;
         decoded_reg_strb.intr_block_rf.error_internal_intr_r = cpuif_req_masked & (cpuif_addr == 12'h814);
         decoded_reg_strb.intr_block_rf.notif_internal_intr_r = cpuif_req_masked & (cpuif_addr == 12'h818);
         decoded_reg_strb.intr_block_rf.error_intr_trig_r = cpuif_req_masked & (cpuif_addr == 12'h81c);
         decoded_reg_strb.intr_block_rf.notif_intr_trig_r = cpuif_req_masked & (cpuif_addr == 12'h820);
         decoded_reg_strb.intr_block_rf.error_internal_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h900);
         decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r = cpuif_req_masked & (cpuif_addr == 12'h980);
-        decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha00);
-        decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha04);
+        decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha00) & !cpuif_req_is_wr;
+        decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r = cpuif_req_masked & (cpuif_addr == 12'ha04) & !cpuif_req_is_wr;
+        decoded_err = '0;
     end
 
     // Pass down signals to next stage
+    assign decoded_addr = cpuif_addr;
     assign decoded_req = cpuif_req_masked;
     assign decoded_req_is_wr = cpuif_req_is_wr;
     assign decoded_wr_data = cpuif_wr_data;
@@ -723,8 +731,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ECC_CTRL.CTRL.value <= 2'h0;
-        end else if(field_combo.ECC_CTRL.CTRL.load_next) begin
-            field_storage.ECC_CTRL.CTRL.value <= field_combo.ECC_CTRL.CTRL.next;
+        end else begin
+            if(field_combo.ECC_CTRL.CTRL.load_next) begin
+                field_storage.ECC_CTRL.CTRL.value <= field_combo.ECC_CTRL.CTRL.next;
+            end
         end
     end
     assign hwif_out.ECC_CTRL.CTRL.value = field_storage.ECC_CTRL.CTRL.value;
@@ -747,8 +757,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ECC_CTRL.ZEROIZE.value <= 1'h0;
-        end else if(field_combo.ECC_CTRL.ZEROIZE.load_next) begin
-            field_storage.ECC_CTRL.ZEROIZE.value <= field_combo.ECC_CTRL.ZEROIZE.next;
+        end else begin
+            if(field_combo.ECC_CTRL.ZEROIZE.load_next) begin
+                field_storage.ECC_CTRL.ZEROIZE.value <= field_combo.ECC_CTRL.ZEROIZE.next;
+            end
         end
     end
     assign hwif_out.ECC_CTRL.ZEROIZE.value = field_storage.ECC_CTRL.ZEROIZE.value;
@@ -771,8 +783,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ECC_CTRL.PCR_SIGN.value <= 1'h0;
-        end else if(field_combo.ECC_CTRL.PCR_SIGN.load_next) begin
-            field_storage.ECC_CTRL.PCR_SIGN.value <= field_combo.ECC_CTRL.PCR_SIGN.next;
+        end else begin
+            if(field_combo.ECC_CTRL.PCR_SIGN.load_next) begin
+                field_storage.ECC_CTRL.PCR_SIGN.value <= field_combo.ECC_CTRL.PCR_SIGN.next;
+            end
         end
     end
     assign hwif_out.ECC_CTRL.PCR_SIGN.value = field_storage.ECC_CTRL.PCR_SIGN.value;
@@ -795,8 +809,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ECC_CTRL.DH_SHAREDKEY.value <= 1'h0;
-        end else if(field_combo.ECC_CTRL.DH_SHAREDKEY.load_next) begin
-            field_storage.ECC_CTRL.DH_SHAREDKEY.value <= field_combo.ECC_CTRL.DH_SHAREDKEY.next;
+        end else begin
+            if(field_combo.ECC_CTRL.DH_SHAREDKEY.load_next) begin
+                field_storage.ECC_CTRL.DH_SHAREDKEY.value <= field_combo.ECC_CTRL.DH_SHAREDKEY.next;
+            end
         end
     end
     assign hwif_out.ECC_CTRL.DH_SHAREDKEY.value = field_storage.ECC_CTRL.DH_SHAREDKEY.value;
@@ -823,8 +839,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_SEED[i0].SEED.value <= 32'h0;
-            end else if(field_combo.ECC_SEED[i0].SEED.load_next) begin
-                field_storage.ECC_SEED[i0].SEED.value <= field_combo.ECC_SEED[i0].SEED.next;
+            end else begin
+                if(field_combo.ECC_SEED[i0].SEED.load_next) begin
+                    field_storage.ECC_SEED[i0].SEED.value <= field_combo.ECC_SEED[i0].SEED.next;
+                end
             end
         end
         assign hwif_out.ECC_SEED[i0].SEED.value = field_storage.ECC_SEED[i0].SEED.value;
@@ -852,8 +870,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_MSG[i0].MSG.value <= 32'h0;
-            end else if(field_combo.ECC_MSG[i0].MSG.load_next) begin
-                field_storage.ECC_MSG[i0].MSG.value <= field_combo.ECC_MSG[i0].MSG.next;
+            end else begin
+                if(field_combo.ECC_MSG[i0].MSG.load_next) begin
+                    field_storage.ECC_MSG[i0].MSG.value <= field_combo.ECC_MSG[i0].MSG.next;
+                end
             end
         end
         assign hwif_out.ECC_MSG[i0].MSG.value = field_storage.ECC_MSG[i0].MSG.value;
@@ -878,8 +898,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value <= 32'h0;
-            end else if(field_combo.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.load_next) begin
-                field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value <= field_combo.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.next;
+            end else begin
+                if(field_combo.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.load_next) begin
+                    field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value <= field_combo.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.next;
+                end
             end
         end
     end
@@ -906,8 +928,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_PUBKEY_X[i0].PUBKEY_X.value <= 32'h0;
-            end else if(field_combo.ECC_PUBKEY_X[i0].PUBKEY_X.load_next) begin
-                field_storage.ECC_PUBKEY_X[i0].PUBKEY_X.value <= field_combo.ECC_PUBKEY_X[i0].PUBKEY_X.next;
+            end else begin
+                if(field_combo.ECC_PUBKEY_X[i0].PUBKEY_X.load_next) begin
+                    field_storage.ECC_PUBKEY_X[i0].PUBKEY_X.value <= field_combo.ECC_PUBKEY_X[i0].PUBKEY_X.next;
+                end
             end
         end
         assign hwif_out.ECC_PUBKEY_X[i0].PUBKEY_X.value = field_storage.ECC_PUBKEY_X[i0].PUBKEY_X.value;
@@ -935,8 +959,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_PUBKEY_Y[i0].PUBKEY_Y.value <= 32'h0;
-            end else if(field_combo.ECC_PUBKEY_Y[i0].PUBKEY_Y.load_next) begin
-                field_storage.ECC_PUBKEY_Y[i0].PUBKEY_Y.value <= field_combo.ECC_PUBKEY_Y[i0].PUBKEY_Y.next;
+            end else begin
+                if(field_combo.ECC_PUBKEY_Y[i0].PUBKEY_Y.load_next) begin
+                    field_storage.ECC_PUBKEY_Y[i0].PUBKEY_Y.value <= field_combo.ECC_PUBKEY_Y[i0].PUBKEY_Y.next;
+                end
             end
         end
         assign hwif_out.ECC_PUBKEY_Y[i0].PUBKEY_Y.value = field_storage.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
@@ -964,8 +990,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_SIGN_R[i0].SIGN_R.value <= 32'h0;
-            end else if(field_combo.ECC_SIGN_R[i0].SIGN_R.load_next) begin
-                field_storage.ECC_SIGN_R[i0].SIGN_R.value <= field_combo.ECC_SIGN_R[i0].SIGN_R.next;
+            end else begin
+                if(field_combo.ECC_SIGN_R[i0].SIGN_R.load_next) begin
+                    field_storage.ECC_SIGN_R[i0].SIGN_R.value <= field_combo.ECC_SIGN_R[i0].SIGN_R.next;
+                end
             end
         end
         assign hwif_out.ECC_SIGN_R[i0].SIGN_R.value = field_storage.ECC_SIGN_R[i0].SIGN_R.value;
@@ -993,8 +1021,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_SIGN_S[i0].SIGN_S.value <= 32'h0;
-            end else if(field_combo.ECC_SIGN_S[i0].SIGN_S.load_next) begin
-                field_storage.ECC_SIGN_S[i0].SIGN_S.value <= field_combo.ECC_SIGN_S[i0].SIGN_S.next;
+            end else begin
+                if(field_combo.ECC_SIGN_S[i0].SIGN_S.load_next) begin
+                    field_storage.ECC_SIGN_S[i0].SIGN_S.value <= field_combo.ECC_SIGN_S[i0].SIGN_S.next;
+                end
             end
         end
         assign hwif_out.ECC_SIGN_S[i0].SIGN_S.value = field_storage.ECC_SIGN_S[i0].SIGN_S.value;
@@ -1019,8 +1049,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_VERIFY_R[i0].VERIFY_R.value <= 32'h0;
-            end else if(field_combo.ECC_VERIFY_R[i0].VERIFY_R.load_next) begin
-                field_storage.ECC_VERIFY_R[i0].VERIFY_R.value <= field_combo.ECC_VERIFY_R[i0].VERIFY_R.next;
+            end else begin
+                if(field_combo.ECC_VERIFY_R[i0].VERIFY_R.load_next) begin
+                    field_storage.ECC_VERIFY_R[i0].VERIFY_R.value <= field_combo.ECC_VERIFY_R[i0].VERIFY_R.next;
+                end
             end
         end
         assign hwif_out.ECC_VERIFY_R[i0].VERIFY_R.value = field_storage.ECC_VERIFY_R[i0].VERIFY_R.value;
@@ -1045,8 +1077,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_IV[i0].IV.value <= 32'h0;
-            end else if(field_combo.ECC_IV[i0].IV.load_next) begin
-                field_storage.ECC_IV[i0].IV.value <= field_combo.ECC_IV[i0].IV.next;
+            end else begin
+                if(field_combo.ECC_IV[i0].IV.load_next) begin
+                    field_storage.ECC_IV[i0].IV.value <= field_combo.ECC_IV[i0].IV.next;
+                end
             end
         end
         assign hwif_out.ECC_IV[i0].IV.value = field_storage.ECC_IV[i0].IV.value;
@@ -1071,8 +1105,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_NONCE[i0].NONCE.value <= 32'h0;
-            end else if(field_combo.ECC_NONCE[i0].NONCE.load_next) begin
-                field_storage.ECC_NONCE[i0].NONCE.value <= field_combo.ECC_NONCE[i0].NONCE.next;
+            end else begin
+                if(field_combo.ECC_NONCE[i0].NONCE.load_next) begin
+                    field_storage.ECC_NONCE[i0].NONCE.value <= field_combo.ECC_NONCE[i0].NONCE.next;
+                end
             end
         end
         assign hwif_out.ECC_NONCE[i0].NONCE.value = field_storage.ECC_NONCE[i0].NONCE.value;
@@ -1100,8 +1136,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value <= 32'h0;
-            end else if(field_combo.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.load_next) begin
-                field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value <= field_combo.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.next;
+            end else begin
+                if(field_combo.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.load_next) begin
+                    field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value <= field_combo.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.next;
+                end
             end
         end
         assign hwif_out.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value = field_storage.ECC_PRIVKEY_IN[i0].PRIVKEY_IN.value;
@@ -1126,8 +1164,10 @@ module ecc_reg (
         always_ff @(posedge clk or negedge hwif_in.reset_b) begin
             if(~hwif_in.reset_b) begin
                 field_storage.ECC_DH_SHARED_KEY[i0].DH_SHARED_KEY.value <= 32'h0;
-            end else if(field_combo.ECC_DH_SHARED_KEY[i0].DH_SHARED_KEY.load_next) begin
-                field_storage.ECC_DH_SHARED_KEY[i0].DH_SHARED_KEY.value <= field_combo.ECC_DH_SHARED_KEY[i0].DH_SHARED_KEY.next;
+            end else begin
+                if(field_combo.ECC_DH_SHARED_KEY[i0].DH_SHARED_KEY.load_next) begin
+                    field_storage.ECC_DH_SHARED_KEY[i0].DH_SHARED_KEY.value <= field_combo.ECC_DH_SHARED_KEY[i0].DH_SHARED_KEY.next;
+                end
             end
         end
     end
@@ -1150,8 +1190,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_pkey_ctrl.read_en.value <= 1'h0;
-        end else if(field_combo.ecc_kv_rd_pkey_ctrl.read_en.load_next) begin
-            field_storage.ecc_kv_rd_pkey_ctrl.read_en.value <= field_combo.ecc_kv_rd_pkey_ctrl.read_en.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_pkey_ctrl.read_en.load_next) begin
+                field_storage.ecc_kv_rd_pkey_ctrl.read_en.value <= field_combo.ecc_kv_rd_pkey_ctrl.read_en.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_rd_pkey_ctrl.read_en.value = field_storage.ecc_kv_rd_pkey_ctrl.read_en.value;
@@ -1171,8 +1213,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value <= 5'h0;
-        end else if(field_combo.ecc_kv_rd_pkey_ctrl.read_entry.load_next) begin
-            field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value <= field_combo.ecc_kv_rd_pkey_ctrl.read_entry.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_pkey_ctrl.read_entry.load_next) begin
+                field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value <= field_combo.ecc_kv_rd_pkey_ctrl.read_entry.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_rd_pkey_ctrl.read_entry.value = field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value;
@@ -1192,8 +1236,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.value <= 1'h0;
-        end else if(field_combo.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.load_next) begin
-            field_storage.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.value <= field_combo.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.load_next) begin
+                field_storage.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.value <= field_combo.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.value = field_storage.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.value;
@@ -1213,8 +1259,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value <= 25'h0;
-        end else if(field_combo.ecc_kv_rd_pkey_ctrl.rsvd.load_next) begin
-            field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value <= field_combo.ecc_kv_rd_pkey_ctrl.rsvd.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_pkey_ctrl.rsvd.load_next) begin
+                field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value <= field_combo.ecc_kv_rd_pkey_ctrl.rsvd.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_rd_pkey_ctrl.rsvd.value = field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value;
@@ -1237,8 +1285,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_pkey_status.VALID.value <= 1'h0;
-        end else if(field_combo.ecc_kv_rd_pkey_status.VALID.load_next) begin
-            field_storage.ecc_kv_rd_pkey_status.VALID.value <= field_combo.ecc_kv_rd_pkey_status.VALID.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_pkey_status.VALID.load_next) begin
+                field_storage.ecc_kv_rd_pkey_status.VALID.value <= field_combo.ecc_kv_rd_pkey_status.VALID.next;
+            end
         end
     end
     // Field: ecc_reg.ecc_kv_rd_seed_ctrl.read_en
@@ -1260,8 +1310,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_seed_ctrl.read_en.value <= 1'h0;
-        end else if(field_combo.ecc_kv_rd_seed_ctrl.read_en.load_next) begin
-            field_storage.ecc_kv_rd_seed_ctrl.read_en.value <= field_combo.ecc_kv_rd_seed_ctrl.read_en.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_seed_ctrl.read_en.load_next) begin
+                field_storage.ecc_kv_rd_seed_ctrl.read_en.value <= field_combo.ecc_kv_rd_seed_ctrl.read_en.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_rd_seed_ctrl.read_en.value = field_storage.ecc_kv_rd_seed_ctrl.read_en.value;
@@ -1281,8 +1333,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_seed_ctrl.read_entry.value <= 5'h0;
-        end else if(field_combo.ecc_kv_rd_seed_ctrl.read_entry.load_next) begin
-            field_storage.ecc_kv_rd_seed_ctrl.read_entry.value <= field_combo.ecc_kv_rd_seed_ctrl.read_entry.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_seed_ctrl.read_entry.load_next) begin
+                field_storage.ecc_kv_rd_seed_ctrl.read_entry.value <= field_combo.ecc_kv_rd_seed_ctrl.read_entry.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_rd_seed_ctrl.read_entry.value = field_storage.ecc_kv_rd_seed_ctrl.read_entry.value;
@@ -1302,8 +1356,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_seed_ctrl.pcr_hash_extend.value <= 1'h0;
-        end else if(field_combo.ecc_kv_rd_seed_ctrl.pcr_hash_extend.load_next) begin
-            field_storage.ecc_kv_rd_seed_ctrl.pcr_hash_extend.value <= field_combo.ecc_kv_rd_seed_ctrl.pcr_hash_extend.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_seed_ctrl.pcr_hash_extend.load_next) begin
+                field_storage.ecc_kv_rd_seed_ctrl.pcr_hash_extend.value <= field_combo.ecc_kv_rd_seed_ctrl.pcr_hash_extend.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_rd_seed_ctrl.pcr_hash_extend.value = field_storage.ecc_kv_rd_seed_ctrl.pcr_hash_extend.value;
@@ -1323,8 +1379,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_seed_ctrl.rsvd.value <= 25'h0;
-        end else if(field_combo.ecc_kv_rd_seed_ctrl.rsvd.load_next) begin
-            field_storage.ecc_kv_rd_seed_ctrl.rsvd.value <= field_combo.ecc_kv_rd_seed_ctrl.rsvd.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_seed_ctrl.rsvd.load_next) begin
+                field_storage.ecc_kv_rd_seed_ctrl.rsvd.value <= field_combo.ecc_kv_rd_seed_ctrl.rsvd.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_rd_seed_ctrl.rsvd.value = field_storage.ecc_kv_rd_seed_ctrl.rsvd.value;
@@ -1347,8 +1405,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_rd_seed_status.VALID.value <= 1'h0;
-        end else if(field_combo.ecc_kv_rd_seed_status.VALID.load_next) begin
-            field_storage.ecc_kv_rd_seed_status.VALID.value <= field_combo.ecc_kv_rd_seed_status.VALID.next;
+        end else begin
+            if(field_combo.ecc_kv_rd_seed_status.VALID.load_next) begin
+                field_storage.ecc_kv_rd_seed_status.VALID.value <= field_combo.ecc_kv_rd_seed_status.VALID.next;
+            end
         end
     end
     // Field: ecc_reg.ecc_kv_wr_pkey_ctrl.write_en
@@ -1370,8 +1430,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.write_en.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.write_en.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.write_en.value <= field_combo.ecc_kv_wr_pkey_ctrl.write_en.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.write_en.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.write_en.value <= field_combo.ecc_kv_wr_pkey_ctrl.write_en.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.write_en.value = field_storage.ecc_kv_wr_pkey_ctrl.write_en.value;
@@ -1391,8 +1453,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value <= 5'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.write_entry.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value <= field_combo.ecc_kv_wr_pkey_ctrl.write_entry.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.write_entry.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value <= field_combo.ecc_kv_wr_pkey_ctrl.write_entry.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.write_entry.value = field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value;
@@ -1412,8 +1476,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value;
@@ -1433,8 +1499,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value;
@@ -1454,8 +1522,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.value;
@@ -1475,8 +1545,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value;
@@ -1496,8 +1568,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value;
@@ -1517,8 +1591,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value;
@@ -1538,8 +1614,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value;
@@ -1559,8 +1637,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value;
@@ -1580,8 +1660,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.value <= field_combo.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.value = field_storage.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.value;
@@ -1601,8 +1683,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value <= 17'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_ctrl.rsvd.load_next) begin
-            field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value <= field_combo.ecc_kv_wr_pkey_ctrl.rsvd.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_ctrl.rsvd.load_next) begin
+                field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value <= field_combo.ecc_kv_wr_pkey_ctrl.rsvd.next;
+            end
         end
     end
     assign hwif_out.ecc_kv_wr_pkey_ctrl.rsvd.value = field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value;
@@ -1625,8 +1709,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.ecc_kv_wr_pkey_status.VALID.value <= 1'h0;
-        end else if(field_combo.ecc_kv_wr_pkey_status.VALID.load_next) begin
-            field_storage.ecc_kv_wr_pkey_status.VALID.value <= field_combo.ecc_kv_wr_pkey_status.VALID.next;
+        end else begin
+            if(field_combo.ecc_kv_wr_pkey_status.VALID.load_next) begin
+                field_storage.ecc_kv_wr_pkey_status.VALID.value <= field_combo.ecc_kv_wr_pkey_status.VALID.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.global_intr_en_r.error_en
@@ -1645,8 +1731,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.error_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.error_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.error_en.value <= field_combo.intr_block_rf.global_intr_en_r.error_en.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.global_intr_en_r.notif_en
@@ -1665,8 +1753,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
-            field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.global_intr_en_r.notif_en.load_next) begin
+                field_storage.intr_block_rf.global_intr_en_r.notif_en.value <= field_combo.intr_block_rf.global_intr_en_r.notif_en.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.error_intr_en_r.error_internal_en
@@ -1685,8 +1775,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_en_r.error_internal_en.load_next) begin
-            field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value <= field_combo.intr_block_rf.error_intr_en_r.error_internal_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_en_r.error_internal_en.load_next) begin
+                field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value <= field_combo.intr_block_rf.error_intr_en_r.error_internal_en.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.notif_intr_en_r.notif_cmd_done_en
@@ -1705,8 +1797,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.load_next) begin
-            field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.load_next) begin
+                field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value <= field_combo.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.error_global_intr_r.agg_sts
@@ -1725,8 +1819,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.error_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.error_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_global_intr_r.intr =
@@ -1747,8 +1843,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
-            field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_global_intr_r.agg_sts.load_next) begin
+                field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value <= field_combo.intr_block_rf.notif_global_intr_r.agg_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_global_intr_r.intr =
@@ -1759,8 +1857,8 @@ module ecc_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value | field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
+        if(field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.error_internal_intr_r.error_internal_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1775,8 +1873,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
         if(~hwif_in.hard_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_r.error_internal_sts.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error_internal_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_r.error_internal_sts.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error_internal_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.error_internal_intr_r.intr =
@@ -1787,8 +1887,8 @@ module ecc_reg (
         automatic logic load_next_c;
         next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
         load_next_c = '0;
-        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value != '0) begin // stickybit
-            next_c = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value | field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        if(field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value) begin // stickybit
+            next_c = '1;
             load_next_c = '1;
         end else if(hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset) begin // HW Set
             next_c = '1;
@@ -1803,8 +1903,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.load_next) begin
-            field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.load_next) begin
+                field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value <= field_combo.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.next;
+            end
         end
     end
     assign hwif_out.intr_block_rf.notif_internal_intr_r.intr =
@@ -1828,8 +1930,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_intr_trig_r.error_internal_trig.load_next) begin
-            field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error_internal_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_intr_trig_r.error_internal_trig.load_next) begin
+                field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value <= field_combo.intr_block_rf.error_intr_trig_r.error_internal_trig.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig
@@ -1851,8 +1955,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.load_next) begin
-            field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.load_next) begin
+                field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value <= field_combo.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.error_internal_intr_count_r.cnt
@@ -1875,18 +1981,16 @@ module ecc_reg (
         end
         field_combo.intr_block_rf.error_internal_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.error_internal_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.error_internal_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.error_internal_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.hard_reset_b) begin
         if(~hwif_in.hard_reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value <= field_combo.intr_block_rf.error_internal_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value <= field_combo.intr_block_rf.error_internal_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.notif_cmd_done_intr_count_r.cnt
@@ -1909,18 +2013,16 @@ module ecc_reg (
         end
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.incrthreshold = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value >= 32'hffffffff);
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.incrsaturate = (field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value >= 32'hffffffff);
-        if(next_c > 32'hffffffff) begin
-            next_c = 32'hffffffff;
-            load_next_c = '1;
-        end
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next = next_c;
         field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= 32'h0;
-        end else if(field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next) begin
-            field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.load_next) begin
+                field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_r.cnt.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.error_internal_intr_count_incr_r.pulse
@@ -1950,8 +2052,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.error_internal_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error_internal_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.error_internal_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.error_internal_intr_count_incr_r.pulse.next;
+            end
         end
     end
     // Field: ecc_reg.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse
@@ -1981,8 +2085,10 @@ module ecc_reg (
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
             field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= 1'h0;
-        end else if(field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.load_next) begin
-            field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.next;
+        end else begin
+            if(field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.load_next) begin
+                field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value <= field_combo.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.next;
+            end
         end
     end
 
@@ -1997,108 +2103,148 @@ module ecc_reg (
     // Readback
     //--------------------------------------------------------------------------
 
+    logic [11:0] rd_mux_addr;
+    assign rd_mux_addr = decoded_addr;
+
     logic readback_err;
     logic readback_done;
     logic [31:0] readback_data;
-
-    // Assign readback values to a flattened array
-    logic [108-1:0][31:0] readback_array;
-    for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 0][31:0] = (decoded_reg_strb.ECC_NAME[i0] && !decoded_req_is_wr) ? hwif_in.ECC_NAME[i0].NAME.next : '0;
-    end
-    for(genvar i0=0; i0<2; i0++) begin
-        assign readback_array[i0*1 + 2][31:0] = (decoded_reg_strb.ECC_VERSION[i0] && !decoded_req_is_wr) ? hwif_in.ECC_VERSION[i0].VERSION.next : '0;
-    end
-    assign readback_array[4][0:0] = (decoded_reg_strb.ECC_STATUS && !decoded_req_is_wr) ? hwif_in.ECC_STATUS.READY.next : '0;
-    assign readback_array[4][1:1] = (decoded_reg_strb.ECC_STATUS && !decoded_req_is_wr) ? hwif_in.ECC_STATUS.VALID.next : '0;
-    assign readback_array[4][31:2] = '0;
-    for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.ECC_PRIVKEY_OUT[i0] && !decoded_req_is_wr) ? field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value : '0;
-    end
-    for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 17][31:0] = (decoded_reg_strb.ECC_PUBKEY_X[i0] && !decoded_req_is_wr) ? field_storage.ECC_PUBKEY_X[i0].PUBKEY_X.value : '0;
-    end
-    for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 29][31:0] = (decoded_reg_strb.ECC_PUBKEY_Y[i0] && !decoded_req_is_wr) ? field_storage.ECC_PUBKEY_Y[i0].PUBKEY_Y.value : '0;
-    end
-    for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 41][31:0] = (decoded_reg_strb.ECC_SIGN_R[i0] && !decoded_req_is_wr) ? field_storage.ECC_SIGN_R[i0].SIGN_R.value : '0;
-    end
-    for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 53][31:0] = (decoded_reg_strb.ECC_SIGN_S[i0] && !decoded_req_is_wr) ? field_storage.ECC_SIGN_S[i0].SIGN_S.value : '0;
-    end
-    for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 65][31:0] = (decoded_reg_strb.ECC_VERIFY_R[i0] && !decoded_req_is_wr) ? field_storage.ECC_VERIFY_R[i0].VERIFY_R.value : '0;
-    end
-    for(genvar i0=0; i0<12; i0++) begin
-        assign readback_array[i0*1 + 77][31:0] = (decoded_reg_strb.ECC_DH_SHARED_KEY[i0] && !decoded_req_is_wr) ? field_storage.ECC_DH_SHARED_KEY[i0].DH_SHARED_KEY.value : '0;
-    end
-    assign readback_array[89][0:0] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.read_en.value : '0;
-    assign readback_array[89][5:1] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value : '0;
-    assign readback_array[89][6:6] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.value : '0;
-    assign readback_array[89][31:7] = (decoded_reg_strb.ecc_kv_rd_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value : '0;
-    assign readback_array[90][0:0] = (decoded_reg_strb.ecc_kv_rd_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_pkey_status.READY.next : '0;
-    assign readback_array[90][1:1] = (decoded_reg_strb.ecc_kv_rd_pkey_status && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_pkey_status.VALID.value : '0;
-    assign readback_array[90][9:2] = (decoded_reg_strb.ecc_kv_rd_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_pkey_status.ERROR.next : '0;
-    assign readback_array[90][31:10] = '0;
-    assign readback_array[91][0:0] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.read_en.value : '0;
-    assign readback_array[91][5:1] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.read_entry.value : '0;
-    assign readback_array[91][6:6] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.pcr_hash_extend.value : '0;
-    assign readback_array[91][31:7] = (decoded_reg_strb.ecc_kv_rd_seed_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_ctrl.rsvd.value : '0;
-    assign readback_array[92][0:0] = (decoded_reg_strb.ecc_kv_rd_seed_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_seed_status.READY.next : '0;
-    assign readback_array[92][1:1] = (decoded_reg_strb.ecc_kv_rd_seed_status && !decoded_req_is_wr) ? field_storage.ecc_kv_rd_seed_status.VALID.value : '0;
-    assign readback_array[92][9:2] = (decoded_reg_strb.ecc_kv_rd_seed_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_rd_seed_status.ERROR.next : '0;
-    assign readback_array[92][31:10] = '0;
-    assign readback_array[93][0:0] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.write_en.value : '0;
-    assign readback_array[93][5:1] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value : '0;
-    assign readback_array[93][6:6] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value : '0;
-    assign readback_array[93][7:7] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value : '0;
-    assign readback_array[93][8:8] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.value : '0;
-    assign readback_array[93][9:9] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value : '0;
-    assign readback_array[93][10:10] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value : '0;
-    assign readback_array[93][11:11] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value : '0;
-    assign readback_array[93][12:12] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value : '0;
-    assign readback_array[93][13:13] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value : '0;
-    assign readback_array[93][14:14] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.value : '0;
-    assign readback_array[93][31:15] = (decoded_reg_strb.ecc_kv_wr_pkey_ctrl && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value : '0;
-    assign readback_array[94][0:0] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_wr_pkey_status.READY.next : '0;
-    assign readback_array[94][1:1] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? field_storage.ecc_kv_wr_pkey_status.VALID.value : '0;
-    assign readback_array[94][9:2] = (decoded_reg_strb.ecc_kv_wr_pkey_status && !decoded_req_is_wr) ? hwif_in.ecc_kv_wr_pkey_status.ERROR.next : '0;
-    assign readback_array[94][31:10] = '0;
-    assign readback_array[95][0:0] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.error_en.value : '0;
-    assign readback_array[95][1:1] = (decoded_reg_strb.intr_block_rf.global_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.global_intr_en_r.notif_en.value : '0;
-    assign readback_array[95][31:2] = '0;
-    assign readback_array[96][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value : '0;
-    assign readback_array[96][31:1] = '0;
-    assign readback_array[97][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_en_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value : '0;
-    assign readback_array[97][31:1] = '0;
-    assign readback_array[98][0:0] = (decoded_reg_strb.intr_block_rf.error_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_global_intr_r.agg_sts.value : '0;
-    assign readback_array[98][31:1] = '0;
-    assign readback_array[99][0:0] = (decoded_reg_strb.intr_block_rf.notif_global_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value : '0;
-    assign readback_array[99][31:1] = '0;
-    assign readback_array[100][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value : '0;
-    assign readback_array[100][31:1] = '0;
-    assign readback_array[101][0:0] = (decoded_reg_strb.intr_block_rf.notif_internal_intr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value : '0;
-    assign readback_array[101][31:1] = '0;
-    assign readback_array[102][0:0] = (decoded_reg_strb.intr_block_rf.error_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value : '0;
-    assign readback_array[102][31:1] = '0;
-    assign readback_array[103][0:0] = (decoded_reg_strb.intr_block_rf.notif_intr_trig_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value : '0;
-    assign readback_array[103][31:1] = '0;
-    assign readback_array[104][31:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value : '0;
-    assign readback_array[105][31:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value : '0;
-    assign readback_array[106][0:0] = (decoded_reg_strb.intr_block_rf.error_internal_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[106][31:1] = '0;
-    assign readback_array[107][0:0] = (decoded_reg_strb.intr_block_rf.notif_cmd_done_intr_count_incr_r && !decoded_req_is_wr) ? field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value : '0;
-    assign readback_array[107][31:1] = '0;
-
-    // Reduce the array
     always_comb begin
         automatic logic [31:0] readback_data_var;
+        readback_data_var = '0;
+        for(int i0=0; i0<2; i0++) begin
+            if(rd_mux_addr == 12'h0 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = hwif_in.ECC_NAME[i0].NAME.next;
+            end
+        end
+        for(int i0=0; i0<2; i0++) begin
+            if(rd_mux_addr == 12'h8 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = hwif_in.ECC_VERSION[i0].VERSION.next;
+            end
+        end
+        if(rd_mux_addr == 12'h18) begin
+            readback_data_var[0] = hwif_in.ECC_STATUS.READY.next;
+            readback_data_var[1] = hwif_in.ECC_STATUS.VALID.next;
+        end
+        for(int i0=0; i0<12; i0++) begin
+            if(rd_mux_addr == 12'h180 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value;
+            end
+        end
+        for(int i0=0; i0<12; i0++) begin
+            if(rd_mux_addr == 12'h200 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = field_storage.ECC_PUBKEY_X[i0].PUBKEY_X.value;
+            end
+        end
+        for(int i0=0; i0<12; i0++) begin
+            if(rd_mux_addr == 12'h280 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = field_storage.ECC_PUBKEY_Y[i0].PUBKEY_Y.value;
+            end
+        end
+        for(int i0=0; i0<12; i0++) begin
+            if(rd_mux_addr == 12'h300 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = field_storage.ECC_SIGN_R[i0].SIGN_R.value;
+            end
+        end
+        for(int i0=0; i0<12; i0++) begin
+            if(rd_mux_addr == 12'h380 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = field_storage.ECC_SIGN_S[i0].SIGN_S.value;
+            end
+        end
+        for(int i0=0; i0<12; i0++) begin
+            if(rd_mux_addr == 12'h400 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = field_storage.ECC_VERIFY_R[i0].VERIFY_R.value;
+            end
+        end
+        for(int i0=0; i0<12; i0++) begin
+            if(rd_mux_addr == 12'h5c0 + (12)'(i0) * 12'h4) begin
+                readback_data_var[31:0] = field_storage.ECC_DH_SHARED_KEY[i0].DH_SHARED_KEY.value;
+            end
+        end
+        if(rd_mux_addr == 12'h600) begin
+            readback_data_var[0] = field_storage.ecc_kv_rd_pkey_ctrl.read_en.value;
+            readback_data_var[5:1] = field_storage.ecc_kv_rd_pkey_ctrl.read_entry.value;
+            readback_data_var[6] = field_storage.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.value;
+            readback_data_var[31:7] = field_storage.ecc_kv_rd_pkey_ctrl.rsvd.value;
+        end
+        if(rd_mux_addr == 12'h604) begin
+            readback_data_var[0] = hwif_in.ecc_kv_rd_pkey_status.READY.next;
+            readback_data_var[1] = field_storage.ecc_kv_rd_pkey_status.VALID.value;
+            readback_data_var[9:2] = hwif_in.ecc_kv_rd_pkey_status.ERROR.next;
+        end
+        if(rd_mux_addr == 12'h608) begin
+            readback_data_var[0] = field_storage.ecc_kv_rd_seed_ctrl.read_en.value;
+            readback_data_var[5:1] = field_storage.ecc_kv_rd_seed_ctrl.read_entry.value;
+            readback_data_var[6] = field_storage.ecc_kv_rd_seed_ctrl.pcr_hash_extend.value;
+            readback_data_var[31:7] = field_storage.ecc_kv_rd_seed_ctrl.rsvd.value;
+        end
+        if(rd_mux_addr == 12'h60c) begin
+            readback_data_var[0] = hwif_in.ecc_kv_rd_seed_status.READY.next;
+            readback_data_var[1] = field_storage.ecc_kv_rd_seed_status.VALID.value;
+            readback_data_var[9:2] = hwif_in.ecc_kv_rd_seed_status.ERROR.next;
+        end
+        if(rd_mux_addr == 12'h610) begin
+            readback_data_var[0] = field_storage.ecc_kv_wr_pkey_ctrl.write_en.value;
+            readback_data_var[5:1] = field_storage.ecc_kv_wr_pkey_ctrl.write_entry.value;
+            readback_data_var[6] = field_storage.ecc_kv_wr_pkey_ctrl.hmac_key_dest_valid.value;
+            readback_data_var[7] = field_storage.ecc_kv_wr_pkey_ctrl.hmac_block_dest_valid.value;
+            readback_data_var[8] = field_storage.ecc_kv_wr_pkey_ctrl.mldsa_seed_dest_valid.value;
+            readback_data_var[9] = field_storage.ecc_kv_wr_pkey_ctrl.ecc_pkey_dest_valid.value;
+            readback_data_var[10] = field_storage.ecc_kv_wr_pkey_ctrl.ecc_seed_dest_valid.value;
+            readback_data_var[11] = field_storage.ecc_kv_wr_pkey_ctrl.aes_key_dest_valid.value;
+            readback_data_var[12] = field_storage.ecc_kv_wr_pkey_ctrl.mlkem_seed_dest_valid.value;
+            readback_data_var[13] = field_storage.ecc_kv_wr_pkey_ctrl.mlkem_msg_dest_valid.value;
+            readback_data_var[14] = field_storage.ecc_kv_wr_pkey_ctrl.dma_data_dest_valid.value;
+            readback_data_var[31:15] = field_storage.ecc_kv_wr_pkey_ctrl.rsvd.value;
+        end
+        if(rd_mux_addr == 12'h614) begin
+            readback_data_var[0] = hwif_in.ecc_kv_wr_pkey_status.READY.next;
+            readback_data_var[1] = field_storage.ecc_kv_wr_pkey_status.VALID.value;
+            readback_data_var[9:2] = hwif_in.ecc_kv_wr_pkey_status.ERROR.next;
+        end
+        if(rd_mux_addr == 12'h800) begin
+            readback_data_var[0] = field_storage.intr_block_rf.global_intr_en_r.error_en.value;
+            readback_data_var[1] = field_storage.intr_block_rf.global_intr_en_r.notif_en.value;
+        end
+        if(rd_mux_addr == 12'h804) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value;
+        end
+        if(rd_mux_addr == 12'h808) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_en_r.notif_cmd_done_en.value;
+        end
+        if(rd_mux_addr == 12'h80c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 12'h810) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_global_intr_r.agg_sts.value;
+        end
+        if(rd_mux_addr == 12'h814) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value;
+        end
+        if(rd_mux_addr == 12'h818) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value;
+        end
+        if(rd_mux_addr == 12'h81c) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_intr_trig_r.error_internal_trig.value;
+        end
+        if(rd_mux_addr == 12'h820) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+        end
+        if(rd_mux_addr == 12'h900) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.error_internal_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'h980) begin
+            readback_data_var[31:0] = field_storage.intr_block_rf.notif_cmd_done_intr_count_r.cnt.value;
+        end
+        if(rd_mux_addr == 12'ha00) begin
+            readback_data_var[0] = field_storage.intr_block_rf.error_internal_intr_count_incr_r.pulse.value;
+        end
+        if(rd_mux_addr == 12'ha04) begin
+            readback_data_var[0] = field_storage.intr_block_rf.notif_cmd_done_intr_count_incr_r.pulse.value;
+        end
+        readback_data = readback_data_var;
         readback_done = decoded_req & ~decoded_req_is_wr;
         readback_err = '0;
-        readback_data_var = '0;
-        for(int i=0; i<108; i++) readback_data_var |= readback_array[i];
-        readback_data = readback_data_var;
     end
 
     assign cpuif_rd_ack = readback_done;

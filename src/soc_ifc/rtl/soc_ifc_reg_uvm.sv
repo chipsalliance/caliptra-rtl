@@ -4,7 +4,7 @@ package soc_ifc_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "soc_ifc_reg_covergroups.svh"
-    // Reg - soc_ifc_reg::CPTRA_HW_ERROR_FATAL
+    // reg - soc_ifc_reg::CPTRA_HW_ERROR_FATAL
     class soc_ifc_reg__CPTRA_HW_ERROR_FATAL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -69,7 +69,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_ERROR_FATAL
 
-    // Reg - soc_ifc_reg::CPTRA_HW_ERROR_NON_FATAL
+    // reg - soc_ifc_reg::CPTRA_HW_ERROR_NON_FATAL
     class soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -119,7 +119,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL
 
-    // Reg - soc_ifc_reg::CPTRA_FW_ERROR_FATAL
+    // reg - soc_ifc_reg::CPTRA_FW_ERROR_FATAL
     class soc_ifc_reg__CPTRA_FW_ERROR_FATAL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -149,7 +149,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_ERROR_FATAL
 
-    // Reg - soc_ifc_reg::CPTRA_FW_ERROR_NON_FATAL
+    // reg - soc_ifc_reg::CPTRA_FW_ERROR_NON_FATAL
     class soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -179,7 +179,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_ERROR_NON_FATAL
 
-    // Reg - soc_ifc_reg::CPTRA_HW_ERROR_ENC
+    // reg - soc_ifc_reg::CPTRA_HW_ERROR_ENC
     class soc_ifc_reg__CPTRA_HW_ERROR_ENC extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -209,7 +209,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_ERROR_ENC
 
-    // Reg - soc_ifc_reg::CPTRA_FW_ERROR_ENC
+    // reg - soc_ifc_reg::CPTRA_FW_ERROR_ENC
     class soc_ifc_reg__CPTRA_FW_ERROR_ENC extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -239,7 +239,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_ERROR_ENC
 
-    // Reg - soc_ifc_reg::CPTRA_FW_EXTENDED_ERROR_INFO
+    // reg - soc_ifc_reg::CPTRA_FW_EXTENDED_ERROR_INFO
     class soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -269,7 +269,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_EXTENDED_ERROR_INFO
 
-    // Reg - soc_ifc_reg::CPTRA_BOOT_STATUS
+    // reg - soc_ifc_reg::CPTRA_BOOT_STATUS
     class soc_ifc_reg__CPTRA_BOOT_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -299,7 +299,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_BOOT_STATUS
 
-    // Reg - soc_ifc_reg::CPTRA_FLOW_STATUS
+    // reg - soc_ifc_reg::CPTRA_FLOW_STATUS
     class soc_ifc_reg__CPTRA_FLOW_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -359,7 +359,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FLOW_STATUS
 
-    // Reg - soc_ifc_reg::CPTRA_RESET_REASON
+    // reg - soc_ifc_reg::CPTRA_RESET_REASON
     class soc_ifc_reg__CPTRA_RESET_REASON extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -394,7 +394,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_RESET_REASON
 
-    // Reg - soc_ifc_reg::CPTRA_SECURITY_STATE
+    // reg - soc_ifc_reg::CPTRA_SECURITY_STATE
     class soc_ifc_reg__CPTRA_SECURITY_STATE extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -439,7 +439,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_SECURITY_STATE
 
-    // Reg - soc_ifc_reg::CPTRA_MBOX_VALID_AXI_USER
+    // reg - soc_ifc_reg::CPTRA_MBOX_VALID_AXI_USER
     class soc_ifc_reg__CPTRA_MBOX_VALID_AXI_USER extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -469,7 +469,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_MBOX_VALID_AXI_USER
 
-    // Reg - soc_ifc_reg::CPTRA_MBOX_AXI_USER_LOCK
+    // reg - soc_ifc_reg::CPTRA_MBOX_AXI_USER_LOCK
     class soc_ifc_reg__CPTRA_MBOX_AXI_USER_LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -499,7 +499,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_MBOX_AXI_USER_LOCK
 
-    // Reg - soc_ifc_reg::CPTRA_TRNG_VALID_AXI_USER
+    // reg - soc_ifc_reg::CPTRA_TRNG_VALID_AXI_USER
     class soc_ifc_reg__CPTRA_TRNG_VALID_AXI_USER extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -529,7 +529,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_VALID_AXI_USER
 
-    // Reg - soc_ifc_reg::CPTRA_TRNG_AXI_USER_LOCK
+    // reg - soc_ifc_reg::CPTRA_TRNG_AXI_USER_LOCK
     class soc_ifc_reg__CPTRA_TRNG_AXI_USER_LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -559,7 +559,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_AXI_USER_LOCK
 
-    // Reg - soc_ifc_reg::CPTRA_TRNG_DATA
+    // reg - soc_ifc_reg::CPTRA_TRNG_DATA
     class soc_ifc_reg__CPTRA_TRNG_DATA extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -589,7 +589,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_DATA
 
-    // Reg - soc_ifc_reg::CPTRA_TRNG_CTRL
+    // reg - soc_ifc_reg::CPTRA_TRNG_CTRL
     class soc_ifc_reg__CPTRA_TRNG_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -610,7 +610,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.clear = new("clear");
-            this.clear.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.clear.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(clear_bit_cg[bt]) clear_bit_cg[bt] = new();
             end
@@ -619,7 +619,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_CTRL
 
-    // Reg - soc_ifc_reg::CPTRA_TRNG_STATUS
+    // reg - soc_ifc_reg::CPTRA_TRNG_STATUS
     class soc_ifc_reg__CPTRA_TRNG_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -654,7 +654,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TRNG_STATUS
 
-    // Reg - soc_ifc_reg::CPTRA_FUSE_WR_DONE
+    // reg - soc_ifc_reg::CPTRA_FUSE_WR_DONE
     class soc_ifc_reg__CPTRA_FUSE_WR_DONE extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -684,7 +684,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FUSE_WR_DONE
 
-    // Reg - soc_ifc_reg::CPTRA_TIMER_CONFIG
+    // reg - soc_ifc_reg::CPTRA_TIMER_CONFIG
     class soc_ifc_reg__CPTRA_TIMER_CONFIG extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -714,7 +714,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_TIMER_CONFIG
 
-    // Reg - soc_ifc_reg::CPTRA_BOOTFSM_GO
+    // reg - soc_ifc_reg::CPTRA_BOOTFSM_GO
     class soc_ifc_reg__CPTRA_BOOTFSM_GO extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -744,7 +744,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_BOOTFSM_GO
 
-    // Reg - soc_ifc_reg::CPTRA_DBG_MANUF_SERVICE_REG
+    // reg - soc_ifc_reg::CPTRA_DBG_MANUF_SERVICE_REG
     class soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -774,7 +774,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_DBG_MANUF_SERVICE_REG
 
-    // Reg - soc_ifc_reg::CPTRA_CLK_GATING_EN
+    // reg - soc_ifc_reg::CPTRA_CLK_GATING_EN
     class soc_ifc_reg__CPTRA_CLK_GATING_EN extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -804,7 +804,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_CLK_GATING_EN
 
-    // Reg - soc_ifc_reg::CPTRA_GENERIC_INPUT_WIRES
+    // reg - soc_ifc_reg::CPTRA_GENERIC_INPUT_WIRES
     class soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -834,7 +834,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_GENERIC_INPUT_WIRES
 
-    // Reg - soc_ifc_reg::CPTRA_GENERIC_OUTPUT_WIRES
+    // reg - soc_ifc_reg::CPTRA_GENERIC_OUTPUT_WIRES
     class soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -864,7 +864,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_GENERIC_OUTPUT_WIRES
 
-    // Reg - soc_ifc_reg::CPTRA_HW_REV_ID
+    // reg - soc_ifc_reg::CPTRA_HW_REV_ID
     class soc_ifc_reg__CPTRA_HW_REV_ID extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -899,7 +899,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_REV_ID
 
-    // Reg - soc_ifc_reg::CPTRA_FW_REV_ID
+    // reg - soc_ifc_reg::CPTRA_FW_REV_ID
     class soc_ifc_reg__CPTRA_FW_REV_ID extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -929,7 +929,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_REV_ID
 
-    // Reg - soc_ifc_reg::CPTRA_HW_CONFIG
+    // reg - soc_ifc_reg::CPTRA_HW_CONFIG
     class soc_ifc_reg__CPTRA_HW_CONFIG extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -989,7 +989,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_CONFIG
 
-    // Reg - soc_ifc_reg::CPTRA_WDT_TIMER1_EN
+    // reg - soc_ifc_reg::CPTRA_WDT_TIMER1_EN
     class soc_ifc_reg__CPTRA_WDT_TIMER1_EN extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1019,7 +1019,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER1_EN
 
-    // Reg - soc_ifc_reg::CPTRA_WDT_TIMER1_CTRL
+    // reg - soc_ifc_reg::CPTRA_WDT_TIMER1_CTRL
     class soc_ifc_reg__CPTRA_WDT_TIMER1_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1040,7 +1040,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.timer1_restart = new("timer1_restart");
-            this.timer1_restart.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.timer1_restart.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(timer1_restart_bit_cg[bt]) timer1_restart_bit_cg[bt] = new();
             end
@@ -1049,7 +1049,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER1_CTRL
 
-    // Reg - soc_ifc_reg::CPTRA_WDT_TIMER1_TIMEOUT_PERIOD
+    // reg - soc_ifc_reg::CPTRA_WDT_TIMER1_TIMEOUT_PERIOD
     class soc_ifc_reg__CPTRA_WDT_TIMER1_TIMEOUT_PERIOD extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1079,7 +1079,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER1_TIMEOUT_PERIOD
 
-    // Reg - soc_ifc_reg::CPTRA_WDT_TIMER2_EN
+    // reg - soc_ifc_reg::CPTRA_WDT_TIMER2_EN
     class soc_ifc_reg__CPTRA_WDT_TIMER2_EN extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1109,7 +1109,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER2_EN
 
-    // Reg - soc_ifc_reg::CPTRA_WDT_TIMER2_CTRL
+    // reg - soc_ifc_reg::CPTRA_WDT_TIMER2_CTRL
     class soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1130,7 +1130,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.timer2_restart = new("timer2_restart");
-            this.timer2_restart.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.timer2_restart.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(timer2_restart_bit_cg[bt]) timer2_restart_bit_cg[bt] = new();
             end
@@ -1139,7 +1139,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER2_CTRL
 
-    // Reg - soc_ifc_reg::CPTRA_WDT_TIMER2_TIMEOUT_PERIOD
+    // reg - soc_ifc_reg::CPTRA_WDT_TIMER2_TIMEOUT_PERIOD
     class soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1169,7 +1169,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_TIMER2_TIMEOUT_PERIOD
 
-    // Reg - soc_ifc_reg::CPTRA_WDT_STATUS
+    // reg - soc_ifc_reg::CPTRA_WDT_STATUS
     class soc_ifc_reg__CPTRA_WDT_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1204,7 +1204,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_STATUS
 
-    // Reg - soc_ifc_reg::CPTRA_FUSE_VALID_AXI_USER
+    // reg - soc_ifc_reg::CPTRA_FUSE_VALID_AXI_USER
     class soc_ifc_reg__CPTRA_FUSE_VALID_AXI_USER extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1234,7 +1234,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FUSE_VALID_AXI_USER
 
-    // Reg - soc_ifc_reg::CPTRA_FUSE_AXI_USER_LOCK
+    // reg - soc_ifc_reg::CPTRA_FUSE_AXI_USER_LOCK
     class soc_ifc_reg__CPTRA_FUSE_AXI_USER_LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1264,7 +1264,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FUSE_AXI_USER_LOCK
 
-    // Reg - soc_ifc_reg::CPTRA_WDT_CFG
+    // reg - soc_ifc_reg::CPTRA_WDT_CFG
     class soc_ifc_reg__CPTRA_WDT_CFG extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1294,7 +1294,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_WDT_CFG
 
-    // Reg - soc_ifc_reg::CPTRA_RSVD_REG
+    // reg - soc_ifc_reg::CPTRA_RSVD_REG
     class soc_ifc_reg__CPTRA_RSVD_REG extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1324,7 +1324,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_RSVD_REG
 
-    // Reg - soc_ifc_reg::CPTRA_HW_CAPABILITIES
+    // reg - soc_ifc_reg::CPTRA_HW_CAPABILITIES
     class soc_ifc_reg__CPTRA_HW_CAPABILITIES extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1354,7 +1354,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_HW_CAPABILITIES
 
-    // Reg - soc_ifc_reg::CPTRA_FW_CAPABILITIES
+    // reg - soc_ifc_reg::CPTRA_FW_CAPABILITIES
     class soc_ifc_reg__CPTRA_FW_CAPABILITIES extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1384,7 +1384,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_FW_CAPABILITIES
 
-    // Reg - soc_ifc_reg::CPTRA_CAP_LOCK
+    // reg - soc_ifc_reg::CPTRA_CAP_LOCK
     class soc_ifc_reg__CPTRA_CAP_LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1414,7 +1414,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_CAP_LOCK
 
-    // Reg - soc_ifc_reg::CPTRA_OWNER_PK_HASH
+    // reg - soc_ifc_reg::CPTRA_OWNER_PK_HASH
     class soc_ifc_reg__CPTRA_OWNER_PK_HASH extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1444,7 +1444,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_OWNER_PK_HASH
 
-    // Reg - soc_ifc_reg::CPTRA_OWNER_PK_HASH_LOCK
+    // reg - soc_ifc_reg::CPTRA_OWNER_PK_HASH_LOCK
     class soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1474,7 +1474,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK
 
-    // Reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_0
+    // reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_0
     class soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1509,7 +1509,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0
 
-    // Reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_1
+    // reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_1
     class soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1544,7 +1544,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1
 
-    // Reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_2
+    // reg - soc_ifc_reg::CPTRA_iTRNG_ENTROPY_CONFIG_2
     class soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1594,7 +1594,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2
 
-    // Reg - soc_ifc_reg::CPTRA_iTRNG1_ENTROPY_CONFIG_0
+    // reg - soc_ifc_reg::CPTRA_iTRNG1_ENTROPY_CONFIG_0
     class soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1629,7 +1629,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0
 
-    // Reg - soc_ifc_reg::CPTRA_iTRNG1_ENTROPY_CONFIG_1
+    // reg - soc_ifc_reg::CPTRA_iTRNG1_ENTROPY_CONFIG_1
     class soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1664,7 +1664,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1
 
-    // Reg - soc_ifc_reg::CPTRA_iTRNG1_ENTROPY_CONFIG_2
+    // reg - soc_ifc_reg::CPTRA_iTRNG1_ENTROPY_CONFIG_2
     class soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1714,7 +1714,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2
 
-    // Reg - soc_ifc_reg::fuse_uds_seed
+    // reg - soc_ifc_reg::fuse_uds_seed
     class soc_ifc_reg__fuse_uds_seed extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1744,7 +1744,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_uds_seed
 
-    // Reg - soc_ifc_reg::fuse_field_entropy
+    // reg - soc_ifc_reg::fuse_field_entropy
     class soc_ifc_reg__fuse_field_entropy extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1774,7 +1774,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_field_entropy
 
-    // Reg - soc_ifc_reg::fuse_vendor_pk_hash
+    // reg - soc_ifc_reg::fuse_vendor_pk_hash
     class soc_ifc_reg__fuse_vendor_pk_hash extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1804,7 +1804,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_vendor_pk_hash
 
-    // Reg - soc_ifc_reg::fuse_ecc_revocation
+    // reg - soc_ifc_reg::fuse_ecc_revocation
     class soc_ifc_reg__fuse_ecc_revocation extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1834,7 +1834,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_ecc_revocation
 
-    // Reg - soc_ifc_reg::fuse_fmc_key_manifest_svn
+    // reg - soc_ifc_reg::fuse_fmc_key_manifest_svn
     class soc_ifc_reg__fuse_fmc_key_manifest_svn extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1864,7 +1864,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_fmc_key_manifest_svn
 
-    // Reg - soc_ifc_reg::fuse_runtime_svn
+    // reg - soc_ifc_reg::fuse_runtime_svn
     class soc_ifc_reg__fuse_runtime_svn extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1894,7 +1894,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_runtime_svn
 
-    // Reg - soc_ifc_reg::fuse_anti_rollback_disable
+    // reg - soc_ifc_reg::fuse_anti_rollback_disable
     class soc_ifc_reg__fuse_anti_rollback_disable extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1924,7 +1924,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_anti_rollback_disable
 
-    // Reg - soc_ifc_reg::fuse_idevid_cert_attr
+    // reg - soc_ifc_reg::fuse_idevid_cert_attr
     class soc_ifc_reg__fuse_idevid_cert_attr extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1954,7 +1954,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_idevid_cert_attr
 
-    // Reg - soc_ifc_reg::fuse_idevid_manuf_hsm_id
+    // reg - soc_ifc_reg::fuse_idevid_manuf_hsm_id
     class soc_ifc_reg__fuse_idevid_manuf_hsm_id extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1984,7 +1984,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_idevid_manuf_hsm_id
 
-    // Reg - soc_ifc_reg::fuse_lms_revocation
+    // reg - soc_ifc_reg::fuse_lms_revocation
     class soc_ifc_reg__fuse_lms_revocation extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2014,7 +2014,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_lms_revocation
 
-    // Reg - soc_ifc_reg::fuse_mldsa_revocation
+    // reg - soc_ifc_reg::fuse_mldsa_revocation
     class soc_ifc_reg__fuse_mldsa_revocation extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2044,7 +2044,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_mldsa_revocation
 
-    // Reg - soc_ifc_reg::fuse_soc_stepping_id
+    // reg - soc_ifc_reg::fuse_soc_stepping_id
     class soc_ifc_reg__fuse_soc_stepping_id extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2074,7 +2074,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_soc_stepping_id
 
-    // Reg - soc_ifc_reg::fuse_manuf_dbg_unlock_token
+    // reg - soc_ifc_reg::fuse_manuf_dbg_unlock_token
     class soc_ifc_reg__fuse_manuf_dbg_unlock_token extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2104,7 +2104,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_manuf_dbg_unlock_token
 
-    // Reg - soc_ifc_reg::fuse_pqc_key_type
+    // reg - soc_ifc_reg::fuse_pqc_key_type
     class soc_ifc_reg__fuse_pqc_key_type extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2134,7 +2134,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_pqc_key_type
 
-    // Reg - soc_ifc_reg::fuse_soc_manifest_svn
+    // reg - soc_ifc_reg::fuse_soc_manifest_svn
     class soc_ifc_reg__fuse_soc_manifest_svn extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2164,7 +2164,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_soc_manifest_svn
 
-    // Reg - soc_ifc_reg::fuse_soc_manifest_max_svn
+    // reg - soc_ifc_reg::fuse_soc_manifest_max_svn
     class soc_ifc_reg__fuse_soc_manifest_max_svn extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2194,7 +2194,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_soc_manifest_max_svn
 
-    // Reg - soc_ifc_reg::fuse_hek_seed
+    // reg - soc_ifc_reg::fuse_hek_seed
     class soc_ifc_reg__fuse_hek_seed extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2224,7 +2224,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__fuse_hek_seed
 
-    // Reg - soc_ifc_reg::SS_CALIPTRA_BASE_ADDR_L
+    // reg - soc_ifc_reg::SS_CALIPTRA_BASE_ADDR_L
     class soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2254,7 +2254,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_L
 
-    // Reg - soc_ifc_reg::SS_CALIPTRA_BASE_ADDR_H
+    // reg - soc_ifc_reg::SS_CALIPTRA_BASE_ADDR_H
     class soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2284,7 +2284,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_CALIPTRA_BASE_ADDR_H
 
-    // Reg - soc_ifc_reg::SS_MCI_BASE_ADDR_L
+    // reg - soc_ifc_reg::SS_MCI_BASE_ADDR_L
     class soc_ifc_reg__SS_MCI_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2314,7 +2314,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_MCI_BASE_ADDR_L
 
-    // Reg - soc_ifc_reg::SS_MCI_BASE_ADDR_H
+    // reg - soc_ifc_reg::SS_MCI_BASE_ADDR_H
     class soc_ifc_reg__SS_MCI_BASE_ADDR_H extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2344,7 +2344,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_MCI_BASE_ADDR_H
 
-    // Reg - soc_ifc_reg::SS_RECOVERY_IFC_BASE_ADDR_L
+    // reg - soc_ifc_reg::SS_RECOVERY_IFC_BASE_ADDR_L
     class soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2374,7 +2374,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_L
 
-    // Reg - soc_ifc_reg::SS_RECOVERY_IFC_BASE_ADDR_H
+    // reg - soc_ifc_reg::SS_RECOVERY_IFC_BASE_ADDR_H
     class soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_H extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2404,7 +2404,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_RECOVERY_IFC_BASE_ADDR_H
 
-    // Reg - soc_ifc_reg::SS_OTP_FC_BASE_ADDR_L
+    // reg - soc_ifc_reg::SS_OTP_FC_BASE_ADDR_L
     class soc_ifc_reg__SS_OTP_FC_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2434,7 +2434,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_OTP_FC_BASE_ADDR_L
 
-    // Reg - soc_ifc_reg::SS_OTP_FC_BASE_ADDR_H
+    // reg - soc_ifc_reg::SS_OTP_FC_BASE_ADDR_H
     class soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2464,7 +2464,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_OTP_FC_BASE_ADDR_H
 
-    // Reg - soc_ifc_reg::SS_UDS_SEED_BASE_ADDR_L
+    // reg - soc_ifc_reg::SS_UDS_SEED_BASE_ADDR_L
     class soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2494,7 +2494,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_L
 
-    // Reg - soc_ifc_reg::SS_UDS_SEED_BASE_ADDR_H
+    // reg - soc_ifc_reg::SS_UDS_SEED_BASE_ADDR_H
     class soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2524,7 +2524,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_UDS_SEED_BASE_ADDR_H
 
-    // Reg - soc_ifc_reg::SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET
+    // reg - soc_ifc_reg::SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET
     class soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2554,7 +2554,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET
 
-    // Reg - soc_ifc_reg::SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES
+    // reg - soc_ifc_reg::SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES
     class soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2584,7 +2584,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES
 
-    // Reg - soc_ifc_reg::SS_DEBUG_INTENT
+    // reg - soc_ifc_reg::SS_DEBUG_INTENT
     class soc_ifc_reg__SS_DEBUG_INTENT extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2614,7 +2614,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_DEBUG_INTENT
 
-    // Reg - soc_ifc_reg::SS_CALIPTRA_DMA_AXI_USER
+    // reg - soc_ifc_reg::SS_CALIPTRA_DMA_AXI_USER
     class soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2644,7 +2644,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_CALIPTRA_DMA_AXI_USER
 
-    // Reg - soc_ifc_reg::SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
+    // reg - soc_ifc_reg::SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
     class soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2674,7 +2674,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_L
 
-    // Reg - soc_ifc_reg::SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
+    // reg - soc_ifc_reg::SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
     class soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2704,7 +2704,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_EXTERNAL_STAGING_AREA_BASE_ADDR_H
 
-    // Reg - soc_ifc_reg::SS_KEY_RELEASE_BASE_ADDR_L
+    // reg - soc_ifc_reg::SS_KEY_RELEASE_BASE_ADDR_L
     class soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2734,7 +2734,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_L
 
-    // Reg - soc_ifc_reg::SS_KEY_RELEASE_BASE_ADDR_H
+    // reg - soc_ifc_reg::SS_KEY_RELEASE_BASE_ADDR_H
     class soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2764,7 +2764,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H
 
-    // Reg - soc_ifc_reg::SS_KEY_RELEASE_SIZE
+    // reg - soc_ifc_reg::SS_KEY_RELEASE_SIZE
     class soc_ifc_reg__SS_KEY_RELEASE_SIZE extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2794,7 +2794,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_KEY_RELEASE_SIZE
 
-    // Reg - soc_ifc_reg::SS_OCP_LOCK_CTRL
+    // reg - soc_ifc_reg::SS_OCP_LOCK_CTRL
     class soc_ifc_reg__SS_OCP_LOCK_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2824,7 +2824,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_OCP_LOCK_CTRL
 
-    // Reg - soc_ifc_reg::SS_STRAP_GENERIC
+    // reg - soc_ifc_reg::SS_STRAP_GENERIC
     class soc_ifc_reg__SS_STRAP_GENERIC extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2854,7 +2854,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_STRAP_GENERIC
 
-    // Reg - soc_ifc_reg::SS_DBG_SERVICE_REG_REQ
+    // reg - soc_ifc_reg::SS_DBG_SERVICE_REG_REQ
     class soc_ifc_reg__SS_DBG_SERVICE_REG_REQ extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2899,7 +2899,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_DBG_SERVICE_REG_REQ
 
-    // Reg - soc_ifc_reg::SS_DBG_SERVICE_REG_RSP
+    // reg - soc_ifc_reg::SS_DBG_SERVICE_REG_RSP
     class soc_ifc_reg__SS_DBG_SERVICE_REG_RSP extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -2979,7 +2979,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_DBG_SERVICE_REG_RSP
 
-    // Reg - soc_ifc_reg::SS_SOC_DBG_UNLOCK_LEVEL
+    // reg - soc_ifc_reg::SS_SOC_DBG_UNLOCK_LEVEL
     class soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3009,7 +3009,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_SOC_DBG_UNLOCK_LEVEL
 
-    // Reg - soc_ifc_reg::SS_GENERIC_FW_EXEC_CTRL
+    // reg - soc_ifc_reg::SS_GENERIC_FW_EXEC_CTRL
     class soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3039,7 +3039,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__SS_GENERIC_FW_EXEC_CTRL
 
-    // Reg - soc_ifc_reg::internal_obf_key
+    // reg - soc_ifc_reg::internal_obf_key
     class soc_ifc_reg__internal_obf_key extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3069,7 +3069,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_obf_key
 
-    // Reg - soc_ifc_reg::internal_iccm_lock
+    // reg - soc_ifc_reg::internal_iccm_lock
     class soc_ifc_reg__internal_iccm_lock extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3099,7 +3099,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_iccm_lock
 
-    // Reg - soc_ifc_reg::internal_fw_update_reset
+    // reg - soc_ifc_reg::internal_fw_update_reset
     class soc_ifc_reg__internal_fw_update_reset extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3120,7 +3120,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.core_rst = new("core_rst");
-            this.core_rst.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.core_rst.configure(this, 1, 0, "RW", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(core_rst_bit_cg[bt]) core_rst_bit_cg[bt] = new();
             end
@@ -3129,7 +3129,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_fw_update_reset
 
-    // Reg - soc_ifc_reg::internal_fw_update_reset_wait_cycles
+    // reg - soc_ifc_reg::internal_fw_update_reset_wait_cycles
     class soc_ifc_reg__internal_fw_update_reset_wait_cycles extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3159,7 +3159,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_fw_update_reset_wait_cycles
 
-    // Reg - soc_ifc_reg::internal_nmi_vector
+    // reg - soc_ifc_reg::internal_nmi_vector
     class soc_ifc_reg__internal_nmi_vector extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3189,7 +3189,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_nmi_vector
 
-    // Reg - soc_ifc_reg::internal_hw_error_fatal_mask
+    // reg - soc_ifc_reg::internal_hw_error_fatal_mask
     class soc_ifc_reg__internal_hw_error_fatal_mask extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3249,7 +3249,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_hw_error_fatal_mask
 
-    // Reg - soc_ifc_reg::internal_hw_error_non_fatal_mask
+    // reg - soc_ifc_reg::internal_hw_error_non_fatal_mask
     class soc_ifc_reg__internal_hw_error_non_fatal_mask extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3289,7 +3289,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_hw_error_non_fatal_mask
 
-    // Reg - soc_ifc_reg::internal_fw_error_fatal_mask
+    // reg - soc_ifc_reg::internal_fw_error_fatal_mask
     class soc_ifc_reg__internal_fw_error_fatal_mask extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3319,7 +3319,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_fw_error_fatal_mask
 
-    // Reg - soc_ifc_reg::internal_fw_error_non_fatal_mask
+    // reg - soc_ifc_reg::internal_fw_error_non_fatal_mask
     class soc_ifc_reg__internal_fw_error_non_fatal_mask extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3349,7 +3349,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_fw_error_non_fatal_mask
 
-    // Reg - soc_ifc_reg::internal_rv_mtime_l
+    // reg - soc_ifc_reg::internal_rv_mtime_l
     class soc_ifc_reg__internal_rv_mtime_l extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3379,7 +3379,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_rv_mtime_l
 
-    // Reg - soc_ifc_reg::internal_rv_mtime_h
+    // reg - soc_ifc_reg::internal_rv_mtime_h
     class soc_ifc_reg__internal_rv_mtime_h extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3409,7 +3409,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_rv_mtime_h
 
-    // Reg - soc_ifc_reg::internal_rv_mtimecmp_l
+    // reg - soc_ifc_reg::internal_rv_mtimecmp_l
     class soc_ifc_reg__internal_rv_mtimecmp_l extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3439,7 +3439,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_rv_mtimecmp_l
 
-    // Reg - soc_ifc_reg::internal_rv_mtimecmp_h
+    // reg - soc_ifc_reg::internal_rv_mtimecmp_h
     class soc_ifc_reg__internal_rv_mtimecmp_h extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3469,7 +3469,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_rv_mtimecmp_h
 
-    // Reg - soc_ifc_reg::internal_iccm_fmc_start_addr
+    // reg - soc_ifc_reg::internal_iccm_fmc_start_addr
     class soc_ifc_reg__internal_iccm_fmc_start_addr extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3499,7 +3499,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_iccm_fmc_start_addr
 
-    // Reg - soc_ifc_reg::internal_iccm_fmc_end_addr
+    // reg - soc_ifc_reg::internal_iccm_fmc_end_addr
     class soc_ifc_reg__internal_iccm_fmc_end_addr extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3529,7 +3529,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_iccm_fmc_end_addr
 
-    // Reg - soc_ifc_reg::internal_iccm_rt_start_addr
+    // reg - soc_ifc_reg::internal_iccm_rt_start_addr
     class soc_ifc_reg__internal_iccm_rt_start_addr extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3559,7 +3559,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_iccm_rt_start_addr
 
-    // Reg - soc_ifc_reg::internal_iccm_rt_end_addr
+    // reg - soc_ifc_reg::internal_iccm_rt_end_addr
     class soc_ifc_reg__internal_iccm_rt_end_addr extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3589,7 +3589,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_iccm_rt_end_addr
 
-    // Reg - soc_ifc_reg::internal_iccm_region_lock
+    // reg - soc_ifc_reg::internal_iccm_region_lock
     class soc_ifc_reg__internal_iccm_region_lock extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3619,7 +3619,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_iccm_region_lock
 
-    // Reg - soc_ifc_reg::intr_block_t::global_intr_en_t
+    // reg - soc_ifc_reg::intr_block_t::global_intr_en_t
     class soc_ifc_reg__intr_block_t__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3654,7 +3654,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__global_intr_en_t
 
-    // Reg - soc_ifc_reg::intr_block_t::error_intr_en_t
+    // reg - soc_ifc_reg::intr_block_t::error_intr_en_t
     class soc_ifc_reg__intr_block_t__error_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3719,7 +3719,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_en_t
 
-    // Reg - soc_ifc_reg::intr_block_t::notif_intr_en_t
+    // reg - soc_ifc_reg::intr_block_t::notif_intr_en_t
     class soc_ifc_reg__intr_block_t__notif_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3774,7 +3774,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__notif_intr_en_t
 
-    // Reg - soc_ifc_reg::intr_block_t::global_intr_t_agg_sts_dd3dcf0a
+    // reg - soc_ifc_reg::intr_block_t::global_intr_t_agg_sts_dd3dcf0a
     class soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3804,7 +3804,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a
 
-    // Reg - soc_ifc_reg::intr_block_t::global_intr_t_agg_sts_e6399b4a
+    // reg - soc_ifc_reg::intr_block_t::global_intr_t_agg_sts_e6399b4a
     class soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3834,7 +3834,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - soc_ifc_reg::intr_block_t::error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f
+    // reg - soc_ifc_reg::intr_block_t::error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f
     class soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3899,7 +3899,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f
 
-    // Reg - soc_ifc_reg::intr_block_t::notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70
+    // reg - soc_ifc_reg::intr_block_t::notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70
     class soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3954,7 +3954,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__notif_intr_t_notif_cmd_avail_sts_1871606b_notif_debug_locked_sts_5f024102_notif_gen_in_toggle_sts_59f84b64_notif_mbox_ecc_cor_sts_5c3d26bb_notif_scan_mode_sts_122f6367_notif_soc_req_lock_sts_deddde70
 
-    // Reg - soc_ifc_reg::intr_block_t::error_intr_trig_t
+    // reg - soc_ifc_reg::intr_block_t::error_intr_trig_t
     class soc_ifc_reg__intr_block_t__error_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -3989,21 +3989,21 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.error_internal_trig = new("error_internal_trig");
-            this.error_internal_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_internal_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.error_inv_dev_trig = new("error_inv_dev_trig");
-            this.error_inv_dev_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_inv_dev_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.error_cmd_fail_trig = new("error_cmd_fail_trig");
-            this.error_cmd_fail_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_cmd_fail_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.error_bad_fuse_trig = new("error_bad_fuse_trig");
-            this.error_bad_fuse_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_bad_fuse_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             this.error_iccm_blocked_trig = new("error_iccm_blocked_trig");
-            this.error_iccm_blocked_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_iccm_blocked_trig.configure(this, 1, 4, "W1S", 1, 'h0, 1, 1, 0);
             this.error_mbox_ecc_unc_trig = new("error_mbox_ecc_unc_trig");
-            this.error_mbox_ecc_unc_trig.configure(this, 1, 5, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_mbox_ecc_unc_trig.configure(this, 1, 5, "W1S", 1, 'h0, 1, 1, 0);
             this.error_wdt_timer1_timeout_trig = new("error_wdt_timer1_timeout_trig");
-            this.error_wdt_timer1_timeout_trig.configure(this, 1, 6, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_wdt_timer1_timeout_trig.configure(this, 1, 6, "W1S", 1, 'h0, 1, 1, 0);
             this.error_wdt_timer2_timeout_trig = new("error_wdt_timer2_timeout_trig");
-            this.error_wdt_timer2_timeout_trig.configure(this, 1, 7, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_wdt_timer2_timeout_trig.configure(this, 1, 7, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(error_internal_trig_bit_cg[bt]) error_internal_trig_bit_cg[bt] = new();
                 foreach(error_inv_dev_trig_bit_cg[bt]) error_inv_dev_trig_bit_cg[bt] = new();
@@ -4019,7 +4019,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__error_intr_trig_t
 
-    // Reg - soc_ifc_reg::intr_block_t::notif_intr_trig_t
+    // reg - soc_ifc_reg::intr_block_t::notif_intr_trig_t
     class soc_ifc_reg__intr_block_t__notif_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4050,17 +4050,17 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.notif_cmd_avail_trig = new("notif_cmd_avail_trig");
-            this.notif_cmd_avail_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_cmd_avail_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_mbox_ecc_cor_trig = new("notif_mbox_ecc_cor_trig");
-            this.notif_mbox_ecc_cor_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_mbox_ecc_cor_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_debug_locked_trig = new("notif_debug_locked_trig");
-            this.notif_debug_locked_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_debug_locked_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_scan_mode_trig = new("notif_scan_mode_trig");
-            this.notif_scan_mode_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_scan_mode_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_soc_req_lock_trig = new("notif_soc_req_lock_trig");
-            this.notif_soc_req_lock_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_soc_req_lock_trig.configure(this, 1, 4, "W1S", 1, 'h0, 1, 1, 0);
             this.notif_gen_in_toggle_trig = new("notif_gen_in_toggle_trig");
-            this.notif_gen_in_toggle_trig.configure(this, 1, 5, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_gen_in_toggle_trig.configure(this, 1, 5, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_cmd_avail_trig_bit_cg[bt]) notif_cmd_avail_trig_bit_cg[bt] = new();
                 foreach(notif_mbox_ecc_cor_trig_bit_cg[bt]) notif_mbox_ecc_cor_trig_bit_cg[bt] = new();
@@ -4074,7 +4074,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__notif_intr_trig_t
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_608f1141
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_608f1141
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4104,7 +4104,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_608f1141
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_916ab5df
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_916ab5df
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4134,7 +4134,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_916ab5df
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_b2a56031
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_b2a56031
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4164,7 +4164,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_b2a56031
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_fb7d2433
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_fb7d2433
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4194,7 +4194,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_fb7d2433
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_25e76b6f
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_25e76b6f
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4224,7 +4224,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_25e76b6f
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_26b97e39
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_26b97e39
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4254,7 +4254,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_26b97e39
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a2f61f82
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a2f61f82
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4284,7 +4284,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_a2f61f82
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_d46457cd
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_d46457cd
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4314,7 +4314,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_d46457cd
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a06f0954
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_a06f0954
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4344,7 +4344,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_a06f0954
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_00e49272
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_00e49272
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4374,7 +4374,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_00e49272
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_ee53ded8
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_ee53ded8
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4404,7 +4404,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_ee53ded8
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_fbf3c714
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_fbf3c714
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4434,7 +4434,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_fbf3c714
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_b9bddabe
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_b9bddabe
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4464,7 +4464,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_b9bddabe
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_57528cc1
+    // reg - soc_ifc_reg::intr_block_t::intr_count_t_cnt_57528cc1
     class soc_ifc_reg__intr_block_t__intr_count_t_cnt_57528cc1 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4494,7 +4494,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_t_cnt_57528cc1
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_15e6ed7e
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_15e6ed7e
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4524,7 +4524,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_f762ea9c
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_f762ea9c
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4554,7 +4554,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f762ea9c
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_aa8718c6
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_aa8718c6
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4584,7 +4584,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa8718c6
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_26fa5955
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_26fa5955
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4614,7 +4614,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_26fa5955
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_3e43d258
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_3e43d258
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4644,7 +4644,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_3e43d258
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_9f1632fd
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_9f1632fd
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_9f1632fd extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4674,7 +4674,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_9f1632fd
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_aa999fdc
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_aa999fdc
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4704,7 +4704,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_aa999fdc
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_404e12db
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_404e12db
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4734,7 +4734,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_404e12db
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_90d52137
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_90d52137
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4764,7 +4764,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_90d52137
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_a6db6fff
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_a6db6fff
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_a6db6fff extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4794,7 +4794,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_a6db6fff
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_51891fb1
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_51891fb1
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_51891fb1 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4824,7 +4824,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_51891fb1
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_f5d8afe0
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_f5d8afe0
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4854,7 +4854,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_f5d8afe0
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_246489bd
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_246489bd
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4884,7 +4884,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_246489bd
 
-    // Reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_d6ed4d1e
+    // reg - soc_ifc_reg::intr_block_t::intr_count_incr_t_pulse_d6ed4d1e
     class soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -4914,7 +4914,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t__intr_count_incr_t_pulse_d6ed4d1e
 
-    // Regfile - soc_ifc_reg::intr_block_t
+    // regfile - soc_ifc_reg::intr_block_t
     class soc_ifc_reg__intr_block_t extends uvm_reg_block;
         rand soc_ifc_reg__intr_block_t__global_intr_en_t global_intr_en_r;
         rand soc_ifc_reg__intr_block_t__error_intr_en_t error_intr_en_r;
@@ -5148,7 +5148,7 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__intr_block_t
 
-    // Addrmap - soc_ifc_reg
+    // addrmap - soc_ifc_reg
     class soc_ifc_reg extends uvm_reg_block;
         rand soc_ifc_reg__CPTRA_HW_ERROR_FATAL CPTRA_HW_ERROR_FATAL;
         rand soc_ifc_reg__CPTRA_HW_ERROR_NON_FATAL CPTRA_HW_ERROR_NON_FATAL;

@@ -5,6 +5,7 @@ package sha512_acc_csr_pkg;
 
     localparam SHA512_ACC_CSR_DATA_WIDTH = 32;
     localparam SHA512_ACC_CSR_MIN_ADDR_WIDTH = 12;
+    localparam SHA512_ACC_CSR_SIZE = 'ha14;
 
     typedef struct packed{
         logic hwclr;
@@ -223,7 +224,7 @@ package sha512_acc_csr_pkg;
         sha512_acc_csr__intr_block_t__out_t intr_block_rf;
     } sha512_acc_csr__out_t;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [1:0] {
         sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_STREAM_384 = 'h0,
         sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_STREAM_512 = 'h1,
         sha512_acc_csr__MODE__MODE__sha_cmd_e__SHA_MBOX_384 = 'h2,

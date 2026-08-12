@@ -5,6 +5,7 @@ package sha512_reg_pkg;
 
     localparam SHA512_REG_DATA_WIDTH = 32;
     localparam SHA512_REG_MIN_ADDR_WIDTH = 12;
+    localparam SHA512_REG_SIZE = 'ha14;
 
     typedef struct packed{
         logic [31:0] next;
@@ -434,7 +435,7 @@ package sha512_reg_pkg;
         sha512_reg__intr_block_t__out_t intr_block_rf;
     } sha512_reg__out_t;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [2:0] {
         kv_status_reg__ERROR__kv_error_e__SUCCESS = 'h0,
         kv_status_reg__ERROR__kv_error_e__KV_READ_FAIL = 'h1,
         kv_status_reg__ERROR__kv_error_e__KV_WRITE_FAIL = 'h2,

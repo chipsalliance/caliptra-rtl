@@ -4,7 +4,7 @@ package ecc_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "ecc_reg_covergroups.svh"
-    // Reg - ecc_reg::ECC_NAME
+    // reg - ecc_reg::ECC_NAME
     class ecc_reg__ECC_NAME extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_NAME
 
-    // Reg - ecc_reg::ECC_VERSION
+    // reg - ecc_reg::ECC_VERSION
     class ecc_reg__ECC_VERSION extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -64,7 +64,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_VERSION
 
-    // Reg - ecc_reg::ECC_CTRL
+    // reg - ecc_reg::ECC_CTRL
     class ecc_reg__ECC_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -93,7 +93,7 @@ package ecc_reg_uvm;
             this.CTRL = new("CTRL");
             this.CTRL.configure(this, 2, 0, "WO", 1, 'h0, 1, 1, 0);
             this.ZEROIZE = new("ZEROIZE");
-            this.ZEROIZE.configure(this, 1, 2, "WO", 0, 'h0, 1, 1, 0);
+            this.ZEROIZE.configure(this, 1, 2, "WO", 1, 'h0, 1, 1, 0);
             this.PCR_SIGN = new("PCR_SIGN");
             this.PCR_SIGN.configure(this, 1, 3, "WO", 1, 'h0, 1, 1, 0);
             this.DH_SHAREDKEY = new("DH_SHAREDKEY");
@@ -109,7 +109,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_CTRL
 
-    // Reg - ecc_reg::ECC_STATUS
+    // reg - ecc_reg::ECC_STATUS
     class ecc_reg__ECC_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -144,7 +144,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_STATUS
 
-    // Reg - ecc_reg::ECC_SEED
+    // reg - ecc_reg::ECC_SEED
     class ecc_reg__ECC_SEED extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -174,7 +174,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_SEED
 
-    // Reg - ecc_reg::ECC_MSG
+    // reg - ecc_reg::ECC_MSG
     class ecc_reg__ECC_MSG extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -204,7 +204,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_MSG
 
-    // Reg - ecc_reg::ECC_PRIVKEY_OUT
+    // reg - ecc_reg::ECC_PRIVKEY_OUT
     class ecc_reg__ECC_PRIVKEY_OUT extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -234,7 +234,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_PRIVKEY_OUT
 
-    // Reg - ecc_reg::ECC_PUBKEY_X
+    // reg - ecc_reg::ECC_PUBKEY_X
     class ecc_reg__ECC_PUBKEY_X extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -264,7 +264,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_PUBKEY_X
 
-    // Reg - ecc_reg::ECC_PUBKEY_Y
+    // reg - ecc_reg::ECC_PUBKEY_Y
     class ecc_reg__ECC_PUBKEY_Y extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -294,7 +294,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_PUBKEY_Y
 
-    // Reg - ecc_reg::ECC_SIGN_R
+    // reg - ecc_reg::ECC_SIGN_R
     class ecc_reg__ECC_SIGN_R extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -324,7 +324,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_SIGN_R
 
-    // Reg - ecc_reg::ECC_SIGN_S
+    // reg - ecc_reg::ECC_SIGN_S
     class ecc_reg__ECC_SIGN_S extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -354,7 +354,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_SIGN_S
 
-    // Reg - ecc_reg::ECC_VERIFY_R
+    // reg - ecc_reg::ECC_VERIFY_R
     class ecc_reg__ECC_VERIFY_R extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -384,7 +384,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_VERIFY_R
 
-    // Reg - ecc_reg::ECC_IV
+    // reg - ecc_reg::ECC_IV
     class ecc_reg__ECC_IV extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -414,7 +414,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_IV
 
-    // Reg - ecc_reg::ECC_NONCE
+    // reg - ecc_reg::ECC_NONCE
     class ecc_reg__ECC_NONCE extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -444,7 +444,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_NONCE
 
-    // Reg - ecc_reg::ECC_PRIVKEY_IN
+    // reg - ecc_reg::ECC_PRIVKEY_IN
     class ecc_reg__ECC_PRIVKEY_IN extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -474,7 +474,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_PRIVKEY_IN
 
-    // Reg - ecc_reg::ECC_DH_SHARED_KEY
+    // reg - ecc_reg::ECC_DH_SHARED_KEY
     class ecc_reg__ECC_DH_SHARED_KEY extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -504,7 +504,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__ECC_DH_SHARED_KEY
 
-    // Reg - kv_read_ctrl_reg
+    // reg - kv_read_ctrl_reg
     class kv_read_ctrl_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -549,7 +549,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : kv_read_ctrl_reg
 
-    // Reg - kv_status_reg
+    // reg - kv_status_reg
     class kv_status_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -589,7 +589,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : kv_status_reg
 
-    // Reg - kv_write_ctrl_reg
+    // reg - kv_write_ctrl_reg
     class kv_write_ctrl_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -674,7 +674,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : kv_write_ctrl_reg
 
-    // Reg - ecc_reg::intr_block_t::global_intr_en_t
+    // reg - ecc_reg::intr_block_t::global_intr_en_t
     class ecc_reg__intr_block_t__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -709,7 +709,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__global_intr_en_t
 
-    // Reg - ecc_reg::intr_block_t::error_intr_en_t
+    // reg - ecc_reg::intr_block_t::error_intr_en_t
     class ecc_reg__intr_block_t__error_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -739,7 +739,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__error_intr_en_t
 
-    // Reg - ecc_reg::intr_block_t::notif_intr_en_t
+    // reg - ecc_reg::intr_block_t::notif_intr_en_t
     class ecc_reg__intr_block_t__notif_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -769,7 +769,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__notif_intr_en_t
 
-    // Reg - ecc_reg::intr_block_t::global_intr_t_agg_sts_dd3dcf0a
+    // reg - ecc_reg::intr_block_t::global_intr_t_agg_sts_dd3dcf0a
     class ecc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -799,7 +799,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a
 
-    // Reg - ecc_reg::intr_block_t::global_intr_t_agg_sts_e6399b4a
+    // reg - ecc_reg::intr_block_t::global_intr_t_agg_sts_e6399b4a
     class ecc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -829,7 +829,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - ecc_reg::intr_block_t::error_intr_t_error_internal_sts_83adab02
+    // reg - ecc_reg::intr_block_t::error_intr_t_error_internal_sts_83adab02
     class ecc_reg__intr_block_t__error_intr_t_error_internal_sts_83adab02 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -859,7 +859,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__error_intr_t_error_internal_sts_83adab02
 
-    // Reg - ecc_reg::intr_block_t::notif_intr_t_notif_cmd_done_sts_1c68637e
+    // reg - ecc_reg::intr_block_t::notif_intr_t_notif_cmd_done_sts_1c68637e
     class ecc_reg__intr_block_t__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -889,7 +889,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__notif_intr_t_notif_cmd_done_sts_1c68637e
 
-    // Reg - ecc_reg::intr_block_t::error_intr_trig_t
+    // reg - ecc_reg::intr_block_t::error_intr_trig_t
     class ecc_reg__intr_block_t__error_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -910,7 +910,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.error_internal_trig = new("error_internal_trig");
-            this.error_internal_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.error_internal_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(error_internal_trig_bit_cg[bt]) error_internal_trig_bit_cg[bt] = new();
             end
@@ -919,7 +919,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__error_intr_trig_t
 
-    // Reg - ecc_reg::intr_block_t::notif_intr_trig_t
+    // reg - ecc_reg::intr_block_t::notif_intr_trig_t
     class ecc_reg__intr_block_t__notif_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -940,7 +940,7 @@ package ecc_reg_uvm;
 
         virtual function void build();
             this.notif_cmd_done_trig = new("notif_cmd_done_trig");
-            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_cmd_done_trig_bit_cg[bt]) notif_cmd_done_trig_bit_cg[bt] = new();
             end
@@ -949,7 +949,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__notif_intr_trig_t
 
-    // Reg - ecc_reg::intr_block_t::intr_count_t_cnt_60ddff93
+    // reg - ecc_reg::intr_block_t::intr_count_t_cnt_60ddff93
     class ecc_reg__intr_block_t__intr_count_t_cnt_60ddff93 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -979,7 +979,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__intr_count_t_cnt_60ddff93
 
-    // Reg - ecc_reg::intr_block_t::intr_count_t_cnt_be67d6d5
+    // reg - ecc_reg::intr_block_t::intr_count_t_cnt_be67d6d5
     class ecc_reg__intr_block_t__intr_count_t_cnt_be67d6d5 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1009,7 +1009,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__intr_count_t_cnt_be67d6d5
 
-    // Reg - ecc_reg::intr_block_t::intr_count_incr_t_pulse_15e6ed7e
+    // reg - ecc_reg::intr_block_t::intr_count_incr_t_pulse_15e6ed7e
     class ecc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1039,7 +1039,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__intr_count_incr_t_pulse_15e6ed7e
 
-    // Reg - ecc_reg::intr_block_t::intr_count_incr_t_pulse_6173128e
+    // reg - ecc_reg::intr_block_t::intr_count_incr_t_pulse_6173128e
     class ecc_reg__intr_block_t__intr_count_incr_t_pulse_6173128e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1069,7 +1069,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t__intr_count_incr_t_pulse_6173128e
 
-    // Regfile - ecc_reg::intr_block_t
+    // regfile - ecc_reg::intr_block_t
     class ecc_reg__intr_block_t extends uvm_reg_block;
         rand ecc_reg__intr_block_t__global_intr_en_t global_intr_en_r;
         rand ecc_reg__intr_block_t__error_intr_en_t error_intr_en_r;
@@ -1159,7 +1159,7 @@ package ecc_reg_uvm;
         endfunction : build
     endclass : ecc_reg__intr_block_t
 
-    // Addrmap - ecc_reg
+    // addrmap - ecc_reg
     class ecc_reg extends uvm_reg_block;
         rand ecc_reg__ECC_NAME ECC_NAME[2];
         rand ecc_reg__ECC_VERSION ECC_VERSION[2];

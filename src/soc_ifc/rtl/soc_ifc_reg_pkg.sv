@@ -5,6 +5,7 @@ package soc_ifc_reg_pkg;
 
     localparam SOC_IFC_REG_DATA_WIDTH = 32;
     localparam SOC_IFC_REG_MIN_ADDR_WIDTH = 12;
+    localparam SOC_IFC_REG_SIZE = 'ha38;
 
     typedef struct packed{
         logic next;
@@ -631,27 +632,47 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__internal_rv_mtime_h__count_h__in_t count_h;
     } soc_ifc_reg__internal_rv_mtime_h__in_t;
 
+    typedef struct packed {
+        logic [13:0] _reserved_31_18;
+        logic [17:0] addr;
+    } soc_ifc_reg__internal_iccm_fmc_start_addr__external__fields__in_t;
+
     typedef struct packed{
         logic rd_ack;
-        logic [31:0] rd_data;
+        soc_ifc_reg__internal_iccm_fmc_start_addr__external__fields__in_t rd_data;
         logic wr_ack;
     } soc_ifc_reg__internal_iccm_fmc_start_addr__external__in_t;
 
+    typedef struct packed {
+        logic [13:0] _reserved_31_18;
+        logic [17:0] addr;
+    } soc_ifc_reg__internal_iccm_fmc_end_addr__external__fields__in_t;
+
     typedef struct packed{
         logic rd_ack;
-        logic [31:0] rd_data;
+        soc_ifc_reg__internal_iccm_fmc_end_addr__external__fields__in_t rd_data;
         logic wr_ack;
     } soc_ifc_reg__internal_iccm_fmc_end_addr__external__in_t;
 
-    typedef struct packed{
-        logic rd_ack;
-        logic [31:0] rd_data;
-        logic wr_ack;
-    } soc_ifc_reg__internal_iccm_rt_start_addr__external__in_t;
+    typedef struct packed {
+        logic [13:0] _reserved_31_18;
+        logic [17:0] addr;
+    } soc_ifc_reg__internal_iccm_rt_start_addr__external__fields__in_t;
 
     typedef struct packed{
         logic rd_ack;
-        logic [31:0] rd_data;
+        soc_ifc_reg__internal_iccm_rt_start_addr__external__fields__in_t rd_data;
+        logic wr_ack;
+    } soc_ifc_reg__internal_iccm_rt_start_addr__external__in_t;
+
+    typedef struct packed {
+        logic [13:0] _reserved_31_18;
+        logic [17:0] addr;
+    } soc_ifc_reg__internal_iccm_rt_end_addr__external__fields__in_t;
+
+    typedef struct packed{
+        logic rd_ack;
+        soc_ifc_reg__internal_iccm_rt_end_addr__external__fields__in_t rd_data;
         logic wr_ack;
     } soc_ifc_reg__internal_iccm_rt_end_addr__external__in_t;
 
@@ -1539,32 +1560,52 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__internal_rv_mtimecmp_h__compare_h__out_t compare_h;
     } soc_ifc_reg__internal_rv_mtimecmp_h__out_t;
 
+    typedef struct packed {
+        logic [13:0] _reserved_31_18;
+        logic [17:0] addr;
+    } soc_ifc_reg__internal_iccm_fmc_start_addr__external__fields__out_t;
+
     typedef struct packed{
         logic req;
         logic req_is_wr;
-        logic [31:0] wr_data;
-        logic [31:0] wr_biten;
+        soc_ifc_reg__internal_iccm_fmc_start_addr__external__fields__out_t wr_data;
+        soc_ifc_reg__internal_iccm_fmc_start_addr__external__fields__out_t wr_biten;
     } soc_ifc_reg__internal_iccm_fmc_start_addr__external__out_t;
 
+    typedef struct packed {
+        logic [13:0] _reserved_31_18;
+        logic [17:0] addr;
+    } soc_ifc_reg__internal_iccm_fmc_end_addr__external__fields__out_t;
+
     typedef struct packed{
         logic req;
         logic req_is_wr;
-        logic [31:0] wr_data;
-        logic [31:0] wr_biten;
+        soc_ifc_reg__internal_iccm_fmc_end_addr__external__fields__out_t wr_data;
+        soc_ifc_reg__internal_iccm_fmc_end_addr__external__fields__out_t wr_biten;
     } soc_ifc_reg__internal_iccm_fmc_end_addr__external__out_t;
 
-    typedef struct packed{
-        logic req;
-        logic req_is_wr;
-        logic [31:0] wr_data;
-        logic [31:0] wr_biten;
-    } soc_ifc_reg__internal_iccm_rt_start_addr__external__out_t;
+    typedef struct packed {
+        logic [13:0] _reserved_31_18;
+        logic [17:0] addr;
+    } soc_ifc_reg__internal_iccm_rt_start_addr__external__fields__out_t;
 
     typedef struct packed{
         logic req;
         logic req_is_wr;
-        logic [31:0] wr_data;
-        logic [31:0] wr_biten;
+        soc_ifc_reg__internal_iccm_rt_start_addr__external__fields__out_t wr_data;
+        soc_ifc_reg__internal_iccm_rt_start_addr__external__fields__out_t wr_biten;
+    } soc_ifc_reg__internal_iccm_rt_start_addr__external__out_t;
+
+    typedef struct packed {
+        logic [13:0] _reserved_31_18;
+        logic [17:0] addr;
+    } soc_ifc_reg__internal_iccm_rt_end_addr__external__fields__out_t;
+
+    typedef struct packed{
+        logic req;
+        logic req_is_wr;
+        soc_ifc_reg__internal_iccm_rt_end_addr__external__fields__out_t wr_data;
+        soc_ifc_reg__internal_iccm_rt_end_addr__external__fields__out_t wr_biten;
     } soc_ifc_reg__internal_iccm_rt_end_addr__external__out_t;
 
     typedef struct packed{
@@ -1699,7 +1740,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
     } soc_ifc_reg__out_t;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [1:0] {
         soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle_e__DEVICE_UNPROVISIONED = 'h0,
         soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle_e__DEVICE_MANUFACTURING = 'h1,
         soc_ifc_reg__CPTRA_SECURITY_STATE__device_lifecycle_e__DEVICE_PRODUCTION = 'h3

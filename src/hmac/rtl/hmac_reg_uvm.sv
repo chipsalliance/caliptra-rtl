@@ -4,7 +4,7 @@ package hmac_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "hmac_reg_covergroups.svh"
-    // Reg - hmac_reg::HMAC512_NAME
+    // reg - hmac_reg::HMAC512_NAME
     class hmac_reg__HMAC512_NAME extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__HMAC512_NAME
 
-    // Reg - hmac_reg::HMAC512_VERSION
+    // reg - hmac_reg::HMAC512_VERSION
     class hmac_reg__HMAC512_VERSION extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -64,7 +64,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__HMAC512_VERSION
 
-    // Reg - hmac_reg::HMAC512_CTRL
+    // reg - hmac_reg::HMAC512_CTRL
     class hmac_reg__HMAC512_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -97,17 +97,17 @@ package hmac_reg_uvm;
 
         virtual function void build();
             this.INIT = new("INIT");
-            this.INIT.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
+            this.INIT.configure(this, 1, 0, "WO", 1, 'h0, 1, 1, 0);
             this.NEXT = new("NEXT");
-            this.NEXT.configure(this, 1, 1, "WO", 0, 'h0, 1, 1, 0);
+            this.NEXT.configure(this, 1, 1, "WO", 1, 'h0, 1, 1, 0);
             this.ZEROIZE = new("ZEROIZE");
-            this.ZEROIZE.configure(this, 1, 2, "WO", 0, 'h0, 1, 1, 0);
+            this.ZEROIZE.configure(this, 1, 2, "WO", 1, 'h0, 1, 1, 0);
             this.MODE = new("MODE");
             this.MODE.configure(this, 1, 3, "WO", 0, 'h1, 1, 1, 0);
             this.CSR_MODE = new("CSR_MODE");
             this.CSR_MODE.configure(this, 1, 4, "WO", 0, 'h0, 1, 1, 0);
             this.LAST = new("LAST");
-            this.LAST.configure(this, 1, 5, "WO", 0, 'h0, 1, 1, 0);
+            this.LAST.configure(this, 1, 5, "WO", 1, 'h0, 1, 1, 0);
             this.Reserved = new("Reserved");
             this.Reserved.configure(this, 1, 6, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
@@ -124,7 +124,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__HMAC512_CTRL
 
-    // Reg - hmac_reg::HMAC512_STATUS
+    // reg - hmac_reg::HMAC512_STATUS
     class hmac_reg__HMAC512_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -159,7 +159,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__HMAC512_STATUS
 
-    // Reg - hmac_reg::HMAC512_KEY
+    // reg - hmac_reg::HMAC512_KEY
     class hmac_reg__HMAC512_KEY extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -189,7 +189,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__HMAC512_KEY
 
-    // Reg - hmac_reg::HMAC512_BLOCK
+    // reg - hmac_reg::HMAC512_BLOCK
     class hmac_reg__HMAC512_BLOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -219,7 +219,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__HMAC512_BLOCK
 
-    // Reg - hmac_reg::HMAC512_TAG
+    // reg - hmac_reg::HMAC512_TAG
     class hmac_reg__HMAC512_TAG extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -249,7 +249,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__HMAC512_TAG
 
-    // Reg - hmac_reg::HMAC512_LFSR_SEED
+    // reg - hmac_reg::HMAC512_LFSR_SEED
     class hmac_reg__HMAC512_LFSR_SEED extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -279,7 +279,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__HMAC512_LFSR_SEED
 
-    // Reg - kv_read_ctrl_reg
+    // reg - kv_read_ctrl_reg
     class kv_read_ctrl_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -324,7 +324,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : kv_read_ctrl_reg
 
-    // Reg - kv_status_reg
+    // reg - kv_status_reg
     class kv_status_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -364,7 +364,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : kv_status_reg
 
-    // Reg - kv_write_ctrl_reg
+    // reg - kv_write_ctrl_reg
     class kv_write_ctrl_reg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -449,7 +449,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : kv_write_ctrl_reg
 
-    // Reg - hmac_reg::global_intr_en_t
+    // reg - hmac_reg::global_intr_en_t
     class hmac_reg__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -484,7 +484,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__global_intr_en_t
 
-    // Reg - hmac_reg::error_intr_en_t
+    // reg - hmac_reg::error_intr_en_t
     class hmac_reg__error_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -529,7 +529,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__error_intr_en_t
 
-    // Reg - hmac_reg::notif_intr_en_t
+    // reg - hmac_reg::notif_intr_en_t
     class hmac_reg__notif_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -559,7 +559,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__notif_intr_en_t
 
-    // Reg - hmac_reg::global_intr_t_agg_sts_dd3dcf0a
+    // reg - hmac_reg::global_intr_t_agg_sts_dd3dcf0a
     class hmac_reg__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -589,7 +589,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__global_intr_t_agg_sts_dd3dcf0a
 
-    // Reg - hmac_reg::global_intr_t_agg_sts_e6399b4a
+    // reg - hmac_reg::global_intr_t_agg_sts_e6399b4a
     class hmac_reg__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -619,7 +619,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - hmac_reg::error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183
+    // reg - hmac_reg::error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183
     class hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -664,7 +664,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__error_intr_t_error2_sts_b1cf2205_error3_sts_74a35378_key_mode_error_sts_f2304c86_key_zero_error_sts_64a18183
 
-    // Reg - hmac_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
+    // reg - hmac_reg::notif_intr_t_notif_cmd_done_sts_1c68637e
     class hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -694,7 +694,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__notif_intr_t_notif_cmd_done_sts_1c68637e
 
-    // Reg - hmac_reg::error_intr_trig_t
+    // reg - hmac_reg::error_intr_trig_t
     class hmac_reg__error_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -721,13 +721,13 @@ package hmac_reg_uvm;
 
         virtual function void build();
             this.key_mode_error_trig = new("key_mode_error_trig");
-            this.key_mode_error_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.key_mode_error_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.key_zero_error_trig = new("key_zero_error_trig");
-            this.key_zero_error_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.key_zero_error_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.error2_trig = new("error2_trig");
-            this.error2_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.error2_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.error3_trig = new("error3_trig");
-            this.error3_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.error3_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(key_mode_error_trig_bit_cg[bt]) key_mode_error_trig_bit_cg[bt] = new();
                 foreach(key_zero_error_trig_bit_cg[bt]) key_zero_error_trig_bit_cg[bt] = new();
@@ -739,7 +739,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__error_intr_trig_t
 
-    // Reg - hmac_reg::notif_intr_trig_t
+    // reg - hmac_reg::notif_intr_trig_t
     class hmac_reg__notif_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -760,7 +760,7 @@ package hmac_reg_uvm;
 
         virtual function void build();
             this.notif_cmd_done_trig = new("notif_cmd_done_trig");
-            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_cmd_done_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_cmd_done_trig_bit_cg[bt]) notif_cmd_done_trig_bit_cg[bt] = new();
             end
@@ -769,7 +769,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__notif_intr_trig_t
 
-    // Reg - hmac_reg::intr_count_t_cnt_b8d41777
+    // reg - hmac_reg::intr_count_t_cnt_b8d41777
     class hmac_reg__intr_count_t_cnt_b8d41777 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -799,7 +799,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_t_cnt_b8d41777
 
-    // Reg - hmac_reg::intr_count_t_cnt_55fc66d7
+    // reg - hmac_reg::intr_count_t_cnt_55fc66d7
     class hmac_reg__intr_count_t_cnt_55fc66d7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -829,7 +829,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_t_cnt_55fc66d7
 
-    // Reg - hmac_reg::intr_count_t_cnt_d8af96ff
+    // reg - hmac_reg::intr_count_t_cnt_d8af96ff
     class hmac_reg__intr_count_t_cnt_d8af96ff extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -859,7 +859,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_t_cnt_d8af96ff
 
-    // Reg - hmac_reg::intr_count_t_cnt_9bd7f809
+    // reg - hmac_reg::intr_count_t_cnt_9bd7f809
     class hmac_reg__intr_count_t_cnt_9bd7f809 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -889,7 +889,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_t_cnt_9bd7f809
 
-    // Reg - hmac_reg::intr_count_t_cnt_be67d6d5
+    // reg - hmac_reg::intr_count_t_cnt_be67d6d5
     class hmac_reg__intr_count_t_cnt_be67d6d5 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -919,7 +919,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_t_cnt_be67d6d5
 
-    // Reg - hmac_reg::intr_count_incr_t_pulse_14f62453
+    // reg - hmac_reg::intr_count_incr_t_pulse_14f62453
     class hmac_reg__intr_count_incr_t_pulse_14f62453 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -949,7 +949,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_incr_t_pulse_14f62453
 
-    // Reg - hmac_reg::intr_count_incr_t_pulse_080329b7
+    // reg - hmac_reg::intr_count_incr_t_pulse_080329b7
     class hmac_reg__intr_count_incr_t_pulse_080329b7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -979,7 +979,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_incr_t_pulse_080329b7
 
-    // Reg - hmac_reg::intr_count_incr_t_pulse_87b45fe7
+    // reg - hmac_reg::intr_count_incr_t_pulse_87b45fe7
     class hmac_reg__intr_count_incr_t_pulse_87b45fe7 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1009,7 +1009,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_incr_t_pulse_87b45fe7
 
-    // Reg - hmac_reg::intr_count_incr_t_pulse_c1689ee6
+    // reg - hmac_reg::intr_count_incr_t_pulse_c1689ee6
     class hmac_reg__intr_count_incr_t_pulse_c1689ee6 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1039,7 +1039,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_incr_t_pulse_c1689ee6
 
-    // Reg - hmac_reg::intr_count_incr_t_pulse_6173128e
+    // reg - hmac_reg::intr_count_incr_t_pulse_6173128e
     class hmac_reg__intr_count_incr_t_pulse_6173128e extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1069,7 +1069,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_count_incr_t_pulse_6173128e
 
-    // Regfile - hmac_reg::intr_block_t
+    // regfile - hmac_reg::intr_block_t
     class hmac_reg__intr_block_t extends uvm_reg_block;
         rand hmac_reg__global_intr_en_t global_intr_en_r;
         rand hmac_reg__error_intr_en_t error_intr_en_r;
@@ -1195,7 +1195,7 @@ package hmac_reg_uvm;
         endfunction : build
     endclass : hmac_reg__intr_block_t
 
-    // Addrmap - hmac_reg
+    // addrmap - hmac_reg
     class hmac_reg extends uvm_reg_block;
         rand hmac_reg__HMAC512_NAME HMAC512_NAME[2];
         rand hmac_reg__HMAC512_VERSION HMAC512_VERSION[2];

@@ -5,6 +5,7 @@ package pv_reg_pkg;
 
     localparam PV_REG_DATA_WIDTH = 32;
     localparam PV_REG_MIN_ADDR_WIDTH = 12;
+    localparam PV_REG_SIZE = 'hc00;
 
     typedef struct packed{
         logic swwel;

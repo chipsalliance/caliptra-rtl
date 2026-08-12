@@ -5,6 +5,7 @@ package entropy_combiner_reg_pkg;
 
     localparam ENTROPY_COMBINER_REG_DATA_WIDTH = 32;
     localparam ENTROPY_COMBINER_REG_MIN_ADDR_WIDTH = 11;
+    localparam ENTROPY_COMBINER_REG_SIZE = 'h618;
 
     typedef struct packed{
         logic [31:0] next;

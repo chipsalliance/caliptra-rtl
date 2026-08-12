@@ -5,6 +5,7 @@ package doe_reg_pkg;
 
     localparam DOE_REG_DATA_WIDTH = 32;
     localparam DOE_REG_MIN_ADDR_WIDTH = 12;
+    localparam DOE_REG_SIZE = 'ha14;
 
     typedef struct packed{
         logic hwclr;
@@ -172,14 +173,14 @@ package doe_reg_pkg;
         doe_reg__intr_block_t__out_t intr_block_rf;
     } doe_reg__out_t;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [1:0] {
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_IDLE = 'h0,
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_UDS = 'h1,
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_FE = 'h2,
         doe_reg__DOE_CTRL__CMD__doe_cmd_e__DOE_CLEAR_OBF_SECRETS = 'h3
     } doe_reg__DOE_CTRL__CMD__doe_cmd_e_e;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [1:0] {
         doe_reg__DOE_CTRL__CMD_EXT__doe_cmd_ext_e__DOE_STD = 'h0,
         doe_reg__DOE_CTRL__CMD_EXT__doe_cmd_ext_e__DOE_HEK = 'h1,
         doe_reg__DOE_CTRL__CMD_EXT__doe_cmd_ext_e__DOE_RSVD0 = 'h2,

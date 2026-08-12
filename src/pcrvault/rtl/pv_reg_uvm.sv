@@ -4,7 +4,7 @@ package pv_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "pv_reg_covergroups.svh"
-    // Reg - pv_reg::pvCtrl
+    // reg - pv_reg::pvCtrl
     class pv_reg__pvCtrl extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -33,7 +33,7 @@ package pv_reg_uvm;
             this.lock = new("lock");
             this.lock.configure(this, 1, 0, "RW", 0, 'h0, 1, 1, 0);
             this.clear = new("clear");
-            this.clear.configure(this, 1, 1, "RW", 0, 'h0, 1, 1, 0);
+            this.clear.configure(this, 1, 1, "RW", 1, 'h0, 1, 1, 0);
             this.rsvd0 = new("rsvd0");
             this.rsvd0.configure(this, 1, 2, "RW", 1, 'h0, 1, 1, 0);
             this.rsvd1 = new("rsvd1");
@@ -49,7 +49,7 @@ package pv_reg_uvm;
         endfunction : build
     endclass : pv_reg__pvCtrl
 
-    // Reg - pv_reg::pcrReg
+    // reg - pv_reg::pcrReg
     class pv_reg__pcrReg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -79,7 +79,7 @@ package pv_reg_uvm;
         endfunction : build
     endclass : pv_reg__pcrReg
 
-    // Addrmap - pv_reg
+    // addrmap - pv_reg
     class pv_reg extends uvm_reg_block;
         rand pv_reg__pvCtrl PCR_CTRL[32];
         rand pv_reg__pcrReg PCR_ENTRY[32][12];

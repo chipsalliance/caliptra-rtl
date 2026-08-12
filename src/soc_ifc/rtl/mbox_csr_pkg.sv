@@ -5,6 +5,7 @@ package mbox_csr_pkg;
 
     localparam MBOX_CSR_DATA_WIDTH = 32;
     localparam MBOX_CSR_MIN_ADDR_WIDTH = 6;
+    localparam MBOX_CSR_SIZE = 'h28;
 
     typedef struct packed{
         logic hwclr;
@@ -245,14 +246,14 @@ package mbox_csr_pkg;
         mbox_csr__tap_mode__out_t tap_mode;
     } mbox_csr__out_t;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [1:0] {
         mbox_csr__mbox_status__status__mbox_status_e__CMD_BUSY = 'h0,
         mbox_csr__mbox_status__status__mbox_status_e__DATA_READY = 'h1,
         mbox_csr__mbox_status__status__mbox_status_e__CMD_COMPLETE = 'h2,
         mbox_csr__mbox_status__status__mbox_status_e__CMD_FAILURE = 'h3
     } mbox_csr__mbox_status__status__mbox_status_e_e;
 
-    typedef enum logic [31:0] {
+    typedef enum logic [2:0] {
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_IDLE = 'h0,
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_RDY_FOR_CMD = 'h1,
         mbox_csr__mbox_status__mbox_fsm_ps__mbox_fsm_e__MBOX_RDY_FOR_DLEN = 'h3,

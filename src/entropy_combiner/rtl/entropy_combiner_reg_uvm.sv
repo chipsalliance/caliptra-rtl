@@ -4,7 +4,7 @@ package entropy_combiner_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "entropy_combiner_reg_covergroups.svh"
-    // Reg - entropy_combiner_reg::COMBINER_NAME
+    // reg - entropy_combiner_reg::COMBINER_NAME
     class entropy_combiner_reg__COMBINER_NAME extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__COMBINER_NAME
 
-    // Reg - entropy_combiner_reg::COMBINER_VERSION
+    // reg - entropy_combiner_reg::COMBINER_VERSION
     class entropy_combiner_reg__COMBINER_VERSION extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -64,7 +64,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__COMBINER_VERSION
 
-    // Reg - entropy_combiner_reg::KAT_CTRL
+    // reg - entropy_combiner_reg::KAT_CTRL
     class entropy_combiner_reg__KAT_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -85,7 +85,7 @@ package entropy_combiner_reg_uvm;
 
         virtual function void build();
             this.start = new("start");
-            this.start.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
+            this.start.configure(this, 1, 0, "WO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(start_bit_cg[bt]) start_bit_cg[bt] = new();
             end
@@ -94,7 +94,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__KAT_CTRL
 
-    // Reg - entropy_combiner_reg::KAT_MSG_LEN
+    // reg - entropy_combiner_reg::KAT_MSG_LEN
     class entropy_combiner_reg__KAT_MSG_LEN extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -124,7 +124,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__KAT_MSG_LEN
 
-    // Reg - entropy_combiner_reg::KAT_STATUS
+    // reg - entropy_combiner_reg::KAT_STATUS
     class entropy_combiner_reg__KAT_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -159,7 +159,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__KAT_STATUS
 
-    // Reg - entropy_combiner_reg::KAT_MSG
+    // reg - entropy_combiner_reg::KAT_MSG
     class entropy_combiner_reg__KAT_MSG extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -189,7 +189,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__KAT_MSG
 
-    // Reg - entropy_combiner_reg::KAT_DIGEST
+    // reg - entropy_combiner_reg::KAT_DIGEST
     class entropy_combiner_reg__KAT_DIGEST extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -219,7 +219,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__KAT_DIGEST
 
-    // Reg - entropy_combiner_reg::COMBINER_CTRL
+    // reg - entropy_combiner_reg::COMBINER_CTRL
     class entropy_combiner_reg__COMBINER_CTRL extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -254,7 +254,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__COMBINER_CTRL
 
-    // Reg - entropy_combiner_reg::AHB_LOCK
+    // reg - entropy_combiner_reg::AHB_LOCK
     class entropy_combiner_reg__AHB_LOCK extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -284,7 +284,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__AHB_LOCK
 
-    // Reg - entropy_combiner_reg::COMBINER_STATUS
+    // reg - entropy_combiner_reg::COMBINER_STATUS
     class entropy_combiner_reg__COMBINER_STATUS extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -314,7 +314,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__COMBINER_STATUS
 
-    // Reg - entropy_combiner_reg::global_intr_en_t
+    // reg - entropy_combiner_reg::global_intr_en_t
     class entropy_combiner_reg__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -349,7 +349,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__global_intr_en_t
 
-    // Reg - entropy_combiner_reg::error_intr_en_t
+    // reg - entropy_combiner_reg::error_intr_en_t
     class entropy_combiner_reg__error_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -399,7 +399,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__error_intr_en_t
 
-    // Reg - entropy_combiner_reg::notif_intr_en_t
+    // reg - entropy_combiner_reg::notif_intr_en_t
     class entropy_combiner_reg__notif_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -429,7 +429,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__notif_intr_en_t
 
-    // Reg - entropy_combiner_reg::global_intr_t_agg_sts_dd3dcf0a
+    // reg - entropy_combiner_reg::global_intr_t_agg_sts_dd3dcf0a
     class entropy_combiner_reg__global_intr_t_agg_sts_dd3dcf0a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -459,7 +459,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__global_intr_t_agg_sts_dd3dcf0a
 
-    // Reg - entropy_combiner_reg::global_intr_t_agg_sts_e6399b4a
+    // reg - entropy_combiner_reg::global_intr_t_agg_sts_e6399b4a
     class entropy_combiner_reg__global_intr_t_agg_sts_e6399b4a extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -489,7 +489,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__global_intr_t_agg_sts_e6399b4a
 
-    // Reg - entropy_combiner_reg::error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40
+    // reg - entropy_combiner_reg::error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40
     class entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -539,7 +539,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__error_intr_t_combiner_fsm_error_sts_8d010179_count_error_sts_3599d16f_sha3_error_sts_a3cfdcf2_sparse_fsm_error_sts_eed28f3e_storage_rst_error_sts_a4339a40
 
-    // Reg - entropy_combiner_reg::notif_intr_t_notif_kat_done_sts_50d04acb
+    // reg - entropy_combiner_reg::notif_intr_t_notif_kat_done_sts_50d04acb
     class entropy_combiner_reg__notif_intr_t_notif_kat_done_sts_50d04acb extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -569,7 +569,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__notif_intr_t_notif_kat_done_sts_50d04acb
 
-    // Reg - entropy_combiner_reg::error_intr_trig_t
+    // reg - entropy_combiner_reg::error_intr_trig_t
     class entropy_combiner_reg__error_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -598,15 +598,15 @@ package entropy_combiner_reg_uvm;
 
         virtual function void build();
             this.sha3_error_trig = new("sha3_error_trig");
-            this.sha3_error_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.sha3_error_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             this.sparse_fsm_error_trig = new("sparse_fsm_error_trig");
-            this.sparse_fsm_error_trig.configure(this, 1, 1, "W1S", 0, 'h0, 1, 1, 0);
+            this.sparse_fsm_error_trig.configure(this, 1, 1, "W1S", 1, 'h0, 1, 1, 0);
             this.count_error_trig = new("count_error_trig");
-            this.count_error_trig.configure(this, 1, 2, "W1S", 0, 'h0, 1, 1, 0);
+            this.count_error_trig.configure(this, 1, 2, "W1S", 1, 'h0, 1, 1, 0);
             this.storage_rst_error_trig = new("storage_rst_error_trig");
-            this.storage_rst_error_trig.configure(this, 1, 3, "W1S", 0, 'h0, 1, 1, 0);
+            this.storage_rst_error_trig.configure(this, 1, 3, "W1S", 1, 'h0, 1, 1, 0);
             this.combiner_fsm_error_trig = new("combiner_fsm_error_trig");
-            this.combiner_fsm_error_trig.configure(this, 1, 4, "W1S", 0, 'h0, 1, 1, 0);
+            this.combiner_fsm_error_trig.configure(this, 1, 4, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(sha3_error_trig_bit_cg[bt]) sha3_error_trig_bit_cg[bt] = new();
                 foreach(sparse_fsm_error_trig_bit_cg[bt]) sparse_fsm_error_trig_bit_cg[bt] = new();
@@ -619,7 +619,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__error_intr_trig_t
 
-    // Reg - entropy_combiner_reg::notif_intr_trig_t
+    // reg - entropy_combiner_reg::notif_intr_trig_t
     class entropy_combiner_reg__notif_intr_trig_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -640,7 +640,7 @@ package entropy_combiner_reg_uvm;
 
         virtual function void build();
             this.notif_kat_done_trig = new("notif_kat_done_trig");
-            this.notif_kat_done_trig.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.notif_kat_done_trig.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(notif_kat_done_trig_bit_cg[bt]) notif_kat_done_trig_bit_cg[bt] = new();
             end
@@ -649,7 +649,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__notif_intr_trig_t
 
-    // Reg - entropy_combiner_reg::intr_count_t_cnt_9198fa18
+    // reg - entropy_combiner_reg::intr_count_t_cnt_9198fa18
     class entropy_combiner_reg__intr_count_t_cnt_9198fa18 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -679,7 +679,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_t_cnt_9198fa18
 
-    // Reg - entropy_combiner_reg::intr_count_t_cnt_d64d6c2f
+    // reg - entropy_combiner_reg::intr_count_t_cnt_d64d6c2f
     class entropy_combiner_reg__intr_count_t_cnt_d64d6c2f extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -709,7 +709,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_t_cnt_d64d6c2f
 
-    // Reg - entropy_combiner_reg::intr_count_t_cnt_855566f4
+    // reg - entropy_combiner_reg::intr_count_t_cnt_855566f4
     class entropy_combiner_reg__intr_count_t_cnt_855566f4 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -739,7 +739,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_t_cnt_855566f4
 
-    // Reg - entropy_combiner_reg::intr_count_t_cnt_2f455042
+    // reg - entropy_combiner_reg::intr_count_t_cnt_2f455042
     class entropy_combiner_reg__intr_count_t_cnt_2f455042 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -769,7 +769,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_t_cnt_2f455042
 
-    // Reg - entropy_combiner_reg::intr_count_t_cnt_77a9f3e0
+    // reg - entropy_combiner_reg::intr_count_t_cnt_77a9f3e0
     class entropy_combiner_reg__intr_count_t_cnt_77a9f3e0 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -799,7 +799,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_t_cnt_77a9f3e0
 
-    // Reg - entropy_combiner_reg::intr_count_t_cnt_dd5595d5
+    // reg - entropy_combiner_reg::intr_count_t_cnt_dd5595d5
     class entropy_combiner_reg__intr_count_t_cnt_dd5595d5 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -829,7 +829,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_t_cnt_dd5595d5
 
-    // Reg - entropy_combiner_reg::intr_count_incr_t_pulse_d65b5e88
+    // reg - entropy_combiner_reg::intr_count_incr_t_pulse_d65b5e88
     class entropy_combiner_reg__intr_count_incr_t_pulse_d65b5e88 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -859,7 +859,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_incr_t_pulse_d65b5e88
 
-    // Reg - entropy_combiner_reg::intr_count_incr_t_pulse_a1bb0d16
+    // reg - entropy_combiner_reg::intr_count_incr_t_pulse_a1bb0d16
     class entropy_combiner_reg__intr_count_incr_t_pulse_a1bb0d16 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -889,7 +889,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_incr_t_pulse_a1bb0d16
 
-    // Reg - entropy_combiner_reg::intr_count_incr_t_pulse_d619a058
+    // reg - entropy_combiner_reg::intr_count_incr_t_pulse_d619a058
     class entropy_combiner_reg__intr_count_incr_t_pulse_d619a058 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -919,7 +919,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_incr_t_pulse_d619a058
 
-    // Reg - entropy_combiner_reg::intr_count_incr_t_pulse_e5766d33
+    // reg - entropy_combiner_reg::intr_count_incr_t_pulse_e5766d33
     class entropy_combiner_reg__intr_count_incr_t_pulse_e5766d33 extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -949,7 +949,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_incr_t_pulse_e5766d33
 
-    // Reg - entropy_combiner_reg::intr_count_incr_t_pulse_484eaecd
+    // reg - entropy_combiner_reg::intr_count_incr_t_pulse_484eaecd
     class entropy_combiner_reg__intr_count_incr_t_pulse_484eaecd extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -979,7 +979,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_incr_t_pulse_484eaecd
 
-    // Reg - entropy_combiner_reg::intr_count_incr_t_pulse_4d47d41f
+    // reg - entropy_combiner_reg::intr_count_incr_t_pulse_4d47d41f
     class entropy_combiner_reg__intr_count_incr_t_pulse_4d47d41f extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -1009,7 +1009,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_count_incr_t_pulse_4d47d41f
 
-    // Regfile - entropy_combiner_reg::intr_block_t
+    // regfile - entropy_combiner_reg::intr_block_t
     class entropy_combiner_reg__intr_block_t extends uvm_reg_block;
         rand entropy_combiner_reg__global_intr_en_t global_intr_en_r;
         rand entropy_combiner_reg__error_intr_en_t error_intr_en_r;
@@ -1147,7 +1147,7 @@ package entropy_combiner_reg_uvm;
         endfunction : build
     endclass : entropy_combiner_reg__intr_block_t
 
-    // Addrmap - entropy_combiner_reg
+    // addrmap - entropy_combiner_reg
     class entropy_combiner_reg extends uvm_reg_block;
         rand entropy_combiner_reg__COMBINER_NAME COMBINER_NAME[2];
         rand entropy_combiner_reg__COMBINER_VERSION COMBINER_VERSION[2];

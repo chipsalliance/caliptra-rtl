@@ -4,7 +4,7 @@ package dv_reg_uvm;
     `include "uvm_macros.svh"
     import uvm_pkg::*;
     `include "dv_reg_covergroups.svh"
-    // Reg - dv_reg::StickyDataVaultCtrl
+    // reg - dv_reg::StickyDataVaultCtrl
     class dv_reg__StickyDataVaultCtrl extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -34,7 +34,7 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__StickyDataVaultCtrl
 
-    // Reg - dv_reg::StickyDataVaultReg
+    // reg - dv_reg::StickyDataVaultReg
     class dv_reg__StickyDataVaultReg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -64,7 +64,7 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__StickyDataVaultReg
 
-    // Reg - dv_reg::DataVaultCtrl
+    // reg - dv_reg::DataVaultCtrl
     class dv_reg__DataVaultCtrl extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -94,7 +94,7 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__DataVaultCtrl
 
-    // Reg - dv_reg::DataVaultReg
+    // reg - dv_reg::DataVaultReg
     class dv_reg__DataVaultReg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -124,7 +124,7 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__DataVaultReg
 
-    // Reg - dv_reg::LockableScratchRegCtrl
+    // reg - dv_reg::LockableScratchRegCtrl
     class dv_reg__LockableScratchRegCtrl extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -154,7 +154,7 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__LockableScratchRegCtrl
 
-    // Reg - dv_reg::LockableScratchReg
+    // reg - dv_reg::LockableScratchReg
     class dv_reg__LockableScratchReg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -184,7 +184,7 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__LockableScratchReg
 
-    // Reg - dv_reg::NonStickyGenericScratchReg
+    // reg - dv_reg::NonStickyGenericScratchReg
     class dv_reg__NonStickyGenericScratchReg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -214,7 +214,7 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__NonStickyGenericScratchReg
 
-    // Reg - dv_reg::StickyLockableScratchRegCtrl
+    // reg - dv_reg::StickyLockableScratchRegCtrl
     class dv_reg__StickyLockableScratchRegCtrl extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -244,7 +244,7 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__StickyLockableScratchRegCtrl
 
-    // Reg - dv_reg::StickyLockableScratchReg
+    // reg - dv_reg::StickyLockableScratchReg
     class dv_reg__StickyLockableScratchReg extends uvm_reg;
         protected uvm_reg_data_t m_current;
         protected uvm_reg_data_t m_data;
@@ -274,7 +274,7 @@ package dv_reg_uvm;
         endfunction : build
     endclass : dv_reg__StickyLockableScratchReg
 
-    // Addrmap - dv_reg
+    // addrmap - dv_reg
     class dv_reg extends uvm_reg_block;
         rand dv_reg__StickyDataVaultCtrl StickyDataVaultCtrl[10];
         rand dv_reg__StickyDataVaultReg STICKY_DATA_VAULT_ENTRY[10][12];
