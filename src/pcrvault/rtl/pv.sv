@@ -48,7 +48,9 @@ module pv
     input pv_read_t [PV_NUM_READ-1:0]     pv_read,
     input pv_write_t [PV_NUM_WRITE-1:0]   pv_write,
     output pv_rd_resp_t [PV_NUM_READ-1:0] pv_rd_resp,
-    output pv_wr_resp_t [PV_NUM_WRITE-1:0] pv_wr_resp
+    output pv_wr_resp_t [PV_NUM_WRITE-1:0] pv_wr_resp,
+
+    input logic                           iccm_unlock
 
 );
 
@@ -62,6 +64,7 @@ pv_uc_req_t uc_req;
 //intermediate signals to make verilator happy
 logic [PV_NUM_PCR-1:0][PV_NUM_DWORDS-1:0] pv_entry_we;
 logic [PV_NUM_PCR-1:0][PV_NUM_DWORDS-1:0][31:0] pv_entry_next;
+logic [PV_NUM_WRITE-1:0][PV_NUM_PCR-1:0] client_entry_blocked;
 
 pv_reg__in_t pv_reg_hwif_in;
 pv_reg__out_t pv_reg_hwif_out;
@@ -111,9 +114,24 @@ always_comb begin : keyvault_ctrl
         pv_reg_hwif_in.PCR_CTRL[entry].clear.swwel = pv_reg_hwif_out.PCR_CTRL[entry].lock.value & ~fw_update_rst_window;
     end
 
+    //per-client x per-entry write guard
+    for (int client = 0; client < PV_NUM_WRITE; client++) begin
+        for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+            client_entry_blocked[client][entry] =
+                ((client == PV_SHA_CLIENT)  && ((entry == PV_PCR_CUR) || (entry == PV_PCR_JRN))) ||
+                ((client == PV_ICCM_CLIENT) &&  (entry != PV_PCR_CUR) && (entry != PV_PCR_JRN));
+`else
+            client_entry_blocked[client][entry] = 1'b0;
+`endif
+        end
+    end
+
     //pcrvault storage
     //AND-OR mux writes to each entry from crypto blocks
     //write to the appropriate dest entry and offset when write_en is set
+    //PCR4/PCR5 guard: pv_write[0] (sha512_ctrl) is blocked from writing PCR4 and PCR5.
+    //Only pv_write[1] (iccm hash engine) can write nonzero data to PCR4/PCR5.
     for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
         for (int dword = 0; dword < PV_NUM_DWORDS; dword++) begin
             //initialize to 0 for AND-OR mux
@@ -121,13 +139,18 @@ always_comb begin : keyvault_ctrl
             pv_entry_next[entry][dword] = '0;
             
             for (int client = 0; client < PV_NUM_WRITE; client++) begin
-                pv_entry_we[entry][dword] |= pv_write[client].write_en &(pv_write[client].write_entry == entry) & 
-                                             (pv_write[client].write_offset == dword);
-                pv_entry_next[entry][dword] |= pv_write[client].write_en & (pv_write[client].write_entry == entry) ? pv_write[client].write_data : '0;
+                pv_entry_we[entry][dword] |= pv_write[client].write_en &
+                                             (pv_write[client].write_entry == entry) & 
+                                             (pv_write[client].write_offset == dword) &
+                                             ~client_entry_blocked[client][entry];
+                pv_entry_next[entry][dword] |= (pv_write[client].write_en &
+                                                (pv_write[client].write_entry == entry) &
+                                                ~client_entry_blocked[client][entry]) ? pv_write[client].write_data : '0;
             end 
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.we = pv_entry_we[entry][dword];
             pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.next =  pv_entry_next[entry][dword];
-            pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = pv_reg_hwif_out.PCR_CTRL[entry].clear.value;
+            pv_reg_hwif_in.PCR_ENTRY[entry][dword].data.hwclr = pv_reg_hwif_out.PCR_CTRL[entry].clear.value |
+                                                                 (entry == PV_PCR_CUR ? iccm_unlock : 1'b0);
         end
     end
 end

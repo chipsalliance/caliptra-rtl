@@ -22,6 +22,7 @@ module soc_ifc_top
     import mbox_pkg::*;
     import soc_ifc_reg_pkg::*;
     import kv_defines_pkg::*;
+    import pv_defines_pkg::*;
     #(
      parameter AXI_ADDR_WIDTH = 18
     ,parameter AXI_DATA_WIDTH = 32
@@ -174,6 +175,15 @@ module soc_ifc_top
     // ICCM Lock
     output logic iccm_lock,
     input  logic iccm_axs_blocked,
+
+    // ICCM hash mode
+    input  logic        iccm_hash_dv,
+    input  logic [31:0] iccm_hash_data,
+    output pv_write_t   pv_write,
+    output logic        iccm_unlock_o,
+    // ICCM PCR extend
+    output pv_read_t    pv_read,
+    input  pv_rd_resp_t pv_rd_resp,
 
     // ICCM Region Registers for Boot Flow Monitor
     output logic [ICCM_ADDR_WIDTH-1:0] iccm_fmc_start_addr,
@@ -1088,6 +1098,8 @@ assign soc_ifc_error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr
 assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
 assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
+assign iccm_unlock_o = iccm_unlock;
+
 // iccm_fmc_start_addr, iccm_fmc_end_addr, iccm_rt_start_addr, iccm_rt_end_addr
 // are driven directly by the caliptra_prim_subreg_shadow .q outputs below.
 logic iccm_region_lock_reg; // Raw register value -- gates shadow writes
@@ -1312,6 +1324,16 @@ i_sha512_acc_top (
     .sha_sram_req_addr(sha_sram_req_addr),
     .sha_sram_resp(sha_sram_resp),
     .sha_sram_hold(sha_sram_hold),
+
+    // ICCM hash mode
+    .iccm_hash_dv_i(iccm_hash_dv),
+    .iccm_hash_data_i(iccm_hash_data),
+    .iccm_lock_i(iccm_lock),
+    .iccm_unlock_i(iccm_unlock),
+    .pv_write_o(pv_write),
+    // ICCM PCR extend
+    .pv_read_o(pv_read),
+    .pv_rd_resp_i(pv_rd_resp),
 
     .error_intr(sha_error_intr),
     .notif_intr(sha_notif_intr)
