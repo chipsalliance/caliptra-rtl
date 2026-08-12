@@ -1640,13 +1640,14 @@ The ECC core performance is reported in the next section.
 
 ### Pure hardware architecture
 
-In this architecture, the ECC interface and controller are implemented in hardware. The performance specification of the ECC architecture is reported as shown in the following table.
+In this architecture, the ECC interface and controller are implemented in hardware. The Montgomery multiplier in the current RTL uses a **radix-48** datapath (`MULT_RADIX = 48` in `src/ecc/rtl/ecc_params_pkg.sv`), which reduces the number of PE iterations per 384-bit modular multiplication from 12 (radix-32) to 8. The performance specification of the ECC architecture is reported as shown in the following table. Cycle counts were measured on `ecc_top_tb` running the `ecc_normal_test` (radix-48 RTL).
 
-| Operation | Cycle count \[CCs\] | Time \[ms\] @ 400 MHz | Throughput \[op/s\] |
-| :-------- | :------------------ | :-------------------- | :------------------ |
-| Keygen    | 909,648             | 2.274                 | 439                 |
-| Signing   | 932,990             | 2.332                 | 428                 |
-| Verifying | 1,223,938           | 3.060                 | 326                 |
+| Operation      | Cycle count \[CCs\] | Time \[ms\] @ 400 MHz | Throughput \[op/s\] |
+| :------------- | :------------------ | :-------------------- | :------------------ |
+| Keygen         | 719,675             | 1.799                 | 556                 |
+| Signing        | 736,978             | 1.842                 | 543                 |
+| Verifying      | 960,404             | 2.401                 | 416                 |
+| ECDH sharedkey | 717,421             | 1.794                 | 558                 |
 
 
 ## LMS Accelerator
