@@ -29,12 +29,17 @@ valid alternative: a thin software driver layer sitting between the harness and 
 registers, exposing operations (KeyGen, SigGen, Encapsulate, ...) as function calls that
 internally perform the same kind of register sequence. Either style can be used to drive
 the hardware described in this document; §8.3 and §11-§13 are written this way simply to
-illustrate that a driver-based harness is a workable option, not to mandate it. For
-ML-DSA-87 and ML-KEM-1024, the shared hardware block referenced (the "Adams Bridge"
-post-quantum accelerator) doesn't have a register-definition file available alongside
-this document, so those two sections' register names and control opcodes should be
-treated as illustrative rather than independently RTL-verified. LMS has no dedicated
+illustrate that a driver-based harness is a workable option, not to mandate it. ML-DSA-87
+and ML-KEM-1024 share a hardware block ("Adams Bridge," a post-quantum accelerator) whose
+register names and control opcodes are confirmed against the live register browser (see
+below) the same way every other section in this document is. LMS has no dedicated
 register interface at all — see §13 for how that changes the section's shape.
+
+**Register references.** Every register mentioned in §4-§8, §10-§12 is a link to its live
+definition in the [Caliptra register browser](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/)
+rather than a hardcoded address — addresses are not reproduced in this document, so
+nothing here goes stale if they change. §9 (HMAC-DRBG) and §13 (LMS) have no register
+block to link to, matching their signal-level/pure-software framing.
 
 ---
 
@@ -194,26 +199,26 @@ is compared against the originally supplied `SIGN_R`.
 
 ## 4. AES
 
-Register interface documented in `src/aes/data/aes.rdl`; encodings in `src/aes/rtl/aes_pkg.sv`.
+Register interface: see the live register browser for the [`aes_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg) and [`aes_clp_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg) blocks (encodings in `src/aes/rtl/aes_pkg.sv`).
 
 ### 4.1 Register map
 
-| Register | Address |
+| Register | Notes |
 |---|---|
-| `KEY_SHARE0_0..7` | `0x04`–`0x20` |
-| `KEY_SHARE1_0..7` | `0x24`–`0x40` |
-| `IV_0..3` | `0x44`–`0x50` |
-| `DATA_IN_0..3` | `0x54`–`0x60` |
-| `DATA_OUT_0..3` | `0x64`–`0x70` |
-| `CTRL_SHADOWED` | `0x74` |
-| `CTRL_AUX_SHADOWED` | `0x78` |
-| `CTRL_AUX_REGWEN` | `0x7c` |
-| `TRIGGER` | `0x80` |
-| `STATUS` | `0x84` |
-| `CTRL_GCM_SHADOWED` | `0x88` |
-| `ENTROPY_IF_SEED_0..8` | `0x910`–`0x930` (9×32-bit, CLP-specific block at `+0x800`) |
+| [`KEY_SHARE0_0..7`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.KEY_SHARE0) | |
+| [`KEY_SHARE1_0..7`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.KEY_SHARE1) | |
+| [`IV_0..3`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.IV) | |
+| [`DATA_IN_0..3`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.DATA_IN) | |
+| [`DATA_OUT_0..3`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.DATA_OUT) | |
+| [`CTRL_SHADOWED`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.CTRL_SHADOWED) | |
+| [`CTRL_AUX_SHADOWED`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.CTRL_AUX_SHADOWED) | |
+| [`CTRL_AUX_REGWEN`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.CTRL_AUX_REGWEN) | |
+| [`TRIGGER`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.TRIGGER) | |
+| [`STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.STATUS) | |
+| [`CTRL_GCM_SHADOWED`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.CTRL_GCM_SHADOWED) | |
+| [`ENTROPY_IF_SEED_0..8`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg.ENTROPY_IF_SEED) | 9×32-bit, in the `aes_clp_reg` block |
 
-**`CTRL_SHADOWED`** (`0x74`):
+**[`CTRL_SHADOWED`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.CTRL_SHADOWED)**:
 
 | Bits | Field | Values |
 |---|---|---|
@@ -224,7 +229,7 @@ Register interface documented in `src/aes/data/aes.rdl`; encodings in `src/aes/r
 | [14:12] | `PRNG_RESEED_RATE` | `PER_1=3'b001` — written on every `CTRL_SHADOWED` write; the masking PRNG's reseed rate is never left at its 0 reset value |
 | [15] | `MANUAL_OPERATION` | must be 1 so the unit waits for an explicit `TRIGGER.START` rather than auto-starting on `DATA_IN` writes |
 
-**`TRIGGER`** (`0x80`):
+**[`TRIGGER`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.TRIGGER)**:
 
 | Bits | Field |
 |---|---|
@@ -233,7 +238,7 @@ Register interface documented in `src/aes/data/aes.rdl`; encodings in `src/aes/r
 | [2] | `DATA_OUT_CLEAR` |
 | [3] | `PRNG_RESEED` |
 
-**`STATUS`** (`0x84`):
+**[`STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.STATUS)**:
 
 | Bits | Field |
 |---|---|
@@ -245,7 +250,7 @@ Register interface documented in `src/aes/data/aes.rdl`; encodings in `src/aes/r
 | [5] | `ALERT_RECOV_CTRL_UPDATE_ERR` |
 | [6] | `ALERT_FATAL_FAULT` |
 
-**`CTRL_GCM_SHADOWED`** (`0x88`):
+**[`CTRL_GCM_SHADOWED`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg.CTRL_GCM_SHADOWED)**:
 
 | Bits | Field | Values |
 |---|---|---|
@@ -471,20 +476,20 @@ each outer iteration `i`):
 
 ## 5. SHA2-224 / SHA2-256
 
-Register interface documented in `src/sha256/rtl/sha256_reg.rdl`.
+Register interface: see the live register browser for the [`sha256_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg) block.
 
 ### 5.1 Register map
 
-| Register | Address |
+| Register | Notes |
 |---|---|
-| `NAME_0/1`, `VERSION_0/1` | `0x00`,`0x04`,`0x08`,`0x0c` |
-| `CTRL` | `0x10` |
-| `STATUS` | `0x18` |
-| `BLOCK_0..15` | `0x80`–`0xbc` (16×32-bit = 512-bit message block, big-endian) |
-| `DIGEST_0..7` | `0x100`–`0x11c` (8×32-bit = 256-bit digest, big-endian) |
+| [`SHA256_NAME_0/1`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg.SHA256_NAME), [`SHA256_VERSION_0/1`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg.SHA256_VERSION) | |
+| [`SHA256_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg.SHA256_CTRL) | |
+| [`SHA256_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg.SHA256_STATUS) | |
+| [`SHA256_BLOCK_0..15`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg.SHA256_BLOCK) | 16×32-bit = 512-bit message block, big-endian |
+| [`SHA256_DIGEST_0..7`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg.SHA256_DIGEST) | 8×32-bit = 256-bit digest, big-endian |
 
-**`CTRL`** (`0x10`) — `INIT`/`NEXT`/`ZEROIZE` are single-pulse fields: a software write
-generates one pulse and the bit self-clears:
+**[`SHA256_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg.SHA256_CTRL)** — `INIT`/`NEXT`/`ZEROIZE` are single-pulse fields: a software
+write generates one pulse and the bit self-clears:
 
 | Bits | Field | Notes |
 |---|---|---|
@@ -493,15 +498,16 @@ generates one pulse and the bit self-clears:
 | [2] | `MODE` | 0 = SHA2-224, 1 = SHA2-256 |
 | [3] | `ZEROIZE` | |
 
-**`STATUS`** (`0x18`):
+**[`SHA256_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg.SHA256_STATUS)**:
 
 | Bits | Field | Notes |
 |---|---|---|
 | [0] | `READY` | core is ready to take a control command |
 | [1] | `VALID` | process is done and DIGEST is valid |
 
-(`CTRL` also has Winternitz-specific fields — `WNTZ_MODE`, `WNTZ_W`, `WNTZ_N_MODE` — and
-`STATUS` has `WNTZ_BUSY`; none are needed for standard SHA-2 hashing.)
+(`SHA256_CTRL` also has Winternitz-specific fields — `WNTZ_MODE`, `WNTZ_W`,
+`WNTZ_N_MODE` — and `SHA256_STATUS` has `WNTZ_BUSY`; none are needed for standard SHA-2
+hashing.)
 
 ### 5.2 Sequence
 
@@ -509,15 +515,16 @@ Message padding (the `0x80` marker plus a big-endian bit-length field, to a mult
 512 bits) is not part of this register interface — the DUT only ever receives complete,
 already-padded 512-bit blocks.
 
-1. Per 512-bit block: write `BLOCK_0..15` (plain sequential big-endian split of the
-   padded block — no byte reversal, unlike AES).
-2. Write `CTRL` = `{MODE, INIT=1}` for the first block of a message, or
+1. Per 512-bit block: write `SHA256_BLOCK_0..15` (plain sequential big-endian split of
+   the padded block — no byte reversal, unlike AES).
+2. Write `SHA256_CTRL` = `{MODE, INIT=1}` for the first block of a message, or
    `{MODE, NEXT=1}` for every subsequent block.
-3. Wait `STATUS.READY` or `STATUS.VALID` (either indicates the block finished
-   processing).
-4. After the last block, read `DIGEST_0..7`. For SHA2-224, only `DIGEST_0..6` (the
-   upper 224 bits) are the result — `DIGEST_7` is not part of the digest.
-5. Write `CTRL.ZEROIZE=1` before starting the next message.
+3. Wait `SHA256_STATUS.READY` or `SHA256_STATUS.VALID` (either indicates the block
+   finished processing).
+4. After the last block, read `SHA256_DIGEST_0..7`. For SHA2-224, only
+   `SHA256_DIGEST_0..6` (the upper 224 bits) are the result — `SHA256_DIGEST_7` is not
+   part of the digest.
+5. Write `SHA256_CTRL.ZEROIZE=1` before starting the next message.
 
 **Worked example — SHA2-224, single block**
 
@@ -529,22 +536,23 @@ already-padded 512-bit blocks.
 1. Pad the message to one 512-bit block: `B3E7066F` + `0x80` marker + 51 zero bytes +
    64-bit big-endian length field (`32` bits) = 
    `B3E7066F800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000020`.
-2. Write `BLOCK_0..15` — `BLOCK_0`=`0xB3E7066F`, `BLOCK_1`=`0x80000000`,
-   `BLOCK_2..14`=`0x00000000`, `BLOCK_15`=`0x00000020` (the last word carries the 64-bit
-   length field's low half; its upper half is the `0x00000000` at `BLOCK_14`).
-3. Write `CTRL` = `0x1` (`MODE=0` for SHA2-224, `INIT=1`).
-4. Wait `STATUS.READY`/`STATUS.VALID`.
-5. Read `DIGEST_0..6` (`DIGEST_7` discarded):
+2. Write `SHA256_BLOCK_0..15` — `SHA256_BLOCK_0`=`0xB3E7066F`, `SHA256_BLOCK_1`=`0x80000000`,
+   `SHA256_BLOCK_2..14`=`0x00000000`, `SHA256_BLOCK_15`=`0x00000020` (the last word carries
+   the 64-bit length field's low half; its upper half is the `0x00000000` at
+   `SHA256_BLOCK_14`).
+3. Write `SHA256_CTRL` = `0x1` (`MODE=0` for SHA2-224, `INIT=1`).
+4. Wait `SHA256_STATUS.READY`/`SHA256_STATUS.VALID`.
+5. Read `SHA256_DIGEST_0..6` (`SHA256_DIGEST_7` discarded):
 
    | Register | Value |
    |---|---|
-   | `DIGEST_0` | `0xACACA528` |
-   | `DIGEST_1` | `0x2641E845` |
-   | `DIGEST_2` | `0x2DD4C6CA` |
-   | `DIGEST_3` | `0xEF9C7952` |
-   | `DIGEST_4` | `0x010B6FE9` |
-   | `DIGEST_5` | `0xBD3ACC53` |
-   | `DIGEST_6` | `0x1D0D2FC2` |
+   | `SHA256_DIGEST_0` | `0xACACA528` |
+   | `SHA256_DIGEST_1` | `0x2641E845` |
+   | `SHA256_DIGEST_2` | `0x2DD4C6CA` |
+   | `SHA256_DIGEST_3` | `0xEF9C7952` |
+   | `SHA256_DIGEST_4` | `0x010B6FE9` |
+   | `SHA256_DIGEST_5` | `0xBD3ACC53` |
+   | `SHA256_DIGEST_6` | `0x1D0D2FC2` |
 
    Concatenated: `ACACA5282641E8452DD4C6CAEF9C7952010B6FE9BD3ACC531D0D2FC2` — matches the
    expected `md` exactly.
@@ -570,19 +578,19 @@ For j = 0 to 99
 
 ## 6. SHA2-384 / SHA2-512
 
-Register interface documented in `src/sha512/rtl/sha512_reg.rdl`.
+Register interface: see the live register browser for the [`sha512_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg) block.
 
 ### 6.1 Register map
 
-| Register | Address |
+| Register | Notes |
 |---|---|
-| `NAME_0/1`, `VERSION_0/1` | `0x00`,`0x04`,`0x08`,`0x0c` |
-| `CTRL` | `0x10` |
-| `STATUS` | `0x18` |
-| `BLOCK_0..31` | `0x80`–`0xfc` (32×32-bit = 1024-bit message block, big-endian) |
-| `DIGEST_0..15` | `0x100`–`0x13c` (16×32-bit = 512-bit digest, big-endian) |
+| [`SHA512_NAME_0/1`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg.SHA512_NAME), [`SHA512_VERSION_0/1`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg.SHA512_VERSION) | |
+| [`SHA512_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg.SHA512_CTRL) | |
+| [`SHA512_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg.SHA512_STATUS) | |
+| [`SHA512_BLOCK_0..31`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg.SHA512_BLOCK) | 32×32-bit = 1024-bit message block, big-endian |
+| [`SHA512_DIGEST_0..15`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg.SHA512_DIGEST) | 16×32-bit = 512-bit digest, big-endian |
 
-**`CTRL`** (`0x10`):
+**[`SHA512_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg.SHA512_CTRL)**:
 
 | Bits | Field | Notes |
 |---|---|---|
@@ -593,44 +601,47 @@ Register interface documented in `src/sha512/rtl/sha512_reg.rdl`.
 | [5] | `LAST` | key-vault/hash-extend write-back — not needed for standard hashing |
 | [6] | `RESTORE` | resume from a previously-saved digest — not needed for standard hashing |
 
-**`STATUS`** (`0x18`):
+**[`SHA512_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg.SHA512_STATUS)**:
 
 | Bits | Field |
 |---|---|
 | [0] | `READY` |
 | [1] | `VALID` |
 
-SHA-512 has additional register groups beyond `DIGEST` (key-vault read/write control at
-`0x600`–`0x60c`, and a PCR-hash sub-block at `0x610`–`0x674`) that are not part of
-standard ACVP hashing.
+SHA-512 has additional register groups beyond `SHA512_DIGEST` — key-vault read/write
+control (`SHA512_VAULT_RD_CTRL`/`_STATUS`, `SHA512_KV_WR_CTRL`/`_STATUS`) and a PCR-hash
+sub-block (`SHA512_GEN_PCR_HASH_*`, see the register browser link above) — that are not
+part of standard ACVP hashing.
 
 ### 6.2 Sequence
 
 Same structure as SHA-256 (§5.2, including its worked example) — write the padded
-message a block at a time, `CTRL`={`MODE`,`INIT`/`NEXT`}, wait ready/valid, read the
-digest, zeroize. Padding (0x80 marker + 128-bit big-endian length field, to a multiple
+message a block at a time, `SHA512_CTRL`={`MODE`,`INIT`/`NEXT`}, wait ready/valid, read
+the digest, zeroize. Padding (0x80 marker + 128-bit big-endian length field, to a multiple
 of 1024 bits) is done before any register write; the DUT only receives complete padded
 blocks. Concretely, versus §5.2:
 
-- Block and digest registers are twice as wide (`BLOCK_0..31` vs `BLOCK_0..15`;
-  `DIGEST_0..15` vs `DIGEST_0..7`) and the length field in the padding is 128 bits
-  instead of 64.
+- Block and digest registers are twice as wide (`SHA512_BLOCK_0..31` vs
+  `SHA256_BLOCK_0..15`; `SHA512_DIGEST_0..15` vs `SHA256_DIGEST_0..7`) and the length
+  field in the padding is 128 bits instead of 64.
 - `MODE` is a 2-bit field (`10`/`11`) instead of 1 bit.
-- The truncation rule for a narrower output (§5.2's "`DIGEST_7` is not part of the
+- The truncation rule for a narrower output (§5.2's "`SHA256_DIGEST_7` is not part of the
   result" for SHA2-224) has a direct SHA-384 analog: keep only the upper 384 bits
-  (`DIGEST[511:128]`, i.e. `DIGEST_0..11`) and discard `DIGEST_12..15`.
+  (`SHA512_DIGEST[511:128]`, i.e. `SHA512_DIGEST_0..11`) and discard
+  `SHA512_DIGEST_12..15`.
 
 Everything else — byte packing (plain sequential big-endian, no reversal), the
 INIT-first-block/NEXT-subsequent-blocks rule, and the ready/valid polling — carries over
 unchanged from the §5.2 worked example.
 
-1. Per 1024-bit block: write `BLOCK_0..31`.
-2. Write `CTRL` = `{MODE, INIT=1}` for the first block, `{MODE, NEXT=1}` for subsequent
-   blocks.
-3. Wait `STATUS.READY` or `STATUS.VALID`.
-4. After the last block, read `DIGEST_0..15`. For SHA-384, keep only `DIGEST[511:128]`
-   (the register always holds a full 512-bit result regardless of mode).
-5. Write `CTRL.ZEROIZE=1` before the next message.
+1. Per 1024-bit block: write `SHA512_BLOCK_0..31`.
+2. Write `SHA512_CTRL` = `{MODE, INIT=1}` for the first block, `{MODE, NEXT=1}` for
+   subsequent blocks.
+3. Wait `SHA512_STATUS.READY` or `SHA512_STATUS.VALID`.
+4. After the last block, read `SHA512_DIGEST_0..15`. For SHA-384, keep only
+   `SHA512_DIGEST[511:128]` (the register always holds a full 512-bit result regardless
+   of mode).
+5. Write `SHA512_CTRL.ZEROIZE=1` before the next message.
 
 ### 6.3 Monte Carlo Test (MCT)
 
@@ -653,27 +664,27 @@ For j = 0 to 99
 
 ## 7. SHA3-224/256/384/512, SHAKE-128/256, cSHAKE-128/256
 
-Register interface documented in `src/sha3/rtl/kmac_reg.rdl`. This register block is
-reachable at IP-base **+ 0x1000**; all offsets below are relative to that.
+Register interface: see the live register browser for the [`kmac`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac) block. This register block
+is reachable at IP-base **+ 0x1000**.
 
 ### 7.1 Register map
 
-| Register | Offset (from +0x1000) |
+| Register | Notes |
 |---|---|
-| `CFG_REGWEN` | `0x10` |
-| `CFG_SHADOWED` | `0x14` |
-| `CMD` | `0x18` |
-| `STATUS` | `0x1c` |
-| `PREFIX_0..10` | `0x20`–`0x48` (11×32-bit, cSHAKE N/S encoding) |
-| `ERR_CODE` | `0x4c` |
-| `STATE` | `0x400` (digest/squeeze output) |
-| `MSG_FIFO` | `0x800` (message input window) |
+| [`CFG_REGWEN`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.CFG_REGWEN) | |
+| [`CFG_SHADOWED`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.CFG_SHADOWED) | |
+| [`CMD`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.CMD) | |
+| [`STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.STATUS) | |
+| [`PREFIX_0..10`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.PREFIX_0) | 11×32-bit, cSHAKE N/S encoding |
+| [`ERR_CODE`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.ERR_CODE) | |
+| [`STATE`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.STATE) | digest/squeeze output |
+| [`MSG_FIFO`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.MSG_FIFO) | message input window |
 
 **Note — endianness exception:** `PREFIX` words are packed **little-endian** (byte order
 reversed within each word) — unlike every other register in this document, including
 `MSG_FIFO`/`STATE` in this same IP.
 
-**`CFG_SHADOWED`** (`0x14`) — a shadowed register: write the value twice to commit:
+**[`CFG_SHADOWED`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.CFG_SHADOWED)** — a shadowed register: write the value twice to commit:
 
 | Bits | Field | Values |
 |---|---|---|
@@ -682,7 +693,7 @@ reversed within each word) — unlike every other register in this document, inc
 | [8] | `msg_endianness` | written `1` on every configuration write |
 | [9] | `state_endianness` | written `1` on every configuration write |
 
-**`CMD`** (`0x18`) — 6-bit one-hot-style command field:
+**[`CMD`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.CMD)** — 6-bit one-hot-style command field:
 
 | Value | Command | Effect |
 |---|---|---|
@@ -691,7 +702,7 @@ reversed within each word) — unlike every other register in this document, inc
 | `0x31` | `RUN` | triggers 24 more Keccak rounds during the squeeze stage — used when more output is needed than one rate's worth |
 | `0x16` | `DONE` | completes the operation |
 
-**`STATUS`** (`0x1c`):
+**[`STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac.STATUS)**:
 
 | Bits | Field |
 |---|---|
@@ -912,22 +923,22 @@ previous call.
 
 ## 8. HMAC-SHA2-384 / HMAC-SHA2-512
 
-Register interface documented in `src/hmac/rtl/hmac_reg.rdl`. HMAC has no MCT test
-type — AFT only.
+Register interface: see the live register browser for the [`hmac_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg) block. HMAC has no MCT
+test type — AFT only.
 
 ### 8.1 Register map
 
-| Register | Offset |
+| Register | Notes |
 |---|---|
-| `NAME_0/1`, `VERSION_0/1` | `0x0`,`0x4`,`0x8`,`0xc` |
-| `CTRL` | `0x10` |
-| `STATUS` | `0x18` |
-| `KEY_0..15` | `0x40`–`0x7c` (16×32-bit = 512-bit key register, fixed width) |
-| `BLOCK_0..31` | `0x80`–`0xfc` (32×32-bit = 1024-bit message block) |
-| `TAG_0..15` | `0x100`–`0x13c` (16×32-bit = 512-bit MAC output) |
-| `LFSR_SEED_0..11` | `0x140`–`0x16c` (12×32-bit = 384-bit) |
+| [`HMAC512_NAME_0/1`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_NAME), [`HMAC512_VERSION_0/1`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_VERSION) | |
+| [`HMAC512_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_CTRL) | |
+| [`HMAC512_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_STATUS) | |
+| [`HMAC512_KEY_0..15`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_KEY) | 16×32-bit = 512-bit key register, fixed width |
+| [`HMAC512_BLOCK_0..31`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_BLOCK) | 32×32-bit = 1024-bit message block |
+| [`HMAC512_TAG_0..15`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_TAG) | 16×32-bit = 512-bit MAC output |
+| [`HMAC512_LFSR_SEED_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_LFSR_SEED) | 12×32-bit = 384-bit |
 
-**`CTRL`** (`0x10`):
+**[`HMAC512_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_CTRL)**:
 
 | Bits | Field | Notes |
 |---|---|---|
@@ -935,9 +946,9 @@ type — AFT only.
 | [1] | `NEXT` | |
 | [2] | `ZEROIZE` | zeroize all internal registers, to avoid SCA leakage |
 | [3] | `MODE` | 0 = SHA2-384, 1 = SHA2-512 |
-| [4] | `CSR_MODE` | sources the key from an internal key-vault CSR instead of `KEY_0..15` — not used for standard ACVP hashing |
+| [4] | `CSR_MODE` | sources the key from an internal key-vault CSR instead of `HMAC512_KEY_0..15` — not used for standard ACVP hashing |
 
-**`STATUS`** (`0x18`):
+**[`HMAC512_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg.HMAC512_STATUS)**:
 
 | Bits | Field | Notes |
 |---|---|---|
@@ -945,21 +956,21 @@ type — AFT only.
 | [1] | `VALID` | results in TAG are valid |
 
 The worked example below (§8.2) is HMAC-SHA2-384. HMAC-SHA2-512 follows the identical
-sequence — the only changes are `CTRL` bit[3]=1 instead of 0, and the key no longer
-needs zero-extension (a 512-bit key fills `KEY_0..15` natively instead of only
-`KEY_0..11`).
+sequence — the only changes are `HMAC512_CTRL` bit[3]=1 instead of 0, and the key no
+longer needs zero-extension (a 512-bit key fills `HMAC512_KEY_0..15` natively instead of
+only `HMAC512_KEY_0..11`).
 
 ### 8.2 Sequence
 
-1. Write `KEY_0..15`. The register is always 512 bits wide regardless of mode; a
+1. Write `HMAC512_KEY_0..15`. The register is always 512 bits wide regardless of mode; a
    384-bit (SHA-2-384-native) key is zero-extended into it.
-2. Per 1024-bit (already-padded) block: write `BLOCK_0..31`; on the first block also
-   write `LFSR_SEED_0..11`, then write `CTRL`=`{MODE, INIT=1}`; on subsequent blocks
-   write `CTRL`=`{MODE, NEXT=1}`.
-3. Wait `STATUS.READY` or `STATUS.VALID` after each block.
-4. After the last block, read `TAG_0..15` (512 bits); truncate to the requested MAC
-   length by keeping the high-order bits.
-5. Write `CTRL.ZEROIZE=1` before the next operation.
+2. Per 1024-bit (already-padded) block: write `HMAC512_BLOCK_0..31`; on the first block
+   also write `HMAC512_LFSR_SEED_0..11`, then write `HMAC512_CTRL`=`{MODE, INIT=1}`; on
+   subsequent blocks write `HMAC512_CTRL`=`{MODE, NEXT=1}`.
+3. Wait `HMAC512_STATUS.READY` or `HMAC512_STATUS.VALID` after each block.
+4. After the last block, read `HMAC512_TAG_0..15` (512 bits); truncate to the requested
+   MAC length by keeping the high-order bits.
+5. Write `HMAC512_CTRL.ZEROIZE=1` before the next operation.
 
 **Worked example — HMAC-SHA2-384, single block, truncated to a 320-bit MAC**
 
@@ -971,40 +982,41 @@ needs zero-extension (a 512-bit key fills `KEY_0..15` natively instead of only
 | requested `macLen` | 320 bits |
 | expected `mac` | `0A3D73D92D088799DA8A2C078D45BBCF09DE47D8F96CF74A89D03DEBA11AB105879F553CF9CB869D` |
 
-1. Write `KEY_0..11` (the 384-bit key, sequential big-endian) and `KEY_12..15` = `0`
-   (zero-extension into the 512-bit register):
+1. Write `HMAC512_KEY_0..11` (the 384-bit key, sequential big-endian) and
+   `HMAC512_KEY_12..15` = `0` (zero-extension into the 512-bit register):
 
    | Register | Value | Register | Value |
    |---|---|---|---|
-   | `KEY_0` | `0x4D1A1F94` | `KEY_6` | `0x0673E45A` |
-   | `KEY_1` | `0x8AA811C0` | `KEY_7` | `0x31F7EB57` |
-   | `KEY_2` | `0x3B5C024A` | `KEY_8` | `0x2A18F540` |
-   | `KEY_3` | `0x97B79704` | `KEY_9` | `0xF008D5F3` |
-   | `KEY_4` | `0x21E30BBD` | `KEY_10` | `0x2F705621` |
-   | `KEY_5` | `0x1C283ED7` | `KEY_11` | `0x110CA79D` |
-   | `KEY_12..15` | `0x00000000` | | |
+   | `HMAC512_KEY_0` | `0x4D1A1F94` | `HMAC512_KEY_6` | `0x0673E45A` |
+   | `HMAC512_KEY_1` | `0x8AA811C0` | `HMAC512_KEY_7` | `0x31F7EB57` |
+   | `HMAC512_KEY_2` | `0x3B5C024A` | `HMAC512_KEY_8` | `0x2A18F540` |
+   | `HMAC512_KEY_3` | `0x97B79704` | `HMAC512_KEY_9` | `0xF008D5F3` |
+   | `HMAC512_KEY_4` | `0x21E30BBD` | `HMAC512_KEY_10` | `0x2F705621` |
+   | `HMAC512_KEY_5` | `0x1C283ED7` | `HMAC512_KEY_11` | `0x110CA79D` |
+   | `HMAC512_KEY_12..15` | `0x00000000` | | |
 
 2. Pad the message to one 1024-bit block: `E871542EE3390633B9CE836A4F04A216` + `0x80`
    marker + 95 zero bytes + 128-bit big-endian length field (`128` bits).
-3. Write `BLOCK_0..31` — `BLOCK_0`=`0xE871542E`, `BLOCK_1`=`0xE3390633`,
-   `BLOCK_2`=`0xB9CE836A`, `BLOCK_3`=`0x4F04A216`, `BLOCK_4`=`0x80000000`,
-   `BLOCK_5..30`=`0x00000000`, `BLOCK_31`=`0x00000080` (the last word carries the low
-   half of the 128-bit length field; the rest of the length field is `0` since the
-   message is far under 2^32 bits).
-4. Write `LFSR_SEED_0..11` (any consistent value — this seeds the core's internal
+3. Write `HMAC512_BLOCK_0..31` — `HMAC512_BLOCK_0`=`0xE871542E`,
+   `HMAC512_BLOCK_1`=`0xE3390633`, `HMAC512_BLOCK_2`=`0xB9CE836A`,
+   `HMAC512_BLOCK_3`=`0x4F04A216`, `HMAC512_BLOCK_4`=`0x80000000`,
+   `HMAC512_BLOCK_5..30`=`0x00000000`, `HMAC512_BLOCK_31`=`0x00000080` (the last word
+   carries the low half of the 128-bit length field; the rest of the length field is `0`
+   since the message is far under 2^32 bits).
+4. Write `HMAC512_LFSR_SEED_0..11` (any consistent value — this seeds the core's internal
    SCA-countermeasure masking, not the HMAC computation itself, so it doesn't affect
    the result).
-5. Write `CTRL` = `0x1` (`MODE=0` for SHA2-384, `INIT=1`).
-6. Wait `STATUS.READY`/`STATUS.VALID`.
-7. Read `TAG_0..15`; keep the top 10 words (320 bits):
+5. Write `HMAC512_CTRL` = `0x1` (`MODE=0` for SHA2-384, `INIT=1`).
+6. Wait `HMAC512_STATUS.READY`/`HMAC512_STATUS.VALID`.
+7. Read `HMAC512_TAG_0..15`; keep the top 10 words (320 bits):
 
    | Register | Value | Register | Value |
    |---|---|---|---|
-   | `TAG_0` | `0x0A3D73D9` | `TAG_5` | `0xF96CF74A` |
-   | `TAG_1` | `0x2D088799` | `TAG_6` | `0x89D03DEB` |
-   | `TAG_2` | `0xDA8A2C07` | `TAG_7` | `0xA11AB105` |
-   | `TAG_3` | `0x8D45BBCF` | `TAG_8` | `0x879F553C` |
-   | `TAG_4` | `0x09DE47D8` | `TAG_9` | `0xF9CB869D` |
+   | `HMAC512_TAG_0` | `0x0A3D73D9` | `HMAC512_TAG_5` | `0xF96CF74A` |
+   | `HMAC512_TAG_1` | `0x2D088799` | `HMAC512_TAG_6` | `0x89D03DEB` |
+   | `HMAC512_TAG_2` | `0xDA8A2C07` | `HMAC512_TAG_7` | `0xA11AB105` |
+   | `HMAC512_TAG_3` | `0x8D45BBCF` | `HMAC512_TAG_8` | `0x879F553C` |
+   | `HMAC512_TAG_4` | `0x09DE47D8` | `HMAC512_TAG_9` | `0xF9CB869D` |
 
    Concatenated:
    `0A3D73D92D088799DA8A2C078D45BBCF09DE47D8F96CF74A89D03DEBA11AB105879F553CF9CB869D`
@@ -1030,12 +1042,12 @@ counter(1, 4 bytes big-endian) || label || [0x00 || context, if context is suppl
 ```
 
 pads that exactly as §8.2 step 2 describes, and runs it through the identical
-`KEY`/`BLOCK`/`LFSR_SEED`/`CTRL`/`STATUS`/`TAG` register sequence. The counter is fixed at
-`i=1` (single-iteration counter mode — there's no need to loop to `i=2` for longer
-outputs at the message lengths ACVP registers here); `context` is optional and, when
-present, is separated from `label` by a single
-`0x00` byte. The derived output is read back from `TAG_0..15` exactly as in §8.2, keeping
-the high-order bits if truncating to a requested length.
+`HMAC512_KEY`/`HMAC512_BLOCK`/`HMAC512_LFSR_SEED`/`HMAC512_CTRL`/`HMAC512_STATUS`/
+`HMAC512_TAG` register sequence. The counter is fixed at `i=1` (single-iteration counter
+mode — there's no need to loop to `i=2` for longer outputs at the message lengths ACVP
+registers here); `context` is optional and, when present, is separated from `label` by a
+single `0x00` byte. The derived output is read back from `HMAC512_TAG_0..15` exactly as
+in §8.2, keeping the high-order bits if truncating to a requested length.
 
 **Worked example — HMAC-SHA2-384 KDF, no context** (independently verified: computed
 `HMAC-SHA-384(key, counter(1) || label)` in Python and confirmed the first 40 bytes match
@@ -1048,57 +1060,57 @@ the reference output exactly)
 | `context` | none |
 | expected `out` (320 bits, first 40 bytes of the full 384-bit HMAC output) | `5949ACF9635A77297928C1E155D43A4E4BCA61B1369A5EF50530888550BA270E26BE4A421CDF80B7` |
 
-1. Write `KEY_0..11` (the 384-bit key fills the register natively — no zero-extension
-   needed, same as §8.2's HMAC-SHA2-512 case):
+1. Write `HMAC512_KEY_0..11` (the 384-bit key fills the register natively — no
+   zero-extension needed, same as §8.2's HMAC-SHA2-512 case):
 
    | Register | Value | Register | Value |
    |---|---|---|---|
-   | `KEY_0` | `0xB57DC523` | `KEY_6` | `0x33ED3BB7` |
-   | `KEY_1` | `0x54AFEE11` | `KEY_7` | `0x2035A4AB` |
-   | `KEY_2` | `0xEDB4C905` | `KEY_8` | `0x55D6648C` |
-   | `KEY_3` | `0x2A528344` | `KEY_9` | `0x1529EF7A` |
-   | `KEY_4` | `0x348B2C6B` | `KEY_10` | `0x9170FEC9` |
-   | `KEY_5` | `0x6C39F321` | `KEY_11` | `0xEF26A81E` |
+   | `HMAC512_KEY_0` | `0xB57DC523` | `HMAC512_KEY_6` | `0x33ED3BB7` |
+   | `HMAC512_KEY_1` | `0x54AFEE11` | `HMAC512_KEY_7` | `0x2035A4AB` |
+   | `HMAC512_KEY_2` | `0xEDB4C905` | `HMAC512_KEY_8` | `0x55D6648C` |
+   | `HMAC512_KEY_3` | `0x2A528344` | `HMAC512_KEY_9` | `0x1529EF7A` |
+   | `HMAC512_KEY_4` | `0x348B2C6B` | `HMAC512_KEY_10` | `0x9170FEC9` |
+   | `HMAC512_KEY_5` | `0x6C39F321` | `HMAC512_KEY_11` | `0xEF26A81E` |
 
 2. Construct `counter(1) || label` = 4 + 60 = 64 bytes (512 bits), then pad to one
    1024-bit block: `0x80` marker + 47 zero bytes + 128-bit big-endian length field
-   (`512` bits). Write `BLOCK_0..31`:
+   (`512` bits). Write `HMAC512_BLOCK_0..31`:
 
    | Register | Value | Register | Value |
    |---|---|---|---|
-   | `BLOCK_0` | `0x00000001` (the counter, `i=1`) | `BLOCK_16` | `0x80000000` |
-   | `BLOCK_1` | `0x17E64190` | `BLOCK_17` | `0x00000000` |
-   | `BLOCK_2` | `0x9DEDFEE4` | `BLOCK_18` | `0x00000000` |
-   | `BLOCK_3` | `0x968BB95D` | `BLOCK_19` | `0x00000000` |
-   | `BLOCK_4` | `0x7F770E45` | `BLOCK_20` | `0x00000000` |
-   | `BLOCK_5` | `0x57CA347A` | `BLOCK_21` | `0x00000000` |
-   | `BLOCK_6` | `0x46614CB3` | `BLOCK_22` | `0x00000000` |
-   | `BLOCK_7` | `0x71423F0D` | `BLOCK_23` | `0x00000000` |
-   | `BLOCK_8` | `0x91DF3B58` | `BLOCK_24` | `0x00000000` |
-   | `BLOCK_9` | `0xB536ED54` | `BLOCK_25` | `0x00000000` |
-   | `BLOCK_10` | `0x531FD2A2` | `BLOCK_26` | `0x00000000` |
-   | `BLOCK_11` | `0xEB0B8B2A` | `BLOCK_27` | `0x00000000` |
-   | `BLOCK_12` | `0x1634C23C` | `BLOCK_28` | `0x00000000` |
-   | `BLOCK_13` | `0x88FAD970` | `BLOCK_29` | `0x00000000` |
-   | `BLOCK_14` | `0x6C45DB44` | `BLOCK_30` | `0x00000000` |
-   | `BLOCK_15` | `0x11A23B89` | `BLOCK_31` | `0x00000200` (length field = 512) |
+   | `HMAC512_BLOCK_0` | `0x00000001` (the counter, `i=1`) | `HMAC512_BLOCK_16` | `0x80000000` |
+   | `HMAC512_BLOCK_1` | `0x17E64190` | `HMAC512_BLOCK_17` | `0x00000000` |
+   | `HMAC512_BLOCK_2` | `0x9DEDFEE4` | `HMAC512_BLOCK_18` | `0x00000000` |
+   | `HMAC512_BLOCK_3` | `0x968BB95D` | `HMAC512_BLOCK_19` | `0x00000000` |
+   | `HMAC512_BLOCK_4` | `0x7F770E45` | `HMAC512_BLOCK_20` | `0x00000000` |
+   | `HMAC512_BLOCK_5` | `0x57CA347A` | `HMAC512_BLOCK_21` | `0x00000000` |
+   | `HMAC512_BLOCK_6` | `0x46614CB3` | `HMAC512_BLOCK_22` | `0x00000000` |
+   | `HMAC512_BLOCK_7` | `0x71423F0D` | `HMAC512_BLOCK_23` | `0x00000000` |
+   | `HMAC512_BLOCK_8` | `0x91DF3B58` | `HMAC512_BLOCK_24` | `0x00000000` |
+   | `HMAC512_BLOCK_9` | `0xB536ED54` | `HMAC512_BLOCK_25` | `0x00000000` |
+   | `HMAC512_BLOCK_10` | `0x531FD2A2` | `HMAC512_BLOCK_26` | `0x00000000` |
+   | `HMAC512_BLOCK_11` | `0xEB0B8B2A` | `HMAC512_BLOCK_27` | `0x00000000` |
+   | `HMAC512_BLOCK_12` | `0x1634C23C` | `HMAC512_BLOCK_28` | `0x00000000` |
+   | `HMAC512_BLOCK_13` | `0x88FAD970` | `HMAC512_BLOCK_29` | `0x00000000` |
+   | `HMAC512_BLOCK_14` | `0x6C45DB44` | `HMAC512_BLOCK_30` | `0x00000000` |
+   | `HMAC512_BLOCK_15` | `0x11A23B89` | `HMAC512_BLOCK_31` | `0x00000200` (length field = 512) |
 
-3. Write `LFSR_SEED_0..11` (any consistent value, per §8.2).
-4. Write `CTRL` = `0x1` (`MODE=0` for SHA2-384, `INIT=1`).
-5. Wait `STATUS.READY`/`STATUS.VALID`.
-6. Read `TAG_0..15`; the requested 320-bit output keeps the top 10 words:
+3. Write `HMAC512_LFSR_SEED_0..11` (any consistent value, per §8.2).
+4. Write `HMAC512_CTRL` = `0x1` (`MODE=0` for SHA2-384, `INIT=1`).
+5. Wait `HMAC512_STATUS.READY`/`HMAC512_STATUS.VALID`.
+6. Read `HMAC512_TAG_0..15`; the requested 320-bit output keeps the top 10 words:
 
    | Register | Value | Register | Value |
    |---|---|---|---|
-   | `TAG_0` | `0x5949ACF9` | `TAG_5` | `0x369A5EF5` |
-   | `TAG_1` | `0x635A7729` | `TAG_6` | `0x05308885` |
-   | `TAG_2` | `0x7928C1E1` | `TAG_7` | `0x50BA270E` |
-   | `TAG_3` | `0x55D43A4E` | `TAG_8` | `0x26BE4A42` |
-   | `TAG_4` | `0x4BCA61B1` | `TAG_9` | `0x1CDF80B7` |
+   | `HMAC512_TAG_0` | `0x5949ACF9` | `HMAC512_TAG_5` | `0x369A5EF5` |
+   | `HMAC512_TAG_1` | `0x635A7729` | `HMAC512_TAG_6` | `0x05308885` |
+   | `HMAC512_TAG_2` | `0x7928C1E1` | `HMAC512_TAG_7` | `0x50BA270E` |
+   | `HMAC512_TAG_3` | `0x55D43A4E` | `HMAC512_TAG_8` | `0x26BE4A42` |
+   | `HMAC512_TAG_4` | `0x4BCA61B1` | `HMAC512_TAG_9` | `0x1CDF80B7` |
 
    Concatenated: `5949ACF9635A77297928C1E155D43A4E4BCA61B1369A5EF50530888550BA270E26BE4A421CDF80B7`
    — matches the expected `out` exactly.
-7. Write `CTRL.ZEROIZE=1` before the next operation.
+7. Write `HMAC512_CTRL.ZEROIZE=1` before the next operation.
 
 **If `context` is supplied** for a different test case, insert a `0x00` byte immediately
 after `label` and before `context` in step 2's message, then re-pad accordingly — the
@@ -1178,36 +1190,36 @@ force-triggers the out-of-range condition and checks the retry logic recovers fr
 
 ## 10. ECDSA P-384 — KeyGen / SigGen / SigVer
 
-Register interface documented in `src/ecc/rtl/ecc_reg.rdl`. All three operations share
-one register map. ECDSA testing (KeyGen, SigGen, SigVer, and deterministic SigGen) uses
-AFT only — there is no MCT for ECDSA.
+Register interface: see the live register browser for the [`ecc_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg) block. All three
+operations share one register map. ECDSA testing (KeyGen, SigGen, SigVer, and
+deterministic SigGen) uses AFT only — there is no MCT for ECDSA.
 
 ### 10.1 Register map (384-bit fields = 12×32-bit words, big-endian, MSB-first)
 
-| Register | Offset | Used by |
-|---|---|---|
-| `CTRL` | `0x10` | all |
-| `STATUS` | `0x18` | all |
-| `SEED_0..11` | `0x80`–`0xac` | KeyGen |
-| `MSG_0..11` | `0x100`–`0x12c` | SigGen, SigVer (hashed message digest) |
-| `PRIVKEY_OUT_0..11` | `0x180`–`0x1ac` | KeyGen (output) |
-| `PUBKEY_X_0..11` | `0x200`–`0x22c` | KeyGen (output), SigVer (input) |
-| `PUBKEY_Y_0..11` | `0x280`–`0x2ac` | KeyGen (output), SigVer (input) |
-| `SIGN_R_0..11` | `0x300`–`0x32c` | SigGen (output), SigVer (input) |
-| `SIGN_S_0..11` | `0x380`–`0x3ac` | SigGen (output), SigVer (input) |
-| `VERIFY_R_0..11` | `0x400`–`0x42c` | SigVer (computed result, output) |
-| `IV_0..11` | `0x480`–`0x4ac` | KeyGen, SigGen (SCA-countermeasure randomization input — not used by SigVer, which has no secret to protect) |
-| `NONCE_0..11` | `0x500`–`0x52c` | KeyGen only |
-| `PRIVKEY_IN_0..11` | `0x580`–`0x5ac` | SigGen |
+| Register | Used by |
+|---|---|
+| [`ECC_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_CTRL) | all |
+| [`ECC_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_STATUS) | all |
+| [`ECC_SEED_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_SEED) | KeyGen |
+| [`ECC_MSG_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_MSG) | SigGen, SigVer (hashed message digest) |
+| [`ECC_PRIVKEY_OUT_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_PRIVKEY_OUT) | KeyGen (output) |
+| [`ECC_PUBKEY_X_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_PUBKEY_X) | KeyGen (output), SigVer (input) |
+| [`ECC_PUBKEY_Y_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_PUBKEY_Y) | KeyGen (output), SigVer (input) |
+| [`ECC_SIGN_R_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_SIGN_R) | SigGen (output), SigVer (input) |
+| [`ECC_SIGN_S_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_SIGN_S) | SigGen (output), SigVer (input) |
+| [`ECC_VERIFY_R_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_VERIFY_R) | SigVer (computed result, output) |
+| [`ECC_IV_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_IV) | KeyGen, SigGen (SCA-countermeasure randomization input — not used by SigVer, which has no secret to protect) |
+| [`ECC_NONCE_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_NONCE) | KeyGen only |
+| [`ECC_PRIVKEY_IN_0..11`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_PRIVKEY_IN) | SigGen |
 
-**`CTRL`** (`0x10`) — self-clears after each write:
+**[`ECC_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_CTRL)** — self-clears after each write:
 
 | Bits | Field | Values |
 |---|---|---|
 | [1:0] | command | `00`=NONE, `01`=KEYGEN, `10`=SIGNING, `11`=VERIFYING |
 | [2] | `ZEROIZE` | |
 
-**`STATUS`** (`0x18`):
+**[`ECC_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg.ECC_STATUS)**:
 
 | Bits | Field |
 |---|---|
@@ -1216,12 +1228,12 @@ AFT only — there is no MCT for ECDSA.
 
 ### 10.2 KeyGen
 
-1. Wait `STATUS.READY`.
-2. Write `SEED_0..11`, `NONCE_0..11`, `IV_0..11`.
-3. Write `CTRL`=`01` (KEYGEN).
-4. Wait `STATUS.VALID`.
-5. Read `PRIVKEY_OUT_0..11`, `PUBKEY_X_0..11`, `PUBKEY_Y_0..11`.
-6. Write `CTRL.ZEROIZE=1`.
+1. Wait `ECC_STATUS.READY`.
+2. Write `ECC_SEED_0..11`, `ECC_NONCE_0..11`, `ECC_IV_0..11`.
+3. Write `ECC_CTRL`=`01` (KEYGEN).
+4. Wait `ECC_STATUS.VALID`.
+5. Read `ECC_PRIVKEY_OUT_0..11`, `ECC_PUBKEY_X_0..11`, `ECC_PUBKEY_Y_0..11`.
+6. Write `ECC_CTRL.ZEROIZE=1`.
 
 **Worked example — KeyGen**
 
@@ -1231,18 +1243,18 @@ AFT only — there is no MCT for ECDSA.
 | expected `qx` | `9DD7A5235280B8ECE69D3787211CEE8D42F3F717EEF03D4A39004E73C853C4AF8FAAD5D26EB83DEE3EA530B84B2DBDAD` |
 | expected `qy` | `4FB013CD53DCC215464A1E8F470192C775E3BD1FBA4492DAFE611B5A0F8BE04147154E9A1F0FD5BF4B2B78921157E7B1` |
 
-ACVP KeyGen doesn't supply `SEED`/`NONCE`/`IV` inputs — the harness must generate its own
+ACVP KeyGen doesn't supply `ECC_SEED`/`ECC_NONCE`/`ECC_IV` inputs — the harness must generate its own
 random 384-bit values for these registers. The DUT has no on-chip TRNG for this path: it
-deterministically derives the key pair from exactly the `SEED`/`NONCE` values it's given,
+deterministically derives the key pair from exactly the `ECC_SEED`/`ECC_NONCE` values it's given,
 so these writes are the only source of randomness, not an optional convenience. The ACVP
 server only checks that the reported key pair is valid, not that it matches a particular
 seed. So step 1 below uses illustrative (not vector-supplied) values; only the read-back
 in steps 2-3 is real, vector-verified data.
 
-1. Wait `STATUS.READY`. Write `SEED_0..11`, `NONCE_0..11`, `IV_0..11` with random 384-bit
+1. Wait `ECC_STATUS.READY`. Write `ECC_SEED_0..11`, `ECC_NONCE_0..11`, `ECC_IV_0..11` with random 384-bit
    values generated by the harness (these are the only source of randomness for this
-   operation). Write `CTRL`=`01` (KEYGEN). Wait `STATUS.VALID`.
-2. Read `PRIVKEY_OUT_0..11`:
+   operation). Write `ECC_CTRL`=`01` (KEYGEN). Wait `ECC_STATUS.VALID`.
+2. Read `ECC_PRIVKEY_OUT_0..11`:
 
    | Register | Value | Register | Value |
    |---|---|---|---|
@@ -1253,9 +1265,9 @@ in steps 2-3 is real, vector-verified data.
    | word 4 | `0xF868053F` | word 10 | `0xCE173D0C` |
    | word 5 | `0x7FEE29AB` | word 11 | `0x26E12938` |
 
-3. Read `PUBKEY_X_0..11` and `PUBKEY_Y_0..11`:
+3. Read `ECC_PUBKEY_X_0..11` and `ECC_PUBKEY_Y_0..11`:
 
-   | Word | `PUBKEY_X` | `PUBKEY_Y` |
+   | Word | `ECC_PUBKEY_X` | `ECC_PUBKEY_Y` |
    |---|---|---|
    | 0 | `0x9DD7A523` | `0x4FB013CD` |
    | 1 | `0x5280B8EC` | `0x53DCC215` |
@@ -1270,7 +1282,7 @@ in steps 2-3 is real, vector-verified data.
    | 10 | `0x3EA530B8` | `0x4B2B7892` |
    | 11 | `0x4B2DBDAD` | `0x1157E7B1` |
 
-4. Write `CTRL.ZEROIZE=1`.
+4. Write `ECC_CTRL.ZEROIZE=1`.
 
 Verified independently (not via the DUT, since the seed-to-key derivation is internal):
 recomputed `Q = d·G` on P-384 from scratch (own point-addition/doubling implementation,
@@ -1279,22 +1291,22 @@ curve constants cross-checked against a library) and confirmed it equals the rep
 
 ### 10.3 SigGen (deterministic)
 
-1. Wait `STATUS.READY`.
-2. Write `MSG_0..11` (hashed message digest), `PRIVKEY_IN_0..11`, `IV_0..11`.
-3. Write `CTRL`=`10` (SIGNING).
-4. Wait `STATUS.VALID`.
-5. Read `SIGN_R_0..11`, `SIGN_S_0..11`.
-6. Write `CTRL.ZEROIZE=1`.
+1. Wait `ECC_STATUS.READY`.
+2. Write `ECC_MSG_0..11` (hashed message digest), `ECC_PRIVKEY_IN_0..11`, `ECC_IV_0..11`.
+3. Write `ECC_CTRL`=`10` (SIGNING).
+4. Wait `ECC_STATUS.VALID`.
+5. Read `ECC_SIGN_R_0..11`, `ECC_SIGN_S_0..11`.
+6. Write `ECC_CTRL.ZEROIZE=1`.
 
-No nonce/`k` register is written for signing — `NONCE` is wired only to the KeyGen path.
+No nonce/`k` register is written for signing — `ECC_NONCE` is wired only to the KeyGen path.
 The signing nonce `k` is generated internally, from the private key and hashed message,
 by an on-chip HMAC-DRBG per RFC 6979 (`src/ecc/rtl/ecc_hmac_drbg_interface.sv:17-29`),
 which is what makes this deterministic ECDSA.
 
-`PRIVKEY_IN` is not a freely-suppliable input — ACVP never discloses a private key for
+`ECC_PRIVKEY_IN` is not a freely-suppliable input — ACVP never discloses a private key for
 SigGen vectors. Per ACVP test group, the harness must first run KeyGen (§10.2) once to
-generate a fresh key pair, then write that exact private key to `PRIVKEY_IN` for every
-signing operation in that group. The resulting `PUBKEY_X`/`PUBKEY_Y` must also be
+generate a fresh key pair, then write that exact private key to `ECC_PRIVKEY_IN` for every
+signing operation in that group. The resulting `ECC_PUBKEY_X`/`ECC_PUBKEY_Y` must also be
 reported alongside each `(r, s)`, since without the private key the ACVP server has no
 other way to check that a given signature is valid.
 
@@ -1312,12 +1324,12 @@ confirmed by its length being exactly 48 bytes)
 The `qx`/`qy` above are this test group's public key — the harness generated this key
 pair via one KeyGen operation for the whole group and reported it back, exactly as
 described above. Like KeyGen, the private key used to sign is never disclosed by ACVP,
-so `PRIVKEY_IN`/`IV` below are illustrative, not vector-supplied — but in a real harness
-`PRIVKEY_IN` would be the private key produced by that same group-level KeyGen call, not
+so `ECC_PRIVKEY_IN`/`ECC_IV` below are illustrative, not vector-supplied — but in a real harness
+`ECC_PRIVKEY_IN` would be the private key produced by that same group-level KeyGen call, not
 an arbitrary value.
 
-1. Wait `STATUS.READY`.
-2. Write `MSG_0..11` (the message is already the hash — no separate hashing step
+1. Wait `ECC_STATUS.READY`.
+2. Write `ECC_MSG_0..11` (the message is already the hash — no separate hashing step
    needed here):
 
    | Word | Value | Word | Value |
@@ -1329,12 +1341,12 @@ an arbitrary value.
    | 4 | `0x7043E428` | 10 | `0xA8CD75BF` |
    | 5 | `0x742AB4A6` | 11 | `0xD270662E` |
 
-   Write `PRIVKEY_IN_0..11` and `IV_0..11` (internal to the DUT for this test group;
+   Write `ECC_PRIVKEY_IN_0..11` and `ECC_IV_0..11` (internal to the DUT for this test group;
    not part of the ACVP vector).
-3. Write `CTRL`=`10` (SIGNING). Wait `STATUS.VALID`.
-4. Read `SIGN_R_0..11` and `SIGN_S_0..11`:
+3. Write `ECC_CTRL`=`10` (SIGNING). Wait `ECC_STATUS.VALID`.
+4. Read `ECC_SIGN_R_0..11` and `ECC_SIGN_S_0..11`:
 
-   | Word | `SIGN_R` | `SIGN_S` |
+   | Word | `ECC_SIGN_R` | `ECC_SIGN_S` |
    |---|---|---|
    | 0 | `0xB3C5CBF5` | `0xEAD3E2C4` |
    | 1 | `0xAFA68178` | `0xF3EA4429` |
@@ -1350,7 +1362,7 @@ an arbitrary value.
    | 11 | `0x7B1EDE80` | `0x1D7E4BA0` |
 
    Concatenated, these match the expected `r`/`s` exactly.
-5. Write `CTRL.ZEROIZE=1`.
+5. Write `ECC_CTRL.ZEROIZE=1`.
 
 Verified independently: the reported `(r, s)` is a valid ECDSA signature over the given
 hash under the reported `(qx, qy)`, confirmed with a from-scratch ECDSA verification
@@ -1359,18 +1371,18 @@ performs, since the private key isn't disclosed for direct comparison.
 
 ### 10.4 SigVer
 
-1. Wait `STATUS.READY`.
-2. Write `MSG_0..11` (hashed digest), `PUBKEY_X_0..11`, `PUBKEY_Y_0..11`,
-   `SIGN_R_0..11`, `SIGN_S_0..11`.
-3. Write `CTRL`=`11` (VERIFYING).
-4. Wait `STATUS.VALID`.
-5. Read `VERIFY_R_0..11`.
-6. Write `CTRL.ZEROIZE=1`.
+1. Wait `ECC_STATUS.READY`.
+2. Write `ECC_MSG_0..11` (hashed digest), `ECC_PUBKEY_X_0..11`, `ECC_PUBKEY_Y_0..11`,
+   `ECC_SIGN_R_0..11`, `ECC_SIGN_S_0..11`.
+3. Write `ECC_CTRL`=`11` (VERIFYING).
+4. Wait `ECC_STATUS.VALID`.
+5. Read `ECC_VERIFY_R_0..11`.
+6. Write `ECC_CTRL.ZEROIZE=1`.
 
 **Worked example — valid signature** (unlike the SigGen vector above, this SigVer
 vector's `message` field is a raw 1024-bit message, not a pre-hashed digest — no
 `componentTest` flag is set for this test group, confirmed by the message being 128
-bytes long. It must be hashed with SHA-384 before writing to `MSG_0..11`)
+bytes long. It must be hashed with SHA-384 before writing to `ECC_MSG_0..11`)
 
 | Field | Value |
 |---|---|
@@ -1383,8 +1395,8 @@ bytes long. It must be hashed with SHA-384 before writing to `MSG_0..11`)
 
 1. Hash the raw message with SHA-384 (external to the register interface):
    `E8DC953DE7148A201F8A15F6316F416F8D69B99CEA4F5C6FF970341189FCC6D7311022A1291D3B0E9C96B34A1B569843`.
-2. Wait `STATUS.READY`.
-3. Write `MSG_0..11` (the digest computed in step 1):
+2. Wait `ECC_STATUS.READY`.
+3. Write `ECC_MSG_0..11` (the digest computed in step 1):
 
    | Word | Value | Word | Value |
    |---|---|---|---|
@@ -1395,9 +1407,9 @@ bytes long. It must be hashed with SHA-384 before writing to `MSG_0..11`)
    | 4 | `0x8D69B99C` | 10 | `0x9C96B34A` |
    | 5 | `0xEA4F5C6F` | 11 | `0x1B569843` |
 
-4. Write `PUBKEY_X_0..11` and `PUBKEY_Y_0..11`:
+4. Write `ECC_PUBKEY_X_0..11` and `ECC_PUBKEY_Y_0..11`:
 
-   | Word | `PUBKEY_X` | `PUBKEY_Y` |
+   | Word | `ECC_PUBKEY_X` | `ECC_PUBKEY_Y` |
    |---|---|---|
    | 0 | `0xD5B077F1` | `0xE9EF1992` |
    | 1 | `0xAD3E4508` | `0x57A0567E` |
@@ -1412,9 +1424,9 @@ bytes long. It must be hashed with SHA-384 before writing to `MSG_0..11`)
    | 10 | `0xFE046C49` | `0x920840F5` |
    | 11 | `0x5817B37C` | `0xC602AB5A` |
 
-5. Write `SIGN_R_0..11` and `SIGN_S_0..11`:
+5. Write `ECC_SIGN_R_0..11` and `ECC_SIGN_S_0..11`:
 
-   | Word | `SIGN_R` | `SIGN_S` |
+   | Word | `ECC_SIGN_R` | `ECC_SIGN_S` |
    |---|---|---|
    | 0 | `0xE2E197A2` | `0x3D7C92FD` |
    | 1 | `0x2B9BBE62` | `0x8714BB05` |
@@ -1429,22 +1441,22 @@ bytes long. It must be hashed with SHA-384 before writing to `MSG_0..11`)
    | 10 | `0xC6575AFA` | `0xEFF75DCC` |
    | 11 | `0xA7821BF6` | `0x0823219B` |
 
-6. Write `CTRL`=`11` (VERIFYING). Wait `STATUS.VALID`.
-7. Read `VERIFY_R_0..11` — expected to equal `SIGN_R_0..11` exactly (valid signature).
-8. Write `CTRL.ZEROIZE=1`.
+6. Write `ECC_CTRL`=`11` (VERIFYING). Wait `ECC_STATUS.VALID`.
+7. Read `ECC_VERIFY_R_0..11` — expected to equal `ECC_SIGN_R_0..11` exactly (valid signature).
+8. Write `ECC_CTRL.ZEROIZE=1`.
 
 Verified independently with the same from-scratch ECDSA verifier: valid for this vector
 (and, as a sanity check on the verifier itself, also confirmed **invalid** for a
 different test case in the same vector set whose `r` is all-zero — an intentionally
 malformed signature that a correct implementation must reject).
 
-`STATUS.VALID` only means "computation complete" — it is not a pass/fail bit. Signature
-validity is determined by comparing the computed `VERIFY_R` against the originally
-supplied `SIGN_R`: equal ⇒ valid.
+`ECC_STATUS.VALID` only means "computation complete" — it is not a pass/fail bit. Signature
+validity is determined by comparing the computed `ECC_VERIFY_R` against the originally
+supplied `ECC_SIGN_R`: equal ⇒ valid.
 
 An invalid-signature case exercises the identical sequence above: change any bit of
-`SIGN_R`, `SIGN_S`, `PUBKEY_X`, `PUBKEY_Y`, or the hashed message before writing it, and
-the computed `VERIFY_R` will no longer match the supplied `SIGN_R`.
+`ECC_SIGN_R`, `ECC_SIGN_S`, `ECC_PUBKEY_X`, `ECC_PUBKEY_Y`, or the hashed message before writing it, and
+the computed `ECC_VERIFY_R` will no longer match the supplied `ECC_SIGN_R`.
 
 ---
 
@@ -1452,46 +1464,45 @@ the computed `VERIFY_R` will no longer match the supplied `SIGN_R`.
 
 This section illustrates one way to implement ML-DSA-87 KeyGen/SigGen/SigVer as a thin
 software layer over a register interface, rather than as raw register pokes at the call
-site (contrast with §4-§10, which describe direct register sequences). As noted in §1, no
-independently-read register-definition file was available for this hardware block, so the
-register names and control opcodes below should be treated as illustrative rather than
-independently RTL-verified. ML-DSA-87 shares its register block ("Adams Bridge") with
-ML-KEM-1024 (§12) — they are two different peripherals on the same silicon block, with
-entirely separate `mldsa_*`/`mlkem_*` register fields.
+site (contrast with §4-§10, which describe direct register sequences). The register names
+and control opcodes below are confirmed against the live register browser for this
+hardware block ("Adams Bridge", shared with ML-KEM-1024, §12 — they are two different
+peripherals on the same silicon block, with entirely separate `MLDSA_*`/`MLKEM_*`
+register fields).
 
 ### 11.1 Register map
 
 | Register | Purpose |
 |---|---|
-| `mldsa_ctrl` | opcode + control bits: `ctrl[2:0]` (`KEYGEN=1, SIGN=2, VERIFY=3, KEYGEN_SIGN=4`), `external_mu` (bool), `stream_msg` (bool, for variable-length message streaming — not needed for ACVP, see note below), `pcr_sign` (bool, for a PCR-signing flow outside ACVP's scope — not used in any sequence below), `zeroize` (bool) |
-| `mldsa_status` | `ready`, `valid`, `msg_stream_ready` |
-| `mldsa_seed` | 8 words (256 bits) — KeyGen/SigGen seed input |
-| `mldsa_privkey_in` | 1224 words (4896 bytes) — supplied private key, used for SigGen when signing with a known key instead of a seed |
-| `mldsa_privkey_out` | 1224 words — KeyGen's generated private key (optional readback) |
-| `mldsa_pubkey` | 648 words (2592 bytes) — KeyGen output / SigVer input |
-| `mldsa_msg` | 16 words (64 bytes, fixed-size) — message input for SigGen/SigVer |
-| `mldsa_external_mu` | 16 words (64 bytes) — pre-computed FIPS 204 `mu` digest, used instead of `mldsa_msg` when `external_mu=1` |
-| `mldsa_sign_rnd` | 8 words (32 bytes) — the FIPS 204 Algorithm 7 `rnd` input; all-zero = deterministic signing, ACVP-supplied value = hedged/randomized signing |
-| `entropy` | TRNG-generated randomness, written before every KeyGen or Sign operation for side-channel-masking (not an ACVP protocol input); not written before Verify, which has no secret to protect |
-| `mldsa_signature` | 1157 words — 4628-byte buffer; the real signature is 4627 bytes, the trailing word is zero-padded |
-| `mldsa_verify_res` | 16 words — SigVer's computed result, compared in software against the first 16 words of the supplied signature |
-| `kv_mldsa_seed_rd_ctrl`/`_status` | Key-Vault-mediated seed routing (used when the seed comes from KV instead of a plain array) |
+| [`MLDSA_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_CTRL) | opcode + control bits: `ctrl[2:0]` (`KEYGEN=1, SIGN=2, VERIFY=3, KEYGEN_SIGN=4`), `external_mu` (bool), `stream_msg` (bool, for variable-length message streaming — not needed for ACVP, see note below), `pcr_sign` (bool, for a PCR-signing flow outside ACVP's scope — not used in any sequence below), `zeroize` (bool) |
+| [`MLDSA_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_STATUS) | `ready`, `valid`, `msg_stream_ready` |
+| [`MLDSA_SEED`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_SEED) | 8 words (256 bits) — KeyGen/SigGen seed input |
+| [`MLDSA_PRIVKEY_IN`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_PRIVKEY_IN) | 1224 words (4896 bytes) — supplied private key, used for SigGen when signing with a known key instead of a seed |
+| [`MLDSA_PRIVKEY_OUT`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_PRIVKEY_OUT) | 1224 words — KeyGen's generated private key (optional readback) |
+| [`MLDSA_PUBKEY`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_PUBKEY) | 648 words (2592 bytes) — KeyGen output / SigVer input |
+| [`MLDSA_MSG`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_MSG) | 16 words (64 bytes, fixed-size) — message input for SigGen/SigVer |
+| [`MLDSA_EXTERNAL_MU`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_EXTERNAL_MU) | 16 words (64 bytes) — pre-computed FIPS 204 `mu` digest, used instead of `MLDSA_MSG` when `external_mu=1` |
+| [`MLDSA_SIGN_RND`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_SIGN_RND) | 8 words (32 bytes) — the FIPS 204 Algorithm 7 `rnd` input; all-zero = deterministic signing, ACVP-supplied value = hedged/randomized signing |
+| [`ABR_ENTROPY`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.ABR_ENTROPY) | TRNG-generated randomness, written before every KeyGen or Sign operation for side-channel-masking (not an ACVP protocol input); not written before Verify, which has no secret to protect. Shared with ML-KEM-1024 (§12). |
+| [`MLDSA_SIGNATURE`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_SIGNATURE) | 1157 words — 4628-byte buffer; the real signature is 4627 bytes, the trailing word is zero-padded |
+| [`MLDSA_VERIFY_RES`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLDSA_VERIFY_RES) | 16 words — SigVer's computed result, compared in software against the first 16 words of the supplied signature |
+| [`kv_mldsa_seed_rd_ctrl`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.kv_mldsa_seed_rd_ctrl)/[`_status`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.kv_mldsa_seed_rd_status) | Key-Vault-mediated seed routing (used when the seed comes from KV instead of a plain array) |
 
 **ACVP's registered message length (§2.9: max 512 bits = 64 bytes) fits entirely inside
-the fixed-size `mldsa_msg`/`mldsa_external_mu` registers** — a variable-length streaming
-path (word-by-word writes to `mldsa_msg` via a strobe bit, for messages too large for the
+the fixed-size `MLDSA_MSG`/`MLDSA_EXTERNAL_MU` registers** — a variable-length streaming
+path (word-by-word writes to `MLDSA_MSG` via a strobe bit, for messages too large for the
 fixed-size register) is a reasonable feature for this hardware to expose, but isn't
 needed for ACVP testing at this message-length domain, so it's out of scope here.
 
 ### 11.2 KeyGen
 
-1. Wait `mldsa_status.ready`.
-2. Write `mldsa_seed` (8 words).
-3. Write `entropy` (TRNG-generated).
-4. Write `mldsa_ctrl` = `{ctrl=KEYGEN}`.
-5. Wait `mldsa_status.valid`.
-6. Read `mldsa_pubkey` (648 words); optionally read `mldsa_privkey_out` (1224 words).
-7. Write `mldsa_ctrl.zeroize=1`.
+1. Wait `MLDSA_STATUS.ready`.
+2. Write `MLDSA_SEED` (8 words).
+3. Write `ABR_ENTROPY` (TRNG-generated).
+4. Write `MLDSA_CTRL` = `{ctrl=KEYGEN}`.
+5. Wait `MLDSA_STATUS.valid`.
+6. Read `MLDSA_PUBKEY` (648 words); optionally read `MLDSA_PRIVKEY_OUT` (1224 words).
+7. Write `MLDSA_CTRL.zeroize=1`.
 
 A KeyGen entry point can reasonably do one more thing after step 7 that's worth knowing
 about even though it isn't an ACVP protocol step: automatically sign an all-zero message
@@ -1506,21 +1517,21 @@ are — see §11.3's worked example instead, which exercises the same hardware p
 
 ### 11.3 SigGen (deterministic and hedged, plus the "external mu" variant)
 
-1. Wait `mldsa_status.ready`.
-2. Write the private key: `mldsa_privkey_in` (1224 words) if signing with a caller-supplied
-   private key, or `mldsa_seed` if generating a fresh key pair as part of this same
+1. Wait `MLDSA_STATUS.ready`.
+2. Write the private key: `MLDSA_PRIVKEY_IN` (1224 words) if signing with a caller-supplied
+   private key, or `MLDSA_SEED` if generating a fresh key pair as part of this same
    operation (`ctrl=KEYGEN_SIGN` instead of `SIGN` in step 5).
-3. Write the message: `mldsa_msg` (plain message) **or** `mldsa_external_mu` (pre-computed
+3. Write the message: `MLDSA_MSG` (plain message) **or** `MLDSA_EXTERNAL_MU` (pre-computed
    `mu` digest) — never both.
-4. Write `mldsa_sign_rnd`: all-zero for **deterministic** signing (what every worked
+4. Write `MLDSA_SIGN_RND`: all-zero for **deterministic** signing (what every worked
    example in this document uses), or an ACVP-supplied 32-byte value for **hedged**
    (randomized) signing.
-5. Write `entropy` (TRNG-generated).
-6. Write `mldsa_ctrl` = `{ctrl=SIGN or KEYGEN_SIGN, external_mu=<1 if step 3 used
-   mldsa_external_mu>}`.
-7. Wait `mldsa_status.valid`.
-8. Read `mldsa_signature` (1157 words; last word is padding).
-9. Write `mldsa_ctrl.zeroize=1`.
+5. Write `ABR_ENTROPY` (TRNG-generated).
+6. Write `MLDSA_CTRL` = `{ctrl=SIGN or KEYGEN_SIGN, external_mu=<1 if step 3 used
+   MLDSA_EXTERNAL_MU>}`.
+7. Wait `MLDSA_STATUS.valid`.
+8. Read `MLDSA_SIGNATURE` (1157 words; last word is padding).
+9. Write `MLDSA_CTRL.zeroize=1`.
 
 A SigGen entry point can reasonably re-verify every signature it produces (an internal
 call to the same SigVer path in §11.4) before returning it, returning an error instead of
@@ -1541,41 +1552,41 @@ realistic ML-DSA-87 scale)
 | `sign_rnd` | all-zero (deterministic) |
 | expected `signature` | starts `D1476E71 E540E209 6F507B9C 085CA49F BF9E8671 14C85D6C 62E11E2D 7C9E1104 ...`, ends `... 00000000 01000000 1E160E08 00302A22` (1157 words total; the real signature is 4627 bytes, so the trailing word `0x00302A22` includes the padding byte) |
 
-1. Wait `mldsa_status.ready`.
-2. Write `mldsa_privkey_in` = the 1224-word `sk` above.
-3. Write `mldsa_external_mu` = the 16-word `external_mu` above (this is the `external_mu`
-   path, not `mldsa_msg`).
-4. Write `mldsa_sign_rnd` = all-zero.
-5. Write `entropy` (TRNG-generated; doesn't affect the deterministic result).
-6. Write `mldsa_ctrl` = `{ctrl=SIGN, external_mu=1}`.
-7. Wait `mldsa_status.valid`.
-8. Read `mldsa_signature` — matches the expected `signature` above exactly. Note that
+1. Wait `MLDSA_STATUS.ready`.
+2. Write `MLDSA_PRIVKEY_IN` = the 1224-word `sk` above.
+3. Write `MLDSA_EXTERNAL_MU` = the 16-word `external_mu` above (this is the `external_mu`
+   path, not `MLDSA_MSG`).
+4. Write `MLDSA_SIGN_RND` = all-zero.
+5. Write `ABR_ENTROPY` (TRNG-generated; doesn't affect the deterministic result).
+6. Write `MLDSA_CTRL` = `{ctrl=SIGN, external_mu=1}`.
+7. Wait `MLDSA_STATUS.valid`.
+8. Read `MLDSA_SIGNATURE` — matches the expected `signature` above exactly. Note that
    this example's expected values are internally self-consistent (given these inputs,
    this is the corresponding output) rather than independently recomputed from scratch
    the way the AES/SHA/HMAC/ECDSA examples earlier in this document are — ML-DSA-87's
    underlying lattice math is a much heavier lift to reimplement independently for
    verification purposes.
-9. Write `mldsa_ctrl.zeroize=1`.
+9. Write `MLDSA_CTRL.zeroize=1`.
 
 ### 11.4 SigVer (plus the "external mu" variant)
 
-1. Wait `mldsa_status.ready`.
-2. Write `mldsa_pubkey` (648 words).
-3. Write `mldsa_signature` (1157 words).
-4. Write the message: `mldsa_msg` **or** `mldsa_external_mu`.
-5. Write `mldsa_ctrl` = `{ctrl=VERIFY, external_mu=<1 if step 4 used mldsa_external_mu>}`.
-6. Wait `mldsa_status.valid`.
-7. Read `mldsa_verify_res` (16 words).
-8. Write `mldsa_ctrl.zeroize=1`.
+1. Wait `MLDSA_STATUS.ready`.
+2. Write `MLDSA_PUBKEY` (648 words).
+3. Write `MLDSA_SIGNATURE` (1157 words).
+4. Write the message: `MLDSA_MSG` **or** `MLDSA_EXTERNAL_MU`.
+5. Write `MLDSA_CTRL` = `{ctrl=VERIFY, external_mu=<1 if step 4 used MLDSA_EXTERNAL_MU>}`.
+6. Wait `MLDSA_STATUS.valid`.
+7. Read `MLDSA_VERIFY_RES` (16 words).
+8. Write `MLDSA_CTRL.zeroize=1`.
 
-Like ECDSA SigVer (§10.4), `mldsa_status.valid` only means "computation complete" — it is
-not a pass/fail bit. Validity is determined in software by comparing `mldsa_verify_res`
+Like ECDSA SigVer (§10.4), `MLDSA_STATUS.valid` only means "computation complete" — it is
+not a pass/fail bit. Validity is determined in software by comparing `MLDSA_VERIFY_RES`
 against the **first 16 words only** of the signature written in step 3: equal ⇒ valid,
 different ⇒ invalid.
 
 A negative-test case can demonstrate the invalid path directly: write a signature/public-
 key pair that's known-valid, but substitute a different (e.g. all-`0xFF`) message in step
-4 — `mldsa_verify_res` then no longer matches the signature's first 16 words, so the
+4 — `MLDSA_VERIFY_RES` then no longer matches the signature's first 16 words, so the
 result comes back invalid instead of valid.
 
 ### 11.5 Test-type note
@@ -1589,26 +1600,25 @@ digital-signature IP in this document.
 
 This section illustrates one way to implement ML-KEM-1024 KeyGen/Encapsulate/Decapsulate
 as a thin software layer over a register interface, the same style as §11's ML-DSA-87
-section (contrast with §4-§10, which describe direct register sequences). As noted in §1,
-no independently-read register-definition file was available for this hardware block, so
-the register names and control opcodes below should be treated as illustrative rather
-than independently RTL-verified. ML-KEM-1024 shares its register block ("Adams Bridge")
-with ML-DSA-87 (§11) — they are two different peripherals on the same silicon block, with
-entirely separate `mlkem_*`/`mldsa_*` register fields.
+section (contrast with §4-§10, which describe direct register sequences). The register
+names and control opcodes below are confirmed against the live register browser for this
+hardware block ("Adams Bridge", shared with ML-DSA-87, §11 — they are two different
+peripherals on the same silicon block, with entirely separate `MLKEM_*`/`MLDSA_*`
+register fields).
 
 ### 12.1 Register map
 
 | Register | Purpose |
 |---|---|
-| `mlkem_ctrl` | opcode + control bits: `ctrl[2:0]` (`KEYGEN=1, ENCAPS=2, DECAPS=3, KEYGEN_DECAPS=4`), `zeroize` (bool) |
-| `mlkem_status` | `ready`, `valid` |
-| `mlkem_seed_d`, `mlkem_seed_z` | 8 words (256 bits) each — KeyGen's two FIPS 203 seed inputs |
-| `mlkem_encaps_key` | 392 words (1568 bytes) — KeyGen output / Encapsulate input |
-| `mlkem_decaps_key` | 792 words (3168 bytes) — KeyGen output / Decapsulate input |
-| `mlkem_msg` | 8 words (32 bytes) — Encapsulate's message input |
-| `mlkem_ciphertext` | 392 words (1568 bytes) — Encapsulate output / Decapsulate input |
-| `mlkem_shared_key` | 8 words (32 bytes) — Encapsulate/Decapsulate output |
-| `kv_mlkem_seed_rd_ctrl`/`_status`, `kv_mlkem_msg_rd_ctrl`/`_status`, `kv_mlkem_sharedkey_wr_ctrl`/`_status` | Key-Vault-mediated routing for seeds, message, and shared-key output, used as an alternative to plain array I/O |
+| [`MLKEM_CTRL`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLKEM_CTRL) | opcode + control bits: `ctrl[2:0]` (`KEYGEN=1, ENCAPS=2, DECAPS=3, KEYGEN_DECAPS=4`), `zeroize` (bool) |
+| [`MLKEM_STATUS`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLKEM_STATUS) | `ready`, `valid` |
+| [`MLKEM_SEED_D`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLKEM_SEED_D), [`MLKEM_SEED_Z`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLKEM_SEED_Z) | 8 words (256 bits) each — KeyGen's two FIPS 203 seed inputs |
+| [`MLKEM_ENCAPS_KEY`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLKEM_ENCAPS_KEY) | 392 words (1568 bytes) — KeyGen output / Encapsulate input |
+| [`MLKEM_DECAPS_KEY`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLKEM_DECAPS_KEY) | 792 words (3168 bytes) — KeyGen output / Decapsulate input |
+| [`MLKEM_MSG`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLKEM_MSG) | 8 words (32 bytes) — Encapsulate's message input |
+| [`MLKEM_CIPHERTEXT`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLKEM_CIPHERTEXT) | 392 words (1568 bytes) — Encapsulate output / Decapsulate input |
+| [`MLKEM_SHARED_KEY`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.MLKEM_SHARED_KEY) | 8 words (32 bytes) — Encapsulate/Decapsulate output |
+| [`kv_mlkem_seed_rd_ctrl`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.kv_mlkem_seed_rd_ctrl)/`_status`, [`kv_mlkem_msg_rd_ctrl`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.kv_mlkem_msg_rd_ctrl)/`_status`, [`kv_mlkem_sharedkey_wr_ctrl`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg.kv_mlkem_sharedkey_wr_ctrl)/`_status` | Key-Vault-mediated routing for seeds, message, and shared-key output, used as an alternative to plain array I/O |
 
 Unlike ML-DSA-87 (§11), none of these operations need to write an `entropy` register on a
 per-operation basis. That register is shared with ML-DSA-87 on the same silicon block,
@@ -1621,13 +1631,13 @@ rather than only after, as §11 does for ML-DSA-87.
 
 ### 12.2 KeyGen
 
-1. Wait `mlkem_status.ready`, write `mlkem_ctrl.zeroize=1`, wait `mlkem_status.ready`
+1. Wait `MLKEM_STATUS.ready`, write `MLKEM_CTRL.zeroize=1`, wait `MLKEM_STATUS.ready`
    again (defensive pre-clear, done at the start of every ML-KEM operation).
-2. Write `mlkem_seed_d` and `mlkem_seed_z` (8 words each).
-3. Write `mlkem_ctrl` = `{ctrl=KEYGEN}`.
-4. Wait `mlkem_status.valid`.
-5. Read `mlkem_encaps_key` (392 words) and `mlkem_decaps_key` (792 words).
-6. Write `mlkem_ctrl.zeroize=1`.
+2. Write `MLKEM_SEED_D` and `MLKEM_SEED_Z` (8 words each).
+3. Write `MLKEM_CTRL` = `{ctrl=KEYGEN}`.
+4. Wait `MLKEM_STATUS.valid`.
+5. Read `MLKEM_ENCAPS_KEY` (392 words) and `MLKEM_DECAPS_KEY` (792 words).
+6. Write `MLKEM_CTRL.zeroize=1`.
 
 A KeyGen entry point can reasonably run an automatic pairwise-consistency check after
 step 6 (encapsulate a zero message with the new key, decapsulate it back, and confirm the
@@ -1646,35 +1656,35 @@ inputs)
 | expected `encaps_key` (1568 bytes) | starts `4814898E B15B7012 40445527 89BEF849 675B39A1 A9521326 ...`, ends `... 5A02A685 637B46B1 17002FE1 C65AB9F6` (392 words total) |
 | expected `decaps_key` (3168 bytes) | starts `0DAC07E1 16073C76 71EBA683 FB57DB5F D5D590F6 7F536C03 ...`, ends `... 87654321 0FEDCBA9 44332211 88776655 DDCCBBAA 1100FFEE 55443322 99887766` (792 words total — note the **last 8 words are `seed_z` itself**, a structural feature of the FIPS 203 decapsulation-key format worth cross-checking independently of trusting the full computation) |
 
-1. Write `mlkem_seed_d` = the 8-word `seed_d` above; `mlkem_seed_z` = the 8-word `seed_z`
+1. Write `MLKEM_SEED_D` = the 8-word `seed_d` above; `MLKEM_SEED_Z` = the 8-word `seed_z`
    above.
-2. Write `mlkem_ctrl` = `{ctrl=KEYGEN}`.
-3. Wait `mlkem_status.valid`.
-4. Read `mlkem_encaps_key` and `mlkem_decaps_key` — match the expected values above
+2. Write `MLKEM_CTRL` = `{ctrl=KEYGEN}`.
+3. Wait `MLKEM_STATUS.valid`.
+4. Read `MLKEM_ENCAPS_KEY` and `MLKEM_DECAPS_KEY` — match the expected values above
    exactly. As with §11's worked example, these values are internally self-consistent
    rather than independently recomputed from scratch — reimplementing ML-KEM's lattice
    math independently for verification purposes is a much heavier lift than AES/SHA/HMAC/
    ECDSA.
-5. Write `mlkem_ctrl.zeroize=1`.
+5. Write `MLKEM_CTRL.zeroize=1`.
 
 ### 12.3 Encapsulate
 
 1. Wait ready, zeroize, wait ready (defensive pre-clear).
-2. Write `mlkem_encaps_key` (392 words).
-3. Write `mlkem_msg` (8 words).
-4. Write `mlkem_ctrl` = `{ctrl=ENCAPS}`.
-5. Wait `mlkem_status.valid`.
-6. Read `mlkem_shared_key` (8 words) and `mlkem_ciphertext` (392 words).
-7. Write `mlkem_ctrl.zeroize=1`.
+2. Write `MLKEM_ENCAPS_KEY` (392 words).
+3. Write `MLKEM_MSG` (8 words).
+4. Write `MLKEM_CTRL` = `{ctrl=ENCAPS}`.
+5. Wait `MLKEM_STATUS.valid`.
+6. Read `MLKEM_SHARED_KEY` (8 words) and `MLKEM_CIPHERTEXT` (392 words).
+7. Write `MLKEM_CTRL.zeroize=1`.
 
 ### 12.4 Decapsulate
 
 1. Wait ready, zeroize, wait ready (defensive pre-clear).
-2. Write `mlkem_decaps_key` (792 words) and `mlkem_ciphertext` (392 words).
-3. Write `mlkem_ctrl` = `{ctrl=DECAPS}`.
-4. Wait `mlkem_status.valid`.
-5. Read `mlkem_shared_key` (8 words).
-6. Write `mlkem_ctrl.zeroize=1`.
+2. Write `MLKEM_DECAPS_KEY` (792 words) and `MLKEM_CIPHERTEXT` (392 words).
+3. Write `MLKEM_CTRL` = `{ctrl=DECAPS}`.
+4. Wait `MLKEM_STATUS.valid`.
+5. Read `MLKEM_SHARED_KEY` (8 words).
+6. Write `MLKEM_CTRL.zeroize=1`.
 
 **Worked example — Encapsulate then Decapsulate** (continuing from §12.2's `encaps_key`/
 `decaps_key`, with `message = DEADBEEF CAFEBABE 12345678 9ABCDEF0 11223344 55667788
@@ -1685,18 +1695,18 @@ secret to check this against — instead, the correctness check is that **encaps
 then decapsulating round-trips to the same shared key**, which is what this worked
 example demonstrates in place of an external reference value:
 
-1. Write `mlkem_encaps_key` = §12.2's `encaps_key`.
-2. Write `mlkem_msg` = `DEADBEEF CAFEBABE 12345678 9ABCDEF0 11223344 55667788 AABBCCDD EEFF0011`.
-3. Write `mlkem_ctrl` = `{ctrl=ENCAPS}`.
-4. Wait `mlkem_status.valid`.
-5. Read `mlkem_shared_key` → call this `shared_key_enc`; read `mlkem_ciphertext`.
-6. Write `mlkem_ctrl.zeroize=1`.
-7. Write `mlkem_decaps_key` = §12.2's `decaps_key`; write `mlkem_ciphertext` = the
+1. Write `MLKEM_ENCAPS_KEY` = §12.2's `encaps_key`.
+2. Write `MLKEM_MSG` = `DEADBEEF CAFEBABE 12345678 9ABCDEF0 11223344 55667788 AABBCCDD EEFF0011`.
+3. Write `MLKEM_CTRL` = `{ctrl=ENCAPS}`.
+4. Wait `MLKEM_STATUS.valid`.
+5. Read `MLKEM_SHARED_KEY` → call this `shared_key_enc`; read `MLKEM_CIPHERTEXT`.
+6. Write `MLKEM_CTRL.zeroize=1`.
+7. Write `MLKEM_DECAPS_KEY` = §12.2's `decaps_key`; write `MLKEM_CIPHERTEXT` = the
    ciphertext just produced in step 5.
-8. Write `mlkem_ctrl` = `{ctrl=DECAPS}`.
-9. Wait `mlkem_status.valid`.
-10. Read `mlkem_shared_key` → call this `shared_key_dec`.
-11. Write `mlkem_ctrl.zeroize=1`.
+8. Write `MLKEM_CTRL` = `{ctrl=DECAPS}`.
+9. Wait `MLKEM_STATUS.valid`.
+10. Read `MLKEM_SHARED_KEY` → call this `shared_key_dec`.
+11. Write `MLKEM_CTRL.zeroize=1`.
 12. `shared_key_enc` and `shared_key_dec` come out equal.
 
 ### 12.5 Test-type note
