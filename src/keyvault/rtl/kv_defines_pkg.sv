@@ -99,9 +99,10 @@ typedef struct packed {
 } kv_wr_resp_t;
 
 typedef struct packed {
-    logic                   error;
-    logic                   last;
-    logic   [KV_DATA_W-1:0] read_data;
+    logic                         error;
+    logic                         last;
+    logic   [KV_ENTRY_SIZE_W-1:0] entry_last_dword;
+    logic   [KV_DATA_W-1:0]       read_data;
 } kv_rd_resp_t;
 
 //control register for KV reads
@@ -126,6 +127,7 @@ typedef enum logic [7:0] {
     KV_SUCCESS = 8'h00,
     KV_READ_FAIL = 8'h01,
     KV_WRITE_FAIL = 8'h02,
+    KV_RD_LEN_MISMATCH = 8'h03,
     KV_FSM_ERROR = 8'h04
 } kv_error_code_e;
 
