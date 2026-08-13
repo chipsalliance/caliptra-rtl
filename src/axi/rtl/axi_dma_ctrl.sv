@@ -1504,11 +1504,6 @@ import kv_defines_pkg::*;
         clk, !rst_n)
     // Saturation must deassert the write request, guaranteeing no overflow.
     `CALIPTRA_ASSERT(AXI_DMA_SAT_STALL_WR_REQ, (&wr_resp_pending) |-> !w_req_if.valid, clk, !rst_n)
-    // Coverage: reach saturation, accept a response while saturated, and resume
-    // a request after the counter drops out of saturation.
-    `CALIPTRA_COVER(AXI_DMA_WR_RESP_SATURATED, (&wr_resp_pending), clk, !rst_n)
-    `CALIPTRA_COVER(AXI_DMA_WR_RESP_RELEASE, (&wr_resp_pending) && w_req_if.resp_valid, clk, !rst_n)
-    `CALIPTRA_COVER(AXI_DMA_WR_RESP_RESUME, $fell(&wr_resp_pending) ##[1:$] wr_req_hshake, clk, !rst_n)
     // Proper configuration
     `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_32, DW == 32)
     `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_EQ_MB, DW == CPTRA_MBOX_DATA_W)

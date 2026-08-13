@@ -657,7 +657,8 @@ import pv_defines_pkg::*;
     end
 
 
-  soc_ifc_cov_bind i_soc_ifc_cov_bind();  
+  soc_ifc_cov_bind i_soc_ifc_cov_bind();
+  axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
   // pragma uvmf custom dut_instantiation end
 
   initial begin      // tbx vif_binding_block 
