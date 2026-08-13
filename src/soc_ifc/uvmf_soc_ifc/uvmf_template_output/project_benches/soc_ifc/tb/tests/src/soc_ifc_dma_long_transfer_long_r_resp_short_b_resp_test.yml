@@ -13,11 +13,12 @@
 # limitations under the License.
 
 ---
-# One 64 KiB AXI-memory copy with a fixed 255-cycle B-response delay and no
-# R-response delay. Data integrity and completion are checked end to end.
+# One 64 KiB AXI-memory copy with a randomized 192-255-cycle R-response
+# delay and randomized 0-3-cycle B-response delay. Data integrity and
+# completion are checked end to end.
 seed: ${PLAYBOOK_RANDOM_SEED}
 plusargs:
 - '+UVM_TESTNAME=soc_ifc_cmdline_test'
-- '+CLP_SEQ=soc_ifc_env_dma_long_transfer_sequence'
+- '+CLP_SEQ=soc_ifc_env_dma_long_transfer_long_r_resp_short_b_resp_sequence'
 - '+UVM_VERBOSITY=UVM_LOW'
-testname: soc_ifc_dma_long_transfer_test
+testname: soc_ifc_dma_long_transfer_long_r_resp_short_b_resp_test
