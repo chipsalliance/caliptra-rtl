@@ -185,13 +185,29 @@ uvmf_active_passive_t interface_activities[] = {
   // The fabric component later validates these windows against compile-time
   // Avery port counts and ID widths.
   virtual function void build_axi_fabric_configuration();
+    string manager_vif_name[AXI_FABRIC_NUM_MANAGERS];
+    string subordinate_vif_name[AXI_FABRIC_NUM_SUBORDINATES];
+
+    manager_vif_name[AXI_FABRIC_SOC_MANAGER_IDX] =
+      AXI_FABRIC_SOC_MANAGER_VIF;
+    manager_vif_name[AXI_FABRIC_DMA_MANAGER_IDX] =
+      AXI_FABRIC_DMA_MANAGER_VIF;
+    subordinate_vif_name[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX] =
+      AXI_FABRIC_CALIPTRA_SUBORDINATE_VIF;
+    subordinate_vif_name[AXI_FABRIC_SRAM_SUBORDINATE_IDX] =
+      AXI_FABRIC_SRAM_SUBORDINATE_VIF;
+    subordinate_vif_name[AXI_FABRIC_RECOVERY_SUBORDINATE_IDX] =
+      AXI_FABRIC_RECOVERY_SUBORDINATE_VIF;
+
     configuration.axi_fabric_config.configure(
-      .soc_manager_vif_name    (AXI_FABRIC_SOC_MANAGER_VIF),
-      .dma_manager_vif_name    (AXI_FABRIC_DMA_MANAGER_VIF),
-      .caliptra_subordinate_vif_name(AXI_FABRIC_CALIPTRA_SUBORDINATE_VIF),
-      .sram_subordinate_vif_name(AXI_FABRIC_SRAM_SUBORDINATE_VIF),
-      .recovery_subordinate_vif_name(AXI_FABRIC_RECOVERY_SUBORDINATE_VIF),
+      .manager_vif_name        (manager_vif_name),
+      .subordinate_vif_name    (subordinate_vif_name),
       .interconnect_vif_name   (AXI_FABRIC_INTERCONNECT_VIF),
+      .soc_manager_idx         (AXI_FABRIC_SOC_MANAGER_IDX),
+      .dma_manager_idx         (AXI_FABRIC_DMA_MANAGER_IDX),
+      .caliptra_subordinate_idx(AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX),
+      .sram_subordinate_idx    (AXI_FABRIC_SRAM_SUBORDINATE_IDX),
+      .recovery_subordinate_idx(AXI_FABRIC_RECOVERY_SUBORDINATE_IDX),
       .caliptra_base_addr      (64'h0),
       .caliptra_limit_addr     ((64'(1) << soc_ifc_pkg::SOC_IFC_ADDR_W) - 1),
       .sram_config             (configuration.axi_sram_config),

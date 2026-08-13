@@ -19,24 +19,18 @@ class soc_ifc_axi_fabric_env extends uvm_env;
 
   `uvm_component_utils(soc_ifc_axi_fabric_env)
 
-  localparam int SOC_MANAGER_IDX     = 0;
-  localparam int DMA_MANAGER_IDX     = 1;
-  localparam int CALIPTRA_SUBORDINATE_IDX = 0;
-  localparam int SRAM_SUBORDINATE_IDX = 1;
-  localparam int RECOVERY_SUBORDINATE_IDX = 2;
-
   soc_ifc_axi_fabric_config configuration;
 
-  aaxi_agent      manager[2];
-  aaxi_agent      subordinate[3];
+  aaxi_agent      manager[];
+  aaxi_agent      subordinate[];
   aaxi_intc_agent interconnect_agent;
 
-  aaxi_vip_config manager_config[2];
-  aaxi_vip_config subordinate_config[3];
+  aaxi_vip_config manager_config[];
+  aaxi_vip_config subordinate_config[];
   aaxi_intc_config interconnect_config;
 
-  virtual aaxi_intf manager_vif[2];
-  virtual aaxi_intf subordinate_vif[3];
+  virtual aaxi_intf manager_vif[];
+  virtual aaxi_intf subordinate_vif[];
   virtual aaxi_interconnect_intf interconnect_vif;
 
   // Construct the AXI fabric environment.
@@ -52,22 +46,22 @@ class soc_ifc_axi_fabric_env extends uvm_env;
 
   // Return the SRAM subordinate BFM for endpoint binding.
   function aaxi_device_class get_sram_bfm();
-    return subordinate[SRAM_SUBORDINATE_IDX].bfm;
+    return subordinate[configuration.sram_subordinate_idx].bfm;
   endfunction
 
   // Return the recovery subordinate BFM for endpoint binding.
   function aaxi_device_class get_recovery_bfm();
-    return subordinate[RECOVERY_SUBORDINATE_IDX].bfm;
+    return subordinate[configuration.recovery_subordinate_idx].bfm;
   endfunction
 
   // Register a callback on the recovery subordinate.
   function void add_recovery_callback(aaxi_callbacks callback);
-    subordinate[RECOVERY_SUBORDINATE_IDX].add_callback(callback);
+    subordinate[configuration.recovery_subordinate_idx].add_callback(callback);
   endfunction
 
   // Register a callback on the SRAM subordinate.
   function void add_sram_callback(aaxi_callbacks callback);
-    subordinate[SRAM_SUBORDINATE_IDX].add_callback(callback);
+    subordinate[configuration.sram_subordinate_idx].add_callback(callback);
   endfunction
 
   // Apply protocol, ID, user-signal, and outstanding-depth settings shared by
@@ -114,6 +108,13 @@ class soc_ifc_axi_fabric_env extends uvm_env;
       `uvm_fatal("AXI_FABRIC", "soc_ifc AXI fabric configuration is null")
     configuration.validate();
 
+    manager = new[configuration.manager_vif_name.size()];
+    subordinate = new[configuration.subordinate_vif_name.size()];
+    manager_config = new[configuration.manager_vif_name.size()];
+    subordinate_config = new[configuration.subordinate_vif_name.size()];
+    manager_vif = new[configuration.manager_vif_name.size()];
+    subordinate_vif = new[configuration.subordinate_vif_name.size()];
+
     foreach (manager_vif[i])
       if (!uvm_config_db #(virtual aaxi_intf)::get(
             this, "", configuration.manager_vif_name[i], manager_vif[i]))
@@ -139,13 +140,13 @@ class soc_ifc_axi_fabric_env extends uvm_env;
         $sformatf("manager_config[%0d]", i));
       configure_common(manager_config[i], manager_vif[i], i,
                        aaxi_pkg::AAXI_ID_WIDTH,
-                       (i == SOC_MANAGER_IDX));
+                       (i == configuration.soc_manager_idx));
       manager_config[i].set_config_int("agent_type", AAXI_MASTER);
     end
-    configure_address_map(manager_config[SOC_MANAGER_IDX],
+    configure_address_map(manager_config[configuration.soc_manager_idx],
                           configuration.caliptra_base_addr,
                           configuration.caliptra_limit_addr);
-    configure_address_map(manager_config[DMA_MANAGER_IDX],
+    configure_address_map(manager_config[configuration.dma_manager_idx],
                           '0, '1);
 
     // Caliptra is an RTL subordinate and therefore passive. SRAM and recovery
@@ -155,27 +156,31 @@ class soc_ifc_axi_fabric_env extends uvm_env;
         $sformatf("subordinate_config[%0d]", i));
       configure_common(subordinate_config[i], subordinate_vif[i], i,
                        0,
-                       (i != CALIPTRA_SUBORDINATE_IDX));
+                       (i != configuration.caliptra_subordinate_idx));
       subordinate_config[i].set_config_int(
         "agent_type", AAXI_SLAVE_TO_INTERCONNECT);
     end
-    configure_address_map(subordinate_config[CALIPTRA_SUBORDINATE_IDX],
-                          configuration.caliptra_base_addr,
-                          configuration.caliptra_limit_addr);
-    configure_address_map(subordinate_config[SRAM_SUBORDINATE_IDX],
+    configure_address_map(
+      subordinate_config[configuration.caliptra_subordinate_idx],
+      configuration.caliptra_base_addr,
+      configuration.caliptra_limit_addr);
+    configure_address_map(subordinate_config[configuration.sram_subordinate_idx],
                           configuration.sram_config.base_addr,
                           configuration.sram_config.limit_addr);
-    configure_address_map(subordinate_config[RECOVERY_SUBORDINATE_IDX],
-                          configuration.recovery_config.fifo_data_addr,
-                          configuration.recovery_config.fifo_data_addr);
-    subordinate_config[RECOVERY_SUBORDINATE_IDX].cfg_info.fifo_address[0] =
+    configure_address_map(
+      subordinate_config[configuration.recovery_subordinate_idx],
+      configuration.recovery_config.fifo_data_addr,
+      configuration.recovery_config.fifo_data_addr);
+    subordinate_config[configuration.recovery_subordinate_idx].
+      cfg_info.fifo_address[0] =
       configuration.recovery_config.fifo_data_addr;
-    subordinate_config[RECOVERY_SUBORDINATE_IDX].cfg_info.fifo_limit[0] =
+    subordinate_config[configuration.recovery_subordinate_idx].
+      cfg_info.fifo_limit[0] =
       configuration.recovery_config.fifo_data_addr;
-    subordinate_config[RECOVERY_SUBORDINATE_IDX].set_config_int(
+    subordinate_config[configuration.recovery_subordinate_idx].set_config_int(
       "warn_on_uninitialized_read", 0);
     foreach (subordinate_config[i]) begin
-      if (i != CALIPTRA_SUBORDINATE_IDX) begin
+      if (i != configuration.caliptra_subordinate_idx) begin
         subordinate_config[i].set_config_int("awready_default", 1);
         subordinate_config[i].set_config_int("dwready_default", 1);
         subordinate_config[i].set_config_int("arready_default", 1);
@@ -226,20 +231,22 @@ class soc_ifc_axi_fabric_env extends uvm_env;
         interconnect_config.slave_cfg[i]);
     end
     configure_address_map(
-      interconnect_config.slave_cfg[CALIPTRA_SUBORDINATE_IDX],
+      interconnect_config.slave_cfg[configuration.caliptra_subordinate_idx],
       configuration.caliptra_base_addr,
       configuration.caliptra_limit_addr);
     configure_address_map(
-      interconnect_config.slave_cfg[SRAM_SUBORDINATE_IDX],
+      interconnect_config.slave_cfg[configuration.sram_subordinate_idx],
       configuration.sram_config.base_addr,
       configuration.sram_config.limit_addr);
     configure_address_map(
-      interconnect_config.slave_cfg[RECOVERY_SUBORDINATE_IDX],
+      interconnect_config.slave_cfg[configuration.recovery_subordinate_idx],
       configuration.recovery_config.fifo_data_addr,
       configuration.recovery_config.fifo_data_addr);
-    interconnect_config.slave_cfg[RECOVERY_SUBORDINATE_IDX].cfg_info.fifo_address[0] =
+    interconnect_config.slave_cfg[configuration.recovery_subordinate_idx].
+      cfg_info.fifo_address[0] =
       configuration.recovery_config.fifo_data_addr;
-    interconnect_config.slave_cfg[RECOVERY_SUBORDINATE_IDX].cfg_info.fifo_limit[0] =
+    interconnect_config.slave_cfg[configuration.recovery_subordinate_idx].
+      cfg_info.fifo_limit[0] =
       configuration.recovery_config.fifo_data_addr;
 
     uvm_config_db #(virtual aaxi_interconnect_intf)::set(

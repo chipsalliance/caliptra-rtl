@@ -73,11 +73,13 @@ package soc_ifc_parameters_pkg;
   parameter int unsigned AXI_RECOVERY_FIFO_REFILL_DELAY_MIN_DEFAULT = 0;
   parameter int unsigned AXI_RECOVERY_FIFO_REFILL_DELAY_MAX_DEFAULT = 0;
 
-  parameter int AXI_FABRIC_SOC_MANAGER_IDX = 0;
-  parameter int AXI_FABRIC_DMA_MANAGER_IDX = 1;
-  parameter int AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX = 0;
-  parameter int AXI_FABRIC_SRAM_SUBORDINATE_IDX = 1;
-  parameter int AXI_FABRIC_RECOVERY_SUBORDINATE_IDX = 2;
+  parameter int unsigned AXI_FABRIC_SOC_MANAGER_IDX = 0;
+  parameter int unsigned AXI_FABRIC_DMA_MANAGER_IDX = 1;
+  parameter int unsigned AXI_FABRIC_NUM_MANAGERS = 2;
+  parameter int unsigned AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX = 0;
+  parameter int unsigned AXI_FABRIC_SRAM_SUBORDINATE_IDX = 1;
+  parameter int unsigned AXI_FABRIC_RECOVERY_SUBORDINATE_IDX = 2;
+  parameter int unsigned AXI_FABRIC_NUM_SUBORDINATES = 3;
 
   parameter string AXI_FABRIC_SOC_MANAGER_VIF = "soc_ifc_axi_fabric_soc_manager_vif";
   parameter string AXI_FABRIC_DMA_MANAGER_VIF = "soc_ifc_axi_fabric_dma_manager_vif";

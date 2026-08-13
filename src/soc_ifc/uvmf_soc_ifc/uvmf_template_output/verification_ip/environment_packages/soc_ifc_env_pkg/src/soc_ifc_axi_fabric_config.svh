@@ -19,12 +19,15 @@ class soc_ifc_axi_fabric_config extends uvm_object;
 
   `uvm_object_utils(soc_ifc_axi_fabric_config)
 
-  localparam int NUM_MANAGERS     = 2;
-  localparam int NUM_SUBORDINATES = 3;
-
-  string manager_vif_name[NUM_MANAGERS];
-  string subordinate_vif_name[NUM_SUBORDINATES];
+  string manager_vif_name[];
+  string subordinate_vif_name[];
   string interconnect_vif_name;
+
+  int unsigned soc_manager_idx;
+  int unsigned dma_manager_idx;
+  int unsigned caliptra_subordinate_idx;
+  int unsigned sram_subordinate_idx;
+  int unsigned recovery_subordinate_idx;
 
   aaxi_addr_t caliptra_base_addr;
   aaxi_addr_t caliptra_limit_addr;
@@ -43,28 +46,32 @@ class soc_ifc_axi_fabric_config extends uvm_object;
   // Capture the complete topology in one call, then validate immediately so
   // malformed geometry cannot reach Avery component construction.
   function void configure(
-      input string      soc_manager_vif_name,
-      input string      dma_manager_vif_name,
-      input string      caliptra_subordinate_vif_name,
-      input string      sram_subordinate_vif_name,
-      input string      recovery_subordinate_vif_name,
+      input string      manager_vif_name[],
+      input string      subordinate_vif_name[],
       input string      interconnect_vif_name,
+      input int unsigned soc_manager_idx,
+      input int unsigned dma_manager_idx,
+      input int unsigned caliptra_subordinate_idx,
+      input int unsigned sram_subordinate_idx,
+      input int unsigned recovery_subordinate_idx,
       input aaxi_addr_t caliptra_base_addr,
       input aaxi_addr_t caliptra_limit_addr,
       input soc_ifc_axi_sram_config sram_config,
       input soc_ifc_recovery_fifo_config recovery_config,
       input int unsigned outstanding_depth);
-    this.manager_vif_name[0]     = soc_manager_vif_name;
-    this.manager_vif_name[1]     = dma_manager_vif_name;
-    this.subordinate_vif_name[0] = caliptra_subordinate_vif_name;
-    this.subordinate_vif_name[1] = sram_subordinate_vif_name;
-    this.subordinate_vif_name[2] = recovery_subordinate_vif_name;
+    this.manager_vif_name        = manager_vif_name;
+    this.subordinate_vif_name    = subordinate_vif_name;
     this.interconnect_vif_name   = interconnect_vif_name;
-    this.caliptra_base_addr      = caliptra_base_addr;
-    this.caliptra_limit_addr     = caliptra_limit_addr;
-    this.sram_config             = sram_config;
-    this.recovery_config         = recovery_config;
-    this.outstanding_depth       = outstanding_depth;
+    this.soc_manager_idx         = soc_manager_idx;
+    this.dma_manager_idx         = dma_manager_idx;
+    this.caliptra_subordinate_idx = caliptra_subordinate_idx;
+    this.sram_subordinate_idx     = sram_subordinate_idx;
+    this.recovery_subordinate_idx = recovery_subordinate_idx;
+    this.caliptra_base_addr       = caliptra_base_addr;
+    this.caliptra_limit_addr      = caliptra_limit_addr;
+    this.sram_config              = sram_config;
+    this.recovery_config          = recovery_config;
+    this.outstanding_depth        = outstanding_depth;
     configured = 1'b1;
     validate();
   endfunction
@@ -77,12 +84,28 @@ class soc_ifc_axi_fabric_config extends uvm_object;
       `uvm_fatal("AXI_FABRIC_CFG", "Fabric configuration has not been initialized")
     if (sram_config == null || recovery_config == null)
       `uvm_fatal("AXI_FABRIC_CFG", "Endpoint configuration is null")
-    if (aaxi_pkg::AAXI_INTC_MASTER_CNT != NUM_MANAGERS ||
-        aaxi_pkg::AAXI_INTC_SLAVE_CNT != NUM_SUBORDINATES)
+    if (aaxi_pkg::AAXI_INTC_MASTER_CNT != manager_vif_name.size() ||
+        aaxi_pkg::AAXI_INTC_SLAVE_CNT != subordinate_vif_name.size())
       `uvm_fatal("AXI_FABRIC_CFG",
-        $sformatf("Avery fabric must compile as 2x3, got %0dx%0d",
+        $sformatf("Avery fabric must compile as %0dx%0d, got %0dx%0d",
+                  manager_vif_name.size(),
+                  subordinate_vif_name.size(),
                   aaxi_pkg::AAXI_INTC_MASTER_CNT,
                   aaxi_pkg::AAXI_INTC_SLAVE_CNT))
+    if (soc_manager_idx >= manager_vif_name.size() ||
+        dma_manager_idx >= manager_vif_name.size())
+      `uvm_fatal("AXI_FABRIC_CFG", "Manager index exceeds configured topology")
+    if (soc_manager_idx == dma_manager_idx)
+      `uvm_fatal("AXI_FABRIC_CFG", "Manager indexes must be unique")
+    if (caliptra_subordinate_idx >= subordinate_vif_name.size() ||
+        sram_subordinate_idx >= subordinate_vif_name.size() ||
+        recovery_subordinate_idx >= subordinate_vif_name.size())
+      `uvm_fatal("AXI_FABRIC_CFG",
+        "Subordinate index exceeds configured topology")
+    if (caliptra_subordinate_idx == sram_subordinate_idx ||
+        caliptra_subordinate_idx == recovery_subordinate_idx ||
+        sram_subordinate_idx == recovery_subordinate_idx)
+      `uvm_fatal("AXI_FABRIC_CFG", "Subordinate indexes must be unique")
     if (aaxi_pkg::AAXI_ID_WIDTH != soc_ifc_pkg::CPTRA_AXI_DMA_ID_WIDTH)
       `uvm_fatal("AXI_FABRIC_CFG",
         $sformatf("Avery manager ID width %0d must match DMA ID width %0d",

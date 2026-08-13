@@ -112,7 +112,7 @@ import pv_defines_pkg::*;
       .BUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH),
       .ARUSER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH),
       .RUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH)
-  ) axi_manager_ports[2] (
+  ) axi_manager_ports[AXI_FABRIC_NUM_MANAGERS] (
       .ACLK   (clk                                   ),
       .ARESETn(cptra_rst_b_dly_assert_simult_deassert),
       .CACTIVE(                                      ),
@@ -131,7 +131,7 @@ import pv_defines_pkg::*;
       .BUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH),
       .ARUSER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH),
       .RUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH)
-  ) axi_subordinate_ports[3] (
+  ) axi_subordinate_ports[AXI_FABRIC_NUM_SUBORDINATES] (
       .ACLK   (clk                                   ),
       .ARESETn(cptra_rst_b_dly_assert_simult_deassert),
       .CACTIVE(                                      ),
