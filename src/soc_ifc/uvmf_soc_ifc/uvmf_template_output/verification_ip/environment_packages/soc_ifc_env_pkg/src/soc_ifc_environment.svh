@@ -27,6 +27,7 @@
 //----------------------------------------------------------------------
 //
 
+// Owns soc_ifc stimulus agents, passive checking, and AXI endpoint services.
 class soc_ifc_environment  extends uvmf_environment_base #(
     .CONFIG_T( soc_ifc_env_configuration 
   ));
@@ -35,14 +36,12 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 
   qvip_ahb_lite_slave_environment #()  qvip_ahb_lite_slave_subenv;
 
-  // Avery AXI environment
-  aaxi_log              aaxi_test_log;
-  aaxi_uvm_container    aaxi_uc;             //VAR: UVM container 
-  aaxi_uvm_testbench    aaxi_tb;
-  uvm_table_printer     aaxi_printer;
-  aaxi_protocol_version aaxi_vers;
-//  aaxi_cfg_info mcfg;
-//  aaxi_cfg_info scfg;
+  // The environment owns all persistent AXI transport and agent components.
+  // Configuration supplies construction policy but never owns these phased
+  // runtime objects.
+  soc_ifc_axi_fabric_env axi_fabric;
+  soc_ifc_axi_sram_agent axi_sram_agent;
+  soc_ifc_recovery_fifo_agent recovery_fifo_agent;
 
 
 
@@ -97,7 +96,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 
 // Identify the UVM reg adapter in the QVIP installation for the protocol agent.
 // Change the typedef below to reflect the reg adapter class type and any parameters.
-// Be sure to modify the envioronment package to import the QVIP protocol package 
+// Be sure to modify the environment package to import the QVIP protocol package
 // that contains the selected adapter.
    // Instantiate register model adapter and predictor
    typedef ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
@@ -132,8 +131,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
    axi_reg_predictor_t    axi_reg_predictor;
 
 
-  typedef uvmf_virtual_sequencer_base #(.CONFIG_T(soc_ifc_env_configuration)) soc_ifc_vsqr_t;
-  soc_ifc_vsqr_t vsqr;
+  soc_ifc_virtual_sequencer vsqr;
 
   // pragma uvmf custom class_item_additional begin
   bit can_handle_reset = 1'b1;
@@ -149,8 +147,6 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 //
   function new( string name = "", uvm_component parent = null );
     super.new( name, parent );
-    this.aaxi_vers = AAXI4;
-    this.aaxi_test_log = new("test_log");
   endfunction
 
 // ****************************************************************************
@@ -161,43 +157,23 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 // pragma uvmf custom build_phase_pre_super begin
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
-    begin: AVERY_AXI_VIP_SETUP
-        // Enable transaction recording for everything
-        uvm_config_int::set(this, "*", "recording_detail", UVM_FULL);
-        uvm_config_db #(aaxi_protocol_version)::set(uvm_root::get(), "*", "vers", aaxi_vers);
-
-        // ask the sequencer not to generate random sequence at the beginning
-        aaxi_tb = aaxi_uvm_testbench::type_id::create("aaxi_tb", this);
-        uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.master[0].sequencer.build_phase", "count", 0);
-//        uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.slave[0].sequencer.build_phase", "count", 0);
-//        `ifdef AVERY_PASSIVE_SLAVE
-//        uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.psv_slave[0].sequencer.build_phase", "count", 0);
-//        `endif
-        `ifdef AVERY_PASSIVE_MASTER
-        uvm_config_db #(int)::set(this/*null*/, "aaxi_tb.env0.psv_master[0].sequencer.build_phase", "count", 0);
-        `endif
-
-        // COMMENTED OUT in AVERY reference file, aaxi_uvm_test_base....?
-        //uvm_config_db #(aaxi_cfg_info)::set(this, "aaxi_tb.env0.master[0].driver", "cfg_info", mcfg);
-        //uvm_config_db #(aaxi_cfg_info)::set(this, "aaxi_tb.env0.slave[0].driver", "cfg_info", scfg);
-
-        //get uc
-        void'(uvm_config_db #(aaxi_uvm_container)::get(uvm_root::get(), "*", "intf_uc", aaxi_uc));
-
-        uvm_config_db #(virtual aaxi_intf)::set(this/*uvm_root::get()*/, "aaxi_tb.env0.master[0].driver", "ports", aaxi_uc.ports);
-//        uvm_config_db #(virtual aaxi_intf)::set(this/*uvm_root::get()*/, "aaxi_tb.env0.slave[0].driver", "ports", aaxi_uc.ports);
-//        `ifdef AVERY_PASSIVE_SLAVE // connect with aaxi_interconnect_intf or aaxi_intf
-//            uvm_config_db #(virtual aaxi_intf)::set(this, "aaxi_tb.env0.psv_slave[0].driver", "ports", aaxi_uc.ports);
-//        `endif
-        `ifdef AVERY_PASSIVE_MASTER // connect with aaxi_interconnect_intf or aaxi_intf
-            uvm_config_db #(virtual aaxi_intf)::set(this, "aaxi_tb.env0.psv_master[0].driver", "ports", aaxi_uc.ports);
-        `endif 
-
-        // Create a specific depth printer for printing the created topology
-        aaxi_printer = new();
-        aaxi_printer.knobs.depth = 4;
-    end: AVERY_AXI_VIP_SETUP
-
+    uvm_config_int::set(this, "*", "recording_detail", UVM_FULL);
+    uvm_config_db #(aaxi_protocol_version)::set(
+      uvm_root::get(), "*", "vers", AAXI4);
+    // Build transport topology separately from agent behavior and passive
+    // checking. This keeps Avery routing, storage services, and correctness
+    // oracles independently replaceable through the factory.
+    axi_fabric =
+      soc_ifc_axi_fabric_env::type_id::create("axi_fabric", this);
+    axi_fabric.set_config(configuration.axi_fabric_config);
+    axi_sram_agent =
+      soc_ifc_axi_sram_agent::type_id::create(
+        "axi_sram_agent", this);
+    axi_sram_agent.set_config(configuration.axi_sram_config);
+    recovery_fifo_agent =
+      soc_ifc_recovery_fifo_agent::type_id::create(
+        "recovery_fifo_agent", this);
+    recovery_fifo_agent.set_config(configuration.recovery_fifo_config);
     qvip_ahb_lite_slave_subenv = qvip_ahb_lite_slave_environment#()::type_id::create("qvip_ahb_lite_slave_subenv",this);
     qvip_ahb_lite_slave_subenv.set_config(configuration.qvip_ahb_lite_slave_subenv_config);
     soc_ifc_ctrl_agent = soc_ifc_ctrl_agent_t::type_id::create("soc_ifc_ctrl_agent",this);
@@ -232,9 +208,12 @@ class soc_ifc_environment  extends uvmf_environment_base #(
   end
 // pragma uvmf custom reg_model_build_phase end
 
-    vsqr = soc_ifc_vsqr_t::type_id::create("vsqr", this);
+    vsqr = soc_ifc_virtual_sequencer::type_id::create("vsqr", this);
     vsqr.set_config(configuration);
     configuration.set_vsqr(vsqr);
+    `uvm_info("SOC_IFC_ENV",
+      "Built protocol agents, endpoint services, predictor, scoreboard, coverage, and virtual sequencer",
+      UVM_LOW)
 
     // pragma uvmf custom build_phase begin
     // pragma uvmf custom build_phase end
@@ -250,38 +229,20 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 // pragma uvmf custom connect_phase_pre_super begin
 // pragma uvmf custom connect_phase_pre_super end
     super.connect_phase(phase);
-    begin: AVERY_AXI_CFG
-        aaxi_tb.env0.master[0].driver.cfg_info.data_bus_bytes = aaxi_pkg::AAXI_DATA_WIDTH >> 3;
-        aaxi_tb.env0.master[0].driver.cfg_info.uvm_resp = 1;    
-        aaxi_tb.env0.master[0].driver.cfg_info.total_outstanding_depth= 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.id_outstanding_depth   = 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_awuser_enable= 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_wuser_enable = 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_buser_enable = 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_aruser_enable= 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.opt_ruser_enable = 1;
-        aaxi_tb.env0.master[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
-        aaxi_tb.env0.master[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
-        `ifdef AVERY_PASSIVE_MASTER
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.data_bus_bytes = aaxi_pkg::AAXI_DATA_WIDTH >> 3;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.uvm_resp = 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.total_outstanding_depth= 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.id_outstanding_depth   = 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.passive_mode   = 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
-	    `ifdef AVERY_AXI_USER
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_awuser_enable= 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_wuser_enable = 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_buser_enable = 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_aruser_enable= 1;
-            aaxi_tb.env0.psv_master[0].driver.cfg_info.opt_ruser_enable = 1;
-	    `endif
-        `endif
-        aaxi_tb.env0.slave[0].driver.cfg_info.passive_mode     = 1'b1;
-        aaxi_tb.env0.slave[0].driver.cfg_info.base_address [0] = aaxi_addr_t'('h0000_0000_0000_0000);
-        aaxi_tb.env0.slave[0].driver.cfg_info.limit_address[0] = aaxi_addr_t'(1 << SOC_IFC_ADDR_W)-1;
-    end: AVERY_AXI_CFG
+    // Bind agent services after Avery agents have created their BFMs. The
+    // agent owns callbacks/models; the fabric only provides transport BFMs
+    // and callback registration.
+    axi_sram_agent.bind_bfm(axi_fabric.get_sram_bfm());
+    recovery_fifo_agent.bind_bfm(axi_fabric.get_recovery_bfm());
+    axi_fabric.add_sram_callback(axi_sram_agent.delay_callback);
+    axi_fabric.add_recovery_callback(recovery_fifo_agent.callback);
+    axi_fabric.add_recovery_callback(
+      recovery_fifo_agent.delay_callback);
+    // Alias agent-owned item sequencers into the virtual coordination point.
+    // Virtual sequences receive these typed handles, never agent,
+    // model, driver, or BFM handles.
+    vsqr.axi_sram_sequencer = axi_sram_agent.sequencer;
+    vsqr.recovery_fifo_sequencer = recovery_fifo_agent.sequencer;
     soc_ifc_ctrl_agent.monitored_ap.connect(soc_ifc_pred.soc_ifc_ctrl_agent_ae);
     cptra_ctrl_agent.monitored_ap.connect(soc_ifc_pred.cptra_ctrl_agent_ae);
     ss_mode_ctrl_agent.monitored_ap.connect(soc_ifc_pred.ss_mode_ctrl_agent_ae);
@@ -297,14 +258,17 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(soc_ifc_pred.ahb_slave_0_ae);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.actual_ahb_analysis_export);
-    aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect(soc_ifc_pred.axi_sub_0_ae);
-    aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect(soc_ifc_pred.axi_sub_0_ae);
-    aaxi_tb.env0.master[0].  write_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
-    aaxi_tb.env0.master[0].   read_done_export.connect(soc_ifc_sb.actual_axi_analysis_export);
+    axi_fabric.manager[0].driver.ms_tx_AW_W_port.connect(soc_ifc_pred.axi_sub_0_ae);
+    axi_fabric.manager[0].driver.ms_rx_rvalid_port.connect(soc_ifc_pred.axi_sub_0_ae);
+    axi_fabric.manager[0].driver.write_done_port.connect(soc_ifc_sb.actual_axi_analysis_export);
+    axi_fabric.manager[0].driver.read_done_port.connect(soc_ifc_sb.actual_axi_analysis_export);
     if ( configuration.qvip_ahb_lite_slave_subenv_interface_activity[0] == ACTIVE )
        uvm_config_db #(mvc_sequencer)::set(null,UVMF_SEQUENCERS,configuration.qvip_ahb_lite_slave_subenv_interface_names[0],qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer  );
     if ( configuration.axi_slave_subenv_interface_activity[0] == ACTIVE )
-       uvm_config_db #(aaxi_uvm_sequencer)::set(null,UVMF_SEQUENCERS,configuration.axi_slave_subenv_interface_names[0],aaxi_tb.env0.master[0].sequencer  );
+       uvm_config_db #(aaxi_sequencer)::set(null,UVMF_SEQUENCERS,configuration.axi_slave_subenv_interface_names[0],axi_fabric.manager[0].sequencer);
+    `uvm_info("SOC_IFC_ENV",
+      "Connected AXI endpoint services, passive checking, coverage, and virtual sequencer aliases",
+      UVM_LOW)
     // pragma uvmf custom reg_model_connect_phase begin
     /*if (TODO) */begin:connect_coverage
         soc_ifc_pred.soc_ifc_cov_ap      .connect                                   (soc_ifc_env_cov_sub.soc_ifc_ctrl_ae  );
@@ -315,10 +279,10 @@ class soc_ifc_environment  extends uvmf_environment_base #(
         ss_mode_status_agent.monitored_ap.connect                                   (soc_ifc_env_cov_sub.ss_mode_status_ae);
         mbox_sram_agent     .monitored_ap.connect                                   (soc_ifc_env_cov_sub.mbox_sram_ae     );
         qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_cov"].connect(soc_ifc_env_cov_sub.ahb_ae           );
-        aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
-        aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
-        aaxi_tb.env0.master[0].  write_done_export.connect                            (soc_ifc_env_cov_sub.axi_completed_ae );
-        aaxi_tb.env0.master[0].   read_done_export.connect                            (soc_ifc_env_cov_sub.axi_completed_ae );
+        axi_fabric.manager[0].driver.ms_tx_AW_W_port.connect                           (soc_ifc_env_cov_sub.axi_ae           );
+        axi_fabric.manager[0].driver.ms_rx_rvalid_port.connect                         (soc_ifc_env_cov_sub.axi_ae           );
+        axi_fabric.manager[0].driver.write_done_port.connect                           (soc_ifc_env_cov_sub.axi_completed_ae );
+        axi_fabric.manager[0].driver.read_done_port.connect                            (soc_ifc_env_cov_sub.axi_completed_ae );
     end:connect_coverage
     // Create register model adapter if required
     if (configuration.enable_reg_prediction ||
@@ -331,8 +295,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     // Set sequencer and adapter in register model map
     if ((configuration.enable_reg_adaptation) && (qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer != null ))
       configuration.soc_ifc_rm.soc_ifc_AHB_map.set_sequencer(qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.m_sequencer, ahb_reg_adapter);
-    if ((configuration.enable_reg_adaptation) && (aaxi_tb.env0.master[0].sequencer != null ))
-      configuration.soc_ifc_rm.soc_ifc_AXI_map.set_sequencer(aaxi_tb.env0.master[0].sequencer, axi_reg_adapter);
+    if ((configuration.enable_reg_adaptation) && (axi_fabric.manager[0].sequencer != null ))
+      configuration.soc_ifc_rm.soc_ifc_AXI_map.set_sequencer(axi_fabric.manager[0].sequencer, axi_reg_adapter);
     // Set map and adapter handles within uvm predictor
     if (configuration.enable_reg_prediction) begin
       ahb_reg_predictor.map     = configuration.soc_ifc_rm.soc_ifc_AHB_map;
@@ -382,6 +346,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 endclass
 
 // pragma uvmf custom external begin
+// Wait for reset assertion and dispatch environment reset handling.
 task soc_ifc_environment::detect_reset();
     string kind = "SOFT";
 
@@ -393,10 +358,12 @@ task soc_ifc_environment::detect_reset();
 endtask
 
 // Called by a super-environment, if present, to bubble reset responsibility up
+// Enable or disable this environment's reset-monitor process.
 function void soc_ifc_environment::set_can_handle_reset(bit en = 1'b1);
     this.can_handle_reset = en;
 endfunction
 
+// Reset agents, predictor, and scoreboard for the requested reset kind.
 task soc_ifc_environment::handle_reset(string kind = "HARD");
     uvm_object obj;
     uvm_event reset_synchro;
@@ -414,7 +381,7 @@ task soc_ifc_environment::handle_reset(string kind = "HARD");
     this.mbox_sram_agent.handle_reset(kind);
 
 //    // Reset AXI agent TODO investigating correct way to do this as of 2/4/2025
-//    this.aaxi_tb.env0.master[0].master_reset();
+//    this.axi_fabric.manager[0].driver.master_reset();
 
     // Reset scoreboard according to kind
     this.soc_ifc_sb.handle_reset(kind);
@@ -452,6 +419,7 @@ task soc_ifc_environment::handle_reset(string kind = "HARD");
     // Reset AHB
 endtask
 
+// Monitor resets when this environment owns reset handling.
 task soc_ifc_environment::run_phase(uvm_phase phase);
     if (this.can_handle_reset) begin
         fork

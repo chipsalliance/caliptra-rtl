@@ -62,6 +62,7 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src/mbox_sram_if.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/mbox_sram_pkg/src/mbox_sram_monitor_bfm.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/testbench/soc_ifc_sha_status_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/src/soc_ifc_recovery_if.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers/soc_ifc_reg_model_top_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.sv
 ---
@@ -70,7 +71,7 @@ schema_version: 2.4.0
 requires:
   - uvmf_soc_ifc_vip
   - soc_ifc_coverage
-  - caliptra_axi_sram
+  - axi_dma_coverage
 targets:
   tb:
     directories:
@@ -91,7 +92,7 @@ targets:
   sim:
     pre_exec: 'echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)" && cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .'
     # Not sure which flag controls generation of this file...
-    post_exec: 'rm ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+    post_exec: 'rm -f ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
 global:
   tool:
     vcs:
@@ -126,7 +127,10 @@ global:
         - +define+AVERY_NAMED_CONSTRUCTOR
         - +define+AVERY_AXI_USER
         - +define+AVERY_AXI_UVM+AVERY_UVM
+        - +define+AVERY_AXI_INTERCONNECT
         - +define+FOUR_OUTSTANDING
+        - +define+AAXI_INTC_MASTER_CNT=2
+        - +define+AAXI_INTC_SLAVE_CNT=3
         - +define+AAXI_MAX_DATA_WIDTH=32
         - +define+AAXI_MAX_ADDR_WIDTH=64
         - +define+AAXI_MAX_ID_WIDTH=5
@@ -175,7 +179,7 @@ targets:
       - hvl_top
   sim:
     pre_exec: 'echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)" && cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .'
-    post_exec: 'rm ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+    post_exec: 'rm -f ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
 global:
   tool:
     vcs:
@@ -206,7 +210,10 @@ global:
         - +define+AVERY_NAMED_CONSTRUCTOR
         - +define+AVERY_AXI_USER
         - +define+AVERY_AXI_UVM+AVERY_UVM
+        - +define+AVERY_AXI_INTERCONNECT
         - +define+FOUR_OUTSTANDING
+        - +define+AAXI_INTC_MASTER_CNT=2
+        - +define+AAXI_INTC_SLAVE_CNT=3
         - +define+AAXI_MAX_DATA_WIDTH=32
         - +define+AAXI_MAX_ADDR_WIDTH=64
         - +define+AAXI_MAX_ID_WIDTH=5

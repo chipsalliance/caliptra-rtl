@@ -24,6 +24,7 @@
 // via stop(), or bound it with num_accesses.
 //----------------------------------------------------------------------
 
+// Generates unauthorized SoC-AXI accesses to the firmware-only DMA registers.
 class soc_ifc_env_dma_reg_soc_access_sequence extends soc_ifc_env_dma_sequence_base;
 
   `uvm_object_utils( soc_ifc_env_dma_reg_soc_access_sequence )
@@ -33,15 +34,19 @@ class soc_ifc_env_dma_reg_soc_access_sequence extends soc_ifc_env_dma_sequence_b
 
   protected bit stop_access;
 
+  // Construct the SoC-access sequence.
   function new(string name = "" );
     super.new(name);
   endfunction
 
-  // Request the access loop to finish (used when forked as background traffic).
+  // Request the access loop to finish after its current frontdoor operation.
+  // This is cooperative termination: no sequence is killed while a RAL access
+  // owns the SoC AXI sequencer.
   virtual function void stop();
     stop_access = 1'b1;
   endfunction
 
+  // Drive accesses until the configured count is reached or stop() is called.
   virtual task body();
     uvm_reg           soc_regs[$];
     caliptra_axi_user axi_user_obj;
@@ -54,12 +59,20 @@ class soc_ifc_env_dma_reg_soc_access_sequence extends soc_ifc_env_dma_sequence_b
     if (reg_model == null)
       reg_model = configuration.soc_ifc_rm;
 
+    // Use the generated DMA AXI map so new registers automatically participate
+    // in attack traffic without maintaining a hand-authored address list.
     reg_model.axi_dma_reg_rm.axi_dma_reg_AXI_map.get_registers(soc_regs);
     axi_user_obj = new("axi_user_obj");
     stop_access  = 1'b0;
     count        = 0;
+    `uvm_info("DMA_SOC_SEQ",
+      $sformatf(
+        "Starting unauthorized SoC-AXI DMA register accesses (limit=%0d; 0 means run until stopped)",
+        num_accesses), UVM_LOW)
 
-    // Any AxUSER is rejected for the DMA block, so a raw random user suffices.
+    // Any SoC AxUSER is unauthorized for this firmware-only DMA register block.
+    // Random register, direction, user, and write data vary the rejected traffic;
+    // predictor/scoreboard and arbitration assertions provide the checks.
     while (!stop_access && (num_accesses == 0 || count < num_accesses)) begin
       sel = $urandom_range(soc_regs.size()-1, 0);
       if (!axi_user_obj.randomize())

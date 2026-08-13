@@ -34,14 +34,15 @@
 typedef soc_ifc_env_configuration soc_ifc_env_configuration_t;
 typedef soc_ifc_environment soc_ifc_environment_t;
 
+// Builds the soc_ifc environment and its bench-specific endpoint topology.
 class test_top extends uvmf_test_base #(.CONFIG_T(soc_ifc_env_configuration_t), 
                                         .ENV_T(soc_ifc_environment_t), 
                                         .TOP_LEVEL_SEQ_T(soc_ifc_bench_sequence_base));
 
   `uvm_component_utils( test_top );
 
-// This message handler can be used to redirect QVIP Memeory Model messages through
-// the UVM messaging mecahanism.  How to enable and use it is described in 
+// This message handler can redirect QVIP memory-model messages through the UVM
+// reporting mechanism. How to enable and use it is described in
 //      $UVMF_HOME/common/utility_packages/qvip_utils_pkg/src/qvip_report_catcher.svh
 qvip_memory_message_handler message_handler;
 
@@ -70,33 +71,139 @@ uvmf_active_passive_t interface_activities[] = {
     ACTIVE /* mbox_sram_agent     [8] */   };
 
   // pragma uvmf custom class_item_additional begin
-  // Create/configure the DMA AXI SRAM backdoor from the bench parameter package.
-  // Keeps the env package independent of soc_ifc_parameters_pkg.
-  virtual function void build_dma_axi_sram_backdoor();
-    soc_ifc_mem_backdoor bkdr;
-    // Install the bench default without replacing a backend override selected by
-    // a derived test.
-    soc_ifc_mem_backdoor::type_id::set_type_override(
-      soc_ifc_caliptra_sram_backdoor::get_type(), 1'b0);
-    bkdr = soc_ifc_mem_backdoor::type_id::create("dma_axi_sram_backdoor");
-    bkdr.configure(.path  (DMA_AXI_SRAM_HDL_PATH),
-                   .base  (DMA_AXI_SRAM_BASE_ADDR),
-                   .size  (DMA_AXI_SRAM_SIZE_BYTES),
-                   .wbytes(DMA_AXI_SRAM_WORD_BYTES));
-    configuration.dma_axi_sram_backdoor = bkdr;
+  // Parse either one fixed-delay plusarg or a complete MIN/MAX pair. Reject
+  // ambiguous combinations so every endpoint starts with one deterministic
+  // delay policy before components are built.
+  virtual function void parse_response_delay(
+      input string prefix,
+      input int unsigned default_min,
+      input int unsigned default_max,
+      output int unsigned delay_min,
+      output int unsigned delay_max);
+    int unsigned fixed_delay;
+    bit has_fixed_delay;
+    bit has_min_delay;
+    bit has_max_delay;
+    string fixed_arg;
+    string min_arg;
+    string max_arg;
+
+    delay_min = default_min;
+    delay_max = default_max;
+    fixed_arg = {prefix, "=%d"};
+    min_arg = {prefix, "_MIN=%d"};
+    max_arg = {prefix, "_MAX=%d"};
+    has_fixed_delay = $value$plusargs(
+      fixed_arg, fixed_delay);
+    has_min_delay = $value$plusargs(
+      min_arg, delay_min);
+    has_max_delay = $value$plusargs(
+      max_arg, delay_max);
+    if (has_fixed_delay && (has_min_delay || has_max_delay))
+      `uvm_fatal("AXI_FABRIC_CFG",
+        $sformatf("%s cannot be combined with %s_MIN or %s_MAX",
+                  prefix, prefix, prefix))
+    if (has_min_delay != has_max_delay)
+      `uvm_fatal("AXI_FABRIC_CFG",
+        $sformatf("%s_MIN and %s_MAX must be specified together",
+                  prefix, prefix))
+    if (has_fixed_delay) begin
+      delay_min = fixed_delay;
+      delay_max = fixed_delay;
+    end
+    if (delay_min > delay_max)
+      `uvm_fatal("AXI_FABRIC_CFG",
+        $sformatf("%s minimum %0d exceeds maximum %0d",
+                  prefix, delay_min, delay_max))
   endfunction
 
-  virtual function void start_of_simulation_phase(uvm_phase phase);
-    super.start_of_simulation_phase(phase);
-    // Fail fast on an SRAM path/geometry mismatch before stimulus.
-    if (configuration.dma_axi_sram_backdoor != null)
-      configuration.dma_axi_sram_backdoor.validate_path();
+  // Convert bench parameters and plusargs into declarative endpoint configs.
+  // This is the only layer that depends on bench parameter names; reusable
+  // environment components consume typed configuration objects.
+  virtual function void build_endpoint_configurations();
+    virtual soc_ifc_recovery_if recovery_vif;
+    int unsigned sram_b_delay_min;
+    int unsigned sram_b_delay_max;
+    int unsigned sram_r_delay_min;
+    int unsigned sram_r_delay_max;
+    int unsigned recovery_r_delay_min;
+    int unsigned recovery_r_delay_max;
+    int unsigned recovery_refill_delay_min;
+    int unsigned recovery_refill_delay_max;
+    int unsigned recovery_fifo_depth_dwords;
+
+    parse_response_delay(
+      "AXI_SRAM_B_DELAY",
+      AXI_SRAM_B_DELAY_MIN_DEFAULT,
+      AXI_SRAM_B_DELAY_MAX_DEFAULT,
+      sram_b_delay_min, sram_b_delay_max);
+    parse_response_delay(
+      "AXI_SRAM_R_DELAY",
+      AXI_SRAM_R_DELAY_MIN_DEFAULT,
+      AXI_SRAM_R_DELAY_MAX_DEFAULT,
+      sram_r_delay_min, sram_r_delay_max);
+    parse_response_delay(
+      "AXI_RECOVERY_R_DELAY",
+      AXI_RECOVERY_R_DELAY_MIN_DEFAULT,
+      AXI_RECOVERY_R_DELAY_MAX_DEFAULT,
+      recovery_r_delay_min, recovery_r_delay_max);
+    parse_response_delay(
+      "AXI_RECOVERY_FIFO_REFILL_DELAY",
+      AXI_RECOVERY_FIFO_REFILL_DELAY_MIN_DEFAULT,
+      AXI_RECOVERY_FIFO_REFILL_DELAY_MAX_DEFAULT,
+      recovery_refill_delay_min,
+      recovery_refill_delay_max);
+    recovery_fifo_depth_dwords =
+      AXI_RECOVERY_FIFO_DEPTH_DWORDS_DEFAULT;
+    void'($value$plusargs(
+      "AXI_RECOVERY_FIFO_DEPTH_DWORDS=%d",
+      recovery_fifo_depth_dwords));
+
+    configuration.axi_sram_config.configure(
+      AXI_SRAM_BASE_ADDR,
+      AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES - 1,
+      AXI_SRAM_WORD_BYTES,
+      sram_b_delay_min, sram_b_delay_max,
+      sram_r_delay_min, sram_r_delay_max);
+
+    if (!uvm_config_db #(virtual soc_ifc_recovery_if)::get(
+          null, UVMF_VIRTUAL_INTERFACES,
+          soc_ifc_env_pkg::SOC_IFC_RECOVERY_VIF, recovery_vif))
+      `uvm_fatal("RECOVERY_FIFO_CFG",
+        "Unable to retrieve recovery FIFO virtual interface")
+    configuration.recovery_fifo_config.configure(
+      recovery_vif,
+      AXI_RECOVERY_FIFO_ADDR,
+      recovery_fifo_depth_dwords,
+      recovery_r_delay_min,
+      recovery_r_delay_max,
+      recovery_refill_delay_min,
+      recovery_refill_delay_max);
   endfunction
+
+  // Describe topology and address ownership before the environment is built.
+  // The fabric component later validates these windows against compile-time
+  // Avery port counts and ID widths.
+  virtual function void build_axi_fabric_configuration();
+    configuration.axi_fabric_config.configure(
+      .soc_manager_vif_name    (AXI_FABRIC_SOC_MANAGER_VIF),
+      .dma_manager_vif_name    (AXI_FABRIC_DMA_MANAGER_VIF),
+      .caliptra_subordinate_vif_name(AXI_FABRIC_CALIPTRA_SUBORDINATE_VIF),
+      .sram_subordinate_vif_name(AXI_FABRIC_SRAM_SUBORDINATE_VIF),
+      .recovery_subordinate_vif_name(AXI_FABRIC_RECOVERY_SUBORDINATE_VIF),
+      .interconnect_vif_name   (AXI_FABRIC_INTERCONNECT_VIF),
+      .caliptra_base_addr      (64'h0),
+      .caliptra_limit_addr     ((64'(1) << soc_ifc_pkg::SOC_IFC_ADDR_W) - 1),
+      .sram_config             (configuration.axi_sram_config),
+      .recovery_config         (configuration.recovery_fifo_config),
+      .outstanding_depth       (AXI_FABRIC_OUTSTANDING_DEPTH));
+  endfunction
+
   // pragma uvmf custom class_item_additional end
 
   // ****************************************************************************
   // FUNCTION: new()
-  // This is the standard systemVerilog constructor.  All components are 
+  // This is the standard SystemVerilog constructor. All components are
   // constructed in the build_phase to allow factory overriding.
   //
   function new( string name = "", uvm_component parent = null );
@@ -108,7 +215,7 @@ uvmf_active_passive_t interface_activities[] = {
   // ****************************************************************************
   // FUNCTION: build_phase()
   // The construction of the configuration and environment classes is done in
-  // the build_phase of uvmf_test_base.  Once the configuraton and environment
+  // the build_phase of uvmf_test_base. Once the configuration and environment
   // classes are built then the initialize call is made to perform the
   // following: 
   //     Monitor and driver BFM virtual interface handle passing into agents
@@ -121,7 +228,16 @@ uvmf_active_passive_t interface_activities[] = {
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
     // pragma uvmf custom configuration_settings_post_randomize begin
-    build_dma_axi_sram_backdoor();
+    build_endpoint_configurations();
+    build_axi_fabric_configuration();
+    `uvm_info("SOC_IFC_TEST_CFG",
+      $sformatf(
+        "Configured AXI SRAM [0x%0h:0x%0h], recovery FIFO address 0x%0h depth %0d DWORDs, fabric outstanding depth %0d",
+        configuration.axi_sram_config.base_addr,
+        configuration.axi_sram_config.limit_addr,
+        configuration.recovery_fifo_config.fifo_data_addr,
+        configuration.recovery_fifo_config.depth_dwords,
+        configuration.axi_fabric_config.outstanding_depth), UVM_LOW)
     // pragma uvmf custom configuration_settings_post_randomize end
     configuration.initialize(NA, "uvm_test_top.environment", interface_names, null, interface_activities);
   endfunction

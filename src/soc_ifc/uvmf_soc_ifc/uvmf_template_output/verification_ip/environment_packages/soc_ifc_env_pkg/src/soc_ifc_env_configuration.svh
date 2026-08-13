@@ -74,8 +74,11 @@ extends uvmf_environment_configuration_base;
     string                                   axi_slave_subenv_interface_names[];
     uvmf_active_passive_t                    axi_slave_subenv_interface_activity[];
 
-  typedef uvmf_virtual_sequencer_base #(.CONFIG_T(soc_ifc_env_configuration)) soc_ifc_vsqr_t;
-  soc_ifc_vsqr_t vsqr;
+  // UVMF launch bridge only. The environment factory-creates and owns this
+  // component; configuration merely mirrors the same class handle because
+  // generated soc_ifc_bench_sequence_base starts its environment sequence with
+  // top_configuration.vsqr. Custom sequences use their active m_sequencer.
+  soc_ifc_virtual_sequencer vsqr;
 
   // pragma uvmf custom class_item_additional begin
   // -------------------------------------------------------------------------
@@ -96,8 +99,10 @@ extends uvmf_environment_configuration_base;
   bit enable_sha_iccm_unlock;
   virtual soc_ifc_sha_status_if sha_status_vif;
 
-  // DMA AXI SRAM backdoor (factory-swappable). Configured by test_top.
-  soc_ifc_mem_backdoor dma_axi_sram_backdoor;
+  // Runtime components remain environment-owned; only policies live here.
+  soc_ifc_axi_sram_config axi_sram_config;
+  soc_ifc_axi_fabric_config axi_fabric_config;
+  soc_ifc_recovery_fifo_config recovery_fifo_config;
   // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************
@@ -118,6 +123,11 @@ extends uvmf_environment_configuration_base;
     mbox_sram_agent_config = mbox_sram_agent_config_t::type_id::create("mbox_sram_agent_config");
 
     qvip_ahb_lite_slave_subenv_config = qvip_ahb_lite_slave_env_configuration::type_id::create("qvip_ahb_lite_slave_subenv_config");
+    axi_sram_config =
+      soc_ifc_axi_sram_config::type_id::create("axi_sram_config");
+    axi_fabric_config = soc_ifc_axi_fabric_config::type_id::create("axi_fabric_config");
+    recovery_fifo_config =
+      soc_ifc_recovery_fifo_config::type_id::create("recovery_fifo_config");
 
     soc_ifc_configuration_cg=new;
     `uvm_info("COVERAGE_MODEL_REVIEW", "TODO!!!!!!!!! A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this message after the covergroup has been reviewed.", UVM_NONE)
@@ -132,7 +142,7 @@ extends uvmf_environment_configuration_base;
 // ****************************************************************************
 // FUNCTION : set_vsqr()
 // This function is used to assign the vsqr handle.
-  virtual function void set_vsqr( soc_ifc_vsqr_t vsqr);
+  virtual function void set_vsqr(soc_ifc_virtual_sequencer vsqr);
      this.vsqr = vsqr;
   endfunction : set_vsqr
 

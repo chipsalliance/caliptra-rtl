@@ -251,11 +251,15 @@ import kv_defines_pkg::*;
     logic recovery_data_avail_d, recovery_data_avail_p; // Edge detection
     `endif
     logic [3:0] wr_resp_pending; // Counts up to 15 pending Write responses.
-                                 // Once this counter saturates, we stall new requests
-                                 // until further responses arrive.
+                                 // Once this counter saturates, new write requests
+                                 // are stalled (w_req_if.valid deasserted) until a
+                                 // response arrives and decrements the counter.
                                  // This is an artificially imposed limit, intended
                                  // to allow a subordinate to have some delay in sending
                                  // write responses without ever throttling this DMA.
+                                 // A response coincident with saturation is not
+                                 // bypassed, so a request may resume only on the
+                                 // following cycle (one-cycle release bubble).
 
     logic [DW-1:0] r_data_mask;
 
@@ -773,7 +777,11 @@ import kv_defines_pkg::*;
         r_req_if.fixed    = hwif_out.ctrl.rd_fixed.value;
         r_req_if.lock     = 1'b0;
 
-        w_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !wr_req_hshake_bypass && (wr_bytes_requested < hwif_out.byte_count.count.value) && ((AXI_LEN_BC_WIDTH-BW)'(wr_credits) >= wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
+        // Suppress new write requests while the response counter is saturated to
+        // prevent wr_resp_pending overflow. A B response arriving on the same
+        // cycle is not bypassed, so requests resume no earlier than the next
+        // cycle (intentional one-cycle release bubble).
+        w_req_if.valid    = (ctrl_fsm_ps == DMA_WAIT_DATA) && !wr_req_hshake_bypass && (wr_bytes_requested < hwif_out.byte_count.count.value) && ((AXI_LEN_BC_WIDTH-BW)'(wr_credits) >= wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]) && !(&wr_resp_pending);
         w_req_if.addr     = dst_addr + (hwif_out.ctrl.wr_fixed.value ? 0 : wr_bytes_requested);
         w_req_if.byte_len = wr_req_byte_count - AXI_LEN_BC_WIDTH'(BC);
         w_req_if.fixed    = hwif_out.ctrl.wr_fixed.value;
@@ -1481,6 +1489,24 @@ import kv_defines_pkg::*;
     // Requests must not cross AXI boundary (4KiB)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_RD_REQ_BND, rd_req_hshake && !r_req_if.fixed |-> r_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((r_req_if.addr + r_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_VLD_WR_REQ_BND, wr_req_hshake && !w_req_if.fixed |-> w_req_if.addr[AW-1:AXI_LEN_BC_WIDTH] == ((w_req_if.addr + w_req_if.byte_len) >> AXI_LEN_BC_WIDTH), clk, !rst_n)
+    // Pending write responses count accepted controller requests minus returned B responses.
+    `CALIPTRA_ASSERT_NEVER(AXI_DMA_OFL_WR_RESP,
+        (&wr_resp_pending) && ({w_req_if.resp_valid, wr_req_hshake} == 2'b01),
+        clk, !rst_n)
+    `CALIPTRA_ASSERT_NEVER(AXI_DMA_WR_RESP_PENDING_WHILE_IDLE_OR_DONE,
+        (ctrl_fsm_ps inside {DMA_IDLE, DMA_DONE}) && (wr_resp_pending != '0),
+        clk, !rst_n)
+    `CALIPTRA_ASSERT_NEVER(AXI_DMA_UFL_WR_RESP,
+        (wr_resp_pending == '0) &&
+        ({w_req_if.resp_valid, wr_req_hshake} == 2'b10),
+        clk, !rst_n)
+    // Saturation must deassert the write request, guaranteeing no overflow.
+    `CALIPTRA_ASSERT(AXI_DMA_SAT_STALL_WR_REQ, (&wr_resp_pending) |-> !w_req_if.valid, clk, !rst_n)
+    // Coverage: reach saturation, accept a response while saturated, and resume
+    // a request after the counter drops out of saturation.
+    `CALIPTRA_COVER(AXI_DMA_WR_RESP_SATURATED, (&wr_resp_pending), clk, !rst_n)
+    `CALIPTRA_COVER(AXI_DMA_WR_RESP_RELEASE, (&wr_resp_pending) && w_req_if.resp_valid, clk, !rst_n)
+    `CALIPTRA_COVER(AXI_DMA_WR_RESP_RESUME, $fell(&wr_resp_pending) ##[1:$] wr_req_hshake, clk, !rst_n)
     // Proper configuration
     `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_32, DW == 32)
     `CALIPTRA_ASSERT_INIT(AXI_DMA_DW_EQ_MB, DW == CPTRA_MBOX_DATA_W)
