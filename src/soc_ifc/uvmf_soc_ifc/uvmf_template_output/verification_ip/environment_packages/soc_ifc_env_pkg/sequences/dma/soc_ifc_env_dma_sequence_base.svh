@@ -35,6 +35,9 @@ class soc_ifc_env_dma_sequence_base
   // Running count of transfers issued, used for log/error context.
   protected int unsigned transfer_id;
 
+  // Mode of the transfer currently using the shared polling helpers.
+  protected dma_transfer_mode_e active_transfer_mode;
+
   // Runtime coordination point used to reach agent-owned item sequencers
   // without storing component handles in configuration.
   protected soc_ifc_virtual_sequencer active_vsqr;
@@ -178,6 +181,33 @@ class soc_ifc_env_dma_sequence_base
                       ((1 << reg_model.axi_dma_reg_rm.status0.fifo_depth.get_n_bits()) - 1));
   endtask
 
+  // Select a bounded checkpoint interval for a status-poll budget.
+  protected function int unsigned dma_poll_progress_interval(
+      input int unsigned max_polls);
+    if (max_polls == 0)
+      return 10000;
+    return ((max_polls / 50) + ((max_polls % 50) != 0));
+  endfunction
+
+  // Report ten coarse milestones for long word-processing loops.
+  protected function void dma_report_word_progress(
+      input string operation,
+      input int unsigned completed_words,
+      input int unsigned total_words);
+    int unsigned interval;
+
+    if (total_words < 100)
+      return;
+    interval = (total_words + 9) / 10;
+    if ((completed_words < total_words) &&
+        ((completed_words % interval) == 0))
+      `uvm_info("DMA_XFER_PROGRESS",
+        $sformatf(
+          "Transfer %0d mode=%s: %s progress %0d/%0d words; continuing",
+          transfer_id, active_transfer_mode.name(), operation,
+          completed_words, total_words), UVM_LOW)
+  endfunction
+
   // Derive a conservative status-poll budget from transfer size and the live
   // endpoint delay policies. The safety factor covers AXI handshakes, AHB
   // polling overhead, and route-specific control latency.
@@ -247,10 +277,24 @@ class soc_ifc_env_dma_sequence_base
     bit busy;
     int unsigned fd;
     int unsigned poll_count;
+    int unsigned progress_interval;
     poll_count = 0;
+    progress_interval = dma_poll_progress_interval(max_polls);
+    `uvm_info("DMA_XFER_PROGRESS",
+      $sformatf(
+        "Transfer %0d mode=%s: entering DMA idle wait with max_status_polls=%0d",
+        transfer_id, active_transfer_mode.name(), max_polls), UVM_LOW)
     do begin
       dma_read_status(busy, err, fd);
       poll_count++;
+      if (busy &&
+          !err &&
+          ((poll_count % progress_interval) == 0))
+        `uvm_info("DMA_XFER_PROGRESS",
+          $sformatf(
+            "Transfer %0d mode=%s: DMA still busy after %0d/%0d status polls (fifo_depth=%0d)",
+            transfer_id, active_transfer_mode.name(), poll_count, max_polls,
+            fd), UVM_LOW)
       if (busy &&
           !err &&
           max_polls != 0 &&
@@ -260,6 +304,11 @@ class soc_ifc_env_dma_sequence_base
             "DMA transfer %0d remained busy after %0d status polls (fifo_depth=%0d)",
             transfer_id, poll_count, fd))
     end while (busy && !err);
+    `uvm_info("DMA_XFER_PROGRESS",
+      $sformatf(
+        "Transfer %0d mode=%s: DMA idle wait exited after %0d status polls (busy=%0b error=%0b fifo_depth=%0d)",
+        transfer_id, active_transfer_mode.name(), poll_count, busy, err, fd),
+      UVM_LOW)
     // Detection only; callers are the contextual error reporter.
   endtask
 
@@ -374,6 +423,7 @@ class soc_ifc_env_dma_sequence_base
     byte_count = num_words * 4;
     max_polls = dma_transfer_max_polls(item);
     transfer_id++;
+    active_transfer_mode = item.transfer_mode;
     mismatch_count = 0;
 
     `uvm_info("DMA_XFER_SEQ",
@@ -394,8 +444,10 @@ class soc_ifc_env_dma_sequence_base
           $sformatf(
             "Transfer %0d: preloading %0d source SRAM words",
             transfer_id, num_words), UVM_LOW)
-        for (int w = 0; w < num_words; w++)
+        for (int w = 0; w < num_words; w++) begin
           axi_sram_write32(item.src_offset + (w*4), item.payload[w]);
+          dma_report_word_progress("source SRAM preload", w + 1, num_words);
+        end
         `uvm_info("DMA_XFER_SEQ",
           $sformatf(
             "Transfer %0d: source preload complete; arming AXI-to-AXI DMA and polling status0",
@@ -424,6 +476,8 @@ class soc_ifc_env_dma_sequence_base
             end
             mismatch_count++;
           end
+          dma_report_word_progress(
+            "destination SRAM readback", w + 1, num_words);
         end
         if (mismatch_count != 0)
           `uvm_error("DMA_XFER_SEQ",
