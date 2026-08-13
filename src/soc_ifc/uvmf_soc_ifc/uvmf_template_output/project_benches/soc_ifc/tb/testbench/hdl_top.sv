@@ -489,21 +489,6 @@ import pv_defines_pkg::*;
     );
 `endif
 
-    // AXI subordinate memory on the DMA AXI manager port. Geometry is owned by
-    // soc_ifc_parameters_pkg; axi_sub aliases the DMA's wide address into the AW
-    // window.
-    caliptra_axi_sram #(
-        .AW(DMA_AXI_SRAM_ADDR_WIDTH   ),
-        .DW(CPTRA_AXI_DMA_DATA_WIDTH  ),
-        .IW(CPTRA_AXI_DMA_ID_WIDTH    ),
-        .UW(CPTRA_AXI_DMA_USER_WIDTH  )
-    ) i_dma_axi_sram (
-        .clk       (clk                              ),
-        .rst_n     (soc_ifc_ctrl_agent_bus.cptra_rst_b),
-        .s_axi_w_if(m_axi_if.w_sub                   ),
-        .s_axi_r_if(m_axi_if.r_sub                   )
->>>>>>> 15e65a380e0bfe935a39d9592607368e521852ff
-    );
 
 `ifdef CALIPTRA_MODE_SUBSYSTEM
     // -----------------------------------------------------------------------

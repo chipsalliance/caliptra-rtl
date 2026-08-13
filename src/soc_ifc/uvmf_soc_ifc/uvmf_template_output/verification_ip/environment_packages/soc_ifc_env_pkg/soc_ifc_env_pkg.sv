@@ -362,6 +362,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_dma_sequence_base soc_ifc_env_dma_sequence_base_t;
   `include "sequences/dma/soc_ifc_env_dma_reg_soc_access_sequence.svh"
   typedef soc_ifc_env_dma_reg_soc_access_sequence soc_ifc_env_dma_reg_soc_access_sequence_t;
+  `include "sequences/dma/soc_ifc_env_dma_wr_fifo_directed_sequence.svh"
+  typedef soc_ifc_env_dma_wr_fifo_directed_sequence soc_ifc_env_dma_wr_fifo_directed_sequence_t;
   `include "sequences/dma/soc_ifc_env_dma_transfer_stress_sequence.svh"
   typedef soc_ifc_env_dma_transfer_stress_sequence soc_ifc_env_dma_transfer_stress_sequence_t;
   `include "sequences/dma/soc_ifc_env_dma_long_transfer_sequence.svh"

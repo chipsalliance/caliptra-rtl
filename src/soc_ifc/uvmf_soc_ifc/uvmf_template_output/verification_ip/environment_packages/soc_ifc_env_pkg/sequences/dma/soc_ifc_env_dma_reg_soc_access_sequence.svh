@@ -32,6 +32,9 @@ class soc_ifc_env_dma_reg_soc_access_sequence extends soc_ifc_env_dma_sequence_b
   // 0 = run until stop() is called; otherwise stop after this many accesses.
   int unsigned num_accesses = 0;
 
+  // Complete read and write accesses to every register before honoring stop().
+  bit exhaustive = 1'b0;
+
   protected bit stop_access;
 
   // Construct the SoC-access sequence.
@@ -70,22 +73,53 @@ class soc_ifc_env_dma_reg_soc_access_sequence extends soc_ifc_env_dma_sequence_b
         "Starting unauthorized SoC-AXI DMA register accesses (limit=%0d; 0 means run until stopped)",
         num_accesses), UVM_LOW)
 
-    // Any SoC AxUSER is unauthorized for this firmware-only DMA register block.
-    // Random register, direction, user, and write data vary the rejected traffic;
-    // predictor/scoreboard and arbitration assertions provide the checks.
-    while (!stop_access && (num_accesses == 0 || count < num_accesses)) begin
-      sel = $urandom_range(soc_regs.size()-1, 0);
-      if (!axi_user_obj.randomize())
-        `uvm_fatal("DMA_SOC_SEQ", "Failed to randomize AxUSER")
-      if ($urandom_range(1,0)) begin
-        soc_regs[sel].read(sts, rdata, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+    if (soc_regs.size() == 0)
+      `uvm_fatal("DMA_SOC_SEQ", "DMA AXI register map contains no registers")
+
+    if (exhaustive) begin
+      // A pass is indivisible so stop() cannot leave a register or direction
+      // uncovered.
+      do begin
+        foreach (soc_regs[i]) begin
+          if (!axi_user_obj.randomize())
+            `uvm_fatal("DMA_SOC_SEQ", "Failed to randomize read AxUSER")
+          soc_regs[i].read(sts, rdata, UVM_FRONTDOOR,
+                           reg_model.soc_ifc_AXI_map, this,
+                           .extension(axi_user_obj));
+          count++;
+
+          if (!axi_user_obj.randomize())
+            `uvm_fatal("DMA_SOC_SEQ", "Failed to randomize write AxUSER")
+          if (!std::randomize(wdata))
+            `uvm_fatal("DMA_SOC_SEQ", "Failed to randomize write data")
+          soc_regs[i].write(sts, wdata, UVM_FRONTDOOR,
+                            reg_model.soc_ifc_AXI_map, this,
+                            .extension(axi_user_obj));
+          count++;
+        end
+      end while (!stop_access &&
+                 (num_accesses == 0 || count < num_accesses));
+    end
+    else begin
+      while (!stop_access &&
+             (num_accesses == 0 || count < num_accesses)) begin
+        sel = $urandom_range(soc_regs.size()-1, 0);
+        if (!axi_user_obj.randomize())
+          `uvm_fatal("DMA_SOC_SEQ", "Failed to randomize AxUSER")
+        if ($urandom_range(1,0)) begin
+          soc_regs[sel].read(sts, rdata, UVM_FRONTDOOR,
+                             reg_model.soc_ifc_AXI_map, this,
+                             .extension(axi_user_obj));
+        end
+        else begin
+          if (!std::randomize(wdata))
+            `uvm_fatal("DMA_SOC_SEQ", "Failed to randomize write data")
+          soc_regs[sel].write(sts, wdata, UVM_FRONTDOOR,
+                              reg_model.soc_ifc_AXI_map, this,
+                              .extension(axi_user_obj));
+        end
+        count++;
       end
-      else begin
-        if (!std::randomize(wdata))
-          `uvm_fatal("DMA_SOC_SEQ", "Failed to randomize write data")
-        soc_regs[sel].write(sts, wdata, UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
-      end
-      count++;
     end
 
     `uvm_info("DMA_SOC_SEQ", $sformatf("Completed %0d SoC-AXI DMA register accesses (all expected rejected)", count), UVM_LOW)
