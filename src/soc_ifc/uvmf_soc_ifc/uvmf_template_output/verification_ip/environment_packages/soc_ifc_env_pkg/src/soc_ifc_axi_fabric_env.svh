@@ -155,7 +155,7 @@ class soc_ifc_axi_fabric_env extends uvm_env;
       subordinate_config[i] = aaxi_vip_config::type_id::create(
         $sformatf("subordinate_config[%0d]", i));
       configure_common(subordinate_config[i], subordinate_vif[i], i,
-                       0,
+                       aaxi_pkg::AAXI_INTC_ID_WIDTH,
                        (i != configuration.caliptra_subordinate_idx));
       subordinate_config[i].set_config_int(
         "agent_type", AAXI_SLAVE_TO_INTERCONNECT);
@@ -220,7 +220,7 @@ class soc_ifc_axi_fabric_env extends uvm_env;
     end
     foreach (interconnect_config.slave_cfg[i]) begin
       configure_common(interconnect_config.slave_cfg[i], subordinate_vif[i], i,
-                       0, 1'b1);
+                       aaxi_pkg::AAXI_INTC_ID_WIDTH, 1'b1);
       interconnect_config.slave_cfg[i].set_config_int(
         "agent_type", AAXI_INTERCONNECT_SLAVE_PORT);
       field_name =
