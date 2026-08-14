@@ -137,6 +137,11 @@ typedef enum logic [AES_KEYLEN_WIDTH-1:0] {
   AES_256 = 3'b100
 } key_len_e;
 
+// KV key-length-mismatch check
+localparam int AES128_KV_LAST_DWORD = (128/32) - 1; // 3
+localparam int AES192_KV_LAST_DWORD = (192/32) - 1; // 5
+localparam int AES256_KV_LAST_DWORD = (256/32) - 1; // 7
+
 // SEC_CM: MAIN.CONFIG.SPARSE
 typedef enum logic [AES_PRNGRESEEDRATE_WIDTH-1:0] {
   PER_1  = 3'b001,
@@ -761,6 +766,7 @@ typedef struct packed {
     logic                        kv_data_out_valid;
     logic                        kv_key_in_use;
     logic                        aes_operation_is_ecb_decrypt;
+    key_len_e                    key_len;
 } aes2caliptra_t;
 
 /* ---------------------- END CALIPTRA definitions ------------------------ */

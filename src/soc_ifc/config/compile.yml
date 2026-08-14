@@ -4,6 +4,7 @@ schema_version: 2.4.0
 requires:
   - caliptra_top_defines
   - caliptra_top_reg_defines
+  - caliptra_prim_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -71,6 +72,7 @@ targets:
       - $COMPILE_ROOT/rtl/soc_ifc_reg.sv
       - $COMPILE_ROOT/rtl/mbox.sv
       - $COMPILE_ROOT/rtl/mbox_csr.sv
+      - $COMPILE_ROOT/rtl/sha512_acc_iccm_hash.sv
       - $COMPILE_ROOT/rtl/sha512_acc_top.sv
       - $COMPILE_ROOT/rtl/sha512_acc_csr.sv
       - $COMPILE_ROOT/rtl/wdt.sv

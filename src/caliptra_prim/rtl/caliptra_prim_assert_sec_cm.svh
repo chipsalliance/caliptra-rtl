@@ -7,6 +7,13 @@
 `ifndef CALIPTRA_PRIM_ASSERT_SEC_CM_SVH
 `define CALIPTRA_PRIM_ASSERT_SEC_CM_SVH
 
+// This fragment references shared macros (CALIPTRA_ASSERT,
+// CALIPTRA_ASSERT_DEFAULT_CLK/RST, CALIPTRA_ASSUME_FPV) that are defined by
+// caliptra_prim_assert.sv. Include it so the fragment is self-contained for
+// standalone lint; the top guard in caliptra_prim_assert.sv makes this a no-op
+// when the fragment is pulled in via that header.
+`include "caliptra_prim_assert.sv"
+
 `define _CALIPTRA_SEC_CM_ALERT_MAX_CYC 30
 
 // When a named error signal rises, expect to see an associated error in at most MAX_CYCLES_ cycles.

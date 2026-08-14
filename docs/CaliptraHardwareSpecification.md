@@ -267,11 +267,21 @@ The RISC-V processor is able to access the SoC mailbox SRAM using a direct acces
 
 ## Security state
 
-Caliptra uses the MSB of the security state input to determine whether or not Caliptra is in debug mode.
+The security state input is a packed value encoded as `{debug_locked[3:0], device_lifecycle[1:0]}`. Caliptra uses the `debug_locked` field to determine whether or not Caliptra is in debug mode.
 
-When Caliptra is in debug mode:
+To harden this security-critical decision against fault-injection (glitch) attacks, `debug_locked` is a multi-bit (MuBi4) encoded value rather than a single bit:
 
-* Security state MSB is set to 0.
+* `debug_locked` = `4'h6` (MuBi4True) &rarr; debug is **locked** (secure).
+* `debug_locked` = `4'h9` (MuBi4False) &rarr; debug is **unlocked** (debug mode).
+
+The two legal encodings are bitwise complements, so a single- or multi-bit glitch is unlikely to convert one legal value into the other. Caliptra evaluates the field with a fail-secure policy:
+
+* The "debug unlocked" decision uses a *strict* test: only the exact `4'h9` encoding unlocks debug. Any other value (including any invalid encoding) leaves debug locked.
+* The "debug locked" decision uses a *loose* test: `4'h6` and any invalid encoding are all treated as locked.
+
+Consequently, any value other than the two legal MuBi4 encodings resolves to debug **locked**. Integrators must drive one of the two legal MuBi4 values on the external `security_state` strap; see the Caliptra Integration Specification for the strap layout.
+
+When Caliptra is in debug mode (`debug_locked` = MuBi4False):
 
 * Caliptra JTAG is opened for the microcontroller and HW debug.
 
@@ -440,8 +450,11 @@ These are the top level signals defined in caliptra\_top.
 
 | Name        | Input or output | Description                                                                                             |
 | :---------- | :-------------- | :------------ |
-| itrng_data  | input           | Physical true random noise source data                                                                  |
-| itrng_valid | input           | Valid is asserted high for one cycle when data is valid. The expected valid output rate is about 50KHz. |
+| itrng0_data  | input           | Primary physical true random noise source (ES0) data. |
+| itrng0_valid | input           | Primary source valid, asserted high for one cycle when data is valid. The expected valid output rate is about 50KHz. |
+| itrng1_data  | input           | Secondary physical true random noise source (ES1) data, used only when the dual iTRNG entropy combiner is enabled; tie to 0 if unused. |
+| itrng1_valid | input           | Secondary source valid, asserted high for one cycle when data is valid. Used only in dual-iTRNG mode; tie to 0 if unused. |
+| itrng1_en    | input           | Dual iTRNG enable strap: enables the secondary entropy source (ES1) and the SHA3-384 entropy combiner. Tie to 0 for a single iTRNG. See [Dual iTRNG entropy combiner](#dual-itrng-entropy-combiner). |
 
 The following figure shows the top level signals defined in caliptra\_top.
 
@@ -590,6 +603,74 @@ count tests:
 The methodology used for calculating the repetition count threshold in the
 ROM boot phase can be directly applied for this test as well. The threshold is
 applied on a per-noise-source basis.
+
+
+## Dual iTRNG entropy combiner
+
+Some integrations require a **second physical noise source** — for example, a
+secondary noise-generation technology deployed alongside the primary one. To
+support this, Caliptra can instantiate a **second `entropy_src` (ES1)** next to
+the primary source (`ES0`) while still feeding a **single CSRNG**. A dedicated
+**SHA3-384 entropy combiner** sits between the two entropy sources and the CSRNG
+and merges their conditioned outputs. This feature is only available when the
+integrated TRNG is instantiated (`CALIPTRA_INTERNAL_TRNG`) and, per the interface
+rules, is only enabled in Subsystem mode.
+The following figure shows the dual iTRNG entropy combiner block.
+
+*Figure: Dual iTRNG entropy combiner block*
+
+![](./images/dual_entropy.png)
+
+The combiner presents a single `entropy_src_hw_if` interface to CSRNG
+and drives one such interface to each of ES0 and ES1. It operates in one of two
+modes, selected by `CPTRA_HW_CONFIG.dual_iTRNG_en`:
+
+* **Bypass mode (`dual_iTRNG_en == 0`, default):** the combiner is transparent.
+  A CSRNG entropy request is forwarded to ES0 and ES0's response is returned
+  unchanged; ES1 is never requested. This is functionally identical to the
+  single-iTRNG datapath, so the default behavior of existing integrations is
+  unchanged.
+* **Combine mode (`dual_iTRNG_en == 1`):** one CSRNG request is fanned out to
+  both ES0 and ES1. The combiner waits until both 384-bit conditioned seeds are
+  captured, concatenates them as `ES0 || ES1` (768 bits — one SHA3-384 block,
+  because 768 < the 832-bit SHA3-384 rate), hashes them through the shared
+  `ot_sha3` gates, and returns the single 384-bit digest to CSRNG with one
+  acknowledge. The FIPS status returned to CSRNG follows a configurable policy
+  (AND of both sources by default, ES0-only, or a firmware-programmed value).
+
+### Enabling the feature
+
+Combine mode is enabled by `CPTRA_HW_CONFIG.dual_iTRNG_en`, a software-readable
+bit that hardware drives from a dedicated `itrng1_en` integration input. The bit
+resolves to 1 only in Subsystem mode with the internal TRNG present; in any other
+configuration it reads 0 and the combiner stays in bypass. The same `itrng1_en`
+input also gates the secondary physical-source pins (`itrng1_data` /
+`itrng1_valid`). Each entropy source has its own external request output
+(`etrng0_req` for ES0, `etrng1_req` for ES1).
+
+### Power-on known-answer test (KAT) and AHB lock
+
+Because FIPS certification requires a power-on KAT of every cryptographic block,
+the combiner exposes an AHB-lite register interface used **only** by ROM. ROM
+runs a self-contained KAT by writing a fixed message into `KAT_MSG`, programming
+`KAT_MSG_LEN`, and pulsing `KAT_CTRL.start`; the combiner hashes that bounded
+single-block message through the same `ot_sha3` datapath used operationally and
+exposes the result in `KAT_DIGEST`. After the KAT, ROM sets the write-once
+multi-bit (MuBi4) `AHB_LOCK`. Once locked, the KAT registers are zeroized and
+read back as 0, and the FIPS combine policy is frozen, so runtime firmware cannot
+observe KAT state or weaken the combination. Entropy never appears in any
+AHB-readable register — the ES0/ES1 → combiner → CSRNG path is internal only.
+
+### Fault handling
+
+The combiner is fault-hardened consistently with the surrounding OpenTitan
+blocks: `AHB_LOCK` uses a MuBi4 encoding that is fail-safe to *locked*, and the
+datapath sequencer uses a sparse Hamming-distance-3 (HD-3) FSM encoding. A
+single-bit glitch that produces an undefined FSM code is trapped to a terminal
+error state and latched into the combiner's error-interrupt status (alongside the
+`ot_sha3` countermeasure errors). The `cs_aes_halt` current-management
+handshake between each entropy source and CSRNG is terminated locally inside the
+combiner so that a conditioner is never left waiting on an acknowledge.
 
 
 ## External-TRNG REQ HW API
@@ -1562,13 +1643,14 @@ The ECC core performance is reported in the next section.
 
 ### Pure hardware architecture
 
-In this architecture, the ECC interface and controller are implemented in hardware. The performance specification of the ECC architecture is reported as shown in the following table.
+In this architecture, the ECC interface and controller are implemented in hardware. The Montgomery multiplier in the current RTL uses a **radix-48** datapath (`MULT_RADIX = 48` in `src/ecc/rtl/ecc_params_pkg.sv`), which reduces the number of PE iterations per 384-bit modular multiplication from 12 (radix-32) to 8. The performance specification of the ECC architecture is reported as shown in the following table. Cycle counts were measured on `ecc_top_tb` running the `ecc_normal_test` (radix-48 RTL).
 
-| Operation | Cycle count \[CCs\] | Time \[ms\] @ 400 MHz | Throughput \[op/s\] |
-| :-------- | :------------------ | :-------------------- | :------------------ |
-| Keygen    | 909,648             | 2.274                 | 439                 |
-| Signing   | 932,990             | 2.332                 | 428                 |
-| Verifying | 1,223,938           | 3.060                 | 326                 |
+| Operation      | Cycle count \[CCs\] | Time \[ms\] @ 400 MHz | Throughput \[op/s\] |
+| :------------- | :------------------ | :-------------------- | :------------------ |
+| Keygen         | 719,675             | 1.799                 | 556                 |
+| Signing        | 736,978             | 1.842                 | 543                 |
+| Verifying      | 960,404             | 2.401                 | 416                 |
+| ECDH sharedkey | 717,421             | 1.794                 | 558                 |
 
 
 ## LMS Accelerator
@@ -2441,6 +2523,49 @@ FW must set a last cycle flag before running the last iteration of the SHA engin
 * HW also implements a HW function called SIGN\_PCR. This function takes the PCR digest that was generated by the previous routine and signs it using the key in key slot 7, following the same ECC sign flow defined in the [ECC](#ecc) section.
      * The resulting PCR DIGEST is used only once for signing by the HW. If a new PCR signing is required, GEN\_PCR\_HASH needs to be redone.
 
+### ICCM write hash measurement (PCR4/PCR5)
+
+The SHA-512 accelerator (`sha512_acc_top`) includes an ICCM hash mode that provides hardware-only measurement of all data written to ICCM during firmware loading. This creates a tamper-evident record of what code actually landed in instruction memory, closing the gap between "firmware image was verified" and "firmware image was correctly copied."
+
+#### Overview
+
+Two dedicated PCR entries are used:
+
+| PCR | Name | Reset | Behavior |
+| :-- | :--- | :---- | :------- |
+| PCR4 | ICCM Current | Cleared on `fw_update_reset` (`iccm_unlock`) | Extended from zero on each firmware load — reflects only the currently running image |
+| PCR5 | ICCM Journey | Cleared only on cold reset (`cptra_pwrgood`) | Extended from previous value on each firmware load — accumulates a chain of all images ever loaded |
+
+Both PCR entries are write-protected: only the ICCM hash engine (`pv_write[1]`) can write nonzero values to PCR4 and PCR5. The normal SHA512/crypto PCR extend path (`pv_write[0]`) and firmware AHB writes are blocked from targeting these entries. Firmware may clear PCR4 or PCR5 to zero via `PCR_CTRL[n].clear` as a field escape hatch, but cannot write arbitrary values.
+
+#### Operation
+
+1. **Autonomous arming**: HW measures the ICCM region automatically. The existing per-bank ICCM-write snoop sets a sticky internal `iccm_armed` flag on the very first write it sees after reset (or after `fw_update_reset` releases the `iccm_unlock`-driven clear). On the same cycle, HW acquires the SHA accelerator lock via the LOCK register's `hwset` path, blocking any concurrent SOC access for the duration of the measurement. Firmware does not need to take any action to enable the feature; ROM simply performs the memcpy as normal.
+
+2. **ICCM write capture**: As ROM copies firmware from the mailbox to ICCM via CPU store instructions, each ICCM bank write is captured by the SHA accelerator and accumulated into a SHA-384 hash. The hash runs in parallel with the copy — no backpressure or stall. Data is hashed as little-endian 32-bit words (native CPU byte order). The combinational OR of the live snoop into the `iccm_mode` enable guarantees the very first dword is captured in the same cycle, before `iccm_armed` itself updates on the next clock edge.
+
+3. **Finalization on ICCM lock**: When ROM sets `INTERNAL_ICCM_LOCK`, the SHA accelerator finalizes the hash (padding and last compression), producing a 384-bit ICCM digest.
+
+4. **PCR extend**: An internal FSM then performs proper PCR extend operations:
+   - Reads PCR4 current value (zeros after clear), computes `SHA-384(PCR4 || ICCM_digest)`, writes result to PCR4
+   - Reads PCR5 current value, computes `SHA-384(PCR5 || ICCM_digest)`, writes result to PCR5
+   - The extend uses the same `sha512_core` instance with the same byte ordering as the normal PCR hash extend path, ensuring consistent results
+
+5. **Lock release**: After both PCR extends complete, the sticky `iccm_mode_done` flag latches (blocking re-trigger until the next `iccm_unlock`) and the SHA accelerator lock is released for normal firmware use.
+
+#### Security properties
+
+- HW-autonomous arming closes the bypass window where firmware could "forget" to enable the feature — the hash starts unconditionally on the first ICCM write the snoop sees
+- ICCM measurement is single-shot per boot cycle: once `iccm_mode_done` latches, firmware cannot re-trigger it to overwrite PCR4/PCR5
+- The hash captures the ground truth of ICCM write data at the memory bank interface — eliminating TOCTOU gaps between verification and copy
+- Skipping any step (trigger, copy, or lock) results in empty PCRs, causing attestation failure
+- The feature operates correctly regardless of `boot_flow_monitor_en` — if debug-unlocked tests skip ICCM mode, PCRs stay empty and attestation fails (no security bypass)
+- PCR4 clear mechanism (`pcr4_hwclr`) is tied to `iccm_unlock` (fires on `fw_update_reset`), ensuring fresh measurement on each firmware update
+
+#### Timing impact
+
+The SHA-384 computation runs in parallel with ROM's ICCM copy. Only finalization (~80 cycles) and the two PCR extend operations (~210 cycles total) occur after `ICCM_LOCK` is set. Total added latency: ~290 cycles, invisible to boot time.
+
 ## Key vault
 
 Key Vault (KV) is a register file that stores the keys to be used by the microcontroller, but this register file is not observed by the microcontroller. Each cryptographic function has a control register and functional block designed to read from and write to the KV. 
@@ -2487,6 +2612,61 @@ While the crypto engine, key vault read, or key vault write blocks are active, t
 When a key is read from the key vault, the API register is locked and any result generated from the cryptographic block is not readable by firmware. The digest can only be sent to the key vault by appropriately programming the key vault write controls. After the cryptographic block completes its operation, the lock is cleared and the key is cleared from the API registers.
 
 Key vault read errors will prevent the crypto engine from accepting new commands. The engine will require zeroization in order to clear the error and resume normal operation.
+
+### Key vault key-length-mismatch detection
+
+Each cryptographic consumer that reads from KV performs a length check
+between the KV entry's stored `last_dword` and the consumer's
+`expected_key_size` port (derived from mode, e.g., HMAC-384 vs HMAC-512,
+or fixed by the consumer, e.g., ECC P-384, MLDSA/MLKEM seed, OCP LOCK
+MEK). The KV read-mux broadcasts each addressed entry's stored
+`last_dword` on `kv_rd_resp_t.entry_last_dword`, and every
+`kv_read_client` latches that value into a local `stored_last_dword`
+register.
+A stored entry *larger* than the
+consumer's expected size is accepted. A stored entry *smaller* than the
+consumer's expected size triggers `KV_RD_LEN_MISMATCH`. Access-control
+(`dest_valid` + `kv_read_rule_check`) still gates which slots each
+consumer may touch, so prefix use of an oversized entry does not
+widen attack surface.
+
+When mismatch fires, `error_code` is registered to `KV_RD_LEN_MISMATCH`
+and self-holds via the existing mux fall-through (cleared only by
+`rst_b` or `zeroize`). The length check enforces *how much of
+the slot is meaningful* and closes a key-substitution class where a
+shorter stored key would otherwise be silently zero-padded (or worse,
+consumed with undefined-tail bits) by a wider engine.
+
+**Two check-time modes**, selected by parameter `LEN_CHECK_AT_KEY_USE`:
+- `LEN_CHECK_AT_KEY_USE=0` (default) — check fires on `read_done` (KV
+  FSM's `KV_DONE` state), comparing `stored_last_dword` to the fixed
+  `expected_key_size` the consumer wires. Used by consumers whose
+  expected size is stable at KV-read time (ECC privkey/seed, AXI-DMA
+  MEK, MLDSA/MLKEM seeds and message).
+- `LEN_CHECK_AT_KEY_USE=1` — check fires on the consumer's
+  `check_key_size` strobe (typically at `INIT`/`START`/op-commit).
+  Used by consumers whose expected size is not stable until the op
+  commits (HMAC and AES, whose mode/key_len may be programmed after
+  the KV read completes).
+
+**HMAC** enables the check on the key path only. `hmac_key_kv_read`
+uses `LEN_CHECK_AT_KEY_USE=1` with `check_key_size = (init_reg |
+next_reg) & kv_key_data_present` and `expected_key_size =
+hmac_expected_key_size` (11 for HMAC-384, 15 for HMAC-512). The HMAC
+block is a message chunk, not a security-sized key, and legitimate
+consumers (notably the OCP LOCK HEK seed at `OCP_LOCK_HEK_NUM_DWORDS=8`
+dwords routed to `KV_DEST_IDX_HMAC_BLOCK`) may supply KV entries
+shorter than the mode's key size.
+
+**AES** derives `expected_key_size` from the runtime-selectable
+`CTRL_SHADOWED.key_len` (128/192/256 → 3/5/7), exposed to the CLP
+wrapper via `aes2caliptra.key_len`. The check is armed at
+`kv_key_done | keymgr_key.valid`, so any FW re-program of `key_len`
+that would create an entry-too-small condition is caught before AES
+samples the key. AES does not raise an interrupt on KV errors; FW
+must observe `AES_KV_RD_KEY_STATUS.ERROR` after the status VALID bit
+sets. The `AES_KV_RD_KEY_STATUS.ERROR` field encodes the KV error
+code (`KV_SUCCESS=0`, `KV_READ_FAIL=1`, `KV_RD_LEN_MISMATCH=3`).
 
 If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
 
@@ -2952,6 +3132,27 @@ Caliptra's AXI DMA supports a hardware path to write **KV23 (MEK)** to the SoC v
 - **Enable AES ↔ KV write path** only if `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set.
 
 
+
+## Fatal hardware errors
+
+The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditions. Assertion of any bit drives the SoC `cptra_error_fatal` interrupt pin (unless the bit is masked by `internal_hw_error_fatal_mask`). Once the interrupt is asserted, clearing the register bit does **not** deassert the interrupt — only a Caliptra reset clears a fatal error interrupt. All fields are sticky (RW1C by Caliptra and SoC).
+
+| Bit | Field | Maskable | Trigger |
+| :-- | :---- | :------- | :------ |
+| 0 | iccm_ecc_unc | Yes (`mask_iccm_ecc_unc`) | Uncorrectable double-bit ECC error in ICCM |
+| 1 | dccm_ecc_unc | Yes (`mask_dccm_ecc_unc`) | Uncorrectable double-bit ECC error in DCCM |
+| 2 | nmi_pin | Yes (`mask_nmi_pin`) | NMI asserted by WDT Timer2 timeout |
+| 3 | crypto_err | No | Multiple concurrent cryptographic operations using the Key Vault |
+| 4 | kv_error | No | KV boot-flow monitor `dest_valid` mismatch or boot-flow error |
+| 5 | shadow_storage_err | No | ICCM region shadow-register storage fault (register/shadow corrupted) |
+| 6 | fsm_error | No | Sparse-encoded security FSM entered an invalid/illegal state (fault-injection/glitch detection) |
+| 31:7 | rsvd | — | Reserved |
+
+**Masking behavior:** Only `iccm_ecc_unc`, `dccm_ecc_unc`, and `nmi_pin` are maskable via the writable fields of `internal_hw_error_fatal_mask`. The remaining fields (`crypto_err`, `kv_error`, `shadow_storage_err`, `fsm_error`) are unmaskable; their corresponding mask bits are read-only zero. Firmware cannot suppress an already-triggered fatal interrupt by setting a mask bit.
+
+**`fsm_error` — sparse-FSM glitch detection:** Security-critical FSMs (for example, the mailbox FSM) are sparse-encoded with Hamming-distance-separated state values. If a fault-injection/glitch drives an FSM into an unused encoding, the sparse-FSM guard forces the machine to its error state and asserts `fsm_error`. This is an unmaskable, reset-only fatal error.
+
+The recoverable counterpart, `CPTRA_HW_ERROR_NON_FATAL`, aggregates non-fatal conditions (mailbox protocol violations, mailbox uncorrectable ECC, and the ICCM region shadow-register phase mismatch `shadow_update_err`); firmware may deassert `cptra_error_non_fatal` by clearing or masking all set non-fatal bits.
 
 ## Cryptographic blocks fatal and non-fatal errors
 

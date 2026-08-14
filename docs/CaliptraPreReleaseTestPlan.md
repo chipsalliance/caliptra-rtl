@@ -46,7 +46,6 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 | Counter stable on lock_use (slot 7) | RT | Crypto write to lock_use'd slot 7 | write_count_fmc_ecdsa unchanged (SVA) |
 | DOE lockdown (RT) | RT | Issue DOE command after RT entry | Command rejected |
 
-
 #### `directed_kv_iccm_region`
 
 | Iter | Description | Pass Criteria |
@@ -150,3 +149,293 @@ Covergroups verify enforcement correctness, flush source attribution, monitor pa
 
 - `src/integration/stimulus/L0_regression.yml` -- smoke/kv_boot_flow_monitor
 - `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- all 4 tests
+
+---
+
+## Dual-iTRNG SHA3-384 Entropy Combiner
+
+### Feature Summary
+
+A second internal TRNG (secondary `entropy_src`, ES1) is added alongside the primary
+(ES0) to support different noise-generation technologies. To keep a single CSRNG,
+a SHA3-384 `entropy_combiner` is inserted between the two `entropy_src` blocks and
+CSRNG: when the secondary source is enabled (`dual_iTRNG_en` strap =
+`CPTRA_HW_CONFIG.dual_iTRNG_en`, subsystem-mode only) the combiner delivers
+`seed = SHA3-384(ES0 || ES1)`; otherwise it bypasses ES1 and passes the ES0 seed
+through unchanged. The combiner also exposes an AHB slave used only by ROM for a
+power-on SHA3-384 KAT; after the KAT, ROM sets a W1S MuBi4 `AHB_LOCK` that scrubs
+the KAT registers and freezes the FIPS combine policy so RT FW cannot read KAT
+residuals or weaken the policy. The combiner never exposes raw entropy on any
+readable register (ES0/ES1 -> SHA3 -> CSRNG is internal only).
+
+### Test Suite
+
+| Test | Category | Description |
+| :--- | :------- | :---------- |
+| `smoke_test_entropy_combiner` | Smoke | End-to-end combine: 2x `entropy_src` (raw/bypass) -> combiner -> CSRNG, genbits vs golden `SHA3-384(IS0\|\|IS1)` |
+| `smoke_test_entropy_combiner_kat` | Smoke | Combiner power-on SHA3-384 KAT (incl. empty message), identity (NAME/VERSION), FIPS-policy sweep, and MuBi4 `AHB_LOCK` enforcement |
+| `smoke_test_entropy_combiner_lock_op` | Directed | Operational-after-lock: combine datapath still produces a seed while the combiner is AHB-locked; lock enforcement persists |
+| `smoke_test_entropy_combiner_conditioned` | Directed | Conditioner-ENABLED (FIPS) combine with deterministic entropy; power-on KAT -> lock -> conditioned combine through the locked combiner |
+| `smoke_test_entropy_combiner_multiseed` | Directed | Back-to-back multi-seed: 4 consecutive combined seeds (startup + steady-state) exercise the FSM re-request path |
+
+Build/run notes: combine mode requires the subsystem build
+(`caliptra_top_ss_mode_tb`: `CALIPTRA_MODE_SUBSYSTEM` + `CALIPTRA_INTERNAL_TRNG`)
+plus `+CLP_ITRNG1_EN`. `smoke_test_entropy_combiner_kat` runs in the default
+`caliptra_top_tb` build (no plusargs) since the combiner KAT/AHB path is
+independent of the ES/CSRNG datapath. The conditioned and multiseed tests add
+`+CLP_DETERMINISTIC_RNG` to select the deterministic RNG model
+(`physical_rng_deterministic`) so the conditioned output is reproducible.
+
+### Test Cases
+
+#### `smoke_test_entropy_combiner`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| Combine genbits | Enable ES0/ES1 raw, CSRNG instantiate-from-entropy, generate 128b | genbits == golden `EXP_GENBITS_COMBINE` |
+| ES config readback | Read back `CONF`/`MODULE_ENABLE`/`RECOV_ALERT_STS` on both ES | Config took; no recoverable alert |
+| Combine topology | Read `COMBINER_STATUS.combine_en` and `COMBINER_CTRL` (policy) | combine_en=1; policy at reset default |
+
+#### `smoke_test_entropy_combiner_kat`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| Identity | Read `COMBINER_NAME_0/1`, `COMBINER_VERSION_0/1` | Match "sha3comb" / "2.20" reset constants |
+| KAT vectors A-D | Program `KAT_MSG[0..23]`, `KAT_MSG_LEN=96`, pulse START, poll VALID | `KAT_DIGEST` == `SHA3-384(ES0\|\|ES1)` golden (ordering guards) |
+| KAT empty message | `KAT_MSG_LEN=0`, START | `KAT_DIGEST` == `SHA3-384("")`; `KAT_MSG_LEN` reads back per value |
+| Policy sweep | Write `COMBINER_CTRL.es_fips_policy`/`es_fips_cfg` = {0,1,2,3, cfg} unlocked | Each value reads back |
+| Lock + scrub | Write `AHB_LOCK`=MuBi4True | `KAT_DIGEST`/`KAT_STATUS` read 0; lock reads locked |
+| KAT blocked when locked | Program fresh message + START while locked | `KAT_STATUS` never busy/valid; digest stays 0 |
+| Policy frozen | Write different policy while locked | Read back unchanged (swwe=!lock) |
+| Lock sticky | Write MuBi4False (unlock) while locked | Reads back still locked (clears only on reset) |
+
+#### `smoke_test_entropy_combiner_lock_op`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| Bring-up (bypass) | Enable ES0/ES1 raw (one boot seed each), no instantiate yet | Both ES boot-done |
+| Pre-lock policy | Program `COMBINER_CTRL.es_fips_policy` unlocked | Reads back programmed value |
+| Lock | Set `AHB_LOCK`=MuBi4True | Reads locked |
+| Enforcement (pre-combine) | KAT scrubbed, policy frozen, lock sticky | All hold |
+| Combine while locked | Instantiate-from-entropy + generate through the locked combiner | genbits == golden `EXP_GENBITS_COMBINE`; no CSRNG exception/error |
+| Enforcement (post-combine) | Re-check KAT scrubbed / policy frozen / lock sticky | Live combine did not disturb the lock |
+
+#### `smoke_test_entropy_combiner_conditioned`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| Power-on KAT | Empty-message KAT before lock (populates `KAT_DIGEST`) | `KAT_DIGEST` == `SHA3-384("")` |
+| Program policy + lock | Program `es_fips_policy`, set `AHB_LOCK` before entropy flows | Policy took; reads locked |
+| FIPS ES config | Both ES: `CONF.FIPS_ENABLE`=MuBi4True, `FIPS_WINDOW=1024`, widen REPCNT/ADAPTP | Config readback OK; `RECOV_ALERT_STS`=0 |
+| Conditioned combine (locked) | Instantiate + generate through the locked combiner | genbits == golden `EXP_GENBITS_CONDITIONED` (from `es_conditioner_model.py`) |
+| Post-lock enforcement | KAT digest scrubbed to 0, policy frozen, lock sticky | All hold (confidential KAT data not readable) |
+
+#### `smoke_test_entropy_combiner_multiseed`
+
+| Scenario | Description | Pass Criteria |
+| :------- | :---------- | :------------ |
+| FIPS ES config | Configure both ES in FIPS/conditioned mode | Config readback OK |
+| Seed 0 (startup) | Instantiate + generate; startup seed absorbs 2x`FIPS_WINDOW` | genbits == `EXP_GENBITS_SEED_0` |
+| Seeds 1-3 (steady-state) | uninstantiate -> re-instantiate -> generate per seed | genbits == `EXP_GENBITS_SEED_k`; no CSRNG exception/error |
+| Re-request path | Consecutive combines re-arm the combiner FSM | Each seed distinct and correct |
+
+### Direct (Unit-level) Testbenches
+
+Location: `src/entropy_combiner/tb/`
+
+| Testbench | Description |
+| :-------- | :---------- |
+| `entropy_combiner_tb.sv` | Combiner datapath TB: combine (`SHA3-384(ES0\|\|ES1)`) and bypass (ES1 ignored) modes against file vectors |
+| `entropy_combiner_align_tb.sv` | ES0/ES1 arrival-skew stress (directed matrix + randomized); checks digest correctness and ES/CSRNG ack ordering |
+| `entropy_combiner_es_integration_tb.sv` | 2x real `entropy_src` -> combiner, ES0/ES1 arrival-timing sweep via itrng release gates |
+| `entropy_combiner_es_csrng_tb.sv` | Full chain 2x `entropy_src` -> combiner -> real CSRNG; 5 cases (see below) |
+
+#### `entropy_combiner_es_csrng_tb.sv` cases
+
+| Case | Description | Pass Criteria |
+| :--- | :---------- | :------------ |
+| case1 ES1-faster-than-ES2 | Combine; release ES0 first, ES1 after a skew | seed==`EXP_SEED_COMBINE`; genbits==`EXP_GENBITS_COMBINE` |
+| case2 ES1-slower-than-ES2 | Combine; release ES1 first, ES0 after a skew | seed/genbits match combine golden |
+| case3 both-same-time | Combine; ES0/ES1 released together | seed/genbits match combine golden |
+| case4 ES2-disabled | Bypass (`combine_en=0`); ES1 disabled | seed==`EXP_SEED_BYPASS`(=IS0); genbits==`EXP_GENBITS_BYPASS` |
+| case5 force-fsm-error | Glitch the combiner sparse-FSM state to an undefined code mid-combine | FSM traps to `combiner_st_error` and holds; NO `es_ack` to CSRNG (no corrupt/partial seed); only reset recovers to `combiner_st_idle` (VCS-only; CM assertions silenced around the forced fault) |
+
+### Reference Models
+
+Location: `src/entropy_combiner/tb/`
+
+| Model | Purpose |
+| :---- | :------ |
+| `gen_test_vectors.py` | SHA3-384 combiner reference: generates `entropy_combiner_test_vectors.hex` (ES0, ES1, digest) |
+| `csrng_drbg_model.py` | AES-256 CTR_DRBG (CSRNG) + combiner digest; validated against AES FIPS-197 and CSRNG KATs |
+| `es_conditioner_model.py` | `entropy_src` SHA3-384 conditioner front-end (startup = 2x window, little-nibble packing) + full chain; emits conditioned/multi-seed goldens (sim-validated at `FIPS_WINDOW=1024`) |
+
+### Deterministic RNG Infrastructure
+
+| Component | Location | Description |
+| :-------- | :------- | :---------- |
+| `physical_rng_deterministic` | `src/entropy_src/tb/physical_rng_deterministic.sv` | Fully deterministic LFSR nibble stream (holds on disable), for reproducible conditioned/multi-seed tests |
+| RNG source MUX | `src/integration/tb/caliptra_top_tb.sv` | Per-source MUX between `physical_rng` and `physical_rng_deterministic`, selected by `+CLP_DETERMINISTIC_RNG` (default off, existing tests unaffected) |
+
+### Security Enforcement
+
+| Mechanism | RTL Location | Description |
+| :-------- | :----------- | :---------- |
+| KAT register scrub on lock | `entropy_combiner.sv` | On W1S `AHB_LOCK`, `KAT_MSG`/`KAT_MSG_LEN`/`KAT_DIGEST`/`KAT_STATUS` are held 0 so RT FW cannot read KAT residuals |
+| KAT blocked when locked | `entropy_combiner.sv` | `kat_start_cmd = start && !ahb_locked` -- no KAT can run once locked |
+| FIPS policy freeze | `entropy_combiner.sv` | `COMBINER_CTRL.es_fips_policy/es_fips_cfg` `swwe = !ahb_locked` -- ROM freezes the combine policy after lock |
+| Lock write-once-sticky | `entropy_combiner_reg.rdl` | MuBi4 `AHB_LOCK` `swwe=strict-False`; any non-strict-False code is treated as locked (fail-safe); clears only on reset |
+| No raw entropy on bus | `entropy_combiner.sv` | ES0/ES1 -> SHA3 -> CSRNG is internal only; no readable register exposes raw entropy |
+| Sparse-FSM fail-safe | `entropy_combiner.sv` | An undefined FSM state traps to `combiner_st_error` (self-loop), emits no CSRNG ack, and recovers only on reset (verified by `entropy_combiner_es_csrng_tb` case5) |
+
+### Regression
+
+- Standalone: the combiner C tests are launched directly (subsystem build +
+  plusargs as noted above); `smoke_test_entropy_combiner_kat` runs in the default
+  build.
+
+---
+
+## ICCM Write Hash Measurement (PCR4/PCR5)
+
+### Feature Summary
+
+Hardware-only SHA-384 measurement of all data written to ICCM during firmware loading. The SHA-512 accelerator captures every ICCM write in real-time, computes the hash, and extends the result into two dedicated PCRs: PCR4 (Current — cleared each boot) and PCR5 (Journey — accumulates across FW updates). This closes the gap between "image was verified" and "image was correctly copied to ICCM."
+
+### Test Suite
+
+| Test | Category | Description |
+| :--- | :------- | :---------- |
+| `smoke_test_iccm_hash` | Smoke | Write 4 known words to ICCM, verify PCR4 matches expected extend result, cross-check PCR0 extend with same digest |
+| `directed_test_iccm_hash` | Directed | 6 sequences (multi-block, extra pad, zero-length, exact boundary, large, tight memcpy) with fw_update_reset between each; each non-zero-length sequence adds an independent PCR0 readback cross-check |
+| `directed_test_iccm_hash_sizes` | Directed | Size-boundary sequences (1, 60, 284 words) that close `iccm_hash_cov_grp` byte-count / extra-pad coverpoint and cross bins |
+| `directed_test_iccm_hash_fill` | Directed | Fill the ENTIRE ICCM (65536 dwords / 256 KiB) with an incrementing pattern; verify PCR4 & PCR5 match the full-ICCM extend-from-zero digest |
+| `directed_test_iccm_hash_overflow` | Directed | Fill the ICCM then write one extra dword past the end (wraps to address 0); verify PCR4 & PCR5 hash all 65537 writes |
+| `directed_test_iccm_pcr5_journey` | Directed | 3 boots separated by `fw_update_reset`; PCR4 clears each boot, PCR5 chains across boots (Journey property) |
+| `directed_test_iccm_fw_write_block` | Directed | FW AHB writes to PCR4/PCR5 are dropped both pre-hash (zero) and post-hash (populated digest unchanged) |
+| `directed_test_iccm_sha_ctrl_block` | Directed | `sha512_ctrl` `pcr_hash_extend` targeting PCR4 / PCR5 is blocked by `pv.sv` guard; same flow against PCR0 succeeds (control) |
+| `directed_test_iccm_clear_hatch` | Directed | `PCR_CTRL[4,5].clear` zeros PCR4/PCR5, then FW AHB writes and SHA-ctrl extends are still blocked on the cleared entries |
+| `directed_test_iccm_sha_acc_reuse` | Directed | After ICCM hash completes, SHA acc lock is released and a streaming SHA-384 produces a matching digest |
+| `directed_test_iccm_cold_reset_pcr5` | Directed | PCR5 populated in Boot 0; after cold reset (Boot 1) PCR5 reads back zero (new Journey chain) |
+| `directed_test_iccm_replay_block` | Directed | After the measurement completes, additional ICCM writes in the same boot do not perturb PCR4/PCR5 |
+
+### Test Iterations
+
+#### `smoke_test_iccm_hash`
+
+Single iteration:
+1. Write 4 words {0x1, 0x2, 0x3, 0x4} to ICCM (HW autonomously arms on the first write)
+2. Lock ICCM → triggers hash finalization + PCR4/PCR5 extend
+3. Verify PCR4 matches expected `SHA-384(zeros || SHA-384(LE_iccm_data))`
+4. Extend PCR0 via normal SHA512 `pcr_hash_extend` with same ICCM digest
+5. Verify PCR0 == PCR4 (byte-ordering consistency between extend paths)
+
+#### `directed_test_iccm_hash`
+
+| Iter | Sequence | Description | Pass Criteria |
+| :--- | :------- | :---------- | :------------ |
+| 0 | 64 words {0x10..0x4F} | Multi-block (256 bytes, 2 SHA blocks + padding block) | PCR4 matches expected |
+| 1 | 28 words {0xBB00..0xBB1B} | Extra padding block required (112 bytes) | PCR4 matches expected |
+| 2 | 0 words | Zero-length hash (lock immediately after trigger) | PCR4 matches expected |
+| 3 | 32 words {0xC000..0xC01F} | Exact SHA-384 block boundary (128 bytes) | PCR4 matches expected |
+| 4 | 260 words {0xD000..0xD103} | Large (1040 bytes, >1KB) | PCR4 matches expected |
+| 5 | 64 words {0x10..0x4F} tight | Back-to-back `sw` pairs via inline asm (LSU merge test) | PCR4 matches seq 0 |
+
+Each iteration ends with `fw_update_reset`, which clears PCR4 via `pcr4_hwclr` and resets ICCM mode for the next sequence.
+
+After the primary PCR4 check, each non-zero-length iteration runs an independent **readback cross-check**: the ICCM contents are read back and re-hashed with the SHA512 *controller* (byte-swapped so its big-endian BLOCK interpretation matches the snoop's little-endian byte stream, with FW-driven padding), spare PCR0 is cleared and extended from zero with that digest via `pcr_hash_extend`, and the test asserts `PCR0 == expected vector == PCR4`. This proves the HW snoop hashed the same ICCM data an independent engine sees. (The zero-length sequence skips the cross-check; the primary PCR4 check already covers it.)
+
+#### `directed_test_iccm_hash_sizes`
+
+Size-boundary sequences (each separated by `fw_update_reset`) that hit `iccm_hash_cov_grp` coverpoint/cross bins the base test never reaches:
+
+| Seq | Sequence | Coverage Target |
+| :-- | :------- | :-------------- |
+| A | 1 word (4 bytes) | `iccm_byte_count_cp.min_write`; `byte_count×extra_pad.(min_write,0)` |
+| B | 60 words (240 bytes) | `byte_count×extra_pad.(multi_block,1)` — 112-byte last-block remainder forces an extra pad block |
+| C | 284 words (1136 bytes) | `byte_count×extra_pad.(large_sz,1)` — 112-byte last-block remainder forces an extra pad block |
+
+#### `directed_test_iccm_hash_fill`
+
+Single-shot measurement (no `fw_update_reset`):
+1. Fill the ENTIRE ICCM (`RV_ICCM_SIZE` = 256 KiB = 65536 dwords) with an incrementing pattern (dword `i` = `i`); HW arms on the first write
+2. Lock ICCM → hash finalization over the full stream `{0, 1, ..., 65535}` + PCR4/PCR5 extend
+3. Verify PCR4 (Current) and PCR5 (Journey) both equal `SHA-384(48_zeros || SHA-384(LE {0..65535}))` — both extend from zero, so PCR4 == PCR5
+
+Passive (non-subsystem) mode: feature absent — verifies PCR4/PCR5 stay zero.
+
+#### `directed_test_iccm_hash_overflow`
+
+Single-shot past-end boundary test (no `fw_update_reset`):
+1. Fill the entire ICCM (65536 dwords), then write one extra dword (value 65536) that physically wraps back to ICCM address 0
+2. Lock ICCM → the HW snoop still hashes every write, so the hashed stream is `{0, 1, ..., 65536}` (65537 dwords)
+3. Verify PCR4 and PCR5 both equal the extend-from-zero digest of the wrapped stream (PCR4 == PCR5)
+
+Passive mode: verifies PCR4/PCR5 stay zero.
+
+#### `directed_test_iccm_pcr5_journey`
+
+3 boots separated by `fw_update_reset`, sequenced by a counter in `.dccm.persistent`:
+1. Boot 0: run default ICCM hash → PCR5 holds the Boot-0 digest
+2. Boot 1: assert PCR4 was cleared and PCR5 still equals Boot-0 value, then run hash → PCR5 chains
+3. Boot 2: same pre-checks, then run hash → PCR5 chains again
+
+Expected PCR4 (per boot) and PCR5 (chained) values are hardcoded in the test.
+
+#### `directed_test_iccm_fw_write_block`
+
+Single iteration, 3 steps:
+1. Pre-hash: write `0xDEADBEEF` to every dword of PCR4 and PCR5 → both must still read all zeros
+2. Run default ICCM hash → PCR4 / PCR5 populated with digest
+3. Post-hash: write `0xDEADBEEF` to every dword of PCR4 and PCR5 again → digests must be unchanged
+
+#### `directed_test_iccm_sha_ctrl_block`
+
+Three independent SHA-ctrl `pcr_hash_extend` attempts from FW:
+1. Extend targeting PCR4 → PCR4 must remain zero (`pv.sv` guard drops `pv_write[0]` to entry 4)
+2. Extend targeting PCR5 → PCR5 must remain zero
+3. Extend targeting PCR0 (control) → PCR0 must change, proving the extend path itself works
+
+#### `directed_test_iccm_clear_hatch`
+
+Single iteration, 4 steps:
+1. Run default ICCM hash → PCR4 / PCR5 populated
+2. Write `PCR_CTRL[4].clear` and `PCR_CTRL[5].clear` → both PCRs read zero
+3. FW AHB write `0xDEADBEEF` to every dword of PCR4 / PCR5 → both still read zero
+4. SHA-ctrl `pcr_hash_extend` targeting PCR4 then PCR5 → both still read zero
+
+#### `directed_test_iccm_sha_acc_reuse`
+
+Single iteration, 3 steps:
+1. Run default ICCM hash → completes, releases SHA acc lock
+2. Re-acquire SHA acc lock via normal FW handshake (release then read-to-acquire)
+3. Streaming SHA-384 of `{0x01, 0x02, 0x03, 0x04}` → digest must match the expected SHA-384
+
+#### `directed_test_iccm_cold_reset_pcr5`
+
+2 boots separated by a cold reset, sequenced by a counter in `.dccm.persistent`:
+1. Boot 0: run default ICCM hash → PCR5 non-zero, then trigger cold reset
+2. Boot 1: PCR5 must read all zeros (new Journey chain after cold reset)
+
+#### `directed_test_iccm_replay_block`
+
+Single iteration, 3 steps:
+1. Run default ICCM hash → PCR4 / PCR5 populated, snapshot both
+2. Write a different pattern to ICCM (no `fw_update_reset`) and re-assert `INTERNAL_ICCM_LOCK`
+3. Re-read PCR4 and PCR5 → both must match the snapshots byte-for-byte
+
+### Security Enforcement
+
+| Mechanism | RTL Location | Description |
+| :-------- | :----------- | :---------- |
+| PCR4/PCR5 write guard | `pv.sv` | `pv_write[0]` (sha512_ctrl) blocked from targeting entry 4 or 5; only `pv_write[1]` (ICCM hash) can write |
+| Autonomous arming | `sha512_acc_top.sv` | `iccm_armed` sticky flop set combinationally by the first ICCM-write snoop; HW also acquires the SHA acc LOCK in the same cycle via `LOCK.hwset` |
+| Hash measurement single-shot | `sha512_acc_top.sv` | `iccm_mode_done` sticky flag prevents re-trigger until `iccm_unlock` (which fires on `fw_update_reset`) |
+| PCR4 clear on FW update | `caliptra_top.sv` | `pcr4_hwclr = iccm_unlock` clears PCR4 on fw_update_reset |
+| FW isolation | `sha512_acc_top.sv` | All extend FSM control signals (pv_read, write_entry, init) driven by HW state only — no CSR interface |
+| PCR extend correctness | `sha512_acc_top.sv` | Extend FSM uses same `kv_read_client` + `sha512_core` + `kv_write_client` pattern as sha512.sv PCR extend |
+
+### Regression
+
+- `src/integration/stimulus/L0_regression.yml` -- smoke_test_iccm_hash
+- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- directed_test_iccm_hash, directed_test_iccm_pcr5_journey, directed_test_iccm_fw_write_block, directed_test_iccm_sha_ctrl_block, directed_test_iccm_clear_hatch, directed_test_iccm_sha_acc_reuse, directed_test_iccm_cold_reset_pcr5, directed_test_iccm_replay_block, directed_test_iccm_hash_sizes, directed_test_iccm_hash_fill, directed_test_iccm_hash_overflow

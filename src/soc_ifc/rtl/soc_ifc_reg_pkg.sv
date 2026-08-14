@@ -12,7 +12,7 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__rw_rw_sticky_hw__in_t;
 
     typedef struct packed{
-        logic [25:0] next;
+        logic [24:0] next;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t;
 
     typedef struct packed{
@@ -22,6 +22,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__rw_rw_sticky_hw__in_t crypto_err;
         soc_ifc_reg__rw_rw_sticky_hw__in_t kv_error;
         soc_ifc_reg__rw_rw_sticky_hw__in_t shadow_storage_err;
+        soc_ifc_reg__rw_rw_sticky_hw__in_t fsm_error;
         soc_ifc_reg__CPTRA_HW_ERROR_FATAL__rsvd__in_t rsvd;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__in_t;
 
@@ -212,12 +213,17 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__in_t;
 
     typedef struct packed{
+        logic next;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__dual_iTRNG_en__in_t;
+
+    typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t iTRNG_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__Fuse_Granularity__in_t Fuse_Granularity;
         soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t RSVD_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__LMS_acc_en__in_t LMS_acc_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__in_t SUBSYSTEM_MODE_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__in_t OCP_LOCK_MODE_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__dual_iTRNG_en__in_t dual_iTRNG_en;
     } soc_ifc_reg__CPTRA_HW_CONFIG__in_t;
 
     typedef struct packed{
@@ -824,6 +830,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__rw_rw_sticky_hw__out_t crypto_err;
         soc_ifc_reg__rw_rw_sticky_hw__out_t kv_error;
         soc_ifc_reg__rw_rw_sticky_hw__out_t shadow_storage_err;
+        soc_ifc_reg__rw_rw_sticky_hw__out_t fsm_error;
     } soc_ifc_reg__CPTRA_HW_ERROR_FATAL__out_t;
 
     typedef struct packed{
@@ -1036,8 +1043,13 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__out_t;
 
     typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__dual_iTRNG_en__out_t;
+
+    typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__out_t SUBSYSTEM_MODE_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__out_t OCP_LOCK_MODE_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__dual_iTRNG_en__out_t dual_iTRNG_en;
     } soc_ifc_reg__CPTRA_HW_CONFIG__out_t;
 
     typedef struct packed{

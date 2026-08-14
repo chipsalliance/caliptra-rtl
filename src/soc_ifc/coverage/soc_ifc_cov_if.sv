@@ -32,6 +32,9 @@
 
 
 `ifndef VERILATOR
+`include "caliptra_macros.svh"
+
+`include "caliptra_macros.svh"
 
 interface soc_ifc_cov_if
     import soc_ifc_pkg::*;
@@ -201,7 +204,7 @@ interface soc_ifc_cov_if
     input logic rdc_clk_dis,
     input logic fw_update_rst_window,
 
-    input logic crypto_error,
+    input cptra_hw_fatal_error_t cptra_hw_fatal_errors,
 
     input logic uc_req_dv,
     input soc_ifc_req_t uc_req,
@@ -241,6 +244,15 @@ interface soc_ifc_cov_if
   assign soc_rd = soc_req_dv & ~soc_req.write;
   assign soc_wr = soc_req_dv & soc_req.write;
 
+  // ---- SoC-AXI access to the DMA register block ----
+  // The DMA block is Caliptra-uC-only, so any SoC-AXI access here must be rejected.
+  // soc_dma_access flags such an access; soc_dma_offset is the targeted register
+  // offset within the DMA block (base = DMA_REG_START_ADDR).
+  logic        soc_dma_access;
+  logic [11:0] soc_dma_offset;
+  assign soc_dma_access = soc_req_dv & (soc_req.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]});
+  assign soc_dma_offset = 12'(soc_req.addr - DMA_REG_START_ADDR);
+
   assign generic_input_wires_flat  = {generic_input_wires [1],generic_input_wires [0]};
   assign generic_output_wires_flat = {generic_output_wires[1],generic_output_wires[0]};
 
@@ -253,7 +265,7 @@ interface soc_ifc_cov_if
         clk_gating_en_cp: coverpoint clk_gating_en;
         rdc_clk_dis_cp: coverpoint rdc_clk_dis;
         fw_update_rst_window_cp: coverpoint fw_update_rst_window;
-        crypto_error_cp: coverpoint crypto_error;
+        crypto_error_cp: coverpoint cptra_hw_fatal_errors.crypto_err;
         security_state_cp: coverpoint security_state;
         ready_for_fuses_cp: coverpoint ready_for_fuses;
         ready_for_mb_processing_cp: coverpoint ready_for_mb_processing;
@@ -473,6 +485,114 @@ interface soc_ifc_cov_if
 
     endgroup
 
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    // -----------------------------------------------------------------------
+    // ICCM Hash --> PCR4 Coverage
+    // -----------------------------------------------------------------------
+
+    // Bin the ICCM byte count into meaningful size categories
+    logic [31:0] iccm_num_bytes_wr;
+    assign iccm_num_bytes_wr = i_sha512_acc_top.iccm_num_bytes_wr;
+
+    // ICCM hash control signals
+    logic iccm_mode;
+    logic iccm_mode_done;
+    logic iccm_armed;
+    logic iccm_hash_dv;
+    logic iccm_lock_i;
+    logic iccm_unlock_i;
+    logic iccm_pcr_dest_done;
+    logic iccm_lock_acquire;
+
+    assign iccm_mode           = i_sha512_acc_top.iccm_mode;
+    assign iccm_mode_done      = i_sha512_acc_top.i_sha512_acc_iccm_hash.iccm_mode_done;
+    assign iccm_armed          = i_sha512_acc_top.i_sha512_acc_iccm_hash.iccm_armed;
+    assign iccm_hash_dv        = i_sha512_acc_top.iccm_hash_dv_i;
+    assign iccm_lock_i         = i_sha512_acc_top.iccm_lock_i;
+    assign iccm_unlock_i       = i_sha512_acc_top.iccm_unlock_i;
+    assign iccm_pcr_dest_done  = i_sha512_acc_top.i_sha512_acc_iccm_hash.iccm_pcr_dest_done;
+    assign iccm_lock_acquire   = i_sha512_acc_top.iccm_lock_acquire;
+
+    covergroup iccm_hash_cov_grp @(posedge clk iff cptra_rst_b);
+        option.per_instance = 1;
+
+        // ------- Coverpoints -------
+
+        // ICCM mode active
+        iccm_mode_cp: coverpoint iccm_mode;
+
+        // ICCM armed sticky flag (set on first ICCM write after reset / unlock)
+        iccm_armed_cp: coverpoint iccm_armed;
+
+        // ICCM mode done (write-once completed)
+        iccm_mode_done_cp: coverpoint iccm_mode_done;
+
+        // ICCM data valid pulse (write captured)
+        iccm_hash_dv_cp: coverpoint iccm_hash_dv;
+
+        // ICCM lock (triggers finalization)
+        iccm_lock_cp: coverpoint iccm_lock_i;
+
+        // ICCM unlock (anti-replay reset)
+        iccm_unlock_cp: coverpoint iccm_unlock_i;
+
+        // PCR4 write completion
+        iccm_pcr_dest_done_cp: coverpoint iccm_pcr_dest_done;
+
+        // HW-driven LOCK acquire pulse (asserted while ICCM hash is engaging)
+        iccm_lock_acquire_cp: coverpoint iccm_lock_acquire;
+
+        // SHA FSM state during ICCM mode
+        iccm_sha_fsm_cp: coverpoint sha_fsm_ps iff (iccm_mode) {
+            bins idle    = {SHA_IDLE};
+            bins block0  = {SHA_BLOCK_0};
+            bins blockN  = {SHA_BLOCK_N};
+            bins pad0    = {SHA_PAD0};
+            bins pad1    = {SHA_PAD1};
+            bins done    = {SHA_DONE};
+        }
+
+        // Byte count categories at finalization (sampled on iccm_lock rising)
+        iccm_byte_count_cp: coverpoint iccm_num_bytes_wr iff (iccm_lock_i & iccm_mode) {
+            bins min_write     = {[1:4]};       // 1 word
+            bins sub_block     = {[5:127]};     // < 1 SHA block
+            bins one_block     = {[128:128]};   // exactly 1 block boundary
+            bins multi_block   = {[129:1024]};  // 2-8 blocks
+            bins large_sz      = {[1025:262143]}; // > 8 blocks, below full ICCM
+            bins iccm_full     = {262144};      // exact ICCM size (256 KiB = RV_ICCM_SIZE*1024)
+            bins iccm_overflow = {[262145:$]};  // wrapped past ICCM end (> ICCM size)
+        }
+
+        // Extra padding block required (exercises PAD0-->PAD1 path)
+        iccm_extra_pad_cp: coverpoint i_sha512_acc_top.extra_pad_block_required iff (iccm_mode);
+
+        // ------- Crosses -------
+
+        // Mode x FSM state: ensure all FSM states are visited in iccm_mode
+        iccm_modeXsha_fsm: cross iccm_mode_cp, iccm_sha_fsm_cp {
+            ignore_bins not_iccm = binsof(iccm_mode_cp) intersect {0};
+        }
+
+        // Byte count x extra pad: verify boundary cases trigger extra padding
+        iccm_byte_countXextra_pad: cross iccm_byte_count_cp, iccm_extra_pad_cp {
+            ignore_bins impossible_min_extra_pad =
+                binsof(iccm_byte_count_cp.min_write) &&
+                binsof(iccm_extra_pad_cp) intersect {1};
+            ignore_bins impossible_one_block_extra_pad =
+                binsof(iccm_byte_count_cp.one_block) &&
+                binsof(iccm_extra_pad_cp) intersect {1};
+        }
+
+        // Lock with no prior writes (edge case: empty hash attempt)
+        iccm_lock_no_writes_cp: coverpoint (iccm_lock_i & iccm_mode & (iccm_num_bytes_wr == 0)) {
+            bins no_write_lock = {1};
+        }
+
+    endgroup
+
+    iccm_hash_cov_grp iccm_hash_cov_grp1 = new();
+`endif
+
     mbox_fsm_state_e mbox_fsm_ps;
     assign mbox_fsm_ps = mbox_fsm_state_e'(i_mbox.mbox_fsm_ps);
 
@@ -607,6 +727,52 @@ interface soc_ifc_cov_if
       AXItoSHAxMailbox: cross AXItoSHA_ip_cp, MBOX_ip_cp;
       AXItoSHAxTRNG: cross AXItoSHA_ip_cp, TRNG_ip_cp;
       AXItoSHAxREG: cross AXItoSHA_ip_cp, REG_ip_cp;
+
+    // ---- SoC-AXI accesses targeting the DMA register block (all rejected) ----
+    // The DMA block is Caliptra-uC-only; these coverpoints record the (rejected)
+    // SoC-AXI attempts and cross them with the DMA transaction state via the
+    // *_ip_cp coverpoints above.
+    //
+    // Which DMA register the SoC-AXI access targeted. Bin values come from the
+    // RDL-generated CLP_AXI_DMA_REG_* addresses (block-relative), so they cannot
+    // drift from the map; the default bin flags a register added/removed in RDL.
+    soc_dma_reg_cp: coverpoint soc_dma_offset iff (soc_dma_access) {
+      bins id         = {(`CLP_AXI_DMA_REG_ID         - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins cap        = {(`CLP_AXI_DMA_REG_CAP        - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins ctrl       = {(`CLP_AXI_DMA_REG_CTRL       - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins status0    = {(`CLP_AXI_DMA_REG_STATUS0    - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins status1    = {(`CLP_AXI_DMA_REG_STATUS1    - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins src_addr_l = {(`CLP_AXI_DMA_REG_SRC_ADDR_L - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins src_addr_h = {(`CLP_AXI_DMA_REG_SRC_ADDR_H - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins dst_addr_l = {(`CLP_AXI_DMA_REG_DST_ADDR_L - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins dst_addr_h = {(`CLP_AXI_DMA_REG_DST_ADDR_H - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins byte_count = {(`CLP_AXI_DMA_REG_BYTE_COUNT - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins block_size = {(`CLP_AXI_DMA_REG_BLOCK_SIZE - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins write_data = {(`CLP_AXI_DMA_REG_WRITE_DATA - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins read_data  = {(`CLP_AXI_DMA_REG_READ_DATA  - `CLP_AXI_DMA_REG_BASE_ADDR)};
+      bins intr_block = {[(`CLP_AXI_DMA_REG_INTR_BLOCK_RF_START - `CLP_AXI_DMA_REG_BASE_ADDR):12'hfff]};
+      bins unmapped_or_new = default; // flags register-map drift (added/removed regs)
+    }
+    // Attempted AXI direction (read vs write). "Attempted" because the arbiter
+    // rejects the access regardless of grant.
+    soc_dma_rnw_cp: coverpoint soc_req.write iff (soc_dma_access) {
+      bins rd = {1'b0};
+      bins wr = {1'b1};
+    }
+    // DMA disabled (idle) context, to pair with the active *_ip_cp transfer types.
+    soc_dma_disabled_cp: coverpoint (dma_ctrl_fsm_ps == DMA_IDLE) iff (soc_dma_access) {
+      bins one = {1'b1};
+    }
+
+    // Each DMA register, attempted by an AXI read AND an AXI write, while the DMA
+    // is: disabled, or active in each transaction type (reusing the *_ip_cp
+    // coverpoints). KV/AES routes have no *_ip_cp and are intentionally not crossed.
+    soc_access_x_disabled:  cross soc_dma_reg_cp, soc_dma_rnw_cp, soc_dma_disabled_cp;
+    soc_access_x_WR_FIFO:   cross soc_dma_reg_cp, soc_dma_rnw_cp, AHBtoAXI_ip_cp;
+    soc_access_x_RD_FIFO:   cross soc_dma_reg_cp, soc_dma_rnw_cp, AXItoAHB_ip_cp;
+    soc_access_x_AXItoAXI:  cross soc_dma_reg_cp, soc_dma_rnw_cp, AXItoAXI_ip_cp;
+    soc_access_x_MBOXtoAXI: cross soc_dma_reg_cp, soc_dma_rnw_cp, MBOXtoAXI_ip_cp;
+    soc_access_x_AXItoMBOX: cross soc_dma_reg_cp, soc_dma_rnw_cp, AXItoMBOX_ip_cp;
   endgroup
 
     soc_ifc_top_cov_grp soc_ifc_top_cov_grp1 = new();
@@ -837,6 +1003,22 @@ interface soc_ifc_cov_if
   logic          hit_CPTRA_iTRNG_ENTROPY_CONFIG_1;
   logic [3:0]    bus_CPTRA_iTRNG_ENTROPY_CONFIG_1;
   logic [31:0]   full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_1 = `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1;
+
+  logic          hit_CPTRA_iTRNG_ENTROPY_CONFIG_2;
+  logic [3:0]    bus_CPTRA_iTRNG_ENTROPY_CONFIG_2;
+  logic [31:0]   full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_2 = `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2;
+
+  logic          hit_CPTRA_iTRNG1_ENTROPY_CONFIG_0;
+  logic [3:0]    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_0;
+  logic [31:0]   full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_0 = `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0;
+
+  logic          hit_CPTRA_iTRNG1_ENTROPY_CONFIG_1;
+  logic [3:0]    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_1;
+  logic [31:0]   full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_1 = `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1;
+
+  logic          hit_CPTRA_iTRNG1_ENTROPY_CONFIG_2;
+  logic [3:0]    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_2;
+  logic [31:0]   full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_2 = `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2;
 
   logic          hit_CPTRA_RSVD_REG[0:1];
   logic [3:0]    bus_CPTRA_RSVD_REG[0:1];
@@ -1574,6 +1756,18 @@ interface soc_ifc_cov_if
 
   assign hit_CPTRA_iTRNG_ENTROPY_CONFIG_1 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_1[AXI_ADDR_WIDTH-1:0]);
   assign bus_CPTRA_iTRNG_ENTROPY_CONFIG_1 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG_ENTROPY_CONFIG_1}};
+
+  assign hit_CPTRA_iTRNG_ENTROPY_CONFIG_2 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG_ENTROPY_CONFIG_2[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG_ENTROPY_CONFIG_2 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG_ENTROPY_CONFIG_2}};
+
+  assign hit_CPTRA_iTRNG1_ENTROPY_CONFIG_0 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_0[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG1_ENTROPY_CONFIG_0 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG1_ENTROPY_CONFIG_0}};
+
+  assign hit_CPTRA_iTRNG1_ENTROPY_CONFIG_1 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_1[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG1_ENTROPY_CONFIG_1 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG1_ENTROPY_CONFIG_1}};
+
+  assign hit_CPTRA_iTRNG1_ENTROPY_CONFIG_2 = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_iTRNG1_ENTROPY_CONFIG_2[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_iTRNG1_ENTROPY_CONFIG_2 = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_iTRNG1_ENTROPY_CONFIG_2}};
 
   assign hit_CPTRA_RSVD_REG[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_RSVD_REG[0][18-1:0]);
   assign bus_CPTRA_RSVD_REG[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_RSVD_REG[0]}};
@@ -2723,6 +2917,42 @@ interface soc_ifc_cov_if
   covergroup soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_1_cg (ref logic [3:0] bus_event) @(posedge clk);
     CPTRA_iTRNG_ENTROPY_CONFIG_1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_1;
     bus_CPTRA_iTRNG_ENTROPY_CONFIG_1_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG_ENTROPY_CONFIG_2 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_2_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG_ENTROPY_CONFIG_2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG_ENTROPY_CONFIG_2;
+    bus_CPTRA_iTRNG_ENTROPY_CONFIG_2_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG1_ENTROPY_CONFIG_0 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_0_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG1_ENTROPY_CONFIG_0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG1_ENTROPY_CONFIG_0;
+    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_0_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG1_ENTROPY_CONFIG_1 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_1_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG1_ENTROPY_CONFIG_1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG1_ENTROPY_CONFIG_1;
+    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_1_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_iTRNG1_ENTROPY_CONFIG_2 -----------------------
+  covergroup soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_2_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_iTRNG1_ENTROPY_CONFIG_2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_iTRNG1_ENTROPY_CONFIG_2;
+    bus_CPTRA_iTRNG1_ENTROPY_CONFIG_2_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
     }
@@ -4218,6 +4448,10 @@ interface soc_ifc_cov_if
   soc_ifc_CPTRA_WDT_CFG_cg CPTRA_WDT_CFG_cg = new(bus_CPTRA_WDT_CFG);
   soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_0_cg CPTRA_iTRNG_ENTROPY_CONFIG_0_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_0);
   soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_1_cg CPTRA_iTRNG_ENTROPY_CONFIG_1_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_1);
+  soc_ifc_CPTRA_iTRNG_ENTROPY_CONFIG_2_cg CPTRA_iTRNG_ENTROPY_CONFIG_2_cg = new(bus_CPTRA_iTRNG_ENTROPY_CONFIG_2);
+  soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_0_cg CPTRA_iTRNG1_ENTROPY_CONFIG_0_cg = new(bus_CPTRA_iTRNG1_ENTROPY_CONFIG_0);
+  soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_1_cg CPTRA_iTRNG1_ENTROPY_CONFIG_1_cg = new(bus_CPTRA_iTRNG1_ENTROPY_CONFIG_1);
+  soc_ifc_CPTRA_iTRNG1_ENTROPY_CONFIG_2_cg CPTRA_iTRNG1_ENTROPY_CONFIG_2_cg = new(bus_CPTRA_iTRNG1_ENTROPY_CONFIG_2);
   soc_ifc_CPTRA_RSVD_REG_cg CPTRA_RSVD_REG_cg = new(bus_CPTRA_RSVD_REG);
   soc_ifc_CPTRA_HW_CAPABILITIES_cg CPTRA_HW_CAPABILITIES_cg = new(bus_CPTRA_HW_CAPABILITIES);
   soc_ifc_CPTRA_FW_CAPABILITIES_cg CPTRA_FW_CAPABILITIES_cg = new(bus_CPTRA_FW_CAPABILITIES);

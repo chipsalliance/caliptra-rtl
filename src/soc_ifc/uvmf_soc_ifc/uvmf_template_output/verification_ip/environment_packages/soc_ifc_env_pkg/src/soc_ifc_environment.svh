@@ -317,6 +317,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
         qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_cov"].connect(soc_ifc_env_cov_sub.ahb_ae           );
         aaxi_tb.env0.master[0].  ms_tx_AW_W_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
         aaxi_tb.env0.master[0].ms_rx_rvalid_export.connect                            (soc_ifc_env_cov_sub.axi_ae           );
+        aaxi_tb.env0.master[0].  write_done_export.connect                            (soc_ifc_env_cov_sub.axi_completed_ae );
+        aaxi_tb.env0.master[0].   read_done_export.connect                            (soc_ifc_env_cov_sub.axi_completed_ae );
     end:connect_coverage
     // Create register model adapter if required
     if (configuration.enable_reg_prediction ||
@@ -400,6 +402,9 @@ task soc_ifc_environment::handle_reset(string kind = "HARD");
     uvm_event reset_synchro;
     reset_flag rst_sync_flag;
 
+    if (kind == "HARD")
+        configuration.global_straps_captured = 1'b0;
+
     // Reset status agents (needed to reset monitor transaction keys)
     this.cptra_status_agent.handle_reset(kind);
     this.soc_ifc_status_agent.handle_reset(kind);
@@ -455,4 +460,3 @@ task soc_ifc_environment::run_phase(uvm_phase phase);
     end
 endtask
 // pragma uvmf custom external end
-

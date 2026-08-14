@@ -165,6 +165,7 @@ ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_arb.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/soc_ifc_reg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/mbox_csr.sv
+${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_iccm_hash.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_top.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/sha512_acc_csr.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/rtl/wdt.sv

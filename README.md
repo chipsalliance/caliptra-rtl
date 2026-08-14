@@ -28,15 +28,13 @@ OS:
 
 Lint:
  - Synopsys Spyglass
-   - `Version X-2025.06-SP1-1`
- - Real Intent AscentLint
-   - `Version 2019.A.p15 for RHEL 6.0-64, Rev 116515, Built On 12/18/2020`
+   - `Version Y-2026.03-SP1-1`
 
 Simulation:
  - Synopsys VCS with Verdi
-   - `Version R-2020.12-SP2-7_Full64`
+   - `Version Y-2026.03-SP1`
  - Verilator
-   - `Version 5.044`
+   - `Version 5.046`
  - Mentor Graphics QVIP
    - `Version 2021.2.1` of AHB models
  - Avery AXI VIP
@@ -50,7 +48,7 @@ Simulation:
 
 Synthesis:
  - Synopsys Fusion Compiler
-   - `Version 2022.12-SP3`
+   - `Version X-2025.06-SP3`
 
 GCC:
  - RISCV Toolchain for generating memory initialization files
