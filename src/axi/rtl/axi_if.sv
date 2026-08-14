@@ -201,7 +201,30 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
 
     `ifndef SYNTHESIS
     `ifndef XCELIUM
+        typedef struct packed {
+            logic [DW-1:0] data;
+            logic [UW-1:0] user;
+            axi_resp_e     resp;
+            logic          last;
+        } axi_read_beat_t;
+
+        typedef struct packed {
+            logic [UW-1:0] user;
+            axi_resp_e     resp;
+        } axi_write_resp_t;
+
+        localparam int unsigned AxiIDCount = 2**IW;
+        axi_read_beat_t  pending_read_beat [AxiIDCount][$];
+        axi_write_resp_t pending_write_resp[AxiIDCount][$];
+        semaphore read_response_lock  = new(1);
+        semaphore write_response_lock = new(1);
+
         task rst_mgr();
+            for (int unsigned id = 0; id < AxiIDCount; id++) begin
+                pending_read_beat[id].delete();
+                pending_write_resp[id].delete();
+            end
+
             araddr  `EQ__ '0;
             arburst `EQ__ AXI_BURST_FIXED;
             arsize  `EQ__ '0;
@@ -283,21 +306,33 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
                         output logic [DW-1:0] data,
                         output logic [UW-1:0] user,
                         output axi_resp_e     resp);
+            axi_read_beat_t beat;
             logic [IW-1:0] resp_id;
-            do begin
-                `TIME_ALGN
-                rready `EQ__ 1;
-                do
-                    @(posedge clk);
-                while (!rvalid);
-                data    `EQ__ rdata;
-                user    `EQ__ ruser;
-                resp    `EQ__ axi_resp_e'(rresp);
-                resp_id `EQ__ rid;
-                `TIME_ALGN
-                rready `EQ__ 0;
-                wait(!rready);
-            end while (id != resp_id);
+            read_response_lock.get(1);
+            if (pending_read_beat[int'(id)].size() != 0) begin
+                beat = pending_read_beat[int'(id)].pop_front();
+            end else begin
+                do begin
+                    `TIME_ALGN
+                    rready `EQ__ 1;
+                    do
+                        @(posedge clk);
+                    while (!rvalid);
+                    beat.data = rdata;
+                    beat.user = ruser;
+                    beat.resp = axi_resp_e'(rresp);
+                    beat.last = rlast;
+                    resp_id   = rid;
+                    `TIME_ALGN
+                    rready `EQ__ 0;
+                    wait(!rready);
+                    if (resp_id != id) pending_read_beat[int'(resp_id)].push_back(beat);
+                end while (resp_id != id);
+            end
+            read_response_lock.put(1);
+            data = beat.data;
+            user = beat.user;
+            resp = beat.resp;
         endtask
 
         // Read: default to single beat of native data width
@@ -420,20 +455,31 @@ interface axi_if #(parameter integer AW = 32, parameter integer DW = 32, paramet
         task get_write_resp(input  logic [IW-1:0] id    = IW'(0),
                             output axi_resp_e     resp,
                             output logic [UW-1:0] user);
+            axi_write_resp_t write_resp;
             logic [IW-1:0] resp_id;
-            do begin
-                `TIME_ALGN
-                bready `EQ__ 1;
-                do
-                    @(posedge clk);
-                while(!bvalid);
-                resp    `EQ__ axi_resp_e'(bresp);
-                user    `EQ__ buser;
-                resp_id `EQ__ bid;
-                `TIME_ALGN
-                bready `EQ__ 0;
-                wait(!bready);
-            end while(resp_id != id);
+            write_response_lock.get(1);
+            if (pending_write_resp[int'(id)].size() != 0) begin
+                write_resp = pending_write_resp[int'(id)].pop_front();
+            end else begin
+                do begin
+                    `TIME_ALGN
+                    bready `EQ__ 1;
+                    do
+                        @(posedge clk);
+                    while (!bvalid);
+                    write_resp.resp = axi_resp_e'(bresp);
+                    write_resp.user = buser;
+                    resp_id         = bid;
+                    `TIME_ALGN
+                    bready `EQ__ 0;
+                    wait(!bready);
+                    if (resp_id != id) pending_write_resp[int'(resp_id)].push_back(write_resp);
+                end while (resp_id != id);
+            end
+
+            write_response_lock.put(1);
+            resp = write_resp.resp;
+            user = write_resp.user;
         endtask
 
         task axi_write(input  logic [AW-1:0]   addr,
