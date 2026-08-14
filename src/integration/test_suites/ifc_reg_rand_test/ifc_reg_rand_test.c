@@ -41,23 +41,23 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define TB_CMD_TEST_FAIL 0x01
 
 void set_env(void) {
-    lsu_write_32(STDOUT, 0x107F);
-    lsu_write_32(STDOUT, 0x1B7F);
+    lsu_write_32(STDOUT, 0x10A2);
+    lsu_write_32(STDOUT, 0x1BA2);
     if (test_mode & 1) {
         // Manufacturing mode
-        lsu_write_32(STDOUT, 0x147F);
+        lsu_write_32(STDOUT, 0x7F);
     } else {
         // Production mode
-        lsu_write_32(STDOUT, 0x157F);
+        lsu_write_32(STDOUT, 0x15A2);
     }
     if (test_mode & 2) {
         // Enable debug intent
-        lsu_write_32(STDOUT, 0x167F);
-        lsu_write_32(STDOUT, 0x127F);
+        lsu_write_32(STDOUT, 0x16A2);
+        lsu_write_32(STDOUT, 0x12A2);
     } else {
         // Disable debug intent
-        lsu_write_32(STDOUT, 0x177F);
-        lsu_write_32(STDOUT, 0x137F);
+        lsu_write_32(STDOUT, 0x17A2);
+        lsu_write_32(STDOUT, 0x13A2);
     }
 }
 
@@ -106,8 +106,8 @@ void main(void) {
             error_count += read_register_group_and_verify(group, &g_expected_data_dict, false, COLD_RESET, false);
         }
 
-        ifc_reg_write(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0, 0xFFFFFF7F);
-        if (ifc_reg_read(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0) != 0xFFFFFF7F) {
+        ifc_reg_write(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0, 0xFFFFFFA2);
+        if (ifc_reg_read(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0) != 0xFFFFFFA2) {
             error_count += 1;
         }
 
@@ -137,8 +137,8 @@ void main(void) {
         if (!was_zero) {
             error_count += 1;
         }
-        ifc_reg_write(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0, 0xFFFFFF7F);
-        if (ifc_reg_read(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0) != 0xFFFFFF7F) {
+        ifc_reg_write(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0, 0xFFFFFFA2);
+        if (ifc_reg_read(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0) != 0xFFFFFFA2) {
             error_count += 1;
         }
 
