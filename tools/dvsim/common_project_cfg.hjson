@@ -1,0 +1,34 @@
+// Copyright lowRISC contributors (OpenTitan project).
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+{
+  project:          ""
+  repo_server:      ""
+  book:             ""
+  doc_server:       ""
+  results_server:   ""
+
+  // Default directory structure for the output
+  scratch_base_path:  "{scratch_root}/{branch}"
+  scratch_path:       "{scratch_base_path}/{dut}-{flow}-{tool}"
+
+  // Common data structure
+  build_pass_patterns: []
+  // TODO: Add back FuseSoC fail pattern after
+  // https://github.com/lowRISC/opentitan/issues/7348 is resolved.
+  build_fail_patterns: []
+
+  exports: [
+    { SCRATCH_PATH: "{scratch_path}" },
+    { proj_root: "{proj_root}" }
+  ]
+
+  // Results server stuff - indicate what command to use to copy over the results.
+  // Workaround for gsutil to fall back to using python2.7.
+  results_server_prefix:      ""
+  results_server_cmd:         ""
+  results_html_name:          ""
+
+  // If defined, this is printed into the results md files
+  revision: ""
+}

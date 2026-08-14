@@ -22,6 +22,8 @@ module soc_ifc_top
     import mbox_pkg::*;
     import soc_ifc_reg_pkg::*;
     import kv_defines_pkg::*;
+    import pv_defines_pkg::*;
+    import caliptra_prim_mubi_pkg::*;
     #(
      parameter AXI_ADDR_WIDTH = 18
     ,parameter AXI_DATA_WIDTH = 32
@@ -40,6 +42,9 @@ module soc_ifc_top
     input logic clk_cg,
     input logic soc_ifc_clk_cg,
     input logic rdc_clk_cg,
+
+    // Busy indicator and clocks cannot be gated
+    output logic busy,
 
     //SoC boot signals
     input logic cptra_pwrgood,
@@ -164,6 +169,11 @@ module soc_ifc_top
     output logic         ss_ocp_lock_in_progress,
     output logic [15:0]  ss_key_release_key_size,
 
+    // Dual iTRNG enable strap: reflected in CPTRA_HW_CONFIG.dual_iTRNG_en and
+    // exported (dual_itrng_en_o) to drive the entropy combiner's combine_en.
+    input  logic         dual_itrng_en,
+    output logic         dual_itrng_en_o,
+
     // Stable owner key enable (subsystem_mode & strap_generic_3[0] & !ocp_lock)
     output logic         stable_owner_key_en,
 
@@ -174,6 +184,15 @@ module soc_ifc_top
     // ICCM Lock
     output logic iccm_lock,
     input  logic iccm_axs_blocked,
+
+    // ICCM hash mode
+    input  logic        iccm_hash_dv,
+    input  logic [31:0] iccm_hash_data,
+    output pv_write_t   pv_write,
+    output logic        iccm_unlock_o,
+    // ICCM PCR extend
+    output pv_read_t    pv_read,
+    input  pv_rd_resp_t pv_rd_resp,
 
     // ICCM Region Registers for Boot Flow Monitor
     output logic [ICCM_ADDR_WIDTH-1:0] iccm_fmc_start_addr,
@@ -191,8 +210,7 @@ module soc_ifc_top
     output logic rdc_clk_dis,
     output logic fw_update_rst_window,
 
-    input logic crypto_error,
-    input logic kv_error,
+    input cptra_hw_fatal_error_t cptra_hw_fatal_errors,
 
     //caliptra uncore jtag ports
     input  logic                            cptra_uncore_dmi_reg_en,
@@ -218,6 +236,7 @@ soc_ifc_req_t uc_req;
 logic mbox_req_dv;
 logic mbox_dir_req_dv;
 logic mbox_req_hold;
+logic mbox_busy;
 soc_ifc_req_t mbox_req_data;
 logic [SOC_IFC_DATA_W-1:0] mbox_rdata;
 logic [SOC_IFC_DATA_W-1:0] mbox_dir_rdata;
@@ -263,7 +282,7 @@ logic [4:0][AXI_USER_WIDTH-1:0] valid_mbox_users;
 logic uc_mbox_data_avail;
 logic uc_mbox_data_avail_d;
 logic uc_cmd_avail_p;
-logic security_state_debug_locked_d;
+mubi4_t security_state_debug_locked_d;
 logic security_state_debug_locked_p;
 logic scan_mode_f;
 logic scan_mode_p;
@@ -330,7 +349,10 @@ logic valid_sha_user;
 
 logic strap_we_pre_fuse_done;
 
-boot_fsm_state_e boot_fsm_ps;
+logic [2:0] boot_fsm_ps;
+logic boot_fsm_error;
+logic mbox_fsm_error;
+logic sha_fsm_error;
 
 assign fuse_done = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
@@ -346,7 +368,7 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .fw_update_rst (soc_ifc_reg_hwif_out.internal_fw_update_reset.core_rst.value),
     .fw_update_rst_wait_cycles (soc_ifc_reg_hwif_out.internal_fw_update_reset_wait_cycles.wait_cycles.value),
     .ready_for_fuses(ready_for_fuses),
-    .boot_fsm_ps(boot_fsm_ps),
+    .boot_fsm_ps_encoded(boot_fsm_ps),
 
     .fuse_done(fuse_done),
     .fuse_wr_done_observed(fuse_wr_done_reg_write_observed),
@@ -359,7 +381,8 @@ soc_ifc_boot_fsm i_soc_ifc_boot_fsm (
     .iccm_unlock(iccm_unlock),
     .fw_upd_rst_executed(fw_upd_rst_executed),
     .rdc_clk_dis(rdc_clk_dis),
-    .fw_update_rst_window(fw_update_rst_window)
+    .fw_update_rst_window(fw_update_rst_window),
+    .fsm_error(boot_fsm_error)
 );
 
 always_comb soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.FW_UPD_RESET.we = fw_upd_rst_executed;
@@ -531,10 +554,22 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
 `ifdef CALIPTRA_MODE_SUBSYSTEM
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b1;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = ss_ocp_lock_en;
+    // Dual iTRNG (secondary entropy_src + SHA3 combiner) is only enabled in
+    // subsystem mode with the internal TRNG present; the strap then reflects into
+    // the SW-readable register and drives combine_en. Any other config => bypass (0).
+  `ifdef CALIPTRA_INTERNAL_TRNG
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = dual_itrng_en;
+  `else
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
+  `endif
 `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b0;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
 `endif
+// dual_iTRNG_en stored value exported to drive the entropy combiner's combine_en
+// (0 unless subsystem mode + internal TRNG).
+always_comb dual_itrng_en_o = soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.dual_iTRNG_en.value;
 
 //SOC Stepping ID update
 always_comb begin
@@ -545,7 +580,7 @@ always_comb begin
     for (int i = 0; i < `CLP_OBF_KEY_DWORDS; i++) begin
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.swwe = '0; //sw can't write to obf key
         //Sample only if its a pwrgood cycle, in debug locked state and scan mode is not asserted (as in do not sample if it was a warm reset or debug or scan mode)
-        soc_ifc_reg_hwif_in.internal_obf_key[i].key.wel = ~pwrgood_toggle_hint || ~security_state.debug_locked || scan_mode_f || clear_obf_secrets;
+        soc_ifc_reg_hwif_in.internal_obf_key[i].key.wel = ~pwrgood_toggle_hint || mubi4_test_false_strict(security_state.debug_locked) || scan_mode_f || clear_obf_secrets;
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.next = cptra_obf_key[i];
         soc_ifc_reg_hwif_in.internal_obf_key[i].key.hwclr = clear_obf_secrets;
         cptra_obf_key_reg[i] = soc_ifc_reg_hwif_out.internal_obf_key[i].key.value;
@@ -554,7 +589,7 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.hwclr = clear_obf_secrets;
         //Sample immediately after we leave warm reset.
         //Only if debug locked, not scan mode, and the fuse valid bit is set
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && mubi4_test_true_loose(security_state.debug_locked) && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.next = cptra_obf_uds_seed[i];
         obf_uds_seed[i] = soc_ifc_reg_hwif_out.fuse_uds_seed[i].seed.value;
     end
@@ -562,7 +597,7 @@ always_comb begin
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.hwclr = clear_obf_secrets;
         //Sample immediately after we leave warm reset.
         //Only if debug locked, not scan mode, and the fuse valid bit is set
-        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && security_state.debug_locked && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && mubi4_test_true_loose(security_state.debug_locked) && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.next = cptra_obf_field_entropy[i];
         obf_field_entropy[i] = soc_ifc_reg_hwif_out.fuse_field_entropy[i].seed.value;
     end
@@ -577,7 +612,7 @@ always_comb begin
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.ready_for_fuses.next = ready_for_fuses;
     soc_ifc_reg_hwif_in.CPTRA_FLOW_STATUS.boot_fsm_ps.next = boot_fsm_ps;
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.device_lifecycle.next = security_state.device_lifecycle;
-    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next     = security_state.debug_locked;
+    soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.debug_locked.next     = mubi4_test_true_loose(security_state.debug_locked);
     soc_ifc_reg_hwif_in.CPTRA_SECURITY_STATE.scan_mode.next        = scan_mode;
     //generic wires
     for (int i = 0; i < 2; i++) begin
@@ -598,8 +633,7 @@ logic cptra_in_dbg_or_manuf_mode;
 // Breakpoint value captured on a Caliptra reset deassertion (0->1 signal transition)
 // BootFSM_Continue will allow the boot fsm to continue
 // Security State in Debug or Manuf Mode
-assign cptra_in_dbg_or_manuf_mode = ~(security_state.debug_locked) | 
-                                     ((security_state.debug_locked) & (security_state.device_lifecycle == DEVICE_MANUFACTURING));
+assign cptra_in_dbg_or_manuf_mode = mubi4_test_false_strict(security_state.debug_locked) | (security_state.device_lifecycle == DEVICE_MANUFACTURING);
 
 always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
@@ -656,14 +690,17 @@ end
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
     if (~cptra_noncore_rst_b) begin
-        security_state_debug_locked_d <= '0;
+        security_state_debug_locked_d <= MuBi4True;
     end
     else begin
         security_state_debug_locked_d <= security_state.debug_locked;
     end
 end
 
-always_comb security_state_debug_locked_p = security_state.debug_locked ^ security_state_debug_locked_d;
+// Pulse when the interpreted locked state changes. Uses the loose "locked" test
+// (mubi4_test_true_loose) on both the current and delayed values so that any
+// transition into or out of the locked interpretation generates a single pulse.
+always_comb security_state_debug_locked_p = mubi4_test_true_loose(security_state.debug_locked) ^ mubi4_test_true_loose(security_state_debug_locked_d);
 
 // Generate a pulse to set the interrupt bit
 always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
@@ -789,8 +826,7 @@ assign stable_owner_key_en = soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.SUBSYSTEM_MODE
 
 //Uncore registers only open for debug unlock or manufacturing
 always_comb cptra_uncore_dmi_unlocked_reg_en = cptra_uncore_dmi_reg_en & 
-                                               (~(security_state.debug_locked) | 
-                                                 (security_state.device_lifecycle == DEVICE_MANUFACTURING));
+                                               (mubi4_test_false_strict(security_state.debug_locked) | (security_state.device_lifecycle == DEVICE_MANUFACTURING));
 //Uncore registers open for all cases
 always_comb cptra_uncore_dmi_locked_reg_en = cptra_uncore_dmi_reg_en;
 
@@ -1006,7 +1042,18 @@ generate
     end
 endgenerate
 
-always_comb valid_sha_user = soc_req_dv & (soc_req.user == soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value);
+// SoC-AXI access to the SHA accelerator is only available in Caliptra Subsystem
+// mode (per the Integration Specification). In passive builds the SoC-AXI SHA
+// route is compiled out (valid_sha_user tied to 0) so no AxUSER - including the
+// reset-value SS_CALIPTRA_DMA_AXI_USER of 0 - can authorize it. The uC/AHB path
+// to the accelerator is unaffected and remains available in both modes.
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+always_comb valid_sha_user = soc_req_dv &
+                             (soc_req.user == soc_ifc_reg_hwif_out.SS_CALIPTRA_DMA_AXI_USER.user.value);
+`else
+always_comb valid_sha_user = '0;
+`endif
+
 
 
 // Generate a pulse to set the interrupt bit
@@ -1088,6 +1135,8 @@ assign soc_ifc_error_intr = soc_ifc_reg_hwif_out.intr_block_rf.error_global_intr
 assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr_r.intr;
 assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
+assign iccm_unlock_o = iccm_unlock;
+
 // iccm_fmc_start_addr, iccm_fmc_end_addr, iccm_rt_start_addr, iccm_rt_end_addr
 // are driven directly by the caliptra_prim_subreg_shadow .q outputs below.
 logic iccm_region_lock_reg; // Raw register value -- gates shadow writes
@@ -1313,6 +1362,18 @@ i_sha512_acc_top (
     .sha_sram_resp(sha_sram_resp),
     .sha_sram_hold(sha_sram_hold),
 
+    // ICCM hash mode
+    .iccm_hash_dv_i(iccm_hash_dv),
+    .iccm_hash_data_i(iccm_hash_data),
+    .iccm_lock_i(iccm_lock),
+    .iccm_unlock_i(iccm_unlock),
+    .pv_write_o(pv_write),
+    // ICCM PCR extend
+    .pv_read_o(pv_read),
+    .pv_rd_resp_i(pv_rd_resp),
+
+    .sha_fsm_error(sha_fsm_error),
+
     .error_intr(sha_error_intr),
     .notif_intr(sha_notif_intr)
 );
@@ -1371,11 +1432,13 @@ i_mbox (
     .sram_single_ecc_error(sram_single_ecc_error),
     .sram_double_ecc_error(sram_double_ecc_error),
     .uc_mbox_lock(uc_mbox_lock),
+    .busy(mbox_busy),
     .soc_mbox_data_avail(mailbox_data_avail),
     .uc_mbox_data_avail(uc_mbox_data_avail),
     .soc_req_mbox_lock(soc_req_mbox_lock),
     .mbox_protocol_error(mbox_protocol_error),
     .mbox_inv_axi_user_axs(mbox_inv_user_p),
+    .mbox_fsm_error(mbox_fsm_error),
     .dmi_mbox_avail(soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.TAP_MAILBOX_AVAILABLE.value),
     .dmi_inc_rdptr(dmi_inc_rdptr),
     .dmi_inc_wrptr(dmi_inc_wrptr),
@@ -1385,6 +1448,9 @@ i_mbox (
     .dmi_reg_wdata(cptra_uncore_dmi_reg_wdata),
     .dmi_reg(mbox_dmi_reg)
 );
+
+// Aggregate soc_ifc busy sources for the clock gate
+always_comb busy = mbox_busy;
 
 // AXI Manager (DMA)
 axi_dma_top #(
@@ -1530,12 +1596,13 @@ wdt #(
 // Write-enables for CPTRA_HW_ERROR_FATAL and CPTRA_HW_ERROR_NON_FATAL
 // Also calculate whether or not an unmasked event is being set, so we can
 // trigger the SOC interrupt signal
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .we = crypto_error;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .we = cptra_hw_fatal_errors.crypto_err;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc.we = rv_ecc_sts.cptra_iccm_ecc_double_error & ~fw_update_rst_window;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.we = rv_ecc_sts.cptra_dccm_ecc_double_error & ~fw_update_rst_window;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .we = nmi_intr;
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error    .we = kv_error;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error    .we = cptra_hw_fatal_errors.kv_error;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.we = shadow_storage_err;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.fsm_error   .we = boot_fsm_error | mbox_fsm_error | sha_fsm_error | cptra_hw_fatal_errors.fsm_error;
 // Using we+next instead of hwset allows us to encode the reserved fields in some fashion
 // other than bit-hot in the future, if needed (e.g. we need to encode > 32 FATAL events)
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err  .next = 1'b1;
@@ -1544,14 +1611,16 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error    .next = 1'b1;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.next = 1'b1;
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.next[25:0]   = 26'h0;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.fsm_error   .next = 1'b1;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.rsvd.next[24:0]   = 25'h0;
 // Flag the write even if the field being written to is already set to 1 - this is a new occurrence of the error and should trigger a new interrupt
 always_comb unmasked_hw_error_fatal_write = (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err        .we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.crypto_err        .next) ||
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc      .we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_iccm_ecc_unc.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.iccm_ecc_unc      .next) ||
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc      .we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_dccm_ecc_unc.value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc      .next) ||
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin           .we && ~soc_ifc_reg_hwif_out.internal_hw_error_fatal_mask.mask_nmi_pin     .value && |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin           .next) ||
                                             (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error          .we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error          .next) ||
-                                            (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.next);
+                                            (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.next) ||
+                                            (soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.fsm_error         .we &&                                                                               |soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.fsm_error         .next);
 
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_no_lock.we = mbox_protocol_error.axs_without_lock;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_NON_FATAL.mbox_prot_ooo    .we = mbox_protocol_error.axs_incorrect_order;
@@ -1601,7 +1670,8 @@ always_comb cptra_uncore_dmi_locked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_ad
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
                                                    ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) |
-                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_FATAL.rsvd.next[25:0],
+                                                   ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_FATAL.rsvd.next[24:0],
+                                                                                                                   soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.fsm_error.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.shadow_storage_err.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.kv_error.value,
                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.crypto_err.value,
@@ -1642,9 +1712,10 @@ always_comb cptra_uncore_dmi_unlocked_reg_rdata_in = ({32{(cptra_uncore_dmi_reg_
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_FW_ERROR_ENC)}} & soc_ifc_reg_hwif_out.CPTRA_FW_ERROR_ENC.error_code.value) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_BOOTFSM_GO)}} & {31'b0, soc_ifc_reg_hwif_out.CPTRA_BOOTFSM_GO.GO.value}) |
                                                      ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_CPTRA_DBG_MANUF_SERVICE_REG)}} & soc_ifc_reg_hwif_out.CPTRA_DBG_MANUF_SERVICE_REG.DATA.value) |
-                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_FATAL.rsvd.next[25:0],
+                                                     ({32{(cptra_uncore_dmi_reg_addr == DMI_REG_HW_FATAL_ERROR)}} & {soc_ifc_reg_hwif_in .CPTRA_HW_ERROR_FATAL.rsvd.next[24:0],
+                                                                                                                     soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.fsm_error.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.shadow_storage_err.value,
-                                                                                                                    soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.kv_error.value,
+                                                                                                                     soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.kv_error.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.crypto_err.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.nmi_pin.value,
                                                                                                                      soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.dccm_ecc_unc.value,

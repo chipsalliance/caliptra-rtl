@@ -46,6 +46,7 @@
 `define SHA256_PATH         `CPTRA_TOP_PATH.sha256.sha256_inst
 `define SHA512_MASKED_PATH  `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i.HMAC_K.u_sha512_core_h1
 `define SOC_IFC_TOP_PATH    `CPTRA_TOP_PATH.soc_ifc_top1
+`define MBOX_PATH           `SOC_IFC_TOP_PATH.i_mbox
 `define AXI_DMA_CTRL_PATH   `SOC_IFC_TOP_PATH.i_axi_dma.i_axi_dma_ctrl
 `define WDT_PATH            `SOC_IFC_TOP_PATH.i_wdt
 `define ABR_RAMS_PATH       `SERVICES_PATH.abr_mem_top_inst
@@ -72,6 +73,7 @@ module caliptra_top_sva
   import kv_defines_pkg::*;
   import axi_dma_reg_pkg::*;
   import keymgr_pkg::*;
+  import caliptra_prim_mubi_pkg::*;
   ();
 
   //TODO: pass these parameters from their architecture into here
@@ -87,6 +89,10 @@ module caliptra_top_sva
   localparam SHA256_DIG_NUM_DWORDS    = 8;    //`SHA256_PATH.DIG_NUM_DWORDS;
   localparam SHA256_BLOCK_NUM_DWORDS  = 16;   //`SHA256_PATH.BLOCK_NUM_DWORDS;
   localparam DOE_256_NUM_ROUNDS       = 14;   //`DOE_INST_PATH.i_doe_core_cbc.keymem.DOE_256_NUM_ROUNDS
+
+  // Local boolean signals for debug_locked (validation collateral — reduce MuBi4 once here)
+  logic debug_unlocked_latched = mubi4_test_false_strict(`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked);
+  logic debug_unlocked_input   = mubi4_test_false_strict(`CPTRA_TOP_PATH.security_state.debug_locked);
   localparam SEED_NUM_DWORDS = 8;
   localparam MSG_NUM_DWORDS = 16;
   localparam PRIVKEY_NUM_DWORDS = 1224;
@@ -104,6 +110,46 @@ module caliptra_top_sva
   localparam MLDSA_ENTROPY_NUM_DWORDS   = 16;
   localparam MLDSA_SIGN_RND_NUM_DWORDS  = 8; 
 
+
+  // What: An ECC read-check may only follow a genuine mailbox SRAM read.
+  // Why: The mailbox DMA write path must not trigger the ECC read-check on a write.
+  // Timing: 1 cycle because the ECC check is sampled from the prior request cycle.
+  `CALIPTRA_ASSERT(MboxEccCheckFollowsSramRead_A,
+      `MBOX_PATH.sram_rd_ecc_en |-> $past(`MBOX_PATH.mbox_sram_req_cs & ~`MBOX_PATH.mbox_sram_req_we),
+      `MBOX_PATH.clk, ~`MBOX_PATH.rst_b);
+
+  // What: Any mailbox SRAM write must not generate an ECC read-check on the next cycle.
+  // Why: The #1183 regression was caused by a DMA write into mailbox SRAM.
+  // Timing: 1 cycle because the read-check is sampled from the prior request cycle.
+  `CALIPTRA_ASSERT(MboxSramWriteNoEccCheck_A,
+      $past(`MBOX_PATH.mbox_sram_req_cs & `MBOX_PATH.mbox_sram_req_we) |-> !`MBOX_PATH.sram_rd_ecc_en,
+      `MBOX_PATH.clk, ~`MBOX_PATH.rst_b);
+
+  // What: ECC decode inputs must be known whenever a read-check is enabled.
+  // Why: The SRAM model returns X on non-read cycles; unknown inputs must not be consumed.
+  // Timing: 0 cycles because the property is checked on the same cycle as the enable.
+  `CALIPTRA_ASSERT(MboxEccInputKnown_A,
+      `MBOX_PATH.sram_rd_ecc_en |-> (!$isunknown(`MBOX_PATH.sram_rdata) && !$isunknown(`MBOX_PATH.sram_rdata_ecc)),
+      `MBOX_PATH.clk, ~`MBOX_PATH.rst_b);
+
+  // What: Cover the DMA-write-into-mailbox path that triggered the regression.
+  // Why: This prevents a false pass when the functional path is never exercised.
+  // Timing: 0 cycles because the cover is sampled on the write cycle itself.
+  MboxDmaSramWrite_C: cover property (@(posedge `MBOX_PATH.clk) disable iff (~`MBOX_PATH.rst_b)
+      `MBOX_PATH.dma_sram_req_dv_q && `MBOX_PATH.dma_sram_req_write && `MBOX_PATH.mbox_sram_req_cs && `MBOX_PATH.mbox_sram_req_we);
+
+  // What: Cover the protocol/pointer-path analog of the #1183 hazard: a genuine mailbox
+  //       SRAM write (mbox_protocol_sram_we, i.e. inc_wrptr) landing in the same cycle as
+  //       a mailbox SRAM read/pointer-reset request (mbox_protocol_sram_rd, i.e.
+  //       inc_rdptr | rst_mbox_rdptr). This can arise if the current lock-holder (uC, SoC,
+  //       or TAP) issues an out-of-order datain/wrptr-increment write in the same cycle its
+  //       own status/execute write causes an EXECUTE-state transition arc to fire.
+  // Why: If reachable, this is the same failure signature as #1183 (a write cycle
+  //      simultaneously satisfying a read-enable term) via a different trigger than DMA.
+  //      MboxSramWriteNoEccCheck_A above is the decisive pass/fail check for this path.
+  // Timing: 0 cycles because the cover is sampled on the overlap cycle itself.
+  MboxProtocolWriteReadOverlap_C: cover property (@(posedge `MBOX_PATH.clk) disable iff (~`MBOX_PATH.rst_b)
+      `MBOX_PATH.mbox_protocol_sram_we && `MBOX_PATH.mbox_protocol_sram_rd);
 
   //Create a flopped version of hmac kv_data_present to be used to disable tag write OCP SVAs in case result is not expected to go to KV
   logic hmac_kv_data_present_f;
@@ -205,7 +251,7 @@ module caliptra_top_sva
   function automatic logic check_kv_slot_debug_value(int entry);
     logic sel_value = `KEYVAULT_PATH.kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value;
     logic [31:0] expected_value = sel_value ? CLP_DEBUG_MODE_KV_1 : CLP_DEBUG_MODE_KV_0;
-    if ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && `KEYVAULT_PATH.cptra_pwrgood) begin
+    if ((debug_unlocked_latched || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && `KEYVAULT_PATH.cptra_pwrgood) begin
       for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
         if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
           $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", entry, dword, expected_value, `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
@@ -223,7 +269,7 @@ module caliptra_top_sva
       KV_debug_slot: assert property (
         @(posedge `SVA_RDC_CLK)
         disable iff(!`KEYVAULT_PATH.cptra_pwrgood)
-        ($rose( ((!`CPTRA_TOP_PATH.cptra_security_state_Latched.debug_locked) || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) &&
+        ($rose( ((debug_unlocked_latched) || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) &&
                `KEYVAULT_PATH.cptra_pwrgood) |=> check_kv_slot_debug_value(entry)))
       else $display("SVA ERROR: KV[%0d] debug flush comprehensive check failed", entry);
     end
@@ -592,7 +638,7 @@ module caliptra_top_sva
     for(genvar dword = 0; dword < `CLP_OBF_UDS_DWORDS; dword++) begin
       DOE_UDS_data_check:  assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
                                             (`SERVICES_PATH.WriteData == 'hEC && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_uds_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.uds_plaintext[dword])
                                 
                                           )
@@ -606,7 +652,7 @@ module caliptra_top_sva
   
       DOE_FE_data_check:   assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
                                             (`SERVICES_PATH.WriteData == 'hED && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_fe_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.fe_plaintext[dword])
                                           )
                                   else $display("SVA ERROR: DOE FE output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.fe_plaintext[dword]);
@@ -620,7 +666,7 @@ module caliptra_top_sva
 
       DOE_HEK_data_check:  assert property (
                                             @(posedge `SVA_RDC_CLK)
-                                            disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+                                            disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
                                             (`SERVICES_PATH.WriteData == 'hD5 && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_hek_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.hek_plaintext[dword])
                                           )
                                   else $display("SVA ERROR: DOE HEK output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.hek_plaintext[dword]);
@@ -768,7 +814,7 @@ module caliptra_top_sva
   // Consolidated assertions
   MLDSA_keygen_privkey_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK)
-    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
     (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> 
      check_mldsa_privkey())
   )
@@ -776,7 +822,7 @@ module caliptra_top_sva
 
   MLDSA_keygen_pubkey_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK)
-    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
     (((`SERVICES_PATH.mldsa_keygen || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> 
      check_mldsa_pubkey())
   )
@@ -784,7 +830,7 @@ module caliptra_top_sva
 
   MLDSA_signature_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK)
-    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked || `SERVICES_PATH.disable_mldsa_sva)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input || `SERVICES_PATH.disable_mldsa_sva)
     (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing || `SERVICES_PATH.check_pcr_mldsa_signing) && `ABR_PATH.abr_status_done) |=> 
      check_mldsa_signature())
   )
@@ -792,7 +838,7 @@ module caliptra_top_sva
 
   MLDSA_verify_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK iff (`SERVICES_PATH.mldsa_verify || `ABR_PATH.abr_status_done))
-    disable iff (`CPTRA_TOP_PATH.scan_mode || !`CPTRA_TOP_PATH.security_state.debug_locked)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
     ((`SERVICES_PATH.mldsa_verify && `ABR_PATH.abr_status_done) |=> 
      check_mldsa_verify_results())
   )
@@ -1472,5 +1518,110 @@ module caliptra_top_sva
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       `HMAC_PATH.hmac_key_kv_read.kv_read_rules.read_en_o &&
       ~`HMAC_PATH.hmac_key_kv_read.kv_read_rules.read_allow);
+
+  // -----------------------------------------------------------------
+  // KV key-length-mismatch (per-consumer, per RFC)
+  // -----------------------------------------------------------------
+  // The stored last_dword captured inside kv_read_client must equal the
+  // entry's stored last_dword whenever the read completes without error.
+  `CALIPTRA_ASSERT(KV_hmac_stored_len_matches_entry,
+      $rose(`HMAC_PATH.kv_key_done) && (`HMAC_PATH.kv_key_error == 0) |->
+      (`HMAC_PATH.hmac_key_kv_read.stored_last_dword ==
+       `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].last_dword.value),
+      `SVA_RDC_CLK, ~`SVA_RST)
+
+  // HMAC key path uses relaxed (entry-too-small) check: mismatch fires only
+  // when the stored entry is smaller than what the mode requires.
+  `CALIPTRA_ASSERT(KV_hmac_len_mismatch_iff_mode_differs,
+      `HMAC_PATH.hmac_key_kv_read.length_mismatch |->
+      `HMAC_PATH.kv_key_data_present &&
+      (`HMAC_PATH.init_reg || `HMAC_PATH.next_reg) &&
+      (`HMAC_PATH.hmac_key_kv_read.stored_last_dword < `HMAC_PATH.hmac_expected_key_size),
+      `SVA_RDC_CLK, ~`SVA_RST)
+
+  // When mismatch fires, key regs clear via hwclr with a fixed 2-cycle
+  // pipeline (mismatch cycle N → error_code registers cycle N+1 →
+  // hwclr cycle N+1 → key_reg zero cycle N+2).
+  // Note: expressed via $past(..., 2) instead of `|-> ##2` because Verilator
+  // does not support "implication with sequence expression" on the RHS.
+  // Logically equivalent: if length_mismatch fired 2 cycles ago, the key
+  // register must be zero now.
+  `CALIPTRA_ASSERT(KV_hmac_key_cleared_on_mismatch,
+      $past(`HMAC_PATH.hmac_key_kv_read.length_mismatch, 2) |-> (`HMAC_PATH.key_reg == '0),
+      `SVA_RDC_CLK, ~`SVA_RST)
+
+  `CALIPTRA_ASSERT(KV_ecc_len_mismatch_clears_privkey,
+      $past(`ECC_PATH.ecc_privkey_kv_read.length_mismatch, 2) |-> (`ECC_PATH.privkey_reg == '0),
+      `SVA_RDC_CLK, ~`SVA_RST)
+
+  `CALIPTRA_ASSERT(KV_ecc_len_mismatch_clears_seed,
+      $past(`ECC_PATH.ecc_seed_kv_read.length_mismatch, 2) |-> (`ECC_PATH.seed_reg == '0),
+      `SVA_RDC_CLK, ~`SVA_RST)
+
+  // Covers: each consumer exercises both match and mismatch.
+  KV_hmac_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      (`HMAC_PATH.init_reg || `HMAC_PATH.next_reg) && `HMAC_PATH.kv_key_data_present && !`HMAC_PATH.hmac_key_kv_read.length_mismatch);
+  KV_hmac_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.hmac_key_kv_read.length_mismatch);
+  KV_ecc_privkey_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      |`ECC_PATH.cmd_reg && `ECC_PATH.kv_key_data_present && !`ECC_PATH.ecc_privkey_kv_read.length_mismatch);
+  KV_ecc_privkey_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ECC_PATH.ecc_privkey_kv_read.length_mismatch);
+  KV_ecc_seed_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      |`ECC_PATH.cmd_reg && `ECC_PATH.kv_seed_data_present && !`ECC_PATH.ecc_seed_kv_read.length_mismatch);
+  KV_ecc_seed_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ECC_PATH.ecc_seed_kv_read.length_mismatch);
+
+  // AES key path — length check deferred to key-use (LEN_CHECK_AT_KEY_USE=1).
+  // check_key_size pulses on kv_key_done | keymgr_key.valid.
+  KV_aes_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `CPTRA_TOP_PATH.aes_inst.aes_key_kv_read.check_key_size &&
+      !`CPTRA_TOP_PATH.aes_inst.aes_key_kv_read.length_mismatch);
+  KV_aes_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `CPTRA_TOP_PATH.aes_inst.aes_key_kv_read.length_mismatch);
+
+  // MLDSA seed path
+  KV_mldsa_seed_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mldsa_seed_read_inst.read_done &&
+      !`ABR_PATH.kv_mldsa_seed_read_inst.length_mismatch);
+  KV_mldsa_seed_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mldsa_seed_read_inst.length_mismatch);
+
+  // MLKEM seed path
+  KV_mlkem_seed_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mlkem_seed_read_inst.read_done &&
+      !`ABR_PATH.kv_mlkem_seed_read_inst.length_mismatch);
+  KV_mlkem_seed_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mlkem_seed_read_inst.length_mismatch);
+
+  // MLKEM msg path
+  KV_mlkem_msg_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mlkem_msg_read_inst.read_done &&
+      !`ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
+  KV_mlkem_msg_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
+
+  // DMA key-release path (MEK)
+  KV_dma_len_match_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AXI_DMA_CTRL_PATH.dma_data_kv_read.read_done &&
+      !`AXI_DMA_CTRL_PATH.dma_data_kv_read.length_mismatch);
+  KV_dma_len_mismatch_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AXI_DMA_CTRL_PATH.dma_data_kv_read.length_mismatch);
 
 endmodule

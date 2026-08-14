@@ -121,6 +121,7 @@ module hmac
   logic kv_key_ready, kv_key_done;
   logic kv_block_ready, kv_block_done;
   logic kv_write_ready, kv_write_done;
+  logic [KV_ENTRY_SIZE_W-1:0] hmac_expected_key_size;
 
   kv_read_ctrl_reg_t kv_key_read_ctrl_reg;
   kv_read_ctrl_reg_t kv_block_read_ctrl_reg;
@@ -270,13 +271,13 @@ always_comb begin
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     hwif_in.HMAC512_BLOCK[dword].BLOCK.we = (kv_block_write_en & (kv_block_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC512_BLOCK[dword].BLOCK.next = kv_block_write_data;
-    hwif_in.HMAC512_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_data_present_reset | (kv_block_error == KV_READ_FAIL);
+    hwif_in.HMAC512_BLOCK[dword].BLOCK.hwclr = zeroize_reg | kv_data_present_reset | (kv_block_error != KV_SUCCESS);
     hwif_in.HMAC512_BLOCK[dword].BLOCK.swwel = block_reg_lock[dword];
   end
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++)begin
     hwif_in.HMAC512_KEY[dword].KEY.we = (kv_key_write_en & (kv_key_write_offset == dword)) & !(zeroize_reg | kv_data_present_reset);
     hwif_in.HMAC512_KEY[dword].KEY.next = kv_key_write_data;
-    hwif_in.HMAC512_KEY[dword].KEY.hwclr = zeroize_reg | kv_data_present_reset | (kv_key_error == KV_READ_FAIL);
+    hwif_in.HMAC512_KEY[dword].KEY.hwclr = zeroize_reg | kv_data_present_reset | (kv_key_error != KV_SUCCESS);
     hwif_in.HMAC512_KEY[dword].KEY.swwel = kv_key_data_present;
   end
   //set ready when keyvault isn't busy
@@ -400,7 +401,7 @@ always_comb last_alone_error = hwif_out.HMAC512_CTRL.LAST.value & ~hwif_out.HMAC
 // last_alone_error is a soft notification: the engine never started,
 // so it must NOT join error_flag (which gates core_tag_we and is
 // sticky until zeroize). Keep it for the interrupt status bit only.
-always_comb error_flag = key_zero_error | key_mode_error;
+always_comb error_flag = key_zero_error | key_mode_error | (kv_key_error == KV_RD_LEN_MISMATCH);
 
 always_ff @(posedge clk or negedge reset_n) 
 begin : error_detection
@@ -450,7 +451,9 @@ end
 //Read Key
 kv_read_client #(
   .DATA_WIDTH(KEY_SIZE),
-  .PAD(0)
+  .PAD(0),
+  .LEN_CHECK_AT_KEY_USE(1)  //HMAC mode_reg (→ expected length) may be
+                           //programmed after the KV read completes.
 )
 hmac_key_kv_read
 (
@@ -473,8 +476,14 @@ hmac_key_kv_read
 
     .error_code(kv_key_error),
     .kv_ready(kv_key_ready),
-    .read_done(kv_key_done)
+    .read_done(kv_key_done),
+    .check_key_size((init_reg | next_reg) & kv_key_data_present),
+    .expected_key_size(hmac_expected_key_size)
 );
+
+//KV key-length-mismatch expected value (HMAC mode is runtime-selectable).
+always_comb hmac_expected_key_size = (mode_reg == HMAC512_MODE) ? KV_ENTRY_SIZE_W'(HMAC512_KV_LAST_DWORD)
+                                                                : KV_ENTRY_SIZE_W'(HMAC384_KV_LAST_DWORD);
 
 //Key Vault Control Modules
 always_comb begin
@@ -484,10 +493,15 @@ always_comb begin
 end
 
 //Read Block
+// Length check disabled on the BLOCK path: the HMAC block is a message chunk,
+// not a security-sized key. Legitimate consumers (e.g., OCP LOCK HEK seed,
+// OCP_LOCK_HEK_NUM_DWORDS=8) may write KV entries shorter than the mode's
+// key size and rely on PAD=1 zero-extension.
 kv_read_client #(
   .DATA_WIDTH(BLOCK_SIZE),
   .HMAC(1),
-  .PAD(1)
+  .PAD(1),
+  .LEN_CHECK(0)
 )
 hmac_block_kv_read
 (
@@ -510,7 +524,9 @@ hmac_block_kv_read
 
     .error_code(kv_block_error),
     .kv_ready(kv_block_ready),
-    .read_done(kv_block_done)
+    .read_done(kv_block_done),
+    .check_key_size(1'b0),
+    .expected_key_size('0)
 );
 
 //write 512 or 384 result based on mode bit
@@ -558,6 +574,7 @@ hmac_result_kv_write
 );
 
 always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_ready;
+
 
 endmodule // hmac
 
