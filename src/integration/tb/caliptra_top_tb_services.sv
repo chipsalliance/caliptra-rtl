@@ -218,6 +218,7 @@ module caliptra_top_tb_services
     logic                       timed_warm_rst;
     logic                       timed_kv_clear;
     logic                       timed_kv_clear_done;
+    logic                       kv_clear_force;
     logic                       hmac_tag_mismatch_kill;
     logic                       ecc_privkey_mismatch_kill;
     logic                       prandom_warm_rst;
@@ -1016,25 +1017,18 @@ module caliptra_top_tb_services
         end
     end
 
-    generate
-        // Check if n-th KV slot is zeroed
-        for (genvar slot_id=0; slot_id < 24; slot_id++) begin : kv_check_zero_slot_loop
-            for (genvar dword_i=0; dword_i < 16; dword_i++) begin : kv_check_zero_dword_loop
-                always @(negedge clk or negedge cptra_rst_b) begin
-                    if (!cptra_rst_b) begin
-                        kv_idx <= '0;
-                        check_kv_clear <= '0;
-                    end
-                    else if(((WriteData[15:0] & 16'hE0A2) == 16'hA0A2) && mailbox_write) begin
-                        kv_idx <= (WriteData[15:0] & 16'h1F00) >> 8;
-                        check_kv_clear <= '1;
-                    end else begin
-                        check_kv_clear <= '0;
-                    end
-                end
-            end
+     // Check if n-th KV slot is zeroed
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            kv_idx <= '0;
+            check_kv_clear <= '0;
+        end else if (((WriteData[15:0] & 16'hE0A2) == 16'hA0A2) && mailbox_write) begin
+            kv_idx <= (WriteData[15:0] & 16'h1F00) >> 8;
+            check_kv_clear <= '1;
+        end else begin
+            check_kv_clear <= '0;
         end
-    endgenerate
+    end
 
     always @(negedge clk) begin
         if (!cptra_rst_b) begin
@@ -1046,25 +1040,29 @@ module caliptra_top_tb_services
         end
     end
 
+    assign kv_clear_force = timed_kv_clear && (`CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.kv_doe_fsm_ns == 3'b100) && !timed_kv_clear_done;
+
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            timed_kv_clear_done <= '0;
+        end else if (kv_clear_force) begin
+            $assertkill(0, `CPTRA_TB_TOP_NAME.sva.FE_data_check.genblk1[0].DOE_FE_data_check);
+            $assertkill(0, `CPTRA_TB_TOP_NAME.sva.FE_data_check.genblk1[1].DOE_FE_data_check);
+            $assertkill(0, `CPTRA_TB_TOP_NAME.sva.FE_data_check.genblk1[2].DOE_FE_data_check);
+            $assertkill(0, `CPTRA_TB_TOP_NAME.sva.FE_data_check.genblk1[3].DOE_FE_data_check);
+            timed_kv_clear_done <= '1;
+        end
+    end
+
     generate
-        for (genvar slot_id=0; slot_id < 24; slot_id++) begin : kv_timed_clear_loop
+        for (genvar slot_id = 0; slot_id < 24; slot_id++) begin : kv_timed_clear_loop
             always @(negedge clk or negedge cptra_rst_b) begin
                 if (!cptra_rst_b) begin
-                    timed_kv_clear_done <= '0;
-                end else if (timed_kv_clear) begin
-                    if((`CPTRA_TOP_PATH.doe.doe_inst.doe_fsm1.kv_doe_fsm_ns == 3'b100) & ~timed_kv_clear_done) begin
-                        // Need to kill off assertion that checks whether output matches plaintext (it won't since it got cleared)
-                        $assertkill(0, `CPTRA_TB_TOP_NAME.sva.FE_data_check.genblk1[0].DOE_FE_data_check);
-                        $assertkill(0, `CPTRA_TB_TOP_NAME.sva.FE_data_check.genblk1[1].DOE_FE_data_check);
-                        $assertkill(0, `CPTRA_TB_TOP_NAME.sva.FE_data_check.genblk1[2].DOE_FE_data_check);
-                        $assertkill(0, `CPTRA_TB_TOP_NAME.sva.FE_data_check.genblk1[3].DOE_FE_data_check);
-                        force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_CTRL[slot_id].clear.value = '1;
-                        timed_kv_clear_done <= 'b1;
-                    end else if(timed_kv_clear_done) begin
-                        release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_CTRL[slot_id].clear.value;
-                    end
-                end else begin
-                    timed_kv_clear <= '0;
+                    release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_CTRL[slot_id].clear.value;
+                end else if (kv_clear_force) begin
+                    force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_CTRL[slot_id].clear.value = '1;
+                end else if (timed_kv_clear_done) begin
+                    release `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_out.KEY_CTRL[slot_id].clear.value;
                 end
             end
         end
@@ -1732,7 +1730,7 @@ module caliptra_top_tb_services
 
     always @(negedge clk) begin
         //Switch to Production mode mode
-        else if ((WriteData[15:0] == 16'h15A2) && mailbox_write) begin
+        if ((WriteData[15:0] == 16'h15A2) && mailbox_write) begin
             security_state.device_lifecycle <= DEVICE_PRODUCTION;
             $display("Setting lifecycle to DEVICE_PRODUCTION\n");
         end

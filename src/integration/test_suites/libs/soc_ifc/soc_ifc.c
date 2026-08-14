@@ -68,7 +68,7 @@ void soc_ifc_set_mbox_status_field(enum mbox_status_e field) {
     lsu_write_32(CLP_MBOX_CSR_MBOX_STATUS,reg);
 }
 
-uint8_t soc_ifc_poll_mbox_state(uint32_t attempt_count, enum mbox_status_e exp_state) {
+uint8_t soc_ifc_poll_mbox_state(uint32_t attempt_count, enum mbox_fsm_e exp_state) {
     for(uint32_t ii=0; ii<attempt_count; ii++) {
         if(((lsu_read_32(CLP_MBOX_CSR_MBOX_STATUS) & MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_MASK) >> MBOX_CSR_MBOX_STATUS_MBOX_FSM_PS_LOW) == exp_state) {
             return 0;
