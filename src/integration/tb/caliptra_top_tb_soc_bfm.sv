@@ -884,7 +884,7 @@ import caliptra_top_tb_pkg::*; #(
                 if (read && write) // Need to merge the results
                     // only keep read response user bit
                     // OR the status, if one is an error, the whole transaction looks like an error
-                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, (axi_rresp.pop_front() || axi_bresp), 1'b1};
+                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, (axi_rresp.pop_front() | axi_bresp), 1'b1};
                 else if (read)
                     generic_input_wires <= {axi_ruser.pop_front(), 29'd0, axi_rresp.pop_front(), 1'b1};
                 else if (write)// write

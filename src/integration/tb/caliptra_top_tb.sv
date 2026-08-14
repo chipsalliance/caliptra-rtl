@@ -158,7 +158,7 @@ module caliptra_top_tb (
     logic [ 3:0] wstrb[$];
     logic [ 1:0] burst;
     logic        use_id;
-    logic        id;
+    logic [ 7:0] id;
     logic        write;
     logic        write_addr;
     logic        write_data;

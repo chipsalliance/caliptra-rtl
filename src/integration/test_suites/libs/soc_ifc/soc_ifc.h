@@ -151,7 +151,7 @@ void soc_ifc_mbox_dir_write_single(uint32_t wrptr, uint32_t wrdata);
 void soc_ifc_clear_execute_reg();
 uint8_t soc_ifc_chk_execute_uc();
 void soc_ifc_set_mbox_status_field(enum mbox_status_e field);
-uint8_t soc_ifc_poll_mbox_state(uint32_t attempt_count, enum mbox_status_e exp_state);
+uint8_t soc_ifc_poll_mbox_state(uint32_t attempt_count, enum mbox_fsm_e exp_state);
 uint32_t soc_ifc_mbox_read_rdptr();
 void soc_ifc_set_flow_status_field(uint32_t field);
 void soc_ifc_clr_flow_status_field(uint32_t field);
