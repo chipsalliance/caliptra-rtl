@@ -206,8 +206,6 @@ import aaxi_uvm_pkg::*;
 
   // pragma uvmf custom avery_vip_components begin
     // Avery VIP signals
-    //uc
-    aaxi_uvm_container  uc;             //VAR: UVM container
 
     // FIXME
     // This reset timing hack is necessary to work around a race condition bug
@@ -247,13 +245,6 @@ import aaxi_uvm_pkg::*;
     defparam monitor0.USER_SUPPORT= 5'b11111;
     defparam monitor0.VER= "AXI4";
 
-    initial begin
-      uc = new();
-      uvm_config_db #(aaxi_uvm_container)::set(uvm_root::get(), "*", "intf_uc", uc);
-
-      uc.ports = ports[0];
-      //uvm_config_db #(virtual aaxi_intf)::set(uvm_root::get(), "intf_uc", "ports", ports[0]);
-    end
   // pragma uvmf custom avery_vip_components end
 
   // pragma uvmf custom dut_instantiation begin
@@ -636,4 +627,3 @@ endmodule
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Serializes recovery items through the agent sequencer and translates
-// them into model operations. This is the only sequence-facing path to mutable
-// recovery state, preventing direct model access from virtual sequences.
+// Implements the control plane for the recovery endpoint. Virtual sequences
+// send load, clear, and query items through this driver, while AXI read traffic
+// reaches the same model through Avery callbacks and the agent's run_phase.
+// Routing commands here keeps queue mutation out of virtual sequences and keeps
+// those sequences independent of vendor FIFO internals.
 class soc_ifc_recovery_fifo_driver
   extends uvm_driver #(soc_ifc_recovery_fifo_item);
 
@@ -28,13 +30,17 @@ class soc_ifc_recovery_fifo_driver
     super.new(name, parent);
   endfunction
 
-  // Execute recovery commands until the run phase ends.
+  // Execute control commands until UVM terminates run_phase. Every request
+  // receives a response so callers know the driver completed a load or clear
+  // before continuing, and query callers receive the reported model fields.
   virtual task run_phase(uvm_phase phase);
     soc_ifc_recovery_fifo_item request;
     soc_ifc_recovery_fifo_item response;
     forever begin
       seq_item_port.get_next_item(request);
       response = soc_ifc_recovery_fifo_item::type_id::create("response");
+      // Preserve request routing metadata for get_response() in the originating
+      // command sequence.
       response.set_id_info(request);
       response.operation = request.operation;
       // Keep operation decoding here so the model remains an agent-private

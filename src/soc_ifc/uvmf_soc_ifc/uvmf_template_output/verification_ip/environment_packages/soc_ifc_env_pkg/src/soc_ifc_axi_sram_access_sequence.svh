@@ -12,9 +12,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Converts one virtual-sequence SRAM request into a sequencer/driver exchange.
-// The response path is used for reads and writes so agent completion is
-// serialized before the calling virtual sequence continues.
+// Provides the sequence API for direct access to the external SRAM endpoint.
+// It is designed to run on vsqr.axi_sram_sequencer after a parent sequence sets
+// operation, offset, and data. The corresponding driver accesses the endpoint's
+// shared Avery memory, providing a non-AXI path for initialization or inspection.
 class soc_ifc_axi_sram_access_sequence
   extends uvm_sequence #(soc_ifc_axi_sram_item);
 
@@ -29,7 +30,11 @@ class soc_ifc_axi_sram_access_sequence
     super.new(name);
   endfunction
 
-  // Send one SRAM request and return the response data.
+  // Convert the public sequence fields into one request and wait for the
+  // driver response. set_id_info() in the driver associates that response with
+  // this request, allowing get_response() to retrieve the matching completion.
+  // Copying response.data back into data gives callers one API for both writes
+  // and reads; write responses simply preserve completion ordering.
   virtual task body();
     soc_ifc_axi_sram_item request;
     soc_ifc_axi_sram_item response;

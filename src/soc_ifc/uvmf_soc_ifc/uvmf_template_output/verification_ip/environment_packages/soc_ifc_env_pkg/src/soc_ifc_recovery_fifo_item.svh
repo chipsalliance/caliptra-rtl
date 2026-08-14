@@ -12,22 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// One recovery agent operation. Load requests carry a complete image and
-// byte-based DMA block size; query responses report both storage levels.
+// Defines the sequence-side control operations for the streaming recovery
+// endpoint. These operations configure or inspect the testbench model; they
+// are not AXI commands. Loaded data is consumed independently by reads through
+// the Avery recovery subordinate.
 typedef enum int {
   RECOVERY_FIFO_LOAD_IMAGE,
   RECOVERY_FIFO_CLEAR,
   RECOVERY_FIFO_QUERY
 } soc_ifc_recovery_fifo_operation_e;
 
-// Carries one recovery command and its resulting FIFO state.
+// Carries one recovery command from a virtual sequence to the recovery driver.
+// A load transfers a complete test image plus the model's staging block size.
+// A query response distinguishes the finite AXI-visible FIFO from all image
+// data still held in either the front FIFO or the backing queue.
 class soc_ifc_recovery_fifo_item extends uvm_sequence_item;
 
   `uvm_object_utils(soc_ifc_recovery_fifo_item)
 
-  soc_ifc_recovery_fifo_operation_e operation;
-  bit [31:0] payload[];
-  int unsigned block_size_bytes;
+  soc_ifc_recovery_fifo_operation_e operation; // Model command to execute.
+  bit [31:0] payload[];                        // Complete load-image contents.
+  int unsigned block_size_bytes;               // Model staging granularity.
   int unsigned front_fifo_dwords_available; // Currently visible to AXI.
   int unsigned image_dwords_remaining;      // Front FIFO plus backing image.
   bit recovery_data_avail;
@@ -40,5 +45,8 @@ class soc_ifc_recovery_fifo_item extends uvm_sequence_item;
 
 endclass
 
+// Typed control sequencer exported through soc_ifc_virtual_sequencer. AXI data
+// movement remains passive from the sequence's perspective and occurs when an
+// AXI manager reads the separately registered Avery FIFO.
 typedef uvm_sequencer #(soc_ifc_recovery_fifo_item)
   soc_ifc_recovery_fifo_sequencer;

@@ -12,18 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Carries declarative SRAM geometry and response policies.
-// Delay objects are intentionally shared with callbacks so runtime setters can
-// change future transactions without recreating agent components.
+// Describes the external SRAM subordinate presented to AXI managers through the
+// Avery fabric. soc_ifc_env_configuration creates this object, the fabric
+// uses its address window for routing, and soc_ifc_axi_sram_agent uses the same
+// geometry for safe testbench-side preload/readback operations.
+//
+// The delay-range objects are handles, not copied scalar settings. The agent's
+// response callback retains these same handles, allowing a test to change B or
+// R backpressure policy at runtime without rebuilding or re-registering the
+// callback.
 class soc_ifc_axi_sram_config extends uvm_object;
 
   `uvm_object_utils(soc_ifc_axi_sram_config)
 
-  aaxi_addr_t base_addr;
-  aaxi_addr_t limit_addr;
-  int unsigned word_bytes;
-  soc_ifc_axi_delay_range b_delay;
-  soc_ifc_axi_delay_range r_delay;
+  aaxi_addr_t base_addr;      // Inclusive AXI address-map base.
+  aaxi_addr_t limit_addr;     // Inclusive AXI address-map limit.
+  int unsigned word_bytes;    // Configured boundary used for DWORD checks.
+  soc_ifc_axi_delay_range b_delay; // Delay before write responses.
+  soc_ifc_axi_delay_range r_delay; // Delay before each read-data beat.
 
   // Construct SRAM geometry and mutable response-delay policies.
   function new(string name = "soc_ifc_axi_sram_config");
@@ -32,8 +38,10 @@ class soc_ifc_axi_sram_config extends uvm_object;
     r_delay = soc_ifc_axi_delay_range::type_id::create("r_delay");
   endfunction
 
-  // Initialize geometry and startup delays before the agent build phase.
-  // Runtime tests subsequently modify only the shared delay-range objects.
+  // Initialize and validate geometry plus startup response timing before the
+  // environment build phase consumes this object. A DWORD must fit wholly
+  // within both the address window and one configured word_bytes region because
+  // the direct-access driver operates in 32-bit units.
   function void configure(input aaxi_addr_t base_addr,
                           input aaxi_addr_t limit_addr,
                           input int unsigned word_bytes,
@@ -55,13 +63,15 @@ class soc_ifc_axi_sram_config extends uvm_object;
     r_delay.configure(r_delay_min, r_delay_max);
   endfunction
 
-  // Update the B-response delay policy used by future writes.
+  // Update the shared B-response policy. The callback samples this range when
+  // Avery invokes it for a write response.
   function void set_b_response_delay(input int unsigned min_cycles,
                                      input int unsigned max_cycles);
     b_delay.set_range(min_cycles, max_cycles);
   endfunction
 
-  // Update the R-response delay policy used by future reads.
+  // Update the shared R-response policy. The callback independently samples
+  // the range when it processes the first and subsequent beats of a read burst.
   function void set_r_response_delay(input int unsigned min_cycles,
                                      input int unsigned max_cycles);
     r_delay.set_range(min_cycles, max_cycles);

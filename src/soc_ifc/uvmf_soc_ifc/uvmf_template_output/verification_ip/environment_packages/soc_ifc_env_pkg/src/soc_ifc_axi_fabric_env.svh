@@ -23,11 +23,11 @@ class soc_ifc_axi_fabric_env extends uvm_env;
 
   aaxi_agent      manager[];
   aaxi_agent      subordinate[];
-  aaxi_intc_agent interconnect_agent;
+  aaxi_pkg_xactor::aaxi_intc_agent interconnect_agent;
 
   aaxi_vip_config manager_config[];
   aaxi_vip_config subordinate_config[];
-  aaxi_intc_config interconnect_config;
+  aaxi_pkg_xactor::aaxi_intc_config interconnect_config;
 
   virtual aaxi_intf manager_vif[];
   virtual aaxi_intf subordinate_vif[];
@@ -252,7 +252,7 @@ class soc_ifc_axi_fabric_env extends uvm_env;
     uvm_config_db #(virtual aaxi_interconnect_intf)::set(
       this, "interconnect", "INTERCONNECT", interconnect_vif);
     interconnect_agent =
-      aaxi_intc_agent::type_id::create("interconnect", this);
+      aaxi_pkg_xactor::aaxi_intc_agent::type_id::create("interconnect", this);
     interconnect_agent.set_config(interconnect_config);
     `uvm_info("AXI_FABRIC",
       $sformatf(

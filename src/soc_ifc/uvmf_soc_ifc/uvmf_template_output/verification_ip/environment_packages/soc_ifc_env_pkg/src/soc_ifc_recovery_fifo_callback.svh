@@ -12,9 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Enforces the recovery agent's single-address FIXED-read protocol and
-// injects SLVERR on empty reads. The pre-data callback also provides the only
-// point early enough to lower availability before the final R beat completes.
+// Supplies recovery-specific behavior that a generic Avery FIFO does not know.
+// soc_ifc_environment registers this object on the recovery subordinate in
+// addition to the generic R-delay callback. Avery invokes it for reads reaching
+// that subordinate, allowing the model to check the single-address FIXED-burst
+// contract, report empty-FIFO accesses, and synchronize recovery_data_avail
+// with beat creation.
+//
+// This callback does not own storage or refill timing. It delegates queue state
+// to soc_ifc_recovery_fifo_model; the agent's clocked run_phase accounts accepted
+// handshakes and schedules later refills.
 class soc_ifc_recovery_fifo_callback extends aaxi_callbacks;
 
   `uvm_object_utils(soc_ifc_recovery_fifo_callback)
@@ -26,8 +33,9 @@ class soc_ifc_recovery_fifo_callback extends aaxi_callbacks;
     super.new(name);
   endfunction
 
-  // Recovery data is a single-address streaming FIFO. Reject addressing or
-  // burst modes that would turn it into ordinary incrementing memory.
+  // Check each accepted AR against the streaming-port contract. Recovery data
+  // is consumed repeatedly from one address, so report addressing or burst
+  // modes that do not match the intended FIFO semantics.
   virtual task read_address_channel_rx(aaxi_device_class bfm,
                                        ref aaxi_slave_tr tn);
     if (model == null)
@@ -40,7 +48,10 @@ class soc_ifc_recovery_fifo_callback extends aaxi_callbacks;
         $sformatf("Recovery FIFO read used non-FIXED burst %0d", tn.burst))
   endtask
 
-  // Prepare one R beat and lower availability before the final staged beat.
+  // Prepare one R beat before Avery sends it. An empty model marks the response
+  // as SLVERR and reports one underflow per load, clear, or reset generation.
+  // For valid data, commit notification is deliberately earlier than the
+  // RVALID/RREADY accounting performed by the agent.
   virtual task pre_rdata_beat_tx(aaxi_device_class bfm,
                                  ref aaxi_slave_tr tn);
     if (model == null)

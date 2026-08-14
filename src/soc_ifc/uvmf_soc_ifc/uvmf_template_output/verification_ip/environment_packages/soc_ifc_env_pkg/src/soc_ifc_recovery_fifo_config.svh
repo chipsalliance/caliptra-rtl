@@ -12,20 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Configures the finite AXI-facing FIFO and its response/refill timing.
-// `depth_dwords` describes only staged data visible to AXI; complete recovery
-// images are held separately by the agent-owned backing queue.
+// Describes the streaming recovery endpoint connected through the Avery AXI
+// fabric. The interface handle drives recovery_data_avail, the
+// FIFO address identifies the single FIXED-burst data port, and depth_dwords
+// sizes only the finite data currently visible to AXI. Complete test images may
+// be larger because soc_ifc_recovery_fifo_model retains unstaged words in a
+// separate backing queue.
+//
+// R delay models subordinate response pressure after an AXI request. Refill
+// delay models the independent producer-side gap between draining one staged
+// chunk and making the next chunk available.
 class soc_ifc_recovery_fifo_config extends uvm_object;
 
   `uvm_object_utils(soc_ifc_recovery_fifo_config)
 
-  virtual soc_ifc_recovery_if vif;
-  aaxi_addr_t fifo_data_addr;
+  virtual soc_ifc_recovery_if vif; // Drives streaming-boot sideband status.
+  aaxi_addr_t fifo_data_addr;      // Sole AXI address used for FIFO reads.
   // This depth limits staged AXI data. Supported recovery blocks are separately
   // capped at 64 bytes; complete images are held by the backing queue.
   int unsigned depth_dwords;
-  soc_ifc_axi_delay_range r_delay;
-  soc_ifc_axi_delay_range refill_delay;
+  soc_ifc_axi_delay_range r_delay;      // AR/R response timing policy.
+  soc_ifc_axi_delay_range refill_delay; // Empty-to-next-chunk timing policy.
 
   // Construct recovery FIFO geometry and mutable delay policies.
   function new(string name = "soc_ifc_recovery_fifo_config");
@@ -55,13 +62,15 @@ class soc_ifc_recovery_fifo_config extends uvm_object;
     refill_delay.configure(refill_delay_min, refill_delay_max);
   endfunction
 
-  // Update the R-response delay policy used by future reads.
+  // Update Avery read-response pacing for future AXI reads. This does not
+  // control when a drained front FIFO receives its next data chunk.
   function void set_r_response_delay(input int unsigned min_cycles,
                                      input int unsigned max_cycles);
     r_delay.set_range(min_cycles, max_cycles);
   endfunction
 
-  // Update the refill delay selected after the front FIFO drains.
+  // Update producer refill timing. The agent samples this range only when an
+  // accepted final beat empties a non-final chunk.
   function void set_refill_delay(input int unsigned min_cycles,
                                  input int unsigned max_cycles);
     refill_delay.set_range(min_cycles, max_cycles);

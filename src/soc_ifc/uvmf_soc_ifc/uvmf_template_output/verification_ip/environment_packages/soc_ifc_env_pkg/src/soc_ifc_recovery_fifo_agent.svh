@@ -12,9 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Owns recovery command execution, storage state, availability drive, and
-// clocked refill scheduling. The model performs queue operations; this
-// component converts FIFO-empty handshakes into delayed refill events.
+// Implements the complete testbench endpoint behind the streaming recovery
+// interface. It is connected in two directions:
+//   * virtual sequences send load/clear/query commands through sequencer/driver;
+//   * AXI reads reach the model through the Avery recovery subordinate, where
+//     this endpoint requires the streaming protocol's FIXED burst form.
+//
+// The model owns image and FIFO state, callback validates/prepares Avery reads,
+// delay_callback controls R-channel pacing, and this component's run_phase
+// observes accepted beats and schedules producer refills. soc_ifc_environment
+// binds all three services to the same Avery subordinate during connect_phase.
 class soc_ifc_recovery_fifo_agent extends uvm_agent;
 
   `uvm_component_utils(soc_ifc_recovery_fifo_agent)
@@ -26,13 +33,13 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
   soc_ifc_recovery_fifo_sequencer sequencer;
   soc_ifc_recovery_fifo_driver driver;
 
-  bit refill_pending;
-  bit reset_active;
-  int unsigned refill_cycles_remaining;
-  int unsigned refill_elapsed_cycles;
-  int unsigned refill_count;
-  int unsigned selected_refill_delay;
-  int unsigned observed_generation;
+  bit refill_pending;                  // A drained chunk awaits restaging.
+  bit reset_active;                    // Prevents repeated clear during reset.
+  int unsigned refill_cycles_remaining;// Countdown to the next staged chunk.
+  int unsigned refill_elapsed_cycles;  // Independent check of selected delay.
+  int unsigned refill_count;           // Number of completed delayed refills.
+  int unsigned selected_refill_delay;  // Policy sample for current countdown.
+  int unsigned observed_generation;    // Detects model changes from other processes.
 
   // Sample actual agent state on each recovery clock. Coverage distinguishes
   // final chunks, refill events, availability transitions, and underflow while
@@ -68,7 +75,9 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
     recovery_fifo_cg = new();
   endfunction
 
-  // Assign FIFO geometry, timing policy, and the recovery interface.
+  // Store the shared endpoint configuration before build_phase. The fabric
+  // consumes this same object for address routing, while this agent consumes
+  // FIFO geometry, sideband interface, and delay policies.
   function void set_config(soc_ifc_recovery_fifo_config configuration);
     this.configuration = configuration;
   endfunction
@@ -106,7 +115,9 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
     driver.seq_item_port.connect(sequencer.seq_item_export);
   endfunction
 
-  // Register the finite FIFO with the Avery subordinate used by the DUT DMA.
+  // Register the model's finite front FIFO with the Avery subordinate used by
+  // the DUT DMA. Callback registration remains in soc_ifc_environment because
+  // it is a cross-component connection rather than model initialization.
   function void bind_bfm(aaxi_device_class bfm);
     model.bind_bfm(bfm);
     `uvm_info("RECOVERY_FIFO",
@@ -126,9 +137,10 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
     selected_refill_delay = 0;
   endfunction
 
-  // Stage the next chunk only after the front FIFO drains. Compare elapsed
-  // cycles with the selected policy before refill so fixed and random delays
-  // are checked by the agent that actually performs the scheduling.
+  // Complete a scheduled refill by moving the next model chunk into Avery.
+  // Compare an elapsed counter with the countdown selection so off-by-one
+  // errors in zero, fixed, and random delay handling are caught where timing is
+  // implemented rather than hidden in the storage model.
   protected function bit refill_front_fifo();
     int unsigned staged_dwords;
     if (refill_elapsed_cycles != selected_refill_delay)
@@ -146,7 +158,10 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
     return staged_dwords != 0;
   endfunction
 
-  // Observe accepted reads, schedule refills, and sample FIFO coverage.
+  // Observe recovery-clock activity continuously. Avery callbacks run in the
+  // subordinate's transaction processes, so this clocked loop is responsible
+  // for the separate RVALID/RREADY acceptance event and for turning a drained
+  // front chunk into a refill after the configured producer delay.
   virtual task run_phase(uvm_phase phase);
     bit read_beat;
     bit refill_event;
@@ -159,6 +174,8 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
       front_fifo_emptied = 1'b0;
 
       if (!configuration.vif.rst_n) begin
+        // Clear once on reset entry. Re-clearing every reset cycle would keep
+        // changing generation and obscure whether a real command replaced data.
         if (!reset_active)
           model.clear();
         reset_active = 1'b1;
@@ -186,6 +203,8 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
           front_fifo_emptied = model.note_read_beat_handshake();
           if (front_fifo_emptied &&
               model.backing_dwords_remaining() != 0) begin
+            // Select a new delay per drained chunk. This models an independently
+            // paced recovery producer rather than AXI R-channel backpressure.
             selected_refill_delay =
               configuration.refill_delay.next_delay();
             refill_elapsed_cycles = 0;
@@ -228,12 +247,13 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
     end
   endtask
 
-  // Report incomplete recovery state at the end of a test.
+  // Report incomplete endpoint state at test end. This checker treats any
+  // loaded recovery image as expected to be fully consumed before the test ends.
   virtual function void check_phase(uvm_phase phase);
     super.check_phase(phase);
-    // Integration tests must consume every loaded image. These end-state checks
-    // replace sequence-side peeks into model internals and identify whichever
-    // DMA scenario left stale recovery state behind.
+    // Tests using this agent must consume every loaded image. These end-state
+    // checks replace sequence-side peeks into model internals and identify
+    // recovery scenarios that leave stale state behind.
     if (refill_pending)
       `uvm_error("RECOVERY_FIFO",
         "Test ended with a recovery refill pending")

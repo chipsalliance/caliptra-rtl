@@ -12,9 +12,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Converts one recovery operation into a sequencer/driver exchange. Query
-// responses distinguish AXI-visible front-FIFO occupancy from total image data
-// remaining across both storage levels.
+// Provides the virtual-sequence API for preparing and inspecting streaming
+// recovery data. A parent sequence fills these public fields and starts this
+// sequence on vsqr.recovery_fifo_sequencer. The driver then updates the
+// agent-owned model; actual image consumption occurs separately when the DUT
+// reads the recovery subordinate and is observed through its AXI callbacks.
 class soc_ifc_recovery_fifo_command_sequence
   extends uvm_sequence #(soc_ifc_recovery_fifo_item);
 
@@ -33,7 +35,11 @@ class soc_ifc_recovery_fifo_command_sequence
     super.new(name);
   endfunction
 
-  // Send one recovery command and copy the response state to the sequence.
+  // Send one model command and wait for completion. The response is useful for
+  // all operations because it establishes ordering with the driver's model
+  // update; query operations additionally return externally useful state. This
+  // avoids virtual-sequence reads of model internals and keeps Avery-specific
+  // storage behind the recovery agent boundary.
   virtual task body();
     soc_ifc_recovery_fifo_item request;
     soc_ifc_recovery_fifo_item response;
@@ -52,6 +58,8 @@ class soc_ifc_recovery_fifo_command_sequence
         "Clearing recovery image state", UVM_LOW)
     finish_item(request);
     get_response(response);
+    // Publish both storage views because "front FIFO empty" can be true while
+    // a larger image still has data waiting for a delayed refill.
     front_fifo_dwords_available =
       response.front_fifo_dwords_available;
     image_dwords_remaining = response.image_dwords_remaining;

@@ -12,27 +12,34 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Models a complete recovery image behind a finite AXI-facing Avery FIFO.
-// The backing queue decouples image size from physical FIFO depth; this object
-// manages storage and invariants but performs no clocked refill scheduling.
+// Owns storage and accounting for the testbench implementation of the streaming
+// recovery data buffer. AXI readers see a finite Avery FIFO at one address,
+// while the DUT also sees recovery_data_avail. Tests load a complete image
+// through the recovery command sequencer. This model bridges those views with:
+//   * backing_image_q for image words not yet exposed to AXI, and
+//   * Avery's fifo_data_Q for the currently exposed front chunk.
+//
+// The model performs immediate state transitions only. The enclosing agent owns
+// clocked handshake observation and refill-delay scheduling, while the recovery
+// callback invokes pre-RVALID commit handling.
 class soc_ifc_recovery_fifo_model extends uvm_object;
 
   `uvm_object_utils(soc_ifc_recovery_fifo_model)
 
-  soc_ifc_recovery_fifo_config configuration;
-  aaxi_device_class bfm;
+  soc_ifc_recovery_fifo_config configuration; // Endpoint geometry and policies.
+  aaxi_device_class bfm; // Recovery subordinate and its registered front FIFO.
   // Backing storage holds all words not yet exposed to AXI. It is intentionally
   // independent of front FIFO depth for test-sized recovery images.
   bit [31:0] backing_image_q[$];
-  int unsigned front_fifo_dwords_available;
-  int unsigned image_dwords_consumed;
-  int unsigned total_image_dwords;
-  int unsigned block_size_bytes;
-  int unsigned block_size_dwords;
-  int unsigned generation;
-  bit final_chunk_staged;
-  bit last_staged_beat_committed;
-  bit underflow_reported;
+  int unsigned front_fifo_dwords_available; // Staged words not handshaken.
+  int unsigned image_dwords_consumed;       // Accepted DUT read beats.
+  int unsigned total_image_dwords;          // Size of the current loaded image.
+  int unsigned block_size_bytes;            // Requested staging block size.
+  int unsigned block_size_dwords;           // Staging granularity.
+  int unsigned generation; // Invalidates refill state after load/clear/reset.
+  bit final_chunk_staged;   // No backing data remains after current chunk.
+  bit last_staged_beat_committed; // Availability dropped before last R beat.
+  bit underflow_reported;   // Suppresses duplicate errors for one generation.
 
   // Construct an empty recovery FIFO model.
   function new(string name = "soc_ifc_recovery_fifo_model");
@@ -48,7 +55,9 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     clear();
   endfunction
 
-  // Register the finite front FIFO in the Avery BFM.
+  // Register the finite AXI-visible queue with the recovery subordinate. The
+  // environment calls this after Avery has built the BFM but before any test
+  // command can stage data.
   function void bind_bfm(aaxi_device_class bfm);
     if (bfm == null)
       `uvm_fatal("RECOVERY_FIFO", "Cannot bind a null Avery BFM")
@@ -57,7 +66,8 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
                  configuration.depth_dwords);
   endfunction
 
-  // Find the registered front FIFO index in the Avery model.
+  // Resolve the queue by address instead of retaining an index that could
+  // become stale if Avery or another callback adds FIFO entries.
   protected function int find_fifo();
     if (bfm == null)
       `uvm_fatal("RECOVERY_FIFO", "Avery BFM is not bound")
@@ -70,7 +80,8 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     return -1;
   endfunction
 
-  // Drive recovery_data_avail through the configured virtual interface.
+  // Drive the streaming-boot sideband observed by the DUT. Centralizing the
+  // assignment keeps sideband state synchronized with model occupancy.
   protected function void set_data_avail(bit value);
     configuration.vif.recovery_data_avail = value;
   endfunction
@@ -98,9 +109,10 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     end
   endfunction
 
-  // Validate the DMA byte-based block contract before mutating model state.
-  // Supported recovery blocks are at most one legal 64-byte FIXED AXI burst
-  // and must fit in the front FIFO.
+  // Validate the byte-based staging contract before mutating model state.
+  // A block is the refill/staging granularity, not the complete image size. The
+  // model restricts it to at most 64 bytes and requires it to fit in the finite
+  // front FIFO so every non-final refill contains whole blocks.
   protected function bit validate_image(
       input bit [31:0] payload[],
       input int unsigned requested_block_size_bytes);
@@ -157,9 +169,10 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     void'(stage_next_chunk());
   endfunction
 
-  // Fill an empty front FIFO with the largest whole-block multiple that fits.
-  // Only the final chunk may be shorter than one block because DMA byte_count
-  // tells hardware exactly how many final words remain.
+  // Transfer backing words into an empty Avery front FIFO. For non-final data,
+  // stage the largest whole-block multiple that fits so refills never split a
+  // block. The final chunk may be shorter because no later refill must preserve
+  // a whole-block boundary.
   function int unsigned stage_next_chunk();
     int fifo_idx;
     int unsigned stage_dwords;
@@ -174,6 +187,8 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     if (backing_image_q.size() == 0)
       return 0;
 
+    // Choosing final/non-final status before queue mutation allows both the
+    // availability callback and coverage to describe the staged chunk.
     if (backing_image_q.size() <= configuration.depth_dwords) begin
       // All remaining image data fits, so this is the final chunk and may be
       // shorter than block_size_dwords.
@@ -197,9 +212,8 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
         "Non-final recovery refill is not a whole block multiple")
 
     fifo_idx = find_fifo();
-    // Avery exposes no public preload API. Keep direct queue construction
-    // isolated in this model so sequences and agent control code remain
-    // independent of vendor internals.
+    // Keep direct construction of Avery queue entries isolated in this model so
+    // sequences and agent control code remain independent of vendor internals.
     repeat (stage_dwords) begin
       data = backing_image_q.pop_front();
       entry = new(configuration.fifo_data_addr,
@@ -215,9 +229,10 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     return stage_dwords;
   endfunction
 
-  // Called before Avery presents an R beat. If it is the final staged word,
-  // lower availability now so the signal is already low when that beat later
-  // handshakes.
+  // Called by soc_ifc_recovery_fifo_callback before Avery presents an R beat.
+  // The model's occupancy counter is not decremented yet because the manager may
+  // stall RREADY. Only the sideband is committed early for the last staged word,
+  // ensuring it is low by the eventual final handshake.
   function void note_read_beat_committed();
     if (front_fifo_dwords_available == 0)
       return;
@@ -227,9 +242,9 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     end
   endfunction
 
-  // Called only after RVALID/RREADY. Account the consumed word and return one
-  // when the front FIFO drains, which tells the agent to select and schedule
-  // the next refill.
+  // Called by the agent only after RVALID/RREADY. Account the consumed word and
+  // return one when the front FIFO drains; the return value is the boundary
+  // between storage accounting here and delayed refill scheduling in the agent.
   function bit note_read_beat_handshake();
     if (front_fifo_dwords_available == 0) begin
       if (!underflow_reported)

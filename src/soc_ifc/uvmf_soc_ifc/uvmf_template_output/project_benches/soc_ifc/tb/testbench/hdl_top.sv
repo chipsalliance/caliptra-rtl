@@ -489,56 +489,6 @@ import pv_defines_pkg::*;
     );
 `endif
 
-
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-    // -----------------------------------------------------------------------
-    // PCR Vault (pcrvault) instance.
-    //
-    // In subsystem mode the SHA accelerator boots LOCKED (RDL LOCK=1) and the
-    // HW ICCM-content-hash flow (sha512_acc_iccm_hash) releases it only after it
-    // measures ICCM and extends PCR4/PCR5 to EXTEND_DONE. That PCR extend needs a
-    // PCR vault to answer reads and accept writes. This instance provides it so
-    // the explicitly requested reset flow can unlock the SHA accelerator.
-    //
-    // soc_ifc presents a single PCR read/write client; connect it to client index
-    // 1 (matching caliptra_top) and tie off the unused client and the SW AHB
-    // interface.
-    // -----------------------------------------------------------------------
-    always_comb begin
-        pv_read_arr        = '0;
-        pv_write_arr       = '0;
-        pv_read_arr[1]     = dut_pv_read;
-        pv_write_arr[1]    = dut_pv_write;
-    end
-
-    pv #(
-        .AHB_ADDR_WIDTH(PV_ADDR_W),
-        .AHB_DATA_WIDTH(32)
-    ) i_pv (
-        .clk                 (clk                                        ),
-        .rst_b               (cptra_status_agent_bus.cptra_noncore_rst_b ),
-        .core_only_rst_b     (cptra_status_agent_bus.cptra_uc_rst_b      ),
-        .cptra_pwrgood       (soc_ifc_ctrl_agent_bus.cptra_pwrgood       ),
-        .fw_update_rst_window(cptra_status_agent_bus.fw_update_rst_window),
-        // SW AHB interface tied off (no firmware PCR configuration in this bench)
-        .haddr_i             ('0    ),
-        .hwdata_i            ('0    ),
-        .hsel_i              (1'b0  ),
-        .hwrite_i            (1'b0  ),
-        .hready_i            (1'b1  ),
-        .htrans_i            (2'b0  ),
-        .hsize_i             (3'b0  ),
-        .hresp_o             (      ),
-        .hreadyout_o         (      ),
-        .hrdata_o            (      ),
-        .pv_read             (pv_read_arr    ),
-        .pv_write            (pv_write_arr   ),
-        .pv_rd_resp          (pv_rd_resp_arr ),
-        .pv_wr_resp          (pv_wr_resp_arr ),
-        .iccm_unlock         (dut_iccm_unlock)
-    );
-`endif
-
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HMASTLOCK = 1'b0;
