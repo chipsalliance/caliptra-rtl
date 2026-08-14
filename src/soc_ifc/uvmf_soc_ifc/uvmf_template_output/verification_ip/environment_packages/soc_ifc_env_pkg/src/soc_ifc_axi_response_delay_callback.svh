@@ -24,6 +24,12 @@
 // replacing the callback. A null policy means "do not assign that transaction
 // delay field", which permits the same class to serve read-only and read/write
 // endpoints.
+//
+// TODO: Evaluate replacing this callback with Avery's built-in delay
+// support: auto_slave_delay with minwaits/maxwaits, config_slave_delay with
+// fixed B/R controls randomized only while the endpoint is idle, or the
+// aaxi_slave_delays delay database. Compare READY-channel coupling, outstanding
+// transaction safety, runtime policy updates, and per-R-beat randomization.
 class soc_ifc_axi_response_delay_callback extends aaxi_callbacks;
 
   `uvm_object_utils(soc_ifc_axi_response_delay_callback)
