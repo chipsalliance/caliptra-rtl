@@ -42,63 +42,41 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void soc_write_random_to_register_group_and_track(ifc_register_group_t group, ifc_reg_exp_dict_t *dict) {
     int count = get_register_count(group);
-    VPRINTF(LOW,  "Writing random values to all %s registers (%d total):\n", get_group_name(group), count);
-
-    bool ro_reg = false;
 
     for (int i = 0; i < count; i++) {
         const ifc_register_info_t *reg = get_register_info(group, i);
 
-        if (reg) {
-            // Check if this register should be excluded using our efficient method
-            if (!is_register_excluded(reg->address)) {
-                // Generate a unique value for each register
-                uint32_t rand_value = xorshift32();
+        if (!reg || is_register_excluded(reg->address)) continue;
 
-                /* Get mask for this register */
-                uint32_t mask = get_register_mask(reg->address);
-
-                // Store in dictionary
-                if (!ro_reg) {
-                    if (set_reg_exp_data(dict, reg->address, rand_value, mask, true, group, true) != 0) {
-                        VPRINTF(MEDIUM, "  WARNING: Could not store expected data for %s[%d]\n", get_group_name(group), i);
-                    }
-                }
-
-                VPRINTF(MEDIUM, "  Writing 0x%08x to %s[%d] (0x%08x)\n", rand_value, get_group_name(group), i, reg->address);
-                soc_write_32(reg->address, rand_value);
-            } else {
-                VPRINTF(MEDIUM, "  Skipping excluded register %s[%d] (0x%08x)\n", get_group_name(group), i, reg->address);
-            }
+        uint32_t rand_value = xorshift32();
+        uint32_t mask = get_register_mask(reg->address);
+        if (set_reg_exp_data(dict, reg->address, rand_value, mask, true, group, true) != 0) {
+            VPRINTF(ERROR, "Dictionary full\n");
+            SEND_STDOUT_CTRL(TB_CMD_TEST_FAIL);
+            while(1);
         }
+        VPRINTF(MEDIUM, "Writing 0x%08x to (0x%08x)\n", rand_value, reg->address);
+        soc_write_32(reg->address, rand_value);
     }
 }
 
+
 void soc_write_to_register_group_and_track(ifc_register_group_t group, uint32_t write_data, ifc_reg_exp_dict_t *dict) {
     int count = get_register_count(group);
-    VPRINTF(LOW,  "Writing fixed value to all %s registers (%d total):\n", get_group_name(group), count);
 
     for (int i = 0; i < count; i++) {
         const ifc_register_info_t *reg = get_register_info(group, i);
 
-        if (reg) {
-            // Check if this register should be excluded using our efficient method
-            if (!is_register_excluded(reg->address)) {
+        if (!reg || is_register_excluded(reg->address)) continue;
 
-                /* Get mask for this register */
-                uint32_t mask = get_register_mask(reg->address);
-
-                // Store in dictionary
-                if (set_reg_exp_data(dict, reg->address, write_data, mask, true, group, true) != 0) {
-                    VPRINTF(MEDIUM, "  WARNING: Could not store expected data for %s[%d]\n", get_group_name(group), i);
-                }
-
-                VPRINTF(MEDIUM, "  Writing 0x%08x to %s[%d] (0x%08x)\n", write_data, get_group_name(group), i, reg->address);
-                soc_write_32(reg->address, write_data);
-            } else {
-                VPRINTF(MEDIUM, "  Skipping excluded register %s[%d] (0x%08x)\n", get_group_name(group), i, reg->address);
-            }
+        uint32_t mask = get_register_mask(reg->address);
+        if (set_reg_exp_data(dict, reg->address, write_data, mask, true, group, true) != 0) {
+            VPRINTF(ERROR, "Dictionary full\n");
+            SEND_STDOUT_CTRL(TB_CMD_TEST_FAIL);
+            while(1);
         }
+        VPRINTF(MEDIUM, "Writing 0x%08x to (0x%08x)\n", write_data, reg->address);
+        soc_write_32(reg->address, write_data);
     }
 }
 
@@ -114,7 +92,7 @@ void main(void) {
     };
 
     const int num_groups =  sizeof(ro_reg_groups) / sizeof(ro_reg_groups[0]);
-    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0, 0x1A7F);
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0, 0x1AA2);
 
     if (rst_count == 1) {
         ifc_init();
