@@ -1,4 +1,6 @@
 +define+MAP_PROT_ATTR
++define+AVERY_AXI_UVM+AVERY_UVM
++define+AVERY_AXI_INTERCONNECT
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/libs/rtl
