@@ -155,7 +155,6 @@ void init_mask_dict(void);
 const ifc_register_info_t* get_register_info(ifc_register_group_t group, int index);
 int get_register_count(ifc_register_group_t group);
 uint32_t get_register_mask(uint32_t address);
-const char* get_group_name(ifc_register_group_t group);
 int add_mask_entry(uint32_t address, uint32_t mask);
 void write_random_to_register_group_and_track(ifc_register_group_t group, ifc_reg_exp_dict_t *dict);
 void write_to_register_group_and_track(ifc_register_group_t group, uint32_t write_data, ifc_reg_exp_dict_t *dict);

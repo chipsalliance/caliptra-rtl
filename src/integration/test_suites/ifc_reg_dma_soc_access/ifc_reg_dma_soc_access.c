@@ -36,20 +36,16 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define TB_CMD_TEST_PASS 0xFF
 #define TB_CMD_TEST_FAIL 0x01
 
-int check_if_soc_write_ignored(uintptr_t reg_addr) {
-    uint32_t initial_value = lsu_read_32(reg_addr);
-    uint32_t rand_value = xorshift32();
-
-    VPRINTF(LOW, "Testing SoC write to 0x%x\n", reg_addr);
-    if(soc_write_32(reg_addr, rand_value)) {
-        VPRINTF(LOW, "Can't access register from SoC, addr: 0x%x\n", reg_addr);
+int check_if_soc_rw_ignored(uintptr_t reg_addr) {
+    VPRINTF(LOW, "Testing SoC access to 0x%x\n", reg_addr);
+    if(!soc_write_32(reg_addr, xorshift32())) {
+        VPRINTF(ERROR, "SoC DMA write accepted, addr: 0x%x\n", reg_addr);
         return 1;
     }
 
-    uint32_t new_value = lsu_read_32(reg_addr);
-
-    if(new_value != initial_value) {
-        VPRINTF(LOW, "Register value changed after SoC write, written: 0x%x to 0x%x, expected (initial): 0x%x\n", rand_value, reg_addr, initial_value);
+    uint32_t read_value = lsu_read_32(reg_addr);
+    if(read_value) {
+        VPRINTF(ERROR, "(0x%x): Read non-zero value: 0x%x. Expected the read to be rejected.\n", reg_addr, read_value);
         return 1;
     }
     return 0;
@@ -71,7 +67,7 @@ void main(void) {
     const int soc_ro_reg_count =  sizeof(soc_ro_regs) / sizeof(soc_ro_regs[0]);
 
     for(int i = 0; i < soc_ro_reg_count; i++) {
-        error_count += check_if_soc_write_ignored(soc_ro_regs[i]);
+        error_count += check_if_soc_rw_ignored(soc_ro_regs[i]);
     }
 
     if (error_count == 0 ) {

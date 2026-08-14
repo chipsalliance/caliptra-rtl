@@ -82,7 +82,11 @@ bool is_ro(ifc_register_group_t group) {
 }
 
 uint32_t report_mismatch(ifc_register_group_t group, uint32_t id, uint32_t reg_addr, uint32_t read_data, uint32_t exp_data) {
-    VPRINTF(LOW, "No match: %s[%d] (0x%08x): Read 0x%08x, Expected 0x%08x\n", get_group_name(group), id, reg_addr, read_data, exp_data);
+    VPRINTF(LOW, "(0x%08x): Read 0x%08x, Expected 0x%08x\n", reg_addr, read_data, exp_data);
+}
+
+uint32_t report_no_data(uint32_t reg_addr) {
+    VPRINTF(ERROR, "(0x%08x): No expected data in dictionary\n", reg_addr);
 }
 
 // Array of register with non-zero initial values
@@ -536,57 +540,6 @@ const ifc_register_info_t *register_groups[] = {
     REG_GROUP_INTERRUPT_NOTIF_COUNTERS_INCR_RO_ARRAY
 };
 
-/* Function to get a string representation of a register group */
-const char* get_group_name(ifc_register_group_t group) {
-    switch(group) {
-        case REG_GROUP_CAPABILITIES: return "Capabilities";
-        case REG_GROUP_STRAPS_RO: return "Caliptra Straps RO";
-        case REG_GROUP_STATUS: return "Status";
-        case REG_GROUP_STATUS_RO: return "Status-RO";
-        case REG_GROUP_SECURITY_RO: return "Security-RO";
-        case REG_GROUP_ERROR_RW1C: return "Ftl/Non-Ftl err W1C";
-        case REG_GROUP_ERROR: return "Ftl/Non-Ftl Err";
-        case REG_GROUP_ERROR_MASK: return "Err Mask";
-        case REG_GROUP_WATCHDOG: return "Watchdog";
-        case REG_GROUP_WATCHDOG_RO: return "Watchdog-RO";
-        case REG_GROUP_MCU: return "MCU";
-        case REG_GROUP_CONTROL: return "Control";
-        case REG_GROUP_CONTROL_RO: return "Control RO (Tap Access RW in Debug Mode)";
-        case REG_GROUP_MBOX: return "IFC Mailbox AXI User";
-        case REG_GROUP_MBOX_RW1S: return "IFC Mailbox AXI User Lock";
-        case REG_GROUP_DBG_MANUF_SERVICE: return "Debug Services";
-        case REG_GROUP_GENERIC_WIRES: return "Generic Wires";
-        case REG_GROUP_GENERIC_WIRES_RO: return "Generic Wires - RO";
-        case REG_GROUP_FW: return "FW Reset Cycles";
-        case REG_GROUP_FW_PULSE_RW1S: return "FW Reset";
-        case REG_GROUP_TRNG: return "TRNG control registers";
-        case REG_GROUP_TRNG_RW1S: return "TRNG AXI User Lock";
-        case REG_GROUP_FUSE: return "Fuse AXI User";
-        case REG_GROUP_FUSE_RW1S: return "Fuse AXI User Lock";
-        case REG_GROUP_FUSE_RO: return "Fuse Status - RO";
-        case REG_GROUP_OWNER_PK_HASH_RO: return "Caliptra Owner PK Hash - RO";
-        case REG_GROUP_UDS_RO: return "Unique Device Secret - RO";
-        case REG_GROUP_FIELD_ENTROPY_RO: return "Field Entropy - RO";
-        case REG_GROUP_VENDOR_PK_HASH_RO: return "Vendor PK Hash - RO";
-        case REG_GROUP_ECC_REVOCATION_RO: return "ECC Revocation - RO";
-        case REG_GROUP_SVN_RO: return "Security Version Number - RO";
-        case REG_GROUP_ANTI_ROLLBACK_RO: return "Anti Rollback - RO";
-        case REG_GROUP_IDEVID_RO: return "IDevID - RO";
-        case REG_GROUP_MANUF_DBG_UNLOCK_RO: return "Manufacturing Debug Unlock Token - RO";
-        case REG_GROUP_SOC_STEPPING_RO: return " SoC Stepping - RO";
-        case REG_GROUP_KEY_TYPE_RO: return "PQC Key Type - RO";
-        case REG_GROUP_INTERRUPT_EN: return "Intrpt Enable";
-        case REG_GROUP_INTERRUPT_GLOBAL_STATUS_RO: return "Intrpt Global Status RO";
-        case REG_GROUP_INTERRUPT_STATUS_RW1C: return "Intrpt Status W1C";
-        case REG_GROUP_INTERRUPT_TRIGGER_PULSE_RW1S: return "Intrpt Trigger Pulse W1S";
-        case REG_GROUP_INTERRUPT_ERROR_COUNTERS: return "Err Intrpt Counters";
-        case REG_GROUP_INTERRUPT_NOTIF_COUNTERS: return "Notif Intrpt Counters";
-        case REG_GROUP_INTERRUPT_ERROR_COUNTERS_INCR_RO: return "Err Intrpt Counters Increment - RO";
-        case REG_GROUP_INTERRUPT_NOTIF_COUNTERS_INCR_RO: return "Notif Intrpt Counters Increment - RO";
-        default: return "Unknown";
-    }
-}
-
 /* Get the number of registers in a group */
 int get_register_count(ifc_register_group_t group) {
     int count = 0;
@@ -986,8 +939,7 @@ int exclude_register(uint32_t reg_addr) {
         return 0;
     }
 
-    // Collision table is full
-    VPRINTF(WARNING, "Collision table full, cannot add register 0x%08x\n", reg_addr);
+    VPRINTF(WARNING, "Collision table full");
     return -1;
 }
 
@@ -1096,13 +1048,8 @@ int read_register_group_and_verify(ifc_register_group_t group, ifc_reg_exp_dict_
     for (int i = 0; i < count; i++) {
         const ifc_register_info_t *reg = get_register_info(group, i);
 
-        if (!reg) {
-            VPRINTF(ERROR, "Register index %d not found in group\n", i);
-            continue;
-        }
-
         // Skip excluded registers with collision-aware check
-        if (is_register_excluded(reg->address)) {
+        if (!reg || is_register_excluded(reg->address)) {
             continue;
         }
 
@@ -1112,14 +1059,14 @@ int read_register_group_and_verify(ifc_register_group_t group, ifc_reg_exp_dict_
             const ifc_register_info_t *cmd_reg = get_register_info(REG_GROUP_GENERIC_WIRES, 0);
             const ifc_register_info_t *rsp_reg0 = get_register_info(REG_GROUP_GENERIC_WIRES_RO, 0);
             const ifc_register_info_t *rsp_reg1 = get_register_info(REG_GROUP_GENERIC_WIRES_RO, 1);
-            ifc_reg_write(cmd_reg->address, 0x207F | ((i << 7) & 0xF00));
+            ifc_reg_write(cmd_reg->address, 0x20A2 | ((i << 7) & 0xF00));
             read_data = i & 1 ? ifc_reg_read(rsp_reg0->address): ifc_reg_read(rsp_reg1->address);
         }
         if (group == REG_GROUP_FIELD_ENTROPY_RO && use_hw) {
             const ifc_register_info_t *cmd_reg = get_register_info(REG_GROUP_GENERIC_WIRES, 0);
             const ifc_register_info_t *rsp_reg0 = get_register_info(REG_GROUP_GENERIC_WIRES_RO, 0);
             const ifc_register_info_t *rsp_reg1 = get_register_info(REG_GROUP_GENERIC_WIRES_RO, 1);
-            ifc_reg_write(cmd_reg->address, 0x307F | ((i << 7) & 0xF00));
+            ifc_reg_write(cmd_reg->address, 0x30A2 | ((i << 7) & 0xF00));
             read_data = i & 1 ? ifc_reg_read(rsp_reg0->address): ifc_reg_read(rsp_reg1->address);
         }
 
@@ -1181,8 +1128,7 @@ int read_register_group_and_verify(ifc_register_group_t group, ifc_reg_exp_dict_
                             mismatch_count++;
                         }
                     } else {
-                        VPRINTF(ERROR, "%s[%d] (0x%08x): Read 0x%08x, No expected data in dictionary\n",
-                                get_group_name(group), i, reg->address, read_data);
+                        report_no_data(reg->address);
                     }
                 }
             } else if (reset_type == WARM_RESET) {
@@ -1222,8 +1168,7 @@ int read_register_group_and_verify(ifc_register_group_t group, ifc_reg_exp_dict_
                             mismatch_count++;
                         }
                     } else {
-                        VPRINTF(ERROR, "%s[%d] (0x%08x): Read 0x%08x, No expected data in dictionary\n",
-                                get_group_name(group), i, reg->address, read_data);
+                        report_no_data(reg->address);
                     }
                 } else {
                     if (reg->has_init_value == true) {
@@ -1282,7 +1227,7 @@ int read_register_group_and_verify(ifc_register_group_t group, ifc_reg_exp_dict_
                                 mismatch_count++;
                             }
                         } else {
-                            VPRINTF(ERROR, "%s[%d] (0x%08x): Read 0x%08x, No expected data in dictionary\n", get_group_name(group), i, reg->address, read_data);
+                            report_no_data(reg->address);
                         }
                     }
                 }
@@ -1315,7 +1260,7 @@ int read_register_group_and_verify(ifc_register_group_t group, ifc_reg_exp_dict_
                     mismatch_count++;
                 }
             } else {
-                VPRINTF(ERROR, "%s[%d] (0x%08x): Read 0x%08x, No expected data in dictionary\n", get_group_name(group), i, reg->address, read_data);
+                report_no_data(reg->address);
             }
         }
     }
@@ -1347,12 +1292,10 @@ void read_register_group_and_track(ifc_register_group_t group, ifc_reg_exp_dict_
 
             // Store in dictionary
             if (set_reg_exp_data(dict, reg->address, read_data, mask, false, group, false) != 0) {
-                VPRINTF(WARNING, "Could not store read data for %s[%d]\n", get_group_name(group), i);
+                VPRINTF(ERROR, "Dictionary full\n");
             }
         }
     }
-
-    VPRINTF(LOW, "Register tracking complete: %d register(s) read and tracked\n", count);
 }
 
 
