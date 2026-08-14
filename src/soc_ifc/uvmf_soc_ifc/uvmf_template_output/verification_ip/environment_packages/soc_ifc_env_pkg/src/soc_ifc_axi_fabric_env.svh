@@ -71,15 +71,12 @@ class soc_ifc_axi_fabric_env extends uvm_env;
       input aaxi_vip_config cfg,
       input virtual aaxi_intf vif,
       input int unsigned port_id,
-      input int unsigned id_width,
       input bit is_active);
     cfg.vif = vif;
     cfg.set_config_int("version", AAXI4);
     cfg.set_config_int("is_active", is_active);
     cfg.set_config_int("port_id", port_id);
     cfg.set_config_int("data_bus_bytes", soc_ifc_pkg::CPTRA_AXI_DMA_DATA_WIDTH / 8);
-    if (id_width != 0)
-      cfg.set_config_int("id_width", id_width);
     cfg.set_config_int("total_outstanding_depth", configuration.outstanding_depth);
     cfg.set_config_int("id_outstanding_depth", configuration.outstanding_depth);
     cfg.set_config_int("opt_awuser_enable", 1);
@@ -139,8 +136,9 @@ class soc_ifc_axi_fabric_env extends uvm_env;
       manager_config[i] = aaxi_vip_config::type_id::create(
         $sformatf("manager_config[%0d]", i));
       configure_common(manager_config[i], manager_vif[i], i,
-                       aaxi_pkg::AAXI_ID_WIDTH,
                        (i == configuration.soc_manager_idx));
+      manager_config[i].set_config_int(
+        "id_width", soc_ifc_pkg::CPTRA_AXI_DMA_ID_WIDTH);
       manager_config[i].set_config_int("agent_type", AAXI_MASTER);
     end
     configure_address_map(manager_config[configuration.soc_manager_idx],
@@ -155,7 +153,6 @@ class soc_ifc_axi_fabric_env extends uvm_env;
       subordinate_config[i] = aaxi_vip_config::type_id::create(
         $sformatf("subordinate_config[%0d]", i));
       configure_common(subordinate_config[i], subordinate_vif[i], i,
-                       aaxi_pkg::AAXI_INTC_ID_WIDTH,
                        (i != configuration.caliptra_subordinate_idx));
       subordinate_config[i].set_config_int(
         "agent_type", AAXI_SLAVE_TO_INTERCONNECT);
@@ -208,7 +205,9 @@ class soc_ifc_axi_fabric_env extends uvm_env;
 
     foreach (interconnect_config.master_cfg[i]) begin
       configure_common(interconnect_config.master_cfg[i], manager_vif[i], i,
-                       aaxi_pkg::AAXI_ID_WIDTH, 1'b1);
+                       1'b1);
+      interconnect_config.master_cfg[i].set_config_int(
+        "id_width", soc_ifc_pkg::CPTRA_AXI_DMA_ID_WIDTH);
       interconnect_config.master_cfg[i].set_config_int(
         "agent_type", AAXI_INTERCONNECT_MASTER_PORT);
       field_name =
@@ -220,7 +219,7 @@ class soc_ifc_axi_fabric_env extends uvm_env;
     end
     foreach (interconnect_config.slave_cfg[i]) begin
       configure_common(interconnect_config.slave_cfg[i], subordinate_vif[i], i,
-                       aaxi_pkg::AAXI_INTC_ID_WIDTH, 1'b1);
+                       1'b1);
       interconnect_config.slave_cfg[i].set_config_int(
         "agent_type", AAXI_INTERCONNECT_SLAVE_PORT);
       field_name =
