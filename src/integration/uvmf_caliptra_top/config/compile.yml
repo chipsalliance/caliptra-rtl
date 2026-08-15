@@ -129,8 +129,6 @@ global:
         - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
 #        - "-P $AVERY_PLI/tb_vcs64.tab"
         - '+vpi -lpthread'
-        - +aaxi_dbg_name=no_tracker
-#        - +aaxi_dbg_name=all
 ---
 provides: [uvmf_caliptra_top_itrng]
 schema_version: 2.4.0
@@ -214,5 +212,3 @@ global:
         - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
 #        - "-P $AVERY_PLI/tb_vcs64.tab"
         - '+vpi -lpthread'
-        - +aaxi_dbg_name=no_tracker
-#        - +aaxi_dbg_name=all

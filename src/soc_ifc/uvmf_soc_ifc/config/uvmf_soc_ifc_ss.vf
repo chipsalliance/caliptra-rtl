@@ -302,7 +302,7 @@ ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/i
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/src/soc_ifc_sha_status_if.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/src/soc_ifc_recovery_if.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers/soc_ifc_reg_model_top_pkg.sv
-${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/parameters/soc_ifc_parameters_pkg.sv
+${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_axi_topology_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/soc_ifc_env_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_if.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_iccm_shadow_cov.sv
@@ -310,6 +310,7 @@ ${CALIPTRA_ROOT}/src/soc_ifc/coverage/soc_ifc_cov_bind.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_if.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_bind.sv
 ${CALIPTRA_ROOT}/src/axi/coverage/axi_dma_top_cov_props.sv
+${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/parameters/soc_ifc_parameters_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/sequences/soc_ifc_sequences_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/tests/soc_ifc_tests_pkg.sv
 ${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/project_benches/soc_ifc/tb/testbench/soc_ifc_sha_acc_state_sva.sv

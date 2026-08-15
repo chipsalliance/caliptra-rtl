@@ -98,7 +98,23 @@ uvmf_active_passive_t interface_activities[] = {
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
     // pragma uvmf custom configuration_settings_post_randomize begin
-    configuration.configure_axi_endpoints();
+    configuration.configure_axi_endpoints(
+      .soc_ifc_base_addr(AXI_SOC_IFC_BASE_ADDR),
+      .soc_ifc_limit_addr(AXI_SOC_IFC_LIMIT_ADDR),
+      .sram_base_addr(AXI_SRAM_BASE_ADDR),
+      .sram_size_bytes(AXI_SRAM_SIZE_BYTES),
+      .sram_word_bytes(AXI_SRAM_WORD_BYTES),
+      .recovery_fifo_addr(AXI_RECOVERY_FIFO_ADDR),
+      .recovery_fifo_depth_dwords_default(AXI_RECOVERY_FIFO_DEPTH_DWORDS_DEFAULT),
+      .outstanding_depth(AXI_FABRIC_OUTSTANDING_DEPTH),
+      .sram_b_delay_min_default(AXI_SRAM_B_DELAY_MIN_DEFAULT),
+      .sram_b_delay_max_default(AXI_SRAM_B_DELAY_MAX_DEFAULT),
+      .sram_r_delay_min_default(AXI_SRAM_R_DELAY_MIN_DEFAULT),
+      .sram_r_delay_max_default(AXI_SRAM_R_DELAY_MAX_DEFAULT),
+      .recovery_r_delay_min_default(AXI_RECOVERY_R_DELAY_MIN_DEFAULT),
+      .recovery_r_delay_max_default(AXI_RECOVERY_R_DELAY_MAX_DEFAULT),
+      .recovery_refill_delay_min_default(AXI_RECOVERY_FIFO_REFILL_DELAY_MIN_DEFAULT),
+      .recovery_refill_delay_max_default(AXI_RECOVERY_FIFO_REFILL_DELAY_MAX_DEFAULT));
     // pragma uvmf custom configuration_settings_post_randomize end
     configuration.initialize(NA, "uvm_test_top.environment", interface_names, null, interface_activities);
   endfunction

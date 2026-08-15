@@ -100,7 +100,7 @@ package soc_ifc_env_pkg;
   import kv_defines_pkg::*;
   import mbox_pkg::*;
   import soc_ifc_pkg::*;
-  import soc_ifc_parameters_pkg::*;
+  import soc_ifc_axi_topology_pkg::*;
   import axi_dma_reg_pkg::*;
   import caliptra_prim_mubi_pkg::*;
   `include "caliptra_macros.svh"

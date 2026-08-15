@@ -32,7 +32,6 @@ package caliptra_top_parameters_pkg;
   import uvmf_base_pkg_hdl::*;
 
   // pragma uvmf custom package_imports_additional begin 
-  import soc_ifc_parameters_pkg::*;
   // pragma uvmf custom package_imports_additional end
 
 
@@ -51,6 +50,23 @@ package caliptra_top_parameters_pkg;
   parameter string soc_ifc_subenv_mbox_sram_agent_BFM  = "soc_ifc_subenv_mbox_sram_agent_BFM"; /* [7] */
 
   // pragma uvmf custom package_item_additional begin
+  parameter int AXI_SRAM_ADDR_WIDTH = 18;
+  parameter int AXI_SRAM_WORD_BYTES = soc_ifc_pkg::CPTRA_AXI_DMA_DATA_WIDTH / 8;
+  parameter longint unsigned AXI_SRAM_SIZE_BYTES = longint'(1) << AXI_SRAM_ADDR_WIDTH;
+  parameter bit [63:0] AXI_SRAM_BASE_ADDR = 64'h8000_0000;
+  parameter bit [63:0] AXI_RECOVERY_FIFO_ADDR = 64'h9000_0000;
+  parameter int unsigned AXI_FABRIC_OUTSTANDING_DEPTH = 64;
+  parameter bit [63:0] AXI_SOC_IFC_BASE_ADDR = 64'h0;
+  parameter bit [63:0] AXI_SOC_IFC_LIMIT_ADDR = (64'(1) << soc_ifc_pkg::SOC_IFC_ADDR_W) - 1;
+  parameter int unsigned AXI_RECOVERY_FIFO_DEPTH_DWORDS_DEFAULT = 512;
+  parameter int unsigned AXI_SRAM_B_DELAY_MIN_DEFAULT = 0;
+  parameter int unsigned AXI_SRAM_B_DELAY_MAX_DEFAULT = 0;
+  parameter int unsigned AXI_SRAM_R_DELAY_MIN_DEFAULT = 0;
+  parameter int unsigned AXI_SRAM_R_DELAY_MAX_DEFAULT = 0;
+  parameter int unsigned AXI_RECOVERY_R_DELAY_MIN_DEFAULT = 0;
+  parameter int unsigned AXI_RECOVERY_R_DELAY_MAX_DEFAULT = 0;
+  parameter int unsigned AXI_RECOVERY_FIFO_REFILL_DELAY_MIN_DEFAULT = 0;
+  parameter int unsigned AXI_RECOVERY_FIFO_REFILL_DELAY_MAX_DEFAULT = 0;
   // pragma uvmf custom package_item_additional end
 
 endpackage

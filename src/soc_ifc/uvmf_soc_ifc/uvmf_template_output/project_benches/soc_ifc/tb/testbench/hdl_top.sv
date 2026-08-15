@@ -46,6 +46,7 @@ import aaxi_pkg_xactor::*;
 import aaxi_pkg_test::*;
 import aaxi_pll::*;
 import soc_ifc_pkg::*;
+import soc_ifc_axi_topology_pkg::*;
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"

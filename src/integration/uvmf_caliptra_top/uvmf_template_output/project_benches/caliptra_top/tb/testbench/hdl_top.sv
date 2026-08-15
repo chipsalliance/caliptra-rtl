@@ -38,7 +38,7 @@
 module hdl_top;
 
 import caliptra_top_parameters_pkg::*;
-import soc_ifc_parameters_pkg::*;
+import soc_ifc_axi_topology_pkg::*;
 import qvip_ahb_lite_slave_params_pkg::*;
 //import qvip_apb5_slave_params_pkg::*;
 import uvmf_base_pkg_hdl::*;

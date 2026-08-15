@@ -176,6 +176,21 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     bfm.log.enable_tx_tracker = enable;
   endfunction
 
+  // Apply one tracker state to every external and internal Avery BFM.
+  protected function void set_all_axi_trackers(bit enable);
+    set_axi_tracker(axi_soc_manager_agent.driver, enable, "axi_soc_manager_agent");
+    set_axi_tracker(axi_dma_manager_agent.driver, enable, "axi_dma_manager_agent");
+    set_axi_tracker(axi_soc_ifc_subordinate_agent.driver, enable, "axi_soc_ifc_subordinate_agent");
+    set_axi_tracker(axi_sram_subordinate_agent.driver, enable, "axi_sram_subordinate_agent");
+    set_axi_tracker(axi_recovery_fifo_subordinate_agent.driver, enable, "axi_recovery_fifo_subordinate_agent");
+    foreach (axi_interconnect_agent.driver.master_ports[i])
+      set_axi_tracker(axi_interconnect_agent.driver.master_ports[i], enable, $sformatf("axi_interconnect_master_port[%0d]", i));
+    for (int unsigned i = 0; i < AXI_FABRIC_NUM_SUBORDINATES; i++)
+      set_axi_tracker(axi_interconnect_agent.driver.slave_ports[i], enable, $sformatf("axi_interconnect_slave_port[%0d]", i));
+    set_axi_tracker(axi_interconnect_agent.driver.default_slave, enable, "axi_interconnect_default_slave");
+    set_axi_tracker(axi_interconnect_agent.driver.default_slave_port, enable, "axi_interconnect_default_slave_port");
+  endfunction
+
   // Apply project tracker policy after every external and interconnect BFM exists.
   protected function void configure_axi_trackers();
     axi_tracker_mode_e mode;
@@ -187,6 +202,10 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     else
       mode = AXI_TRACK_NONE;
 
+    // Establish a project-owned default independent of Avery command-line
+    // defaults, then enable only the BFMs selected by the project plusargs.
+    set_all_axi_trackers(1'b0);
+
     if (mode inside {AXI_TRACK_ENDPOINTS, AXI_TRACK_ALL}) begin
       set_axi_tracker(axi_dma_manager_agent.driver, 1'b1, "axi_dma_manager_agent");
       set_axi_tracker(axi_soc_ifc_subordinate_agent.driver, 1'b1, "axi_soc_ifc_subordinate_agent");
@@ -195,13 +214,7 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     end
 
     if (mode == AXI_TRACK_ALL) begin
-      set_axi_tracker(axi_soc_manager_agent.driver, 1'b1, "axi_soc_manager_agent");
-      foreach (axi_interconnect_agent.driver.master_ports[i])
-        set_axi_tracker(axi_interconnect_agent.driver.master_ports[i], 1'b1, $sformatf("axi_interconnect_master_port[%0d]", i));
-      for (int unsigned i = 0; i < AXI_FABRIC_NUM_SUBORDINATES; i++)
-        set_axi_tracker(axi_interconnect_agent.driver.slave_ports[i], 1'b1, $sformatf("axi_interconnect_slave_port[%0d]", i));
-      set_axi_tracker(axi_interconnect_agent.driver.default_slave, 1'b1, "axi_interconnect_default_slave");
-      set_axi_tracker(axi_interconnect_agent.driver.default_slave_port, 1'b1, "axi_interconnect_default_slave_port");
+      set_all_axi_trackers(1'b1);
     end
 
     `uvm_info("AXI_TRACKER", $sformatf("Applied AXI tracker policy: %s", mode.name()), UVM_LOW)
@@ -217,8 +230,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     cfg.set_config_int("is_active", activity == ACTIVE);
     cfg.set_config_int("port_id", port_id);
     cfg.set_config_int("data_bus_bytes", soc_ifc_pkg::CPTRA_AXI_DMA_DATA_WIDTH / 8);
-    cfg.set_config_int("total_outstanding_depth", AXI_FABRIC_OUTSTANDING_DEPTH);
-    cfg.set_config_int("id_outstanding_depth", AXI_FABRIC_OUTSTANDING_DEPTH);
+    cfg.set_config_int("total_outstanding_depth", configuration.axi_outstanding_depth);
+    cfg.set_config_int("id_outstanding_depth", configuration.axi_outstanding_depth);
     cfg.set_config_int("opt_awuser_enable", 1);
     cfg.set_config_int("opt_wuser_enable", 1);
     cfg.set_config_int("opt_buser_enable", 1);
@@ -268,6 +281,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     if (aaxi_pkg::AAXI_INTC_ID_WIDTH != soc_ifc_pkg::SOC_IFC_ID_W)
       `uvm_fatal("AXI_CFG", $sformatf("Avery expanded ID width %0d must match SoC IFC ID width %0d", aaxi_pkg::AAXI_INTC_ID_WIDTH,
                                      soc_ifc_pkg::SOC_IFC_ID_W))
+    if (!configuration.axi_endpoints_configured)
+      `uvm_fatal("AXI_CFG", "Parent bench did not configure AXI endpoint topology")
     if (configuration.axi_sram_config == null || configuration.recovery_fifo_config == null)
       `uvm_fatal("AXI_CFG", "SRAM or recovery endpoint configuration is null")
     if (configuration.axi_soc_ifc_limit_addr < configuration.axi_soc_ifc_base_addr ||
@@ -282,8 +297,8 @@ class soc_ifc_environment  extends uvmf_environment_base #(
       `uvm_fatal("AXI_CFG", "Recovery FIFO address overlaps another window")
     if (configuration.recovery_fifo_config.depth_dwords == 0)
       `uvm_fatal("AXI_CFG", "Recovery FIFO depth must be nonzero")
-    if (AXI_FABRIC_OUTSTANDING_DEPTH <= 16)
-      `uvm_fatal("AXI_CFG", $sformatf("Outstanding depth %0d cannot run response-pressure stress", AXI_FABRIC_OUTSTANDING_DEPTH))
+    if (configuration.axi_outstanding_depth <= 16)
+      `uvm_fatal("AXI_CFG", $sformatf("Outstanding depth %0d cannot run response-pressure stress", configuration.axi_outstanding_depth))
 
     // Resolve the five HDL-facing interfaces. These names are also published
     // by hdl_top, avoiding direct hierarchy references in the UVM environment.

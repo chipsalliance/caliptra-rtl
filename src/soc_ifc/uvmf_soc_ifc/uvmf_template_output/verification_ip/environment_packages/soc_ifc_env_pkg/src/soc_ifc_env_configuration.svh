@@ -100,6 +100,8 @@ extends uvmf_environment_configuration_base;
   soc_ifc_recovery_fifo_config recovery_fifo_config;
   aaxi_addr_t axi_soc_ifc_base_addr;
   aaxi_addr_t axi_soc_ifc_limit_addr;
+  int unsigned axi_outstanding_depth;
+  bit axi_endpoints_configured;
 
   // Parse one fixed delay or a complete minimum/maximum pair.
   virtual function void parse_response_delay(input string prefix, input int unsigned default_min, input int unsigned default_max,
@@ -133,7 +135,23 @@ extends uvmf_environment_configuration_base;
   endfunction
 
   // Configure the SRAM and recovery endpoint policies.
-  virtual function void configure_axi_endpoints();
+  virtual function void configure_axi_endpoints(
+      input aaxi_addr_t soc_ifc_base_addr,
+      input aaxi_addr_t soc_ifc_limit_addr,
+      input aaxi_addr_t sram_base_addr,
+      input longint unsigned sram_size_bytes,
+      input int unsigned sram_word_bytes,
+      input aaxi_addr_t recovery_fifo_addr,
+      input int unsigned recovery_fifo_depth_dwords_default,
+      input int unsigned outstanding_depth,
+      input int unsigned sram_b_delay_min_default,
+      input int unsigned sram_b_delay_max_default,
+      input int unsigned sram_r_delay_min_default,
+      input int unsigned sram_r_delay_max_default,
+      input int unsigned recovery_r_delay_min_default,
+      input int unsigned recovery_r_delay_max_default,
+      input int unsigned recovery_refill_delay_min_default,
+      input int unsigned recovery_refill_delay_max_default);
     virtual soc_ifc_recovery_if recovery_vif;
     int unsigned sram_b_delay_min;
     int unsigned sram_b_delay_max;
@@ -145,24 +163,27 @@ extends uvmf_environment_configuration_base;
     int unsigned recovery_refill_delay_max;
     int unsigned recovery_fifo_depth_dwords;
 
-    parse_response_delay("AXI_SRAM_B_DELAY", AXI_SRAM_B_DELAY_MIN_DEFAULT, AXI_SRAM_B_DELAY_MAX_DEFAULT,
-                         sram_b_delay_min, sram_b_delay_max);
-    parse_response_delay("AXI_SRAM_R_DELAY", AXI_SRAM_R_DELAY_MIN_DEFAULT, AXI_SRAM_R_DELAY_MAX_DEFAULT,
-                         sram_r_delay_min, sram_r_delay_max);
-    parse_response_delay("AXI_RECOVERY_R_DELAY", AXI_RECOVERY_R_DELAY_MIN_DEFAULT, AXI_RECOVERY_R_DELAY_MAX_DEFAULT,
+    axi_soc_ifc_base_addr = soc_ifc_base_addr;
+    axi_soc_ifc_limit_addr = soc_ifc_limit_addr;
+    axi_outstanding_depth = outstanding_depth;
+
+    parse_response_delay("AXI_SRAM_B_DELAY", sram_b_delay_min_default, sram_b_delay_max_default, sram_b_delay_min, sram_b_delay_max);
+    parse_response_delay("AXI_SRAM_R_DELAY", sram_r_delay_min_default, sram_r_delay_max_default, sram_r_delay_min, sram_r_delay_max);
+    parse_response_delay("AXI_RECOVERY_R_DELAY", recovery_r_delay_min_default, recovery_r_delay_max_default,
                          recovery_r_delay_min, recovery_r_delay_max);
-    parse_response_delay("AXI_RECOVERY_FIFO_REFILL_DELAY", AXI_RECOVERY_FIFO_REFILL_DELAY_MIN_DEFAULT,
-                         AXI_RECOVERY_FIFO_REFILL_DELAY_MAX_DEFAULT, recovery_refill_delay_min, recovery_refill_delay_max);
-    recovery_fifo_depth_dwords = AXI_RECOVERY_FIFO_DEPTH_DWORDS_DEFAULT;
+    parse_response_delay("AXI_RECOVERY_FIFO_REFILL_DELAY", recovery_refill_delay_min_default, recovery_refill_delay_max_default,
+                         recovery_refill_delay_min, recovery_refill_delay_max);
+    recovery_fifo_depth_dwords = recovery_fifo_depth_dwords_default;
     void'($value$plusargs("AXI_RECOVERY_FIFO_DEPTH_DWORDS=%d", recovery_fifo_depth_dwords));
 
-    axi_sram_config.configure(AXI_SRAM_BASE_ADDR, AXI_SRAM_BASE_ADDR + AXI_SRAM_SIZE_BYTES - 1, AXI_SRAM_WORD_BYTES,
+    axi_sram_config.configure(sram_base_addr, sram_base_addr + sram_size_bytes - 1, sram_word_bytes,
                               sram_b_delay_min, sram_b_delay_max, sram_r_delay_min, sram_r_delay_max);
 
     if (!uvm_config_db #(virtual soc_ifc_recovery_if)::get(null, UVMF_VIRTUAL_INTERFACES, SOC_IFC_RECOVERY_VIF, recovery_vif))
       `uvm_fatal("RECOVERY_FIFO_CFG", "Unable to retrieve recovery FIFO virtual interface")
-    recovery_fifo_config.configure(recovery_vif, AXI_RECOVERY_FIFO_ADDR, recovery_fifo_depth_dwords, recovery_r_delay_min,
+    recovery_fifo_config.configure(recovery_vif, recovery_fifo_addr, recovery_fifo_depth_dwords, recovery_r_delay_min,
                                    recovery_r_delay_max, recovery_refill_delay_min, recovery_refill_delay_max);
+    axi_endpoints_configured = 1'b1;
 
     `uvm_info("SOC_IFC_CFG", $sformatf("Configured AXI SRAM [0x%0h:0x%0h] and recovery FIFO 0x%0h depth %0d DWORDs",
               axi_sram_config.base_addr, axi_sram_config.limit_addr, recovery_fifo_config.fifo_data_addr,
@@ -196,8 +217,7 @@ extends uvmf_environment_configuration_base;
 
   // pragma uvmf custom new begin
     subsystem_mode = CALIPTRA_SS_MODE_C;
-    axi_soc_ifc_base_addr = AXI_SOC_IFC_BASE_ADDR;
-    axi_soc_ifc_limit_addr = AXI_SOC_IFC_LIMIT_ADDR;
+    axi_endpoints_configured = 1'b0;
     enable_sha_iccm_unlock =
         subsystem_mode && $test$plusargs("ENABLE_SHA_ICCM_UNLOCK");
   // pragma uvmf custom new end
