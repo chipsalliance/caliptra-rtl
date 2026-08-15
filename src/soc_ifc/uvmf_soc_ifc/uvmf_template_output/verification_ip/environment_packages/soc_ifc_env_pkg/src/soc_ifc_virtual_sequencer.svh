@@ -22,6 +22,7 @@ class soc_ifc_virtual_sequencer
 
   `uvm_component_utils(soc_ifc_virtual_sequencer)
 
+  aaxi_sequencer soc_axi_sequencer;
   soc_ifc_axi_sram_sequencer axi_sram_sequencer;
   soc_ifc_recovery_fifo_sequencer recovery_fifo_sequencer;
 

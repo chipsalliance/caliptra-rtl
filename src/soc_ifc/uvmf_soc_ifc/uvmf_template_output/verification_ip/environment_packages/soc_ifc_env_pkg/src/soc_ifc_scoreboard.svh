@@ -576,6 +576,9 @@ class soc_ifc_scoreboard #(
     `uvm_info("SCBD_AXI", "Transaction Received through actual_axi_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_AXI",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
+    if (t.addr < configuration.axi_soc_ifc_base_addr || t.addr > configuration.axi_soc_ifc_limit_addr)
+      return;
+
     if (axi_expected_q.size() > 0) begin
         t_exp = axi_expected_q.pop_front();
         // Compare the AXI response in addition to the payload so that response
@@ -749,4 +752,3 @@ endclass
   endfunction
 
 // pragma uvmf custom external end
-

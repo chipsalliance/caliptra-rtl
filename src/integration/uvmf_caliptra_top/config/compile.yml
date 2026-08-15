@@ -58,7 +58,7 @@ targets:
         cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .
         $MSFT_SCRIPTS_DIR/run_test_makefile
     # Not sure which flag controls generation of this file...
-    post_exec: 'rm ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+    post_exec: 'if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
 global:
   tool:
     vcs:
@@ -96,7 +96,10 @@ global:
         - +define+AVERY_NAMED_CONSTRUCTOR
         - +define+AVERY_AXI_USER
         - +define+AVERY_AXI_UVM+AVERY_UVM
+        - +define+AVERY_AXI_INTERCONNECT
         - +define+FOUR_OUTSTANDING
+        - +define+AAXI_INTC_MASTER_CNT=2
+        - +define+AAXI_INTC_SLAVE_CNT=3
         - +define+AAXI_MAX_DATA_WIDTH=32
         - +define+AAXI_MAX_ADDR_WIDTH=64
         - +define+AAXI_MAX_ID_WIDTH=5
@@ -144,7 +147,7 @@ targets:
         cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .
         $MSFT_SCRIPTS_DIR/run_test_makefile
     # Not sure which flag controls generation of this file...
-    post_exec: 'rm ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+    post_exec: 'if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
 global:
   tool:
     vcs:
@@ -178,7 +181,10 @@ global:
         - +define+AVERY_NAMED_CONSTRUCTOR
         - +define+AVERY_AXI_USER
         - +define+AVERY_AXI_UVM+AVERY_UVM
+        - +define+AVERY_AXI_INTERCONNECT
         - +define+FOUR_OUTSTANDING
+        - +define+AAXI_INTC_MASTER_CNT=2
+        - +define+AAXI_INTC_SLAVE_CNT=3
         - +define+AAXI_MAX_DATA_WIDTH=32
         - +define+AAXI_MAX_ADDR_WIDTH=64
         - +define+AAXI_MAX_ID_WIDTH=5

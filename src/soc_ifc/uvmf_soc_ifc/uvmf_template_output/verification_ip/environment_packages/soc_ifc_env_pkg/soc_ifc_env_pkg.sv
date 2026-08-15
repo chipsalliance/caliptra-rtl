@@ -100,6 +100,7 @@ package soc_ifc_env_pkg;
   import kv_defines_pkg::*;
   import mbox_pkg::*;
   import soc_ifc_pkg::*;
+  import soc_ifc_parameters_pkg::*;
   import axi_dma_reg_pkg::*;
   import caliptra_prim_mubi_pkg::*;
   `include "caliptra_macros.svh"
@@ -128,7 +129,6 @@ package soc_ifc_env_pkg;
   `include "src/soc_ifc_recovery_fifo_command_sequence.svh"
   `include "src/soc_ifc_axi_sram_config.svh"
   `include "src/soc_ifc_recovery_fifo_config.svh"
-  `include "src/soc_ifc_axi_fabric_config.svh"
   `include "src/soc_ifc_axi_response_delay_callback.svh"
   `include "src/soc_ifc_recovery_fifo_model.svh"
   `include "src/soc_ifc_recovery_fifo_callback.svh"
@@ -142,7 +142,6 @@ package soc_ifc_env_pkg;
   `include "src/soc_ifc_scoreboard.svh"
   `include "src/soc_ifc_reg_cov_subscriber.svh"
   `include "src/soc_ifc_env_cov_subscriber.svh"
-  `include "src/soc_ifc_axi_fabric_env.svh"
   `include "src/soc_ifc_environment.svh"
   `include "src/soc_ifc_env_sequence_base.svh"
 

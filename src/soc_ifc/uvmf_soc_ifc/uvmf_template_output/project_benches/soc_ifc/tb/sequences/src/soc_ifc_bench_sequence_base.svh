@@ -83,7 +83,6 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
 
   // Sequencer handles for each QVIP interface
   mvc_sequencer uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_sqr;
-  aaxi_sequencer uvm_test_top_environment_aaxi_tb_env0_master_0_sqr;
 
   // Top level environment configuration handle
   soc_ifc_env_configuration_t top_configuration;
@@ -142,8 +141,6 @@ rand soc_ifc_env_sequence_base_t soc_ifc_env_seq;
     // Retrieve QVIP sequencer handles from the uvm_config_db
     if( !uvm_config_db #(mvc_sequencer)::get( null,UVMF_SEQUENCERS,"uvm_test_top.environment.qvip_ahb_lite_slave_subenv.ahb_lite_slave_0", uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_sqr) ) 
       `uvm_warning("CFG" , "uvm_config_db #( mvc_sequencer )::get cannot find resource ahb_lite_slave_0" ) 
-    if( !uvm_config_db #(aaxi_sequencer)::get( null,UVMF_SEQUENCERS,uvm_test_top_environment_aaxi_tb_env0_master_0, uvm_test_top_environment_aaxi_tb_env0_master_0_sqr) )
-      `uvm_warning("CFG" , "uvm_config_db #( aaxi_sequencer )::get cannot find resource axi_fabric.manager[0]" )
     reg_model = top_configuration.soc_ifc_rm;
 
 

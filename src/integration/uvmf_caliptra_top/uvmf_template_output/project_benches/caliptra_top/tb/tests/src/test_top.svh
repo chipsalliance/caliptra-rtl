@@ -47,29 +47,27 @@ qvip_memory_message_handler message_handler;
 
 
   string interface_names[] = {
-    uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */ , 
+    uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */,
 //    uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_apb5_master_0 /* apb5_master_0     [1] */ , 
-    uvm_test_top_environment_soc_ifc_subenv_aaxi_tb_env0_master_0 /* aaxi_tb.env0.master[0] [1] */ , 
-    soc_ifc_subenv_soc_ifc_ctrl_agent_BFM /* soc_ifc_subenv_soc_ifc_ctrl_agent     [2] */ , 
-    soc_ifc_subenv_cptra_ctrl_agent_BFM /* soc_ifc_subenv_cptra_ctrl_agent     [3] */ , 
-    soc_ifc_subenv_ss_mode_ctrl_agent_BFM /* soc_ifc_subenv_ss_mode_ctrl_agent     [4] */ , 
-    soc_ifc_subenv_soc_ifc_status_agent_BFM /* soc_ifc_subenv_soc_ifc_status_agent     [5] */ , 
-    soc_ifc_subenv_cptra_status_agent_BFM /* soc_ifc_subenv_cptra_status_agent     [6] */ , 
-    soc_ifc_subenv_ss_mode_status_agent_BFM /* soc_ifc_subenv_ss_mode_status_agent     [7] */ , 
-    soc_ifc_subenv_mbox_sram_agent_BFM /* soc_ifc_subenv_mbox_sram_agent     [8] */ 
+    soc_ifc_subenv_soc_ifc_ctrl_agent_BFM /* soc_ifc_subenv_soc_ifc_ctrl_agent     [1] */,
+    soc_ifc_subenv_cptra_ctrl_agent_BFM /* soc_ifc_subenv_cptra_ctrl_agent     [2] */,
+    soc_ifc_subenv_ss_mode_ctrl_agent_BFM /* soc_ifc_subenv_ss_mode_ctrl_agent     [3] */,
+    soc_ifc_subenv_soc_ifc_status_agent_BFM /* soc_ifc_subenv_soc_ifc_status_agent     [4] */,
+    soc_ifc_subenv_cptra_status_agent_BFM /* soc_ifc_subenv_cptra_status_agent     [5] */,
+    soc_ifc_subenv_ss_mode_status_agent_BFM /* soc_ifc_subenv_ss_mode_status_agent     [6] */,
+    soc_ifc_subenv_mbox_sram_agent_BFM /* soc_ifc_subenv_mbox_sram_agent     [7] */
 };
 
-uvmf_active_passive_t interface_activities[] = { 
-    PASSIVE /* ahb_lite_slave_0     [0] */ , 
+uvmf_active_passive_t interface_activities[] = {
+    PASSIVE /* ahb_lite_slave_0     [0] */,
 //    ACTIVE /* apb5_master_0     [1] */ , 
-    ACTIVE /* aaxi_tb.env0.master[0] [1] */ , 
-    ACTIVE /* soc_ifc_subenv_soc_ifc_ctrl_agent     [2] */ , 
-    PASSIVE /* soc_ifc_subenv_cptra_ctrl_agent     [3] */ , 
-    ACTIVE /* soc_ifc_subenv_ss_mode_ctrl_agent     [4] */ , 
-    ACTIVE /* soc_ifc_subenv_soc_ifc_status_agent     [5] */ , 
-    PASSIVE /* soc_ifc_subenv_cptra_status_agent     [6] */ ,
-    ACTIVE /* soc_ifc_subenv_ss_mode_status_agent     [7] */ , 
-    ACTIVE /* soc_ifc_subenv_mbox_sram_agent     [8] */   };
+    ACTIVE /* soc_ifc_subenv_soc_ifc_ctrl_agent     [1] */,
+    PASSIVE /* soc_ifc_subenv_cptra_ctrl_agent     [2] */,
+    ACTIVE /* soc_ifc_subenv_ss_mode_ctrl_agent     [3] */,
+    ACTIVE /* soc_ifc_subenv_soc_ifc_status_agent     [4] */,
+    PASSIVE /* soc_ifc_subenv_cptra_status_agent     [5] */,
+    ACTIVE /* soc_ifc_subenv_ss_mode_status_agent     [6] */,
+    ACTIVE /* soc_ifc_subenv_mbox_sram_agent     [7] */};
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -101,6 +99,7 @@ uvmf_active_passive_t interface_activities[] = {
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
     // pragma uvmf custom configuration_settings_post_randomize begin
+    configuration.soc_ifc_subenv_config.configure_axi_endpoints();
     // pragma uvmf custom configuration_settings_post_randomize end
     configuration.initialize(NA, "uvm_test_top.environment", interface_names, null, interface_activities);
   endfunction
@@ -109,4 +108,3 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

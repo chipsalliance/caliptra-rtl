@@ -2195,6 +2195,14 @@ class soc_ifc_predictor #(
     `uvm_info("PRED_AXI", "Transaction Received through axi_sub_0_ae", UVM_MEDIUM)
     `uvm_info("PRED_AXI", {"            Data: ",t.sprint(uvm_top.uvm_get_max_verbosity(), "AXI_SUB_0_AE")}, UVM_HIGH)
 
+    if (t.addr < configuration.axi_soc_ifc_base_addr || t.addr > configuration.axi_soc_ifc_limit_addr) begin
+        `uvm_info("PRED_AXI",
+          $sformatf(
+            "Ignoring external AXI fabric transaction at address 0x%0h",
+            t.addr), UVM_HIGH)
+        return;
+    end
+
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");

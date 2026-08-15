@@ -70,6 +70,7 @@ package caliptra_top_sequences_pkg;
   import aaxi_uvm_pkg::*;
 
   import soc_ifc_env_pkg::*;
+  import soc_ifc_parameters_pkg::*;
   import soc_ifc_reg_model_top_pkg::*;
   // pragma uvmf custom package_imports_additional end
 
@@ -93,4 +94,3 @@ endpackage
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

@@ -9,6 +9,7 @@ requires:
 targets:
   tb:
     directories:
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/cptra_ctrl_pkg
@@ -26,6 +27,7 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers
     files:
+      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters/soc_ifc_parameters_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg_hdl.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/soc_ifc_ctrl_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/src/soc_ifc_ctrl_driver_bfm.sv
@@ -80,7 +82,6 @@ targets:
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/tests
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/testbench
     files:
-      - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/parameters/soc_ifc_parameters_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/sequences/soc_ifc_sequences_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/tests/soc_ifc_tests_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/soc_ifc/tb/testbench/soc_ifc_sha_acc_state_sva.sv
@@ -92,7 +93,7 @@ targets:
   sim:
     pre_exec: 'echo "[PRE-EXEC] Copying SHA512 Vectors to $(pwd)" && cp ${COMPILE_ROOT}/../tb/vectors/SHA*.rsp .'
     # Not sure which flag controls generation of this file...
-    post_exec: 'rm -f ./AXI4_tracker.txt && if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
+    post_exec: 'if [[ -f ./cm.log ]]; then rm ./cm.log; else echo "Did not find cm.log"; fi'
 global:
   tool:
     vcs:
@@ -160,8 +161,9 @@ global:
         - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
 #        - "-P $AVERY_PLI/tb_vcs64.tab"
         - '+vpi -lpthread'
-        - +aaxi_dbg_name=no_tracker
-#        - +aaxi_dbg_name=all
+        # Disable Avery trackers globally. soc_ifc_environment selectively
+        # re-enables them with SOC_IFC_AXI_TRACK_ENDPOINTS or TRACK_ALL.
+        - '+aaxi_dbg_name=no_tracker'
 ---
 # Subsystem-mode sibling of uvmf_soc_ifc. Reuses the same bench, sequences, tests
 # and testbench, but compiles with CALIPTRA_MODE_SUBSYSTEM defined so that the
@@ -231,4 +233,6 @@ global:
         # AVERY
         - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
         - '+vpi -lpthread'
-        - +aaxi_dbg_name=no_tracker
+        # Disable Avery trackers globally. soc_ifc_environment selectively
+        # re-enables them with SOC_IFC_AXI_TRACK_ENDPOINTS or TRACK_ALL.
+        - '+aaxi_dbg_name=no_tracker'
