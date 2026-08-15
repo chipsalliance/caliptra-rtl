@@ -17,8 +17,10 @@
 // -- Begin Boilerplate --
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
+#include "caliptra_rtl_lib.h"
 #include "riscv-csr.h"
 #include <string.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdlib.h>
 #include "printf.h"
@@ -37,13 +39,8 @@ volatile uint32_t  err_count __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-#ifndef MY_RANDOM_SEED
-#define MY_RANDOM_SEED 17
-#endif // MY_RANDOM_SEED
-// -- End Boilerplate --
-
-const long seed = MY_RANDOM_SEED; 
-
+unsigned seed = (unsigned) MY_RANDOM_SEED;
+ptrdiff_t expected_alias_offset = 1U << 11;
 
 int wr_regs_per_pfx(widereg_t *dv_reg, uint32_t rmask) {
 
@@ -61,7 +58,7 @@ int wr_regs_per_pfx(widereg_t *dv_reg, uint32_t rmask) {
     for (int j = 0; j < dv_reg->width; j++) {
         tmpreg = baseaddr + j; 
 
-        wdata = (uint32_t) rand(); 
+        wdata = xorshift32();
         *tmpreg = wdata;
 
         rdata = *tmpreg;
@@ -78,6 +75,16 @@ int wr_regs_per_pfx(widereg_t *dv_reg, uint32_t rmask) {
             VPRINTF(ERROR,"\nMismatch at addr 0x%x (%s[%d]), read data 0x%08x != expected data 0x%08x --\n",  
                 tmpreg, dv_reg->pfx, j, rdata, expdata); 
         } 
+
+        tmpreg = (uint32_t*)((uintptr_t)tmpreg + expected_alias_offset);
+        rdata = *tmpreg;
+        if (rdata) {
+            errs++;
+            VPRINTF(ERROR,"\nNon-zero read at alias addr 0x%x (%s[%d] + 0x%x), read data 0x%08x--\n",
+                tmpreg, dv_reg->pfx, j, expected_alias_offset, rdata);
+        }
+
+
     }
     VPRINTF(LOW,"\n");
 
@@ -94,7 +101,6 @@ void main() {
 
 
     VPRINTF(LOW,"\nINFO. Using random seed = %d\n", seed);
-    srand(seed);
 
     VPRINTF(LOW,"\n** Phase 1. Basic random writes and reads **\n"); 
 

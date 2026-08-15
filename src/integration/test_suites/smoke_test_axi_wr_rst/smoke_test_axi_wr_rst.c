@@ -1,5 +1,4 @@
 // SPDX-License-Identifier: Apache-2.0
-// 
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -14,18 +13,22 @@
 // limitations under the License.
 //
 
+#include "caliptra_defines.h"
+#include "caliptra_isr.h"
 #include <stdint.h>
-#include "caliptra_rtl_lib.h"
+#include "printf.h"
 
-uint32_t xorshift32_state = (unsigned) MY_RANDOM_SEED;
+volatile uint32_t intr_count = 0;
+volatile uint32_t *stdout = (uint32_t *)STDOUT;
+#ifdef CPT_VERBOSITY
+enum printf_verbosity verbosity_g = CPT_VERBOSITY;
+#else
+enum printf_verbosity verbosity_g = HIGH;
+#endif
 
-void xorshift32_init(uint32_t seed) {
-    xorshift32_state = seed;
-}
+volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-uint32_t xorshift32(void) {
-    xorshift32_state ^= xorshift32_state << 13;
-    xorshift32_state ^= xorshift32_state >> 17;
-    xorshift32_state ^= xorshift32_state << 5;
-    return xorshift32_state;
+void main(void) {
+    // The test is fully executed during the boot stage in the testbench
+    while(1);
 }
