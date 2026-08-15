@@ -247,9 +247,9 @@ class soc_ifc_env_dma_transfer_stress_sequence
                               recovery_r_delay_cycles,
                               recovery_refill_delay_cycles) with {
                 b_delay_cycles inside {[0:127]};
-                sram_r_delay_cycles inside {[0:127]};
-                recovery_r_delay_cycles inside {[0:127]};
-                recovery_refill_delay_cycles inside {[0:63]};
+                sram_r_delay_cycles inside {[0:10]};
+                recovery_r_delay_cycles inside {[0:10]};
+                recovery_refill_delay_cycles inside {[0:10]};
               })
             `uvm_fatal("DMA_XFER_SEQ",
               "Failed to randomize short DMA stress response delays")
@@ -269,13 +269,14 @@ class soc_ifc_env_dma_transfer_stress_sequence
                   [1:31] :/ 90
                 };
                 recovery_r_delay_cycles dist {
-                  0      := 10,
-                  [1:31] :/ 90
+                  0        := 5,
+                  [1:31]   :/ 90,
+                  [32:127] :/ 5
                 };
                 recovery_refill_delay_cycles dist {
                   0        := 10,
                   [1:15]   :/ 50,
-                  [16:100] :/ 40
+                  [16:127] :/ 40
                 };
               })
             `uvm_fatal("DMA_XFER_SEQ",

@@ -12,8 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Runs a fixed firmware WR_FIFO transfer while the SoC interface attempts
-// exhaustive unauthorized read and write accesses to every DMA register.
+// Runs a fixed firmware WR_FIFO transfer with unauthorized SoC DMA accesses.
 class soc_ifc_env_dma_wr_fifo_directed_sequence
   extends soc_ifc_env_dma_sequence_base;
 
@@ -65,7 +64,7 @@ class soc_ifc_env_dma_wr_fifo_directed_sequence
 
     `uvm_info("DMA_WRFIFO_DIR",
       $sformatf(
-        "Starting directed %0d-word WR_FIFO transfer with exhaustive SoC accesses",
+        "Starting directed %0d-word WR_FIFO transfer with random SoC accesses",
         NUM_WORDS), UVM_LOW)
 
     fork
