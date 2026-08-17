@@ -24,22 +24,18 @@ addrmap entropy_src {
     reg {
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Enable interrupt when es_entropy_valid is set.";
         } ES_ENTROPY_VALID[0:0];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Enable interrupt when es_health_test_failed is set.";
         } ES_HEALTH_TEST_FAILED[1:1];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Enable interrupt when es_observe_fifo_ready is set.";
         } ES_OBSERVE_FIFO_READY[2:2];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Enable interrupt when es_fatal_err is set.";
         } ES_FATAL_ERR[3:3];
     } INTERRUPT_ENABLE @ 0x4;
@@ -76,7 +72,7 @@ addrmap entropy_src {
             desc = "When true, the !!MODULE_ENABLE register can be modified.
             When false, it becomes read-only.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ME_REGWEN[0:0] = 0x1;
     } ME_REGWEN @ 0x10;
     reg {
@@ -86,7 +82,7 @@ addrmap entropy_src {
             all associated control and threshold registers.
             When false, these registers become read-only.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } SW_REGUPD[0:0] = 0x1;
     } SW_REGUPD @ 0x14;
     reg {
@@ -743,81 +739,81 @@ addrmap entropy_src {
             desc = "This bit is set when the FIPS_ENABLE field in the !!CONF register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } FIPS_ENABLE_FIELD_ALERT[0:0];
         field {
             desc = "This bit is set when the ENTROPY_DATA_REG_ENABLE field in the !!CONF register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ENTROPY_DATA_REG_EN_FIELD_ALERT[1:1];
         field {
             desc = "This bit is set when the MODULE_ENABLE field in the !!MODULE_ENABLE register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } MODULE_ENABLE_FIELD_ALERT[2:2];
         field {
             desc = "This bit is set when the THRESHOLD_SCOPE field in the !!CONF register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } THRESHOLD_SCOPE_FIELD_ALERT[3:3];
         field {
             desc = "This bit is set when the RNG_BIT_ENABLE field in the !!CONF register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } RNG_BIT_ENABLE_FIELD_ALERT[5:5];
         field {
             desc = "This bit is set when the FW_OV_SHA3_START field in the !!FW_OV_SHA3_START register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } FW_OV_SHA3_START_FIELD_ALERT[7:7];
         field {
             desc = "This bit is set when the FW_OV_MODE field in the !!FW_OV_CONTROL register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } FW_OV_MODE_FIELD_ALERT[8:8];
         field {
             desc = "This bit is set when the FW_OV_ENTROPY_INSERT field in the !!FW_OV_CONTROL register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } FW_OV_ENTROPY_INSERT_FIELD_ALERT[9:9];
         field {
             desc = "This bit is set when the ES_ROUTE field in the !!ENTROPY_CONTROL register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ES_ROUTE_FIELD_ALERT[10:10];
         field {
             desc = "This bit is set when the ES_TYPE field in the !!ENTROPY_CONTROL register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ES_TYPE_FIELD_ALERT[11:11];
         field {
             desc = "This bit is set when the main state machine detects a threshhold failure state.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ES_MAIN_SM_ALERT[12:12];
         field {
             desc = "This bit is set when the interal entropy bus value is equal to the prior
             valid value on the bus, indicating a possible attack.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ES_BUS_CMP_ALERT[13:13];
         field {
             desc = "This bit is set when the !!ALERT_THRESHOLD register is not configured properly.
             The upper field must be the exact inverse of the lower field.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ES_THRESH_CFG_ALERT[14:14];
         field {
             desc = "This bit is set when the packer FIFO has been written but was full at the time,
@@ -826,7 +822,7 @@ addrmap entropy_src {
             register before each write to the !!FW_OV_WR_DATA register.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ES_FW_OV_WR_ALERT[15:15];
         field {
             desc = "This bit is set when !!FW_OV_SHA3_START has been set to `kMultiBitBool4False`, without waiting for the bypass packer FIFO to clear.
@@ -836,19 +832,19 @@ addrmap entropy_src {
             This alert only applies when both !!FW_OV_CONTROL.FW_OV_MODE and !!FW_OV_CONTROL.FW_OV_ENTROPY_INSERT are set to `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ES_FW_OV_DISABLE_ALERT[16:16];
         field {
             desc = "This bit is set when the FIPS_FLAG field in the !!CONF register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } FIPS_FLAG_FIELD_ALERT[17:17];
         field {
             desc = "This bit is set when the RNG_FIPS field in the !!CONF register is set to a value other than `kMultiBitBool4False` or `kMultiBitBool4True`.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } RNG_FIPS_FIELD_ALERT[18:18];
         field {
             desc = "This bit is set when post-health test entropy bits are being dropped from the hardware pipeline.
@@ -863,7 +859,7 @@ addrmap entropy_src {
 
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } POSTHT_ENTROPY_DROP_ALERT[31:31];
     } RECOV_ALERT_STS @ 0xD4;
     reg {
