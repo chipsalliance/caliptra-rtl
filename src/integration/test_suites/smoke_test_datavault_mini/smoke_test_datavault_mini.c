@@ -24,6 +24,7 @@
 // -- Begin Boilerplate --
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
+#include "caliptra_rtl_lib.h"
 #include "riscv-csr.h"
 #include <string.h>
 #include <stdint.h>
@@ -44,13 +45,7 @@ volatile uint32_t err_count __attribute__((section(".dccm.persistent"))) = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-
-#ifndef MY_RANDOM_SEED
-#define MY_RANDOM_SEED 17
-#endif // MY_RANDOM_SEED
-// -- End Boilerplate --
-
-const long seed = MY_RANDOM_SEED; 
+unsigned seed = (unsigned) MY_RANDOM_SEED;
 
 const int EXPECT_LOCKED = 1;
 const int EXPECT_UNLOCKED = 0;
@@ -110,7 +105,7 @@ int wr_regs_per_pfx(widereg_t *dv_reg, uint32_t rmask, int locked) {
         if (locked)
             expdata = *tmpreg; 
 
-        wdata = (uint32_t) rand(); 
+        wdata = xorshift32();
         *tmpreg = wdata;
 
         rdata = *tmpreg;
@@ -187,11 +182,11 @@ int sm_exercise_unlocked() {
         } else if (curr == 0) { 
             // VPRINTF (LOW, "found fully unlocked registers at sm_dv_regs[%d]...(curr status is 0x%-3x):\n", i, curr);
             found_unlocked = 1;
-            pos = rand() % dv_ptr->width; 
+            pos = xorshift32() % dv_ptr->width;
         } else {
             // VPRINTF (LOW, "found partially unlocked registers at sm_dv_regs[%d]...(curr status is 0x%-3x):\n", i, curr);
             for (int j = 0; j < dv_ptr->width; j++) {
-                pos = rand() % dv_ptr-> width;
+                pos = xorshift32() % dv_ptr-> width;
                 if ( (curr & (1 << pos)) == 0 ) { 
                     found_unlocked = 1;
                     break;
@@ -200,7 +195,7 @@ int sm_exercise_unlocked() {
         }
 
         if (found_unlocked) {
-            uint32_t rand_data = rand();
+            uint32_t rand_data = xorshift32();
             errs += wr_single_reg_explicit( dv_ptr, rand_data, rand_data, pos );  // unlocked registers
         }
 
@@ -273,10 +268,10 @@ int sm_handle_1d_locking(ctrl_reg_t *dv_ctrl_ptr) {
 
         VPRINTF(LOW, "%s[%d] -LOCKS-> %s[%d]\n", ctrlgrp_ptr->pfx, j, datagrp_ptr->pfx, j);
 
-        uint32_t locked_data = rand();
+        uint32_t locked_data = xorshift32();
         errs += wr_single_reg_explicit( datagrp_ptr, locked_data, locked_data, j );     // write random
         errs += wr_single_reg_explicit( ctrlgrp_ptr, 0x1, 0x1, j );                     // lock register 
-        errs += wr_single_reg_explicit( datagrp_ptr, rand(), locked_data, j );          // attempt write random
+        errs += wr_single_reg_explicit( datagrp_ptr, xorshift32(), locked_data, j );          // attempt write random
         update_bitmap(datagrp_ptr - datagrp_head, j);                                   // mark lock bitmap
         errs += sm_exercise_unlocked();                                                    // attempt write random to unlocked blocks
         errs += wr_single_reg_explicit( ctrlgrp_ptr, 0x0, 0x1, j );                     // attempt unlock register 
@@ -294,7 +289,6 @@ void main() {
     VPRINTF(LOW,"-------------------------------------------------------------------\n");
 
     VPRINTF(LOW,"\nINFO. Using random seed = %d\n", seed);
-    srand(seed);
 
     // We have up to 4 array of pairings of Control and Data registers that are lockable 
     ctrl_reg_t *dv_ctrl_ptr;
