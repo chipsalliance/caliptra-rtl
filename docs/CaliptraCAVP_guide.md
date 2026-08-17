@@ -61,6 +61,7 @@ block to link to, matching their signal-level/pure-software framing.
 | Algorithm | Parameters |
 |---|---|
 | SHA2-224, SHA2-256, SHA2-384, SHA2-512 | `messageLength`: domain `{min:32, max:65536, increment:32}`; `performLargeDataTest: []` |
+| SHA2-512/224, SHA2-512/256 | `messageLength`: domain `{min:32, max:65536, increment:32}`; `performLargeDataTest: []` |
 | SHA3-224, SHA3-256, SHA3-384, SHA3-512 | `revision: 2.0`; `messageLength`: domain `{min:32, max:65536, increment:32}`; `performLargeDataTest: []` |
 
 ### 2.3 XOFs — SHAKE, cSHAKE
@@ -105,7 +106,7 @@ to be rejected or skipped rather than fed to the DUT as-is.
 
 | Algorithm | Mode | Standard | Parameters |
 |---|---|---|---|
-| KDF | Counter | SP 800-108r1 | `macMode: HMAC-SHA2-384`; `supportedLengths: [384]`; `fixedDataOrder: [before iterator]`; `counterLength: 32`; `supportsEmptyIv: true`; `requiresEmptyIv: false` |
+| KDF | Counter | SP 800-108r1 | `macMode: [HMAC-SHA2-384, HMAC-SHA2-512]`; `supportedLengths: [384, 512]`; `fixedDataOrder: [before iterator]`; `counterLength: 32`; `supportsEmptyIv: true`; `requiresEmptyIv: false` |
 
 ### 2.8 Stateful Hash-Based Signatures — LMS
 
@@ -576,7 +577,7 @@ For j = 0 to 99
 
 ---
 
-## 6. SHA2-384 / SHA2-512
+## 6. SHA2-512/224 / SHA2-512/256 / SHA2-384 / SHA2-512
 
 Register interface: see the live register browser for the [`sha512_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg) block.
 
@@ -596,7 +597,7 @@ Register interface: see the live register browser for the [`sha512_reg`](https:/
 |---|---|---|
 | [0] | `INIT` | |
 | [1] | `NEXT` | |
-| [3:2] | `MODE` | `10`=SHA-384, `11`=SHA-512 |
+| [3:2] | `MODE` | `00`=SHA-512/224, `01`=SHA-512/256, `10`=SHA-384, `11`=SHA-512 |
 | [4] | `ZEROIZE` | |
 | [5] | `LAST` | key-vault/hash-extend write-back — not needed for standard hashing |
 | [6] | `RESTORE` | resume from a previously-saved digest — not needed for standard hashing |
@@ -624,11 +625,21 @@ blocks. Concretely, versus §5.2:
 - Block and digest registers are twice as wide (`SHA512_BLOCK_0..31` vs
   `SHA256_BLOCK_0..15`; `SHA512_DIGEST_0..15` vs `SHA256_DIGEST_0..7`) and the length
   field in the padding is 128 bits instead of 64.
-- `MODE` is a 2-bit field (`10`/`11`) instead of 1 bit.
+- `MODE` is a 2-bit field (`00`/`01`/`10`/`11`) instead of 1 bit.
 - The truncation rule for a narrower output (§5.2's "`SHA256_DIGEST_7` is not part of the
-  result" for SHA2-224) has a direct SHA-384 analog: keep only the upper 384 bits
-  (`SHA512_DIGEST[511:128]`, i.e. `SHA512_DIGEST_0..11`) and discard
-  `SHA512_DIGEST_12..15`.
+  result" for SHA2-224) has a direct analog for each of the three narrower SHA-512
+  modes — keep only the upper N bits of `SHA512_DIGEST` and discard the rest:
+  - SHA-512/224: upper 224 bits (`SHA512_DIGEST[511:288]`, i.e. `SHA512_DIGEST_0..6`),
+    discard `SHA512_DIGEST_7..15`.
+  - SHA-512/256: upper 256 bits (`SHA512_DIGEST[511:256]`, i.e. `SHA512_DIGEST_0..7`),
+    discard `SHA512_DIGEST_8..15`.
+  - SHA-384: upper 384 bits (`SHA512_DIGEST[511:128]`, i.e. `SHA512_DIGEST_0..11`),
+    discard `SHA512_DIGEST_12..15`.
+
+  SHA-512/224 and SHA-512/256 additionally use their own FIPS 180-4 initial hash values
+  (distinct from plain SHA-512's `H0..H7`) — this is not a truncation of the SHA-512
+  digest computed with SHA-512's own IV, it is a full independent hash computation
+  selected by `MODE`.
 
 Everything else — byte packing (plain sequential big-endian, no reversal), the
 INIT-first-block/NEXT-subsequent-blocks rule, and the ready/valid polling — carries over
@@ -638,15 +649,17 @@ unchanged from the §5.2 worked example.
 2. Write `SHA512_CTRL` = `{MODE, INIT=1}` for the first block, `{MODE, NEXT=1}` for
    subsequent blocks.
 3. Wait `SHA512_STATUS.READY` or `SHA512_STATUS.VALID`.
-4. After the last block, read `SHA512_DIGEST_0..15`. For SHA-384, keep only
-   `SHA512_DIGEST[511:128]` (the register always holds a full 512-bit result regardless
-   of mode).
+4. After the last block, read `SHA512_DIGEST_0..15`. For a narrower mode, keep only the
+   upper bits as described above (`SHA512_DIGEST_0..6` for SHA-512/224,
+   `SHA512_DIGEST_0..7` for SHA-512/256, `SHA512_DIGEST_0..11` for SHA-384) — the register
+   always holds a full 512-bit result regardless of mode.
 5. Write `SHA512_CTRL.ZEROIZE=1` before the next message.
 
 ### 6.3 Monte Carlo Test (MCT)
 
-Standard MCT, same structure as §5.3 — one `SHA2-384/512(MSG)` call is one execution of
-the full §6.2 sequence over `MSG`'s padded blocks:
+Standard MCT, same structure as §5.3 — one `SHA2-512/224`/`SHA2-512/256`/`SHA2-384`/`SHA2-512(MSG)`
+call (per the mode under test) is one execution of the full §6.2 sequence over `MSG`'s
+padded blocks:
 
 ```
 SEED = seed value from the test vector
@@ -654,7 +667,7 @@ For j = 0 to 99
   A = B = C = SEED
   For i = 0 to 999
     MSG = A || B || C
-    MD = SHA2-384/512(MSG)
+    MD = SHA2-512/224 or SHA2-512/256 or SHA2-384 or SHA2-512(MSG)  # mode under test
     A = B; B = C; C = MD
   Output MD
   SEED = MD
