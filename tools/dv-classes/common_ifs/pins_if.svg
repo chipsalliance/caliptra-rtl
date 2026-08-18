@@ -1,0 +1,96 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="808.88" height="533" fill="none" stroke-linecap="square" stroke-miterlimit="10" version="1.1" viewBox="0 0 808.88 533" xmlns="http://www.w3.org/2000/svg">
+ <defs>
+  <marker id="marker3489" overflow="visible" orient="auto">
+   <path transform="matrix(-.4 0 0 -.4 -4 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill="#000" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker2935" overflow="visible" orient="auto">
+   <path transform="matrix(-.4 0 0 -.4 -4 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill="#000" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker2925" overflow="visible" orient="auto">
+   <path transform="matrix(-.4 0 0 -.4 -4 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill="#000" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker2619" overflow="visible" orient="auto">
+   <path transform="matrix(-.4 0 0 -.4 -4 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill="#000" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker2609" overflow="visible" orient="auto">
+   <path transform="matrix(-.4 0 0 -.4 -4 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill="#000" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker2599" overflow="visible" orient="auto">
+   <path transform="matrix(-.4 0 0 -.4 -4 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill="#000" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+  <marker id="marker2589" overflow="visible" orient="auto">
+   <path transform="matrix(-.4 0 0 -.4 -4 0)" d="m0 0 5-5-17.5 5 17.5 5z" fill="#000" fill-rule="evenodd" stroke="#000" stroke-width="1pt"/>
+  </marker>
+ </defs>
+ <clipPath>
+  <path d="m0 0h1421.3v1009h-1421.3z"/>
+ </clipPath>
+ <path d="m1.5 1.5h630v530h-630z" fill="#fce5cd" fill-rule="evenodd" stroke="#000" stroke-linecap="butt" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="3"/>
+ <path d="m181.5 221.5v200l-70 70v-340z" fill="#d9ead3" fill-rule="evenodd" stroke="#000" stroke-linecap="butt" stroke-linejoin="round" stroke-miterlimit="10" stroke-width="2"/>
+ <g fill="#000" fill-opacity="0" fill-rule="evenodd">
+  <path d="m147.26 412.57h56.252v49.134h-56.252z"/>
+  <path d="m104.13 388.22h56.252v43.402h-56.252z"/>
+  <path d="m119.94 439.97h56.252v49.134h-56.252z"/>
+  <path d="m134.03 467.43h0.85831v39.685h97.346"/>
+  <path d="m162.11 439.06h0.0765v39.842h70.065"/>
+  <path d="m185.24 341.22h153.51"/>
+ </g>
+ <g fill="#000000" font-family="'Liberation Sans'" letter-spacing="0px" stroke-linecap="butt" word-spacing="0px">
+  <text x="315.18164" y="45.988651" font-size="40px" stroke-width="1px" text-align="center" text-anchor="middle" style="line-height:50px" xml:space="preserve"><tspan x="315.18164" y="45.988651" font-size="40px">pins_if</tspan></text>
+  <g font-size="26.667px" stroke-width="1px">
+   <text x="118.41411" y="255.95123" style="line-height:30.7692px" xml:space="preserve"><tspan x="118.41411" y="255.95123" font-size="26.667px" stroke-width="1px">00</tspan></text>
+   <text x="118.54431" y="290.85855" style="line-height:30.7692px" xml:space="preserve"><tspan x="118.54431" y="290.85855" font-size="26.667px" stroke-width="1px">01</tspan></text>
+   <text x="118.90891" y="325.76587" style="line-height:30.7692px" xml:space="preserve"><tspan x="118.90891" y="325.76587" font-size="26.667px" stroke-width="1px">10</tspan></text>
+   <text x="120.0287" y="360.67319" style="line-height:30.7692px" xml:space="preserve"><tspan x="120.0287" y="360.67319" font-size="26.667px" stroke-width="1px">11</tspan></text>
+  </g>
+ </g>
+ <g fill="none" stroke="#000" stroke-linecap="butt" stroke-miterlimit="10" stroke-width="2">
+  <path d="m54.843 246.77h46.657" marker-end="url(#marker2589)"/>
+  <path d="m54.843 281.68h46.657" marker-end="url(#marker2599)"/>
+  <path d="m54.843 316.59h46.657" marker-end="url(#marker2609)"/>
+  <path d="m54.843 351.5h46.657" marker-end="url(#marker2619)"/>
+ </g>
+ <g fill="#000000" font-family="'Liberation Sans'" font-size="26.667px" letter-spacing="0px" stroke-linecap="butt" stroke-width="1px" text-anchor="end" word-spacing="0px">
+  <text x="45.992271" y="255.95123" text-align="end" style="line-height:30.7692px" xml:space="preserve"><tspan x="45.992271" y="255.95123" font-size="26.667px" stroke-width="1px" text-align="end" text-anchor="end">z</tspan></text>
+  <text x="45.992271" y="290.85855" text-align="end" style="line-height:30.7692px" xml:space="preserve"><tspan x="45.992271" y="290.85855" font-size="26.667px" stroke-width="1px" text-align="end" text-anchor="end">1</tspan></text>
+  <text x="45.992271" y="325.76587" text-align="end" style="line-height:30.7692px" xml:space="preserve"><tspan x="45.992271" y="325.76587" font-size="26.667px" stroke-width="1px" text-align="end" text-anchor="end">0</tspan></text>
+  <text x="45.992271" y="360.67319" text-align="end" style="line-height:30.7692px" xml:space="preserve"><tspan x="45.992271" y="360.67319" font-size="26.667px" stroke-width="1px" text-align="end" text-anchor="end">0</tspan></text>
+  <text x="165.30479" y="432.25009" text-align="end" style="line-height:30.7692px" xml:space="preserve"><tspan x="165.30479" y="432.25009" font-size="26.667px" stroke-width="1px" text-align="end" text-anchor="end">0</tspan></text>
+  <text x="137.20518" y="459.56351" text-align="end" style="line-height:30.7692px" xml:space="preserve"><tspan x="137.20518" y="459.56351" font-size="26.667px" stroke-width="1px" text-align="end" text-anchor="end">1</tspan></text>
+ </g>
+ <path d="m231.5 481.5h-70v-30" fill="none" marker-end="url(#marker2925)" stop-color="#000000" stroke="#000" stroke-linecap="butt" stroke-miterlimit="10" stroke-width="2" style="font-variation-settings:normal"/>
+ <path d="m231.5 511.5h-100v-30" fill="none" marker-end="url(#marker2935)" stop-color="#000000" stroke="#000" stroke-linecap="butt" stroke-miterlimit="10" stroke-width="2" style="font-variation-settings:normal"/>
+ <g font-family="'Liberation Sans'" letter-spacing="0px" stroke-linecap="butt" stroke-width="1px" word-spacing="0px">
+  <text x="190.71532" y="290.99576" fill="#000000" font-size="17.333px" style="line-height:20px" xml:space="preserve"><tspan x="190.71532" y="290.99576" font-size="26.667px">pins_int</tspan></text>
+  <g font-size="26.667px" text-anchor="middle">
+   <text x="331.5" y="461.5" fill="none" stroke="#000000" text-align="center" style="line-height:20px" xml:space="preserve"><tspan x="331.5" y="461.5"/></text>
+   <text x="250.19676" y="486.23666" fill="#000000" text-align="center" style="line-height:20px" xml:space="preserve"><tspan x="250.19676" y="486.23666">pu</tspan></text>
+   <text transform="translate(-89.803 4.9802)" x="340" y="510" dominant-baseline="auto" fill="#000000" stop-color="#000000" stroke-miterlimit="10" text-align="center" style="font-feature-settings:normal;font-variant-alternates:normal;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-variant-position:normal;font-variation-settings:normal;inline-size:0;line-height:20px;shape-margin:0;shape-padding:0;text-decoration-color:#000000;text-decoration-line:none;text-decoration-style:solid;text-indent:0;text-orientation:mixed;text-transform:none;white-space:normal" xml:space="preserve"><tspan x="340" y="510">pd</tspan></text>
+  </g>
+ </g>
+ <path d="m181.5 301.5h150" fill="none" stroke="#000" stroke-linecap="butt" stroke-miterlimit="10" stroke-width="2"/>
+ <path d="m351.5 131.5v165" fill="none" stroke="#000" stroke-linecap="butt" stroke-miterlimit="10" stroke-width="2"/>
+ <g transform="translate(1.5,-8.5)" fill="#cfe2f3" fill-rule="evenodd" stroke="#000" stroke-linecap="butt" stroke-miterlimit="10" stroke-width="2">
+  <path d="m330 340v-60l40 30z"/>
+  <circle cx="349.96" cy="287.38" r="6.2956" color="#000000" stop-color="#000000" style="font-variation-settings:normal"/>
+ </g>
+ <g stroke-linecap="butt">
+  <path d="m331.5 151.5v-60l40 30z" fill="#cfe2f3" fill-rule="evenodd" stroke="#000" stroke-miterlimit="10" stroke-width="2"/>
+  <text x="219.98398" y="200.81238" fill="#000000" font-family="'Liberation Sans'" font-size="17.333px" letter-spacing="0px" stroke-width="1px" word-spacing="0px" style="line-height:20px" xml:space="preserve"><tspan x="219.98398" y="200.81238" font-size="26.667px">pins_oe</tspan></text>
+  <path d="m221.5 211.5h130" fill="none" stroke="#000" stroke-miterlimit="10" stroke-width="2"/>
+  <text x="220.12297" y="111.45274" fill="#000000" font-family="'Liberation Sans'" font-size="17.333px" letter-spacing="0px" stroke-width="1px" word-spacing="0px" style="line-height:20px" xml:space="preserve"><tspan x="220.12297" y="111.45274" font-size="26.667px">pins_o</tspan></text>
+ </g>
+ <g fill="none" stroke="#000" stroke-linecap="butt" stroke-miterlimit="10" stroke-width="2">
+  <path d="m221.5 121.5h110"/>
+  <path d="m371.5 121.5h140v180h-140"/>
+  <path d="m511.5 211.5h180"/>
+ </g>
+ <g stroke-linecap="butt" stroke-miterlimit="10">
+  <text transform="matrix(.59047 0 0 .59047 146.37 54.875)" x="390" y="100" dominant-baseline="auto" fill="#000000" font-family="'Liberation Sans'" font-size="20px" letter-spacing="0px" stop-color="#000000" stroke-width="1.6936px" word-spacing="0px" style="font-feature-settings:normal;font-variant-alternates:normal;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-variant-position:normal;font-variation-settings:normal;inline-size:0;line-height:15px;shape-margin:0;shape-padding:0;text-decoration-color:#000000;text-decoration-line:none;text-decoration-style:solid;text-indent:0;text-orientation:mixed;text-transform:none;white-space:normal" xml:space="preserve"><tspan x="390" y="100" font-size="20px" stroke-width="1.6936px">(strong0, strong1)</tspan></text>
+  <text transform="matrix(.59047 0 0 .59047 146.37 234.9)" x="390" y="100" dominant-baseline="auto" fill="#000000" font-family="'Liberation Sans'" font-size="20px" letter-spacing="0px" stop-color="#000000" stroke-width="1.6936px" word-spacing="0px" style="font-feature-settings:normal;font-variant-alternates:normal;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-variant-position:normal;font-variation-settings:normal;inline-size:0;line-height:15px;shape-margin:0;shape-padding:0;text-decoration-color:#000000;text-decoration-line:none;text-decoration-style:solid;text-indent:0;text-orientation:mixed;text-transform:none;white-space:normal" xml:space="preserve"><tspan x="390" y="100" font-size="20px" stroke-width="1.6936px">(pull0, pull1)</tspan></text>
+  <path d="m691.5 341.5h-120v-125" fill="none" marker-end="url(#marker3489)" stroke="#000" stroke-dasharray="8, 4" stroke-width="2"/>
+  <text transform="translate(74.051 -8.6514)" x="566.30847" y="340" dominant-baseline="auto" fill="#000000" font-family="'Liberation Sans'" font-size="26.667px" letter-spacing="0px" stop-color="#000000" stroke-width="1px" word-spacing="0px" style="font-feature-settings:normal;font-variant-alternates:normal;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-variant-position:normal;font-variation-settings:normal;inline-size:0;line-height:20px;shape-margin:0;shape-padding:0;text-decoration-color:#000000;text-decoration-line:none;text-decoration-style:solid;text-indent:0;text-orientation:mixed;text-transform:none;white-space:normal" xml:space="preserve"><tspan x="566.30847" y="340">external driver</tspan></text>
+  <text transform="translate(-20.372 1.3687)" x="660" y="200" dominant-baseline="auto" fill="#000000" font-family="'Liberation Sans'" font-size="26.667px" letter-spacing="0px" stop-color="#000000" stroke-width="1px" word-spacing="0px" style="font-feature-settings:normal;font-variant-alternates:normal;font-variant-caps:normal;font-variant-east-asian:normal;font-variant-ligatures:normal;font-variant-numeric:normal;font-variant-position:normal;font-variation-settings:normal;inline-size:0;line-height:20px;shape-margin:0;shape-padding:0;text-decoration-color:#000000;text-decoration-line:none;text-decoration-style:solid;text-indent:0;text-orientation:mixed;text-transform:none;white-space:normal" xml:space="preserve"><tspan x="660" y="200">pins</tspan></text>
+ </g>
+</svg>
