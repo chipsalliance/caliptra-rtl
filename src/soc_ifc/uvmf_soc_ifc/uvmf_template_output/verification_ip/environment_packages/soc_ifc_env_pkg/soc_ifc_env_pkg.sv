@@ -65,6 +65,7 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_mbox_sram_agent_ae)
   `uvm_analysis_imp_decl(_ahb_slave_0_ae)
   `uvm_analysis_imp_decl(_axi_sub_0_ae)
+  `uvm_analysis_imp_decl(_axi_dut_ae)
   `uvm_analysis_imp_decl(_expected_analysis_export)
   `uvm_analysis_imp_decl(_expected_cptra_analysis_export)
   `uvm_analysis_imp_decl(_expected_ss_mode_analysis_export)

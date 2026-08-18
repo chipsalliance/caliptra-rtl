@@ -522,10 +522,10 @@ class soc_ifc_environment  extends uvmf_environment_base #(
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap = qvip_ahb_lite_slave_subenv.ahb_lite_slave_0.ap; 
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer"].connect(soc_ifc_pred.ahb_slave_0_ae);
     qvip_ahb_lite_slave_subenv_ahb_lite_slave_0_ap["burst_transfer_sb"].connect(soc_ifc_sb.actual_ahb_analysis_export);
-    axi_soc_manager_agent.driver.ms_tx_AW_W_port.connect(
-      soc_ifc_pred.axi_sub_0_ae);
-    axi_soc_manager_agent.driver.ms_rx_rvalid_port.connect(
-      soc_ifc_pred.axi_sub_0_ae);
+    // Predict from completed DUT-side transfers so variable interconnect
+    // latency is reflected without fixed cycle delays.
+    axi_soc_ifc_subordinate_agent.driver.slv_rx_W_port.connect(soc_ifc_pred.axi_dut_ae);
+    axi_soc_ifc_subordinate_agent.driver.slv_tx_R_port.connect(soc_ifc_pred.axi_dut_ae);
     axi_soc_manager_agent.driver.write_done_port.connect(
       soc_ifc_sb.actual_axi_analysis_export);
     axi_soc_manager_agent.driver.read_done_port.connect(
