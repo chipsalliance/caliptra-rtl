@@ -29,11 +29,11 @@ class soc_ifc_env_mbox_reg_axs_invalid_large_sequence extends soc_ifc_env_mbox_r
   `uvm_object_utils( soc_ifc_env_mbox_reg_axs_invalid_large_sequence )
 
   // Constrain size to a large command
-  // Min. size: 16KiB
-  constraint mbox_dlen_min_large_c { mbox_op_rand.dlen > 32'h0000_4000; }
+  // Min. size: half the mailbox (CPTRA_MBOX_SIZE_BYTES/2) so "large" scales with the configured mailbox size and stays within the base dlen<=CPTRA_MBOX_SIZE_BYTES cap
+  constraint mbox_dlen_min_large_c { mbox_op_rand.dlen > (CPTRA_MBOX_SIZE_BYTES/2); }
   // Constrain response data size to also be large
-  // Min. size: 16KiB
-  constraint mbox_resp_dlen_min_large_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_4000; }
+  // Min. size: half the mailbox (CPTRA_MBOX_SIZE_BYTES/2) so "large" scales with the configured mailbox size and stays within the base dlen<=CPTRA_MBOX_SIZE_BYTES cap
+  constraint mbox_resp_dlen_min_large_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= (CPTRA_MBOX_SIZE_BYTES/2); }
   // Valid solution for the custom delay ruleset, to control random delays while
   // waiting to inject random error accesses
   constraint custom_delay_c { rand_delay > 0; rand_delay < (mbox_op_rand.dlen * 5); }
