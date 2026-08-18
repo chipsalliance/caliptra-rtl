@@ -4105,18 +4105,18 @@ function uvm_reg_data_t soc_ifc_predictor::dma_reg_masked_expected_rdata(uvm_reg
 endfunction
 
 function void soc_ifc_predictor::predict_boot_wait_boot_done();
-    // Capture FSM state before overriding and check if FSM is following
-    // breakpoint vs "normal" path
-    bit brkpoint_path = p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait;
 
-    // MOdel FSM changing to BOOT_DONE state
+    // Capture FSM state before overriding.
+    bit from_boot_wait = p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait;
+
+    // Model FSM changing to BOOT_DONE state
     p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_done: 1'b1, default: 1'b0};
 
     // Since we enter BOOT_DONE any fw_update is complete.
     fw_update_rst_window                           = 1'b0;
 
     // Model the boot-FSM ICCM HW-clear by predicting the register field to 0.
-    if (brkpoint_path && iccm_locked) begin
+    if (from_boot_wait && iccm_locked) begin
         if(!p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.predict(1'b0)) begin
             `uvm_fatal("PRED_BOOT", "Failed to predict internal_iccm_lock.lock deassertion on boot-FSM ICCM unlock")
         end
@@ -4124,7 +4124,7 @@ function void soc_ifc_predictor::predict_boot_wait_boot_done();
 
     fork
         begin
-            // if brkpoint_path && iccm_locked there are 2 predictions
+            // if from_boot_wait && iccm_locked there are 2 predictions
             // 1. iccm_lock clearing
             // 2. uc_rst desasserts
             // Otherwise only 1 prediction of uc_rst_deassert
