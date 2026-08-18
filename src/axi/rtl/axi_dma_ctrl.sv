@@ -124,7 +124,7 @@ import kv_defines_pkg::*;
     //   b) Configured data width X max supported AXI burst length value for FIXED bursts
     localparam AXI_MAX_FIXED_BLOCK_SIZE = `MIN_OF(AXI_LEN_MAX_BYTES,(AXI_FIXED_LEN_MAX_VALUE * BC));
     localparam MAX_FIXED_BLOCK_SIZE     = `MIN_OF(AXI_MAX_FIXED_BLOCK_SIZE,MAX_BLOCK_SIZE);
-    localparam DMA_MAX_XFER_SIZE = 32'h10_0000; // 1MiB
+    localparam DMA_MAX_XFER_SIZE = 32'h8000_0000; // 2GiB
 
 
     // --------------------------------------- //
