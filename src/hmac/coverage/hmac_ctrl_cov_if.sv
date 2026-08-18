@@ -14,79 +14,151 @@
 
 `ifndef VERILATOR
 
-interface hmac_ctrl_cov_if     
-    import kv_defines_pkg::*;  
+interface hmac_ctrl_cov_if
+    import kv_defines_pkg::*;
     (
     input logic           clk,
     input logic           reset_n,
     input logic           cptra_pwrgood,
 
     input logic           ocp_lock_in_progress
-
 );
 
     logic init;
     logic next;
     logic zeroize;
     logic mode;
+    logic csr_mode;
     logic last;
     logic ready;
     logic valid;
-    
+    logic restore;
+    logic is_last_op;
+
     logic core_tag_we;
 
-    logic [2 : 0] hmac_cmd;
+    logic kv_key_data_present;
+    logic kv_block_data_present;
+    logic dest_keyvault;
+    logic tag_was_masked;
+    logic awaiting_zeroize;
+
+    logic key_mode_error_edge;
+    logic key_zero_error_edge;
+    logic invalid_cmd_error_edge;
+    logic intermediate_tag_hidden_edge;
+
+    logic error_intr;
+    logic notif_intr;
+
+    logic debug_scan_zeroize;
+
+    logic [4:0] hmac_cmd;
 
     kv_write_filter_metrics_t kv_write_metrics;
-    kv_write_ctrl_reg_t kv_write_ctrl_reg;
+    kv_write_ctrl_reg_t       kv_write_ctrl_reg;
 
-    assign init = hmac_ctrl.hmac_inst.init_reg;
-    assign next = hmac_ctrl.hmac_inst.next_reg;
-    assign zeroize = hmac_ctrl.hmac_inst.zeroize_reg;
-    assign mode = hmac_ctrl.hmac_inst.mode_reg;
-    assign last = hmac_ctrl.hmac_inst.last_reg;
-    assign ready = hmac_ctrl.hmac_inst.ready_reg;
-    assign valid = hmac_ctrl.hmac_inst.tag_valid_reg;
+    assign init       = hmac_ctrl.hmac_inst.init_reg;
+    assign next       = hmac_ctrl.hmac_inst.next_reg;
+    assign zeroize    = hmac_ctrl.hmac_inst.zeroize_reg;
+    assign mode       = hmac_ctrl.hmac_inst.mode_reg;
+    assign csr_mode   = hmac_ctrl.hmac_inst.csr_mode_reg;
+    assign last       = hmac_ctrl.hmac_inst.last_reg;
+    assign ready      = hmac_ctrl.hmac_inst.ready_reg;
+    assign valid      = hmac_ctrl.hmac_inst.tag_valid_reg;
+    assign restore    = hmac_ctrl.hmac_inst.restore_reg;
+    assign is_last_op = hmac_ctrl.hmac_inst.is_last_op_reg;
 
-    assign core_tag_we = hmac_ctrl.hmac_inst.core_tag_we;
+    assign core_tag_we           = hmac_ctrl.hmac_inst.core_tag_we;
+    assign kv_key_data_present   = hmac_ctrl.hmac_inst.kv_key_data_present;
+    assign kv_block_data_present = hmac_ctrl.hmac_inst.kv_block_data_present;
+    assign dest_keyvault         = hmac_ctrl.hmac_inst.dest_keyvault;
+    assign tag_was_masked        = hmac_ctrl.hmac_inst.tag_was_masked_reg;
+    assign awaiting_zeroize      = hmac_ctrl.hmac_inst.awaiting_zeroize;
 
-    assign hmac_cmd = {last, next, init};
+    assign key_mode_error_edge          = hmac_ctrl.hmac_inst.key_mode_error_edge;
+    assign key_zero_error_edge          = hmac_ctrl.hmac_inst.key_zero_error_edge;
+    assign invalid_cmd_error_edge       = hmac_ctrl.hmac_inst.invalid_cmd_error_edge;
+    assign intermediate_tag_hidden_edge = hmac_ctrl.hmac_inst.intermediate_tag_hidden_edge;
 
-    assign kv_write_metrics = hmac_ctrl.hmac_inst.kv_write_metrics;
+    assign error_intr = hmac_ctrl.hmac_inst.error_intr;
+    assign notif_intr = hmac_ctrl.hmac_inst.notif_intr;
+
+    assign debug_scan_zeroize = hmac_ctrl.hmac_inst.debugUnlock_or_scan_mode_switch;
+
+    // hmac_cmd bit layout: {restore, last, next, init, zeroize}.
+    assign hmac_cmd = {hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.RESTORE.value,
+                       hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.LAST.value,
+                       hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.NEXT.value,
+                       hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.INIT.value,
+                       hmac_ctrl.hmac_inst.hwif_out.HMAC512_CTRL.ZEROIZE.value};
+
+    assign kv_write_metrics  = hmac_ctrl.hmac_inst.kv_write_metrics;
     assign kv_write_ctrl_reg = hmac_ctrl.hmac_inst.kv_write_ctrl_reg;
 
     covergroup hmac_ctrl_cov_grp @(posedge clk);
         reset_cp: coverpoint reset_n;
-        //cptra_pwrgood_cp: coverpoint cptra_pwrgood;
 
-        init_cp: coverpoint init;
-        next_cp: coverpoint next;
-        zeroize_cp: coverpoint zeroize;
-        mode_cp: coverpoint mode;
-        last_cp: coverpoint last;
-        ready_cp: coverpoint ready;
-        valid_cp: coverpoint valid;
+        init_cp:             coverpoint init;
+        next_cp:             coverpoint next;
+        zeroize_cp:          coverpoint zeroize;
+        mode_cp:             coverpoint mode;
+        csr_mode_cp:         coverpoint csr_mode;
+        last_cp:             coverpoint last;
+        restore_cp:          coverpoint restore;
+        ready_cp:            coverpoint ready;
+        valid_cp:            coverpoint valid;
+        is_last_op_cp:       coverpoint is_last_op;
+        awaiting_zeroize_cp: coverpoint awaiting_zeroize;
 
         core_tag_we_cp: coverpoint core_tag_we;
 
+        // KV / CSR / dest-KV cause bins for intermediate_tag_hidden.
+        kv_key_present_cp:   coverpoint kv_key_data_present   { bins asserted = {1'b1}; }
+        kv_block_present_cp: coverpoint kv_block_data_present { bins asserted = {1'b1}; }
+        dest_keyvault_cp:    coverpoint dest_keyvault         { bins asserted = {1'b1}; }
+        tag_was_masked_cp:   coverpoint tag_was_masked        { bins asserted = {1'b1}; }
+
+        // Per-bit error interrupt status.
+        error0_sts_cp: coverpoint key_mode_error_edge          { bins fired = {1'b1}; }
+        error1_sts_cp: coverpoint key_zero_error_edge          { bins fired = {1'b1}; }
+        error2_sts_cp: coverpoint invalid_cmd_error_edge       { bins fired = {1'b1}; }
+        error3_sts_cp: coverpoint intermediate_tag_hidden_edge { bins fired = {1'b1}; }
+
+        // Aggregated SoC interrupts.
+        error_intr_cp: coverpoint error_intr { bins asserted = {1'b1}; }
+        notif_intr_cp: coverpoint notif_intr { bins asserted = {1'b1}; }
+
+        // Debug-unlock / scan-mode driven zeroize.
+        debug_scan_zeroize_cp: coverpoint debug_scan_zeroize;
+
+        // {restore, last, next, init, zeroize} — 32 encodings.
         hmac_cmd_cp: coverpoint hmac_cmd {
-            bins init               = (0 => 1 => 0);
-            bins next               = (0 => 2 => 0);
-            bins last_alone_ignored = (0 => 4 => 0);
-            bins init_last          = (0 => 5 => 0);
-            bins next_last          = (0 => 6 => 0);
+            bins cmd[] = {[0:31]};
         }
 
-        //init_ready_cp: cross ready, init;
-        //next_ready_cp: cross ready, next;
-        mode_ready_cp: cross ready, mode;
-        zeroize_ready_cp: cross ready, zeroize;
-        zeroize_init_cp: cross zeroize, init;
-        zeroize_next_cp: cross zeroize, next;
-        zeroize_last_cp: cross zeroize, last;
-        init_mode_cp: cross init, mode;
-        next_mode_cp: cross next, mode;
-        last_mode_cp: cross last, mode;
+        // Cross every CTRL encoding with MODE (HMAC-384 x HMAC-512).
+        hmac_cmd_x_mode: cross hmac_cmd_cp, mode_cp;
+
+        // Ready / zeroize crosses.
+        mode_ready_cp:             cross ready_cp, mode_cp;
+        zeroize_ready_cp:          cross ready_cp, zeroize_cp;
+        awaiting_zeroize_ready_cp: cross awaiting_zeroize_cp, ready_cp;
+
+        // Per-bit x mode crosses.
+        zeroize_x_mode_cp:  cross zeroize_cp,   mode_cp;
+        restore_x_mode_cp:  cross restore_cp,   mode_cp;
+        init_x_mode_cp:     cross init_cp,      mode_cp;
+        next_x_mode_cp:     cross next_cp,      mode_cp;
+        last_x_mode_cp:     cross last_cp,      mode_cp;
+        error0_x_mode_cp:   cross error0_sts_cp, mode_cp;
+        error1_x_mode_cp:   cross error1_sts_cp, mode_cp;
+        error2_x_mode_cp:   cross error2_sts_cp, mode_cp;
+        error3_x_mode_cp:   cross error3_sts_cp, mode_cp;
+
+        // csr_mode dimension (HMAC-512 only — HMAC-256 has no CSR key path).
+        csr_mode_ready_cp:  cross ready_cp, csr_mode_cp;
+        csr_mode_x_mode_cp: cross csr_mode_cp, mode_cp;
 
     endgroup
 
@@ -122,8 +194,7 @@ interface hmac_ctrl_cov_if
 
     endgroup    
 
-    hmac_ctrl_cov_grp hmac_ctrl_cov_grp1 = new();
-
+    hmac_ctrl_cov_grp     hmac_ctrl_cov_grp1     = new();
     hmac_ocp_lock_cov_grp hmac_ocp_lock_cov_grp1 = new();
 
 endinterface

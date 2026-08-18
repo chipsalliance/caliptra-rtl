@@ -788,6 +788,8 @@
 `define HMAC_REG_HMAC512_CTRL_LAST_MASK                                                             (32'h20)
 `define HMAC_REG_HMAC512_CTRL_RESERVED_LOW                                                          (6)
 `define HMAC_REG_HMAC512_CTRL_RESERVED_MASK                                                         (32'h40)
+`define HMAC_REG_HMAC512_CTRL_RESTORE_LOW                                                           (7)
+`define HMAC_REG_HMAC512_CTRL_RESTORE_MASK                                                          (32'h80)
 `endif
 `ifndef HMAC_REG_HMAC512_STATUS
 `define HMAC_REG_HMAC512_STATUS                                                                     (32'h18)

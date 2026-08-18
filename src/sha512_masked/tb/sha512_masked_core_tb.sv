@@ -49,9 +49,11 @@ module sha512_masked_core_tb
 
   reg           init_tb; 
   reg           next_tb;
+  reg           restore_tb;
   reg [1:0]     mode_tb;
 
   reg [1023:0]  block_tb;
+  reg [511:0]   restore_digest_tb;
   wire [511:0]  digest_tb;
   
   reg [191:0]    entropy_tb;
@@ -69,11 +71,13 @@ module sha512_masked_core_tb
 
                      .init_cmd(init_tb),
                      .next_cmd(next_tb),
+                     .restore_cmd(restore_tb),
                      .mode(mode_tb),
 
                      .entropy(entropy_tb),
 
                      .block_msg(block_tb),
+                     .restore_digest(restore_digest_tb),
 
                      .ready(ready_tb),
                      .digest(digest_tb),
@@ -164,8 +168,10 @@ module sha512_masked_core_tb
 
       init_tb     = '0;
       next_tb     = '0;
+      restore_tb  = '0;
       mode_tb     = '0;
       block_tb    = '0;
+      restore_digest_tb = '0;
 
       entropy_tb     = '0;
     end
@@ -393,6 +399,109 @@ module sha512_masked_core_tb
 
 
   //----------------------------------------------------------------
+  // restore_test()
+  //
+  //
+  // Perform test of a double block digest with restore feature. 
+  //----------------------------------------------------------------
+  task restore_test(input [7 : 0]    tc_number,
+                    input [1 : 0]    mode,
+                    input [1023 : 0] block0,
+                    input [1023 : 0] block1,
+                    input [511 : 0]  expected0,
+                    input [511 : 0]  expected1
+                   );
+    reg [511 : 0] mask;
+    reg [511 : 0] saved_digest;
+    reg [511 : 0] masked_data;
+    reg [31  : 0] start_time;
+    reg [31  : 0] end_time;
+
+    begin
+      $display("*** TC%01d - Restore block test started.", tc_ctr);
+
+      mask = get_mask(mode);
+      start_time = cycle_ctr;
+
+      // First block via INIT
+      block_tb   = block0;
+      entropy_tb = random_gen();
+      $display("   entropy_tb= %019x", entropy_tb);
+
+      #CLK_PERIOD;
+      mode_tb    = mode;
+      next_tb    = '0;
+      restore_tb = '0;
+      init_tb    = 1'b1;
+
+      #CLK_PERIOD;
+      init_tb    = '0;
+
+      wait_ready();
+
+      if (digest_tb == expected0)
+        begin
+          $display("TC%01d first block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in first digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%064x", tc_ctr, expected0);
+          $display("TC%01d: Got:      0x%064x", tc_ctr, digest_tb);
+          error_ctr = error_ctr + 1;
+        end
+
+      saved_digest = digest_tb;
+
+      zeroize_tb = 1'b1;
+      #CLK_PERIOD;
+      zeroize_tb = 1'b0;
+
+      // Final block via RESTORE + NEXT
+      block_tb          = block1;
+      restore_digest_tb = saved_digest;
+      entropy_tb        = random_gen();
+
+      #CLK_PERIOD;
+      mode_tb    = mode;
+      init_tb    = '0;
+      next_tb    = 1'b1;
+      restore_tb = 1'b1;
+
+      #CLK_PERIOD;
+      next_tb    = '0;
+      restore_tb = '0;
+
+      wait_ready();
+
+      end_time = cycle_ctr - start_time;
+      $display("*** Restore block test processing time = %01d cycles", end_time);
+
+      masked_data = digest_tb & mask;
+
+      if (masked_data == (expected1 & mask))
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected1);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, masked_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      zeroize_tb = 1'b1;
+      #CLK_PERIOD;
+      zeroize_tb = 1'b0;
+
+      $display("*** TC%01d - Restore block test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // restore_test
+
+
+  //----------------------------------------------------------------
   // sha512_test
   // The main test functionality.
   //
@@ -467,6 +576,15 @@ module sha512_masked_core_tb
       tc11_expected = 512'h2A7F1D895FD58E0BEAAE96D1A673C741015A2173796C1A88F6352CA156ACAFF7C662113E9EBB4D6417B61A85E2CCF0A937EB9A6660FEB5198F2EBE9A81E6A2C5;
       tc12_expected = {384'h09330C33F71147E83D192FC782CD1B4753111B173B3B05D22FA08086E3B0F712FCC7C71A557E2DB966C3E9FA91746039, {4{32'h00000000}}};
       double_block_test(8'h08, MODE_SHA_384, double_block_one, double_block_two, tc11_expected, tc12_expected);
+
+      // SHA-512 restore test.
+      restore_test(8'h09, MODE_SHA_512,     double_block_one, double_block_two, tc5_expected,  tc6_expected);
+      // SHA-512_224 restore test.
+      restore_test(8'h0a, MODE_SHA_512_224, double_block_one, double_block_two, tc7_expected,  tc8_expected);
+      // SHA-512_256 restore test.
+      restore_test(8'h0b, MODE_SHA_512_256, double_block_one, double_block_two, tc9_expected,  tc10_expected);
+      // SHA-384 restore test.
+      restore_test(8'h0c, MODE_SHA_384,     double_block_one, double_block_two, tc11_expected, tc12_expected);
 
       display_test_result();
       

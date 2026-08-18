@@ -64,6 +64,7 @@ module sha512_masked_core
                    // Control.
                    input wire            init_cmd,
                    input wire            next_cmd,
+                   input wire            restore_cmd,
                    input wire [1 : 0]    mode,
                    
                    // Data port.
@@ -71,6 +72,7 @@ module sha512_masked_core
                    
 
                    input wire [1023 : 0] block_msg,
+                   input wire [511  : 0] restore_digest,
 
                    output wire           ready,
                    output wire [511 : 0] digest,
@@ -103,6 +105,10 @@ module sha512_masked_core
   logic init_reg_set;
   logic init_reg_reset;
   logic init_reg;
+
+  logic restore_reg_set;
+  logic restore_reg_reset;
+  logic restore_reg;
 
   masked_reg_t a_reg;
   masked_reg_t a_new;
@@ -173,6 +179,7 @@ module sha512_masked_core
   reg state_update;
 
   reg first_block;
+  reg restore;
 
   masked_reg_t t1_b2a;
   masked_reg_t t2_b2a;
@@ -374,6 +381,18 @@ module sha512_masked_core
           init_reg        <= 1'b0;
       end // init_reg_update
 
+    always @ (posedge clk or negedge reset_n)
+      begin : restore_reg_update
+        if (!reset_n)
+          restore_reg        <= '0;
+        else if (zeroize)
+          restore_reg        <= '0;
+        else if (restore_reg_set)
+          restore_reg        <= 1'b1;
+        else if (restore_reg_reset)
+          restore_reg        <= 1'b0;
+      end // restore_reg_update
+
   //----------------------------------------------------------------
   // digest_logic
   //
@@ -401,6 +420,18 @@ module sha512_masked_core
           H5_new = H0_5;
           H6_new = H0_6;
           H7_new = H0_7;
+          H_we = 1;
+        end
+      else if (restore)
+        begin
+          H0_new  = restore_digest[511 : 448];
+          H1_new  = restore_digest[447 : 384];
+          H2_new  = restore_digest[383 : 320];
+          H3_new  = restore_digest[319 : 256];
+          H4_new  = restore_digest[255 : 192];
+          H5_new  = restore_digest[191 : 128];
+          H6_new  = restore_digest[127 :  64];
+          H7_new  = restore_digest[63  :   0];
           H_we = 1;
         end
 
@@ -522,6 +553,18 @@ module sha512_masked_core
               h_new  = {H0_7 ^ rh_masking_rnd[7], rh_masking_rnd[7]};
               a_h_we = 1;
             end
+          else if (restore)
+           begin
+             a_new  = {restore_digest[511 : 448] ^ rh_masking_rnd[0], rh_masking_rnd[0]};
+             b_new  = {restore_digest[447 : 384] ^ rh_masking_rnd[1], rh_masking_rnd[1]};
+             c_new  = {restore_digest[383 : 320] ^ rh_masking_rnd[2], rh_masking_rnd[2]};
+             d_new  = {restore_digest[319 : 256] ^ rh_masking_rnd[3], rh_masking_rnd[3]};
+             e_new  = {restore_digest[255 : 192] ^ rh_masking_rnd[4], rh_masking_rnd[4]};
+             f_new  = {restore_digest[191 : 128] ^ rh_masking_rnd[5], rh_masking_rnd[5]};
+             g_new  = {restore_digest[127 :  64] ^ rh_masking_rnd[6], rh_masking_rnd[6]};
+             h_new  = {restore_digest[63  :   0] ^ rh_masking_rnd[7], rh_masking_rnd[7]};
+             a_h_we = 1;
+           end
           else
             begin
               a_new  = {H0_reg ^ rh_masking_rnd[0], rh_masking_rnd[0]};
@@ -641,11 +684,14 @@ module sha512_masked_core
       rnd_ctr_rst         = 1'b0;
       init_reg_set        = 1'b0;
       init_reg_reset      = 1'b0;
+      restore_reg_set     = 1'b0;
+      restore_reg_reset   = 1'b0;
+      restore             = 1'b0;
 
       unique case (sha512_ctrl_reg)
         CTRL_IDLE:
           begin
-            if (init_cmd | next_cmd)
+            if (init_cmd | next_cmd | restore_cmd)
               begin
                 ready_new           = 1'b0;
                 ready_we            = 1'b1;
@@ -655,6 +701,7 @@ module sha512_masked_core
                 sha512_ctrl_new     = CTRL_RND;
                 sha512_ctrl_we      = 1;
                 init_reg_set        = init_cmd;
+                restore_reg_set     = restore_cmd;
               end
           end
 
@@ -670,11 +717,16 @@ module sha512_masked_core
                 sha512_ctrl_new     = CTRL_ROUNDS;
                 sha512_ctrl_we      = 1;
                 init_reg_reset      = 1;
+                restore_reg_reset   = 1;
 
                 if (init_reg)
                   begin
                     digest_init         = 1;
                     first_block         = 1;
+                  end
+                else if (restore_reg)
+                  begin
+                    restore             = 1;
                   end
               end
           end

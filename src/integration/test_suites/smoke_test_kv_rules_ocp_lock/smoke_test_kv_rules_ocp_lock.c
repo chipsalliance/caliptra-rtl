@@ -186,6 +186,10 @@ void main() {
             VPRINTF(LOW, "KV Write is successful!\n");
         }
 
+        // Mandatory zeroize required after each SW-visible HMAC op before
+        // STATUS.READY re-asserts for the next operation.
+        hmac_zeroize();
+
         switch (op){
             case 0:
                 VPRINTF(LOW,"Running HMAC core by reading from different segment\n");

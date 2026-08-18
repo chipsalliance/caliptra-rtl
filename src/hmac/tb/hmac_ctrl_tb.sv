@@ -41,7 +41,8 @@ module hmac_ctrl_tb
   parameter CTRL_INIT_VALUE  = `HMAC_REG_HMAC512_CTRL_INIT_MASK;
   parameter CTRL_NEXT_VALUE  = `HMAC_REG_HMAC512_CTRL_NEXT_MASK;
   parameter CTRL_LAST_VALUE  = `HMAC_REG_HMAC512_CTRL_LAST_MASK;
-  
+  parameter CTRL_RESTORE_VALUE = `HMAC_REG_HMAC512_CTRL_RESTORE_MASK;
+
   parameter HMAC512_MODE     = (1'b1 << `HMAC_REG_HMAC512_CTRL_MODE_LOW) & `HMAC_REG_HMAC512_CTRL_MODE_MASK;
   parameter HMAC384_MODE     = (1'b0 << `HMAC_REG_HMAC512_CTRL_MODE_LOW) & `HMAC_REG_HMAC512_CTRL_MODE_MASK;
 
@@ -459,6 +460,33 @@ module hmac_ctrl_tb
   endtask // hmac_read_digest
 
   //----------------------------------------------------------------
+  // write_tag()
+  //
+  //
+  // Write the given tag value back to TAG[0..15] big-endian.
+  //----------------------------------------------------------------
+  task write_tag(input [TAG_SIZE-1 : 0] tag);
+    begin
+      write_single_word(`HMAC_REG_HMAC512_TAG_0,  tag[511 : 480]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_1,  tag[479 : 448]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_2,  tag[447 : 416]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_3,  tag[415 : 384]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_4,  tag[383 : 352]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_5,  tag[351 : 320]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_6,  tag[319 : 288]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_7,  tag[287 : 256]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_8,  tag[255 : 224]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_9,  tag[223 : 192]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_10, tag[191 : 160]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_11, tag[159 : 128]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_12, tag[127 :  96]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_13, tag[95  :  64]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_14, tag[63  :  32]);
+      write_single_word(`HMAC_REG_HMAC512_TAG_15, tag[31  :   0]);
+    end
+  endtask // write_tag
+
+  //----------------------------------------------------------------
   // hmac_single_block_test()
   //
   //
@@ -580,6 +608,146 @@ module hmac_ctrl_tb
       tc_ctr = tc_ctr + 1;
     end
   endtask // hmac_double_block_test
+
+
+  //----------------------------------------------------------------
+  // hmac_save_restore_test()
+  //
+  // Save inner state from operation A, then run a complete,
+  // unrelated single-block operation B (different key + block,
+  // finalized with LAST. 
+  //----------------------------------------------------------------
+  task hmac_save_restore_test(
+        input [31:0]                 mode,
+        input [KEY_SIZE-1   : 0]     keyA,
+        input [BLOCK_SIZE-1 : 0]     blockA0,
+        input [BLOCK_SIZE-1 : 0]     blockA1,
+        input [LFSR_SEED_SIZE-1 : 0] seedA,
+        input [TAG_SIZE-1   : 0]     expectedA,
+        input [KEY_SIZE-1   : 0]     keyB,
+        input [BLOCK_SIZE-1 : 0]     blockB,
+        input [LFSR_SEED_SIZE-1 : 0] seedB);
+    reg [TAG_SIZE-1 : 0] saved_tag;
+    begin
+      $display("*** TC%01d - Restore with unrelated op test started.", tc_ctr);
+
+      // ---- Operation A, session 1: INIT blockA0 (no LAST) ----
+      hmac_write_key(keyA);
+      write_block(blockA0);
+      write_seed(seedA);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+      saved_tag = digest_data;
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE);
+      #(4*CLK_PERIOD);
+
+      // ---- Unrelated operation B: single block with LAST ----
+      hmac_write_key(keyB);
+      write_block(blockB);
+      write_seed(seedB);
+      write_single_word(`HMAC_REG_HMAC512_CTRL,
+                        mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE);
+      #(4*CLK_PERIOD);
+
+      // ---- Operation A, session 2: restore saved state + finalize ----
+      hmac_write_key(keyA);
+      write_block(blockA1);
+      write_seed(seedA);
+      write_tag(saved_tag);
+      write_single_word(`HMAC_REG_HMAC512_CTRL,
+                        mode | CTRL_RESTORE_VALUE | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE);
+
+      if (digest_data == expectedA)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest after unrelated-op restore", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expectedA);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - Restore with unrelated op test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // hmac_save_restore_test
+
+
+  task hmac_restore_last_test(
+        input [31:0]                 mode,
+        input [KEY_SIZE-1   : 0]     keyA,
+        input [BLOCK_SIZE-1 : 0]     blockA0,
+        input [BLOCK_SIZE-1 : 0]     blockA1,
+        input [LFSR_SEED_SIZE-1 : 0] seedA,
+        input [TAG_SIZE-1   : 0]     expectedA);
+    reg [TAG_SIZE-1 : 0] saved_tag;
+    begin
+      $display("*** TC%01d - Restore|LAST test started.", tc_ctr);
+
+      hmac_write_key(keyA);
+      write_block(blockA0);
+      write_seed(seedA);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+      saved_tag = digest_data;
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE);
+      #(4*CLK_PERIOD);
+
+      hmac_write_key(keyA);
+      write_block(blockA1);
+      write_seed(seedA);
+      write_tag(saved_tag);
+      write_single_word(`HMAC_REG_HMAC512_CTRL,
+                        mode | CTRL_RESTORE_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE);
+
+      if (digest_data == expectedA)
+        begin
+          $display("TC%01d: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest after RESTORE|LAST.", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expectedA);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - Restore|LAST test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // hmac_restore_last_test
 
 
   //----------------------------------------------------------------
@@ -809,6 +977,74 @@ module hmac_ctrl_tb
 
 
   //----------------------------------------------------------------
+  // restore_alone_error_test()
+  //
+  // RESTORE without NEXT (or LAST) is not a defined firmware flow.
+  // The engine must reject it: STATUS.READY must stay high and the
+  // operation that follows must produce the expected digest.
+  //----------------------------------------------------------------
+  task restore_alone_error_test(input [31:0]  mode,
+                                input [KEY_SIZE-1:0] key,
+                                input [BLOCK_SIZE-1:0] block,
+                                input [LFSR_SEED_SIZE-1:0]  seed,
+                                input [TAG_SIZE-1:0]  expected);
+    begin
+      $display("*** TC%01d - RESTORE-alone reject test started.", tc_ctr);
+
+      hmac_write_key(key);
+      write_block(block);
+      write_seed(seed);
+
+      // Bogus write: RESTORE alone, no NEXT companion.
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_RESTORE_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD * 4);
+
+      // Engine must still be IDLE/READY.
+      read_single_word(`HMAC_REG_HMAC512_STATUS);
+      if ((read_data & `HMAC_REG_HMAC512_STATUS_READY_MASK) !== `HMAC_REG_HMAC512_STATUS_READY_MASK)
+        begin
+          $display("TC%01d: ERROR - STATUS.READY dropped after RESTORE-alone write.", tc_ctr);
+          error_ctr = error_ctr + 1;
+        end
+
+      // error2_sts must be set to notify SW that the command was rejected.
+      read_single_word(`HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+      if ((read_data & `HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK) == 0) begin
+        $display("TC%01d: ERROR - error2_sts not set after RESTORE-alone write.", tc_ctr);
+        error_ctr = error_ctr + 1;
+      end
+
+      // Now drive a valid single-block op and confirm the digest.
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d: OK (RESTORE alone rejected; follow-up op produced expected digest).", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR - state corruption after RESTORE-alone write.", tc_ctr);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - RESTORE-alone reject test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // restore_alone_error_test
+
+
+  //----------------------------------------------------------------
   // continuous_cmd_last_test()
   //
   // Stress variant of continuous_cmd_test. Between INIT and the
@@ -965,14 +1201,6 @@ module hmac_ctrl_tb
 
 
   //----------------------------------------------------------------
-  // init_next_conflict_test()
-  //
-  // Writes CTRL = mode|INIT|NEXT simultaneously from IDLE. Per the
-  // FSM (hmac_core CTRL_IDLE branch), INIT wins and NEXT is silently
-  // dropped. Verifies the engine completes a single-block op (the
-  // INIT path) and produces the expected digest -- proving the
-  // NEXT bit didn't divert flow or corrupt inner_digest_reg.
-  //----------------------------------------------------------------
   task init_next_conflict_test(input [31:0]  mode,
                                input [KEY_SIZE-1:0] key,
                                input [BLOCK_SIZE-1:0] block,
@@ -985,26 +1213,44 @@ module hmac_ctrl_tb
       write_block(block);
       write_seed(seed);
 
-      // Drive INIT, NEXT and LAST together. FSM should treat as INIT|LAST
-      // (INIT wins over NEXT in the IDLE branch; LAST is latched as the
-      // last-block modifier).
       write_single_word(`HMAC_REG_HMAC512_CTRL,
                         mode | CTRL_INIT_VALUE | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD * 4);
+
+      read_single_word(`HMAC_REG_HMAC512_STATUS);
+      if ((read_data & `HMAC_REG_HMAC512_STATUS_READY_MASK) !== `HMAC_REG_HMAC512_STATUS_READY_MASK)
+        begin
+          $display("TC%01d: ERROR - STATUS.READY dropped after INIT|NEXT write.", tc_ctr);
+          error_ctr = error_ctr + 1;
+        end
+
+      read_single_word(`HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+      if ((read_data & `HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK) == 0) begin
+        $display("TC%01d: ERROR - error2_sts not set after INIT|NEXT write.", tc_ctr);
+        error_ctr = error_ctr + 1;
+      end
+
+      write_single_word(`HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R,
+                        `HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK);
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, mode | CTRL_INIT_VALUE | CTRL_LAST_VALUE);
       #CLK_PERIOD;
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
       wait_ready();
       hmac_read_digest();
 
-      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE);
 
       if (digest_data == expected)
         begin
-          $display("TC%01d: OK (INIT won; NEXT silently dropped).", tc_ctr);
+          $display("TC%01d: OK (INIT|NEXT raised error2_sts; follow-up op produced expected digest).", tc_ctr);
         end
       else
         begin
-          $display("TC%01d: ERROR - INIT|NEXT|LAST produced wrong digest.", tc_ctr);
+          $display("TC%01d: ERROR - state corruption after INIT|NEXT write.", tc_ctr);
           $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
           $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
           error_ctr = error_ctr + 1;
@@ -1246,6 +1492,16 @@ module hmac_ctrl_tb
 
       hmac_double_block_test(HMAC384_MODE, {key4, {HMAC384_KEY_PAD{1'b0}}}, data40, data41, seed4, {expected4, {HMAC384_TAG_PAD{1'b0}}});
 
+      // Save state, run an unrelated complete op (clobbers TAG), then restore + finalize.
+      hmac_save_restore_test(HMAC384_MODE,
+                                          {key4, {HMAC384_KEY_PAD{1'b0}}}, data40, data41, seed4,
+                                          {expected4, {HMAC384_TAG_PAD{1'b0}}},
+                                          {key0, {HMAC384_KEY_PAD{1'b0}}}, data0, seed0);
+
+      hmac_restore_last_test(HMAC384_MODE,
+                                          {key4, {HMAC384_KEY_PAD{1'b0}}}, data40, data41, seed4,
+                                          {expected4, {HMAC384_TAG_PAD{1'b0}}});
+
       continuous_cmd_test(HMAC384_MODE, {key4, {HMAC384_KEY_PAD{1'b0}}}, data40, data41, seed4, {expected4, {HMAC384_TAG_PAD{1'b0}}});
 
       // Stress: bombard CTRL with every command variant during BUSY.
@@ -1254,6 +1510,9 @@ module hmac_ctrl_tb
       // Modifier-only LAST must be ignored when written alone.
       // Reuses TC0 single-block vector to verify state is intact after the bogus write.
       last_alone_error_test(HMAC384_MODE, {key0, {HMAC384_KEY_PAD{1'b0}}}, data0, seed0, {expected0, {HMAC384_TAG_PAD{1'b0}}});
+
+      // RESTORE without NEXT must not start the engine.
+      restore_alone_error_test(HMAC384_MODE, {key0, {HMAC384_KEY_PAD{1'b0}}}, data0, seed0, {expected0, {HMAC384_TAG_PAD{1'b0}}});
 
       // Three-block HMAC-SHA-384 (RFC 4868 / NIST CAVS HMAC-SHA-384 COUNT=1).
       key5     = 384'h236e161c1b3fa17d8ee87427b56986f3b9779bb3b28b6200e46fafc436887f98f675f3bbc33384f38f60f77d14993863;
@@ -1369,6 +1628,9 @@ module hmac_ctrl_tb
       // Modifier-only LAST must be ignored when written alone.
       last_alone_error_test(HMAC512_MODE, key0, data0, seed0, expected0);
 
+      // RESTORE without NEXT must not start the engine.
+      restore_alone_error_test(HMAC512_MODE, key0, data0, seed0, expected0);
+
       // Three-block HMAC-SHA-512. Same underlying key/message as the
       // HMAC-SHA-384 COUNT=1 vector; tag re-derived for SHA-512.
       // 384-bit key is zero-extended to 512 bits to match SHA-384's
@@ -1382,6 +1644,14 @@ module hmac_ctrl_tb
       seed5    = random_gen();
 
       hmac_three_block_test(HMAC512_MODE, key5, data50, data51, data52, seed5, expected5);
+
+      // Save state, run an unrelated complete op (clobbers TAG), then restore + finalize.
+      hmac_save_restore_test(HMAC512_MODE,
+                                          key4, data40, data41, seed4, expected4,
+                                          key0, data0, seed0);
+
+      hmac_restore_last_test(HMAC512_MODE,
+                                          key4, data40, data41, seed4, expected4);
 
       // Mid-op ZEROIZE recovers cleanly back to IDLE.
       zeroize_mid_op_test(HMAC512_MODE, key0, data0, seed0, expected0);
@@ -1438,7 +1708,45 @@ module hmac_ctrl_tb
       
       $display("*** TC%01d - CSR test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
-      
+
+      // Partial-op intermediate-tag-hidden check.
+      // INIT alone in CSR_MODE; engine completes the first SHA block
+      // but TAG must read back all-zero (chaining state masked).
+      hmac_write_key(512'h0);
+      write_block(data);
+      write_seed(seed);
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, HMAC512_MODE | CTRL_INIT_VALUE | `HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == '0)
+        begin
+          $display("TC%01d: OK (CSR intermediate TAG masked to 0).", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR - CSR intermediate TAG leaked.", tc_ctr);
+          $display("TC%01d: Got: 0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      // error3_sts must be set to notify SW.
+      read_single_word(`HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+      if ((read_data & `HMAC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK) == 0) begin
+        $display("TC%01d: ERROR - error3_sts not set after CSR partial op.", tc_ctr);
+        error_ctr = error_ctr + 1;
+      end
+
+      $display("*** TC%01d - CSR intermediate-TAG mask test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+
       $display("*** Testcases for CSR completed.");
     end
   endtask // hmac_csr_tests
