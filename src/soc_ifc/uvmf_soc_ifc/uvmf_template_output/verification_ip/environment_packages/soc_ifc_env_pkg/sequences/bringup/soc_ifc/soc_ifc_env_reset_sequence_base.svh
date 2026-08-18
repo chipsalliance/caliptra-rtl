@@ -39,11 +39,6 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
   localparam [63:0] CPTRA_WDT_TIMEOUT_IN_PS = 64'd350_000_000_000; // 350ms
   localparam [63:0] CPTRA_WDT_CFG_VALUE = CPTRA_WDT_TIMEOUT_IN_PS / CPTRA_CLK_PERIOD_PS; // clock cycles
 
-  // Sequentially-encoded BOOT_WAIT value as reported by the CPTRA_FLOW_STATUS.boot_fsm_ps
-  // register field (boot_fsm_ps_encoded in soc_ifc_boot_fsm.sv). This differs from the
-  // sparse-encoded boot_fsm_state_e::BOOT_WAIT value used internally by the RTL FSM.
-  localparam [2:0]  BOOT_FSM_PS_ENCODED_BOOT_WAIT = 3'h3;
-
   caliptra_axi_user axi_user_obj;
 
   typedef struct packed {
@@ -264,12 +259,10 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     data_mask = (1 << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_n_bits()) - 1;
     data_mask <<= reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
     //create a valid data for checking that matches masked read data
-    // NOTE: CPTRA_FLOW_STATUS.boot_fsm_ps reports the sequentially-ENCODED boot
-    // FSM state (boot_fsm_ps_encoded in soc_ifc_boot_fsm.sv: IDLE=0, FUSE=1,
-    // FW_RST=2, WAIT=3, DONE=4, ERROR=5), which is intentionally kept
-    // backwards-compatible. It is NOT the sparse-encoded boot_fsm_state_e value
-    // (BOOT_WAIT = 10'b0110011011), so compare against the encoded value here.
-    data_check = BOOT_FSM_PS_ENCODED_BOOT_WAIT << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
+    // CPTRA_FLOW_STATUS.boot_fsm_ps reports the sequentially-encoded boot FSM state
+    // (see soc_ifc_pkg::boot_fsm_ps_encode), which is distinct from the sparse
+    // boot_fsm_state_e encoding, so encode BOOT_WAIT through the shared package function.
+    data_check = soc_ifc_pkg::boot_fsm_ps_encode(BOOT_WAIT) << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
 
     // If set_bootfsm_breakpoint is randomized to 1, we need to release bootfsm by writing GO
     // bootfsm_breakpoint is qualified by debug mode and device_lifecycle, so incorporate that here
