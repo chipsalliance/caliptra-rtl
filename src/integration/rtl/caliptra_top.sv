@@ -495,13 +495,22 @@ end
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IDMA]    = iccm_lock & responder_inst[`CALIPTRA_SLAVE_SEL_IDMA].hwrite;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA256]  = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_IMEM]    = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_MLDSA]   = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_AES]     = 1'b0;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA3]    = 1'b0;
+    `ifdef CALIPTRA_INTERNAL_TRNG
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_CSRNG]       = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC] = 1'b0;
-    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_MLDSA]    = 1'b0;
-    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_AES]    = 1'b0;
-    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_SHA3]   = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1] = 1'b0;
     always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_COMBINER]     = 1'b0;
+    `else
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_CSRNG]       = 1'b1;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC] = 1'b1;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1] = 1'b1;
+    always_comb ahb_lite_resp_disable[`CALIPTRA_SLAVE_SEL_COMBINER]     = 1'b1;
+    `endif
+    
+
 
 `ifdef CALIPTRA_MODE_SUBSYSTEM
     //=========================================================================-
@@ -1818,16 +1827,16 @@ always_comb begin: tie_off_slaves
 
 `ifndef CALIPTRA_INTERNAL_TRNG
     responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hresp = '0;
-    responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hreadyout = '1;
     responder_inst[`CALIPTRA_SLAVE_SEL_CSRNG].hrdata = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hresp = '0;
-    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout = '1;
     responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hrdata = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hresp = '0;
-    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hreadyout = '1;
     responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hrdata = '0;
     responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hresp = '0;
-    responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hreadyout = '0;
+    responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hreadyout = '1;
     responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hrdata = '0;
 `endif
 end
