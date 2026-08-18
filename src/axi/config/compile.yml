@@ -90,8 +90,10 @@ targets:
 global:
   tool:
     vcs:
-      default:
-        - +warn=noUII-L
+      elab:
+        # axi_if.sv is compiled into both RTL and TB library contexts. The
+        # testbench uses the TB copy, leaving the RTL copy intentionally unused.
+        - '-suppress=UII-L'
 ---
 provides: [axi_dma_coverage]
 schema_version: 2.4.0
