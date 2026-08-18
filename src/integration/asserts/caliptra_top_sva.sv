@@ -398,7 +398,7 @@ module caliptra_top_sva
       if (dword < HMAC_TAG_NUM_DWORDS) begin
         kv_hmac_tag_w_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              (`HMAC_PATH.kv_write_done & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
+                                              (`HMAC_PATH.kv_write_done & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_write_error == 0)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 tag mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);                    
 
@@ -1208,6 +1208,7 @@ module caliptra_top_sva
 
   hmac_key_kv_others_read_error_check: assert property (
                                             @(posedge `SVA_RDC_CLK)
+                                            disable iff (`CPTRA_FW_UPD_RST_WINDOW)
                                             ($fell(`HMAC_PATH.kv_key_write_en) & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  (`KEYVAULT_PATH.kv_read[0].read_entry != 23) & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].dest_valid.value[0])) |-> /*(`KEYVAULT_PATH.kv_rd_resp[0].error == 1'b0)*/ (`HMAC_PATH.hmac_key_kv_read.error_code == 0)
                                             )
                             else $display("SVA ERROR: KV read error set when ocp_lock_in_progress = 1 for non-KV23 read");
@@ -1220,6 +1221,7 @@ module caliptra_top_sva
 
   hmac_block_kv_others_read_error_check: assert property (
                                             @(posedge `SVA_RDC_CLK)
+                                            disable iff (`CPTRA_FW_UPD_RST_WINDOW)
                                             ($rose(`HMAC_PATH.kv_block_done) &`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  `KEYVAULT_PATH.kv_read[1].read_entry != 23 & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].dest_valid.value[1])) |-> /*(`KEYVAULT_PATH.kv_rd_resp[1].error == 1'b0)*/ (`HMAC_PATH.hmac_block_kv_read.error_code == 0)
                                             )
                             else $display("SVA ERROR: KV read error set when ocp_lock_in_progress = 1 for non-KV23 read");

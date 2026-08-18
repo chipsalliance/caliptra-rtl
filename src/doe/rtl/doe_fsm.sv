@@ -48,6 +48,7 @@ module doe_fsm
 
     //interface with kv
     output kv_write_t kv_write,
+    input  kv_wr_resp_t kv_wr_resp,
 
     //interface with client
     output logic src_write_en,
@@ -210,7 +211,7 @@ always_comb begin : kv_doe_fsm
             //increment dest offset each clock, clear when done
             dest_write_offset_en = kv_write_allow;
             dest_write_offset_nxt = dest_write_offset + 'd1;
-            flow_error = !kv_write_allow;
+            flow_error = !kv_write_allow | kv_wr_resp.error;
 
             //go back to idle if dest done, and done with blocks
             if      (zeroize ) kv_doe_fsm_ns = DOE_IDLE;
@@ -278,7 +279,10 @@ kv_write_rule_check kv_write_rules
 //drive outputs to kv
 always_comb kv_write.write_en = dest_write_en;
 always_comb kv_write.write_offset = dest_write_offset;
-always_comb kv_write.write_dest_valid = running_hek ? OCP_LOCK_HEK_SEED_DEST_VALID : 'd3; //FIXME tie off dest valid, or let FW program? 
+// dest_valid only on the final beat (mirrors kv_write_client write_last), so an
+// aborted/partial write leaves the slot dest_valid=0 and thus unreadable.
+always_comb kv_write.write_dest_valid = (dest_write_en & dest_write_done & block_done) ?
+                                        (running_hek ? OCP_LOCK_HEK_SEED_DEST_VALID : 'd3) : '0;
 always_comb kv_write.write_entry = dest_addr;
 //swizzle big endian result to little endian storage
 always_comb kv_write.write_data = dest_write_en ? dest_data[(DEST_NUM_DWORDS-1) - dest_write_offset[DEST_OFFSET_W-1:0]] : '0;
