@@ -424,7 +424,7 @@ uint8_t soc_ifc_axi_dma_send_mbox_payload(uint64_t src_addr, uint64_t dst_addr, 
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
-    if ((src_addr + byte_count) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
+    if ((src_addr + byte_count - 1) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
         VPRINTF(ERROR, "reading 0x%x bytes from src_addr 0x%x goes out of bounds for mbox span!\n", byte_count, (uint32_t) src_addr);
         SEND_STDOUT_CTRL(0x1);
         while(1);
@@ -481,7 +481,7 @@ uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t ds
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
-    if ((dst_addr + byte_count) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
+    if ((dst_addr + byte_count - 1) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
         VPRINTF(ERROR, "writing 0x%x bytes to dst_addr 0x%x goes out of bounds for mbox span!\n", byte_count, (uint32_t) dst_addr);
         SEND_STDOUT_CTRL(0x1);
         while(1);
