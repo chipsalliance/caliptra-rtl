@@ -541,8 +541,9 @@ import kv_defines_pkg::*;
                                (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT)) ||
                               ((hwif_out.byte_count.count.value > (OCP_LOCK_MEK_NUM_DWORDS << 2))  &&
                                (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT));
-        // power of 2 and word-aligned
+        // power of 2, at most 64 bytes, and word-aligned
         cmd_inv_block_size  = |(hwif_out.block_size.size.value & (hwif_out.block_size.size.value-1)) ||
+                              (hwif_out.block_size.size.value > 12'd64) ||
                               |hwif_out.block_size.size.value[BW-1:0];
         cmd_inv_rd_fixed    = hwif_out.ctrl.rd_fixed.value && hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__DISABLE;
         cmd_inv_wr_fixed    = hwif_out.ctrl.wr_fixed.value && hwif_out.ctrl.wr_route.value inside {axi_dma_reg__ctrl__wr_route__wr_route_e__DISABLE,

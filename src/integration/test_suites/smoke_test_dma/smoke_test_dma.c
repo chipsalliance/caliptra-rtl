@@ -155,6 +155,7 @@ void main(void) {
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_dst_addr   )) { fail = 1; }
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_byte_count )) { fail = 1; }
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_block_size )) { fail = 1; }
+        if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_block_size_large)) { fail = 1; }
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_aes_block_size)) { fail = 1; }
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_rd_fixed   )) { fail = 1; }
         if (soc_ifc_axi_dma_inject_inv_error(cmd_inv_wr_fixed   )) { fail = 1; }
