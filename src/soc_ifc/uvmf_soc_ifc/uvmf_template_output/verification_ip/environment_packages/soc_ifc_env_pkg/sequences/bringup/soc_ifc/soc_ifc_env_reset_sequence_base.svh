@@ -259,7 +259,10 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
     data_mask = (1 << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_n_bits()) - 1;
     data_mask <<= reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
     //create a valid data for checking that matches masked read data
-    data_check = BOOT_WAIT << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
+    // CPTRA_FLOW_STATUS.boot_fsm_ps reports the sequentially-encoded boot FSM state
+    // (see soc_ifc_pkg::boot_fsm_ps_encode), which is distinct from the sparse
+    // boot_fsm_state_e encoding, so encode BOOT_WAIT through the shared package function.
+    data_check = soc_ifc_pkg::boot_fsm_ps_encode(BOOT_WAIT) << reg_model.soc_ifc_reg_rm.CPTRA_FLOW_STATUS.boot_fsm_ps.get_lsb_pos();
 
     // If set_bootfsm_breakpoint is randomized to 1, we need to release bootfsm by writing GO
     // bootfsm_breakpoint is qualified by debug mode and device_lifecycle, so incorporate that here
