@@ -34,7 +34,8 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
            | (init_b    & restore_b);
   endfunction
 
-  task drive_cmd(input bit [4:0] cmd, input bit mode_bit, input string id);
+  task drive_cmd(input bit [4:0] cmd, input bit mode_bit, input string id,
+                 input bit csr_mode_bit = 1'b0);
     bit [31:0]      read_data;
     uvm_reg_field   target_err_field;
     bit             expect_illegal = is_illegal(cmd);
@@ -50,12 +51,17 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
     reg_model.HMAC512_CTRL.RESTORE.set(cmd[CMD_RESTORE]);
     reg_model.HMAC512_CTRL.ZEROIZE.set(cmd[CMD_ZEROIZE]);
     reg_model.HMAC512_CTRL.MODE.set(mode_bit);
+    // CSR_MODE is not part of the invalid_cmd_error equation (hmac.sv:433-436
+    // keys only off INIT/NEXT/LAST/RESTORE), so toggling it cannot perturb
+    // expect_illegal. It is driven here to get toggle coverage on the field
+    // and on the csr_mode_reg key-mux / TAG-gating paths.
+    reg_model.HMAC512_CTRL.CSR_MODE.set(csr_mode_bit);
 
     target_err_field = reg_model.intr_block_rf.error_internal_intr_r.error2_sts;
 
     `uvm_info(id,
-      $sformatf("cmd=5'b%05b mode=%0d expect_illegal=%0d",
-                cmd, mode_bit, expect_illegal), UVM_LOW)
+      $sformatf("cmd=5'b%05b mode=%0d csr_mode=%0d expect_illegal=%0d",
+                cmd, mode_bit, csr_mode_bit, expect_illegal), UVM_LOW)
     reg_model.HMAC512_CTRL.update(status);
 
     fork
@@ -135,8 +141,8 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
         `uvm_fatal("HMAC_INVALID_CMD",
           "randomize(rc_cmd/rc_mode/rc_csr) failed")
       drive_cmd(rc_cmd, rc_mode,
-        $sformatf("HMAC_INVALID_CMD.rand.mode%0d.cmd%02h",
-                  rc_mode, rc_cmd));
+        $sformatf("HMAC_INVALID_CMD.rand.mode%0d.csr%0d.cmd%02h",
+                  rc_mode, rc_csr, rc_cmd), rc_csr);
     end
 
     `uvm_info("HMAC_INVALID_CMD",

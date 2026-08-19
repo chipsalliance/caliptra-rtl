@@ -34,9 +34,8 @@ class register_test_sequence extends HMAC_bench_sequence_base;
     // Reset the DUT
     fork
       // pragma uvmf custom register_test_reset begin
-      // UVMF_CHANGE_ME 
-      // Select the desired wait_for_reset or provide custom mechanism.
-      // fork-join for this code block may be unnecessary based on your situation.
+      // The RAL sequences below issue AHB traffic immediately, so wait for the
+      // reset agent to release before touching the register model.
       hmac_rst_agent_config.wait_for_reset();
       // pragma uvmf custom register_test_reset end
     join
