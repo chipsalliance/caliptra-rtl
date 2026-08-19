@@ -79,6 +79,13 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
       reg_model.intr_block_rf.error_internal_intr_r.write(status,
           32'h1 << target_err_field.get_lsb_pos());
     end else begin
+      // Legal command: the error bit must stay clear. Without this check
+      // the sweep would pass even with error2_sts stuck high.
+      if (((read_data >> target_err_field.get_lsb_pos()) & 32'h1) != 1'b0) begin
+        `uvm_error(id,
+          $sformatf("unexpected error2_sts high for legal cmd=5'b%05b (raw=0x%08h)",
+                    cmd, read_data))
+      end
       hmac_rst_agent_config.wait_for_num_clocks(50);
     end
 

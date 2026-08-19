@@ -181,7 +181,20 @@ class HMAC_random_sequence extends HMAC_bench_sequence_base;
     // Compute the expected TAG using openssl via shared Python helper
     // (src/hmac/tb/test_gen.py — same script the standalone TB uses).
     write_predictor_input(block_length);
-    void'($system("python3 ${CALIPTRA_ROOT}/src/hmac/tb/test_gen.py"));
+    begin
+      string out_fname = mode ? PY_OUTPUT_512 : PY_OUTPUT_384;
+      int    py_status;
+      // Drop any stale output before regenerating: if the helper fails,
+      // a leftover file from a previous op would be compared against and
+      // the mismatch would go unreported.
+      void'($system({"rm -f ", out_fname}));
+      py_status = $system("python3 ${CALIPTRA_ROOT}/src/hmac/tb/test_gen.py");
+      if (py_status != 0) begin
+        `uvm_fatal("HMAC_RAND",
+          $sformatf("test_gen.py failed (exit=%0d); no expected TAG to compare",
+                    py_status))
+      end
+    end
     read_predictor_output(expected_tag);
 
     // Compare. HMAC-384 produces a 12-dword (384-bit) TAG; the upper
