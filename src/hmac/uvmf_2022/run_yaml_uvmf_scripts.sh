@@ -41,13 +41,13 @@ fi
 cd "$(dirname "$0")"
 
 YAMLS=(
-  hmac_global.yaml
-  hmac_interfaces.yaml
-  hmac_util_comp_predictor.yaml
-  hmac_util_comp_scoreboard.yaml
+  HMAC_global.yaml
+  HMAC_interfaces.yaml
+  HMAC_util_comp_predictor.yaml
+  HMAC_util_comp_scoreboard.yaml
   ../../libs/uvmf/qvip_ahb_lite_slave_dir/uvmf/qvip_ahb_lite_slave_subenv_config.yaml
   HMAC_environment.yaml
-  hmac_bench.yaml
+  HMAC_bench.yaml
 )
 
 if [[ -d uvmf_template_output ]]; then

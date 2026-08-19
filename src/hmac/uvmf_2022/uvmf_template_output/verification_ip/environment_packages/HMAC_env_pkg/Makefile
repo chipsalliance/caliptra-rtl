@@ -15,6 +15,12 @@ COMP_hmac_PKG_TGT = $(COMP_hmac_PKG_TGT_$(USE_VELOCE))
 
 comp_hmac_env_pkg: $(COMP_hmac_PKG_TGT) 
 
+# Backward-compatible aliases (top-level sim/Makefile uses the capitalized
+# HMAC_env target names because the environment package name is HMAC_env).
+comp_HMAC_env_pkg:   comp_hmac_env_pkg
+q_comp_HMAC_env_pkg: q_comp_hmac_env_pkg
+v_comp_HMAC_env_pkg: v_comp_hmac_env_pkg
+
 q_comp_hmac_env_pkg:   
 		$(HVL_COMP_CMD) +incdir+$(UVMF_VIP_LIBRARY_HOME)/environment_packages/HMAC_env_pkg $(hmac_ENV_PKG)
 
