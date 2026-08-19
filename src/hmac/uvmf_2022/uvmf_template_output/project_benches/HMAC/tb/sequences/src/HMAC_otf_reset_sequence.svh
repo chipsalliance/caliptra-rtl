@@ -70,7 +70,19 @@ class HMAC_otf_reset_sequence extends HMAC_bench_sequence_base;
       $sformatf("Post-reset STATUS recovered: 0x%08h", read_data), UVM_LOW)
 
     `uvm_info("HMAC_OTF", "HMAC_otf_reset_sequence complete", UVM_LOW)
-    $display("* TESTCASE PASSED");
+    // Report the final status. The regression log parser keys off the
+    // "* TESTCASE PASSED"/"* TESTCASE FAILED" string; printing PASSED
+    // unconditionally makes every uvm_error check in this sequence
+    // unenforceable, so gate it on the report server's error/fatal count.
+    begin
+      uvm_report_server svr = uvm_report_server::get_server();
+      int unsigned num_fail = svr.get_severity_count(UVM_ERROR)
+                            + svr.get_severity_count(UVM_FATAL);
+      if (num_fail == 0)
+        $display("* TESTCASE PASSED");
+      else
+        $display("* TESTCASE FAILED (%0d error/fatal reports)", num_fail);
+    end
   endtask
 
 endclass

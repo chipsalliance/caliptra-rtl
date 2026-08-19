@@ -37,6 +37,7 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
   task drive_cmd(input bit [4:0] cmd, input bit mode_bit, input string id,
                  input bit csr_mode_bit = 1'b0);
     bit [31:0]      read_data;
+    bit [31:0]      status_data;
     uvm_reg_field   target_err_field;
     bit             expect_illegal = is_illegal(cmd);
 
@@ -68,14 +69,23 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
       hmac_rst_agent_config.wait_for_num_clocks(200);
     join
 
-    reg_model.HMAC512_STATUS.read(status, read_data);
+    // Keep the STATUS read in its own variable: the error-register read below
+    // would otherwise clobber it before the VALID check.
+    reg_model.HMAC512_STATUS.read(status, status_data);
     reg_model.intr_block_rf.error_internal_intr_r.read(status, read_data);
 
     if (expect_illegal) begin
-      if (reg_model.HMAC512_STATUS.VALID.get_mirrored_value() !== 1'b0) begin
+      // Check the value actually read back rather than the RAL mirror. This
+      // env never calls set_auto_predict() and leaves reg_predictor.bus_in
+      // unconnected (see HMAC_environment.svh), so the mirror is never
+      // updated and get_mirrored_value() would always return the reset value,
+      // making this check pass unconditionally. ECC, SHA512 and MLDSA use raw
+      // read data for the same reason.
+      if (((status_data >> reg_model.HMAC512_STATUS.VALID.get_lsb_pos())
+           & 32'h1) != 1'b0) begin
         `uvm_error(id,
-          $sformatf("STATUS.VALID asserted after invalid CTRL cmd=5'b%05b",
-                    cmd))
+          $sformatf("STATUS.VALID asserted after invalid CTRL cmd=5'b%05b (raw=0x%08h)",
+                    cmd, status_data))
       end
       if (((read_data >> target_err_field.get_lsb_pos()) & 32'h1) == 1'b0) begin
         `uvm_error(id,
@@ -148,7 +158,19 @@ class HMAC_invalid_cmd_error_sequence extends HMAC_bench_sequence_base;
     `uvm_info("HMAC_INVALID_CMD",
       $sformatf("HMAC_invalid_cmd_error_sequence complete (%0d random stimuli)",
                 num_random_stimuli), UVM_LOW)
-    $display("* TESTCASE PASSED");
+    // Report the final status. The regression log parser keys off the
+    // "* TESTCASE PASSED"/"* TESTCASE FAILED" string; printing PASSED
+    // unconditionally makes every uvm_error check in this sequence
+    // unenforceable, so gate it on the report server's error/fatal count.
+    begin
+      uvm_report_server svr = uvm_report_server::get_server();
+      int unsigned num_fail = svr.get_severity_count(UVM_ERROR)
+                            + svr.get_severity_count(UVM_FATAL);
+      if (num_fail == 0)
+        $display("* TESTCASE PASSED");
+      else
+        $display("* TESTCASE FAILED (%0d error/fatal reports)", num_fail);
+    end
   endtask
 
 endclass
