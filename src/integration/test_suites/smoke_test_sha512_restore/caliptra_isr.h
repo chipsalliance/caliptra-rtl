@@ -149,10 +149,6 @@ inline void service_sha256_notif_intr() {
 
 inline void service_sha3_error_intr() {return;}
 inline void service_sha3_notif_intr() {return;}
-inline void service_qspi_error_intr() {return;}
-inline void service_qspi_notif_intr() {return;}
-inline void service_uart_error_intr() {return;}
-inline void service_uart_notif_intr() {return;}
 inline void service_i3c_error_intr() {return;}
 inline void service_i3c_notif_intr() {return;}
 
