@@ -2,6 +2,7 @@ incdir:
   - ${uvm_path}/src
   - .
 needs:
+  - $UVMF_HOME/common/utility_packages/qvip_utils_pkg/qvip_utils_pkg.compile
   - ../tests/HMAC_tests_pkg.compile
 src:
   - hvl_top.sv

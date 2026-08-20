@@ -1,12 +1,26 @@
 //----------------------------------------------------------------------
 // Created with uvmf_gen version 2022.3
 //----------------------------------------------------------------------
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // pragma uvmf custom header begin
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //                                          
-// DESCRIPTION: THis is the configuration for the HMAC environment.
+// DESCRIPTION: THis is the configuration for the hmac environment.
 //  it contains configuration classes for each agent.  It also contains
 //  environment level configuration variables.
 //
@@ -21,25 +35,27 @@ extends uvmf_environment_configuration_base;
 
 //Constraints for the configuration variables:
 
+// Instantiate the register model
+  hmac_reg_model_top  hmac_rm;
 
-  covergroup HMAC_configuration_cg;
+  covergroup hmac_configuration_cg;
     // pragma uvmf custom covergroup begin
     option.auto_bin_max=1024;
     // pragma uvmf custom covergroup end
   endgroup
 
 
-    typedef HMAC_in_configuration HMAC_in_agent_config_t;
-    rand HMAC_in_agent_config_t HMAC_in_agent_config;
-
-    typedef HMAC_out_configuration HMAC_out_agent_config_t;
-    rand HMAC_out_agent_config_t HMAC_out_agent_config;
+    typedef HMAC_rst_configuration hmac_rst_agent_config_t;
+    rand hmac_rst_agent_config_t hmac_rst_agent_config;
 
 
 
+    qvip_ahb_lite_slave_env_configuration     qvip_ahb_lite_slave_subenv_config;
+    string                                   qvip_ahb_lite_slave_subenv_interface_names[];
+    uvmf_active_passive_t                    qvip_ahb_lite_slave_subenv_interface_activity[];
 
-  typedef uvmf_virtual_sequencer_base #(.CONFIG_T(HMAC_env_configuration)) HMAC_vsqr_t;
-  HMAC_vsqr_t vsqr;
+  typedef uvmf_virtual_sequencer_base #(.CONFIG_T(HMAC_env_configuration)) hmac_vsqr_t;
+  hmac_vsqr_t vsqr;
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -53,12 +69,12 @@ extends uvmf_environment_configuration_base;
     super.new( name );
 
 
-    HMAC_in_agent_config = HMAC_in_agent_config_t::type_id::create("HMAC_in_agent_config");
-    HMAC_out_agent_config = HMAC_out_agent_config_t::type_id::create("HMAC_out_agent_config");
+    hmac_rst_agent_config = hmac_rst_agent_config_t::type_id::create("hmac_rst_agent_config");
 
+    qvip_ahb_lite_slave_subenv_config = qvip_ahb_lite_slave_env_configuration::type_id::create("qvip_ahb_lite_slave_subenv_config");
 
-    HMAC_configuration_cg=new;
-    `uvm_info("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this message after the covergroup has been reviewed. Demoted to UVM_INFO", UVM_NONE)
+    hmac_configuration_cg=new;
+    `uvm_warning("COVERAGE_MODEL_REVIEW", "A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this warning after the covergroup has been reviewed.")
 
   // pragma uvmf custom new begin
   // pragma uvmf custom new end
@@ -67,7 +83,7 @@ extends uvmf_environment_configuration_base;
 // ****************************************************************************
 // FUNCTION : set_vsqr()
 // This function is used to assign the vsqr handle.
-  virtual function void set_vsqr( HMAC_vsqr_t vsqr);
+  virtual function void set_vsqr( hmac_vsqr_t vsqr);
      this.vsqr = vsqr;
   endfunction : set_vsqr
 
@@ -92,10 +108,9 @@ extends uvmf_environment_configuration_base;
     // pragma uvmf custom convert2string begin
     return {
      
-     "\n", HMAC_in_agent_config.convert2string,
-     "\n", HMAC_out_agent_config.convert2string
+     "\n", hmac_rst_agent_config.convert2string,
 
-
+     "\n", qvip_ahb_lite_slave_subenv_config.convert2string
        };
     // pragma uvmf custom convert2string end
   endfunction
@@ -119,17 +134,35 @@ extends uvmf_environment_configuration_base;
     super.initialize(sim_level, environment_path, interface_names, register_model, interface_activity);
 
 
+  // Interface initialization for QVIP sub-environments
+    qvip_ahb_lite_slave_subenv_interface_names    = new[1];
+    qvip_ahb_lite_slave_subenv_interface_activity = new[1];
+
+    qvip_ahb_lite_slave_subenv_interface_names     = interface_names[0:0];
+    qvip_ahb_lite_slave_subenv_interface_activity  = interface_activity[0:0];
+
 
   // Interface initialization for local agents
-     HMAC_in_agent_config.initialize( interface_activity[0], {environment_path,".HMAC_in_agent"}, interface_names[0]);
-     HMAC_in_agent_config.initiator_responder = INITIATOR;
-     // HMAC_in_agent_config.has_coverage = 1;
-     HMAC_out_agent_config.initialize( interface_activity[1], {environment_path,".HMAC_out_agent"}, interface_names[1]);
-     HMAC_out_agent_config.initiator_responder = RESPONDER;
-     // HMAC_out_agent_config.has_coverage = 1;
+     hmac_rst_agent_config.initialize( interface_activity[1], {environment_path,".HMAC_rst_agent"}, interface_names[1]);
+     hmac_rst_agent_config.initiator_responder = INITIATOR;
+     // hmac_rst_agent_config.has_coverage = 1;
+
+    // pragma uvmf custom reg_model_config_initialize begin
+    // Register model creation and configuation
+    if (register_model == null) begin
+      hmac_rm = hmac_reg_model_top::type_id::create("hmac_rm");
+      hmac_rm.build();
+      hmac_rm.lock_model();
+      enable_reg_adaptation = 1;
+      enable_reg_prediction = 1;
+    end else begin
+      $cast(hmac_rm,register_model);
+      enable_reg_prediction = 1;
+    end
+    // pragma uvmf custom reg_model_config_initialize end
 
 
-
+     qvip_ahb_lite_slave_subenv_config.initialize( sim_level, {environment_path,".qvip_ahb_lite_slave_subenv"}, qvip_ahb_lite_slave_subenv_interface_names, null,   qvip_ahb_lite_slave_subenv_interface_activity);
 
 
   // pragma uvmf custom initialize begin

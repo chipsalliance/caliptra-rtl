@@ -18,6 +18,7 @@ class register_test_sequence extends HMAC_bench_sequence_base;
 
   `uvm_object_utils( register_test_sequence );
 
+  uvm_reg_mem_built_in_seq uvm_register_test_seq;
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -28,25 +29,80 @@ class register_test_sequence extends HMAC_bench_sequence_base;
 
   // ****************************************************************************
   virtual task body();
+    uvm_register_test_seq = new("uvm_register_test_seq");
 
     // Reset the DUT
     fork
       // pragma uvmf custom register_test_reset begin
-      // UVMF_CHANGE_ME 
-      // Select the desired wait_for_reset or provide custom mechanism.
-      // fork-join for this code block may be unnecessary based on your situation.
-      HMAC_in_agent_config.wait_for_reset();
-      HMAC_out_agent_config.wait_for_reset();
+      // The RAL sequences below issue AHB traffic immediately, so wait for the
+      // reset agent to release before touching the register model.
+      hmac_rst_agent_config.wait_for_reset();
       // pragma uvmf custom register_test_reset end
     join
 
       // pragma uvmf custom register_test_setup begin
-      // UVMF_CHANGE_ME perform potentially necessary operations before running the sequence.
+      // Exclude registers whose SW-visible behavior the bit-bash sequence cannot
+      // model. Bit-bash writes a 1 to each bit and expects to read it back, which
+      // never holds for these two classes:
+      //
+      //   HMAC512_KV_*_CTRL   - SW writes are HW-gated by swwe, so writes are
+      //                         dropped while the KV client is busy.
+      //   *_intr_trig_r       - write-1-set fields that singlepulse back to 0.
+      //
+      // Both are correct RTL behavior, so only bit-bash is disabled here. The
+      // hw_reset, access, shared-access and mem-walk tests still cover these
+      // registers.
+      begin
+        uvm_reg regs[$];
+        reg_model.get_registers(regs);
+        foreach (regs[i]) begin
+          if (regs[i].get_name() inside {"HMAC512_KV_RD_KEY_CTRL",
+                                         "HMAC512_KV_RD_BLOCK_CTRL",
+                                         "HMAC512_KV_WR_CTRL",
+                                         "error_intr_trig_r",
+                                         "notif_intr_trig_r"}) begin
+            uvm_resource_db#(bit)::set({"REG::", regs[i].get_full_name()},
+                                       "NO_REG_BIT_BASH_TEST", 1, this);
+            `uvm_info("REG_TEST_EXCLUDE",
+                      $sformatf("Excluding %s from bit-bash", regs[i].get_full_name()),
+                      UVM_LOW)
+          end
+        end
+      end
       // pragma uvmf custom register_test_setup end
 
+    // Reset the register model
+    reg_model.reset();
+    // Identify the register model to test
+    uvm_register_test_seq.model = reg_model;
+    // Perform the register test
+    // Disable particular tests in sequence by commenting options below
+    uvm_register_test_seq.tests = {
     // pragma uvmf custom register_test_operation begin
-    // UVMF_CHANGE_ME Perform your custom register test
+                                   UVM_DO_REG_HW_RESET      |
+                                   UVM_DO_REG_BIT_BASH      |
+                                   UVM_DO_REG_ACCESS        |
+                                   UVM_DO_MEM_ACCESS        |
+                                   UVM_DO_SHARED_ACCESS     |
+                                   UVM_DO_MEM_WALK          |
+                                   UVM_DO_ALL_REG_MEM_TESTS 
     // pragma uvmf custom register_test_operation end
+                                  };
+
+    uvm_register_test_seq.start(null);
+
+    // Report the final status. The regression log parser keys off the
+    // "* TESTCASE PASSED"/"* TESTCASE FAILED" string, so a sequence that never
+    // prints it is scored as a failure no matter how clean the run was.
+    begin
+      uvm_report_server svr = uvm_report_server::get_server();
+      int unsigned num_fail = svr.get_severity_count(UVM_ERROR)
+                            + svr.get_severity_count(UVM_FATAL);
+      if (num_fail == 0)
+        $display("* TESTCASE PASSED");
+      else
+        $display("* TESTCASE FAILED (%0d error/fatal reports)", num_fail);
+    end
 
   endtask
 

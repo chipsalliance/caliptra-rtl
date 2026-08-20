@@ -4,34 +4,29 @@ schema_version: 2.4.0
 requires:
   - uvmf_lib
   - hmac_ctrl
+  - hmac_uvm_pkg
   - hmac_coverage
+  - keyvault
+  - caliptra_top_defines
+  - caliptra_top_reg_defines
+  - caliptra_prim
 targets:
   tb:
     directories:
-      - ${COMPILE_ROOT}/../rtl
-      - ${COMPILE_ROOT}/../../libs/rtl
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_in_pkg
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_in_pkg/src
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_out_pkg
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_out_pkg/src
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_rst_pkg
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_rst_pkg/src
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/HMAC_env_pkg
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/HMAC/tb/parameters
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/HMAC/tb/sequences
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/HMAC/tb/tests
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/HMAC/tb/testbench
     files:
-#      - ${COMPILE_ROOT}/../rtl/hmac_intr_regs_uvm.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_in_pkg/HMAC_in_pkg_hdl.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_in_pkg/HMAC_in_pkg.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_in_pkg/src/HMAC_in_driver_bfm.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_in_pkg/src/HMAC_in_if.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_in_pkg/src/HMAC_in_monitor_bfm.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_out_pkg/HMAC_out_pkg_hdl.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_out_pkg/HMAC_out_pkg.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_out_pkg/src/HMAC_out_driver_bfm.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_out_pkg/src/HMAC_out_if.sv
-      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_out_pkg/src/HMAC_out_monitor_bfm.sv
-#      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/HMAC_env_pkg/registers/HMAC_reg_model_top_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_rst_pkg/HMAC_rst_pkg_hdl.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_rst_pkg/HMAC_rst_pkg.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_rst_pkg/src/HMAC_rst_driver_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_rst_pkg/src/HMAC_rst_if.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/interface_packages/HMAC_rst_pkg/src/HMAC_rst_monitor_bfm.sv
+      - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/HMAC_env_pkg/registers/HMAC_reg_model_top_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/verification_ip/environment_packages/HMAC_env_pkg/HMAC_env_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/HMAC/tb/parameters/HMAC_parameters_pkg.sv
       - ${COMPILE_ROOT}/uvmf_template_output/project_benches/HMAC/tb/sequences/HMAC_sequences_pkg.sv
@@ -41,8 +36,6 @@ targets:
     tops:
       - hdl_top
       - hvl_top
-  sim:
-    pre_exec: 'echo "[PRE-EXEC] Copying HMAC test vector gen script to $(pwd)" && cp $COMPILE_ROOT/../tb/test_gen.py .'
 global:
   tool:
     vcs:
@@ -50,21 +43,15 @@ global:
         - '-assert svaext'
         - +define+CLP_ASSERT_ON
         - +define+SIMULATION
-        #- '-v2k_generate'
-        #- '-timescale=1ns/1ps'
+        - +define+FCOV
         - '-noinherit_timescale=1ns/1ps'
-        #- '-ucli -i dump.ucli'
-      #sim:
-        #- '-ucli -i dump.ucli'
-        # Suppress a warning due to calling $fgets as task instead of function
-        # i.e. discarding the return value. This is in auto-generated code.
         - '+warn=noRVOSFD'
-        # Suppress NOTE about repeated package imports within the same
-        # package (each .svh file included in the auto-generated UVM _pkg.sv
-        # files imports the same dependencies)
         - '-suppress=SV-LCM-PPWI'
       elab:
-        # Suppress warnings about too few port connections - auto-generated interfaces
-        # declare all signals as inout, but are driven at a lower layer than the
-        # instantiation, so they will always flag this
         - '-suppress=TFIPC'
+        - '-cm line+cond+fsm+tgl+branch+assert'
+      sim:
+        - '-sv_root $QUESTA_MVC_HOME/questa_mvc_core/linux_x86_64_gcc-6.2.0_vcs'
+        - '-sv_lib libahb_IN_SystemVerilog_VCS_full'
+        - '+UVM_VERBOSITY=UVM_MEDIUM'
+        - '-cm line+cond+fsm+tgl+branch+assert'

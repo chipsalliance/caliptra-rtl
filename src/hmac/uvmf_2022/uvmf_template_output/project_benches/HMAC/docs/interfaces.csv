@@ -9,6 +9,5 @@
 
 ,
 Interface Description, Interface Type, Interface Transaction, Interface Name,
-HMAC_in_agent, HMAC_in_driver_bfm HMAC_in_monitor_bfm, HMAC_in_transaction, HMAC_in_pkg_HMAC_in_agent_BFM,
-HMAC_out_agent, HMAC_out_driver_bfm HMAC_out_monitor_bfm, HMAC_out_transaction, HMAC_out_pkg_HMAC_out_agent_BFM,
+HMAC_rst_agent, HMAC_rst_driver_bfm HMAC_rst_monitor_bfm, HMAC_rst_transaction, HMAC_rst_pkg_HMAC_rst_agent_BFM,
 
