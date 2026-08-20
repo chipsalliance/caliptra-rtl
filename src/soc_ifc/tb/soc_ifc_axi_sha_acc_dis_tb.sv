@@ -105,6 +105,7 @@ module soc_ifc_axi_sha_acc_dis_tb
  kv_read_t    kv_read;
  kv_rd_resp_t kv_rd_resp = '{error:1'b0,
                              last: 1'b0,
+                             entry_last_dword: '0,
                              read_data: KV_DATA_W'(0)};
 
 
@@ -274,7 +275,8 @@ module soc_ifc_axi_sha_acc_dis_tb
     .cptra_uncore_dmi_reg_wr_en(1'b0),
     .cptra_uncore_dmi_reg_rdata(),
     .cptra_uncore_dmi_reg_addr(7'h0),
-    .cptra_uncore_dmi_reg_wdata(0) 
+    .cptra_uncore_dmi_reg_wdata(0),
+    .busy()
   );
 
   //----------------------------------------------------------------
