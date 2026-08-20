@@ -1358,7 +1358,7 @@ The HMAC256 architecture uses the same finite-state machine structure as HMAC512
 
 ### Save and restore
 
-The HMAC256 controller supports save/restore of the intermediate SHA-256 chaining state through the `CTRL.RESTORE` bit combined with `CTRL.NEXT` or `CTRL.LAST`. Software reads the eight `HMAC256_TAG` dwords after any non-final block to snapshot the inner hash state, then writes those dwords back through the `HMAC256_BLOCK` register slots and pulses `CTRL.RESTORE|NEXT` (or `CTRL.RESTORE|LAST` for the final block) to continue a paused operation. This mirrors the HMAC512 save/restore mechanic and lets firmware handle long messages without holding the block busy across other operations.
+The HMAC256 controller supports save/restore of the intermediate SHA-256 chaining state through the `CTRL.RESTORE` bit combined with `CTRL.NEXT` or `CTRL.LAST`. Software reads the eight `HMAC256_TAG` dwords after any non-final block to snapshot the inner hash state, then writes those dwords back into the `HMAC256_TAG` registers, re-supplies the same `CTRL.MODE` and `HMAC256_KEY`, loads the next message block into `HMAC256_BLOCK`, and pulses `CTRL.RESTORE|NEXT` (or `CTRL.RESTORE|LAST` for the final block) to continue a paused operation. This mirrors the HMAC512 save/restore mechanic and lets firmware handle long messages without holding the block busy across other operations.
 
 ### Signal descriptions
 
@@ -1371,11 +1371,12 @@ The HMAC256 architecture inputs and outputs are described in the following table
 | init                | input           | The core is initialized and processes the key and the first block of the message. |
 | next                | input           | The core processes the rest of the message blocks using the result from the previous blocks. |
 | last                | input           | Marks the final block of the message so the outer hash is produced. |
-| restore             | input           | Combined with `next` or `last`, resumes an operation from a previously saved intermediate SHA-256 state written into the `HMAC256_BLOCK` slots. |
+| restore             | input           | Combined with `next` or `last`, resumes an operation from a previously saved intermediate SHA-256 state written into the `HMAC256_TAG` registers. |
 | zeroize             | input           | The core clears all internal registers to avoid any SCA information leakage. |
 | mode                | input           | Selects the hmac variant. This can be: <br>- HMAC-SHA-224 (`0`) <br>- HMAC-SHA-256 (`1`). |
 | key\[255:0\]        | input           | The input key. |
-| block\[511:0\]      | input           | The input padded block of message, or the intermediate SHA-256 chaining state during a restore. |
+| block\[511:0\]      | input           | The input padded block of message. |
+| restore_digest\[255:0\] | input       | The saved intermediate SHA-256 chaining state, sourced from the `HMAC256_TAG` registers, used when `restore` is asserted. |
 | LFSR_seed\[191:0\]  | input           | The input to seed PRNG to enable the masking countermeasure for SCA protection. |
 | ready               | output          | When HIGH, the signal indicates the core is ready. |
 | tag\[255:0\]        | output          | The HMAC value of the given key and message. In HMAC-224 mode only the upper 224 bits are meaningful. |

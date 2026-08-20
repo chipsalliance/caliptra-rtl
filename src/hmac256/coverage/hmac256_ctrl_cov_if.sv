@@ -93,7 +93,7 @@ interface hmac256_ctrl_cov_if
         mode_ready_cp:    cross ready_cp, mode_cp;
         zeroize_ready_cp: cross ready_cp, zeroize_cp;
 
-        // Did zeroize, restore, error0, init, next, last, and gatign teh tag
+        // Did zeroize, restore, error0, init, next, last, and gating the tag
         // all fire in both modes.
         zeroize_x_mode_cp:     cross zeroize_cp,     mode_cp;
         restore_x_mode_cp:     cross restore_cp,     mode_cp;
