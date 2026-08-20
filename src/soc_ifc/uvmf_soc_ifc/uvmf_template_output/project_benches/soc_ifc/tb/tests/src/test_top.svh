@@ -34,46 +34,45 @@
 typedef soc_ifc_env_configuration soc_ifc_env_configuration_t;
 typedef soc_ifc_environment soc_ifc_environment_t;
 
-// Builds the soc_ifc environment and its bench-specific endpoint topology.
 class test_top extends uvmf_test_base #(.CONFIG_T(soc_ifc_env_configuration_t), 
                                         .ENV_T(soc_ifc_environment_t), 
                                         .TOP_LEVEL_SEQ_T(soc_ifc_bench_sequence_base));
 
   `uvm_component_utils( test_top );
 
-// This message handler can redirect QVIP memory-model messages through the UVM
-// reporting mechanism. How to enable and use it is described in
+// This message handler can be used to redirect QVIP Memeory Model messages through
+// the UVM messaging mecahanism.  How to enable and use it is described in 
 //      $UVMF_HOME/common/utility_packages/qvip_utils_pkg/src/qvip_report_catcher.svh
 qvip_memory_message_handler message_handler;
 
 
   string interface_names[] = {
-    uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */,
-    soc_ifc_ctrl_agent_BFM /* soc_ifc_ctrl_agent     [1] */,
-    cptra_ctrl_agent_BFM /* cptra_ctrl_agent     [2] */,
-    ss_mode_ctrl_agent_BFM /* ss_mode_ctrl_agent     [3] */,
-    soc_ifc_status_agent_BFM /* soc_ifc_status_agent     [4] */,
-    cptra_status_agent_BFM /* cptra_status_agent     [5] */,
-    ss_mode_status_agent_BFM /* ss_mode_status_agent     [6] */,
-    mbox_sram_agent_BFM /* mbox_sram_agent     [7] */
+    uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */ , 
+    soc_ifc_ctrl_agent_BFM /* soc_ifc_ctrl_agent     [1] */ , 
+    cptra_ctrl_agent_BFM /* cptra_ctrl_agent     [2] */ , 
+    ss_mode_ctrl_agent_BFM /* ss_mode_ctrl_agent     [3] */ , 
+    soc_ifc_status_agent_BFM /* soc_ifc_status_agent     [4] */ , 
+    cptra_status_agent_BFM /* cptra_status_agent     [5] */ , 
+    ss_mode_status_agent_BFM /* ss_mode_status_agent     [6] */ , 
+    mbox_sram_agent_BFM /* mbox_sram_agent     [7] */ 
 };
 
-uvmf_active_passive_t interface_activities[] = {
-    ACTIVE /* ahb_lite_slave_0     [0] */,
-    ACTIVE /* soc_ifc_ctrl_agent     [1] */,
-    ACTIVE /* cptra_ctrl_agent     [2] */,
-    ACTIVE /* ss_mode_ctrl_agent     [3] */,
-    ACTIVE /* soc_ifc_status_agent     [4] */,
-    ACTIVE /* cptra_status_agent     [5] */,
-    ACTIVE /* ss_mode_status_agent     [6] */,
-    ACTIVE /* mbox_sram_agent     [7] */};
+uvmf_active_passive_t interface_activities[] = { 
+    ACTIVE /* ahb_lite_slave_0     [0] */ , 
+    ACTIVE /* soc_ifc_ctrl_agent     [1] */ , 
+    ACTIVE /* cptra_ctrl_agent     [2] */ , 
+    ACTIVE /* ss_mode_ctrl_agent     [3] */ , 
+    ACTIVE /* soc_ifc_status_agent     [4] */ , 
+    ACTIVE /* cptra_status_agent     [5] */ , 
+    ACTIVE /* ss_mode_status_agent     [6] */ , 
+    ACTIVE /* mbox_sram_agent     [7] */   };
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
 
   // ****************************************************************************
   // FUNCTION: new()
-  // This is the standard SystemVerilog constructor. All components are
+  // This is the standard systemVerilog constructor.  All components are 
   // constructed in the build_phase to allow factory overriding.
   //
   function new( string name = "", uvm_component parent = null );
@@ -85,7 +84,7 @@ uvmf_active_passive_t interface_activities[] = {
   // ****************************************************************************
   // FUNCTION: build_phase()
   // The construction of the configuration and environment classes is done in
-  // the build_phase of uvmf_test_base. Once the configuration and environment
+  // the build_phase of uvmf_test_base.  Once the configuraton and environment
   // classes are built then the initialize call is made to perform the
   // following: 
   //     Monitor and driver BFM virtual interface handle passing into agents
@@ -123,3 +122,4 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
+
