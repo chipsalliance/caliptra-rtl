@@ -16,6 +16,7 @@
 
 python3 tools/scripts/reg_doc_gen.py \
 src/integration/rtl/caliptra_reg.rdl \
+src/entropy_combiner/rtl/entropy_combiner_reg.rdl \
 src/keyvault/rtl/kv_reg.rdl \
 src/pcrvault/rtl/pv_reg.rdl \
 src/datavault/rtl/dv_reg.rdl \
@@ -42,6 +43,7 @@ src/keyvault/rtl/kv_def.rdl
 
 python3 tools/scripts/reg_doc_gen.py --param CALIPTRA_SS_MODE=true \
 src/integration/rtl/caliptra_reg.rdl \
+src/entropy_combiner/rtl/entropy_combiner_reg.rdl \
 src/keyvault/rtl/kv_reg.rdl \
 src/pcrvault/rtl/pv_reg.rdl \
 src/datavault/rtl/dv_reg.rdl \

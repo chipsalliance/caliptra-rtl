@@ -62,6 +62,7 @@ requires:
   - csrng
   - aes
   - sha3_ctrl
+  - entropy_combiner
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -113,6 +114,7 @@ requires:
   - csrng
   - aes
   - sha3_ctrl
+  - entropy_combiner
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -168,9 +170,7 @@ targets:
       - $COMPILE_ROOT/test_suites/libs/tcp_server
       - $COMPILE_ROOT/test_suites/libs/jtagdpi
     files:
-      - $COMPILE_ROOT/test_suites/libs/tcp_server/tcp_server.h
       - $COMPILE_ROOT/test_suites/libs/tcp_server/tcp_server.c
-      - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.h
       - $COMPILE_ROOT/test_suites/libs/jtagdpi/jtagdpi.c
     options:
       - '-Wno-unused-variable'
@@ -272,6 +272,11 @@ global:
         # targeted signal (with +/-node) is ultimately represented
         # correctly in the output vdb.
         - '-suppress=VCM-HFUFR'
+        # Suppress "Interface not instantiated" warning.
+        # axi_if.sv is compiled into both the RTL filelist and
+        # caliptra_top_tb_pkg; the TB binds the package copy, so the
+        # RTL-library copy is unused and harmlessly ignored by VCS.
+        - '-suppress=UII-L'
 ---
 provides: [caliptra_top_trng_tb]
 schema_version: 2.4.0
@@ -336,6 +341,11 @@ global:
         # targeted signal (with +/-node) is ultimately represented
         # correctly in the output vdb.
         - '-suppress=VCM-HFUFR'
+        # Suppress "Interface not instantiated" warning.
+        # axi_if.sv is compiled into both the RTL filelist and
+        # caliptra_top_tb_pkg; the TB binds the package copy, so the
+        # RTL-library copy is unused and harmlessly ignored by VCS.
+        - '-suppress=UII-L'
 
 ---  
 provides: [caliptra_top_ss_mode_tb]
@@ -408,3 +418,8 @@ global:
         # targeted signal (with +/-node) is ultimately represented
         # correctly in the output vdb.
         - '-suppress=VCM-HFUFR'
+        # Suppress "Interface not instantiated" warning.
+        # axi_if.sv is compiled into both the RTL filelist and
+        # caliptra_top_tb_pkg; the TB binds the package copy, so the
+        # RTL-library copy is unused and harmlessly ignored by VCS.
+        - '-suppress=UII-L'

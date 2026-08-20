@@ -1,0 +1,277 @@
+// Copyright lowRISC contributors (OpenTitan project).
+// Licensed under the Apache License, Version 2.0, see LICENSE for details.
+// SPDX-License-Identifier: Apache-2.0
+{
+  build_cmd:  "{job_prefix} xrun"
+  run_cmd:    "{job_prefix} xrun"
+
+  build_db_dir: "{build_dir}/xcelium.d"
+
+  build_opts: ["-elaborate -64bit -sv",
+               // Wait to acquire a license.
+               "-licqueue",
+               // TODO: duplicate primitives between OT and Ibex #1231
+               "-ALLOWREDEFINITION",
+               "-messages -errormax 50",
+               "-timescale {timescale}",
+               "-f {sv_flist}",
+               "-uvmhome CDNS-1.2",
+               // Specify the library name for the run step to use.
+               "-xmlibdirname {build_db_dir}",
+               // List multiple tops for the simulation. Prepend each top level with `-top`.
+               "{eval_cmd} echo {sim_tops} | sed -E 's/(\\S+)/-top \\1/g'",
+               // Set the top level elaborated entity (snapshot name) correctly since there are
+               // multiple tops.
+               "-snapshot {tb}",
+               // for uvm_hdl_* used by csr backdoor
+               "-access +rw",
+               // This is to fix a timescale issue due to using `resetall to reset timescale and
+               // `-sv` compile option. #7178
+               "-enable_strict_timescale",
+               // Use this to conditionally compile for Xcelium (example: LRM interpretations differ
+               // across tools).
+               "+define+XCELIUM",
+               // Suppress printing of the copyright banner.
+               "-nocopyright",
+               // Ignore "timescale is not specified for the package" warning
+               "-nowarn TSNSPK",
+               // Ignore "IEEE 1800-2009 SystemVerilog simulation semantics" warning
+               "-nowarn DSEMEL",
+               // Ignore hierarchial ref warnings in interfaces
+               "-nowarn CUVIHR",
+               // Ignore warning "Potentially reversed dist range may cause it to be treated as
+               // empty". This is thrown when and expression like `var - 1` is added to a
+               // randomization distribution, which can potentially be a negative value.
+               "-nowarn REVRNG",
+               // Ignore warning "Include directory <path> given but not used". This is benign.
+               "-nowarn SPDUSD",
+               // Ignore "cds.lib Invalid path ... command ignored" warnings emitted by Xcelium's
+               // bundled cdsvhdl.lib referencing VHDL library directories that don't exist in the
+               // install. Benign for SV-only flows.
+               "-nowarn DLCPTH",
+               // This warning is thrown when a scalar enum variable is assigned to an enum array.
+               // Other tools (e.g., FPV) treat such assignments as an error, hence we bump it to
+               // an error in simulation so that this can be caught early in CI.
+               "-xmerror ENUMERR",
+               // Enables LRM compliant behavior for $asserton, $assertoff and $assertkill tasks.
+               "-enable_abv_asrtctrl_enh"
+               ]
+
+  // We want to allow the possibility of passing no test or no test sequence. Unfortunately,
+  // Xcelium generates an error (*E,OPTP2ND) if you pass an empty plusarg. To avoid doing so, these
+  // two variables expand to e.g. "+UVM_TESTNAME=foo" if we have a test and the empty string if
+  // not.
+  uvm_testname_plusarg: "{eval_cmd} echo {uvm_test} | sed -E 's/(.+)/+UVM_TESTNAME=\\1/'"
+  uvm_testseq_plusarg: "{eval_cmd} echo {uvm_test_seq} | sed -E 's/(.+)/+UVM_TEST_SEQ=\\1/'"
+
+  run_opts:   ["-input {run_script}",
+               // Suppress printing of the copyright banner.
+               "-nocopyright",
+               // Wait to acquire a license.
+               "-licqueue",
+               "-64bit -xmlibdirname {build_db_dir}",
+               // Use the same snapshot name set during the build step.
+               "-r {tb}",
+               "+SVSEED={svseed}",
+               "{uvm_testname_plusarg}",
+               "{uvm_testseq_plusarg}",
+               // Ignore "IEEE 1800-2009 SystemVerilog simulation semantics" warning
+               "-nowarn DSEM2009",
+               // Ignore "cds.lib Invalid path ... command ignored" warnings emitted by Xcelium's
+               // bundled cdsvhdl.lib referencing VHDL library directories that don't exist in the
+               // install. Benign for SV-only flows.
+               "-nowarn DLCPTH",
+               ]
+
+  // Vars that need to exported to the env.
+  exports: [
+    // Poll for an available license in all servers.
+    { CDS_LIC_QUEUE_POLL: 1 },
+
+    // Poll for an available license every 1 min.
+    { CDS_LIC_QUEUE_POLL_INT: 60 },
+
+    // X-prop related: these were suggested by Xcelium as warnings during the build time.
+    // These enable array corruption when the index is out of range or invalid.
+    { VL_ENABLE_INVALID_IDX_XPROP: 1 },
+    { VL_ENABLE_OUTOFRANGE_IDX_XPROP: 1 },
+
+    // Export the cov_report path so that the tcl file can read these as env vars.
+    { cov_merge_db_dir: "{cov_merge_db_dir}" },
+    { cov_report_dir: "{cov_report_dir}" }
+
+    // Export unr related paths for make
+    {cov_unr_dir:     "{cov_unr_dir}" }
+    // Add an additional single quotation because `cov_merge_cmd` has an empty space, it will cause
+    // trouble when exporting the entire command in the environment.
+    {cov_merge_cmd: "{cov_merge_cmd}"}
+
+    // job prefix
+    {job_prefix: "{job_prefix}"}
+
+  ]
+
+  // Supported wave dumping formats (in order of preference).
+  supported_wave_formats: ["shm", "fsdb", "vcd"]
+
+  // Default tcl script used when running the sim. Override if needed.
+  run_script: "{dv_root}/tools/sim.tcl"
+
+  // Coverage related.
+  // By default, collect all coverage metrics: block:expr:fsm:toggle:functional.
+  cov_metrics: all
+
+  // Supply the cov configuration file.
+  // Note that this needs to be set as -covfile <file>.
+  xcelium_cov_cfg_file: ""
+
+  // Supply the cov exclusion tcl script - passed on to IMC using the -init switch.
+  xcelium_cov_excl_script: ""
+
+  // Supply the cov refinement files - passed on to IMC using the -load_refinement switch.
+  xcelium_cov_refine_files: []
+
+  // Set the coverage directories.
+  cov_work_dir: "{scratch_path}/coverage"
+  cov_db_dir:   "{cov_work_dir}/{build_mode}"
+
+  // Individual test specific coverage data - this will be deleted if the test fails
+  // so that coverage from failiing tests is not included in the final report.
+  cov_db_test_dir_name: "{run_dir_name}.{svseed}"
+  cov_db_test_dir:      "{cov_db_dir}/{cov_db_test_dir_name}"
+
+  // Merging coverage.
+  // It is constructed by the tool itself.
+  cov_merge_dir:    "{scratch_path}/cov_merge"
+  cov_merge_db_dir: "{cov_merge_dir}/merged"
+  cov_merge_cmd:    "imc"
+  cov_merge_opts:   ["-64bit",
+                     "-licqueue",
+                     "-exec {dv_root}/tools/xcelium/cov_merge.tcl"]
+
+  // Generate covreage reports in text as well as html.
+  cov_report_dir:   "{scratch_path}/cov_report"
+  cov_report_cmd:   "{job_prefix} imc"
+  cov_report_opts:  ["-64bit",
+                     "-licqueue",
+                     "-load {cov_merge_db_dir}",
+                     " {eval_cmd} echo {xcelium_cov_excl_script} | sed -E 's/(\\S+)/-init \\1/g' ",
+                     " {eval_cmd} echo {xcelium_cov_refine_files} | sed -E 's/(\\S+)/-load_refinement \\1/g' ",
+                     "-exec {dv_root}/tools/xcelium/cov_report.tcl"]
+  cov_report_txt:   "{cov_report_dir}/cov_report.txt"
+  cov_report_page:  "index.html"
+
+  // Analyzing coverage - this is done by invoking --cov-analyze switch. It opens up the
+  // GUI for visual analysis.
+  cov_analyze_dir:  "{scratch_path}/cov_analyze"
+  cov_analyze_cmd:  "{job_prefix} imc"
+  cov_analyze_opts: ["-64bit",
+                     "-licqueue",
+                     "-load {cov_merge_db_dir}",
+                     " {eval_cmd} echo {xcelium_cov_excl_script} | sed -E 's/(\\S+)/-init \\1/g' ",
+                     " {eval_cmd} echo {xcelium_cov_refine_files} | sed -E 's/(\\S+)/-load_refinement \\1/g' "]
+
+  cov_unr_dir:     "{scratch_path}/cov_unr"
+
+  // not needed we can reuse the last build snapshot
+  cov_unr_build_opts:[]
+  cov_unr_build_cmd:[]
+
+  cov_unr_run_cmd: "{job_prefix} xrun"
+
+
+  cov_unr_run_opts: [// use xrun in UNR mode
+                     "-unr",
+                     // JasperGold switch (use formal)
+                     "-jg",
+                     // use the same snapshot as used for regression
+                     "-r {tb}",
+                     // pointer to the merged coverage data from the regression
+                     "-covdb {cov_merge_db_dir}",
+                     // what metrics to use
+                     "-jg_coverage {cov_metrics}",
+                     "-64bit",
+                     "-xmlibdirname {build_db_dir}",
+                     "-jgargs '-allow_unsupported_OS'",
+                     // overwrite previous results
+                     "-covoverwrite",
+                     "-inst_top {dut_instance}",
+                     // UNR Configurations
+                     "-input {xcelium_unr_cfg_file} "]
+
+
+  // pass and fail patterns
+  build_fail_patterns: ["\\*E.*$"]
+  run_fail_patterns:   ["\\*E.*$"] // Null pointer error
+
+  build_modes: [
+    {
+      name: xcelium_gui
+      is_sim_mode: 1
+      build_opts: ["-createdebugdb", "-access +c"]
+      run_opts: ["-gui"]
+    }
+    {
+      name: xcelium_gui_debug
+      is_sim_mode: 1
+      build_opts: ["-createdebugdb", "-access +c", "-uvmlinedebug", "-linedebug",
+                   "+uvm_set_config_int=*,recording_detail,1"]
+      run_opts: ["-gui",
+                 "-input '@database -open waves -into waves.shm -default; probe -create \n"
+                 "tb -depth all -packed 32k -unpacked 32k -all -dynamic -database waves'",
+                 "+uvm_set_config_int=*,recording_detail,1"]
+    }
+    {
+      name: xcelium_waves
+      is_sim_mode: 1
+      build_opts: ["-access +c"]
+    }
+    {
+      name: xcelium_waves_off
+      is_sim_mode: 1
+      build_opts: []
+    }
+    {
+      name: xcelium_cov
+      is_sim_mode: 1
+      build_opts: [// Enable the required cov metrics.
+                   "-coverage {cov_metrics}",
+                   // Limit the scope of coverage collection to the DUT.
+                   "-covdut {dut}",
+                   // Set the coverage configuration file
+                   "-covfile {xcelium_cov_cfg_file}",
+                   // Don't warn about the switches we set that will be default in future releases.
+                   "-nowarn COVDEF",
+                  ]
+      run_opts:   [// Put the coverage model (*.ucm) and the database (*.ucd) together.
+                   "-covmodeldir {cov_db_test_dir}",
+                   // Coverage database output location.
+                   "-covworkdir {cov_work_dir}",
+                   // Set the scope to the build mode name.
+                   "-covscope {build_mode}",
+                   // Test coverage dir name to create under cov_db_dir.
+                   "-covtest {cov_db_test_dir_name}",
+                   // Overwrite the coverage data of a specific test/seed if it already exists.
+                   "-covoverwrite"]
+    }
+    // TODO support profile for xcelium
+    {
+      name: xcelium_profile
+      is_sim_mode: 1
+      build_opts: ["-perfstat"]
+      run_opts:   ["-perfstat", "-perflog perfstat.log"]
+    }
+    {
+      name: xcelium_xprop
+      is_sim_mode: 1
+      build_opts: ["-xprop F -xverbose"]
+    }
+    {
+      // TODO: Add build and run options to enable zero delay loop detection.
+      name: xcelium_loopdetect
+      is_sim_mode: 1
+      build_opts: []
+      run_opts:   []
+    }
+  ]
+}

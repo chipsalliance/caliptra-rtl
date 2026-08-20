@@ -268,11 +268,21 @@ The RISC-V processor is able to access the SoC mailbox SRAM using a direct acces
 
 ## Security state
 
-Caliptra uses the MSB of the security state input to determine whether or not Caliptra is in debug mode.
+The security state input is a packed value encoded as `{debug_locked[3:0], device_lifecycle[1:0]}`. Caliptra uses the `debug_locked` field to determine whether or not Caliptra is in debug mode.
 
-When Caliptra is in debug mode:
+To harden this security-critical decision against fault-injection (glitch) attacks, `debug_locked` is a multi-bit (MuBi4) encoded value rather than a single bit:
 
-* Security state MSB is set to 0.
+* `debug_locked` = `4'h6` (MuBi4True) &rarr; debug is **locked** (secure).
+* `debug_locked` = `4'h9` (MuBi4False) &rarr; debug is **unlocked** (debug mode).
+
+The two legal encodings are bitwise complements, so a single- or multi-bit glitch is unlikely to convert one legal value into the other. Caliptra evaluates the field with a fail-secure policy:
+
+* The "debug unlocked" decision uses a *strict* test: only the exact `4'h9` encoding unlocks debug. Any other value (including any invalid encoding) leaves debug locked.
+* The "debug locked" decision uses a *loose* test: `4'h6` and any invalid encoding are all treated as locked.
+
+Consequently, any value other than the two legal MuBi4 encodings resolves to debug **locked**. Integrators must drive one of the two legal MuBi4 values on the external `security_state` strap; see the Caliptra Integration Specification for the strap layout.
+
+When Caliptra is in debug mode (`debug_locked` = MuBi4False):
 
 * Caliptra JTAG is opened for the microcontroller and HW debug.
 
@@ -441,8 +451,11 @@ These are the top level signals defined in caliptra\_top.
 
 | Name        | Input or output | Description                                                                                             |
 | :---------- | :-------------- | :------------ |
-| itrng_data  | input           | Physical true random noise source data                                                                  |
-| itrng_valid | input           | Valid is asserted high for one cycle when data is valid. The expected valid output rate is about 50KHz. |
+| itrng0_data  | input           | Primary physical true random noise source (ES0) data. |
+| itrng0_valid | input           | Primary source valid, asserted high for one cycle when data is valid. The expected valid output rate is about 50KHz. |
+| itrng1_data  | input           | Secondary physical true random noise source (ES1) data, used only when the dual iTRNG entropy combiner is enabled; tie to 0 if unused. |
+| itrng1_valid | input           | Secondary source valid, asserted high for one cycle when data is valid. Used only in dual-iTRNG mode; tie to 0 if unused. |
+| itrng1_en    | input           | Dual iTRNG enable strap: enables the secondary entropy source (ES1) and the SHA3-384 entropy combiner. Tie to 0 for a single iTRNG. See [Dual iTRNG entropy combiner](#dual-itrng-entropy-combiner). |
 
 The following figure shows the top level signals defined in caliptra\_top.
 
@@ -591,6 +604,74 @@ count tests:
 The methodology used for calculating the repetition count threshold in the
 ROM boot phase can be directly applied for this test as well. The threshold is
 applied on a per-noise-source basis.
+
+
+## Dual iTRNG entropy combiner
+
+Some integrations require a **second physical noise source** — for example, a
+secondary noise-generation technology deployed alongside the primary one. To
+support this, Caliptra can instantiate a **second `entropy_src` (ES1)** next to
+the primary source (`ES0`) while still feeding a **single CSRNG**. A dedicated
+**SHA3-384 entropy combiner** sits between the two entropy sources and the CSRNG
+and merges their conditioned outputs. This feature is only available when the
+integrated TRNG is instantiated (`CALIPTRA_INTERNAL_TRNG`) and, per the interface
+rules, is only enabled in Subsystem mode.
+The following figure shows the dual iTRNG entropy combiner block.
+
+*Figure: Dual iTRNG entropy combiner block*
+
+![](./images/dual_entropy.png)
+
+The combiner presents a single `entropy_src_hw_if` interface to CSRNG
+and drives one such interface to each of ES0 and ES1. It operates in one of two
+modes, selected by `CPTRA_HW_CONFIG.dual_iTRNG_en`:
+
+* **Bypass mode (`dual_iTRNG_en == 0`, default):** the combiner is transparent.
+  A CSRNG entropy request is forwarded to ES0 and ES0's response is returned
+  unchanged; ES1 is never requested. This is functionally identical to the
+  single-iTRNG datapath, so the default behavior of existing integrations is
+  unchanged.
+* **Combine mode (`dual_iTRNG_en == 1`):** one CSRNG request is fanned out to
+  both ES0 and ES1. The combiner waits until both 384-bit conditioned seeds are
+  captured, concatenates them as `ES0 || ES1` (768 bits — one SHA3-384 block,
+  because 768 < the 832-bit SHA3-384 rate), hashes them through the shared
+  `ot_sha3` gates, and returns the single 384-bit digest to CSRNG with one
+  acknowledge. The FIPS status returned to CSRNG follows a configurable policy
+  (AND of both sources by default, ES0-only, or a firmware-programmed value).
+
+### Enabling the feature
+
+Combine mode is enabled by `CPTRA_HW_CONFIG.dual_iTRNG_en`, a software-readable
+bit that hardware drives from a dedicated `itrng1_en` integration input. The bit
+resolves to 1 only in Subsystem mode with the internal TRNG present; in any other
+configuration it reads 0 and the combiner stays in bypass. The same `itrng1_en`
+input also gates the secondary physical-source pins (`itrng1_data` /
+`itrng1_valid`). Each entropy source has its own external request output
+(`etrng0_req` for ES0, `etrng1_req` for ES1).
+
+### Power-on known-answer test (KAT) and AHB lock
+
+Because FIPS certification requires a power-on KAT of every cryptographic block,
+the combiner exposes an AHB-lite register interface used **only** by ROM. ROM
+runs a self-contained KAT by writing a fixed message into `KAT_MSG`, programming
+`KAT_MSG_LEN`, and pulsing `KAT_CTRL.start`; the combiner hashes that bounded
+single-block message through the same `ot_sha3` datapath used operationally and
+exposes the result in `KAT_DIGEST`. After the KAT, ROM sets the write-once
+multi-bit (MuBi4) `AHB_LOCK`. Once locked, the KAT registers are zeroized and
+read back as 0, and the FIPS combine policy is frozen, so runtime firmware cannot
+observe KAT state or weaken the combination. Entropy never appears in any
+AHB-readable register — the ES0/ES1 → combiner → CSRNG path is internal only.
+
+### Fault handling
+
+The combiner is fault-hardened consistently with the surrounding OpenTitan
+blocks: `AHB_LOCK` uses a MuBi4 encoding that is fail-safe to *locked*, and the
+datapath sequencer uses a sparse Hamming-distance-3 (HD-3) FSM encoding. A
+single-bit glitch that produces an undefined FSM code is trapped to a terminal
+error state and latched into the combiner's error-interrupt status (alongside the
+`ot_sha3` countermeasure errors). The `cs_aes_halt` current-management
+handshake between each entropy source and CSRNG is terminated locally inside the
+combiner so that a conditioner is never left waiting on an acknowledge.
 
 
 ## External-TRNG REQ HW API
@@ -1170,12 +1251,15 @@ The HMAC architecture inputs and outputs are described in the following table.
 | reset_n                     | input           | The reset signal is active LOW and resets the core. This is the only active LOW signal.                                                                                     |
 | init                        | input           | The core is initialized and processes the key and the first block of the message.                                                                                           |
 | next                        | input           | The core processes the rest of the message blocks using the result from the previous blocks.                                                                                |
+| last                        | input           | Modifier bit indicating the current message block is the last one; drives OPAD and HMAC finalization after MSG.                                                             |
+| restore                     | input           | Restore a previously saved inner-hash digest instead of computing it from IPAD and MSG. Must be paired with next or last.                                                   |
 | zeroize                     | input           | The core clears all internal registers to avoid any SCA information leakage.                                                                                                |
 | csr_mode                    | input           | When set, the key comes from the cptra_csr_hmac_key interface pins. This key is valid only during MANUFACTURING mode.                                                       |
 | mode                        | input           | Indicates the hmac type of the function. This can be: <br>- HMAC384 <br>- HMAC512.                                                                                          |
 | cptra_csr_hmac_key\[511:0\] | input           | The key to be used during csr mode.                                                                                                                                         |
 | key\[511:0\]                | input           | The input key.                                                                                                                                                              |
 | block\[1023:0\]             | input           | The input padded block of message.                                                                                                                                          |
+| restore_digest\[511:0\]     | input           | The inner-hash digest to restore when restore is asserted.                                                                                                                  |
 | LFSR_seed\[383:0\]          | Input           | The input to seed PRNG to enable the masking countermeasure for SCA protection.                                                                                             |
 | ready                       | output          | When HIGH, the signal indicates the core is ready.                                                                                                                          |
 | tag\[511:0\]                | output          | The HMAC value of the given key or block. For PRF-HMAC-SHA-512, a 512-bit tag is required. For HMAC-SHA-512-256, the host is responsible for reading 256 bits from the MSB. |
@@ -1213,13 +1297,13 @@ In this architecture, the HMAC interface and controller are implemented in hardw
 
 | Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
 | :-------------------- | :------------------ | :-------------------- | :------------------ |
-| Data_In transmission  | 44                  | 0.11                  | -                   |
-| Process               | 254                 | 0.635                 | -                   |
+| Data_In transmission  | 50                  | 0.125                 | -                   |
+| Process               | 463                 | 1.158                 | -                   |
 | Data_Out transmission | 12                  | 0.03                  | -                   |
-| Single block          | 310                 | 0.775                 | 1,290,322           |
-| Double block          | 513                 | 1.282                 | 780,031             |
-| 1 KiB message         | 1,731               | 4.327                 | 231,107             |
-| 128 KiB message       | 207,979             | 519.947               | 1,923               |
+| Single block          | 525                 | 1.313                 | 761,905             |
+| Double block          | 652                 | 1.630                 | 613,497             |
+| 1 KiB message         | 1,462               | 3.655                 | 273,598             |
+| 128 KiB message       | 138,622             | 346.555               | 2,886               |
 
 #### Hardware/software architecture
 
@@ -1228,12 +1312,12 @@ In this architecture, the HMAC interface and controller are implemented in RISC-
 | Operation             | Cycle count \[CCs\] | Time \[us\] @ 400 MHz | Throughput \[op/s\] |
 | :-------------------- | :------------------ | :-------------------- | :------------------ |
 | Data_In transmission  | 1389                | 3.473                 | -                   |
-| Process               | 253                 | 0.633                 | -                   |
+| Process               | 463                 | 1.158                 | -                   |
 | Data_Out transmission | 290                 | 0.725                 | -                   |
-| Single block          | 1932                | 4.83                  | 207,039             |
-| Double block          | 3166                | 7.915                 | 136,342             |
-| 1 KiB message         | 10,570              | 26.425                | 37,842              |
-| 128 KiB message       | 1,264,314           | 3,160.785             | 316                 |
+| Single block          | 2,142               | 5.355                 | 186,741             |
+| Double block          | 3,249               | 8.123                 | 123,115             |
+| 1 KiB message         | 9,903               | 24.758                | 40,392              |
+| 128 KiB message       | 1,136,647           | 2,841.618             | 352                 |
 
 ## HMAC256/HMAC224
 
@@ -1663,13 +1747,14 @@ The ECC core performance is reported in the next section.
 
 ### Pure hardware architecture
 
-In this architecture, the ECC interface and controller are implemented in hardware. The performance specification of the ECC architecture is reported as shown in the following table.
+In this architecture, the ECC interface and controller are implemented in hardware. The Montgomery multiplier in the current RTL uses a **radix-48** datapath (`MULT_RADIX = 48` in `src/ecc/rtl/ecc_params_pkg.sv`), which reduces the number of PE iterations per 384-bit modular multiplication from 12 (radix-32) to 8. The performance specification of the ECC architecture is reported as shown in the following table. Cycle counts were measured on `ecc_top_tb` running the `ecc_normal_test` (radix-48 RTL).
 
-| Operation | Cycle count \[CCs\] | Time \[ms\] @ 400 MHz | Throughput \[op/s\] |
-| :-------- | :------------------ | :-------------------- | :------------------ |
-| Keygen    | 909,648             | 2.274                 | 439                 |
-| Signing   | 932,990             | 2.332                 | 428                 |
-| Verifying | 1,223,938           | 3.060                 | 326                 |
+| Operation      | Cycle count \[CCs\] | Time \[ms\] @ 400 MHz | Throughput \[op/s\] |
+| :------------- | :------------------ | :-------------------- | :------------------ |
+| Keygen         | 719,675             | 1.799                 | 556                 |
+| Signing        | 736,978             | 1.842                 | 543                 |
+| Verifying      | 960,404             | 2.401                 | 416                 |
+| ECDH sharedkey | 717,421             | 1.794                 | 558                 |
 
 
 ## LMS Accelerator
@@ -2632,6 +2717,61 @@ When a key is read from the key vault, the API register is locked and any result
 
 Key vault read errors will prevent the crypto engine from accepting new commands. The engine will require zeroization in order to clear the error and resume normal operation.
 
+### Key vault key-length-mismatch detection
+
+Each cryptographic consumer that reads from KV performs a length check
+between the KV entry's stored `last_dword` and the consumer's
+`expected_key_size` port (derived from mode, e.g., HMAC-384 vs HMAC-512,
+or fixed by the consumer, e.g., ECC P-384, MLDSA/MLKEM seed, OCP LOCK
+MEK). The KV read-mux broadcasts each addressed entry's stored
+`last_dword` on `kv_rd_resp_t.entry_last_dword`, and every
+`kv_read_client` latches that value into a local `stored_last_dword`
+register.
+A stored entry *larger* than the
+consumer's expected size is accepted. A stored entry *smaller* than the
+consumer's expected size triggers `KV_RD_LEN_MISMATCH`. Access-control
+(`dest_valid` + `kv_read_rule_check`) still gates which slots each
+consumer may touch, so prefix use of an oversized entry does not
+widen attack surface.
+
+When mismatch fires, `error_code` is registered to `KV_RD_LEN_MISMATCH`
+and self-holds via the existing mux fall-through (cleared only by
+`rst_b` or `zeroize`). The length check enforces *how much of
+the slot is meaningful* and closes a key-substitution class where a
+shorter stored key would otherwise be silently zero-padded (or worse,
+consumed with undefined-tail bits) by a wider engine.
+
+**Two check-time modes**, selected by parameter `LEN_CHECK_AT_KEY_USE`:
+- `LEN_CHECK_AT_KEY_USE=0` (default) — check fires on `read_done` (KV
+  FSM's `KV_DONE` state), comparing `stored_last_dword` to the fixed
+  `expected_key_size` the consumer wires. Used by consumers whose
+  expected size is stable at KV-read time (ECC privkey/seed, AXI-DMA
+  MEK, MLDSA/MLKEM seeds and message).
+- `LEN_CHECK_AT_KEY_USE=1` — check fires on the consumer's
+  `check_key_size` strobe (typically at `INIT`/`START`/op-commit).
+  Used by consumers whose expected size is not stable until the op
+  commits (HMAC and AES, whose mode/key_len may be programmed after
+  the KV read completes).
+
+**HMAC** enables the check on the key path only. `hmac_key_kv_read`
+uses `LEN_CHECK_AT_KEY_USE=1` with `check_key_size = (init_reg |
+next_reg) & kv_key_data_present` and `expected_key_size =
+hmac_expected_key_size` (11 for HMAC-384, 15 for HMAC-512). The HMAC
+block is a message chunk, not a security-sized key, and legitimate
+consumers (notably the OCP LOCK HEK seed at `OCP_LOCK_HEK_NUM_DWORDS=8`
+dwords routed to `KV_DEST_IDX_HMAC_BLOCK`) may supply KV entries
+shorter than the mode's key size.
+
+**AES** derives `expected_key_size` from the runtime-selectable
+`CTRL_SHADOWED.key_len` (128/192/256 → 3/5/7), exposed to the CLP
+wrapper via `aes2caliptra.key_len`. The check is armed at
+`kv_key_done | keymgr_key.valid`, so any FW re-program of `key_len`
+that would create an entry-too-small condition is caught before AES
+samples the key. AES does not raise an interrupt on KV errors; FW
+must observe `AES_KV_RD_KEY_STATUS.ERROR` after the status VALID bit
+sets. The `AES_KV_RD_KEY_STATUS.ERROR` field encodes the KV error
+code (`KV_SUCCESS=0`, `KV_READ_FAIL=1`, `KV_RD_LEN_MISMATCH=3`).
+
 If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
 
 The following tables describe read, write, and status values for key vault blocks.
@@ -3096,6 +3236,27 @@ Caliptra's AXI DMA supports a hardware path to write **KV23 (MEK)** to the SoC v
 - **Enable AES ↔ KV write path** only if `SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS` is set.
 
 
+
+## Fatal hardware errors
+
+The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditions. Assertion of any bit drives the SoC `cptra_error_fatal` interrupt pin (unless the bit is masked by `internal_hw_error_fatal_mask`). Once the interrupt is asserted, clearing the register bit does **not** deassert the interrupt — only a Caliptra reset clears a fatal error interrupt. All fields are sticky (RW1C by Caliptra and SoC).
+
+| Bit | Field | Maskable | Trigger |
+| :-- | :---- | :------- | :------ |
+| 0 | iccm_ecc_unc | Yes (`mask_iccm_ecc_unc`) | Uncorrectable double-bit ECC error in ICCM |
+| 1 | dccm_ecc_unc | Yes (`mask_dccm_ecc_unc`) | Uncorrectable double-bit ECC error in DCCM |
+| 2 | nmi_pin | Yes (`mask_nmi_pin`) | NMI asserted by WDT Timer2 timeout |
+| 3 | crypto_err | No | Multiple concurrent cryptographic operations using the Key Vault |
+| 4 | kv_error | No | KV boot-flow monitor `dest_valid` mismatch or boot-flow error |
+| 5 | shadow_storage_err | No | ICCM region shadow-register storage fault (register/shadow corrupted) |
+| 6 | fsm_error | No | Sparse-encoded security FSM entered an invalid/illegal state (fault-injection/glitch detection) |
+| 31:7 | rsvd | — | Reserved |
+
+**Masking behavior:** Only `iccm_ecc_unc`, `dccm_ecc_unc`, and `nmi_pin` are maskable via the writable fields of `internal_hw_error_fatal_mask`. The remaining fields (`crypto_err`, `kv_error`, `shadow_storage_err`, `fsm_error`) are unmaskable; their corresponding mask bits are read-only zero. Firmware cannot suppress an already-triggered fatal interrupt by setting a mask bit.
+
+**`fsm_error` — sparse-FSM glitch detection:** Security-critical FSMs (for example, the mailbox FSM) are sparse-encoded with Hamming-distance-separated state values. If a fault-injection/glitch drives an FSM into an unused encoding, the sparse-FSM guard forces the machine to its error state and asserts `fsm_error`. This is an unmaskable, reset-only fatal error.
+
+The recoverable counterpart, `CPTRA_HW_ERROR_NON_FATAL`, aggregates non-fatal conditions (mailbox protocol violations, mailbox uncorrectable ECC, and the ICCM region shadow-register phase mismatch `shadow_update_err`); firmware may deassert `cptra_error_non_fatal` by clearing or masking all set non-fatal bits.
 
 ## Cryptographic blocks fatal and non-fatal errors
 

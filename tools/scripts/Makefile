@@ -15,6 +15,12 @@
 
 SHELL = /usr/bin/env bash
 PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
+# VCS ntb_random_seed for the simv run. Defaults to PLAYBOOK_RANDOM_SEED (the same seed
+# used for the firmware's MY_RANDOM_SEED) so a single seed value reproduces both the FW
+# and testbench randomization by default, but can be overridden independently, e.g. to
+# replay a specific VCS-only seed against a fixed firmware build:
+#   make ... VCS_RANDOM_SEED=<seed> vcs
+VCS_RANDOM_SEED ?= $(PLAYBOOK_RANDOM_SEED)
 BUILD_CFLAGS ?= 
 # Cflags to give fw visibility to expected hw configuration
 # Current release version is 2.1 - smoke test uses this value to check HW_REV_ID register
@@ -143,6 +149,20 @@ endif
 
 ifdef coverage
 COVERAGE_ARGS = -cm line+cond+fsm+tgl+branch+assert -cm_hier $(CALIPTRA_ROOT)/src/integration/coverage/config/caliptra_top_tb_cm_hier.cfg
+endif
+
+# Opt-in VCS FSDB waveform dump. Off by default (no impact on normal builds/runs).
+# Usage: make ... WAVES=1 vcs
+#   Produces <BUILD_DIR>/waves.fsdb, viewable in Verdi, e.g.:
+#     verdi -ssf waves.fsdb
+# vcs-build already compiles with -kdb (KDB debug database, required for FSDB dumping);
+# the actual dump is driven at simv runtime via a UCLI script so no testbench source
+# changes (e.g. $fsdbDumpvars) are required.
+WAVES ?= 0
+ifeq ($(WAVES),1)
+VCS_WAVES_DUMPFILE = waves.fsdb
+VCS_WAVES_UCLI_SCRIPT = $(BUILD_DIR)/dump_waves.tcl
+VCS_WAVES_ARGS = -ucli -i $(VCS_WAVES_UCLI_SCRIPT)
 endif
 
 # RK
@@ -275,6 +295,21 @@ VCS_COMP_OPTS += -noinherit_timescale=1ns/1ps
 VCS_COMP_OPTS += +define+SIMULATION
 VCS_COMP_OPTS += $(TB_DEFS)
 
+############# VCS Elab options #############
+# These mirror the elab-step suppressions in
+# src/integration/config/compile.yml so the local Makefile flow behaves the
+# same as the pipeline flow.
+# Suppress "Bit Size Exceeded" coverage warning for large ram signals under
+# caliptra_top_tb_services that we intentionally don't collect coverage on.
+VCS_ELAB_OPTS += -suppress=VCM-BSZEX
+# Suppress erroneous "unmatched wildcard pattern" warning for nested struct
+# signals in generated reg files (the signal is still represented in the vdb).
+VCS_ELAB_OPTS += -suppress=VCM-HFUFR
+# Suppress "Interface not instantiated" warning: axi_if.sv is compiled into both
+# the RTL filelist and caliptra_top_tb_pkg; the TB binds the package copy, so the
+# RTL-library copy is unused and harmlessly ignored by VCS.
+VCS_ELAB_OPTS += -suppress=UII-L
+
 # Targets
 all: clean verilator
 
@@ -306,9 +341,12 @@ verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_VERILATOR_SRCS) $(TBD
 vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
 	vlogan -full64 -sverilog -kdb -incr_vlogan \
 	  $(VCS_COMP_OPTS) \
+	  -l vcs_compile.log \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf
 	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 $(COVERAGE_ARGS) \
-	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb +dpi -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)
+	  -l vcs_elab.log \
+	  $(VCS_ELAB_OPTS) \
+	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)
 
 ############ TEST Simulation ###############################
 
@@ -317,7 +355,17 @@ verilator: program.hex verilator-build
 
 vcs: program.hex vcs-build
 	cp -r $(TEST_GEN_FILES) $(BUILD_DIR)
-	./simv.caliptra_top_tb $(COVERAGE_ARGS)
+	mkdir -p $(BUILD_DIR)/ml-kem/tv
+	@echo "MY_RANDOM_SEED (firmware)  = $(PLAYBOOK_RANDOM_SEED)"
+	@echo "ntb_random_seed (VCS)      = $(VCS_RANDOM_SEED)"
+ifeq ($(WAVES),1)
+	@echo 'dump -file $(VCS_WAVES_DUMPFILE) -type FSDB'      >  $(VCS_WAVES_UCLI_SCRIPT)
+	@echo 'dump -add /caliptra_top_tb -depth 0'              >> $(VCS_WAVES_UCLI_SCRIPT)
+	@echo 'run'                                              >> $(VCS_WAVES_UCLI_SCRIPT)
+	@echo 'quit'                                             >> $(VCS_WAVES_UCLI_SCRIPT)
+	@echo "FSDB waveform dump enabled -> $(BUILD_DIR)/$(VCS_WAVES_DUMPFILE)"
+endif
+	./simv.caliptra_top_tb $(COVERAGE_ARGS) $(VCS_WAVES_ARGS) +ntb_random_seed=$(VCS_RANDOM_SEED) -l vcs_sim.log
 
 ############ TEST build ###############################
 

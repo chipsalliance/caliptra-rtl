@@ -44,6 +44,7 @@ module hmac_core
       input logic            init_cmd,
       input logic            next_cmd,
       input logic            last_cmd,
+      input logic            restore_cmd,
       input logic            mode_cmd,
       output logic           ready,
       output logic           tag_valid,
@@ -53,6 +54,7 @@ module hmac_core
 
       input  logic [KEY_SIZE-1   : 0] key,
       input  logic [BLOCK_SIZE-1 : 0] block_msg,
+      input  logic [TAG_SIZE-1   : 0] restore_digest,
       output logic [TAG_SIZE-1   : 0] tag
     );
 
@@ -100,6 +102,7 @@ module hmac_core
   // Latched on entry to MSG flow: 1 if the current message block is the
   // final one (so MSG must capture inner_digest and continue to OPAD).
   logic         is_last_block;
+  logic         is_restore_block;
 
   // Captured inner-hash digest at the final MSG -> OPAD transition; used
   // as data into the HMAC finalization block.
@@ -108,6 +111,7 @@ module hmac_core
 
   logic             sha_init;
   logic             sha_next;
+  logic             sha_restore;
   logic [BLOCK_SIZE-1 : 0] sha_block;
   logic             sha_ready;
   logic [TAG_SIZE-1 : 0] sha_digest;
@@ -140,11 +144,13 @@ module hmac_core
 
                      .init_cmd(sha_init),
                      .next_cmd(sha_next),
+                     .restore_cmd(sha_restore),
                      .mode(mode_reg),
 
                      .entropy(entropy),
 
                      .block_msg(sha_block),
+                     .restore_digest(restore_digest),
 
                      .ready(sha_ready),
                      .digest(sha_digest),
@@ -189,6 +195,7 @@ module hmac_core
           hmac_ctrl_ff     <= CTRL_IDLE;
           inner_digest_reg <= '0;
           is_last_block    <= 1'b0;
+          is_restore_block <= 1'b0;
         end
       else if (zeroize)
         begin
@@ -197,6 +204,7 @@ module hmac_core
           hmac_ctrl_ff     <= CTRL_IDLE;
           inner_digest_reg <= '0;
           is_last_block    <= 1'b0;
+          is_restore_block <= 1'b0;
         end
       else
         begin
@@ -211,12 +219,15 @@ module hmac_core
           if (inner_digest_we)
             inner_digest_reg <= sha_digest;
 
-          // Sample at IDLE: LAST is a modifier on INIT or NEXT, so any
-          // command kicked off at IDLE latches is_last_block from last_cmd.
-           // This handles all firmware patterns: INIT, INIT|LAST, NEXT and NEXT|LAST. 
+          // Sample at IDLE: LAST is a modifier on INIT, NEXT, or RESTORE, so any
+          // command kicked off at IDLE latches is_last_block from last_cmd and
+          // is_restore_block from restore_cmd. This handles INIT, INIT|LAST,
+          // NEXT, NEXT|LAST, RESTORE, RESTORE|NEXT, and RESTORE|LAST.
           if (hmac_ctrl_reg == CTRL_IDLE) begin
-            if (init_cmd | next_cmd)
-              is_last_block <= last_cmd;
+            if (init_cmd | next_cmd | restore_cmd) begin
+              is_last_block    <= last_cmd;
+              is_restore_block <= restore_cmd;
+            end
           end
         end
     end // reg_update
@@ -286,6 +297,7 @@ module hmac_core
       // Defaults
       sha_init  = 1'b0;
       sha_next  = 1'b0;
+      sha_restore = 1'b0;
 
       first_round = (hmac_ctrl_reg == hmac_ctrl_ff) ? 1'b0 : 1'b1;
       // IPAD/OPAD finish with sha_init only — digest is not yet meaningful,
@@ -314,6 +326,7 @@ module hmac_core
           if (first_round)
             begin
               sha_next  = 1'b1;
+              sha_restore = is_restore_block;
               MSG_ready = 1'b0;
             end
 
@@ -334,6 +347,7 @@ module hmac_core
         default: begin
           sha_init = 1'b0;
           sha_next = 1'b0;
+          sha_restore = 1'b0;
         end
       endcase
     end
@@ -365,7 +379,7 @@ module hmac_core
                 hmac_ctrl_new    = CTRL_ENTROPY;
                 hmac_ctrl_we     = 1'b1;
               end
-            else if (next_cmd)
+            else if (next_cmd | restore_cmd)
               begin
                 digest_valid_new = 1'b0;
                 digest_valid_we  = 1'b1;

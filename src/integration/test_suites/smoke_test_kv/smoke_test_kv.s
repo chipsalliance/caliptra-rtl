@@ -135,6 +135,11 @@ _start:
         and x5, x5, x1
         bne x5, x1, dest_done_loop
 
+    // Zeroize before starting the next HMAC op (mandatory-zeroize gate).
+    li x3, CLP_HMAC_REG_HMAC512_CTRL
+    li x4, HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK
+    sw x4, 0(x3)
+
     //ecc stuff would be here
 
     //-------

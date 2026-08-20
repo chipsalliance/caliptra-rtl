@@ -54,8 +54,7 @@ contents:
         - ../test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml
         - ../test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize.yml
         - ../test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
-        - ../test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
-        - ../test_suites/smoke_test_doe_scan/smoke_test_doe_scan.yml
+        - ../test_suites/smoke_test_doe/smoke_test_doe.yml
         - ../test_suites/smoke_test_zeroize_crypto/smoke_test_zeroize_crypto.yml
         - ../test_suites/smoke_test_doe_cg/smoke_test_doe_cg.yml
         - ../test_suites/smoke_test_kv_rules_ocp_lock/smoke_test_kv_rules_ocp_lock.yml

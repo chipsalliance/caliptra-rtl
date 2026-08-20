@@ -163,7 +163,7 @@ caliptra_tlul_adapter_vh_inst
   // Valid-Hold device interface (VH to TLUL).
   .dv_i(ahb_dv),
   .hld_o(ahb_hold),
-  .addr_i({ {caliptra_tlul_pkg::TL_AW-AHB_ADDR_WIDTH{1'b0}}, ahb_addr }),
+  .addr_i(caliptra_tlul_pkg::TL_AW'(ahb_addr)),
   .write_i(ahb_write),
   .wdata_i(ahb_wdata),
   .wstrb_i(ahb_wstrb),

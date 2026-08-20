@@ -45,10 +45,14 @@ import aaxi_pkg::*;
 import aaxi_pkg_xactor::*;
 import aaxi_pkg_test::*;
 import aaxi_pll::*;
+import soc_ifc_pkg::*;
 
 import uvm_pkg::*;
 `include "uvm_macros.svh"
 import aaxi_uvm_pkg::*;
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+import pv_defines_pkg::*;
+`endif
 `include "config_defines.svh"
 
   // pragma attribute hdl_top partition_module_xrtl                                            
@@ -200,6 +204,23 @@ import aaxi_uvm_pkg::*;
         .UW(CPTRA_AXI_DMA_USER_WIDTH    )
     ) m_axi_if (.clk(clk), .rst_n(soc_ifc_ctrl_agent_bus.cptra_rst_b));
 
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    // PCR-vault plumbing for the subsystem ICCM-content-hash flow.
+    pv_read_t                     dut_pv_read;    // DUT PCR read request  (output)
+    pv_write_t                    dut_pv_write;   // DUT PCR write request (output)
+    logic                         dut_iccm_unlock;// DUT iccm_unlock_o      (output)
+    pv_read_t    [PV_NUM_READ-1:0]  pv_read_arr;
+    pv_write_t   [PV_NUM_WRITE-1:0] pv_write_arr;
+    pv_rd_resp_t [PV_NUM_READ-1:0]  pv_rd_resp_arr;
+    pv_wr_resp_t [PV_NUM_WRITE-1:0] pv_wr_resp_arr;
+`endif
+
+    // Construct the HW fatal error struct from UVMF interface signals
+    cptra_hw_fatal_error_t cptra_hw_fatal_errors_i;
+    assign cptra_hw_fatal_errors_i.crypto_err = cptra_ctrl_agent_bus.crypto_error;
+    assign cptra_hw_fatal_errors_i.kv_error   = 1'b0;
+    assign cptra_hw_fatal_errors_i.fsm_error  = 1'b0;
+
     // DUT
     soc_ifc_top #(
         .AXI_ADDR_WIDTH (`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)),
@@ -340,6 +361,10 @@ import aaxi_uvm_pkg::*;
         .ss_ocp_lock_in_progress(    /*TODO*/),
         .ss_key_release_key_size(    /*TODO*/),
 
+        // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out
+        .dual_itrng_en          (1'b0/*TODO*/),
+        .dual_itrng_en_o        (    /*TODO*/),
+
         .stable_owner_key_en(       /*TODO*/),
 
         // NMI Vector 
@@ -353,11 +378,18 @@ import aaxi_uvm_pkg::*;
         // ICCM hash mode
         .iccm_hash_dv(1'b0),
         .iccm_hash_data(32'b0),
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        .pv_write(dut_pv_write),
+        .iccm_unlock_o(dut_iccm_unlock),
+        // ICCM PCR extend
+        .pv_read(dut_pv_read),
+        .pv_rd_resp(pv_rd_resp_arr[1]),
+`else
         .pv_write(),
         .iccm_unlock_o(),
-        // ICCM PCR extend
         .pv_read(),
         .pv_rd_resp('0),
+`endif
 
         //Other blocks reset
         .cptra_noncore_rst_b (cptra_status_agent_bus.cptra_noncore_rst_b),
@@ -367,13 +399,12 @@ import aaxi_uvm_pkg::*;
         .clk_gating_en        (                                           ), // TODO
         .rdc_clk_dis          (                                           ), // TODO
         .fw_update_rst_window (cptra_status_agent_bus.fw_update_rst_window),
-        .crypto_error         (cptra_ctrl_agent_bus.crypto_error          ),
+        .cptra_hw_fatal_errors(cptra_hw_fatal_errors_i                  ),
         .iccm_fmc_start_addr  (                                           ),
         .iccm_fmc_end_addr    (                                           ),
         .iccm_rt_start_addr   (                                           ),
         .iccm_rt_end_addr     (                                           ),
         .iccm_region_lock     (                                           ),
-        .kv_error             (1'b0                                       ),
 
         //caliptra uncore jtag ports
         .cptra_uncore_dmi_reg_en   (1'b0 ),
@@ -381,6 +412,75 @@ import aaxi_uvm_pkg::*;
         .cptra_uncore_dmi_reg_rdata(     ),
         .cptra_uncore_dmi_reg_addr (7'h0 ),
         .cptra_uncore_dmi_reg_wdata(32'h0)
+    );
+
+    soc_ifc_sha_status_if sha_status_if (
+        .clk     (clk                                           ),
+        .sha_lock(dut.i_sha512_acc_top.hwif_out.LOCK.LOCK.value )
+    );
+
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    // -----------------------------------------------------------------------
+    // PCR Vault (pcrvault) instance.
+    //
+    // In subsystem mode the SHA accelerator boots LOCKED (RDL LOCK=1) and the
+    // HW ICCM-content-hash flow (sha512_acc_iccm_hash) releases it only after it
+    // measures ICCM and extends PCR4/PCR5 to EXTEND_DONE. That PCR extend needs a
+    // PCR vault to answer reads and accept writes. This instance provides it so
+    // the explicitly requested reset flow can unlock the SHA accelerator.
+    //
+    // soc_ifc presents a single PCR read/write client; connect it to client index
+    // 1 (matching caliptra_top) and tie off the unused client and the SW AHB
+    // interface.
+    // -----------------------------------------------------------------------
+    always_comb begin
+        pv_read_arr        = '0;
+        pv_write_arr       = '0;
+        pv_read_arr[1]     = dut_pv_read;
+        pv_write_arr[1]    = dut_pv_write;
+    end
+
+    pv #(
+        .AHB_ADDR_WIDTH(PV_ADDR_W),
+        .AHB_DATA_WIDTH(32)
+    ) i_pv (
+        .clk                 (clk                                        ),
+        .rst_b               (cptra_status_agent_bus.cptra_noncore_rst_b ),
+        .core_only_rst_b     (cptra_status_agent_bus.cptra_uc_rst_b      ),
+        .cptra_pwrgood       (soc_ifc_ctrl_agent_bus.cptra_pwrgood       ),
+        .fw_update_rst_window(cptra_status_agent_bus.fw_update_rst_window),
+        // SW AHB interface tied off (no firmware PCR configuration in this bench)
+        .haddr_i             ('0    ),
+        .hwdata_i            ('0    ),
+        .hsel_i              (1'b0  ),
+        .hwrite_i            (1'b0  ),
+        .hready_i            (1'b1  ),
+        .htrans_i            (2'b0  ),
+        .hsize_i             (3'b0  ),
+        .hresp_o             (      ),
+        .hreadyout_o         (      ),
+        .hrdata_o            (      ),
+        .pv_read             (pv_read_arr    ),
+        .pv_write            (pv_write_arr   ),
+        .pv_rd_resp          (pv_rd_resp_arr ),
+        .pv_wr_resp          (pv_wr_resp_arr ),
+        .iccm_unlock         (dut_iccm_unlock)
+    );
+`endif
+
+    // AXI subordinate memory on the DMA AXI manager port. Geometry is owned by
+    // soc_ifc_parameters_pkg; axi_sub aliases the DMA's wide address into the AW
+    // window.
+    caliptra_axi_sram #(
+        .AW(DMA_AXI_SRAM_ADDR_WIDTH   ),
+        .DW(CPTRA_AXI_DMA_DATA_WIDTH  ),
+        .IW(CPTRA_AXI_DMA_ID_WIDTH    ),
+        .UW(CPTRA_AXI_DMA_USER_WIDTH  )
+    ) i_dma_axi_sram (
+        .clk       (clk                              ),
+        .rst_n     (soc_ifc_ctrl_agent_bus.cptra_rst_b),
+        .s_axi_w_if(m_axi_if.w_sub                   ),
+        .s_axi_r_if(m_axi_if.r_sub                   )
     );
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HBURST    = 3'b0;
     assign uvm_test_top_environment_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HPROT     = 7'b0;
@@ -454,51 +554,6 @@ import aaxi_uvm_pkg::*;
         ports[0].BVALID = s_axi_if.bvalid;
         s_axi_if.bready = ports[0].BREADY;
     end
-    // TODO
-    always_comb begin
-        // AXI AR
-//        ports[0].ARADDR  = m_axi_if.araddr;
-//        ports[0].ARBURST = m_axi_if.arburst;
-//        ports[0].ARSIZE  = m_axi_if.arsize;
-//        ports[0].ARLEN   = m_axi_if.arlen;
-//        ports[0].ARUSER  = m_axi_if.aruser;
-//        ports[0].ARID    = m_axi_if.arid;
-//        ports[0].ARLOCK  = m_axi_if.arlock;
-//        ports[0].ARVALID = m_axi_if.arvalid;
-        m_axi_if.arready = '0;//ports[0].ARREADY;
-
-        // AXI R
-        m_axi_if.rdata  = '0; //ports[0].RDATA;
-        m_axi_if.rresp  = '0; //ports[0].RRESP;
-        m_axi_if.rid    = '0; //ports[0].RID;
-        m_axi_if.rlast  = '0; //ports[0].RLAST;
-        m_axi_if.rvalid = '0; //ports[0].RVALID;
-//        ports[0].RREADY = s_axi_if.rready;
-
-        // AXI AW
-//        ports[0].AWADDR  = m_axi_if.awaddr;
-//        ports[0].AWBURST = m_axi_if.awburst;
-//        ports[0].AWSIZE  = m_axi_if.awsize;
-//        ports[0].AWLEN   = m_axi_if.awlen;
-//        ports[0].AWUSER  = m_axi_if.awuser;
-//        ports[0].AWID    = m_axi_if.awid;
-//        ports[0].AWLOCK  = m_axi_if.awlock;
-//        ports[0].AWVALID = m_axi_if.awvalid;
-        m_axi_if.awready = '0; //ports[0].AWREADY;
-
-        // AXI W
-//        ports[0].WDATA  = m_axi_if.wdata;
-//        ports[0].WSTRB  = m_axi_if.wstrb;
-//        ports[0].WVALID = m_axi_if.wvalid;
-//        ports[0].WLAST  = m_axi_if.wlast;
-        m_axi_if.wready = '0; //ports[0].WREADY;
-
-        // AXI B
-        m_axi_if.bresp  = '0; //ports[0].BRESP;
-        m_axi_if.bid    = '0; //ports[0].BID;
-        m_axi_if.bvalid = '0; //ports[0].BVALID;
-//        ports[0].BREADY = m_axi_if.bready;
-    end
 
 
   soc_ifc_cov_bind i_soc_ifc_cov_bind();  
@@ -524,10 +579,12 @@ import aaxi_uvm_pkg::*;
     uvm_config_db #( virtual cptra_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , cptra_status_agent_BFM , cptra_status_agent_drv_bfm  );
     uvm_config_db #( virtual ss_mode_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , ss_mode_status_agent_BFM , ss_mode_status_agent_drv_bfm  );
     uvm_config_db #( virtual mbox_sram_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , mbox_sram_agent_BFM , mbox_sram_agent_drv_bfm  );
+    uvm_config_db #( virtual soc_ifc_sha_status_if )::set(
+        null, UVMF_VIRTUAL_INTERFACES,
+        soc_ifc_env_pkg::SOC_IFC_SHA_STATUS_VIF, sha_status_if);
   end
 
 endmodule
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

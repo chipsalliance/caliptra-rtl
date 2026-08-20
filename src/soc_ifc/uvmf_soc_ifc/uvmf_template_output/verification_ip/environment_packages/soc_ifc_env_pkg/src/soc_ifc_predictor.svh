@@ -232,7 +232,7 @@ class soc_ifc_predictor #(
   bit                                 cptra_obf_uds_seed_vld = 1'b0;
   bit [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed = '{default:32'h0};
 
-  security_state_t security_state = '{debug_locked: 1'b1, device_lifecycle: DEVICE_UNPROVISIONED}; // FIXME unused
+  security_state_t security_state = '{debug_locked: MuBi4True, device_lifecycle: DEVICE_UNPROVISIONED}; // FIXME unused
   bit bootfsm_breakpoint = 1'b0;
   bit cptra_in_dbg_or_manuf_mode = 1'b0;
   int unsigned fw_update_wait_count = 0;
@@ -304,7 +304,11 @@ class soc_ifc_predictor #(
   extern task          wdt_counter_task();
   extern function bit  valid_requester(input uvm_transaction txn);
   extern function bit  valid_receiver(input uvm_transaction txn);
+  extern function bit  sha_route_valid_user(input aaxi_master_tr txn);
   extern function bit  sha_valid_user(input uvm_transaction txn);
+  extern function bit  is_sha_interrupt_reg(uvm_reg r);
+  extern function bit  is_axi_dma_reg(uvm_reg r);
+  extern function uvm_reg_data_t dma_reg_masked_expected_rdata(uvm_reg r, uvm_reg_data_t observed);
   extern function void predict_boot_wait_boot_done();
   extern task          handle_reset(input string kind = "HARD", output uvm_event reset_synchro);
   extern function void predict_reset(input string kind = "HARD");
@@ -482,7 +486,7 @@ class soc_ifc_predictor #(
         if (soc_ifc_rst_in_asserted) begin
             // Todo check for breakpoint assertion and flag an expected AHB write to clear it
             soc_ifc_rst_in_asserted = 1'b0;
-            cptra_in_dbg_or_manuf_mode = ~t.security_state.debug_locked || t.security_state.device_lifecycle == DEVICE_MANUFACTURING;
+            cptra_in_dbg_or_manuf_mode = mubi4_test_false_strict(t.security_state.debug_locked) || t.security_state.device_lifecycle == DEVICE_MANUFACTURING;
             bootfsm_breakpoint = t.set_bootfsm_breakpoint && cptra_in_dbg_or_manuf_mode;
             reset_predicted.reset();
             send_soc_ifc_sts_txn = 0; // prediction for ready_for_fuses done in predict_reset after noncore reset deassertion
@@ -900,6 +904,9 @@ class soc_ifc_predictor #(
     uvm_reg axs_reg;
     uvm_mem axs_mem;
     uvm_reg_data_t previous_mirror;
+    uvm_reg_data_t dma_lane_mask;
+    uvm_reg_data_t dma_exp_masked;
+    int unsigned   dma_lane_shift;
     bit do_reg_prediction = 1;
     bit [SOC_IFC_DATA_W-1:0] data_active;
     bit [ahb_lite_slave_0_params::AHB_WDATA_WIDTH-1:0] address_aligned;
@@ -976,6 +983,31 @@ class soc_ifc_predictor #(
         do_reg_prediction = 1'b0;
     end
     else if (axs_reg != null) begin
+        // Identify the DMA registers by block ancestry (is_axi_dma_reg), NOT by
+        // name, so a DMA register whose short name happens to match an mbox/sha
+        // case label below can never be mishandled. Passive integrity check: on a
+        // successful AHB read, drive the scoreboard's expected read data from the
+        // register model for NON-VOLATILE fields only (volatile/reserved bits keep
+        // the observed value so they never false-fail). This catches any illegal
+        // write (e.g. from SoC-AXI) that changed a DMA config register.
+        if (is_axi_dma_reg(axs_reg)) begin
+            if (ahb_txn.RnW == AHB_READ && ahb_txn.resp[0] == AHB_OKAY) begin
+                // Substitute ONLY the active 32-bit lane's non-volatile field bits
+                // with the model value; keep the observed data everywhere else (the
+                // inactive lane of the 64-bit AHB word and volatile/reserved bits)
+                // so only the checked bits can ever drive a scoreboard mismatch.
+                dma_lane_shift = 8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8));
+                dma_lane_mask  = uvm_reg_data_t'({SOC_IFC_DATA_W{1'b1}}) << dma_lane_shift;
+                dma_exp_masked = dma_reg_masked_expected_rdata(axs_reg, data_active);
+                soc_ifc_sb_ahb_ap_output_transaction.data[0] =
+                    (ahb_txn.data[0] & ~dma_lane_mask) |
+                    ((dma_exp_masked << dma_lane_shift) & dma_lane_mask);
+                // DEBUG: confirm the predictor read-check fired and what expected value it injected.
+                `uvm_info("DMA_RDCHK", $sformatf("PREDICTOR fired DMA read-check on %s @0x%0x: observed=0x%08x expected(masked)=0x%08x",
+                          axs_reg.get_name(), ahb_txn.address, data_active, dma_exp_masked), UVM_HIGH)
+            end
+        end
+        else
         case (axs_reg.get_name()) inside
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
             // setting a new bit, so we need the previous value to catch the edges
@@ -1640,6 +1672,10 @@ class soc_ifc_predictor #(
                 ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
                 "CPTRA_iTRNG_ENTROPY_CONFIG_0",
                 "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+                "CPTRA_iTRNG_ENTROPY_CONFIG_2",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
                 ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                     `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
@@ -2182,6 +2218,32 @@ class soc_ifc_predictor #(
         soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
         soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
     end
+    else if (is_axi_dma_reg(axs_reg)) begin
+        // The AXI (SoC) interface has no access to the DMA registers; the DMA
+        // assist is accessible only by Caliptra's microcontroller (over AHB).
+        // Any AXI access to the DMA block is rejected (SLVERR) with no effect on
+        // the register state. A rejected read returns 0; for a rejected write the
+        // expected payload is left as observed (the master still drives WDATA) so
+        // the scoreboard flags on the response rather than the write data.
+        do_reg_prediction = 1'b0;
+        if (!axi_txn.is_write()) begin
+            soc_ifc_sb_axi_ap_output_transaction.data  = {0,0,0,0};
+            soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+        end
+        soc_ifc_sb_axi_ap_output_transaction.resp  = AAXI_RESP_SLVERR;
+    end
+    else if (is_sha_interrupt_reg(axs_reg) &&
+             !sha_route_valid_user(axi_txn)) begin
+        // Interrupt CSRs retain their soc_req-based RDL behavior once a request
+        // reaches SHA, but the subsystem-mode route and strap AxUSER gate still
+        // apply before that point.
+        do_reg_prediction = 1'b0;
+        if (!axi_txn.is_write()) begin
+            soc_ifc_sb_axi_ap_output_transaction.data  = {0,0,0,0};
+            soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+        end
+        soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+    end
     else begin
         case (axs_reg.get_name()) inside
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
@@ -2335,10 +2397,32 @@ class soc_ifc_predictor #(
                     end
                 end
             end
-            // SHA Accelerator Functions are screened based on AXI_USER
-            "LOCK",
+            // SHA datapath registers are screened based on integration mode,
+            // route-authorized AxUSER, and SHA lock ownership. CONTROL and the
+            // interrupt register block retain their distinct RDL policies.
+            "LOCK": begin
+                if (axi_txn.is_write() && (axs_reg.get_name() == "LOCK")) begin
+                    // Only the current subsystem-mode SHA owner may clear the lock.
+                    do_reg_prediction = sha_valid_user(axi_txn);
+                    soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
+                end
+                else if (axi_txn.is_read() && (!configuration.subsystem_mode || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value()))) begin
+                    do_reg_prediction = 1'b0;
+                    // "Expected" read data is 0
+                    soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                    soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                    // "Expected" resp is SLVERR
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                end
+            end
             "USER": begin
-                if (axi_txn.is_read() && (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                if (axi_txn.is_write()) begin
+                    // USER is read-only. An authorized route acknowledges the write
+                    // without changing state; all other routes are rejected.
+                    do_reg_prediction = 1'b0;
+                    soc_ifc_sb_axi_ap_output_transaction.resp = sha_route_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
+                end
+                else if (!sha_route_valid_user(axi_txn)) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
@@ -2353,7 +2437,7 @@ class soc_ifc_predictor #(
                     // "Expected" resp is SLVERR for blocked writes
                     soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
-                else if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                else if ((!configuration.subsystem_mode) || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
@@ -2374,7 +2458,7 @@ class soc_ifc_predictor #(
                     // "Expected" resp is SLVERR for blocked writes
                     soc_ifc_sb_axi_ap_output_transaction.resp = sha_valid_user(axi_txn) ? AAXI_RESP_OKAY : AAXI_RESP_SLVERR;
                 end
-                else if ((axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
+                else if ((!configuration.subsystem_mode) || (axi_txn.aruser != p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value())) begin
                     do_reg_prediction = 1'b0;
                     // "Expected" read data is 0
                     soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
@@ -2384,6 +2468,19 @@ class soc_ifc_predictor #(
                 end
             end
             "CONTROL": begin
+                // Intentionally not lock-owner screened. CONTROL is SoC-RW in
+                // sha512_acc_external_csr.rdl; route authorization is enforced
+                // before the request reaches the SHA block. SHA interrupt
+                // registers similarly fall through to their soc_req-based
+                // policy from sha512_acc_csr.rdl.
+                if (!sha_route_valid_user(axi_txn)) begin
+                    do_reg_prediction = 1'b0;
+                    if (!axi_txn.is_write()) begin
+                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
+                    end
+                    soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
+                end
             end
             default: begin
                 `uvm_info("PRED_AXI", {"Enable reg prediction on access to ", axs_reg.get_name()}, UVM_FULL)
@@ -2411,6 +2508,9 @@ class soc_ifc_predictor #(
     end
     else if (axs_reg == null) begin
         `uvm_error("PRED_AXI", $sformatf("AXI transaction to address: 0x%x decodes to null from soc_ifc_AXI_map", axi_txn.addr))
+    end
+    else if (is_axi_dma_reg(axs_reg)) begin
+        `uvm_info("PRED_AXI", {"AXI access to DMA register ", axs_reg.get_full_name(), " is rejected (Caliptra-uC-only); no system effect"}, UVM_MEDIUM)
     end
     else begin
         `uvm_info("PRED_AXI", {"Detected access to register: ", axs_reg.get_full_name()}, UVM_MEDIUM)
@@ -2825,6 +2925,10 @@ class soc_ifc_predictor #(
             ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
             "CPTRA_iTRNG_ENTROPY_CONFIG_0",
             "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+            "CPTRA_iTRNG_ENTROPY_CONFIG_2",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
             ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                 `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
             end
@@ -3903,6 +4007,12 @@ function bit soc_ifc_predictor::valid_receiver(input uvm_transaction txn);
     end
 endfunction
 
+function bit soc_ifc_predictor::sha_route_valid_user(input aaxi_master_tr txn);
+    return configuration.subsystem_mode &&
+           ((txn.is_write() ? txn.awuser : txn.aruser) ==
+            p_soc_ifc_rm.soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.get_mirrored_value());
+endfunction
+
 function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
     soc_ifc_sb_ahb_ap_output_transaction_t ahb_txn;
     aaxi_master_tr                         axi_txn;
@@ -3921,7 +4031,10 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
         return sha_valid_user;
     end
     else if ($cast(axi_txn,txn)) begin
-        sha_valid_user = p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
+        // AXI datapath access requires subsystem mode, a lock owned by the SoC,
+        // and requester AxUSER matching the owner captured in SHA USER.
+        sha_valid_user = sha_route_valid_user(axi_txn) &&
+                         p_soc_ifc_rm.sha512_acc_csr_rm.LOCK.LOCK.get_mirrored_value() &&
                          p_soc_ifc_rm.sha512_acc_csr_rm.STATUS.SOC_HAS_LOCK.get_mirrored_value() &&
                          p_soc_ifc_rm.sha512_acc_csr_rm.USER.get_mirrored_value() == (axi_txn.is_write() ? axi_txn.awuser : axi_txn.aruser);
         if (!sha_valid_user) begin
@@ -3942,6 +4055,53 @@ function bit soc_ifc_predictor::sha_valid_user(input uvm_transaction txn);
         sha_valid_user = 0;
         return sha_valid_user;
     end
+endfunction
+
+function bit soc_ifc_predictor::is_sha_interrupt_reg(uvm_reg r);
+    uvm_reg_block blk;
+    if (r == null) return 1'b0;
+    blk = r.get_parent();
+    while (blk != null) begin
+        if (blk.get_name() == "intr_block_rf_ext")
+            return (blk.get_parent() != null) &&
+                   (blk.get_parent().get_name() == "sha512_acc_csr_rm");
+        blk = blk.get_parent();
+    end
+    return 1'b0;
+endfunction
+
+// Returns 1 if register `r` belongs anywhere within the AXI DMA register block
+// (axi_dma_reg_rm), including its interrupt register sub-block (intr_block_rf_ext).
+// Used to reject all SoC-AXI accesses to the DMA block, which is Caliptra-uC-only.
+function bit soc_ifc_predictor::is_axi_dma_reg(uvm_reg r);
+    uvm_reg_block blk;
+    if (r == null) return 1'b0;
+    blk = r.get_parent();
+    while (blk != null) begin
+        if (blk.get_name() == "axi_dma_reg_rm") return 1'b1;
+        blk = blk.get_parent();
+    end
+    return 1'b0;
+endfunction
+
+// Build the scoreboard's expected read data for a register: start from the
+// observed (DUT) value and overwrite only the NON-VOLATILE field bits with the
+// register model's mirrored value. Volatile fields and reserved/unmapped bits
+// keep the observed value, so they are never compared (no false mismatches).
+function uvm_reg_data_t soc_ifc_predictor::dma_reg_masked_expected_rdata(uvm_reg r, uvm_reg_data_t observed);
+    uvm_reg_field flds[$];
+    uvm_reg_data_t exp;
+    uvm_reg_data_t fmask;
+    exp = observed;
+    if (r == null) return exp;
+    r.get_fields(flds);
+    foreach (flds[i]) begin
+        if (!flds[i].is_volatile()) begin
+            fmask = ((uvm_reg_data_t'(1) << flds[i].get_n_bits()) - 1) << flds[i].get_lsb_pos();
+            exp = (exp & ~fmask) | ((flds[i].get_mirrored_value() << flds[i].get_lsb_pos()) & fmask);
+        end
+    end
+    return exp;
 endfunction
 
 function void soc_ifc_predictor::predict_boot_wait_boot_done();

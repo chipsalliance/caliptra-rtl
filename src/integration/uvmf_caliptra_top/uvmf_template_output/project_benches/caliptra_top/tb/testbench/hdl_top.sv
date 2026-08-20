@@ -137,7 +137,7 @@ import aaxi_uvm_pkg::*;
     logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr;
     logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] imem_rdata;
 
-    logic        etrng_req;
+    logic        etrng0_req;
     logic  [3:0] itrng_data;
     logic        itrng_valid;
 
@@ -338,15 +338,23 @@ import aaxi_uvm_pkg::*;
         .cptra_error_non_fatal(soc_ifc_subenv_soc_ifc_status_agent_bus.cptra_error_non_fatal),
         // External TRNG
 `ifdef CALIPTRA_INTERNAL_TRNG
-        .etrng_req             (etrng_req),
+        .etrng0_req            (etrng0_req),
+        .etrng1_req            (), // ES1 unused in this UVM bench (dual-iTRNG combine disabled)
         // Internal TRNG
-        .itrng_data            (itrng_data ),
-        .itrng_valid           (itrng_valid),
+        .itrng0_data           (itrng_data ),
+        .itrng0_valid          (itrng_valid),
+        .itrng1_data           (4'h0),
+        .itrng1_valid          (1'b0),
+        .itrng1_en             (1'b0),
 `else
-        .etrng_req             (soc_ifc_subenv_soc_ifc_status_agent_bus.trng_req),
+        .etrng0_req            (soc_ifc_subenv_soc_ifc_status_agent_bus.trng_req),
+        .etrng1_req            (),
         // Internal TRNG
-        .itrng_data            (4'h0),
-        .itrng_valid           (1'b0),
+        .itrng0_data           (4'h0),
+        .itrng0_valid          (1'b0),
+        .itrng1_data           (4'h0),
+        .itrng1_valid          (1'b0),
+        .itrng1_en             (1'b0),
 `endif
 
         // Subsystem mode straps
@@ -554,7 +562,7 @@ import aaxi_uvm_pkg::*;
     //=========================================================================-
     physical_rng physical_rng_i (
         .clk    (clk),
-        .enable (etrng_req),
+        .enable (etrng0_req),
         .data   (itrng_data),
         .valid  (itrng_valid)
     );
