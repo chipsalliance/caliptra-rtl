@@ -125,7 +125,7 @@ The following table shows the memory map address ranges for each of the IP block
 | ABR (MLDSA/MLKEM)                   | 14        | 64 KiB       | 0x1003_0000   | 0x1003_FFFF |
 | AES                                 | 15        | 4 KiB        | 0x1001_1000   | 0x1001_1FFF |
 | SHA3                                | 16        | 4 KiB        | 0x1004_0000   | 0x1004_0FFF |
-| HMAC256                             | 17        | 4 KiB        | 0x1004_2000   | 0x1004_2FFF |
+| HMAC256                             | 19        | 4 KiB        | 0x1004_2000   | 0x1004_2FFF |
 
 #### Peripherals subsystem
 
