@@ -391,7 +391,7 @@ void main(void) {
         // ===========================================================================
         VPRINTF(LOW, "Reading FIFO payload to Mailbox with block_size feature\n");
         // Offset chosen to test the FIXED burst size feature and DMA support for a smaller final burst
-        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x3F5C, 256)) {
+        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x3F5C, 64)) {
             fail = 1;
         }
 
@@ -413,7 +413,7 @@ void main(void) {
         SEND_STDOUT_CTRL(RCVY_EMU_TOGGLE);
         SEND_STDOUT_CTRL(FIFO_AUTO_WRITE_ON);
 
-        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x3F5C, 256)) {
+        if (soc_ifc_axi_dma_read_mbox_payload_no_wait(AXI_FIFO_BASE_ADDR, 0x0, 1, 0x3F5C, 64)) {
             fail = 1;
         }
 
