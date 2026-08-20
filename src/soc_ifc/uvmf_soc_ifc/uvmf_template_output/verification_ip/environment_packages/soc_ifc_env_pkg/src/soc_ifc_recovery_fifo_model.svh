@@ -14,8 +14,9 @@
 
 // Owns storage and accounting for the testbench implementation of the streaming
 // recovery data buffer. AXI readers see a finite Avery FIFO at one address,
-// while the DUT also sees recovery_data_avail. Tests load a complete image
-// through the recovery command sequencer. This model bridges those views with:
+// while the DUT also sees recovery_data_avail and recovery_image_activated.
+// Tests load a complete image through the recovery command sequencer. This
+// model bridges those views with:
 //   * backing_image_q for image words not yet exposed to AXI, and
 //   * Avery's fifo_data_Q for the currently exposed front chunk.
 //
@@ -80,10 +81,14 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     return -1;
   endfunction
 
-  // Drive the streaming-boot sideband observed by the DUT. Centralizing the
-  // assignment keeps sideband state synchronized with model occupancy.
-  protected function void set_data_avail(bit value);
-    configuration.vif.recovery_data_avail = value;
+  // Drive the streaming-boot sidebands observed by the DUT. Image activation
+  // becomes sticky when the final staged chunk is advertised as available and
+  // remains high until clear() starts a new flow or aborts the current flow.
+  protected function void set_recovery_status(
+      bit data_avail,
+      bit image_activated);
+    configuration.vif.recovery_data_avail = data_avail;
+    configuration.vif.recovery_image_activated = image_activated;
   endfunction
 
   // Remove all backing and staged state. Incrementing generation allows the
@@ -102,7 +107,7 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     last_staged_beat_committed = 1'b0;
     underflow_reported = 1'b0;
     if (configuration != null && configuration.vif != null)
-      set_data_avail(1'b0);
+      set_recovery_status(1'b0, 1'b0);
     if (bfm != null) begin
       fifo_idx = find_fifo();
       bfm.fifo_address_Q[fifo_idx].fifo_data_Q.delete();
@@ -225,7 +230,7 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     end
     front_fifo_dwords_available = stage_dwords;
     last_staged_beat_committed = 1'b0;
-    set_data_avail(1'b1);
+    set_recovery_status(1'b1, final_chunk_staged);
     return stage_dwords;
   endfunction
 
@@ -237,7 +242,7 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
     if (front_fifo_dwords_available == 0)
       return;
     if (front_fifo_dwords_available == 1) begin
-      set_data_avail(1'b0);
+      configuration.vif.recovery_data_avail = 1'b0;
       last_staged_beat_committed = 1'b1;
     end
   endfunction
@@ -261,7 +266,7 @@ class soc_ifc_recovery_fifo_model extends uvm_object;
       if (!last_staged_beat_committed)
         `uvm_error("RECOVERY_FIFO",
           "recovery_data_avail was not deasserted before FIFO empty")
-      set_data_avail(1'b0);
+      configuration.vif.recovery_data_avail = 1'b0;
       return 1'b1;
     end
     return 1'b0;

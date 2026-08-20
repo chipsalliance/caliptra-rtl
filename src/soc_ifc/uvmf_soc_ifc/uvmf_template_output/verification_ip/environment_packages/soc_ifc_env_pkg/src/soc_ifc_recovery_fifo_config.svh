@@ -13,11 +13,11 @@
 // limitations under the License.
 
 // Describes the streaming recovery endpoint connected through the Avery AXI
-// fabric. The interface handle drives recovery_data_avail, the
-// FIFO address identifies the single FIXED-burst data port, and depth_dwords
-// sizes only the finite data currently visible to AXI. Complete test images may
-// be larger because soc_ifc_recovery_fifo_model retains unstaged words in a
-// separate backing queue.
+// fabric. The interface handle drives recovery_data_avail and
+// recovery_image_activated, the FIFO address identifies the single FIXED-burst
+// data port, and depth_dwords sizes only the finite data currently visible to
+// AXI. Complete test images may be larger because soc_ifc_recovery_fifo_model
+// retains unstaged words in a separate backing queue.
 //
 // R delay models subordinate response pressure after an AXI request. Refill
 // delay models the independent producer-side gap between draining one staged

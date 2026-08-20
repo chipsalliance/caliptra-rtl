@@ -274,7 +274,7 @@ import pv_defines_pkg::*;
         .mailbox_flow_done       (soc_ifc_status_agent_bus.mailbox_flow_done       ),
 
         .recovery_data_avail     (recovery_if.recovery_data_avail                  ),
-        .recovery_image_activated(soc_ifc_ctrl_agent_bus.recovery_image_activated  ),
+        .recovery_image_activated(recovery_if.recovery_image_activated              ),
 
         .security_state    (soc_ifc_ctrl_agent_bus.security_state),
 

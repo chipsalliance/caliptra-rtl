@@ -48,6 +48,7 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
       bit image_complete,
       bit final_chunk_staged,
       bit recovery_data_avail,
+      bit recovery_image_activated,
       bit read_beat,
       bit refill_event,
       bit underflow,
@@ -56,6 +57,7 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
     image_complete_cp: coverpoint image_complete;
     final_chunk_cp: coverpoint final_chunk_staged;
     data_avail_cp: coverpoint recovery_data_avail;
+    image_activated_cp: coverpoint recovery_image_activated;
     read_beat_cp: coverpoint read_beat;
     refill_event_cp: coverpoint refill_event;
     underflow_cp: coverpoint underflow;
@@ -230,6 +232,10 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
             model.front_fifo_empty())
           `uvm_error("RECOVERY_FIFO",
             "recovery_data_avail asserted while front FIFO is empty")
+        if (configuration.vif.recovery_image_activated !==
+            model.final_chunk_staged)
+          `uvm_error("RECOVERY_FIFO",
+            "recovery_image_activated did not match final chunk state")
         if (model.front_fifo_dwords_available >
             configuration.depth_dwords)
           `uvm_error("RECOVERY_FIFO",
@@ -240,6 +246,7 @@ class soc_ifc_recovery_fifo_agent extends uvm_agent;
         model.image_complete(),
         model.final_chunk_staged,
         configuration.vif.recovery_data_avail,
+        configuration.vif.recovery_image_activated,
         read_beat,
         refill_event,
         model.underflow_reported,

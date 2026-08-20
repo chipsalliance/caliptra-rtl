@@ -339,8 +339,8 @@ import aaxi_uvm_pkg::*;
         .mailbox_data_avail(soc_ifc_subenv_soc_ifc_status_agent_bus.mailbox_data_avail),
         .mailbox_flow_done (soc_ifc_subenv_soc_ifc_status_agent_bus.mailbox_flow_done ),
 
-        .recovery_data_avail     (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.recovery_data_avail       ),
-        .recovery_image_activated(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.recovery_image_activated  ),
+        .recovery_data_avail     (recovery_if.recovery_data_avail                                 ),
+        .recovery_image_activated(recovery_if.recovery_image_activated                             ),
 
         .BootFSM_BrkPoint  (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.BootFSM_BrkPoint),
 

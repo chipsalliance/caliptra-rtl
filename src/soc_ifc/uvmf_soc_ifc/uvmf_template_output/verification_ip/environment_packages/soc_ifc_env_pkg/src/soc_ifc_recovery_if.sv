@@ -12,13 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-// Carries the recovery availability sideband driven by the endpoint component.
-// Clock and reset are shared with the AXI-facing FIFO so availability changes
-// can be checked against read-data handshakes without hierarchy references.
+// Carries recovery sidebands driven by the endpoint component. Clock and reset
+// are shared with the AXI-facing FIFO so status changes can be checked against
+// read-data handshakes without hierarchy references.
 interface soc_ifc_recovery_if (
   input logic clk,
   input logic rst_n
 );
   logic recovery_data_avail;
+  logic recovery_image_activated;
 
 endinterface
