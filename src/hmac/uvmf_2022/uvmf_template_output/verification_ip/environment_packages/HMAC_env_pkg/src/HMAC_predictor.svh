@@ -1,6 +1,20 @@
 //----------------------------------------------------------------------
 // Created with uvmf_gen version 2022.3
 //----------------------------------------------------------------------
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
 // pragma uvmf custom header begin
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
@@ -13,12 +27,12 @@
 //   This analysis component has the following analysis_exports that receive the 
 //   listed transaction type.
 //   
-//   HMAC_in_agent_ae receives transactions of type  HMAC_in_transaction #()
+//   hmac_rst_agent_ae receives transactions of type  HMAC_rst_transaction
 //
 //   This analysis component has the following analysis_ports that can broadcast 
 //   the listed transaction type.
 //
-//  HMAC_sb_ap broadcasts transactions of type HMAC_out_transaction #()
+//  hmac_sb_ahb_ap broadcasts transactions of type ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH)
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
@@ -42,43 +56,40 @@ class HMAC_predictor #(
 
   
   // Instantiate the analysis exports
-  uvm_analysis_imp_HMAC_in_agent_ae #(HMAC_in_transaction #(), HMAC_predictor #(
+  uvm_analysis_imp_hmac_rst_agent_ae #(HMAC_rst_transaction, HMAC_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )
-) HMAC_in_agent_ae;
+) hmac_rst_agent_ae;
 
   
   // Instantiate the analysis ports
-  uvm_analysis_port #(HMAC_out_transaction #()) HMAC_sb_ap;
+  uvm_analysis_port #(mvc_sequence_item_base) hmac_sb_ahb_ap;
 
+ 
+  // Instantiate QVIP analysis exports
+  uvm_analysis_imp_ahb_slave_0_ae #(mvc_sequence_item_base, HMAC_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )
+) ahb_slave_0_ae;
 
-  // Transaction variable for predicted values to be sent out HMAC_sb_ap
+  // Transaction variable for predicted values to be sent out hmac_sb_ahb_ap
   // Once a transaction is sent through an analysis_port, another transaction should
   // be constructed for the next predicted transaction. 
-  typedef HMAC_out_transaction #() HMAC_sb_ap_output_transaction_t;
-  HMAC_sb_ap_output_transaction_t HMAC_sb_ap_output_transaction;
-  // Code for sending output transaction out through HMAC_sb_ap
-  // HMAC_sb_ap.write(HMAC_sb_ap_output_transaction);
+  typedef ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) hmac_sb_ahb_ap_output_transaction_t;
+  hmac_sb_ahb_ap_output_transaction_t hmac_sb_ahb_ap_output_transaction;
+  // Code for sending output transaction out through hmac_sb_ahb_ap
+  // hmac_sb_ahb_ap.write(hmac_sb_ahb_ap_output_transaction);
 
   // Define transaction handles for debug visibility 
-  HMAC_in_transaction #() HMAC_in_agent_ae_debug;
+  HMAC_rst_transaction hmac_rst_agent_ae_debug;
 
+  // Create QVIP transaction handles for debug visibility 
+  mvc_sequence_item_base ahb_slave_0_ae_debug_t;
+  // Create transaction handles for visibility in visualizer
 
   // pragma uvmf custom class_item_additional begin
-  reg [511:0] expected;
-  reg [383:0] hmac384_tmp;
-  reg [511:0] hmac512_tmp;
-
-  int line_skip;
-  int cnt_tmp;
-  int fd_r;
-
-  string line_read;
-  string tmp_str1;
-  string tmp_str2;
-  string file_name;
-
   // pragma uvmf custom class_item_additional end
 
   // FUNCTION: new
@@ -91,117 +102,33 @@ class HMAC_predictor #(
   // FUNCTION: build_phase
   virtual function void build_phase (uvm_phase phase);
 
-    HMAC_in_agent_ae = new("HMAC_in_agent_ae", this);
-    HMAC_sb_ap =new("HMAC_sb_ap", this );
+    hmac_rst_agent_ae = new("hmac_rst_agent_ae", this);
+    ahb_slave_0_ae = new("ahb_slave_0_ae", this);
+    hmac_sb_ahb_ap =new("hmac_sb_ahb_ap", this );
   // pragma uvmf custom build_phase begin
   // pragma uvmf custom build_phase end
   endfunction
 
-  // FUNCTION: write_HMAC_in_agent_ae
-  // Transactions received through HMAC_in_agent_ae initiate the execution of this function.
+  // FUNCTION: write_hmac_rst_agent_ae
+  // Transactions received through hmac_rst_agent_ae initiate the execution of this function.
   // This function performs prediction of DUT output values based on DUT input, configuration and state
-  virtual function void write_HMAC_in_agent_ae(HMAC_in_transaction #() t);
-    // pragma uvmf custom HMAC_in_agent_ae_predictor begin
-    HMAC_in_agent_ae_debug = t;
-    `uvm_info("PRED", "Transaction Received through HMAC_in_agent_ae", UVM_MEDIUM)
-    `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
-    // Construct one of each output transaction type.
-    HMAC_sb_ap_output_transaction = HMAC_sb_ap_output_transaction_t::type_id::create("HMAC_sb_ap_output_transaction");
-    //  UVMF_CHANGE_ME: Implement predictor model here.  
-    //`uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
-    //`uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "UVMF_CHANGE_ME: The HMAC_predictor::write_HMAC_in_agent_ae function needs to be completed with DUT prediction model",UVM_NONE)
-    //`uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
- 
-    $display("**HMAC_predictor** t.op= %d",t.op);
-
-    if (t.op== 2'b00 || t.op == 2'b11) HMAC_sb_ap_output_transaction.result = 0;
-    else if (t.op== 2'b01) begin
-      $system("python ./test_gen.py");
-
-      file_name = "expected_hmac384_tag.txt";
-
-      cnt_tmp = 0;      
-      fd_r = $fopen(file_name, "r");
-      if(!fd_r) $display("**HMAC_predictor** Cannot open file %s", file_name);
-
-      //Get tag:
-      $fgets(line_read, fd_r);
-      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac384_tmp);
-
-      while (tmp_str1 != "TAG") begin
-        $fgets(line_read, fd_r);
-        $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac384_tmp);
-      end
-
-      expected = {hmac384_tmp, 128'b0};
-      $fclose(fd_r);
-
-      HMAC_sb_ap_output_transaction.result = expected;
-      `uvm_info("PREDICT",{"HMAC_OUT: ",HMAC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
-
-    end
-    else if (t.op== 2'b10) begin
-      $system("python ./test_gen.py");
-
-      file_name = "expected_hmac512_tag.txt";
-
-      cnt_tmp = 0;      
-      fd_r = $fopen(file_name, "r");
-      if(!fd_r) $display("**HMAC_predictor** Cannot open file %s", file_name);
-
-      //Get tag:
-      $fgets(line_read, fd_r);
-      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac512_tmp);
-
-      while (tmp_str1 != "TAG") begin
-        $fgets(line_read, fd_r);
-        $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac512_tmp);
-      end
-
-      expected = hmac512_tmp;
-      $fclose(fd_r);
-
-      HMAC_sb_ap_output_transaction.result = expected;
-      `uvm_info("PREDICT",{"HMAC_OUT: ",HMAC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
-
-    end
-    else if (t.op == 3'b100) begin
-      // last_alone_op: follow-up op is a hmac512 run, predict the same way.
-      $system("python ./test_gen.py");
-
-      file_name = "expected_hmac512_tag.txt";
-
-      cnt_tmp = 0;
-      fd_r = $fopen(file_name, "r");
-      if(!fd_r) $display("**HMAC_predictor** Cannot open file %s", file_name);
-
-      //Get tag:
-      $fgets(line_read, fd_r);
-      $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac512_tmp);
-
-      while (tmp_str1 != "TAG") begin
-        $fgets(line_read, fd_r);
-        $sscanf(line_read, "%s %s %h", tmp_str1, tmp_str2, hmac512_tmp);
-      end
-
-      expected = hmac512_tmp;
-      $fclose(fd_r);
-
-      HMAC_sb_ap_output_transaction.result = expected;
-      `uvm_info("PREDICT",{"HMAC_OUT (last_alone_op follow-up): ",HMAC_sb_ap_output_transaction.convert2string()},UVM_MEDIUM);
-
-    end
-
-    // Code for sending output transaction out through HMAC_sb_ap
-    // Please note that each broadcasted transaction should be a different object than previously 
-    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
-    // using either new() or create().  Broadcasting a transaction object more than once to either the 
-    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
-    HMAC_sb_ap.write(HMAC_sb_ap_output_transaction);
-    // pragma uvmf custom HMAC_in_agent_ae_predictor end
+  virtual function void write_hmac_rst_agent_ae(HMAC_rst_transaction t);
+    // pragma uvmf custom hmac_rst_agent_ae_predictor begin
+    hmac_rst_agent_ae_debug = t;
+    // pragma uvmf custom hmac_rst_agent_ae_predictor end
   endfunction
 
 
+  // FUNCTION: write_ahb_slave_0_ae
+  // QVIP transactions received through ahb_slave_0_ae initiate the execution of this function.
+  // This function casts incoming QVIP transactions into the correct protocol type and then performs prediction 
+  // of DUT output values based on DUT input, configuration and state
+  virtual function void write_ahb_slave_0_ae(mvc_sequence_item_base _t);
+    // pragma uvmf custom ahb_slave_0_ae_predictor begin
+    ahb_slave_0_ae_debug_t = _t;
+    // pragma uvmf custom ahb_slave_0_ae_predictor end
+  endfunction
+  
 endclass 
 
 // pragma uvmf custom external begin

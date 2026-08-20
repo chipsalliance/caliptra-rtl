@@ -3,12 +3,9 @@
 onerror {resume}
 quietly WaveActivateNextPane {} 0
 
-add wave -noupdate -divider HMAC_in_agent 
-add wave -noupdate /uvm_root/uvm_test_top/environment/HMAC_in_agent/HMAC_in_agent_monitor/txn_stream
-add wave -noupdate -group HMAC_in_agent_bus /hdl_top/HMAC_in_agent_bus/*
-add wave -noupdate -divider HMAC_out_agent 
-add wave -noupdate /uvm_root/uvm_test_top/environment/HMAC_out_agent/HMAC_out_agent_monitor/txn_stream
-add wave -noupdate -group HMAC_out_agent_bus /hdl_top/HMAC_out_agent_bus/*
+add wave -noupdate -divider HMAC_rst_agent 
+add wave -noupdate /uvm_root/uvm_test_top/environment/HMAC_rst_agent/hmac_rst_agent_monitor/txn_stream
+add wave -noupdate -group hmac_rst_agent_bus /hdl_top/hmac_rst_agent_bus/*
 
 TreeUpdate [SetDefaultTree]
 quietly wave cursor active 0

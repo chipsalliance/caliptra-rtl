@@ -42,12 +42,17 @@ vcom $env(UVMF_PROJECT_DIR)/rtl/vhdl/vhdl_dut.vhd
 vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(UVMF_HOME)/uvmf_base_pkg -F $env(UVMF_HOME)/uvmf_base_pkg/uvmf_base_pkg_filelist_hdl.f
 vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(UVMF_HOME)/uvmf_base_pkg -F $env(UVMF_HOME)/uvmf_base_pkg/uvmf_base_pkg_filelist_hvl.f
 
+###################################################################
+## QVIP COMPILATION
+###################################################################
+vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(QUESTA_MVC_HOME)/questa_mvc_src/sv/ -f $env(QVIP_AHB_LITE_SLAVE_DIR_NAME)/qvip_ahb_lite_slave_filelist.f
+vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(QVIP_AHB_LITE_SLAVE_DIR_NAME) $env(QVIP_AHB_LITE_SLAVE_DIR_NAME)/hdl_qvip_ahb_lite_slave.sv
+vlog -sv -timescale 1ps/1ps +incdir+$env(UVMF_HOME)/common/utility_packages/qvip_utils_pkg $env(UVMF_HOME)/common/utility_packages/qvip_utils_pkg/qvip_utils_pkg.sv
 
 ###################################################################
 ## UVMF INTERFACE COMPILATION
 ###################################################################
-do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC_in_pkg/compile.do
-do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC_out_pkg/compile.do
+do $env(UVMF_VIP_LIBRARY_HOME)/interface_packages/HMAC_rst_pkg/compile.do
 
 ###################################################################
 ## UVMF ENVIRONMENT COMPILATION
@@ -61,22 +66,8 @@ vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(UVMF_PROJ
 vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(UVMF_PROJECT_DIR)/tb/sequences $env(UVMF_PROJECT_DIR)/tb/sequences/HMAC_sequences_pkg.sv
 vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(UVMF_PROJECT_DIR)/tb/tests $env(UVMF_PROJECT_DIR)/tb/tests/HMAC_tests_pkg.sv
 
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../rtl/hmac_ctrl.sv
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../rtl/hmac_core.v
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../rtl/hmac.v
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../rtl/hmac_param.sv
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_ctrl.sv
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_core.v
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_h_constants.v
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_k_constants.v
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_param.sv
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512.v
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_w_mem.v
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../../libs/rtl/ahb_slv_sif.sv
-vlog -sv -timescale 1ps/1ps -suppress 2223,2286 $env(UVMF_PROJECT_DIR)/../../../../../libs/rtl/caliptra_sva.svh
-
 vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286 +incdir+$env(UVMF_PROJECT_DIR)/tb/testbench -F $env(UVMF_PROJECT_DIR)/tb/testbench/top_filelist_hdl.f
-vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286  +incdir+$env(UVMF_PROJECT_DIR)/tb/testbench -F $env(UVMF_PROJECT_DIR)/tb/testbench/top_filelist_hvl.f
+vlog -sv -timescale 1ps/1ps -suppress 2223 -suppress 2286  +incdir+$env(QUESTA_MVC_HOME)/questa_mvc_src/sv  +incdir+$env(UVMF_PROJECT_DIR)/tb/testbench -F $env(UVMF_PROJECT_DIR)/tb/testbench/top_filelist_hvl.f
 
 ###################################################################
 ## OPTIMIZATION

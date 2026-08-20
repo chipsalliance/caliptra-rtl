@@ -1,5 +1,4 @@
 ---
-# Random seed desired...
 seed: ${PLAYBOOK_RANDOM_SEED}
 plusargs:
 - '+UVM_TESTNAME=HMAC_otf_reset_test'
