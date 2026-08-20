@@ -139,38 +139,38 @@ $(UVMF_PROJECT_DIR)/rtl/vhdl/vhdl_dut.vhd
 
 
 # Project bench package targets
-COMP_HMAC_PARAMETERS_PKG_TGT_0 = q_comp_HMAC_parameters_pkg
-COMP_HMAC_PARAMETERS_PKG_TGT_1 = v_comp_HMAC_parameters_pkg
-COMP_HMAC_PARAMETERS_PKG_TGT = $(COMP_HMAC_PARAMETERS_PKG_TGT_$(USE_VELOCE))
+COMP_HMAC256_PARAMETERS_PKG_TGT_0 = q_comp_HMAC256_parameters_pkg
+COMP_HMAC256_PARAMETERS_PKG_TGT_1 = v_comp_HMAC256_parameters_pkg
+COMP_HMAC256_PARAMETERS_PKG_TGT = $(COMP_HMAC256_PARAMETERS_PKG_TGT_$(USE_VELOCE))
 
-comp_HMAC_parameters_pkg: $(COMP_HMAC_PARAMETERS_PKG_TGT)
+comp_HMAC256_parameters_pkg: $(COMP_HMAC256_PARAMETERS_PKG_TGT)
 
-q_comp_HMAC_parameters_pkg:
+q_comp_HMAC256_parameters_pkg:
 	        $(HVL_COMP_CMD) +incdir+$(UVMF_PROJECT_DIR)/tb/parameters $(HMAC256_PARAMETERS_PKG)
 
-v_comp_HMAC_parameters_pkg: q_comp_HMAC_parameters_pkg
+v_comp_HMAC256_parameters_pkg: q_comp_HMAC256_parameters_pkg
 	$(HDL_COMP_CMD) +incdir+$(UVMF_PROJECT_DIR)/tb/parameters $(HMAC256_PARAMETERS_PKG)
  
 
-comp_HMAC_sequences_pkg:
+comp_HMAC256_sequences_pkg:
 	$(HVL_COMP_CMD) +incdir+$(UVMF_PROJECT_DIR)/tb/sequences $(HMAC256_SEQUENCES_PKG)
 
-comp_HMAC_tests_pkg:
+comp_HMAC256_tests_pkg:
 	$(HVL_COMP_CMD) +incdir+$(UVMF_PROJECT_DIR)/tb/tests $(HMAC256_TEST_PKG)
 
 # pragma uvmf custom dut_compile_make_target begin
 # UVMF_CHANGE_ME : Add make target to compile your verilog dut here
-comp_hmac_verilog_dut: 
+comp_hmac256_verilog_dut: 
 	echo "Compile your verilog DUT here"
 	$(HDL_COMP_CMD) $(HMAC256_VERILOG_DUT)
 
 # UVMF_CHANGE_ME : Add make target to compile your vhdl dut here
-comp_hmac_vhdl_dut: 
+comp_hmac256_vhdl_dut: 
 	echo "Compile your vhdl DUT here"
 	$(HDL_COMP_CMD_VHDL) $(HMAC256_VHDL_DUT)
 
 # UVMF_CHANGE_ME : Add make target to compile your dut here
-comp_hmac_dut: comp_hmac_vhdl_dut comp_hmac_verilog_dut 
+comp_hmac256_dut: comp_hmac256_vhdl_dut comp_hmac256_verilog_dut 
 # pragma uvmf custom dut_compile_make_target end
 
 comp_qvip: 
@@ -186,18 +186,18 @@ comp_hvl : comp_hvl_core
 
 
 comp_hvl_core :  comp_qvip comp_qvip_utils_pkg   \
-	 comp_HMAC_rst_pkg  \
-	comp_HMAC_env_pkg \
-	comp_HMAC_parameters_pkg comp_HMAC_sequences_pkg comp_HMAC_tests_pkg 
+	 comp_HMAC256_rst_pkg  \
+	comp_HMAC256_env_pkg \
+	comp_HMAC256_parameters_pkg comp_HMAC256_sequences_pkg comp_HMAC256_tests_pkg 
 
 comp_uvmf_core : comp_uvm_pkg comp_uvmf_base_pkg 
 
-make_build: comp_hmac_dut comp_uvmf_core comp_hvl comp_test_bench  
+make_build: comp_hmac256_dut comp_uvmf_core comp_hvl comp_test_bench  
 
-hvl_build:  q_comp_HMAC_rst_pkg  comp_HMAC_env_pkg comp_HMAC_sequences_pkg comp_HMAC_tests_pkg hvl_comp_testbench link optimize
+hvl_build:  q_comp_HMAC256_rst_pkg  comp_HMAC256_env_pkg comp_HMAC256_sequences_pkg comp_HMAC256_tests_pkg hvl_comp_testbench link optimize
 
 
-vinfo_build: comp_qvip  comp_hmac_vhdl_dut  build_hdl_vinfo build_hvl_vinfo $(VINFO_TGT)
+vinfo_build: comp_qvip  comp_hmac256_vhdl_dut  build_hdl_vinfo build_hvl_vinfo $(VINFO_TGT)
 
 	$(HDL_COMP_CMD) -F hdl.vf
 	$(VEL_COMP)
