@@ -216,12 +216,13 @@ class soc_ifc_env_dma_transfer_stress_sequence
     for (int i = first_random_transfer; i < num_transfers; i++) begin
       // Ensure every semantic route appears at least once. Item geometry,
       // payload, addresses, and timing remain randomized in these transfers.
-      constrain_mode = (i >= 1) && (i <= 4);
+      constrain_mode = (i >= 1) && (i <= 5);
       case (i)
         1: required_mode = DMA_XFER_AXI_RECOVERY;
         2: required_mode = DMA_XFER_READ_FIFO;
         3: required_mode = DMA_XFER_WRITE_FIFO;
         4: required_mode = DMA_XFER_MAILBOX;
+        5: required_mode = DMA_XFER_AXI_MEMORY;
         default: required_mode = DMA_XFER_AXI_MEMORY;
       endcase
 
