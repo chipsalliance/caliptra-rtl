@@ -28,16 +28,21 @@ module sha3_ctrl_tb ();
   parameter DEBUG = 0;
 
   // Algorithm selector: 0=SHA3, 1=SHAKE, 2=cSHAKE
-  parameter int    ALGO_TYPE  = 2;
+  // Runtime-overridable via +SHA3_ALGO_TYPE=<0|1|2> — see init below.
+  int    ALGO_TYPE  = 0;
 
   // SHA3 variant selector: set to 224, 256, 384, or 512
-  parameter int    SHA3_MODE = 512;
+  // Runtime-overridable via +SHA3_DIGEST_BITS=<224|256|384|512>.
+  int    SHA3_MODE = 256;
 
   // Security strength for SHAKE/cSHAKE: 128 or 256
-  parameter int    SHAKE_BITS = 256;
+  // Runtime-overridable via +SHA3_SHAKE_BITS=<128|256>.
+  int    SHAKE_BITS = 256;
 
-  parameter string IN_FILE   = "../stimulus/acvp/cSHAKE-256-635502_test.txt";
-  parameter string OUT_FILE  = "../stimulus/acvp/cSHAKE-256-635502_test_digest.txt";
+  // Defaults match the ALGO_TYPE/SHA3_MODE defaults above (SHA3-256).
+  // Runtime-overridable via +SHA3_ACVP_FILE=/+SHA3_ACVP_RESP_FILE=.
+  parameter string IN_FILE   = "../stimulus/acvp/SHA3-256.txt";
+  parameter string OUT_FILE  = "../stimulus/acvp/SHA3-256_digest.txt";
 
 
   parameter CLK_HALF_PERIOD = 1;
@@ -113,28 +118,54 @@ module sha3_ctrl_tb ();
   parameter CFG_MODE_SHAKE           = 2'h2;
   parameter CFG_MODE_CSHAKE          = 2'h3;
 
-  // Derived from SHA3_MODE - controls RTL config, state read width, and output format
-  localparam int DIGEST_BITS  = SHA3_MODE;          // 224 / 256 / 384 / 512
-  localparam int DIGEST_WORDS = DIGEST_BITS / 32;   // 7  / 8   / 12  / 16
-  localparam int DIGEST_HEX   = DIGEST_BITS / 4;    // 56 / 64  / 96  / 128
-
-  localparam [2:0] KSTRENGTH =
-      (ALGO_TYPE != 0)   ? ((SHAKE_BITS == 128) ? CFG_KSTRENGTH_L128 : CFG_KSTRENGTH_L256) :
-      (SHA3_MODE == 224) ? CFG_KSTRENGTH_L224 :
-      (SHA3_MODE == 384) ? CFG_KSTRENGTH_L384 :
-      (SHA3_MODE == 512) ? CFG_KSTRENGTH_L512 :
-                           CFG_KSTRENGTH_L256;   // default / 256
-
-  // Mode selected at compile time
-  localparam [1:0] CFG_MODE_SEL =
-      (ALGO_TYPE == 2) ? CFG_MODE_CSHAKE :
-      (ALGO_TYPE == 1) ? CFG_MODE_SHAKE  :
-                         CFG_MODE_SHA3;
+  // Derived from SHA3_MODE - controls RTL config, state read width, and output format.
+  // Was localparam; now computed at runtime in init_mode_config() since
+  // ALGO_TYPE/SHA3_MODE/SHAKE_BITS are plusarg-overridable (see below).
+  int         DIGEST_BITS;   // 224 / 256 / 384 / 512
+  int         DIGEST_WORDS;  // 7  / 8   / 12  / 16
+  int         DIGEST_HEX;    // 56 / 64  / 96  / 128
+  reg [2:0]   KSTRENGTH;
+  reg [1:0]   CFG_MODE_SEL;
 
   // Words available per Keccak squeeze for XOF modes
   // SHAKE-128/cSHAKE-128 rate = 1344 bits = 42 words
   // SHAKE-256/cSHAKE-256 rate = 1088 bits = 34 words
-  localparam int RATE_WORDS   = (SHAKE_BITS == 128) ? 42 : 34;
+  int         RATE_WORDS;
+
+  //----------------------------------------------------------------
+  // init_mode_config()
+  //
+  // Parses +SHA3_ALGO_TYPE / +SHA3_DIGEST_BITS / +SHA3_SHAKE_BITS
+  // plusargs (falling back to the ALGO_TYPE/SHA3_MODE/SHAKE_BITS
+  // defaults above) and computes the derived mode-config variables.
+  // Must run before any task references DIGEST_BITS/DIGEST_WORDS/
+  // DIGEST_HEX/KSTRENGTH/CFG_MODE_SEL/RATE_WORDS.
+  //----------------------------------------------------------------
+  task init_mode_config;
+    begin
+      void'($value$plusargs("SHA3_ALGO_TYPE=%d", ALGO_TYPE));
+      void'($value$plusargs("SHA3_DIGEST_BITS=%d", SHA3_MODE));
+      void'($value$plusargs("SHA3_SHAKE_BITS=%d", SHAKE_BITS));
+
+      DIGEST_BITS  = SHA3_MODE;
+      DIGEST_WORDS = DIGEST_BITS / 32;
+      DIGEST_HEX   = DIGEST_BITS / 4;
+
+      KSTRENGTH =
+          (ALGO_TYPE != 0)   ? ((SHAKE_BITS == 128) ? CFG_KSTRENGTH_L128 : CFG_KSTRENGTH_L256) :
+          (SHA3_MODE == 224) ? CFG_KSTRENGTH_L224 :
+          (SHA3_MODE == 384) ? CFG_KSTRENGTH_L384 :
+          (SHA3_MODE == 512) ? CFG_KSTRENGTH_L512 :
+                               CFG_KSTRENGTH_L256;   // default / 256
+
+      CFG_MODE_SEL =
+          (ALGO_TYPE == 2) ? CFG_MODE_CSHAKE :
+          (ALGO_TYPE == 1) ? CFG_MODE_SHAKE  :
+                             CFG_MODE_SHA3;
+
+      RATE_WORDS = (SHAKE_BITS == 128) ? 42 : 34;
+    end
+  endtask // init_mode_config
 
   // Maximum XOF output accumulator size (bits); covers observed max outLen ~61056 bits
   localparam int MAX_XOF_BITS = 65536;
@@ -799,6 +830,7 @@ module sha3_ctrl_tb ();
   task acvp_test;
     int fin, fout, scan_result;
     string in_file, out_file;
+    bit    skip_mct;
     string pt, test_type;
     int tcid;
     int pt_len;
@@ -823,7 +855,7 @@ module sha3_ctrl_tb ();
     string       mct_s_lenhex;
     string       mct_md_hex;
     bit          mct_prefix_ok;
-    begin
+    begin : acvp_test_block
       if (ALGO_TYPE == 0)
         $display("   -- SHA3-%0d ACVP testbench started --", SHA3_MODE);
       else if (ALGO_TYPE == 1)
@@ -831,25 +863,28 @@ module sha3_ctrl_tb ();
       else
         $display("   -- cSHAKE-%0d ACVP testbench started --", SHAKE_BITS);
 
-      // e.g. +SHA3_ACVP_FILE=${CALIPTRA_ROOT}/src/sha3/stimulus/acvp/cSHAKE-256-635502_test.txt
+      // e.g. +SHA3_ACVP_FILE=${CALIPTRA_ROOT}/src/sha3/stimulus/acvp/SHA3-256.txt
       if (!$value$plusargs("SHA3_ACVP_FILE=%s", in_file))
         in_file = IN_FILE;
       if (!$value$plusargs("SHA3_ACVP_RESP_FILE=%s", out_file))
         out_file = OUT_FILE;
+      skip_mct = $test$plusargs("SHA3_SKIP_MCT");
 
       fin  = $fopen(in_file,  "r");
       if (fin == 0)
         begin
-          $display("ERROR: Input file %s not found", in_file);
-          $stop;
+          $display("ERROR: ACVP input file %s not found — failing test and skipping acvp_test()", in_file);
+          error_ctr = error_ctr + 1;
+          disable acvp_test_block;
         end
 
       fout = $fopen(out_file, "w");
       if (fout == 0)
         begin
-          $display("ERROR: Cannot open output file %s", out_file);
+          $display("ERROR: Cannot open ACVP output file %s — failing test and skipping acvp_test()", out_file);
+          error_ctr = error_ctr + 1;
           $fclose(fin);
-          $stop;
+          disable acvp_test_block;
         end
 
       // ================================================================
@@ -945,7 +980,7 @@ module sha3_ctrl_tb ();
                   tc_ctr = tc_ctr + 1;
                 end
 
-              else if (test_type == "MCT")
+              else if (test_type == "MCT" && !skip_mct)
                 begin
                   //------------------------------------------------------
                   // SHA3 MCT: MD[0] = SEED; repeat 100 outer iterations.
@@ -1120,7 +1155,7 @@ module sha3_ctrl_tb ();
                       break;
                     end
                 end
-              else if (test_type == "MCT")
+              else if (test_type == "MCT" && !skip_mct)
                 begin
                   scan_result = $fscanf(fin, " %*d %d %d %d %d %s %s %s",
                                         tcid, mct_min_out_len, mct_max_out_len,
@@ -1192,7 +1227,7 @@ module sha3_ctrl_tb ();
                 end // AFT
 
               // ---- MCT ----
-              else if (test_type == "MCT")
+              else if (test_type == "MCT" && !skip_mct)
                 begin
                   $display("MSG: Running cSHAKE-%0d MCT vector %4d",
                            SHAKE_BITS, tcid);
@@ -1337,6 +1372,7 @@ module sha3_ctrl_tb ();
     begin : sha3_test
       $display("   -- Testbench for sha3_ctrl started --");
 
+      init_mode_config();
       init_sim();
       reset_dut();
       check_name_version();
