@@ -70,7 +70,11 @@ class soc_ifc_env_mbox_uc_reg_access_sequence extends soc_ifc_env_mbox_sequence_
   // pick a slave to select an address in a valid range
   constraint slave_sel_c { slave_sel.size() == num_reg;
                            foreach (slave_sel[i]) { slave_sel[i] <  `CALIPTRA_AHB_SLAVES_NUM; 
-                                                    slave_sel[i] != `CALIPTRA_SLAVE_SEL_SOC_IFC; }
+                                                    slave_sel[i] != `CALIPTRA_SLAVE_SEL_SOC_IFC;
+                                                    slave_sel[i] != `CALIPTRA_SLAVE_SEL_ENTROPY_SRC;
+                                                    slave_sel[i] != `CALIPTRA_SLAVE_SEL_ENTROPY_SRC1;
+                                                    slave_sel[i] != `CALIPTRA_SLAVE_SEL_CSRNG;
+                                                    slave_sel[i] != `CALIPTRA_SLAVE_SEL_COMBINER;}
                            solve num_reg before slave_sel;
   }
   
