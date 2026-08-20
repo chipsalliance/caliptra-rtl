@@ -434,9 +434,12 @@ class soc_ifc_environment  extends uvmf_environment_base #(
 //
   virtual function void build_phase(uvm_phase phase);
 // pragma uvmf custom build_phase_pre_super begin
+    int unsigned tr_recording_detail;
+    tr_recording_detail = $test$plusargs("SOC_IFC_ENABLE_TR_RECORDING") ? UVM_FULL : UVM_NONE;
+    uvm_config_int::set(this, "*", "recording_detail", tr_recording_detail);
+    `uvm_info("SOC_IFC_ENV", $sformatf("UVM transaction recording (tr_db.log) %s (recording_detail=%0d); toggle with +SOC_IFC_ENABLE_TR_RECORDING", (tr_recording_detail == UVM_NONE) ? "DISABLED" : "ENABLED", tr_recording_detail), UVM_LOW)
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
-    uvm_config_int::set(this, "*", "recording_detail", UVM_FULL);
     uvm_config_db #(aaxi_protocol_version)::set(uvm_root::get(), "*", "vers", AAXI4);
     build_axi_components();
     axi_sram_agent = soc_ifc_axi_sram_agent::type_id::create("axi_sram_agent", this);
