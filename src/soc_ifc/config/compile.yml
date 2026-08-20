@@ -110,6 +110,12 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+      elab:
+        # Suppress "Interface not instantiated" warning.
+        # axi_if.sv is compiled into both the RTL filelist and
+        # caliptra_top_tb_pkg; the TB binds the package copy, so the
+        # RTL-library copy is unused and harmlessly ignored by VCS.
+        - '-suppress=UII-L'
 ---
 provides: [soc_ifc_axi_sha_acc_dis_tb]
 schema_version: 2.4.0
@@ -138,6 +144,12 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+      elab:
+        # Suppress "Interface not instantiated" warning.
+        # axi_if.sv is compiled into both the RTL filelist and
+        # caliptra_top_tb_pkg; the TB binds the package copy, so the
+        # RTL-library copy is unused and harmlessly ignored by VCS.
+        - '-suppress=UII-L'
 ---
 provides: [soc_ifc_tb_ss]
 schema_version: 2.4.0
@@ -163,3 +175,9 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+      elab:
+        # Suppress "Interface not instantiated" warning.
+        # axi_if.sv is compiled into both the RTL filelist and
+        # caliptra_top_tb_pkg; the TB binds the package copy, so the
+        # RTL-library copy is unused and harmlessly ignored by VCS.
+        - '-suppress=UII-L'
