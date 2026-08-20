@@ -13,12 +13,11 @@
 # limitations under the License.
 #
 ---
-# NOTE: sha3_ctrl_tb ALGO_TYPE/SHA3_MODE/SHAKE_BITS are compile-time
-# parameters, not plusargs, so this covers the module's default build
-# configuration (cSHAKE-256) only; other variants require a separate
-# elaboration with parameter overrides.
 plusargs:
-  - +SHA3_ACVP_FILE='${CALIPTRA_ROOT}/src/sha3/stimulus/acvp/cSHAKE-256-635502_test.txt'
+  - +SHA3_ALGO_TYPE=1
+  - +SHA3_SHAKE_BITS=128
+  - +SHA3_ACVP_FILE='${CALIPTRA_ROOT}/src/sha3/stimulus/acvp/SHAKE-128.txt'
+  - +SHA3_ACVP_RESP_FILE='${CALIPTRA_ROOT}/src/sha3/stimulus/acvp/SHAKE-128_digest.txt'
 
-testname: sha3_acvp_test
+testname: shake_acvp_128_test
 seed: 1
