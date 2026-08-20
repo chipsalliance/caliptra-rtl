@@ -14,9 +14,9 @@ This document has two independent parts:
   signal interface, for HMAC DRBG) and the exact sequence needed to drive one operation.
   These are derived entirely from each IP's own RTL-level register documentation
   (`.rdl` addrmap files and module header comments), independent of any testbench. The
-  intent is that a testbench can be implemented from this document alone. (Some of these
-  IPs — SHA256, HMAC, ECC — already have testbenches in `caliptra-rtl` today; this
-  document does not reference them.)
+  intent is that a testbench can be implemented from this document alone. Existing
+  testbenches for these IPs are linked from each section for reference, not because this
+  document depends on them.
 
 **Explicitly out of scope:** how ACVP JSON vectors get parsed and translated into the
 register values described in §3 onward. That translation is left to whoever implements
@@ -201,6 +201,8 @@ is compared against the originally supplied `SIGN_R`.
 ## 4. AES
 
 Register interface: see the live register browser for the [`aes_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_reg) and [`aes_clp_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.aes_clp_reg) blocks (encodings in `src/aes/rtl/aes_pkg.sv`).
+
+Testbench: [`src/aes/tb`](https://github.com/chipsalliance/caliptra-rtl/tree/main/src/aes/tb) in `caliptra-rtl`.
 
 ### 4.1 Register map
 
@@ -479,6 +481,8 @@ each outer iteration `i`):
 
 Register interface: see the live register browser for the [`sha256_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha256_reg) block.
 
+Testbench: [`src/sha256/tb`](https://github.com/chipsalliance/caliptra-rtl/tree/main/src/sha256/tb) in `caliptra-rtl`.
+
 ### 5.1 Register map
 
 | Register | Notes |
@@ -581,6 +585,8 @@ For j = 0 to 99
 
 Register interface: see the live register browser for the [`sha512_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.sha512_reg) block.
 
+Testbench: [`src/sha512/tb`](https://github.com/chipsalliance/caliptra-rtl/tree/main/src/sha512/tb) in `caliptra-rtl`.
+
 ### 6.1 Register map
 
 | Register | Notes |
@@ -679,6 +685,8 @@ For j = 0 to 99
 
 Register interface: see the live register browser for the [`kmac`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.kmac) block. This register block
 is reachable at IP-base **+ 0x1000**.
+
+Testbench: [`src/sha3/tb`](https://github.com/chipsalliance/caliptra-rtl/tree/main/src/sha3/tb) in `caliptra-rtl`.
 
 ### 7.1 Register map
 
@@ -939,6 +947,8 @@ previous call.
 Register interface: see the live register browser for the [`hmac_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.hmac_reg) block. HMAC has no MCT
 test type — AFT only.
 
+Testbench: [`src/hmac/tb`](https://github.com/chipsalliance/caliptra-rtl/tree/main/src/hmac/tb) in `caliptra-rtl`.
+
 ### 8.1 Register map
 
 | Register | Notes |
@@ -1142,6 +1152,8 @@ header: SHA-384-based, `PredictionResistance=False`, `EntropyInputLen=384`,
 `ReturnedBitsLen=384`. There is no reseed path. DRBG testing has a single test type,
 AFT — there is no MCT for DRBGs.
 
+Testbench: [`src/hmac_drbg/tb`](https://github.com/chipsalliance/caliptra-rtl/tree/main/src/hmac_drbg/tb) in `caliptra-rtl`.
+
 ### 9.1 Interface (signal ports)
 
 | Port | Dir | Width | Purpose |
@@ -1206,6 +1218,8 @@ force-triggers the out-of-range condition and checks the retry logic recovers fr
 Register interface: see the live register browser for the [`ecc_reg`](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.ecc_reg) block. All three
 operations share one register map. ECDSA testing (KeyGen, SigGen, SigVer, and
 deterministic SigGen) uses AFT only — there is no MCT for ECDSA.
+
+Testbench: [`src/ecc/tb`](https://github.com/chipsalliance/caliptra-rtl/tree/main/src/ecc/tb) in `caliptra-rtl`.
 
 ### 10.1 Register map (384-bit fields = 12×32-bit words, big-endian, MSB-first)
 
@@ -1483,6 +1497,9 @@ hardware block ("Adams Bridge", shared with ML-KEM-1024, §12 — they are two d
 peripherals on the same silicon block, with entirely separate `MLDSA_*`/`MLKEM_*`
 register fields).
 
+Testbench: [`src/abr_top/tb`](https://github.com/chipsalliance/adams-bridge/tree/main/src/abr_top/tb) in the `adams-bridge` repo (Adams Bridge's RTL lives in its own
+repo, pulled into `caliptra-rtl` as a submodule; shared with ML-KEM-1024, §12).
+
 ### 11.1 Register map
 
 | Register | Purpose |
@@ -1618,6 +1635,9 @@ names and control opcodes below are confirmed against the live register browser 
 hardware block ("Adams Bridge", shared with ML-DSA-87, §11 — they are two different
 peripherals on the same silicon block, with entirely separate `MLKEM_*`/`MLDSA_*`
 register fields).
+
+Testbench: [`src/abr_top/tb`](https://github.com/chipsalliance/adams-bridge/tree/main/src/abr_top/tb) in the `adams-bridge` repo (Adams Bridge's RTL lives in its own
+repo, pulled into `caliptra-rtl` as a submodule; shared with ML-DSA-87, §11).
 
 ### 12.1 Register map
 
