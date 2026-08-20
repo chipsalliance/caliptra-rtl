@@ -445,12 +445,12 @@ module caliptra_top_sva
         //ecc privkey read
         kv_ecc_privkey_r_flow:    assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`ECC_PATH.kv_privkey_write_en) && (`ECC_PATH.kv_privkey_error == 0) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.privkey_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              $fell(`ECC_PATH.kv_privkey_write_en) && (`ECC_PATH.kv_privkey_error == 0) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`ECC_PATH.kv_read[0].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[0].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.privkey_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value == `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC privkey read mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[0].read_entry][dword].data.value, `ECC_PATH.privkey_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         kv_ecc_seed_r_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              $fell(`ECC_PATH.kv_seed_write_en) && (`ECC_PATH.kv_seed_error == 0) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
+                                              $fell(`ECC_PATH.kv_seed_write_en) && (`ECC_PATH.kv_seed_error == 0) && (dword < (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`ECC_PATH.kv_read[1].read_entry].last_dword.value + 1)) |-> (`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`ECC_PATH.kv_read[1].read_entry == OCP_LOCK_KEY_RELEASE_KV_SLOT)) ? (`ECC_PATH.seed_reg[dword] == '0) : (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value == `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: ECC seed mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`ECC_PATH.kv_read[1].read_entry][dword].data.value, `ECC_PATH.seed_reg[(`ECC_PATH.REG_NUM_DWORDS-1) - dword]);
         //ecc privkey write
