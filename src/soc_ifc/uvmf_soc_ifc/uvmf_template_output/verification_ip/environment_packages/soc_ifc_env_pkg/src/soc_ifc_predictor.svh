@@ -4201,20 +4201,34 @@ function uvm_reg_data_t soc_ifc_predictor::dma_reg_masked_expected_rdata(uvm_reg
 endfunction
 
 function void soc_ifc_predictor::predict_boot_wait_boot_done();
-    cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
 
+    // Capture FSM state before overriding.
+    bit from_boot_wait = p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait;
+
+    // Model FSM changing to BOOT_DONE state
     p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_done: 1'b1, default: 1'b0};
+
+    // Since we enter BOOT_DONE any fw_update is complete.
     fw_update_rst_window                           = 1'b0;
+
+    // Model the boot-FSM ICCM HW-clear by predicting the register field to 0.
+    if (from_boot_wait && iccm_locked) begin
+        if(!p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.predict(1'b0)) begin
+            `uvm_fatal("PRED_BOOT", "Failed to predict internal_iccm_lock.lock deassertion on boot-FSM ICCM unlock")
+        end
+    end
 
     fork
         begin
+            // if from_boot_wait && iccm_locked there are 2 predictions
+            // 1. iccm_lock clearing
+            // 2. uc_rst desasserts
+            // Otherwise only 1 prediction of uc_rst_deassert
             configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+            send_delayed_expected_transactions();
             if (uc_rst_out_asserted) begin
-                uc_rst_out_asserted   = 1'b0;
-                local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
-                populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
-                cptra_sb_ap.write(local_cptra_sb_ap_txn);
-                `uvm_info("PRED_BOOT", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+                send_delayed_expected_transactions();
             end
         end
     join_none
