@@ -2665,6 +2665,81 @@ must observe `AES_KV_RD_KEY_STATUS.ERROR` after the status VALID bit
 sets. The `AES_KV_RD_KEY_STATUS.ERROR` field encodes the KV error
 code (`KV_SUCCESS=0`, `KV_READ_FAIL=1`, `KV_RD_LEN_MISMATCH=3`).
 
+**Consumers that do not check.** `hmac_block_kv_read` and
+`sha512_block_kv_read` are instantiated with `LEN_CHECK=0`. The
+comparison logic, the `stored_last_dword` register, and the trigger
+select are inside a `generate if (LEN_CHECK != 0)` block, so for these
+two instances the logic is not elaborated at all. This is deliberate:
+a parameter-gated `always_comb` would leave permanently unreachable
+condition and branch bins in every non-checking instance (and an
+unreachable arm of the trigger select in *every* instance), which then
+have to be papered over with coverage exclusions. Generating the logic
+away instead keeps every remaining line/condition/branch bin in
+`kv_read_client.sv` genuinely reachable in the instance that owns it,
+so no exclusion file is required for this feature.
+
+#### Coverage sign-off for the length check
+
+VCS merges code coverage across module instances whose coverable code
+structure is identical, and the merge is per metric. Measured on a
+`caliptra_top_tb` coverage run, **all eight `LEN_CHECK=1` instances
+land in a single condition/branch coverage group**:
+
+```
+Cond Coverage for Module : \RTL.kv_read_client
+  ( DATA_WIDTH=384,...,LEN_CHECK=1,LEN_CHECK_AT_KEY_USE=0
+  + DATA_WIDTH=512,...,LEN_CHECK=1,LEN_CHECK_AT_KEY_USE=1
+  + DATA_WIDTH=256,...,AES=1,LEN_CHECK=1,LEN_CHECK_AT_KEY_USE=1
+  + DATA_WIDTH=256,...,LEN_CHECK=1,LEN_CHECK_AT_KEY_USE=0
+  + DATA_WIDTH=512,...,LEN_CHECK=1,LEN_CHECK_AT_KEY_USE=0 )
+
+  EXPRESSION (length_check_trigger && (stored_last_dword < expected_key_size))
+              -----------1-----------    ---------------2----------------
+  -1- -2- Status
+   0   1  Covered
+   1   0  Not Covered
+   1   1  Covered
+```
+
+That truth table is shared by `hmac_key_kv_read`,
+`ecc_privkey_kv_read`, `ecc_seed_kv_read`, `aes_key_kv_read`,
+`kv_mldsa_seed_read_inst`, `kv_mlkem_seed_read_inst`,
+`kv_mlkem_msg_read_inst` and `dma_data_kv_read`. A single
+`smoke_test_kv_len_mismatch_hmac` run marks the `1 1` (mismatch) bin
+covered for **all eight** consumers. Two consequences for sign-off:
+
+1. **Condition and branch coverage on `length_mismatch` cannot be used
+   as per-consumer evidence.** Per-instance line/cond/branch scores are
+   still available in the urg hierarchy view and in the "Module
+   self-instances" table of `modinfo.txt`, so read those rather than
+   the merged group score.
+2. The instance-unique cover properties in
+   `src/integration/asserts/caliptra_top_sva.sv` are the authoritative
+   per-consumer evidence. Each checking consumer has the same bin set:
+   `_len_mismatch_C` (comparator fired), `_len_err_latched_C`
+   (FW-visible `error_code`), `_len_match_C`, `_len_exact_C`
+   (`stored == expected` boundary) and `_len_larger_C` (the relaxed
+   accept-larger path). HMAC additionally crosses the check against
+   `mode_reg` (384/512) and AES against `key_len` (128/192/256),
+   because for those two consumers the expected size is programmed
+   *after* the KV read completes and an aggregate bin would not prove
+   the check tracks the register.
+
+Note that the merged `1 0` bin above (check evaluated, entry large
+enough) is the accept path; `smoke_test_kv_len_mismatch_*` are
+negative-only, so the `_len_match_C` / `_len_exact_C` / `_len_larger_C`
+covers are the ones that close it per consumer.
+
+`caliptra_top_sva` is instantiated at `caliptra_top_tb.sva`, outside
+the `+tree caliptra_top_tb.caliptra_top_dut` scope in
+`src/integration/coverage/config/caliptra_top_tb_cm_hier.cfg`. That
+`begin` block lists only `line+tgl+fsm+cond+branch`, so `assert`
+coverage is unscoped and collected design-wide; all of these covers
+have been confirmed present in `urg` `asserts.txt` as
+`caliptra_top_tb.sva.KV_*_len_*_C`. If the cfg ever gains an `assert`
+block scoped to the DUT tree, they would silently disappear rather
+than fail.
+
 If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
 
 The following tables describe read, write, and status values for key vault blocks.
