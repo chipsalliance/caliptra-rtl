@@ -7,3 +7,6 @@
 # reps
 compilespecs.yml @Nitsirks @mojtaba-bisheh @upadhyayulakiran @ekarabu @clayton8 @calebofearth
 compile.yml @Nitsirks @mojtaba-bisheh @upadhyayulakiran @ekarabu @clayton8 @calebofearth
+
+# CAVP verification guide is owned by its author
+docs/CaliptraCAVP_guide.md @ravithakurAMD
