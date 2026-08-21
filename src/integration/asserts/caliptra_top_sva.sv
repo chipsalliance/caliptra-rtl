@@ -40,6 +40,7 @@
 `define ABR_REG_PATH        `CPTRA_TOP_PATH.abr_inst.abr_reg_inst
 `define HMAC_PATH           `CPTRA_TOP_PATH.hmac.hmac_inst
 `define HMAC_REG_PATH       `HMAC_PATH.i_hmac_reg
+`define HMAC256_PATH        `CPTRA_TOP_PATH.hmac256.hmac256_inst
 `define ECC_PATH            `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i
 `define ECC_REG_PATH        `CPTRA_TOP_PATH.ecc_top1.ecc_reg1
 `define HMAC_DRBG_PATH      `CPTRA_TOP_PATH.ecc_top1.ecc_dsa_ctrl_i.ecc_hmac_drbg_interface_i.hmac_drbg_i
@@ -1310,6 +1311,26 @@ module caliptra_top_sva
                                         (`HMAC_PATH.ready_reg || `HMAC_PATH.awaiting_zeroize)
                                     )
                         else $display("SVA ERROR: HMAC VALID flag mismatch!");
+
+  HMAC256_valid_flag:   assert property (
+                                    @(posedge `SVA_RDC_CLK)
+                                    `HMAC256_PATH.tag_valid_reg |->
+                                        (`HMAC256_PATH.ready_reg || `HMAC256_PATH.awaiting_zeroize)
+                                    )
+                        else $display("SVA ERROR: HMAC256 VALID flag mismatch!");
+
+  // busy_o must reflect engine occupancy only. The mandatory-zeroize barrier
+  // is enforced on the command-acceptance path (ready_reg -> CTRL.swwe), not
+  // on busy_o: hmac256_busy feeds the concurrent-crypto detector that drives
+  // the non-recoverable cptra_hw_fatal_errors.crypto_err. Holding busy_o
+  // through the awaiting_zeroize window would raise a spurious fatal error,
+  // because firmware must read TAG (hwclr'd by ZEROIZE) before it can zeroize.
+  HMAC256_busy_not_sticky: assert property (
+                                    @(posedge `SVA_RDC_CLK)
+                                    `HMAC256_PATH.core_ready |->
+                                        !`CPTRA_TOP_PATH.hmac256_busy
+                                    )
+                        else $display("SVA ERROR: HMAC256 busy_o asserted while core is ready!");
 
   ECC_valid_flag:       assert property (
                                     @(posedge `SVA_RDC_CLK)

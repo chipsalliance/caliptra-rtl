@@ -1,0 +1,6 @@
+Global
+auto_bin_max, 64
+
+Name,Type,Include
+rand_fields,coverpoint,=rand *.**
+

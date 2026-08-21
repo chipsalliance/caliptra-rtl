@@ -1,0 +1,5 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=HMAC256_otf_reset_test'
+testname: HMAC256_otf_reset_test

@@ -76,6 +76,8 @@ static void nonstd_veer_isr_sha512_acc_error (void) __attribute__ ((interrupt ("
 static void nonstd_veer_isr_sha512_acc_notif (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_axi_dma_error (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_axi_dma_notif (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_hmac256_error (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_hmac256_notif (void) __attribute__ ((interrupt ("machine")));
 
 // Could be much more fancy with C preprocessing to pair up the ISR with Vector
 // numbers as defined in caliptra_defines.h.... TODO
@@ -106,8 +108,8 @@ static void (* const nonstd_veer_isr_23) (void) = nonstd_veer_isr_abr_error   ; 
 static void (* const nonstd_veer_isr_24) (void) = nonstd_veer_isr_abr_notif   ;    //        |
 static void (* const nonstd_veer_isr_25) (void) = nonstd_veer_isr_axi_dma_error;   //        |
 static void (* const nonstd_veer_isr_26) (void) = nonstd_veer_isr_axi_dma_notif;   // -------'
-static void (* const nonstd_veer_isr_27) (void) = std_rv_nop_machine; // --------.
-static void (* const nonstd_veer_isr_28) (void) = std_rv_nop_machine; //         |
+static void (* const nonstd_veer_isr_27) (void) = nonstd_veer_isr_hmac256_error; // --------.
+static void (* const nonstd_veer_isr_28) (void) = nonstd_veer_isr_hmac256_notif; //         |
 static void (* const nonstd_veer_isr_29) (void) = std_rv_nop_machine; // Unimplemented ISR
 static void (* const nonstd_veer_isr_30) (void) = std_rv_nop_machine; //         |
 static void (* const nonstd_veer_isr_31) (void) = std_rv_nop_machine; // --------'
@@ -174,6 +176,7 @@ void init_interrupts(void) {
     volatile uint32_t * const doe_reg        = (uint32_t*) CLP_DOE_REG_BASE_ADDR;
     volatile uint32_t * const ecc_reg        = (uint32_t*) CLP_ECC_REG_BASE_ADDR;
     volatile uint32_t * const hmac_reg       = (uint32_t*) CLP_HMAC_REG_BASE_ADDR;
+    volatile uint32_t * const hmac256_reg    = (uint32_t*) CLP_HMAC256_REG_BASE_ADDR;
     volatile uint32_t * const sha512_reg     = (uint32_t*) CLP_SHA512_REG_BASE_ADDR;
     volatile uint32_t * const sha256_reg     = (uint32_t*) CLP_SHA256_REG_BASE_ADDR;
     volatile uint32_t * const sha512_acc_csr = (uint32_t*) CLP_SHA512_ACC_CSR_BASE_ADDR;
@@ -246,6 +249,8 @@ void init_interrupts(void) {
     meipls[VEER_INTR_VEC_ABR_NOTIF       ] = VEER_INTR_PRIO_ABR_NOTIF       ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_AXI_DMA_ERROR   ] = VEER_INTR_PRIO_AXI_DMA_ERROR   ; __asm__ volatile ("fence");
     meipls[VEER_INTR_VEC_AXI_DMA_NOTIF   ] = VEER_INTR_PRIO_AXI_DMA_NOTIF   ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_HMAC256_ERROR   ] = VEER_INTR_PRIO_HMAC256_ERROR   ; __asm__ volatile ("fence");
+    meipls[VEER_INTR_VEC_HMAC256_NOTIF   ] = VEER_INTR_PRIO_HMAC256_NOTIF   ; __asm__ volatile ("fence");
     for (uint8_t undef = VEER_INTR_VEC_MAX_ASSIGNED+1; undef <= RV_PIC_TOTAL_INT; undef++) {
         meipls[undef] = 0; __asm__ volatile ("fence"); // Set to 0 meaning NEVER interrupt
     }
@@ -299,6 +304,15 @@ void init_interrupts(void) {
     hmac_reg[HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = HMAC_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
     hmac_reg[HMAC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = HMAC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
                                                                          HMAC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
+
+    // HMAC256
+    hmac256_reg[HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR0_EN_MASK |
+                                                                               HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR1_EN_MASK |
+                                                                               HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR2_EN_MASK |
+                                                                               HMAC256_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR3_EN_MASK;
+    hmac256_reg[HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R /sizeof(uint32_t)] = HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK;
+    hmac256_reg[HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R/sizeof(uint32_t)] = HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                                                                               HMAC256_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK;
 
     // SHA512
     // TODO error interrupt enables
@@ -819,4 +833,9 @@ nonstd_veer_isr(abr_notif)
 nonstd_veer_isr(axi_dma_error)
 // Non-Standard Vectored Interrupt Handler (AXI DMA Notification = vector 26)
 nonstd_veer_isr(axi_dma_notif)
+
+// Non-Standard Vectored Interrupt Handler (HMAC256 Error = vector 27)
+nonstd_veer_isr(hmac256_error)
+// Non-Standard Vectored Interrupt Handler (HMAC256 Notification = vector 28)
+nonstd_veer_isr(hmac256_notif)
 

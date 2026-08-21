@@ -149,6 +149,7 @@ enum test_list {
     CRYPTO_HMAC_ECC                   ,
     CRYPTO_HMAC_DOE                   ,
     CRYPTO_DOE_ECC                    ,
+    CRYPTO_HMAC256_HMAC               ,
     TEST_COUNT                        ,
 };
 enum boot_count_list {
@@ -163,7 +164,8 @@ enum boot_count_list {
     BEFORE_FIRST_CRYPTO_FAILURE   ,
     BEFORE_SECOND_CRYPTO_FAILURE  ,
     BEFORE_THIRD_CRYPTO_FAILURE   ,
-    AFTER_THIRD_CRYPTO_FAILURE
+    BEFORE_FOURTH_CRYPTO_FAILURE  ,
+    AFTER_FOURTH_CRYPTO_FAILURE
 };
 //enum boot_count_list {
 //    RUN_MBOX_AND_FIRST_ICCM_SRAM_ECC  = 1,
@@ -981,9 +983,10 @@ void run_crypto_error(enum test_list test_case) {
     VPRINTF(MEDIUM, "\n*** Run Crypto Case ***\n");
 
     // Get test ID
-    if      (test_case == CRYPTO_DOE_ECC)  { cur_test = CRYPTO_DOE_ECC;  }
-    else if (test_case == CRYPTO_HMAC_DOE) { cur_test = CRYPTO_HMAC_DOE; }
-    else if (test_case == CRYPTO_HMAC_ECC) { cur_test = CRYPTO_HMAC_ECC; }
+    if      (test_case == CRYPTO_DOE_ECC)     { cur_test = CRYPTO_DOE_ECC;     }
+    else if (test_case == CRYPTO_HMAC_DOE)    { cur_test = CRYPTO_HMAC_DOE;    }
+    else if (test_case == CRYPTO_HMAC_ECC)    { cur_test = CRYPTO_HMAC_ECC;    }
+    else if (test_case == CRYPTO_HMAC256_HMAC){ cur_test = CRYPTO_HMAC256_HMAC;}
 
     //start appropriate crypto engines
     if (test_case == CRYPTO_DOE_ECC) {
@@ -999,6 +1002,11 @@ void run_crypto_error(enum test_list test_case) {
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_KEYGEN);
         lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
                                                 (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+    } else if (test_case == CRYPTO_HMAC256_HMAC) {
+        //start hmac256 and hmac (512) together
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
+        lsu_write_32(CLP_HMAC256_REG_HMAC256_CTRL, HMAC256_REG_HMAC256_CTRL_INIT_MASK);
     }
 
     // Flag test as having run
@@ -1011,9 +1019,10 @@ uint32_t check_crypto_error(enum test_list test_case) {
     enum test_list cur_test;
     VPRINTF(MEDIUM, "\n*** Check Crypto Case ***\n  ");
     // Get test ID
-    if      (test_case == CRYPTO_DOE_ECC)  { cur_test = CRYPTO_DOE_ECC;  }
-    else if (test_case == CRYPTO_HMAC_DOE) { cur_test = CRYPTO_HMAC_DOE; }
-    else if (test_case == CRYPTO_HMAC_ECC) { cur_test = CRYPTO_HMAC_ECC; }
+    if      (test_case == CRYPTO_DOE_ECC)     { cur_test = CRYPTO_DOE_ECC;     }
+    else if (test_case == CRYPTO_HMAC_DOE)    { cur_test = CRYPTO_HMAC_DOE;    }
+    else if (test_case == CRYPTO_HMAC_ECC)    { cur_test = CRYPTO_HMAC_ECC;    }
+    else if (test_case == CRYPTO_HMAC256_HMAC){ cur_test = CRYPTO_HMAC256_HMAC;}
 
     // Check for generic_input_wires activity
     if (!(cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_GEN_IN_TOGGLE_STS_MASK)) {
@@ -1278,7 +1287,9 @@ void main(void) {
                                                                run_crypto_error  (CRYPTO_HMAC_DOE); }
         else if (boot_count == BEFORE_THIRD_CRYPTO_FAILURE)  { check_crypto_error(CRYPTO_HMAC_DOE);
                                                                run_crypto_error  (CRYPTO_HMAC_ECC); }
-        else if (boot_count == AFTER_THIRD_CRYPTO_FAILURE)   { check_crypto_error(CRYPTO_HMAC_ECC); }
+        else if (boot_count == BEFORE_FOURTH_CRYPTO_FAILURE) { check_crypto_error(CRYPTO_HMAC_ECC);
+                                                               run_crypto_error  (CRYPTO_HMAC256_HMAC); }
+        else if (boot_count == AFTER_FOURTH_CRYPTO_FAILURE)  { check_crypto_error(CRYPTO_HMAC256_HMAC); }
  
         // Final Report
         VPRINTF(MEDIUM, "Eval test progress...\n");

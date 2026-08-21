@@ -1,0 +1,14 @@
+options:
+  # Use the following data structure and set the environment variable name and 'value' entry
+  # appropriately to point to the requisite QVIP subenvironments for this bench. This allows users
+  # to avoid having to set environment variables directly in their shell
+  env_vars:
+# pragma uvmf custom QVIP_AHB_LITE_SLAVE_info begin
+    QVIP_AHB_LITE_SLAVE_DIR_NAME: 
+      value: the_environment_variable_named_QVIP_AHB_LITE_SLAVE_DIR_NAME_needs_to_point_to_the_QVIP_configurator_generated_code_for_this_sub_environment
+      resolve_path: False  # Set this to True if the value above is changed to something containing variable references
+# pragma uvmf custom QVIP_AHB_LITE_SLAVE_info end
+flows:
+  base:
+    variables:
+      using_qvip: True
