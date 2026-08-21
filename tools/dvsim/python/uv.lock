@@ -81,7 +81,7 @@ dependencies = [
 [package.metadata]
 requires-dist = [
     { name = "compile-to-core", git = "https://github.com/lowRISC/compile-to-core?branch=main" },
-    { name = "dvsim", specifier = "==1.49.9" },
+    { name = "dvsim" },
     { name = "flake8", specifier = "~=7.1" },
     { name = "fusesoc", specifier = "==2.4.5" },
     { name = "isort", specifier = "~=5.10" },
@@ -164,7 +164,7 @@ wheels = [
 
 [[package]]
 name = "dvsim"
-version = "1.49.9"
+version = "1.51.2"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "anybadge" },
@@ -182,9 +182,9 @@ dependencies = [
     { name = "toml" },
     { name = "typing-extensions" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/36/c8/12e4cde18c3fc9b4f526bedcbf1f6f5d660a03663af871ed04a06ed3a388/dvsim-1.49.9.tar.gz", hash = "sha256:a4e416d522ad526f6893a4b998a366116c0b4049737721cc71d1e1a0d77fcd9f", size = 545992, upload-time = "2026-06-04T12:49:34.119Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/a0/b5/ee5b7177ccd4affcad8e539719261fdeadd5c596fb17a90cec82fa219fd8/dvsim-1.51.2.tar.gz", hash = "sha256:22b5673777ce268b74d98f14d9aca4195b5b750c9da2c407bfae81803a079fad", size = 553348, upload-time = "2026-08-21T09:39:46.596Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/99/bf/2045971014fe978fdebd381ed84350f01e10c49e9d9c8e757340c486ad10/dvsim-1.49.9-py3-none-any.whl", hash = "sha256:a80a2bde9558e165c66e9a3c3a526324e8cf94965d6dc055be98bc0f91010c95", size = 306546, upload-time = "2026-06-04T12:49:32.283Z" },
+    { url = "https://files.pythonhosted.org/packages/0b/c1/adf2035fd6eb1bad0ae4253545d8f7c3cbe8094bbb24d0972e342780b766/dvsim-1.51.2-py3-none-any.whl", hash = "sha256:a511d4818f10274fd572a88abc1e4451a63e8b1198b3b8d387e98fcad84d974a", size = 309751, upload-time = "2026-08-21T09:39:45.034Z" },
 ]
 
 [[package]]
@@ -283,14 +283,14 @@ wheels = [
 
 [[package]]
 name = "gitpython"
-version = "3.1.50"
+version = "3.1.59"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "gitdb" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/33/f6/354ae6491228b5eb40e10d89c4d13c651fe1cf7556e35ebdded50cff57ce/gitpython-3.1.50.tar.gz", hash = "sha256:80da2d12504d52e1f998772dc5baf6e553f8d2fcfe1fcc226c9d9a2ee3372dcc", size = 219798, upload-time = "2026-05-06T04:01:26.571Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/dc/126b28e76b24a9268ba931ad3e012f71ebdadf62fd9f17758f7074bb0b20/gitpython-3.1.59.tar.gz", hash = "sha256:0a1475cfdc38a5bfba1a3e9a4a9da52a39749ecec322b772915c019f94e5b7e4", size = 230445, upload-time = "2026-08-10T12:03:20.271Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/20/7a/1c6e3562dfd8950adbb11ffbc65d21e7c89d01a6e4f137fa981056de25c5/gitpython-3.1.50-py3-none-any.whl", hash = "sha256:d352abe2908d07355014abdd21ddf798c2a961469239afec4962e9da884858f9", size = 212507, upload-time = "2026-05-06T04:01:23.799Z" },
+    { url = "https://files.pythonhosted.org/packages/ef/ed/ae57eb7d344f43f87b74b3a281ead6ec7d6394eef72a7b1dcb28dd089550/gitpython-3.1.59-py3-none-any.whl", hash = "sha256:67a82f537384578643624c8b2c531938a9b82be431663e575dcf638526631d4c", size = 220996, upload-time = "2026-08-10T12:03:18.804Z" },
 ]
 
 [[package]]
