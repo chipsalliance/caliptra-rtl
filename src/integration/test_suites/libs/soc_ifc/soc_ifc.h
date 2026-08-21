@@ -83,6 +83,7 @@ enum err_inj_type {
     cmd_inv_wr_fixed_kv ,
     cmd_inv_aes_fixed  ,
     cmd_inv_block_size,
+    cmd_inv_block_size_large,
     cmd_inv_aes_block_size,
     cmd_inv_mbox_lock
 //    cmd_inv_sha_lock

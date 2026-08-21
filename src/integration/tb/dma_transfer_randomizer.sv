@@ -94,14 +94,18 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
   constraint blk_size_c {
       !test_block_size -> block_size == 0;
       test_block_size -> $onehot(block_size);
-      test_block_size -> block_size inside {[4:2048]};
+      test_block_size -> block_size inside {[4:64]};
       solve test_block_size before block_size;
   };
 
   constraint blk_size_with_axi2axi_restriction_c {
-      test_block_size && (dma_xfer_type == AXI2AXI) -> block_size <= AXI_FIXED_LEN_MAX_VALUE*CPTRA_AXI_DMA_DATA_WIDTH; // 64 is the maximum burst size for AXI FIXED bursts assuming a 32-bit data width
-      test_block_size && (dma_xfer_type == AXI2AXI) -> dst_offset & (block_size - 1) == 0; // Force destination address to be aligned to the block_size
+      test_block_size && (dma_xfer_type == AXI2AXI) -> (dst_offset & (block_size - 1)) == 0; // Force destination address to be aligned to the block_size
   };
+
+  constraint blk_size_with_fixed_axi_restriction_c {
+      use_rd_fixed || use_wr_fixed -> block_size <= AXI_FIXED_LEN_MAX_VALUE*CPTRA_AXI_DMA_DATA_WIDTH/8; // 64 is the maximum burst size for AXI FIXED bursts assuming a 32-bit data width
+  };
+
 
   constraint fifo_access_c {
       !(src_is_fifo && dst_is_fifo);

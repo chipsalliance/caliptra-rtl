@@ -1,10 +1,20 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+
 ---
-# Directed WR_FIFO / write_data test: a single deterministic (no randomization),
-# fast DMA write-FIFO transfer through write_data over AHB, while the SoC-AXI side
-# continuously attempts writes to all DMA registers (including write_data), all of
-# which must be rejected (SLVERR). Checkers: the transfer self-checks its data; the
-# predictor+scoreboard verify the SoC-AXI accesses are rejected; and the bound assertion
-# soc_ifc_arb.ERR_ARB_SOC_DMA_GNT flags any grant of the DMA client to the SoC.
+# Directed firmware WR_FIFO transfer with concurrent fixed unauthorized
+# SoC-AXI writes to every DMA register.
 seed: ${PLAYBOOK_RANDOM_SEED}
 plusargs:
 - '+UVM_TESTNAME=soc_ifc_cmdline_test'

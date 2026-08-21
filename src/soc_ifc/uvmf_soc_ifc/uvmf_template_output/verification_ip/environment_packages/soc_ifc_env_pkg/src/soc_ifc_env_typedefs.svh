@@ -134,10 +134,4 @@
     mbox_steps_s step;
   } mbox_steps_by_if_s;
 
-  // Reusable memory backdoor classes (abstract base + caliptra_sram backend).
-  // Included here (before soc_ifc_env_configuration) so the configuration can
-  // hold a soc_ifc_mem_backdoor handle. The environment stays independent of the
-  // bench parameter package: test_top configures the concrete backend.
-  `include "src/soc_ifc_mem_backdoor.svh"
-  `include "src/soc_ifc_caliptra_sram_backdoor.svh"
   // pragma uvmf custom additional end

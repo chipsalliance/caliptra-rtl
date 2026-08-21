@@ -48,50 +48,26 @@ qvip_memory_message_handler message_handler;
 
   string interface_names[] = {
     uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */ , 
-    uvm_test_top_environment_aaxi_tb_env0_master_0 /* aaxi_tb.env0.master[0] [1] */ , 
-    soc_ifc_ctrl_agent_BFM /* soc_ifc_ctrl_agent     [2] */ , 
-    cptra_ctrl_agent_BFM /* cptra_ctrl_agent     [3] */ , 
-    ss_mode_ctrl_agent_BFM /* ss_mode_ctrl_agent     [4] */ , 
-    soc_ifc_status_agent_BFM /* soc_ifc_status_agent     [5] */ , 
-    cptra_status_agent_BFM /* cptra_status_agent     [6] */ , 
-    ss_mode_status_agent_BFM /* ss_mode_status_agent     [7] */ , 
-    mbox_sram_agent_BFM /* mbox_sram_agent     [8] */ 
+    soc_ifc_ctrl_agent_BFM /* soc_ifc_ctrl_agent     [1] */ , 
+    cptra_ctrl_agent_BFM /* cptra_ctrl_agent     [2] */ , 
+    ss_mode_ctrl_agent_BFM /* ss_mode_ctrl_agent     [3] */ , 
+    soc_ifc_status_agent_BFM /* soc_ifc_status_agent     [4] */ , 
+    cptra_status_agent_BFM /* cptra_status_agent     [5] */ , 
+    ss_mode_status_agent_BFM /* ss_mode_status_agent     [6] */ , 
+    mbox_sram_agent_BFM /* mbox_sram_agent     [7] */ 
 };
 
 uvmf_active_passive_t interface_activities[] = { 
     ACTIVE /* ahb_lite_slave_0     [0] */ , 
-    ACTIVE /* aaxi_tb.env0.master[0] [1] */ , 
-    ACTIVE /* soc_ifc_ctrl_agent     [2] */ , 
-    ACTIVE /* cptra_ctrl_agent     [3] */ , 
-    ACTIVE /* ss_mode_ctrl_agent     [4] */ , 
-    ACTIVE /* soc_ifc_status_agent     [5] */ , 
-    ACTIVE /* cptra_status_agent     [6] */ , 
-    ACTIVE /* ss_mode_status_agent     [7] */ , 
-    ACTIVE /* mbox_sram_agent     [8] */   };
+    ACTIVE /* soc_ifc_ctrl_agent     [1] */ , 
+    ACTIVE /* cptra_ctrl_agent     [2] */ , 
+    ACTIVE /* ss_mode_ctrl_agent     [3] */ , 
+    ACTIVE /* soc_ifc_status_agent     [4] */ , 
+    ACTIVE /* cptra_status_agent     [5] */ , 
+    ACTIVE /* ss_mode_status_agent     [6] */ , 
+    ACTIVE /* mbox_sram_agent     [7] */   };
 
   // pragma uvmf custom class_item_additional begin
-  // Create/configure the DMA AXI SRAM backdoor from the bench parameter package.
-  // Keeps the env package independent of soc_ifc_parameters_pkg.
-  virtual function void build_dma_axi_sram_backdoor();
-    soc_ifc_mem_backdoor bkdr;
-    // Install the bench default without replacing a backend override selected by
-    // a derived test.
-    soc_ifc_mem_backdoor::type_id::set_type_override(
-      soc_ifc_caliptra_sram_backdoor::get_type(), 1'b0);
-    bkdr = soc_ifc_mem_backdoor::type_id::create("dma_axi_sram_backdoor");
-    bkdr.configure(.path  (DMA_AXI_SRAM_HDL_PATH),
-                   .base  (DMA_AXI_SRAM_BASE_ADDR),
-                   .size  (DMA_AXI_SRAM_SIZE_BYTES),
-                   .wbytes(DMA_AXI_SRAM_WORD_BYTES));
-    configuration.dma_axi_sram_backdoor = bkdr;
-  endfunction
-
-  virtual function void start_of_simulation_phase(uvm_phase phase);
-    super.start_of_simulation_phase(phase);
-    // Fail fast on an SRAM path/geometry mismatch before stimulus.
-    if (configuration.dma_axi_sram_backdoor != null)
-      configuration.dma_axi_sram_backdoor.validate_path();
-  endfunction
   // pragma uvmf custom class_item_additional end
 
   // ****************************************************************************
@@ -121,7 +97,23 @@ uvmf_active_passive_t interface_activities[] = {
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
     // pragma uvmf custom configuration_settings_post_randomize begin
-    build_dma_axi_sram_backdoor();
+    configuration.configure_axi_endpoints(
+      .soc_ifc_base_addr(AXI_SOC_IFC_BASE_ADDR),
+      .soc_ifc_limit_addr(AXI_SOC_IFC_LIMIT_ADDR),
+      .sram_base_addr(AXI_SRAM_BASE_ADDR),
+      .sram_size_bytes(AXI_SRAM_SIZE_BYTES),
+      .sram_word_bytes(AXI_SRAM_WORD_BYTES),
+      .recovery_fifo_addr(AXI_RECOVERY_FIFO_ADDR),
+      .recovery_fifo_depth_dwords_default(AXI_RECOVERY_FIFO_DEPTH_DWORDS_DEFAULT),
+      .outstanding_depth(AXI_FABRIC_OUTSTANDING_DEPTH),
+      .sram_b_delay_min_default(AXI_SRAM_B_DELAY_MIN_DEFAULT),
+      .sram_b_delay_max_default(AXI_SRAM_B_DELAY_MAX_DEFAULT),
+      .sram_r_delay_min_default(AXI_SRAM_R_DELAY_MIN_DEFAULT),
+      .sram_r_delay_max_default(AXI_SRAM_R_DELAY_MAX_DEFAULT),
+      .recovery_r_delay_min_default(AXI_RECOVERY_R_DELAY_MIN_DEFAULT),
+      .recovery_r_delay_max_default(AXI_RECOVERY_R_DELAY_MAX_DEFAULT),
+      .recovery_refill_delay_min_default(AXI_RECOVERY_FIFO_REFILL_DELAY_MIN_DEFAULT),
+      .recovery_refill_delay_max_default(AXI_RECOVERY_FIFO_REFILL_DELAY_MAX_DEFAULT));
     // pragma uvmf custom configuration_settings_post_randomize end
     configuration.initialize(NA, "uvm_test_top.environment", interface_names, null, interface_activities);
   endfunction
@@ -130,3 +122,4 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
+
