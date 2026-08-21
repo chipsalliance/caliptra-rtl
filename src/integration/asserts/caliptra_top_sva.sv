@@ -1520,32 +1520,185 @@ module caliptra_top_sva
       ~`HMAC_PATH.hmac_key_kv_read.kv_read_rules.read_allow);
 
   // -----------------------------------------------------------------
-  // KV key-length-mismatch (per-consumer, per RFC)
+  // KV key-length-mismatch (per-consumer)
   // -----------------------------------------------------------------
-  // The stored last_dword captured inside kv_read_client must equal the
-  // entry's stored last_dword whenever the read completes without error.
-  `CALIPTRA_ASSERT(KV_hmac_stored_len_matches_entry,
-      $rose(`HMAC_PATH.kv_key_done) && (`HMAC_PATH.kv_key_error == 0) |->
-      (`HMAC_PATH.hmac_key_kv_read.stored_last_dword ==
-       `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].last_dword.value),
+  // COVERAGE NOTE -- why every consumer gets its own bins.
+  //
+  // VCS scores code coverage per module definition per unique parameter set,
+  // so kv_read_client instances that share a parameter set are MERGED in the
+  // module view. Colliding pairs today:
+  //     ecc_privkey_kv_read      / ecc_seed_kv_read         (DATA_WIDTH=384)
+  //     kv_mldsa_seed_read_inst  / kv_mlkem_msg_read_inst   (DATA_WIDTH=256)
+  //     kv_mlkem_seed_read_inst  / dma_data_kv_read         (DATA_WIDTH=512)
+  // Hitting the mismatch branch in one member of a pair marks it covered for
+  // the other. These instance-unique cover properties are therefore the only
+  // per-consumer evidence that the check was actually exercised end to end.
+  // Sign-off must read the urg HIERARCHY view for code coverage, not the
+  // module view. See docs/CaliptraHardwareSpecification.md.
+  //
+  // Uniform bin set per checking consumer:
+  //   _len_mismatch_C        comparator fired (stored entry too small)
+  //   _len_err_latched_C     FW-visible outcome: error_code == KV_RD_LEN_MISMATCH
+  //   _len_match_C           check evaluated and passed
+  //   _len_exact_C           stored == expected (boundary)
+  //   _len_larger_C          stored >  expected (relaxed accept-larger path)
+  //
+  // hmac_block_kv_read and sha512_block_kv_read are LEN_CHECK=0: the logic is
+  // generated away entirely, so there is nothing to cover and nothing to
+  // exclude.
+
+  // kv_defines_pkg is elaborated into both the RTL and TB libraries, so a
+  // direct enum-to-enum compare between a DUT `error_code` and a TB-scope
+  // enum literal raises Warning-[DTIE]/[DTII]. Mirror the codes as ints and
+  // cast at the comparison instead.
+  localparam int KV_ERRC_SUCCESS      = int'(KV_SUCCESS);
+  localparam int KV_ERRC_LEN_MISMATCH = int'(KV_RD_LEN_MISMATCH);
+
+`define KV_LEN_COVERS(NAME, CLIENT)                                                    \
+  KV_``NAME``_len_mismatch_C: cover property (                                         \
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)                                  \
+      CLIENT.length_mismatch);                                                         \
+  KV_``NAME``_len_err_latched_C: cover property (                                      \
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)                                  \
+      int'(CLIENT.error_code) == KV_ERRC_LEN_MISMATCH);                                        \
+  KV_``NAME``_len_match_C: cover property (                                            \
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)                                  \
+      CLIENT.len_check_gen.length_check_trigger && !CLIENT.length_mismatch);           \
+  KV_``NAME``_len_exact_C: cover property (                                            \
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)                                  \
+      CLIENT.len_check_gen.length_check_trigger &&                                     \
+      (CLIENT.len_check_gen.stored_last_dword == CLIENT.expected_key_size));           \
+  KV_``NAME``_len_larger_C: cover property (                                           \
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)                                  \
+      CLIENT.len_check_gen.length_check_trigger &&                                     \
+      (CLIENT.len_check_gen.stored_last_dword > CLIENT.expected_key_size));
+
+  // The size latched from the KV read-mux must equal the addressed entry's
+  // stored last_dword whenever the read completed cleanly. Applied per
+  // consumer: DATA_WIDTH differs per client, and the whole point of sourcing
+  // entry_last_dword from the mux is that a client whose read window is
+  // shorter than the entry still sees the true stored size.
+`define KV_LEN_STORED_MATCHES_ENTRY(NAME, CLIENT)                                      \
+  `CALIPTRA_ASSERT(KV_``NAME``_stored_len_matches_entry,                               \
+      $rose(CLIENT.read_done) && (int'(CLIENT.error_code) == KV_ERRC_SUCCESS) |->                 \
+      (CLIENT.len_check_gen.stored_last_dword ==                                       \
+       `KEYVAULT_REG_PATH.hwif_out.KEY_CTRL[CLIENT.read_ctrl_reg.read_entry].last_dword.value), \
       `SVA_RDC_CLK, ~`SVA_RST)
 
-  // HMAC key path uses relaxed (entry-too-small) check: mismatch fires only
-  // when the stored entry is smaller than what the mode requires.
-  `CALIPTRA_ASSERT(KV_hmac_len_mismatch_iff_mode_differs,
-      `HMAC_PATH.hmac_key_kv_read.length_mismatch |->
-      `HMAC_PATH.kv_key_data_present &&
-      (`HMAC_PATH.init_reg || `HMAC_PATH.next_reg) &&
-      (`HMAC_PATH.hmac_key_kv_read.stored_last_dword < `HMAC_PATH.hmac_expected_key_size),
+  // The comparator must reach the FW-visible error register. Qualified against
+  // the higher-priority arms of the error_code mux so the check is exact.
+  // Expressed with $past() rather than |=> for Verilator compatibility.
+`define KV_LEN_ERR_REACHES_REG(NAME, CLIENT)                                           \
+  `CALIPTRA_ASSERT(KV_``NAME``_len_mismatch_latches_err,                               \
+      $past(CLIENT.length_mismatch && !CLIENT.zeroize && !CLIENT.fsm_error &&          \
+            !(CLIENT.validated_read_en && !CLIENT.read_allow) &&                       \
+            !(CLIENT.write_en && CLIENT.kv_resp.error) &&                              \
+            !(CLIENT.write_en && |CLIENT.write_offset &&                               \
+              (int'(CLIENT.error_code) != KV_ERRC_SUCCESS)), 1) |->                               \
+      (int'(CLIENT.error_code) == KV_ERRC_LEN_MISMATCH),                                       \
       `SVA_RDC_CLK, ~`SVA_RST)
 
-  // When mismatch fires, key regs clear via hwclr with a fixed 2-cycle
-  // pipeline (mismatch cycle N → error_code registers cycle N+1 →
-  // hwclr cycle N+1 → key_reg zero cycle N+2).
-  // Note: expressed via $past(..., 2) instead of `|-> ##2` because Verilator
-  // does not support "implication with sequence expression" on the RHS.
-  // Logically equivalent: if length_mismatch fired 2 cycles ago, the key
-  // register must be zero now.
+  // Non-AES clients gate kv_ready on error_code, which is what refuses the op.
+  // AES takes the aes_kv_ready_gen arm (no zeroize support) and instead relies
+  // on error_intr + engine-side op gating, so it is deliberately excluded here.
+`define KV_LEN_OP_BLOCKED(NAME, CLIENT)                                                \
+  `CALIPTRA_ASSERT(KV_``NAME``_not_ready_on_len_err,                                   \
+      (int'(CLIENT.error_code) == KV_ERRC_LEN_MISMATCH) |-> !CLIENT.kv_ready,                  \
+      `SVA_RDC_CLK, ~`SVA_RST)
+
+  `KV_LEN_COVERS(hmac_key,   `HMAC_PATH.hmac_key_kv_read)
+  `KV_LEN_COVERS(ecc_privkey,`ECC_PATH.ecc_privkey_kv_read)
+  `KV_LEN_COVERS(ecc_seed,   `ECC_PATH.ecc_seed_kv_read)
+  `KV_LEN_COVERS(aes_key,    `AES_CLP_PATH.aes_key_kv_read)
+  `KV_LEN_COVERS(mldsa_seed, `ABR_PATH.kv_mldsa_seed_read_inst)
+  `KV_LEN_COVERS(mlkem_seed, `ABR_PATH.kv_mlkem_seed_read_inst)
+  `KV_LEN_COVERS(mlkem_msg,  `ABR_PATH.kv_mlkem_msg_read_inst)
+  `KV_LEN_COVERS(dma_mek,    `AXI_DMA_CTRL_PATH.dma_data_kv_read)
+
+  `KV_LEN_STORED_MATCHES_ENTRY(hmac_key,   `HMAC_PATH.hmac_key_kv_read)
+  `KV_LEN_STORED_MATCHES_ENTRY(ecc_privkey,`ECC_PATH.ecc_privkey_kv_read)
+  `KV_LEN_STORED_MATCHES_ENTRY(ecc_seed,   `ECC_PATH.ecc_seed_kv_read)
+  `KV_LEN_STORED_MATCHES_ENTRY(aes_key,    `AES_CLP_PATH.aes_key_kv_read)
+  `KV_LEN_STORED_MATCHES_ENTRY(mldsa_seed, `ABR_PATH.kv_mldsa_seed_read_inst)
+  `KV_LEN_STORED_MATCHES_ENTRY(mlkem_seed, `ABR_PATH.kv_mlkem_seed_read_inst)
+  `KV_LEN_STORED_MATCHES_ENTRY(mlkem_msg,  `ABR_PATH.kv_mlkem_msg_read_inst)
+  `KV_LEN_STORED_MATCHES_ENTRY(dma_mek,    `AXI_DMA_CTRL_PATH.dma_data_kv_read)
+
+  `KV_LEN_ERR_REACHES_REG(hmac_key,   `HMAC_PATH.hmac_key_kv_read)
+  `KV_LEN_ERR_REACHES_REG(ecc_privkey,`ECC_PATH.ecc_privkey_kv_read)
+  `KV_LEN_ERR_REACHES_REG(ecc_seed,   `ECC_PATH.ecc_seed_kv_read)
+  `KV_LEN_ERR_REACHES_REG(aes_key,    `AES_CLP_PATH.aes_key_kv_read)
+  `KV_LEN_ERR_REACHES_REG(mldsa_seed, `ABR_PATH.kv_mldsa_seed_read_inst)
+  `KV_LEN_ERR_REACHES_REG(mlkem_seed, `ABR_PATH.kv_mlkem_seed_read_inst)
+  `KV_LEN_ERR_REACHES_REG(mlkem_msg,  `ABR_PATH.kv_mlkem_msg_read_inst)
+  `KV_LEN_ERR_REACHES_REG(dma_mek,    `AXI_DMA_CTRL_PATH.dma_data_kv_read)
+
+  `KV_LEN_OP_BLOCKED(hmac_key,   `HMAC_PATH.hmac_key_kv_read)
+  `KV_LEN_OP_BLOCKED(ecc_privkey,`ECC_PATH.ecc_privkey_kv_read)
+  `KV_LEN_OP_BLOCKED(ecc_seed,   `ECC_PATH.ecc_seed_kv_read)
+  `KV_LEN_OP_BLOCKED(mldsa_seed, `ABR_PATH.kv_mldsa_seed_read_inst)
+  `KV_LEN_OP_BLOCKED(mlkem_seed, `ABR_PATH.kv_mlkem_seed_read_inst)
+  `KV_LEN_OP_BLOCKED(mlkem_msg,  `ABR_PATH.kv_mlkem_msg_read_inst)
+  `KV_LEN_OP_BLOCKED(dma_mek,    `AXI_DMA_CTRL_PATH.dma_data_kv_read)
+
+  // -----------------------------------------------------------------
+  // Deferred-check consumers: cross the check against the runtime size
+  // -----------------------------------------------------------------
+  // HMAC and AES use LEN_CHECK_AT_KEY_USE=1 precisely because the expected
+  // size is programmed AFTER the KV read completes. An aggregate mismatch
+  // cover does not prove the check tracks the mode/key_len register, so each
+  // programmable size gets its own match and mismatch bin.
+
+  KV_hmac_key_len_mismatch_mode384_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.hmac_key_kv_read.length_mismatch && (`HMAC_PATH.mode_reg != hmac_param_pkg::HMAC512_MODE));
+  KV_hmac_key_len_mismatch_mode512_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.hmac_key_kv_read.length_mismatch && (`HMAC_PATH.mode_reg == hmac_param_pkg::HMAC512_MODE));
+  KV_hmac_key_len_match_mode384_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.hmac_key_kv_read.len_check_gen.length_check_trigger &&
+      !`HMAC_PATH.hmac_key_kv_read.length_mismatch && (`HMAC_PATH.mode_reg != hmac_param_pkg::HMAC512_MODE));
+  KV_hmac_key_len_match_mode512_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `HMAC_PATH.hmac_key_kv_read.len_check_gen.length_check_trigger &&
+      !`HMAC_PATH.hmac_key_kv_read.length_mismatch && (`HMAC_PATH.mode_reg == hmac_param_pkg::HMAC512_MODE));
+
+  KV_aes_key_len_mismatch_128_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AES_CLP_PATH.aes_key_kv_read.length_mismatch &&
+      (`AES_CLP_PATH.aes_expected_key_size == KV_ENTRY_SIZE_W'(aes_pkg::AES128_KV_LAST_DWORD)));
+  KV_aes_key_len_mismatch_192_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AES_CLP_PATH.aes_key_kv_read.length_mismatch &&
+      (`AES_CLP_PATH.aes_expected_key_size == KV_ENTRY_SIZE_W'(aes_pkg::AES192_KV_LAST_DWORD)));
+  KV_aes_key_len_mismatch_256_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AES_CLP_PATH.aes_key_kv_read.length_mismatch &&
+      (`AES_CLP_PATH.aes_expected_key_size == KV_ENTRY_SIZE_W'(aes_pkg::AES256_KV_LAST_DWORD)));
+  KV_aes_key_len_match_128_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AES_CLP_PATH.aes_key_kv_read.len_check_gen.length_check_trigger &&
+      !`AES_CLP_PATH.aes_key_kv_read.length_mismatch &&
+      (`AES_CLP_PATH.aes_expected_key_size == KV_ENTRY_SIZE_W'(aes_pkg::AES128_KV_LAST_DWORD)));
+  KV_aes_key_len_match_192_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AES_CLP_PATH.aes_key_kv_read.len_check_gen.length_check_trigger &&
+      !`AES_CLP_PATH.aes_key_kv_read.length_mismatch &&
+      (`AES_CLP_PATH.aes_expected_key_size == KV_ENTRY_SIZE_W'(aes_pkg::AES192_KV_LAST_DWORD)));
+  KV_aes_key_len_match_256_C: cover property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      `AES_CLP_PATH.aes_key_kv_read.len_check_gen.length_check_trigger &&
+      !`AES_CLP_PATH.aes_key_kv_read.length_mismatch &&
+      (`AES_CLP_PATH.aes_expected_key_size == KV_ENTRY_SIZE_W'(aes_pkg::AES256_KV_LAST_DWORD)));
+
+  // -----------------------------------------------------------------
+  // Consumer-side clear-down on mismatch
+  // -----------------------------------------------------------------
+  // mismatch cycle N -> error_code registers cycle N+1 -> hwclr cycle N+1 ->
+  // consumer key register zero cycle N+2. Expressed via $past(..., 2) instead
+  // of |-> ##2 because Verilator does not support an implication with a
+  // sequence expression on the RHS.
   `CALIPTRA_ASSERT(KV_hmac_key_cleared_on_mismatch,
       $past(`HMAC_PATH.hmac_key_kv_read.length_mismatch, 2) |-> (`HMAC_PATH.key_reg == '0),
       `SVA_RDC_CLK, ~`SVA_RST)
@@ -1557,71 +1710,4 @@ module caliptra_top_sva
   `CALIPTRA_ASSERT(KV_ecc_len_mismatch_clears_seed,
       $past(`ECC_PATH.ecc_seed_kv_read.length_mismatch, 2) |-> (`ECC_PATH.seed_reg == '0),
       `SVA_RDC_CLK, ~`SVA_RST)
-
-  // Covers: each consumer exercises both match and mismatch.
-  KV_hmac_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      (`HMAC_PATH.init_reg || `HMAC_PATH.next_reg) && `HMAC_PATH.kv_key_data_present && !`HMAC_PATH.hmac_key_kv_read.length_mismatch);
-  KV_hmac_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `HMAC_PATH.hmac_key_kv_read.length_mismatch);
-  KV_ecc_privkey_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      |`ECC_PATH.cmd_reg && `ECC_PATH.kv_key_data_present && !`ECC_PATH.ecc_privkey_kv_read.length_mismatch);
-  KV_ecc_privkey_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ECC_PATH.ecc_privkey_kv_read.length_mismatch);
-  KV_ecc_seed_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      |`ECC_PATH.cmd_reg && `ECC_PATH.kv_seed_data_present && !`ECC_PATH.ecc_seed_kv_read.length_mismatch);
-  KV_ecc_seed_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ECC_PATH.ecc_seed_kv_read.length_mismatch);
-
-  // AES key path — length check deferred to key-use (LEN_CHECK_AT_KEY_USE=1).
-  // check_key_size pulses on kv_key_done | keymgr_key.valid.
-  KV_aes_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `CPTRA_TOP_PATH.aes_inst.aes_key_kv_read.check_key_size &&
-      !`CPTRA_TOP_PATH.aes_inst.aes_key_kv_read.length_mismatch);
-  KV_aes_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `CPTRA_TOP_PATH.aes_inst.aes_key_kv_read.length_mismatch);
-
-  // MLDSA seed path
-  KV_mldsa_seed_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mldsa_seed_read_inst.read_done &&
-      !`ABR_PATH.kv_mldsa_seed_read_inst.length_mismatch);
-  KV_mldsa_seed_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mldsa_seed_read_inst.length_mismatch);
-
-  // MLKEM seed path
-  KV_mlkem_seed_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_seed_read_inst.read_done &&
-      !`ABR_PATH.kv_mlkem_seed_read_inst.length_mismatch);
-  KV_mlkem_seed_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_seed_read_inst.length_mismatch);
-
-  // MLKEM msg path
-  KV_mlkem_msg_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_msg_read_inst.read_done &&
-      !`ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
-  KV_mlkem_msg_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
-
-  // DMA key-release path (MEK)
-  KV_dma_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `AXI_DMA_CTRL_PATH.dma_data_kv_read.read_done &&
-      !`AXI_DMA_CTRL_PATH.dma_data_kv_read.length_mismatch);
-  KV_dma_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `AXI_DMA_CTRL_PATH.dma_data_kv_read.length_mismatch);
-
 endmodule
