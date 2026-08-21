@@ -54,7 +54,6 @@ module kv_read_client
     input  logic [KV_ENTRY_SIZE_W-1:0] expected_key_size
 );
 
-logic [KV_ENTRY_SIZE_W-1:0] stored_last_dword;
 logic length_mismatch;
 
 logic validated_read_en;
@@ -146,26 +145,51 @@ generate
     end
 endgenerate
 
-// Latch the addressed KV entry's stored last_dword during the read.
-// Sourced from the readmux (kv_resp.entry_last_dword) — independent of the
-// consumer's own DATA_WIDTH, so a consumer whose read window does not reach
-// the entry's true end still sees the correct stored size.
-always_ff @(posedge clk or negedge rst_b) begin
-    if (!rst_b)              stored_last_dword <= '0;
-    else if (zeroize)        stored_last_dword <= '0;
-    else if (write_en)       stored_last_dword <= kv_resp.entry_last_dword;
-end
+// Length-mismatch detection.
+//
+// Structurally elaborated only for consumers that request the check
+// (LEN_CHECK != 0) and only for the trigger the consumer selected. Coverage
+// rationale: a parameter-gated `always_comb` would leave permanently
+// unreachable condition/branch bins in every non-checking instance and an
+// unreachable arm of the trigger select in *every* instance, which then get
+// papered over with coverage exclusions. Generating the logic away instead
+// means every remaining line/cond/branch bin in this file is genuinely
+// reachable in the instance that owns it.
+generate
+    if (LEN_CHECK != 0) begin : len_check_gen
+        logic [KV_ENTRY_SIZE_W-1:0] stored_last_dword;
+        logic                       length_check_trigger;
 
-logic length_check_trigger;
-always_comb length_check_trigger = (LEN_CHECK_AT_KEY_USE != 0) ? check_key_size
-                                                              : read_done;
+        // Latch the addressed KV entry's stored last_dword during the read.
+        // Sourced from the readmux (kv_resp.entry_last_dword) — independent of
+        // the consumer's own DATA_WIDTH, so a consumer whose read window does
+        // not reach the entry's true end still sees the correct stored size.
+        always_ff @(posedge clk or negedge rst_b) begin
+            if (!rst_b)        stored_last_dword <= '0;
+            else if (zeroize)  stored_last_dword <= '0;
+            else if (write_en) stored_last_dword <= kv_resp.entry_last_dword;
+        end
 
-// Length-mismatch: consumer requires a KV entry of at least `expected_key_size`
-// dwords. A larger entry is accepted. A smaller entry triggers the
-// error and refuses the op. Once error_code latches KV_RD_LEN_MISMATCH the
-// mux self-holds until rst_b/zeroize (same discipline as KV_READ_FAIL).
-always_comb length_mismatch = (LEN_CHECK != 0) && length_check_trigger &&
-                              (stored_last_dword < expected_key_size);
+        if (LEN_CHECK_AT_KEY_USE != 0) begin : at_key_use_gen
+            // Consumer's expected length is only known when the engine commits
+            // to using the key (HMAC mode_reg / AES key_len are programmable
+            // after the KV read completes).
+            always_comb length_check_trigger = check_key_size;
+        end else begin : at_read_done_gen
+            always_comb length_check_trigger = read_done;
+        end
+
+        // Consumer requires a KV entry of at least `expected_key_size` dwords.
+        // A larger entry is accepted (safe prefix read). A smaller entry raises
+        // the error and refuses the op. Once error_code latches
+        // KV_RD_LEN_MISMATCH the mux self-holds until rst_b/zeroize (same
+        // discipline as KV_READ_FAIL).
+        always_comb length_mismatch = length_check_trigger &&
+                                      (stored_last_dword < expected_key_size);
+    end else begin : no_len_check_gen
+        always_comb length_mismatch = 1'b0;
+    end
+endgenerate
 
 `CALIPTRA_ASSERT_KNOWN(READ_METRICS_X,  read_metrics, clk, !rst_b)
 
