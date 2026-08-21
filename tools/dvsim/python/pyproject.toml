@@ -31,7 +31,7 @@ dependencies = [
   "fusesoc==2.4.5",
 
   # Build and run tool for Design Verification flows
-  "dvsim==1.49.9",
+  "dvsim",
 
   # Extract fusesoc information from compile.yaml files
   "compile-to-core",
