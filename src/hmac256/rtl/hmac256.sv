@@ -323,7 +323,12 @@ assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0;
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
 assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
-assign busy_o = ~core_ready | awaiting_zeroize;
+//Busy reflects only that the engine is occupied, matching hmac.sv. The
+//mandatory-zeroize barrier is enforced on the command-acceptance path via
+//ready_reg/swwe, not here: busy_o feeds the concurrent-crypto detector in
+//caliptra_top, so holding it through the awaiting_zeroize window would raise
+//a spurious non-recoverable crypto_err.
+always_comb busy_o = ~core_ready;
 
 endmodule // hmac256
 
