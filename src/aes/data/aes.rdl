@@ -6,7 +6,6 @@ addrmap aes {
     reg {
         field {
             sw = w;
-            onwrite = woclr;
             desc = "Initial Key Registers Share 0.
 
             The actual initial key corresponds to Initial Key Registers
@@ -25,7 +24,6 @@ addrmap aes {
     reg {
         field {
             sw = w;
-            onwrite = woclr;
             desc = "Initial Key Registers Share 1.
 
             The actual initial key corresponds to Initial Key Registers
@@ -44,7 +42,6 @@ addrmap aes {
     reg {
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Initialization Vector Registers.
 
             The initialization vector (IV) or initial counter value must
@@ -66,7 +63,6 @@ addrmap aes {
     reg {
         field {
             sw = w;
-            onwrite = woclr;
             desc = "Input Data Registers.
 
             If MANUAL_OPERATION=0 (see Control Register), the AES unit
@@ -97,14 +93,12 @@ addrmap aes {
     reg {
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "2-bit one-hot field to select the operation of AES
             unit.  Invalid input values, i.e., values with multiple
             bits set and value 2'b00, are mapped to AES_ENC (2'b01).";
         } OPERATION[1:0];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "6-bit one-hot field to select AES block cipher
             mode.  Invalid input values, i.e., values with multiple
             bits set and value 6'b00_0000, are mapped to AES_NONE
@@ -112,7 +106,6 @@ addrmap aes {
         } MODE[7:2];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "3-bit one-hot field to select AES key length.
             Invalid input values, i.e., values with multiple bits set,
             value 3'b000, and value 3'b010 in case 192-bit keys are
@@ -121,7 +114,6 @@ addrmap aes {
         } KEY_LEN[10:8];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Controls whether the AES unit uses the key
             provided by the key manager via key sideload interface (1)
             or the key provided by software via Initial Key Registers
@@ -129,7 +121,6 @@ addrmap aes {
         } SIDELOAD[11:11];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "3-bit one-hot field to control the reseeding rate
             of the internal pseudo-random number generator (PRNG) used
             for masking. Invalid input values, i.e., values with
@@ -138,7 +129,6 @@ addrmap aes {
         } PRNG_RESEED_RATE[14:12];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Controls whether the AES unit is operated in
             normal/automatic mode (0) or fully manual mode (1).  In
             automatic mode (0), the AES unit automatically i) starts
@@ -158,14 +148,12 @@ addrmap aes {
     reg {
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Controls whether providing a new key triggers the reseeding
             of internal pseudo-random number generators used for clearing and
             masking (1) or not (0).";
         } KEY_TOUCH_FORCES_RESEED[0:0];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Allow the internal masking PRNG to advance (0) or
             force its internal state (1) leading to constant masks.
             Setting all masks to constant value can be useful when
@@ -189,7 +177,6 @@ addrmap aes {
     reg {
         field {
             sw = w;
-            onwrite = woclr;
             desc = "Keep AES unit paused (0) or trigger the
             encryption/decryption of one data block (1).  This trigger
             is cleared to `0` if MANUAL_OPERATION=0 or if MODE=AES_NONE
@@ -197,7 +184,6 @@ addrmap aes {
         } START[0:0];
         field {
             sw = w;
-            onwrite = woclr;
             desc = "Keep current values in Initial Key, internal Full
             Key and Decryption Key registers, IV registers and Input
             Data registers (0) or clear all those registers with
@@ -205,13 +191,11 @@ addrmap aes {
         } KEY_IV_DATA_IN_CLEAR[1:1];
         field {
             sw = w;
-            onwrite = woclr;
             desc = "Keep current values in Output Data registers (0) or
             clear those registers with pseudo-random data (1).";
         } DATA_OUT_CLEAR[2:2];
         field {
             sw = w;
-            onwrite = woclr;
             desc = "Keep continuing with the current states of the
             internal pseudo-random number generators used for register
             clearing and masking (0) or perform a reseed of the internal
@@ -283,7 +267,6 @@ addrmap aes {
     reg {
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "6-bit one-hot field to select the phase of the
             Galois/Counter Mode (GCM) of operation.  Invalid input
             values, i.e., values with multiple bits set and value
@@ -294,7 +277,6 @@ addrmap aes {
         } PHASE[5:0];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Number of valid bytes of the current input block.
             Only the last block in the GCM_AAD and GCM_TEXT phases are
             expected to have not all bytes marked as valid.  For all
