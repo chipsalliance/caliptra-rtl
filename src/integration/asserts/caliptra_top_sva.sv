@@ -547,15 +547,18 @@ module caliptra_top_sva
   AES_KV_rd_full_key: assert property (aes_new_key_fully_overwrites_old_key)
                       else $display("SVA ERROR: AES core partially read new key into keyvault and kept partial old key!");
 
-  // AES core contains a local reg that buffers the key when reading from KeyVault.
-  // Enforce that this reg is cleared to 0 when reading in a new key.
+  // AES core buffers the KV sideload key as two masked shares
+  // (kv_key_masked = key ^ m, kv_key_mask = m).
+  // Enforce that both share stages are cleared to 0 for the not-yet-read
+  // dwords when reading in a new key.
   AES_KV_rd_reg_clr:  assert property (
                                       @(posedge `SVA_RDC_CLK)
                                       (`AES_CLP_PATH.aes_key_kv_read.write_en && `AES_CLP_PATH.aes_key_kv_read.write_offset == 0)
                                       |=>
                                       // dword 0 is written with new value
-                                      // Check that dwords 1:MAX are cleared to 0
-                                      (~|`AES_CLP_PATH.kv_key_reg[(keymgr_pkg::KeyWidth/32)-1:1])
+                                      // Check that dwords 1:MAX are cleared to 0 in both shares
+                                      (~|`AES_CLP_PATH.kv_key_masked[(keymgr_pkg::KeyWidth/32)-1:1] &&
+                                       ~|`AES_CLP_PATH.kv_key_mask[(keymgr_pkg::KeyWidth/32)-1:1])
                                       )
                       else $display("SVA ERROR: AES local reg stage for KeyVault not cleared");
   `endif
