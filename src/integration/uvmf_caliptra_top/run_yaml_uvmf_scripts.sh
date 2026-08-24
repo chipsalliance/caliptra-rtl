@@ -8,10 +8,12 @@ python ${UVMF_HOME}/scripts/yaml2uvmf.py --merge_source uvmf_template_output \
                                          ../../soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/interface_packages/soc_ifc_ctrl_pkg/yaml/soc_ifc_ctrl_interface.yaml \
                                          ../../soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/interface_packages/cptra_status_pkg/yaml/cptra_status_interface.yaml \
                                          ../../soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/interface_packages/soc_ifc_status_pkg/yaml/soc_ifc_status_interface.yaml \
+                                         ../../soc_ifc/uvmf_soc_ifc/ss_mode_ctrl_interface.yaml \
+                                         ../../soc_ifc/uvmf_soc_ifc/ss_mode_status_interface.yaml \
+                                         ../../soc_ifc/uvmf_soc_ifc/mbox_sram_interface.yaml \
                                          ../../soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/yaml/soc_ifc_util_comp_soc_ifc_predictor.yaml \
                                          ../../soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/yaml/soc_ifc_util_comp_soc_ifc_scoreboard.yaml \
-                                         ../../soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/yaml/soc_ifc_environment.yaml \
+                                         ../../soc_ifc/uvmf_soc_ifc/soc_ifc_environment.yaml \
                                          caliptra_top_environment.yaml \
                                          caliptra_top_bench.yaml \
                                          -d uvmf_template_output_merged
-

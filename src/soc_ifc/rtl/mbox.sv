@@ -90,6 +90,9 @@ module mbox
     // Status
     output logic uc_mbox_lock,
 
+    // Mailbox busy indicator (keep-alive for clock gating).
+    output logic busy,
+
     //interrupts
     output logic uc_mbox_data_avail,
     output logic soc_mbox_data_avail,
@@ -302,7 +305,9 @@ always_comb rdptr_inc_valid = ({1'b0,mbox_rdptr} < dlen_in_dws) & (mbox_rdptr < 
 // No more valid reads if we read the last entry
 // On pre-load of entry 0, ensure that next dlen isn't 0
 // Restrict reads once read pointer has passed the dlen
-always_comb mbox_rd_valid = (rst_mbox_rdptr & (dlen_in_dws_nxt != 0)) | (~rst_mbox_rdptr & ~mbox_rd_full & ({1'b0,mbox_rdptr} < dlen_in_dws));
+// Gate on mbox_protocol_sram_rd so mbox_rd_valid only asserts on an actual
+// protocol SRAM read, avoiding driving X into mbox_dataout.
+always_comb mbox_rd_valid = mbox_protocol_sram_rd && ((rst_mbox_rdptr & (dlen_in_dws_nxt != 0)) | (~rst_mbox_rdptr & ~mbox_rd_full & ({1'b0,mbox_rdptr} < dlen_in_dws)));
 // Restrict the write pointer from rolling over
 always_comb wrptr_inc_valid = mbox_wrptr < (MBOX_SIZE_DWORDS-1);
 
@@ -544,8 +549,10 @@ always_ff @(posedge clk or negedge rst_b) begin
                              
         dlen_in_dws <= latch_dlen_in_dws ? dlen_in_dws_nxt : dlen_in_dws;                    
         mbox_protocol_error <= mbox_protocol_error_nxt;
-        //enable ecc for mbox protocol, direct reads, or SHA direct reads
-        sram_rd_ecc_en <= mbox_protocol_sram_rd | (dir_req_dv_q & ~sha_sram_req_dv & ~req_data_write) | (dma_sram_req_dv_q & ~dma_sram_req_write) | sha_sram_req_dv;
+        // Enable ecc read-check only when this cycle issued a genuine SRAM read
+        // (cs asserted, we deasserted), tying directly to the SRAM control signals
+        // so the read-check can never assert on a write cycle. See issue #1183.
+        sram_rd_ecc_en <= mbox_sram_req_cs & ~mbox_sram_req_we;
     end
 end
 
@@ -606,6 +613,18 @@ always_comb begin: mbox_sram_inf
     sha_sram_resp_ecc  = sram_rdata_cor_ecc;
     sha_sram_resp_data = sram_rdata_cor;
 end
+
+// Mailbox busy indicator used to keep the soc_ifc clock alive so the clock
+// cannot be gated mid-operation. High whenever the mailbox is:
+//   (a) servicing a request on any interface (raw DVs stay asserted through their
+//       read-data phase because the hold/stall mechanism holds them high)
+//   (b) running an ECC read-check
+//   (c) driving an SRAM access
+//   (d) transitioning FSM state
+always_comb busy = req_dv | dir_req_dv | dma_sram_req_dv | sha_sram_req_dv |
+                   sram_rd_ecc_en |
+                   mbox_sram_req_cs |
+                   (mbox_fsm_ns != mbox_fsm_ps);
 
 // From RISC-V core beh_lib.sv
 // 32-bit data width hardcoded

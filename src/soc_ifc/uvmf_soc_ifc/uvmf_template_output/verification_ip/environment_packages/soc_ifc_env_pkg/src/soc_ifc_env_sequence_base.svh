@@ -26,6 +26,8 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
+// Provides common register-model and interface-sequence access for soc_ifc
+// virtual sequences.
 class soc_ifc_env_sequence_base #( 
       type CONFIG_T
       ) extends uvmf_virtual_sequence_base #(.CONFIG_T(CONFIG_T));
@@ -47,6 +49,8 @@ class soc_ifc_env_sequence_base #(
 // base class of this sequence.  The configuration handle is retrieved from the
 // virtual sequencer that this sequence is started on.
 // Available sequencer handles within the environment configuration:
+// Custom SRAM and recovery endpoint sequencers are intentionally not stored in
+// configuration; coordinating sequences access them through m_sequencer.
 
   // Initiator agent sequencers in soc_ifc_environment:
     // configuration.soc_ifc_ctrl_agent_config.sequencer
@@ -81,24 +85,31 @@ class soc_ifc_env_sequence_base #(
     cptra_status_agent_responder_seq_t cptra_status_agent_rsp_seq;
     ss_mode_status_agent_responder_seq_t ss_mode_status_agent_rsp_seq;
 
+  // Report entry into a soc_ifc environment sequence.
   virtual task pre_start();
-    `uvm_info(this.get_type_name(), "In: pre_start() for sequence", UVM_NONE)
+    `uvm_info(this.get_type_name(), "Starting soc_ifc environment sequence",
+              UVM_LOW)
   endtask
 
+  // Return the current mailbox SRAM ECC injection mode.
   virtual function get_mbox_sram_ecc_error_injection();
     return this.configuration.mbox_sram_agent_config.inject_ecc_error;
   endfunction
+  // Enable single-bit mailbox SRAM ECC injection.
   virtual function set_mbox_sram_ecc_single_error_injection();
     this.configuration.mbox_sram_agent_config.inject_ecc_error |= 2'b01;
   endfunction
+  // Enable double-bit mailbox SRAM ECC injection.
   virtual function set_mbox_sram_ecc_double_error_injection();
     this.configuration.mbox_sram_agent_config.inject_ecc_error |= 2'b10;
   endfunction
+  // Disable mailbox SRAM ECC injection.
   virtual function clr_mbox_sram_ecc_error_injection();
     this.configuration.mbox_sram_agent_config.inject_ecc_error = 2'b00;
   endfunction
   // pragma uvmf custom class_item_additional end
   
+  // Construct the default child sequences.
   function new(string name = "" );
     super.new(name);
     soc_ifc_ctrl_agent_rand_seq = soc_ifc_ctrl_agent_random_sequence_t::type_id::create("soc_ifc_ctrl_agent_rand_seq");
@@ -108,6 +119,7 @@ class soc_ifc_env_sequence_base #(
 
   endfunction
 
+  // Run the default random control-agent workload.
   virtual task body();
 
     if ( configuration.soc_ifc_ctrl_agent_config.sequencer != null )
@@ -124,4 +136,3 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

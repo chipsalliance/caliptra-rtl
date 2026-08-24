@@ -18,6 +18,7 @@ interface axi_dma_top_cov_if
     import soc_ifc_pkg::*;
     import axi_dma_reg_pkg::*;
     import kv_defines_pkg::*;
+    import axi_pkg::*;
     #(
         parameter AW = 64,
         parameter DW = 32,         // Data Width
@@ -142,6 +143,23 @@ interface axi_dma_top_cov_if
     assign mb_lock_error = axi_dma_top.i_axi_dma_ctrl.mb_lock_error;
     assign aes_error = axi_dma_top.i_axi_dma_ctrl.aes_error;
     assign all_bytes_transferred = axi_dma_top.i_axi_dma_ctrl.all_bytes_transferred;
+
+    // Write-response saturation gate observation. Mirrors the axi_dma_ctrl
+    // w_req_if.valid assignment so the covergroup can witness both saturation
+    // and the case where saturation is the sole reason a write request is held
+    // off. wr_req_pre_sat_valid reconstructs every w_req_if.valid term except
+    // the saturation gate; keep it identical to the RTL assignment.
+    logic [3:0] wr_resp_pending;
+    logic       wr_resp_saturated;
+    logic       wr_req_pre_sat_valid;
+
+    assign wr_resp_pending    = axi_dma_top.i_axi_dma_ctrl.wr_resp_pending;
+    assign wr_resp_saturated  = &wr_resp_pending;
+    assign wr_req_pre_sat_valid =
+        (ctrl_fsm_ps == DMA_WAIT_DATA) &&
+        !axi_dma_top.i_axi_dma_ctrl.wr_req_hshake_bypass &&
+        (axi_dma_top.i_axi_dma_ctrl.wr_bytes_requested < axi_dma_top.i_axi_dma_ctrl.hwif_out.byte_count.count.value) &&
+        ((AXI_LEN_BC_WIDTH-BW)'(axi_dma_top.i_axi_dma_ctrl.wr_credits) >= axi_dma_top.i_axi_dma_ctrl.wr_req_byte_count[AXI_LEN_BC_WIDTH-1:BW]);
 
     // Pulse dma_xfer_start_pulse at beginning to DMA_WAIT_DATA state
     always_ff @(posedge clk or negedge rst_n) begin
@@ -790,6 +808,19 @@ interface axi_dma_top_cov_if
         wr_aes_ceil_req_dma_wait: coverpoint (axi_dma_top.i_axi_dma_ctrl.wr_aes_ceil_req_byte_count < 16 && axi_dma_top.i_axi_dma_ctrl.w_req_if.valid && axi_dma_top.i_axi_dma_ctrl.wr_sel_req_byte_count < axi_dma_top.i_axi_dma_ctrl.wr_align_req_byte_count  && axi_dma_top.i_axi_dma_ctrl.hwif_out.ctrl.aes_mode_en.value && 
                                               ctrl_fsm_ps == DMA_WAIT_DATA) {
             bins wr_aes_ceil_dma_wait = {1};
+        }
+
+        // wr_resp_pending saturated (counter == 4'hF)
+        wr_resp_pending_saturated: coverpoint (wr_resp_saturated) {
+            bins saturated = {1};
+        }
+
+        // Saturation is the sole reason w_req_if.valid is held low: all other
+        // w_req_if.valid conditions in axi_dma_ctrl are asserted while the
+        // counter is saturated. Witnesses the gate blocking an otherwise-ready
+        // write request.
+        wr_req_stalled_by_saturation: coverpoint (wr_resp_saturated && wr_req_pre_sat_valid) {
+            bins stalled = {1};
         }
     endgroup
     

@@ -5,6 +5,12 @@
 `ifndef CALIPTRA_PRIM_FLOP_MACROS_SV
 `define CALIPTRA_PRIM_FLOP_MACROS_SV
 
+// This fragment uses shared macros (CALIPTRA_ASSERT, CALIPTRA_PRIM_STRINGIFY)
+// that are defined by caliptra_prim_assert.sv. Include it so the fragment is
+// self-contained for standalone lint; the top guard in caliptra_prim_assert.sv
+// makes this a no-op when the fragment is pulled in via that header.
+`include "caliptra_prim_assert.sv"
+
 /////////////////////////////////////
 // Default Values for Macros below //
 /////////////////////////////////////

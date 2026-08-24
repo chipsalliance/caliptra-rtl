@@ -150,6 +150,22 @@ package soc_ifc_pkg;
         BOOT_ERROR  = 10'b1011111000
     } boot_fsm_state_e;
 
+    // Sequential, backwards-compatible 3-bit encoding of the sparse boot_fsm_state_e
+    // that is exposed to software via CPTRA_FLOW_STATUS.boot_fsm_ps. This is the single
+    // source of truth shared by the RTL (soc_ifc_boot_fsm.boot_fsm_ps_encoded) and the
+    // verification environment, so the sparse encoding can change without touching either.
+    function automatic logic [2:0] boot_fsm_ps_encode(boot_fsm_state_e state);
+        unique case (state)
+            BOOT_IDLE:   boot_fsm_ps_encode = 3'd0;
+            BOOT_FUSE:   boot_fsm_ps_encode = 3'd1;
+            BOOT_FW_RST: boot_fsm_ps_encode = 3'd2;
+            BOOT_WAIT:   boot_fsm_ps_encode = 3'd3;
+            BOOT_DONE:   boot_fsm_ps_encode = 3'd4;
+            BOOT_ERROR:  boot_fsm_ps_encode = 3'd5;
+            default:     boot_fsm_ps_encode = 3'd5;
+        endcase
+    endfunction
+
     //SHA FSM
     // Encoding generated with
     // $ python3 sparse_fsm_encode.py -d 5 -m 7 -n 10 -s 16180339

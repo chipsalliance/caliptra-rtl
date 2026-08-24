@@ -69,8 +69,9 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_errortrigger5/smoke_test_ecc_errortrigger5.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_pcr_zeroize/smoke_test_pcr_zeroize.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ahb_mux/smoke_test_ahb_mux.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_rand/smoke_test_doe_rand.yml
-        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_scan/smoke_test_doe_scan.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_axi_wr_rst/smoke_test_axi_wr_rst.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe/smoke_test_doe.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_doe_scan/directed_doe_scan.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_zeroize_crypto/smoke_test_zeroize_crypto.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_cg/smoke_test_doe_cg.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic.yml
@@ -82,6 +83,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_clk_gating/smoke_test_clk_gating.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_iccm_reset/smoke_test_iccm_reset.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma/smoke_test_dma.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mbox_dma_ecc/smoke_test_mbox_dma_ecc.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hek_flow/smoke_test_hek_flow.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/kv_entry_read_err/kv_entry_read_err.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_swwe_lock/smoke_test_kv_swwe_lock.yml

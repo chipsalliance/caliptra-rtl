@@ -154,8 +154,13 @@ always_comb uc_sha_req = (uc_req_dv & (uc_req_data.addr inside {[SHA_REG_START_A
 always_comb soc_sha_req = (soc_req_dv & (soc_req_data.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]})) & valid_sha_user;
 
 // Requests to DMA
+// The AXI DMA register block is owned exclusively by Caliptra uC firmware (the
+// DMA assist is Caliptra's AXI manager, per the Caliptra Integration/Hardware
+// Specifications). SoC AXI agents are not permitted to reach it, so the SoC->DMA
+// path is held off here. SoC accesses to the DMA address range then fall through
+// to the unmapped-access term in soc_error below, returning SLVERR.
 always_comb uc_dma_req = (uc_req_dv & (uc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}));
-always_comb soc_dma_req = (soc_req_dv & (soc_req_data.addr inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}));
+always_comb soc_dma_req = 1'b0;
 
 //Check if SoC request is coming from a valid user
 //There are 5 valid user registers, check if user attribute matches any of them
@@ -255,5 +260,11 @@ always_comb soc_error = (soc_mbox_gnt & mbox_error) |
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_SHA_ACCESS_MUTEX , {uc_sha_gnt,soc_sha_gnt}, clk, !rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_DMA_ACCESS_MUTEX , {uc_dma_gnt,soc_dma_gnt}, clk, !rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_ARB_MBOX_REG_AND_DIR_ACCESS_MUTEX, {mbox_req_dv,mbox_dir_req_dv}, clk, !rst_b)
+
+// The AXI DMA register block is Caliptra-uC-only (owned over AHB); no SoC-AXI
+// agent may reach it. The SoC->DMA path is held off (soc_dma_req=1'b0), so the
+// DMA client must never be granted to the SoC. This guards against any future
+// re-introduction of a SoC->DMA path, independent of DMA state.
+`CALIPTRA_ASSERT_NEVER(ERR_ARB_SOC_DMA_GNT, soc_dma_gnt, clk, !rst_b)
 
 endmodule

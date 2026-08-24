@@ -368,7 +368,7 @@ module ecc_dsa_ctrl
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode       ? pcr_signing_data.pcr_ecc_signing_privkey[dword] : 
                                                             kv_privkey_write_en ? kv_privkey_write_data : 
                                                                                   read_reg[11-dword];
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error == KV_READ_FAIL);
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error != KV_SUCCESS);
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = ecc_ready_reg & ~kv_key_data_present;
         end 
 
@@ -383,7 +383,7 @@ module ecc_dsa_ctrl
             seed_reg[dword] = hwif_out.ECC_SEED[11-dword].SEED.value;
             hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
-            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error == KV_READ_FAIL);
+            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error != KV_SUCCESS);
             hwif_in.ECC_SEED[dword].SEED.swwe  = ecc_ready_reg & ~kv_seed_data_present;
         end
 
@@ -921,7 +921,9 @@ module ecc_dsa_ctrl
 
         .error_code(kv_privkey_error),
         .kv_ready(kv_privkey_ready),
-        .read_done(kv_privkey_done)
+        .read_done(kv_privkey_done),
+        .check_key_size(1'b0),
+        .expected_key_size(KV_ENTRY_SIZE_W'((REG_SIZE/32)-1))
     );
 
     //Read SEED
@@ -956,7 +958,9 @@ module ecc_dsa_ctrl
 
         .error_code(kv_seed_error),
         .kv_ready(kv_seed_ready),
-        .read_done(kv_seed_done)
+        .read_done(kv_seed_done),
+        .check_key_size(1'b0),
+        .expected_key_size(KV_ENTRY_SIZE_W'((REG_SIZE/32)-1))
     );
 
     //Write to keyvault

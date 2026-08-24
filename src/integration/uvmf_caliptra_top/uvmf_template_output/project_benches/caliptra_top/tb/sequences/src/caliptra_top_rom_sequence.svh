@@ -40,6 +40,14 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
 
   int sts_rsp_count = 0;
 
+  // Shared flags between body() and the forked monitor_fatal_error task.
+  // Kept as class members (not ref-args) so the forked process accesses them
+  // directly; passing them as ref arguments into a fork-join_none/any triggers
+  // VCS SV-IATRA "Illegal access to reference argument".
+  bit body_done;
+  bit monitor_ready;
+  bit monitor_done;
+
   function new(string name = "" );
     super.new(name);
     reg_model = top_configuration.soc_ifc_subenv_config.soc_ifc_rm;
@@ -47,8 +55,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
   endfunction
 
   // ****************************************************************************
-  virtual task monitor_fatal_error(ref bit body_done, ref bit monitor_ready,
-                                   ref bit monitor_done);
+  virtual task monitor_fatal_error();
     uvm_status_e fw_sts, hw_sts;
     uvm_reg_data_t fw_fatal, hw_fatal;
     bit fatal_handled = 1'b0;
@@ -130,9 +137,9 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     // pragma uvmf custom body begin
     // Construct sequences here
     uvm_object obj;
-    bit body_done = 1'b0;
-    bit monitor_ready = 1'b0;
-    bit monitor_done = 1'b0;
+    body_done = 1'b0;
+    monitor_ready = 1'b0;
+    monitor_done = 1'b0;
 
     caliptra_top_env_seq = caliptra_top_env_sequence_base_t::type_id::create("caliptra_top_env_seq");
     soc_ifc_env_bringup_seq = soc_ifc_env_rom_bringup_sequence_t::type_id::create("soc_ifc_env_bringup_seq");
@@ -155,7 +162,7 @@ class caliptra_top_rom_sequence extends caliptra_top_bench_sequence_base;
     reg_model.reset();
     axi_user_obj.set_addr_user(reg_model.soc_ifc_reg_rm.CPTRA_MBOX_VALID_AXI_USER[0].AXI_USER.get_reset("HARD"));
     fork
-        monitor_fatal_error(body_done, monitor_ready, monitor_done);
+        monitor_fatal_error();
     join_none
     wait(monitor_ready);
     #0;

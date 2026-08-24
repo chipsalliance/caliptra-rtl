@@ -30,7 +30,6 @@ The blocks described in this document are either obtained from open-source GitHu
 | AHB Lite Bus | [aignacio/ahb_lite_bus: AHB Bus lite v3.0 (github.com)](https://github.com/aignacio/ahb_lite_bus) | AHB Lite Protocol<br> [Figure: SoC interface block diagram](#soc-interface-definition) | [ahb_lite_bus/docs at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/tree/master/docs)<br> [ahb_lite_bus/diagram_ahb_bus.png at master · aignacio/ahb_lite_bus (github.com)](https://github.com/aignacio/ahb_lite_bus/blob/master/diagram_ahb_bus.png) |
 | SHA 256 | [secworks/sha256: Hardware implementation of the SHA-256 cryptographic hash function (github.com)](https://github.com/secworks/sha256) | | |
 | SHA 512 | | | |
-| SPI Controller | <https://github.com/pulp-platform/axi_spi_master> | | |
 
 # Caliptra Core
 
@@ -409,6 +408,7 @@ All accesses that are outside of the defined address space of Caliptra are respo
 * Access to mailbox memory region with invalid AXI_USER are dropped.
 * Access to a fuse with invalid AXI_USER are dropped.
 * Access to the trng with invalid AXI_USER are dropped.
+* Access to the AXI DMA via the AXI interface are dropped.
 * SLVERR is asserted for any of the above conditions.
 
 All accesses must be 32-bit aligned. Misaligned writes are dropped and reads return 0x0.
@@ -1397,9 +1397,6 @@ The following terminology is used in this document.
 | BMI          | Boot Media Integrated                                                                            |
 | ECC          | Elliptic Curve Cryptography                                                                      |
 | ECO          | Engineering Change Order (used to implement logic changes to a hardware design post-synthesis)   |
-| QSPI         | Quad Serial Peripheral Interface                                                                 |
 | RISC         | Reduced Instruction Set Computer                                                                 |
 | SHA          | Secure Hashing Algorithm                                                                         |
-| SPI          | Serial Peripheral Interface                                                                      |
-| UART         | Universal Asynchronous Receiver Transmitter                                                      |
 | UC           | Microcontroller, referring to Caliptra's internal RISC-V processor core                          |
