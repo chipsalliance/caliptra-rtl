@@ -78,6 +78,10 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_reset/smoke_test_datavault_reset.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_lock/smoke_test_datavault_lock.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_stash_bank/smoke_test_stash_bank.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_stash_bank_negative/smoke_test_stash_bank_negative.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_stash_bank_cptra_lock/smoke_test_stash_bank_cptra_lock.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_stash_bank_rst/smoke_test_stash_bank_rst.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_wdt/smoke_test_wdt.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_wdt_rst/smoke_test_wdt_rst.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cg_wdt/smoke_test_cg_wdt.yml

@@ -1668,6 +1668,41 @@ class soc_ifc_predictor #(
                 "CPTRA_WDT_STATUS": begin
                     `uvm_info("PRED_AHB", "AHB access of WDT status", UVM_MEDIUM);
                 end
+                ["STASH_BANK_SLOT_DATA[0]":"STASH_BANK_SLOT_DATA[9]"],
+                ["STASH_BANK_SLOT_DATA[10]":"STASH_BANK_SLOT_DATA[99]"],
+                ["STASH_BANK_SLOT_DATA[100]":"STASH_BANK_SLOT_DATA[207]"],
+                "STASH_BANK_SOC_LOCK",
+                "STASH_END_STASH": begin
+                    // SoC/AXI-only registers; RTL silently drops accesses from the
+                    // Caliptra/AHB side. Real sequences shouldn't hit this via AHB
+                    // except as part of invalid-access/decode-error style testing.
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", {"Write to SoC/AXI-only register: ", axs_reg.get_name(), " via AHB has no effect on system"}, UVM_MEDIUM)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Read to ", axs_reg.get_name(), " via AHB has no effect on system"}, UVM_HIGH)
+                    end
+                end
+                "STASH_BANK_CPTRA_LOCK": begin
+                    // WO, Caliptra-side lock; sets slot_locked+cptra_lock bits in
+                    // STASH_BANK_STATUS (until reset). No further state tracked here
+                    // since STASH_BANK_STATUS is RO and reflects RTL state directly.
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_info("PRED_AHB", $sformatf("Write to %s locks Caliptra-side access to the stash bank (until reset)", axs_reg.get_name()), UVM_MEDIUM)
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_DEBUG)
+                    end
+                end
+                "STASH_BANK_STATUS": begin
+                    // RO status register; writes have no effect on system state
+                    if (ahb_txn.RnW == AHB_WRITE) begin
+                        `uvm_warning("PRED_AHB", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
+                    end
+                    else begin
+                        `uvm_info("PRED_AHB", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_DEBUG)
+                    end
+                end
                 "CPTRA_FUSE_VALID_AXI_USER",
                 "CPTRA_FUSE_AXI_USER_LOCK": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
@@ -2863,6 +2898,47 @@ class soc_ifc_predictor #(
 //                else if (axi_txn.is_read()) begin
 //                    send_soc_ifc_sts_txn = 1'b0;
 //                end
+            end
+            ["STASH_BANK_SLOT_DATA[0]":"STASH_BANK_SLOT_DATA[9]"],
+            ["STASH_BANK_SLOT_DATA[10]":"STASH_BANK_SLOT_DATA[99]"],
+            ["STASH_BANK_SLOT_DATA[100]":"STASH_BANK_SLOT_DATA[207]"]: begin
+                // SoC/AXI-only write; RTL silently drops the write once the owning
+                // slot is locked (STASH_BANK_SOC_LOCK) or stash is ended
+                // (STASH_END_STASH). No additional predictor-side state to track;
+                // the RAL mirror is updated by the frontdoor write itself.
+                if (axi_txn.is_write()) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s stores stash bank slot data (dropped if slot locked or stash ended)", axs_reg.get_name()), UVM_HIGH)
+                end
+                else begin
+                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_HIGH)
+                end
+            end
+            "STASH_BANK_SOC_LOCK": begin
+                // W1S, SoC/AXI-only; sets per-slot lock bits, cleared only on reset
+                if (axi_txn.is_write()) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s sets SoC-side per-slot stash lock bit(s) (W1S, cleared only on reset)", axs_reg.get_name()), UVM_MEDIUM)
+                end
+                else begin
+                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_HIGH)
+                end
+            end
+            "STASH_END_STASH": begin
+                // WO, SoC/AXI-only; marks the stash bank contents as finalized
+                if (axi_txn.is_write()) begin
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s marks the stash bank contents as finalized", axs_reg.get_name()), UVM_MEDIUM)
+                end
+                else begin
+                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_HIGH)
+                end
+            end
+            "STASH_BANK_STATUS": begin
+                // RO status register, readable from both AXI and AHB
+                if (axi_txn.is_write()) begin
+                    `uvm_warning("PRED_AXI", {"Write to RO register: ", axs_reg.get_name(), " has no effect on system"})
+                end
+                else begin
+                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_HIGH)
+                end
             end
             "CPTRA_TRNG_VALID_AXI_USER",
             "CPTRA_TRNG_AXI_USER_LOCK",
