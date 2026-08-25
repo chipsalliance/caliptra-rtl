@@ -30,10 +30,10 @@ class soc_ifc_env_mbox_rand_delay_large_sequence extends soc_ifc_env_mbox_rand_d
   `uvm_object_utils( soc_ifc_env_mbox_rand_delay_large_sequence )
 
   // Constrain size to a large command
-  // Min. size: 16KiB
-  constraint mbox_dlen_min_large_c { mbox_op_rand.dlen > 32'h0000_4000; }
+  // Min. size: one-eighth of the mailbox
+  constraint mbox_dlen_min_large_c { mbox_op_rand.dlen > (CPTRA_MBOX_SIZE_BYTES/8); }
   // Constrain response data size to also be large
-  // Min. size: 16KiB
-  constraint mbox_resp_dlen_min_large_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= 32'h0000_4000; }
+  // Min. size: one-eighth of the mailbox
+  constraint mbox_resp_dlen_min_large_c { mbox_op_rand.cmd.cmd_s.resp_reqd -> mbox_resp_expected_dlen >= (CPTRA_MBOX_SIZE_BYTES/8); }
 
 endclass

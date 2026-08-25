@@ -47,29 +47,27 @@ qvip_memory_message_handler message_handler;
 
 
   string interface_names[] = {
-    uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */ , 
+    uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0 /* ahb_lite_slave_0     [0] */,
 //    uvm_test_top_environment_soc_ifc_subenv_qvip_apb5_slave_subenv_apb5_master_0 /* apb5_master_0     [1] */ , 
-    uvm_test_top_environment_soc_ifc_subenv_aaxi_tb_env0_master_0 /* aaxi_tb.env0.master[0] [1] */ , 
-    soc_ifc_subenv_soc_ifc_ctrl_agent_BFM /* soc_ifc_subenv_soc_ifc_ctrl_agent     [2] */ , 
-    soc_ifc_subenv_cptra_ctrl_agent_BFM /* soc_ifc_subenv_cptra_ctrl_agent     [3] */ , 
-    soc_ifc_subenv_ss_mode_ctrl_agent_BFM /* soc_ifc_subenv_ss_mode_ctrl_agent     [4] */ , 
-    soc_ifc_subenv_soc_ifc_status_agent_BFM /* soc_ifc_subenv_soc_ifc_status_agent     [5] */ , 
-    soc_ifc_subenv_cptra_status_agent_BFM /* soc_ifc_subenv_cptra_status_agent     [6] */ , 
-    soc_ifc_subenv_ss_mode_status_agent_BFM /* soc_ifc_subenv_ss_mode_status_agent     [7] */ , 
-    soc_ifc_subenv_mbox_sram_agent_BFM /* soc_ifc_subenv_mbox_sram_agent     [8] */ 
+    soc_ifc_subenv_soc_ifc_ctrl_agent_BFM /* soc_ifc_subenv_soc_ifc_ctrl_agent     [1] */,
+    soc_ifc_subenv_cptra_ctrl_agent_BFM /* soc_ifc_subenv_cptra_ctrl_agent     [2] */,
+    soc_ifc_subenv_ss_mode_ctrl_agent_BFM /* soc_ifc_subenv_ss_mode_ctrl_agent     [3] */,
+    soc_ifc_subenv_soc_ifc_status_agent_BFM /* soc_ifc_subenv_soc_ifc_status_agent     [4] */,
+    soc_ifc_subenv_cptra_status_agent_BFM /* soc_ifc_subenv_cptra_status_agent     [5] */,
+    soc_ifc_subenv_ss_mode_status_agent_BFM /* soc_ifc_subenv_ss_mode_status_agent     [6] */,
+    soc_ifc_subenv_mbox_sram_agent_BFM /* soc_ifc_subenv_mbox_sram_agent     [7] */
 };
 
-uvmf_active_passive_t interface_activities[] = { 
-    PASSIVE /* ahb_lite_slave_0     [0] */ , 
+uvmf_active_passive_t interface_activities[] = {
+    PASSIVE /* ahb_lite_slave_0     [0] */,
 //    ACTIVE /* apb5_master_0     [1] */ , 
-    ACTIVE /* aaxi_tb.env0.master[0] [1] */ , 
-    ACTIVE /* soc_ifc_subenv_soc_ifc_ctrl_agent     [2] */ , 
-    PASSIVE /* soc_ifc_subenv_cptra_ctrl_agent     [3] */ , 
-    ACTIVE /* soc_ifc_subenv_ss_mode_ctrl_agent     [4] */ , 
-    ACTIVE /* soc_ifc_subenv_soc_ifc_status_agent     [5] */ , 
-    PASSIVE /* soc_ifc_subenv_cptra_status_agent     [6] */ ,
-    ACTIVE /* soc_ifc_subenv_ss_mode_status_agent     [7] */ , 
-    ACTIVE /* soc_ifc_subenv_mbox_sram_agent     [8] */   };
+    ACTIVE /* soc_ifc_subenv_soc_ifc_ctrl_agent     [1] */,
+    PASSIVE /* soc_ifc_subenv_cptra_ctrl_agent     [2] */,
+    ACTIVE /* soc_ifc_subenv_ss_mode_ctrl_agent     [3] */,
+    ACTIVE /* soc_ifc_subenv_soc_ifc_status_agent     [4] */,
+    PASSIVE /* soc_ifc_subenv_cptra_status_agent     [5] */,
+    ACTIVE /* soc_ifc_subenv_ss_mode_status_agent     [6] */,
+    ACTIVE /* soc_ifc_subenv_mbox_sram_agent     [7] */};
 
   // pragma uvmf custom class_item_additional begin
   // pragma uvmf custom class_item_additional end
@@ -101,6 +99,23 @@ uvmf_active_passive_t interface_activities[] = {
 // pragma uvmf custom build_phase_pre_super end
     super.build_phase(phase);
     // pragma uvmf custom configuration_settings_post_randomize begin
+    configuration.soc_ifc_subenv_config.configure_axi_endpoints(
+      .soc_ifc_base_addr(AXI_SOC_IFC_BASE_ADDR),
+      .soc_ifc_limit_addr(AXI_SOC_IFC_LIMIT_ADDR),
+      .sram_base_addr(AXI_SRAM_BASE_ADDR),
+      .sram_size_bytes(AXI_SRAM_SIZE_BYTES),
+      .sram_word_bytes(AXI_SRAM_WORD_BYTES),
+      .recovery_fifo_addr(AXI_RECOVERY_FIFO_ADDR),
+      .recovery_fifo_depth_dwords_default(AXI_RECOVERY_FIFO_DEPTH_DWORDS_DEFAULT),
+      .outstanding_depth(AXI_FABRIC_OUTSTANDING_DEPTH),
+      .sram_b_delay_min_default(AXI_SRAM_B_DELAY_MIN_DEFAULT),
+      .sram_b_delay_max_default(AXI_SRAM_B_DELAY_MAX_DEFAULT),
+      .sram_r_delay_min_default(AXI_SRAM_R_DELAY_MIN_DEFAULT),
+      .sram_r_delay_max_default(AXI_SRAM_R_DELAY_MAX_DEFAULT),
+      .recovery_r_delay_min_default(AXI_RECOVERY_R_DELAY_MIN_DEFAULT),
+      .recovery_r_delay_max_default(AXI_RECOVERY_R_DELAY_MAX_DEFAULT),
+      .recovery_refill_delay_min_default(AXI_RECOVERY_FIFO_REFILL_DELAY_MIN_DEFAULT),
+      .recovery_refill_delay_max_default(AXI_RECOVERY_FIFO_REFILL_DELAY_MAX_DEFAULT));
     // pragma uvmf custom configuration_settings_post_randomize end
     configuration.initialize(NA, "uvm_test_top.environment", interface_names, null, interface_activities);
   endfunction
@@ -109,4 +124,3 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

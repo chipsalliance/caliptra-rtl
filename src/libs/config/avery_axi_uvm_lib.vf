@@ -1,3 +1,5 @@
++define+AVERY_AXI_UVM+AVERY_UVM
++define+AVERY_AXI_INTERCONNECT
 +incdir+${UVM_HOME}/src
 +incdir+${UVM_HOME}/src/dpi
 +incdir+${CALIPTRA_AXI4PC_DIR}

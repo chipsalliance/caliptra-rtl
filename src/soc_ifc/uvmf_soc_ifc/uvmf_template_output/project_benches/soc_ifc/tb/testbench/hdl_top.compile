@@ -12,10 +12,4 @@ needs:
   - ../../../../verification_ip/interface_packages/ss_mode_status_pkg/ss_mode_status_hdl.compile
   - ../../../../verification_ip/interface_packages/mbox_sram_pkg/mbox_sram_hdl.compile
 src:
-  # pragma uvmf custom sha_status_before begin
-  - soc_ifc_sha_status_if.sv
-  # pragma uvmf custom sha_status_before end
   - hdl_top.sv
-  # pragma uvmf custom sha_sva_after begin
-  - soc_ifc_sha_acc_state_sva.sv
-  # pragma uvmf custom sha_sva_after end
