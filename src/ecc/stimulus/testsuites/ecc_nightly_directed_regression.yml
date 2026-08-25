@@ -8,3 +8,6 @@ contents:
         - ${CALIPTRA_ROOT}/src/ecc/stimulus/tests/directed/ecc_normal_test.yml
         - ${CALIPTRA_ROOT}/src/ecc/stimulus/tests/directed/ecc_otf_reset_test.yml
         - ${CALIPTRA_ROOT}/src/ecc/stimulus/tests/directed/ecc_sca_config_test.yml
+        - ${CALIPTRA_ROOT}/src/ecc/stimulus/tests/directed/ecc_acvp_sigver_test.yml
+        - ${CALIPTRA_ROOT}/src/ecc/stimulus/tests/directed/ecc_acvp_siggen_test.yml
+        - ${CALIPTRA_ROOT}/src/ecc/stimulus/tests/directed/ecc_acvp_keygen_test.yml

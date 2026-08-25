@@ -11,6 +11,15 @@ targets:
       - $COMPILE_ROOT/rtl/aes_reg_pkg.sv
       - $COMPILE_ROOT/rtl/aes_pkg.sv
       - $COMPILE_ROOT/rtl/aes_sbox_canright_pkg.sv
+      - $COMPILE_ROOT/rtl/aes_clp_reg_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/aes_reg_pkg.sv
+      - $COMPILE_ROOT/rtl/aes_pkg.sv
+      - $COMPILE_ROOT/rtl/aes_sbox_canright_pkg.sv
+      - $COMPILE_ROOT/rtl/aes_clp_reg_pkg.sv
+
 ---
 provides: [aes]
 schema_version: 2.4.0
@@ -65,3 +74,15 @@ targets:
     directories: []
     waiver_files: []
     tops: [aes_cipher_core]
+---
+provides: [aes_clp_tb]
+schema_version: 2.4.0
+requires:
+  - aes
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/aes_clp_tb.sv
+    tops: [aes_clp_tb]
