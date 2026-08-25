@@ -455,7 +455,7 @@ addrmap kmac_reg {
     mem {
         name = "SHA3/SHAKE component Message FIFO";
         sw = w;
-        mementries = 0x40;
+        mementries = 0x200;
         memwidth = 0x20;
         desc = "Message FIFO. window size is 2048 bytes.
         Any write operation to this window will be appended to MSG_FIFO. SW can
