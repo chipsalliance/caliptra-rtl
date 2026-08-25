@@ -110,9 +110,6 @@ class JsonImporter(RDLImporter):
     if access_type == 'rw0c':
       self.assign_property(comp_def, 'sw', AccessType['rw'])
       self.assign_property(comp_def, 'onwrite', OnWriteType['wzc'])
-    if access_type == 'rw0c':
-      self.assign_property(comp_def, 'sw', AccessType['rw'])
-      self.assign_property(comp_def, 'onwrite', OnWriteType['woclr'])
     elif access_type == 'rw':
       self.assign_property(comp_def, 'sw', AccessType['rw'])
     elif access_type == 'ro':
@@ -265,7 +262,6 @@ class JsonImporter(RDLImporter):
       elif addr == 0x4:
         field_desc = 'Enable interrupt when %s is set.' % field_name
         self.assign_property(field_def, 'sw', AccessType['rw'])
-        self.assign_property(field_def, 'onwrite', OnWriteType['woclr'])
       elif addr == 0x8:
         field_desc = 'Write 1 to force %s to 1.' % field_name
         self.assign_property(field_def, 'sw', AccessType['w'])

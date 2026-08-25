@@ -49,8 +49,10 @@ done
 patn=$(echo "${gen_rtl_list[@]}" | sed 's, ,\\\|,g')
 
 # Find file modifications
-rdl_mod_count=$(git diff --merge-base "${merge_dest}" --name-only | grep -c -e '\.rdl$\|tools\/templates\/rdl\|reg_gen.sh\|reg_gen.py\|reg_doc_gen.sh\|reg_doc_gen.py' -e "${patn}" || exit 0)
+rdl_mod_count=$(git diff --merge-base "${merge_dest}" --name-only | grep -c -e '\.rdl$\|tools\/templates\/rdl\|reg_gen.sh\|reg_gen.py\|reg_json.py\|reg_doc_gen.sh\|reg_doc_gen.py\|tools\/scripts\/tests\/test_reg_json.py' -e "${patn}" || exit 0)
 if [[ "${rdl_mod_count}" -gt 0 ]]; then
+    python3 "${CALIPTRA_ROOT}/tools/scripts/tests/test_reg_json.py"
+
     # Run the HTML Doc generator script (to update the REG macro header files)
     # and the individual reg generator script but then remove the docs directories
     bash "${CALIPTRA_ROOT}/tools/scripts/reg_gen.sh"
