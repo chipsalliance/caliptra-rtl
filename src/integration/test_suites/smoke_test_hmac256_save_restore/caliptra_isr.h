@@ -1,0 +1,126 @@
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//
+#ifndef CALIPTRA_ISR_H
+    #define CALIPTRA_ISR_H
+
+#include "veer-csr.h"
+#include "caliptra_defines.h"
+#include <stdint.h>
+#include "printf.h"
+
+typedef struct {
+    uint32_t doe_error;
+    uint32_t doe_notif;
+    uint32_t ecc_error;
+    uint32_t ecc_notif;
+    uint32_t hmac_error;
+    uint32_t hmac_notif;
+    uint32_t kv_error;
+    uint32_t kv_notif;
+    uint32_t sha512_error;
+    uint32_t sha512_notif;
+    uint32_t sha256_error;
+    uint32_t sha256_notif;
+    uint32_t soc_ifc_error;
+    uint32_t soc_ifc_notif;
+    uint32_t sha512_acc_error;
+    uint32_t sha512_acc_notif;
+    uint32_t abr_error;
+    uint32_t abr_notif;
+    uint32_t axi_dma_error;
+    uint32_t axi_dma_notif;
+    uint32_t hmac256_error;
+    uint32_t hmac256_notif;
+} caliptra_intr_received_s;
+extern volatile caliptra_intr_received_s cptra_intr_rcv;
+
+void init_interrupts(void);
+
+inline void service_doe_error_intr() {return;}
+inline void service_doe_notif_intr() {return;}
+
+inline void service_ecc_error_intr() {return;}
+inline void service_ecc_notif_intr() {return;}
+
+inline void service_hmac_error_intr() {return;}
+inline void service_hmac_notif_intr() {return;}
+
+inline void service_kv_error_intr() {return;}
+inline void service_kv_notif_intr() {return;}
+
+inline void service_sha512_error_intr() {return;}
+inline void service_sha512_notif_intr() {return;}
+
+inline void service_sha256_error_intr() {return;}
+inline void service_sha256_notif_intr() {return;}
+
+inline void service_sha3_error_intr() {return;}
+inline void service_sha3_notif_intr() {return;}
+
+inline void service_soc_ifc_error_intr() {return;}
+inline void service_soc_ifc_notif_intr () {return;}
+
+inline void service_sha512_acc_error_intr() {return;}
+inline void service_sha512_acc_notif_intr() {return;}
+
+inline void service_abr_error_intr() {return;}
+inline void service_abr_notif_intr() {return;}
+
+inline void service_axi_dma_error_intr() {return;}
+inline void service_axi_dma_notif_intr() {return;}
+
+inline void service_hmac256_error_intr() {
+    volatile uint32_t * reg = (volatile uint32_t *) (CLP_HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK) {
+        *reg = HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK;
+        cptra_intr_rcv.hmac256_error |= HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR0_STS_MASK;
+    }
+    if (sts & HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK) {
+        *reg = HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK;
+        cptra_intr_rcv.hmac256_error |= HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR1_STS_MASK;
+    }
+    if (sts & HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK) {
+        *reg = HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK;
+        cptra_intr_rcv.hmac256_error |= HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR2_STS_MASK;
+    }
+    if (sts & HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK) {
+        *reg = HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK;
+        cptra_intr_rcv.hmac256_error |= HMAC256_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR3_STS_MASK;
+    }
+    if (sts == 0) {
+        VPRINTF(ERROR,"bad hmac256_error_intr sts:%x\n", sts);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+}
+
+inline void service_hmac256_notif_intr() {
+    volatile uint32_t * reg = (volatile uint32_t *) (CLP_HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R);
+    uint32_t sts = *reg;
+    /* Write 1 to Clear the pending interrupt */
+    if (sts & HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK) {
+        *reg = HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+        cptra_intr_rcv.hmac256_notif |= HMAC256_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+    }
+    if (sts == 0) {
+        VPRINTF(ERROR,"bad hmac256_notif_intr sts:%x\n", sts);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+}
+
+#endif //CALIPTRA_ISR_H

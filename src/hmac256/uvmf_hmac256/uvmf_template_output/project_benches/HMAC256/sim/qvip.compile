@@ -1,0 +1,9 @@
+
+incdir:
+  - $QUESTA_MVC_HOME/questa_mvc_src/sv
+  - $QVIP_AHB_LITE_SLAVE_DIR_NAME
+src:
+  - $QUESTA_MVC_HOME/include/questa_mvc_svapi.svh
+  - $QUESTA_MVC_HOME/questa_mvc_src/sv/mvc_pkg.sv
+  - -f $QVIP_AHB_LITE_SLAVE_DIR_NAME/qvip_ahb_lite_slave_filelist.f
+  - $QVIP_AHB_LITE_SLAVE_DIR_NAME/hdl_qvip_ahb_lite_slave.sv

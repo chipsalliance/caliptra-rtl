@@ -65,4 +65,7 @@ inline void service_axi_dma_error_intr   () {VPRINTF(ERROR, "ERROR");}
 inline void service_axi_dma_notif_intr   () {VPRINTF(ERROR, "ERROR");}
 
 
+inline void service_hmac256_error_intr() {return;}
+inline void service_hmac256_notif_intr() {return;}
+
 #endif //CALIPTRA_ISR_H

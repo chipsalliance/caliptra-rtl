@@ -1,0 +1,1 @@
+$UVMF_VIP_LIBRARY_HOME/interface_packages/HMAC256_rst_pkg/HMAC256_rst_pkg.sv
