@@ -16,6 +16,7 @@
 // limitations under the License.
 
 // pragma uvmf custom header begin
+`include "caliptra_macros.svh"
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------

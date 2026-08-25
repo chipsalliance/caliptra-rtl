@@ -88,6 +88,22 @@ import pv_defines_pkg::*;
 // pragma uvmf custom reset_generator end
 
   // pragma uvmf custom module_item_additional begin
+  // FSDB waveform dump (VCS + Verdi PLI via -kdb). Same style as caliptra_top_tb.
+  // Enable with +fsdbon. Useful Verdi runtime plusargs (pass on simv cmd line):
+  //   +fsdbfile+<path>              override default wave.fsdb
+  //   +fsdb+mda=on                  dump multi-dimensional arrays
+  //   +fsdb+skip_cell_instance=0    dump cell instances (0 = do not skip)
+  initial begin
+    string fsdb_path;
+    if ($test$plusargs("fsdbon")) begin
+      fsdb_path = "wave.fsdb";
+      void'($value$plusargs("fsdbfile+%s", fsdb_path));
+      $fsdbDumpfile(fsdb_path);
+      $fsdbDumpvars(0, hdl_top, "+all");
+      $display("TB: FSDB dump enabled (%s, +all); use +fsdb+mda=on +fsdb+skip_cell_instance=0 as needed", fsdb_path);
+    end
+  end
+
   // FIXME
   // This reset timing hack is necessary to work around a race condition bug
   // in Avery VIP that results in Null Object Access error when reset asserts

@@ -261,6 +261,8 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_sha_accel_sequence soc_ifc_env_sha_accel_sequence_t;
   `include "sequences/trng/soc_ifc/soc_ifc_env_trng_write_data_sequence.svh"
   typedef soc_ifc_env_trng_write_data_sequence soc_ifc_env_trng_write_data_sequence_t;
+  `include "sequences/stash/soc_ifc/soc_ifc_env_stash_bank_reg_access_sequence.svh"
+  typedef soc_ifc_env_stash_bank_reg_access_sequence soc_ifc_env_stash_bank_reg_access_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_soc_mbox_handler_sequence.svh"
   typedef soc_ifc_env_soc_mbox_handler_sequence soc_ifc_env_soc_mbox_handler_sequence_t;
   `include "sequences/mbox/soc_ifc/soc_ifc_env_soc_mbox_reg_axs_invalid_handler_sequence.svh"
