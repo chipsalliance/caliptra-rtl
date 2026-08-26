@@ -1925,7 +1925,7 @@
 `define CLP_KMAC_STATE_BASE_ADDR                                                                    (32'h10040400)
 `define CLP_KMAC_STATE_END_ADDR                                                                     (32'h100404ff)
 `define CLP_KMAC_MSG_FIFO_BASE_ADDR                                                                 (32'h10040800)
-`define CLP_KMAC_MSG_FIFO_END_ADDR                                                                  (32'h100408ff)
+`define CLP_KMAC_MSG_FIFO_END_ADDR                                                                  (32'h10040fff)
 `define CLP_SHA3_BASE_ADDR                                                                          (32'h10041000)
 `define CLP_SHA3_SHA3_NAME_0                                                                        (32'h10041000)
 `define CLP_SHA3_SHA3_NAME_1                                                                        (32'h10041004)

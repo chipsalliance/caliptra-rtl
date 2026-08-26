@@ -1713,6 +1713,4 @@ module kmac
   `CALIPTRA_ASSERT(StrippedKmacMaskingDisabled_A, EnFullKmac == 0 |-> EnMasking == 0)
   `CALIPTRA_ASSUME(StrippedKmacState_M, EnFullKmac == 0 |-> kmac_st inside
       {KmacIdle, KmacPrefix, KmacMsgFeed, KmacDigest, KmacTerminalError})
-  `CALIPTRA_ASSUME(StrippedSha3Mode_M, EnFullKmac == 0 |-> app_sha3_mode inside
-      {ot_sha3_pkg::Sha3, ot_sha3_pkg::Shake, ot_sha3_pkg::CShake})
 endmodule
