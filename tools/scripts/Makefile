@@ -132,7 +132,7 @@ OFILES += $(foreach comp_lib_name, $(COMP_LIB_NAMES), $(comp_lib_name).o)
 VERILATOR_TRACE=vcd
 
 ifdef debug
- DEBUG_PLUS = +fsdbon
+ DEBUG_PLUS = +dumpon
  IRUN_DEBUG = -access +rc
  IRUN_DEBUG_RUN = -input $(RV_ROOT)/testbench/input.tcl
  VCS_DEBUG = -debug_access
@@ -286,11 +286,6 @@ VERILATOR_RUN_ARGS ?= ""
 CFLAGS += $(TB_DPI_INCS)
 
 ############# VCS Compile options #############
-# FSDB ($fsdbDumpvars in caliptra_top_tb.sv): use -kdb -debug_access+all below.
-# Do not add -P .../novas.tab (deprecated in Verdi 2024.09+; duplicates PLI with
-# -kdb and breaks $fsdbDumpvars). At run time pass debug=1 or +fsdbon; VERDI_HOME
-# must be set (setup_caliptra_env.sh).
-
 VCS_COMP_OPTS += +lint=IA_CHECKFAIL
 VCS_COMP_OPTS += -assert svaext
 VCS_COMP_OPTS += +define+CLP_ASSERT_ON
@@ -347,10 +342,10 @@ vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
 	  $(VCS_COMP_OPTS) \
 	  -l vcs_compile.log \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vf
-	vcs -full64 -kdb -lca -debug_access+all +memcbk -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 $(COVERAGE_ARGS) \
+	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 $(COVERAGE_ARGS) \
 	  -l vcs_elab.log \
 	  $(VCS_ELAB_OPTS) \
-	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb +dpi -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)
+	  -assert enable_hier caliptra_top_tb -o simv.caliptra_top_tb -cflags "$(TB_DPI_INCS)" $(TB_DPI_SRCS)
 
 ############ TEST Simulation ###############################
 
@@ -387,7 +382,7 @@ ifeq ($(WAVES),1)
 	@echo 'quit'                                             >> $(VCS_WAVES_UCLI_SCRIPT)
 	@echo "FSDB waveform dump enabled -> $(BUILD_DIR)/$(VCS_WAVES_DUMPFILE)"
 endif
-	./simv.caliptra_top_tb $(COVERAGE_ARGS) $(VCS_WAVES_ARGS) $(DEBUG_PLUS) $(RUN_PLUSARGS) +ntb_random_seed=$(VCS_RANDOM_SEED) -l vcs_sim.log
+	./simv.caliptra_top_tb $(COVERAGE_ARGS) $(VCS_WAVES_ARGS) $(RUN_PLUSARGS) +ntb_random_seed=$(VCS_RANDOM_SEED) -l vcs_sim.log
 
 ############ TEST build ###############################
 
