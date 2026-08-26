@@ -389,6 +389,38 @@ module hmac256_drbg_tb();
     end
   endtask
 
+  //----------------------------------------------------------------
+  // hmac256_drbg_check_secrets_cleared()
+  //   Zeroize must erase the secret-bearing state, not merely park the
+  //   FSM in IDLE_ST. Checking only drbg_st_reg/valid would still pass if
+  //   a future edit dropped a K_reg/V_reg/drbg_reg zeroize assignment,
+  //   leaving private-key-derived material resident in the DUT.
+  //----------------------------------------------------------------
+  task hmac256_drbg_check_secrets_cleared(input string context_str);
+    begin
+      if (dut.K_reg !== '0) begin
+        $display("*** ERROR: TC %0d %s: K_reg not cleared by zeroize (0x%h)",
+                 tc_number, context_str, dut.K_reg);
+        error_ctr = error_ctr + 1;
+      end
+      if (dut.V_reg !== '0) begin
+        $display("*** ERROR: TC %0d %s: V_reg not cleared by zeroize (0x%h)",
+                 tc_number, context_str, dut.V_reg);
+        error_ctr = error_ctr + 1;
+      end
+      if (dut.drbg_reg !== '0) begin
+        $display("*** ERROR: TC %0d %s: drbg_reg not cleared by zeroize (0x%h)",
+                 tc_number, context_str, dut.drbg_reg);
+        error_ctr = error_ctr + 1;
+      end
+      if (drbg_tb !== '0) begin
+        $display("*** ERROR: TC %0d %s: drbg output not cleared by zeroize (0x%h)",
+                 tc_number, context_str, drbg_tb);
+        error_ctr = error_ctr + 1;
+      end
+    end
+  endtask
+
   task hmac256_drbg_zeroize_test();
     begin
       busy_seen = 0;
@@ -420,6 +452,7 @@ module hmac256_drbg_tb();
         $display("*** ERROR: TC %0d NOT successful.\n", tc_number);
         error_ctr = error_ctr + 1;
       end
+      hmac256_drbg_check_secrets_cleared("zeroize concurrent with init");
 
       # CLK_PERIOD;
       busy_seen = 0;
@@ -442,6 +475,7 @@ module hmac256_drbg_tb();
         $display("*** ERROR: TC %0d NOT successful.\n", tc_number);
         error_ctr = error_ctr + 1;
       end
+      hmac256_drbg_check_secrets_cleared("zeroize concurrent with next");
 
       tc_number = tc_number+1;
     end
@@ -534,16 +568,38 @@ module hmac256_drbg_tb();
         wait(dut.drbg_st_reg == dut.T_ST);
         force dut.HMAC_tag = tag_force;
         wait(dut.drbg_st_reg == dut.CHCK_ST);
+        // failure_check is combinational off HMAC_tag, but drbg_st_reg is
+        // sampled by the TB right after the edge that loaded CHCK_ST. Wait two
+        // clocks so the forced tag has propagated and the comparator output is
+        // stable before it is sampled.
         # (2 * CLK_PERIOD);
         if (dut.failure_check !== exp_reject) begin
           $display("*** ERROR: TC %0d boundary %0d: failure_check=%0b expected=%0b",
                    tc_number, i, dut.failure_check, exp_reject);
           error_ctr = error_ctr + 1;
         end
-        release dut.HMAC_tag;
-        # CLK_PERIOD;
 
-        wait(valid_tb);
+        if (!exp_reject) begin
+          // Accept path: DONE_ST captures drbg_reg <= HMAC_tag, so the force
+          // must be held until valid rises. Checking only failure_check would
+          // let a broken DONE-stage capture (or a stale/raced drbg_reg) pass
+          // while still hitting the coverage bins.
+          wait(valid_tb);
+          if (drbg_tb !== tag_force) begin
+            $display("*** ERROR: TC %0d boundary %0d: drbg=0x%h expected=0x%h",
+                     tc_number, i, drbg_tb, tag_force);
+            error_ctr = error_ctr + 1;
+          end
+          release dut.HMAC_tag;
+        end
+        else begin
+          // Reject path: release the force so the engine retries with real
+          // tags and eventually produces an in-range value.
+          release dut.HMAC_tag;
+          # CLK_PERIOD;
+          wait(valid_tb);
+        end
+
         $display("*** TC %0d boundary %0d completed", tc_number, i);
         tc_number = tc_number + 1;
 
@@ -646,6 +702,7 @@ module hmac256_drbg_tb();
                  tc_number, wait_state);
         error_ctr = error_ctr + 1;
       end
+      hmac256_drbg_check_secrets_cleared($sformatf("mid-op zeroize at state %0d", wait_state));
       $display("*** TC %0d mid-op zeroize at state %0d completed", tc_number, wait_state);
       tc_number = tc_number + 1;
 

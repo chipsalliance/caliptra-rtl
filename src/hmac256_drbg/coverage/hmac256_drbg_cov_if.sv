@@ -34,6 +34,7 @@ interface hmac256_drbg_cov_if
     logic [255 : 0] hmac_tag;
     logic [1 : 0] failure_reason;
     logic [1 : 0] active_mode;
+    logic         hmac_ready;
 
     parameter logic [255:0] HMAC_DRBG_PRIME = hmac256_drbg.HMAC_DRBG_PRIME;
 
@@ -49,15 +50,23 @@ interface hmac256_drbg_cov_if
     assign drbg = hmac256_drbg.drbg;
     assign failure_check = hmac256_drbg.failure_check;
     assign hmac_tag = hmac256_drbg.HMAC_tag;
+    assign hmac_ready = hmac256_drbg.HMAC_ready;
 
     assign failure_reason = (hmac_tag == '0)              ? 2'd1 :
                             (hmac_tag >= HMAC_DRBG_PRIME) ? 2'd2 : 2'd0;
 
+    // Qualify on HMAC_ready (the DUT's own IDLE_ST launch condition in
+    // state_logic), not on ready_reg. ready_reg is a registered status flag and
+    // can still be low on a cycle where the FSM actually accepts the command
+    // (e.g. the first cycle out of reset, or back-to-back commands issued on
+    // the first ready cycle after DONE_ST). Sampling ready_reg would then leave
+    // active_mode stale and mis-attribute the CHCK_ST rejection bins to the
+    // previous command.
     always_ff @(posedge clk or negedge reset_n) begin
-        if (!reset_n)                                     active_mode <= 2'd0;
-        else if (zeroize)                                 active_mode <= 2'd0;
-        else if (ready && (drbg_state == 5'd0) && init)   active_mode <= 2'd1;
-        else if (ready && (drbg_state == 5'd0) && next)   active_mode <= 2'd2;
+        if (!reset_n)                                          active_mode <= 2'd0;
+        else if (zeroize)                                      active_mode <= 2'd0;
+        else if (hmac_ready && (drbg_state == 5'd0) && init)   active_mode <= 2'd1;
+        else if (hmac_ready && (drbg_state == 5'd0) && next)   active_mode <= 2'd2;
     end
 
     covergroup hmac256_drbg_control_cg @(posedge clk);
