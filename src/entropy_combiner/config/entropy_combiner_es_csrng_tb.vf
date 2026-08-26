@@ -210,6 +210,14 @@ ${CALIPTRA_ROOT}/src/aes/rtl/aes_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_pkg.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_clp_reg_pkg.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_defines_pkg.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg_pkg.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_reg.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_fsm.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_client.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_client.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_rule_check.sv
+${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_rule_check.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_masked.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_cipher_core.sv
