@@ -94,6 +94,10 @@ class soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
                               )) axi_sub_0_ae;
+  uvm_analysis_imp_axi_dut_ae #(aaxi_slave_tr, soc_ifc_predictor #(
+                              .CONFIG_T(CONFIG_T),
+                              .BASE_T(BASE_T)
+                              )) axi_dut_ae;
   uvm_analysis_imp_mbox_sram_agent_ae #(mbox_sram_transaction, soc_ifc_predictor #(
                               .CONFIG_T(CONFIG_T),
                               .BASE_T(BASE_T)
@@ -348,6 +352,7 @@ class soc_ifc_predictor #(
     ss_mode_ctrl_agent_ae = new("ss_mode_ctrl_agent_ae", this); // FIXME
     ahb_slave_0_ae = new("ahb_slave_0_ae", this);
     axi_sub_0_ae = new("axi_sub_0_ae", this);
+    axi_dut_ae = new("axi_dut_ae", this);
     soc_ifc_sb_ap = new("soc_ifc_sb_ap", this );
     cptra_sb_ap = new("cptra_sb_ap", this );
     soc_ifc_sb_ahb_ap = new("soc_ifc_sb_ahb_ap", this );
@@ -2195,6 +2200,14 @@ class soc_ifc_predictor #(
     `uvm_info("PRED_AXI", "Transaction Received through axi_sub_0_ae", UVM_MEDIUM)
     `uvm_info("PRED_AXI", {"            Data: ",t.sprint(uvm_top.uvm_get_max_verbosity(), "AXI_SUB_0_AE")}, UVM_HIGH)
 
+    if (t.addr < configuration.axi_soc_ifc_base_addr || t.addr > configuration.axi_soc_ifc_limit_addr) begin
+        `uvm_info("PRED_AXI",
+          $sformatf(
+            "Ignoring external AXI fabric transaction at address 0x%0h",
+            t.addr), UVM_HIGH)
+        return;
+    end
+
     // Construct one of each output transaction type.
     soc_ifc_sb_ap_output_transaction = soc_ifc_sb_ap_output_transaction_t::type_id::create("soc_ifc_sb_ap_output_transaction");
     cptra_sb_ap_output_transaction = cptra_sb_ap_output_transaction_t::type_id::create("cptra_sb_ap_output_transaction");
@@ -3189,6 +3202,89 @@ class soc_ifc_predictor #(
     // pragma uvmf custom axi_sub_0_ae_predictor end
   endfunction
 
+  // Adapts a completed transaction from Caliptra's passive AXI subordinate
+  // monitor to the master transaction type used by the existing predictor.
+  // This keeps prediction at the DUT boundary, after interconnect latency.
+  // The input is not modified. The normalized transaction is immediately
+  // forwarded to write_axi_sub_0_ae() and is not retained.
+  //
+  // TODO: convert predictor to aaxi_slave_tr. This temporary boundary
+  // conversion avoids rewriting the predictor, register callbacks, and
+  // scoreboard while using Avery 2025.2's correctly timed slave observation.
+  virtual function aaxi_master_tr normalize_axi_dut_transaction(aaxi_slave_tr t);
+    aaxi_master_tr normalized_txn;
+    int unsigned beat_bytes;
+    int unsigned beat_count;
+
+    if (t.data.size() == 0) begin
+      `uvm_error("PRED_AXI_DUT",
+                 $sformatf("DUT-side %s transaction has no payload: addr=0x%0h size=%0d len=%0d",
+                           t.is_write() ? "write" : "read", t.addr, t.size, t.len))
+      return null;
+    end
+    if (t.is_write() && (t.strobes.size() > t.data.size())) begin
+      `uvm_error("PRED_AXI_DUT",
+                 $sformatf("DUT-side write has more strobes than payload bytes: addr=0x%0h size=%0d len=%0d bytes=%0d strobes=%0d",
+                           t.addr, t.size, t.len, t.data.size(), t.strobes.size()))
+      return null;
+    end
+    normalized_txn = aaxi_master_tr::type_id::create("normalized_dut_axi_txn");
+    normalized_txn.kind = t.kind;
+    normalized_txn.addr = t.addr;
+    normalized_txn.id = t.id;
+    normalized_txn.len = t.len;
+    normalized_txn.size = t.size;
+    normalized_txn.burst = t.burst;
+    normalized_txn.awuser = t.awuser;
+    normalized_txn.aruser = t.aruser;
+    normalized_txn.resp = t.resp;
+    normalized_txn.data = t.data;
+
+    // Avery stores one strobe bit per payload byte. If fewer strobes than data
+    // bytes are present, each missing strobe defaults to enabled. For example,
+    // four data bytes with strobes {1, 0} mean effective strobes {1, 0, 1, 1}.
+    // Build the complete per-byte queue required by the master-oriented
+    // register adapter while preserving every explicit zero strobe.
+    if (t.is_write()) begin
+      repeat (t.data.size())
+        normalized_txn.strobes.push_back(1'b1);
+      foreach (t.strobes[byte_idx])
+        normalized_txn.strobes[byte_idx] = t.strobes[byte_idx];
+    end
+
+    // Avery's passive slave transaction provides valid payload bytes, but its
+    // beat queue is not compatible with the master-oriented register adapter.
+    // Rebuild beats using the same byte index as payload and strobes.
+    beat_bytes = 1 << t.size;
+    beat_count = (t.data.size() + beat_bytes - 1) / beat_bytes;
+    repeat (beat_count)
+      normalized_txn.beatQ.push_back('0);
+    foreach (t.data[byte_idx]) begin
+      normalized_txn.beatQ[byte_idx / beat_bytes][8 * (byte_idx % beat_bytes) +: 8] =
+        t.data[byte_idx];
+    end
+
+    // The slave callback reports its cursor after consuming the transfer.
+    // Reset it so the existing master transaction path reads from byte zero.
+    normalized_txn.cur_byte_offset = 0;
+    return normalized_txn;
+  endfunction
+
+  // Converts and forwards a completed DUT-side transaction for prediction.
+  virtual function void write_axi_dut_ae(aaxi_slave_tr t);
+    aaxi_master_tr normalized_txn;
+
+    normalized_txn = normalize_axi_dut_transaction(t);
+    if (normalized_txn == null)
+      return;
+    `uvm_info("PRED_AXI_DUT",
+              $sformatf("Converted DUT-side %s transaction: addr=0x%0h id=0x%0h bytes=%0d input_strobes=%0d normalized_strobes=%0d beats=%0d",
+                        t.is_write() ? "write" : "read", t.addr, t.id,
+                        t.data.size(), t.strobes.size(),
+                        normalized_txn.strobes.size(), normalized_txn.beatQ.size()),
+              UVM_HIGH)
+    write_axi_sub_0_ae(normalized_txn);
+  endfunction
 
 endclass
 
@@ -4105,20 +4201,34 @@ function uvm_reg_data_t soc_ifc_predictor::dma_reg_masked_expected_rdata(uvm_reg
 endfunction
 
 function void soc_ifc_predictor::predict_boot_wait_boot_done();
-    cptra_sb_ap_output_transaction_t local_cptra_sb_ap_txn;
 
+    // Capture FSM state before overriding.
+    bit from_boot_wait = p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs.boot_wait;
+
+    // Model FSM changing to BOOT_DONE state
     p_soc_ifc_rm.soc_ifc_reg_rm.boot_fn_state_sigs = '{boot_done: 1'b1, default: 1'b0};
+
+    // Since we enter BOOT_DONE any fw_update is complete.
     fw_update_rst_window                           = 1'b0;
+
+    // Model the boot-FSM ICCM HW-clear by predicting the register field to 0.
+    if (from_boot_wait && iccm_locked) begin
+        if(!p_soc_ifc_rm.soc_ifc_reg_rm.internal_iccm_lock.lock.predict(1'b0)) begin
+            `uvm_fatal("PRED_BOOT", "Failed to predict internal_iccm_lock.lock deassertion on boot-FSM ICCM unlock")
+        end
+    end
 
     fork
         begin
+            // if from_boot_wait && iccm_locked there are 2 predictions
+            // 1. iccm_lock clearing
+            // 2. uc_rst desasserts
+            // Otherwise only 1 prediction of uc_rst_deassert
             configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+            send_delayed_expected_transactions();
             if (uc_rst_out_asserted) begin
-                uc_rst_out_asserted   = 1'b0;
-                local_cptra_sb_ap_txn = cptra_sb_ap_output_transaction_t::type_id::create("local_cptra_sb_ap_txn");
-                populate_expected_cptra_status_txn(local_cptra_sb_ap_txn);
-                cptra_sb_ap.write(local_cptra_sb_ap_txn);
-                `uvm_info("PRED_BOOT", "Transaction submitted through cptra_sb_ap", UVM_MEDIUM)
+                configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(1);
+                send_delayed_expected_transactions();
             end
         end
     join_none

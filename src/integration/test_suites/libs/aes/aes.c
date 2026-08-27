@@ -195,7 +195,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
                                   >> AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_LOW;
           if (kv_rd_err != 0) {
               if (aes_input.key.kv_expect_err) {
-                  VPRINTF(LOW, "AES KV read error observed as expected (code = 0x%x)\n", kv_rd_err);
+                  VPRINTF(LOW, "AES KV read err observed as expected (code = 0x%x)\n", kv_rd_err);
                   return; // Do not attempt the AES operation; key is invalidated.
               } else {
                   VPRINTF(FATAL, "Unexpected AES KV read error (code = 0x%x)\n", kv_rd_err);
@@ -232,7 +232,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
                                    >> AES_CLP_REG_AES_KV_RD_KEY_STATUS_ERROR_LOW;
       if (kv_rd_err_late != 0) {
           if (aes_input.key.kv_expect_err) {
-              VPRINTF(LOW, "AES KV deferred read error observed as expected (code = 0x%x)\n", kv_rd_err_late);
+              VPRINTF(LOW, "AES KV deferred read err observed as expected (code = 0x%x)\n", kv_rd_err_late);
               return;
           } else {
               VPRINTF(FATAL, "Unexpected AES KV deferred read error (code = 0x%x)\n", kv_rd_err_late);

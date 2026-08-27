@@ -46,17 +46,6 @@ class register_test extends test_top;
     super.build_phase(phase);
   endfunction
 
-  virtual function void end_of_elaboration_phase(uvm_phase phase);
-    super.end_of_elaboration_phase(phase);
-    // pragma uvmf custom register_test_scoreboard_control begin
-
-    // These UVMF scoreboards may need to be disabled for the register test.  
-    
-    // environment.soc_ifc_sb.disable_scoreboard();
-    // environment.soc_ifc_sb.disable_end_of_test_activity_check();
-    
-    // pragma uvmf custom register_test_scoreboard_control end
-  endfunction
 
 endclass
 

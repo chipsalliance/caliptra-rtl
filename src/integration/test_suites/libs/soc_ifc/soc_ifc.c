@@ -424,7 +424,7 @@ uint8_t soc_ifc_axi_dma_send_mbox_payload(uint64_t src_addr, uint64_t dst_addr, 
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
-    if ((src_addr + byte_count) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
+    if ((src_addr + byte_count - 1) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
         VPRINTF(ERROR, "reading 0x%x bytes from src_addr 0x%x goes out of bounds for mbox span!\n", byte_count, (uint32_t) src_addr);
         SEND_STDOUT_CTRL(0x1);
         while(1);
@@ -481,7 +481,7 @@ uint8_t soc_ifc_axi_dma_read_mbox_payload_no_wait(uint64_t src_addr, uint64_t ds
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
-    if ((dst_addr + byte_count) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
+    if ((dst_addr + byte_count - 1) & ~((uint64_t) (MBOX_DIR_SPAN-1))) {
         VPRINTF(ERROR, "writing 0x%x bytes to dst_addr 0x%x goes out of bounds for mbox span!\n", byte_count, (uint32_t) dst_addr);
         SEND_STDOUT_CTRL(0x1);
         while(1);
@@ -700,8 +700,9 @@ uint8_t soc_ifc_axi_dma_inject_inv_error(enum err_inj_type err_type) {
     } else {
         byte_count = 0x40; // Default valid byte count
     }
-    block_size = (err_type == cmd_inv_block_size)     ? 0x13 : 
-                 (err_type == cmd_inv_aes_block_size) ? 0x4  : 0x00;
+    block_size = (err_type == cmd_inv_block_size)       ? 0x13 :
+                 (err_type == cmd_inv_block_size_large) ? 0x80 :
+                 (err_type == cmd_inv_aes_block_size)   ? 0x4  : 0x00;
 
     aes_mode = (err_type == cmd_inv_aes_route_combo) || (err_type == cmd_inv_aes_block_size) || (err_type == cmd_inv_aes_fixed); 
 

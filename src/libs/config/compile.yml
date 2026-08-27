@@ -126,6 +126,9 @@ targets:
       - $AVERY_AXI/src.axi/aaxi_intf.sv 
       - $AVERY_AXI/src.uvm/aaxi_uvm_pkg.sv 
       - $AVERY_AXI/src.uvm/aaxi_uvm_test_top.sv 
+    options:
+      - +define+AVERY_AXI_UVM+AVERY_UVM
+      - +define+AVERY_AXI_INTERCONNECT
     tops: []
 ---
 provides: [uvmf_lib]

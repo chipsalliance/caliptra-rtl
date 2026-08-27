@@ -14,7 +14,7 @@ uvmf:
         # activity based on signals other than just those in the ctrl if.
       - bfm_name: soc_ifc_subenv_soc_ifc_status_agent
         value: ACTIVE
-      #TODO ADD JTAG, QSPI, UART, I3C agents
+      #TODO ADD JTAG, I3C agents
         # Internal agents from block-level benches still exist in
         # caliptra_top as passive monitors even though the drivers are
         # not pushing activity to the respective interface

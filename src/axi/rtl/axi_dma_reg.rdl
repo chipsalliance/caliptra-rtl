@@ -240,14 +240,11 @@ addrmap axi_dma_reg {
               After completion of a burst, if recovery_data_avail is set,
               the subsequent burst will be issued. Otherwise, DMA will wait
               for recovery_data_avail to be set.
-              If block_size is larger than the maximum legal AXI burst length,
-              it will be further subdivided to multiple smaller bursts.
               When zero, DMA issues AXI transactions of maximum size
               without any stalls in between transactions.
-              Must be a multiple of AXI data width. If block size is not
-              aligned to the AXI data width, it will be rounded down.
-              Must be a power of 2.
-              Value of 4096 or larger is unsupported – AXI native maximum size is 4096.";
+              Supported non-zero values are 4, 8, 16, 32, and 64 bytes.
+              Values larger than 64 bytes are unsupported.
+              Must be a multiple of AXI data width and a power of 2.";
         field { desc="Block Size"; sw=rw; swwel=dma_swwel; hw=r; } size[12]=12'h000;
         field { desc="RESERVED."; sw=r; } rsvd[20]=20'h00000;
     } block_size;

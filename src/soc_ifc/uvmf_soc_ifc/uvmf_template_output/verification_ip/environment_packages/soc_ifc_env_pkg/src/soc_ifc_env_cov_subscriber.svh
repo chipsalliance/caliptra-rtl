@@ -685,6 +685,8 @@ class soc_ifc_env_cov_subscriber #(
 
     // Extract info
     if (!$cast(axi_txn,txn)) `uvm_fatal("SOC_IFC_COV_AXI", "AXI coverage analysis import received invalid transaction")
+    if (axi_txn.addr < configuration.axi_soc_ifc_base_addr || axi_txn.addr > configuration.axi_soc_ifc_limit_addr)
+      return;
     axs_reg = c_soc_ifc_rm.soc_ifc_AXI_map.get_reg_by_offset(axi_txn.addr);
 
     // Calculate coverage impact from register access

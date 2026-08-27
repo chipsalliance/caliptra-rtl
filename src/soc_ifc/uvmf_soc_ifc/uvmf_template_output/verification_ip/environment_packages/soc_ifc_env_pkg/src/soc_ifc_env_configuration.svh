@@ -66,16 +66,15 @@ extends uvmf_environment_configuration_base;
     typedef mbox_sram_configuration mbox_sram_agent_config_t;
     rand mbox_sram_agent_config_t mbox_sram_agent_config;
 
-
-
     qvip_ahb_lite_slave_env_configuration     qvip_ahb_lite_slave_subenv_config;
     string                                   qvip_ahb_lite_slave_subenv_interface_names[];
     uvmf_active_passive_t                    qvip_ahb_lite_slave_subenv_interface_activity[];
-    string                                   axi_slave_subenv_interface_names[];
-    uvmf_active_passive_t                    axi_slave_subenv_interface_activity[];
 
-  typedef uvmf_virtual_sequencer_base #(.CONFIG_T(soc_ifc_env_configuration)) soc_ifc_vsqr_t;
-  soc_ifc_vsqr_t vsqr;
+  // UVMF launch bridge only. The environment factory-creates and owns this
+  // component; configuration merely mirrors the same class handle because
+  // generated soc_ifc_bench_sequence_base starts its environment sequence with
+  // top_configuration.vsqr. Custom sequences use their active m_sequencer.
+  soc_ifc_virtual_sequencer vsqr;
 
   // pragma uvmf custom class_item_additional begin
   // -------------------------------------------------------------------------
@@ -96,8 +95,100 @@ extends uvmf_environment_configuration_base;
   bit enable_sha_iccm_unlock;
   virtual soc_ifc_sha_status_if sha_status_vif;
 
-  // DMA AXI SRAM backdoor (factory-swappable). Configured by test_top.
-  soc_ifc_mem_backdoor dma_axi_sram_backdoor;
+  // Runtime components remain environment-owned; only policies live here.
+  soc_ifc_axi_sram_config axi_sram_config;
+  soc_ifc_recovery_fifo_config recovery_fifo_config;
+  aaxi_addr_t axi_soc_ifc_base_addr;
+  aaxi_addr_t axi_soc_ifc_limit_addr;
+  int unsigned axi_outstanding_depth;
+  bit axi_endpoints_configured;
+
+  // Parse one fixed delay or a complete minimum/maximum pair.
+  virtual function void parse_response_delay(input string prefix, input int unsigned default_min, input int unsigned default_max,
+                                             output int unsigned delay_min, output int unsigned delay_max);
+    int unsigned fixed_delay;
+    bit has_fixed_delay;
+    bit has_min_delay;
+    bit has_max_delay;
+    string fixed_arg;
+    string min_arg;
+    string max_arg;
+
+    delay_min = default_min;
+    delay_max = default_max;
+    fixed_arg = {prefix, "=%d"};
+    min_arg = {prefix, "_MIN=%d"};
+    max_arg = {prefix, "_MAX=%d"};
+    has_fixed_delay = $value$plusargs(fixed_arg, fixed_delay);
+    has_min_delay = $value$plusargs(min_arg, delay_min);
+    has_max_delay = $value$plusargs(max_arg, delay_max);
+    if (has_fixed_delay && (has_min_delay || has_max_delay))
+      `uvm_fatal("AXI_FABRIC_CFG", $sformatf("%s cannot be combined with %s_MIN or %s_MAX", prefix, prefix, prefix))
+    if (has_min_delay != has_max_delay)
+      `uvm_fatal("AXI_FABRIC_CFG", $sformatf("%s_MIN and %s_MAX must be specified together", prefix, prefix))
+    if (has_fixed_delay) begin
+      delay_min = fixed_delay;
+      delay_max = fixed_delay;
+    end
+    if (delay_min > delay_max)
+      `uvm_fatal("AXI_FABRIC_CFG", $sformatf("%s minimum %0d exceeds maximum %0d", prefix, delay_min, delay_max))
+  endfunction
+
+  // Configure the SRAM and recovery endpoint policies.
+  virtual function void configure_axi_endpoints(
+      input aaxi_addr_t soc_ifc_base_addr,
+      input aaxi_addr_t soc_ifc_limit_addr,
+      input aaxi_addr_t sram_base_addr,
+      input longint unsigned sram_size_bytes,
+      input int unsigned sram_word_bytes,
+      input aaxi_addr_t recovery_fifo_addr,
+      input int unsigned recovery_fifo_depth_dwords_default,
+      input int unsigned outstanding_depth,
+      input int unsigned sram_b_delay_min_default,
+      input int unsigned sram_b_delay_max_default,
+      input int unsigned sram_r_delay_min_default,
+      input int unsigned sram_r_delay_max_default,
+      input int unsigned recovery_r_delay_min_default,
+      input int unsigned recovery_r_delay_max_default,
+      input int unsigned recovery_refill_delay_min_default,
+      input int unsigned recovery_refill_delay_max_default);
+    virtual soc_ifc_recovery_if recovery_vif;
+    int unsigned sram_b_delay_min;
+    int unsigned sram_b_delay_max;
+    int unsigned sram_r_delay_min;
+    int unsigned sram_r_delay_max;
+    int unsigned recovery_r_delay_min;
+    int unsigned recovery_r_delay_max;
+    int unsigned recovery_refill_delay_min;
+    int unsigned recovery_refill_delay_max;
+    int unsigned recovery_fifo_depth_dwords;
+
+    axi_soc_ifc_base_addr = soc_ifc_base_addr;
+    axi_soc_ifc_limit_addr = soc_ifc_limit_addr;
+    axi_outstanding_depth = outstanding_depth;
+
+    parse_response_delay("AXI_SRAM_B_DELAY", sram_b_delay_min_default, sram_b_delay_max_default, sram_b_delay_min, sram_b_delay_max);
+    parse_response_delay("AXI_SRAM_R_DELAY", sram_r_delay_min_default, sram_r_delay_max_default, sram_r_delay_min, sram_r_delay_max);
+    parse_response_delay("AXI_RECOVERY_R_DELAY", recovery_r_delay_min_default, recovery_r_delay_max_default,
+                         recovery_r_delay_min, recovery_r_delay_max);
+    parse_response_delay("AXI_RECOVERY_FIFO_REFILL_DELAY", recovery_refill_delay_min_default, recovery_refill_delay_max_default,
+                         recovery_refill_delay_min, recovery_refill_delay_max);
+    recovery_fifo_depth_dwords = recovery_fifo_depth_dwords_default;
+    void'($value$plusargs("AXI_RECOVERY_FIFO_DEPTH_DWORDS=%d", recovery_fifo_depth_dwords));
+
+    axi_sram_config.configure(sram_base_addr, sram_base_addr + sram_size_bytes - 1, sram_word_bytes,
+                              sram_b_delay_min, sram_b_delay_max, sram_r_delay_min, sram_r_delay_max);
+
+    if (!uvm_config_db #(virtual soc_ifc_recovery_if)::get(null, UVMF_VIRTUAL_INTERFACES, SOC_IFC_RECOVERY_VIF, recovery_vif))
+      `uvm_fatal("RECOVERY_FIFO_CFG", "Unable to retrieve recovery FIFO virtual interface")
+    recovery_fifo_config.configure(recovery_vif, recovery_fifo_addr, recovery_fifo_depth_dwords, recovery_r_delay_min,
+                                   recovery_r_delay_max, recovery_refill_delay_min, recovery_refill_delay_max);
+    axi_endpoints_configured = 1'b1;
+
+    `uvm_info("SOC_IFC_CFG", $sformatf("Configured AXI SRAM [0x%0h:0x%0h] and recovery FIFO 0x%0h depth %0d DWORDs",
+              axi_sram_config.base_addr, axi_sram_config.limit_addr, recovery_fifo_config.fifo_data_addr,
+              recovery_fifo_config.depth_dwords), UVM_LOW)
+  endfunction
   // pragma uvmf custom class_item_additional end
 
 // ****************************************************************************
@@ -118,12 +209,15 @@ extends uvmf_environment_configuration_base;
     mbox_sram_agent_config = mbox_sram_agent_config_t::type_id::create("mbox_sram_agent_config");
 
     qvip_ahb_lite_slave_subenv_config = qvip_ahb_lite_slave_env_configuration::type_id::create("qvip_ahb_lite_slave_subenv_config");
+    axi_sram_config = soc_ifc_axi_sram_config::type_id::create("axi_sram_config");
+    recovery_fifo_config = soc_ifc_recovery_fifo_config::type_id::create("recovery_fifo_config");
 
     soc_ifc_configuration_cg=new;
     `uvm_info("COVERAGE_MODEL_REVIEW", "TODO!!!!!!!!! A covergroup has been constructed which may need review because of either generation or re-generation with merging.  Please note that configuration variables added as a result of re-generation and merging are not automatically added to the covergroup.  Remove this message after the covergroup has been reviewed.", UVM_NONE)
 
   // pragma uvmf custom new begin
     subsystem_mode = CALIPTRA_SS_MODE_C;
+    axi_endpoints_configured = 1'b0;
     enable_sha_iccm_unlock =
         subsystem_mode && $test$plusargs("ENABLE_SHA_ICCM_UNLOCK");
   // pragma uvmf custom new end
@@ -132,7 +226,7 @@ extends uvmf_environment_configuration_base;
 // ****************************************************************************
 // FUNCTION : set_vsqr()
 // This function is used to assign the vsqr handle.
-  virtual function void set_vsqr( soc_ifc_vsqr_t vsqr);
+  virtual function void set_vsqr(soc_ifc_virtual_sequencer vsqr);
      this.vsqr = vsqr;
   endfunction : set_vsqr
 
@@ -159,6 +253,7 @@ extends uvmf_environment_configuration_base;
      $sformatf("\nsubsystem_mode=%0b ss_dma_axi_user=0x%08x global_straps_captured=%0b enable_sha_iccm_unlock=%0b sha_status_vif_configured=%0b",
                subsystem_mode, ss_dma_axi_user, global_straps_captured,
                enable_sha_iccm_unlock, (sha_status_vif != null)),
+     $sformatf("\naxi_soc_ifc_window=[0x%0h:0x%0h]", axi_soc_ifc_base_addr, axi_soc_ifc_limit_addr),
      "\n", soc_ifc_ctrl_agent_config.convert2string,
      "\n", cptra_ctrl_agent_config.convert2string,
      "\n", ss_mode_ctrl_agent_config.convert2string,
@@ -200,33 +295,26 @@ extends uvmf_environment_configuration_base;
     qvip_ahb_lite_slave_subenv_interface_names     = interface_names[0:0];
     qvip_ahb_lite_slave_subenv_interface_activity  = interface_activity[0:0];
 
-    axi_slave_subenv_interface_names    = new[1];
-    axi_slave_subenv_interface_activity = new[1];
-
-    axi_slave_subenv_interface_names     = interface_names[1:1];
-    axi_slave_subenv_interface_activity  = interface_activity[1:1];
-
-
   // Interface initialization for local agents
-     soc_ifc_ctrl_agent_config.initialize( interface_activity[2], {environment_path,".soc_ifc_ctrl_agent"}, interface_names[2]);
+     soc_ifc_ctrl_agent_config.initialize( interface_activity[1], {environment_path,".soc_ifc_ctrl_agent"}, interface_names[1]);
      soc_ifc_ctrl_agent_config.initiator_responder = INITIATOR;
      soc_ifc_ctrl_agent_config.has_coverage = 1;
-     cptra_ctrl_agent_config.initialize( interface_activity[3], {environment_path,".cptra_ctrl_agent"}, interface_names[3]);
+     cptra_ctrl_agent_config.initialize( interface_activity[2], {environment_path,".cptra_ctrl_agent"}, interface_names[2]);
      cptra_ctrl_agent_config.initiator_responder = INITIATOR;
      cptra_ctrl_agent_config.has_coverage = 1;
-     ss_mode_ctrl_agent_config.initialize( interface_activity[4], {environment_path,".ss_mode_ctrl_agent"}, interface_names[4]);
+     ss_mode_ctrl_agent_config.initialize( interface_activity[3], {environment_path,".ss_mode_ctrl_agent"}, interface_names[3]);
      ss_mode_ctrl_agent_config.initiator_responder = INITIATOR;
      ss_mode_ctrl_agent_config.has_coverage = 1;
-     soc_ifc_status_agent_config.initialize( interface_activity[5], {environment_path,".soc_ifc_status_agent"}, interface_names[5]);
+     soc_ifc_status_agent_config.initialize( interface_activity[4], {environment_path,".soc_ifc_status_agent"}, interface_names[4]);
      soc_ifc_status_agent_config.initiator_responder = RESPONDER;
      soc_ifc_status_agent_config.has_coverage = 1;
-     cptra_status_agent_config.initialize( interface_activity[6], {environment_path,".cptra_status_agent"}, interface_names[6]);
+     cptra_status_agent_config.initialize( interface_activity[5], {environment_path,".cptra_status_agent"}, interface_names[5]);
      cptra_status_agent_config.initiator_responder = RESPONDER;
      cptra_status_agent_config.has_coverage = 1;
-     ss_mode_status_agent_config.initialize( interface_activity[7], {environment_path,".ss_mode_status_agent"}, interface_names[7]);
+     ss_mode_status_agent_config.initialize( interface_activity[6], {environment_path,".ss_mode_status_agent"}, interface_names[6]);
      ss_mode_status_agent_config.initiator_responder = RESPONDER;
      ss_mode_status_agent_config.has_coverage = 1;
-     mbox_sram_agent_config.initialize( interface_activity[8], {environment_path,".mbox_sram_agent"}, interface_names[8]);
+     mbox_sram_agent_config.initialize( interface_activity[7], {environment_path,".mbox_sram_agent"}, interface_names[7]);
      mbox_sram_agent_config.initiator_responder = RESPONDER;
      mbox_sram_agent_config.has_coverage = 1;
 
