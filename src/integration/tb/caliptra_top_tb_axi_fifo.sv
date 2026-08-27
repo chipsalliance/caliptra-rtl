@@ -264,7 +264,7 @@ module caliptra_top_tb_axi_fifo #(
         else
         `endif
         begin
-            RECOVERY_BURST_TEST_SIZE = 256; // Used for smoke_test_dma, etc.
+            RECOVERY_BURST_TEST_SIZE = 64; // Used for smoke_test_dma, etc.
         end
     end
 

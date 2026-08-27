@@ -65,6 +65,7 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_mbox_sram_agent_ae)
   `uvm_analysis_imp_decl(_ahb_slave_0_ae)
   `uvm_analysis_imp_decl(_axi_sub_0_ae)
+  `uvm_analysis_imp_decl(_axi_dut_ae)
   `uvm_analysis_imp_decl(_expected_analysis_export)
   `uvm_analysis_imp_decl(_expected_cptra_analysis_export)
   `uvm_analysis_imp_decl(_expected_ss_mode_analysis_export)
@@ -79,6 +80,7 @@ package soc_ifc_env_pkg;
   `uvm_analysis_imp_decl(_cov_soc_ifc_ctrl_ae)
   `uvm_analysis_imp_decl(_cov_soc_ifc_status_ae)
   `uvm_analysis_imp_decl(_cov_axi_ae)
+  `uvm_analysis_imp_decl(_cov_axi_completed_ae)
   `uvm_analysis_imp_decl(_cov_cptra_ctrl_ae)
   `uvm_analysis_imp_decl(_cov_cptra_status_ae)
   `uvm_analysis_imp_decl(_cov_ahb_ae)
@@ -99,13 +101,43 @@ package soc_ifc_env_pkg;
   import kv_defines_pkg::*;
   import mbox_pkg::*;
   import soc_ifc_pkg::*;
+  import soc_ifc_axi_topology_pkg::*;
+  import axi_dma_reg_pkg::*;
+  import caliptra_prim_mubi_pkg::*;
   `include "caliptra_macros.svh"
   `include "caliptra_reg_defines.svh"
   // pragma uvmf custom package_imports_additional end
 
   // Parameters defined as HVL parameters
 
+  // Single shared compile-time mode constant for the soc_ifc environment.
+  // Derived from the CALIPTRA_MODE_SUBSYSTEM build define.
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+  localparam bit CALIPTRA_SS_MODE_C = 1'b1;
+`else
+  localparam bit CALIPTRA_SS_MODE_C = 1'b0;
+`endif
+  localparam string SOC_IFC_SHA_STATUS_VIF = "soc_ifc_sha_status_vif";
+  localparam string SOC_IFC_RECOVERY_VIF = "soc_ifc_recovery_vif";
+
+  typedef class soc_ifc_env_configuration;
+
   `include "src/soc_ifc_env_typedefs.svh"
+  `include "src/soc_ifc_axi_delay_range.svh"
+  `include "src/soc_ifc_axi_sram_item.svh"
+  `include "src/soc_ifc_recovery_fifo_item.svh"
+  `include "src/soc_ifc_axi_sram_access_sequence.svh"
+  `include "src/soc_ifc_recovery_fifo_command_sequence.svh"
+  `include "src/soc_ifc_axi_sram_config.svh"
+  `include "src/soc_ifc_recovery_fifo_config.svh"
+  `include "src/soc_ifc_axi_response_delay_callback.svh"
+  `include "src/soc_ifc_recovery_fifo_model.svh"
+  `include "src/soc_ifc_recovery_fifo_callback.svh"
+  `include "src/soc_ifc_recovery_fifo_driver.svh"
+  `include "src/soc_ifc_recovery_fifo_agent.svh"
+  `include "src/soc_ifc_axi_sram_driver.svh"
+  `include "src/soc_ifc_axi_sram_agent.svh"
+  `include "src/soc_ifc_virtual_sequencer.svh"
   `include "src/soc_ifc_env_configuration.svh"
   `include "src/soc_ifc_predictor.svh"
   `include "src/soc_ifc_scoreboard.svh"
@@ -316,6 +348,32 @@ package soc_ifc_env_pkg;
   typedef soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence soc_ifc_env_top_mbox_reg_axs_invalid_medium_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence.svh"
   typedef soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence soc_ifc_env_top_mbox_reg_axs_invalid_large_sequence_t;
+  // One semantic mode represents each legal DMA source/destination behavior.
+  typedef enum int {
+    DMA_XFER_AXI_MEMORY,
+    DMA_XFER_AXI_RECOVERY,
+    DMA_XFER_READ_FIFO,
+    DMA_XFER_WRITE_FIFO,
+    DMA_XFER_MAILBOX
+  } dma_transfer_mode_e;
+  `include "sequences/dma/soc_ifc_dma_xfer_item.svh"
+  typedef soc_ifc_dma_xfer_item soc_ifc_dma_xfer_item_t;
+  `include "sequences/dma/soc_ifc_env_dma_sequence_base.svh"
+  typedef soc_ifc_env_dma_sequence_base soc_ifc_env_dma_sequence_base_t;
+  `include "sequences/dma/soc_ifc_env_dma_reg_soc_access_sequence.svh"
+  typedef soc_ifc_env_dma_reg_soc_access_sequence soc_ifc_env_dma_reg_soc_access_sequence_t;
+  `include "sequences/dma/soc_ifc_env_dma_wr_fifo_directed_sequence.svh"
+  typedef soc_ifc_env_dma_wr_fifo_directed_sequence soc_ifc_env_dma_wr_fifo_directed_sequence_t;
+  `include "sequences/dma/soc_ifc_env_dma_transfer_stress_sequence.svh"
+  typedef soc_ifc_env_dma_transfer_stress_sequence soc_ifc_env_dma_transfer_stress_sequence_t;
+  `include "sequences/dma/soc_ifc_env_dma_long_transfer_long_b_resp_short_r_resp_sequence.svh"
+  typedef soc_ifc_env_dma_long_transfer_long_b_resp_short_r_resp_sequence
+    soc_ifc_env_dma_long_transfer_long_b_resp_short_r_resp_sequence_t;
+  `include "sequences/dma/soc_ifc_env_dma_long_transfer_long_r_resp_short_b_resp_sequence.svh"
+  typedef soc_ifc_env_dma_long_transfer_long_r_resp_short_b_resp_sequence
+    soc_ifc_env_dma_long_transfer_long_r_resp_short_b_resp_sequence_t;
+  `include "sequences/dma/soc_ifc_env_dma_soc_access_stress_sequence.svh"
+  typedef soc_ifc_env_dma_soc_access_stress_sequence soc_ifc_env_dma_soc_access_stress_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_multi_agent_sequence.svh"
   typedef soc_ifc_env_top_mbox_multi_agent_sequence soc_ifc_env_top_mbox_multi_agent_sequence_t;
   `include "sequences/mbox/soc_ifc_env_top_mbox_dlen_violation_sequence.svh"
@@ -338,4 +396,3 @@ endpackage
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

@@ -6,6 +6,8 @@
 // The state vector of both LFSRs is constantly checked and an error is asserted if the
 // two states are inconsistent.
 
+`include "caliptra_prim_assert.sv"
+
 module caliptra_prim_double_lfsr #(
   // prim_lfsr parameters - refer to prim_lfsr for their meaning/
   parameter                    LfsrType     = "GAL_XOR",

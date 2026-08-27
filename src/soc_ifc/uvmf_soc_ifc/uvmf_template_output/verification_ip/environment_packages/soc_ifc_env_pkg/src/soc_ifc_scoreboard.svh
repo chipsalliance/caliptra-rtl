@@ -138,7 +138,11 @@ class soc_ifc_scoreboard #(
                               ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
                               ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
                               ahb_lite_slave_0_params::AHB_RDATA_WIDTH)     ahb_expected_q       [$]; // FIXME
-  aaxi_master_tr axi_expected_q [$];
+  // AXI reads (AR/R) and writes (AW/W/B) use independent channels with no mutual
+  // ordering guarantee. Keep separate per-kind expected queues and match
+  // each actual against the queue of its own kind. 
+  aaxi_master_tr axi_expected_rd_q [$];
+  aaxi_master_tr axi_expected_wr_q [$];
 
   // Use an soc_ifc_status_monitor_struct to track the expected state of the
   // soc_ifc_status interface.
@@ -510,7 +514,12 @@ class soc_ifc_scoreboard #(
     `uvm_info("SCBD_AXI", "Transaction Received through expected_axi_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_AXI",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
-    axi_expected_q.push_back(t);
+    // Route the prediction into the queue for its own AXI channel so read and
+    // write orderings stay independent.
+    if (t.is_write())
+      axi_expected_wr_q.push_back(t);
+    else
+      axi_expected_rd_q.push_back(t);
 
     transaction_count++;
     -> entry_received;
@@ -536,6 +545,11 @@ class soc_ifc_scoreboard #(
     if (ahb_expected_q.size() > 0) begin
         t_exp = ahb_expected_q.pop_front();
         txn_eq = t.compare(t_exp);
+        // DEBUG: confirm the scoreboard actually compares DMA-register AHB reads
+        // (expected data comes from the predictor's model-based read-check).
+        if (t.RnW == AHB_READ && (t.address inside {[DMA_REG_START_ADDR:DMA_REG_END_ADDR]}))
+            `uvm_info("DMA_RDCHK", $sformatf("SCOREBOARD compared DMA-reg AHB read @0x%0x: actual=0x%08x expected=0x%08x -> %s",
+                      t.address, t.data[0], t_exp.data[0], (txn_eq ? "MATCH" : "MISMATCH")), UVM_HIGH)
         if (txn_eq) begin
             match_count++;
             `uvm_info ("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} matches expected",t.address,t.data[0],t.RnW), UVM_HIGH)
@@ -571,9 +585,19 @@ class soc_ifc_scoreboard #(
     `uvm_info("SCBD_AXI", "Transaction Received through actual_axi_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_AXI",{"            Data: ",t.convert2string()}, UVM_HIGH)
 
-    if (axi_expected_q.size() > 0) begin
-        t_exp = axi_expected_q.pop_front();
-        txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind);
+    if (t.addr < configuration.axi_soc_ifc_base_addr || t.addr > configuration.axi_soc_ifc_limit_addr)
+      return;
+
+    if ((t.is_write() ? axi_expected_wr_q.size() : axi_expected_rd_q.size()) > 0) begin
+        // Match against the prediction from the same AXI channel; reads and
+        // writes complete independently, so their relative order is not fixed.
+        t_exp = t.is_write() ? axi_expected_wr_q.pop_front() : axi_expected_rd_q.pop_front();
+        // Compare the AXI response in addition to the payload so that response
+        // predictions (e.g. an expected SLVERR for a rejected access) are checked
+        // and not just the data. For valid accesses the predicted response equals
+        // the observed response, so this does not affect existing comparisons.
+        txn_eq = t.compare(t_exp, diff, t.kind) && (t.kind == t_exp.kind) &&
+                 (t.resp[$bits(axi_resp_e)-1:0] === t_exp.resp[$bits(axi_resp_e)-1:0]);
         if (txn_eq) begin
             match_count++;
             `uvm_info ("SCBD_AXI", $sformatf("Actual AXI txn with {Address: 0x%x} {Data: 0x%x} {read_or_write: %p} matches expected",t.addr,t.beatQ[0],t.kind), UVM_HIGH)
@@ -664,7 +688,8 @@ endclass
           cptra_expected_hash  .delete();
           ss_mode_expected_hash.delete();
           ahb_expected_q.delete();
-          axi_expected_q.delete();
+          axi_expected_rd_q.delete();
+          axi_expected_wr_q.delete();
 
           // Clear toggle counter
           soc_ifc_status_monitor_struct      = '{default:0};
@@ -699,15 +724,17 @@ endclass
       if (cptra_expected_hash.size() != 0)   entries_remaining |= 1;
       if (ss_mode_expected_hash.size() != 0) entries_remaining |= 1;
       if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
-      if (axi_expected_q.size() != 0)        entries_remaining |= 1;
+      if (axi_expected_rd_q.size() != 0)     entries_remaining |= 1;
+      if (axi_expected_wr_q.size() != 0)     entries_remaining |= 1;
       while (entries_remaining) begin : while_entries_remaining
-          `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("Waiting for entries to drain. Remaining: soc_ifc_exp[%d] cptra_exp[%d] ss_mode_exp[%d] ahb_exp[%d] axi_exp[%d]", soc_ifc_expected_hash.size(), cptra_expected_hash.size(), ss_mode_expected_hash.size(), ahb_expected_q.size(), axi_expected_q.size()),UVM_NONE)
+          `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("Waiting for entries to drain. Remaining: soc_ifc_exp[%d] cptra_exp[%d] ss_mode_exp[%d] ahb_exp[%d] axi_rd_exp[%d] axi_wr_exp[%d]", soc_ifc_expected_hash.size(), cptra_expected_hash.size(), ss_mode_expected_hash.size(), ahb_expected_q.size(), axi_expected_rd_q.size(), axi_expected_wr_q.size()),UVM_NONE)
           begin: VERBOSE_TXN_DUMP
               foreach (soc_ifc_expected_hash[ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("soc_ifc_expected[%0d]: %s",ii,soc_ifc_expected_hash[ii].convert2string()), UVM_FULL) end
               foreach (cptra_expected_hash  [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("cptra_expected[%0d]:   %s",ii,cptra_expected_hash  [ii].convert2string()), UVM_FULL) end
               foreach (ss_mode_expected_hash[ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("ss_mode_expected[%0d]: %s",ii,ss_mode_expected_hash[ii].convert2string()), UVM_FULL) end
               foreach (ahb_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("ahb_expected[%0d]:     %s",ii,ahb_expected_q       [ii].convert2string()), UVM_FULL) end
-              foreach (axi_expected_q       [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("axi_expected[%0d]:     %s",ii,axi_expected_q       [ii].convert2string()), UVM_FULL) end
+              foreach (axi_expected_rd_q    [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("axi_expected_rd[%0d]:  %s",ii,axi_expected_rd_q    [ii].convert2string()), UVM_FULL) end
+              foreach (axi_expected_wr_q    [ii]) begin `uvm_info("SOC_IFC_SCBD_DRAIN",$sformatf("axi_expected_wr[%0d]:  %s",ii,axi_expected_wr_q    [ii].convert2string()), UVM_FULL) end
           end
           @entry_received;
           entries_remaining=0;
@@ -715,7 +742,8 @@ endclass
           if (cptra_expected_hash.size() != 0)   entries_remaining |= 1;
           if (ss_mode_expected_hash.size() != 0) entries_remaining |= 1;
           if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
-          if (axi_expected_q.size() != 0)        entries_remaining |= 1;
+          if (axi_expected_rd_q.size() != 0)     entries_remaining |= 1;
+          if (axi_expected_wr_q.size() != 0)     entries_remaining |= 1;
       end : while_entries_remaining
   endtask
 
@@ -739,4 +767,3 @@ endclass
   endfunction
 
 // pragma uvmf custom external end
-

@@ -1,0 +1,23 @@
+CAPI=2:
+# Copyright lowRISC contributors (OpenTitan project).
+# Licensed under the Apache License, Version 2.0, see LICENSE for details.
+# SPDX-License-Identifier: Apache-2.0
+#
+# ------------------- W A R N I N G: A U T O - G E N E R A T E D   C O D E !! ---------------------
+#
+# This code is copied from the OpenTitan project, where it was generated with the command
+# gen-mubi.py. Do not hand-edit this version.
+name: "lowrisc:prim:mubi_pkg:0.1"
+description: "Multibit types and functions"
+filesets:
+  files_rtl:
+    depend:
+      - lowrisc:prim:assert
+    files:
+      - rtl/prim_mubi_pkg.sv
+    file_type: systemVerilogSource
+
+targets:
+  default: &default_target
+    filesets:
+      - files_rtl

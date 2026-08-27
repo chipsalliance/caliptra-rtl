@@ -133,5 +133,5 @@
     bit          is_ahb;
     mbox_steps_s step;
   } mbox_steps_by_if_s;
-  // pragma uvmf custom additional end
 
+  // pragma uvmf custom additional end

@@ -40,16 +40,32 @@ package soc_ifc_parameters_pkg;
   // names as the field_name. The parameter is also used to enable transaction viewing 
   // from the command line for selected interfaces using the UVM command line processing.
   parameter string uvm_test_top_environment_qvip_ahb_lite_slave_subenv_ahb_lite_slave_0  = "uvm_test_top.environment.qvip_ahb_lite_slave_subenv.ahb_lite_slave_0"; /* [0] */
-  parameter string uvm_test_top_environment_aaxi_tb_env0_master_0  = "uvm_test_top.environment.aaxi_tb.env0.master[0]"; /* [1] */
-  parameter string soc_ifc_ctrl_agent_BFM  = "soc_ifc_ctrl_agent_BFM"; /* [2] */
-  parameter string cptra_ctrl_agent_BFM  = "cptra_ctrl_agent_BFM"; /* [3] */
-  parameter string ss_mode_ctrl_agent_BFM  = "ss_mode_ctrl_agent_BFM"; /* [4] */
-  parameter string soc_ifc_status_agent_BFM  = "soc_ifc_status_agent_BFM"; /* [5] */
-  parameter string cptra_status_agent_BFM  = "cptra_status_agent_BFM"; /* [6] */
-  parameter string ss_mode_status_agent_BFM  = "ss_mode_status_agent_BFM"; /* [7] */
-  parameter string mbox_sram_agent_BFM  = "mbox_sram_agent_BFM"; /* [8] */
+  parameter string soc_ifc_ctrl_agent_BFM  = "soc_ifc_ctrl_agent_BFM"; /* [1] */
+  parameter string cptra_ctrl_agent_BFM  = "cptra_ctrl_agent_BFM"; /* [2] */
+  parameter string ss_mode_ctrl_agent_BFM  = "ss_mode_ctrl_agent_BFM"; /* [3] */
+  parameter string soc_ifc_status_agent_BFM  = "soc_ifc_status_agent_BFM"; /* [4] */
+  parameter string cptra_status_agent_BFM  = "cptra_status_agent_BFM"; /* [5] */
+  parameter string ss_mode_status_agent_BFM  = "ss_mode_status_agent_BFM"; /* [6] */
+  parameter string mbox_sram_agent_BFM  = "mbox_sram_agent_BFM"; /* [7] */
 
   // pragma uvmf custom package_item_additional begin
+  parameter int AXI_SRAM_ADDR_WIDTH = 18;
+  parameter int AXI_SRAM_WORD_BYTES = soc_ifc_pkg::CPTRA_AXI_DMA_DATA_WIDTH / 8;
+  parameter longint unsigned AXI_SRAM_SIZE_BYTES = longint'(1) << AXI_SRAM_ADDR_WIDTH;
+  parameter bit [63:0] AXI_SRAM_BASE_ADDR = 64'h8000_0000;
+  parameter bit [63:0] AXI_RECOVERY_FIFO_ADDR = 64'h9000_0000;
+  parameter int unsigned AXI_FABRIC_OUTSTANDING_DEPTH = 64;
+  parameter bit [63:0] AXI_SOC_IFC_BASE_ADDR = 64'h0;
+  parameter bit [63:0] AXI_SOC_IFC_LIMIT_ADDR = (64'(1) << soc_ifc_pkg::SOC_IFC_ADDR_W) - 1;
+  parameter int unsigned AXI_RECOVERY_FIFO_DEPTH_DWORDS_DEFAULT = 512;
+  parameter int unsigned AXI_SRAM_B_DELAY_MIN_DEFAULT = 0;
+  parameter int unsigned AXI_SRAM_B_DELAY_MAX_DEFAULT = 0;
+  parameter int unsigned AXI_SRAM_R_DELAY_MIN_DEFAULT = 0;
+  parameter int unsigned AXI_SRAM_R_DELAY_MAX_DEFAULT = 0;
+  parameter int unsigned AXI_RECOVERY_R_DELAY_MIN_DEFAULT = 0;
+  parameter int unsigned AXI_RECOVERY_R_DELAY_MAX_DEFAULT = 0;
+  parameter int unsigned AXI_RECOVERY_FIFO_REFILL_DELAY_MIN_DEFAULT = 0;
+  parameter int unsigned AXI_RECOVERY_FIFO_REFILL_DELAY_MAX_DEFAULT = 0;
   // pragma uvmf custom package_item_additional end
 
 endpackage

@@ -82,8 +82,10 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_KV_ERROR_MASK                                     (32'h10)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_LOW                            (5)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_MASK                           (32'h20)
-`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (6)
-`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (32'hffffffc0)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_LOW                                     (6)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_MASK                                    (32'h40)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (7)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (32'hffffff80)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL                                               (32'h4)
@@ -328,6 +330,8 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK                                 (32'h20)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_LOW                                   (6)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                  (32'h40)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_LOW                                      (7)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_MASK                                     (32'h80)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN
 `define GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                                    (32'he4)
@@ -381,20 +385,6 @@
 `endif
 `ifndef GENERIC_AND_FUSE_REG_CPTRA_WDT_CFG_1
 `define GENERIC_AND_FUSE_REG_CPTRA_WDT_CFG_1                                                        (32'h114)
-`endif
-`ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0                                           (32'h118)
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_LOW_THRESHOLD_LOW                         (0)
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_LOW_THRESHOLD_MASK                        (32'hffff)
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_HIGH_THRESHOLD_LOW                        (16)
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_HIGH_THRESHOLD_MASK                       (32'hffff0000)
-`endif
-`ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1                                           (32'h11c)
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_LOW                      (0)
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_MASK                     (32'hffff)
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_LOW                                  (16)
-`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_MASK                                 (32'hffff0000)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_CPTRA_RSVD_REG_0
 `define GENERIC_AND_FUSE_REG_CPTRA_RSVD_REG_0                                                       (32'h120)
@@ -453,6 +443,60 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_OWNER_PK_HASH_LOCK                                               (32'h170)
 `define GENERIC_AND_FUSE_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_LOW                                      (0)
 `define GENERIC_AND_FUSE_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK                                     (32'h1)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0                                           (32'h180)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_LOW_THRESHOLD_LOW                         (0)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_LOW_THRESHOLD_MASK                        (32'hffff)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_HIGH_THRESHOLD_LOW                        (16)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0_HIGH_THRESHOLD_MASK                       (32'hffff0000)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1                                           (32'h184)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_LOW                      (0)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_MASK                     (32'hffff)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_LOW                                  (16)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_MASK                                 (32'hffff0000)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2                                           (32'h188)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_FIPS_WINDOW_SIZE_LOW                      (0)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_FIPS_WINDOW_SIZE_MASK                     (32'hffff)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_SINGLE_BIT_MODE_LOW                       (16)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_SINGLE_BIT_MODE_MASK                      (32'h10000)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_RNG_BIT_SEL_LOW                           (17)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_RNG_BIT_SEL_MASK                          (32'h60000)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_RSVD_LOW                                  (19)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_RSVD_MASK                                 (32'h7ff80000)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_BYPASS_MODE_LOW                           (31)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2_BYPASS_MODE_MASK                          (32'h80000000)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0                                          (32'h18c)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0_LOW_THRESHOLD_LOW                        (0)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0_LOW_THRESHOLD_MASK                       (32'hffff)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0_HIGH_THRESHOLD_LOW                       (16)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0_HIGH_THRESHOLD_MASK                      (32'hffff0000)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1                                          (32'h190)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_REPETITION_COUNT_LOW                     (0)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_REPETITION_COUNT_MASK                    (32'hffff)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_RSVD_LOW                                 (16)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_RSVD_MASK                                (32'hffff0000)
+`endif
+`ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2                                          (32'h194)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_FIPS_WINDOW_SIZE_LOW                     (0)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_FIPS_WINDOW_SIZE_MASK                    (32'hffff)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_SINGLE_BIT_MODE_LOW                      (16)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_SINGLE_BIT_MODE_MASK                     (32'h10000)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_RNG_BIT_SEL_LOW                          (17)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_RNG_BIT_SEL_MASK                         (32'h60000)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_RSVD_LOW                                 (19)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_RSVD_MASK                                (32'h7ff80000)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_BYPASS_MODE_LOW                          (31)
+`define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_BYPASS_MODE_MASK                         (32'h80000000)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_FUSE_UDS_SEED_0
 `define GENERIC_AND_FUSE_REG_FUSE_UDS_SEED_0                                                        (32'h200)

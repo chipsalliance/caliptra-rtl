@@ -60,6 +60,11 @@ class soc_ifc_env_cov_subscriber #(
   CONFIG_T configuration;
   soc_ifc_reg_model_top c_soc_ifc_rm;
 
+  typedef enum bit [1:0] {
+    SHA_REG_DATAPATH,
+    SHA_REG_CONTROL,
+    SHA_REG_INTERRUPT
+  } sha_reg_category_e;
 
   //------------------------------------------------------------------------------------------
   //                                   Coverage Signals
@@ -70,6 +75,53 @@ class soc_ifc_env_cov_subscriber #(
   //------------------------------------------------------------------------------------------
   //                                   Covergroups
   //------------------------------------------------------------------------------------------
+  covergroup soc_ifc_env_sha_access_cg with function sample (
+      input bit                subsystem_mode,
+      input bit                user_match,
+      input bit                is_write,
+      input sha_reg_category_e category,
+      input axi_resp_e         response);
+    option.per_instance = 1;
+
+    integration_mode : coverpoint subsystem_mode {
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+      bins subsystem = {1'b1};
+`else
+      bins passive = {1'b0};
+`endif
+    }
+    axuser_match : coverpoint user_match;
+    direction : coverpoint is_write {
+      bins read  = {1'b0};
+      bins write = {1'b1};
+    }
+    register_category : coverpoint category {
+      bins datapath = {SHA_REG_DATAPATH};
+      bins control = {SHA_REG_CONTROL};
+      bins interrupt = {SHA_REG_INTERRUPT};
+    }
+    actual_response : coverpoint response {
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+      bins okay = {AXI_RESP_OKAY};
+`endif
+      bins slverr = {AXI_RESP_SLVERR};
+      bins other = default;
+    }
+    datapath_outcome : coverpoint {
+        subsystem_mode, user_match, is_write, category, response
+    } {
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+      bins rejected_nonmatch_read  = {7'b1000010};
+      bins rejected_nonmatch_write = {7'b1010010};
+      bins authorized_read         = {7'b1100000};
+      bins authorized_write        = {7'b1110000};
+`else
+      wildcard bins rejected_passive_read  = {7'b0?00010};
+      wildcard bins rejected_passive_write = {7'b0?10010};
+`endif
+    }
+  endgroup
+
   covergroup soc_ifc_env_mbox_steps_cg with function sample (input bit is_ahb, input mbox_steps_s next_step);
     option.per_instance = 1;
     step_lock_acquire   : coverpoint (next_step.lock_acquire);
@@ -422,6 +474,7 @@ class soc_ifc_env_cov_subscriber #(
   uvm_analysis_imp_cov_soc_ifc_ctrl_ae   #(soc_ifc_ctrl_transaction,   this_type) soc_ifc_ctrl_ae;
   uvm_analysis_imp_cov_soc_ifc_status_ae #(soc_ifc_status_transaction, this_type) soc_ifc_status_ae;
   uvm_analysis_imp_cov_axi_ae            #(aaxi_master_tr,             this_type) axi_ae;
+  uvm_analysis_imp_cov_axi_completed_ae  #(aaxi_master_tr,             this_type) axi_completed_ae;
   uvm_analysis_imp_cov_cptra_ctrl_ae     #(cptra_ctrl_transaction,     this_type) cptra_ctrl_ae;
   uvm_analysis_imp_cov_cptra_status_ae   #(cptra_status_transaction,   this_type) cptra_status_ae;
   uvm_analysis_imp_cov_ahb_ae            #(mvc_sequence_item_base,     this_type) ahb_ae;
@@ -434,6 +487,7 @@ class soc_ifc_env_cov_subscriber #(
   //------------------------------------------------------------------------------------------
   function new (string name, uvm_component parent);
     super.new(name, parent);
+    soc_ifc_env_sha_access_cg = new;
     soc_ifc_env_mbox_steps_cg = new;
     soc_ifc_env_mbox_scenarios_cg = new;
   endfunction
@@ -445,6 +499,7 @@ class soc_ifc_env_cov_subscriber #(
     soc_ifc_ctrl_ae   = new("soc_ifc_ctrl_ae"  , this);
     soc_ifc_status_ae = new("soc_ifc_status_ae", this);
     axi_ae            = new("axi_ae"           , this);
+    axi_completed_ae  = new("axi_completed_ae" , this);
     cptra_ctrl_ae     = new("cptra_ctrl_ae"    , this);
     cptra_status_ae   = new("cptra_status_ae"  , this);
     ahb_ae            = new("ahb_ae"           , this);
@@ -453,8 +508,52 @@ class soc_ifc_env_cov_subscriber #(
     ss_mode_status_ae = new("ss_mode_status_ae", this);
 
     c_soc_ifc_rm = configuration.soc_ifc_rm;
+    soc_ifc_env_sha_access_cg.set_inst_name($sformatf("soc_ifc_env_sha_access_cg_%s",get_full_name()));
     soc_ifc_env_mbox_steps_cg.set_inst_name($sformatf("soc_ifc_env_mbox_steps_cg_%s",get_full_name()));
     soc_ifc_env_mbox_scenarios_cg.set_inst_name($sformatf("soc_ifc_env_mbox_scenarios_cg_%s",get_full_name()));
+  endfunction
+
+  virtual function sha_reg_category_e sha_reg_category(uvm_reg rg);
+    uvm_reg_block blk;
+
+    if (rg.get_name() == "CONTROL")
+      return SHA_REG_CONTROL;
+
+    blk = rg.get_parent();
+    while (blk != null) begin
+      if (blk.get_name() == "intr_block_rf_ext")
+        return SHA_REG_INTERRUPT;
+      blk = blk.get_parent();
+    end
+    return SHA_REG_DATAPATH;
+  endfunction
+
+  //------------------------------------------------------------------------------------------
+  //                              Completed AXI - write
+  //------------------------------------------------------------------------------------------
+  virtual function void write_cov_axi_completed_ae(aaxi_master_tr txn);
+    uvm_reg axs_reg;
+    bit user_match;
+    axi_resp_e response;
+
+    if (!(txn.addr inside {[SHA_REG_START_ADDR:SHA_REG_END_ADDR]}))
+      return;
+
+    axs_reg = c_soc_ifc_rm.soc_ifc_AXI_map.get_reg_by_offset(txn.addr);
+    if (axs_reg == null) begin
+      `uvm_error("SOC_IFC_COV_SHA", $sformatf("Completed AXI transaction to SHA address 0x%x decodes to null", txn.addr))
+      return;
+    end
+
+    user_match = (txn.is_write() ? txn.awuser : txn.aruser) ==
+                 configuration.ss_dma_axi_user;
+    response = axi_resp_e'(txn.resp[$bits(axi_resp_e)-1:0]);
+    soc_ifc_env_sha_access_cg.sample(
+        configuration.subsystem_mode,
+        user_match,
+        txn.is_write(),
+        sha_reg_category(axs_reg),
+        response);
   endfunction
 
   //------------------------------------------------------------------------------------------
@@ -586,6 +685,8 @@ class soc_ifc_env_cov_subscriber #(
 
     // Extract info
     if (!$cast(axi_txn,txn)) `uvm_fatal("SOC_IFC_COV_AXI", "AXI coverage analysis import received invalid transaction")
+    if (axi_txn.addr < configuration.axi_soc_ifc_base_addr || axi_txn.addr > configuration.axi_soc_ifc_limit_addr)
+      return;
     axs_reg = c_soc_ifc_rm.soc_ifc_AXI_map.get_reg_by_offset(axi_txn.addr);
 
     // Calculate coverage impact from register access

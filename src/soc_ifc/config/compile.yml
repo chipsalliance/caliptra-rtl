@@ -4,6 +4,7 @@ schema_version: 2.4.0
 requires:
   - caliptra_top_defines
   - caliptra_top_reg_defines
+  - caliptra_prim_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -71,6 +72,7 @@ targets:
       - $COMPILE_ROOT/rtl/soc_ifc_reg.sv
       - $COMPILE_ROOT/rtl/mbox.sv
       - $COMPILE_ROOT/rtl/mbox_csr.sv
+      - $COMPILE_ROOT/rtl/sha512_acc_iccm_hash.sv
       - $COMPILE_ROOT/rtl/sha512_acc_top.sv
       - $COMPILE_ROOT/rtl/sha512_acc_csr.sv
       - $COMPILE_ROOT/rtl/wdt.sv
@@ -108,6 +110,12 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+      elab:
+        # Suppress "Interface not instantiated" warning.
+        # axi_if.sv is compiled into both the RTL filelist and
+        # caliptra_top_tb_pkg; the TB binds the package copy, so the
+        # RTL-library copy is unused and harmlessly ignored by VCS.
+        - '-suppress=UII-L'
 ---
 provides: [soc_ifc_axi_sha_acc_dis_tb]
 schema_version: 2.4.0
@@ -136,6 +144,12 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+      elab:
+        # Suppress "Interface not instantiated" warning.
+        # axi_if.sv is compiled into both the RTL filelist and
+        # caliptra_top_tb_pkg; the TB binds the package copy, so the
+        # RTL-library copy is unused and harmlessly ignored by VCS.
+        - '-suppress=UII-L'
 ---
 provides: [soc_ifc_tb_ss]
 schema_version: 2.4.0
@@ -161,3 +175,9 @@ global:
         #- '-ucli -i dump.ucli'
       #sim:
         #- '-ucli -i dump.ucli'
+      elab:
+        # Suppress "Interface not instantiated" warning.
+        # axi_if.sv is compiled into both the RTL filelist and
+        # caliptra_top_tb_pkg; the TB binds the package copy, so the
+        # RTL-library copy is unused and harmlessly ignored by VCS.
+        - '-suppress=UII-L'

@@ -16,6 +16,7 @@
 
 python3 tools/scripts/reg_doc_gen.py \
 src/integration/rtl/caliptra_reg.rdl \
+src/entropy_combiner/rtl/entropy_combiner_reg.rdl \
 src/keyvault/rtl/kv_reg.rdl \
 src/pcrvault/rtl/pv_reg.rdl \
 src/datavault/rtl/dv_reg.rdl \
@@ -33,14 +34,13 @@ src/hmac/rtl/hmac_reg.rdl \
 src/doe/rtl/doe_reg.rdl \
 src/entropy_src/data/entropy_src.rdl \
 src/csrng/data/csrng.rdl \
-src/spi_host/data/spi_host.rdl \
-src/uart/data/uart.rdl \
 src/aes/data/aes.rdl \
 src/aes/rtl/aes_clp_reg.rdl \
 src/keyvault/rtl/kv_def.rdl
 
 python3 tools/scripts/reg_doc_gen.py --param CALIPTRA_SS_MODE=true \
 src/integration/rtl/caliptra_reg.rdl \
+src/entropy_combiner/rtl/entropy_combiner_reg.rdl \
 src/keyvault/rtl/kv_reg.rdl \
 src/pcrvault/rtl/pv_reg.rdl \
 src/datavault/rtl/dv_reg.rdl \
@@ -58,8 +58,6 @@ src/hmac/rtl/hmac_reg.rdl \
 src/doe/rtl/doe_reg.rdl \
 src/entropy_src/data/entropy_src.rdl \
 src/csrng/data/csrng.rdl \
-src/spi_host/data/spi_host.rdl \
-src/uart/data/uart.rdl \
 src/aes/data/aes.rdl \
 src/aes/rtl/aes_clp_reg.rdl \
 src/keyvault/rtl/kv_def.rdl

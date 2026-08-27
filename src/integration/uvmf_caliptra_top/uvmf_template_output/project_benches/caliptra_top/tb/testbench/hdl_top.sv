@@ -38,6 +38,7 @@
 module hdl_top;
 
 import caliptra_top_parameters_pkg::*;
+import soc_ifc_axi_topology_pkg::*;
 import qvip_ahb_lite_slave_params_pkg::*;
 //import qvip_apb5_slave_params_pkg::*;
 import uvmf_base_pkg_hdl::*;
@@ -137,7 +138,7 @@ import aaxi_uvm_pkg::*;
     logic [`CALIPTRA_IMEM_ADDR_WIDTH-1:0] imem_addr;
     logic [`CALIPTRA_IMEM_DATA_WIDTH-1:0] imem_rdata;
 
-    logic        etrng_req;
+    logic        etrng0_req;
     logic  [3:0] itrng_data;
     logic        itrng_valid;
 
@@ -146,6 +147,68 @@ import aaxi_uvm_pkg::*;
 
     el2_mem_if el2_mem_export ();
     abr_mem_if abr_memory_export();
+
+    // FIXME
+    // Avery can access a null object when reset asserts in the same cycle that
+    // an RVALID/RLAST response ends. Delay assertion by 1ps while allowing
+    // deassertion immediately. Recheck this workaround with newer Avery VIP.
+    logic cptra_rst_b_d;
+    logic cptra_rst_b_dly_assert_simult_deassert;
+    initial cptra_rst_b_d = 1'b0;
+    always@(*) begin
+        #1ps cptra_rst_b_d =
+          soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
+    end
+    assign cptra_rst_b_dly_assert_simult_deassert =
+      cptra_rst_b_d |
+      soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
+
+    pulldown (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b);
+    pulldown (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_pwrgood);
+
+    aaxi_intf #(
+        .ID_WIDTH    (aaxi_pkg::AAXI_INTC_ID_WIDTH),
+        .ADDR_WIDTH  (aaxi_pkg::AAXI_ADDR_WIDTH),
+        .DATA_WIDTH  (CPTRA_AXI_DMA_DATA_WIDTH),
+        .AWUSER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH),
+        .WUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH),
+        .BUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH),
+        .ARUSER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH),
+        .RUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH)
+    ) axi_manager_ports[AXI_FABRIC_NUM_MANAGERS] (
+        .ACLK   (clk                                   ),
+        .ARESETn(cptra_rst_b_dly_assert_simult_deassert),
+        .CACTIVE(                                      ),
+        .CSYSREQ(1'b0                                  ),
+        .CSYSACK(                                      )
+    );
+    aaxi_intf #(
+        .ID_WIDTH    (aaxi_pkg::AAXI_INTC_ID_WIDTH),
+        .ADDR_WIDTH  (aaxi_pkg::AAXI_ADDR_WIDTH),
+        .DATA_WIDTH  (CPTRA_AXI_DMA_DATA_WIDTH),
+        .AWUSER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH),
+        .WUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH),
+        .BUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH),
+        .ARUSER_WIDTH(CPTRA_AXI_DMA_USER_WIDTH),
+        .RUSER_WIDTH (CPTRA_AXI_DMA_USER_WIDTH)
+    ) axi_subordinate_ports[AXI_FABRIC_NUM_SUBORDINATES] (
+        .ACLK   (clk                                   ),
+        .ARESETn(cptra_rst_b_dly_assert_simult_deassert),
+        .CACTIVE(                                      ),
+        .CSYSREQ(1'b0                                  ),
+        .CSYSACK(                                      )
+    );
+    aaxi_interconnect_intf axi_interconnect_port (
+        .ACLK   (clk                                   ),
+        .ARESETn(cptra_rst_b_dly_assert_simult_deassert),
+        .CACTIVE(                                      ),
+        .CSYSREQ(1'b0                                  ),
+        .CSYSACK(                                      )
+    );
+    soc_ifc_recovery_if recovery_if (
+        .clk  (clk                                   ),
+        .rst_n(cptra_rst_b_dly_assert_simult_deassert)
+    );
 
    //=========================================================================-
    // END Custom Signals
@@ -203,58 +266,6 @@ import aaxi_uvm_pkg::*;
   soc_ifc_status_driver_bfm  soc_ifc_subenv_soc_ifc_status_agent_drv_bfm(soc_ifc_subenv_soc_ifc_status_agent_bus.responder_port);
   ss_mode_status_driver_bfm  soc_ifc_subenv_ss_mode_status_agent_drv_bfm(soc_ifc_subenv_ss_mode_status_agent_bus.responder_port);
   mbox_sram_driver_bfm  soc_ifc_subenv_mbox_sram_agent_drv_bfm(soc_ifc_subenv_mbox_sram_agent_bus.responder_port);
-
-  // pragma uvmf custom avery_vip_components begin
-    // Avery VIP signals
-    //uc
-    aaxi_uvm_container  uc;             //VAR: UVM container
-
-    // FIXME
-    // This reset timing hack is necessary to work around a race condition bug
-    // in Avery VIP that results in Null Object Access error when reset asserts
-    // on the same clock cycle that a Read request is ending (RVALID == 1, RLAST == 1)
-    // Applied when using Avery 2024.3. Might be able to remove it by 2025.1+
-    logic cptra_rst_b_d;
-    logic cptra_rst_b_dly_assert_simult_deassert;
-    initial cptra_rst_b_d = 1'b0;
-    always@(*) begin
-        #1ps cptra_rst_b_d = soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
-    end
-    assign cptra_rst_b_dly_assert_simult_deassert = cptra_rst_b_d | soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b;
-
-    // Ensure cptra_rst_b/cptra_pwrgood are 0 at elaboration (before delta 0),
-    // preventing X-triggered assertions in soc_ifc_reg.sv external ack logic.
-    // The driver BFM overrides these weak pulls once UVM configures it as INITIATOR.
-    pulldown (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_rst_b);
-    pulldown (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.cptra_pwrgood);
-
-    aaxi_intf #(
-        .MCB_INPUT (aaxi_pkg::AAXI_MCB_INPUT ),
-        .MCB_OUTPUT(aaxi_pkg::AAXI_MCB_OUTPUT),
-        .SCB_INPUT (aaxi_pkg::AAXI_SCB_INPUT ),
-        .SCB_OUTPUT(aaxi_pkg::AAXI_SCB_OUTPUT)
-    ) ports[1] (
-        .ACLK   (clk                                              ),
-        .ARESETn(cptra_rst_b_dly_assert_simult_deassert/*1'b1*/   ),
-        .CACTIVE(                                                 ),
-        .CSYSREQ(1'b0                                             ),
-        .CSYSACK(                                                 )
-    );
-    aaxi_monitor_wrapper monitor0 (ports[0]);
-    defparam monitor0.ID_WIDTH= AAXI_ID_WIDTH;
-    defparam monitor0.BUS_DATA_WIDTH=aaxi_pkg::AAXI_DATA_WIDTH;
-    // enable the support of all user-defined signaling
-    defparam monitor0.USER_SUPPORT= 5'b11111;
-    defparam monitor0.VER= "AXI4";
-
-    initial begin
-      uc = new();
-      uvm_config_db #(aaxi_uvm_container)::set(uvm_root::get(), "*", "intf_uc", uc);
-
-      uc.ports = ports[0];
-      //uvm_config_db #(virtual aaxi_intf)::set(uvm_root::get(), "intf_uc", "ports", ports[0]);
-    end
-  // pragma uvmf custom avery_vip_components end
 
   // pragma uvmf custom dut_instantiation begin
   // AHB Clock/reset
@@ -328,8 +339,8 @@ import aaxi_uvm_pkg::*;
         .mailbox_data_avail(soc_ifc_subenv_soc_ifc_status_agent_bus.mailbox_data_avail),
         .mailbox_flow_done (soc_ifc_subenv_soc_ifc_status_agent_bus.mailbox_flow_done ),
 
-        .recovery_data_avail     (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.recovery_data_avail       ),
-        .recovery_image_activated(soc_ifc_subenv_soc_ifc_ctrl_agent_bus.recovery_image_activated  ),
+        .recovery_data_avail     (recovery_if.recovery_data_avail                                 ),
+        .recovery_image_activated(recovery_if.recovery_image_activated                             ),
 
         .BootFSM_BrkPoint  (soc_ifc_subenv_soc_ifc_ctrl_agent_bus.BootFSM_BrkPoint),
 
@@ -338,15 +349,23 @@ import aaxi_uvm_pkg::*;
         .cptra_error_non_fatal(soc_ifc_subenv_soc_ifc_status_agent_bus.cptra_error_non_fatal),
         // External TRNG
 `ifdef CALIPTRA_INTERNAL_TRNG
-        .etrng_req             (etrng_req),
+        .etrng0_req            (etrng0_req),
+        .etrng1_req            (), // ES1 unused in this UVM bench (dual-iTRNG combine disabled)
         // Internal TRNG
-        .itrng_data            (itrng_data ),
-        .itrng_valid           (itrng_valid),
+        .itrng0_data           (itrng_data ),
+        .itrng0_valid          (itrng_valid),
+        .itrng1_data           (4'h0),
+        .itrng1_valid          (1'b0),
+        .itrng1_en             (1'b0),
 `else
-        .etrng_req             (soc_ifc_subenv_soc_ifc_status_agent_bus.trng_req),
+        .etrng0_req            (soc_ifc_subenv_soc_ifc_status_agent_bus.trng_req),
+        .etrng1_req            (),
         // Internal TRNG
-        .itrng_data            (4'h0),
-        .itrng_valid           (1'b0),
+        .itrng0_data           (4'h0),
+        .itrng0_valid          (1'b0),
+        .itrng1_data           (4'h0),
+        .itrng1_valid          (1'b0),
+        .itrng1_en             (1'b0),
 `endif
 
         // Subsystem mode straps
@@ -419,110 +438,103 @@ import aaxi_uvm_pkg::*;
     assign uvm_test_top_environment_soc_ifc_subenv_qvip_ahb_lite_slave_subenv_qvip_hdl.ahb_lite_slave_0_HEXOKAY   = 1'b0;
 
     always_comb begin
-        // Clock control placeholders
-        ports[0].CACTIVE_m = 1'b0;
-        ports[0].CACTIVE_s = 1'b0;
-        ports[0].CSYSACK_m = 1'b0;
-        ports[0].CSYSACK_s = 1'b0;
+        s_axi_if.araddr   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARADDR[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0];
+        s_axi_if.arburst  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARBURST;
+        s_axi_if.arsize   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARSIZE;
+        s_axi_if.arlen    = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARLEN;
+        s_axi_if.aruser   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARUSER;
+        s_axi_if.arid     = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARID;
+        s_axi_if.arlock   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARLOCK;
+        s_axi_if.arcache  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARCACHE;
+        s_axi_if.arprot   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARPROT;
+        s_axi_if.arqos    = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARQOS;
+        s_axi_if.arregion = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARREGION;
+        s_axi_if.arvalid  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARVALID;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].ARREADY = s_axi_if.arready;
 
-        // AXI AR
-        s_axi_if.araddr  = ports[0].ARADDR;
-        s_axi_if.arburst = ports[0].ARBURST;
-        s_axi_if.arsize  = ports[0].ARSIZE;
-        s_axi_if.arlen   = ports[0].ARLEN;
-        s_axi_if.aruser  = ports[0].ARUSER;
-        s_axi_if.arid    = ports[0].ARID;
-        s_axi_if.arlock  = ports[0].ARLOCK;
-        s_axi_if.arcache = ports[0].ARCACHE ;
-        s_axi_if.arprot  = ports[0].ARPROT  ;
-        s_axi_if.arqos   = ports[0].ARQOS   ;
-        s_axi_if.arregion= ports[0].ARREGION;
-        s_axi_if.arvalid = ports[0].ARVALID;
-        ports[0].ARREADY = s_axi_if.arready;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].RDATA  = s_axi_if.rdata;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].RRESP  = s_axi_if.rresp;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].RID    = s_axi_if.rid;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].RUSER  = s_axi_if.ruser;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].RLAST  = s_axi_if.rlast;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].RVALID = s_axi_if.rvalid;
+        s_axi_if.rready = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].RREADY;
 
-        // AXI R
-        ports[0].RDATA  = s_axi_if.rdata ;
-        ports[0].RRESP  = s_axi_if.rresp ;
-        ports[0].RID    = s_axi_if.rid   ;
-        ports[0].RUSER  = s_axi_if.ruser ;
-        ports[0].RLAST  = s_axi_if.rlast ;
-        ports[0].RVALID = s_axi_if.rvalid;
-        s_axi_if.rready = ports[0].RREADY;
+        s_axi_if.awaddr   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWADDR[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_SOC_IFC)-1:0];
+        s_axi_if.awburst  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWBURST;
+        s_axi_if.awsize   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWSIZE;
+        s_axi_if.awlen    = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWLEN;
+        s_axi_if.awuser   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWUSER;
+        s_axi_if.awid     = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWID;
+        s_axi_if.awlock   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWLOCK;
+        s_axi_if.awcache  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWCACHE;
+        s_axi_if.awprot   = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWPROT;
+        s_axi_if.awqos    = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWQOS;
+        s_axi_if.awregion = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWREGION;
+        s_axi_if.awvalid  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWVALID;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].AWREADY = s_axi_if.awready;
 
-        // AXI AW
-        s_axi_if.awaddr  = ports[0].AWADDR;
-        s_axi_if.awburst = ports[0].AWBURST;
-        s_axi_if.awsize  = ports[0].AWSIZE;
-        s_axi_if.awlen   = ports[0].AWLEN;
-        s_axi_if.awuser  = ports[0].AWUSER;
-        s_axi_if.awid    = ports[0].AWID;
-        s_axi_if.awlock  = ports[0].AWLOCK;
-        s_axi_if.awcache = ports[0].AWCACHE ;
-        s_axi_if.awprot  = ports[0].AWPROT  ;
-        s_axi_if.awqos   = ports[0].AWQOS   ;
-        s_axi_if.awregion= ports[0].AWREGION;
-        s_axi_if.awvalid = ports[0].AWVALID;
-        ports[0].AWREADY = s_axi_if.awready;
+        s_axi_if.wdata  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].WDATA;
+        s_axi_if.wstrb  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].WSTRB;
+        s_axi_if.wuser  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].WUSER;
+        s_axi_if.wvalid = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].WVALID;
+        s_axi_if.wlast  = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].WLAST;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].WREADY = s_axi_if.wready;
 
-        // AXI W
-        s_axi_if.wdata  = ports[0].WDATA;
-        s_axi_if.wstrb  = ports[0].WSTRB;
-        s_axi_if.wuser  = ports[0].WUSER;
-        s_axi_if.wvalid = ports[0].WVALID;
-        s_axi_if.wlast  = ports[0].WLAST;
-        ports[0].WREADY = s_axi_if.wready;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].BRESP  = s_axi_if.bresp;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].BID    = s_axi_if.bid;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].BUSER  = s_axi_if.buser;
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].BVALID = s_axi_if.bvalid;
+        s_axi_if.bready = axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX].BREADY;
 
-        // AXI B
-        ports[0].BRESP  = s_axi_if.bresp ;
-        ports[0].BID    = s_axi_if.bid   ;
-        ports[0].BUSER  = s_axi_if.buser ;
-        ports[0].BVALID = s_axi_if.bvalid;
-        s_axi_if.bready = ports[0].BREADY;
-    end
-    // TODO
-    always_comb begin
-        // AXI AR
-//        ports[0].ARADDR  = m_axi_if.araddr;
-//        ports[0].ARBURST = m_axi_if.arburst;
-//        ports[0].ARSIZE  = m_axi_if.arsize;
-//        ports[0].ARLEN   = m_axi_if.arlen;
-//        ports[0].ARUSER  = m_axi_if.aruser;
-//        ports[0].ARID    = m_axi_if.arid;
-//        ports[0].ARLOCK  = m_axi_if.arlock;
-//        ports[0].ARVALID = m_axi_if.arvalid;
-        m_axi_if.arready = '0;//ports[0].ARREADY;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARADDR   = m_axi_if.araddr;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARBURST  = m_axi_if.arburst;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARSIZE   = m_axi_if.arsize;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARLEN    = m_axi_if.arlen;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARUSER   = m_axi_if.aruser;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARID     = aaxi_pkg::AAXI_INTC_ID_WIDTH'(m_axi_if.arid);
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARLOCK   = m_axi_if.arlock;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARCACHE  = m_axi_if.arcache;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARPROT   = m_axi_if.arprot;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARQOS    = m_axi_if.arqos;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARREGION = m_axi_if.arregion;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARVALID  = m_axi_if.arvalid;
+        m_axi_if.arready = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].ARREADY;
 
-        // AXI R
-        m_axi_if.rdata  = '0; //ports[0].RDATA;
-        m_axi_if.rresp  = '0; //ports[0].RRESP;
-        m_axi_if.rid    = '0; //ports[0].RID;
-        m_axi_if.rlast  = '0; //ports[0].RLAST;
-        m_axi_if.rvalid = '0; //ports[0].RVALID;
-//        ports[0].RREADY = s_axi_if.rready;
+        m_axi_if.rdata  = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].RDATA;
+        m_axi_if.rresp  = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].RRESP;
+        m_axi_if.rid    = CPTRA_AXI_DMA_ID_WIDTH'(axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].RID);
+        m_axi_if.ruser  = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].RUSER;
+        m_axi_if.rlast  = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].RLAST;
+        m_axi_if.rvalid = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].RVALID;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].RREADY = m_axi_if.rready;
 
-        // AXI AW
-//        ports[0].AWADDR  = m_axi_if.awaddr;
-//        ports[0].AWBURST = m_axi_if.awburst;
-//        ports[0].AWSIZE  = m_axi_if.awsize;
-//        ports[0].AWLEN   = m_axi_if.awlen;
-//        ports[0].AWUSER  = m_axi_if.awuser;
-//        ports[0].AWID    = m_axi_if.awid;
-//        ports[0].AWLOCK  = m_axi_if.awlock;
-//        ports[0].AWVALID = m_axi_if.awvalid;
-        m_axi_if.awready = '0; //ports[0].AWREADY;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWADDR   = m_axi_if.awaddr;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWBURST  = m_axi_if.awburst;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWSIZE   = m_axi_if.awsize;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWLEN    = m_axi_if.awlen;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWUSER   = m_axi_if.awuser;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWID     = aaxi_pkg::AAXI_INTC_ID_WIDTH'(m_axi_if.awid);
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWLOCK   = m_axi_if.awlock;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWCACHE  = m_axi_if.awcache;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWPROT   = m_axi_if.awprot;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWQOS    = m_axi_if.awqos;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWREGION = m_axi_if.awregion;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWVALID  = m_axi_if.awvalid;
+        m_axi_if.awready = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].AWREADY;
 
-        // AXI W
-//        ports[0].WDATA  = m_axi_if.wdata;
-//        ports[0].WSTRB  = m_axi_if.wstrb;
-//        ports[0].WVALID = m_axi_if.wvalid;
-//        ports[0].WLAST  = m_axi_if.wlast;
-        m_axi_if.wready = '0; //ports[0].WREADY;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].WDATA  = m_axi_if.wdata;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].WSTRB  = m_axi_if.wstrb;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].WUSER  = m_axi_if.wuser;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].WVALID = m_axi_if.wvalid;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].WLAST  = m_axi_if.wlast;
+        m_axi_if.wready = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].WREADY;
 
-        // AXI B
-        m_axi_if.bresp  = '0; //ports[0].BRESP;
-        m_axi_if.bid    = '0; //ports[0].BID;
-        m_axi_if.bvalid = '0; //ports[0].BVALID;
-//        ports[0].BREADY = m_axi_if.bready;
+        m_axi_if.bresp  = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].BRESP;
+        m_axi_if.bid    = CPTRA_AXI_DMA_ID_WIDTH'(axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].BID);
+        m_axi_if.buser  = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].BUSER;
+        m_axi_if.bvalid = axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].BVALID;
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX].BREADY = m_axi_if.bready;
     end
 
     assign soc_ifc_subenv_cptra_status_agent_bus.cptra_noncore_rst_b = caliptra_top_dut.cptra_noncore_rst_b;
@@ -554,7 +566,7 @@ import aaxi_uvm_pkg::*;
     //=========================================================================-
     physical_rng physical_rng_i (
         .clk    (clk),
-        .enable (etrng_req),
+        .enable (etrng0_req),
         .data   (itrng_data),
         .valid  (itrng_valid)
     );
@@ -622,10 +634,29 @@ import aaxi_uvm_pkg::*;
     uvm_config_db #( virtual soc_ifc_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_subenv_soc_ifc_status_agent_BFM , soc_ifc_subenv_soc_ifc_status_agent_drv_bfm  );
     uvm_config_db #( virtual ss_mode_status_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_subenv_ss_mode_status_agent_BFM , soc_ifc_subenv_ss_mode_status_agent_drv_bfm  );
     uvm_config_db #( virtual mbox_sram_driver_bfm  )::set( null , UVMF_VIRTUAL_INTERFACES , soc_ifc_subenv_mbox_sram_agent_BFM , soc_ifc_subenv_mbox_sram_agent_drv_bfm ); 
+    uvm_config_db #(virtual soc_ifc_recovery_if)::set(
+        null, UVMF_VIRTUAL_INTERFACES,
+        soc_ifc_env_pkg::SOC_IFC_RECOVERY_VIF, recovery_if);
+    uvm_config_db #(virtual aaxi_intf)::set(
+        null, "*", AXI_FABRIC_SOC_MANAGER_VIF,
+        axi_manager_ports[AXI_FABRIC_SOC_MANAGER_IDX]);
+    uvm_config_db #(virtual aaxi_intf)::set(
+        null, "*", AXI_FABRIC_DMA_MANAGER_VIF,
+        axi_manager_ports[AXI_FABRIC_DMA_MANAGER_IDX]);
+    uvm_config_db #(virtual aaxi_intf)::set(
+        null, "*", AXI_FABRIC_CALIPTRA_SUBORDINATE_VIF,
+        axi_subordinate_ports[AXI_FABRIC_CALIPTRA_SUBORDINATE_IDX]);
+    uvm_config_db #(virtual aaxi_intf)::set(
+        null, "*", AXI_FABRIC_SRAM_SUBORDINATE_VIF,
+        axi_subordinate_ports[AXI_FABRIC_SRAM_SUBORDINATE_IDX]);
+    uvm_config_db #(virtual aaxi_intf)::set(
+        null, "*", AXI_FABRIC_RECOVERY_SUBORDINATE_VIF,
+        axi_subordinate_ports[AXI_FABRIC_RECOVERY_SUBORDINATE_IDX]);
+    uvm_config_db #(virtual aaxi_interconnect_intf)::set(
+        null, "*", AXI_FABRIC_INTERCONNECT_VIF, axi_interconnect_port);
   end
 
 endmodule
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

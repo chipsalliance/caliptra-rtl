@@ -22,6 +22,7 @@
 // Probably should be deprecated and utilize UVMF environment only
 //======================================================================
 
+`include "caliptra_macros.svh"
 
 import "DPI-C" function string getenv(input string env_name);
 
@@ -42,10 +43,12 @@ module soc_ifc_tb
   import soc_ifc_tb_pkg::*;
   import axi_pkg::*;
   import kv_defines_pkg::*;
+  import caliptra_prim_mubi_pkg::*;
   ();
 
 
-  enum logic {DEBUG_UNLOCKED = 1'b0, DEBUG_LOCKED = 1'b1} debug_state_e;
+  localparam mubi4_t DEBUG_UNLOCKED = MuBi4False;
+  localparam mubi4_t DEBUG_LOCKED   = MuBi4True;
 
   // plusargs and other test related
   string soc_ifc_testname; 
@@ -189,6 +192,7 @@ module soc_ifc_tb
  kv_read_t    kv_read;
  kv_rd_resp_t kv_rd_resp = '{error:1'b0,
                              last: 1'b0,
+                             entry_last_dword: '0,
                              read_data: KV_DATA_W'(0)};
 
  assign aes_input_ready = '0; 
@@ -439,6 +443,10 @@ module soc_ifc_tb
              .ss_ocp_lock_in_progress(),
              .ss_key_release_key_size(),
 
+             // Dual iTRNG enable strap in / register value out
+             .dual_itrng_en(1'b0),
+             .dual_itrng_en_o(),
+
              .stable_owner_key_en(),
 
              .nmi_vector(),
@@ -446,6 +454,15 @@ module soc_ifc_tb
 
              .iccm_lock(),
              .iccm_axs_blocked(1'b0), // MH. Tie off here unless need control
+
+             // ICCM hash mode
+             .iccm_hash_dv(1'b0),
+             .iccm_hash_data(32'b0),
+             .pv_write(),
+             .iccm_unlock_o(),
+             // ICCM PCR extend
+             .pv_read(),
+             .pv_rd_resp('0),
 
              .iccm_fmc_start_addr(),
              .iccm_fmc_end_addr(),
@@ -459,14 +476,14 @@ module soc_ifc_tb
              .rdc_clk_dis(),
              .fw_update_rst_window(),
 
-             .crypto_error('0),
-             .kv_error(1'b0),
+             .cptra_hw_fatal_errors('0),
 
              .cptra_uncore_dmi_reg_en     ( 1'h0),
              .cptra_uncore_dmi_reg_wr_en  ( 1'h0),
              .cptra_uncore_dmi_reg_rdata  (     ),
              .cptra_uncore_dmi_reg_addr   ( 7'h0),
-             .cptra_uncore_dmi_reg_wdata  (32'h0)
+             .cptra_uncore_dmi_reg_wdata  (32'h0),
+             .busy()
 
             );
 
@@ -621,7 +638,7 @@ module soc_ifc_tb
       $display("SocRegisters finished executing new()");
       fork
         forever @($changed({scan_mode,security_state.debug_locked,security_state.device_lifecycle}))
-          update_CPTRA_SECURITY_STATE(scan_mode, security_state.debug_locked, security_state.device_lifecycle);
+          update_CPTRA_SECURITY_STATE(scan_mode, mubi4_test_true_loose(security_state.debug_locked), security_state.device_lifecycle);
         forever @($changed({ready_for_fuses,`REG_HIER_BOOT_FSM_PS}))
           update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
         forever @($changed(generic_input_wires1_q))
@@ -629,7 +646,7 @@ module soc_ifc_tb
         forever @($changed(generic_input_wires0_q))
           update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires0_q, 1'b0);
         forever @($changed({gen_input_wire_toggle,security_state.debug_locked}))
-          update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, security_state.debug_locked); 
+          update_INTR_BRF_NOTIF_INTERNAL_INTR_R(gen_input_wire_toggle, mubi4_test_true_loose(security_state.debug_locked)); 
       join_none
   end
 
@@ -1760,12 +1777,15 @@ module soc_ifc_tb
       begin
           security_state = '{device_lifecycle: ss.device_lifecycle, debug_locked: ss.debug_locked};
 
-          // TODO. Has hardwired mask bit positions in here. Ideally they should be pulled from tb package. 
-          //       Eg: in update_CPTRA_SECURITY_STATE(...)
-          set_initval("CPTRA_SECURITY_STATE", ss & 32'h7);  
-          update_exp_regval("CPTRA_SECURITY_STATE", ss & 32'h7, SET_DIRECT); 
+          // Construct register value: bit[2]=debug_locked (boolean), bits[1:0]=device_lifecycle
+          begin
+              logic [31:0] reg_val;
+              reg_val = {29'b0, mubi4_test_true_loose(ss.debug_locked), ss.device_lifecycle};
+              set_initval("CPTRA_SECURITY_STATE", reg_val);  
+              update_exp_regval("CPTRA_SECURITY_STATE", reg_val, SET_DIRECT); 
+          end
 
-          intr_notif_val = get_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R") & 32'hffff_fffb | ss.debug_locked & 32'h4;
+          intr_notif_val = get_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R") & 32'hffff_fffb | ({31'b0, mubi4_test_true_loose(ss.debug_locked)} << 2);
           set_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val); 
           update_exp_regval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val, SET_DIRECT);  
       end

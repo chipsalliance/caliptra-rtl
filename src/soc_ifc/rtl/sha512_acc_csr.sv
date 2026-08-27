@@ -588,7 +588,13 @@ module sha512_acc_csr (
         automatic logic load_next_c;
         next_c = field_storage.LOCK.LOCK.value;
         load_next_c = '0;
-        if(decoded_reg_strb.LOCK && !decoded_req_is_wr) begin // SW set on read
+        if(hwif_in.LOCK.LOCK.hwset) begin // HW Set
+            next_c = '1;
+            load_next_c = '1;
+        end else if(hwif_in.LOCK.LOCK.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end else if(decoded_reg_strb.LOCK && !decoded_req_is_wr) begin // SW set on read
             next_c = '1;
             load_next_c = '1;
         end else if(decoded_reg_strb.LOCK && decoded_req_is_wr && hwif_in.valid_user) begin // SW write 1 clear

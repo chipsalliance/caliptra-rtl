@@ -5,6 +5,12 @@
 // Macro bodies included by caliptra_prim_assert.sv for formal verification with Yosys. See caliptra_prim_assert.sv
 // for documentation for each of the macros.
 
+// This fragment references shared macros (CALIPTRA_ASSERT_DEFAULT_CLK/RST) that
+// are defined by caliptra_prim_assert.sv. Include it so the fragment is
+// self-contained for standalone lint; the top guard in caliptra_prim_assert.sv
+// makes this a no-op when the fragment is pulled in via that header.
+`include "caliptra_prim_assert.sv"
+
 `define CALIPTRA_ASSERT_I(__name, __prop)    \
   always_comb begin : __name        \
     assert (__prop);                \

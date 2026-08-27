@@ -19,6 +19,7 @@
 // Test to make sure SHA acc is not accessible over SoC AXI interface
 
 `include "config_defines.svh"
+`include "caliptra_macros.svh"
 
 module soc_ifc_axi_sha_acc_dis_tb
     import soc_ifc_pkg::*;
@@ -32,6 +33,8 @@ module soc_ifc_axi_sha_acc_dis_tb
   parameter CLK_HALF_PERIOD = 5000;
   parameter CLK_PERIOD      = 2 * CLK_HALF_PERIOD;
   parameter MAX_CYCLES = 20_0000;
+  localparam logic [1:0] DEVICE_PRODUCTION_ENCODING =
+      soc_ifc_pkg::DEVICE_PRODUCTION;
 
   parameter AHB_HTRANS_IDLE      = 0;
   parameter AHB_HTRANS_BUSY      = 1;
@@ -102,6 +105,7 @@ module soc_ifc_axi_sha_acc_dis_tb
  kv_read_t    kv_read;
  kv_rd_resp_t kv_rd_resp = '{error:1'b0,
                              last: 1'b0,
+                             entry_last_dword: '0,
                              read_data: KV_DATA_W'(0)};
 
 
@@ -145,7 +149,9 @@ module soc_ifc_axi_sha_acc_dis_tb
     .recovery_data_avail(1'b0),
     .recovery_image_activated(1'b0),
 
-    .security_state({2'b11, 1'b0}),
+    // Packed lifecycle bits avoid distinct TB/RTL enum images under VCS partcomp.
+    .security_state({caliptra_prim_mubi_pkg::MuBi4False,
+                     DEVICE_PRODUCTION_ENCODING}),
 
     .generic_input_wires(64'h0),
     .BootFSM_BrkPoint(1'b0),
@@ -232,12 +238,25 @@ module soc_ifc_axi_sha_acc_dis_tb
     .ss_ocp_lock_in_progress(),
     .ss_key_release_key_size(),
 
+    // Dual iTRNG enable strap in / register value out
+    .dual_itrng_en(1'b0),
+    .dual_itrng_en_o(),
+
     .stable_owner_key_en(),
 
     .nmi_vector(),
     .nmi_intr(),
     .iccm_lock(),
     .iccm_axs_blocked(1'b0),
+
+    // ICCM hash mode
+    .iccm_hash_dv(1'b0),
+    .iccm_hash_data(32'b0),
+    .pv_write(),
+    .iccm_unlock_o(),
+    // ICCM PCR extend
+    .pv_read(),
+    .pv_rd_resp('0),
 
     .iccm_fmc_start_addr(),
     .iccm_fmc_end_addr(),
@@ -250,14 +269,14 @@ module soc_ifc_axi_sha_acc_dis_tb
     .clk_gating_en(),
     .rdc_clk_dis(),
     .fw_update_rst_window(),
-    .crypto_error(1'b0),
-    .kv_error(1'b0),
+    .cptra_hw_fatal_errors('0),
     
     .cptra_uncore_dmi_reg_en(1'b0),
     .cptra_uncore_dmi_reg_wr_en(1'b0),
     .cptra_uncore_dmi_reg_rdata(),
     .cptra_uncore_dmi_reg_addr(7'h0),
-    .cptra_uncore_dmi_reg_wdata(0) 
+    .cptra_uncore_dmi_reg_wdata(0),
+    .busy()
   );
 
   //----------------------------------------------------------------
@@ -705,13 +724,66 @@ end
 
 endtask
 
+task passive_axi_sha_access_test;
+  logic access_error;
+
+  access_error = 1'b0;
+
+  #(10*CLK_PERIOD);
+  $display("Clearing SHA LOCK over AHB\n");
+  write_single_word(`CLP_SHA512_ACC_CSR_LOCK, 32'h1);
+
+  #(CLK_PERIOD);
+  hsel_i_tb = 0;
+
+  #(2*CLK_PERIOD);
+
+  $display("Attempting passive-mode SHA ACC LOCK access with AxUSER zero\n");
+  axi_sub_if.axi_read_single(
+    .addr(`CLP_SHA512_ACC_CSR_LOCK),
+    .user('0),
+    .id($urandom()),
+    .lock(0),
+    .data(rdata),
+    .resp_user(resp_user),
+    .resp(resp)
+  );
+
+  if (resp !== AXI_RESP_SLVERR) begin
+    $error("Passive-mode SHA AXI access returned %s instead of SLVERR", resp.name());
+    access_error = 1'b1;
+  end
+
+  if (dut.i_sha512_acc_top.hwif_out.LOCK.LOCK.value !== 1'b0) begin
+    $error("Passive-mode SHA AXI access changed the SHA lock state");
+    access_error = 1'b1;
+  end
+
+  if (access_error) begin
+    $display("* TESTCASE FAILED");
+    $finish;
+  end
+endtask
+
+task mode_aware_axi_sha_access_test;
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+  axi_sha_access_test();
+`else
+  passive_axi_sha_access_test();
+`endif
+endtask
+
 initial begin
   $display("Starting AXI sha access test\n");
+`ifdef CALIPTRA_MODE_SUBSYSTEM
   strap_tb = $urandom();
+`else
+  strap_tb = '0;
+`endif
   init_sim();
   reset_dut();
   $display("Init and reset done\n");
-  axi_sha_access_test();
+  mode_aware_axi_sha_access_test();
   
   $display("Issuing cold reset\n");
   init_sim();
@@ -719,7 +791,7 @@ initial begin
   #(CLK_PERIOD);
   
   $display("Restarting AXI sha access test\n");
-  axi_sha_access_test();
+  mode_aware_axi_sha_access_test();
 
   $display("Issuing warm reset\n");
   init_sim();
@@ -727,7 +799,7 @@ initial begin
   #(CLK_PERIOD);
 
   $display("Restarting AXI sha access test\n");
-  axi_sha_access_test();
+  mode_aware_axi_sha_access_test();
 
   repeat(100) @(posedge clk_tb);
   $display("* TESTCASE PASSED");

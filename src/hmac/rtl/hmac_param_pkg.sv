@@ -47,6 +47,9 @@ package hmac_param_pkg;
   localparam int HMAC384_KEY_PAD     = KEY_SIZE - HMAC384_KEY_SIZE;
   localparam int HMAC384_TAG_PAD     = TAG_SIZE - HMAC384_TAG_SIZE;
 
+  localparam int HMAC384_KV_LAST_DWORD = (HMAC384_KEY_SIZE/32) - 1;
+  localparam int HMAC512_KV_LAST_DWORD = (KEY_SIZE/32) - 1;
+
   // HMAC inner/outer key pad bytes (RFC 2104).
   localparam bit [BLOCK_SIZE-1:0] IPAD = {(BLOCK_SIZE/8){8'h36}};
   localparam bit [BLOCK_SIZE-1:0] OPAD = {(BLOCK_SIZE/8){8'h5c}};

@@ -32,7 +32,7 @@ uvmf:
 #        sb_type: uvmf_in_order_scoreboard
 #        trans_type: soc_ifc_status_transaction
 
-      #TODO ADD JTAG, QSPI, UART, I3C agents
+      #TODO ADD JTAG, I3C agents
       subenvs:
         - { name: "soc_ifc_subenv", type: "soc_ifc" }
 

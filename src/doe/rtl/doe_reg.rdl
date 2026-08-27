@@ -149,11 +149,10 @@ addrmap doe_reg {
 
         // Specific enables for the events defined in this
         // event type in the instantiating peripheral.
-        // TODO add error events
-        field {desc = "Enable bit for Event 0";} error0_en = 1'b0;
-        field {desc = "Enable bit for Event 1";} error1_en = 1'b0;
-        field {desc = "Enable bit for Event 2";} error2_en = 1'b0;
-        field {desc = "Enable bit for Event 3";} error3_en = 1'b0;
+        field {desc = "Enable bit for DOE FSM error (glitch or invalid state encoding detected)";} error0_en = 1'b0;
+        field {desc = "Enable bit for DOE flow error (Key Vault write failed)";} error1_en = 1'b0;
+        field {desc = "Enable bit for Event 2 (reserved, unused)";} error2_en = 1'b0;
+        field {desc = "Enable bit for Event 3 (reserved, unused)";} error3_en = 1'b0;
     };
 
     /* ---- Notification Interrupt Enable ---- */
@@ -182,10 +181,10 @@ addrmap doe_reg {
         default woclr = true;
         default level intr;
 
-        field {desc = "Interrupt Event 0 status bit";} error0_sts = 1'b0;
-        field {desc = "Interrupt Event 1 status bit";} error1_sts = 1'b0;
-        field {desc = "Interrupt Event 2 status bit";} error2_sts = 1'b0;
-        field {desc = "Interrupt Event 3 status bit";} error3_sts = 1'b0;
+        field {desc = "DOE FSM error interrupt status bit (glitch or invalid state encoding detected)";} error0_sts = 1'b0;
+        field {desc = "DOE flow error interrupt status bit (Key Vault write failed)";} error1_sts = 1'b0;
+        field {desc = "Interrupt Event 2 status bit (reserved, unused)";} error2_sts = 1'b0;
+        field {desc = "Interrupt Event 3 status bit (reserved, unused)";} error3_sts = 1'b0;
     };
 
     /* ---- Notification Interrupt Status ---- */
@@ -239,10 +238,10 @@ addrmap doe_reg {
         default singlepulse = true;
 
         // Instantiate triggers bit-by-bit.
-        field {desc = "Interrupt Trigger 0 bit";} error0_trig = 1'b0;
-        field {desc = "Interrupt Trigger 1 bit";} error1_trig = 1'b0;
-        field {desc = "Interrupt Trigger 2 bit";} error2_trig = 1'b0;
-        field {desc = "Interrupt Trigger 3 bit";} error3_trig = 1'b0;
+        field {desc = "Interrupt Trigger 0 bit (DOE FSM error)";} error0_trig = 1'b0;
+        field {desc = "Interrupt Trigger 1 bit (DOE flow error, Key Vault write failed)";} error1_trig = 1'b0;
+        field {desc = "Interrupt Trigger 2 bit (reserved, unused)";} error2_trig = 1'b0;
+        field {desc = "Interrupt Trigger 3 bit (reserved, unused)";} error3_trig = 1'b0;
     };
 
     /* ---- Notification Interrupt Trigger ---- */

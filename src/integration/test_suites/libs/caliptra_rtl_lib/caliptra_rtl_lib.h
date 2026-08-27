@@ -18,8 +18,11 @@
 #define CALIPTRA_RTL_LIB
 #include <stdint.h>
 
-extern uint32_t state;
+#ifndef MY_RANDOM_SEED
+    #define MY_RANDOM_SEED 0xabcd
+#endif
 
+void xorshift32_init(uint32_t seed);
 uint32_t xorshift32(void);
 
 #endif // CALIPTRA_RTL_LIB

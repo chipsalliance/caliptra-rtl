@@ -13,6 +13,7 @@
 // limitations under the License.
 //
 //`include "kv_defines.svh"
+`include "caliptra_prim_assert.sv"
 
 module kv_fsm 
     import kv_defines_pkg::*;
@@ -44,7 +45,8 @@ module kv_fsm
 
     output logic ready,
 
-    output logic done
+    output logic done,
+    output logic fsm_error
 );
 //max dwords for SHA/HMAC blocks that need padding
 localparam KV_MAX_DWORDS = 1024/32;
@@ -56,13 +58,21 @@ logic [KV_NUM_DWORDS_W:0] num_dwords_total;
 logic [31:0] length_for_pad;
 
 //declare fsm state variables
-typedef enum logic [2:0] {
-    KV_IDLE   = 3'b000,
-    KV_RW     = 3'b001,
-    KV_PAD    = 3'b011,
-    KV_ZERO   = 3'b010,
-    KV_LENGTH = 3'b110,
-    KV_DONE   = 3'b100
+// Encoding generated with
+// $ python3 sparse_fsm_encode.py -d 5 -m 7 -n 10 -s 27182818
+//
+// Minimum Hamming distance: 5
+// Maximum Hamming distance: 7
+//
+localparam int KvStateWidth = 10;
+typedef enum logic [KvStateWidth-1:0] {
+    KV_IDLE   = 10'b1011010011,
+    KV_RW     = 10'b0101000111,
+    KV_PAD    = 10'b1110100100,
+    KV_ZERO   = 10'b1001101001,
+    KV_LENGTH = 10'b0111111010,
+    KV_DONE   = 10'b0010011101,
+    KV_ERROR  = 10'b1100011110
 } kv_fsm_state_e;
 
 kv_fsm_state_e kv_fsm_ps, kv_fsm_ns;
@@ -110,20 +120,24 @@ always_comb begin : kv_fsm_comb
     offset_nxt = '0;
     pad_data = '0;
     done = '0;
+    fsm_error = '0;
     unique case (kv_fsm_ps)
         KV_IDLE: begin
-            if      (arc_KV_IDLE_KV_RW)   kv_fsm_ns = KV_RW;
+            if      (zeroize) kv_fsm_ns = KV_IDLE;
+            else if(arc_KV_IDLE_KV_RW)   kv_fsm_ns = KV_RW;
             else if (arc_KV_IDLE_KV_DONE) kv_fsm_ns = KV_DONE;
         end
         KV_RW: begin
-            if (arc_KV_RW_KV_PAD) kv_fsm_ns = KV_PAD;
-            if (arc_KV_RW_KV_DONE) kv_fsm_ns = KV_DONE;
+            if      (zeroize) kv_fsm_ns = KV_IDLE;
+            else if (arc_KV_RW_KV_PAD) kv_fsm_ns = KV_PAD;
+            else if (arc_KV_RW_KV_DONE) kv_fsm_ns = KV_DONE;
             write_en = '1;
             offset_en = '1;
             offset_nxt = offset + 'd1;
         end
         KV_PAD: begin
-            if (arc_KV_PAD_KV_ZERO) kv_fsm_ns = KV_ZERO;
+            if      (zeroize) kv_fsm_ns = KV_IDLE;
+            else if (arc_KV_PAD_KV_ZERO) kv_fsm_ns = KV_ZERO;
             write_en = '1;
             offset_en = '1;
             offset_nxt = offset + 'd1;
@@ -131,7 +145,8 @@ always_comb begin : kv_fsm_comb
             pad_data = 32'h8000_0000;
         end
         KV_ZERO: begin
-            if (arc_KV_ZERO_KV_LENGTH) kv_fsm_ns = KV_LENGTH;
+            if      (zeroize) kv_fsm_ns = KV_IDLE;
+            else if (arc_KV_ZERO_KV_LENGTH) kv_fsm_ns = KV_LENGTH;
             write_en = '1;
             offset_en = '1;
             offset_nxt = offset + 'd1;
@@ -139,7 +154,8 @@ always_comb begin : kv_fsm_comb
             pad_data = '0;
         end
         KV_LENGTH: begin
-            if (arc_KV_LENGTH_KV_DONE) kv_fsm_ns = KV_DONE;
+            if      (zeroize) kv_fsm_ns = KV_IDLE;
+            else if (arc_KV_LENGTH_KV_DONE) kv_fsm_ns = KV_DONE;
             write_en = '1;
             offset_en = '1;
             offset_nxt = offset + 'd1;
@@ -150,22 +166,28 @@ always_comb begin : kv_fsm_comb
             if (arc_KV_DONE_KV_IDLE) kv_fsm_ns = KV_IDLE;
             done = '1;
         end
+        KV_ERROR: begin
+            kv_fsm_ns = KV_ERROR; // Terminal — sticky until reset
+            fsm_error = 1'b1;
+        end
         default: begin
+            kv_fsm_ns = KV_ERROR; // Invalid encoding detected
+            fsm_error = 1'b1;
         end
     endcase
 end
 
+// Sparse FSM flop for glitch hardening (invalid encoding -> KV_ERROR)
+`CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_kv_state_regs, kv_fsm_ns, kv_fsm_ps, kv_fsm_state_e, KV_IDLE, clk, rst_b, 0)
+
 always_ff @(posedge clk or negedge rst_b) begin
     if (!rst_b) begin
-        kv_fsm_ps <= KV_IDLE;
         offset <= '0;
     end
     else if (zeroize) begin
-        kv_fsm_ps <= KV_IDLE;
         offset <= '0;
     end
     else begin
-        kv_fsm_ps <= kv_fsm_ns;
         offset <= offset_rst ? '0 :
                   offset_en ? offset_nxt : offset;
     end

@@ -28,6 +28,7 @@ files:
   - src/kmac/config/compile.yml
   - src/entropy_src/config/compile.yml
   - src/csrng/config/compile.yml
+  - src/entropy_combiner/config/compile.yml
   # -- End RNG --
 
   # UVMF TBs

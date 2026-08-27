@@ -61,7 +61,7 @@ interface  soc_ifc_ctrl_if
   inout tri [`CLP_OBF_FE_DWORDS-1:0][31:0] cptra_obf_field_entropy,
   inout tri  cptra_obf_uds_seed_vld,
   inout tri [`CLP_OBF_UDS_DWORDS-1:0][31:0] cptra_obf_uds_seed,
-  inout tri [2:0] security_state,
+  inout tri [5:0] security_state,
   inout tri  BootFSM_BrkPoint,
   inout tri [63:0] generic_input_wires,
   inout tri  recovery_data_avail,

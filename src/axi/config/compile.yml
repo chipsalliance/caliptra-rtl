@@ -58,6 +58,7 @@ requires:
   - axi_pkg
   - soc_ifc_pkg
   - kv_defines_pkg
+  - keyvault
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -74,6 +75,25 @@ targets:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/axi_dma_reg_pkg.sv
+---
+provides: [axi_dma_2gib_tb]
+schema_version: 2.4.0
+requires:
+  - axi_dma
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/tb
+    files:
+      - $COMPILE_ROOT/tb/axi_dma_2gib_tb.sv
+    tops: [axi_dma_2gib_tb]
+global:
+  tool:
+    vcs:
+      elab:
+        # axi_if.sv is compiled into both RTL and TB library contexts. The
+        # testbench uses the TB copy, leaving the RTL copy intentionally unused.
+        - '-suppress=UII-L'
 ---
 provides: [axi_dma_coverage]
 schema_version: 2.4.0
