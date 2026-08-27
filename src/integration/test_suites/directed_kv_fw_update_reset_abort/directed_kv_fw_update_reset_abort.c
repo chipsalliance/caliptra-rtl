@@ -85,20 +85,21 @@
 //     contents persist. Post-reset: dest_valid unchanged == HMAC_KEY, and
 //     crucially NOT flipped to AES_KEY; no spurious kv_error.
 //
-//   Case C -- DOE producer, LOCKED slot (central kv.sv protection, no self-abort)
+//   Case C -- DOE producer, UNLOCKED slot (fw_update_rst_window gate + DOE abort)
 //   ----------------------------------------------------------------------------
-//     DOE has its own FSM (doe_fsm.sv), does NOT consume kv_wr_resp, and does
-//     NOT see fw_update_rst_window; its ONLY protection is the centralized kv.sv
-//     gating. Populate spare slot 12 via HMAC (dest_valid = HMAC_KEY), set
-//     lock_wr, arm TB hook 0xbd flavor 2 (waits for kv_write[DOE].write_en then forces
-//     fw_update_rst), and start a DOE deobfuscation flow whose UDS destination
-//     is the locked slot 12. DOE streams its multiword KV write and cannot
-//     abort; the reset lands mid-burst. Outside the window the REAL lock_wr
-//     blocks the write (key_entry_we & ~lock_wr_q); inside the window
-//     & ~fw_update_rst_window blocks it. So slot 12 is protected in BOTH
-//     regimes. Post-reset: dest_valid unchanged == HMAC_KEY only (DOE writes
-//     dest_valid = 0x3 = hmac_key|hmac_block, so an overwrite would set the
-//     hmac_block bit -- it must NOT be set); no spurious kv_error.
+//     With this PR's DOE hardening, doe_fsm.sv now consumes kv_wr_resp.error and
+//     aborts its KV write, and presents dest_valid only on the final beat. Populate
+//     spare slot 12 via HMAC (dest_valid = HMAC_KEY) and leave it UNLOCKED so the
+//     DOE write is NOT lock-rejected; arm TB hook 0xbd flavor 2 (waits for
+//     kv_write[DOE].write_en then forces fw_update_rst), and start a DOE
+//     deobfuscation flow whose UDS destination is slot 12. The reset lands while
+//     the DOE write is in flight: the window error-responds the remaining beats,
+//     the DOE FSM aborts, and the write never COMPLETES (its dest_valid = 0x3 =
+//     hmac_key|hmac_block is committed only on the final, blocked beat). This
+//     isolates the window gate from the normal lock_wr path. Post-reset: the DOE's
+//     hmac_block bit must NOT be set (a completed overwrite). A pre-window beat may
+//     legitimately leave the slot invalid (dest_valid = 0), which is a safe outcome,
+//     so HMAC_KEY is not required to persist; no spurious kv_error.
 //
 //   Case D -- HMAC consumer, READ-side abort (window read-block + hwclr)
 //   -------------------------------------------------------------------
@@ -161,7 +162,7 @@ volatile uint32_t phase __attribute__((section(".dccm.persistent"))) = 0;
 // slot 23 which can hang the DOE FSM).
 #define TEST_SLOT_A            KV_SLOT_TMP        // 3  (Case A, HMAC, locked)
 #define TEST_SLOT_B            11                 //    (Case B, HMAC, unlocked)
-#define TEST_SLOT_C            12                 //    (Case C, DOE,  locked)
+#define TEST_SLOT_C            12                 //    (Case C, DOE,  unlocked)
 #define DOE_FE_SLOT            13                 //    (Case C, DOE FE spare dest)
 #define DOE_HEK_SLOT           14                 //    (Case C, DOE HEK spare dest)
 // Case D repopulates slot 13 fresh (the stale Case C DOE FE spare) as a
@@ -180,9 +181,10 @@ volatile uint32_t phase __attribute__((section(".dccm.persistent"))) = 0;
 #define ARM_KV_FWRST(flavor)     lsu_write_32(STDOUT, (((flavor) & 0xff) << 8) | TB_CMD_KV_FWRST)
 
 // fw-update-reset window length (INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES). Case A
-// and Case C only need the reset to land during the burst (the effective lock
-// protects the rest), so 5 is sufficient. Case B is unlocked and window-aligned,
-// so the window must span the ENTIRE ~12-beat HMAC->KV burst; use a long value.
+// only needs the reset to land during the burst (the real lock_wr protects the
+// rest), and Case C's DOE FSM self-aborts on the first window-gated error beat,
+// so 5 is sufficient for both. Case B is unlocked and relies purely on the window
+// spanning the ENTIRE ~12-beat HMAC->KV burst; use a long value.
 #define FWRST_WAIT_CYCLES_SHORT  5
 #define FWRST_WAIT_CYCLES_LONG   40
 
@@ -302,6 +304,25 @@ static void verify_no_overwrite(uint8_t slot, uint32_t other_bit, const char *ta
     VPRINTF(LOW, "%s passed: slot %d preserved (dest_valid=0x%x)\n", tag, slot, dv);
 }
 
+// Case C verification (DOE producer, window gate). The DOE UDS write presents its
+// dest_valid (HMAC_BLOCK bit, forming 0x3) only on the final beat, which the
+// fw_update_rst_window blocks -- so a COMPLETED DOE overwrite is detectable by the
+// HMAC_BLOCK bit being set, and that must never happen. Unlike the HMAC cases, an
+// unlocked slot may be legitimately left invalid (dest_valid=0) by a pre-window
+// beat; that is a safe outcome (no valid overwritten key), so we do NOT require
+// HMAC_KEY to persist -- only that the DOE write never completed.
+static void verify_case_c(uint8_t slot, const char *tag) {
+    uint32_t dv = kv_read_dest_valid(slot);
+    if ((dv >> KV_DV_HMAC_BLOCK_BIT) & 0x1) {
+        VPRINTF(ERROR, "[FAIL] %s: DOE overwrite COMPLETED across fw-update reset "
+                       "(dest_valid=0x%x, HMAC_BLOCK set)\n", tag, slot, dv);
+        SEND_STDOUT_CTRL(0x01);
+        while (1);
+    }
+    check_no_kv_error(tag);
+    VPRINTF(LOW, "%s passed: DOE overwrite did not complete (dest_valid=0x%x)\n", tag, slot, dv);
+}
+
 // Case A (locked, short window, HMAC write_en hook) and Case B (unlocked,
 // long window, digest_valid_new hook) share this setup. Populate the slot via
 // HMAC, optionally lock it, program the window, arm the TB hook, then kick a
@@ -320,15 +341,17 @@ static void setup_hmac_write_case(uint8_t slot, int do_lock, uint32_t flavor,
     spin_for_fwrst(tag);
 }
 
-// Case C -- DOE producer, LOCKED slot. DOE has its own FSM, does not consume
-// kv_wr_resp and cannot self-abort; its ONLY protection is the central kv.sv
-// gating (and the real lock_wr outside the window). Populate + lock slot 12,
-// arm the DOE write_en hook, then run a DOE deobfuscation flow whose UDS
-// destination is the locked slot; the reset lands mid-burst.
+// Case C -- DOE producer, UNLOCKED slot: exercises the fw_update_rst_window gate,
+// NOT a lock. With this PR's DOE hardening, doe_fsm consumes kv_wr_resp.error and
+// aborts, and dest_valid is presented only on the final DOE beat (mirroring
+// kv_write_client). Populate slot 12 and leave it UNLOCKED so the DOE write is not
+// lock-rejected on beat 0; arm the DOE write_en hook so the reset lands while the
+// DOE UDS write is in flight. The window then error-responds the remaining beats,
+// the DOE FSM aborts, and the write never completes (its dest_valid=0x3 is never
+// committed). Verified by verify_case_c().
 static void setup_case_c(void) {
-    VPRINTF(LOW, "C setup: DOE write to locked slot %d\n", TEST_SLOT_C);
+    VPRINTF(LOW, "C setup: DOE write to unlocked slot %d (window gate)\n", TEST_SLOT_C);
     hmac_write_kv_slot(TEST_SLOT_C, DV_HMAC_KEY);
-    lsu_write_32(KV_KEY_CTRL(TEST_SLOT_C), KV_LOCK_WR_MASK);
     lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES,
                  FWRST_WAIT_CYCLES_SHORT);
     ARM_KV_FWRST(KV_FWRST_FLAVOR_DOE);
@@ -405,7 +428,7 @@ void main() {
             phase = 2;
             setup_case_c();
         } else if (phase == 2) {
-            verify_no_overwrite(TEST_SLOT_C, KV_DV_HMAC_BLOCK_BIT, "C");
+            verify_case_c(TEST_SLOT_C, "C");
             phase = 3;
             setup_case_d();
         } else if (phase == 3) {

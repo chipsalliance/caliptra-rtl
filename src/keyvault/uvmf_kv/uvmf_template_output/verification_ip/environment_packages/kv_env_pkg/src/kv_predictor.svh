@@ -263,6 +263,11 @@ class kv_predictor #(
   logic [KV_NUM_KEYS-1:0] key_ctrl_lock_wr = 0;
   logic [KV_NUM_KEYS-1:0] key_ctrl_lock_use = 0;
 
+  //Tracks fw_update_rst_window (driven from kv_rst assert_core_rst). While active,
+  //the RTL fail-closed hardening error-responds and masks ALL KV reads/writes, so
+  //the predictor must expect error=1 and read_data=0 for any access in the window.
+  bit fw_update_rst_window = 0;
+
   extern function void populate_expected_kv_read_txn(ref kv_sb_ap_output_transaction_t t_expected, kv_read_transaction t_received, string client);
   extern function void populate_expected_kv_write_txn(ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
   extern task          poll_and_run_delay_jobs();
@@ -369,6 +374,9 @@ class kv_predictor #(
     uvm_reg_data_t kv_reg_data;
 
     kv_rst_agent_ae_debug = t;
+    // fw_update_rst_window follows assert_core_rst (the core-reset/fw-update window).
+    // While asserted, kv.sv error-responds and masks all KV accesses.
+    fw_update_rst_window = t.assert_core_rst;
     `uvm_info("PRED", "Transaction Received through kv_rst_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
     // Construct one of each output transaction type.
@@ -977,7 +985,7 @@ endclass
     //As a workaround, setting a val_ctrl reg when clear happens. Until a write occurs on that entry, this bit will remain set
     //During every read, we check val_ctrl[entry] bit. If 1, return 0s, resp.err = 1 and last dword = 0 to mimic design
     `uvm_info("KV_DBG", $sformatf("lock_use during read = %d, client_dest_valid = %d, val_ctrl_data = %h, val_ctrl_derived_data = %h for received entry = %h", lock_use, client_dest_valid, val_ctrl_data[t_received.read_entry], val_ctrl_derived_data[t_received.read_entry], t_received.read_entry), UVM_DEBUG)
-    if (lock_use || !client_dest_valid || val_ctrl_data[t_received.read_entry] || val_ctrl_derived_data[t_received.read_entry]) begin
+    if (fw_update_rst_window || lock_use || !client_dest_valid || val_ctrl_data[t_received.read_entry] || val_ctrl_derived_data[t_received.read_entry]) begin
       t_expected.read_data = 'h0;
       t_expected.error = 'b1;
     end
@@ -1034,7 +1042,7 @@ endclass
 
     //Error should be set when writing to locked regs //TODO: error when entry is being cleared during write
     if (t_received.write_en) begin
-      if(lock_wr || lock_use) begin
+      if(fw_update_rst_window || lock_wr || lock_use) begin
         t_expected.error = 1'b1;
         `uvm_info("PRED", "Trying to write to a locked reg", UVM_MEDIUM)
       end

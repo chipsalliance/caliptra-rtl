@@ -538,11 +538,11 @@ module caliptra_top_sva
   property aes_new_key_fully_overwrites_old_key;
       logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] keymgr_key_prev;
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      ($past(`AES_CLP_PATH.keymgr_key.valid) && !`AES_CLP_PATH.keymgr_key.valid, keymgr_key_prev = $past(`AES_CLP_PATH.keymgr_key.key[0])) ##0
+      ($past(`AES_CLP_PATH.keymgr_key.valid) && !`AES_CLP_PATH.keymgr_key.valid, keymgr_key_prev = $past(`AES_CLP_PATH.keymgr_key.key[0] ^ `AES_CLP_PATH.keymgr_key.key[1])) ##0
       (!`AES_CLP_PATH.keymgr_key.valid)[*0:$] ##1
       `AES_CLP_PATH.keymgr_key.valid
       |->
-      (dw_all_different_or_all_same(keymgr_key_prev, `AES_CLP_PATH.keymgr_key.key[0]) == 1);
+      (dw_all_different_or_all_same(keymgr_key_prev, `AES_CLP_PATH.keymgr_key.key[0] ^ `AES_CLP_PATH.keymgr_key.key[1]) == 1);
   endproperty
   AES_KV_rd_full_key: assert property (aes_new_key_fully_overwrites_old_key)
                       else $display("SVA ERROR: AES core partially read new key into keyvault and kept partial old key!");

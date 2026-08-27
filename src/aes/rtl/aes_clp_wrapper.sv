@@ -553,12 +553,12 @@ generate
         if (~reset_n) begin
           kv_key_masked[g_dword][g_byte] <= '0;
           kv_key_mask  [g_dword][g_byte] <= '0;
-        // zeroize the buffered key on debug/scan or on any read client error so
-        // partial/garbage key material never persists
-        end else if(debugUnlock_or_scan_mode_switch || (kv_key_error != KV_SUCCESS)) begin
+        // Debug/scan forces a clear (highest priority after reset) so key material
+        // never persists into a debug session.
+        end else if (debugUnlock_or_scan_mode_switch) begin
           kv_key_masked[g_dword][g_byte] <= '0;
           kv_key_mask  [g_dword][g_byte] <= '0;
-        // zeroize the buffered key when reading in a new key
+        // An active KV write takes priority over the stale-error clear below.
         // On the first beat, the least-sig dword is set, all other dwords set to 0
         end else if (kv_key_write_en && (g_dword > 0) && (kv_key_write_offset < AES_KV_KEY_DW_WIDTH'(g_dword))) begin
           kv_key_masked[g_dword][g_byte] <= '0;
@@ -569,6 +569,11 @@ generate
         end else if (kv_key_write_en && (kv_key_write_offset == AES_KV_KEY_DW_WIDTH'(g_dword))) begin
           kv_key_masked[g_dword][g_byte] <= kv_key_write_data[3-g_byte] ^ edn_bus_bytes[3-g_byte];
           kv_key_mask  [g_dword][g_byte] <= edn_bus_bytes[3-g_byte];
+        // On any read client error with no active write this beat, zeroize so
+        // partial/garbage key material never persists.
+        end else if (kv_key_error != KV_SUCCESS) begin
+          kv_key_masked[g_dword][g_byte] <= '0;
+          kv_key_mask  [g_dword][g_byte] <= '0;
         end
       end
     end
