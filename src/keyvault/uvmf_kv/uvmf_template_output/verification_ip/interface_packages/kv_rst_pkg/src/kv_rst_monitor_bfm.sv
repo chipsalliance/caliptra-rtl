@@ -224,6 +224,7 @@ end
     kv_rst_monitor_struct.wait_cycles = 0;
     kv_rst_monitor_struct.debug_mode = debug_locked_i;
     kv_rst_monitor_struct.scan_mode = cptra_in_debug_scan_mode_i & !debug_locked_i;
+    kv_rst_monitor_struct.assert_fw_upd_rst = fw_update_rst_window_i;
     // pragma uvmf custom do_monitor end
   endtask         
   

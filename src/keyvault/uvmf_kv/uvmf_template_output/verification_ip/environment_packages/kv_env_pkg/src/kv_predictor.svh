@@ -374,9 +374,10 @@ class kv_predictor #(
     uvm_reg_data_t kv_reg_data;
 
     kv_rst_agent_ae_debug = t;
-    // fw_update_rst_window follows assert_core_rst (the core-reset/fw-update window).
-    // While asserted, kv.sv error-responds and masks all KV accesses.
-    fw_update_rst_window = t.assert_core_rst;
+    // fw_update_rst_window is now a decoupled field (assert_fw_upd_rst), sampled
+    // from the real pin by the monitor. While asserted, kv.sv error-responds and
+    // masks all KV accesses even though the KV itself is NOT in reset.
+    fw_update_rst_window = t.assert_fw_upd_rst;
     `uvm_info("PRED", "Transaction Received through kv_rst_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
     // Construct one of each output transaction type.
