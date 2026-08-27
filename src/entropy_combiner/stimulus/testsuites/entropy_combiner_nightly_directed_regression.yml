@@ -1,0 +1,8 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "ENTROPY_COMBINER"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/entropy_combiner/stimulus/tests/directed/entropy_combiner_es_csrng_tb.yml
