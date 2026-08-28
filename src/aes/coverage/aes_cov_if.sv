@@ -83,7 +83,7 @@ interface aes_cov_if
         input aes2caliptra_t aes2caliptra,
 
         input logic kv_key_write_en,
-        input logic [3:0][7:0] edn_bus_bytes,
+        input logic [3:0][7:0] edn_bus_bytes
     );
 
     covergroup aes_clp_wrapper_cov_grp @(posedge clk);
