@@ -23,6 +23,7 @@
 //======================================================================
 
 `include "caliptra_prim_assert.sv"
+`include "caliptra_prim_module_name_macros.svh"
 `include "caliptra_reg_field_defines.svh"
 `include "kv_macros.svh"
 
@@ -492,7 +493,9 @@ logic [3:0][7:0] edn_bus_bytes;
 assign edn_bus_bytes = edn_bus;
 
 // SEC_CM: KEY.MASKING. Compute the masked key word (key ^ mask) through the
-// caliptra_prim_xor2 cell rather than a behavioral '^'. 
+// caliptra_prim xor2 cell rather than a behavioral '^'.
+logic [31:0] kv_key_write_data_masked;
+`CALIPTRA_PRIM_MODULE_NAME(xor2) #(
   .Width(32)
 ) u_kv_key_mask_xor (
   .in0_i (kv_key_write_data),
@@ -576,7 +579,7 @@ generate
         // kv_key_write_en (see en_i), so edn_bus provides a fresh 32b mask word
         // aligned to this dword's write beat.
         end else if (kv_key_write_en && (kv_key_write_offset == AES_KV_KEY_DW_WIDTH'(g_dword))) begin
-          kv_key_masked[g_dword][g_byte] <= kv_key_write_data_masked[3-g_byte];
+          kv_key_masked[g_dword][g_byte] <= kv_key_write_data_masked[8*(3-g_byte) +: 8];
           kv_key_mask  [g_dword][g_byte] <= edn_bus_bytes[3-g_byte];
         // On any read client error with no active write this beat, zeroize so
         // partial/garbage key material never persists.
