@@ -70,6 +70,7 @@ typedef struct packed  { \
   bit debug_mode ; \
   bit scan_mode ; \
   bit assert_fw_upd_rst ; \
+  bit assert_fw_upd_rst_q ; \
      } kv_rst_monitor_s;
 
   `define kv_rst_TO_MONITOR_STRUCT_FUNCTION \
@@ -82,7 +83,8 @@ typedef struct packed  { \
             this.wait_cycles , \
             this.debug_mode , \
             this.scan_mode , \
-            this.assert_fw_upd_rst  \
+            this.assert_fw_upd_rst , \
+            this.assert_fw_upd_rst_q  \
             };\
     return ( kv_rst_monitor_struct);\
   endfunction\
@@ -96,7 +98,8 @@ typedef struct packed  { \
             this.wait_cycles , \
             this.debug_mode , \
             this.scan_mode , \
-            this.assert_fw_upd_rst  \
+            this.assert_fw_upd_rst , \
+            this.assert_fw_upd_rst_q  \
             } = kv_rst_monitor_struct;\
   endfunction
 

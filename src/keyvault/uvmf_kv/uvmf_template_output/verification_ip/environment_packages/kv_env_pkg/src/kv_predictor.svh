@@ -263,10 +263,21 @@ class kv_predictor #(
   logic [KV_NUM_KEYS-1:0] key_ctrl_lock_wr = 0;
   logic [KV_NUM_KEYS-1:0] key_ctrl_lock_use = 0;
 
-  //Tracks fw_update_rst_window (driven from kv_rst assert_core_rst). While active,
-  //the RTL fail-closed hardening error-responds and masks ALL KV reads/writes, so
-  //the predictor must expect error=1 and read_data=0 for any access in the window.
+  //Tracks fw_update_rst_window as seen by the READ path. The kv_read monitor is
+  //0-delay (KV reads are async), so read beats and the window (also delivered with
+  //0 delay by the kv_rst monitor) are already on the same timeline. While active,
+  //the RTL fail-closed hardening error-responds and masks KV reads, so the
+  //predictor expects error=1 / read_data=0 for any read in the window.
   bit fw_update_rst_window = 0;
+
+  //Window as seen by the WRITE path: a 1-clock-flopped copy of the pin, produced
+  //by the kv_rst monitor (assert_fw_upd_rst_q). The kv_write monitor delivers each
+  //write beat one clock late ("mimic design", since KV writes are registered), so
+  //the live window is one clock ahead of the write beats it must gate. Using the
+  //flopped window re-aligns them, so the predictor matches RTL on the boundary
+  //beat without any same-timestamp tie-breaking. Delivery is deterministically
+  //window-first, so no race remains.
+  bit fw_update_rst_window_q = 0;
 
   extern function void populate_expected_kv_read_txn(ref kv_sb_ap_output_transaction_t t_expected, kv_read_transaction t_received, string client);
   extern function void populate_expected_kv_write_txn(ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
@@ -374,10 +385,13 @@ class kv_predictor #(
     uvm_reg_data_t kv_reg_data;
 
     kv_rst_agent_ae_debug = t;
-    // fw_update_rst_window is now a decoupled field (assert_fw_upd_rst), sampled
-    // from the real pin by the monitor. While asserted, kv.sv error-responds and
-    // masks all KV accesses even though the KV itself is NOT in reset.
-    fw_update_rst_window = t.assert_fw_upd_rst;
+    // fw_update_rst_window is a decoupled field (assert_fw_upd_rst), sampled from
+    // the real pin by the monitor. While asserted, kv.sv error-responds and masks
+    // all KV accesses even though the KV itself is NOT in reset. The read path uses
+    // this live value; the write path uses the monitor's 1-clock-flopped copy
+    // (assert_fw_upd_rst_q) to match the kv_write monitor's 1-clock delay.
+    fw_update_rst_window   = t.assert_fw_upd_rst;
+    fw_update_rst_window_q = t.assert_fw_upd_rst_q;
     `uvm_info("PRED", "Transaction Received through kv_rst_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
     // Construct one of each output transaction type.
@@ -1043,7 +1057,7 @@ endclass
 
     //Error should be set when writing to locked regs //TODO: error when entry is being cleared during write
     if (t_received.write_en) begin
-      if(fw_update_rst_window || lock_wr || lock_use) begin
+      if(fw_update_rst_window_q || lock_wr || lock_use) begin
         t_expected.error = 1'b1;
         `uvm_info("PRED", "Trying to write to a locked reg", UVM_MEDIUM)
       end
