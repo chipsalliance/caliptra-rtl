@@ -73,6 +73,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe/smoke_test_doe.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_doe_scan/directed_doe_scan.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_zeroize_crypto/smoke_test_zeroize_crypto.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/uc_soc_collision/uc_soc_collision.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_doe_cg/smoke_test_doe_cg.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_basic/smoke_test_datavault_basic.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_datavault_reset/smoke_test_datavault_reset.yml
