@@ -234,7 +234,60 @@ interface keyvault_cov_if
 
 
     keyvault_top_cov_grp keyvault_top_cov_grp1 = new();
-    
+
+    // -------------------------------------------------------------------------
+    // FW-update-reset abort coverage (fw_update_rst_window)
+    //
+    // During fw_update_rst_window the KV noncore logic stays alive (rst_b high)
+    // while the core-side resets. Any producer write or consumer read issued in
+    // this window must be error-responded (fail-closed) so that no key can be
+    // partially overwritten or leaked across a firmware-update reset. The
+    // directed_kv_fw_update_reset_abort test and the randomized uvmf_kv
+    // fw-update-reset sequence only drive HMAC (write/read) and DOE (write)
+    // producers into the window, so this coverage just confirms that the window
+    // was seen colliding with a write and with a read.
+    // -------------------------------------------------------------------------
+    logic fw_update_rst_window;
+    assign fw_update_rst_window = kv.fw_update_rst_window;
+
+    logic [KV_NUM_WRITE-1:0] fw_wr_en_bus;
+    logic [KV_NUM_WRITE-1:0] fw_wr_err_bus;
+    logic [KV_NUM_READ-1:0]  fw_rd_err_bus;
+    generate
+        for (genvar wc = 0; wc < KV_NUM_WRITE; wc++) begin : gen_fw_wr_bus
+            assign fw_wr_en_bus[wc]  = kv.kv_write[wc].write_en;
+            assign fw_wr_err_bus[wc] = kv.kv_wr_resp[wc].error;
+        end
+        for (genvar rc = 0; rc < KV_NUM_READ; rc++) begin : gen_fw_rd_bus
+            assign fw_rd_err_bus[rc] = kv.kv_rd_resp[rc].error;
+        end
+    endgenerate
+
+    // A producer write actively rejected by the window: write_en asserted, the
+    // write response is an error, and the window is up on the same beat.
+    logic fw_write_in_window;
+    assign fw_write_in_window = |(fw_wr_en_bus & fw_wr_err_bus) & fw_update_rst_window;
+
+    // A consumer read aborted by the window (error asserted while window up).
+    logic fw_read_in_window;
+    assign fw_read_in_window = |fw_rd_err_bus & fw_update_rst_window;
+
+    covergroup cg_fw_update_rst @(posedge clk);
+        option.per_instance = 1;
+        option.name = "cg_fw_update_rst";
+
+        // Confirm the FW-update-reset window was seen colliding with a producer
+        // write (error-blocked) and with a consumer read (error-aborted).
+        cp_write_in_window: coverpoint fw_write_in_window {
+            bins collided = {1'b1};
+        }
+        cp_read_in_window: coverpoint fw_read_in_window {
+            bins collided = {1'b1};
+        }
+    endgroup
+
+    cg_fw_update_rst cg_fw_update_rst_inst = new();
+
 endinterface
 
 `endif

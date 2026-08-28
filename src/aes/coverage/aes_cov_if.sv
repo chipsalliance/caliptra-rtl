@@ -80,7 +80,10 @@ interface aes_cov_if
         input logic [KV_ENTRY_ADDR_W-1:0] kv_key_present_slot,
         input kv_write_filter_metrics_t kv_write_metrics,
         input caliptra2aes_t caliptra2aes,
-        input aes2caliptra_t aes2caliptra
+        input aes2caliptra_t aes2caliptra,
+
+        input logic kv_key_write_en,
+        input logic [3:0][7:0] edn_bus_bytes,
     );
 
     covergroup aes_clp_wrapper_cov_grp @(posedge clk);
@@ -135,6 +138,8 @@ interface aes_cov_if
         kv_write_write_dest_valid_cp: coverpoint kv_write.write_dest_valid;
         kv_wr_resp_error_cp:          coverpoint kv_wr_resp.error;
 
+        MaskNonZero_cp: coverpoint (kv_key_write_en && (edn_bus_bytes != 32'h0));
+
         busy_o_cp: coverpoint busy_o;
 
         // Interrupt
@@ -185,7 +190,6 @@ interface aes_cov_if
 
     aes_clp_wrapper_cov_grp aes_clp_wrapper_cov_grp1 = new();
     aes_ocp_lock_flow_grp   aes_ocp_lock_flow_grp1   = new();
-
 
 
 endinterface
