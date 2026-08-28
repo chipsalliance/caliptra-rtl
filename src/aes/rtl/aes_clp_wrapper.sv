@@ -491,6 +491,15 @@ logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_mask;
 logic [3:0][7:0] edn_bus_bytes;
 assign edn_bus_bytes = edn_bus;
 
+// SEC_CM: KEY.MASKING. Compute the masked key word (key ^ mask) through the
+// caliptra_prim_xor2 cell rather than a behavioral '^'. 
+  .Width(32)
+) u_kv_key_mask_xor (
+  .in0_i (kv_key_write_data),
+  .in1_i (edn_bus_bytes),
+  .out_o (kv_key_write_data_masked)
+);
+
 // AES KV write is only supported for key-release in ocp-lock mode, with the AES-ECB-decrypt use-case
 // Key size is in bytes
 always_comb kv_wr_num_dwords = ($clog2(CLP_AES_KV_WR_DW/32)+1)'(key_release_key_size>>2);
@@ -567,7 +576,7 @@ generate
         // kv_key_write_en (see en_i), so edn_bus provides a fresh 32b mask word
         // aligned to this dword's write beat.
         end else if (kv_key_write_en && (kv_key_write_offset == AES_KV_KEY_DW_WIDTH'(g_dword))) begin
-          kv_key_masked[g_dword][g_byte] <= kv_key_write_data[3-g_byte] ^ edn_bus_bytes[3-g_byte];
+          kv_key_masked[g_dword][g_byte] <= kv_key_write_data_masked[3-g_byte];
           kv_key_mask  [g_dword][g_byte] <= edn_bus_bytes[3-g_byte];
         // On any read client error with no active write this beat, zeroize so
         // partial/garbage key material never persists.
