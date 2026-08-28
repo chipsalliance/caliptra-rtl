@@ -76,9 +76,9 @@ static void fail_test(const char* m){
     while(1);
 }
 
-// TB inject cmd 0xa2 — arbitrary slot/last_dword/dest_valid.
+// TB inject cmd 0xa3 — arbitrary slot/last_dword/dest_valid.
 static inline void kv_inject(uint8_t slot, uint8_t last_dword, uint8_t dest_valid) {
-    uint32_t cmd = 0xa2u
+    uint32_t cmd = 0xa3u
                  | ((uint32_t)(slot & 0x1Fu) << 8)
                  | ((uint32_t)(last_dword & 0xFu) << 13)
                  | ((uint32_t)dest_valid << 17);
