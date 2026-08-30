@@ -89,6 +89,8 @@ reg {
     ro_ro    mask_kv_error=0;         /* KV boot flow monitor error - No Mask (reserved, read-only 0) */
     ro_ro    shadow_storage_err=0;    /* Shadow register storage error - No Mask (reserved, read-only 0) */
     ro_ro    fsm_error=0;             /* Sparse FSM glitch/illegal-state error - No Mask (reserved, read-only 0) */
+    ro_ro    mask_rv_dcls_err=0;      /* RISC-V dual-core lockstep (DCLS) corruption - No Mask (reserved, read-only 0) */
+    rw_ro_hw mask_dccm_wr_readback_err=0; /* DCCM write-readback mismatch detected - Maskable */
 } internal_hw_error_fatal_mask;
 reg {
     name = "Hardware Error Non-Fatal Mask";
@@ -285,6 +287,32 @@ reg {
 
     field {desc = "Lock bit for ICCM region registers. Write 1 to set -- cannot be cleared by SW."; hw = r; sw = rw; onwrite = woset; swwel = soc_req; resetsignal = cptra_rst_b;} lock = 1'b0;
 } internal_iccm_region_lock;
+
+reg {
+    name = "DCLS Control";
+    desc = "Controls the RISC-V dual-core lockstep (DCLS) corruption detection.
+            Software writes a MuBi4-encoded value: MuBiTrue (4'h6) disables detection,
+            MuBiFalse (4'h9) enables detection. Reset value is MuBiTrue (detection
+            disabled at reset; firmware must explicitly enable after boot).
+            [br]Caliptra Access: RW
+            [br]SOC Access:      None (writes rejected via swwel)";
+    field {
+        desc = "MuBi4-encoded disable signal for DCLS corruption detection.";
+        hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;
+    } disable_corruption_detection[4] = 4'h6;
+} internal_dcls_ctrl;
+reg {
+    name = "Trace Control";
+    desc = "Selects which RISC-V core is muxed onto the caliptra_top trace_rv_i_* ports.
+            [br]0 = main core (default), 1 = shadow (lockstep) core.
+            [br]Reset value selects the main core.
+            [br]Caliptra Access: RW
+            [br]SOC Access:      None (writes rejected via swwel)";
+    field {
+        desc = "Trace port core select: 0 = main core, 1 = shadow (lockstep) core.";
+        hw = r; sw = rw; swwel = soc_req; resetsignal = cptra_rst_b;
+    } trace_shadow_core_sel = 1'b0;
+} internal_trace_ctrl;
 
 
 ////////////////////////////////////////////////////////////////
