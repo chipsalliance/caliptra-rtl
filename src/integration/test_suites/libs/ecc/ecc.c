@@ -507,6 +507,22 @@ void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sig
         offset++;
     }
 
+    // Hardware performs the ECC_VERIFY_R vs ECC_SIGN_R comparison internally and
+    // reports it in ECC_STATUS.VERIFY_PASS. It must agree with the firmware-side
+    // comparison performed above.
+    ecc_check_verify_pass(1);
+
+}
+
+void ecc_check_verify_pass(uint8_t expected){
+    uint8_t actual = (lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VERIFY_PASS_MASK) ? 1 : 0;
+
+    if (actual != expected) {
+        VPRINTF(ERROR, "ECC_STATUS.VERIFY_PASS is %d, expected %d!\n", actual, expected);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+    VPRINTF(LOW, "ECC_STATUS.VERIFY_PASS = %d as expected\n", actual);
 }
 
 void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s){

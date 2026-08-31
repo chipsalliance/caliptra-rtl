@@ -223,6 +223,8 @@
 #define ECC_REG_ECC_STATUS_READY_MASK                                                               (0x1)
 #define ECC_REG_ECC_STATUS_VALID_LOW                                                                (1)
 #define ECC_REG_ECC_STATUS_VALID_MASK                                                               (0x2)
+#define ECC_REG_ECC_STATUS_VERIFY_PASS_LOW                                                          (2)
+#define ECC_REG_ECC_STATUS_VERIFY_PASS_MASK                                                         (0x4)
 #endif
 #define CLP_ECC_REG_ECC_SEED_0                                                                      (0x10008080)
 #ifndef ECC_REG_ECC_SEED_0
@@ -7941,6 +7943,8 @@
 #define ABR_REG_MLDSA_STATUS_MSG_STREAM_READY_MASK                                                  (0x4)
 #define ABR_REG_MLDSA_STATUS_ERROR_LOW                                                              (3)
 #define ABR_REG_MLDSA_STATUS_ERROR_MASK                                                             (0x8)
+#define ABR_REG_MLDSA_STATUS_VERIFY_PASS_LOW                                                        (4)
+#define ABR_REG_MLDSA_STATUS_VERIFY_PASS_MASK                                                       (0x10)
 #endif
 #define CLP_ABR_REG_ABR_ENTROPY_0                                                                   (0x10030018)
 #ifndef ABR_REG_ABR_ENTROPY_0

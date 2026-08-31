@@ -567,6 +567,9 @@ void main() {
             while(1);
         }
 
+        // Errored operation must never report a passing verification result
+        mldsa_check_verify_pass_bit(0);
+
         mldsa_zeroize();
         //Issue warm reset
         rst_count++;
@@ -598,6 +601,9 @@ void main() {
             while(1);
         }
 
+        // Errored operation must never report a passing verification result
+        mldsa_check_verify_pass_bit(0);
+
         mldsa_zeroize();
         //Issue warm reset
         rst_count++;
@@ -628,6 +634,9 @@ void main() {
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
+
+        // Errored operation must never report a passing verification result
+        mldsa_check_verify_pass_bit(0);
 
         mldsa_zeroize();
         //Issue warm reset
@@ -684,6 +693,9 @@ void main() {
             reg_ptr++;
             offset++;
         }
+
+        // Invalid hint: hardware must report a failing verification result
+        mldsa_check_verify_pass_bit(0);
 
         mldsa_zeroize();
     }

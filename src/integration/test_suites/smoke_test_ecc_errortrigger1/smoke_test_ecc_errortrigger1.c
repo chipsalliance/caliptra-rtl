@@ -285,6 +285,9 @@ void main() {
             while(1);
         }
 
+        // An errored verification must never report a passing result
+        ecc_check_verify_pass(0);
+
         ecc_zeroize();
         //Issue warm reset
         rst_count++;
@@ -334,6 +337,9 @@ void main() {
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
+
+        // An errored verification must never report a passing result
+        ecc_check_verify_pass(0);
 
         ecc_zeroize();
         //Issue warm reset
@@ -415,6 +421,9 @@ void main() {
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
+
+        // An errored verification must never report a passing result
+        ecc_check_verify_pass(0);
 
         ecc_zeroize();
         //Issue warm reset

@@ -844,6 +844,94 @@ module caliptra_top_sva
   )
   else $display("SVA ERROR: [MLDSA verify] Verification result check failed");
 
+  // MLDSA_VERIFY_RES matches the c field of the supplied signature, i.e. the
+  // condition that MLDSA_STATUS.VERIFY_PASS claims to have checked
+  function automatic logic check_mldsa_verify_res_matches_c();
+    for (int dword = 0; dword < VERIFY_RES_NUM_DWORDS; dword++)
+      if (`ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword] !== `ABR_PATH.signature_reg.enc.c[dword])
+        return 1'b0;
+    return 1'b1;
+  endfunction
+
+  // The hardware pass/fail bit can never disagree with the data returned to FW
+  MLDSA_verify_pass_implies_res_match: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    ($rose(`ABR_REG_PATH.hwif_in.MLDSA_STATUS.VERIFY_PASS.next) |-> check_mldsa_verify_res_matches_c())
+  )
+  else $display("SVA ERROR: [MLDSA verify] VERIFY_PASS set while VERIFY_RES does not match signature c");
+
+  // An errored MLDSA operation must never report a passing verification
+  MLDSA_verify_pass_clear_on_error: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    (`ABR_PATH.error_flag_reg |-> !`ABR_REG_PATH.hwif_in.MLDSA_STATUS.VERIFY_PASS.next)
+  )
+  else $display("SVA ERROR: [MLDSA verify] VERIFY_PASS set while error flag is asserted");
+
+  // VERIFY_PASS is allowed to lead MLDSA_STATUS.VALID, but must never lag it.
+  // mldsa_process_done (which is what registers VALID) is raised by
+  // mldsa_verify_done at the end of the verify program, so once that fires the
+  // result flop must already hold its final value: no further write may occur
+  // until the next VERIFY command is dispatched.
+  MLDSA_verify_pass_not_later_than_valid: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input || `ABR_PATH.zeroize)
+    ((`ABR_PATH.mldsa_verifying_process && `ABR_PATH.mldsa_verify_done)
+       |=> (!`ABR_PATH.mldsa_verify_res_we) until `ABR_PATH.set_verify_valid)
+  )
+  else $display("SVA ERROR: [MLDSA verify] VERIFY_PASS updated after MLDSA_STATUS.VALID was raised");
+
+  // A zeroize is mandatory between ABR commands and must always clear the
+  // previous verification result, so a VERIFY that aborts early can never
+  // inherit a pass from a previous run.
+  MLDSA_verify_pass_clear_on_zeroize: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    (`ABR_PATH.zeroize |=> !`ABR_PATH.mldsa_verify_pass_reg)
+  )
+  else $display("SVA ERROR: [MLDSA verify] VERIFY_PASS not cleared on zeroize");
+
+  // ECC_VERIFY_R matches the supplied signature R, i.e. the condition that
+  // ECC_STATUS.VERIFY_PASS claims to have checked
+  function automatic logic check_ecc_verify_r_matches_sign_r();
+    for (int dword = 0; dword < ECC_REG_NUM_DWORDS; dword++)
+      if (`ECC_REG_PATH.hwif_out.ECC_VERIFY_R[dword].VERIFY_R.value !== `ECC_REG_PATH.hwif_out.ECC_SIGN_R[dword].SIGN_R.value)
+        return 1'b0;
+    return 1'b1;
+  endfunction
+
+  ECC_verify_pass_implies_res_match: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    ($rose(`ECC_REG_PATH.hwif_in.ECC_STATUS.VERIFY_PASS.next) |-> check_ecc_verify_r_matches_sign_r())
+  )
+  else $display("SVA ERROR: [ECC verify] VERIFY_PASS set while VERIFY_R does not match SIGN_R");
+
+  ECC_verify_pass_clear_on_error: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    ((`ECC_PATH.error_flag || `ECC_PATH.error_flag_reg) |-> !`ECC_REG_PATH.hwif_in.ECC_STATUS.VERIFY_PASS.next)
+  )
+  else $display("SVA ERROR: [ECC verify] VERIFY_PASS set while error flag is asserted");
+
+  // Same ordering requirement on the ECC side: the result flop is only ever
+  // written while the engine is still busy, i.e. strictly before ECC_STATUS.VALID
+  // is raised for that operation.
+  ECC_verify_pass_not_later_than_valid: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input || `ECC_PATH.zeroize_reg)
+    ((`ECC_PATH.verifying_process && `ECC_PATH.hw_verify_r_we) |-> !`ECC_PATH.ecc_valid_reg)
+  )
+  else $display("SVA ERROR: [ECC verify] VERIFY_PASS updated after ECC_STATUS.VALID was raised");
+
+  ECC_verify_pass_clear_on_cmd_start: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    (`ECC_PATH.ecc_cmd_start |=> !`ECC_PATH.ecc_verify_pass_reg)
+  )
+  else $display("SVA ERROR: [ECC verify] VERIFY_PASS not cleared at command dispatch");
+
 
   // MLDSA Scan, Debug and Zeroization Assertions
   generate

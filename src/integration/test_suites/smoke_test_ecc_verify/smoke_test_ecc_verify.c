@@ -254,7 +254,14 @@ void main() {
     ecc_verifying_flow(msg, pubkey_x, pubkey_y, sign_r, sign_s);
     cptra_intr_rcv.ecc_notif = 0;
 
+    // The verification above passed, so the hardware result bit must be set
+    ecc_check_verify_pass(1);
+
     ecc_zeroize();
+
+    // Zeroize must clear the hardware verification result so it can never be
+    // mistaken for the outcome of a subsequent operation
+    ecc_check_verify_pass(0);
 
     SEND_STDOUT_CTRL(0xff); //End the test
     

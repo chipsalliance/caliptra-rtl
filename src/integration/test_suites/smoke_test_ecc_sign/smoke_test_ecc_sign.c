@@ -254,6 +254,9 @@ void main() {
     ecc_signing_flow(privkey, msg, iv, sign_r, sign_s, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
+    // A SIGN operation must never report a passing verification result
+    ecc_check_verify_pass(0);
+
     ecc_zeroize();
 
     SEND_STDOUT_CTRL(0xff); //End the test

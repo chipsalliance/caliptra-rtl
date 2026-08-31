@@ -188,6 +188,8 @@
 `define ECC_REG_ECC_STATUS_READY_MASK                                                               (32'h1)
 `define ECC_REG_ECC_STATUS_VALID_LOW                                                                (1)
 `define ECC_REG_ECC_STATUS_VALID_MASK                                                               (32'h2)
+`define ECC_REG_ECC_STATUS_VERIFY_PASS_LOW                                                          (2)
+`define ECC_REG_ECC_STATUS_VERIFY_PASS_MASK                                                         (32'h4)
 `endif
 `ifndef ECC_REG_ECC_SEED_0
 `define ECC_REG_ECC_SEED_0                                                                          (32'h80)
@@ -6270,6 +6272,8 @@
 `define ABR_REG_MLDSA_STATUS_MSG_STREAM_READY_MASK                                                  (32'h4)
 `define ABR_REG_MLDSA_STATUS_ERROR_LOW                                                              (3)
 `define ABR_REG_MLDSA_STATUS_ERROR_MASK                                                             (32'h8)
+`define ABR_REG_MLDSA_STATUS_VERIFY_PASS_LOW                                                        (4)
+`define ABR_REG_MLDSA_STATUS_VERIFY_PASS_MASK                                                       (32'h10)
 `endif
 `ifndef ABR_REG_ABR_ENTROPY_0
 `define ABR_REG_ABR_ENTROPY_0                                                                       (32'h18)
