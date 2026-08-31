@@ -73,6 +73,7 @@ module doe_cbc
 
    //interface with kv
    output kv_write_t kv_write,
+   input  kv_wr_resp_t kv_wr_resp,
    input  logic ocp_lock_en, // Synth-time constant strap input instead of ocp_lock_in_progress
    input  logic doe_cmd_lock, // Prevent new DOE commands once FMC/RT execution begins
    input  logic debugUnlock_or_scan_mode_switch
@@ -251,6 +252,7 @@ doe_fsm1
 
   //interface with kv
   .kv_write(kv_write),
+  .kv_wr_resp(kv_wr_resp),
 
   //interface with client
   .src_write_en(doe_block_write_en),

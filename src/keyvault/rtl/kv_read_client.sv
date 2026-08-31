@@ -96,6 +96,7 @@ kv_read_fsm
     .start(validated_read_en),
     .allow(read_allow),
     .last (kv_resp.last),
+    .abort_i(kv_resp.error), // Abort read on KV error
     .pcr_hash_extend(read_ctrl_reg.pcr_hash_extend),
     .num_dwords(num_dwords),
     .read_offset(read_offset),

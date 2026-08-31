@@ -84,6 +84,7 @@ package kv_rst_pkg;
    //    the new sequence after any base sequences of the new sequence.
    `include "src/kv_rst_poweron_sequence.svh"
    `include "src/kv_rst_warm_rst_sequence.svh"
+   `include "src/kv_rst_fw_upd_rst_sequence.svh"
    `include "src/kv_rst_cold_rst_sequence.svh"
    `include "src/kv_rst_core_rst_sequence.svh"
    `include "src/kv_rst_debug_sequence.svh"
