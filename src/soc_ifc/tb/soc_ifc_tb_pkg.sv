@@ -196,8 +196,12 @@ package soc_ifc_tb_pkg;
     "CPTRA_FUSE_VALID_AXI_USER"                     : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_VALID_AXI_USER,                            // 0x108      Valid User for FUSE 
     "CPTRA_FUSE_AXI_USER_LOCK"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FUSE_AXI_USER_LOCK,                             // 0x10c      Valid User for FUSE AXI_USER Lock
     "CPTRA_WDT_CFG"                                 : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_WDT_CFG_0,                                      // 0x110 [2]  Caliptra WDT1 Config 	
-    "CPTRA_ITRNG_ENTROPY_CONFIG_0"	                : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0,                         // 0x118      Caliptra iTRNG Entropy Configuration 0 	                            
-    "CPTRA_ITRNG_ENTROPY_CONFIG_1"	                : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1,                         // 0x11c      Caliptra iTRNG Entropy Configuration 1    
+    "CPTRA_ITRNG_ENTROPY_CONFIG_0"                  : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0,                         // 0x180      Caliptra iTRNG Entropy Configuration 0
+    "CPTRA_ITRNG_ENTROPY_CONFIG_1"                  : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1,                         // 0x184      Caliptra iTRNG Entropy Configuration 1
+    "CPTRA_ITRNG_ENTROPY_CONFIG_2"                  : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2,                         // 0x188      Caliptra iTRNG Entropy Configuration 2
+    "CPTRA_ITRNG1_ENTROPY_CONFIG_0"                 : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0,                        // 0x18c      Caliptra iTRNG1 Entropy Configuration 0
+    "CPTRA_ITRNG1_ENTROPY_CONFIG_1"                 : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1,                        // 0x190      Caliptra iTRNG1 Entropy Configuration 1
+    "CPTRA_ITRNG1_ENTROPY_CONFIG_2"                 : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2,                        // 0x194      Caliptra iTRNG1 Entropy Configuration 2
     "CPTRA_RSVD_REG"                                : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_RSVD_REG_0,                                     // 0x120 [2]  Caliptra Reserved Registers
     "CPTRA_HW_CAPABILITIES"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_CAPABILITIES,                                // 0x128      Caliptra HW Capabilities
     "CPTRA_FW_CAPABILITIES"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_CAPABILITIES,                                // 0x12c      Caliptra FW Capabilities
@@ -205,7 +209,7 @@ package soc_ifc_tb_pkg;
     // 0x134..0x13c
     "CPTRA_OWNER_PK_HASH"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_0,                                // 0x140 [12] - 
     "CPTRA_OWNER_PK_HASH_LOCK"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK,                             // 0x170      - 
-    // 0x174..0x1fc
+    // 0x174..0x17c, 0x198..0x1fc
     "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                                      // 0x200 [12] Unique Device Secret 
     "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,                                 // 0x240 [8]  Field Entropy 
     "FUSE_VENDOR_PK_HASH"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_VENDOR_PK_HASH_0,                                // 0x260 [12] - 
@@ -343,7 +347,8 @@ package soc_ifc_tb_pkg;
   // These address ranges (inclusive) in each extent have no definition 
   extent_t _undefined_addr_ranges [$] = {
     '{addr_min: SOCIFC_BASE + 16'h0134, addr_max: SOCIFC_BASE + 16'h013c},
-    '{addr_min: SOCIFC_BASE + 16'h0174, addr_max: SOCIFC_BASE + 16'h01fc},
+    '{addr_min: SOCIFC_BASE + 16'h0174, addr_max: SOCIFC_BASE + 16'h017c},
+    '{addr_min: SOCIFC_BASE + 16'h0198, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0294, addr_max: SOCIFC_BASE + 16'h02b0},
     '{addr_min: SOCIFC_BASE + 16'h03a4, addr_max: SOCIFC_BASE + 16'h03bc},
     '{addr_min: SOCIFC_BASE + 16'h03e0, addr_max: SOCIFC_BASE + 16'h04fc},
@@ -635,7 +640,14 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_NOTIF_CMD_AVAIL_INTR_COUNT_INCR_R"     ,
     "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"  ,
     "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"  , 
-    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"        
+    "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"   ,
+    "SHA_ACC_INTR_BRF_ERROR_INTR_TRIG_R"              ,
+    "SHA_ACC_INTR_BRF_NOTIF_INTR_TRIG_R"              ,
+    "SHA_ACC_INTR_BRF_ERROR0_INTR_COUNT_INCR_R"        ,
+    "SHA_ACC_INTR_BRF_ERROR1_INTR_COUNT_INCR_R"        ,
+    "SHA_ACC_INTR_BRF_ERROR2_INTR_COUNT_INCR_R"        ,
+    "SHA_ACC_INTR_BRF_ERROR3_INTR_COUNT_INCR_R"        ,
+    "SHA_ACC_INTR_BRF_NOTIF_CMD_DONE_INTR_COUNT_INCR_R"
     // "INTR_BRF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_R"    // TODO. Check for saturation!
   }; 
 
@@ -1007,10 +1019,15 @@ package soc_ifc_tb_pkg;
         exp_data = '0;  // not accessible over AXI or AHB 
 
       else if (str_startswith(addr_name, "SHA_ACC_INTR_BRF"))
-        if (str_endswith(addr_name, "INCR_R"))
+        if (is_pulsed_reg(addr_name))
+          exp_data = '0;
+        else if (str_endswith(addr_name, "INCR_R"))
           exp_data = ahb_rodata | axi_rodata; 
         else if ((addr_name == "SHA_ACC_INTR_BRF_ERROR_GLOBAL_INTR_R") || (addr_name == "SHA_ACC_INTR_BRF_NOTIF_GLOBAL_INTR_R"))
           exp_data = ahb_rodata | axi_rodata; 
+        else if ((addr_name == "SHA_ACC_INTR_BRF_ERROR_INTERNAL_INTR_R") ||
+                 (addr_name == "SHA_ACC_INTR_BRF_NOTIF_INTERNAL_INTR_R"))
+          exp_data = axi_rodata | (~(ahb_indata & get_mask(addr_name)) & curr_data);
         else
           exp_data = ahb_indata & get_mask(addr_name) | axi_rodata; 
 
@@ -1433,8 +1450,11 @@ package soc_ifc_tb_pkg;
     strq_t soc_regs; 
 
     foreach (_soc_register_dict[rkey]) begin
-      if (rkey.substr(0,7) != "INTR_BRF") 
-        soc_regs.push_back(rkey); 
+      if (str_startswith(rkey, "INTR_BRF"))
+        continue;
+      if (!subsystem_mode_tb && str_startswith(rkey, "SHA_ACC_INTR_BRF"))
+        continue;
+      soc_regs.push_back(rkey);
     end 
 
     return soc_regs;
@@ -2228,5 +2248,3 @@ package soc_ifc_tb_pkg;
 endpackage // soc_ifc_tb_pkg
 
 `endif // SOC_IFC_TB_PKG
-
-

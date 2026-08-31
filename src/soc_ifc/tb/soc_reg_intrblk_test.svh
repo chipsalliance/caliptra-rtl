@@ -157,7 +157,7 @@
 
       // These are read-only registers
       update_exp_regval("INTR_BRF_ERROR_GLOBAL_INTR_R", error_global_intr_r, SET_DIRECT); 
-      update_exp_regval("INTR_BRF_NOTIF_GLOBAL_INTR_R", error_global_intr_r, SET_DIRECT); 
+      update_exp_regval("INTR_BRF_NOTIF_GLOBAL_INTR_R", notif_global_intr_r, SET_DIRECT);
 
       // Write-one to clear regs need special handling
       wo_regnames = { "INTR_BRF_ERROR_INTR_TRIG_R", "INTR_BRF_NOTIF_INTR_TRIG_R" };
@@ -175,6 +175,10 @@
 
       repeat (20) @(posedge clk_tb);
       sb.del_all();
+      update_exp_regval("INTR_BRF_ERROR_GLOBAL_INTR_R", error_global_intr_r, SET_DIRECT);
+      update_exp_regval("INTR_BRF_NOTIF_GLOBAL_INTR_R", notif_global_intr_r, SET_DIRECT);
+      update_exp_regval("INTR_BRF_ERROR_INTERNAL_INTR_R", error_internal_intr_r, SET_DIRECT);
+      update_exp_regval("INTR_BRF_NOTIF_INTERNAL_INTR_R", notif_internal_intr_r, SET_DIRECT);
 
 
       // PHASE I. 1a-d Write-Read register back2back 
@@ -339,8 +343,9 @@
 
       end
 
-    end
+      error_ctr += sb.err_count;
 
+    end
   endtask // soc_reg_intrblk_test;
 
 
@@ -409,4 +414,3 @@ endproperty
 
 monitor_trans2ones: assert property(reg_remains_low);
 */
-

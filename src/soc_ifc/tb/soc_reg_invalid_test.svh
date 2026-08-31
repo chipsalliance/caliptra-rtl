@@ -37,6 +37,7 @@
 
     automatic dword_t valid_hrdata; 
     automatic dword_t valid_rdata;
+    automatic exp_txn_sts_e exp_txn_sts;
 
     begin
       $display("Executing task soc_reg_invalid_test"); 
@@ -90,10 +91,11 @@
 
         addr = socregs.get_addr(rname); 
         unaligned_addr = addr + 'd1 + ($urandom() % 3);
+        exp_txn_sts = !subsystem_mode_tb && str_startswith(rname, "SHA_ACC_INTR_BRF") ? ERROR_RESP : PASS;
 
         wdata = $urandom(); 
-        write_single_word_axi_sub(unaligned_addr, wdata);
-        read_single_word_axi_sub(unaligned_addr, valid_rdata);
+        write_single_word_axi_sub(unaligned_addr, wdata, exp_txn_sts);
+        read_single_word_axi_sub(unaligned_addr, valid_rdata, exp_txn_sts);
 
         $display("Write & read over AXI : unaligned addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", unaligned_addr, wdata, valid_rdata); 
 
@@ -120,7 +122,7 @@
       write_single_word_ahb(addr, wdata);
       read_single_word_ahb(addr);
 
-      valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
+      valid_hrdata = addr[2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO];
       $display("Control condtion; test over AHB to aligned address (expect read to mirro write value) : addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", 
         addr, wdata, valid_hrdata); 
 
@@ -132,7 +134,7 @@
         write_single_word_ahb(undef_addr, wdata);
         read_single_word_ahb(undef_addr);
 
-        valid_hrdata =  addr[2] ?  hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
+        valid_hrdata = undef_addr[2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO];
         $display("Write & read over AHB : undefined addr = 0x%08x, wdata = 0x%08x, rdata = 0x%x", undef_addr, wdata, valid_hrdata); 
 
         if (valid_hrdata != 0) begin 
@@ -170,4 +172,3 @@
 
     end
   endtask // soc_reg_invalid_test
-

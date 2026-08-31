@@ -18,219 +18,127 @@
   //----------------------------------------------------------------
   // sha_acc_intrblk_test()
   // 
-  // Tests that SHA ACC Interrupt Block Registers are RO over AXI  
+  // Tests SHA ACC interrupt registers over AHB and mode-specific AXI access
   //----------------------------------------------------------------
 
+  logic [3:0] sha_acc_error_intr_trig_r;
+  logic       sha_acc_notif_intr_trig_r;
+
+  assign sha_acc_error_intr_trig_r = {
+    dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value,
+    dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value,
+    dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value,
+    dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value
+  };
+
+  assign sha_acc_notif_intr_trig_r =
+    dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
+
+  // Checks that an AXI write never creates a transient SHA interrupt trigger.
+  task automatic monitor_sha_acc_axi_trigger(input string regname, input int num_cycles);
+    dword_t observed_value;
+
+    begin
+      repeat (num_cycles) begin
+        observed_value = (regname == "SHA_ACC_INTR_BRF_ERROR_INTR_TRIG_R") ?
+                         sha_acc_error_intr_trig_r : sha_acc_notif_intr_trig_r;
+
+        if (observed_value !== '0) begin
+          $error("AXI write transiently changed %s to 0x%08x", regname, observed_value);
+          error_ctr += 1;
+          break;
+        end
+        @(posedge clk_tb);
+      end
+    end
+  endtask
 
   task sha_acc_intrblk_test; 
 
     automatic word_addr_t addr; 
-    automatic int tid = 0; // TID is to be updated ONLY if multiple writes to an address 
+    automatic int tid = 0;
     automatic strq_t sha_acc_intrblk_regnames;
-    automatic strq_t nonmatching_regnames;
-    automatic dword_t rddata; 
-    automatic dwordq_t nonmatching_rddata;
     automatic string rname;
-    automatic dword_t ahb_wrdata, exp_regval; 
-    automatic dword_t apb_wrdata, apb_rddata; 
+    automatic dword_t axi_wrdata;
+    automatic dword_t axi_rddata;
+    automatic dword_t exp_regval;
+    automatic exp_txn_sts_e axi_exp_txn_sts;
     automatic WordTransaction wrtrans, rdtrans;
-
-    // Interrupt Register Block Fields 
-    // --------------------------------
-    // logic global_intr_en_r.error_en;
-    // logic global_intr_en_r.notif_en;
-    // logic error_intr_en_r.error0_en;
-    // logic error_intr_en_r.error1_en;
-    // logic error_intr_en_r.error2_en;
-    // logic error_intr_en_r.error3_en;
-    // logic notif_intr_en_r.notif_cmd_done_en;
-    // logic error_global_intr_r.agg_sts;
-    // logic notif_global_intr_r.agg_sts;
-    logic [3:0] error_internal_intr_r;  // represent next 4 fields
-    // logic error_internal_intr_r.error0_sts;
-    // logic error_internal_intr_r.error1_sts;
-    // logic error_internal_intr_r.error2_sts;
-    // logic error_internal_intr_r.error3_sts;
-    logic notif_internal_intr_r;  // proxy for next field 
-    // logic notif_internal_intr_r.notif_cmd_done_sts;
-    logic [3:0] error_intr_trig_r;  // represent next 4 fields
-    // logic error_intr_trig_r.error0_trig;
-    // logic error_intr_trig_r.error1_trig;
-    // logic error_intr_trig_r.error2_trig;
-    // logic error_intr_trig_r.error3_trig;
-    logic notif_intr_trig_r;  // proxy for next field;
-    // logic notif_intr_trig_r.notif_cmd_done_trig;
-    // logic error0_intr_count_r.cnt;
-    // logic error1_intr_count_r.cnt;
-    // logic error2_intr_count_r.cnt;
-    // logic error3_intr_count_r.cnt;
-    // logic notif_cmd_done_intr_count_r.cnt;
-    // logic error0_intr_count_incr_r.pulse;
-    // logic error1_intr_count_incr_r.pulse;
-    // logic error2_intr_count_incr_r.pulse;
-    // logic error3_intr_count_incr_r.pulse;
-    // logic notif_cmd_done_intr_count_incr_r.pulse;
 
     begin
       $display("Executing task sha_acc_intrblk_test"); 
       $display("---------------------------------\n");
 
-      // set_security_state_byname("DEBUG_UNLOCKED_PRODCUTION"); 
-
       tc_ctr = tc_ctr + 1;
       wrtrans = new();
       rdtrans = new();
 
+      // Use the register model as the authoritative list and expected-value source.
       sha_acc_intrblk_regnames = get_sha_acc_intrblk_regnames();
+      axi_exp_txn_sts = subsystem_mode_tb ? PASS : ERROR_RESP;
 
-      // Skip wrting & reading over AHB until post reset sequencing is done 
-      // THEN, update scoreboard entry accordingly for a couple of registers which 
-      // are written using AXI as part of Caliptra boot.  Scoreboard update not 
-      // needed for readonly fields which are set directly by wires.
+      // Complete boot before exercising the Caliptra-internal AHB register path.
       simulate_caliptra_boot();
-
-      // PHASE I. 1a.  Write (AHB, then AXI) and Read register over AXI 
-      // ------------------------------------------------------------
-
       repeat (20) @(posedge clk_tb);
-      sb.del_all();
 
+      // Clear queued pre-test transactions without resetting expected register values.
+      sb.del_all();
       update_CPTRA_FLOW_STATUS(ready_for_fuses, `REG_HIER_BOOT_FSM_PS);
 
-      $display ("\n1a. Writing over AHB, AXI then reading back over AXI"); 
+      $display("\nWriting and reading SHA interrupt registers over AHB, then checking mode-specific AXI access");
 
       foreach (sha_acc_intrblk_regnames[i]) begin
         rname = sha_acc_intrblk_regnames[i];
         addr = socregs.get_addr(rname);
+
+        // Establish each register's legal AHB state with randomized stimulus.
         wrtrans.update(addr, 0, tid);
-        wrtrans.randomize();
+        if (!wrtrans.randomize())
+          $fatal(1, "Failed to randomize SHA interrupt register transaction for %s", rname);
 
-        ahb_wrdata = wrtrans.data; 
-        apb_wrdata = ~ahb_wrdata; 
-
-        write_reg_trans(SET_AHB, wrtrans);  
-        repeat (3) @(posedge clk_tb);
-        wrtrans.update_data(apb_wrdata);
-        write_reg_trans(SET_AXI, wrtrans);  
+        write_reg_trans(SET_AHB, wrtrans);
         repeat (3) @(posedge clk_tb);
 
+        // Check RW, RO, W1C, and pulse behavior through the register model.
         rdtrans.update(addr, 0, tid);
-        read_reg_trans(GET_AXI, rdtrans);  
-        @(posedge clk_tb);
-
-        apb_rddata = rdtrans.data;
+        read_reg_trans(GET_AHB, rdtrans);
         exp_regval = socregs.get_exp_regval(rname);
-
-        if (apb_rddata == exp_regval)
-          continue; // all good; move on to next
-
-        if (apb_rddata == apb_wrdata) begin
-          $display ("TB ERROR for addr 0x%08x (%s). apb_rddata matches apb_wrdata 0x%08x", addr, rname, apb_rddata);
-          error_ctr = error_ctr + 1;
-        end else if (apb_rddata != exp_regval) begin 
-          if (rddata != '0) begin 
-            $display ("TB ERROR for addr 0x%08x (%s). Unexpected non-zero apb_rddata 0x%08x", addr, rname, rddata);
-            error_ctr = error_ctr + 1;
-          end else begin
-            $display ("TB Warning for addr 0x%08x (%s). apb_rddata 0x%08x does not match exp_regval 0x%08x", addr, rname, apb_rddata, exp_regval);
-            nonmatching_regnames.push_back(rname);
-            nonmatching_rddata.push_back(apb_rddata);
-          end
+        if (rdtrans.data !== exp_regval) begin
+          $error("AHB read mismatch for addr 0x%08x (%s): observed 0x%08x, expected 0x%08x", addr, rname, rdtrans.data, exp_regval);
+          error_ctr += 1;
         end
-      end 
 
-      // control launch of assertions using directed writes
-      // Expect issues w/the 4 registers
-      assign error_internal_intr_r = {dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value , 
-                                      dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value , 
-                                      dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value ,
-                                      dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value}; 
+        // Subsystem mode permits the configured DMA AXI user, but the interrupt
+        // registers remain AXI read-only. Passive mode rejects both directions.
+        // Low-level helpers keep the AXI write out of the expected-value model.
+        axi_wrdata = ~wrtrans.data;
+        if ((rname == "SHA_ACC_INTR_BRF_ERROR_INTR_TRIG_R") ||
+            (rname == "SHA_ACC_INTR_BRF_NOTIF_INTR_TRIG_R")) begin
+          fork
+            write_single_word_axi_sub(addr, axi_wrdata, axi_exp_txn_sts);
+            monitor_sha_acc_axi_trigger(rname, 10);
+          join
+        end
+        else begin
+          write_single_word_axi_sub(addr, axi_wrdata, axi_exp_txn_sts);
+        end
+        read_single_word_axi_sub(addr, axi_rddata, axi_exp_txn_sts);
+        repeat (3) @(posedge clk_tb);
 
-      assign notif_internal_intr_r = dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.value; 	
+        // In subsystem mode, the successful AXI read must return the AHB state.
+        if (subsystem_mode_tb && (axi_rddata !== exp_regval)) begin
+          $error("AXI read mismatch for addr 0x%08x (%s): observed 0x%08x, expected 0x%08x", addr, rname, axi_rddata, exp_regval);
+          error_ctr += 1;
+        end
 
-      assign error_intr_trig_r = {dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_intr_trig_r.error0_trig.value ,
-                                 dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_intr_trig_r.error1_trig.value ,
-                                 dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_intr_trig_r.error2_trig.value ,
-                                 dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_intr_trig_r.error3_trig.value};
-
-      assign notif_intr_trig_r = dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.notif_intr_trig_r.notif_cmd_done_trig.value;
-
-
-      foreach (nonmatching_regnames[i]) begin
-        rname = nonmatching_regnames[i];
-        rddata = nonmatching_rddata[i];
-
-        addr = socregs.get_addr(rname);
-        wrtrans.update(addr, 32'hffff_ffff, tid);
-        write_reg_trans(SET_AHB, wrtrans); // This should clear the register to all 0's
-        repeat (10) @(posedge clk_tb); 
-
-        fork    // Try to set again over apb - should be unsuccessful 
-          begin
-            write_reg_trans(SET_AXI, wrtrans);  
-            repeat (10) @(posedge clk_tb); 
-          end
-
-          begin
-            repeat (10) begin
-              // $display ( "TB DEBUG. checking for assertion");
-              @(posedge clk_tb);
-              case (rname) 
-               "SHA_ACC_INTR_BRF_ERROR_INTERNAL_INTR_R": assert ((|error_internal_intr_r) == 1'b0)
-                  else begin
-                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over AXI! agg value is 0b%b", addr, rname, error_internal_intr_r);
-                    error_ctr += 1;
-                    break;
-                  end
-
-                "SHA_ACC_INTR_BRF_NOTIF_INTERNAL_INTR_R": assert ((|notif_internal_intr_r) == 1'b0)
-                  else begin
-                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over AXI! agg value is 0b%b", addr, rname, notif_internal_intr_r); 
-                    error_ctr += 1;
-                    break;
-                  end
-
-                "SHA_ACC_INTR_BRF_ERROR_INTR_TRIG_R": assert ((|error_intr_trig_r) == 1'b0)
-                  else begin
-                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over AXI! agg value is 0b%b", addr, rname, error_intr_trig_r); 
-                    error_ctr += 1;
-                    break;
-                  end
-
-                "SHA_ACC_INTR_BRF_NOTIF_INTR_TRIG_R": assert ((|notif_intr_trig_r) == 1'b0)
-                  else begin
-                    $display ("TB ERROR aserted for addr 0x%08x (%s). Register bit-field(s) mutable over AXI! agg value is 0b%b", addr, rname, notif_intr_trig_r); 
-                    error_ctr += 1;
-                    break;
-                  end
-
-                default: $display ("TB ERROR for addr 0x%08x (%s). Unexpected mismatch; no handler found", addr, rname); 
-              endcase
-            end 
-          end
-        join_any
- 
+        // Re-read over AHB to prove the AXI write had no side effects in either mode.
+        rdtrans.update(addr, 0, tid);
+        read_reg_trans(GET_AHB, rdtrans);
+        if (rdtrans.data !== exp_regval) begin
+          $error("AXI write changed addr 0x%08x (%s): observed 0x%08x, expected 0x%08x", addr, rname, rdtrans.data, exp_regval);
+          error_ctr += 1;
+        end
       end
-      
     end
 
   endtask // sha_acc_intrblk_test
-
-/* 
-// Placeholder for concurrent assertions in future
-
-sequence remain_low__sha_acc_error_internal_intr_r;
-  (| ({ dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_internal_intr_r.error0_sts.value, 
-        dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_internal_intr_r.error1_sts.value, 
-        dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_internal_intr_r.error2_sts.value,
-        dut.i_sha512_acc_top.i_sha512_acc_csr.field_storage.intr_block_rf.error_internal_intr_r.error3_sts.value }) == 1'b0); 
-endsequence 
-
-property reg_remains_low;
-  @(posedge clk_tb)
-  disable iff (reg_sva_off) remain_low__sha_acc_error_internal_intr_r;
-endproperty
-
-monitor_trans2ones: assert property(reg_remains_low);
-*/
-
