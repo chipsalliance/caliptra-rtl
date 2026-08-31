@@ -21,17 +21,23 @@
 //----------------------------------------------------------------------
 //
 // DESCRIPTION:
-// This sequences randomizes the soc_ifc_ctrl transaction and sends it
-// to the UVM driver.
+// Firmware-update-reset window sequence.
 //
-// This sequence constructs and randomizes a soc_ifc_ctrl_transaction.
+// Models the real BOOT_FW_RST scenario (soc_ifc_boot_fsm): the fw-update reset
+// window asserts together with the core (uc) reset, while the KV noncore reset
+// (rst_b) stays HIGH so the KV remains ALIVE and error-responds/masks accesses
+// during the window. This is distinct from a warm reset (which resets the KV).
+//
+//   assert_rst        = 0  -> KV rst_b stays high (KV alive)
+//   assert_core_rst   = 1  -> core_only_rst_b asserted (uc reset)
+//   assert_fw_upd_rst = 1  -> fw_update_rst_window asserted
 //
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-class kv_rst_warm_rst_sequence extends kv_rst_sequence_base;
+class kv_rst_fw_upd_rst_sequence extends kv_rst_sequence_base;
 
-    `uvm_object_utils( kv_rst_warm_rst_sequence )
+    `uvm_object_utils( kv_rst_fw_upd_rst_sequence )
 
     //*****************************************************************
   function new(string name = "");
@@ -46,28 +52,26 @@ class kv_rst_warm_rst_sequence extends kv_rst_sequence_base;
 
   task body();
 
-    // Assert warm reset
-    req=kv_rst_transaction::type_id::create("pwr_req");
+    // Assert fw-update reset window (KV stays alive)
+    req=kv_rst_transaction::type_id::create("fw_upd_req");
     start_item(req);
-    // Randomize the transaction
-    if(!req.randomize()) `uvm_fatal("KV_RST_WARM_RST", "kv_rst_warm_rst_sequence::body()-kv_rst_transaction randomization failed")
-    `uvm_info("KV_RST_WARM_RST", "Asserting reset", UVM_MEDIUM)
+    if(!req.randomize()) `uvm_fatal("KV_RST_FW_UPD_RST", "kv_rst_fw_upd_rst_sequence::body()-kv_rst_transaction randomization failed")
+    `uvm_info("KV_RST_FW_UPD_RST", "Asserting fw-update reset window (KV alive)", UVM_MEDIUM)
     req.set_pwrgood = 1'b1;
-    req.assert_rst = 1'b1;
+    req.assert_rst = 1'b0;
     req.assert_core_rst = 1'b1;
-    req.assert_fw_upd_rst = 1'b0;
+    req.assert_fw_upd_rst = 1'b1;
     req.debug_mode = 1'b0;
     req.scan_mode = 1'b0;
 
     finish_item(req);
-    `uvm_info("KV_RST_WARM_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
-    
-    // Deassert warm reset
-    req=kv_rst_transaction::type_id::create("rst_req");
+    `uvm_info("KV_RST_FW_UPD_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
+
+    // Deassert fw-update reset window
+    req=kv_rst_transaction::type_id::create("fw_upd_deassert_req");
     start_item(req);
-    // Randomize the transaction
-    if(!req.randomize()) `uvm_fatal("KV_RST_WARM_RST", "kv_rst_warm_rst_sequence::body()-kv_rst_transaction randomization failed")
-    `uvm_info("KV_RST_WARM_RST", "Deasserting reset", UVM_MEDIUM)
+    if(!req.randomize()) `uvm_fatal("KV_RST_FW_UPD_RST", "kv_rst_fw_upd_rst_sequence::body()-kv_rst_transaction randomization failed")
+    `uvm_info("KV_RST_FW_UPD_RST", "Deasserting fw-update reset window", UVM_MEDIUM)
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b0;
     req.assert_core_rst = 1'b0;
@@ -76,10 +80,8 @@ class kv_rst_warm_rst_sequence extends kv_rst_sequence_base;
     req.scan_mode = 1'b0;
 
     finish_item(req);
-    `uvm_info("KV_RST_WARM_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
+    `uvm_info("KV_RST_FW_UPD_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
 
-    
-
-endtask
+  endtask
 
 endclass

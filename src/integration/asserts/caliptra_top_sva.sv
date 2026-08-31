@@ -398,7 +398,7 @@ module caliptra_top_sva
       if (dword < HMAC_TAG_NUM_DWORDS) begin
         kv_hmac_tag_w_flow:       assert property (
                                               @(posedge `SVA_RDC_CLK)
-                                              (`HMAC_PATH.kv_write_done & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
+                                              (`HMAC_PATH.kv_write_done & ~`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress & (`HMAC_PATH.kv_write_error == 0)) |-> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value == `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword])
                                               )
                                   else $display("SVA ERROR: HMAC384 tag mismatch!, 0x%04x, 0x%04x", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`HMAC_PATH.kv_write_ctrl_reg.write_entry][dword].data.value, `HMAC_PATH.kv_reg[(`HMAC_PATH.TAG_NUM_DWORDS-1) - dword]);                    
 
@@ -538,24 +538,27 @@ module caliptra_top_sva
   property aes_new_key_fully_overwrites_old_key;
       logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] keymgr_key_prev;
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      ($past(`AES_CLP_PATH.keymgr_key.valid) && !`AES_CLP_PATH.keymgr_key.valid, keymgr_key_prev = $past(`AES_CLP_PATH.keymgr_key.key[0])) ##0
+      ($past(`AES_CLP_PATH.keymgr_key.valid) && !`AES_CLP_PATH.keymgr_key.valid, keymgr_key_prev = $past(`AES_CLP_PATH.keymgr_key.key[0] ^ `AES_CLP_PATH.keymgr_key.key[1])) ##0
       (!`AES_CLP_PATH.keymgr_key.valid)[*0:$] ##1
       `AES_CLP_PATH.keymgr_key.valid
       |->
-      (dw_all_different_or_all_same(keymgr_key_prev, `AES_CLP_PATH.keymgr_key.key[0]) == 1);
+      (dw_all_different_or_all_same(keymgr_key_prev, `AES_CLP_PATH.keymgr_key.key[0] ^ `AES_CLP_PATH.keymgr_key.key[1]) == 1);
   endproperty
   AES_KV_rd_full_key: assert property (aes_new_key_fully_overwrites_old_key)
                       else $display("SVA ERROR: AES core partially read new key into keyvault and kept partial old key!");
 
-  // AES core contains a local reg that buffers the key when reading from KeyVault.
-  // Enforce that this reg is cleared to 0 when reading in a new key.
+  // AES core buffers the KV sideload key as two masked shares
+  // (kv_key_masked = key ^ m, kv_key_mask = m).
+  // Enforce that both share stages are cleared to 0 for the not-yet-read
+  // dwords when reading in a new key.
   AES_KV_rd_reg_clr:  assert property (
                                       @(posedge `SVA_RDC_CLK)
                                       (`AES_CLP_PATH.aes_key_kv_read.write_en && `AES_CLP_PATH.aes_key_kv_read.write_offset == 0)
                                       |=>
                                       // dword 0 is written with new value
-                                      // Check that dwords 1:MAX are cleared to 0
-                                      (~|`AES_CLP_PATH.kv_key_reg[(keymgr_pkg::KeyWidth/32)-1:1])
+                                      // Check that dwords 1:MAX are cleared to 0 in both shares
+                                      (~|`AES_CLP_PATH.kv_key_masked[(keymgr_pkg::KeyWidth/32)-1:1] &&
+                                       ~|`AES_CLP_PATH.kv_key_mask[(keymgr_pkg::KeyWidth/32)-1:1])
                                       )
                       else $display("SVA ERROR: AES local reg stage for KeyVault not cleared");
   `endif
@@ -1208,6 +1211,7 @@ module caliptra_top_sva
 
   hmac_key_kv_others_read_error_check: assert property (
                                             @(posedge `SVA_RDC_CLK)
+                                            disable iff (`CPTRA_FW_UPD_RST_WINDOW)
                                             ($fell(`HMAC_PATH.kv_key_write_en) & `SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  (`KEYVAULT_PATH.kv_read[0].read_entry != 23) & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[0].read_entry].dest_valid.value[0])) |-> /*(`KEYVAULT_PATH.kv_rd_resp[0].error == 1'b0)*/ (`HMAC_PATH.hmac_key_kv_read.error_code == 0)
                                             )
                             else $display("SVA ERROR: KV read error set when ocp_lock_in_progress = 1 for non-KV23 read");
@@ -1220,6 +1224,7 @@ module caliptra_top_sva
 
   hmac_block_kv_others_read_error_check: assert property (
                                             @(posedge `SVA_RDC_CLK)
+                                            disable iff (`CPTRA_FW_UPD_RST_WINDOW)
                                             ($rose(`HMAC_PATH.kv_block_done) &`SOC_IFC_TOP_PATH.ss_ocp_lock_in_progress &  `KEYVAULT_PATH.kv_read[1].read_entry != 23 & (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_CTRL[`HMAC_PATH.kv_read[1].read_entry].dest_valid.value[1])) |-> /*(`KEYVAULT_PATH.kv_rd_resp[1].error == 1'b0)*/ (`HMAC_PATH.hmac_block_kv_read.error_code == 0)
                                             )
                             else $display("SVA ERROR: KV read error set when ocp_lock_in_progress = 1 for non-KV23 read");

@@ -84,6 +84,7 @@ kv_dest_write_fsm
     .start(dest_data_avail & write_ctrl_reg.write_en),
     .allow(write_allow),
     .last('0),
+    .abort_i(kv_resp.error), // Abort write on KV error
     .pcr_hash_extend(1'b0),
     .num_dwords(num_dwords),
     .read_offset(dest_read_offset),

@@ -254,7 +254,7 @@ end
     
     if (initiator_struct.assert_rst)
       rst_b_o <= 1'b0;
-    if (initiator_struct.assert_core_rst)
+    if (initiator_struct.assert_fw_upd_rst)
       fw_update_rst_window_o <= 1'b1;
     if (initiator_struct.assert_core_rst)
       core_only_rst_b_o <= 1'b0;
@@ -274,7 +274,7 @@ end
     @(posedge clk_i);
     if (!initiator_struct.assert_rst)
       rst_b_o <= 1'b1;
-    if (!initiator_struct.assert_core_rst)
+    if (!initiator_struct.assert_fw_upd_rst)
       fw_update_rst_window_o <= 1'b0;
     if (!initiator_struct.assert_core_rst)
       core_only_rst_b_o <= 1'b1;
