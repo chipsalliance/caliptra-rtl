@@ -276,9 +276,10 @@ module soc_ifc_tb
     SUB = 1 
   } mgr_sub_e;
 
-  typedef enum logic {
-    FAIL = 0, 
-    PASS = 1
+  typedef enum logic [1:0] {
+    FAIL       = 0,
+    PASS       = 1,
+    ERROR_RESP = 2
   } exp_txn_sts_e;
 
   always_comb begin
@@ -910,22 +911,27 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   task axi_txn_check(input axi_resp_e resp, input rw_e rw, input exp_txn_sts_e exp_txn_sts = PASS);
     begin
-      logic error;
-      if (((resp == AXI_RESP_SLVERR) | (resp == AXI_RESP_DECERR)) & (exp_txn_sts == PASS)) begin
-        error = 1;
+      logic response_matches;
+
+      case (exp_txn_sts)
+        PASS: response_matches = (resp !== AXI_RESP_SLVERR) &&
+                                 (resp !== AXI_RESP_DECERR) &&
+                                 !$isunknown(resp);
+        ERROR_RESP: response_matches = (resp === AXI_RESP_SLVERR) ||
+                                       (resp === AXI_RESP_DECERR);
+        // Legacy FAIL callers verify that the transaction had no side effects.
+        default: response_matches = 1'b1;
+      endcase
+
+      if (!response_matches) begin
         error_ctr += 1;
+        if (rw === read)
+          $error("AXI read response mismatch: expected status %s, received %s", exp_txn_sts.name(), resp.name());
+        else
+          $error("AXI write response mismatch: expected status %s, received %s", exp_txn_sts.name(), resp.name());
       end
-      else begin
-        error = 0;
-        $display("AXI txn was successful");
-      end 
-      $display("AXI txn tcheck");
-      if (error & (rw == read) & (exp_txn_sts == PASS)) begin //read     
-        $error("AXI Read error");
-      end
-      else if (error & (rw == write) & (exp_txn_sts == PASS)) begin //write
-        $error("AXI Write error");
-      end
+      else
+        $display("AXI transaction response matched expected %s status", exp_txn_sts.name());
     end
   endtask
 
