@@ -525,6 +525,100 @@ void ecc_check_verify_pass(uint8_t expected){
     VPRINTF(LOW, "ECC_STATUS.VERIFY_PASS = %d as expected\n", actual);
 }
 
+// Negative verification flow: drives a well-formed but non-matching input set and
+// checks that hardware reports a FAIL verdict through the ordinary comparison path
+// rather than through the error path.
+//
+// The caller must mutate MSG, not the signature. MSG is the only VERIFY input with
+// no validity check in ecc_dsa_ctrl.sv: it is merely reduced modulo GROUP_ORDER and
+// contributes no term to error_flag. Mutating it therefore cannot steer the flow
+// into the error path. By contrast SIGN_R and SIGN_S are range checked
+// (r_input_outofrange / s_input_outofrange), and the error path is already covered
+// by the ecc errortrigger tests without ever exercising a plain compare mismatch.
+void ecc_verifying_flow_expect_fail(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sign_r, ecc_io sign_s){
+    uint8_t offset;
+    volatile uint32_t * reg_ptr;
+    uint32_t ecc_verify_r[12];
+    uint8_t  any_diff = 0;
+
+    // wait for ECC to be ready
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+
+    // Program ECC MSG
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_MSG_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_MSG_11) {
+        *reg_ptr++ = msg.data[offset++];
+    }
+
+    // Program ECC PUBKEY_X
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_X_11) {
+        *reg_ptr++ = pubkey_x.data[offset++];
+    }
+
+    // Program ECC PUBKEY_Y
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_PUBKEY_Y_11) {
+        *reg_ptr++ = pubkey_y.data[offset++];
+    }
+
+    // Program ECC SIGN_R
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_11) {
+        *reg_ptr++ = sign_r.data[offset++];
+    }
+
+    // Program ECC SIGN_S
+    reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_0;
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_SIGN_S_11) {
+        *reg_ptr++ = sign_s.data[offset++];
+    }
+
+    // Enable ECC VERIFYING core
+    VPRINTF(LOW, "\nECC VERIFYING (negative case, expecting FAIL verdict)\n");
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_VERIFYING);
+
+    // wait for ECC VERIFYING process to be done
+    wait_for_ecc_intr();
+
+    // The operation must complete WITHOUT an error. If error_flag were asserted,
+    // ECC_STATUS.VERIFY_PASS would be cleared by the error term and the ordinary
+    // compare-mismatch branch would never be exercised, which is the coverage
+    // goal of this flow.
+    if (cptra_intr_rcv.ecc_error != 0) {
+        VPRINTF(ERROR, "ECC error raised on negative verify; mismatch branch not exercised!\n");
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+
+    // Firmware side check: the recomputed R must differ from the supplied signature R
+    reg_ptr = (uint32_t *) CLP_ECC_REG_ECC_VERIFY_R_0;
+    VPRINTF(LOW, "Load VERIFY_R data from ECC\n");
+    offset = 0;
+    while (reg_ptr <= (uint32_t*) CLP_ECC_REG_ECC_VERIFY_R_11) {
+        ecc_verify_r[offset] = *reg_ptr;
+        if (ecc_verify_r[offset] != sign_r.data[offset]) {
+            any_diff = 1;
+        }
+        reg_ptr++;
+        offset++;
+    }
+
+    if (any_diff == 0) {
+        VPRINTF(ERROR, "Negative verify produced a matching VERIFY_R; stimulus is not a mismatch!\n");
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+
+    // Hardware verdict must agree with the firmware side comparison
+    ecc_check_verify_pass(0);
+}
+
 void ecc_pcr_signing_flow(ecc_io iv, ecc_io sign_r, ecc_io sign_s){
     uint8_t offset;
     volatile uint32_t * reg_ptr;

@@ -36,6 +36,7 @@ void ecc_keygen_flow(ecc_io seed, ecc_io nonce, ecc_io iv, ecc_io privkey, ecc_i
 void ecc_sharedkey_flow(ecc_io iv, ecc_io privkey, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sharedkey);
 void ecc_signing_flow(ecc_io privkey, ecc_io msg, ecc_io iv, ecc_io sign_r, ecc_io sign_s, BOOL check_result);
 void ecc_verifying_flow(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sign_r, ecc_io sign_s);
+void ecc_verifying_flow_expect_fail(ecc_io msg, ecc_io pubkey_x, ecc_io pubkey_y, ecc_io sign_r, ecc_io sign_s);
 // Check the hardware reported signature verification result (ECC_STATUS.VERIFY_PASS)
 // against the expected outcome. expected = 1 for a valid signature, 0 otherwise.
 void ecc_check_verify_pass(uint8_t expected);
