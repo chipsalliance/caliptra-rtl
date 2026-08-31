@@ -38,6 +38,16 @@ class kv_rst_transaction  extends uvmf_transaction_base;
   rand int unsigned wait_cycles ;
   rand bit debug_mode ;
   rand bit scan_mode ;
+  // fw_update_rst_window (decoupled from core_only_rst). Models BOOT_FW_RST where
+  // the fw-update window asserts while the KV noncore reset (rst_b) stays HIGH.
+  bit assert_fw_upd_rst ;
+  // 1-clock-delayed (flopped) copy of assert_fw_upd_rst, produced by the monitor.
+  // The kv_write monitor delivers write beats one clock late ("mimic design", since
+  // KV writes are registered), while the kv_rst monitor delivers the window with no
+  // delay. This flopped copy re-aligns the window to that delayed write timeline so
+  // the predictor's write-error gating matches RTL on the window boundary beat.
+  // Reads use the un-flopped assert_fw_upd_rst (read monitor is 0-delay).
+  bit assert_fw_upd_rst_q ;
 
   //Constraints for the transaction variables:
   constraint wait_cycles_c { wait_cycles dist {[1:25] := 80, [25:100] := 15, [100:500] := 5}; }
@@ -121,7 +131,7 @@ class kv_rst_transaction  extends uvmf_transaction_base;
   virtual function string convert2string();
     // pragma uvmf custom convert2string begin
     // UVMF_CHANGE_ME : Customize format if desired.
-    return $sformatf("set_pwrgood:0x%x assert_rst:0x%x assert_core_rst:0x%x wait_cycles:0x%x debug_mode:0x%x scan_mode: 0x%x",set_pwrgood,assert_rst,assert_core_rst,wait_cycles,debug_mode,scan_mode);
+    return $sformatf("set_pwrgood:0x%x assert_rst:0x%x assert_core_rst:0x%x wait_cycles:0x%x debug_mode:0x%x scan_mode: 0x%x assert_fw_upd_rst: 0x%x assert_fw_upd_rst_q: 0x%x",set_pwrgood,assert_rst,assert_core_rst,wait_cycles,debug_mode,scan_mode,assert_fw_upd_rst,assert_fw_upd_rst_q);
     // pragma uvmf custom convert2string end
   endfunction
 
@@ -169,6 +179,8 @@ class kv_rst_transaction  extends uvmf_transaction_base;
     this.wait_cycles = RHS.wait_cycles;
     this.debug_mode = RHS.debug_mode;
     this.scan_mode = RHS.scan_mode;
+    this.assert_fw_upd_rst = RHS.assert_fw_upd_rst;
+    this.assert_fw_upd_rst_q = RHS.assert_fw_upd_rst_q;
     // pragma uvmf custom do_copy end
   endfunction
 
@@ -197,6 +209,8 @@ class kv_rst_transaction  extends uvmf_transaction_base;
     $add_attribute(transaction_view_h,assert_core_rst,"assert_core_rst");
     $add_attribute(transaction_view_h,wait_cycles,"wait_cycles");
     $add_attribute(transaction_view_h,debug_mode,"debug_mode");
+    $add_attribute(transaction_view_h,assert_fw_upd_rst,"assert_fw_upd_rst");
+    $add_attribute(transaction_view_h,assert_fw_upd_rst_q,"assert_fw_upd_rst_q");
     // pragma uvmf custom add_to_wave end
     $end_transaction(transaction_view_h,end_time);
     $free_transaction(transaction_view_h);

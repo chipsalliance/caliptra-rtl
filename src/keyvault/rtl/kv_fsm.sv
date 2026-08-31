@@ -31,6 +31,7 @@ module kv_fsm
     input logic start,
     input logic allow,
     input logic last,
+    input logic abort_i, // Halt transfer on KV access error
 
     input logic pcr_hash_extend,
     input logic [OFFSET_W:0] num_dwords,
@@ -109,7 +110,7 @@ always_comb arc_KV_ZERO_KV_LENGTH = (PAD == 1) && ($bits(num_dwords_total)'(offs
 always_comb arc_KV_LENGTH_KV_DONE = (PAD == 1) && (kv_fsm_ps == KV_LENGTH);
 always_comb arc_KV_DONE_KV_IDLE = '1;
 
-always_comb offset_rst = arc_KV_RW_KV_DONE | arc_KV_LENGTH_KV_DONE;
+always_comb offset_rst = arc_KV_RW_KV_DONE | arc_KV_LENGTH_KV_DONE | (abort_i & (kv_fsm_ps == KV_RW));
 always_comb write_last = arc_KV_RW_KV_DONE | arc_KV_LENGTH_KV_DONE;
 
 always_comb begin : kv_fsm_comb
@@ -129,6 +130,7 @@ always_comb begin : kv_fsm_comb
         end
         KV_RW: begin
             if      (zeroize) kv_fsm_ns = KV_IDLE;
+            else if (abort_i) kv_fsm_ns = KV_DONE; // Abort on KV error
             else if (arc_KV_RW_KV_PAD) kv_fsm_ns = KV_PAD;
             else if (arc_KV_RW_KV_DONE) kv_fsm_ns = KV_DONE;
             write_en = '1;

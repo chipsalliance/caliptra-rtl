@@ -23,6 +23,7 @@
 //======================================================================
 
 `include "caliptra_prim_assert.sv"
+`include "caliptra_prim_module_name_macros.svh"
 `include "caliptra_reg_field_defines.svh"
 `include "kv_macros.svh"
 
@@ -481,7 +482,26 @@ aes_key_kv_read
     .expected_key_size(aes_expected_key_size)
 );
 
-logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_reg;
+// Masked KV sideload key storage: the key is stored as two boolean shares as
+// it is gathered from the KeyVault. kv_key_masked holds (key ^ m), kv_key_mask
+// holds the per-dword mask m sourced from the Trivium PRNG. The AES core XORs
+// the shares to reconstruct the key, so the raw key never exists in one flop.
+logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_masked;
+logic [(keymgr_pkg::KeyWidth/32)-1:0][3:0][7:0] kv_key_mask;
+// Trivium output viewed as bytes, matching the kv key byte swizzle below
+logic [3:0][7:0] edn_bus_bytes;
+assign edn_bus_bytes = edn_bus;
+
+// SEC_CM: KEY.MASKING. Compute the masked key word (key ^ mask) through the
+// caliptra_prim xor2 cell rather than a behavioral '^'.
+logic [31:0] kv_key_write_data_masked;
+`CALIPTRA_PRIM_MODULE_NAME(xor2) #(
+  .Width(32)
+) u_kv_key_mask_xor (
+  .in0_i (kv_key_write_data),
+  .in1_i (edn_bus_bytes),
+  .out_o (kv_key_write_data_masked)
+);
 
 // AES KV write is only supported for key-release in ocp-lock mode, with the AES-ECB-decrypt use-case
 // Key size is in bytes
@@ -543,15 +563,29 @@ generate
     for (g_byte = 0; g_byte < 4; g_byte++) begin
       always_ff @(posedge clk or negedge reset_n) begin
         if (~reset_n) begin
-          kv_key_reg[g_dword][g_byte] <= '0;
-        end else if(debugUnlock_or_scan_mode_switch) begin
-          kv_key_reg[g_dword][g_byte] <= '0;
-        // zeroize the buffered KeyVault value when reading in a new key
+          kv_key_masked[g_dword][g_byte] <= '0;
+          kv_key_mask  [g_dword][g_byte] <= '0;
+        // Debug/scan forces a clear (highest priority after reset) so key material
+        // never persists into a debug session.
+        end else if (debugUnlock_or_scan_mode_switch) begin
+          kv_key_masked[g_dword][g_byte] <= '0;
+          kv_key_mask  [g_dword][g_byte] <= '0;
+        // An active KV write takes priority over the stale-error clear below.
         // On the first beat, the least-sig dword is set, all other dwords set to 0
         end else if (kv_key_write_en && (g_dword > 0) && (kv_key_write_offset < AES_KV_KEY_DW_WIDTH'(g_dword))) begin
-          kv_key_reg[g_dword][g_byte] <= 0;
+          kv_key_masked[g_dword][g_byte] <= '0;
+          kv_key_mask  [g_dword][g_byte] <= '0;
+        // mask each key dword as it is gathered: the Trivium is advanced by
+        // kv_key_write_en (see en_i), so edn_bus provides a fresh 32b mask word
+        // aligned to this dword's write beat.
         end else if (kv_key_write_en && (kv_key_write_offset == AES_KV_KEY_DW_WIDTH'(g_dword))) begin
-          kv_key_reg[g_dword][g_byte] <= kv_key_write_data[3-g_byte];
+          kv_key_masked[g_dword][g_byte] <= kv_key_write_data_masked[8*(3-g_byte) +: 8];
+          kv_key_mask  [g_dword][g_byte] <= edn_bus_bytes[3-g_byte];
+        // On any read client error with no active write this beat, zeroize so
+        // partial/garbage key material never persists.
+        end else if (kv_key_error != KV_SUCCESS) begin
+          kv_key_masked[g_dword][g_byte] <= '0;
+          kv_key_mask  [g_dword][g_byte] <= '0;
         end
       end
     end
@@ -571,8 +605,8 @@ always_ff @(posedge clk or negedge reset_n) begin
   end
   else if (kv_key_done && (kv_key_error == KV_SUCCESS)) begin //key is copied, drive valid to aes
     keymgr_key.valid <= '1;
-    keymgr_key.key[0] <= kv_key_reg;
-    keymgr_key.key[1] <= '0;
+    keymgr_key.key[0] <= kv_key_masked; //share 0: key ^ mask
+    keymgr_key.key[1] <= kv_key_mask;   //share 1: mask
   end
 end
 
@@ -653,7 +687,7 @@ u_caliptra_prim_trivium
     .clk_i(clk),
     .rst_ni(reset_n),
 
-    .en_i                (edn_req.edn_req),
+    .en_i                (edn_req.edn_req | kv_key_write_en),
     .allow_lockup_i      ('0), // Not used.
     .seed_en_i           (trivium_seed_en),
     .seed_done_o         (), // Not used.

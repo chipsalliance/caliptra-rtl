@@ -233,13 +233,14 @@ always_comb begin : keyvault_ctrl
         key_entry_dest_valid_next[entry] = '0; 
         key_entry_last_dword_next[entry] = '0;
 
-        //Qualify lock signals as they are on fw upd reset and create RDC violations if allowed to reset asynchronously
+        // Mask locks to 0 during fw update reset window (RDC: equals reset value, no crossing edge).
+        // Writes are blocked/errored separately below via fw_update_rst_window (fail-closed).
         lock_wr_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_wr.value & ~fw_update_rst_window;
         lock_use_q[entry] = kv_reg_hwif_out.KEY_CTRL[entry].lock_use.value & ~fw_update_rst_window;
         
         for (int client = 0; client < KV_NUM_WRITE; client++) begin
             key_entry_ctrl_we[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].write_en & 
-                                        ~lock_wr_q[entry] & ~lock_use_q[entry]; 
+                                        ~lock_wr_q[entry] & ~lock_use_q[entry] & ~fw_update_rst_window; 
             key_entry_dest_valid_next[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].write_en ? kv_write[client].write_dest_valid : '0;
             //store the final offset on the last write cycle, we'll use that to signal last dword on reads
             key_entry_last_dword_next[entry] |= (kv_write[client].write_entry == entry) & kv_write[client].write_en ? kv_write[client].write_offset : '0;
@@ -268,7 +269,7 @@ always_comb begin : keyvault_ctrl
             key_entry_next[entry][dword] = '0;
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 key_entry_we[entry][dword] |= ((((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
-                                                kv_write[client].write_en) | flush_keyvault) & 
+                                                kv_write[client].write_en & ~fw_update_rst_window) | flush_keyvault) & 
                                               ((~lock_wr_q[entry] & ~lock_use_q[entry]) | debugUnlock_or_scan_mode_switch));
                 key_entry_next[entry][dword] |= flush_keyvault ? debug_value :
                                                 kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_data : '0;
@@ -293,7 +294,7 @@ always_comb begin : keyvault_readmux
         for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
             for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
                 kv_rd_resp[client].read_data |= (kv_read[client].read_entry == entry) & (kv_read[client].read_offset == dword) &
-                                                ~lock_use_q[entry] & kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client] ? 
+                                                ~lock_use_q[entry] & kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client] & ~fw_update_rst_window ?
                                                  kv_reg_hwif_out.KEY_ENTRY[entry][dword].data.value : '0;
             end
         //signal last when reading the last dword
@@ -302,7 +303,7 @@ always_comb begin : keyvault_readmux
         kv_rd_resp[client].entry_last_dword |= (kv_read[client].read_entry == entry) ?
                                                kv_reg_hwif_out.KEY_CTRL[entry].last_dword.value : '0;
         kv_rd_resp[client].error |= (kv_read[client].read_entry == entry) & 
-                                    (lock_use_q[entry] | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client]);
+                                    (lock_use_q[entry] | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client] | fw_update_rst_window);
         end
     end
 end
@@ -313,7 +314,7 @@ always_comb begin : keyvault_write_resp
         kv_wr_resp[client].error = '0;
         for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
             kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & kv_write[client].write_en &
-                                        (key_entry_clear[entry] | lock_wr_q[entry] | lock_use_q[entry]);
+                                        (key_entry_clear[entry] | lock_wr_q[entry] | lock_use_q[entry] | fw_update_rst_window);
         end
     end
 end
