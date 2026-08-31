@@ -886,14 +886,24 @@ module caliptra_top_sva
   else $display("SVA ERROR: [MLDSA verify] VERIFY_PASS updated after MLDSA_STATUS.VALID was raised");
 
   // A zeroize is mandatory between ABR commands and must always clear the
-  // previous verification result, so a VERIFY that aborts early can never
-  // inherit a pass from a previous run.
+  // previous verification result.
   MLDSA_verify_pass_clear_on_zeroize: assert property (
     @(posedge `SVA_RDC_CLK)
     disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
     (`ABR_PATH.zeroize |=> !`ABR_PATH.mldsa_verify_pass_reg)
   )
   else $display("SVA ERROR: [MLDSA verify] VERIFY_PASS not cleared on zeroize");
+
+  // Independently of zeroize, the flop is cleared when a VERIFY starts and when
+  // a VERIFY aborts early on a rejected signature. Early-abort paths never
+  // assert mldsa_verify_res_we, so this clear is what guarantees a VERIFY can
+  // never inherit the verdict of a previous run.
+  MLDSA_verify_pass_clear_on_verify_start: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    ((`ABR_PATH.set_verify_valid || `ABR_PATH.clear_verify_valid) |=> !`ABR_PATH.mldsa_verify_pass_reg)
+  )
+  else $display("SVA ERROR: [MLDSA verify] VERIFY_PASS not cleared at VERIFY start/abort");
 
   // ECC_VERIFY_R matches the supplied signature R, i.e. the condition that
   // ECC_STATUS.VERIFY_PASS claims to have checked
