@@ -384,7 +384,7 @@ module caliptra_top_tb_services
     //         8'hba        - Enable scan mode with KV write
     //         8'hbb        - Enable KV boot phase transition enforcement
     //         8'hbc        - Force MuBi4 glitch on boot_flow_fmc (invalid encoding, auto-release after 5 clocks)
-    //         8'hbd        - Unused
+    //         8'hbd        - Arm KV fw-update-reset alignment hook; flavor in WriteData[15:8]: 0=HMAC write_en (Case A), 1=HMAC digest_valid_new (Case B), 2=DOE write_en (Case C), 3=HMAC kv_key_write_en / KEY read (Case D) (TB-only, directed_kv_fw_update_reset_abort)
     //         8'hbe        - Force shadow storage bit-flip on ICCM fmc_start shadow register (auto-release after 5 clocks)
     //         8'hbf        - Unused
     //         8'hc0:       - Inject MLDSA_SEED to kv_key register
@@ -1885,6 +1885,75 @@ endgenerate //IV_NO
             release `CPTRA_TOP_PATH.soc_ifc_top1.u_shadow_fmc_start.shadow_reg.q[0];
             shadow_flip_cycle <= '0;
             $display("TB: Released shadow storage force (auto)");
+        end
+    end
+
+    // ------------------------------------------------------------------
+    // KV firmware-update-reset alignment hook for directed_kv_fw_update_reset_abort
+    // -- TB ONLY. C-level timing of the short producer->KV write burst is fragile,
+    // so this hook provides DETERMINISTIC alignment: once armed it waits for a
+    // specific in-flight KV-write event and then drives a firmware-update /
+    // core-only reset by forcing the boot FSM's fw_update_rst input for 5 cycles
+    // (self-sustaining window governed by FW_UPDATE_RESET_WAIT_CYCLES), landing the
+    // reset precisely while the multiword KV write is in flight. Auto-releases.
+    //
+    // Command 0xbd; the flavor byte WriteData[15:8] selects the trigger event:
+    //   0 Case A: kv_write[KV_WRITE_IDX_HMAC].write_en (in-flight HMAC beat to a
+    //             LOCKED slot) -> exercises the kv_fsm abort_i path.
+    //   1 Case B: hmac.hmac_inst.core.digest_valid_new (asserted in the HMAC core's
+    //             CTRL_DONE state, one cycle BEFORE the KV write burst) -> raises the
+    //             window before the first beat so the whole UNLOCKED-slot burst is
+    //             blocked by kv.sv & ~fw_update_rst_window.
+    //   2 Case C: kv_write[KV_WRITE_IDX_DOE].write_en (in-flight DOE beat to a LOCKED
+    //             slot) -> exercises the central kv.sv gating for a producer that
+    //             does NOT use kv_fsm (cannot self-abort).
+    //   3 Case D: hmac.hmac_inst.kv_key_write_en (in-flight KV->HMAC KEY read beat;
+    //             asserted per dword as the read client streams KV data into
+    //             HMAC512_KEY) -> raises the window mid-read so kv.sv blocks read
+    //             data / asserts kv_rd_resp.error and the read client aborts with
+    //             KV_READ_FAIL, driving KEY.hwclr so no partial key remains.
+    // Arm from C with: lsu_write_32(STDOUT, (flavor << 8) | 0xbd);
+    logic       kv_fwrst_armed;
+    logic [7:0] kv_fwrst_flavor;
+    logic [63:0] kv_fwrst_force_cycle;
+    logic        kv_fwrst_trigger;
+    initial begin
+        kv_fwrst_armed = 1'b0;
+        kv_fwrst_flavor = 8'h0;
+        kv_fwrst_force_cycle = '0;
+    end
+    // Select the trigger event for the armed flavor.
+    always_comb begin
+        case (kv_fwrst_flavor)
+            8'h1:    kv_fwrst_trigger = `CPTRA_TOP_PATH.hmac.hmac_inst.core.digest_valid_new;
+            8'h2:    kv_fwrst_trigger = `CPTRA_TOP_PATH.kv_write[KV_WRITE_IDX_DOE].write_en;
+            8'h3:    kv_fwrst_trigger = `CPTRA_TOP_PATH.hmac.hmac_inst.kv_key_write_en;
+            default: kv_fwrst_trigger = `CPTRA_TOP_PATH.kv_write[KV_WRITE_IDX_HMAC].write_en;
+        endcase
+    end
+    always @(posedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            kv_fwrst_armed <= 1'b0;
+            kv_fwrst_flavor <= 8'h0;
+            kv_fwrst_force_cycle <= '0;
+        end
+        else begin
+            if ((WriteData[7:0] == 8'hbd) && mailbox_write) begin
+                kv_fwrst_armed <= 1'b1;
+                kv_fwrst_flavor <= WriteData[15:8];
+                $display("TB: KV fw-update-reset hook armed (flavor=%0d)", WriteData[15:8]);
+            end
+            else if (kv_fwrst_armed && kv_fwrst_trigger) begin
+                kv_fwrst_armed <= 1'b0;
+                force `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_boot_fsm.fw_update_rst = 1'b1;
+                kv_fwrst_force_cycle <= cycleCnt;
+                $display("TB: KV write in flight (flavor=%0d) -- forcing fw_update_rst", kv_fwrst_flavor);
+            end
+            else if (kv_fwrst_force_cycle != '0 && cycleCnt == kv_fwrst_force_cycle + 'd5) begin
+                release `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_boot_fsm.fw_update_rst;
+                kv_fwrst_force_cycle <= '0;
+                $display("TB: Released fw_update_rst force (auto)");
+            end
         end
     end
 

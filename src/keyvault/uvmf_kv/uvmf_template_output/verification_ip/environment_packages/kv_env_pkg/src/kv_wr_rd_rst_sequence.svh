@@ -38,6 +38,9 @@ class kv_wr_rd_rst_sequence #(
     typedef kv_rst_warm_rst_sequence kv_rst_warm_rst_sequence_t;
     kv_rst_warm_rst_sequence_t kv_rst_agent_warm_rst_seq;
 
+    typedef kv_rst_fw_upd_rst_sequence kv_rst_fw_upd_rst_sequence_t;
+    kv_rst_fw_upd_rst_sequence_t kv_rst_agent_fw_upd_rst_seq;
+
     typedef kv_write_key_entry_sequence kv_write_agent_key_entry_sequence_t;
     kv_write_agent_key_entry_sequence_t hmac_write_seq;
     kv_write_agent_key_entry_sequence_t mlkem_write_seq;
@@ -70,6 +73,8 @@ class kv_wr_rd_rst_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST poweron seq");
         kv_rst_agent_warm_rst_seq = kv_rst_warm_rst_sequence_t::type_id::create("kv_rst_agent_warm_rst_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST poweron seq");
+        kv_rst_agent_fw_upd_rst_seq = kv_rst_fw_upd_rst_sequence_t::type_id::create("kv_rst_agent_fw_upd_rst_seq");
+        if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV RST fw-upd seq");
         
         hmac_write_seq = kv_write_agent_key_entry_sequence_t::type_id::create("hmac_write_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV WRITE seq");
@@ -208,11 +213,24 @@ class kv_wr_rd_rst_sequence #(
                 repeat(10) mlkem_msg_read_seq.start(configuration.kv_mlkem_msg_read_agent_config.sequencer);
             end
             begin
-                kv_rst_agent_warm_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
-                reset_phase.trigger;
-                if(!kv_rst_agent_warm_rst_seq.req.assert_rst) begin
-                    reset_phase.reset;
-                    active_phase.trigger;
+                // Randomly inject either a warm reset (resets the KV) or a
+                // fw-update-reset window (KV stays ALIVE and error-responds to
+                // in-flight accesses). The window path keeps traffic active
+                // because assert_rst is 0 (handled by the !assert_rst branch).
+                if ($urandom_range(0,1) == 0) begin
+                    kv_rst_agent_warm_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
+                    reset_phase.trigger;
+                    if(!kv_rst_agent_warm_rst_seq.req.assert_rst) begin
+                        reset_phase.reset;
+                        active_phase.trigger;
+                    end
+                end else begin
+                    kv_rst_agent_fw_upd_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
+                    reset_phase.trigger;
+                    if(!kv_rst_agent_fw_upd_rst_seq.req.assert_rst) begin
+                        reset_phase.reset;
+                        active_phase.trigger;
+                    end
                 end
             end
 

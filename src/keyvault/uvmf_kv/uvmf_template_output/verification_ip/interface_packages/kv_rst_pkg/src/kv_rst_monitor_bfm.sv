@@ -110,12 +110,26 @@ end
     reg debug_locked_o = 'b0;
     reg cptra_in_debug_scan_mode_o = 'b0;
 
+    // 1-clock-delayed (flopped) copy of the fw-update-reset window pin. Free-running
+    // off clk_i so it lags the live pin by exactly one clock. Delivered to the
+    // predictor as assert_fw_upd_rst_q and used on the WRITE path only, because the
+    // kv_write monitor emits its beats one clock late ("mimic design"); this flop
+    // re-aligns the window to that delayed write timeline. Reads (kv_read monitor is
+    // 0-delay) keep using the live assert_fw_upd_rst value.
+    reg fw_update_rst_window_q = 'b0;
+    always @(posedge clk_i) fw_update_rst_window_q <= fw_update_rst_window_i;
+    // Last-emitted copy of the flopped window, so a change in the DELAYED window
+    // (one clock after the live pin) also triggers a monitor emission -- otherwise
+    // the predictor would never be told that assert_fw_upd_rst_q updated.
+    reg fw_update_rst_window_q_o = 'b0;
+
     function bit any_signal_changed();
 
       return  |(cptra_pwrgood_i ^ cptra_pwrgood_o) ||
               |(rst_b_i ^ rst_b_o) ||
               |(core_only_rst_b_i ^ core_only_rst_b_o) ||
               |(fw_update_rst_window_i ^ fw_update_rst_window_o) ||
+              |(fw_update_rst_window_q ^ fw_update_rst_window_q_o) ||
               |(debug_locked_i ^ debug_locked_o) ||
               |(cptra_in_debug_scan_mode_i ^ cptra_in_debug_scan_mode_o);
   
@@ -215,6 +229,7 @@ end
     rst_b_o                <= rst_b_i;
     core_only_rst_b_o      <= core_only_rst_b_i;
     fw_update_rst_window_o <= fw_update_rst_window_i;
+    fw_update_rst_window_q_o <= fw_update_rst_window_q;
     debug_locked_o         <= debug_locked_i;
     cptra_in_debug_scan_mode_o <= cptra_in_debug_scan_mode_i;
 
@@ -224,6 +239,8 @@ end
     kv_rst_monitor_struct.wait_cycles = 0;
     kv_rst_monitor_struct.debug_mode = debug_locked_i;
     kv_rst_monitor_struct.scan_mode = cptra_in_debug_scan_mode_i & !debug_locked_i;
+    kv_rst_monitor_struct.assert_fw_upd_rst = fw_update_rst_window_i;
+    kv_rst_monitor_struct.assert_fw_upd_rst_q = fw_update_rst_window_q;
     // pragma uvmf custom do_monitor end
   endtask         
   
