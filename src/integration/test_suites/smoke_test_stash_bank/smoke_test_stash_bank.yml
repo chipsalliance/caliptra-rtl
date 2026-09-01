@@ -13,5 +13,9 @@
 # limitations under the License.
 #
 ---
+# +CALIPTRA_TEST_STASH_BANK gates the SoC BFM's write_stash_bank() hook
+# (caliptra_top_tb_soc_bfm.sv) that this test's FW-side checks depend on.
+plusargs:
+  - +CALIPTRA_TEST_STASH_BANK
 seed: 1
 testname: smoke_test_stash_bank

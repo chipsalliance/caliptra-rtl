@@ -65,7 +65,8 @@ import caliptra_top_tb_pkg::*; #(
     input logic ready_for_mb_processing,
     input logic mailbox_data_avail,
 
-    input  var  ras_test_ctrl_t ras_test_ctrl,
+    input  var  ras_test_ctrl_t   ras_test_ctrl,
+    input  var  stash_test_ctrl_t stash_test_ctrl,
 
     output logic [63:0] generic_input_wires,
 
@@ -361,11 +362,11 @@ import caliptra_top_tb_pkg::*; #(
                         @(posedge cptra_rst_b);
                         $display("[stash_bank] BFM: STDOUT handler active\n");
                         while (cptra_rst_b) begin
-                            if (ras_test_ctrl.do_stash_bad_pauser_writes) begin
+                            if (stash_test_ctrl.do_stash_bad_pauser_writes) begin
                                 write_stash_bank_bad_pauser();
                                 generic_input_wires = {32'h0, STASH_BAD_PAUSER_DONE};
                             end
-                            else if (ras_test_ctrl.do_stash_post_cptra_lock_writes) begin
+                            else if (stash_test_ctrl.do_stash_post_cptra_lock_writes) begin
                                 write_stash_bank_post_cptra_lock();
                                 generic_input_wires = {32'h0, STASH_POST_CPTRA_LOCK_DONE};
                             end
@@ -924,37 +925,23 @@ task automatic write_stash_bank();
     $display("[stash_bank] BFM: slot 0 dword %0d written with default AXI USER 0xFFFF_FFFF",
              STASH_DEFAULT_USER_DWORD);
 
-    // 3b. Negative-path (CALIPTRA_TEST_STASH_BANK_NEG): attempt to clear a
-    //     randomly selected lock bit by writing 0 to that bit in
-    //     STASH_BANK_SOC_LOCK (wr_data = ~(1 << slot)). W1S semantics must
-    //     ignore zero data; slot_locked mirror unchanged.
-    //     Must run before STASH_END_STASH (soc_ifc_top gates SOC_LOCK swwe
-    //     once end_stash is set).
-    if ($test$plusargs("CALIPTRA_TEST_STASH_BANK_NEG")) begin
-        int unlock_attempt_slot;
-        logic [31:0] unlock_attempt_data;
-        unlock_attempt_slot = $urandom_range(num_slots - 1, 0);
-        // W1S: only 1-bits take effect; bit unlock_attempt_slot is 0 in wr_data.
-        unlock_attempt_data = ~(32'h1 << unlock_attempt_slot);
-        $display("[stash_bank] BFM: attempting STASH_BANK_SOC_LOCK write of 0x%08x to clear slot %0d (W1S - expected to be ignored)",
-                 unlock_attempt_data, unlock_attempt_slot);
-        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_STASH_BANK_SOC_LOCK),
-                                      .user(STASH_PAUSER), .data(unlock_attempt_data),
+    // 2b. Negative-path (CALIPTRA_TEST_STASH_BANK_NEG), pre-lock: bad-PAUSER
+    //     write attempt while the target slot is still unlocked and
+    //     end_stash is clear, so a broken/missing PAUSER filter is actually
+    //     caught. (Previously this ran from write_stash_bank_negative()
+    //     *after* step 3's lock and STASH_END_STASH were both already
+    //     active, which independently reject the write regardless of the
+    //     PAUSER filter -- the test still "passed" even with PAUSER
+    //     filtering removed.) 0xCAFE_BABE matches none of the five locked
+    //     valid_mbox_users[] entries (0xAAAA_BBBB, 0xAAAA_BBB1..4) and is
+    //     not CPTRA_DEF_MBOX_VALID_AXI_USER. Slot 1 dword 0 already holds
+    //     its step-2 pattern; the C test's full-bank pattern check (step B)
+    //     verifies this write did not land.
+    if ($test$plusargs("CALIPTRA_TEST_STASH_BANK_NEG") && (num_slots > 1)) begin
+        $display("[stash_bank] BFM: attempting pre-lock write with mismatched AXI USER (expected to be silently dropped by PAUSER filter)");
+        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_STASH_BANK_SLOT_DATA_0 + 4*26),
+                                      .user(32'hCAFE_BABE), .data(32'hBAAD_F00D),
                                       .resp(local_wresp), .resp_user(local_buser));
-
-        // 3c. Post-SOC-lock, pre-end_stash: rewrite a locked slot's data.
-        //     end_stash is not yet set, so rejection must be due to
-        //     STASH_BANK_SOC_LOCK[slot] only (not end_stash).
-        begin
-            int soc_lock_rewrite_slot;
-            soc_lock_rewrite_slot = $urandom_range(num_slots - 1, 0);
-            $display("[stash_bank] BFM: attempting pre-end_stash rewrite of slot %0d dword 0 with 0xFEED_FACE (SOC_LOCK only - expected to be dropped)",
-                     soc_lock_rewrite_slot);
-            m_axi_bfm_if.axi_write_single(
-                .addr(`CLP_SOC_IFC_REG_STASH_BANK_SLOT_DATA_0 + 4*(soc_lock_rewrite_slot*26 + 0)),
-                .user(STASH_PAUSER), .data(32'hFEED_FACE),
-                .resp(local_wresp), .resp_user(local_buser));
-        end
     end
 
 `ifdef CALIPTRA_MODE_SUBSYSTEM
@@ -976,13 +963,53 @@ task automatic write_stash_bank();
                                   .user(STASH_PAUSER), .data(32'hCAFE_F00D),
                                   .resp(local_wresp), .resp_user(local_buser));
 `else
-    // 3. Lock the populated slots via STASH_BANK_SOC_LOCK (W1S).
+    // 3. Lock the populated slots via STASH_BANK_SOC_LOCK (W1S). Must
+    //    happen *before* the negative-path checks below: they rely on the
+    //    slots already being locked to be meaningful (a W1S-clear attempt
+    //    against an unlocked bit isn't testing anything, and a rewrite
+    //    attempt against an unlocked slot would be legitimately accepted).
     m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_STASH_BANK_SOC_LOCK),
                                   .user(STASH_PAUSER),
                                   .data((32'h1 << num_slots) - 32'h1),
                                   .resp(local_wresp), .resp_user(local_buser));
     $display("[stash_bank] BFM: STASH_BANK_SOC_LOCK = 0x%0h", (1 << num_slots) - 1);
 `endif
+
+    // 3b. Negative-path (CALIPTRA_TEST_STASH_BANK_NEG): attempt to clear a
+    //     randomly selected lock bit by writing 0 to that bit in
+    //     STASH_BANK_SOC_LOCK (wr_data = ~(1 << slot)). All slots are
+    //     already locked (step 3 above), so this is a genuine W1S-clear
+    //     test: writing a 0 to an already-set bit must leave it set.
+    //     Must run before STASH_END_STASH (soc_ifc_top gates SOC_LOCK swwe
+    //     once end_stash is set).
+    if ($test$plusargs("CALIPTRA_TEST_STASH_BANK_NEG")) begin
+        int unlock_attempt_slot;
+        logic [31:0] unlock_attempt_data;
+        unlock_attempt_slot = $urandom_range(num_slots - 1, 0);
+        // W1S: only 1-bits take effect; bit unlock_attempt_slot is 0 in wr_data.
+        unlock_attempt_data = ~(32'h1 << unlock_attempt_slot);
+        $display("[stash_bank] BFM: attempting STASH_BANK_SOC_LOCK write of 0x%08x to clear slot %0d (W1S - expected to be ignored)",
+                 unlock_attempt_data, unlock_attempt_slot);
+        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_STASH_BANK_SOC_LOCK),
+                                      .user(STASH_PAUSER), .data(unlock_attempt_data),
+                                      .resp(local_wresp), .resp_user(local_buser));
+
+        // 3c. Post-SOC-lock, pre-end_stash: rewrite a locked slot's data.
+        //     Every slot is locked as of step 3, so rejection here is
+        //     deterministic regardless of which slot gets randomized;
+        //     end_stash is not yet set, so it's attributable to
+        //     STASH_BANK_SOC_LOCK[slot] only (not end_stash).
+        begin
+            int soc_lock_rewrite_slot;
+            soc_lock_rewrite_slot = $urandom_range(num_slots - 1, 0);
+            $display("[stash_bank] BFM: attempting pre-end_stash rewrite of slot %0d dword 0 with 0xFEED_FACE (SOC_LOCK only - expected to be dropped)",
+                     soc_lock_rewrite_slot);
+            m_axi_bfm_if.axi_write_single(
+                .addr(`CLP_SOC_IFC_REG_STASH_BANK_SLOT_DATA_0 + 4*(soc_lock_rewrite_slot*26 + 0)),
+                .user(STASH_PAUSER), .data(32'hFEED_FACE),
+                .resp(local_wresp), .resp_user(local_buser));
+        end
+    end
 
     // 4. Assert STASH_END_STASH (W1S, sticky).
     m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_STASH_END_STASH),
@@ -1029,11 +1056,15 @@ endtask
 //==========================================================================
 // Negative-path additional ops for smoke_test_stash_bank_negative.
 // Runs after write_stash_bank() completes. Attempts (a) post-lock rewrite
-// of slot 0 dword 0, (b) a write with a mismatched AXI USER, (c) a write
-// of 0 to STASH_END_STASH after end_stash is latched, (d) a SoC write to
-// STASH_BANK_CPTRA_LOCK, and (e) SoC reads of all three write-only lock
-// registers. All must be silently dropped, ignored, or read as 0; the C
-// test verifies uC-side behavior.
+// of slot 0 dword 0, (b) a write of 0 to STASH_END_STASH after end_stash is
+// latched, (c) a SoC write to STASH_BANK_CPTRA_LOCK, and (d) SoC reads of
+// all three write-only lock registers. (The mismatched-AXI-USER/PAUSER
+// check now runs earlier, from write_stash_bank() itself, before the slot
+// is locked and before end_stash is set -- see step 2b there. Running it
+// here, after both those gates are already active, would test nothing:
+// they alone reject the write independent of PAUSER filtering.) All must
+// be silently dropped, ignored, or read as 0; the C test verifies uC-side
+// behavior.
 //==========================================================================
 task automatic write_stash_bank_negative();
     axi_resp_e   local_wresp;
@@ -1051,23 +1082,14 @@ task automatic write_stash_bank_negative();
                                   .user(STASH_PAUSER), .data(32'hDEAD_BEEF),
                                   .resp(local_wresp), .resp_user(local_buser));
 
-    // (b) Bad-PAUSER write: 0xCAFE_BABE matches none of the five locked
-    //     valid_mbox_users[] entries (0xAAAA_BBBB, 0xAAAA_BBB1..4) and is not
-    //     CPTRA_DEF_MBOX_VALID_AXI_USER, so the stash PAUSER filter must drop
-    //     this write.
-    $display("[stash_bank] BFM: attempting write with mismatched AXI USER (expected to be silently dropped)");
-    m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_STASH_BANK_SLOT_DATA_0 + 4*26),
-                                  .user(32'hCAFE_BABE), .data(32'hBAAD_F00D),
-                                  .resp(local_wresp), .resp_user(local_buser));
-
-    // (c) Attempt to clear STASH_END_STASH by writing 0 after it is already
+    // (b) Attempt to clear STASH_END_STASH by writing 0 after it is already
     //     latched. W1S ignores zero data; end_stash mirror must stay set.
     $display("[stash_bank] BFM: attempting STASH_END_STASH write of 0 (W1S - expected to be ignored)");
     m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_STASH_END_STASH),
                                   .user(STASH_PAUSER), .data(32'h0000_0000),
                                   .resp(local_wresp), .resp_user(local_buser));
 
-    // (d) SoC write to STASH_BANK_CPTRA_LOCK must be dropped (Caliptra-only;
+    // (c) SoC write to STASH_BANK_CPTRA_LOCK must be dropped (Caliptra-only;
     //     soc_ifc_top.sv gates swwe on ~soc_req).
     $display("[stash_bank] BFM: attempting SoC write to STASH_BANK_CPTRA_LOCK (expected to be silently dropped)");
     m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_STASH_BANK_CPTRA_LOCK),
@@ -1080,7 +1102,7 @@ task automatic write_stash_bank_negative();
         $error("[stash_bank] BFM: SoC write to STASH_BANK_CPTRA_LOCK landed (STATUS=0x%08x)", local_status);
     end
 
-    // (e) All three lock registers are write-only; SoC reads must return 0.
+    // (d) All three lock registers are write-only; SoC reads must return 0.
     $display("[stash_bank] BFM: reading write-only lock registers from SoC (expect 0)");
     m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_STASH_BANK_SOC_LOCK),
                                   .user(STASH_PAUSER), .data(local_rdata),

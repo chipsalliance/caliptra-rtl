@@ -131,6 +131,7 @@ module caliptra_top_tb (
     logic [31:0] strap_ss_strap_generic_3;
 
     ras_test_ctrl_t ras_test_ctrl;
+    stash_test_ctrl_t stash_test_ctrl;
     axi_complex_ctrl_t axi_complex_ctrl;
     logic [63:0] generic_input_wires;
     logic        etrng0_req;
@@ -201,6 +202,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .mailbox_data_avail(mailbox_data_avail),
 
     .ras_test_ctrl(ras_test_ctrl),
+    .stash_test_ctrl(stash_test_ctrl),
 
     .generic_input_wires(generic_input_wires),
 
@@ -452,6 +454,7 @@ caliptra_top_tb_services #(
 
     // TB Controls
     .ras_test_ctrl(ras_test_ctrl),
+    .stash_test_ctrl(stash_test_ctrl),
     .cycleCnt(cycleCnt),
     .axi_complex_ctrl(axi_complex_ctrl),
 

@@ -349,23 +349,13 @@ vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
 
 ############ TEST Simulation ###############################
 
-# Stash measurement register bank smoke tests (RFC #673) pass a runtime
-# plusarg to opt into the SoC BFM's write_stash_bank() flow. Appended to
-# RUN_PLUSARGS when TESTNAME matches (even if RUN_PLUSARGS is also set on
-# the make command line). Pass extra plusargs via RUN_PLUSARGS explicitly.
+# Extra runtime plusargs (e.g. +CALIPTRA_TEST_STASH_BANK for the RFC #673
+# stash-bank smoke tests) are declared per-test in that test's own
+# <testname>.yml under plusargs: (same convention as e.g. smoke_test_doe.yml's
+# +CLP_OCP_LOCK_DIS), not pattern-matched here from TESTNAME. The regression
+# runner reads that yml and passes them through via RUN_PLUSARGS on the
+# command line.
 RUN_PLUSARGS ?=
-ifneq (,$(findstring smoke_test_stash_bank,$(TESTNAME)))
-RUN_PLUSARGS += +CALIPTRA_TEST_STASH_BANK
-endif
-ifneq (,$(findstring smoke_test_stash_bank_negative,$(TESTNAME)))
-RUN_PLUSARGS += +CALIPTRA_TEST_STASH_BANK_NEG
-endif
-ifneq (,$(findstring smoke_test_stash_bank_cptra_lock,$(TESTNAME)))
-RUN_PLUSARGS += +CALIPTRA_TEST_STASH_BANK_CPTRA_LOCK
-endif
-ifneq (,$(findstring smoke_test_stash_bank_rst,$(TESTNAME)))
-RUN_PLUSARGS += +CALIPTRA_TEST_STASH_BANK_RST
-endif
 
 verilator: program.hex verilator-build
 	set -eo pipefail; ./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS) $(RUN_PLUSARGS) 2>&1 | tee verilator_sim.log
