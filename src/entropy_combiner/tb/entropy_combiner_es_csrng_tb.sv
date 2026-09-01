@@ -53,6 +53,20 @@ module entropy_combiner_es_csrng_tb
   localparam int AHB_DATA_W      = 32;
   localparam int RNG_DUTY_CYCLE  = 4;
 
+  // Combiner FSM state encodings, mirrored from entropy_combiner_pkg.
+  //
+  // That package is analyzed only into the RTL library (the entropy_combiner
+  // provider lists it under its rtl target). This TB is compiled into the tb
+  // library, so it cannot name entropy_combiner_pkg -- and adding a second copy
+  // under a tb target would compile the package twice, giving RTL and TB
+  // distinct-but-identically-named enum types that VCS refuses to compare or
+  // assign. Comparing against the raw sparse encodings avoids the type
+  // dependency entirely; the forced value is cast to the DUT's own type.
+  localparam logic [8:0] COMB_ST_IDLE  = 9'b011110101;
+  localparam logic [8:0] COMB_ST_ERROR = 9'b001110011;
+  // Not a valid code in the Hamming-distance-3 encoding, so it must trap.
+  localparam logic [8:0] COMB_ST_BOGUS = 9'b101010101;
+
   // itrng InitialSeeds (raw es_bits in bypass mode).
   localparam logic [SEED_W-1:0] IS0 =
     384'h33f63b65f57ad68765693560e743cc5010518e4bf4ecbeba71dc56aaa08b394311731d9df763fc5d27e4ed3e4b7de947;
@@ -577,18 +591,25 @@ module entropy_combiner_es_csrng_tb
       rng0_go = 1'b1; rng1_go = 1'b1;
 
       // Wait until the combiner FSM is mid-operation (has left idle).
-      wait (u_combiner.state_q != entropy_combiner_pkg::combiner_st_idle);
+      wait (u_combiner.state_q != COMB_ST_IDLE);
 
       // Silence the combiner's CM assertions during the deliberate fault, force an
       // undefined 9-bit state code (not any valid enum), then release.
+      //
+      // state_q is enum-typed and the TB cannot name entropy_combiner_pkg (see
+      // above), so an enum-typed RHS is impossible here: a plain vector trips
+      // Warning-[ENUMASSIGN], and type(u_combiner.state_q) is rejected because
+      // the type operator forbids hierarchical references. Forcing a single-item
+      // concatenation makes the target an unsigned packed vector instead of the
+      // enum, which is a legal force lvalue per IEEE 1800 and needs no cast.
       $assertoff(0, u_combiner);
-      force u_combiner.state_q = entropy_combiner_pkg::entropy_combiner_state_e'(9'b101010101);
+      force {u_combiner.state_q} = COMB_ST_BOGUS;
       repeat (2) @(posedge clk_tb);
       release u_combiner.state_q;
 
       // 1) The FSM must trap to combiner_st_error and hold there.
       repeat (5) @(posedge clk_tb);
-      if (u_combiner.state_q !== entropy_combiner_pkg::combiner_st_error) begin
+      if (u_combiner.state_q !== COMB_ST_ERROR) begin
         error_ctr = error_ctr + 1;
         $display("*** [%s] FAIL: FSM did not trap to combiner_st_error (state=%b)",
                  tag, u_combiner.state_q);
@@ -602,7 +623,7 @@ module entropy_combiner_es_csrng_tb
           $display("*** [%s] FAIL: es_ack asserted after FSM error", tag);
           waited = 500;
         end
-        if (u_combiner.state_q !== entropy_combiner_pkg::combiner_st_error) begin
+        if (u_combiner.state_q !== COMB_ST_ERROR) begin
           error_ctr = error_ctr + 1;
           $display("*** [%s] FAIL: FSM left error state without reset (state=%b)",
                    tag, u_combiner.state_q);
@@ -612,7 +633,7 @@ module entropy_combiner_es_csrng_tb
 
       // 3) Recovery only via reset.
       reset_dut();
-      if (u_combiner.state_q !== entropy_combiner_pkg::combiner_st_idle) begin
+      if (u_combiner.state_q !== COMB_ST_IDLE) begin
         error_ctr = error_ctr + 1;
         $display("*** [%s] FAIL: FSM not idle after reset (state=%b)",
                  tag, u_combiner.state_q);
