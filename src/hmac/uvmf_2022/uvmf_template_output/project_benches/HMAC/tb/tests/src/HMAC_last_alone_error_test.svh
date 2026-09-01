@@ -1,22 +1,23 @@
-// ==============================================================================
-// =====            Mentor Graphics UK Ltd                                  =====
-// =====            Rivergate, London Road, Newbury BERKS RG14 2QB          =====
-// ==============================================================================
-//! @file
-//  Project                : HMAC_2019_4
-//  Unit                   : HMAC_last_alone_error_test
-//! @brief  Directed test that exercises the LAST-alone CTRL write so the
-//!         hmac.last_alone_error path raises error2_sts and the
-//!         last_alone_ignored covergroup bin gets hit.
-//-------------------------------------------------------------------------------
-//-------------------------------------------------------------------------------
-// ==============================================================================
-// This unpublished work contains proprietary information.
-// All right reserved. Supplied in confidence and must not be copied, used or disclosed
-// for any purpose without express written permission.
-// 2019 @ Copyright Mentor Graphics UK Ltd
-// ==============================================================================
-
+//----------------------------------------------------------------------
+// SPDX-License-Identifier: Apache-2.0
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+// http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//----------------------------------------------------------------------
+// Description: HMAC_last_alone_error_test
+//   Directed test that exercises the LAST-alone CTRL write so the
+//   hmac.last_alone_error path raises error2_sts and the
+//   last_alone_ignored covergroup bin gets hit.
+//----------------------------------------------------------------------
 
 `ifndef __HMAC_LAST_ALONE_ERROR_TEST
 `define __HMAC_LAST_ALONE_ERROR_TEST
