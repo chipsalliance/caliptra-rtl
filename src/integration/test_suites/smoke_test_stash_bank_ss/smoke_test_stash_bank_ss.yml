@@ -14,7 +14,13 @@
 #
 # Subsystem-mode smoke test: must be run with CALIPTRA_MODE_SUBSYSTEM=1
 # passed to the Makefile, e.g.:
-#   run_caliptra_test.sh smoke_test_stash_bank_ss CALIPTRA_MODE_SUBSYSTEM=1
+#   run_caliptra_test.sh smoke_test_stash_bank_ss CALIPTRA_MODE_SUBSYSTEM=1 RUN_PLUSARGS=+CALIPTRA_TEST_STASH_BANK
+#
+# +CALIPTRA_TEST_STASH_BANK gates the SoC BFM's write_stash_bank() hook
+# (caliptra_top_tb_soc_bfm.sv); without it the BFM never asserts
+# STASH_END_STASH and this test's FW-side poll in Step A spins forever.
 ---
+plusargs:
+  - +CALIPTRA_TEST_STASH_BANK
 seed: 1
 testname: smoke_test_stash_bank_ss

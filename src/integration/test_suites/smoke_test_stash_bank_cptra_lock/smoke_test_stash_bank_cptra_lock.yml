@@ -13,5 +13,11 @@
 # limitations under the License.
 #
 ---
+# +CALIPTRA_TEST_STASH_BANK gates the SoC BFM's write_stash_bank() hook;
+# +CALIPTRA_TEST_STASH_BANK_CPTRA_LOCK makes it take the partial-populate
+# path (write_stash_bank_partial()) instead (caliptra_top_tb_soc_bfm.sv).
+plusargs:
+  - +CALIPTRA_TEST_STASH_BANK
+  - +CALIPTRA_TEST_STASH_BANK_CPTRA_LOCK
 seed: 1
 testname: smoke_test_stash_bank_cptra_lock

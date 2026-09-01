@@ -2931,6 +2931,17 @@ class soc_ifc_predictor #(
                     `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_HIGH)
                 end
             end
+            "STASH_BANK_CPTRA_LOCK": begin
+                // WO, Caliptra/AHB-only; RTL silently drops accesses from the
+                // SoC/AXI side (mirror image of the AHB-side handling of the
+                // SoC/AXI-only stash registers above).
+                if (axi_txn.is_write()) begin
+                    `uvm_info("PRED_AXI", {"Write to Caliptra/AHB-only register: ", axs_reg.get_name(), " via AXI has no effect on system"}, UVM_MEDIUM)
+                end
+                else begin
+                    `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " via AXI has no effect on system"}, UVM_HIGH)
+                end
+            end
             "STASH_BANK_STATUS": begin
                 // RO status register, readable from both AXI and AHB
                 if (axi_txn.is_write()) begin

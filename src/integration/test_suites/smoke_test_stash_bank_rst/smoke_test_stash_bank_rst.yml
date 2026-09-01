@@ -13,5 +13,11 @@
 # limitations under the License.
 #
 ---
+# +CALIPTRA_TEST_STASH_BANK gates the SoC BFM's write_stash_bank() hook;
+# +CALIPTRA_TEST_STASH_BANK_RST makes it skip the stash re-populate on the
+# second (post-warm-reset) boot (caliptra_top_tb_soc_bfm.sv).
+plusargs:
+  - +CALIPTRA_TEST_STASH_BANK
+  - +CALIPTRA_TEST_STASH_BANK_RST
 seed: 1
 testname: smoke_test_stash_bank_rst

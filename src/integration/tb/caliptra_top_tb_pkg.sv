@@ -71,9 +71,14 @@ typedef struct packed {
     logic reset_generic_input_wires;
     logic do_no_lock_access;
     logic do_ooo_access;
+} ras_test_ctrl_t;
+
+// Stash bank (RFC #673) BFM test-control signals. Split out of ras_test_ctrl_t
+// since these are unrelated to smoke_test_ras and its RAS error-injection bundle.
+typedef struct packed {
     logic do_stash_bad_pauser_writes;
     logic do_stash_post_cptra_lock_writes;
-} ras_test_ctrl_t;
+} stash_test_ctrl_t;
 
 typedef struct packed {
     logic fifo_auto_push;
