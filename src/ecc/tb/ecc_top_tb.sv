@@ -611,6 +611,8 @@ module ecc_top_tb
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
     operand_t       verify_r;
+    reg             hw_verify_pass;
+    reg             fw_verify_pass;
     
     begin
       wait_ready();
@@ -639,14 +641,20 @@ module ecc_top_tb
       $display("*** TC %0d reading ECC_CMD_VERIFYING R value", tc_number);
       read_block(`ECC_REG_ECC_VERIFY_R_0);
       verify_r = reg_read_data;
-      
+
+      // Explicit hardware verification result must be read before zeroize clears it
+      read_single_word(`ECC_REG_ECC_STATUS);
+      hw_verify_pass = read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW];
+
       trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
 
       end_time = cycle_ctr - start_time;
       $display("*** verifying test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkey);
 
-      if (verify_r == test_vector.R)
+      fw_verify_pass = (verify_r == test_vector.R);
+
+      if (fw_verify_pass)
         begin
           $display("*** TC %0d verifying successful.", tc_number);
           $display("");
@@ -658,6 +666,14 @@ module ecc_top_tb
           $display("Got:        0x%96x", verify_r);
           $display("");
 
+          error_ctr = error_ctr + 1;
+        end
+
+      // ECC_STATUS.VERIFY_PASS must always agree with the returned ECC_VERIFY_R data
+      if (hw_verify_pass !== fw_verify_pass)
+        begin
+          $display("*** ERROR: TC %0d ECC_STATUS.VERIFY_PASS = %0b but ECC_VERIFY_R comparison = %0b",
+                   tc_number, hw_verify_pass, fw_verify_pass);
           error_ctr = error_ctr + 1;
         end
     end
@@ -677,6 +693,8 @@ module ecc_top_tb
     operand_t     R;
     operand_t     S;
     operand_t     verify_r;
+    reg           hw_verify_pass;
+    reg           fw_verify_pass;
 
     begin
 
@@ -806,10 +824,16 @@ module ecc_top_tb
 
       read_block(`ECC_REG_ECC_VERIFY_R_0);
       verify_r = reg_read_data;
-      
+
+      // Explicit hardware verification result must be read before zeroize clears it
+      read_single_word(`ECC_REG_ECC_STATUS);
+      hw_verify_pass = read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW];
+
       trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
 
-      if (verify_r == test_vector.R)
+      fw_verify_pass = (verify_r == test_vector.R);
+
+      if (fw_verify_pass)
         begin
           $display("*** TC %0d verifying successful.", tc_ctr);
           $display("");
@@ -821,6 +845,14 @@ module ecc_top_tb
           $display("Got:        0x%96x", verify_r);
           $display("");
 
+          error_ctr = error_ctr + 1;
+        end
+
+      // ECC_STATUS.VERIFY_PASS must always agree with the returned ECC_VERIFY_R data
+      if (hw_verify_pass !== fw_verify_pass)
+        begin
+          $display("*** ERROR: TC %0d ECC_STATUS.VERIFY_PASS = %0b but ECC_VERIFY_R comparison = %0b",
+                   tc_ctr, hw_verify_pass, fw_verify_pass);
           error_ctr = error_ctr + 1;
         end
     end
@@ -943,7 +975,15 @@ module ecc_top_tb
 
         read_block(`ECC_REG_ECC_VERIFY_R_0);
         verify_r = reg_read_data;
-        
+
+        // Zeroize must also clear the explicit hardware verification result
+        read_single_word(`ECC_REG_ECC_STATUS);
+        if (read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW] !== 1'b0)
+          begin
+            $display("*** ERROR: TC %0d ECC_STATUS.VERIFY_PASS is set after zeroize.", tc_ctr);
+            error_ctr = error_ctr + 1;
+          end
+
         if (verify_r == 0)
           begin
             $display("*** TC %0d verifying successful.", tc_ctr);

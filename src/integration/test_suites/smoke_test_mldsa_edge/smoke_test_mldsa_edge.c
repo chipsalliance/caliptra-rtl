@@ -632,6 +632,9 @@ void main() {
         offset++;
     }
 
+    // The norm check failure aborted the verification: hardware must report a fail
+    mldsa_check_verify_pass_bit(0);
+
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 

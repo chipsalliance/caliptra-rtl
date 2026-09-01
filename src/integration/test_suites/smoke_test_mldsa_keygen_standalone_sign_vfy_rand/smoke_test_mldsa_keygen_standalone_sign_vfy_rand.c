@@ -53,6 +53,9 @@ void main() {
     // // wait for MLDSA KEYGEN process to be done
     wait_for_mldsa_intr();
 
+    // A KEYGEN operation must never report a passing verification result
+    mldsa_check_verify_pass_bit(0);
+
     SEND_STDOUT_CTRL(0xd8); //clear mldsa checking
 
     mldsa_zeroize();
@@ -72,6 +75,9 @@ void main() {
     // // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
+    // A SIGN operation must never report a passing verification result
+    mldsa_check_verify_pass_bit(0);
+
     SEND_STDOUT_CTRL(0xd8); //clear mldsa checking
 
     mldsa_zeroize();
@@ -90,6 +96,9 @@ void main() {
 
     // // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
+
+    // Valid signature: hardware must report a passing verification
+    mldsa_check_verify_pass_bit(1);
 
     SEND_STDOUT_CTRL(0xd8); //clear mldsa checking
 

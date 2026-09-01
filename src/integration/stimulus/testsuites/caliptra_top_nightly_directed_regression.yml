@@ -29,6 +29,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_keygen/smoke_test_ecc_keygen.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_sign/smoke_test_ecc_sign.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_verify/smoke_test_ecc_verify.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_verify_fail/smoke_test_ecc_verify_fail.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecdh/smoke_test_ecdh.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_hmac/smoke_test_hmac.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dma_aes_gcm/smoke_test_dma_aes_gcm.yml

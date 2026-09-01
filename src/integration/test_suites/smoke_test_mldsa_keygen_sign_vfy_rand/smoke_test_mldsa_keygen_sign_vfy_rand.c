@@ -53,6 +53,9 @@ void main() {
     // // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
+    // A KEYGEN_SIGN operation must never report a passing verification result
+    mldsa_check_verify_pass_bit(0);
+
     SEND_STDOUT_CTRL(0xd8); //clear mldsa checking
 
     mldsa_zeroize();
@@ -72,10 +75,17 @@ void main() {
     // // wait for MLDSA SIGNING process to be done
     wait_for_mldsa_intr();
 
+    // Valid signature: hardware must report a passing verification
+    mldsa_check_verify_pass_bit(1);
+
     SEND_STDOUT_CTRL(0xd8); //clear mldsa checking
 
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
+
+    // A zeroize is mandatory between ABR commands and must clear the verification
+    // result, so a subsequent aborted verify can never inherit this pass.
+    mldsa_check_verify_pass_bit(0);
 
     SEND_STDOUT_CTRL(0xff); //End the test
 

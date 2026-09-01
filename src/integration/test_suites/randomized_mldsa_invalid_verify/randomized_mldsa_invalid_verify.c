@@ -634,6 +634,9 @@ void main() {
         while(1);
     }
 
+    // Hardware must also report the failure explicitly
+    mldsa_check_verify_pass_bit(0);
+
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
 

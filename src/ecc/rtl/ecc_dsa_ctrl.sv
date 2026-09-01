@@ -126,6 +126,12 @@ module ecc_dsa_ctrl
     logic hw_sharedkey_we;
     logic scalar_G_sel;
 
+    //Explicit hardware signature verification result
+    logic ecc_cmd_start;
+    logic ecc_verify_start;
+    logic ecc_verify_res_match;
+    logic ecc_verify_pass_reg;
+
     logic ecc_valid_reg;
     logic ecc_ready_reg;
 
@@ -357,6 +363,8 @@ module ecc_dsa_ctrl
 
     always_comb hwif_in.ECC_STATUS.READY.next = ecc_ready_reg;
     always_comb hwif_in.ECC_STATUS.VALID.next = ecc_valid_reg;
+    // Only expose the verification result once the engine is idle again. 
+    always_comb hwif_in.ECC_STATUS.VERIFY_PASS.next = ecc_verify_pass_reg & ~error_flag_reg & ecc_ready_reg;
 
     
     always_comb begin // ecc_reg_writing
@@ -428,8 +436,10 @@ module ecc_dsa_ctrl
         end
 
         for (int dword=0; dword < 12; dword++)begin 
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = hw_verify_r_we & !zeroize_reg;       
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg[11-dword];
+            //Preload with the complement of the supplied signature R at the start of a
+            //VERIFY operation so an aborted verification cannot leave a stale match
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = (hw_verify_r_we | ecc_verify_start) & !zeroize_reg;
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = ecc_verify_start ? ~r_reg[11-dword] : read_reg[11-dword];
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.hwclr = zeroize_reg;
         end
 
@@ -719,6 +729,30 @@ module ecc_dsa_ctrl
                         pubkey_input_invalid | pcr_sign_input_invalid |
                         privkey_output_outofrange | pubkeyx_output_outofrange | pubkeyy_output_outofrange |
                         sharedkey_outofrange;
+
+    //----------------------------------------------------------------
+    // Explicit hardware signature verification result
+    //
+    // The recomputed R is compared against the supplied signature R by
+    // hardware, in the exact same cycle (and with the exact same data)
+    // that populates ECC_VERIFY_R. This guarantees the reported pass/fail
+    // bit and the data returned to firmware can never disagree. Firmware
+    // may still compare ECC_VERIFY_R against its own copy of R as a
+    // fault-attack check on this bit.
+    //----------------------------------------------------------------
+    always_comb ecc_cmd_start    = (prog_cntr == ECC_NOP) & (|cmd_reg);
+    always_comb ecc_verify_start = (prog_cntr == ECC_NOP) & (cmd_reg == VERIFY);
+    always_comb ecc_verify_res_match = (read_reg == r_reg) & (|r_reg);
+
+    always_ff @(posedge clk or negedge reset_n)
+    begin : ecc_verify_result
+        if (!reset_n)
+            ecc_verify_pass_reg <= 1'b0;
+        else if (zeroize_reg | error_flag | error_flag_reg | ecc_cmd_start)
+            ecc_verify_pass_reg <= 1'b0;
+        else if (verifying_process & hw_verify_r_we)
+            ecc_verify_pass_reg <= ecc_verify_res_match;
+    end // ecc_verify_result
 
     //----------------------------------------------------------------
     // ECDSA_FSM_flow
