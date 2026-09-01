@@ -254,6 +254,9 @@ void main() {
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
+    // A KEYGEN operation must never report a passing verification result
+    ecc_check_verify_pass(0);
+
     ecc_zeroize();
 
     SEND_STDOUT_CTRL(0xff); //End the test

@@ -330,6 +330,9 @@ void main() {
             while(1);
         }
 
+        // An errored verification must never report a passing result
+        ecc_check_verify_pass(0);
+
         ecc_zeroize();
     }
 

@@ -332,6 +332,38 @@ void mldsa_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE], uint32_t msg[MLD
 
 }
 
+// Cross-check the hardware-reported verification result (MLDSA_STATUS.VERIFY_PASS)
+// against an independent firmware comparison of the returned verify result with the
+// c field of the supplied signature (the first MLDSA_VERIFY_RES_SIZE dwords of
+// MLDSA_SIGNATURE). Any disagreement indicates a fault on either the data path or
+// the status bit. verify_res has already been proven equal to the MLDSA_VERIFY_RES
+// register contents by the caller, so no extra register reads are needed here.
+static void mldsa_check_verify_pass(uint32_t sign[MLDSA87_SIGN_SIZE], uint32_t verify_res[MLDSA_VERIFY_RES_SIZE])
+{
+    uint8_t fw_verify_pass = 1;
+    uint16_t offset;
+
+    for (offset = 0; offset < MLDSA_VERIFY_RES_SIZE; offset++) {
+        if (verify_res[offset] != sign[offset]) {
+            fw_verify_pass = 0;
+        }
+    }
+
+    mldsa_check_verify_pass_bit(fw_verify_pass);
+}
+
+void mldsa_check_verify_pass_bit(uint8_t expected)
+{
+    uint8_t actual = (lsu_read_32(CLP_ABR_REG_MLDSA_STATUS) & ABR_REG_MLDSA_STATUS_VERIFY_PASS_MASK) ? 1 : 0;
+
+    if (actual != expected) {
+        VPRINTF(ERROR, "MLDSA_STATUS.VERIFY_PASS is %d, expected %d!\n", actual, expected);
+        SEND_STDOUT_CTRL(0x1);
+        while(1);
+    }
+    VPRINTF(LOW, "MLDSA_STATUS.VERIFY_PASS = %d as expected\n", actual);
+}
+
 void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA87_PUBKEY_SIZE], uint32_t sign[MLDSA87_SIGN_SIZE], uint32_t verify_res[MLDSA_VERIFY_RES_SIZE])
 {
     uint16_t offset;
@@ -375,6 +407,8 @@ void mldsa_verifying_flow(uint32_t msg[MLDSA87_MSG_SIZE], uint32_t pubkey[MLDSA8
         reg_ptr++;
         offset++;
     }
+
+    mldsa_check_verify_pass(sign, verify_res);
 
 }
 
@@ -576,6 +610,8 @@ void mldsa_verifying_external_mu_flow(uint32_t external_mu[MLDSA87_EXTERNAL_MU_S
         reg_ptr++;
         offset++;
     }
+
+    mldsa_check_verify_pass(sign, verify_res);
 }
 
 void mldsa_keyload_error_flow(mldsa_io seed)

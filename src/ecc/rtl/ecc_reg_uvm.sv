@@ -117,9 +117,11 @@ package ecc_reg_uvm;
 
         ecc_reg__ECC_STATUS_bit_cg READY_bit_cg[1];
         ecc_reg__ECC_STATUS_bit_cg VALID_bit_cg[1];
+        ecc_reg__ECC_STATUS_bit_cg VERIFY_PASS_bit_cg[1];
         ecc_reg__ECC_STATUS_fld_cg fld_cg;
         rand uvm_reg_field READY;
         rand uvm_reg_field VALID;
+        rand uvm_reg_field VERIFY_PASS;
 
         function new(string name = "ecc_reg__ECC_STATUS");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -135,9 +137,12 @@ package ecc_reg_uvm;
             this.READY.configure(this, 1, 0, "RO", 1, 'h0, 1, 1, 0);
             this.VALID = new("VALID");
             this.VALID.configure(this, 1, 1, "RO", 1, 'h0, 1, 1, 0);
+            this.VERIFY_PASS = new("VERIFY_PASS");
+            this.VERIFY_PASS.configure(this, 1, 2, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(READY_bit_cg[bt]) READY_bit_cg[bt] = new();
                 foreach(VALID_bit_cg[bt]) VALID_bit_cg[bt] = new();
+                foreach(VERIFY_PASS_bit_cg[bt]) VERIFY_PASS_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();

@@ -321,6 +321,9 @@ void main() {
             while(1);
         }
 
+        // A non-verify operation must never report a passing verification result
+        ecc_check_verify_pass(0);
+
         ecc_zeroize();
     }
 

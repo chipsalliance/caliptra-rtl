@@ -112,6 +112,9 @@ void main() {
 
     // Wait for MLDSA SIGNING process to be done.
     wait_for_mldsa_intr();
+    // A KEYGEN_SIGN operation must never report a passing verification result
+    mldsa_check_verify_pass_bit(0);
+
     VPRINTF(LOW, "Clear forces.\n");
     SEND_STDOUT_CTRL(0xd8); // Clear mldsa and sha3 forces.
     mldsa_zeroize();
@@ -135,6 +138,9 @@ void main() {
 
     // Wait for MLDSA SIGNING process to be done.
     wait_for_mldsa_intr();
+    // Valid signature: hardware must report a passing verification
+    mldsa_check_verify_pass_bit(1);
+
     VPRINTF(LOW, "Clear forces.\n");
     SEND_STDOUT_CTRL(0xd8); // Clear mldsa and sha3 forces.
     mldsa_zeroize();
