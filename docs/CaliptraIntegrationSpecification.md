@@ -511,13 +511,15 @@ The SoC must load the complete image into the external staging area and then ass
 
 This ownership handoff should follow the MCU MBOX SRAM access-control architecture, in which the MCU transfers control of the SRAM to Caliptra and only Caliptra can release the access lock.
 
-Caliptra needs to be given the external staging-area base address, the staging-area unlock CSR address, and the value that must be written to the CSR to release the access lock. These values can be provided either directly in a Caliptra MBOX command or through a manifest passed to Caliptra using the MBOX. These addresses must be an AXI address accessible by the Caliptra DMA controller.
+Caliptra needs to be given the external staging-area base address, the staging-area unlock CSR address, and the value that must be written to the CSR to release the access lock. These values must be provided to Caliptra through a verified mechanism that prevents arbitrary address and value writes. These addresses must be an AXI address accessible by the Caliptra DMA controller.
 
 Since images are now provided and verified through the external staging area, the Caliptra MBOX will be used as the command interface to:
 
 1. Notify Caliptra that an image is available for processing.  
 2. Specify the command to run on the image.  
-3. Indicate the size of the image in the staging area.  
+3. Indicate the size of the image
+4. Indicate location of the staging area (must be verified by Caliptra Core)
+5. Indicate location and value of unlock CSR (must be verified by Caliptra Core)
 
 References:
 
