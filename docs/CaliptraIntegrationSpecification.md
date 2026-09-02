@@ -502,7 +502,7 @@ The AXI_USER bits are used by the SoC to identify which device is accessing the 
 
 To save SRAM area when Caliptra operates in Subsystem mode, the mailbox (MBOX) SRAM is reduced to 16 KiB. Instead of passing images directly to Caliptra through the MBOX, the SoC can configure an external staging SRAM that Caliptra fetches from and processes.
 
-The SoC must load the complete image into the external staging area and then assert a one-way access lock before notifying Caliptra that the image is ready. Once the access lock is asserted:
+The SoC must load the complete image into the external staging area and then assert an access lock before notifying Caliptra that the image is ready. The access lock must have the following properties:
 
 - Caliptra is the only agent permitted to read from or write to the external staging area when it is locked.
 - All other agents are prevented from reading from or writing to the external staging area when it is locked.
