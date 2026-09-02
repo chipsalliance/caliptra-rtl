@@ -504,7 +504,7 @@ To save SRAM area when Caliptra operates in Subsystem mode, the mailbox (MBOX) S
 
 The SoC must load the complete image into the external staging area and then assert a one-way access lock before notifying Caliptra that the image is ready. Once the access lock is asserted:
 
-- Caliptra is the only agent permitted to read from or write to the external staging area.
+- Caliptra is the only agent permitted to read from or write to the external staging area when it is locked.
 - All other agents are prevented from reading from or writing to the external staging area.
 - Only Caliptra can release the access lock.
 - The access lock must remain asserted while Caliptra processes the image.
