@@ -222,7 +222,7 @@ The mux only re-sources these observation-only ports; it does not affect functio
 |  strap_ss_caliptra_base_addr                              | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_mci_base_addr                                   | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_recovery_ifc_base_addr                          | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  strap_ss_external_staging_area_base_addr                 | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_external_staging_area_base_addr                 | 64  | Input Strap | Synchronous to clk | UNUSED IN DESIGN - Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_otp_fc_base_addr                                | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_uds_seed_base_addr                              | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_key_release_base_addr                           | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. This is the full destination address for MEK generated via OCP LOCK flow. In Passive mode, integrators shall tie this input to 0.|
