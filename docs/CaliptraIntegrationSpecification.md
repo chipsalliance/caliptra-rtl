@@ -506,7 +506,7 @@ The SoC must load the complete image into the external staging area and then ass
 
 - Caliptra is the only agent permitted to read from or write to the external staging area when it is locked.
 - All other agents are prevented from reading from or writing to the external staging area when it is locked.
-- Only Caliptra can release the access lock.
+- The lock is one-way, meaning SoC can set but not release the lock. Only Caliptra can release the access lock.
 - The access lock must remain asserted while Caliptra processes the image.
 
 This ownership handoff should follow the MCU MBOX SRAM access-control architecture, in which the MCU transfers control of the SRAM to Caliptra and only Caliptra can release the access lock.
