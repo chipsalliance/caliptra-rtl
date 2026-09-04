@@ -1,0 +1,26 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+# Subsystem-mode smoke test: must be run with CALIPTRA_MODE_SUBSYSTEM=1
+# passed to the Makefile, e.g.:
+#   run_caliptra_test.sh smoke_test_stash_bank_ss CALIPTRA_MODE_SUBSYSTEM=1 RUN_PLUSARGS=+CALIPTRA_TEST_STASH_BANK
+#
+# +CALIPTRA_TEST_STASH_BANK gates the SoC BFM's write_stash_bank() hook
+# (caliptra_top_tb_soc_bfm.sv); without it the BFM never asserts
+# STASH_END_STASH and this test's FW-side poll in Step A spins forever.
+---
+plusargs:
+  - +CALIPTRA_TEST_STASH_BANK
+seed: 1
+testname: smoke_test_stash_bank_ss

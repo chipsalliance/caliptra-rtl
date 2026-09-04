@@ -1,0 +1,23 @@
+# SPDX-License-Identifier: Apache-2.0
+#
+# Licensed under the Apache License, Version 2.0 (the "License");
+# you may not use this file except in compliance with the License.
+# You may obtain a copy of the License at
+#
+# http://www.apache.org/licenses/LICENSE-2.0
+#
+# Unless required by applicable law or agreed to in writing, software
+# distributed under the License is distributed on an "AS IS" BASIS,
+# WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+# See the License for the specific language governing permissions and
+# limitations under the License.
+#
+---
+# +CALIPTRA_TEST_STASH_BANK gates the SoC BFM's write_stash_bank() hook;
+# +CALIPTRA_TEST_STASH_BANK_CPTRA_LOCK makes it take the partial-populate
+# path (write_stash_bank_partial()) instead (caliptra_top_tb_soc_bfm.sv).
+plusargs:
+  - +CALIPTRA_TEST_STASH_BANK
+  - +CALIPTRA_TEST_STASH_BANK_CPTRA_LOCK
+seed: 1
+testname: smoke_test_stash_bank_cptra_lock
