@@ -142,11 +142,11 @@ $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_intr_regs_pkg.sv\
 $(UVMF_PROJECT_DIR)/../../../../../sha512/rtl/sha512_intr_regs.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_defines_pkg.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_params_pkg.sv\
-$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_reg_pkg.sv\
+$(UVMF_PROJECT_DIR)/../../../../rtl/generated/ecc_reg_pkg.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_dsa_uop_pkg.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_pm_uop_pkg.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_top.sv\
-$(UVMF_PROJECT_DIR)/../../../../rtl/ecc_reg.sv\
+$(UVMF_PROJECT_DIR)/../../../../rtl/generated/ecc_reg.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_scalar_blinding.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_dsa_ctrl.sv\
 $(UVMF_PROJECT_DIR)/../../../../rtl/ecc_dsa_sequencer.sv\
