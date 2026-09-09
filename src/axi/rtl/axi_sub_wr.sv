@@ -398,9 +398,12 @@ module axi_sub_wr import axi_pkg::*; #(
     // This assertion assumes that if this rule is violated it is because of a system reset that
     // may or may not have propagated into the axi_sub module yet. So we allow a short delay to
     // occur before requiring the reset assertion be observed.
+// https://github.com/verilator/verilator/issues/7535
+`ifndef VERILATOR
     `CALIPTRA_ASSERT      (AXI_SUB_AW_HSHAKE_ERR, ((s_axi_if.awvalid && !s_axi_if.awready) ##1 !s_axi_if.awvalid) |-> eventually [0:5] not(rst_n), clk, !rst_n)
     `CALIPTRA_ASSERT      (AXI_SUB_W_HSHAKE_ERR,  ((s_axi_if.wvalid  && !s_axi_if.wready ) ##1 !s_axi_if.wvalid ) |-> eventually [0:5] not(rst_n), clk, !rst_n)
     `CALIPTRA_ASSERT      (AXI_SUB_B_HSHAKE_ERR,  ((s_axi_if.bvalid  && !s_axi_if.bready ) ##1 !s_axi_if.bvalid ) |-> eventually [0:5] not(rst_n), clk, !rst_n)
+`endif
 
     // Exclusive access rules:
     //   - Must have an address that is aligned to burst byte count
