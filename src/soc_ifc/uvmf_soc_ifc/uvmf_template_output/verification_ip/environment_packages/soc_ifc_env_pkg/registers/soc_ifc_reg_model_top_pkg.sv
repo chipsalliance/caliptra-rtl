@@ -401,6 +401,12 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG_NO_CP_NONCORE_RST(this.internal_rv_mtime_h                      )
                                                               `REG_NO_CP_NONCORE_RST(this.internal_rv_mtimecmp_l                   )
                                                               `REG_NO_CP_NONCORE_RST(this.internal_rv_mtimecmp_h                   )
+            // Stash bank (RFC 694): all storage fields on cptra_rst_b
+            foreach(this.STASH_BANK_SLOT_DATA[ii])            `REG____CP_NONCORE_RST(this.STASH_BANK_SLOT_DATA[ii]                 )
+                                                              `REG____CP_NONCORE_RST(this.STASH_BANK_SOC_LOCK                      )
+                                                              `REG____CP_NONCORE_RST(this.STASH_END_STASH                          )
+                                                              `REG____CP_NONCORE_RST(this.STASH_BANK_CPTRA_LOCK                    )
+                                                              `REG____CP_NONCORE_RST(this.STASH_BANK_STATUS                        )
             while (blk_flds.size() != 0) begin
                 uvm_reg_field cur_fld = blk_flds.pop_front();
                 `uvm_error("SOC_IFC_REG_EXT", {"No extended reset configuration defined for ", cur_fld.get_full_name()})
