@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 //
-// This is an automatically generated file by nasahlpa on Wed Jul 29 01:16:53 PM CEST 2026
+// This is an automatically generated file by nasahlpa on Thu Sep 10 01:34:12 PM CEST 2026
 //
-// cmd:    veer -target=default_ahb -set=ret_stack_size=8 -set=btb_enable=1 -set=btb_fullya=0 -set=btb_size=512 -set=bht_size=512 -set=div_bit=4 -set=div_new=1 -set=dccm_enable=1 -set=dccm_addr_xor=1 -set=dccm_num_banks=4 -set=dccm_region=0x5 -set=dccm_offset=0x00000 -set=dccm_size=256 -set=dccm_wr_readback=1 -set=dma_buf_depth=5 -set=fast_interrupt_redirect=1 -set=icache_enable=0 -set=icache_waypack=1 -set=icache_ecc=1 -set=icache_size=16 -set=icache_2banks=1 -set=icache_num_ways=2 -set=icache_bypass_enable=1 -set=icache_num_bypass=2 -set=icache_num_tag_bypass=2 -set=icache_tag_bypass_enable=1 -set=iccm_enable=1 -set=iccm_addr_xor=1 -set=iccm_num_banks=4 -set=iccm_region=0x4 -set=iccm_offset=0x0 -set=iccm_size=256 -set=lsu_stbuf_depth=4 -set=lsu_num_nbload=4 -set=load_to_use_plus1=0 -set=pic_2cycle=0 -set=pic_region=0x6 -set=pic_offset=0 -set=pic_size=32 -set=pic_total_int=31 -set=dma_buf_depth=5 -set=timer_legal_en=1 -set=bitmanip_zba=1 -set=bitmanip_zbb=1 -set=bitmanip_zbc=1 -set=bitmanip_zbe=0 -set=bitmanip_zbf=0 -set=bitmanip_zbp=0 -set=bitmanip_zbr=0 -set=bitmanip_zbs=1 -set=pmp_entries=64 -set=reset_vec=0x00000000 -set=lockstep_enable=1 -set=lockstep_regfile_enable=1 -set=lockstep_regfile_read_enable=1 -set=lockstep_delay=2 -set=mubi_width=4 -set=mubi_true=0x6 -set=mubi_false=0x9 -fpga_optimize=0 -snapshot=caliptra 
+// cmd:    veer -target=default_ahb -set=ret_stack_size=8 -set=btb_enable=1 -set=btb_fullya=0 -set=btb_size=512 -set=bht_size=512 -set=div_bit=4 -set=div_new=1 -set=dccm_enable=1 -set=dccm_addr_xor=1 -set=dccm_num_banks=4 -set=dccm_region=0x5 -set=dccm_offset=0x00000 -set=dccm_size=256 -set=dccm_wr_readback=1 -set=dma_buf_depth=5 -set=fast_interrupt_redirect=1 -set=icache_enable=0 -set=icache_waypack=1 -set=icache_ecc=1 -set=icache_size=16 -set=icache_2banks=1 -set=icache_num_ways=2 -set=icache_bypass_enable=1 -set=icache_num_bypass=2 -set=icache_num_tag_bypass=2 -set=icache_tag_bypass_enable=1 -set=iccm_enable=1 -set=iccm_addr_xor=1 -set=iccm_num_banks=4 -set=iccm_region=0x4 -set=iccm_offset=0x0 -set=iccm_size=256 -set=lsu_stbuf_depth=4 -set=lsu_num_nbload=4 -set=load_to_use_plus1=1 -set=pic_2cycle=0 -set=pic_region=0x6 -set=pic_offset=0 -set=pic_size=32 -set=pic_total_int=31 -set=dma_buf_depth=5 -set=timer_legal_en=1 -set=bitmanip_zba=1 -set=bitmanip_zbb=1 -set=bitmanip_zbc=1 -set=bitmanip_zbe=0 -set=bitmanip_zbf=0 -set=bitmanip_zbp=0 -set=bitmanip_zbr=0 -set=bitmanip_zbs=1 -set=pmp_entries=64 -set=reset_vec=0x00000000 -set=lockstep_enable=1 -set=lockstep_regfile_enable=1 -set=lockstep_regfile_read_enable=1 -set=lockstep_delay=2 -set=mubi_width=4 -set=mubi_true=0x6 -set=mubi_false=0x9 -fpga_optimize=0 -snapshot=caliptra 
 //
 `ifndef RV_COMMON_DEFINES
 `define RV_COMMON_DEFINES
@@ -62,6 +62,7 @@
 `define RV_DMA_BUF_DEPTH 5
 `define RV_FAST_INTERRUPT_REDIRECT 1
 `define RV_ICCM_ONLY 1
+`define RV_LOAD_TO_USE_PLUS1 1
 `define RV_LSU2DMA 0
 `define RV_LSU_NUM_NBLOAD 4
 `define RV_LSU_NUM_NBLOAD_WIDTH 2
