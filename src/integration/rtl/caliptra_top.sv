@@ -31,6 +31,7 @@ module caliptra_top
 `endif
     import el2_pkg::*;
     #(
+    parameter logic [31:1] JTAG_IDCODE = 31'h0,
     `include "el2_param.vh"
     )
     (
@@ -691,6 +692,7 @@ el2_veer_wrapper rvtop (
     .rst_vec                ( reset_vector[31:1]),
     .nmi_int                ( nmi_int       ),
     .nmi_vec                ( nmi_vector[31:1]),
+    .jtag_id                ( JTAG_IDCODE   ),
 
     .haddr                  ( ic_haddr      ),
     .hburst                 ( ic_hburst     ),
