@@ -4,9 +4,9 @@
 // SPDX-License-Identifier: Apache-2.0
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 //
-// This is an automatically generated file by nasahlpa on Wed Jul 29 01:16:53 PM CEST 2026
+// This is an automatically generated file by nasahlpa on Thu Sep 10 01:34:12 PM CEST 2026
 //
-// cmd:    veer -target=default_ahb -set=ret_stack_size=8 -set=btb_enable=1 -set=btb_fullya=0 -set=btb_size=512 -set=bht_size=512 -set=div_bit=4 -set=div_new=1 -set=dccm_enable=1 -set=dccm_addr_xor=1 -set=dccm_num_banks=4 -set=dccm_region=0x5 -set=dccm_offset=0x00000 -set=dccm_size=256 -set=dccm_wr_readback=1 -set=dma_buf_depth=5 -set=fast_interrupt_redirect=1 -set=icache_enable=0 -set=icache_waypack=1 -set=icache_ecc=1 -set=icache_size=16 -set=icache_2banks=1 -set=icache_num_ways=2 -set=icache_bypass_enable=1 -set=icache_num_bypass=2 -set=icache_num_tag_bypass=2 -set=icache_tag_bypass_enable=1 -set=iccm_enable=1 -set=iccm_addr_xor=1 -set=iccm_num_banks=4 -set=iccm_region=0x4 -set=iccm_offset=0x0 -set=iccm_size=256 -set=lsu_stbuf_depth=4 -set=lsu_num_nbload=4 -set=load_to_use_plus1=0 -set=pic_2cycle=0 -set=pic_region=0x6 -set=pic_offset=0 -set=pic_size=32 -set=pic_total_int=31 -set=dma_buf_depth=5 -set=timer_legal_en=1 -set=bitmanip_zba=1 -set=bitmanip_zbb=1 -set=bitmanip_zbc=1 -set=bitmanip_zbe=0 -set=bitmanip_zbf=0 -set=bitmanip_zbp=0 -set=bitmanip_zbr=0 -set=bitmanip_zbs=1 -set=pmp_entries=64 -set=reset_vec=0x00000000 -set=lockstep_enable=1 -set=lockstep_regfile_enable=1 -set=lockstep_regfile_read_enable=1 -set=lockstep_delay=2 -set=mubi_width=4 -set=mubi_true=0x6 -set=mubi_false=0x9 -fpga_optimize=0 -snapshot=caliptra 
+// cmd:    veer -target=default_ahb -set=ret_stack_size=8 -set=btb_enable=1 -set=btb_fullya=0 -set=btb_size=512 -set=bht_size=512 -set=div_bit=4 -set=div_new=1 -set=dccm_enable=1 -set=dccm_addr_xor=1 -set=dccm_num_banks=4 -set=dccm_region=0x5 -set=dccm_offset=0x00000 -set=dccm_size=256 -set=dccm_wr_readback=1 -set=dma_buf_depth=5 -set=fast_interrupt_redirect=1 -set=icache_enable=0 -set=icache_waypack=1 -set=icache_ecc=1 -set=icache_size=16 -set=icache_2banks=1 -set=icache_num_ways=2 -set=icache_bypass_enable=1 -set=icache_num_bypass=2 -set=icache_num_tag_bypass=2 -set=icache_tag_bypass_enable=1 -set=iccm_enable=1 -set=iccm_addr_xor=1 -set=iccm_num_banks=4 -set=iccm_region=0x4 -set=iccm_offset=0x0 -set=iccm_size=256 -set=lsu_stbuf_depth=4 -set=lsu_num_nbload=4 -set=load_to_use_plus1=1 -set=pic_2cycle=0 -set=pic_region=0x6 -set=pic_offset=0 -set=pic_size=32 -set=pic_total_int=31 -set=dma_buf_depth=5 -set=timer_legal_en=1 -set=bitmanip_zba=1 -set=bitmanip_zbb=1 -set=bitmanip_zbc=1 -set=bitmanip_zbe=0 -set=bitmanip_zbf=0 -set=bitmanip_zbp=0 -set=bitmanip_zbr=0 -set=bitmanip_zbs=1 -set=pmp_entries=64 -set=reset_vec=0x00000000 -set=lockstep_enable=1 -set=lockstep_regfile_enable=1 -set=lockstep_regfile_read_enable=1 -set=lockstep_delay=2 -set=mubi_width=4 -set=mubi_true=0x6 -set=mubi_false=0x9 -fpga_optimize=0 -snapshot=caliptra 
 //
 // parameter el2_param_t pt = '{
 // 	BHT_ADDR_HI            : 8'h09         ,
@@ -159,7 +159,7 @@
 // 	INST_ACCESS_MASK5      : 36'h0FFFFFFFF  ,
 // 	INST_ACCESS_MASK6      : 36'h0FFFFFFFF  ,
 // 	INST_ACCESS_MASK7      : 36'h0FFFFFFFF  ,
-// 	LOAD_TO_USE_PLUS1      : 5'h00         ,
+// 	LOAD_TO_USE_PLUS1      : 5'h01         ,
 // 	LOCKSTEP_DELAY         : 7'h02         ,
 // 	LOCKSTEP_ENABLE        : 5'h01         ,
 // 	LOCKSTEP_REGFILE_ENABLE : 5'h01         ,
@@ -192,4 +192,4 @@
 // 	TIMER_LEGAL_EN         : 5'h01         ,
 // 	USER_MODE              : 4'h0          
 // }
-parameter el2_param_t pt = 2390'h02420200008020008420000010484100001420002404110506424100030208600000000000000000000000000000000000000000000000000000000000000000000000000000000001FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE082410200E109C38080A0A0000000080041021402100842041861008140C2010004080100470604008020204006008010802003034080820806040907080380810404000000004002101800000000000000000000000000000000000000000000000000000000000000000000000000000000007FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF8010420084060404120400000000900000000601000060000000078083008007C04010020210082
+parameter el2_param_t pt = 2390'h02420200008020008420000010484100001420002404110506424100030208600000000000000000000000000000000000000000000000000000000000000000000000000000000001FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE1FFFFFFFE082410200E109C38080A0A0000000080041021402100842041861008140C2010004080100470604008020204006008010802003034080820806040907080380810404000000004002101800000000000000000000000000000000000000000000000000000000000000000000000000000000007FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF87FFFFFFF8410420084060404120400000000900000000601000060000000078083008007C04010020210082
