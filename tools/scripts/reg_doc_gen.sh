@@ -15,54 +15,54 @@
 #
 
 python3 tools/scripts/reg_doc_gen.py \
-src/integration/rtl/caliptra_reg.rdl \
-src/entropy_combiner/rtl/entropy_combiner_reg.rdl \
-src/keyvault/rtl/kv_reg.rdl \
-src/pcrvault/rtl/pv_reg.rdl \
-src/datavault/rtl/dv_reg.rdl \
-src/ecc/rtl/ecc_reg.rdl \
+src/integration/rdl/caliptra_reg.rdl \
+src/entropy_combiner/rdl/entropy_combiner_reg.rdl \
+src/keyvault/rdl/kv_reg.rdl \
+src/pcrvault/rdl/pv_reg.rdl \
+src/datavault/rdl/dv_reg.rdl \
+src/ecc/rdl/ecc_reg.rdl \
 submodules/adams-bridge/src/abr_top/rtl/abr_reg.rdl \
-src/sha512/rtl/sha512_reg.rdl \
-src/sha256/rtl/sha256_reg.rdl \
-src/sha3/rtl/kmac_reg.rdl \
-src/sha3/rtl/sha3_reg.rdl \
-src/soc_ifc/rtl/mbox_csr.rdl \
-src/soc_ifc/rtl/sha512_acc_csr.rdl \
-src/axi/rtl/axi_dma_reg.rdl \
-src/soc_ifc/rtl/soc_ifc_reg.rdl \
-src/hmac/rtl/hmac_reg.rdl \
-src/doe/rtl/doe_reg.rdl \
-src/entropy_src/data/entropy_src.rdl \
-src/csrng/data/csrng.rdl \
-src/aes/data/aes.rdl \
-src/aes/rtl/aes_clp_reg.rdl \
-src/keyvault/rtl/kv_def.rdl
+src/sha512/rdl/sha512_reg.rdl \
+src/sha256/rdl/sha256_reg.rdl \
+src/sha3/rdl/kmac_reg.rdl \
+src/sha3/rdl/sha3_reg.rdl \
+src/soc_ifc/rdl/mbox_csr.rdl \
+src/soc_ifc/rdl/sha512_acc_csr.rdl \
+src/axi/rdl/axi_dma_reg.rdl \
+src/soc_ifc/rdl/soc_ifc_reg.rdl \
+src/hmac/rdl/hmac_reg.rdl \
+src/doe/rdl/doe_reg.rdl \
+src/entropy_src/rdl/entropy_src.rdl \
+src/csrng/rdl/csrng.rdl \
+src/aes/rdl/aes.rdl \
+src/aes/rdl/aes_clp_reg.rdl \
+src/keyvault/rdl/kv_def.rdl
 
 python3 tools/scripts/reg_doc_gen.py --param CALIPTRA_SS_MODE=true \
-src/integration/rtl/caliptra_reg.rdl \
-src/entropy_combiner/rtl/entropy_combiner_reg.rdl \
-src/keyvault/rtl/kv_reg.rdl \
-src/pcrvault/rtl/pv_reg.rdl \
-src/datavault/rtl/dv_reg.rdl \
-src/ecc/rtl/ecc_reg.rdl \
+src/integration/rdl/caliptra_reg.rdl \
+src/entropy_combiner/rdl/entropy_combiner_reg.rdl \
+src/keyvault/rdl/kv_reg.rdl \
+src/pcrvault/rdl/pv_reg.rdl \
+src/datavault/rdl/dv_reg.rdl \
+src/ecc/rdl/ecc_reg.rdl \
 submodules/adams-bridge/src/abr_top/rtl/abr_reg.rdl \
-src/sha512/rtl/sha512_reg.rdl \
-src/sha256/rtl/sha256_reg.rdl \
-src/sha3/rtl/kmac_reg.rdl \
-src/sha3/rtl/sha3_reg.rdl \
-src/soc_ifc/rtl/mbox_csr.rdl \
-src/soc_ifc/rtl/sha512_acc_csr.rdl \
-src/axi/rtl/axi_dma_reg.rdl \
-src/soc_ifc/rtl/soc_ifc_reg.rdl \
-src/hmac/rtl/hmac_reg.rdl \
-src/doe/rtl/doe_reg.rdl \
-src/entropy_src/data/entropy_src.rdl \
-src/csrng/data/csrng.rdl \
-src/aes/data/aes.rdl \
-src/aes/rtl/aes_clp_reg.rdl \
-src/keyvault/rtl/kv_def.rdl
+src/sha512/rdl/sha512_reg.rdl \
+src/sha256/rdl/sha256_reg.rdl \
+src/sha3/rdl/kmac_reg.rdl \
+src/sha3/rdl/sha3_reg.rdl \
+src/soc_ifc/rdl/mbox_csr.rdl \
+src/soc_ifc/rdl/sha512_acc_csr.rdl \
+src/axi/rdl/axi_dma_reg.rdl \
+src/soc_ifc/rdl/soc_ifc_reg.rdl \
+src/hmac/rdl/hmac_reg.rdl \
+src/doe/rdl/doe_reg.rdl \
+src/entropy_src/rdl/entropy_src.rdl \
+src/csrng/rdl/csrng.rdl \
+src/aes/rdl/aes.rdl \
+src/aes/rdl/aes_clp_reg.rdl \
+src/keyvault/rdl/kv_def.rdl
 
 python3 tools/scripts/reg_doc_gen.py \
-src/soc_ifc/rtl/caliptra_top_reg.rdl \
-src/soc_ifc/rtl/soc_ifc_doc.rdl \
-src/soc_ifc/rtl/mbox_csr.rdl
+src/soc_ifc/rdl/caliptra_top_reg.rdl \
+src/soc_ifc/rdl/soc_ifc_doc.rdl \
+src/soc_ifc/rdl/mbox_csr.rdl
