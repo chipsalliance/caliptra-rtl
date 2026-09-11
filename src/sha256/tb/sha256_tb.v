@@ -114,7 +114,7 @@ module sha256_tb();
              .address(tb_address),
              .write_data(tb_write_data),
              .read_data(tb_read_data),
-             .err(tb_error)
+             .err(tb_error),
 
              .error_intr(),
              .notif_intr(),
