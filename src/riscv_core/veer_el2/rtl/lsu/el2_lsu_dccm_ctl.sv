@@ -70,10 +70,10 @@ import el2_pkg::*;
 
    input logic [pt.DCCM_DATA_WIDTH-1:0]    stbuf_data_any,          // the read out from stbuf
    input logic [pt.DCCM_ECC_WIDTH-1:0]     stbuf_ecc_any,           // the encoded data with ECC bits
-   input logic [pt.DCCM_DATA_WIDTH-1:0]    stbuf_fwddata_hi_m,      // stbuf fowarding to load
-   input logic [pt.DCCM_DATA_WIDTH-1:0]    stbuf_fwddata_lo_m,      // stbuf fowarding to load
-   input logic [pt.DCCM_BYTE_WIDTH-1:0]    stbuf_fwdbyteen_hi_m,    // stbuf fowarding to load
-   input logic [pt.DCCM_BYTE_WIDTH-1:0]    stbuf_fwdbyteen_lo_m,    // stbuf fowarding to load
+   input logic [pt.DCCM_DATA_WIDTH-1:0]    stbuf_fwddata_hi_m,      // stbuf forwarding to load
+   input logic [pt.DCCM_DATA_WIDTH-1:0]    stbuf_fwddata_lo_m,      // stbuf forwarding to load
+   input logic [pt.DCCM_BYTE_WIDTH-1:0]    stbuf_fwdbyteen_hi_m,    // stbuf forwarding to load
+   input logic [pt.DCCM_BYTE_WIDTH-1:0]    stbuf_fwdbyteen_lo_m,    // stbuf forwarding to load
 
    output logic [pt.DCCM_DATA_WIDTH-1:0]   dccm_rdata_hi_r,         // data from the dccm
    output logic [pt.DCCM_DATA_WIDTH-1:0]   dccm_rdata_lo_r,         // data from the dccm
@@ -126,7 +126,7 @@ import el2_pkg::*;
    output logic                            lsu_dccm_rden_m,         // dccm read
    output logic                            lsu_dccm_rden_r,         // dccm read
 
-   output logic                            dccm_dma_rvalid,         // dccm serviving the dma load
+   output logic                            dccm_dma_rvalid,         // dccm servicing the dma load
    output logic                            dccm_dma_ecc_error,      // DMA load had ecc error
    output logic [2:0]                      dccm_dma_rtag,           // DMA return tag
    output logic [63:0]                     dccm_dma_rdata,          // dccm data to dma request
@@ -143,6 +143,16 @@ import el2_pkg::*;
 
    input logic [pt.DCCM_FDATA_WIDTH-1:0]   dccm_rd_data_lo,         // dccm read data back from the dccm
    input logic [pt.DCCM_FDATA_WIDTH-1:0]   dccm_rd_data_hi,         // dccm read data back from the dccm
+
+   output logic                            dccm_wr_rdbk_pend_ff,             // write-readback window open -- stall decode/dma
+   output logic                            dccm_wr_readback_error,           // write-readback mismatch fault pin
+   input logic                             dec_tlu_dccm_wr_readback_disable, // runtime disable (MFDC), default enabled
+
+   // Sticky first-fault DCCM wr readback capture for DMI (debug) visibility.
+   output logic                            dccm_wr_rdbk_fault_valid,         // a fault is latched, pending DMI clear
+   output logic [pt.DCCM_BITS-1:0]         dccm_wr_rdbk_fault_addr,          // address of the latched fault
+   output logic [pt.DCCM_FDATA_WIDTH-1:0]  dccm_wr_rdbk_fault_data,          // actual (corrupted) data+ecc read back
+   input logic                             dccm_wr_rdbk_fault_clear,         // DMI write-to-clear: re-arm capture
 
    // PIC ports
    output logic                            picm_wren,               // write to pic
@@ -174,6 +184,20 @@ import el2_pkg::*;
    logic                           dccm_wr_bypass_d_m_hi, dccm_wr_bypass_d_r_hi;
    logic                           dccm_wr_bypass_d_m_lo, dccm_wr_bypass_d_r_lo;
    logic                           kill_ecc_corr_lo_r, kill_ecc_corr_hi_r;
+
+`ifdef RV_DCCM_WR_READBACK
+   logic                           dccm_wr_rdbk_arm;              // arm a new read-back window this cycle
+   logic                           dccm_wr_rdbk_issue;            // steal read port this cycle (no real read wants it)
+   logic                           dccm_wr_rdbk_snoop_lo;         // a real read this cycle already covers our addr (lo)
+   logic                           dccm_wr_rdbk_snoop_hi;         // a real read this cycle already covers our addr (hi)
+   logic                           dccm_wr_rdbk_resolve;          // window resolves this cycle (steal or snoop)
+   logic [pt.DCCM_BITS-1:0]        dccm_wr_rdbk_addr_ff;          // captured word addr (lo==hi, single bank)
+   logic [pt.DCCM_FDATA_WIDTH-1:0] dccm_wr_rdbk_data_ff;          // captured written data+ecc
+   logic                           dccm_wr_rdbk_active;           // dccm_rd_data_lo/hi valid this cycle for compare
+   logic                           dccm_wr_rdbk_active_hi;        // compare should use dccm_rd_data_hi, not _lo
+   logic [pt.DCCM_FDATA_WIDTH-1:0] dccm_wr_rdbk_expect;           // expected value, aligned with dccm_rd_data_lo/hi
+   logic                           dccm_wr_rdbk_fault_capture_en; // latch this fault (first-fault-wins)
+`endif
 
     // byte_en flowing down
    logic [3:0]                     store_byteen_m ,store_byteen_r;
@@ -231,6 +255,12 @@ import el2_pkg::*;
       logic [63:32] lsu_ld_data_m_nc, lsu_ld_data_corr_m_nc;
       logic [31:0]  lsu_ld_data_corr_m;
 
+      assign lsu_ld_data_r        = '0;
+      assign dccm_rdata_lo_r      = '0;
+      assign dccm_rdata_hi_r      = '0;
+      assign dccm_data_ecc_lo_r   = '0;
+      assign dccm_data_ecc_hi_r   = '0;
+
       assign dccm_dma_rvalid      = lsu_pkt_m.valid & lsu_pkt_m.load & lsu_pkt_m.dma;
       assign dccm_dma_ecc_error   = lsu_double_ecc_error_m;
       assign dccm_dma_rtag[2:0]   = dma_mem_tag_m[2:0];
@@ -242,13 +272,6 @@ import el2_pkg::*;
       assign dccm_rdata_corr_m[63:0] = {sec_data_hi_m[31:0],sec_data_lo_m[31:0]};
       assign stbuf_fwddata_m[63:0]   = {stbuf_fwddata_hi_m[31:0], stbuf_fwddata_lo_m[31:0]};
       assign stbuf_fwdbyteen_m[7:0]  = {stbuf_fwdbyteen_hi_m[3:0], stbuf_fwdbyteen_lo_m[3:0]};
-
-      //Tie Off for Lint
-      assign dccm_data_ecc_hi_r = '0;
-      assign dccm_data_ecc_lo_r = '0;
-      assign dccm_rdata_hi_r = '0;
-      assign dccm_rdata_lo_r = '0;
-      assign lsu_ld_data_r = '0;
 
       for (genvar i=0; i<8; i++) begin: GenLoop
          assign lsu_rdata_corr_m[(8*i)+7:8*i] = stbuf_fwdbyteen_m[i] ? stbuf_fwddata_m[(8*i)+7:8*i] :
@@ -275,10 +298,17 @@ import el2_pkg::*;
    assign ld_single_ecc_error_hi_r_ns = ld_single_ecc_error_hi_r & (lsu_commit_r | lsu_pkt_r.dma) & ~kill_ecc_corr_hi_r;
    assign ld_single_ecc_error_r_ff = (ld_single_ecc_error_lo_r_ff | ld_single_ecc_error_hi_r_ff) & ~lsu_double_ecc_error_r_ff;
 
+`ifdef RV_DCCM_WR_READBACK
+   assign lsu_stbuf_commit_any = stbuf_reqvld_any & ~dccm_wr_rdbk_pend_ff &
+                                 (~(lsu_dccm_rden_d | lsu_dccm_wren_d | ld_single_ecc_error_r_ff) |
+                                  (lsu_dccm_rden_d & ~((stbuf_addr_any[pt.DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS] == lsu_addr_d[pt.DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]) |
+                                                       (stbuf_addr_any[pt.DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS] == end_addr_d[pt.DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]))));
+`else
    assign lsu_stbuf_commit_any = stbuf_reqvld_any &
                                  (~(lsu_dccm_rden_d | lsu_dccm_wren_d | ld_single_ecc_error_r_ff) |
                                   (lsu_dccm_rden_d & ~((stbuf_addr_any[pt.DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS] == lsu_addr_d[pt.DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]) |
                                                        (stbuf_addr_any[pt.DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS] == end_addr_d[pt.DCCM_WIDTH_BITS+:pt.DCCM_BANK_BITS]))));
+`endif
 
    // No need to read for aligned word/dword stores since ECC will come by new data completely
    assign lsu_dccm_rden_d = lsu_pkt_d.valid & (lsu_pkt_d.load | (lsu_pkt_d.store & (~(lsu_pkt_d.word | lsu_pkt_d.dword) | (lsu_addr_d[1:0] != 2'b0)))) & addr_in_dccm_d;
@@ -288,21 +318,48 @@ import el2_pkg::*;
 
    // DCCM inputs
    assign dccm_wren                             = lsu_dccm_wren_d | lsu_stbuf_commit_any | ld_single_ecc_error_r_ff;
-   assign dccm_rden                             = lsu_dccm_rden_d & addr_in_dccm_d;
    assign dccm_wr_addr_lo[pt.DCCM_BITS-1:0]     = ld_single_ecc_error_r_ff ? (ld_single_ecc_error_lo_r_ff ? ld_sec_addr_lo_r_ff[pt.DCCM_BITS-1:0] : ld_sec_addr_hi_r_ff[pt.DCCM_BITS-1:0]) :
                                                                              lsu_dccm_wren_d ? lsu_addr_d[pt.DCCM_BITS-1:0] : stbuf_addr_any[pt.DCCM_BITS-1:0];
    assign dccm_wr_addr_hi[pt.DCCM_BITS-1:0]     = ld_single_ecc_error_r_ff ? (ld_single_ecc_error_hi_r_ff ? ld_sec_addr_hi_r_ff[pt.DCCM_BITS-1:0] : ld_sec_addr_lo_r_ff[pt.DCCM_BITS-1:0]) :
                                                                              lsu_dccm_wren_d ? end_addr_d[pt.DCCM_BITS-1:0] : stbuf_addr_any[pt.DCCM_BITS-1:0];
+`ifdef RV_DCCM_WR_READBACK
+   assign dccm_rden                             = (lsu_dccm_rden_d & addr_in_dccm_d) | dccm_wr_rdbk_issue;
+   assign dccm_rd_addr_lo[pt.DCCM_BITS-1:0]     = dccm_wr_rdbk_issue ? dccm_wr_rdbk_addr_ff[pt.DCCM_BITS-1:0] : lsu_addr_d[pt.DCCM_BITS-1:0];
+   assign dccm_rd_addr_hi[pt.DCCM_BITS-1:0]     = dccm_wr_rdbk_issue ? dccm_wr_rdbk_addr_ff[pt.DCCM_BITS-1:0] : end_addr_d[pt.DCCM_BITS-1:0];
+`else
+   assign dccm_rden                             = lsu_dccm_rden_d & addr_in_dccm_d;
    assign dccm_rd_addr_lo[pt.DCCM_BITS-1:0]     = lsu_addr_d[pt.DCCM_BITS-1:0];
    assign dccm_rd_addr_hi[pt.DCCM_BITS-1:0]     = end_addr_d[pt.DCCM_BITS-1:0];
-   assign dccm_wr_data_lo[pt.DCCM_FDATA_WIDTH-1:0] = ld_single_ecc_error_r_ff ? (ld_single_ecc_error_lo_r_ff ? {sec_data_ecc_lo_r_ff[pt.DCCM_ECC_WIDTH-1:0],sec_data_lo_r_ff[pt.DCCM_DATA_WIDTH-1:0]} :
+`endif
+
+   // DCCM address-XOR mask generation for the DCCM address-XOR infection feature.
+   logic [pt.DCCM_DATA_WIDTH-1:0] dccm_wr_infect_lo, dccm_wr_infect_hi;
+   logic [pt.DCCM_DATA_WIDTH-1:0] dccm_rd_infect_lo, dccm_rd_infect_hi;
+`ifdef RV_DCCM_ADDR_XOR
+   localparam int DCCM_XOR_PAD = int'(pt.DCCM_DATA_WIDTH) - 2*(int'(pt.DCCM_BITS) - 2);
+   assign dccm_wr_infect_lo = {{DCCM_XOR_PAD{1'b0}}, dccm_wr_addr_lo[pt.DCCM_BITS-1:2], dccm_wr_addr_lo[pt.DCCM_BITS-1:2]};
+   assign dccm_wr_infect_hi = {{DCCM_XOR_PAD{1'b0}}, dccm_wr_addr_hi[pt.DCCM_BITS-1:2], dccm_wr_addr_hi[pt.DCCM_BITS-1:2]};
+   assign dccm_rd_infect_lo = {{DCCM_XOR_PAD{1'b0}}, lsu_addr_m[pt.DCCM_BITS-1:2],      lsu_addr_m[pt.DCCM_BITS-1:2]};
+   assign dccm_rd_infect_hi = {{DCCM_XOR_PAD{1'b0}}, end_addr_m[pt.DCCM_BITS-1:2],      end_addr_m[pt.DCCM_BITS-1:2]};
+`else
+   assign dccm_wr_infect_lo = '0;
+   assign dccm_wr_infect_hi = '0;
+   assign dccm_rd_infect_lo = '0;
+   assign dccm_rd_infect_hi = '0;
+`endif
+
+   // DCCM address-XOR infection feature.
+   // XOR the write address on top of the data.
+   assign dccm_wr_data_lo[pt.DCCM_FDATA_WIDTH-1:0] = ({{pt.DCCM_ECC_WIDTH{1'b0}}, dccm_wr_infect_lo}) ^
+                                                     (ld_single_ecc_error_r_ff ? (ld_single_ecc_error_lo_r_ff ? {sec_data_ecc_lo_r_ff[pt.DCCM_ECC_WIDTH-1:0],sec_data_lo_r_ff[pt.DCCM_DATA_WIDTH-1:0]} :
                                                                                                                {sec_data_ecc_hi_r_ff[pt.DCCM_ECC_WIDTH-1:0],sec_data_hi_r_ff[pt.DCCM_DATA_WIDTH-1:0]}) :
                                                                                 (dma_dccm_wen ? {dma_dccm_wdata_ecc_lo[pt.DCCM_ECC_WIDTH-1:0],dma_dccm_wdata_lo[pt.DCCM_DATA_WIDTH-1:0]} :
-                                                                                                {stbuf_ecc_any[pt.DCCM_ECC_WIDTH-1:0],stbuf_data_any[pt.DCCM_DATA_WIDTH-1:0]});
-   assign dccm_wr_data_hi[pt.DCCM_FDATA_WIDTH-1:0] = ld_single_ecc_error_r_ff ? (ld_single_ecc_error_hi_r_ff ? {sec_data_ecc_hi_r_ff[pt.DCCM_ECC_WIDTH-1:0],sec_data_hi_r_ff[pt.DCCM_DATA_WIDTH-1:0]} :
+                                                                                                {stbuf_ecc_any[pt.DCCM_ECC_WIDTH-1:0],stbuf_data_any[pt.DCCM_DATA_WIDTH-1:0]}));
+   assign dccm_wr_data_hi[pt.DCCM_FDATA_WIDTH-1:0] = ({{pt.DCCM_ECC_WIDTH{1'b0}}, dccm_wr_infect_hi}) ^
+                                                     (ld_single_ecc_error_r_ff ? (ld_single_ecc_error_hi_r_ff ? {sec_data_ecc_hi_r_ff[pt.DCCM_ECC_WIDTH-1:0],sec_data_hi_r_ff[pt.DCCM_DATA_WIDTH-1:0]} :
                                                                                                                {sec_data_ecc_lo_r_ff[pt.DCCM_ECC_WIDTH-1:0],sec_data_lo_r_ff[pt.DCCM_DATA_WIDTH-1:0]}) :
                                                                                 (dma_dccm_wen ? {dma_dccm_wdata_ecc_hi[pt.DCCM_ECC_WIDTH-1:0],dma_dccm_wdata_hi[pt.DCCM_DATA_WIDTH-1:0]} :
-                                                                                                {stbuf_ecc_any[pt.DCCM_ECC_WIDTH-1:0],stbuf_data_any[pt.DCCM_DATA_WIDTH-1:0]});
+                                                                                                {stbuf_ecc_any[pt.DCCM_ECC_WIDTH-1:0],stbuf_data_any[pt.DCCM_DATA_WIDTH-1:0]}));
 
    // DCCM outputs
    assign store_byteen_m[3:0] = {4{lsu_pkt_m.store}} &
@@ -377,8 +434,12 @@ import el2_pkg::*;
 
    end
 
-   assign dccm_rdata_lo_m[pt.DCCM_DATA_WIDTH-1:0]   = dccm_rd_data_lo[pt.DCCM_DATA_WIDTH-1:0]; // for ld choose dccm_out
-   assign dccm_rdata_hi_m[pt.DCCM_DATA_WIDTH-1:0]   = dccm_rd_data_hi[pt.DCCM_DATA_WIDTH-1:0]; // for ld this is used for ecc
+   // DCCM address-XOR infection feature.
+   // XOR the read address on top of the data. If the write and read address
+   // match, the plain data is retrieved. On an address mismatch, garbled
+   // data is retrieved that ECC detects.
+   assign dccm_rdata_lo_m[pt.DCCM_DATA_WIDTH-1:0]   = dccm_rd_data_lo[pt.DCCM_DATA_WIDTH-1:0] ^ dccm_rd_infect_lo; // for ld choose dccm_out
+   assign dccm_rdata_hi_m[pt.DCCM_DATA_WIDTH-1:0]   = dccm_rd_data_hi[pt.DCCM_DATA_WIDTH-1:0] ^ dccm_rd_infect_hi; // for ld this is used for ecc
 
    assign dccm_data_ecc_lo_m[pt.DCCM_ECC_WIDTH-1:0] = dccm_rd_data_lo[pt.DCCM_FDATA_WIDTH-1:pt.DCCM_DATA_WIDTH];
    assign dccm_data_ecc_hi_m[pt.DCCM_ECC_WIDTH-1:0] = dccm_rd_data_hi[pt.DCCM_FDATA_WIDTH-1:pt.DCCM_DATA_WIDTH];
@@ -409,6 +470,80 @@ import el2_pkg::*;
       rvdffe #(pt.DCCM_BITS) ld_sec_addr_hi_rff (.*, .din(end_addr_r[pt.DCCM_BITS-1:0]), .dout(ld_sec_addr_hi_r_ff[pt.DCCM_BITS-1:0]), .en(ld_single_ecc_error_r | clk_override), .clk(clk));
       rvdffe #(pt.DCCM_BITS) ld_sec_addr_lo_rff (.*, .din(lsu_addr_r[pt.DCCM_BITS-1:0]), .dout(ld_sec_addr_lo_r_ff[pt.DCCM_BITS-1:0]), .en(ld_single_ecc_error_r | clk_override), .clk(clk));
 
+`ifdef RV_DCCM_WR_READBACK
+      // Arm a readback window on a store-buffer commit.
+      // Gated by the MFDC DCCM write read-back disable bit.
+      assign dccm_wr_rdbk_arm = lsu_stbuf_commit_any & ~dec_tlu_dccm_wr_readback_disable;
+
+      // A real read this cycle that already targets our pending address completes
+      // the check for free. Its own result is tapped next cycle instead of us
+      // stealing the port. Reads are never delayed for this feature.
+      assign dccm_wr_rdbk_snoop_lo = dccm_wr_rdbk_pend_ff & lsu_dccm_rden_d & (lsu_addr_d[pt.DCCM_BITS-1:0] == dccm_wr_rdbk_addr_ff[pt.DCCM_BITS-1:0]);
+      assign dccm_wr_rdbk_snoop_hi = dccm_wr_rdbk_pend_ff & lsu_dccm_rden_d & (end_addr_d[pt.DCCM_BITS-1:0] == dccm_wr_rdbk_addr_ff[pt.DCCM_BITS-1:0]);
+
+      // Steal the port only when nothing else wants to read this cycle.
+      // Reads always win. Only writes defer to a pending window.
+      assign dccm_wr_rdbk_issue = dccm_wr_rdbk_pend_ff & ~lsu_dccm_rden_d & ~ld_single_ecc_error_r_ff;
+
+      assign dccm_wr_rdbk_resolve = dccm_wr_rdbk_issue | dccm_wr_rdbk_snoop_lo | dccm_wr_rdbk_snoop_hi;
+
+      // Error if the read-back data doesn't match the expected data.
+      assign dccm_wr_readback_error = dccm_wr_rdbk_active &
+                     ((dccm_wr_rdbk_active_hi ? dccm_rd_data_hi[pt.DCCM_FDATA_WIDTH-1:0] : dccm_rd_data_lo[pt.DCCM_FDATA_WIDTH-1:0]) != dccm_wr_rdbk_expect[pt.DCCM_FDATA_WIDTH-1:0]);
+
+      // First-fault-wins: only latch while no previously-captured fault is still pending a DMI clear.
+      assign dccm_wr_rdbk_fault_capture_en = dccm_wr_readback_error & ~dccm_wr_rdbk_fault_valid;
+
+      // Set on commit, cleared exactly when the window resolves (steal or snoop).
+      rvdffsc #(.WIDTH(1)) dccm_wr_rdbk_pend_ffi
+         (.din(1'b1), .dout(dccm_wr_rdbk_pend_ff),
+          .en(dccm_wr_rdbk_arm), .clear(dccm_wr_rdbk_resolve), .clk(clk), .*);
+
+      // Register the store address in the cycle where dccm_wr_rdbk_arm goes high.
+      rvdffe #(pt.DCCM_BITS) dccm_wr_rdbk_addr_ffi
+         (.din(stbuf_addr_any[pt.DCCM_BITS-1:0]), .dout(dccm_wr_rdbk_addr_ff[pt.DCCM_BITS-1:0]),
+          .en(dccm_wr_rdbk_arm | clk_override), .clk(clk), .*);
+
+      // Register the store data in the cycle where dccm_wr_rdbk_arm goes high.
+      rvdffe #(pt.DCCM_FDATA_WIDTH) dccm_wr_rdbk_data_ffi
+         (.din(dccm_wr_data_lo[pt.DCCM_FDATA_WIDTH-1:0]), .dout(dccm_wr_rdbk_data_ff[pt.DCCM_FDATA_WIDTH-1:0]),
+          .en(dccm_wr_rdbk_arm | clk_override), .clk(clk), .*);
+
+      // The read-back is active exactly one cycle after it resolved (steal or snoop).
+      rvdff #(1) dccm_wr_rdbk_active_ffi
+         (.din(dccm_wr_rdbk_resolve), .dout(dccm_wr_rdbk_active), .clk(clk), .*);
+
+      // Only a snoop on the hi half (with no lo match) needs the hi bank for compare.
+      rvdff #(1) dccm_wr_rdbk_active_hi_ffi
+         (.din(dccm_wr_rdbk_snoop_hi & ~dccm_wr_rdbk_snoop_lo), .dout(dccm_wr_rdbk_active_hi), .clk(clk), .*);
+
+      // Register the expected value for the read-back.
+      rvdffe #(pt.DCCM_FDATA_WIDTH) dccm_wr_rdbk_expect_ffi
+         (.din(dccm_wr_rdbk_data_ff[pt.DCCM_FDATA_WIDTH-1:0]), .dout(dccm_wr_rdbk_expect[pt.DCCM_FDATA_WIDTH-1:0]),
+          .en(dccm_wr_rdbk_resolve | clk_override), .clk(clk), .*);
+
+      // Sticky fault capture for DMI visibility. Set on first fault, held until an explicit
+      // DMI write clears it (dccm_wr_rdbk_fault_clear).
+      rvdffsc #(.WIDTH(1)) dccm_wr_rdbk_fault_valid_ffi
+         (.din(1'b1), .dout(dccm_wr_rdbk_fault_valid),
+          .en(dccm_wr_rdbk_fault_capture_en), .clear(dccm_wr_rdbk_fault_clear), .clk(clk), .*);
+
+      rvdffs #(pt.DCCM_BITS) dccm_wr_rdbk_fault_addr_ffi
+         (.din(dccm_wr_rdbk_addr_ff[pt.DCCM_BITS-1:0]), .dout(dccm_wr_rdbk_fault_addr[pt.DCCM_BITS-1:0]),
+          .en(dccm_wr_rdbk_fault_capture_en), .clk(clk), .*);
+
+      rvdffs #(pt.DCCM_FDATA_WIDTH) dccm_wr_rdbk_fault_data_ffi
+         (.din(dccm_wr_rdbk_active_hi ? dccm_rd_data_hi[pt.DCCM_FDATA_WIDTH-1:0] : dccm_rd_data_lo[pt.DCCM_FDATA_WIDTH-1:0]),
+          .dout(dccm_wr_rdbk_fault_data[pt.DCCM_FDATA_WIDTH-1:0]),
+          .en(dccm_wr_rdbk_fault_capture_en), .clk(clk), .*);
+`else
+      assign dccm_wr_rdbk_pend_ff     = 1'b0;
+      assign dccm_wr_readback_error   = 1'b0;
+      assign dccm_wr_rdbk_fault_valid = 1'b0;
+      assign dccm_wr_rdbk_fault_addr  = '0;
+      assign dccm_wr_rdbk_fault_data  = '0;
+`endif
+
    end else begin: Gen_dccm_disable
       assign lsu_dccm_rden_m = '0;
       assign lsu_dccm_rden_r = '0;
@@ -418,6 +553,12 @@ import el2_pkg::*;
       assign ld_single_ecc_error_lo_r_ff = 1'b0;
       assign ld_sec_addr_hi_r_ff[pt.DCCM_BITS-1:0] = '0;
       assign ld_sec_addr_lo_r_ff[pt.DCCM_BITS-1:0] = '0;
+
+      assign dccm_wr_rdbk_pend_ff     = 1'b0;
+      assign dccm_wr_readback_error   = 1'b0;
+      assign dccm_wr_rdbk_fault_valid = 1'b0;
+      assign dccm_wr_rdbk_fault_addr  = '0;
+      assign dccm_wr_rdbk_fault_data  = '0;
    end
 
 `ifdef RV_ASSERT_ON
@@ -429,6 +570,15 @@ import el2_pkg::*;
    assert_ld_single_ecc_error_commit: assert property (ld_single_ecc_error_commit) else
      $display("No commit or DMA but ECC correction happened");
 
+`ifdef RV_DCCM_WR_READBACK
+   // A real D-stage read can never be present while the steal issues, the
+   // steal only fires when nothing else wants to read this cycle.
+   property dccm_wr_rdbk_no_conflict;
+      @(posedge clk) disable iff(~rst_l) dccm_wr_rdbk_issue |-> ~lsu_dccm_rden_d;
+   endproperty
+   assert_dccm_wr_rdbk_no_conflict: assert property (dccm_wr_rdbk_no_conflict) else
+     $display("Real D-stage read present during readback steal");
+`endif
 
 `endif
 

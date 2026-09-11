@@ -239,9 +239,10 @@ import pv_defines_pkg::*;
 
     // Construct the HW fatal error struct from UVMF interface signals
     cptra_hw_fatal_error_t cptra_hw_fatal_errors_i;
-    assign cptra_hw_fatal_errors_i.crypto_err = cptra_ctrl_agent_bus.crypto_error;
-    assign cptra_hw_fatal_errors_i.kv_error   = 1'b0;
-    assign cptra_hw_fatal_errors_i.fsm_error  = 1'b0;
+    assign cptra_hw_fatal_errors_i.crypto_err  = cptra_ctrl_agent_bus.crypto_error;
+    assign cptra_hw_fatal_errors_i.kv_error    = 1'b0;
+    assign cptra_hw_fatal_errors_i.fsm_error   = 1'b0;
+    assign cptra_hw_fatal_errors_i.rv_dcls_err = 1'b0;
 
     // DUT
     soc_ifc_top #(

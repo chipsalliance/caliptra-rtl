@@ -31,7 +31,9 @@ reg {
     rw_rw_sticky_hw kv_error=0;         /* KV boot flow monitor dest_valid mismatch */
     rw_rw_sticky_hw shadow_storage_err=0; /* Shadow register storage fault (fatal -- register or shadow corrupted) */
     rw_rw_sticky_hw fsm_error=0; /* Fatal FSM error -- Sparse FSM entered invalid state*/
-    field {sw=r; hw=w;} rsvd[25]=25'h0;
+    rw_rw_sticky_hw rv_dcls_err=0;          /* RISC-V dual-core lockstep (DCLS) corruption detected */
+    rw_rw_sticky_hw dccm_wr_readback_err=0; /* DCCM write-readback mismatch detected (data corrupted on store) */
+    field {sw=r; hw=w;} rsvd[23]=23'h0;
 } CPTRA_HW_ERROR_FATAL;
 reg {
     name = "Hardware Error Non-Fatal";
