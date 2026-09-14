@@ -220,8 +220,8 @@ import el2_pkg::*;
       assign dccm_dma_ecc_error   = lsu_double_ecc_error_r;
       assign dccm_dma_rtag[2:0]   = dma_mem_tag_r[2:0];
       assign dccm_dma_rdata[63:0] = ldst_dual_r ? lsu_rdata_corr_r[63:0] : {2{lsu_rdata_corr_r[31:0]}};
-      assign {lsu_ld_data_r_nc[63:32], lsu_ld_data_r[31:0]}           = lsu_rdata_r[63:0] >> 8*lsu_addr_r[1:0];
-      assign {lsu_ld_data_corr_r_nc[63:32], lsu_ld_data_corr_r[31:0]} = lsu_rdata_corr_r[63:0] >> 8*lsu_addr_r[1:0];
+      assign {lsu_ld_data_r_nc[63:32], lsu_ld_data_r[31:0]}           = 64'(lsu_rdata_r[63:0] >> 8*lsu_addr_r[1:0]);
+      assign {lsu_ld_data_corr_r_nc[63:32], lsu_ld_data_corr_r[31:0]} = 64'(lsu_rdata_corr_r[63:0] >> 8*lsu_addr_r[1:0]);
 
       assign picm_rd_data_r[63:32]   = picm_rd_data_r[31:0];
       assign dccm_rdata_r[63:0]      = {dccm_rdata_hi_r[31:0],dccm_rdata_lo_r[31:0]};
@@ -245,6 +245,9 @@ import el2_pkg::*;
       rvdffe #(64)                 stbuf_fwddata_ff      (.*, .din({stbuf_fwddata_hi_m[31:0], stbuf_fwddata_lo_m[31:0]}),   .dout({stbuf_fwddata_hi_r[31:0], stbuf_fwddata_lo_r[31:0]}),   .en(stbuf_fwddata_en));
       rvdffe #(32)                 picm_rddata_rff       (.*, .din(picm_rd_data_m[31:0]),                                   .dout(picm_rd_data_r[31:0]),                                   .en(addr_in_pic_m | clk_override));
       rvdff #(3)                   dma_mem_tag_rff       (.*, .din(dma_mem_tag_m[2:0]),                                     .dout(dma_mem_tag_r[2:0]),                                     .clk(lsu_c1_r_clk));
+
+      // Tie-off unused signal to avoid linting errors.
+      assign lsu_ld_data_m        = '0;
 
    end else begin: L2U_Plus1_0
 
