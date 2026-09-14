@@ -918,7 +918,7 @@ module caliptra_top_tb_services
 
     initial ras_test_ctrl.error_injection_seen = 1'b0;
     always @(negedge clk) begin
-        if (mailbox_write && WriteData[7:0] inside {8'he5, 8'he6, 8'hfd, 8'hfe}) begin
+        if (mailbox_write && WriteData[7:0] inside {8'h95, 8'he5, 8'he6, 8'hfd, 8'hfe}) begin
             ras_test_ctrl.error_injection_seen <= 1'b1;
         end
     end
@@ -1021,7 +1021,7 @@ module caliptra_top_tb_services
         if (!cptra_rst_b) begin
             kv_idx <= '0;
             check_kv_clear <= '0;
-        end else if (((WriteData[15:0] & 16'hE0A2) == 16'hA0A2) && mailbox_write) begin
+        end else if (((WriteData[15:0] & 16'hE0FF) == 16'hA0A2) && (WriteData[12:8] < 5'd24) && mailbox_write) begin
             kv_idx <= (WriteData[15:0] & 16'h1F00) >> 8;
             check_kv_clear <= '1;
         end else begin
@@ -1679,11 +1679,14 @@ module caliptra_top_tb_services
     logic assert_ss_tran;
 
     initial begin
-        if (!$test$plusargs("CALIPTRA_DEBUG_UNLOCKED")) begin
-             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b1}; // DebugLocked & Production
-        end else begin
-            security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: 1'b0}; // DebugUnlocked & Production
-        end
+ `ifdef CALIPTRA_DEBUG_UNLOCKED
+         security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4False};
+ `else
+         if ($test$plusargs("CALIPTRA_DEBUG_UNLOCKED"))
+             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4False};
+         else
+             security_state = '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4True};
+ `endif
     end
 
     always @(negedge clk) begin
@@ -1731,12 +1734,12 @@ module caliptra_top_tb_services
     always @(negedge clk) begin
         //Switch to debug unlocked
         if ((WriteData[15:0] == 16'h18A2) && mailbox_write) begin
-            security_state.debug_locked <= 1'b0;
+            security_state.debug_locked <= MuBi4False;
             $display("Setting debug_locked to 0");
         end
         //Switch to debug locked
         else if ((WriteData[15:0] == 16'h19A2) && mailbox_write) begin
-            security_state.debug_locked <= 1'b1;
+            security_state.debug_locked <= MuBi4True;
             $display("Setting debug_locked to 1");
         end
     end
