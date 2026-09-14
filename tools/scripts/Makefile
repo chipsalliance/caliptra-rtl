@@ -349,8 +349,16 @@ vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
 
 ############ TEST Simulation ###############################
 
+# Extra runtime plusargs (e.g. +CALIPTRA_TEST_STASH_BANK for the RFC #673
+# stash-bank smoke tests) are declared per-test in that test's own
+# <testname>.yml under plusargs: (same convention as e.g. smoke_test_doe.yml's
+# +CLP_OCP_LOCK_DIS), not pattern-matched here from TESTNAME. The regression
+# runner reads that yml and passes them through via RUN_PLUSARGS on the
+# command line.
+RUN_PLUSARGS ?=
+
 verilator: program.hex verilator-build
-	set -eo pipefail; ./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS) 2>&1 | tee verilator_sim.log
+	set -eo pipefail; ./obj_dir/Vcaliptra_top_tb $(VERILATOR_RUN_ARGS) $(RUN_PLUSARGS) 2>&1 | tee verilator_sim.log
 
 vcs: program.hex vcs-build
 	cp -r $(TEST_GEN_FILES) $(BUILD_DIR)
@@ -364,7 +372,7 @@ ifeq ($(WAVES),1)
 	@echo 'quit'                                             >> $(VCS_WAVES_UCLI_SCRIPT)
 	@echo "FSDB waveform dump enabled -> $(BUILD_DIR)/$(VCS_WAVES_DUMPFILE)"
 endif
-	./simv.caliptra_top_tb $(COVERAGE_ARGS) $(VCS_WAVES_ARGS) +ntb_random_seed=$(VCS_RANDOM_SEED) -l vcs_sim.log
+	./simv.caliptra_top_tb $(COVERAGE_ARGS) $(VCS_WAVES_ARGS) $(RUN_PLUSARGS) +ntb_random_seed=$(VCS_RANDOM_SEED) -l vcs_sim.log
 
 ############ TEST build ###############################
 

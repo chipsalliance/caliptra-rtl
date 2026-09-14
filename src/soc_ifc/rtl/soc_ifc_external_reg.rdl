@@ -558,3 +558,96 @@ reg {
     field {desc = "Entropy bypass mode. When set to 1, enables bypass mode (es_type) to allow entropy characterization directly without passing through conditioning."; sw=rw; resetsignal=cptra_rst_b;} bypass_mode=0;
  } CPTRA_iTRNG1_ENTROPY_CONFIG_2;
 
+////////////////////////////////////////////////////////////////
+// STASH measurement register bank (RFC 673)
+// SOC-writable direct register interface for early-boot measurement
+// deposit, bypassing the STASH_MEASUREMENT mailbox protocol.
+//
+// Layout (per RFC 673 §3):
+//   8 slots, 26 dwords each (104 B per slot) - flat 1-D array, idx = slot*26 + dword
+//     dword  0       : metadata (4 B)
+//     dwords 1-12    : measurement (48 B - SHA-384 digest)
+//     dwords 13-24   : context (48 B)
+//     dword  25      : svn (4 B)
+//
+//   STASH_BANK_SLOT_DATA[208] @0xC00 .. @0xF3F  (832 B total)
+//   STASH_BANK_SOC_LOCK       @0xF40   (W1S, SoC)
+//   STASH_END_STASH           @0xF44   (W1S, SoC)
+//   STASH_BANK_CPTRA_LOCK     @0xF48   (W1S, Caliptra Runtime)
+//   STASH_BANK_STATUS         @0xF4C   (RO, single read path for both sides)
+//
+// Lock gating, PAUSER filtering, the status mirror, and subsystem-mode slot
+// selection all live in soc_ifc_top.sv:
+//
+//   PAUSER filtering shares the mailbox AXI USER set - the five
+//   CPTRA_MBOX_VALID_AXI_USER entries plus the unconditionally valid
+//   CPTRA_DEF_MBOX_VALID_AXI_USER. There is no dedicated STASH_PAUSER.
+//
+//   CALIPTRA_MODE_SUBSYSTEM builds implement slot 0 only: slots 1..7 are
+//   write-disabled and their STASH_BANK_SOC_LOCK bits are tied low, so
+//   STASH_BANK_STATUS.slot_locked reports at most slot 0. Their addresses stay
+//   allocated - soc_ifc_reg.sv is one generated block shared by passive and
+//   subsystem builds - and read as 0.
+reg {
+    desc = "Stash measurement slot data dword. Flat index = slot_idx * 26 + dword_idx,
+            with slot_idx in [0..7] and dword_idx in [0..25].
+            Slot payload (per RFC 673 §3): dword 0 = metadata, dwords 1-12 = measurement (SHA-384),
+            dwords 13-24 = context, dword 25 = svn.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RW (writes dropped when STASH_BANK_SOC_LOCK[slot_idx], STASH_END_STASH, or STASH_BANK_CPTRA_LOCK is set, or when AXI USER does not match MBOX_PAUSER)";
+    field {sw=rw; hw=r; swwel; resetsignal=cptra_rst_b;} data[32]=0;
+} STASH_BANK_SLOT_DATA[208] @0xC00;
+
+reg {
+    name = "Stash bank per-slot lock";
+    desc = "Per-slot write-1-to-set lock. SoC writes 1 to bit i to lock slot i; once set, slot data
+            registers for slot i become read-only. The lock state is observable only via
+            STASH_BANK_STATUS.slot_locked (this register itself is write-only; reads return 0).
+            Cleared only by cptra_rst_b.
+            CALIPTRA_MODE_SUBSYSTEM builds implement bit 0 only; bits 7:1 have no effect and do
+            not appear in STASH_BANK_STATUS.slot_locked.
+            [br]Caliptra Access: (no access; uC writes silently dropped, reads return 0)
+            [br]SOC Access:      W1S";
+    field {sw=w; hw=r; swwe; onwrite=woset; resetsignal=cptra_rst_b;} lock[8]=0;
+} STASH_BANK_SOC_LOCK @0xF40;
+
+reg {
+    name = "Stash end-of-stash latch";
+    desc = "SoC-asserted write-1-to-set end-of-stash. Once set, all subsequent writes to
+            STASH_BANK_SLOT_DATA and STASH_BANK_SOC_LOCK are silently dropped. The latched state
+            is observable only via STASH_BANK_STATUS.end_stash (this register itself is write-only;
+            reads return 0). Cleared only by cptra_rst_b.
+            [br]Caliptra Access: (no access; uC writes silently dropped, reads return 0)
+            [br]SOC Access:      W1S";
+    field {sw=w; hw=r; swwe; onwrite=woset; resetsignal=cptra_rst_b;} end_stash[1]=0;
+} STASH_END_STASH @0xF44;
+
+reg {
+    name = "Stash bank Caliptra post-drain lock";
+    desc = "Caliptra-asserted write-1-to-set defense-in-depth lock. Writeable only by Caliptra
+            microcontroller (uC) - per RFC 673, written by Caliptra Runtime FW after it has
+            finished draining the bank. SoC AXI writes are silently dropped at the swwe gate in
+            soc_ifc_top.sv. Once set, the entire stash bank is permanently locked against any
+            further modification for the remainder of the boot. The latched state is observable
+            only via STASH_BANK_STATUS.cptra_lock (this register itself is write-only; reads return 0).
+            Cleared only by cptra_rst_b.
+            [br]Caliptra Access: W1S
+            [br]SOC Access:      (writes silently dropped; reads return 0)";
+    field {sw=w; hw=r; swwe; onwrite=woset; resetsignal=cptra_rst_b;} cptra_lock[1]=0;
+} STASH_BANK_CPTRA_LOCK @0xF48;
+
+reg {
+    name = "Stash bank status";
+    desc = "Single read path for all stash bank lock state. Mirror of STASH_BANK_SOC_LOCK /
+            STASH_END_STASH / STASH_BANK_CPTRA_LOCK driven by soc_ifc_top.sv glue. The three
+            lock registers are W1S write-only; this status register is how both SoC and Caliptra
+            observe lock state.
+            slot_locked covers the implemented slots: bits 7:0 in passive builds, bit 0 in
+            CALIPTRA_MODE_SUBSYSTEM builds.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RO";
+    field {sw=r; hw=w;} slot_locked[8]=0;
+    field {sw=r; hw=w;} end_stash[1]=0;
+    field {sw=r; hw=w;} cptra_lock[1]=0;
+} STASH_BANK_STATUS @0xF4C;
+
