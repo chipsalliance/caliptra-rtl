@@ -879,14 +879,16 @@ import caliptra_top_tb_pkg::*; #(
     end
 
     always @(posedge core_clk) begin
+        axi_resp_e agg_resp;
         if (axi_put_status) begin
             if (done) begin
-                if (read && write) // Need to merge the results
+                if (read && write) begin // Need to merge the results
                     // only keep read response user bit
-                    // OR the status, if one is an error, the whole transaction looks like an error
-                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, (axi_rresp.pop_front() | axi_bresp), 1'b1};
-                else if (read)
-                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, axi_rresp.pop_front(), 1'b1};
+                    // OR the status, if one is an error, the whole transaction reports an error
+                    agg_resp = aggregate_rresp(axi_rresp);
+                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, (agg_resp > axi_bresp? agg_resp: axi_bresp), 1'b1};
+                end else if (read)
+                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, aggregate_rresp(axi_rresp), 1'b1};
                 else if (write)// write
                     generic_input_wires <= {axi_buser, 29'b0, axi_bresp, 1'b1};
                 else if (write_addr)
@@ -898,7 +900,7 @@ import caliptra_top_tb_pkg::*; #(
                 else if (read_addr)
                     generic_input_wires <= {63'h0, 1'b1};
                 else if (read_resp)
-                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, axi_rresp.pop_front(), 1'b1};
+                    generic_input_wires <= {axi_ruser.pop_front(), 29'd0, aggregate_rresp(axi_rresp), 1'b1};
             end else
                 generic_input_wires <= '0;
         end else if (axi_put_rdata) begin
@@ -1078,5 +1080,18 @@ initial begin
         end
     end
 end
+
+function automatic axi_resp_e aggregate_rresp(ref axi_resp_e resp_q[$]);
+    axi_resp_e aggregate;
+    axi_resp_e resp;
+
+    aggregate = AXI_RESP_OKAY;
+    while (resp_q.size() != 0) begin
+        resp = resp_q.pop_front();
+        // Response precedence DECERR -> SLVERR -> EXOKAY -> OKAY
+        aggregate = resp > aggregate? resp: aggregate;
+    end
+    return aggregate;
+endfunction
 
 endmodule
