@@ -1,7 +1,7 @@
 ---
 name: RTL Trademark Exemption Diff
 about: Template for filing RTL diffs that require an exemption from Trademark requirements.
-title: "[RTL Trademark Exemption] "
+title: "[RTL Trademark Exemption] {Add a meaningful title here}"
 labels: ["Trademark Exemption"]
 assignees: ''
 
