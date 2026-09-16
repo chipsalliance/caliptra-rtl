@@ -295,11 +295,12 @@ always_comb begin
   //clear valid when new request is made
   hwif_in.HMAC512_KV_RD_KEY_STATUS.VALID.hwclr = kv_key_read_ctrl_reg.read_en;
   hwif_in.HMAC512_KV_RD_BLOCK_STATUS.VALID.hwclr = kv_block_read_ctrl_reg.read_en;
-  hwif_in.HMAC512_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en;
-  //clear enable when busy
+  hwif_in.HMAC512_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en | zeroize_reg;
+  //clear enable when busy, or on zeroize so a failed operation cannot leave
+  //the KV write request armed for the next operation
   hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.hwclr = ~kv_key_ready;
   hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.hwclr = ~kv_block_ready;
-  hwif_in.HMAC512_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
+  hwif_in.HMAC512_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready | zeroize_reg;
   //assign hardware readable registers to drive hmac core
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++) begin
     key_reg[dword] = hwif_out.HMAC512_CTRL.CSR_MODE.value ? cptra_csr_hmac_key[dword] : hwif_out.HMAC512_KEY[dword].KEY.value;
