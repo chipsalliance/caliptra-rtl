@@ -345,6 +345,70 @@
 
       error_ctr += sb.err_count;
 
+      // PHASE 3: cover + verify the interrupt count registers. Each *_intr_count_r.cnt
+      // increments on its internal_intr_r rising edge (clears only on cptra_pwrgood) and
+      // the covergroup bins it zero/one/few[2:15]/many[16:$]. Trigger every source
+      // NUM_BURSTS(>=16) times, then read each counter back and confirm it advanced.
+      begin : intr_count_coverage_check
+        int NUM_BURSTS = 20;
+        strq_t count_regnames;
+        dword_t init_cnt [string];
+        string cn;
+        dword_t exp_cnt;
+
+        tphase = "3";
+        $display ("\n------------------------------------------------------------------------------");
+        $display ("3. Coverage+check: burst every interrupt source %0dx and verify count regs", NUM_BURSTS);
+        $display ("------------------------------------------------------------------------------");
+
+        // COUNT registers only (intrblk_regnames excludes *_INCR_R / SHA_ACC_*)
+        foreach (intrblk_regnames[i])
+          if (str_endswith(intrblk_regnames[i], "_INTR_COUNT_R"))
+            count_regnames.push_back(intrblk_regnames[i]);
+
+        foreach (count_regnames[j]) begin
+          cn = count_regnames[j];
+          rdtrans.update_byname(cn, 0, tid);
+          read_reg_trans(GET_AHB, rdtrans);
+          init_cnt[cn] = rdtrans.data;
+        end
+
+        // Trigger every source NUM_BURSTS times (trig sets sts -> count++; W1C lets it re-fire)
+        foreach (wo_regnames[i]) begin
+          dword_t trig_mask;
+          rname = wo_regnames[i];
+          associated_rname = rname == "INTR_BRF_ERROR_INTR_TRIG_R" ? "INTR_BRF_ERROR_INTERNAL_INTR_R" :
+                             rname == "INTR_BRF_NOTIF_INTR_TRIG_R" ? "INTR_BRF_NOTIF_INTERNAL_INTR_R" :
+                                                                     "UNDEFINED";
+          trig_mask = get_mask(rname);
+          $display ("\n-- Bursting all sources of %s (mask 0x%08x) %0dx --", rname, trig_mask, NUM_BURSTS);
+          for (int burst = 0; burst < NUM_BURSTS; burst++) begin
+            wrtrans.update_byname(rname, trig_mask, tid);
+            write_reg_trans(SET_AHB, wrtrans);
+            repeat (5) @(posedge clk_tb);
+            wrtrans.update_byname(associated_rname, trig_mask, tid);
+            write_reg_trans(SET_AHB, wrtrans);
+            repeat (5) @(posedge clk_tb);
+          end
+        end
+
+        // '>=' not '==': tolerate a benign extra HW event; a short count is a real miss
+        foreach (count_regnames[j]) begin
+          cn = count_regnames[j];
+          exp_cnt = init_cnt[cn] + NUM_BURSTS;
+          rdtrans.update_byname(cn, 0, tid);
+          read_reg_trans(GET_AHB, rdtrans);
+          if (rdtrans.data < exp_cnt) begin
+            $display ("TB ERROR. %s = 0x%08x after %0d triggers; expected >= 0x%08x (init 0x%08x + %0d)",
+                      cn, rdtrans.data, NUM_BURSTS, exp_cnt, init_cnt[cn], NUM_BURSTS);
+            error_ctr += 1;
+          end
+          else
+            $display ("TB INFO. %s counted to 0x%08x (>= %0d triggers; walked zero/one/few/many bins)",
+                      cn, rdtrans.data, NUM_BURSTS);
+        end
+      end
+
     end
   endtask // soc_reg_intrblk_test;
 
