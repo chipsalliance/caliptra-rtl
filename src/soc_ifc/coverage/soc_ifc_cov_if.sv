@@ -4155,7 +4155,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_error_internal_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_error_internal_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_error_internal_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_count_r;
+    intr_brf_error_internal_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_internal_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_error_internal_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4164,7 +4166,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_error_inv_dev_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_error_inv_dev_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_error_inv_dev_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_inv_dev_intr_count_r;
+    intr_brf_error_inv_dev_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_inv_dev_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_error_inv_dev_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4173,7 +4177,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_error_cmd_fail_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_error_cmd_fail_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_error_cmd_fail_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_cmd_fail_intr_count_r;
+    intr_brf_error_cmd_fail_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_cmd_fail_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_error_cmd_fail_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4182,7 +4188,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_error_bad_fuse_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_error_bad_fuse_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_error_bad_fuse_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_bad_fuse_intr_count_r;
+    intr_brf_error_bad_fuse_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_bad_fuse_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_error_bad_fuse_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4191,7 +4199,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_error_iccm_blocked_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_error_iccm_blocked_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_error_iccm_blocked_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_iccm_blocked_intr_count_r;
+    intr_brf_error_iccm_blocked_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_iccm_blocked_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_error_iccm_blocked_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4200,7 +4210,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_error_mbox_ecc_unc_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_error_mbox_ecc_unc_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_error_mbox_ecc_unc_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r;
+    intr_brf_error_mbox_ecc_unc_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_mbox_ecc_unc_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_error_mbox_ecc_unc_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4209,7 +4221,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_error_wdt_timer1_timeout_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_error_wdt_timer1_timeout_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_error_wdt_timer1_timeout_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_r;
+    intr_brf_error_wdt_timer1_timeout_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_wdt_timer1_timeout_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_error_wdt_timer1_timeout_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4218,7 +4232,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_error_wdt_timer2_timeout_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_error_wdt_timer2_timeout_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_error_wdt_timer2_timeout_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_r;
+    intr_brf_error_wdt_timer2_timeout_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.error_wdt_timer2_timeout_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_error_wdt_timer2_timeout_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4227,7 +4243,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_notif_cmd_avail_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_notif_cmd_avail_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_notif_cmd_avail_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_cmd_avail_intr_count_r;
+    intr_brf_notif_cmd_avail_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_cmd_avail_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_notif_cmd_avail_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4236,7 +4254,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_notif_mbox_ecc_cor_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_notif_mbox_ecc_cor_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_notif_mbox_ecc_cor_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r;
+    intr_brf_notif_mbox_ecc_cor_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_mbox_ecc_cor_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_notif_mbox_ecc_cor_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4245,7 +4265,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_notif_debug_locked_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_notif_debug_locked_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_notif_debug_locked_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_debug_locked_intr_count_r;
+    intr_brf_notif_debug_locked_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_debug_locked_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_notif_debug_locked_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4254,7 +4276,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_notif_scan_mode_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_notif_scan_mode_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_notif_scan_mode_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_scan_mode_intr_count_r;
+    intr_brf_notif_scan_mode_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_scan_mode_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_notif_scan_mode_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4263,7 +4287,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_notif_soc_req_lock_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_notif_soc_req_lock_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_notif_soc_req_lock_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_soc_req_lock_intr_count_r;
+    intr_brf_notif_soc_req_lock_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_soc_req_lock_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_notif_soc_req_lock_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
@@ -4272,7 +4298,9 @@ interface soc_ifc_cov_if
 
   // ----------------------- COVERGROUP intr_brf_notif_gen_in_toggle_intr_count_r -----------------------
   covergroup soc_ifc_intr_brf_notif_gen_in_toggle_intr_count_r_cg (ref logic [3:0] bus_event) @(posedge clk);
-    intr_brf_notif_gen_in_toggle_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_r;
+    intr_brf_notif_gen_in_toggle_intr_count_r_cp : coverpoint i_soc_ifc_reg.field_storage.intr_block_rf.notif_gen_in_toggle_intr_count_r {
+      bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};
+   }
     bus_intr_brf_notif_gen_in_toggle_intr_count_r_cp : coverpoint bus_event {
       bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
       ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
