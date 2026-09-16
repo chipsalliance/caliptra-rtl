@@ -47,7 +47,7 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <div class="header-row">
 <h1>Caliptra Nightly Directed Regression Results</h1>
 </div>
-<p class="meta">Build&nbsp;ID:&nbsp;<strong>4345918</strong> &nbsp;·&nbsp; Run&nbsp;date:&nbsp;<strong>2026091512</strong> &nbsp;·&nbsp; Totals:&nbsp;<strong>333</strong>&nbsp;tests&nbsp;|&nbsp;<span style="color:#2e7d32">324 passed</span>&nbsp;|&nbsp;<span style="color:#c62828">9 failed</span>&nbsp;|&nbsp;<span style="color:#757575">0 skipped</span></p>
+<p class="meta">Build&nbsp;ID:&nbsp;<strong>4347237</strong> &nbsp;·&nbsp; Run&nbsp;date:&nbsp;<strong>2026091520</strong> &nbsp;·&nbsp; Totals:&nbsp;<strong>357</strong>&nbsp;tests&nbsp;|&nbsp;<span style="color:#2e7d32">352 passed</span>&nbsp;|&nbsp;<span style="color:#c62828">5 failed</span>&nbsp;|&nbsp;<span style="color:#757575">0 skipped</span></p>
 <h2>Suite Summary</h2>
 <table>
 <thead><tr>
@@ -68,19 +68,19 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 </tr>
 <tr>
 <td>Regress_caliptra_top_ss_mode_tb_nightly_directed</td>
-<td class="num">103</td>
-<td class="num" style="color:#2e7d32">97</td>
-<td class="num" style="color:#c62828">6</td>
-<td class="num" style="color:#757575">0</td>
-<td class="num pass-rate-bad">94.2%</td>
-</tr>
-<tr>
-<td>Regress_firmware_tb_nightly_directed</td>
-<td class="num">96</td>
-<td class="num" style="color:#2e7d32">95</td>
+<td class="num">97</td>
+<td class="num" style="color:#2e7d32">96</td>
 <td class="num" style="color:#c62828">1</td>
 <td class="num" style="color:#757575">0</td>
 <td class="num pass-rate-bad">99.0%</td>
+</tr>
+<tr>
+<td>Regress_firmware_tb_nightly_directed</td>
+<td class="num">104</td>
+<td class="num" style="color:#2e7d32">101</td>
+<td class="num" style="color:#c62828">3</td>
+<td class="num" style="color:#757575">0</td>
+<td class="num pass-rate-bad">97.1%</td>
 </tr>
 <tr>
 <td>Regress_doe_core_cbc_tb_nightly_directed</td>
@@ -148,11 +148,11 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 </tr>
 <tr>
 <td>Regress_soc_ifc_tb_nightly_directed</td>
-<td class="num">70</td>
-<td class="num" style="color:#2e7d32">69</td>
-<td class="num" style="color:#c62828">1</td>
+<td class="num">92</td>
+<td class="num" style="color:#2e7d32">92</td>
+<td class="num" style="color:#c62828">0</td>
 <td class="num" style="color:#757575">0</td>
-<td class="num pass-rate-bad">98.6%</td>
+<td class="num pass-rate-good">100.0%</td>
 </tr>
 <tr>
 <td>Regress_soc_ifc_ss_tb_nightly_directed</td>
@@ -177,42 +177,42 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>smoke_test_entropy_combiner_kat.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">189.00</td>
-<td>2026-09-15T10:17:06</td>
+<td class="num">168.00</td>
+<td>2026-09-15T06:15:34</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_entropy_combiner.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">191.00</td>
-<td>2026-09-15T10:17:01</td>
+<td class="num">204.00</td>
+<td>2026-09-15T06:15:37</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_entropy_combiner_conditioned.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">149.00</td>
-<td>2026-09-15T10:17:01</td>
+<td class="num">168.00</td>
+<td>2026-09-15T06:15:37</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_entropy_combiner_multiseed.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">173.00</td>
-<td>2026-09-15T10:17:01</td>
+<td class="num">213.00</td>
+<td>2026-09-15T06:15:40</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_entropy_combiner_lock_op.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">238.00</td>
-<td>2026-09-15T10:17:01</td>
+<td class="num">239.00</td>
+<td>2026-09-15T06:15:37</td>
 <td></td>
 </tr>
 </tbody></table>
 </details>
 <details open>
-<summary>Regress_caliptra_top_ss_mode_tb_nightly_directed — 103 tests | 97 passed | 6 failed | 0 skipped</summary>
+<summary>Regress_caliptra_top_ss_mode_tb_nightly_directed — 97 tests | 96 passed | 1 failed | 0 skipped</summary>
 <table class="detail-table">
 <thead><tr>
 <th>Test Name</th>
@@ -224,728 +224,686 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>smoke_test_datavault_mini.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">487.00</td>
-<td>2026-09-15T10:17:12</td>
+<td class="num">505.00</td>
+<td>2026-09-15T06:15:13</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_veer.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">45.00</td>
-<td>2026-09-15T10:17:12</td>
+<td class="num">40.00</td>
+<td>2026-09-15T06:15:16</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mbox.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">175.00</td>
-<td>2026-09-15T10:17:42</td>
+<td class="num">172.00</td>
+<td>2026-09-15T06:15:18</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mbox_byte_read.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">129.00</td>
-<td>2026-09-15T10:17:12</td>
+<td class="num">133.00</td>
+<td>2026-09-15T06:15:20</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mbox_cg.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">209.00</td>
-<td>2026-09-15T10:17:43</td>
+<td class="num">184.00</td>
+<td>2026-09-15T06:15:22</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha512.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">152.00</td>
-<td>2026-09-15T10:18:20</td>
+<td class="num">121.00</td>
+<td>2026-09-15T06:16:29</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha512_restore.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">136.00</td>
-<td>2026-09-15T10:20:08</td>
+<td class="num">152.00</td>
+<td>2026-09-15T06:18:05</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha256.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">132.00</td>
-<td>2026-09-15T10:21:50</td>
+<td class="num">129.00</td>
+<td>2026-09-15T06:18:41</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha256_wntz.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">248.00</td>
-<td>2026-09-15T10:21:46</td>
+<td class="num">237.00</td>
+<td>2026-09-15T06:18:41</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha256_wntz_rand.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">131.00</td>
-<td>2026-09-15T10:22:09</td>
+<td class="num">130.00</td>
+<td>2026-09-15T06:19:10</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha3.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">226.00</td>
-<td>2026-09-15T10:23:16</td>
+<td class="num">198.00</td>
+<td>2026-09-15T06:21:11</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha3_regs.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">138.00</td>
-<td>2026-09-15T10:25:12</td>
+<td class="num">147.00</td>
+<td>2026-09-15T06:21:14</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha3_externalmu.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">988.00</td>
-<td>2026-09-15T10:24:48</td>
+<td class="num">1000.00</td>
+<td>2026-09-15T06:22:41</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha3_interrupt.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">124.00</td>
-<td>2026-09-15T10:25:38</td>
+<td class="num">133.00</td>
+<td>2026-09-15T06:23:15</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_cshake.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">142.00</td>
-<td>2026-09-15T10:26:32</td>
+<td class="num">141.00</td>
+<td>2026-09-15T06:24:44</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha_accel.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">383.00</td>
-<td>2026-09-15T10:27:16</td>
+<td class="num">381.00</td>
+<td>2026-09-15T06:24:44</td>
 <td></td>
 </tr>
 <tr>
 <td>memCpy_ROM_to_dccm.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">48.00</td>
-<td>2026-09-15T10:27:55</td>
+<td class="num">34.00</td>
+<td>2026-09-15T06:25:13</td>
 <td></td>
 </tr>
 <tr>
 <td>memCpy_dccm_to_iccm.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">40.00</td>
-<td>2026-09-15T10:28:38</td>
+<td class="num">41.00</td>
+<td>2026-09-15T06:25:53</td>
 <td></td>
 </tr>
 <tr>
 <td>hello_world_iccm.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">45.00</td>
-<td>2026-09-15T10:29:12</td>
+<td class="num">38.00</td>
+<td>2026-09-15T06:26:00</td>
 <td></td>
 </tr>
 <tr>
 <td>iccm_lock.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">286.00</td>
-<td>2026-09-15T10:29:12</td>
+<td class="num">279.00</td>
+<td>2026-09-15T06:27:02</td>
 <td></td>
 </tr>
 <tr>
 <td>c_intr_handler.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">296.00</td>
-<td>2026-09-15T10:29:50</td>
+<td class="num">265.00</td>
+<td>2026-09-15T06:27:29</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_keygen.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1210.00</td>
-<td>2026-09-15T10:30:37</td>
+<td class="num">1026.00</td>
+<td>2026-09-15T06:27:27</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_sign.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1228.00</td>
-<td>2026-09-15T10:33:50</td>
+<td class="num">1222.00</td>
+<td>2026-09-15T06:31:36</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_verify.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1653.00</td>
-<td>2026-09-15T10:34:16</td>
+<td class="num">1512.00</td>
+<td>2026-09-15T06:31:56</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_verify_fail.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1481.00</td>
-<td>2026-09-15T10:35:08</td>
+<td class="num">1319.00</td>
+<td>2026-09-15T06:32:18</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecdh.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1143.00</td>
-<td>2026-09-15T10:41:36</td>
+<td class="num">1204.00</td>
+<td>2026-09-15T06:39:52</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_hmac.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">181.00</td>
-<td>2026-09-15T10:51:19</td>
+<td class="num">176.00</td>
+<td>2026-09-15T06:44:54</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">181.00</td>
-<td>2026-09-15T10:54:33</td>
+<td class="num">177.00</td>
+<td>2026-09-15T06:48:26</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_short_1_dword.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">677.00</td>
-<td>2026-09-15T10:54:48</td>
+<td class="num">741.00</td>
+<td>2026-09-15T06:51:58</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_long.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">235.00</td>
-<td>2026-09-15T10:57:47</td>
+<td class="num">252.00</td>
+<td>2026-09-15T06:52:20</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_short_dword.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">310.00</td>
-<td>2026-09-15T11:00:27</td>
+<td class="num">314.00</td>
+<td>2026-09-15T06:54:38</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_non_gcm_en_dec.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">841.00</td>
-<td>2026-09-15T11:00:52</td>
+<td class="num">918.00</td>
+<td>2026-09-15T06:56:57</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_rd_enc_axi_err.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">189.00</td>
-<td>2026-09-15T11:02:03</td>
+<td class="num">205.00</td>
+<td>2026-09-15T06:57:45</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_wr_enc_axi_err.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">198.00</td>
-<td>2026-09-15T11:02:06</td>
+<td class="num">211.00</td>
+<td>2026-09-15T07:00:24</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_collision_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">277.00</td>
-<td>2026-09-15T11:05:32</td>
+<td class="num">323.00</td>
+<td>2026-09-15T07:00:31</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_kv_no_ocp_lock.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">133.00</td>
-<td>2026-09-15T11:05:41</td>
+<td class="num">149.00</td>
+<td>2026-09-15T07:01:29</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_hmac_errortrigger.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">562.00</td>
-<td>2026-09-15T11:06:02</td>
+<td class="num">555.00</td>
+<td>2026-09-15T07:04:10</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mldsa_externalmu.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">506.00</td>
-<td>2026-09-15T11:06:28</td>
+<td class="num">521.00</td>
+<td>2026-09-15T07:04:25</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mldsa_sign_rnd.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">486.00</td>
-<td>2026-09-15T11:08:07</td>
+<td class="num">560.00</td>
+<td>2026-09-15T07:04:48</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">42.00</td>
-<td>2026-09-15T11:10:24</td>
+<td class="num">37.00</td>
+<td>2026-09-15T07:06:10</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sram_ecc.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">245.00</td>
-<td>2026-09-15T11:11:35</td>
+<td class="num">269.00</td>
+<td>2026-09-15T07:07:59</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ras.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">754.00</td>
-<td>2026-09-15T11:15:29</td>
+<td class="num">641.00</td>
+<td>2026-09-15T07:12:43</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_trng.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">256.00</td>
-<td>2026-09-15T11:15:27</td>
+<td class="num">209.00</td>
+<td>2026-09-15T07:12:43</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_hw_config.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">142.00</td>
-<td>2026-09-15T11:15:53</td>
+<td class="num">119.00</td>
+<td>2026-09-15T07:13:40</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_uds_reset.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">229.00</td>
-<td>2026-09-15T11:15:51</td>
+<td class="num">214.00</td>
+<td>2026-09-15T07:14:09</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_securitystate.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">766.00</td>
-<td>2026-09-15T11:16:48</td>
+<td class="num">939.00</td>
+<td>2026-09-15T07:14:42</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_hmac_multiblock_flow.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1225.00</td>
-<td>2026-09-15T11:18:54</td>
+<td class="num">1256.00</td>
+<td>2026-09-15T07:16:18</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_doe.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">631.00</td>
-<td>2026-09-15T11:20:06</td>
+<td class="num">648.00</td>
+<td>2026-09-15T07:18:28</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_cg.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">128.00</td>
-<td>2026-09-15T11:28:30</td>
+<td class="num">166.00</td>
+<td>2026-09-15T07:24:03</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_mldsa.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">325.00</td>
-<td>2026-09-15T11:30:06</td>
+<td class="num">310.00</td>
+<td>2026-09-15T07:27:05</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_mlkem.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">303.00</td>
-<td>2026-09-15T11:30:59</td>
+<td class="num">285.00</td>
+<td>2026-09-15T07:29:44</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mldsa_all_zero_seed.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">309.00</td>
-<td>2026-09-15T11:30:59</td>
+<td class="num">347.00</td>
+<td>2026-09-15T07:30:46</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mlkem_all_zero_seed.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">353.00</td>
-<td>2026-09-15T11:35:57</td>
+<td class="num">344.00</td>
+<td>2026-09-15T07:32:40</td>
 <td></td>
 </tr>
 <tr>
 <td>pv_hash_and_sign.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1461.00</td>
-<td>2026-09-15T11:36:26</td>
+<td class="num">1439.00</td>
+<td>2026-09-15T07:34:47</td>
 <td></td>
 </tr>
 <tr>
 <td>pv_hash_zeroize.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">147.00</td>
-<td>2026-09-15T11:36:28</td>
+<td class="num">157.00</td>
+<td>2026-09-15T07:36:52</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_pcr_signing.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1229.00</td>
-<td>2026-09-15T11:39:12</td>
+<td class="num">1245.00</td>
+<td>2026-09-15T07:38:10</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_fw_kv_backtoback_hmac.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">145.00</td>
-<td>2026-09-15T11:39:49</td>
+<td class="num">153.00</td>
+<td>2026-09-15T07:38:44</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger1.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1812.00</td>
-<td>2026-09-15T11:42:10</td>
+<td class="num">1785.00</td>
+<td>2026-09-15T07:40:05</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger2.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1471.00</td>
-<td>2026-09-15T11:42:29</td>
+<td class="num">1452.00</td>
+<td>2026-09-15T07:41:37</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger3.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2483.00</td>
-<td>2026-09-15T12:00:13</td>
+<td class="num">2526.00</td>
+<td>2026-09-15T07:59:45</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger4.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1339.00</td>
-<td>2026-09-15T12:01:29</td>
+<td class="num">1391.00</td>
+<td>2026-09-15T07:59:45</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger5.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2393.00</td>
-<td>2026-09-15T12:07:20</td>
+<td class="num">2392.00</td>
+<td>2026-09-15T08:06:18</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_pcr_zeroize.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">146.00</td>
-<td>2026-09-15T12:12:53</td>
+<td class="num">151.00</td>
+<td>2026-09-15T08:10:33</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ahb_mux.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">39.00</td>
-<td>2026-09-15T12:15:51</td>
+<td>2026-09-15T08:13:32</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_axi_wr_rst.yml</td>
 <td><span class="badge badge-fail badge-sm">FAILED</span></td>
-<td class="num">31.00</td>
-<td>2026-09-15T12:17:33</td>
+<td class="num">35.00</td>
+<td>2026-09-15T08:15:22</td>
 <td><span class="error-msg">Missing log file</span></td>
 </tr>
 <tr>
 <td>smoke_test_doe.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">123.00</td>
-<td>2026-09-15T12:18:33</td>
+<td class="num">154.00</td>
+<td>2026-09-15T08:16:40</td>
 <td></td>
 </tr>
 <tr>
 <td>directed_doe_scan.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">515.00</td>
-<td>2026-09-15T12:21:25</td>
+<td class="num">476.00</td>
+<td>2026-09-15T08:19:39</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_zeroize_crypto.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">137.00</td>
-<td>2026-09-15T12:24:08</td>
+<td class="num">115.00</td>
+<td>2026-09-15T08:23:11</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_doe_cg.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">127.00</td>
-<td>2026-09-15T12:26:41</td>
+<td class="num">135.00</td>
+<td>2026-09-15T08:25:22</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_datavault_basic.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">433.00</td>
-<td>2026-09-15T12:29:26</td>
+<td class="num">450.00</td>
+<td>2026-09-15T08:27:54</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_datavault_reset.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">937.00</td>
-<td>2026-09-15T12:30:26</td>
+<td class="num">995.00</td>
+<td>2026-09-15T08:28:18</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_datavault_lock.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">5793.00</td>
-<td>2026-09-15T12:37:01</td>
+<td class="num">5976.00</td>
+<td>2026-09-15T08:36:07</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_wdt.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">328.00</td>
-<td>2026-09-15T12:42:04</td>
+<td class="num">339.00</td>
+<td>2026-09-15T08:42:56</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_wdt_rst.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1339.00</td>
-<td>2026-09-15T12:46:29</td>
+<td class="num">1434.00</td>
+<td>2026-09-15T08:45:12</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_cg_wdt.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">534.00</td>
-<td>2026-09-15T12:47:43</td>
+<td class="num">529.00</td>
+<td>2026-09-15T08:46:23</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_clk_gating.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">153.00</td>
-<td>2026-09-15T12:47:49</td>
+<td class="num">175.00</td>
+<td>2026-09-15T08:49:05</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_iccm_reset.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">437.00</td>
-<td>2026-09-15T12:50:56</td>
+<td class="num">399.00</td>
+<td>2026-09-15T08:52:21</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">618.00</td>
-<td>2026-09-15T12:57:01</td>
+<td class="num">660.00</td>
+<td>2026-09-15T08:55:49</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mbox_dma_ecc.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">120.00</td>
-<td>2026-09-15T12:58:26</td>
+<td class="num">125.00</td>
+<td>2026-09-15T08:59:28</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_hek_flow.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">146.00</td>
-<td>2026-09-15T01:01:01</td>
+<td class="num">361.00</td>
+<td>2026-09-15T09:01:51</td>
 <td></td>
 </tr>
 <tr>
 <td>kv_entry_read_err.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">497.00</td>
-<td>2026-09-15T01:03:54</td>
+<td>2026-09-15T09:07:17</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_swwe_lock.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1341.00</td>
-<td>2026-09-15T01:07:39</td>
+<td class="num">1465.00</td>
+<td>2026-09-15T09:08:45</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_lock_use_mid_read.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">140.00</td>
-<td>2026-09-15T01:09:22</td>
+<td class="num">157.00</td>
+<td>2026-09-15T09:09:25</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_abr_kv_zero_error.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">361.00</td>
-<td>2026-09-15T01:12:12</td>
+<td class="num">360.00</td>
+<td>2026-09-15T09:12:24</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms24.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2457.00</td>
-<td>2026-09-15T01:12:28</td>
+<td class="num">2216.00</td>
+<td>2026-09-15T09:16:13</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms32.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">4012.00</td>
-<td>2026-09-15T01:18:48</td>
+<td class="num">4209.00</td>
+<td>2026-09-15T09:19:03</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w1_h5.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">3866.00</td>
-<td>2026-09-15T01:30:26</td>
+<td class="num">4011.00</td>
+<td>2026-09-15T09:33:40</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w1_h10.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">3890.00</td>
-<td>2026-09-15T01:54:03</td>
+<td class="num">3908.00</td>
+<td>2026-09-15T09:53:27</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w1_h15.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">4026.00</td>
-<td>2026-09-15T02:14:07</td>
+<td class="num">4212.00</td>
+<td>2026-09-15T10:16:20</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w1_h20.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">3805.00</td>
-<td>2026-09-15T02:26:06</td>
+<td class="num">4247.00</td>
+<td>2026-09-15T10:30:11</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w2_h5.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2107.00</td>
-<td>2026-09-15T02:35:17</td>
+<td class="num">1985.00</td>
+<td>2026-09-15T10:40:49</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w2_h10.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2430.00</td>
-<td>2026-09-15T02:59:14</td>
+<td class="num">2572.00</td>
+<td>2026-09-15T10:58:55</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w2_h15.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2669.00</td>
-<td>2026-09-15T03:11:03</td>
+<td class="num">2889.00</td>
+<td>2026-09-15T11:14:30</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w2_h20.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2665.00</td>
-<td>2026-09-15T03:21:04</td>
+<td class="num">2714.00</td>
+<td>2026-09-15T11:17:24</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w4_h5.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1497.00</td>
-<td>2026-09-15T03:22:13</td>
+<td class="num">1631.00</td>
+<td>2026-09-15T11:27:03</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w4_h10.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1528.00</td>
-<td>2026-09-15T03:29:52</td>
+<td class="num">1729.00</td>
+<td>2026-09-15T11:41:19</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w4_h15.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1770.00</td>
-<td>2026-09-15T03:40:13</td>
+<td class="num">1855.00</td>
+<td>2026-09-15T11:42:32</td>
 <td></td>
-</tr>
-<tr>
-<td>fw_test_lms_n24_w4_h20.yml</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1694.00</td>
-<td>2026-09-15T03:47:44</td>
-<td></td>
-</tr>
-<tr>
-<td>fw_test_lms_n32_w1_h5.yml</td>
-<td><span class="badge badge-fail badge-sm">FAILED</span></td>
-<td class="num">0.00</td>
-<td></td>
-<td><span class="error-msg">Test did not complete - marked as Failed by pipeline finalization (was: Pending)</span></td>
-</tr>
-<tr>
-<td>fw_test_lms_n32_w1_h10.yml</td>
-<td><span class="badge badge-fail badge-sm">FAILED</span></td>
-<td class="num">0.00</td>
-<td></td>
-<td><span class="error-msg">Test did not complete - marked as Failed by pipeline finalization (was: Pending)</span></td>
-</tr>
-<tr>
-<td>fw_test_lms_n32_w1_h15.yml</td>
-<td><span class="badge badge-fail badge-sm">FAILED</span></td>
-<td class="num">0.00</td>
-<td></td>
-<td><span class="error-msg">Test did not complete - marked as Failed by pipeline finalization (was: Pending)</span></td>
-</tr>
-<tr>
-<td>fw_test_lms_n32_w1_h20.yml</td>
-<td><span class="badge badge-fail badge-sm">FAILED</span></td>
-<td class="num">0.00</td>
-<td></td>
-<td><span class="error-msg">Test did not complete - marked as Failed by pipeline finalization (was: Pending)</span></td>
-</tr>
-<tr>
-<td>fw_test_lms_n32_w2_h5.yml</td>
-<td><span class="badge badge-fail badge-sm">FAILED</span></td>
-<td class="num">0.00</td>
-<td></td>
-<td><span class="error-msg">Test did not complete - marked as Failed by pipeline finalization (was: Pending)</span></td>
 </tr>
 </tbody></table>
 </details>
 <details open>
-<summary>Regress_firmware_tb_nightly_directed — 96 tests | 95 passed | 1 failed | 0 skipped</summary>
+<summary>Regress_firmware_tb_nightly_directed — 104 tests | 101 passed | 3 failed | 0 skipped</summary>
 <table class="detail-table">
 <thead><tr>
 <th>Test Name</th>
@@ -957,674 +915,730 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>smoke_test_datavault_mini.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">444.00</td>
-<td>2026-09-15T10:17:23</td>
+<td class="num">439.00</td>
+<td>2026-09-15T06:15:12</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_veer.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">39.00</td>
-<td>2026-09-15T10:17:22</td>
+<td class="num">47.00</td>
+<td>2026-09-15T06:15:12</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mbox.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">141.00</td>
-<td>2026-09-15T10:17:24</td>
+<td class="num">142.00</td>
+<td>2026-09-15T06:15:13</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mbox_byte_read.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">190.00</td>
-<td>2026-09-15T10:17:22</td>
+<td class="num">195.00</td>
+<td>2026-09-15T06:15:11</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mbox_cg.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">170.00</td>
-<td>2026-09-15T10:17:22</td>
+<td class="num">175.00</td>
+<td>2026-09-15T06:15:13</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha512.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">121.00</td>
-<td>2026-09-15T10:18:24</td>
+<td class="num">112.00</td>
+<td>2026-09-15T06:16:20</td>
+<td></td>
+</tr>
+<tr>
+<td>smoke_test_sha512_restore.yml</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">130.00</td>
+<td>2026-09-15T06:18:15</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha256.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">121.00</td>
-<td>2026-09-15T10:20:53</td>
+<td class="num">122.00</td>
+<td>2026-09-15T06:18:31</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha256_wntz.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">231.00</td>
-<td>2026-09-15T10:20:52</td>
+<td class="num">227.00</td>
+<td>2026-09-15T06:18:26</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha256_wntz_rand.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">198.00</td>
-<td>2026-09-15T10:21:52</td>
+<td class="num">131.00</td>
+<td>2026-09-15T06:18:45</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha3.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">147.00</td>
-<td>2026-09-15T10:23:36</td>
+<td class="num">165.00</td>
+<td>2026-09-15T06:20:44</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha3_regs.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">115.00</td>
-<td>2026-09-15T10:25:08</td>
+<td class="num">122.00</td>
+<td>2026-09-15T06:21:16</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha3_externalmu.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">855.00</td>
-<td>2026-09-15T10:25:20</td>
+<td class="num">1044.00</td>
+<td>2026-09-15T06:21:15</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha3_interrupt.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">116.00</td>
-<td>2026-09-15T10:25:38</td>
+<td class="num">126.00</td>
+<td>2026-09-15T06:22:47</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_cshake.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">123.00</td>
-<td>2026-09-15T10:26:50</td>
+<td class="num">127.00</td>
+<td>2026-09-15T06:23:07</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sha_accel.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">316.00</td>
-<td>2026-09-15T10:27:19</td>
+<td class="num">322.00</td>
+<td>2026-09-15T06:23:45</td>
 <td></td>
 </tr>
 <tr>
 <td>memCpy_ROM_to_dccm.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">56.00</td>
-<td>2026-09-15T10:28:09</td>
+<td class="num">33.00</td>
+<td>2026-09-15T06:23:44</td>
 <td></td>
 </tr>
 <tr>
 <td>memCpy_dccm_to_iccm.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">56.00</td>
-<td>2026-09-15T10:29:14</td>
+<td class="num">40.00</td>
+<td>2026-09-15T06:24:47</td>
 <td></td>
 </tr>
 <tr>
 <td>hello_world_iccm.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">35.00</td>
-<td>2026-09-15T10:29:18</td>
+<td>2026-09-15T06:25:44</td>
 <td></td>
 </tr>
 <tr>
 <td>iccm_lock.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">247.00</td>
-<td>2026-09-15T10:30:18</td>
+<td class="num">228.00</td>
+<td>2026-09-15T06:25:47</td>
 <td></td>
 </tr>
 <tr>
 <td>c_intr_handler.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">249.00</td>
-<td>2026-09-15T10:31:14</td>
+<td class="num">251.00</td>
+<td>2026-09-15T06:25:52</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_keygen.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">951.00</td>
-<td>2026-09-15T10:33:15</td>
+<td class="num">967.00</td>
+<td>2026-09-15T06:27:02</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_sign.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">918.00</td>
-<td>2026-09-15T10:35:14</td>
+<td class="num">998.00</td>
+<td>2026-09-15T06:29:22</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_verify.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1358.00</td>
-<td>2026-09-15T10:35:47</td>
+<td class="num">1289.00</td>
+<td>2026-09-15T06:29:56</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_verify_fail.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1315.00</td>
-<td>2026-09-15T10:40:04</td>
+<td class="num">1085.00</td>
+<td>2026-09-15T06:30:32</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecdh.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1014.00</td>
-<td>2026-09-15T10:49:44</td>
+<td class="num">874.00</td>
+<td>2026-09-15T06:39:00</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_hmac.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">147.00</td>
-<td>2026-09-15T10:50:44</td>
+<td class="num">156.00</td>
+<td>2026-09-15T06:44:14</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">151.00</td>
-<td>2026-09-15T10:53:41</td>
+<td>2026-09-15T06:46:20</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_short_1_dword.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">567.00</td>
-<td>2026-09-15T10:57:02</td>
+<td class="num">598.00</td>
+<td>2026-09-15T06:47:17</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_long.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">200.00</td>
-<td>2026-09-15T10:58:52</td>
+<td>2026-09-15T06:49:04</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_short_dword.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">287.00</td>
-<td>2026-09-15T11:02:27</td>
+<td>2026-09-15T06:49:25</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_non_gcm_en_dec.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">727.00</td>
-<td>2026-09-15T11:02:26</td>
+<td class="num">718.00</td>
+<td>2026-09-15T06:51:58</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_rd_enc_axi_err.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">162.00</td>
-<td>2026-09-15T11:06:45</td>
+<td class="num">164.00</td>
+<td>2026-09-15T06:52:41</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_wr_enc_axi_err.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">174.00</td>
-<td>2026-09-15T11:07:06</td>
+<td class="num">186.00</td>
+<td>2026-09-15T06:54:15</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_gcm_collision_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">241.00</td>
-<td>2026-09-15T11:07:32</td>
+<td class="num">239.00</td>
+<td>2026-09-15T06:54:40</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma_aes_kv_no_ocp_lock.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">123.00</td>
-<td>2026-09-15T11:09:49</td>
+<td class="num">146.00</td>
+<td>2026-09-15T06:56:05</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_hmac_errortrigger.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">452.00</td>
-<td>2026-09-15T11:10:28</td>
+<td class="num">489.00</td>
+<td>2026-09-15T06:57:40</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mldsa_externalmu.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">449.00</td>
-<td>2026-09-15T11:12:16</td>
+<td class="num">439.00</td>
+<td>2026-09-15T06:57:41</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mldsa_sign_rnd.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">456.00</td>
-<td>2026-09-15T11:12:17</td>
+<td class="num">453.00</td>
+<td>2026-09-15T06:59:20</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">44.00</td>
-<td>2026-09-15T11:14:58</td>
+<td class="num">45.00</td>
+<td>2026-09-15T06:59:20</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_sram_ecc.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">217.00</td>
-<td>2026-09-15T11:16:28</td>
+<td>2026-09-15T07:00:42</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ras.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">629.00</td>
-<td>2026-09-15T11:18:17</td>
+<td class="num">631.00</td>
+<td>2026-09-15T07:04:22</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_trng.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">112.00</td>
-<td>2026-09-15T11:20:06</td>
+<td class="num">109.00</td>
+<td>2026-09-15T07:04:42</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_hw_config.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">116.00</td>
-<td>2026-09-15T11:20:45</td>
+<td class="num">120.00</td>
+<td>2026-09-15T07:05:40</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_uds_reset.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">199.00</td>
-<td>2026-09-15T11:20:46</td>
+<td class="num">227.00</td>
+<td>2026-09-15T07:06:14</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_securitystate.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">659.00</td>
-<td>2026-09-15T11:22:08</td>
+<td class="num">680.00</td>
+<td>2026-09-15T07:06:50</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_hmac_multiblock_flow.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">999.00</td>
-<td>2026-09-15T11:23:00</td>
+<td class="num">1048.00</td>
+<td>2026-09-15T07:07:13</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_doe.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">550.00</td>
-<td>2026-09-15T11:29:27</td>
+<td class="num">555.00</td>
+<td>2026-09-15T07:10:22</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_cg.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">118.00</td>
-<td>2026-09-15T11:33:23</td>
+<td class="num">117.00</td>
+<td>2026-09-15T07:15:31</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_mldsa.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">246.00</td>
-<td>2026-09-15T11:35:40</td>
+<td class="num">253.00</td>
+<td>2026-09-15T07:17:48</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_mlkem.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">243.00</td>
-<td>2026-09-15T11:38:56</td>
+<td class="num">239.00</td>
+<td>2026-09-15T07:18:55</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mldsa_all_zero_seed.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">265.00</td>
-<td>2026-09-15T11:39:53</td>
+<td class="num">264.00</td>
+<td>2026-09-15T07:19:58</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mlkem_all_zero_seed.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">288.00</td>
-<td>2026-09-15T11:40:10</td>
+<td class="num">287.00</td>
+<td>2026-09-15T07:22:19</td>
 <td></td>
 </tr>
 <tr>
 <td>pv_hash_and_sign.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1205.00</td>
-<td>2026-09-15T11:43:16</td>
+<td class="num">1240.00</td>
+<td>2026-09-15T07:23:28</td>
 <td></td>
 </tr>
 <tr>
 <td>pv_hash_zeroize.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">123.00</td>
-<td>2026-09-15T11:44:37</td>
+<td class="num">120.00</td>
+<td>2026-09-15T07:24:48</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_pcr_signing.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1069.00</td>
-<td>2026-09-15T11:45:21</td>
+<td class="num">1055.00</td>
+<td>2026-09-15T07:25:28</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_fw_kv_backtoback_hmac.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">124.00</td>
-<td>2026-09-15T11:46:54</td>
+<td class="num">159.00</td>
+<td>2026-09-15T07:27:41</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger1.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1524.00</td>
-<td>2026-09-15T11:49:29</td>
+<td class="num">1528.00</td>
+<td>2026-09-15T07:27:41</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger2.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1190.00</td>
-<td>2026-09-15T12:03:50</td>
+<td class="num">1257.00</td>
+<td>2026-09-15T07:30:45</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger3.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2034.00</td>
-<td>2026-09-15T12:03:50</td>
+<td class="num">2016.00</td>
+<td>2026-09-15T07:43:23</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger4.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1104.00</td>
-<td>2026-09-15T12:15:12</td>
+<td class="num">1151.00</td>
+<td>2026-09-15T07:44:22</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ecc_errortrigger5.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1925.00</td>
-<td>2026-09-15T12:24:03</td>
+<td class="num">1939.00</td>
+<td>2026-09-15T07:52:00</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_pcr_zeroize.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">133.00</td>
-<td>2026-09-15T12:34:07</td>
+<td class="num">142.00</td>
+<td>2026-09-15T07:53:56</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_ahb_mux.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">38.00</td>
-<td>2026-09-15T12:36:33</td>
+<td class="num">40.00</td>
+<td>2026-09-15T07:56:35</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_axi_wr_rst.yml</td>
 <td><span class="badge badge-fail badge-sm">FAILED</span></td>
-<td class="num">36.00</td>
-<td>2026-09-15T12:38:13</td>
+<td class="num">39.00</td>
+<td>2026-09-15T07:58:30</td>
 <td><span class="error-msg">Missing log file</span></td>
 </tr>
 <tr>
 <td>smoke_test_doe.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">111.00</td>
-<td>2026-09-15T12:38:24</td>
+<td class="num">116.00</td>
+<td>2026-09-15T07:59:23</td>
 <td></td>
 </tr>
 <tr>
 <td>directed_doe_scan.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">459.00</td>
-<td>2026-09-15T12:39:16</td>
+<td class="num">446.00</td>
+<td>2026-09-15T08:01:31</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_zeroize_crypto.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">109.00</td>
-<td>2026-09-15T12:40:48</td>
+<td class="num">122.00</td>
+<td>2026-09-15T08:03:53</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_doe_cg.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">116.00</td>
-<td>2026-09-15T12:42:57</td>
+<td class="num">124.00</td>
+<td>2026-09-15T08:06:33</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_datavault_basic.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">392.00</td>
-<td>2026-09-15T12:45:12</td>
+<td>2026-09-15T08:09:08</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_datavault_reset.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">795.00</td>
-<td>2026-09-15T12:47:16</td>
+<td class="num">819.00</td>
+<td>2026-09-15T08:09:08</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_datavault_lock.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">4869.00</td>
-<td>2026-09-15T12:52:00</td>
+<td class="num">5468.00</td>
+<td>2026-09-15T08:15:57</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_wdt.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">278.00</td>
-<td>2026-09-15T12:56:35</td>
+<td class="num">277.00</td>
+<td>2026-09-15T08:17:25</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_wdt_rst.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1122.00</td>
-<td>2026-09-15T01:00:59</td>
+<td class="num">1160.00</td>
+<td>2026-09-15T08:22:27</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_cg_wdt.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">465.00</td>
-<td>2026-09-15T01:02:08</td>
+<td class="num">456.00</td>
+<td>2026-09-15T08:22:59</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_clk_gating.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">134.00</td>
-<td>2026-09-15T01:10:33</td>
+<td>2026-09-15T08:24:32</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_iccm_reset.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">361.00</td>
-<td>2026-09-15T01:13:04</td>
+<td class="num">376.00</td>
+<td>2026-09-15T08:27:15</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_dma.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">520.00</td>
-<td>2026-09-15T01:19:38</td>
+<td class="num">598.00</td>
+<td>2026-09-15T08:31:07</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_mbox_dma_ecc.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">103.00</td>
-<td>2026-09-15T01:20:07</td>
+<td class="num">116.00</td>
+<td>2026-09-15T08:34:00</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_hek_flow.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">131.00</td>
-<td>2026-09-15T01:22:25</td>
+<td class="num">125.00</td>
+<td>2026-09-15T08:36:10</td>
 <td></td>
 </tr>
 <tr>
 <td>kv_entry_read_err.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">437.00</td>
-<td>2026-09-15T01:25:09</td>
+<td class="num">462.00</td>
+<td>2026-09-15T08:38:35</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_swwe_lock.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1144.00</td>
-<td>2026-09-15T01:29:01</td>
+<td class="num">1109.00</td>
+<td>2026-09-15T08:41:38</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_kv_lock_use_mid_read.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">125.00</td>
-<td>2026-09-15T01:32:38</td>
+<td class="num">137.00</td>
+<td>2026-09-15T08:42:12</td>
 <td></td>
 </tr>
 <tr>
 <td>smoke_test_abr_kv_zero_error.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">292.00</td>
-<td>2026-09-15T01:35:02</td>
+<td class="num">308.00</td>
+<td>2026-09-15T08:44:42</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms24.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2069.00</td>
-<td>2026-09-15T01:40:16</td>
+<td class="num">2109.00</td>
+<td>2026-09-15T08:46:32</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms32.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">3349.00</td>
-<td>2026-09-15T01:48:30</td>
+<td class="num">3612.00</td>
+<td>2026-09-15T08:50:23</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w1_h5.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">3150.00</td>
-<td>2026-09-15T02:13:29</td>
+<td class="num">6821.00</td>
+<td>2026-09-15T09:00:45</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w1_h10.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">3281.00</td>
-<td>2026-09-15T02:15:05</td>
+<td class="num">3249.00</td>
+<td>2026-09-15T09:21:59</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w1_h15.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">3413.00</td>
-<td>2026-09-15T02:21:40</td>
+<td class="num">3672.00</td>
+<td>2026-09-15T09:47:26</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w1_h20.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">3181.00</td>
-<td>2026-09-15T02:44:38</td>
+<td class="num">3323.00</td>
+<td>2026-09-15T09:50:52</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w2_h5.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1770.00</td>
-<td>2026-09-15T03:06:19</td>
+<td class="num">1917.00</td>
+<td>2026-09-15T10:16:42</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w2_h10.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2086.00</td>
-<td>2026-09-15T03:10:51</td>
+<td class="num">2165.00</td>
+<td>2026-09-15T10:46:31</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w2_h15.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2214.00</td>
-<td>2026-09-15T03:19:15</td>
+<td class="num">2323.00</td>
+<td>2026-09-15T10:48:58</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w2_h20.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2259.00</td>
-<td>2026-09-15T03:24:51</td>
+<td class="num">2333.00</td>
+<td>2026-09-15T10:48:59</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w4_h5.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1284.00</td>
-<td>2026-09-15T03:36:53</td>
+<td class="num">1328.00</td>
+<td>2026-09-15T10:54:40</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w4_h10.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1273.00</td>
-<td>2026-09-15T03:37:52</td>
+<td class="num">1470.00</td>
+<td>2026-09-15T11:09:08</td>
 <td></td>
 </tr>
 <tr>
 <td>fw_test_lms_n24_w4_h15.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1512.00</td>
-<td>2026-09-15T03:45:58</td>
+<td class="num">1584.00</td>
+<td>2026-09-15T11:17:09</td>
 <td></td>
+</tr>
+<tr>
+<td>fw_test_lms_n24_w4_h20.yml</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">1545.00</td>
+<td>2026-09-15T11:23:14</td>
+<td></td>
+</tr>
+<tr>
+<td>fw_test_lms_n24_w8_h5.yml</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">1353.00</td>
+<td>2026-09-15T11:29:31</td>
+<td></td>
+</tr>
+<tr>
+<td>fw_test_lms_n24_w8_h10.yml</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">1596.00</td>
+<td>2026-09-15T11:29:31</td>
+<td></td>
+</tr>
+<tr>
+<td>fw_test_lms_n24_w8_h15.yml</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">1796.00</td>
+<td>2026-09-15T11:34:56</td>
+<td></td>
+</tr>
+<tr>
+<td>fw_test_lms_n24_w8_h20.yml</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">1593.00</td>
+<td>2026-09-15T11:43:58</td>
+<td></td>
+</tr>
+<tr>
+<td>fw_test_lms_n32_w1_h10.yml</td>
+<td><span class="badge badge-fail badge-sm">FAILED</span></td>
+<td class="num">0.00</td>
+<td>2026-09-15T11:52:36</td>
+<td><span class="error-msg">Test did not complete - marked as Failed by pipeline finalization (was: In Progress)</span></td>
+</tr>
+<tr>
+<td>fw_test_lms_n32_w1_h20.yml</td>
+<td><span class="badge badge-fail badge-sm">FAILED</span></td>
+<td class="num">0.00</td>
+<td>2026-09-16T12:05:14</td>
+<td><span class="error-msg">Test did not complete - marked as Failed by pipeline finalization (was: In Progress)</span></td>
 </tr>
 </tbody></table>
 </details>
@@ -1641,8 +1655,8 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>doe_cbc_nist_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">18.00</td>
-<td>2026-09-15T10:16:12</td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:13:27</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -1660,22 +1674,22 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>ecc_normal_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">2589.00</td>
-<td>2026-09-15T10:15:32</td>
+<td class="num">1862.00</td>
+<td>2026-09-15T06:13:47</td>
 <td></td>
 </tr>
 <tr>
 <td>ecc_otf_reset_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">216.00</td>
-<td>2026-09-15T10:15:31</td>
+<td class="num">144.00</td>
+<td>2026-09-15T06:13:44</td>
 <td></td>
 </tr>
 <tr>
 <td>ecc_sca_config_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">211.00</td>
-<td>2026-09-15T10:15:34</td>
+<td class="num">214.00</td>
+<td>2026-09-15T06:13:49</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -1693,8 +1707,8 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>entropy_combiner_es_csrng_tb.yml</td>
 <td><span class="badge badge-fail badge-sm">FAILED</span></td>
-<td class="num">770.00</td>
-<td>2026-09-15T10:28:28</td>
+<td class="num">781.00</td>
+<td>2026-09-15T06:27:55</td>
 <td><span class="error-msg">addr 0xXXXXXX</span></td>
 </tr>
 </tbody></table>
@@ -1712,8 +1726,8 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>hmac_normal_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:15:50</td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:13:45</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -1731,8 +1745,8 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>hmac_drbg_directed_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:15:01</td>
+<td class="num">22.00</td>
+<td>2026-09-15T06:14:05</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -1750,8 +1764,8 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>sha256_normal_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:16:11</td>
+<td class="num">14.00</td>
+<td>2026-09-15T06:13:44</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -1769,8 +1783,8 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <tr>
 <td>sha512_normal_test.yml</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">42.00</td>
-<td>2026-09-15T10:15:08</td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:12:40</td>
 <td></td>
 </tr>
 </tbody></table>
@@ -1786,149 +1800,149 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <th>Error</th>
 </tr></thead><tbody>
 <tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__936408926</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:15:19</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__2626304877</td>
+<td>soc_ifc_axi_sha_acc_dis_tb__3776227713</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">17.00</td>
-<td>2026-09-15T10:15:18</td>
+<td>2026-09-15T06:13:27</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__3775072658</td>
+<td>soc_ifc_axi_sha_acc_dis_tb__1287400629</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:13:29</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__168501895</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">18.00</td>
-<td>2026-09-15T10:15:20</td>
+<td>2026-09-15T06:13:36</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__1509242190</td>
+<td>soc_ifc_axi_sha_acc_dis_tb__2619528550</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">15.00</td>
-<td>2026-09-15T10:16:12</td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:14:29</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__1072916451</td>
+<td>soc_ifc_axi_sha_acc_dis_tb__1103832459</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:16:14</td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:14:27</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__153685057</td>
+<td>soc_ifc_axi_sha_acc_dis_tb__3983172442</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">23.00</td>
-<td>2026-09-15T10:16:16</td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:14:29</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__3284658800</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">18.00</td>
-<td>2026-09-15T10:16:42</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__3557865274</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">32.00</td>
-<td>2026-09-15T10:17:05</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__4197131064</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">18.00</td>
-<td>2026-09-15T10:17:01</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__2182371831</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">43.00</td>
-<td>2026-09-15T10:17:17</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__934061873</td>
+<td>soc_ifc_axi_sha_acc_dis_tb__1192495212</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">22.00</td>
-<td>2026-09-15T10:17:37</td>
+<td>2026-09-15T06:14:59</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__616590746</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">17.00</td>
-<td>2026-09-15T10:19:35</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__3500017364</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">35.00</td>
-<td>2026-09-15T10:18:42</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__931942095</td>
+<td>soc_ifc_axi_sha_acc_dis_tb__1131242864</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">15.00</td>
-<td>2026-09-15T10:18:39</td>
+<td>2026-09-15T06:15:22</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__1825359585</td>
+<td>soc_ifc_axi_sha_acc_dis_tb__4090753936</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">133.00</td>
-<td>2026-09-15T10:19:16</td>
+<td class="num">27.00</td>
+<td>2026-09-15T06:15:30</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__3069905170</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">97.00</td>
-<td>2026-09-15T10:19:37</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__932713677</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">84.00</td>
-<td>2026-09-15T10:21:13</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__1813785677</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">45.00</td>
-<td>2026-09-15T10:21:47</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__164757923</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:22:35</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_axi_sha_acc_dis_tb__1457417182</td>
+<td>soc_ifc_axi_sha_acc_dis_tb__26296164</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">28.00</td>
-<td>2026-09-15T10:24:20</td>
+<td>2026-09-15T06:15:57</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__646917593</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:16:21</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__3741505649</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:16:27</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__2256826711</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:16:39</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__3909953608</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:17:14</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__3402383143</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:17:17</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__3959161267</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:17:37</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__3404238810</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:18:13</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__1079980436</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:18:15</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__3147607513</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:18:24</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_axi_sha_acc_dis_tb__3297674124</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:19:01</td>
 <td></td>
 </tr>
 </tbody></table>
 </details>
-<details open>
-<summary>Regress_soc_ifc_tb_nightly_directed — 70 tests | 69 passed | 1 failed | 0 skipped</summary>
+<details>
+<summary>Regress_soc_ifc_tb_nightly_directed — 92 tests | 92 passed | 0 failed | 0 skipped</summary>
 <table class="detail-table">
 <thead><tr>
 <th>Test Name</th>
@@ -1938,494 +1952,648 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <th>Error</th>
 </tr></thead><tbody>
 <tr>
-<td>soc_reg_test__1455026944</td>
+<td>ss_soc_dbg_unlock_level_test__266987216</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">17.00</td>
-<td>2026-09-15T10:15:13</td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:13:47</td>
 <td></td>
 </tr>
 <tr>
-<td>ss_strap_reg_pwron_test__2003034777</td>
+<td>ss_strap_reg_lifecycle_test__4016400492</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">17.00</td>
-<td>2026-09-15T10:15:14</td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:13:48</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_intrblk_test__1529256373</td>
+<td>debug_unlock_manuf_test__2263223700</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:13:47</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_prod_test__978434492</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:14:50</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_soc_dbg_unlock_level_test__2932164787</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">15.00</td>
-<td>2026-09-15T10:15:12</td>
+<td>2026-09-15T06:14:50</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_pwron_test__2951056749</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">23.00</td>
-<td>2026-09-15T10:15:44</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_pwron_test__4093546758</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">18.00</td>
-<td>2026-09-15T10:15:44</td>
-<td></td>
-</tr>
-<tr>
-<td>fuse_reg_lifecycle_test__1976598298</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">30.00</td>
-<td>2026-09-15T10:16:00</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_prod_test__2583821162</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">24.00</td>
-<td>2026-09-15T10:16:25</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_test__1928029323</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:16:22</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_manuf_test__2601462398</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">18.00</td>
-<td>2026-09-15T10:17:33</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_wrmrst_test__860525535</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">22.00</td>
-<td>2026-09-15T10:17:34</td>
-<td></td>
-</tr>
-<tr>
-<td>fuse_reg_prod_test__2737217192</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:17:33</td>
-<td></td>
-</tr>
-<tr>
-<td>rvtime_reg_test__836376336</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:18:13</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_prod_test__3310161171</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">86.00</td>
-<td>2026-09-15T10:18:32</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_wrmrst_test__1724632540</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:18:32</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_manuf_test__4004237924</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">18.00</td>
-<td>2026-09-15T10:18:52</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_wrmrst_test__308345787</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">29.00</td>
-<td>2026-09-15T10:19:36</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_manuf_test__979674409</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">1066.00</td>
-<td>2026-09-15T10:20:02</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_wrmrst_test__3269288428</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">37.00</td>
-<td>2026-09-15T10:21:38</td>
-<td></td>
-</tr>
-<tr>
-<td>fuse_reg_lifecycle_test__2752854554</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:20:57</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_pwron_test__1804485514</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">41.00</td>
-<td>2026-09-15T10:21:56</td>
-<td></td>
-</tr>
-<tr>
-<td>rvtime_reg_test__1350212191</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">31.00</td>
-<td>2026-09-15T10:22:44</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_invalid_test__3293277077</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">34.00</td>
-<td>2026-09-15T10:23:00</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_pwron_test__2317053080</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">93.00</td>
-<td>2026-09-15T10:24:16</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_invalid_test__2528711936</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">75.00</td>
-<td>2026-09-15T10:24:18</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_prod_test__431910508</td>
+<td>ss_strap_reg_wrmrst_test__2118931899</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">17.00</td>
-<td>2026-09-15T10:26:31</td>
+<td>2026-09-15T06:14:53</td>
 <td></td>
 </tr>
 <tr>
-<td>fuse_reg_axi_user_test__799021776</td>
+<td>ss_strap_reg_wrmrst_test__3703870218</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">24.00</td>
-<td>2026-09-15T10:26:32</td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:15:57</td>
 <td></td>
 </tr>
 <tr>
-<td>rvtime_reg_test__3371961679</td>
+<td>debug_unlock_manuf_test__1634349457</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:27:02</td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:16:00</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_pwron_test__3028713487</td>
+<td>ss_strap_reg_lifecycle_test__285497888</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:16:10</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_intrblk_test__2741721763</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:16:41</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_axi_user_test__3761597508</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:16:39</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_axi_user_test__1925976212</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">25.00</td>
+<td>2026-09-15T06:17:16</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_cptra_cap_test__3071678803</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:17:41</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_axi_user_test__935856024</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">22.00</td>
+<td>2026-09-15T06:17:44</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_lifecycle_test__3225540228</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">23.00</td>
-<td>2026-09-15T10:27:32</td>
+<td>2026-09-15T06:18:55</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_test__1888693034</td>
+<td>fuse_reg_lifecycle_test__714914791</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">23.00</td>
+<td>2026-09-15T06:18:55</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_test__2342633479</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">24.00</td>
+<td>2026-09-15T06:18:56</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_prod_test__2571351284</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:19:57</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_pwron_test__1754795285</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">22.00</td>
+<td>2026-09-15T06:20:03</td>
+<td></td>
+</tr>
+<tr>
+<td>debug_unlock_manuf_test__2718227199</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:20:03</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_prod_test__228148378</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:21:07</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_invalid_test__1573501369</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:21:10</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_lifecycle_test__1521533242</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">25.00</td>
+<td>2026-09-15T06:21:12</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_wrmrst_test__1782257915</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">22.00</td>
+<td>2026-09-15T06:21:48</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_axi_user_test__2640721688</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:21:54</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_invalid_test__1540382066</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:22:26</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_cptra_cap_test__960344383</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:22:46</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_lifecycle_test__3037997983</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:22:46</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_cptra_cap_test__171346148</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:23:01</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_wrmrst_test__1777133005</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">22.00</td>
+<td>2026-09-15T06:23:24</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_axi_user_test__2056657259</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:23:24</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_prod_test__1689647814</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:23:44</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_axi_user_test__1132928224</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">28.00</td>
+<td>2026-09-15T06:24:06</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_test__4228190606</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:24:37</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_pwron_test__3375830319</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">24.00</td>
+<td>2026-09-15T06:24:41</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_pwron_test__1613603315</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:25:25</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_intrblk_test__1549689784</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:25:25</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_pwron_test__1714252473</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:25:30</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_lifecycle_test__929366923</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:25:57</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_pwron_test__2166550316</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">24.00</td>
+<td>2026-09-15T06:25:59</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_wrmrst_test__273037917</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">22.00</td>
+<td>2026-09-15T06:26:59</td>
+<td></td>
+</tr>
+<tr>
+<td>debug_unlock_prod_test__1498383039</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:26:59</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_cptra_cap_test__3763159967</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:27:18</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_test__1118364574</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:27:30</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_invalid_test__3718435911</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:27:48</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_perm_test__3735538874</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:28:17</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_invalid_test__2952846779</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">24.00</td>
+<td>2026-09-15T06:28:17</td>
+<td></td>
+</tr>
+<tr>
+<td>rvtime_reg_test__4036681669</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">22.00</td>
+<td>2026-09-15T06:28:30</td>
+<td></td>
+</tr>
+<tr>
+<td>sha_acc_intrblk_test__4056546437</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:29:13</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_perm_test__3280400263</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">26.00</td>
+<td>2026-09-15T06:29:16</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_test__592372215</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:29:52</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_cptra_cap_test__424507263</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:29:53</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_test__2909684406</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:30:07</td>
+<td></td>
+</tr>
+<tr>
+<td>sha_acc_intrblk_test__1525330416</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:30:23</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_test__3104986546</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:30:30</td>
+<td></td>
+</tr>
+<tr>
+<td>sha_acc_intrblk_test__2530624901</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:30:49</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_pwron_test__3266202559</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:31:12</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_pwron_test__1186306965</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:31:15</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_ifc_test__2603722020</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:32:18</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_cptra_cap_test__899889329</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:32:18</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_wrmrst_test__31672479</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:32:18</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_invalid_test__3864058316</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:32:48</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_prod_test__409578619</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:32:48</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_intrblk_test__3956613669</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:32:57</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_axi_user_test__3930750103</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:33:33</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_pwron_test__3055184151</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:33:33</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_invalid_test__1130647159</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:33:42</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_pwron_test__2410049336</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:34:14</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_soc_dbg_unlock_level_test__2826629299</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:34:14</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_intrblk_test__1828081822</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">32.00</td>
-<td>2026-09-15T10:27:40</td>
+<td>2026-09-15T06:34:17</td>
 <td></td>
 </tr>
 <tr>
-<td>debug_unlock_manuf_test__3207158547</td>
+<td>fuse_reg_axi_user_test__2211383791</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:35:40</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_intrblk_test__172501786</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:35:41</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_prod_test__358035166</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">16.00</td>
-<td>2026-09-15T10:28:33</td>
+<td>2026-09-15T06:35:41</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_invalid_test__1002213967</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">22.00</td>
-<td>2026-09-15T10:28:34</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_test__1995389306</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:29:09</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_wrmrst_test__3539559799</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">25.00</td>
-<td>2026-09-15T10:29:35</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_lifecycle_test__1390499258</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">16.00</td>
-<td>2026-09-15T10:29:47</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_test__3939069072</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:31:00</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_pwron_test__1024040739</td>
+<td>soc_reg_test__1351593767</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">19.00</td>
-<td>2026-09-15T10:30:59</td>
+<td>2026-09-15T06:36:31</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_intrblk_test__4052062580</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:31:49</td>
-<td></td>
-</tr>
-<tr>
-<td>rvtime_reg_test__812357201</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:31:48</td>
-<td></td>
-</tr>
-<tr>
-<td>rvtime_reg_test__4023893968</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:32:50</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_pwron_test__780169418</td>
+<td>fuse_reg_axi_user_test__809200803</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">23.00</td>
-<td>2026-09-15T10:32:48</td>
+<td>2026-09-15T06:36:36</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_wrmrst_test__3139878735</td>
+<td>soc_reg_wrmrst_test__928407060</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:36:42</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_prod_test__337627647</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:37:37</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_lifecycle_test__2444035073</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:37:38</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_prod_test__2897200015</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:37:37</td>
+<td></td>
+</tr>
+<tr>
+<td>sha_acc_intrblk_test__2612027321</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:38:36</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_perm_test__3924413089</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">22.00</td>
-<td>2026-09-15T10:33:34</td>
+<td>2026-09-15T06:38:39</td>
 <td></td>
 </tr>
 <tr>
-<td>fuse_cptra_cap_test__2275640591</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:33:33</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_prod_test__2115760079</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:34:10</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_test__2292592120</td>
+<td>fuse_cptra_cap_test__1536221789</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">18.00</td>
-<td>2026-09-15T10:34:57</td>
+<td>2026-09-15T06:38:36</td>
 <td></td>
 </tr>
 <tr>
-<td>fuse_cptra_cap_test__2684734539</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:34:58</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_manuf_test__1325534048</td>
+<td>rvtime_reg_test__957045040</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">18.00</td>
-<td>2026-09-15T10:35:35</td>
+<td>2026-09-15T06:39:05</td>
 <td></td>
 </tr>
 <tr>
-<td>ss_soc_dbg_unlock_level_test__30188632</td>
+<td>fuse_reg_lifecycle_test__2855738373</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">18.00</td>
-<td>2026-09-15T10:35:35</td>
+<td>2026-09-15T06:39:43</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_invalid_test__3244463087</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">44.00</td>
-<td>2026-09-15T10:36:26</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_test__2136661327</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:36:18</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_prod_test__1673539759</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:37:35</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_invalid_test__919253058</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:37:35</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_pwron_test__4088620820</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">18.00</td>
-<td>2026-09-15T10:38:34</td>
-<td></td>
-</tr>
-<tr>
-<td>fuse_reg_lifecycle_test__1528752017</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:38:34</td>
-<td></td>
-</tr>
-<tr>
-<td>fuse_reg_lifecycle_test__4202510187</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">22.00</td>
-<td>2026-09-15T10:38:34</td>
-<td></td>
-</tr>
-<tr>
-<td>fuse_reg_prod_test__3394372141</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">18.00</td>
-<td>2026-09-15T10:39:54</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_pwron_test__1522655524</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">17.00</td>
-<td>2026-09-15T10:39:54</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_wrmrst_test__1259596710</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:39:55</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_wrmrst_test__1277697925</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">17.00</td>
-<td>2026-09-15T10:40:51</td>
-<td></td>
-</tr>
-<tr>
-<td>fuse_cptra_cap_test__1496530706</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:40:51</td>
-<td></td>
-</tr>
-<tr>
-<td>rvtime_reg_test__1612777426</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:40:51</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_prod_test__2158681019</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:41:53</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_lifecycle_test__1650146004</td>
+<td>ss_strap_reg_pwron_test__105431559</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">23.00</td>
-<td>2026-09-15T10:41:54</td>
+<td>2026-09-15T06:39:45</td>
 <td></td>
 </tr>
 <tr>
-<td>debug_unlock_prod_test__323181867</td>
+<td>soc_reg_intrblk_test__229566585</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">20.00</td>
-<td>2026-09-15T10:41:54</td>
+<td>2026-09-15T06:39:58</td>
 <td></td>
 </tr>
 <tr>
-<td>debug_unlock_prod_test__3554381541</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">24.00</td>
-<td>2026-09-15T10:42:46</td>
-<td></td>
-</tr>
-<tr>
-<td>fuse_reg_prod_test__3624831036</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:42:44</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_test__1627707231</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">20.00</td>
-<td>2026-09-15T10:42:44</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_ifc_test__2140355523</td>
+<td>ss_soc_dbg_unlock_level_test__3909422792</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">17.00</td>
-<td>2026-09-15T10:43:19</td>
+<td>2026-09-15T06:40:30</td>
 <td></td>
 </tr>
 <tr>
-<td>fuse_reg_perm_test__3034860094</td>
+<td>ss_strap_reg_pwron_test__4099708202</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">25.00</td>
-<td>2026-09-15T10:43:21</td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:40:30</td>
 <td></td>
 </tr>
 <tr>
-<td>fuse_reg_lifecycle_test__2342151907</td>
+<td>debug_unlock_manuf_test__3984324853</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:40:48</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_wrmrst_test__925698053</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:41:44</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_perm_test__4141743354</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">23.00</td>
-<td>2026-09-15T10:43:43</td>
+<td>2026-09-15T06:41:44</td>
 <td></td>
 </tr>
 <tr>
-<td>ss_strap_reg_pwron_test__3211027016</td>
-<td><span class="badge badge-fail badge-sm">FAILED</span></td>
-<td class="num">0.00</td>
+<td>sha_acc_intrblk_test__679049987</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:41:44</td>
 <td></td>
-<td><span class="error-msg">Test did not complete - marked as Failed by pipeline finalization (was: Pending)</span></td>
 </tr>
 </tbody></table>
 </details>
@@ -2440,216 +2608,216 @@ footer { margin-top: 32px; text-align: center; font-size: 12px; color: #888; pad
 <th>Error</th>
 </tr></thead><tbody>
 <tr>
-<td>debug_unlock_prod_test__557770228</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">17.00</td>
-<td>2026-09-15T10:15:02</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_lifecycle_test__3220508213</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">22.00</td>
-<td>2026-09-15T10:15:03</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_prod_test__1495726551</td>
+<td>soc_reg_test__3963524822</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">19.00</td>
-<td>2026-09-15T10:15:01</td>
+<td>2026-09-15T06:13:48</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_wrmrst_test__1830310869</td>
+<td>ss_strap_reg_wrmrst_test__1334580567</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:13:50</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_perm_test__3984992408</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:13:59</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_lifecycle_test__901481443</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:14:29</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_perm_test__3496992030</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:14:32</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_soc_dbg_unlock_level_test__943723572</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:14:38</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_invalid_test__419467925</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:15:01</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_soc_dbg_unlock_level_test__2968504986</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">20.00</td>
-<td>2026-09-15T10:15:59</td>
+<td>2026-09-15T06:15:50</td>
 <td></td>
 </tr>
 <tr>
-<td>debug_unlock_prod_test__3595561275</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">16.00</td>
-<td>2026-09-15T10:15:59</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_manuf_test__2753798130</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:16:04</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_test__3346060857</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">24.00</td>
-<td>2026-09-15T10:16:56</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_wrmrst_test__3721623417</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">23.00</td>
-<td>2026-09-15T10:16:57</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_test__2541032776</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">67.00</td>
-<td>2026-09-15T10:17:40</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_manuf_test__3195006137</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:17:34</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_invalid_test__3724423150</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">74.00</td>
-<td>2026-09-15T10:17:37</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_pwron_test__337245778</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">23.00</td>
-<td>2026-09-15T10:18:55</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_test__1104904118</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">22.00</td>
-<td>2026-09-15T10:20:13</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_prod_test__1609591276</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">33.00</td>
-<td>2026-09-15T10:19:36</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_lifecycle_test__665451288</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">22.00</td>
-<td>2026-09-15T10:20:05</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_prod_test__4294040658</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">126.00</td>
-<td>2026-09-15T10:21:06</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_invalid_test__1224412642</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">73.00</td>
-<td>2026-09-15T10:21:16</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_pwron_test__104306595</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">50.00</td>
-<td>2026-09-15T10:21:13</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_wrmrst_test__3448020034</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">35.00</td>
-<td>2026-09-15T10:22:21</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_wrmrst_test__1904170144</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">32.00</td>
-<td>2026-09-15T10:23:23</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_soc_dbg_unlock_level_test__3261627824</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">36.00</td>
-<td>2026-09-15T10:23:41</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_manuf_test__3836144753</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">88.00</td>
-<td>2026-09-15T10:24:20</td>
-<td></td>
-</tr>
-<tr>
-<td>ss_strap_reg_lifecycle_test__1111260465</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">23.00</td>
-<td>2026-09-15T10:24:33</td>
-<td></td>
-</tr>
-<tr>
-<td>soc_reg_invalid_test__4287543753</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">22.00</td>
-<td>2026-09-15T10:25:13</td>
-<td></td>
-</tr>
-<tr>
-<td>fuse_reg_perm_test__3842746299</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">19.00</td>
-<td>2026-09-15T10:25:32</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_manuf_test__1918199439</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">23.00</td>
-<td>2026-09-15T10:26:51</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_prod_test__3483969259</td>
+<td>ss_strap_reg_wrmrst_test__3198918678</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">17.00</td>
-<td>2026-09-15T10:26:51</td>
+<td>2026-09-15T06:15:49</td>
 <td></td>
 </tr>
 <tr>
-<td>soc_reg_test__3467548266</td>
+<td>debug_unlock_manuf_test__3982939829</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">22.00</td>
-<td>2026-09-15T10:26:51</td>
+<td class="num">15.00</td>
+<td>2026-09-15T06:15:51</td>
 <td></td>
 </tr>
 <tr>
-<td>ss_strap_reg_wrmrst_test__4027042939</td>
-<td><span class="badge badge-pass badge-sm">PASSED</span></td>
-<td class="num">21.00</td>
-<td>2026-09-15T10:27:48</td>
-<td></td>
-</tr>
-<tr>
-<td>debug_unlock_prod_test__461339796</td>
+<td>ss_soc_dbg_unlock_level_test__2895751211</td>
 <td><span class="badge badge-pass badge-sm">PASSED</span></td>
 <td class="num">16.00</td>
-<td>2026-09-15T10:27:48</td>
+<td>2026-09-15T06:16:29</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_lifecycle_test__3179977467</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:16:29</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_test__3923711487</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:16:52</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_lifecycle_test__1816694658</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">21.00</td>
+<td>2026-09-15T06:17:33</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_wrmrst_test__2609627504</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:17:32</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_invalid_test__3397326194</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">23.00</td>
+<td>2026-09-15T06:17:52</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_pwron_test__3473364702</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:19:05</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_test__2578370468</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:19:04</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_pwron_test__1516658742</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:19:04</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_lifecycle_test__1063671581</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:20:07</td>
+<td></td>
+</tr>
+<tr>
+<td>debug_unlock_manuf_test__2962720101</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">17.00</td>
+<td>2026-09-15T06:20:09</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_wrmrst_test__162277317</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">22.00</td>
+<td>2026-09-15T06:20:16</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_pwron_test__4213624742</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:21:19</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_pwron_test__4068941886</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:21:20</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_soc_dbg_unlock_level_test__678233522</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:21:22</td>
+<td></td>
+</tr>
+<tr>
+<td>soc_reg_pwron_test__4117898249</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">16.00</td>
+<td>2026-09-15T06:22:28</td>
+<td></td>
+</tr>
+<tr>
+<td>ss_strap_reg_wrmrst_test__3403100361</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">18.00</td>
+<td>2026-09-15T06:22:32</td>
+<td></td>
+</tr>
+<tr>
+<td>debug_unlock_manuf_test__4131672652</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:22:42</td>
+<td></td>
+</tr>
+<tr>
+<td>debug_unlock_prod_test__4161884048</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">19.00</td>
+<td>2026-09-15T06:23:39</td>
+<td></td>
+</tr>
+<tr>
+<td>fuse_reg_perm_test__1663243933</td>
+<td><span class="badge badge-pass badge-sm">PASSED</span></td>
+<td class="num">20.00</td>
+<td>2026-09-15T06:23:35</td>
 <td></td>
 </tr>
 </tbody></table>
 </details>
-<footer>Generated by Caliptra ADO nightly pipeline &nbsp;·&nbsp; 2026-09-15 16:21:05 UTC</footer>
+<footer>Generated by Caliptra ADO nightly pipeline &nbsp;·&nbsp; 2026-09-16 00:18:17 UTC</footer>
 </div></body></html>
