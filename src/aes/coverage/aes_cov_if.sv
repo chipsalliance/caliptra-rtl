@@ -126,16 +126,32 @@ interface aes_cov_if
         dma_req_rdata_cp: coverpoint dma_req_rdata;
       
         // kv interface
-        kv_read_read_entry_cp:   coverpoint kv_read.read_entry;
+        // Only slots 0..KV_NUM_KEYS-1 exist; bin valid slots to drop phantom bins.
+        kv_read_read_entry_cp:   coverpoint kv_read.read_entry {
+            bins standard[] = {[KV_STANDARD_SLOT_LOW:KV_STANDARD_SLOT_HI]};
+            bins ocp_lock[] = {[KV_OCP_LOCK_SLOT_LOW:KV_OCP_LOCK_SLOT_HI]};
+        }
         kv_read_read_offset_cp:  coverpoint kv_read.read_offset;
         kv_rd_resp_error_cp:     coverpoint kv_rd_resp.error;
         kv_rd_resp_last_cp:      coverpoint kv_rd_resp.last;
         kv_rd_resp_read_data_cp: coverpoint kv_rd_resp.read_data;
         kv_write_write_en_cp:         coverpoint kv_write.write_en;
-        kv_write_write_entry_cp:      coverpoint kv_write.write_entry;
+        kv_write_write_entry_cp:      coverpoint kv_write.write_entry {
+            bins standard[] = {[KV_STANDARD_SLOT_LOW:KV_STANDARD_SLOT_HI]};
+            bins ocp_lock[] = {[KV_OCP_LOCK_SLOT_LOW:KV_OCP_LOCK_SLOT_HI]};
+        }
         kv_write_write_offset_cp:     coverpoint kv_write.write_offset;
         kv_write_write_data_cp:       coverpoint kv_write.write_data;
-        kv_write_write_dest_valid_cp: coverpoint kv_write.write_dest_valid;
+        // dest_valid is a per-read-client mask; cover which destinations are enabled.
+        kv_write_write_dest_valid_cp: coverpoint kv_write.write_dest_valid {
+            bins none          = {0};
+            wildcard bins hmac  = {9'b????????1};
+            wildcard bins mlkem = {9'b???????1?};
+            wildcard bins ecc   = {9'b??????1??};
+            wildcard bins doe   = {9'b?????1???};
+            wildcard bins aes   = {9'b????1????};
+            bins other          = default;
+        }
         kv_wr_resp_error_cp:          coverpoint kv_wr_resp.error;
 
         MaskNonZero_cp: coverpoint (kv_key_write_en && (edn_bus_bytes != 32'h0));
