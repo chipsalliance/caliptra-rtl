@@ -298,30 +298,37 @@ extends uvmf_environment_configuration_base;
   // Interface initialization for local agents
      soc_ifc_ctrl_agent_config.initialize( interface_activity[1], {environment_path,".soc_ifc_ctrl_agent"}, interface_names[1]);
      soc_ifc_ctrl_agent_config.initiator_responder = INITIATOR;
-     soc_ifc_ctrl_agent_config.has_coverage = 1;
+     soc_ifc_ctrl_agent_config.has_coverage = 1; // Enable transaction coverage
      cptra_ctrl_agent_config.initialize( interface_activity[2], {environment_path,".cptra_ctrl_agent"}, interface_names[2]);
      cptra_ctrl_agent_config.initiator_responder = INITIATOR;
-     cptra_ctrl_agent_config.has_coverage = 1;
+     cptra_ctrl_agent_config.has_coverage = 1; // Enable transaction coverage
      ss_mode_ctrl_agent_config.initialize( interface_activity[3], {environment_path,".ss_mode_ctrl_agent"}, interface_names[3]);
      ss_mode_ctrl_agent_config.initiator_responder = INITIATOR;
-     ss_mode_ctrl_agent_config.has_coverage = 1;
+     ss_mode_ctrl_agent_config.has_coverage = 1; // Enable transaction coverage
      soc_ifc_status_agent_config.initialize( interface_activity[4], {environment_path,".soc_ifc_status_agent"}, interface_names[4]);
      soc_ifc_status_agent_config.initiator_responder = RESPONDER;
-     soc_ifc_status_agent_config.has_coverage = 1;
+     soc_ifc_status_agent_config.has_coverage = 1; // Enable transaction coverage
      cptra_status_agent_config.initialize( interface_activity[5], {environment_path,".cptra_status_agent"}, interface_names[5]);
      cptra_status_agent_config.initiator_responder = RESPONDER;
-     cptra_status_agent_config.has_coverage = 1;
+     cptra_status_agent_config.has_coverage = 1; // Enable transaction coverage
      ss_mode_status_agent_config.initialize( interface_activity[6], {environment_path,".ss_mode_status_agent"}, interface_names[6]);
      ss_mode_status_agent_config.initiator_responder = RESPONDER;
-     ss_mode_status_agent_config.has_coverage = 1;
+     ss_mode_status_agent_config.has_coverage = 1; // Enable transaction coverage
      mbox_sram_agent_config.initialize( interface_activity[7], {environment_path,".mbox_sram_agent"}, interface_names[7]);
      mbox_sram_agent_config.initiator_responder = RESPONDER;
-     mbox_sram_agent_config.has_coverage = 1;
+     mbox_sram_agent_config.has_coverage = 1; // Enable transaction coverage
 
     // pragma uvmf custom reg_model_config_initialize begin
     // Register model creation and configuation
     if (register_model == null) begin
+      // Do not enable coverage collection for UVM reg covergroups, by default.
+      // These are redundant against the RTL covergroups and should not be independently
+      // evaluated for functional coverage
+`ifdef CALIPTRA_ENABLE_UVM_REG_COV
       uvm_reg::include_coverage("*", UVM_CVR_ALL); // Register coverage config with resource DB, used later by build_coverage()
+`else
+      uvm_reg::include_coverage("*", UVM_NO_COVERAGE); // Register coverage config with resource DB, used later by build_coverage()
+`endif
       soc_ifc_rm = soc_ifc_reg_model_top::type_id::create("soc_ifc_rm");
       soc_ifc_rm.build();
       soc_ifc_rm.lock_model();
