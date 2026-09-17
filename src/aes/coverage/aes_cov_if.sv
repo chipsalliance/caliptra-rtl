@@ -143,14 +143,19 @@ interface aes_cov_if
         kv_write_write_offset_cp:     coverpoint kv_write.write_offset;
         kv_write_write_data_cp:       coverpoint kv_write.write_data;
         // dest_valid is a per-read-client mask; cover which destinations are enabled.
+        // Bit order per kv_defines_pkg.sv KV_DEST_IDX_* (LSB first).
         kv_write_write_dest_valid_cp: coverpoint kv_write.write_dest_valid {
-            bins none          = {0};
-            wildcard bins hmac  = {9'b????????1};
-            wildcard bins mlkem = {9'b???????1?};
-            wildcard bins ecc   = {9'b??????1??};
-            wildcard bins doe   = {9'b?????1???};
-            wildcard bins aes   = {9'b????1????};
-            bins other          = default;
+            bins none                = {0};
+            wildcard bins hmac_key   = {9'b????????1};
+            wildcard bins hmac_block = {9'b???????1?};
+            wildcard bins mldsa_seed = {9'b??????1??};
+            wildcard bins ecc_pkey   = {9'b?????1???};
+            wildcard bins ecc_seed   = {9'b????1????};
+            wildcard bins aes_key    = {9'b???1?????};
+            wildcard bins mlkem_seed = {9'b??1??????};
+            wildcard bins mlkem_msg  = {9'b?1???????};
+            wildcard bins dma_data   = {9'b1????????};
+            bins other               = default;
         }
         kv_wr_resp_error_cp:          coverpoint kv_wr_resp.error;
 
