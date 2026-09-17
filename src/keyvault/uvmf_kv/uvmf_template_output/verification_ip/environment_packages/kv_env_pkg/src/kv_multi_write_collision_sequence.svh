@@ -42,11 +42,17 @@ class kv_multi_write_collision_sequence #(
     rand reg [KV_ENTRY_ADDR_W-1:0] collision_entry;
     rand reg [KV_ENTRY_ADDR_W-1:0] pre_write_entry;
     rand reg [KV_ENTRY_ADDR_W-1:0] recovery_entry;
+    rand reg [KV_ENTRY_SIZE_W-1:0] recovery_offset;
+
+    //dest_valid bit 0 corresponds to the hmac_key_read client, which is the
+    //client used to read back the recovery entry
+    localparam reg [KV_NUM_READ-1:0] HMAC_KEY_READ_DEST_VALID = 'h1;
 
     constraint c_entries {
         collision_entry < KV_NUM_KEYS;
         pre_write_entry < KV_NUM_KEYS;
         recovery_entry  < KV_NUM_KEYS;
+        recovery_offset < KV_NUM_DWORDS;
         pre_write_entry != collision_entry;
         recovery_entry  != collision_entry;
         recovery_entry  != pre_write_entry;
@@ -68,8 +74,8 @@ class kv_multi_write_collision_sequence #(
 
         if(!this.randomize()) `uvm_error("KV_MULTI_WR", "Failed to randomize collision sequence");
 
-        `uvm_info("KV_MULTI_WR", $sformatf("collision_entry=%0d pre_write_entry=%0d recovery_entry=%0d",
-                  collision_entry, pre_write_entry, recovery_entry), UVM_LOW)
+        `uvm_info("KV_MULTI_WR", $sformatf("collision_entry=%0d pre_write_entry=%0d recovery_entry=%0d recovery_offset=%0d",
+                  collision_entry, pre_write_entry, recovery_entry, recovery_offset), UVM_LOW)
 
         // ── Phase 1: Power-on reset ──
         if (configuration.kv_rst_agent_config.sequencer != null)
@@ -112,40 +118,41 @@ class kv_multi_write_collision_sequence #(
 
         configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
 
-        // ── Phase 5: Recovery — single-client write with a reader-permitting
-        //    dest_valid at a known offset, then read it back so the scoreboard
-        //    verifies the entry is readable again (data + error=0) after a collision ──
-        `uvm_info("KV_MULTI_WR", "Recovery: single HMAC write + read-back after collision", UVM_LOW)
+        // ── Phase 5: Recovery — write a new entry with single client, read back ──
+        `uvm_info("KV_MULTI_WR", "Recovery: single HMAC write to verify KV accepts writes after collision", UVM_LOW)
         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
             "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq",
             "local_write_entry", recovery_entry);
         uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null,
             "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq",
-            "local_write_offset", KV_ENTRY_SIZE_W'(0));
+            "local_write_offset", recovery_offset);
+        //Allow the hmac_key_read client to read the recovered entry
         uvm_config_db#(reg [KV_NUM_READ-1:0])::set(null,
             "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq",
-            "local_write_dest_valid", {KV_NUM_READ{1'b1}});
+            "local_write_dest_valid", HMAC_KEY_READ_DEST_VALID);
         hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
-        // Clear the offset/dest_valid overrides so the Phase 6 collision writes randomize.
+
+        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
+
+        // Read back the recovered entry — scoreboard checks data and resp_err
+        `uvm_info("KV_MULTI_WR", "Recovery: reading back recovered entry to confirm KV is usable again", UVM_LOW)
+        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
+            "uvm_test_top.environment.kv_hmac_key_read_agent.sequencer.hmac_key_read_seq",
+            "local_read_entry", recovery_entry);
+        uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null,
+            "uvm_test_top.environment.kv_hmac_key_read_agent.sequencer.hmac_key_read_seq",
+            "local_read_offset", recovery_offset);
+        hmac_key_read_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
+
+        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
+
+        // Release the forced offset/dest_valid so the remaining writes randomize again
         uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null,
             "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq",
             "local_write_offset", 'x);
         uvm_config_db#(reg [KV_NUM_READ-1:0])::set(null,
             "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq",
             "local_write_dest_valid", 'x);
-
-        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
-
-        // Read recovery_entry back at the written offset; scoreboard checks data + error=0.
-        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
-            "uvm_test_top.environment.kv_hmac_key_read_agent.sequencer.hmac_key_read_seq",
-            "local_read_entry", recovery_entry);
-        uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null,
-            "uvm_test_top.environment.kv_hmac_key_read_agent.sequencer.hmac_key_read_seq",
-            "local_read_offset", KV_ENTRY_SIZE_W'(0));
-        hmac_key_read_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
-
-        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
 
         // ── Phase 6: Three-way collision ──
         `uvm_info("KV_MULTI_WR", "Driving 3-way collision: HMAC + ECC + DOE", UVM_LOW)
