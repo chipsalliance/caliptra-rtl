@@ -130,6 +130,13 @@ class kv_rand_lock_test_sequence extends kv_bench_sequence_base;
         kv_wr_rd_lock_cold_rst_seq.start(top_configuration.vsqr);
         `uvm_info("TOP", "LOCK core rst sequence",UVM_MEDIUM);
         kv_wr_rd_lock_core_rst_seq.start(top_configuration.vsqr);
+
+        `uvm_info("TOP", "Multi-write collision sequence",UVM_MEDIUM);
+        reg_model.reset();
+        kv_multi_write_collision_seq.start(top_configuration.vsqr);
+        `uvm_info("TOP", "Debug flush mixed-locks sequence",UVM_MEDIUM);
+        reg_model.reset();
+        kv_debug_flush_mixed_locks_seq.start(top_configuration.vsqr);
         
 
         if(1) $display("** TESTCASE PASSED");

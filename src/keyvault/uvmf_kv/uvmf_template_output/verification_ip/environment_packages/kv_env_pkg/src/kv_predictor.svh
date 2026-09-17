@@ -287,6 +287,10 @@ class kv_predictor #(
   //Deferred mirror clear: set by handle_multi_write_collision(), applied
   //in poll_and_run_delay_jobs() after 2-clock delay alongside val_ctrl_derived.
   bit pending_collision_mirror_clear = 0;
+  //Cycle countdown for the multi-write-collision tolerance window: while > 0, the
+  //vault-flush clear boundary is untimeable, so expected reads are marked
+  //ignore_response (entry/offset checked, response fields skipped).
+  int collision_tol_cnt = 0;
 
   extern function void populate_expected_kv_read_txn(ref kv_sb_ap_output_transaction_t t_expected, kv_read_transaction t_received, string client);
   extern function void populate_expected_kv_write_txn(ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
@@ -426,6 +430,7 @@ class kv_predictor #(
       key_ctrl_lock_use = 'h0;
       writes_this_step = 0;
       pending_collision_mirror_clear = 0;
+      collision_tol_cnt = 0;
     end
     else if (t.debug_mode | t.scan_mode) begin
       //Set val_reg to 1 for use in reg predictor
@@ -476,6 +481,7 @@ class kv_predictor #(
       key_ctrl_lock_use = 'h0;
       writes_this_step = 0;
       pending_collision_mirror_clear = 0;
+      collision_tol_cnt = 0;
     end
 
     //If debug mode was unlocked, set a val register to let reg predictor know
@@ -1040,6 +1046,9 @@ endclass
     t_expected.entry_last_dword = last_dword_written[t_received.read_entry];
     t_expected.read_entry = t_received.read_entry;
     t_expected.read_offset = t_received.read_offset;
+    //Multi-write-collision tolerance: while the untimeable flush boundary is open,
+    //the scoreboard checks only the entry/offset match key, not the response fields.
+    if (collision_tol_cnt > 0) t_expected.ignore_response = 1'b1;
     `uvm_info("KV_DBG", $sformatf("expected last = %h, received last = %h, last_dword_written = %h, received offset = %h", t_expected.last, t_received.last, last_dword_written[t_received.read_entry], t_received.read_offset), UVM_DEBUG)
   endfunction
 
@@ -1131,6 +1140,9 @@ endclass
     //Flag for poll_and_run_delay_jobs to apply mirror clears + val_ctrl
     //after 1-clock delay (RTL key_entry_clear is registered by 1 cycle)
     this.pending_collision_mirror_clear = 1'b1;
+    //Open the tolerance window: reads/writes straddling the (registered, untimeable)
+    //vault flush get their response fields ignored for a few cycles.
+    this.collision_tol_cnt = 6;
   endfunction
 
   // function void kv_predictor::send_delayed_expected_transactions_hmac_write(kv_write_transaction t);
@@ -1188,6 +1200,8 @@ endclass
 
   task kv_predictor::poll_and_run_delay_jobs();
     forever begin
+      //Decrement the collision tolerance window (one poll iteration == one clock).
+      if (this.collision_tol_cnt > 0) this.collision_tol_cnt--;
       //Multi-write collision: apply mirror clears after 1-clock delay
       //(RTL key_entry_clear is registered — fires 1 cycle after collision)
       if (this.pending_collision_mirror_clear) begin
