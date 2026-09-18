@@ -187,6 +187,8 @@ def main():
 
     wr_rd_bins_txt = "bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);"
     ignore_bins_txt = "ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};"
+    # Meaningful bins for wide interrupt event counters (auto-binning them is unreachable noise)
+    count_bins_txt = "bins zero = {0}; bins one = {1}; bins few = {[2:15]}; bins many = {[16:$]};"
 
     soc_regs = (reg.strip().split() for reg in soc_regs_txt.strip().splitlines())
     soc_regs = [(r[0], int(r[1])) if len(r) == 2 else (r[0], 1) for r in soc_regs] 
@@ -250,7 +252,12 @@ def main():
         if width == 1:
             print (f"{cb}// ----------------------- COVERGROUP {rname} -----------------------")
             print (f"{cb}covergroup soc_ifc_{rname}_cg (ref logic [3:0] bus_event) @(posedge clk);")
-            print (f"  {cb}{rname}_cp : coverpoint i_soc_ifc_reg.field_storage.{rname_mod};") 
+            if rname.endswith("_intr_count_r"):
+                print (f"  {cb}{rname}_cp : coverpoint i_soc_ifc_reg.field_storage.{rname_mod}", '{')
+                print (f"    {cb}{count_bins_txt}")
+                print (f"  {cb}", '}')
+            else:
+                print (f"  {cb}{rname}_cp : coverpoint i_soc_ifc_reg.field_storage.{rname_mod};")
             print (f"  {cb}bus_{rname}_cp : coverpoint bus_event", '{') 
             print (f"    {cb}{wr_rd_bins_txt}") 
             print (f"    {cb}{ignore_bins_txt}")
@@ -260,7 +267,12 @@ def main():
             print (f"{cb}// ----------------------- COVERGROUP {rname} [0:{width-1}] -----------------------")
             print (f"{cb}covergroup soc_ifc_{rname}_cg (ref logic [3:0] bus_event[0:{width-1}]) @(posedge clk);")
             for i in range(width): 
-                print (f"  {cb}{rname}{i}_cp : coverpoint i_soc_ifc_reg.field_storage.{rname_mod}[{i}];") 
+                if rname.endswith("_intr_count_r"):
+                    print (f"  {cb}{rname}{i}_cp : coverpoint i_soc_ifc_reg.field_storage.{rname_mod}[{i}]", '{')
+                    print (f"    {cb}{count_bins_txt}")
+                    print (f"  {cb}", '}')
+                else:
+                    print (f"  {cb}{rname}{i}_cp : coverpoint i_soc_ifc_reg.field_storage.{rname_mod}[{i}];")
                 print (f"  {cb}bus_{rname}{i}_cp : coverpoint bus_event[{i}]", '{') 
                 print (f"    {cb}{wr_rd_bins_txt}") 
                 print (f"    {cb}{ignore_bins_txt}")
