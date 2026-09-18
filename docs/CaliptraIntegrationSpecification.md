@@ -215,7 +215,7 @@ Trace ports have been directly connected from Caliptra's instance of the VeeR-EL
 |  strap_ss_caliptra_base_addr                              | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_mci_base_addr                                   | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_recovery_ifc_base_addr                          | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  strap_ss_external_staging_area_base_addr                 | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_external_staging_area_base_addr                 | 64  | Input Strap | Synchronous to clk | UNUSED IN DESIGN - In all modes, integrators shall tie this input to 0.|
 |  strap_ss_otp_fc_base_addr                                | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_uds_seed_base_addr                              | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_key_release_base_addr                           | 64  | Input Strap | Synchronous to clk | Used in Subsystem mode only. This is the full destination address for MEK generated via OCP LOCK flow. In Passive mode, integrators shall tie this input to 0.|
@@ -499,25 +499,34 @@ The AXI_USER bits are used by the SoC to identify which device is accessing the 
 
 ## External Staging Area
 
-To save SRAM area when Caliptra operates in Subsystem mode, the mailbox (MBOX) SRAM is reduced to **16 KiB**.  
-Instead of passing images directly to Caliptra through the mailbox, the SoC can configure an external staging SRAM that Caliptra fetches from and processes.
 
-Caliptra Core receives the base address of this staging area through the **SOC_IFC** register `SS_EXTERNAL_STAGING_AREA_BASE_ADDR`. The address must be an AXI address accessable via the Caliptra DMA controller. This register is exposed as a strap ``strap_ss_external_staging_area_base_addr`` and is overridable by SW until ``FUSE_DONE`` is set. 
+To save SRAM area when Caliptra operates in Subsystem mode, the mailbox (MBOX) SRAM is reduced to 16 KiB. Instead of passing images directly to Caliptra through the MBOX, the SoC can configure an external staging SRAM that Caliptra fetches from and processes.
 
-For hitless updates or other image-processing operations, the Caliptra mailbox should be used to:
+The SoC must load the complete image into the external staging area and then assert an access lock before notifying Caliptra that the image is ready. The access lock must have the following properties:
+
+- Caliptra is the only agent permitted to read from or write to the external staging area when it is locked.
+- All other agents are prevented from reading from or writing to the external staging area when it is locked.
+- The lock is one-way, meaning SoC can set but not release the lock. Only Caliptra can release the access lock.
+- The access lock must remain asserted while Caliptra processes the image.
+- When Caliptra does NOT have access lock all Caliptra reads shall return either 0s or AXI error. 
+
+This ownership handoff should follow the MCU MBOX SRAM access-control architecture, in which the MCU transfers control of the SRAM to Caliptra and only Caliptra can release the access lock.
+
+Caliptra needs to be given the external staging-area base address, the staging-area unlock CSR address, and the value that must be written to the CSR to release the access lock. These values must be provided to Caliptra through a verified mechanism that prevents arbitrary address and value writes. These addresses must be an AXI address accessible by the Caliptra DMA controller.
+
+Since images are now provided and verified through the external staging area, the Caliptra MBOX will be used as the command interface to:
 
 1. Notify Caliptra that an image is available for processing.  
 2. Specify the command to run on the image.  
-3. Indicate the size of the image in the staging area.  
+3. Indicate the size of the image
+4. Indicate location of the staging area (must be verified by Caliptra Core)
+5. Indicate location and value of unlock CSR (must be verified by Caliptra Core)
 
 References:
 
 - [Caliptra ROM MBOX Commands](https://github.com/chipsalliance/caliptra-sw/blob/main/rom/dev/README.md#handling-commands-from-mailbox)
 - [Caliptra Runtime FW MBOX Commands](https://github.com/chipsalliance/caliptra-sw/blob/main/runtime/README.md#mailbox-commands)
 - [Caliptra HW API](#mailbox)
-
-
-The external staging area must be within the Caliptra crypto boundary. Meaning there must be access restrictions similar to the MBOX preventing trusted entities from manipulating or accessing the data being processed by Caliptra.
 
 ## Mailbox
 
