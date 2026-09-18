@@ -362,7 +362,8 @@ module caliptra_top_tb_services
     //         8'ha0        - Inject HMAC384_KEY to kv_key register
     //         8'ha1        - Inject zero as MLDSA_SEED/MLKEM_MSG to kv_key register (8 dwords)
     //         8'ha2        - Randomizable KV inject: slot=[12:8], last_dword=[16:13], dest_valid=[24:17]
-    //         8'ha3: 8'ha7 - Unused
+    //      16'h80a3        - Inject a HMAC512_KEY test vector into Nth kv slot (where slot is encoded as (N & 0x1F) << 8)
+    //         8'ha4: 8'ha7 - Unused
     //         8'ha8        - Inject zero as HMAC_KEY/MLKEM_SEED to kv_key register (16 dwords)
     //         8'ha9        - Inject HMAC512_KEY to kv_key register
     //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
@@ -627,9 +628,21 @@ module caliptra_top_tb_services
         for (slot_id=0; slot_id < 24; slot_id++) begin : inject_slot_loop
             for (dword_i=0; dword_i < 16; dword_i++) begin : inject_dword_loop
                 always @(negedge clk) begin
-                    //inject valid seed dest and seed value to key reg
-                    if(((WriteData[7:0] & 8'hf8) == 8'h80) && mailbox_write) begin
+                    //inject valid hmac_key dest and hmac512_key_tb value to key reg (but extend the mask to permit all 24 kv slots)
+                    if(((WriteData[15:0] & 16'h80A3) == 16'h80A3) && mailbox_write) begin
+                        inject_mldsa_seed <= 1'b1;
                         release_kv_inject_flags <= '0;
+                        if (((WriteData[15:0] & 16'h1F00) >> 8) == slot_id) begin
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd15;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = hmac512_key_tb[dword_i][31 : 0];
+                        end
+                    end
+                    //inject valid seed dest and seed value to key reg
+                    else if(((WriteData[7:0] & 8'hf8) == 8'h80) && mailbox_write) begin
                         //$system("/home/mojtabab/workspace_aha_poc/ws1/Caliptra/src/ecc/tb/ecdsa_secp384r1.exe");
                         inject_ecc_seed <= 1'b1;
                         if (WriteData[12:8] == slot_id) begin
