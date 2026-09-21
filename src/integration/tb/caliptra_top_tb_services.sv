@@ -1874,8 +1874,9 @@ endgenerate //IV_NO
 `ifdef RV_LOCKSTEP_ENABLE
     // DCLS lockstep corruption injection (auto-release after 5 clocks).
     // Forces lockstep_err_injection_en_i = El2MuBiTrue (4'h6) to trigger corruption_detected_o.
-    // NOTE: FW must first enable detection (internal_dcls_ctrl.disable_corruption_detection = MuBiFalse 0x9),
-    //       otherwise corruption_detected_o stays suppressed by the disable gate.
+    // NOTE: corruption detection must be ENABLED for corruption_detected_o to propagate.
+    //       The smoke_test_dcls_inject FW only requests this inject when
+    //       it observes CPTRA_HW_CONFIG.DCLS_en == 1, so the disable gate is open here.
     logic [63:0] dcls_inject_cycle;
     initial dcls_inject_cycle = '0;
     always @(posedge clk) begin

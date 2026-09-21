@@ -127,6 +127,8 @@ module caliptra_top
 
     // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
     input logic        ss_ocp_lock_en,
+    // Subsystem mode strap input indicating DCLS is enabled
+    input logic        ss_dcls_en,
 
     // Subsystem mode debug outputs
     output logic        ss_dbg_manuf_enable,
@@ -1861,6 +1863,7 @@ soc_ifc_top1
 
     // Subsystem mode OCP LOCK status
     .ss_ocp_lock_en(ss_ocp_lock_en),
+    .ss_dcls_en(ss_dcls_en),
     .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
     .ss_key_release_key_size(ss_key_release_key_size),
     // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out (-> combiner)

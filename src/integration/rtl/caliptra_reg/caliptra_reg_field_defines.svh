@@ -9446,6 +9446,8 @@
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                           (32'h40)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_LOW                                               (7)
 `define SOC_IFC_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_MASK                                              (32'h80)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_LOW                                                     (8)
+`define SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK                                                    (32'h100)
 `endif
 `ifndef SOC_IFC_REG_CPTRA_WDT_TIMER1_EN
 `define SOC_IFC_REG_CPTRA_WDT_TIMER1_EN                                                             (32'he4)
@@ -10183,13 +10185,8 @@
 `define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_LOW                                              (0)
 `define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_MASK                                             (32'h1)
 `endif
-`ifndef SOC_IFC_REG_INTERNAL_DCLS_CTRL
-`define SOC_IFC_REG_INTERNAL_DCLS_CTRL                                                              (32'h664)
-`define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_LOW                             (0)
-`define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_MASK                            (32'hf)
-`endif
 `ifndef SOC_IFC_REG_INTERNAL_TRACE_CTRL
-`define SOC_IFC_REG_INTERNAL_TRACE_CTRL                                                             (32'h668)
+`define SOC_IFC_REG_INTERNAL_TRACE_CTRL                                                             (32'h664)
 `define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_LOW                                   (0)
 `define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_MASK                                  (32'h1)
 `endif

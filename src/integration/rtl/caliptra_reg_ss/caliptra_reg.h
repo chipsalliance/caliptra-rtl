@@ -11770,6 +11770,8 @@
 #define SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                           (0x40)
 #define SOC_IFC_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_LOW                                               (7)
 #define SOC_IFC_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_MASK                                              (0x80)
+#define SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_LOW                                                     (8)
+#define SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK                                                    (0x100)
 #endif
 #define CLP_SOC_IFC_REG_CPTRA_WDT_TIMER1_EN                                                         (0x300300e4)
 #ifndef SOC_IFC_REG_CPTRA_WDT_TIMER1_EN
@@ -12705,15 +12707,9 @@
 #define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_LOW                                              (0)
 #define SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_MASK                                             (0x1)
 #endif
-#define CLP_SOC_IFC_REG_INTERNAL_DCLS_CTRL                                                          (0x30030664)
-#ifndef SOC_IFC_REG_INTERNAL_DCLS_CTRL
-#define SOC_IFC_REG_INTERNAL_DCLS_CTRL                                                              (0x664)
-#define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_LOW                             (0)
-#define SOC_IFC_REG_INTERNAL_DCLS_CTRL_DISABLE_CORRUPTION_DETECTION_MASK                            (0xf)
-#endif
-#define CLP_SOC_IFC_REG_INTERNAL_TRACE_CTRL                                                         (0x30030668)
+#define CLP_SOC_IFC_REG_INTERNAL_TRACE_CTRL                                                         (0x30030664)
 #ifndef SOC_IFC_REG_INTERNAL_TRACE_CTRL
-#define SOC_IFC_REG_INTERNAL_TRACE_CTRL                                                             (0x668)
+#define SOC_IFC_REG_INTERNAL_TRACE_CTRL                                                             (0x664)
 #define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_LOW                                   (0)
 #define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_MASK                                  (0x1)
 #endif

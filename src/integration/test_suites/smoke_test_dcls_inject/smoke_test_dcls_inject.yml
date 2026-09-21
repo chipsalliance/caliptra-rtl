@@ -15,3 +15,5 @@
 ---
 seed: 1
 testname: smoke_test_dcls_inject
+plusargs:
+  - +CLP_DCLS_EN

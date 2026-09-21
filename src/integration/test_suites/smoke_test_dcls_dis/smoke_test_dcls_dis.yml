@@ -14,4 +14,6 @@
 #
 ---
 seed: 1
-testname: smoke_test_dcls_ctrl
+testname: smoke_test_dcls_dis
+plusargs:
+  - +CLP_DCLS_DIS

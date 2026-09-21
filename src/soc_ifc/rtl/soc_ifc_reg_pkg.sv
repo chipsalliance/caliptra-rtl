@@ -219,6 +219,10 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__dual_iTRNG_en__in_t;
 
     typedef struct packed{
+        logic next;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__DCLS_en__in_t;
+
+    typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__iTRNG_en__in_t iTRNG_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__Fuse_Granularity__in_t Fuse_Granularity;
         soc_ifc_reg__CPTRA_HW_CONFIG__RSVD_en__in_t RSVD_en;
@@ -226,6 +230,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__in_t SUBSYSTEM_MODE_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__in_t OCP_LOCK_MODE_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__dual_iTRNG_en__in_t dual_iTRNG_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__DCLS_en__in_t DCLS_en;
     } soc_ifc_reg__CPTRA_HW_CONFIG__in_t;
 
     typedef struct packed{
@@ -1051,9 +1056,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_HW_CONFIG__dual_iTRNG_en__out_t;
 
     typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_HW_CONFIG__DCLS_en__out_t;
+
+    typedef struct packed{
         soc_ifc_reg__CPTRA_HW_CONFIG__SUBSYSTEM_MODE_en__out_t SUBSYSTEM_MODE_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__OCP_LOCK_MODE_en__out_t OCP_LOCK_MODE_en;
         soc_ifc_reg__CPTRA_HW_CONFIG__dual_iTRNG_en__out_t dual_iTRNG_en;
+        soc_ifc_reg__CPTRA_HW_CONFIG__DCLS_en__out_t DCLS_en;
     } soc_ifc_reg__CPTRA_HW_CONFIG__out_t;
 
     typedef struct packed{
@@ -1581,14 +1591,6 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__internal_iccm_region_lock__out_t;
 
     typedef struct packed{
-        logic [3:0] value;
-    } soc_ifc_reg__internal_dcls_ctrl__disable_corruption_detection__out_t;
-
-    typedef struct packed{
-        soc_ifc_reg__internal_dcls_ctrl__disable_corruption_detection__out_t disable_corruption_detection;
-    } soc_ifc_reg__internal_dcls_ctrl__out_t;
-
-    typedef struct packed{
         logic value;
     } soc_ifc_reg__internal_trace_ctrl__trace_shadow_core_sel__out_t;
 
@@ -1717,7 +1719,6 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__internal_iccm_rt_start_addr__external__out_t internal_iccm_rt_start_addr;
         soc_ifc_reg__internal_iccm_rt_end_addr__external__out_t internal_iccm_rt_end_addr;
         soc_ifc_reg__internal_iccm_region_lock__out_t internal_iccm_region_lock;
-        soc_ifc_reg__internal_dcls_ctrl__out_t internal_dcls_ctrl;
         soc_ifc_reg__internal_trace_ctrl__out_t internal_trace_ctrl;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
     } soc_ifc_reg__out_t;

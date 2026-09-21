@@ -47,6 +47,7 @@ import caliptra_top_tb_pkg::*; #(
     output logic [63:0] strap_ss_key_release_base_addr,
 
     output logic ss_ocp_lock_en,
+    output logic ss_dcls_en,
 
     output logic itrng1_en,
 
@@ -235,6 +236,17 @@ import caliptra_top_tb_pkg::*; #(
         else begin
             // Randomize when neither plusarg is set
             ss_ocp_lock_en = $urandom();
+        end
+        
+        if ($test$plusargs("CLP_DCLS_EN")) begin
+            ss_dcls_en = 1'b1;
+        end
+        else if ($test$plusargs("CLP_DCLS_DIS")) begin
+            ss_dcls_en = 1'b0;
+        end
+        else begin
+            // Randomize when neither plusarg is set
+            ss_dcls_en = $urandom();
         end
 
         if ($test$plusargs("CLP_ITRNG1_EN")) begin

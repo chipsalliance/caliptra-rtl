@@ -110,6 +110,7 @@ module caliptra_top_tb (
     security_state_t security_state;
 
     logic ss_ocp_lock_en;
+    logic ss_dcls_en;
 
     logic [31:0] strap_ss_strap_generic_0;
     logic [31:0] strap_ss_strap_generic_1;
@@ -167,6 +168,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .strap_ss_key_release_key_size,
     .strap_ss_key_release_base_addr,
     .ss_ocp_lock_en,
+    .ss_dcls_en,
     .itrng1_en,
     .etrng1_req, // ES1 entropy request observed by the BFM to time second_RNG_triggered
     .second_RNG_triggered, // To control when the second RNG triggers, for testing the combiner. The first RNG is always triggered by the DUT.
@@ -315,6 +317,7 @@ caliptra_top caliptra_top_dut (
 
     // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
     .ss_ocp_lock_en                                         (ss_ocp_lock_en),
+    .ss_dcls_en                                             (ss_dcls_en),
 
     // Subsystem mode debug outputs
     .ss_dbg_manuf_enable    (),

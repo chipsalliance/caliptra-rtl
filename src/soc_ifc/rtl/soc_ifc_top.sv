@@ -166,6 +166,7 @@ module soc_ifc_top
 
     // Subsystem mode OCP LOCK status
     input  logic         ss_ocp_lock_en,
+    input  logic         ss_dcls_en,
     output logic         ss_ocp_lock_in_progress,
     output logic [15:0]  ss_key_release_key_size,
 
@@ -568,10 +569,12 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
   `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
   `endif
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.DCLS_en.next = ss_dcls_en;
 `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b0;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
+    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.DCLS_en.next = 1'b0;
 `endif
 // dual_iTRNG_en stored value exported to drive the entropy combiner's combine_en
 // (0 unless subsystem mode + internal TRNG).
@@ -1142,7 +1145,8 @@ assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr
 assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 assign iccm_unlock_o = iccm_unlock;
-assign dcls_disable_corruption_detection = soc_ifc_reg_hwif_out.internal_dcls_ctrl.disable_corruption_detection.value;
+assign dcls_disable_corruption_detection = mubi4_bool_to_mubi(~soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.DCLS_en.value);
+
 assign trace_shadow_core_sel = soc_ifc_reg_hwif_out.internal_trace_ctrl.trace_shadow_core_sel.value;
 
 // iccm_fmc_start_addr, iccm_fmc_end_addr, iccm_rt_start_addr, iccm_rt_end_addr

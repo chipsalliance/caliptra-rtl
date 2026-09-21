@@ -348,6 +348,7 @@ reg {
     // runs CALIPTRA_ASSERT_KNOWN on hwif_in, so it must never be X. Resets to 0
     // (combiner bypass) and then tracks the dual-iTRNG strap once the reg is clocked.
     field {desc = "Dual iTRNG enabled: secondary entropy_src + SHA3-384 entropy combiner active"; sw=r; hw=rw; resetsignal=cptra_pwrgood;} dual_iTRNG_en=1'b0;
+    field {desc = "Caliptra core DCLS enabled"; sw=r; hw=rw;} DCLS_en=1'b0;
 } CPTRA_HW_CONFIG;
 
 //Timer1

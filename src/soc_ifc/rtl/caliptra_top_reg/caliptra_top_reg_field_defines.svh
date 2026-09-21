@@ -336,6 +336,8 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                  (32'h40)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_LOW                                      (7)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_MASK                                     (32'h80)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DCLS_EN_LOW                                            (8)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK                                           (32'h100)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN
 `define GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                                    (32'he4)
