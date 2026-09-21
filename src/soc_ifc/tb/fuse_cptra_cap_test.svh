@@ -49,52 +49,29 @@ task fuse_cptra_cap_reg_test;
     tphase = "1";
     print_banner("\nPhase 1. Write and check capabilities registers after cold boot");
 
-    // I. Write over AHB, read over AHB then read again over AXI
+    // Phase 1: capabilities are AHB-writable and AXI read-only before CPTRA_CAP_LOCK.
+    // One adjacent write->read pair per bus transition covers all four wr_rd bins.
 
-    $display ("1a. Writing using AHB 3 cycles apart");
+    $display ("1a. Write AHB, read back AHB (AHB_WR -> AHB_RD)");
     write_regs(SET_AHB, cptra_cap_regnames, tid, 3);
-
+    read_regs (GET_AHB, cptra_cap_regnames, tid, 3);
     repeat (10) @(posedge clk_tb);
+    tid = tid + 1;
 
-    $display ("\n1b. Reading over AHB 3 cycles apart"); 
-    read_regs(GET_AHB, cptra_cap_regnames, tid, 3);
-
-    repeat (10) @(posedge clk_tb);
-    
-    $display ("\n1c. Reading over AXI 3 cycles apart"); 
-    read_regs(GET_AXI, cptra_cap_regnames, tid, 3);
-
-    repeat (10) @(posedge clk_tb);
-    tid = 1;
-
-    $display ("1d. Writing using AHB 3 cycles apart");
+    $display ("\n1b. Write AHB, read back AXI (AHB_WR -> AXI_RD)");
     write_regs(SET_AHB, cptra_cap_regnames, tid, 3);
-
+    read_regs (GET_AXI, cptra_cap_regnames, tid, 3);
     repeat (10) @(posedge clk_tb);
+    tid = tid + 1; // fresh tid for the following writes (1a/1b are the two real writes)
 
-    $display ("\n1e. Reading over AHB 3 cycles apart"); 
-    read_regs(GET_AHB, cptra_cap_regnames, tid, 3);
-
-    repeat (10) @(posedge clk_tb);
-    
-    $display ("\n1f. Reading over AXI 3 cycles apart"); 
-    read_regs(GET_AXI, cptra_cap_regnames, tid, 3);
-
-    repeat (10) @(posedge clk_tb);
-
-    $display ("1g. Writing using AHB 3 cycles apart");
+    $display ("\n1c. AXI write (SOC read-only, expect no change), read back AHB (AXI_WR -> AHB_RD)");
     write_regs(SET_AXI, cptra_cap_regnames, tid, 3, FAIL);
-
+    read_regs (GET_AHB, cptra_cap_regnames, tid, 3);
     repeat (10) @(posedge clk_tb);
 
-    $display ("\n1h. Reading over AHB 3 cycles apart"); 
-    read_regs(GET_AHB, cptra_cap_regnames, tid, 3);
-
-    repeat (10) @(posedge clk_tb);
-    
-    $display ("\n1i. Reading over AXI 3 cycles apart"); 
-    read_regs(GET_AXI, cptra_cap_regnames, tid, 3);
-
+    $display ("\n1d. AXI write (expect no change), read back AXI (AXI_WR -> AXI_RD)");
+    write_regs(SET_AXI, cptra_cap_regnames, tid, 3, FAIL);
+    read_regs (GET_AXI, cptra_cap_regnames, tid, 3);
     repeat (10) @(posedge clk_tb);
 
     tphase = "2";
