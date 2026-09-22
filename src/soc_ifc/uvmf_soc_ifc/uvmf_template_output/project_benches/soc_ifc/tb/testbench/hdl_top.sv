@@ -384,7 +384,7 @@ import pv_defines_pkg::*;
         .ss_ocp_lock_en         (1'b0/*TODO*/),
         .ss_ocp_lock_in_progress(    /*TODO*/),
         .ss_key_release_key_size(    /*TODO*/),
-
+        .ss_dcls_en             (1'b0/*TODO*/),
         // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out
         .dual_itrng_en          (1'b0/*TODO*/),
         .dual_itrng_en_o        (    /*TODO*/),
