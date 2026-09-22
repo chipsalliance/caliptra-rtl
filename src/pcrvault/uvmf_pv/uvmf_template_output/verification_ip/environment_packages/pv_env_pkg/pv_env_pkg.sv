@@ -84,6 +84,7 @@ package pv_env_pkg;
   `include "src/pv_wr_rd_ahb_sequence.svh"
   `include "src/pv_wr_rd_rst_sequence.svh"
   `include "src/pv_wr_rd_sequence.svh"
+  `include "src/pv_wr_rd_lock_core_rst_sequence.svh"
 
   // pragma uvmf custom package_item_additional begin
   // UVMF_CHANGE_ME : When adding new environment level sequences to the src directory

@@ -199,9 +199,12 @@ end
 
     cptra_pwrgood_o <= cptra_pwrgood_i;
     rst_b_o         <= rst_b_i;
+    core_only_rst_b_o     <= core_only_rst_b_i;
+    fw_update_rst_window_o <= fw_update_rst_window_i;
 
     pv_rst_monitor_struct.set_pwrgood = cptra_pwrgood_i;
     pv_rst_monitor_struct.assert_rst = !rst_b_i;
+    pv_rst_monitor_struct.assert_core_rst = !core_only_rst_b_i;
     pv_rst_monitor_struct.wait_cycles = 0;
     // pragma uvmf custom do_monitor end
   endtask         
