@@ -388,7 +388,10 @@ module caliptra_top_tb_services
     //         8'hbe        - Force shadow storage bit-flip on ICCM fmc_start shadow register (auto-release after 5 clocks)
     //         8'hbf        - Force DCLS lockstep corruption inject (lockstep_err_injection_en_i = El2MuBiTrue, auto-release after 5 clocks)
     //         8'hc0:       - Inject MLDSA_SEED to kv_key register
-    //         8'hc1: 8'hc7 - Unused
+    //         8'hc1        - Force DCLS lockstep corruption inject WITHOUT the TB self-check
+    //                        (negative test: smoke_test_dcls_dis injects while detection is
+    //                         disabled and verifies in FW that rv_dcls_err stays 0)
+    //         8'hc2: 8'hc7 - Unused
     //         8'hc8        - Inject key 0x0 into slot 16 for AES
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
@@ -1877,10 +1880,15 @@ endgenerate //IV_NO
     // NOTE: corruption detection must be ENABLED for corruption_detected_o to propagate.
     //       The smoke_test_dcls_inject FW only requests this inject when
     //       it observes CPTRA_HW_CONFIG.DCLS_en == 1, so the disable gate is open here.
+    // Two request codes drive the same force:
+    //   0xbf - inject WITH the TB self-check below (positive test; detection enabled).
+    //   0xc1 - inject WITHOUT the TB self-check (negative test; smoke_test_dcls_dis
+    //          injects while detection is DISABLED and verifies in FW that
+    //          rv_dcls_err stays 0 -- no cptra_error_fatal, so FW keeps running).
     logic [63:0] dcls_inject_cycle;
     initial dcls_inject_cycle = '0;
     always @(posedge clk) begin
-        if ((WriteData[7:0] == 8'hbf) && mailbox_write) begin
+        if (((WriteData[7:0] == 8'hbf) || (WriteData[7:0] == 8'hc1)) && mailbox_write) begin
             force `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i = 4'h6; // El2MuBiTrue
             dcls_inject_cycle <= cycleCnt;
             $display("TB: Forced lockstep_err_injection_en_i = El2MuBiTrue (DCLS corruption inject)");

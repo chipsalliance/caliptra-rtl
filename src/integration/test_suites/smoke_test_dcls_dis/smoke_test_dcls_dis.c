@@ -30,6 +30,15 @@
 #include "printf.h"
 #include "riscv_hw_if.h"
 
+// TB control code: force a DCLS lockstep corruption inject WITHOUT the TB self-check
+// (caliptra_top_tb_services.sv). FW keeps running (detection is disabled here, so no
+// cptra_error_fatal) and verifies rv_dcls_err stays 0 itself.
+#define TB_CTRL_DCLS_INJECT_NOCHK (0xc1u)
+// Number of times to poll the fatal-error register after the inject. Each read
+// takes several bus cycles, comfortably spanning the 5-cycle inject window; a
+// sticky rv_dcls_err would be caught on any read.
+#define DCLS_NOERR_POLLS          (64u)
+
 volatile uint32_t* stdout     = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
 
@@ -45,6 +54,8 @@ void main() {
     uint32_t hw_config;
     uint32_t ss_mode;
     uint32_t dcls_en;
+    uint32_t err;
+    uint32_t i;
 
     VPRINTF(LOW, "---------------------------\n");
     VPRINTF(LOW, " DCLS Disabled Smoke Test\n");
@@ -59,7 +70,7 @@ void main() {
     VPRINTF(LOW, "CPTRA_HW_CONFIG=0x%x subsystem_mode=%u DCLS_en=%u\n",
             hw_config, ss_mode, dcls_en);
 
-    // Confirm DCLS corruption detection is disabled:
+    // Step 1: Confirm DCLS corruption detection is disabled:
     //   - passive (non-subsystem) mode: always disabled, or
     //   - subsystem mode with +CLP_DCLS_DIS: ss_dcls_en=0 -> DCLS_en=0.
     if (dcls_en != 0u) {
@@ -68,8 +79,28 @@ void main() {
         SEND_STDOUT_CTRL(0x1);
         while (1);
     }
-
     VPRINTF(LOW, "DCLS corruption detection disabled as expected (subsystem_mode=%u)\n", ss_mode);
+
+    // Step 2: Inject a lockstep mismatch and confirm it does NOT latch an error.
+    // With detection disabled the disable gate suppresses corruption_detected_o, so
+    // rv_dcls_err must stay 0 and cptra_error_fatal must not fire. Use the no-self-check
+    // inject (0xc1) so FW survives to check CPTRA_HW_ERROR_FATAL.rv_dcls_err.
+    VPRINTF(LOW, "Injecting lockstep mismatch (ctrl 0x%x) with detection disabled\n",
+            TB_CTRL_DCLS_INJECT_NOCHK);
+    SEND_STDOUT_CTRL(TB_CTRL_DCLS_INJECT_NOCHK);
+
+    // Poll across (and beyond) the inject window; rv_dcls_err must remain 0.
+    for (i = 0; i < DCLS_NOERR_POLLS; i++) {
+        err = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
+        if (err & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_MASK) {
+            VPRINTF(FATAL, "ERROR: rv_dcls_err latched (CPTRA_HW_ERROR_FATAL=0x%x) despite DCLS disabled\n",
+                    err);
+            SEND_STDOUT_CTRL(0x1);
+            while (1);
+        }
+    }
+
+    VPRINTF(LOW, "No DCLS err after injection with detection disabled (as expected)\n");
     VPRINTF(LOW, "DCLS disabled smoke test PASSED\n");
     SEND_STDOUT_CTRL(0xff);
     while (1);
