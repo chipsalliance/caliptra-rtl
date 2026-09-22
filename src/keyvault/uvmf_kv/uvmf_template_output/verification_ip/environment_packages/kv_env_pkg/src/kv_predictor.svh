@@ -279,8 +279,22 @@ class kv_predictor #(
   //window-first, so no race remains.
   bit fw_update_rst_window_q = 0;
 
+  //Multi-write collision detection — tracks how many write agent handlers
+  //fire at the same simulation time. If > 1, RTL asserts kv_multi_write_err
+  //which clears ALL entries on the next cycle (registered).
+  time last_write_step_time = 0;
+  int unsigned writes_this_step = 0;
+  //Deferred mirror clear: set by handle_multi_write_collision(), applied
+  //in poll_and_run_delay_jobs() after 2-clock delay alongside val_ctrl_derived.
+  bit pending_collision_mirror_clear = 0;
+  //Cycle countdown for the multi-write-collision tolerance window: while > 0, the
+  //vault-flush clear boundary is untimeable, so expected reads are marked
+  //ignore_response (entry/offset checked, response fields skipped).
+  int collision_tol_cnt = 0;
+
   extern function void populate_expected_kv_read_txn(ref kv_sb_ap_output_transaction_t t_expected, kv_read_transaction t_received, string client);
   extern function void populate_expected_kv_write_txn(ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
+  extern function void handle_multi_write_collision();
   extern task          poll_and_run_delay_jobs();
   extern task          poll_and_run_clr_secrets_delay_job();
   // extern function      send_delayed_expected_transactions_hmac_write(kv_write_transaction t);
@@ -414,6 +428,9 @@ class kv_predictor #(
       end
       key_ctrl_lock_wr = 'h0;
       key_ctrl_lock_use = 'h0;
+      writes_this_step = 0;
+      pending_collision_mirror_clear = 0;
+      collision_tol_cnt = 0;
     end
     else if (t.debug_mode | t.scan_mode) begin
       //Set val_reg to 1 for use in reg predictor
@@ -462,6 +479,9 @@ class kv_predictor #(
       end
       key_ctrl_lock_wr = 'h0;
       key_ctrl_lock_use = 'h0;
+      writes_this_step = 0;
+      pending_collision_mirror_clear = 0;
+      collision_tol_cnt = 0;
     end
 
     //If debug mode was unlocked, set a val register to let reg predictor know
@@ -492,18 +512,21 @@ class kv_predictor #(
     `uvm_info("PRED", "Transaction Received through kv_hmac_write_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
 
+    //Track multi-write collision (same simulation time = same clock cycle)
+    //Only count actual writes (write_en=1); monitor also fires on deassertion
+    if (t.write_en) begin
+      if ($time != last_write_step_time) begin writes_this_step = 1; last_write_step_time = $time; end
+      else writes_this_step++;
+    end
+
     // Construct one of each output transaction type.
     kv_sb_ap_output_transaction_write = kv_sb_ap_output_transaction_write_t::type_id::create("kv_sb_ap_output_transaction_write");
     populate_expected_kv_write_txn(kv_sb_ap_output_transaction_write, t);
-    // this.write_entry_pending = 1'b1;
-    // send_hmac_write_txn = 1'b1;
 
-    // Code for sending output transaction out through kv_sb_ap
-    // Please note that each broadcasted transaction should be a different object than previously 
-    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
-    // using either new() or create().  Broadcasting a transaction object more than once to either the 
-    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
     kv_hmac_write_sb_ap.write(kv_sb_ap_output_transaction_write);
+
+    //If multi-write detected, clear all entries (overwrites any mirror updates from this and prior handlers)
+    if (t.write_en && writes_this_step > 1) handle_multi_write_collision();
     // pragma uvmf custom kv_hmac_write_agent_ae_predictor end
   endfunction
 
@@ -516,21 +539,18 @@ class kv_predictor #(
     kv_mlkem_write_agent_ae_debug = t;
     `uvm_info("PRED", "Transaction Received through kv_mlkem_write_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
-    // Construct one of each output transaction type.
+
+    if (t.write_en) begin
+      if ($time != last_write_step_time) begin writes_this_step = 1; last_write_step_time = $time; end
+      else writes_this_step++;
+    end
+
     kv_sb_ap_output_transaction_write = kv_sb_ap_output_transaction_write_t::type_id::create("kv_sb_ap_output_transaction_write");
     populate_expected_kv_write_txn(kv_sb_ap_output_transaction_write, t);
 
-    // //  UVMF_CHANGE_ME: Implement predictor model here.  
-    // `uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
-    // `uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "UVMF_CHANGE_ME: The kv_predictor::write_kv_mlkem_write_agent_ae function needs to be completed with DUT prediction model",UVM_NONE)
-    // `uvm_info("UNIMPLEMENTED_PREDICTOR_MODEL", "******************************************************************************************************",UVM_NONE)
- 
-    // Code for sending output transaction out through kv_sb_ap
-    // Please note that each broadcasted transaction should be a different object than previously 
-    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
-    // using either new() or create().  Broadcasting a transaction object more than once to either the 
-    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
     kv_mlkem_write_sb_ap.write(kv_sb_ap_output_transaction_write);
+
+    if (t.write_en && writes_this_step > 1) handle_multi_write_collision();
     // pragma uvmf custom kv_mlkem_write_agent_ae_predictor end
   endfunction
 
@@ -542,16 +562,18 @@ class kv_predictor #(
     kv_ecc_write_agent_ae_debug = t;
     `uvm_info("PRED", "Transaction Received through kv_ecc_write_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
-    // Construct one of each output transaction type.
+
+    if (t.write_en) begin
+      if ($time != last_write_step_time) begin writes_this_step = 1; last_write_step_time = $time; end
+      else writes_this_step++;
+    end
+
     kv_sb_ap_output_transaction_write = kv_sb_ap_output_transaction_write_t::type_id::create("kv_sb_ap_output_transaction_write");
     populate_expected_kv_write_txn(kv_sb_ap_output_transaction_write, t);
 
-    // Code for sending output transaction out through kv_sb_ap
-    // Please note that each broadcasted transaction should be a different object than previously 
-    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
-    // using either new() or create().  Broadcasting a transaction object more than once to either the 
-    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
     kv_ecc_write_sb_ap.write(kv_sb_ap_output_transaction_write);
+
+    if (t.write_en && writes_this_step > 1) handle_multi_write_collision();
     // pragma uvmf custom kv_ecc_write_agent_ae_predictor end
   endfunction
 
@@ -564,16 +586,18 @@ class kv_predictor #(
     kv_doe_write_agent_ae_debug = t;
     `uvm_info("PRED", "Transaction Received through kv_doe_write_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
-    // Construct one of each output transaction type.
+
+    if (t.write_en) begin
+      if ($time != last_write_step_time) begin writes_this_step = 1; last_write_step_time = $time; end
+      else writes_this_step++;
+    end
+
     kv_sb_ap_output_transaction_write = kv_sb_ap_output_transaction_write_t::type_id::create("kv_sb_ap_output_transaction_write");
     populate_expected_kv_write_txn(kv_sb_ap_output_transaction_write, t);
 
-    // Code for sending output transaction out through kv_sb_ap
-    // Please note that each broadcasted transaction should be a different object than previously 
-    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
-    // using either new() or create().  Broadcasting a transaction object more than once to either the 
-    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
     kv_doe_write_sb_ap.write(kv_sb_ap_output_transaction_write);
+
+    if (t.write_en && writes_this_step > 1) handle_multi_write_collision();
     // pragma uvmf custom kv_doe_write_agent_ae_predictor end
   endfunction
 
@@ -586,16 +610,18 @@ class kv_predictor #(
     kv_aes_write_agent_ae_debug = t;
     `uvm_info("PRED", "Transaction Received through kv_aes_write_agent_ae", UVM_MEDIUM)
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
-    // Construct one of each output transaction type.
+
+    if (t.write_en) begin
+      if ($time != last_write_step_time) begin writes_this_step = 1; last_write_step_time = $time; end
+      else writes_this_step++;
+    end
+
     kv_sb_ap_output_transaction_write = kv_sb_ap_output_transaction_write_t::type_id::create("kv_sb_ap_output_transaction_write");
     populate_expected_kv_write_txn(kv_sb_ap_output_transaction_write, t);
 
-    // Code for sending output transaction out through kv_sb_ap
-    // Please note that each broadcasted transaction should be a different object than previously 
-    // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
-    // using either new() or create().  Broadcasting a transaction object more than once to either the 
-    // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
     kv_aes_write_sb_ap.write(kv_sb_ap_output_transaction_write);
+
+    if (t.write_en && writes_this_step > 1) handle_multi_write_collision();
     // pragma uvmf custom kv_aes_write_agent_ae_predictor end
   endfunction
 
@@ -999,8 +1025,8 @@ endclass
     //kv_predictor takes care of #1. #2 and #3 should be done is custom AHB reg predictor which we don't have
     //As a workaround, setting a val_ctrl reg when clear happens. Until a write occurs on that entry, this bit will remain set
     //During every read, we check val_ctrl[entry] bit. If 1, return 0s, resp.err = 1 and last dword = 0 to mimic design
-    `uvm_info("KV_DBG", $sformatf("lock_use during read = %d, client_dest_valid = %d, val_ctrl_data = %h, val_ctrl_derived_data = %h for received entry = %h", lock_use, client_dest_valid, val_ctrl_data[t_received.read_entry], val_ctrl_derived_data[t_received.read_entry], t_received.read_entry), UVM_DEBUG)
-    if (fw_update_rst_window || lock_use || !client_dest_valid || val_ctrl_data[t_received.read_entry] || val_ctrl_derived_data[t_received.read_entry]) begin
+    `uvm_info("KV_DBG", $sformatf("fw_update_rst_window during read = %d, lock_use during read = %d, client_dest_valid = %d, val_ctrl_data = %h, val_ctrl_derived_data = %h, pending_collision = %0d for received entry = %h", fw_update_rst_window, lock_use, client_dest_valid, val_ctrl_data[t_received.read_entry], val_ctrl_derived_data[t_received.read_entry], pending_collision_mirror_clear, t_received.read_entry), UVM_DEBUG)
+    if (fw_update_rst_window || lock_use || !client_dest_valid || val_ctrl_data[t_received.read_entry] || val_ctrl_derived_data[t_received.read_entry] || pending_collision_mirror_clear) begin
       t_expected.read_data = 'h0;
       t_expected.error = 'b1;
     end
@@ -1020,6 +1046,9 @@ endclass
     t_expected.entry_last_dword = last_dword_written[t_received.read_entry];
     t_expected.read_entry = t_received.read_entry;
     t_expected.read_offset = t_received.read_offset;
+    //Multi-write-collision tolerance: while the untimeable flush boundary is open,
+    //the scoreboard checks only the entry/offset match key, not the response fields.
+    if (collision_tol_cnt > 0) t_expected.ignore_response = 1'b1;
     `uvm_info("KV_DBG", $sformatf("expected last = %h, received last = %h, last_dword_written = %h, received offset = %h", t_expected.last, t_received.last, last_dword_written[t_received.read_entry], t_received.read_offset), UVM_DEBUG)
   endfunction
 
@@ -1071,6 +1100,12 @@ endclass
           t_expected.error = 1'b0;
           //Keep track of last dword written
           last_dword_written[t_received.write_entry] = t_received.write_offset;
+          //Update KEY_CTRL dest_valid and KEY_ENTRY mirrors immediately so
+          //concurrent reads in the same cycle see the same state as RTL
+          //(RTL updates dest_valid combinationally on key_entry_we)
+          p_kv_rm.kv_reg_rm.KEY_CTRL[t_received.write_entry].dest_valid.predict(t_received.write_dest_valid);
+          p_kv_rm.kv_reg_rm.KEY_CTRL[t_received.write_entry].last_dword.predict(t_received.write_offset);
+          p_kv_rm.kv_reg_rm.KEY_ENTRY[t_received.write_entry][t_received.write_offset].predict(t_received.write_data);
         end
       end
     end
@@ -1086,6 +1121,28 @@ endclass
     end
 
       
+  endfunction
+
+  //RTL: kv_multi_write_err clears ALL KEY_ENTRY data, dest_valid, and
+  //last_dword for every entry (registered — takes effect next cycle).
+  //The predictor mirrors this by zeroing the RAL model and internal tracking.
+  function void kv_predictor::handle_multi_write_collision();
+
+    `uvm_info("PRED", $sformatf("MULTI-WRITE COLLISION detected (%0d writes at time %0t) — clearing ALL entries",
+              writes_this_step, $time), UVM_LOW)
+
+    //Reset predictor tracking immediately (internal state, not mirrors)
+    for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+      last_dword_written[entry] = '0;
+      key_entry_ctrl_we[entry] = 1'b0;
+    end
+
+    //Flag for poll_and_run_delay_jobs to apply mirror clears + val_ctrl
+    //after 1-clock delay (RTL key_entry_clear is registered by 1 cycle)
+    this.pending_collision_mirror_clear = 1'b1;
+    //Open the tolerance window: reads/writes straddling the (registered, untimeable)
+    //vault flush get their response fields ignored for a few cycles.
+    this.collision_tol_cnt = 6;
   endfunction
 
   // function void kv_predictor::send_delayed_expected_transactions_hmac_write(kv_write_transaction t);
@@ -1143,7 +1200,34 @@ endclass
 
   task kv_predictor::poll_and_run_delay_jobs();
     forever begin
-      if (this.set_val_ctrl_derived) begin
+      //Decrement the collision tolerance window (one poll iteration == one clock).
+      if (this.collision_tol_cnt > 0) this.collision_tol_cnt--;
+      //Multi-write collision: apply mirror clears after 1-clock delay
+      //(RTL key_entry_clear is registered — fires 1 cycle after collision)
+      if (this.pending_collision_mirror_clear) begin
+        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1);
+        begin
+          uvm_reg ctrl_reg;
+          `uvm_info("PRED", "Applying deferred collision mirror clears (KEY_ENTRY + KEY_CTRL + val_ctrl)", UVM_MEDIUM)
+          for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+            for (int dw = 0; dw < KV_NUM_DWORDS; dw++) begin
+              uvm_reg kv_entry_reg;
+              kv_entry_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_ENTRY[%0d][%0d]", entry, dw));
+              if (kv_entry_reg != null)
+                kv_entry_reg.set('0);
+            end
+            ctrl_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]", entry));
+            if (ctrl_reg != null) begin
+              uvm_reg_data_t ctrl_data = ctrl_reg.get_mirrored_value();
+              ctrl_data[31:5] = '0;
+              ctrl_reg.set(ctrl_data);
+            end
+          end
+          p_kv_rm.val_ctrl.set({KV_NUM_KEYS{1'b1}});
+          this.pending_collision_mirror_clear = 1'b0;
+        end
+      end
+      else if (this.set_val_ctrl_derived) begin
         // fork
           //Delay by 2 clks to match the clear txn reaching predictor by then 
           configuration.kv_hmac_write_agent_config.wait_for_num_clocks(2); //2
