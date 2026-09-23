@@ -1516,7 +1516,7 @@ module caliptra_top_sva
 
   // What: HMAC KV WR_CTRL write_en must not be SW-re-enabled while busy
   // Why: Prevents re-triggering KV write mid-operation
-  // Note: write_en.hwclr = ~kv_write_ready legitimately clears 1→0; only 0→1 is an attack
+  // Note: write_en.hwclr = (~kv_write_ready | zeroize) legitimately clears 1→0; only 0→1 is an attack
   HmacKvWrEnNoRiseWhileBusy_A: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       $past(`HMAC_PATH.busy_o) && `HMAC_PATH.busy_o |->
@@ -1534,7 +1534,7 @@ module caliptra_top_sva
 
   // What: ECC KV WR_PKEY_CTRL write_en must not be SW-re-enabled while busy
   // Why: Prevents re-triggering KV write mid-ECC operation
-  // Note: write_en.hwclr = ~kv_write_ready legitimately clears 1→0; only 0→1 is an attack
+  // Note: write_en.hwclr = (~kv_write_ready | zeroize) legitimately clears 1→0; only 0→1 is an attack
   EccKvWrEnNoRiseWhileBusy_A: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       $past(`ECC_PATH.busy_o) && `ECC_PATH.busy_o |->
@@ -1552,7 +1552,7 @@ module caliptra_top_sva
 
   // What: AES KV WR_CTRL write_en must not be SW-re-enabled while busy
   // Why: Prevents re-triggering KV write mid-AES operation
-  // Note: write_en.hwclr = ~kv_write_ready legitimately clears 1→0; only 0→1 is an attack
+  // Note: write_en.hwclr = (~kv_write_ready | debugUnlock_or_scan_mode_switch) legitimately clears 1→0; only 0→1 is an attack
   AesKvWrEnNoRiseWhileBusy_A: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       $past(`AES_CLP_PATH.busy_o) && `AES_CLP_PATH.busy_o |->
@@ -1577,6 +1577,44 @@ module caliptra_top_sva
       (~`SHA512_PATH.ready_reg || ~`SHA512_PATH.kv_dest_ready || `SHA512_PATH.gen_hash_ip) |->
       !$rose(`SHA512_PATH.kv_write_ctrl_reg.write_en))
   else $display("SVA ERROR: SHA512 KV write_en rose while engine busy");
+
+  // ===========================================================================
+  // KV Write Enable Cleared By Zeroize
+  // A failed crypto operation never produces a result, so the KV write FSM never
+  // runs and never clears write_en via ~kv_*_ready. Zeroize must clear it so the
+  // next operation does not silently take the KV path with stale controls.
+  // Guarded only against a concurrent SW write that actually takes priority over
+  // hwclr in the generated register block, i.e. the exact SW-write condition
+  // (decoded_reg_strb && decoded_req_is_wr && swwe). A read access, or a write
+  // blocked by swwe=0, must not excuse the hwclr, so those cases stay checked.
+  // ===========================================================================
+
+  HmacKvWrEnClearedByZeroize_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      (`HMAC_PATH.zeroize_reg &&
+       !(`HMAC_PATH.i_hmac_reg.decoded_reg_strb.HMAC512_KV_WR_CTRL &&
+         `HMAC_PATH.i_hmac_reg.decoded_req_is_wr &&
+         `HMAC_PATH.i_hmac_reg.hwif_in.HMAC512_KV_WR_CTRL.write_en.swwe)) |=>
+      !`HMAC_PATH.kv_write_ctrl_reg.write_en)
+  else $display("SVA ERROR: HMAC KV write_en not cleared by zeroize");
+
+  EccKvWrEnClearedByZeroize_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      (`ECC_PATH.zeroize_reg &&
+       !(`CPTRA_TOP_PATH.ecc_top1.ecc_reg1.decoded_reg_strb.ecc_kv_wr_pkey_ctrl &&
+         `CPTRA_TOP_PATH.ecc_top1.ecc_reg1.decoded_req_is_wr &&
+         `CPTRA_TOP_PATH.ecc_top1.ecc_reg1.hwif_in.ecc_kv_wr_pkey_ctrl.write_en.swwe)) |=>
+      !`ECC_PATH.kv_write_ctrl_reg.write_en)
+  else $display("SVA ERROR: ECC KV write_en not cleared by zeroize");
+
+  AesKvWrEnClearedByZeroize_A: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
+      (`AES_CLP_PATH.debugUnlock_or_scan_mode_switch &&
+       !(`AES_CLP_PATH.aes_clp_reg_inst.decoded_reg_strb.AES_KV_WR_CTRL &&
+         `AES_CLP_PATH.aes_clp_reg_inst.decoded_req_is_wr &&
+         `AES_CLP_PATH.aes_clp_reg_inst.hwif_in.AES_KV_WR_CTRL.write_en.swwe)) |=>
+      !`AES_CLP_PATH.kv_write_ctrl_reg.write_en)
+  else $display("SVA ERROR: AES KV write_en not cleared by zeroize");
 
   // ===========================================================================
   // KV Read Client Error Code Priority Assertion
