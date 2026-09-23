@@ -1454,6 +1454,18 @@ module caliptra_top_tb_services
         end
     end
 
+    // Edge-detect the MLDSA injection enables.
+    logic mldsa_inject_seed_d = 1'b0;
+    logic mldsa_inject_msg_d  = 1'b0;
+    logic mldsa_inject_sign_d = 1'b0;
+    logic mldsa_inject_vfy_d  = 1'b0;
+    always @(negedge clk) begin
+        mldsa_inject_seed_d <= mldsa_keygen | mldsa_keygen_signing | mldsa_keygen_signing_nomsg;
+        mldsa_inject_msg_d  <= mldsa_signing | mldsa_verify | mldsa_keygen_signing;
+        mldsa_inject_sign_d <= mldsa_signing;
+        mldsa_inject_vfy_d  <= mldsa_verify | mldsa_verify_nomsg;
+    end
+
     genvar mldsa_dword;
     generate
         //MLDSA keygen - inject seed
@@ -1463,7 +1475,7 @@ module caliptra_top_tb_services
                     force `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.we = 'b1;
                     force `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.next = {mldsa_test_vector.seed[mldsa_dword][7:0], mldsa_test_vector.seed[mldsa_dword][15:8], mldsa_test_vector.seed[mldsa_dword][23:16], mldsa_test_vector.seed[mldsa_dword][31:24]};
                 end
-                else begin
+                else if (mldsa_inject_seed_d) begin
                     release `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.we;
                     release `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_SEED[mldsa_dword].SEED.next;
                 end
@@ -1477,7 +1489,7 @@ module caliptra_top_tb_services
                     force `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.we = 'b1;
                     force `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.next = {mldsa_test_vector.msg[mldsa_dword][7:0], mldsa_test_vector.msg[mldsa_dword][15:8], mldsa_test_vector.msg[mldsa_dword][23:16], mldsa_test_vector.msg[mldsa_dword][31:24]};
                 end
-                else begin
+                else if (mldsa_inject_msg_d) begin
                     release `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.we;
                     release `CPTRA_TOP_PATH.abr_inst.abr_reg_inst.hwif_in.MLDSA_MSG[mldsa_dword].MSG.next;
                 end
@@ -1493,7 +1505,7 @@ module caliptra_top_tb_services
                     force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_scratch_reg.mldsa_enc.K[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1+8)][31:24],
                                                                                                       mldsa_test_vector.privkey[((mldsa_dword*2)+8)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+8)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+8)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+8)][31:24]};
                 end
-                else begin
+                else if (mldsa_inject_sign_d) begin
                     release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_scratch_reg.mldsa_enc.rho[mldsa_dword];
                     release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_scratch_reg.mldsa_enc.K[mldsa_dword];
                 end
@@ -1506,7 +1518,7 @@ module caliptra_top_tb_services
                     force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_scratch_reg.mldsa_enc.tr[mldsa_dword] = {mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+1+16)][31:24],
                                                                                                        mldsa_test_vector.privkey[((mldsa_dword*2)+16)][7:0], mldsa_test_vector.privkey[((mldsa_dword*2)+16)][15:8], mldsa_test_vector.privkey[((mldsa_dword*2)+16)][23:16], mldsa_test_vector.privkey[((mldsa_dword*2)+16)][31:24]};
                 end
-                else begin
+                else if (mldsa_inject_sign_d) begin
                     release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_scratch_reg.mldsa_enc.tr[mldsa_dword];
                 end
             end
@@ -1522,7 +1534,7 @@ module caliptra_top_tb_services
                         force abr_mem_top_inst.abr_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2] = {mldsa_test_vector.privkey[mldsa_dword][7:0], mldsa_test_vector.privkey[mldsa_dword][15:8], mldsa_test_vector.privkey[mldsa_dword][23:16], mldsa_test_vector.privkey[mldsa_dword][31:24]};
                     end
                 end
-                else begin
+                else if (mldsa_inject_sign_d) begin
                     release abr_mem_top_inst.abr_sk_mem_bank0_inst.ram[(mldsa_dword-32)/2];
                     release abr_mem_top_inst.abr_sk_mem_bank1_inst.ram[(mldsa_dword-33)/2];
                 end
@@ -1537,7 +1549,7 @@ module caliptra_top_tb_services
                                                                                                         mldsa_test_vector.pubkey[(mldsa_dword*2)][7:0], mldsa_test_vector.pubkey[(mldsa_dword*2)][15:8], mldsa_test_vector.pubkey[(mldsa_dword*2)][23:16], mldsa_test_vector.pubkey[(mldsa_dword*2)][31:24]};
 
                 end
-                else begin
+                else if (mldsa_inject_vfy_d) begin
                     release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_scratch_reg.mldsa_enc.rho[mldsa_dword];
                 end
             end
@@ -1548,7 +1560,7 @@ module caliptra_top_tb_services
                     if (mldsa_verify | mldsa_verify_nomsg) begin
                         force abr_mem_top_inst.abr_pk_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.pubkey[a*10+8+b][7:0], mldsa_test_vector.pubkey[a*10+8+b][15:8], mldsa_test_vector.pubkey[a*10+8+b][23:16], mldsa_test_vector.pubkey[a*10+8+b][31:24]};
                     end
-                    else begin
+                    else if (mldsa_inject_vfy_d) begin
                         release abr_mem_top_inst.abr_pk_mem_inst.ram[a][b*4+3:b*4];
                     end
                 end
@@ -1561,7 +1573,7 @@ module caliptra_top_tb_services
                 if (mldsa_verify | mldsa_verify_nomsg) begin
                     force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.signature_reg.enc.c[mldsa_dword] = {mldsa_test_vector.signature[mldsa_dword][7:0], mldsa_test_vector.signature[mldsa_dword][15:8], mldsa_test_vector.signature[mldsa_dword][23:16], mldsa_test_vector.signature[mldsa_dword][31:24]};
                 end
-                else begin
+                else if (mldsa_inject_vfy_d) begin
                     release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.signature_reg.enc.c[mldsa_dword];
                 end
             end
@@ -1571,7 +1583,7 @@ module caliptra_top_tb_services
                 if (mldsa_verify | mldsa_verify_nomsg) begin
                     force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.signature_reg.enc.h[mldsa_dword] = {mldsa_test_vector.signature[1136+mldsa_dword][7:0], mldsa_test_vector.signature[1136+mldsa_dword][15:8], mldsa_test_vector.signature[1136+mldsa_dword][23:16], mldsa_test_vector.signature[1136+mldsa_dword][31:24]};
                 end
-                else begin
+                else if (mldsa_inject_vfy_d) begin
                     release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.signature_reg.enc.h[mldsa_dword];
                 end
             end
@@ -1582,7 +1594,7 @@ module caliptra_top_tb_services
                     if (mldsa_verify | mldsa_verify_nomsg) begin
                         force abr_mem_top_inst.abr_sig_z_mem_inst.ram[a][b*4+3:b*4] = {mldsa_test_vector.signature[a*5+16+b][7:0], mldsa_test_vector.signature[a*5+16+b][15:8], mldsa_test_vector.signature[a*5+16+b][23:16], mldsa_test_vector.signature[a*5+16+b][31:24]};
                     end
-                    else begin
+                    else if (mldsa_inject_vfy_d) begin
                         release abr_mem_top_inst.abr_sig_z_mem_inst.ram[a][b*4+3:b*4];
                     end
                 end
@@ -1767,10 +1779,14 @@ endgenerate //IV_NO
             end
         end
     end
+    // Only release on the deasserting edge; an unconditional release every
+    // negedge costs ~6.5% of simulation CPU time on tests that never inject.
+    logic inject_zeroize_to_mldsa_d = 1'b0;
     always@(negedge clk) begin
+        inject_zeroize_to_mldsa_d <= inject_zeroize_to_mldsa;
         if (inject_zeroize_to_mldsa) begin
             force `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value = 1'b1;
-        end else begin
+        end else if (inject_zeroize_to_mldsa_d) begin
             release `CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.abr_reg_hwif_out.MLDSA_CTRL.ZEROIZE.value;
         end
     end
