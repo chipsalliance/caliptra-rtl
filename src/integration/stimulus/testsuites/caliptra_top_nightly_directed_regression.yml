@@ -90,6 +90,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_swwe_lock/smoke_test_kv_swwe_lock.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_lock_use_mid_read/smoke_test_kv_lock_use_mid_read.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_abr_kv_zero_error/smoke_test_abr_kv_zero_error.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_wr_ctrl_zeroize/smoke_test_kv_wr_ctrl_zeroize.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms24/fw_test_lms24.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms32/fw_test_lms32.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n24_w1_h5/fw_test_lms_n24_w1_h5.yml
