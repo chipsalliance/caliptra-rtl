@@ -864,9 +864,6 @@ import el2_pkg::*;
    // AXI
    assign ifu_axi_awready = 1'b1;
    assign ifu_axi_wready = 1'b1;
-   assign ifu_axi_bvalid = '0;
-   assign ifu_axi_bresp[1:0] = '0;
-   assign ifu_axi_bid[pt.IFU_BUS_TAG-1:0] = '0;
 
    /*pragma coverage on*/
 
