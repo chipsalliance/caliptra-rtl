@@ -1,0 +1,16 @@
+---
+# Directed RAL register-access test for the stash bank feature (RFC #673).
+#
+# Runs soc_ifc_env_stash_bank_reg_access_sequence via the command-line test
+# to drive representative reads/writes to the STASH_BANK_SLOT_DATA,
+# STASH_BANK_SOC_LOCK, STASH_END_STASH, STASH_BANK_CPTRA_LOCK and
+# STASH_BANK_STATUS registers on both the SoC/AXI and Caliptra/AHB maps, so
+# the soc_ifc register-predictor mirror update and the associated coverage
+# covergroups actually get sampled. See soc_ifc_env_stash_bank_reg_access_sequence.svh
+# for the coverage-closure rationale (this test complements, not replaces,
+# the bare-SV smoke_test_stash_bank[_negative|_cptra_lock|_rst] behavioral tests).
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=soc_ifc_cmdline_test'
+- '+CLP_SEQ=soc_ifc_env_stash_bank_reg_access_sequence'
+testname: soc_ifc_stash_bank_reg_access_test

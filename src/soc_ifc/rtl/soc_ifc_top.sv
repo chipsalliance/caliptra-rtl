@@ -807,6 +807,104 @@ always_comb begin
     end
 end
 
+// STASH measurement register bank (RFC 673) - lock / PAUSER / status glue.
+//
+// The bank shares the mailbox AXI USER set instead of defining its own
+// STASH_PAUSER (RFC 673 §4.1). A request qualifies on either of the two terms
+// soc_ifc_arb.sv uses for valid_mbox_req: a match against one of the five
+// resolved valid_mbox_users[] entries, or a match against
+// CPTRA_DEF_MBOX_VALID_AXI_USER, which is valid unconditionally. Both terms are
+// required for the sets to agree, since the valid_mbox_users[] resolution only
+// falls back to the default for entries that are still unprogrammed.
+//
+// Subsystem mode (CALIPTRA_MODE_SUBSYSTEM) implements slot 0 only - see
+// stash_slot_locked below.
+//
+// STASH_BANK_CPTRA_LOCK is Caliptra-only (RFC 673 §4.4): Caliptra Runtime FW
+// writes it after the post-DPE-init drain to seal the bank for the rest of the boot.
+logic stash_axi_user_valid;
+always_comb begin
+    stash_axi_user_valid = 1'b0;
+    for (int u = 0; u < 5; u++) begin
+        if (soc_ifc_reg_req_data.user == valid_mbox_users[u]) begin
+            stash_axi_user_valid = 1'b1;
+        end
+    end
+    if (soc_ifc_reg_req_data.user == CPTRA_DEF_MBOX_VALID_AXI_USER[SOC_IFC_USER_W-1:0]) begin
+        stash_axi_user_valid = 1'b1;
+    end
+end
+
+// Implemented per-slot lock state, and the only lock source read by the
+// slot-data write gate and the STASH_BANK_STATUS mirror. Routing both through
+// one signal keeps the slots the SoC can lock and the slots Caliptra can observe
+// identical by construction. Subsystem mode implements slot 0 only, so bits 7:1
+// are tied low; STASH_BANK_SOC_LOCK is write-only, leaving its upper storage
+// with no reader for synthesis to keep.
+logic [7:0] stash_slot_locked;
+always_comb begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    stash_slot_locked = {7'h0, soc_ifc_reg_hwif_out.STASH_BANK_SOC_LOCK.lock.value[0]};
+`else
+    stash_slot_locked = soc_ifc_reg_hwif_out.STASH_BANK_SOC_LOCK.lock.value;
+`endif
+end
+
+// Slot data swwel: block when slot locked, end_stash asserted, cptra_lock asserted,
+// request is not from SoC, or AXI USER does not match mailbox PAUSER table.
+// In subsystem mode, slots 1..7 are permanently write-disabled.
+always_comb begin
+    for (int k = 0; k < 208; k++) begin
+        automatic int slot_idx;
+        slot_idx = k / 26;
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        if (slot_idx > 0) begin
+            soc_ifc_reg_hwif_in.STASH_BANK_SLOT_DATA[k].data.swwel = 1'b1;
+        end
+        else begin
+            soc_ifc_reg_hwif_in.STASH_BANK_SLOT_DATA[k].data.swwel =
+                stash_slot_locked[slot_idx]                                    |
+                soc_ifc_reg_hwif_out.STASH_END_STASH.end_stash.value           |
+                soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value    |
+                ~soc_ifc_reg_req_data.soc_req                                   |
+                ~stash_axi_user_valid;
+        end
+`else
+        soc_ifc_reg_hwif_in.STASH_BANK_SLOT_DATA[k].data.swwel =
+            stash_slot_locked[slot_idx]                                    |
+            soc_ifc_reg_hwif_out.STASH_END_STASH.end_stash.value           |
+            soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value    |
+            ~soc_ifc_reg_req_data.soc_req                                   |
+            ~stash_axi_user_valid;
+`endif
+    end
+end
+
+// SOC_LOCK and END_STASH are SoC-only W1S; CPTRA_LOCK is Caliptra-only W1S.
+always_comb begin
+    soc_ifc_reg_hwif_in.STASH_BANK_SOC_LOCK.lock.swwe =
+        soc_ifc_reg_req_data.soc_req &
+        stash_axi_user_valid &
+        ~soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value &
+        ~soc_ifc_reg_hwif_out.STASH_END_STASH.end_stash.value;
+    soc_ifc_reg_hwif_in.STASH_END_STASH.end_stash.swwe =
+        soc_ifc_reg_req_data.soc_req &
+        stash_axi_user_valid &
+        ~soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value;
+    soc_ifc_reg_hwif_in.STASH_BANK_CPTRA_LOCK.cptra_lock.swwe = ~soc_ifc_reg_req_data.soc_req;
+end
+
+// Status mirror (hw=w pass-through fields). Per RFC 673 §4.5, STATUS is the single
+// read path for all stash bank lock state - the three lock registers above are W1S
+// write-only and read as 0.
+always_comb begin
+    soc_ifc_reg_hwif_in.STASH_BANK_STATUS.slot_locked.next = stash_slot_locked;
+    soc_ifc_reg_hwif_in.STASH_BANK_STATUS.end_stash.next =
+        soc_ifc_reg_hwif_out.STASH_END_STASH.end_stash.value;
+    soc_ifc_reg_hwif_in.STASH_BANK_STATUS.cptra_lock.next =
+        soc_ifc_reg_hwif_out.STASH_BANK_CPTRA_LOCK.cptra_lock.value;
+end
+
 // OCP Lock progress register is w1-set, meaning once set to 1 it persists until reset (on the uC fw upd reset domain)
 // It is also only settable when Caliptra was configured to support OCP LOCK operations (via the LOCK_EN strap)
 `ifdef CALIPTRA_MODE_SUBSYSTEM
