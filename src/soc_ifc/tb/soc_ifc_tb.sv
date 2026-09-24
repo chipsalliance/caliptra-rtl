@@ -448,6 +448,9 @@ module soc_ifc_tb
              .dual_itrng_en(1'b0),
              .dual_itrng_en_o(),
 
+             // DCLS corruption-detection enable strap (subsystem DCLS)
+             .ss_dcls_en(1'b0),
+
              .stable_owner_key_en(),
 
              .nmi_vector(),

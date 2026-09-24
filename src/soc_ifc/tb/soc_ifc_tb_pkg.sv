@@ -411,7 +411,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_FUSE_WR_DONE"                               : 32'h1,          // field 0 
     "CPTRA_HW_REV_ID"                                  : 32'hffff_ffff,  // field SOC_STEPPING_ID, CPTRA_GENERATION
     "CPTRA_FW_REV_ID"                                  : 32'hffff_ffff,
-    "CPTRA_HW_CONFIG"                                  : 32'h0000_007F,  // All existing bits are sticky
+    "CPTRA_HW_CONFIG"                                  : 32'h0000_01FF,  // All existing bits are sticky
     "CPTRA_FUSE_VALID_AXI_USER"                        : 32'hffff_ffff,
     "CPTRA_FUSE_AXI_USER_LOCK"                         : 32'h1,
     "CPTRA_TIMER_CONFIG"                               : 32'hffff_ffff,                           
@@ -459,7 +459,9 @@ package soc_ifc_tb_pkg;
                                                           `SOC_IFC_REG_CPTRA_HW_CONFIG_RSVD_EN_MASK           |
                                                           `SOC_IFC_REG_CPTRA_HW_CONFIG_LMS_ACC_EN_MASK        |
                                                           `SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK |
-                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK),
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK  |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_MASK     |
+                                                          `SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK),
     "CPTRA_FLOW_STATUS"                                : (`SOC_IFC_REG_CPTRA_FLOW_STATUS_STATUS_MASK             |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_IDEVID_CSR_READY_MASK   |
                                                           `SOC_IFC_REG_CPTRA_FLOW_STATUS_READY_FOR_MB_PROCESSING_MASK       |
