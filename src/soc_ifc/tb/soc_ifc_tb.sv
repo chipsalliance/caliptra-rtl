@@ -449,7 +449,7 @@ module soc_ifc_tb
              .dual_itrng_en_o(),
 
              // DCLS corruption-detection enable strap (subsystem DCLS)
-             .ss_dcls_en(1'b0),
+             .ss_dcls_en(dcls_en_tb),
 
              .stable_owner_key_en(),
 
@@ -1861,6 +1861,10 @@ module soc_ifc_tb
     ocp_lock_en_tb = $urandom_range(1,0);
 
     while(ocp_lock_en_tb === 'hX);
+
+    dcls_en_tb = $urandom_range(1,0);
+
+    while(dcls_en_tb === 'hX);
 
     $write("PLAYBOOK_RANDOM_SEED = %s\n", getenv("PLAYBOOK_RANDOM_SEED"));
 

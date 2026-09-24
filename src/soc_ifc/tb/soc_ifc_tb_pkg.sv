@@ -49,6 +49,7 @@ package soc_ifc_tb_pkg;
   logic [31:0] strap_ss_caliptra_dma_axi_user_tb;
   logic        ss_debug_intent_tb;
   logic        ocp_lock_en_tb;
+  logic        dcls_en_tb;
 
   // ================================================================================ 
   // Type declarations 
@@ -532,7 +533,8 @@ package soc_ifc_tb_pkg;
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
     "INTERNAL_HW_ERROR_FATAL_MASK"                     : (`SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK      | 
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_DCCM_ECC_UNC_MASK |
-                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_ICCM_ECC_UNC_MASK), 
+                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_ICCM_ECC_UNC_MASK |
+                                                          `SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_DCCM_WR_READBACK_ERR_MASK), 
     "INTERNAL_HW_ERROR_NON_FATAL_MASK"                 : (`SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_NO_LOCK_MASK | 
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_PROT_OOO_MASK     | 
                                                           `SOC_IFC_REG_INTERNAL_HW_ERROR_NON_FATAL_MASK_MASK_MBOX_ECC_UNC_MASK),      
@@ -853,8 +855,9 @@ package soc_ifc_tb_pkg;
 
     begin
       exp_cptra_hw_config = get_initval("CPTRA_HW_CONFIG");
-      if (subsystem_mode_tb && ocp_lock_en_tb === 1'b1) begin
+      if (subsystem_mode_tb && (ocp_lock_en_tb === 1'b1 || dcls_en_tb === 1'b1)) begin
         exp_cptra_hw_config |= ocp_lock_en_tb ? dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) : dword_t'(0);
+        exp_cptra_hw_config |= dcls_en_tb     ? dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK)          : dword_t'(0);
         _soc_register_initval_ss_dict["CPTRA_HW_CONFIG"] = exp_cptra_hw_config;
         update_exp_regval("CPTRA_HW_CONFIG", exp_cptra_hw_config, SET_DIRECT);
       end
