@@ -816,7 +816,7 @@ import kv_defines_pkg::*;
         else if (!kv_read_once && 
                  hwif_out.ctrl.go.value &&
                  (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT) &&
-                 (!cmd_parse_error)) begin
+                 (!cmd_parse_error) && fifo_empty) begin
             kv_read_en <= 1'b1;
         end
         else if (kv_data_read_done) begin
@@ -986,7 +986,9 @@ import kv_defines_pkg::*;
         end
         else if (hwif_out.ctrl.wr_route.value == axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT) begin
             fifo_w_data  = kv_data_write_data;
-            fifo_w_valid = kv_data_write_en && |(rd_fifo_bytes_remaining); // FIXME no backpressure on this signal, FIFO must accept every assertion
+            // Key Vault lacks backpressure; transfer is guaranteed safe as kv_read_en is guarded
+            // by fifo_empty and total transfer size (64B) is strictly less than FIFO depth (512B).
+            fifo_w_valid = kv_data_write_en && |(rd_fifo_bytes_remaining);
         end
         else begin
             fifo_w_data  = r_data_i;
@@ -1503,6 +1505,7 @@ import kv_defines_pkg::*;
         (wr_resp_pending == '0) &&
         ({w_req_if.resp_valid, wr_req_hshake} == 2'b10),
         clk, !rst_n)
+    `CALIPTRA_ASSERT_NEVER(AXI_DMA_KV_FIFO_OVERFLOW, kv_data_write_en && fifo_full, clk, !rst_n)
     // Saturation must deassert the write request, guaranteeing no overflow.
     `CALIPTRA_ASSERT(AXI_DMA_SAT_STALL_WR_REQ, (&wr_resp_pending) |-> !w_req_if.valid, clk, !rst_n)
     // Proper configuration
