@@ -40,9 +40,12 @@
 //     - RT issues firmware update reset
 //
 //   Iter 2 (fw update reset):
-//     - Verify ICCM region registers and lock PERSIST (non-core domain)
-//     - Shadow committed flags also persist (same reset domain)
-//     - Verify lock still blocks writes
+//     - Verify the region LOCK is cleared by the boot-FSM iccm_unlock pulse and
+//       the address VALUES persist (they reset only on cptra_noncore_rst_b,
+//       which a firmware-update reset does not assert)
+//     - Shadow committed-gating is also cleared -> effective lock = 0
+//     - Reprogram regions (2-phase re-commit) and re-lock, then verify the
+//       re-lock blocks further writes
 //     - Run through FMC/RT normally
 //     - RT issues warm reset
 //
@@ -361,14 +364,21 @@ void main() {
 
     case 2:
         // ============================================================
-        // Iter 2: FW update reset preserves region registers
+        // Iter 2: FW update reset (hitless) clears the region LOCK via the
+        // boot-FSM iccm_unlock pulse; the address VALUES persist (noncore
+        // domain). ROM must reprogram (re-commit) and re-lock, mirroring what
+        // real ROM does on the firmware-update path.
         // ============================================================
-        VPRINTF(LOW, "ROM[2]: Verifying registers persist across FW update reset\n");
+        VPRINTF(LOW, "ROM[2]: Verifying lock cleared but addresses persist across FW update reset\n");
+        verify_regs_persist_unlocked();
+        // Reads above cleared the shadow phase trackers; DICE keys persist across
+        // FW update reset so no re-derivation is needed. Reprogram regions + re-lock.
+        VPRINTF(LOW, "ROM[2]: Reprogramming ICCM regions and re-locking after hitless update\n");
+        program_iccm_regions();
         verify_regs_programmed();
-        VPRINTF(LOW, "ROM[2]: Verifying lock still blocks writes\n");
+        VPRINTF(LOW, "ROM[2]: Verifying re-lock blocks further writes\n");
         lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR, 0x3FFFF);
         check_reg("FMC_END after locked overwrite", CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR, FMC_ICCM_END_REL);
-        // DICE keys persist across FW update reset -- no re-derivation needed
         break;
 
     case 3:

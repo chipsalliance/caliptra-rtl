@@ -1093,6 +1093,8 @@ always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_ti
 always_comb soc_ifc_reg_hwif_in.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.hwset = t2_timeout_p && timer2_en;
 
 always_comb soc_ifc_reg_hwif_in.internal_iccm_lock.lock.hwclr    = iccm_unlock;
+// Clear the ICCM region lock after hitless update
+always_comb soc_ifc_reg_hwif_in.internal_iccm_region_lock.lock.hwclr = iccm_unlock;
 
 
 logic [SOC_IFC_DATA_W-1:0] s_cpuif_wr_biten;
@@ -1166,8 +1168,13 @@ logic       shadow_update_err;
 
 // Sticky committed flags -- once a successful 2-phase write occurs, committed
 // stays set until reset. This gates the effective lock in the boot flow monitor.
+// Also cleared by iccm_unlock at the end of every reset flow (incl. hitless/fw-update
+// reset) so the effective lock cannot re-arm with stale boundaries: ROM must re-commit
+// all four region address registers after a hitless update before the monitor arms.
 always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
     if (!cptra_noncore_rst_b)
+        iccm_shadow_committed <= 4'b0;
+    else if (iccm_unlock)
         iccm_shadow_committed <= 4'b0;
     else
         iccm_shadow_committed <= iccm_shadow_committed | iccm_shadow_qe;
