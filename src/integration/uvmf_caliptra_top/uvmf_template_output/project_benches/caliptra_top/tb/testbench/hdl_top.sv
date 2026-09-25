@@ -388,7 +388,7 @@ import aaxi_uvm_pkg::*;
 
         // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
         .ss_ocp_lock_en(1'b0), // TODO
-
+        .ss_dcls_en(1'b0),
         // Subsystem mode debug outputs
         .ss_dbg_manuf_enable    (soc_ifc_subenv_ss_mode_status_agent_bus.ss_dbg_manuf_enable    ),
         .ss_soc_dbg_unlock_level(soc_ifc_subenv_ss_mode_status_agent_bus.ss_soc_dbg_unlock_level),

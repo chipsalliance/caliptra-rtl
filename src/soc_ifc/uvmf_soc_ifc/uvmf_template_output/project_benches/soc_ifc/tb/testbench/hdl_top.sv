@@ -239,9 +239,11 @@ import pv_defines_pkg::*;
 
     // Construct the HW fatal error struct from UVMF interface signals
     cptra_hw_fatal_error_t cptra_hw_fatal_errors_i;
-    assign cptra_hw_fatal_errors_i.crypto_err = cptra_ctrl_agent_bus.crypto_error;
-    assign cptra_hw_fatal_errors_i.kv_error   = 1'b0;
-    assign cptra_hw_fatal_errors_i.fsm_error  = 1'b0;
+    assign cptra_hw_fatal_errors_i.crypto_err  = cptra_ctrl_agent_bus.crypto_error;
+    assign cptra_hw_fatal_errors_i.kv_error    = 1'b0;
+    assign cptra_hw_fatal_errors_i.fsm_error   = 1'b0;
+    assign cptra_hw_fatal_errors_i.rv_dcls_error = 1'b0;
+    assign cptra_hw_fatal_errors_i.dccm_wr_readback_error = 1'b0;
 
     // DUT
     soc_ifc_top #(
@@ -382,7 +384,7 @@ import pv_defines_pkg::*;
         .ss_ocp_lock_en         (1'b0/*TODO*/),
         .ss_ocp_lock_in_progress(    /*TODO*/),
         .ss_key_release_key_size(    /*TODO*/),
-
+        .ss_dcls_en             (1'b0/*TODO*/),
         // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out
         .dual_itrng_en          (1'b0/*TODO*/),
         .dual_itrng_en_o        (    /*TODO*/),
