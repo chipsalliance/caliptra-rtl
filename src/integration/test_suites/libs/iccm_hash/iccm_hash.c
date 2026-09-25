@@ -36,6 +36,16 @@ uint8_t acquire_sha_lock(void) {
     return 0;
 }
 
+void free_sha_acc_lock(void) {
+    // The SHA acc LOCK resets to 1 (locked, held for the SHA acc KAT). The ICCM
+    // hash only arms when the lock is free (~lock_value), so firmware must free
+    // the reset-default lock before the ICCM-write snoop can engage the hash --
+    // mirroring real ROM, which measures the ICCM only after the KAT releases
+    // the lock. Writing 1 clears the lock (woclr); we intentionally do NOT read
+    // it back, so the lock is left free (a read would re-acquire it for FW).
+    lsu_write_32(CLP_SHA512_ACC_CSR_LOCK, SHA512_ACC_CSR_LOCK_LOCK_MASK);
+}
+
 uint8_t wait_pcr4_ready(void) {
     uint32_t timeout = 20000;
     while (timeout--) {
@@ -54,8 +64,10 @@ uint8_t wait_pcr5_ready(void) {
 
 uint8_t run_default_iccm_hash(void) {
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
-    // ICCM-write snoop engages the hash automatically on the first write;
-    // no firmware-side arming or lock acquisition is required.
+    // Free the SHA acc reset-default lock so the ICCM-write snoop can engage the
+    // hash (the hash only arms while the lock is free). No FW-side arming or lock
+    // acquisition is otherwise required -- the snoop auto-arms on the first write.
+    free_sha_acc_lock();
     for (uint32_t i = 0; i < ICCM_HASH_DEFAULT_NUM_WORDS; i++) {
         iccm[i] = ICCM_HASH_DEFAULT_WORD(i);
     }
