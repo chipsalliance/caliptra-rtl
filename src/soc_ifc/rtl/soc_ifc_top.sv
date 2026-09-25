@@ -855,7 +855,7 @@ end
 // In subsystem mode, slots 1..7 are permanently write-disabled.
 always_comb begin
     for (int k = 0; k < 208; k++) begin
-        automatic int slot_idx;
+        automatic logic [7:0] slot_idx;
         slot_idx = k / 26;
 `ifdef CALIPTRA_MODE_SUBSYSTEM
         if (slot_idx > 0) begin
