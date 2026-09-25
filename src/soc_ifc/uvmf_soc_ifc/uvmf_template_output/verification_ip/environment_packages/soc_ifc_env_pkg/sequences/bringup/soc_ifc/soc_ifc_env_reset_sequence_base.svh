@@ -363,11 +363,13 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
 
   //==========================================
   // Name:        unlock_sha_accelerator
-  // Description: In subsystem mode the SHA accelerator boots LOCKED (RDL LOCK=1)
-  //              and is released by the HW ICCM-content-hash flow once it has
-  //              measured ICCM and extended PCR4/PCR5. Trigger that flow with a
-  //              zero-length measurement by writing INTERNAL_ICCM_LOCK over the
-  //              AHB (uC) map, then observe the lock through a passive TB
+  // Description: In subsystem mode the SHA accelerator boots LOCKED (RDL LOCK=1,
+  //              held for the SHA acc KAT). Firmware frees this reset-default lock
+  //              by writing 1 to the SHA512_ACC LOCK register over the AHB (uC)
+  //              map -- LOCK is write-1-to-clear (woclr) -- after which the lock
+  //              reads back 0. (The HW ICCM-content-hash flow no longer arms while
+  //              the accelerator is locked, so it can no longer be used to release
+  //              the boot lock.) The release is observed through a passive TB
   //              interface until hardware clears it.
   //==========================================
   virtual task unlock_sha_accelerator();
@@ -382,22 +384,22 @@ class soc_ifc_env_reset_sequence_base extends soc_ifc_env_sequence_base #(.CONFI
             configuration.sha_status_vif))
         `uvm_fatal("SOC_IFC_RST", "SHA ICCM unlock requested, but soc_ifc_sha_status_vif is unavailable")
 
-    `uvm_info("SOC_IFC_RST", "Releasing SHA accelerator boot lock via ICCM zero-length hash (writing INTERNAL_ICCM_LOCK)", UVM_LOW)
-    reg_model.soc_ifc_reg_rm.internal_iccm_lock.write(sts, uvm_reg_data_t'(1), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
+    `uvm_info("SOC_IFC_RST", "Releasing SHA accelerator boot lock by clearing SHA512_ACC LOCK (write-1-to-clear)", UVM_LOW)
+    reg_model.sha512_acc_csr_rm.LOCK.write(sts, uvm_reg_data_t'(1), UVM_FRONTDOOR, reg_model.soc_ifc_AHB_map, this);
     if (sts != UVM_IS_OK)
-        `uvm_fatal("SOC_IFC_RST", "Failed to write INTERNAL_ICCM_LOCK to release the SHA accelerator lock")
+        `uvm_fatal("SOC_IFC_RST", "Failed to write SHA512_ACC LOCK to release the SHA accelerator lock")
 
     for (attempts = 0; attempts < 200; attempts++) begin
         configuration.soc_ifc_ctrl_agent_config.wait_for_num_clocks(20);
         if ($isunknown(configuration.sha_status_vif.sha_lock))
-            `uvm_fatal("SOC_IFC_RST", "Observed X/Z on SHA lock while waiting for ICCM unlock")
+            `uvm_fatal("SOC_IFC_RST", "Observed X/Z on SHA lock while waiting for lock release")
         if (configuration.sha_status_vif.sha_lock === 1'b0) begin
             sync_sha_model_after_iccm_unlock();
-            `uvm_info("SOC_IFC_RST", "SHA accelerator boot lock released (LOCK cleared by ICCM PCR extend)", UVM_LOW)
+            `uvm_info("SOC_IFC_RST", "SHA accelerator boot lock released (LOCK cleared by W1C)", UVM_LOW)
             return;
         end
     end
-    `uvm_fatal("SOC_IFC_RST", "Timed out waiting for SHA accelerator ICCM unlock")
+    `uvm_fatal("SOC_IFC_RST", "Timed out waiting for SHA accelerator lock release")
   endtask
 
 endclass
