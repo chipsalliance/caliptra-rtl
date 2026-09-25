@@ -88,6 +88,9 @@ static const uint32_t expected_pcr5_boot2[ICCM_HASH_PCR_DWORDS] = {
 // Run an ICCM hash with a specific data pattern (each boot uses different data)
 static uint8_t run_boot_hash(uint32_t boot) {
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
+    // Free the SHA acc reset-default lock so the ICCM-write snoop can arm the hash
+    // (LOCK resets to 1 for the KAT and re-locks after each fw_update_reset).
+    free_sha_acc_lock();
     if (boot == 0) {
         for (uint32_t i = 0; i < 64; i++) iccm[i] = 0x10 + i;
     } else if (boot == 1) {

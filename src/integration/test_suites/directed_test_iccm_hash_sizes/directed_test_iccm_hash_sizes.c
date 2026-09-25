@@ -88,6 +88,10 @@ void main(void) {
 
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
 
+    // Free the SHA acc reset-default lock so the ICCM-write snoop can arm the hash
+    // (LOCK resets to 1 for the KAT and re-locks after each fw_update_reset).
+    free_sha_acc_lock();
+
     // After fw_update_reset, PCR4 should be cleared by iccm_unlock
     if (iteration > 0) {
         VPRINTF(LOW, "Checking PCR4 cleared after fw_update_reset...\n");

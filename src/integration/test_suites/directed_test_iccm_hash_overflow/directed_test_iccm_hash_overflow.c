@@ -91,6 +91,9 @@ void main(void) {
     // Subsystem mode: fill the entire ICCM, then one extra wrapping write.
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
 
+    // Free the SHA acc reset-default lock so the ICCM-write snoop can arm the hash.
+    free_sha_acc_lock();
+
     VPRINTF(LOW, "Filling ICCM: %u dwords (incrementing pattern)...\n", ICCM_NUM_WORDS);
     for (uint32_t i = 0; i < ICCM_NUM_WORDS; i++) {
         iccm[i] = i;

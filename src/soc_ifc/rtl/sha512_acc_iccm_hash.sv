@@ -61,6 +61,7 @@ module sha512_acc_iccm_hash
   // ICCM hash mode signals
   logic iccm_mode_done;
   logic iccm_armed;
+  logic iccm_hash_trigger;
 
   // PCR write via kv_write_client
   logic iccm_pcr_dest_done;
@@ -96,14 +97,18 @@ module sha512_acc_iccm_hash
 // iccm_lock_i for the zero-length case. The OR with the live trigger
 // engages the same cycle the snoop fires to capture the first dword
 // without a one-cycle slip.
-always_comb iccm_mode = (iccm_armed | ((iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock)) & ~iccm_mode_done;
+// iccm_hash_trigger is gated so the hash does NOT arm while the SHA acc LOCK
+// is already held (e.g. the KAT holds the lock out of reset, LOCK resets to 1).
+// The sticky iccm_armed term keeps iccm_mode asserted after the hash acquires
+// the lock itself, so this gate only blocks arming against a pre-existing lock.
+always_comb iccm_hash_trigger = (iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock & ~lock_value;
+
+always_comb iccm_mode = (iccm_armed | iccm_hash_trigger) & ~iccm_mode_done;
 
 // HW SHA acc lock acquire: pulse hwset on the very first ICCM activity
 // (snoop or iccm_lock_i). Gated by ~iccm_armed so the pulse fires exactly
 // once at the start of the measurement, not again during release.
-always_comb iccm_lock_acquire = (iccm_hash_dv_i | iccm_lock_i) &
-                                ~soc_has_lock & ~iccm_armed & ~iccm_mode_done &
-                                ~lock_value;
+always_comb iccm_lock_acquire = iccm_hash_trigger & ~iccm_armed & ~iccm_mode_done;
 
 // HW lock release: clear LOCK back to 0 (free) after the full extend
 // sequence completes (EXTEND_DONE). Using extend_fsm_ps == EXTEND_DONE
@@ -138,7 +143,7 @@ always_ff @(posedge clk or negedge rst_b) begin
     iccm_armed <= 1'b0;
   else if (iccm_unlock_i)
     iccm_armed <= 1'b0;
-  else if ((iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock & ~iccm_mode_done)
+  else if (iccm_hash_trigger & ~iccm_mode_done)
     iccm_armed <= 1'b1;
 end
 

@@ -92,6 +92,9 @@ module kv_boot_flow_sva
   // ICCM region signals
   wire iccm_region_lock = `CPTRA_TOP_PATH.iccm_region_lock;
   wire iccm_read_any    = `CPTRA_TOP_PATH.i_boot_flow_monitor.iccm_read_any;
+  // Boot-FSM pulse that HW-clears the ICCM region lock (and committed-gating) at the
+  // end of every reset flow, including a firmware-update (hitless) reset.
+  wire iccm_unlock      = `CPTRA_TOP_PATH.iccm_unlock;
 
   // cptra_error_fatal output
   wire cptra_error_fatal = `CPTRA_TOP_PATH.cptra_error_fatal;
@@ -488,17 +491,31 @@ module kv_boot_flow_sva
     (iccm_read_any && !iccm_region_lock) |=> mubi4_test_true_strict(mubi4_t'(boot_flow_error))
   ) else $display("SVA ERROR: boot_flow_error not set on ICCM fetch with region_lock=0");
 
-  // What: ICCM_REGION_LOCK is W1S -- once set, cannot be cleared by any write (only reset)
-  // Why: Prevents malicious FW from unlocking region registers after ROM configures them
+  // What: ICCM_REGION_LOCK cannot be cleared by any software write; it clears only on a
+  //       reset flow or the boot-FSM iccm_unlock pulse (end of every reset flow).
+  // Why: Prevents malicious FW from unlocking region registers mid-boot, while still
+  //      allowing the intended HW unlock so ROM can reprogram regions after a hitless update.
   IccmRegionLockSticky_A: assert property (
     @(posedge clk) disable iff (!core_rst_n)
-    iccm_region_lock |=> iccm_region_lock
-  ) else $display("SVA ERROR: ICCM_REGION_LOCK cleared without reset");
+    (iccm_region_lock && !iccm_unlock) |=> iccm_region_lock
+  ) else $display("SVA ERROR: ICCM_REGION_LOCK cleared without reset or iccm_unlock");
+
+  // What: The iccm_unlock pulse deasserts the effective ICCM_REGION_LOCK so ROM can
+  //       reprogram the region registers on every boot, including a hitless update.
+  // Why: A hitless update asserts only cptra_uc_rst_b (not cptra_noncore_rst_b); without
+  //      this HW clear the lock would persist and freeze stale ICCM boundaries.
+  IccmRegionLockClearsOnUnlock_A: assert property (
+    @(posedge clk) disable iff (!core_rst_n)
+    iccm_unlock |=> !iccm_region_lock
+  ) else $display("SVA ERROR: ICCM_REGION_LOCK not cleared by iccm_unlock");
 
   // What: All 4 address registers and ICCM_REGION_LOCK reset to 0 on cptra_noncore_rst_b
   // Why: ROM must reprogram regions on every boot cycle
   // Note: Uses noncore_rst_n because the shadow registers and ICCM_REGION_LOCK
-  //       in soc_ifc_top use cptra_noncore_rst_b (they survive warm resets).
+  //       in soc_ifc_top use cptra_noncore_rst_b (they survive warm resets). The
+  //       address VALUES persist across a hitless update (fw-update asserts uc_rst
+  //       only); the effective lock is cleared by iccm_unlock (see above), so ROM
+  //       must reprogram and re-lock on the hitless path.
   IccmRegionLockReset_A: assert property (
     @(posedge clk)
     !noncore_rst_n |-> !iccm_region_lock

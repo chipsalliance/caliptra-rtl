@@ -58,6 +58,10 @@ void main(void) {
     // Write test data to ICCM (both modes -- ICCM writes always work)
     VPRINTF(LOW, "Writing test data to ICCM...\n");
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
+    // Free the SHA acc reset-default lock (LOCK resets to 1, held for the SHA acc
+    // KAT) so the ICCM-write snoop can arm the hash (it only arms while the lock
+    // is free). Write-1 clears the lock (woclr); do not read it back or it re-locks.
+    lsu_write_32(CLP_SHA512_ACC_CSR_LOCK, SHA512_ACC_CSR_LOCK_LOCK_MASK);
     iccm[0] = 0x00000001;
     iccm[1] = 0x00000002;
     iccm[2] = 0x00000003;
