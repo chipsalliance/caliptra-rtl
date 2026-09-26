@@ -74,10 +74,14 @@ module ecc_arith_unit
     pm_instr_struct_t                   ecc_instr_s;
     logic [REG_SIZE-1 : 0]              reg_dinb_r;
     logic [REG_SIZE-1 : 0]              dinb_mux_s;
+    logic [OPR_ADDR_WIDTH-1 : 0]        addra_mux_s;
     logic [OPR_ADDR_WIDTH-1 : 0]        reg_addr_r;
     logic [OPR_ADDR_WIDTH-1 : 0]        addrb_mux_s;
     logic                               reg_web_r;
     logic                               web_mux_s;
+    logic                               mult_addr_hold_valid;
+    logic [OPR_ADDR_WIDTH-1 : 0]        mult_opa_addr;
+    logic [OPR_ADDR_WIDTH-1 : 0]        mult_opb_addr;
 
     logic [REG_SIZE-1 : 0]              d_o;
 
@@ -127,7 +131,7 @@ module ecc_arith_unit
         .zeroize(zeroize),
         .ena(1'b1),
         .wea(ecc_instr_s.opcode.add_we),
-        .addra(ecc_instr_s.opa_addr),
+        .addra(addra_mux_s),
         .dina(add_res_s),
         .douta(opa_s),
         .enb(1'b1),
@@ -188,6 +192,9 @@ module ecc_arith_unit
             secret_key      <= '0;
             secret_key_pk   <= '0;
             d_o             <= '0;
+            mult_addr_hold_valid <= 1'b0;
+            mult_opa_addr <= '0;
+            mult_opb_addr <= '0;
         end
         else if (zeroize) begin
             reg_dinb_r      <= '0;
@@ -196,8 +203,17 @@ module ecc_arith_unit
             secret_key      <= '0;
             secret_key_pk   <= '0;
             d_o             <= '0;
+            mult_addr_hold_valid <= 1'b0;
+            mult_opa_addr <= '0;
+            mult_opb_addr <= '0;
         end
         else begin
+            mult_addr_hold_valid <= ecc_busy_s & ecc_instr_s.opcode.mult_en;
+            if (ecc_busy_s & ecc_instr_s.opcode.mult_en) begin
+                mult_opa_addr <= ecc_instr_s.opa_addr;
+                mult_opb_addr <= ecc_instr_s.opb_addr;
+            end
+
             if (wr_en_i) begin
                 if (wr_op_sel_i == 1'b0) // Write new register
                     reg_dinb_r <= data_i[REG_SIZE-1 : 0];
@@ -229,8 +245,11 @@ module ecc_arith_unit
     //Push key bit to ecc pm control
     assign digit_in = secret_key[0];
     assign digit_pk_in = secret_key_pk[0];
-            
-    assign addrb_mux_s = ecc_busy_s ? ecc_instr_s.opb_addr : reg_addr_r;
+
+    assign addra_mux_s = (ecc_busy_s & mult_addr_hold_valid & !ecc_instr_s.opcode.add_we) ? mult_opa_addr :
+                         ecc_instr_s.opa_addr;
+    assign addrb_mux_s = (ecc_busy_s & mult_addr_hold_valid & !ecc_instr_s.opcode.mult_we) ? mult_opb_addr :
+                         (ecc_busy_s ? ecc_instr_s.opb_addr : reg_addr_r);
     assign web_mux_s   = ecc_busy_s ? ecc_instr_s.opcode.mult_we    : reg_web_r;
     assign dinb_mux_s  = ecc_busy_s ? mult_res_s                    : reg_dinb_r;
     assign busy_o      = ecc_busy_s;
