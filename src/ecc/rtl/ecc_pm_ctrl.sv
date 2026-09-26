@@ -55,6 +55,7 @@ module ecc_pm_ctrl
     // from arith_unit
     input  wire  [3  :   0]                 ecc_cmd_i,
     input  wire                             digit_i,
+    input  wire                             digit_pk_i,
     output pm_instr_struct_t                instr_o,
     output logic                            req_digit_o,
     input  wire                             mult_ready_i,
@@ -90,6 +91,27 @@ module ecc_pm_ctrl
     logic stalled, stalled_pipe1;
     logic stall_flag;
     logic mont_ladder;
+    logic shamir_digit_g;
+    logic shamir_digit_pk;
+    logic shamir_add_pk_pending;
+    logic shamir_precompute_active;
+    logic shamir_precompute_pk_done;
+
+    function automatic [OPR_ADDR_WIDTH-1 : 0] map_shamir_addr(
+        input [OPR_ADDR_WIDTH-1 : 0] addr,
+        input logic                  digit_g,
+        input logic                  digit_pk
+    );
+        unique case (addr)
+            UOP_OPR_SEL_G_X  : map_shamir_addr = digit_g  ? UOP_OPR_CONST_GX_MONT  : UOP_OPR_CONST_ZERO;
+            UOP_OPR_SEL_G_Y  : map_shamir_addr = digit_g  ? UOP_OPR_CONST_GY_MONT  : UOP_OPR_CONST_ONE_MONT;
+            UOP_OPR_SEL_G_Z  : map_shamir_addr = digit_g  ? UOP_OPR_CONST_ONE_MONT : UOP_OPR_CONST_ZERO;
+            UOP_OPR_SEL_PK_X : map_shamir_addr = digit_pk ? UOP_OPR_Qx_AFFN        : UOP_OPR_CONST_ZERO;
+            UOP_OPR_SEL_PK_Y : map_shamir_addr = digit_pk ? UOP_OPR_Qy_AFFN        : UOP_OPR_CONST_ONE;
+            UOP_OPR_SEL_PK_Z : map_shamir_addr = digit_pk ? UOP_OPR_CONST_ONE_MONT : UOP_OPR_CONST_ZERO;
+            default          : map_shamir_addr = addr;
+        endcase
+    endfunction
     //----------------------------------------------------------------
     // pm sequencer fsm
     //----------------------------------------------------------------
@@ -135,6 +157,11 @@ module ecc_pm_ctrl
             req_digit_o <= '0;
             mont_ladder <= '0;
             ecc_cmd_reg <= '0;
+            shamir_digit_g <= '0;
+            shamir_digit_pk <= '0;
+            shamir_add_pk_pending <= '0;
+            shamir_precompute_active <= '0;
+            shamir_precompute_pk_done <= '0;
         end
         else if (zeroize) begin
             prog_cntr   <= '0;
@@ -144,6 +171,11 @@ module ecc_pm_ctrl
             req_digit_o <= '0;
             mont_ladder <= '0;
             ecc_cmd_reg <= '0;
+            shamir_digit_g <= '0;
+            shamir_digit_pk <= '0;
+            shamir_add_pk_pending <= '0;
+            shamir_precompute_active <= '0;
+            shamir_precompute_pk_done <= '0;
         end
         else begin
             if (stalled & (stall_cntr > 0)) begin
@@ -190,8 +222,11 @@ module ecc_pm_ctrl
                                 prog_cntr <= PM_INIT_G_S;
                             end
 
-                            VER_PART2_CMD : begin  // verifying part2
-                                prog_cntr <= VER1_ST_S;
+                            VER_PART2_CMD : begin  // verifying part2: public double-scalar loop
+                                mont_cntr <= Secp384_MONT_COUNT;
+                                shamir_precompute_active <= 1'b1;
+                                shamir_precompute_pk_done <= 1'b0;
+                                prog_cntr <= PM_INIT_S;
                             end
 
                             CHK_PK_CMD : begin
@@ -228,13 +263,36 @@ module ecc_pm_ctrl
                     end
 
                     PM_INIT_E : begin // End of initilaze R1 = 0
-                        mont_cntr <= mont_cntr - 1;
-                        req_digit_o <= 1;
-                        prog_cntr <= PA_S;
-                        mont_ladder <= 1;
+                        if (ecc_cmd_reg == VER_PART2_CMD) begin
+                            req_digit_o <= 0;
+                            mont_ladder <= 0;
+                            shamir_add_pk_pending <= 1'b0;
+                            if (shamir_precompute_active) begin
+                                shamir_digit_g <= 1'b1;
+                                shamir_digit_pk <= 1'b0;
+                                shamir_precompute_pk_done <= 1'b0;
+                                prog_cntr <= VER_LOAD_G_S;
+                            end
+                            else begin
+                                mont_cntr <= mont_cntr - 1;
+                                req_digit_o <= 1;
+                                prog_cntr <= PD_S;
+                            end
+                        end
+                        else begin
+                            mont_cntr <= mont_cntr - 1;
+                            req_digit_o <= 1;
+                            prog_cntr <= PA_S;
+                            mont_ladder <= 1;
+                        end
                     end
                                         
                     PA_S : begin //Start of point addtion
+                        req_digit_o <= 0;
+                        prog_cntr <= prog_cntr + 1;
+                    end
+
+                    PD_S : begin //Start of point doubling
                         req_digit_o <= 0;
                         prog_cntr <= prog_cntr + 1;
                     end
@@ -244,7 +302,34 @@ module ecc_pm_ctrl
                     end
                     
                     PD_E : begin //End of point doubling
-                        if (mont_cntr == 0) begin // Montgomery ladder is done
+                        if (ecc_cmd_reg == VER_PART2_CMD) begin
+                            req_digit_o <= 0;
+                            shamir_digit_g <= digit_i;
+                            shamir_digit_pk <= digit_pk_i;
+                            if (digit_i & digit_pk_i) begin
+                                shamir_add_pk_pending <= 1'b0;
+                                prog_cntr <= VER_LOAD_GPK_S;
+                            end
+                            else if (digit_i) begin
+                                shamir_add_pk_pending <= digit_pk_i;
+                                prog_cntr <= VER_LOAD_G_S;
+                            end
+                            else if (digit_pk_i) begin
+                                shamir_add_pk_pending <= 1'b0;
+                                prog_cntr <= VER_LOAD_PK_S;
+                            end
+                            else if (mont_cntr == 0) begin
+                                shamir_add_pk_pending <= 1'b0;
+                                prog_cntr <= CONV_X_S;
+                            end
+                            else begin
+                                shamir_add_pk_pending <= 1'b0;
+                                mont_cntr <= mont_cntr - 1;
+                                req_digit_o <= 1;
+                                prog_cntr <= PD_S;
+                            end
+                        end
+                        else if (mont_cntr == 0) begin // Montgomery ladder is done
                             unique case (ecc_cmd_reg)
                                 VER_PART1_CMD : prog_cntr <= NOP;
                                 VER_PART2_CMD : prog_cntr <= VER2_PA_S;
@@ -307,13 +392,49 @@ module ecc_pm_ctrl
                     end
 
                     VER2_PA_E : begin // End of point addition of PA((h*s_inv)*G, (r*s_inv)*PK)
-                        prog_cntr <= CONV_X_S;
+                        if (ecc_cmd_reg == VER_PART2_CMD) begin
+                            if (shamir_precompute_active & !shamir_precompute_pk_done) begin
+                                shamir_precompute_pk_done <= 1'b1;
+                                shamir_digit_g <= 1'b0;
+                                shamir_digit_pk <= 1'b1;
+                                prog_cntr <= VER_LOAD_PK_S;
+                            end
+                            else if (shamir_precompute_active) begin
+                                shamir_precompute_active <= 1'b0;
+                                shamir_precompute_pk_done <= 1'b0;
+                                prog_cntr <= VER_STORE_GPK_S;
+                            end
+                            else if (shamir_add_pk_pending) begin
+                                shamir_add_pk_pending <= 1'b0;
+                                prog_cntr <= VER_LOAD_PK_S;
+                            end
+                            else if (mont_cntr == 0) begin
+                                prog_cntr <= CONV_X_S;
+                            end
+                            else begin
+                                mont_cntr <= mont_cntr - 1;
+                                req_digit_o <= 1;
+                                prog_cntr <= PD_S;
+                            end
+                        end
+                        else begin
+                            prog_cntr <= CONV_X_S;
+                        end
+                    end
+
+                    VER_LOAD_G_E,
+                    VER_LOAD_PK_E,
+                    VER_LOAD_GPK_E : begin
+                        prog_cntr <= VER2_PA_S;
+                    end
+
+                    VER_STORE_GPK_E : begin
+                        prog_cntr <= PM_INIT_S;
                     end
 
                     PM_INIT_G_S,
                     PM_INIT_PK_S,
                     PM_INIT_S,
-                    PD_S,
                     INV_S,
                     INVq_S,
                     CONV_S,
@@ -324,6 +445,10 @@ module ecc_pm_ctrl
                     VER0_P1_S,
                     VER1_ST_S,
                     VER2_PA_S,
+                    VER_LOAD_G_S,
+                    VER_LOAD_PK_S,
+                    VER_LOAD_GPK_S,
+                    VER_STORE_GPK_S,
                     PM_INIT_DH_S: begin
                         prog_cntr <= prog_cntr + 1;
                     end
@@ -399,16 +524,16 @@ module ecc_pm_ctrl
                 if (prog_instr_pipe2.opa_addr[3 +: OPR_ADDR_WIDTH-3] == 3'b001)
                     instr_o.opa_addr  <= {prog_instr_pipe2.opa_addr[3 +: OPR_ADDR_WIDTH-3], digit_i ^ prog_instr_pipe2.opa_addr[2], prog_instr_pipe2.opa_addr[1 : 0]};
                 else
-                    instr_o.opa_addr  <= prog_instr_pipe2.opa_addr;
+                    instr_o.opa_addr  <= map_shamir_addr(prog_instr_pipe2.opa_addr, shamir_digit_g, shamir_digit_pk);
                 //Addr B for MULT result  
                 if (prog_instr_pipe2.opb_addr[3 +: OPR_ADDR_WIDTH-3] == 3'b001)
                     instr_o.opb_addr  <= {prog_instr_pipe2.opb_addr[3 +: OPR_ADDR_WIDTH-3], digit_i ^ prog_instr_pipe2.opb_addr[2], prog_instr_pipe2.opb_addr[1 : 0]};
                 else
-                    instr_o.opb_addr  <= prog_instr_pipe2.opb_addr;  
+                    instr_o.opb_addr  <= map_shamir_addr(prog_instr_pipe2.opb_addr, shamir_digit_g, shamir_digit_pk);
             end
             else begin
-                instr_o.opa_addr  <= prog_instr_pipe2.opa_addr;    //Addr A for ADD/SUB result
-                instr_o.opb_addr  <= prog_instr_pipe2.opb_addr;    //Addr B for MULT result
+                instr_o.opa_addr  <= map_shamir_addr(prog_instr_pipe2.opa_addr, shamir_digit_g, shamir_digit_pk);
+                instr_o.opb_addr  <= map_shamir_addr(prog_instr_pipe2.opb_addr, shamir_digit_g, shamir_digit_pk);
             end 
         end
     end // instruction_out

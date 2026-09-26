@@ -64,7 +64,8 @@ module ecc_arith_unit
     logic [REG_SIZE-1 : 0]      add_res_s;
     logic [REG_SIZE-1 : 0]      mult_res_s;
 
-    reg                 digit_in; 
+    reg                 digit_in;
+    reg                 digit_pk_in;
     logic               req_digit;
     logic               ecc_busy_s;
     logic               mult_ready_s;
@@ -84,7 +85,8 @@ module ecc_arith_unit
     logic [REG_SIZE-1 : 0]              adder_prime;
     logic [RADIX-1 : 0]                 mult_mu;
 
-    reg [(REG_SIZE+RND_SIZE)-1 : 0]     secret_key; 
+    reg [(REG_SIZE+RND_SIZE)-1 : 0]     secret_key;
+    reg [(REG_SIZE+RND_SIZE)-1 : 0]     secret_key_pk;
 
     //----------------------------------------------------------------
     // 
@@ -103,6 +105,7 @@ module ecc_arith_unit
         .zeroize(zeroize),
         .ecc_cmd_i(ecc_cmd_i),
         .digit_i(digit_in),
+        .digit_pk_i(digit_pk_in),
         .instr_o(ecc_instr_s),
         .req_digit_o(req_digit),
         .mult_ready_i(mult_ready_s),
@@ -183,6 +186,7 @@ module ecc_arith_unit
             reg_addr_r      <= '0;
             reg_web_r       <= 0;
             secret_key      <= '0;
+            secret_key_pk   <= '0;
             d_o             <= '0;
         end
         else if (zeroize) begin
@@ -190,18 +194,22 @@ module ecc_arith_unit
             reg_addr_r      <= '0;
             reg_web_r       <= 0;
             secret_key      <= '0;
+            secret_key_pk   <= '0;
             d_o             <= '0;
         end
         else begin
             if (wr_en_i) begin
                 if (wr_op_sel_i == 1'b0) // Write new register
                     reg_dinb_r <= data_i[REG_SIZE-1 : 0];
+                else if (addr_i == UOP_OPR_SCALAR_PK)
+                    secret_key_pk <= data_i;
                 else                    // Write new key
                     secret_key <= data_i;
             end
             else if (req_digit) begin
                 //Shift secret_key to the left
                 secret_key  <= {secret_key[(REG_SIZE+RND_SIZE)-2 : 0], secret_key[(REG_SIZE+RND_SIZE)-1]};
+                secret_key_pk <= {secret_key_pk[(REG_SIZE+RND_SIZE)-2 : 0], secret_key_pk[(REG_SIZE+RND_SIZE)-1]};
             end
 
             reg_addr_r <= addr_i;
@@ -220,6 +228,7 @@ module ecc_arith_unit
 
     //Push key bit to ecc pm control
     assign digit_in = secret_key[0];
+    assign digit_pk_in = secret_key_pk[0];
             
     assign addrb_mux_s = ecc_busy_s ? ecc_instr_s.opb_addr : reg_addr_r;
     assign web_mux_s   = ecc_busy_s ? ecc_instr_s.opcode.mult_we    : reg_web_r;

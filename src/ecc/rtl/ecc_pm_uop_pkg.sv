@@ -134,6 +134,13 @@ localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_P1_Z_MONT         = 6'd55;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_CONST_E_b         = 6'd56;
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_PK_VALID          = 6'd57;
 
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SEL_G_X           = 6'd58;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SEL_G_Y           = 6'd59;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SEL_G_Z           = 6'd60;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SEL_PK_X          = 6'd61;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SEL_PK_Y          = 6'd62;
+localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_SEL_PK_Z          = 6'd63;
+
 //PM command listing
 localparam [3 : 0] KEYGEN_CMD           = 4'b0001;
 localparam [3 : 0] SIGN_CMD             = 4'b0010;
@@ -179,8 +186,15 @@ localparam [PROG_ADDR_W-1 : 0] PM_INIT_PK_S         = VER1_ST_E + 2;  // verifyi
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_PK_E         = PM_INIT_PK_S + 5;
 localparam [PROG_ADDR_W-1 : 0] VER2_PA_S            = PM_INIT_PK_E + 2;  // verifying2 point addtion of PA((h*s_inv)*G, (r*s_inv)*PK)
 localparam [PROG_ADDR_W-1 : 0] VER2_PA_E            = VER2_PA_S + 87;
-
-localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_S         = VER2_PA_E + 2;  // Deffie-Helman Shared Key R1 INIT with PK
+localparam [PROG_ADDR_W-1 : 0] VER_LOAD_G_S         = VER2_PA_E + 2;  // verifying Shamir addend load with G/O
+localparam [PROG_ADDR_W-1 : 0] VER_LOAD_G_E         = VER_LOAD_G_S + 13;
+localparam [PROG_ADDR_W-1 : 0] VER_LOAD_PK_S        = VER_LOAD_G_E + 2;  // verifying Shamir addend load with PK/O
+localparam [PROG_ADDR_W-1 : 0] VER_LOAD_PK_E        = VER_LOAD_PK_S + 13;
+localparam [PROG_ADDR_W-1 : 0] VER_STORE_GPK_S      = VER_LOAD_PK_E + 2;  // verifying Shamir precomputed G+PK store
+localparam [PROG_ADDR_W-1 : 0] VER_STORE_GPK_E      = VER_STORE_GPK_S + 5;
+localparam [PROG_ADDR_W-1 : 0] VER_LOAD_GPK_S       = VER_STORE_GPK_E + 2;  // verifying Shamir addend load with precomputed G+PK
+localparam [PROG_ADDR_W-1 : 0] VER_LOAD_GPK_E       = VER_LOAD_GPK_S + 13;
+localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_S         = VER_LOAD_GPK_E + 2;  // Deffie-Helman Shared Key R1 INIT with PK
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_E         = PM_INIT_DH_S + 9;
 
 endpackage

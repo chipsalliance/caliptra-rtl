@@ -2235,6 +2235,62 @@ module ecc_pm_sequencer
                     VER2_PA_S+ 86 : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Z,       UOP_OPR_CONST_ZERO}; // Zinv_IN = P1_Z
                     VER2_PA_S+ 87 : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_IN,     UOP_OPR_DONTCARE};
 
+                    // VERIFY Shamir addend load with G/O into P1
+                    VER_LOAD_G_S     : douta <= {UOP_DO_ADD_p,   UOP_OPR_SEL_G_X,        UOP_OPR_CONST_ZERO};
+                    VER_LOAD_G_S+ 1  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_X_MONT,      UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 2  : douta <= {UOP_DO_ADD_p,   UOP_OPR_SEL_G_Y,        UOP_OPR_CONST_ZERO};
+                    VER_LOAD_G_S+ 3  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_Y_MONT,      UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 4  : douta <= {UOP_DO_ADD_p,   UOP_OPR_SEL_G_Z,        UOP_OPR_CONST_ZERO};
+                    VER_LOAD_G_S+ 5  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_Z_MONT,      UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 6  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,       UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 7  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,       UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 8  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,       UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 9  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,       UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 10 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,       UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 11 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,       UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 12 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,       UOP_OPR_DONTCARE};
+                    VER_LOAD_G_S+ 13 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,       UOP_OPR_DONTCARE};
+
+                    // VERIFY Shamir addend load with PK/O into P1
+                    VER_LOAD_PK_S     : douta <= {UOP_DO_MUL_p,   UOP_OPR_SEL_PK_X,      UOP_OPR_CONST_R2_p};
+                    VER_LOAD_PK_S+ 1  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,      UOP_OPR_P1_X_MONT};
+                    VER_LOAD_PK_S+ 2  : douta <= {UOP_DO_MUL_p,   UOP_OPR_SEL_PK_Y,      UOP_OPR_CONST_R2_p};
+                    VER_LOAD_PK_S+ 3  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,      UOP_OPR_P1_Y_MONT};
+                    VER_LOAD_PK_S+ 4  : douta <= {UOP_DO_ADD_p,   UOP_OPR_SEL_PK_Z,      UOP_OPR_CONST_ZERO};
+                    VER_LOAD_PK_S+ 5  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_Z_MONT,     UOP_OPR_DONTCARE};
+                    VER_LOAD_PK_S+ 6  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_PK_S+ 7  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_PK_S+ 8  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_PK_S+ 9  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_PK_S+ 10 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_PK_S+ 11 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_PK_S+ 12 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_PK_S+ 13 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+
+                    // VERIFY Shamir precompute store G+PK from R0
+                    VER_STORE_GPK_S     : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,          UOP_OPR_CONST_ZERO};
+                    VER_STORE_GPK_S+ 1  : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_PRE0,      UOP_OPR_DONTCARE};
+                    VER_STORE_GPK_S+ 2  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Y,          UOP_OPR_CONST_ZERO};
+                    VER_STORE_GPK_S+ 3  : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_PRE1,      UOP_OPR_DONTCARE};
+                    VER_STORE_GPK_S+ 4  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Z,          UOP_OPR_CONST_ZERO};
+                    VER_STORE_GPK_S+ 5  : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_PRE2,      UOP_OPR_DONTCARE};
+
+                    // VERIFY Shamir addend load with precomputed G+PK into P1
+                    VER_LOAD_GPK_S     : douta <= {UOP_DO_ADD_p,   UOP_OPR_INV_PRE0,      UOP_OPR_CONST_ZERO};
+                    VER_LOAD_GPK_S+ 1  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_X_MONT,     UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 2  : douta <= {UOP_DO_ADD_p,   UOP_OPR_INV_PRE1,      UOP_OPR_CONST_ZERO};
+                    VER_LOAD_GPK_S+ 3  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_Y_MONT,     UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 4  : douta <= {UOP_DO_ADD_p,   UOP_OPR_INV_PRE2,      UOP_OPR_CONST_ZERO};
+                    VER_LOAD_GPK_S+ 5  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_Z_MONT,     UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 6  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 7  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 8  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 9  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 10 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 11 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 12 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GPK_S+ 13 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+
                     //DH SHARED KEY R1 INIT with PK
                     PM_INIT_DH_S     : douta <= {UOP_DO_MUL_p,   UOP_OPR_LAMBDA,            UOP_OPR_CONST_R2_p};   // R1_Z = mm(Lambda, R2)
                     PM_INIT_DH_S+ 1  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_Z};

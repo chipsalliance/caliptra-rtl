@@ -126,16 +126,15 @@ module ecc_dsa_sequencer
                     DSA_VER_S+ 11 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
                     DSA_VER_S+ 12 : douta <= {DSA_UOP_RD_CORE,        SCALAR_G_ID,        UOP_OPR_SCALAR_G};
                     DSA_VER_S+ 13 : douta <= {DSA_UOP_RD_CORE,        SCALAR_PK_ID,       UOP_OPR_SCALAR_PK};
-                    DSA_VER_S+ 14 : douta <= {DSA_UOP_WR_SCALAR,      SCALAR_G_ID,        UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 15 : douta <= {DSA_UOP_VERIFY1,        NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 16 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 17 : douta <= {DSA_UOP_WR_CORE,        PUBKEYX_ID,         UOP_OPR_Qx_AFFN};
-                    DSA_VER_S+ 18 : douta <= {DSA_UOP_WR_CORE,        PUBKEYY_ID,         UOP_OPR_Qy_AFFN};
-                    DSA_VER_S+ 19 : douta <= {DSA_UOP_WR_SCALAR,      SCALAR_PK_ID,       UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 20 : douta <= {DSA_UOP_VERIFY2,        NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 21 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 22 : douta <= {DSA_UOP_RD_CORE,        VERIFY_R_ID,        UOP_OPR_Qx_AFFN};
-                    DSA_VER_S+ 23 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 14 : douta <= {DSA_UOP_WR_SCALAR,      SCALAR_G_ID,        UOP_OPR_SCALAR_G};
+                    DSA_VER_S+ 15 : douta <= {DSA_UOP_WR_CORE,        PUBKEYX_ID,         UOP_OPR_Qx_AFFN};
+                    DSA_VER_S+ 16 : douta <= {DSA_UOP_WR_CORE,        PUBKEYY_ID,         UOP_OPR_Qy_AFFN};
+                    DSA_VER_S+ 17 : douta <= {DSA_UOP_WR_SCALAR,      SCALAR_PK_ID,       UOP_OPR_SCALAR_PK};
+                    DSA_VER_S+ 18 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 19 : douta <= {DSA_UOP_VERIFY2,        NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 20 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 21 : douta <= {DSA_UOP_RD_CORE,        VERIFY_R_ID,        UOP_OPR_Qx_AFFN};
+                    DSA_VER_S+ 22 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
 
 
                     //DH SHARED_KEY
