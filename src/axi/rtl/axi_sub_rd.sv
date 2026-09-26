@@ -401,8 +401,11 @@ module axi_sub_rd import axi_pkg::*; #(
     // This assertion assumes that if this rule is violated it is because of a system reset that
     // may or may not have propagated into the axi_sub module yet. So we allow a short delay to
     // occur before requiring the reset assertion be observed.
+// https://github.com/verilator/verilator/issues/7535
+`ifndef VERILATOR
     `CALIPTRA_ASSERT      (AXI_SUB_AR_HSHAKE_ERR, ((s_axi_if.arvalid && !s_axi_if.arready) ##1 !s_axi_if.arvalid) |-> eventually [0:5] not(rst_n), clk, !rst_n)
     `CALIPTRA_ASSERT      (AXI_SUB_R_HSHAKE_ERR,  ((s_axi_if.rvalid  && !s_axi_if.rready ) ##1 !s_axi_if.rvalid ) |-> eventually [0:5] not(rst_n), clk, !rst_n)
+`endif
 
     `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_DROP  , dp_rvalid[0] && !dp_rready[0], clk, !rst_n)
     `CALIPTRA_ASSERT_NEVER(ERR_AXI_RD_X     , dp_rvalid[0] && $isunknown({dp_rdata[0],dp_xfer_ctx[0]}), clk, !rst_n)
