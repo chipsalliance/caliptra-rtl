@@ -53,7 +53,9 @@ module ecc_montgomerymultiplier #(
     input  wire [REG_SIZE-1:0]   opb_i,
     input  wire [REG_SIZE-1:0]   n_i,
     input  wire [RADIX-1:0]      n_prime_i, // only need the last few bits
+    input  wire                  reduce_i,
     output logic [REG_SIZE-1:0]  p_o,
+    output logic                 accept_o,
     output logic                 ready_o
 );
     //----------------------------------------------------------------
@@ -101,6 +103,7 @@ module ecc_montgomerymultiplier #(
     logic   [FULL_REG_SIZE-1:0]       p_internal;
     logic   [FULL_REG_SIZE-1:0]       p_subtracted_internal;
     logic                             last_reduction;
+    logic                             reduce_reg;
 
     //----------------------------------------------------------------
     // Processing elements (PEs)
@@ -209,18 +212,21 @@ module ecc_montgomerymultiplier #(
             b_reg <= 'b0;
             p_reg <= 'b0;
             n_prime_reg <= 'b0;
+            reduce_reg <= 1'b1;
         end
         else if (zeroize) begin
             a_reg <= 'b0;
             b_reg <= 'b0;
             p_reg <= 'b0;
             n_prime_reg <= 'b0;
+            reduce_reg <= 1'b1;
         end
         else if (start_i) begin
             a_reg <= {zero_pad, opa_i};
             b_reg <= {zero_pad, opb_i};
             p_reg <= {zero_pad, n_i};
             n_prime_reg <= n_prime_i;
+            reduce_reg <= reduce_i;
         end else begin
             if (odd) begin
                 a_reg[(FULL_REG_SIZE-RADIX)-1 : 0] <= a_reg[FULL_REG_SIZE-1 : RADIX];
@@ -346,7 +352,7 @@ module ecc_montgomerymultiplier #(
     endgenerate
 
     always_comb last_reduction = (sub_b_o[2*(PE_UNITS+1)]);
-    assign p_o = (last_reduction)? p_subtracted_internal[REG_SIZE-1:0] : p_internal[REG_SIZE-1:0];
+    assign p_o = (reduce_reg & last_reduction)? p_subtracted_internal[REG_SIZE-1:0] : p_internal[REG_SIZE-1:0];
 
     // Determines when results are ready based on S_NUM
     always_ff @(posedge clk or negedge reset_n) begin
@@ -370,6 +376,7 @@ module ecc_montgomerymultiplier #(
     end
 
     assign push_reg_eq_zero = push_reg == 'b0;
-    assign ready_o = push_reg_eq_zero & ~push_reg_eq_zero_ff;
+    assign ready_o  = push_reg_eq_zero & ~push_reg_eq_zero_ff;
+    assign accept_o = ready_o;
 
 endmodule

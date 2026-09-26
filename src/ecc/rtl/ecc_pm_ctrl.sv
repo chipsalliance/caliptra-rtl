@@ -57,6 +57,7 @@ module ecc_pm_ctrl
     input  wire                             digit_i,
     output pm_instr_struct_t                instr_o,
     output logic                            req_digit_o,
+    input  wire                             mult_ready_i,
     output wire                             busy_o
 );
 
@@ -148,11 +149,16 @@ module ecc_pm_ctrl
             if (stalled & (stall_cntr > 0)) begin
                 stall_cntr <= stall_cntr - 1;
             end
+            else if (stalled & prog_instr.opcode.mult_en & !mult_ready_i) begin
+                stalled    <= 1'b1;
+                stall_cntr <= '0;
+            end
             else if (stall_flag & (!stalled) & (!stalled_pipe1)) begin
                 unique case (prog_instr.opcode)
                     UOP_DO_ADD_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
-                    UOP_DO_MUL_p :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
+                    UOP_DO_MUL_p,
+                    UOP_DO_MUL_p_red :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
                     UOP_DO_ADD_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
                     UOP_DO_MUL_q :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
@@ -255,7 +261,10 @@ module ecc_pm_ctrl
                     end
                     
                     INV_E : begin // End of inversion mod p
-                        prog_cntr <= CONV_S;
+                        unique case (ecc_cmd_reg)
+                            VER_PART2_CMD : prog_cntr <= CONV_X_S;
+                            default       : prog_cntr <= CONV_S;
+                        endcase
                     end
                     
                     CONV_E : begin // End of conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
@@ -263,6 +272,10 @@ module ecc_pm_ctrl
                             SIGN_CMD : prog_cntr <= SIGN0_S;
                             default  : prog_cntr <= NOP;
                         endcase
+                    end
+
+                    CONV_X_E : begin
+                        prog_cntr <= NOP;
                     end
 
                     SIGN0_E : begin // End of signing part 0 to to convert inputs to Mont domain & compute (h + r*privKey) 
@@ -294,7 +307,7 @@ module ecc_pm_ctrl
                     end
 
                     VER2_PA_E : begin // End of point addition of PA((h*s_inv)*G, (r*s_inv)*PK)
-                        prog_cntr <= INV_S;
+                        prog_cntr <= CONV_X_S;
                     end
 
                     PM_INIT_G_S,
@@ -304,6 +317,7 @@ module ecc_pm_ctrl
                     INV_S,
                     INVq_S,
                     CONV_S,
+                    CONV_X_S,
                     SIGN0_S,
                     SIGN1_S,
                     VER0_P0_S,

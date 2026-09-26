@@ -98,7 +98,9 @@ module ecc_montgomerymultiplier_tb #(
       .opb_i      (opb_i_tb),
       .n_i        (n_i_tb),
       .n_prime_i  (n_prime_i_tb),
+      .reduce_i   (1'b1),
       .p_o        (p_o_tb),
+      .accept_o   (),
       .ready_o    (ready_tb)
   );
 

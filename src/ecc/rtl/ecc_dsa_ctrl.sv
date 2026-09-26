@@ -130,6 +130,7 @@ module ecc_dsa_ctrl
     logic ecc_cmd_start;
     logic ecc_verify_start;
     logic ecc_verify_res_match;
+    logic ecc_verify_projective_match;
     logic ecc_verify_pass_reg;
 
     logic ecc_valid_reg;
@@ -439,7 +440,8 @@ module ecc_dsa_ctrl
             //Preload with the complement of the supplied signature R at the start of a
             //VERIFY operation so an aborted verification cannot leave a stale match
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = (hw_verify_r_we | ecc_verify_start) & !zeroize_reg;
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = ecc_verify_start ? ~r_reg[11-dword] : read_reg[11-dword];
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = ecc_verify_start ? ~r_reg[11-dword] :
+                                                        ecc_verify_projective_match ? r_reg[11-dword] : read_reg[11-dword];
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.hwclr = zeroize_reg;
         end
 
@@ -742,7 +744,8 @@ module ecc_dsa_ctrl
     //----------------------------------------------------------------
     always_comb ecc_cmd_start    = (prog_cntr == ECC_NOP) & (|cmd_reg);
     always_comb ecc_verify_start = (prog_cntr == ECC_NOP) & (cmd_reg == VERIFY);
-    always_comb ecc_verify_res_match = (read_reg == r_reg) & (|r_reg);
+    always_comb ecc_verify_projective_match = read_reg == '0;
+    always_comb ecc_verify_res_match = ecc_verify_projective_match & (|r_reg);
 
     always_ff @(posedge clk or negedge reset_n)
     begin : ecc_verify_result

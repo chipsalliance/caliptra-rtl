@@ -27,7 +27,7 @@
 
 package ecc_pm_uop_pkg;
 
-localparam integer UOP_ADDR_WIDTH       = 6;
+localparam integer UOP_ADDR_WIDTH       = 7;
 localparam integer OPR_ADDR_WIDTH       = 6;
 
 localparam PROG_ADDR_W                  = 12; //$clog2(VER2_PA_E+2);
@@ -41,6 +41,7 @@ typedef struct packed
     logic       add_en;
     logic       mult_en;
     logic       mod_q_sel;
+    logic       red_en;
 } pm_opcode_t;
 
 typedef struct packed
@@ -50,18 +51,19 @@ typedef struct packed
     logic [OPR_ADDR_WIDTH-1 : 0]    opb_addr;
 } pm_instr_struct_t;
 
-localparam pm_opcode_t UOP_NOP      = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0000;
-localparam pm_opcode_t UOP_DO_MUL_p = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0}; // = 6'b01_0000;
-localparam pm_opcode_t UOP_ST_MUL_p = '{mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0001;
-localparam pm_opcode_t UOP_DO_ADD_p = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_1000;
-localparam pm_opcode_t UOP_DO_SUB_p = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_1100;
-localparam pm_opcode_t UOP_ST_ADD_p = '{mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0}; // = 6'b00_0010;
+localparam pm_opcode_t UOP_NOP          = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
+localparam pm_opcode_t UOP_DO_MUL_p     = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0, red_en:1'b0};
+localparam pm_opcode_t UOP_DO_MUL_p_red = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0, red_en:1'b1};
+localparam pm_opcode_t UOP_ST_MUL_p     = '{mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
+localparam pm_opcode_t UOP_DO_ADD_p     = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
+localparam pm_opcode_t UOP_DO_SUB_p     = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
+localparam pm_opcode_t UOP_ST_ADD_p     = '{mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
 
-localparam pm_opcode_t UOP_DO_MUL_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b1}; // = 6'b11_0000;
-localparam pm_opcode_t UOP_ST_MUL_q = '{mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_0001;
-localparam pm_opcode_t UOP_DO_ADD_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_1000;
-localparam pm_opcode_t UOP_DO_SUB_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_1100;
-localparam pm_opcode_t UOP_ST_ADD_q = '{mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1}; // = 6'b10_0010;
+localparam pm_opcode_t UOP_DO_MUL_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b1, red_en:1'b0};
+localparam pm_opcode_t UOP_ST_MUL_q = '{mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1, red_en:1'b0};
+localparam pm_opcode_t UOP_DO_ADD_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1, red_en:1'b0};
+localparam pm_opcode_t UOP_DO_SUB_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1, red_en:1'b0};
+localparam pm_opcode_t UOP_ST_ADD_q = '{mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1, red_en:1'b0};
 
 localparam [OPR_ADDR_WIDTH-1 : 0] UOP_OPR_DONTCARE          = 6'd0;
 
@@ -148,23 +150,25 @@ localparam [PROG_ADDR_W-1 : 0] PM_INIT_G_E          = PM_INIT_G_S + 5;
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_S            = PM_INIT_G_E + 2; // R0 INIT with O
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_E            = PM_INIT_S + 9;
 localparam [PROG_ADDR_W-1 : 0] PA_S                 = PM_INIT_E + 2;   // Point Addition
-localparam [PROG_ADDR_W-1 : 0] PA_E                 = PA_S + 79;
+localparam [PROG_ADDR_W-1 : 0] PA_E                 = PA_S + 85;
 localparam [PROG_ADDR_W-1 : 0] PD_S                 = PA_E + 2;        // Point Doubling
 localparam [PROG_ADDR_W-1 : 0] PD_E                 = PD_S + 83;
 localparam [PROG_ADDR_W-1 : 0] INV_S                = PD_E + 2;        // Inversion mod p
-localparam [PROG_ADDR_W-1 : 0] INV_E                = INV_S + 1039;
+localparam [PROG_ADDR_W-1 : 0] INV_E                = INV_S + 793;
 localparam [PROG_ADDR_W-1 : 0] CONV_S               = INV_E + 2;       // PM result conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
 localparam [PROG_ADDR_W-1 : 0] CONV_E               = CONV_S + 11;
+localparam [PROG_ADDR_W-1 : 0] CONV_X_S             = CONV_E + 2;
+localparam [PROG_ADDR_W-1 : 0] CONV_X_E             = CONV_X_S + 9;
 
-localparam [PROG_ADDR_W-1 : 0] SIGN0_S              = CONV_E + 2;     // signing proof r part0
+localparam [PROG_ADDR_W-1 : 0] SIGN0_S              = CONV_X_E + 2;   // signing proof r part0
 localparam [PROG_ADDR_W-1 : 0] SIGN0_E              = SIGN0_S + 27;
 localparam [PROG_ADDR_W-1 : 0] INVq_S               = SIGN0_E + 2;    // Inversion mod q
-localparam [PROG_ADDR_W-1 : 0] INVq_E               = INVq_S + 1043;
+localparam [PROG_ADDR_W-1 : 0] INVq_E               = INVq_S + 953;
 localparam [PROG_ADDR_W-1 : 0] SIGN1_S              = INVq_E + 2;     // signing proof r part1
 localparam [PROG_ADDR_W-1 : 0] SIGN1_E              = SIGN1_S + 11;
 
 localparam [PROG_ADDR_W-1 : 0] CHK_PK_S             = SIGN1_E + 2;    // check the given public key is a valid curve point
-localparam [PROG_ADDR_W-1 : 0] CHK_PK_E             = CHK_PK_S + 21;
+localparam [PROG_ADDR_W-1 : 0] CHK_PK_E            = CHK_PK_S + 21;
 localparam [PROG_ADDR_W-1 : 0] VER0_P0_S            = CHK_PK_E + 2;   // verifying0 part0 to convert inputs to Mont domain
 localparam [PROG_ADDR_W-1 : 0] VER0_P0_E            = VER0_P0_S + 9;
 localparam [PROG_ADDR_W-1 : 0] VER0_P1_S            = VER0_P0_E + 2;  // verifying0 part1 to compute (h*s_inv) and (r*s_inv)
@@ -174,7 +178,7 @@ localparam [PROG_ADDR_W-1 : 0] VER1_ST_E            = VER1_ST_S + 5;
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_PK_S         = VER1_ST_E + 2;  // verifying2 R1 INIT with PK
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_PK_E         = PM_INIT_PK_S + 5;
 localparam [PROG_ADDR_W-1 : 0] VER2_PA_S            = PM_INIT_PK_E + 2;  // verifying2 point addtion of PA((h*s_inv)*G, (r*s_inv)*PK)
-localparam [PROG_ADDR_W-1 : 0] VER2_PA_E            = VER2_PA_S + 81;
+localparam [PROG_ADDR_W-1 : 0] VER2_PA_E            = VER2_PA_S + 87;
 
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_S         = VER2_PA_E + 2;  // Deffie-Helman Shared Key R1 INIT with PK
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_E         = PM_INIT_DH_S + 9;

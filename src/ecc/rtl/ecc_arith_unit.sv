@@ -67,6 +67,8 @@ module ecc_arith_unit
     reg                 digit_in; 
     logic               req_digit;
     logic               ecc_busy_s;
+    logic               mult_ready_s;
+    logic               mult_accept_s;
 
     pm_instr_struct_t                   ecc_instr_s;
     logic [REG_SIZE-1 : 0]              reg_dinb_r;
@@ -103,6 +105,7 @@ module ecc_arith_unit
         .digit_i(digit_in),
         .instr_o(ecc_instr_s),
         .req_digit_o(req_digit),
+        .mult_ready_i(mult_ready_s),
         .busy_o(ecc_busy_s)
     );
 
@@ -156,12 +159,15 @@ module ecc_arith_unit
         .add_en_i(ecc_instr_s.opcode.add_en),
         .sub_i(ecc_instr_s.opcode.sub_sel),
         .mult_en_i(ecc_instr_s.opcode.mult_en),
+        .reduce_i(ecc_instr_s.opcode.red_en),
         .prime_i(adder_prime),
         .mult_mu_i(mult_mu),
         .opa_i(opa_s),
         .opb_i(opb_s),
         .add_res_o(add_res_s),
-        .mult_res_o(mult_res_s)
+        .mult_res_o(mult_res_s),
+        .mult_accept_o(mult_accept_s),
+        .mult_ready_o(mult_ready_s)
     );
 
 
