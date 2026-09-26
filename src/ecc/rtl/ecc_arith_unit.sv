@@ -66,6 +66,9 @@ module ecc_arith_unit
 
     reg                 digit_in;
     reg                 digit_pk_in;
+    reg                 digit_neg_in;
+    reg                 digit_pk_neg_in;
+    reg [3 : 0]         ecc_cmd_q;
     logic               req_digit;
     logic               ecc_busy_s;
     logic               mult_ready_s;
@@ -91,6 +94,66 @@ module ecc_arith_unit
 
     reg [(REG_SIZE+RND_SIZE)-1 : 0]     secret_key;
     reg [(REG_SIZE+RND_SIZE)-1 : 0]     secret_key_pk;
+    logic                               jsf_active;
+    logic [REG_SIZE : 0]                jsf_digit_g;
+    logic [REG_SIZE : 0]                jsf_digit_pk;
+    logic [REG_SIZE : 0]                jsf_digit_g_neg;
+    logic [REG_SIZE : 0]                jsf_digit_pk_neg;
+
+    function automatic [(4*(REG_SIZE+1))-1 : 0] jsf_recode(
+        input logic [REG_SIZE-1 : 0] scalar_g,
+        input logic [REG_SIZE-1 : 0] scalar_pk
+    );
+        logic [REG_SIZE+1 : 0] g_work;
+        logic [REG_SIZE+1 : 0] pk_work;
+        logic [REG_SIZE : 0] g_nonzero;
+        logic [REG_SIZE : 0] pk_nonzero;
+        logic [REG_SIZE : 0] g_neg;
+        logic [REG_SIZE : 0] pk_neg;
+        logic g_use_digit;
+        logic pk_use_digit;
+        logic g_use_neg;
+        logic pk_use_neg;
+        int unsigned idx;
+        begin
+            g_work = {{2{1'b0}}, scalar_g};
+            pk_work = {{2{1'b0}}, scalar_pk};
+            g_nonzero = '0;
+            pk_nonzero = '0;
+            g_neg = '0;
+            pk_neg = '0;
+            for (idx = 0; idx < REG_SIZE+1; idx++) begin
+                g_use_digit = g_work[0];
+                pk_use_digit = pk_work[0];
+                g_use_neg = g_use_digit & (&g_work[1:0]);
+                pk_use_neg = pk_use_digit & (&pk_work[1:0]);
+
+                if (g_use_digit & !g_use_neg & (g_work[2:0] == 3'b011) & (pk_work[1:0] == 2'b10)) begin
+                    g_use_neg = 1'b1;
+                end
+                if (pk_use_digit & !pk_use_neg & (pk_work[2:0] == 3'b011) & (g_work[1:0] == 2'b10)) begin
+                    pk_use_neg = 1'b1;
+                end
+
+                g_nonzero[idx] = g_use_digit;
+                pk_nonzero[idx] = pk_use_digit;
+                g_neg[idx] = g_use_neg;
+                pk_neg[idx] = pk_use_neg;
+
+                if (g_use_digit) begin
+                    g_work = g_use_neg ? (g_work + {{(REG_SIZE+1){1'b0}}, 1'b1}) :
+                                         (g_work - {{(REG_SIZE+1){1'b0}}, 1'b1});
+                end
+                if (pk_use_digit) begin
+                    pk_work = pk_use_neg ? (pk_work + {{(REG_SIZE+1){1'b0}}, 1'b1}) :
+                                           (pk_work - {{(REG_SIZE+1){1'b0}}, 1'b1});
+                end
+                g_work = {1'b0, g_work[REG_SIZE+1 : 1]};
+                pk_work = {1'b0, pk_work[REG_SIZE+1 : 1]};
+            end
+            jsf_recode = {g_nonzero, g_neg, pk_nonzero, pk_neg};
+        end
+    endfunction
 
     //----------------------------------------------------------------
     // 
@@ -110,6 +173,8 @@ module ecc_arith_unit
         .ecc_cmd_i(ecc_cmd_i),
         .digit_i(digit_in),
         .digit_pk_i(digit_pk_in),
+        .digit_neg_i(digit_neg_in),
+        .digit_pk_neg_i(digit_pk_neg_in),
         .instr_o(ecc_instr_s),
         .req_digit_o(req_digit),
         .mult_ready_i(mult_ready_s),
@@ -192,6 +257,12 @@ module ecc_arith_unit
             secret_key      <= '0;
             secret_key_pk   <= '0;
             d_o             <= '0;
+            jsf_active      <= 1'b0;
+            jsf_digit_g     <= '0;
+            jsf_digit_pk    <= '0;
+            jsf_digit_g_neg <= '0;
+            jsf_digit_pk_neg <= '0;
+            ecc_cmd_q       <= '0;
             mult_addr_hold_valid <= 1'b0;
             mult_opa_addr <= '0;
             mult_opb_addr <= '0;
@@ -203,6 +274,12 @@ module ecc_arith_unit
             secret_key      <= '0;
             secret_key_pk   <= '0;
             d_o             <= '0;
+            jsf_active      <= 1'b0;
+            jsf_digit_g     <= '0;
+            jsf_digit_pk    <= '0;
+            jsf_digit_g_neg <= '0;
+            jsf_digit_pk_neg <= '0;
+            ecc_cmd_q       <= '0;
             mult_addr_hold_valid <= 1'b0;
             mult_opa_addr <= '0;
             mult_opb_addr <= '0;
@@ -212,6 +289,17 @@ module ecc_arith_unit
             if (ecc_busy_s & ecc_instr_s.opcode.mult_en) begin
                 mult_opa_addr <= ecc_instr_s.opa_addr;
                 mult_opb_addr <= ecc_instr_s.opb_addr;
+            end
+
+            ecc_cmd_q <= ecc_cmd_i;
+
+            if ((ecc_cmd_i == VER_PART2_CMD) && (ecc_cmd_q != VER_PART2_CMD)) begin
+                {jsf_digit_g, jsf_digit_g_neg, jsf_digit_pk, jsf_digit_pk_neg} <= jsf_recode(secret_key[(REG_SIZE+RND_SIZE)-1 -: REG_SIZE],
+                                                                                              secret_key_pk[(REG_SIZE+RND_SIZE)-1 -: REG_SIZE]);
+                jsf_active <= 1'b1;
+            end
+            else if ((ecc_cmd_i != VER_PART2_CMD) && (|ecc_cmd_i)) begin
+                jsf_active <= 1'b0;
             end
 
             if (wr_en_i) begin
@@ -226,6 +314,10 @@ module ecc_arith_unit
                 //Shift secret_key to the left
                 secret_key  <= {secret_key[(REG_SIZE+RND_SIZE)-2 : 0], secret_key[(REG_SIZE+RND_SIZE)-1]};
                 secret_key_pk <= {secret_key_pk[(REG_SIZE+RND_SIZE)-2 : 0], secret_key_pk[(REG_SIZE+RND_SIZE)-1]};
+                jsf_digit_g <= {jsf_digit_g[REG_SIZE-1 : 0], jsf_digit_g[REG_SIZE]};
+                jsf_digit_pk <= {jsf_digit_pk[REG_SIZE-1 : 0], jsf_digit_pk[REG_SIZE]};
+                jsf_digit_g_neg <= {jsf_digit_g_neg[REG_SIZE-1 : 0], jsf_digit_g_neg[REG_SIZE]};
+                jsf_digit_pk_neg <= {jsf_digit_pk_neg[REG_SIZE-1 : 0], jsf_digit_pk_neg[REG_SIZE]};
             end
 
             reg_addr_r <= addr_i;
@@ -243,8 +335,10 @@ module ecc_arith_unit
     end // reg_update
 
     //Push key bit to ecc pm control
-    assign digit_in = secret_key[0];
-    assign digit_pk_in = secret_key_pk[0];
+    assign digit_in = jsf_active ? jsf_digit_g[0] : secret_key[0];
+    assign digit_pk_in = jsf_active ? jsf_digit_pk[0] : secret_key_pk[0];
+    assign digit_neg_in = jsf_active & jsf_digit_g_neg[0];
+    assign digit_pk_neg_in = jsf_active & jsf_digit_pk_neg[0];
 
     assign addra_mux_s = (ecc_busy_s & mult_addr_hold_valid & !ecc_instr_s.opcode.add_we) ? mult_opa_addr :
                          ecc_instr_s.opa_addr;

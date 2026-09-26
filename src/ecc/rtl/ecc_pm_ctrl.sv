@@ -56,6 +56,8 @@ module ecc_pm_ctrl
     input  wire  [3  :   0]                 ecc_cmd_i,
     input  wire                             digit_i,
     input  wire                             digit_pk_i,
+    input  wire                             digit_neg_i,
+    input  wire                             digit_pk_neg_i,
     output pm_instr_struct_t                instr_o,
     output logic                            req_digit_o,
     input  wire                             mult_ready_i,
@@ -71,6 +73,7 @@ module ecc_pm_ctrl
     
     localparam [9 : 0] Secp384_SCA_MONT_COUNT   = REG_SIZE[9 : 0] + RND_SIZE[9 : 0];
     localparam [9 : 0] Secp384_MONT_COUNT       = REG_SIZE[9 : 0];
+    localparam [9 : 0] Secp384_JSF_MONT_COUNT   = REG_SIZE[9 : 0] + 10'd1;
     
     //----------------------------------------------------------------
     // Registers 
@@ -93,9 +96,14 @@ module ecc_pm_ctrl
     logic mont_ladder;
     logic shamir_digit_g;
     logic shamir_digit_pk;
+    logic shamir_digit_g_neg;
+    logic shamir_digit_pk_neg;
+    logic shamir_addend_neg;
     logic shamir_add_pk_pending;
+    logic shamir_add_pk_pending_neg;
     logic shamir_precompute_active;
     logic shamir_precompute_pk_done;
+    logic shamir_precompute_gminus;
 
     function automatic [OPR_ADDR_WIDTH-1 : 0] map_shamir_addr(
         input [OPR_ADDR_WIDTH-1 : 0] addr,
@@ -159,9 +167,14 @@ module ecc_pm_ctrl
             ecc_cmd_reg <= '0;
             shamir_digit_g <= '0;
             shamir_digit_pk <= '0;
+            shamir_digit_g_neg <= '0;
+            shamir_digit_pk_neg <= '0;
+            shamir_addend_neg <= '0;
             shamir_add_pk_pending <= '0;
+            shamir_add_pk_pending_neg <= '0;
             shamir_precompute_active <= '0;
             shamir_precompute_pk_done <= '0;
+            shamir_precompute_gminus <= '0;
         end
         else if (zeroize) begin
             prog_cntr   <= '0;
@@ -173,9 +186,14 @@ module ecc_pm_ctrl
             ecc_cmd_reg <= '0;
             shamir_digit_g <= '0;
             shamir_digit_pk <= '0;
+            shamir_digit_g_neg <= '0;
+            shamir_digit_pk_neg <= '0;
+            shamir_addend_neg <= '0;
             shamir_add_pk_pending <= '0;
+            shamir_add_pk_pending_neg <= '0;
             shamir_precompute_active <= '0;
             shamir_precompute_pk_done <= '0;
+            shamir_precompute_gminus <= '0;
         end
         else begin
             if (stalled & (stall_cntr > 0)) begin
@@ -223,9 +241,10 @@ module ecc_pm_ctrl
                             end
 
                             VER_PART2_CMD : begin  // verifying part2: public double-scalar loop
-                                mont_cntr <= Secp384_MONT_COUNT;
+                                mont_cntr <= Secp384_JSF_MONT_COUNT;
                                 shamir_precompute_active <= 1'b1;
                                 shamir_precompute_pk_done <= 1'b0;
+                                shamir_precompute_gminus <= 1'b0;
                                 prog_cntr <= PM_INIT_S;
                             end
 
@@ -267,9 +286,13 @@ module ecc_pm_ctrl
                             req_digit_o <= 0;
                             mont_ladder <= 0;
                             shamir_add_pk_pending <= 1'b0;
+                            shamir_add_pk_pending_neg <= 1'b0;
+                            shamir_addend_neg <= 1'b0;
                             if (shamir_precompute_active) begin
                                 shamir_digit_g <= 1'b1;
                                 shamir_digit_pk <= 1'b0;
+                                shamir_digit_g_neg <= 1'b0;
+                                shamir_digit_pk_neg <= 1'b0;
                                 shamir_precompute_pk_done <= 1'b0;
                                 prog_cntr <= VER_LOAD_G_S;
                             end
@@ -306,24 +329,42 @@ module ecc_pm_ctrl
                             req_digit_o <= 0;
                             shamir_digit_g <= digit_i;
                             shamir_digit_pk <= digit_pk_i;
-                            if (digit_i & digit_pk_i) begin
+                            shamir_digit_g_neg <= digit_neg_i;
+                            shamir_digit_pk_neg <= digit_pk_neg_i;
+                            if (digit_i & digit_pk_i & (digit_neg_i == digit_pk_neg_i)) begin
                                 shamir_add_pk_pending <= 1'b0;
+                                shamir_add_pk_pending_neg <= 1'b0;
+                                shamir_addend_neg <= digit_neg_i;
                                 prog_cntr <= VER_LOAD_GPK_S;
+                            end
+                            else if (digit_i & digit_pk_i) begin
+                                shamir_add_pk_pending <= 1'b0;
+                                shamir_add_pk_pending_neg <= 1'b0;
+                                shamir_addend_neg <= digit_neg_i;
+                                prog_cntr <= VER_LOAD_GMK_S;
                             end
                             else if (digit_i) begin
                                 shamir_add_pk_pending <= digit_pk_i;
+                                shamir_add_pk_pending_neg <= digit_pk_neg_i;
+                                shamir_addend_neg <= digit_neg_i;
                                 prog_cntr <= VER_LOAD_G_S;
                             end
                             else if (digit_pk_i) begin
                                 shamir_add_pk_pending <= 1'b0;
+                                shamir_add_pk_pending_neg <= 1'b0;
+                                shamir_addend_neg <= digit_pk_neg_i;
                                 prog_cntr <= VER_LOAD_PK_S;
                             end
                             else if (mont_cntr == 0) begin
                                 shamir_add_pk_pending <= 1'b0;
+                                shamir_add_pk_pending_neg <= 1'b0;
+                                shamir_addend_neg <= 1'b0;
                                 prog_cntr <= CONV_X_S;
                             end
                             else begin
                                 shamir_add_pk_pending <= 1'b0;
+                                shamir_add_pk_pending_neg <= 1'b0;
+                                shamir_addend_neg <= 1'b0;
                                 mont_cntr <= mont_cntr - 1;
                                 req_digit_o <= 1;
                                 prog_cntr <= PD_S;
@@ -397,15 +438,22 @@ module ecc_pm_ctrl
                                 shamir_precompute_pk_done <= 1'b1;
                                 shamir_digit_g <= 1'b0;
                                 shamir_digit_pk <= 1'b1;
+                                shamir_digit_g_neg <= 1'b0;
+                                shamir_digit_pk_neg <= 1'b0;
+                                shamir_addend_neg <= shamir_precompute_gminus;
                                 prog_cntr <= VER_LOAD_PK_S;
                             end
-                            else if (shamir_precompute_active) begin
-                                shamir_precompute_active <= 1'b0;
-                                shamir_precompute_pk_done <= 1'b0;
+                            else if (shamir_precompute_active & !shamir_precompute_gminus) begin
+                                shamir_addend_neg <= 1'b0;
                                 prog_cntr <= VER_STORE_GPK_S;
+                            end
+                            else if (shamir_precompute_active) begin
+                                shamir_addend_neg <= 1'b0;
+                                prog_cntr <= VER_STORE_GMK_S;
                             end
                             else if (shamir_add_pk_pending) begin
                                 shamir_add_pk_pending <= 1'b0;
+                                shamir_addend_neg <= shamir_add_pk_pending_neg;
                                 prog_cntr <= VER_LOAD_PK_S;
                             end
                             else if (mont_cntr == 0) begin
@@ -424,11 +472,26 @@ module ecc_pm_ctrl
 
                     VER_LOAD_G_E,
                     VER_LOAD_PK_E,
-                    VER_LOAD_GPK_E : begin
+                    VER_LOAD_GPK_E,
+                    VER_LOAD_GMK_E : begin
+                        prog_cntr <= shamir_addend_neg ? VER_NEG_P1_S : VER2_PA_S;
+                    end
+
+                    VER_NEG_P1_E : begin
+                        shamir_addend_neg <= 1'b0;
                         prog_cntr <= VER2_PA_S;
                     end
 
                     VER_STORE_GPK_E : begin
+                        shamir_precompute_gminus <= 1'b1;
+                        shamir_precompute_pk_done <= 1'b0;
+                        prog_cntr <= PM_INIT_S;
+                    end
+
+                    VER_STORE_GMK_E : begin
+                        shamir_precompute_active <= 1'b0;
+                        shamir_precompute_pk_done <= 1'b0;
+                        shamir_precompute_gminus <= 1'b0;
                         prog_cntr <= PM_INIT_S;
                     end
 
@@ -448,7 +511,10 @@ module ecc_pm_ctrl
                     VER_LOAD_G_S,
                     VER_LOAD_PK_S,
                     VER_LOAD_GPK_S,
+                    VER_LOAD_GMK_S,
+                    VER_NEG_P1_S,
                     VER_STORE_GPK_S,
+                    VER_STORE_GMK_S,
                     PM_INIT_DH_S: begin
                         prog_cntr <= prog_cntr + 1;
                     end

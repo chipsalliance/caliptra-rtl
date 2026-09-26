@@ -194,7 +194,13 @@ localparam [PROG_ADDR_W-1 : 0] VER_STORE_GPK_S      = VER_LOAD_PK_E + 2;  // ver
 localparam [PROG_ADDR_W-1 : 0] VER_STORE_GPK_E      = VER_STORE_GPK_S + 5;
 localparam [PROG_ADDR_W-1 : 0] VER_LOAD_GPK_S       = VER_STORE_GPK_E + 2;  // verifying Shamir addend load with precomputed G+PK
 localparam [PROG_ADDR_W-1 : 0] VER_LOAD_GPK_E       = VER_LOAD_GPK_S + 13;
-localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_S         = VER_LOAD_GPK_E + 2;  // Deffie-Helman Shared Key R1 INIT with PK
+localparam [PROG_ADDR_W-1 : 0] VER_STORE_GMK_S      = VER_LOAD_GPK_E + 2;  // verifying Shamir precomputed G-PK store
+localparam [PROG_ADDR_W-1 : 0] VER_STORE_GMK_E      = VER_STORE_GMK_S + 5;
+localparam [PROG_ADDR_W-1 : 0] VER_LOAD_GMK_S       = VER_STORE_GMK_E + 2;  // verifying Shamir addend load with precomputed G-PK
+localparam [PROG_ADDR_W-1 : 0] VER_LOAD_GMK_E       = VER_LOAD_GMK_S + 13;
+localparam [PROG_ADDR_W-1 : 0] VER_NEG_P1_S         = VER_LOAD_GMK_E + 2;  // verifying signed addend Y negation
+localparam [PROG_ADDR_W-1 : 0] VER_NEG_P1_E         = VER_NEG_P1_S + 5;
+localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_S         = VER_NEG_P1_E + 2;  // Deffie-Helman Shared Key R1 INIT with PK
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_E         = PM_INIT_DH_S + 9;
 
 endpackage

@@ -2291,6 +2291,38 @@ module ecc_pm_sequencer
                     VER_LOAD_GPK_S+ 12 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
                     VER_LOAD_GPK_S+ 13 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
 
+                    // VERIFY Shamir precompute store G-PK from R0
+                    VER_STORE_GMK_S     : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_X,          UOP_OPR_CONST_ZERO};
+                    VER_STORE_GMK_S+ 1  : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_PRE3,      UOP_OPR_DONTCARE};
+                    VER_STORE_GMK_S+ 2  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Y,          UOP_OPR_CONST_ZERO};
+                    VER_STORE_GMK_S+ 3  : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_PRE4,      UOP_OPR_DONTCARE};
+                    VER_STORE_GMK_S+ 4  : douta <= {UOP_DO_ADD_p,   UOP_OPR_R0_Z,          UOP_OPR_CONST_ZERO};
+                    VER_STORE_GMK_S+ 5  : douta <= {UOP_ST_ADD_p,   UOP_OPR_INV_PRE5,      UOP_OPR_DONTCARE};
+
+                    // VERIFY Shamir addend load with precomputed G-PK into P1
+                    VER_LOAD_GMK_S     : douta <= {UOP_DO_ADD_p,   UOP_OPR_INV_PRE3,      UOP_OPR_CONST_ZERO};
+                    VER_LOAD_GMK_S+ 1  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_X_MONT,     UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 2  : douta <= {UOP_DO_ADD_p,   UOP_OPR_INV_PRE4,      UOP_OPR_CONST_ZERO};
+                    VER_LOAD_GMK_S+ 3  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_Y_MONT,     UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 4  : douta <= {UOP_DO_ADD_p,   UOP_OPR_INV_PRE5,      UOP_OPR_CONST_ZERO};
+                    VER_LOAD_GMK_S+ 5  : douta <= {UOP_ST_ADD_p,   UOP_OPR_P1_Z_MONT,     UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 6  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 7  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 8  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 9  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 10 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 11 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 12 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+                    VER_LOAD_GMK_S+ 13 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
+
+                    // VERIFY signed addend support: canonicalize P1.Y, then P1 = -P1 by negating Y.
+                    VER_NEG_P1_S     : douta <= {UOP_DO_MUL_p_red, UOP_OPR_P1_Y_MONT,    UOP_OPR_CONST_ONE_MONT};
+                    VER_NEG_P1_S+ 1  : douta <= {UOP_ST_MUL_p,     UOP_OPR_DONTCARE,     UOP_OPR_P1_Y_MONT};
+                    VER_NEG_P1_S+ 2  : douta <= {UOP_DO_SUB_p,     UOP_OPR_CONST_ZERO,   UOP_OPR_P1_Y_MONT};
+                    VER_NEG_P1_S+ 3  : douta <= {UOP_ST_ADD_p,     UOP_OPR_P1_Y_MONT,    UOP_OPR_DONTCARE};
+                    VER_NEG_P1_S+ 4  : douta <= {UOP_NOP,          UOP_OPR_DONTCARE,     UOP_OPR_DONTCARE};
+                    VER_NEG_P1_S+ 5  : douta <= {UOP_NOP,          UOP_OPR_DONTCARE,     UOP_OPR_DONTCARE};
+
                     //DH SHARED KEY R1 INIT with PK
                     PM_INIT_DH_S     : douta <= {UOP_DO_MUL_p,   UOP_OPR_LAMBDA,            UOP_OPR_CONST_R2_p};   // R1_Z = mm(Lambda, R2)
                     PM_INIT_DH_S+ 1  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,          UOP_OPR_R1_Z};
