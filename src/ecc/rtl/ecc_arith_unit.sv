@@ -72,6 +72,7 @@ module ecc_arith_unit
     logic               req_digit;
     logic               ecc_busy_s;
     logic               mult_ready_s;
+    logic               mult_start_s;
     logic               mult_accept_s;
 
     pm_instr_struct_t                   ecc_instr_s;
@@ -85,12 +86,18 @@ module ecc_arith_unit
     logic                               mult_addr_hold_valid;
     logic [OPR_ADDR_WIDTH-1 : 0]        mult_opa_addr;
     logic [OPR_ADDR_WIDTH-1 : 0]        mult_opb_addr;
+    logic                               mult_red_en_hold;
+    logic [REG_SIZE-1 : 0]              mult_prime_hold;
+    logic [RADIX-1 : 0]                 mult_mu_hold;
 
     logic [REG_SIZE-1 : 0]              d_o;
 
     logic                               mod_p_q;
     logic [REG_SIZE-1 : 0]              adder_prime;
+    logic [REG_SIZE-1 : 0]              mult_prime_mux_s;
     logic [RADIX-1 : 0]                 mult_mu;
+    logic [RADIX-1 : 0]                 mult_mu_mux_s;
+    logic                               mult_red_en_mux_s;
 
     reg [(REG_SIZE+RND_SIZE)-1 : 0]     secret_key;
     reg [(REG_SIZE+RND_SIZE)-1 : 0]     secret_key_pk;
@@ -178,6 +185,7 @@ module ecc_arith_unit
         .instr_o(ecc_instr_s),
         .req_digit_o(req_digit),
         .mult_ready_i(mult_ready_s),
+        .mult_start_i(mult_start_s),
         .busy_o(ecc_busy_s)
     );
 
@@ -215,6 +223,9 @@ module ecc_arith_unit
     assign mod_p_q     = ecc_instr_s.opcode.mod_q_sel;  //performing mod_p if (mod_p_q = 0), else mod_q
     assign adder_prime = (mod_p_q)? q_grouporder : p_prime;
     assign mult_mu     = (mod_p_q)? q_mu : p_mu;
+    assign mult_red_en_mux_s = (ecc_busy_s & mult_addr_hold_valid) ? mult_red_en_hold : ecc_instr_s.opcode.red_en;
+    assign mult_prime_mux_s  = (ecc_busy_s & mult_addr_hold_valid) ? mult_prime_hold  : adder_prime;
+    assign mult_mu_mux_s     = (ecc_busy_s & mult_addr_hold_valid) ? mult_mu_hold     : mult_mu;
 
     ecc_fau #(
         .REG_SIZE(REG_SIZE),
@@ -231,13 +242,15 @@ module ecc_arith_unit
         .add_en_i(ecc_instr_s.opcode.add_en),
         .sub_i(ecc_instr_s.opcode.sub_sel),
         .mult_en_i(ecc_instr_s.opcode.mult_en),
-        .reduce_i(ecc_instr_s.opcode.red_en),
+        .reduce_i(mult_red_en_mux_s),
         .prime_i(adder_prime),
-        .mult_mu_i(mult_mu),
+        .mult_prime_i(mult_prime_mux_s),
+        .mult_mu_i(mult_mu_mux_s),
         .opa_i(opa_s),
         .opb_i(opb_s),
         .add_res_o(add_res_s),
         .mult_res_o(mult_res_s),
+        .mult_start_o(mult_start_s),
         .mult_accept_o(mult_accept_s),
         .mult_ready_o(mult_ready_s)
     );
@@ -266,6 +279,9 @@ module ecc_arith_unit
             mult_addr_hold_valid <= 1'b0;
             mult_opa_addr <= '0;
             mult_opb_addr <= '0;
+            mult_red_en_hold <= 1'b0;
+            mult_prime_hold <= '0;
+            mult_mu_hold <= '0;
         end
         else if (zeroize) begin
             reg_dinb_r      <= '0;
@@ -283,12 +299,18 @@ module ecc_arith_unit
             mult_addr_hold_valid <= 1'b0;
             mult_opa_addr <= '0;
             mult_opb_addr <= '0;
+            mult_red_en_hold <= 1'b0;
+            mult_prime_hold <= '0;
+            mult_mu_hold <= '0;
         end
         else begin
             mult_addr_hold_valid <= ecc_busy_s & ecc_instr_s.opcode.mult_en;
             if (ecc_busy_s & ecc_instr_s.opcode.mult_en) begin
                 mult_opa_addr <= ecc_instr_s.opa_addr;
                 mult_opb_addr <= ecc_instr_s.opb_addr;
+                mult_red_en_hold <= ecc_instr_s.opcode.red_en;
+                mult_prime_hold <= adder_prime;
+                mult_mu_hold <= mult_mu;
             end
 
             ecc_cmd_q <= ecc_cmd_i;

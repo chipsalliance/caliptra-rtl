@@ -61,6 +61,7 @@ module ecc_pm_ctrl
     output pm_instr_struct_t                instr_o,
     output logic                            req_digit_o,
     input  wire                             mult_ready_i,
+    input  wire                             mult_start_i,
     output wire                             busy_o
 );
 
@@ -70,6 +71,7 @@ module ecc_pm_ctrl
     //----------------------------------------------------------------
     localparam [7 : 0] MULT_DELAY          = 8'd27; //28 -1;
     localparam [7 : 0] ADD_DELAY           = 8'd1;  // 2 -1;
+    localparam [7 : 0] MULT_RETIRE_DELAY   = MULT_DELAY - 8'd5;
     
     localparam [9 : 0] Secp384_SCA_MONT_COUNT   = REG_SIZE[9 : 0] + RND_SIZE[9 : 0];
     localparam [9 : 0] Secp384_MONT_COUNT       = REG_SIZE[9 : 0];
@@ -93,6 +95,14 @@ module ecc_pm_ctrl
 
     logic stalled, stalled_pipe1;
     logic stall_flag;
+    logic add_issue;
+    logic add_issue_q;
+    logic add_store_wait;
+    logic add_pipe_store_wait;
+    logic [7 : 0] add_retire_cntr;
+    logic mult_store_wait;
+    logic mult_pipe_store_wait;
+    logic [7 : 0] mult_retire_cntr;
     logic mont_ladder;
     logic shamir_digit_g;
     logic shamir_digit_pk;
@@ -161,6 +171,9 @@ module ecc_pm_ctrl
             prog_cntr   <= '0;
             mont_cntr   <= '0;
             stall_cntr  <= '0;
+            add_issue_q <= 1'b0;
+            add_retire_cntr <= '0;
+            mult_retire_cntr <= '0;
             stalled     <= '0;
             req_digit_o <= '0;
             mont_ladder <= '0;
@@ -180,6 +193,9 @@ module ecc_pm_ctrl
             prog_cntr   <= '0;
             mont_cntr   <= '0;
             stall_cntr  <= '0;
+            add_issue_q <= 1'b0;
+            add_retire_cntr <= '0;
+            mult_retire_cntr <= '0;
             stalled     <= '0;
             req_digit_o <= '0;
             mont_ladder <= '0;
@@ -196,8 +212,32 @@ module ecc_pm_ctrl
             shamir_precompute_gminus <= '0;
         end
         else begin
+            add_issue_q <= prog_instr_pipe2.opcode.add_en & !(add_pipe_store_wait || mult_pipe_store_wait);
+
+            if (add_issue)
+                add_retire_cntr <= ADD_DELAY;
+            else if (add_retire_cntr != '0)
+                add_retire_cntr <= add_retire_cntr - 1'b1;
+
+            if (mult_start_i)
+                mult_retire_cntr <= MULT_RETIRE_DELAY;
+            else if (mult_retire_cntr != '0)
+                mult_retire_cntr <= mult_retire_cntr - 1'b1;
+
             if (stalled & (stall_cntr > 0)) begin
                 stall_cntr <= stall_cntr - 1;
+            end
+            else if (add_pipe_store_wait || mult_pipe_store_wait) begin
+                stalled    <= 1'b1;
+                stall_cntr <= '0;
+            end
+            else if (stalled & prog_instr.opcode.add_we & add_store_wait) begin
+                stalled    <= 1'b1;
+                stall_cntr <= '0;
+            end
+            else if (stalled & prog_instr.opcode.mult_we & mult_store_wait) begin
+                stalled    <= 1'b1;
+                stall_cntr <= '0;
             end
             else if (stalled & prog_instr.opcode.mult_en & !mult_ready_i) begin
                 stalled    <= 1'b1;
@@ -212,6 +252,10 @@ module ecc_pm_ctrl
                     UOP_DO_ADD_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
                     UOP_DO_MUL_q :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
+                    UOP_ST_ADD_p,
+                    UOP_ST_ADD_q :  begin stalled <= 1'b1; stall_cntr <= '0; end
+                    UOP_ST_MUL_p,
+                    UOP_ST_MUL_q :  begin stalled <= 1'b1; stall_cntr <= '0; end
                     default      :  begin stalled <= 1'b0; stall_cntr <= '0; end
                 endcase
             end
@@ -534,7 +578,7 @@ module ecc_pm_ctrl
         else if (zeroize) 
             prog_instr_pipe1 <= '{UOP_NOP, '0, '0};
         else begin
-            if (stalled_pipe1) 
+            if (stalled_pipe1 || mult_pipe_store_wait)
                 prog_instr_pipe1 <= prog_instr_pipe1;
             else 
                 prog_instr_pipe1 <= prog_instr;
@@ -548,7 +592,7 @@ module ecc_pm_ctrl
         else if (zeroize) 
             prog_instr_pipe2 <= '{UOP_NOP, '0, '0};
         else begin
-            if (stalled_pipe1) 
+            if (stalled_pipe1 || add_pipe_store_wait || mult_pipe_store_wait)
                 prog_instr_pipe2 <= prog_instr_pipe2;
             else 
                 prog_instr_pipe2 <= prog_instr_pipe1;
@@ -570,7 +614,13 @@ module ecc_pm_ctrl
     end // delay_flag
     */
 
-    always_comb stall_flag = (prog_instr.opcode.add_en || prog_instr.opcode.mult_en);
+    always_comb add_issue = prog_instr_pipe2.opcode.add_en & !add_issue_q &
+                            !(add_pipe_store_wait || mult_pipe_store_wait);
+    always_comb add_store_wait = prog_instr.opcode.add_we & (add_retire_cntr != '0);
+    always_comb add_pipe_store_wait = prog_instr_pipe2.opcode.add_we & (add_retire_cntr != '0);
+    always_comb mult_store_wait = prog_instr.opcode.mult_we & (mult_retire_cntr != '0);
+    always_comb mult_pipe_store_wait = prog_instr_pipe2.opcode.mult_we & (mult_retire_cntr != '0);
+    always_comb stall_flag = (prog_instr.opcode.add_en || prog_instr.opcode.mult_en || add_store_wait || mult_store_wait);
      
 
     //Instruction out to arithmetic units and memory
@@ -579,6 +629,8 @@ module ecc_pm_ctrl
         if (!reset_n)
             instr_o <= '{UOP_NOP, '0, '0};
         else if (zeroize)
+            instr_o <= '{UOP_NOP, '0, '0};
+        else if (add_pipe_store_wait || mult_pipe_store_wait)
             instr_o <= '{UOP_NOP, '0, '0};
         else begin
             instr_o.opcode <= prog_instr_pipe2.opcode;
