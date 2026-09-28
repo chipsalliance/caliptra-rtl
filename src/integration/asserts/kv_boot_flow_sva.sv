@@ -495,8 +495,11 @@ module kv_boot_flow_sva
   //       reset flow or the boot-FSM iccm_unlock pulse (end of every reset flow).
   // Why: Prevents malicious FW from unlocking region registers mid-boot, while still
   //      allowing the intended HW unlock so ROM can reprogram regions after a hitless update.
+  // Note: disabled on noncore reset (not core reset): the region lock lives in the
+  //       cptra_noncore_rst_b domain, and iccm_unlock pulses while the uC is still held in
+  //       reset (BOOT_WAIT), so a core-reset disable would gate out the very event checked.
   IccmRegionLockSticky_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!noncore_rst_n)
     (iccm_region_lock && !iccm_unlock) |=> iccm_region_lock
   ) else $display("SVA ERROR: ICCM_REGION_LOCK cleared without reset or iccm_unlock");
 
@@ -504,8 +507,10 @@ module kv_boot_flow_sva
   //       reprogram the region registers on every boot, including a hitless update.
   // Why: A hitless update asserts only cptra_uc_rst_b (not cptra_noncore_rst_b); without
   //      this HW clear the lock would persist and freeze stale ICCM boundaries.
+  // Note: disabled on noncore reset so it stays active during the hitless-update window,
+  //       when iccm_unlock fires while cptra_uc_rst_b is asserted.
   IccmRegionLockClearsOnUnlock_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n)
+    @(posedge clk) disable iff (!noncore_rst_n)
     iccm_unlock |=> !iccm_region_lock
   ) else $display("SVA ERROR: ICCM_REGION_LOCK not cleared by iccm_unlock");
 
