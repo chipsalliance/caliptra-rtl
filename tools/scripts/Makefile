@@ -71,8 +71,7 @@ endif
 #endif
 
 # Libraries providing functionality for each peripheral component in Caliptra
-COMP_LIB_NAMES := aes \
-		  doe \
+COMP_LIB_NAMES := doe \
 		  ecc \
 		  mldsa \
 		  mlkem \
