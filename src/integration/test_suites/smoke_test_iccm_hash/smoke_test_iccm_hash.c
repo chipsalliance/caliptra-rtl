@@ -71,6 +71,15 @@ void main(void) {
     iccm[2] = 0xBADC0DE2;
     iccm[3] = 0xBADC0DE3;
 
+    // Ordering barrier: the ICCM-write snoop arms the hash only while the SHA acc
+    // lock is FREE, so every poison write above must be committed on the ICCM
+    // write bus (and snooped-while-LOCKED, i.e. ignored) BEFORE the lock-clear
+    // store below takes effect. Without this, the last poison write races the
+    // lock-clear MMIO write (different LSU targets/latencies) and can be captured
+    // into the hashed stream -> PCR4 mismatch. FENCE drains the ICCM stores before
+    // the unlock store is issued, closing the race.
+    __asm__ volatile ("fence");
+
     // Free the SHA acc reset-default lock (LOCK resets to 1, held for the SHA acc
     // KAT) so the ICCM-write snoop can arm the hash (it only arms while the lock
     // is free). Write-1 clears the lock (woclr); do not read it back or it re-locks.
