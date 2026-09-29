@@ -81,7 +81,8 @@ module kmac_staterd
     .readback_en_i              (MuBi4False),
     .readback_error_o           (),
     .wr_collision_i             (1'b0),
-    .write_pending_i            (1'b0)
+    .write_pending_i            (1'b0),
+    .zeroize_rspfifo_i          (1'b0)
   );
 
   always_ff @(posedge clk_i or negedge rst_ni) begin

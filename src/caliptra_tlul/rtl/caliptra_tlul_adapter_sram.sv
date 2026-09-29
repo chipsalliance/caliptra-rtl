@@ -68,7 +68,8 @@ module caliptra_tlul_adapter_sram
   input  mubi4_t              readback_en_i,
   output logic                readback_error_o,
   input  logic                wr_collision_i,
-  input  logic                write_pending_i
+  input  logic                write_pending_i,
+  input  logic                zeroize_rspfifo_i // Zeroize the response FIFO data
 );
 
   localparam int SramByte = SramDw/8;
@@ -627,14 +628,16 @@ module caliptra_tlul_adapter_sram
   //    lose the data from the SRAM interface. Remember, SRAM interface doesn't
   //    have back-pressure signal such as read_ready.
   caliptra_prim_fifo_sync #(
-    .Width   (RspFifoWidth),
-    .Pass    (1'b1),
-    .Depth   (Outstanding),
-    .Secure  (SecFifoPtr)
+    .Width          (RspFifoWidth),
+    .Pass           (1'b1),
+    .Depth          (Outstanding),
+    .Secure         (SecFifoPtr),
+    .resetOnClear   (1),
+    .ClrPtrsOnClear (1'b0)
   ) u_rspfifo (
     .clk_i,
     .rst_ni,
-    .clr_i   (1'b0),
+    .clr_i   (zeroize_rspfifo_i),
     .wvalid_i(rspfifo_wvalid),
     .wready_o(rspfifo_wready),
     .wdata_i (rspfifo_wdata),

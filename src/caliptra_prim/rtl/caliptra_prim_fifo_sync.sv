@@ -13,6 +13,7 @@ module caliptra_prim_fifo_sync #(
   parameter bit OutputZeroIfEmpty     = 1'b1, // if == 1 always output 0 when FIFO is empty
   parameter bit Secure                = 1'b0, // use prim count for pointers
   parameter int unsigned resetOnClear = 0, // if == 1, reset the FIFO on clear
+  parameter bit ClrPtrsOnClear        = 1'b1, // if == 0, clr_i only clears the storage
   // derived parameter
   localparam int          DepthW     = caliptra_prim_util_pkg::vbits(Depth+1)
 ) (
@@ -82,13 +83,16 @@ module caliptra_prim_fifo_sync #(
     assign wready_o = ~full_o & ~under_rst;
     assign rvalid_o = ~empty & ~under_rst;
 
+    logic clr_ptrs;
+    assign clr_ptrs = clr_i & ClrPtrsOnClear;
+
     caliptra_prim_fifo_sync_cnt #(
       .Depth(Depth),
       .Secure(Secure)
     ) u_fifo_cnt (
       .clk_i,
       .rst_ni,
-      .clr_i,
+      .clr_i (clr_ptrs),
       .incr_wptr_i(fifo_incr_wptr),
       .incr_rptr_i(fifo_incr_rptr),
       .wptr_o(fifo_wptr),
@@ -178,6 +182,7 @@ module caliptra_prim_fifo_sync #(
   // Known Assertions //
   //////////////////////
 
+  `CALIPTRA_ASSERT_INIT(ClrPtrsOnClearParam_A, ClrPtrsOnClear || resetOnClear)
   `CALIPTRA_ASSERT(DataKnown_A, rvalid_o |-> !$isunknown(rdata_o))
   `CALIPTRA_ASSERT_KNOWN(DepthKnown_A, depth_o)
   `CALIPTRA_ASSERT_KNOWN(RvalidKnown_A, rvalid_o)
