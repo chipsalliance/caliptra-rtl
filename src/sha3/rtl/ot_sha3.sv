@@ -76,6 +76,10 @@ module ot_sha3
   // Life cycle
   input  lc_ctrl_pkg::lc_tx_t lc_escalate_en_i,
 
+  // Zeroize: clear the Keccak state and all internal variables and return to
+  // Idle in any state
+  input zeroize_i,
+
   // error_o value is pushed to Error FIFO at KMAC/SHA3 top and reported to SW
   output err_t error_o,
 
@@ -185,6 +189,9 @@ module ot_sha3
     if (!rst_ni) begin
       keccak_run_req_q <= 1'b 0;
       keccak_triggered_q <= 1'b 0;
+    end else if (zeroize_i) begin
+      keccak_run_req_q <= 1'b 0;
+      keccak_triggered_q <= 1'b 0;
     end else begin
       keccak_run_req_q <= keccak_run_req_d;
       keccak_triggered_q <= keccak_triggered_d;
@@ -196,8 +203,9 @@ module ot_sha3
   // `absorbed` signal. When this signal goes out, the state is still in
   // `StAbsorb`. Next state is `StSqueeze`.
   always_ff @(posedge clk_i or negedge rst_ni) begin
-    if (!rst_ni) absorbed_o <= MuBi4False;
-    else         absorbed_o <= absorbed;
+    if (!rst_ni)        absorbed_o <= MuBi4False;
+    else if (zeroize_i) absorbed_o <= MuBi4False;
+    else                absorbed_o <= absorbed;
   end
 
   // Squeezing output
@@ -206,6 +214,7 @@ module ot_sha3
   // processing
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni)        processing <= 1'b 0;
+    else if (zeroize_i) processing <= 1'b 0;
     else if (process_i) processing <= 1'b 1;
     else if (mubi4_test_true_strict(absorbed)) begin
       processing <= 1'b 0;
@@ -321,6 +330,21 @@ module ot_sha3
     // if the life cycle controller triggers an escalation.
     if (lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i)) begin
       st_d = StTerminalError_sparse;
+    end
+
+    // Zeroize has the highest priority.
+    // Drops the current operation and return to Idle.
+    if (zeroize_i) begin
+      st_d = StIdle_sparse;
+
+      keccak_start   = 1'b 0;
+      keccak_process = 1'b 0;
+      sw_keccak_run  = 1'b 0;
+      keccak_done    = MuBi4False;
+
+      squeezing   = 1'b 0;
+      state_valid = 1'b 0;
+      mux_sel     = MuxGuard;
     end
   end
 
@@ -444,6 +468,8 @@ module ot_sha3
     // LC
     .lc_escalate_en_i (lc_escalate_en_i),
 
+    .zeroize_i,
+
     // controls
     .start_i   (keccak_start),
     .process_i (keccak_process),
@@ -489,7 +515,9 @@ module ot_sha3
     .round_count_error_o (round_count_error),
     .rst_storage_error_o (keccak_storage_rst_error),
 
-    .clear_i    (keccak_done)
+    .clear_i    (keccak_done),
+
+    .zeroize_i
   );
 
   ////////////////

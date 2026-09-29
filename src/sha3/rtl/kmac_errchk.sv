@@ -87,6 +87,9 @@ module kmac_errchk
 
   input mubi4_t clear_after_error_i,
 
+  // Zeroize
+  input zeroize_i,
+
   output err_t error_o,
   output logic sparse_fsm_error_o
 );
@@ -243,6 +246,7 @@ module kmac_errchk
   // To reduce the command path delay, sw_cmd is latched here
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni)           sw_cmd_o <= CmdNone;
+    else if (zeroize_i)    sw_cmd_o <= CmdNone;
     else if (!block_swcmd) sw_cmd_o <= sw_cmd_i;
   end
 
@@ -403,7 +407,10 @@ module kmac_errchk
   // block to clearly indicate the clock gating condition. However, the
   // statemachine uses the sparse encoding scheme and macro. It prevents any
   // latch enable signals.
-  assign st_gated_d = (block_swcmd) ? st : st_d ;
+  //
+  // Zeroize has the highest priority and returns to Idle in any state.
+  assign st_gated_d = (zeroize_i)   ? StIdle :
+                      (block_swcmd) ? st     : st_d ;
 
   always_comb begin : next_state
     st_d = st;

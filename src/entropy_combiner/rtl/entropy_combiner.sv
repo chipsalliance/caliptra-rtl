@@ -749,6 +749,7 @@ module entropy_combiner
     .run_req_o(sha3_run_req),
     .run_ack_i(1'b1),
     .lc_escalate_en_i(lc_ctrl_pkg::Off),
+    .zeroize_i(1'b0),
     .error_o(sha3_error),
     .sparse_fsm_error_o(sha3_sparse_fsm_error),
     .count_error_o(sha3_count_error),

@@ -156,6 +156,14 @@ package sha3_reg_pkg;
 
     typedef struct packed{
         logic value;
+    } sha3_reg__SHA3_CTRL__ZEROIZE__out_t;
+
+    typedef struct packed{
+        sha3_reg__SHA3_CTRL__ZEROIZE__out_t ZEROIZE;
+    } sha3_reg__SHA3_CTRL__out_t;
+
+    typedef struct packed{
+        logic value;
     } sha3_reg__CFG_REGWEN__en__out_t;
 
     typedef struct packed{
@@ -222,6 +230,7 @@ package sha3_reg_pkg;
     } sha3_reg__MSG_FIFO__external__out_t;
 
     typedef struct packed{
+        sha3_reg__SHA3_CTRL__out_t SHA3_CTRL;
         sha3_reg__CFG_REGWEN__out_t CFG_REGWEN;
         sha3_reg__CFG_SHADOWED__external__out_t CFG_SHADOWED;
         sha3_reg__CMD__out_t CMD;
