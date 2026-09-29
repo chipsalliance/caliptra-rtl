@@ -24,7 +24,6 @@
 #include "caliptra_isr.h"
 #include "riscv_hw_if.h"
 #include "veer-csr.h"
-#include "aes.h"
 #include "doe.h"
 #include "ecc.h"
 #include "hmac.h"
