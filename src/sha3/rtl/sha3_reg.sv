@@ -85,6 +85,7 @@ module sha3_reg (
     typedef struct packed{
         logic [2-1:0]SHA3_NAME;
         logic [2-1:0]SHA3_VERSION;
+        logic SHA3_CTRL;
         logic ALERT_TEST;
         logic CFG_REGWEN;
         logic CFG_SHADOWED;
@@ -134,6 +135,7 @@ module sha3_reg (
         for(int i0=0; i0<2; i0++) begin
             decoded_reg_strb.SHA3_VERSION[i0] = cpuif_req_masked & (cpuif_addr == 12'h8 + i0*12'h4);
         end
+        decoded_reg_strb.SHA3_CTRL = cpuif_req_masked & (cpuif_addr == 12'h10);
         decoded_reg_strb.ALERT_TEST = cpuif_req_masked & (cpuif_addr == 12'h1c);
         decoded_reg_strb.CFG_REGWEN = cpuif_req_masked & (cpuif_addr == 12'h20);
         decoded_reg_strb.CFG_SHADOWED = cpuif_req_masked & (cpuif_addr == 12'h24);
@@ -180,6 +182,12 @@ module sha3_reg (
     // Field logic
     //--------------------------------------------------------------------------
     typedef struct packed{
+        struct packed{
+            struct packed{
+                logic next;
+                logic load_next;
+            } ZEROIZE;
+        } SHA3_CTRL;
         struct packed{
             struct packed{
                 logic next;
@@ -391,6 +399,11 @@ module sha3_reg (
         struct packed{
             struct packed{
                 logic value;
+            } ZEROIZE;
+        } SHA3_CTRL;
+        struct packed{
+            struct packed{
+                logic value;
             } en;
         } CFG_REGWEN;
         struct packed{
@@ -540,6 +553,30 @@ module sha3_reg (
     } field_storage_t;
     field_storage_t field_storage;
 
+    // Field: sha3_reg.SHA3_CTRL.ZEROIZE
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.SHA3_CTRL.ZEROIZE.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.SHA3_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.SHA3_CTRL.ZEROIZE.value & ~decoded_wr_biten[0:0]) | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
+            load_next_c = '1;
+        end else begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.SHA3_CTRL.ZEROIZE.next = next_c;
+        field_combo.SHA3_CTRL.ZEROIZE.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.SHA3_CTRL.ZEROIZE.value <= 1'h0;
+        end else if(field_combo.SHA3_CTRL.ZEROIZE.load_next) begin
+            field_storage.SHA3_CTRL.ZEROIZE.value <= field_combo.SHA3_CTRL.ZEROIZE.next;
+        end
+    end
+    assign hwif_out.SHA3_CTRL.ZEROIZE.value = field_storage.SHA3_CTRL.ZEROIZE.value;
     // Field: sha3_reg.CFG_REGWEN.en
     always_comb begin
         automatic logic [0:0] next_c;

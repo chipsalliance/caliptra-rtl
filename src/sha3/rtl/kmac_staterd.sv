@@ -29,7 +29,10 @@ module kmac_staterd
   input [ot_sha3_pkg::StateW-1:0] state_i [Share],
 
   // Config
-  input endian_swap_i
+  input endian_swap_i,
+
+  // Zeroize: clear any in flight data while allowing transactions to finish.
+  input zeroize_i
 );
 
   localparam int StateAddrW = $clog2(ot_sha3_pkg::StateW/32);
@@ -82,11 +85,13 @@ module kmac_staterd
     .readback_error_o           (),
     .wr_collision_i             (1'b0),
     .write_pending_i            (1'b0),
-    .zeroize_rspfifo_i          (1'b0)
+    .zeroize_rspfifo_i          (zeroize_i)
   );
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
+      tlram_rdata <= '0;
+    end else if (zeroize_i) begin
       tlram_rdata <= '0;
     end else if (tlram_req & ~tlram_we) begin
       tlram_rdata <= conv_endian32(tlram_rdata_endian, endian_swap_i);

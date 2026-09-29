@@ -7100,6 +7100,11 @@
 `ifndef SHA3_SHA3_VERSION_1
 `define SHA3_SHA3_VERSION_1                                                                         (32'hc)
 `endif
+`ifndef SHA3_SHA3_CTRL
+`define SHA3_SHA3_CTRL                                                                              (32'h10)
+`define SHA3_SHA3_CTRL_ZEROIZE_LOW                                                                  (0)
+`define SHA3_SHA3_CTRL_ZEROIZE_MASK                                                                 (32'h1)
+`endif
 `ifndef SHA3_ALERT_TEST
 `define SHA3_ALERT_TEST                                                                             (32'h1c)
 `define SHA3_ALERT_TEST_RECOV_OPERATION_ERR_LOW                                                     (0)

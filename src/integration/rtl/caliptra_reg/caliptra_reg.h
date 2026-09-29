@@ -9015,6 +9015,12 @@
 #ifndef SHA3_SHA3_VERSION_1
 #define SHA3_SHA3_VERSION_1                                                                         (0xc)
 #endif
+#define CLP_SHA3_SHA3_CTRL                                                                          (0x10041010)
+#ifndef SHA3_SHA3_CTRL
+#define SHA3_SHA3_CTRL                                                                              (0x10)
+#define SHA3_SHA3_CTRL_ZEROIZE_LOW                                                                  (0)
+#define SHA3_SHA3_CTRL_ZEROIZE_MASK                                                                 (0x1)
+#endif
 #define CLP_SHA3_ALERT_TEST                                                                         (0x1004101c)
 #ifndef SHA3_ALERT_TEST
 #define SHA3_ALERT_TEST                                                                             (0x1c)
