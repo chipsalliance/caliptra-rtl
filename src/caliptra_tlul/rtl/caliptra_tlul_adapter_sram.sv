@@ -68,7 +68,8 @@ module caliptra_tlul_adapter_sram
   input  mubi4_t              readback_en_i,
   output logic                readback_error_o,
   input  logic                wr_collision_i,
-  input  logic                write_pending_i
+  input  logic                write_pending_i,
+  input  logic                zeroize_rspfifo_i // Zeroize the response FIFO data
 );
 
   localparam int SramByte = SramDw/8;
@@ -626,15 +627,25 @@ module caliptra_tlul_adapter_sram
   //    back pressured, the response FIFO should store the returned data not to
   //    lose the data from the SRAM interface. Remember, SRAM interface doesn't
   //    have back-pressure signal such as read_ready.
+  // Zeroization:
+  //    The response FIFO is the only place in this adapter that holds read
+  //    data. The other FIFOs only hold request metadata and the remaining flops
+  //    are error flags.
+  //    The response FIFO storage consists of Outstanding flop-based entries, so
+  //    with resetOnClear set, asserting zeroize_rspfifo_i clears all entries in a
+  //    single clock cycle. ClrPtrsOnClear is 0 so only the storage is cleared and
+  //    the pointers stay consistent with the request FIFOs.
   caliptra_prim_fifo_sync #(
-    .Width   (RspFifoWidth),
-    .Pass    (1'b1),
-    .Depth   (Outstanding),
-    .Secure  (SecFifoPtr)
+    .Width          (RspFifoWidth),
+    .Pass           (1'b1),
+    .Depth          (Outstanding),
+    .Secure         (SecFifoPtr),
+    .resetOnClear   (1),
+    .ClrPtrsOnClear (1'b0)
   ) u_rspfifo (
     .clk_i,
     .rst_ni,
-    .clr_i   (1'b0),
+    .clr_i   (zeroize_rspfifo_i),
     .wvalid_i(rspfifo_wvalid),
     .wready_o(rspfifo_wready),
     .wdata_i (rspfifo_wdata),

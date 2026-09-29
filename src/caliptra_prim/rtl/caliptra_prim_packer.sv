@@ -33,6 +33,8 @@ module caliptra_prim_packer #(
   input                   flush_i,  // If 1, send out remnant and clear state
   output logic            flush_done_o,
 
+  input                   clr_i,    // If 1, drop remnant and clear state immediately
+
   // When EnProtection is set, err_o raises an error case (position variable
   // mismatch)
   output logic            err_o
@@ -58,6 +60,9 @@ module caliptra_prim_packer #(
 
   logic flush_valid; // flush data out request
   logic flush_done;
+
+  logic clr_state;   // clear internal state after flush or on clr_i
+  assign clr_state = flush_done || clr_i;
 
   // Computing next position ==================================================
   always_comb begin
@@ -89,7 +94,7 @@ module caliptra_prim_packer #(
     always_ff @(posedge clk_i or negedge rst_ni) begin
       if (!rst_ni) begin
         pos_q <= '0;
-      end else if (flush_done) begin
+      end else if (clr_state) begin
         pos_q <= '0;
       end else begin
         pos_q <= pos_d;
@@ -133,7 +138,7 @@ module caliptra_prim_packer #(
       .clk_i,
       .rst_ni,
 
-      .clr_i              (flush_done),
+      .clr_i              (clr_state),
 
       .set_i              (cnt_set_en),
       .set_cnt_i          (cnt_set   ),
@@ -214,7 +219,7 @@ module caliptra_prim_packer #(
     if (!rst_ni) begin
       stored_data <= '0;
       stored_mask <= '0;
-    end else if (flush_done) begin
+    end else if (clr_state) begin
       stored_data <= '0;
       stored_mask <= '0;
     end else begin
@@ -233,6 +238,8 @@ module caliptra_prim_packer #(
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
+      flush_st <= FlushIdle;
+    end else if (clr_i) begin
       flush_st <= FlushIdle;
     end else begin
       flush_st <= flush_st_next;
@@ -323,7 +330,8 @@ module caliptra_prim_packer #(
           |-> $stable(data_i) && $stable(mask_i))
 
   `CALIPTRA_ASSERT(FlushFollowedByDone_A,
-          ##1 $rose(flush_i) && !flush_done_o |-> !flush_done_o [*0:$] ##1 flush_done_o)
+          ##1 $rose(flush_i) && !flush_done_o |-> !flush_done_o [*0:$] ##1 flush_done_o,
+          clk_i, !rst_ni || clr_i)
 
   // If not acked, valid_o should keep asserting
   `CALIPTRA_ASSERT(ValidOPairedWidthReadyI_A,
