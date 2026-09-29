@@ -57,17 +57,10 @@ _start:
     la t0, early_trap_vector
     csrw mtvec, t0
 
-    // Copy .data from ROM (imem) to DCCM
-    la t0, _data_lma_start
-    la t1, _data_lma_end
-    la t2, _data_vma_start
-    bgeu t0, t1, bss_cp_setup
-data_cp_loop:
-    lw t3, 0(t0)
-    sw t3, 0(t2)
-    addi t0, t0, 4
-    addi t2, t2, 4
-    bltu t0, t1, data_cp_loop
+    // .data is backdoor-loaded straight into DCCM via dccm.hex (see
+    // tools/scripts/Makefile), so crt0 no longer copies it from ROM. This saves
+    // the slow ROM->DCCM word copy on every cold and warm reset. These benches
+    // are simulation-only, where DCCM is always preloaded.
 
 bss_cp_setup:
     // Copy .bss from ROM (imem) to DCCM

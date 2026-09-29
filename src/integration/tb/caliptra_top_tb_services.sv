@@ -88,7 +88,10 @@ module caliptra_top_tb_services
     output logic [0:`CLP_OBF_KEY_DWORDS-1][31:0] cptra_obf_key_tb,
     output logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0] cptra_hek_tb,
 
-    output logic axi_error_inj_en
+    output logic axi_error_inj_en,
+
+    // FW-directed generic_input_wires drive control (TB command 8'h96)
+    output var   generic_input_wire_ctrl_t generic_input_wire_ctrl
 
 );
 
@@ -350,6 +353,9 @@ module caliptra_top_tb_services
     //         8'h93        - Issue PCR MLDSA signing with randomized vector
     //         8'h94        - Check PCR MLDSA signing with randomized vector
     //         8'h95        - Glitch inject sparse encoded FSM
+    //         8'h96        - Drive generic_input_wires to a FW-specified 64-bit value (toggle coverage)
+    //                          WriteData[15:8]==8'h00 : latch low  32 bits from CPTRA_GENERIC_OUTPUT_WIRES_1
+    //                          WriteData[15:8]==8'h01 : latch high 32 bits from CPTRA_GENERIC_OUTPUT_WIRES_1 and drive
     //         8'h97        - Inject invalid dh_key into ECC
     //         8'h98        - Inject invalid zero sign_r into ECC
     //         8'h99        - Inject zeroize into HMAC
@@ -549,6 +555,33 @@ module caliptra_top_tb_services
     initial ras_test_ctrl.reset_generic_input_wires = 1'b0;
     always@(negedge clk) begin
         ras_test_ctrl.reset_generic_input_wires <= mailbox_write && (WriteData[7:0] inside {8'he0, 8'he1, 8'he2, 8'he3, 8'hfd, 8'hfe, 8'h95});
+    end
+
+    // FW-directed drive of generic_input_wires for toggle coverage (command 8'h96).
+    // The 64-bit value is passed via CPTRA_GENERIC_OUTPUT_WIRES_1 (32 bits at a
+    // time) to avoid clobbering the STDOUT/command channel on
+    // CPTRA_GENERIC_OUTPUT_WIRES_0. WriteData[15:8] selects which half to latch;
+    // sub-code 8'h01 also asserts override_en so the top-level mux forces
+    // generic_input_wires to the assembled value. override_en is sticky once set
+    // (cleared only by reset); value can be updated by subsequent 8'h96 commands.
+    initial begin
+        generic_input_wire_ctrl.override_en = 1'b0;
+        generic_input_wire_ctrl.value       = 64'h0;
+    end
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            generic_input_wire_ctrl.override_en <= 1'b0;
+            generic_input_wire_ctrl.value       <= 64'h0;
+        end
+        else if ((WriteData[7:0] == 8'h96) && (WriteData[15:8] == 8'h00) && mailbox_write) begin
+            // Latch low 32 bits.
+            generic_input_wire_ctrl.value[31:0]   <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1].generic_wires.value;
+        end
+        else if ((WriteData[7:0] == 8'h96) && (WriteData[15:8] == 8'h01) && mailbox_write) begin
+            // Latch high 32 bits and enable the override.
+            generic_input_wire_ctrl.value[63:32]  <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1].generic_wires.value;
+            generic_input_wire_ctrl.override_en   <= 1'b1;
+        end
     end
 
     // AXI Complex Control

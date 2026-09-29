@@ -113,6 +113,8 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash_fill/directed_test_iccm_hash_fill.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_test_iccm_hash_overflow/directed_test_iccm_hash_overflow.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_fsm_glitch_inject/directed_fsm_glitch_inject.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_ahb_addr_toggle/directed_ahb_addr_toggle.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_ahb_hold_err/directed_ahb_hold_err.yml
         # LMS firmware soak tests: very long runtime (large Winternitz-w / tree-height-h
         # variants). Kept LAST so the shorter directed tests (KV boot-flow monitor, ICCM
         # hash) complete within the regression time budget before the LMS block runs.

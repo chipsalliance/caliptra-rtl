@@ -99,6 +99,8 @@ inline void service_sha512_acc_notif_intr() {
         sha_intr_status = *reg;
     }
 }
+inline void service_aes_error_intr() {return;}
+inline void service_aes_notif_intr() {return;}
 inline void service_abr_error_intr() {return;}
 inline void service_abr_notif_intr() {return;}
 inline void service_axi_dma_error_intr() {return;}
