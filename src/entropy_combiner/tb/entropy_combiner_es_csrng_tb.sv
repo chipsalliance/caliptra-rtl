@@ -413,14 +413,19 @@ module entropy_combiner_es_csrng_tb
     end
   endtask
 
+  // hrdata is muxed from ahb_slv_sif's registered address, which only updates
+  // at the address-phase posedge. Sampling in that same timestep races the
+  // flop update and can read the previous (stale 'z) address -> default 0.
+  // Sample mid data phase (negedge) once hreadyout is high instead.
   task read_cs(input logic [31:0] address);
     begin
       cs_hsel = 1'b1; cs_haddr = address; cs_hwrite = 1'b0; cs_hready = 1'b1;
       cs_htrans = AHB_HTRANS_NONSEQ; cs_hsize = 3'b010;
       @(posedge clk_tb);
       cs_hwdata = '0; cs_haddr = 'z; cs_htrans = AHB_HTRANS_IDLE;
+      @(negedge clk_tb);
+      while (cs_hreadyout !== 1'b1) @(negedge clk_tb);
       read_data = cs_hrdata;
-      wait (cs_hreadyout == 1'b1);
       @(posedge clk_tb);
       cs_hsel = 1'b0;
     end
