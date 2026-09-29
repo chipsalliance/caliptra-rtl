@@ -134,6 +134,10 @@ void verify_regs_reset(void);
 // Verify ICCM region registers have the expected programmed values.
 void verify_regs_programmed(void);
 
+// Verify ICCM region state after a firmware-update (hitless) reset: address
+// values persist but the region LOCK is cleared (ROM must reprogram + re-lock).
+void verify_regs_persist_unlocked(void);
+
 // Verify CPTRA_HW_ERROR_FATAL.kv_error is NOT set.
 void check_no_kv_error(const char *phase);
 

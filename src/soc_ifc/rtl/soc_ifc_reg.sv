@@ -6123,7 +6123,10 @@ module soc_ifc_reg (
         automatic logic load_next_c;
         next_c = field_storage.internal_iccm_region_lock.lock.value;
         load_next_c = '0;
-        if(decoded_reg_strb.internal_iccm_region_lock && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
+        if(hwif_in.internal_iccm_region_lock.lock.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
+        end else if(decoded_reg_strb.internal_iccm_region_lock && decoded_req_is_wr && !(hwif_in.soc_req)) begin // SW write 1 set
             next_c = field_storage.internal_iccm_region_lock.lock.value | (decoded_wr_data[0:0] & decoded_wr_biten[0:0]);
             load_next_c = '1;
         end

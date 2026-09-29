@@ -1224,7 +1224,11 @@ package soc_ifc_tb_pkg;
           end
 
           "INTERNAL_ICCM_REGION_LOCK"                         : begin
-            // Sticky lock: once set, cannot be cleared (like INTERNAL_ICCM_LOCK)
+            // W1S against SW writes: once set, SW cannot clear it. It IS hardware-cleared
+            // by every reset flow -- cold/warm on cptra_noncore_rst_b, and hitless/fw-update
+            // via the boot-FSM iccm_unlock pulse -- so ROM can reprogram/re-lock the regions.
+            // Those clears are modeled in the reset paths (warm_reset_exp_data resets it to
+            // initval; the INTERNAL_FW_UPDATE_RESET handler below clears it), not here.
             iccm_region_locked = curr_data & get_mask(addr_name);
             exp_data = iccm_region_locked ? curr_data : (ahb_indata & get_mask(addr_name) | axi_rodata);
           end
@@ -1245,6 +1249,10 @@ package soc_ifc_tb_pkg;
               // FW update reset clears shadow register phase tracking
               iccm_shadow_phase = '0;
               foreach (iccm_shadow_staged[i]) iccm_shadow_staged[i] = '0;
+              // Hitless (fw-update) reset HW-clears INTERNAL_ICCM_REGION_LOCK via the boot-FSM
+              // iccm_unlock pulse, so ROM can reprogram/re-lock the ICCM regions. The uC is held
+              // in reset until that clear completes, so there is no read race with this update.
+              _exp_register_data_dict["INTERNAL_ICCM_REGION_LOCK"] = '0;
             end
           end
 
