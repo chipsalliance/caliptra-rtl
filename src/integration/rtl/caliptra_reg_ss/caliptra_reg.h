@@ -223,6 +223,8 @@
 #define ECC_REG_ECC_STATUS_READY_MASK                                                               (0x1)
 #define ECC_REG_ECC_STATUS_VALID_LOW                                                                (1)
 #define ECC_REG_ECC_STATUS_VALID_MASK                                                               (0x2)
+#define ECC_REG_ECC_STATUS_VERIFY_PASS_LOW                                                          (2)
+#define ECC_REG_ECC_STATUS_VERIFY_PASS_MASK                                                         (0x4)
 #endif
 #define CLP_ECC_REG_ECC_SEED_0                                                                      (0x10008080)
 #ifndef ECC_REG_ECC_SEED_0
