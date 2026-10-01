@@ -50,7 +50,7 @@ $RV_ROOT/configs/veer.config    \
 -set=dccm_region=0x5                \
 -set=dccm_offset=0x00000            \
 -set=dccm_size=256                  \
--set=dccm_wr_readback=1             \
+-set=dccm_wr_readback=0             \
 -set=dma_buf_depth=5                \
 -set=fast_interrupt_redirect=1      \
 -set=icache_enable=0                \
