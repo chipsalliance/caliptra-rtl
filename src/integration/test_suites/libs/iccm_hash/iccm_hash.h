@@ -44,6 +44,11 @@ extern const uint32_t expected_default_iccm_hash_pcr[ICCM_HASH_PCR_DWORDS];
 // fw_write_attack helpers below; not used by run_default_iccm_hash.)
 uint8_t acquire_sha_lock(void);
 
+// Free the SHA accelerator's reset-default lock (LOCK resets to 1, held for the
+// SHA acc KAT) so the ICCM-write snoop can arm the hash. The hash only arms
+// while the lock is free (~lock_value). Write-only: does not re-acquire.
+void free_sha_acc_lock(void);
+
 // Wait for PCR4 to be written by the extend FSM (poll dword[0] non-zero).
 // Returns 1 on success, 0 on timeout.
 uint8_t wait_pcr4_ready(void);

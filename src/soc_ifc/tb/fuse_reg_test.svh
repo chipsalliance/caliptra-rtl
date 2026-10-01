@@ -80,7 +80,7 @@ task fuse_reg_test;
     read_regs(GET_AHB, fuse_regnames, tid, 3);
 
 
-    // II. Swap -- Write over AHB, read over AHB then read over AXI
+    // II. Write over AHB, read back over AHB (covers AHB_WR -> AHB_RD)
 
     repeat (20) @(posedge clk_tb);
     sb.del_all();
@@ -91,9 +91,6 @@ task fuse_reg_test;
 
     $display ("\n2b. Read over AHB 3 cycles apart");
     read_regs(GET_AHB, fuse_regnames, tid, 3);
-
-    $display ("\n2c. Read over AXI 3 cycles apart");
-    read_regs(GET_AXI, fuse_regnames, tid, 3);
 
 
     // III. Repeat "I". Attempt to write over AXI, read over AHB and AXI     
@@ -112,6 +109,18 @@ task fuse_reg_test;
     repeat (10) @(posedge clk_tb);
 
     $display ("\n3c. Reading over AXI 3 cycles apart"); 
+    read_regs(GET_AXI, fuse_regnames, tid, 3);
+
+
+    // IV. Write over AHB, read back over AXI (covers AHB_WR -> AXI_RD, which the
+    //     AHB-then-AXI read order in Section II cannot hit).
+    repeat (20) @(posedge clk_tb);
+    sb.del_all();
+
+    $display ("\n4a. Writing over AHB 3 cycles apart");
+    write_regs(SET_AHB, fuse_regnames, tid, 3);
+
+    $display ("\n4b. Read over AXI 3 cycles apart (AHB_WR -> AXI_RD)");
     read_regs(GET_AXI, fuse_regnames, tid, 3);
 
     error_ctr = sb.err_count;

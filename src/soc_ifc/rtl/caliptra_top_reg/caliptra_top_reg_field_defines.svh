@@ -84,8 +84,12 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_SHADOW_STORAGE_ERR_MASK                           (32'h20)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_LOW                                     (6)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_FSM_ERROR_MASK                                    (32'h40)
-`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (7)
-`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (32'hffffff80)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_LOW                                   (7)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RV_DCLS_ERR_MASK                                  (32'h80)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_DCCM_WR_READBACK_ERR_LOW                          (8)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_DCCM_WR_READBACK_ERR_MASK                         (32'h100)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_LOW                                          (9)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_FATAL_RSVD_MASK                                         (32'hfffffe00)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_ERROR_NON_FATAL                                               (32'h4)
@@ -332,6 +336,8 @@
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK                                  (32'h40)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_LOW                                      (7)
 `define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DUAL_ITRNG_EN_MASK                                     (32'h80)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DCLS_EN_LOW                                            (8)
+`define GENERIC_AND_FUSE_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK                                           (32'h100)
 `endif
 `ifndef GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN
 `define GENERIC_AND_FUSE_REG_CPTRA_WDT_TIMER1_EN                                                    (32'he4)

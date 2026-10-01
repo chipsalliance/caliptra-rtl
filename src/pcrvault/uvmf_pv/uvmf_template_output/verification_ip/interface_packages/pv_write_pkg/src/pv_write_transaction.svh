@@ -159,6 +159,7 @@ class pv_write_transaction #(
     // UVMF_CHANGE_ME : Eliminate comparison of variables not to be used for compare
     return (super.do_compare(rhs,comparer)
             &&(this.write_entry == RHS.write_entry)
+            &&(this.write_offset == RHS.write_offset)
             &&(this.write_data == RHS.write_data)
             &&(this.error == RHS.error)
             );

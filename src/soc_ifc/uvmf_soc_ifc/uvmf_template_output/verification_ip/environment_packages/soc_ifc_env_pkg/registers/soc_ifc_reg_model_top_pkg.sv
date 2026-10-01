@@ -390,6 +390,7 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG____CP_NONCORE_RST(this.internal_iccm_rt_start_addr              )
                                                               `REG____CP_NONCORE_RST(this.internal_iccm_rt_end_addr                )
                                                               `REG____CP_NONCORE_RST(this.internal_iccm_region_lock                )
+                                                              `REG____CP_NONCORE_RST(this.internal_trace_ctrl                     )
                                                               `REG____CP_NONCORE_RST(this.internal_fw_update_reset                 )
                                                               `REG____CP_NONCORE_RST(this.internal_fw_update_reset_wait_cycles     )
                                                               `REG____CP_NONCORE_RST(this.internal_nmi_vector                      )

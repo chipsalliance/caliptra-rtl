@@ -496,11 +496,12 @@ module ecc_dsa_ctrl
         //clear valid when new request is made
         hwif_in.ecc_kv_rd_pkey_status.VALID.hwclr = kv_privkey_read_ctrl_reg.read_en;
         hwif_in.ecc_kv_rd_seed_status.VALID.hwclr = kv_seed_read_ctrl_reg.read_en;
-        hwif_in.ecc_kv_wr_pkey_status.VALID.hwclr = kv_write_ctrl_reg.write_en;
-        //clear enable when busy
+        hwif_in.ecc_kv_wr_pkey_status.VALID.hwclr = kv_write_ctrl_reg.write_en | zeroize_reg;
+        //clear enable when busy, or on zeroize so a failed operation cannot leave
+        //the KV write request armed for the next operation
         hwif_in.ecc_kv_rd_pkey_ctrl.read_en.hwclr = ~kv_privkey_ready;
         hwif_in.ecc_kv_rd_seed_ctrl.read_en.hwclr = ~kv_seed_ready;
-        hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = ~kv_write_ready;
+        hwif_in.ecc_kv_wr_pkey_ctrl.write_en.hwclr = ~kv_write_ready | zeroize_reg;
     end
 
     // Software write-enables to prevent KV reg manipulation mid-operation

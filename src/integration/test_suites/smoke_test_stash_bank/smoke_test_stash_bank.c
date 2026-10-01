@@ -29,7 +29,7 @@
 //      (In a real Caliptra boot per RFC 673 §7.3, the CPTRA_LOCK assert is
 //      done by Caliptra Runtime FW after the post-DPE-init drain. This smoke
 //      test simulates that sealing step.)
-//   6. FW requests the BFM (STDOUT 0xc1) to overwrite every slot with random
+//   6. FW requests the BFM (STDOUT 0xc3) to overwrite every slot with random
 //      data using an invalid stash PAUSER, then re-verifies the bank still
 //      holds the original BFM pattern (proving the writes were dropped).
 //
@@ -67,9 +67,10 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 // STDOUT opcode decoded in caliptra_top_tb_services.sv; triggers
 // write_stash_bank_bad_pauser() in caliptra_top_tb_soc_bfm.sv.
-// NOTE: was 0xbc; moved to 0xc1 to avoid collision with
-// TB_CMD_MUBI4_GLITCH (directed_kv_glitch_inject.c) which now owns 0xbc.
-#define STASH_BAD_PAUSER_STDOUT_CTRL  0xc1u
+// NOTE: was 0xbc, then 0xc1; moved to 0xc3 after merging main, which took 0xc1
+// for the DCLS corruption inject (no-self-check negative test). 0xc2 remains the
+// post-CPTRA_LOCK stash hook.
+#define STASH_BAD_PAUSER_STDOUT_CTRL  0xc3u
 
 // Completion sentinel driven onto GENERIC_INPUT_WIRES[0] by the BFM when the
 // invalid-PAUSER overwrite attempt finishes (caliptra_top_tb_pkg.sv).

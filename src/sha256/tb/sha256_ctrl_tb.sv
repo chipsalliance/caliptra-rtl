@@ -81,7 +81,7 @@ module sha256_ctrl_tb();
   parameter AHB_HTRANS_SEQ      = 3;
 
   // Match caliptra_top SS-mode instantiation for coverage merge compatibility
-  parameter AHB_ADDR_WIDTH = 16;
+  parameter AHB_ADDR_WIDTH = 15;
   parameter AHB_DATA_WIDTH = 64;
 
   //----------------------------------------------------------------

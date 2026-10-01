@@ -128,6 +128,11 @@ class pv_predictor #(
   uvm_reg_map p_pv_AHB_map;
   uvm_reg_map p_pv_sha512_block_read_map;
 
+  //Local lock shadow — avoids UVM RAL mirror race where reg.write() frontdoor
+  //updates the mirror before the AHB monitor broadcasts to this predictor.
+  //RTL swwel uses the PREVIOUS cycle's lock value, so we need to track it ourselves.
+  bit [PV_NUM_PCR-1:0] ctrl_lock_shadow;
+
   extern function void populate_expected_pv_read_txn(ref pv_sha512_block_read_sb_ap_output_transaction_t t_expected, pv_read_transaction t_received);
   extern function void populate_expected_pv_write_txn(ref pv_sha512_write_sb_ap_output_transaction_t t_expected, pv_write_transaction t_received);
 
@@ -183,6 +188,17 @@ class pv_predictor #(
     if (!t.set_pwrgood) begin
       //Clear all regs on hard reset
       p_pv_rm.reset();
+      ctrl_lock_shadow = '0;
+    end
+    else if (t.assert_core_rst) begin
+      //Core reset clears lock bits (core_only_rst_b resets PCR_CTRL.lock)
+      //Data survives (only resets on cptra_pwrgood)
+      for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
+        p_pv_rm.pv_reg_rm.PCR_CTRL[entry].predict('h0);
+        p_pv_rm.pv_reg_rm.PCR_CTRL[entry].set('h0);
+      end
+      ctrl_lock_shadow = '0;
+      `uvm_info("PRED", "Core reset: cleared all PCR_CTRL lock mirrors", UVM_MEDIUM)
     end
     
     // Code for sending output transaction out through pv_sha512_block_read_sb_ap
@@ -278,18 +294,24 @@ class pv_predictor #(
         val_reg = p_pv_AHB_map.get_reg_by_offset('h1_0000);
         val_reg_data = val_reg.get();
 
-        
-        //Two possible scenarios: lock = 0 and clear = 1
-        //lock = 1 and clear = 1 (transition from lock = 0 so this clear would still go through)
-        if(pv_reg_data[1:0] inside {'h2, 'h3}) begin
+        //Check incoming write data for clear bit, and lock shadow for swwel gating.
+        //We use a local lock shadow (not the mirror) because reg.write() frontdoor
+        //may have already updated the mirror before this predictor runs.
+        //RTL swwel uses the PREVIOUS cycle's lock value, which our shadow tracks.
+        {offset, entry} = convert_addr_to_pv(ahb_txn.address);
+        if(!ctrl_lock_shadow[entry] && data_active[1]) begin
           
           //Clear the entry that is being accessed
-          {offset, entry} = convert_addr_to_pv(ahb_txn.address);
           for(offset = 0; offset < PV_NUM_DWORDS; offset++) begin
             p_pv_rm.pv_reg_rm.PCR_ENTRY[entry][offset].predict('h0);
             p_pv_rm.pv_reg_rm.PCR_ENTRY[entry][offset].set('h0);
           end
         end
+
+        //Update lock shadow AFTER clear logic (so clear sees the OLD lock state)
+        //Only update if lock was previously 0 (if locked, AHB write is blocked by swwel)
+        if(!ctrl_lock_shadow[entry])
+          ctrl_lock_shadow[entry] = data_active[0];
       end
     end
     else begin
@@ -333,6 +355,10 @@ endclass
     
     t_expected = t_received;
     t_expected.error = 'b0; //Currently no error logic in PCR
+
+    //Update reg model mirror with crypto write data so subsequent reads predict correctly
+    p_pv_rm.pv_reg_rm.PCR_ENTRY[t_received.write_entry][t_received.write_offset].predict(t_received.write_data);
+    p_pv_rm.pv_reg_rm.PCR_ENTRY[t_received.write_entry][t_received.write_offset].set(t_received.write_data);
 
   endfunction
 // pragma uvmf custom external end

@@ -392,9 +392,12 @@ always_comb begin
   //set valid when fsm is done
   hwif_in.AES_KV_WR_STATUS.VALID.hwset = caliptra2aes.kv_write_done;
   //clear valid when new request is made
-  hwif_in.AES_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en;
-  //clear enable when busy
-  hwif_in.AES_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready;
+  hwif_in.AES_KV_WR_STATUS.VALID.hwclr = kv_write_ctrl_reg.write_en | debugUnlock_or_scan_mode_switch;
+  //clear enable when busy, or on zeroize so a failed operation cannot leave
+  //the KV write request armed for the next operation
+  //NOTE: the AES CLP has no SW ZEROIZE control register; debugUnlock_or_scan_mode_switch
+  //      is the zeroize source used for all AES KV clients
+  hwif_in.AES_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready | debugUnlock_or_scan_mode_switch;
 
   hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = aes_cmd_done_pulse;
   hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = 1'b0; // unused

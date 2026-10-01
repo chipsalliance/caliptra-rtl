@@ -56,6 +56,9 @@ class pv_rand_lock_test_sequence extends pv_bench_sequence_base;
     typedef pv_wr_rd_lock_cold_rst_sequence #(.CONFIG_T(pv_env_configuration_t)) pv_wr_rd_lock_cold_rst_sequence_t;
     rand pv_wr_rd_lock_cold_rst_sequence_t pv_wr_rd_lock_cold_rst_seq;
 
+    typedef pv_wr_rd_lock_core_rst_sequence #(.CONFIG_T(pv_env_configuration_t)) pv_wr_rd_lock_core_rst_sequence_t;
+    rand pv_wr_rd_lock_core_rst_sequence_t pv_wr_rd_lock_core_rst_seq;
+
 
     //Responder sequences:
 
@@ -72,6 +75,7 @@ class pv_rand_lock_test_sequence extends pv_bench_sequence_base;
         pv_wr_rd_lock_seq = pv_wr_rd_lock_sequence_t::type_id::create("pv_wr_rd_lock_seq");
         pv_wr_rd_lock_warm_rst_seq = pv_wr_rd_lock_warm_rst_sequence_t::type_id::create("pv_wr_rd_lock_warm_rst_seq");
         pv_wr_rd_lock_cold_rst_seq = pv_wr_rd_lock_cold_rst_sequence_t::type_id::create("pv_wr_rd_lock_cold_rst_seq");
+        pv_wr_rd_lock_core_rst_seq = pv_wr_rd_lock_core_rst_sequence_t::type_id::create("pv_wr_rd_lock_core_rst_seq");
         
         if(!pv_wr_rd_seq.randomize())
             `uvm_fatal("PV WR RD SEQ", "pv_rand_lock_test_sequence::body() - pv_wr_rd_seq randomization failed");
@@ -92,6 +96,8 @@ class pv_rand_lock_test_sequence extends pv_bench_sequence_base;
          pv_wr_rd_lock_warm_rst_seq.start(top_configuration.vsqr);
          `uvm_info("TOP", "LOCK cold rst sequence",UVM_MEDIUM);
          pv_wr_rd_lock_cold_rst_seq.start(top_configuration.vsqr);
+         `uvm_info("TOP", "LOCK core rst sequence",UVM_MEDIUM);
+         pv_wr_rd_lock_core_rst_seq.start(top_configuration.vsqr);
         
 
         if(1) $display("** TESTCASE PASSED");

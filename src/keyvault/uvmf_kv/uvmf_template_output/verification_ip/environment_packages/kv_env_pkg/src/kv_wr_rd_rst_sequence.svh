@@ -183,6 +183,11 @@ class kv_wr_rd_rst_sequence #(
                 repeat(10) hmac_block_read_seq.start(configuration.kv_hmac_block_read_agent_config.sequencer);
             end
         join
+        // Quiesce reads/writes while a reset/fw-update window is injected, so this
+        // sequence checks reset-vs-preserve behavior against a settled state and
+        // accesses don't straddle the reset boundary.
+        reset_phase.trigger;
+        active_phase.reset;
         fork
             begin
                 if(reset_phase.is_on) begin
@@ -195,43 +200,40 @@ class kv_wr_rd_rst_sequence #(
                 end
             end
             begin
+                if(reset_phase.is_on) active_phase.wait_ptrigger;
                 repeat(10) mldsa_key_read_seq.start(configuration.kv_mldsa_key_read_agent_config.sequencer);
             end
             begin
+                if(reset_phase.is_on) active_phase.wait_ptrigger;
                 repeat(10) hmac_key_read_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
             end
             begin
+                if(reset_phase.is_on) active_phase.wait_ptrigger;
                 repeat(10) ecc_seed_read_seq.start(configuration.kv_ecc_seed_read_agent_config.sequencer);
             end
             begin
+                if(reset_phase.is_on) active_phase.wait_ptrigger;
                 repeat(10) aes_key_read_seq.start(configuration.kv_aes_key_read_agent_config.sequencer);
             end
             begin
+                if(reset_phase.is_on) active_phase.wait_ptrigger;
                 repeat(10) mlkem_seed_read_seq.start(configuration.kv_mlkem_seed_read_agent_config.sequencer);
             end
             begin
+                if(reset_phase.is_on) active_phase.wait_ptrigger;
                 repeat(10) mlkem_msg_read_seq.start(configuration.kv_mlkem_msg_read_agent_config.sequencer);
             end
             begin
-                // Randomly inject either a warm reset (resets the KV) or a
-                // fw-update-reset window (KV stays ALIVE and error-responds to
-                // in-flight accesses). The window path keeps traffic active
-                // because assert_rst is 0 (handled by the !assert_rst branch).
+                // Inject a warm reset or a fw-update-reset window, then release the
+                // gate to resume traffic (2-clock settle past fw-update de-assert).
                 if ($urandom_range(0,1) == 0) begin
                     kv_rst_agent_warm_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
-                    reset_phase.trigger;
-                    if(!kv_rst_agent_warm_rst_seq.req.assert_rst) begin
-                        reset_phase.reset;
-                        active_phase.trigger;
-                    end
                 end else begin
                     kv_rst_agent_fw_upd_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
-                    reset_phase.trigger;
-                    if(!kv_rst_agent_fw_upd_rst_seq.req.assert_rst) begin
-                        reset_phase.reset;
-                        active_phase.trigger;
-                    end
+                    configuration.kv_rst_agent_config.wait_for_num_clocks(2);
                 end
+                reset_phase.reset;
+                active_phase.trigger;
             end
 
         join

@@ -208,6 +208,13 @@ Trace ports have been directly connected from Caliptra's instance of the VeeR-EL
 | trace_rv_i_interrupt_ip |  1 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 | trace_rv_i_tval_ip      | 32 | Output | Synchronous to clk | Trace signals from Caliptra RV core instance. Refer to VeeR documentation for more details. |
 
+The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration, so both the main core and the redundant shadow core produce a trace stream. The `trace_rv_i_*` ports above expose one of them at a time, selected by a software-controlled mux inside `caliptra_top`. The select is the `internal_trace_ctrl.trace_shadow_core_sel` register field, which is accessible to Caliptra firmware only (SoC writes are rejected):
+
+- `0` (reset default): the **main core** trace is driven onto the `trace_rv_i_*` ports.
+- `1`: the **shadow (lockstep) core** trace is driven onto the ports. The shadow core runs a fixed number of cycles behind the main core, so its trace is identical in content but shifted later in time.
+
+The mux only re-sources these observation-only ports; it does not affect functional behavior, lockstep comparison, or error reporting, and it resets to the main core so default trace behavior is unchanged. The integration guidance above is unaffected — these ports remain unvalidated and integrators shall leave them unconnected regardless of the selected core.
+
 *Table 11: Subsystem Straps, Controls, and iTRNG Configuration*
 
 | Signal name | Width      | Driver     | Synchronous (as viewed from Caliptra’s boundary) | Description |
@@ -229,6 +236,7 @@ Trace ports have been directly connected from Caliptra's instance of the VeeR-EL
 |  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
 |  ss_ocp_lock_en                                           | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC enables OCP LOCK features of Caliptra. Must be tied to a constant value. For example, driving this input from a programmable register or from a package pin is not permitted. |
+|  ss_dcls_en                                               | 1   | Input | Synchronous to clk | Used in Subsystem mode only. Selects whether RISC-V dual-core lockstep (DCLS) corruption detection is active (1 = enabled, 0 = disabled), allowing the subsystem to disable the feature should a late issue be found. The effective state is reflected read-only to firmware and the SoC in `CPTRA_HW_CONFIG.DCLS_en`. In Passive mode, lockstep detection is always disabled; integrators shall tie this input to 0. |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | Enables unlock of the debug interface in the Manufacturing security state, for Subsystem mode only. |
 |  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | Enables unlock of the debug interface in the Production security state, for Subsystem mode only. |
 |  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | Enables SoC processors to execute firmware once authenticated by Caliptra. |

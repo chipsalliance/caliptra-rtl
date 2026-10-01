@@ -44,6 +44,11 @@ class kv_read_transaction #(
   logic last;
   logic [KV_ENTRY_SIZE_W-1:0] entry_last_dword;
   logic [KV_DATA_W-1:0] read_data ;
+  // Set on the EXPECTED txn by the predictor during a multi-write-collision window,
+  // where the vault-flush clear boundary is untimeable. When set, the scoreboard
+  // compares only the entry/offset match key and skips the response fields
+  // (error/data/last), which straddle the clear edge.
+  bit ignore_response = 1'b0;
 
   //Constraints for the transaction variables:
 
@@ -161,10 +166,11 @@ class kv_read_transaction #(
     return (super.do_compare(rhs,comparer)
             &&(this.read_entry === RHS.read_entry)
             &&(this.read_offset === RHS.read_offset)
-            &&(this.error === RHS.error)
-            &&(this.last === RHS.last)
-            &&(this.entry_last_dword === RHS.entry_last_dword)
-            &&(this.read_data === RHS.read_data)
+            &&((this.ignore_response || RHS.ignore_response) ? 1'b1 :
+                 ((this.error === RHS.error)
+                &&(this.last === RHS.last)
+                &&(this.entry_last_dword === RHS.entry_last_dword)
+                &&(this.read_data === RHS.read_data)))
             );
     // pragma uvmf custom do_compare end
   endfunction
@@ -188,6 +194,7 @@ class kv_read_transaction #(
     this.last = RHS.last;
     this.entry_last_dword = RHS.entry_last_dword;
     this.read_data = RHS.read_data;
+    this.ignore_response = RHS.ignore_response;
     // pragma uvmf custom do_copy end
   endfunction
 

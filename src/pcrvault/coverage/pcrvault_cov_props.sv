@@ -31,21 +31,40 @@ module pcrvault_cov_props
             endproperty
             covprop_clear_warmrst: cover property(cover_prop_clear_warm_rst);
         
-            //locks, followed by clear, followed by warm reset in the next clk
-            //Expectation: Unlocked PCRs cleared before warm reset, locks cleared on warm reset
+            //lock and clear active simultaneously, followed by warm reset
+            //Expectation: PCRs cleared before warm reset, locks cleared on warm reset
             property cover_prop_lock_clear_warm_rst;
                 @(posedge pv.clk)
-                (pv.pv_reg_hwif_out.PCR_CTRL[i].lock |-> ##[0:$] pv.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !pv.rst_b);
+                (pv.pv_reg_hwif_out.PCR_CTRL[i].lock && pv.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !pv.rst_b);
             endproperty
             covprop_lock_clear_warmrst: cover property(cover_prop_lock_clear_warm_rst);
         
-            //locks, followed by clear, followed by cold reset in the next clk
-            //Expectation: Unlocked PCRs cleared before cold reset, everything cleared on cold reset
+            //lock and clear active simultaneously, followed by cold reset
+            //Expectation: PCRs cleared before cold reset, everything cleared on cold reset
             property cover_prop_lock_clear_cold_rst;
                 @(posedge pv.clk)
-                (pv.pv_reg_hwif_out.PCR_CTRL[i].lock |-> ##[0:$] pv.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !pv.cptra_pwrgood);
+                (pv.pv_reg_hwif_out.PCR_CTRL[i].lock && pv.pv_reg_hwif_out.PCR_CTRL[i].clear |-> ##[1:$] !pv.cptra_pwrgood);
             endproperty
             covprop_lock_clear_coldrst: cover property(cover_prop_lock_clear_cold_rst);
+
+            //lock set followed by core-only reset
+            //Expectation: lock clears on core_only_rst_b, but data survives (cptra_pwrgood stays up)
+            //During core reset, fw_update_rst_window opens the swwel bypass, but the MCU is in
+            //reset so no AHB clear can fire — the bypass exists for the HW boot FSM, not SW.
+            property cover_prop_lock_core_rst;
+                @(posedge pv.clk)
+                ($rose(pv.pv_reg_hwif_out.PCR_CTRL[i].lock) |-> ##[0:$] !pv.core_only_rst_b);
+            endproperty
+            covprop_lock_core_rst: cover property(cover_prop_lock_core_rst);
+
+            //crypto write to same entry concurrent with clear (same cycle)
+            //Expectation: write data wins over hwclr in RTL when both fire simultaneously
+            property cover_prop_write_during_clear;
+                @(posedge pv.clk)
+                (pv.pv_reg_hwif_out.PCR_CTRL[i].clear &&
+                 pv.pv_write[0].write_en && (pv.pv_write[0].write_entry == i));
+            endproperty
+            covprop_write_during_clear: cover property(cover_prop_write_during_clear);
         end
     endgenerate
 

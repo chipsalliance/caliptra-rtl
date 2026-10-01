@@ -1,7 +1,5 @@
-commit 8d9457af9f7966506c871aba1ae4ff8a2a4e17b0 (HEAD -> 2.0-patches, origin/2.0-patches)
-Author: Karol Gugala <kgugala@antmicro.com>
-Date:   Wed Oct 8 19:31:52 2025 +0200
+commit 60786dedf9cc202e1f07680597413bc55f3bdfbb (HEAD -> main, origin/main, origin/HEAD)
+Author: Tomasz Michalak <tmichalak@antmicro.com>
+Date:   Tue Jul 28 15:56:31 2026 +0200
 
-    CI: bump riscv_dv_matrix_include.py
-
-    Signed-off-by: Karol Gugala <kgugala@antmicro.com>
+    Add copyright headers

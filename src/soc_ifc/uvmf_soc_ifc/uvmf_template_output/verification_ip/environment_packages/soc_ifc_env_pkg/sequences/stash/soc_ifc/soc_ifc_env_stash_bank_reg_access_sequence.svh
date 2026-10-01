@@ -39,7 +39,16 @@ class soc_ifc_env_stash_bank_reg_access_sequence extends soc_ifc_env_sequence_ba
   uvm_status_e reg_sts;
 
   // One representative dword index per stash-bank slot (26 dwords/slot).
-  localparam int NUM_SLOTS       = 8;
+  // CALIPTRA_MODE_SUBSYSTEM builds implement slot 0 only (slots 1..7 are
+  // write-disabled and read 0, and only STASH_BANK_SOC_LOCK bit 0 exists), so
+  // restrict the sweep to the subset of stash registers accessible in that mode.
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+  localparam int          NUM_SLOTS    = 1;
+  localparam logic [7:0]  SOC_LOCK_ALL = 8'h01;
+`else
+  localparam int          NUM_SLOTS    = 8;
+  localparam logic [7:0]  SOC_LOCK_ALL = 8'hFF;
+`endif
   localparam int DWORDS_PER_SLOT = 26;
 
   function new(string name = "");
@@ -86,9 +95,9 @@ class soc_ifc_env_stash_bank_reg_access_sequence extends soc_ifc_env_sequence_ba
     if (reg_sts != UVM_IS_OK)
       `uvm_error("STASH_BANK_REG_ACCESS_SEQ", "Failed writing STASH_BANK_SOC_LOCK = 0")
     reg_model.soc_ifc_reg_rm.STASH_BANK_SOC_LOCK.write(
-        reg_sts, uvm_reg_data_t'(8'hFF), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
+        reg_sts, uvm_reg_data_t'(SOC_LOCK_ALL), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     if (reg_sts != UVM_IS_OK)
-      `uvm_error("STASH_BANK_REG_ACCESS_SEQ", "Failed writing STASH_BANK_SOC_LOCK = 0xFF")
+      `uvm_error("STASH_BANK_REG_ACCESS_SEQ", $sformatf("Failed writing STASH_BANK_SOC_LOCK = 0x%0h", SOC_LOCK_ALL))
     reg_model.soc_ifc_reg_rm.STASH_BANK_SOC_LOCK.write(
         reg_sts, uvm_reg_data_t'(8'h00), UVM_FRONTDOOR, reg_model.soc_ifc_AXI_map, this, .extension(axi_user_obj));
     if (reg_sts != UVM_IS_OK)

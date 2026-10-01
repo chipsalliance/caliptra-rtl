@@ -179,6 +179,29 @@ void verify_regs_programmed(void) {
 }
 
 //
+// Verify ICCM region state after a firmware-update (hitless) reset:
+//   - Address VALUES persist (they reset only on cptra_noncore_rst_b, which a
+//     firmware-update reset does NOT assert).
+//   - The region LOCK is cleared by the boot-FSM iccm_unlock pulse so ROM can
+//     reprogram the regions. The committed-gating is also cleared, so the
+//     effective lock stays deasserted until ROM re-commits all four registers.
+// ROM must therefore reprogram (re-commit) and re-lock on the hitless-update path.
+// Note: reading the four address registers here also clears their shadow phase
+// trackers, which is the prerequisite for the subsequent 2-phase re-commit.
+//
+void verify_regs_persist_unlocked(void) {
+    check_reg("FMC_START", CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR,
+              FMC_ICCM_START_REL);
+    check_reg("FMC_END",   CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR,
+              FMC_ICCM_END_REL);
+    check_reg("RT_START",  CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,
+              RT_ICCM_START_REL);
+    check_reg("RT_END",    CLP_SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,
+              RT_ICCM_END_REL);
+    check_reg("LOCK",      CLP_SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK, 0);
+}
+
+//
 // Verify CPTRA_HW_ERROR_FATAL.kv_error is NOT set.
 //
 void check_no_kv_error(const char *phase) {
