@@ -460,7 +460,7 @@ const uint32_t mldsa_pubkey[] = {
 0x9c03d6b5, 0x2637a27a, 0x00ed3350, 0xe8c83e88, 0x27f25a42, 0x858ad455, 0x02329622, 0x30e4e7b4
 };
 
-// Failed verify res — poison-init value driven by set_verify_valid in abr_ctrl.sv:
+// Failed verify res -- poison-init value driven by set_verify_valid in abr_ctrl.sv:
 //   MLDSA_VERIFY_RES[i] = ~signature_reg.enc.c[i]
 // With the input signature reversed on load (sign[0] = mldsa_sign[SIGN_SIZE-1]),
 // c[i] = mldsa_sign[SIGN_SIZE-1-i]. After this local array is itself reversed

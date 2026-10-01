@@ -160,7 +160,7 @@ void main() {
     mlkem_zeroize();
     cptra_intr_rcv.abr_notif = 0;
     //Use shared key in HMAC to derive new key
-    // Per spec: Little-endian → big-endian (non-AES) = Reverse DWORD order only
+    // Per spec: Little-endian -> big-endian (non-AES) = Reverse DWORD order only
     hmac_block.kv_intf = FALSE;
     hmac_block.data_size = 32;
     for (int i = 0; i < 8; i++) {
@@ -203,7 +203,7 @@ void main() {
     hex_to_uint32_array(tag_str_mlkem, tag_mlkem, &tag_length);
     hex_to_uint32_array(tag_str_hmac, tag_hmac, &tag_length);
 
-    // ML-KEM shared key → AES key: DWORD reversal + BSWAP32 per DWORD
+    // ML-KEM shared key -> AES key: DWORD reversal + BSWAP32 per DWORD
     aes_key_mlkem.kv_intf = FALSE;
     for (int i = 0; i < 8; i++) {
         aes_key_mlkem.key_share0[i] = BSWAP32(actual_sharedkey[MLKEM_SHAREDKEY_SIZE - 1 - i]);

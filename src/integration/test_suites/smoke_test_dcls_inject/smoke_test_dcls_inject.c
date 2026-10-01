@@ -20,7 +20,7 @@
 // CPTRA_HW_ERROR_FATAL.rv_dcls_err =1.
 //
 // Because cptra_error_fatal disrupts firmware execution, this test does NOT
-// signal pass/fail itself — the testbench self-check (in caliptra_top_tb_services.sv)
+// signal pass/fail itself -- the testbench self-check (in caliptra_top_tb_services.sv)
 // verifies the latched error and ends the simulation.
 
 #include "caliptra_defines.h"

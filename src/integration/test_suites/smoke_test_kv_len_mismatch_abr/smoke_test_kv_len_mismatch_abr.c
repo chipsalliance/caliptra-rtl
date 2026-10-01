@@ -12,13 +12,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// KV length-mismatch — Adams-bridge consumers (single-shot randomized).
+// KV length-mismatch -- Adams-bridge consumers (single-shot randomized).
 // Round-6 rewrite. Each invocation exercises exactly ONE KV read.
 //
 // Consumer expected sizes:
-//   MLDSA seed → 7
-//   MLKEM seed → 15
-//   MLKEM msg  → 7
+//   MLDSA seed -> 7
+//   MLKEM seed -> 15
+//   MLKEM msg  -> 7
 // dest_valid bits: bit2=MLDSA_SEED, bit6=MLKEM_SEED, bit7=MLKEM_MSG
 //
 #include "caliptra_defines.h"
@@ -89,7 +89,7 @@ static uint32_t kv_read_and_wait(uint32_t rd_ctrl, uint32_t rd_status,
 
 void main(void) {
     VPRINTF(LOW, "-------------------------------------------------\n");
-    VPRINTF(LOW, " KV length-mismatch — ABR (single-shot random)\n");
+    VPRINTF(LOW, " KV length-mismatch -- ABR (single-shot random)\n");
     VPRINTF(LOW, "-------------------------------------------------\n");
     init_interrupts();
 
