@@ -847,13 +847,13 @@ end
 // Implemented per-slot lock state, and the only lock source read by the
 // slot-data write gate and the STASH_BANK_STATUS mirror. Routing both through
 // one signal keeps the slots the SoC can lock and the slots Caliptra can observe
-// identical by construction. Subsystem mode implements slot 0 only, so bits 7:1
-// are tied low; STASH_BANK_SOC_LOCK is write-only, leaving its upper storage
-// with no reader for synthesis to keep.
-logic [7:0] stash_slot_locked;
+// identical by construction. Subsystem mode implements slot 0 only, so the upper
+// slots (index 1 and above) are tied low; STASH_BANK_SOC_LOCK is write-only,
+// leaving its upper storage with no reader for synthesis to keep.
+logic [SOC_IFC_STASH_NUM_SLOTS-1:0] stash_slot_locked;
 always_comb begin
 `ifdef CALIPTRA_MODE_SUBSYSTEM
-    stash_slot_locked = {7'h0, soc_ifc_reg_hwif_out.STASH_BANK_SOC_LOCK.lock.value[0]};
+    stash_slot_locked = {{(SOC_IFC_STASH_NUM_SLOTS-1){1'b0}}, soc_ifc_reg_hwif_out.STASH_BANK_SOC_LOCK.lock.value[0]};
 `else
     stash_slot_locked = soc_ifc_reg_hwif_out.STASH_BANK_SOC_LOCK.lock.value;
 `endif
@@ -863,9 +863,9 @@ end
 // request is not from SoC, or AXI USER does not match mailbox PAUSER table.
 // In subsystem mode, slots 1..7 are permanently write-disabled.
 always_comb begin
-    for (int k = 0; k < 208; k++) begin
-        automatic logic [7:0] slot_idx;
-        slot_idx = k / 26;
+    for (int k = 0; k < SOC_IFC_STASH_NUM_SLOT_DATA; k++) begin
+        automatic logic [SOC_IFC_STASH_SLOT_IDX_W-1:0] slot_idx;
+        slot_idx = SOC_IFC_STASH_SLOT_IDX_W'(k / SOC_IFC_STASH_DWORDS_PER_SLOT);
 `ifdef CALIPTRA_MODE_SUBSYSTEM
         if (slot_idx > 0) begin
             soc_ifc_reg_hwif_in.STASH_BANK_SLOT_DATA[k].data.swwel = 1'b1;
