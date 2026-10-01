@@ -288,6 +288,26 @@ void main(void) {
         // Setup the interrupt CSR configuration
         init_interrupts();
 
+        // Zero every HW interrupt COUNT register this test compares against its
+        // FW-tracked counts. These counters are sw=rw and persist across a test
+        // re-run; intr_block_rf_sweep() also pulses the TRIG registers, which
+        // increments the 2nd+ error/notif counters of multi-source blocks (e.g.
+        // HMAC KEY_ZERO, SoC_IFC) that its cleanup does not clear. Establish a
+        // known-zero baseline so each pass's HW counts match the FW counts.
+        volatile uint32_t * const intr_counters[] = {
+            sha512_notif_ctr, sha256_notif_ctr, sha512_acc_notif_ctr, hmac_notif_ctr,
+            hmac_error_key_mode_ctr, hmac_error_key_zero_ctr, ecc_notif_ctr, doe_notif_ctr,
+            soc_ifc_error_internal_ctr, soc_ifc_error_inv_dev_ctr, soc_ifc_error_cmd_fail_ctr,
+            soc_ifc_error_bad_fuse_ctr, soc_ifc_error_iccm_blocked_ctr, soc_ifc_error_mbox_ecc_unc_ctr,
+            soc_ifc_error_wdt_timer1_timeout_ctr, soc_ifc_error_wdt_timer2_timeout_ctr,
+            soc_ifc_notif_cmd_avail_ctr, soc_ifc_notif_mbox_ecc_cor_ctr, soc_ifc_notif_debug_locked_ctr,
+            soc_ifc_notif_scan_mode_ctr, soc_ifc_notif_soc_req_lock_ctr, soc_ifc_notif_gen_in_toggle_ctr,
+            abr_notif_ctr, axi_dma_notif_ctr, sha3_notif_ctr, aes_notif_ctr
+        };
+        for (uint32_t i = 0; i < sizeof(intr_counters)/sizeof(intr_counters[0]); i++) {
+            *intr_counters[i] = 0;
+        }
+
         // Initialize the counter
         intr_count = 0;
 
