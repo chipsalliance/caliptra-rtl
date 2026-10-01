@@ -47,9 +47,11 @@ volatile uint32_t  intr_count = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-// Matches num_slots in write_stash_bank() in caliptra_top_tb_soc_bfm.sv
-// (passive-mode path). Exercises every slot supported by the RTL.
-#define EXPECTED_NUM_SLOTS 8
+// Number of stash slots the RTL implements, mirroring num_slots in
+// write_stash_bank() in caliptra_top_tb_soc_bfm.sv: subsystem mode implements
+// slot 0 only (slots 1..7 are tied off), passive mode implements all 8. The
+// count is resolved at runtime from CPTRA_HW_CONFIG.SUBSYSTEM_MODE_EN (see
+// expected_num_slots in main()).
 #define STASH_SLOT_DWORDS  26
 
 static inline uint32_t stash_pattern(uint32_t slot, uint32_t dword) {
@@ -78,10 +80,19 @@ void main(void) {
     uint32_t status;
     uint32_t got;
     uint32_t slot_locked_mask;
+    uint32_t expected_num_slots;
 
     VPRINTF(LOW, "--------------------------------------------\n");
     VPRINTF(LOW, " Caliptra Stash Bank NEGATIVE Smoke Test\n");
     VPRINTF(LOW, "--------------------------------------------\n");
+
+    // Subsystem mode implements slot 0 only; passive mode implements all 8.
+    // Resolve the slot count the same way the SoC BFM selects num_slots so the
+    // expected lock mask and per-slot sweeps match what the RTL presents.
+    uint32_t hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+    uint32_t ss_mode = (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK) ? 1u : 0u;
+    expected_num_slots = ss_mode ? 1u : 8u;
+    VPRINTF(LOW, "FW: subsystem_mode=%u -> expected_num_slots=%u\n", ss_mode, expected_num_slots);
 
     // Step A: confirm BFM finished populating the bank.
     do {
@@ -91,16 +102,16 @@ void main(void) {
 
     slot_locked_mask = (status & SOC_IFC_REG_STASH_BANK_STATUS_SLOT_LOCKED_MASK)
                        >> SOC_IFC_REG_STASH_BANK_STATUS_SLOT_LOCKED_LOW;
-    if (slot_locked_mask != ((1u << EXPECTED_NUM_SLOTS) - 1u)) {
+    if (slot_locked_mask != ((1u << expected_num_slots) - 1u)) {
         fail("slot_locked mirror cleared by SOC_LOCK W1S unlock attempt", slot_locked_mask,
-             (1u << EXPECTED_NUM_SLOTS) - 1u);
+             (1u << expected_num_slots) - 1u);
     }
     VPRINTF(LOW, "FW: slot_locked = 0x%02x unchanged after BFM SOC_LOCK unlock attempt\n",
             slot_locked_mask);
 
     // Step B: positive verification - slot data matches pattern.
     // If any negative write had landed, the pattern check would fail here.
-    for (uint32_t s = 0; s < EXPECTED_NUM_SLOTS; s++) {
+    for (uint32_t s = 0; s < expected_num_slots; s++) {
         for (uint32_t d = 0; d < STASH_SLOT_DWORDS; d++) {
             got = lsu_read_32(slot_addr(s, d));
             uint32_t want = stash_pattern(s, d);
@@ -111,12 +122,12 @@ void main(void) {
         }
     }
     VPRINTF(LOW, "FW: all %0d slots match expected pattern (no negative writes landed)\n",
-            EXPECTED_NUM_SLOTS);
+            expected_num_slots);
 
     // Step C: explicit negative-path assertions - the specific writes
     // attempted by write_stash_bank() steps 3b/3c and write_stash_bank_negative()
     // must NOT change observable state.
-    for (uint32_t s = 0; s < EXPECTED_NUM_SLOTS; s++) {
+    for (uint32_t s = 0; s < expected_num_slots; s++) {
         got = lsu_read_32(slot_addr(s, 0));
         if (got == 0xFEEDFACEu) {
             VPRINTF(ERROR, "ERROR: pre-end_stash SOC_LOCK rewrite landed at slot %0d dword 0\n", s);
@@ -143,9 +154,9 @@ void main(void) {
     }
     slot_locked_mask = (status & SOC_IFC_REG_STASH_BANK_STATUS_SLOT_LOCKED_MASK)
                        >> SOC_IFC_REG_STASH_BANK_STATUS_SLOT_LOCKED_LOW;
-    if (slot_locked_mask != ((1u << EXPECTED_NUM_SLOTS) - 1u)) {
+    if (slot_locked_mask != ((1u << expected_num_slots) - 1u)) {
         fail("slot_locked mirror changed after STASH_END_STASH write of 0",
-             slot_locked_mask, (1u << EXPECTED_NUM_SLOTS) - 1u);
+             slot_locked_mask, (1u << expected_num_slots) - 1u);
     }
     VPRINTF(LOW, "FW: STASH_END_STASH write of 0 ignored (STATUS=0x%08x)\n", status);
 
