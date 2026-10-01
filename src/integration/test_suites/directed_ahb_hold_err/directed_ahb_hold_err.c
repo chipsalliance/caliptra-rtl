@@ -17,21 +17,32 @@
 // Description:
 //     Directed test to cover the two conditional response paths of the shared
 //     AHB slave interface wrapper src/libs/rtl/ahb_slv_sif.sv:
-//       - the ERROR path (hresp=H_ERROR, 2-cycle), driven when a peripheral
-//         asserts its `err` input. This FAULTS the RISC-V core (load/store
-//         access-fault).
+//       - the FAULT path (hresp=H_ERROR, 2-cycle), driven when a peripheral
+//         asserts its `err` input.
 //       - the HOLD path (hreadyout_o low wait-state), driven when a peripheral
 //         asserts its `hld` input. The transaction still completes OKAY, so
 //         these accesses do NOT fault the core.
+//
+//     IMPORTANT (how the fault is delivered):
+//     These faulting targets all live in the external AHB peripheral window.
+//     In VeeR EL2 every external load is issued through the non-blocking load
+//     CAM, so an hresp error returns *after* the access has retired and is
+//     reported as an *imprecise* D-bus NMI (mcause 0xF0000001 for a load,
+//     0xF0000000 for a store), NOT a synchronous mtvec access-fault. The NMI
+//     redirects to SOC_IFC INTERNAL_NMI_VECTOR, and the first imprecise error
+//     latches mdseac and suppresses further capture until mdeau is written, so
+//     the handler must clear mdeau to re-arm for the next faulting access.
 //
 //     A per-peripheral RTL survey established which blocks actually route a
 //     live `err`/`hld` back into ahb_slv_sif from firmware-reachable accesses
 //     (many candidate ports are tied to 1'b0 in RTL):
 //
-//     ERROR path (deterministically reachable from FW):
+//     FAULT path (deterministically reachable from FW):
 //       - soc_ifc : access to an address inside the soc_ifc window that maps to
 //                   no sub-client (mbox / soc_ifc_reg / sha_acc / dma) asserts
-//                   uc_error (soc_ifc_arb.sv).
+//                   uc_error (soc_ifc_arb.sv). This is a valid, designed SLVERR
+//                   response to an unmapped access (see soc_ifc_top.sv, the
+//                   removed ERR_SOC_IFC_AHB_ERR note).
 //       - csrng   : access to an unmapped register offset asserts addrmiss ->
 //                   reg_error (csrng_reg_top.sv, AW=7).
 //       - entropy_src : same addrmiss -> reg_error (entropy_src_reg_top.sv, AW=8).
@@ -49,19 +60,12 @@
 //     Blocks whose err/hld are tied off (no firmware-reachable stimulus) are
 //     logged and skipped: ecc, keyvault, pcrvault, datavault, sha256, sha512,
 //     entropy_combiner (err tied 0 and/or hld tied 0); doe, hmac (both tied 0).
-//
-//     The ERROR accesses are performed with a test-local mtvec DIRECT-mode
-//     handler installed around them (mirrors directed_ahb_addr_toggle) so the
-//     shared caliptra_isr.c default handler is not involved. The handler accepts
-//     load/store access-faults, advances mepc past the forced 4-byte lw/sw, and
-//     counts the fault; any other trap kills the sim. The HOLD accesses are
-//     ordinary mapped reads performed OUTSIDE the handler window (they do not
-//     fault).
 // ---------------------------------------------------------------------
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
 #include "riscv-csr.h"
+#include "veer-csr.h"
 #include "riscv-interrupts.h"
 #include "riscv_hw_if.h"
 #include <string.h>
@@ -79,36 +83,30 @@ volatile uint32_t  intr_count;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-// Count of expected access-faults observed by the test-local trap handler
-volatile uint32_t g_expected_fault_count = 0;
-
 // ---------------------------------------------------------------------
-// ERROR-path target addresses. Each access to these addresses asserts the
+// FAULT-path target addresses. Each access to these addresses asserts the
 // corresponding peripheral's ahb_slv_sif `err` input, producing hresp=H_ERROR
-// and a RISC-V load/store access-fault.
+// and an imprecise D-bus NMI in the core.
 // ---------------------------------------------------------------------
 // soc_ifc window is 0x3000_0000-0x3007_FFFF; offset 0x0_0000 maps to no
 // sub-client (mbox=0x2_0000, sha_acc=0x2_1000, dma=0x2_2000, soc_ifc_reg=
 // 0x3_0000, mbox_sram=0x4_0000) -> uc_error.
-#define ERR_ADDR_SOC_IFC     (CLP_SOC_IFC_REG_BASE_ADDR - 0x30000UL) /* 0x30000000 */
+#define FLT_ADDR_SOC_IFC     (CLP_SOC_IFC_REG_BASE_ADDR - 0x30000UL) /* 0x30000000 */
 // csrng reg block AW=7 (0x00-0x7F); last register MAIN_SM_STATE=0x5C. Offset
 // 0x60 is an unmapped hole -> addrmiss -> reg_error.
-#define ERR_ADDR_CSRNG       (CLP_CSRNG_REG_BASE_ADDR + 0x60UL)      /* 0x20002060 */
+#define FLT_ADDR_CSRNG       (CLP_CSRNG_REG_BASE_ADDR + 0x60UL)      /* 0x20002060 */
 // entropy_src reg block AW=8 (0x00-0xFF); last register MAIN_SM_STATE=0xE0.
 // Offset 0xF0 is an unmapped hole -> addrmiss -> reg_error.
-#define ERR_ADDR_ENTROPY_SRC (CLP_ENTROPY_SRC_REG_BASE_ADDR + 0xF0UL)/* 0x200030F0 */
+#define FLT_ADDR_ENTROPY_SRC (CLP_ENTROPY_SRC_REG_BASE_ADDR + 0xF0UL)/* 0x200030F0 */
 // AES-core TLUL space is offset < 0x800 within the AES window; AES-core AW=8,
 // last register CTRL_GCM_SHADOWED=0x88. Offset 0x8C is unmapped -> addrmiss ->
 // reg_error -> tlul d_error -> ahb_err.
-#define ERR_ADDR_AES         (CLP_AES_REG_BASE_ADDR + 0x8CUL)        /* 0x1001108C */
+#define FLT_ADDR_AES         (CLP_AES_REG_BASE_ADDR + 0x8CUL)        /* 0x1001108C */
 // KMAC-core TLUL space is offset < 0x1000 within the sha3 window; KMAC config
 // registers end at ERR_CODE=0x4C and the next mapped region is the STATE window
 // at 0x400. Offset 0x50 is unmapped -> addrmiss -> reg_error -> tlul d_error ->
 // ahb_err.
-#define ERR_ADDR_KMAC        (CLP_KMAC_BASE_ADDR + 0x50UL)           /* 0x10040050 */
-
-// Two faults (read + write) are expected for each of the 5 ERROR peripherals.
-#define EXPECTED_FAULT_COUNT 10
+#define FLT_ADDR_KMAC        (CLP_KMAC_BASE_ADDR + 0x50UL)           /* 0x10040050 */
 
 // ---------------------------------------------------------------------
 // HOLD-path target addresses. Ordinary reads of these VALID core registers
@@ -118,27 +116,28 @@ volatile uint32_t g_expected_fault_count = 0;
 #define HOLD_ADDR_AES        (CLP_AES_REG_STATUS)                    /* 0x10011084 */
 #define HOLD_ADDR_KMAC       (CLP_KMAC_STATUS)                       /* 0x1004001C */
 
-// Test-local trap handler. Installed in mtvec DIRECT mode around the faulting
-// accesses. Advances mepc past the (forced 4-byte) faulting instruction and
-// counts the expected access-fault. Any other trap kills the sim with error.
-void __attribute__((interrupt("machine"), aligned(4))) ahb_fault_handler(void) {
-    uint_xlen_t cause = csr_read_mcause();
-    if (!(cause & MCAUSE_INTERRUPT_BIT_MASK) &&
-        ((cause == RISCV_EXCP_LOAD_ACCESS_FAULT) || (cause == RISCV_EXCP_STORE_AMO_ACCESS_FAULT))) {
-        // Faulting access is a forced 4-byte lw/sw (see fault_lw/fault_sw), so
-        // advancing mepc by exactly 4 resumes at the next instruction.
-        csr_write_mepc(csr_read_mepc() + 4);
-        g_expected_fault_count++;
-    } else {
-        VPRINTF(FATAL, "Unexpected trap in ahb_hold_err: mcause=%x mepc=%x\n", (uint32_t)cause, (uint32_t)csr_read_mepc());
-        SEND_STDOUT_CTRL(0x1); // kill with ERROR
-        while (1);
-    }
-}
+// Flat list of faulting operations: a read and a write to each of the 5 FAULT
+// peripherals (2 * 5 = 10). Both directions assert `err` and are expected to
+// raise an imprecise D-bus NMI.
+typedef struct { const char *name; uintptr_t addr; uint8_t is_write; } fault_op_t;
+static const fault_op_t FAULT_OPS[] = {
+    {"soc_ifc  rd", FLT_ADDR_SOC_IFC,     0}, {"soc_ifc  wr", FLT_ADDR_SOC_IFC,     1},
+    {"csrng    rd", FLT_ADDR_CSRNG,       0}, {"csrng    wr", FLT_ADDR_CSRNG,       1},
+    {"entropy  rd", FLT_ADDR_ENTROPY_SRC, 0}, {"entropy  wr", FLT_ADDR_ENTROPY_SRC, 1},
+    {"aes      rd", FLT_ADDR_AES,         0}, {"aes      wr", FLT_ADDR_AES,         1},
+    {"kmac     rd", FLT_ADDR_KMAC,        0}, {"kmac     wr", FLT_ADDR_KMAC,        1},
+};
+#define NUM_FAULT_OPS (sizeof(FAULT_OPS) / sizeof(FAULT_OPS[0]))
 
-// Force the faulting accesses to be 4-byte (non-compressed) lw/sw so that a
-// mepc+4 skip in the handler is always exact. Do NOT use lsu_read_32 /
-// lsu_write_32 for the faulting accesses since those could be compressed.
+// Index of the next faulting op and count of NMIs observed. Advanced by the NMI
+// handler and read back in run_faults(); execution resumes in-place (no reset).
+volatile uint32_t g_fault_idx   = 0;
+volatile uint32_t g_fault_count = 0;
+
+void run_faults(void);
+
+// Force the faulting accesses to be 4-byte (non-compressed) lw/sw so the bus
+// transaction (and thus the ahb_slv_sif stimulus) is an explicit 32-bit access.
 static inline uint32_t fault_lw(uintptr_t a) {
     uint32_t v;
     __asm__ volatile(".option push\n.option norvc\nlw %0,0(%1)\n.option pop"
@@ -150,12 +149,61 @@ static inline void fault_sw(uintptr_t a, uint32_t d) {
                      :: "r"(a), "r"(d) : "memory");
 }
 
-// Exercise one ERROR target: a read (drives the peripheral `err`, faults) and a
-// write (drives `err`, faults). Each is expected to increment the fault count.
-static void err_access(const char *name, uintptr_t addr) {
-    VPRINTF(LOW, "AHB err path: %s addr=0x%08x (expect 2 faults)\n", name, (uint32_t)addr);
-    (void)fault_lw(addr);       // load access-fault
-    fault_sw(addr, 0xDEADBEEF); // store access-fault
+// NMI handler installed at SOC_IFC INTERNAL_NMI_VECTOR. Only the expected
+// imprecise D-bus NMI (top nibble of mcause = 0xF, covers both load and store)
+// is tolerated: count it, clear the error state (mcause + mdeau to re-arm
+// mdseac capture), advance to the next op, and redirect mepc so the (implicit)
+// mret resumes at run_faults(). The imprecise mepc is meaningless, so we
+// restart from a known point rather than resuming it.
+void __attribute__((interrupt("machine"), aligned(4))) nmi_handler(void) {
+    uint_xlen_t cause = csr_read_mcause();
+    if ((cause & MCAUSE_NMI_BIT_MASK) == MCAUSE_NMI_BIT_MASK) {
+        g_fault_count++;
+        g_fault_idx++;
+        csr_write_mcause(0x0);
+        csr_write_mdeau(0x0);
+        csr_write_mepc((uintptr_t)run_faults);
+    } else {
+        VPRINTF(FATAL, "Unexpected trap in hold/fault test: mcause=%x mepc=%x\n",
+                (uint32_t)cause, (uint32_t)csr_read_mepc());
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
+}
+
+// Walk the remaining faulting ops. Each op asserts the peripheral `err`, which
+// raises an imprecise D-bus NMI; the handler advances g_fault_idx and resumes
+// here, so the loop re-reads the updated index and continues.
+void run_faults(void) {
+    while (g_fault_idx < NUM_FAULT_OPS) {
+        uint32_t i = g_fault_idx;
+        VPRINTF(LOW, "AHB fault path: %s addr=0x%08x\n", FAULT_OPS[i].name, (uint32_t)FAULT_OPS[i].addr);
+        if (FAULT_OPS[i].is_write)
+            fault_sw(FAULT_OPS[i].addr, 0xDEADBEEF);
+        else
+            (void)fault_lw(FAULT_OPS[i].addr);
+
+        // The imprecise error normally raises an NMI within a few cycles, and
+        // the handler restarts run_faults() with g_fault_idx advanced, so we do
+        // not fall through. Give the error time to drain; if no NMI arrives the
+        // op failed to fault and the test must fail.
+        for (volatile uint32_t k = 0; k < 4000; k++) { }
+        VPRINTF(FATAL, "[FAIL] no NMI for fault op idx=%u addr=0x%08x (count=%u)\n",
+                i, (uint32_t)FAULT_OPS[i].addr, (uint32_t)g_fault_count);
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
+
+    if (g_fault_count != NUM_FAULT_OPS) {
+        VPRINTF(FATAL, "[FAIL] fault count mismatch: got=%u expected=%u\n",
+                (uint32_t)g_fault_count, (uint32_t)NUM_FAULT_OPS);
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
+
+    VPRINTF(LOW, "AHB hold/fault complete (fault_count=%u)\n", (uint32_t)g_fault_count);
+    SEND_STDOUT_CTRL(0xff); // PASS
+    while (1);
 }
 
 // Exercise one HOLD target: a normal mapped read that induces a wait-state
@@ -166,63 +214,36 @@ static void hold_access(const char *name, uintptr_t addr) {
 }
 
 void main(void) {
-    uint_xlen_t saved_mtvec;
+    VPRINTF(LOW, "----------------------------------\nAHB HOLD / FAULT Directed Test !!\n----------------------------------\n");
 
-    VPRINTF(LOW, "----------------------------------\nAHB HOLD / ERROR Directed Test !!\n----------------------------------\n");
-
-    // Setup the interrupt CSR configuration (standard test init). This brings
-    // the shared caliptra_isr vectored handler online; the test-local DIRECT
-    // handler below temporarily overrides it only for the ERROR accesses.
+    // Standard interrupt/CSR init.
     init_interrupts();
 
+    // External AHB error responses arrive as imprecise D-bus NMIs, so route them
+    // to a test-local handler instead of letting them escalate to a hang/reset.
+    lsu_write_32((uintptr_t)(CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t)nmi_handler);
+
     // -----------------------------------------------------------------
-    // HOLD phase (performed OUTSIDE the local handler window; no faults).
-    // TLUL-backed AES and KMAC core register reads assert ahb_hold for the
-    // request/response round-trip. These are the firmware-reachable holds in
-    // this design (the vault blocks tie their hld input to 1'b0).
+    // HOLD phase (no faults). TLUL-backed AES and KMAC core register reads
+    // assert ahb_hold for the request/response round-trip. These are the
+    // firmware-reachable holds in this design (the vault blocks tie hld to 0).
     // -----------------------------------------------------------------
     VPRINTF(LOW, "-- HOLD (wait-state) path --\n");
     hold_access("aes ",  HOLD_ADDR_AES);
     hold_access("kmac",  HOLD_ADDR_KMAC);
 
     // -----------------------------------------------------------------
-    // ERROR phase. Save the current trap vector and install the test-local
-    // handler in DIRECT mode (low 2 bits = 0). Exceptions do not require
-    // mstatus.MIE.
-    // -----------------------------------------------------------------
-    VPRINTF(LOW, "-- ERROR (hresp) path --\n");
-    saved_mtvec = csr_read_mtvec();
-    csr_write_mtvec(((uintptr_t)ahb_fault_handler) & ~0x3UL);
-
-    err_access("soc_ifc    ", ERR_ADDR_SOC_IFC);
-    err_access("csrng      ", ERR_ADDR_CSRNG);
-    err_access("entropy_src", ERR_ADDR_ENTROPY_SRC);
-    err_access("aes        ", ERR_ADDR_AES);
-    err_access("kmac/sha3  ", ERR_ADDR_KMAC);
-
-    // Restore the original trap vector before evaluating results.
-    csr_write_mtvec(saved_mtvec);
-
-    // -----------------------------------------------------------------
     // Blocks whose ahb_slv_sif err/hld are tied off in RTL (no firmware
     // stimulus) are intentionally skipped and logged for the record.
     // -----------------------------------------------------------------
-    VPRINTF(LOW, "-- skipped (err/hld tied off in RTL) --\n");
-    VPRINTF(LOW, "  ecc/kv/pv/dv/sha256/sha512: reg rd/wr err tied 0; hld tied 0\n");
-    VPRINTF(LOW, "  entropy_combiner: err tied 0, hld tied 0; doe/hmac: err+hld tied 0\n");
-    VPRINTF(LOW, "  csrng/entropy_src/soc_ifc hold: shadow/arb only, not reliably FW-driven\n");
+    VPRINTF(LOW, "-- skipped (fault/hold tied off in RTL) --\n");
+    VPRINTF(LOW, "  ecc/kv/pv/dv/sha256/sha512: reg rd/wr fault tied 0; hld tied 0\n");
+    VPRINTF(LOW, "  entropy_combiner: fault tied 0, hld tied 0; doe/hmac: fault+hld tied 0\n");
 
-    // Verify we observed exactly the expected number of access-faults.
-    if (g_expected_fault_count != EXPECTED_FAULT_COUNT) {
-        VPRINTF(FATAL, "[FAIL] fault count mismatch: got=%u expected=%u\n",
-                (uint32_t)g_expected_fault_count, (uint32_t)EXPECTED_FAULT_COUNT);
-        SEND_STDOUT_CTRL(0x1);
-        while (1);
-    }
-
-    VPRINTF(LOW, "AHB hold/err complete (fault_count=%u)\n", (uint32_t)g_expected_fault_count);
-
-    // Signal PASS
-    SEND_STDOUT_CTRL(0xff);
-    while (1);
+    // -----------------------------------------------------------------
+    // FAULT phase. Each op raises an imprecise D-bus NMI serviced by
+    // nmi_handler above, which advances the index and resumes run_faults().
+    // -----------------------------------------------------------------
+    VPRINTF(LOW, "-- FAULT (hresp) path --\n");
+    run_faults();
 }

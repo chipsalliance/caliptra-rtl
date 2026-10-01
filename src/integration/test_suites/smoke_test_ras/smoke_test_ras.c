@@ -149,6 +149,7 @@ enum test_list {
     CRYPTO_HMAC_ECC                   ,
     CRYPTO_HMAC_DOE                   ,
     CRYPTO_DOE_ECC                    ,
+    DCCM_WR_READBACK                  ,
     TEST_COUNT                        ,
 };
 enum boot_count_list {
@@ -221,7 +222,8 @@ enum test_progress test_progress_g[TEST_COUNT] __attribute__((section(".dccm.per
     NOT_STARTED,
     NOT_STARTED,
     NOT_STARTED,
-    NOT_STARTED
+    NOT_STARTED,
+    NOT_STARTED  // DCCM_WR_READBACK
 };
 
 
@@ -240,6 +242,7 @@ uint32_t check_iccm_sram_ecc      (enum mask_config test_mask, enum read_config 
 /* DCCM ECC */
 uint32_t run_dccm_sram_ecc        (enum mask_config test_mask, enum dccm_read_config read_path);
 uint32_t check_dccm_sram_ecc      (enum mask_config test_mask, enum dccm_read_config read_path);
+uint32_t check_dccm_wr_readback   (void);
 
 /* MBOX PROT */
 void     run_mbox_no_lock_error  (enum mask_config test_mask);
@@ -603,6 +606,90 @@ uint32_t check_iccm_sram_ecc (enum mask_config test_mask, enum read_config read_
 }
 
 // TODO should test both DMA slave and internal DCCM accesses?
+// Enable/disable the VeeR DCCM write-readback FI check via MFDC (CSR 0x7f9)
+// bit [7]. disable=1 sets the bit (check off); disable=0 clears it (check on,
+// the reset default). Read-modify-write preserves the other MFDC fields.
+static inline void dccm_wr_readback_set_disable(int disable) {
+    uint32_t mfdc;
+    __asm__ volatile ("csrr %0, 0x7f9" : "=r"(mfdc));
+    if (disable) mfdc |=  (1u << 7);
+    else         mfdc &= ~(1u << 7);
+    __asm__ volatile ("csrw 0x7f9, %0" :: "r"(mfdc));
+}
+
+// Positive check of the VeeR DCCM write-readback FI feature (RV_DCCM_WR_READBACK).
+// With the check ENABLED, inject DCCM SRAM errors (same TB mechanism the ECC
+// tests use) and store to DCCM: the write-readback compares each store against
+// the intended value and, on the injected mismatch, asserts
+// cptra_error_fatal.dccm_wr_readback_error. We mask that fatal so it records
+// status without resetting, then confirm the status bit set. This must run
+// BEFORE the ECC tests disable the feature. Returns SUCCESS/failure via sts and
+// records progress in test_progress_g[DCCM_WR_READBACK].
+uint32_t check_dccm_wr_readback (void) {
+    enum test_list cur_test = DCCM_WR_READBACK;
+    uint32_t sts = SUCCESS;
+    uint32_t saved_mask;
+    uint32_t fatal;
+    volatile uint32_t array_in_dccm [10]; // stack is in DCCM
+    uint32_t* safe_iter = (uint32_t*) CLP_MBOX_SRAM_BASE_ADDR; // not corrupted by DCCM injection
+
+    VPRINTF(MEDIUM, "\n*** Check DCCM Write-Readback ***\n\n");
+    test_progress_g[cur_test] = RUN_NOT_CHECKED;
+
+    // Ensure the write-readback check is ENABLED (reset default) for this test.
+    dccm_wr_readback_set_disable(0);
+
+    // Mask the dccm_wr_readback fatal so the injected mismatch records status
+    // without asserting cptra_error_fatal / resetting the core.
+    saved_mask = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK);
+    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK,
+                 saved_mask | SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_DCCM_WR_READBACK_ERR_MASK);
+
+    // Clear any stale status (W1C).
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_WR_READBACK_ERR_MASK);
+
+    // Acquire the mailbox lock so safe_iter (mailbox memory) is stable.
+    while((lsu_read_32(CLP_MBOX_CSR_MBOX_LOCK) & MBOX_CSR_MBOX_LOCK_LOCK_MASK) != 0) {
+        VPRINTF(MEDIUM, "Get mbox lock\n");
+    }
+
+    // Inject single-bit DCCM SRAM errors and store to DCCM. Single-bit keeps the
+    // corrupted words correctable (benign afterwards); the write-readback still
+    // faults on the raw stored-vs-expected mismatch. Injection is random per
+    // bank/cycle, so retry a few rounds and stop as soon as the fatal status
+    // latches (guards against a rare all-clean round).
+    SEND_STDOUT_CTRL(DCCM_SINGLE);
+    fatal = 0;
+    for (uint32_t attempt = 0; attempt < 8; attempt++) {
+        *safe_iter = 0;
+        while (*safe_iter < 10) {
+            array_in_dccm[*safe_iter] = 0xA5A5A5A5u ^ (*safe_iter) ^ attempt;
+            *safe_iter = (*safe_iter) + 1;
+        }
+        fatal = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL);
+        if (fatal & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_WR_READBACK_ERR_MASK) break;
+    }
+    SEND_STDOUT_CTRL((uint32_t) ERROR_NONE);
+    __asm__ volatile ("fence.i");
+
+    lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
+
+    // Confirm the write-readback fatal status bit latched.
+    if (fatal & SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_WR_READBACK_ERR_MASK) {
+        test_progress_g[cur_test] = RUN_AND_PASSED;
+    } else {
+        test_progress_g[cur_test] = RUN_AND_FAILED;
+        sts |= INV_STATE;
+        VPRINTF(ERROR, "ERROR: dccm_wr_readback_error not observed (HW_ERROR_FATAL=0x%x)\n", fatal);
+    }
+
+    // Clear the status (W1C) and restore the fatal mask.
+    lsu_write_32(CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL, SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_DCCM_WR_READBACK_ERR_MASK);
+    lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK, saved_mask);
+
+    return sts;
+}
+
 uint32_t run_dccm_sram_ecc (enum mask_config test_mask, enum dccm_read_config read_path) {
     enum test_list cur_test;
 
@@ -612,6 +699,22 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask, enum dccm_read_config re
     uint32_t resp = lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_RV_MTIME_L);
 
     VPRINTF(MEDIUM, "\n*** Run DCCM SRAM ECC Err ***\n  Masked: %d\n  Path:   %s\n\n", test_mask == WITH_MASK, read_path == DATA_LOAD ? "LOAD" : "DMA");
+
+    // Verify the DCCM write-readback FI feature once (while it is still enabled)
+    // before we disable it for the ECC-injection sequence below.
+    if (test_progress_g[DCCM_WR_READBACK] == NOT_STARTED) {
+        check_dccm_wr_readback();
+    }
+
+    // Disable the VeeR DCCM write-readback FI check (MFDC[7], CSR 0x7f9) for the
+    // duration of the ECC-injection sequence. That feature reads back every DCCM
+    // store and faults on a mismatch; the SRAM error injection deliberately
+    // corrupts these stores, so with the check enabled the corruption is caught
+    // at WRITE time as a distinct cptra_error_fatal.dccm_wr_readback_error (not
+    // dccm_ecc_unc), pre-empting the intended read-time ECC error and scrubbing
+    // single-bit errors before the test's own read-back. Restored before exit;
+    // warm-reset paths re-enable it via the MFDC reset value regardless.
+    dccm_wr_readback_set_disable(1);
 
     // Grab test enum
     if      (test_mask == WITH_MASK && read_path == DATA_LOAD) { cur_test = DCCM_SRAM_ECC_SINGLE_LOAD_MASKED;   }
@@ -758,6 +861,11 @@ uint32_t run_dccm_sram_ecc (enum mask_config test_mask, enum dccm_read_config re
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_1, (uint32_t) &array_in_dccm);
         lsu_write_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_OUTPUT_WIRES_0, (10 << 12) | 0xdf);
     }
+
+    // Re-enable the DCCM write-readback FI check now that the injection/readback
+    // sequence is complete (masked paths that fall through restore it here;
+    // unmasked paths reset the core, which restores it via the MFDC reset value).
+    dccm_wr_readback_set_disable(0);
 
     // Unlock Mailbox
     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
@@ -1229,7 +1337,6 @@ void main(void) {
 
         VPRINTF(LOW, "Boot Count: %d\n", boot_count);
         
-        // Test Mailbox SRAM ECC
         if (boot_count == BEFORE_FIRST_ICCM_FAILURE) {
             test_mbox_sram_ecc(NO_MASK);
             test_mbox_sram_ecc(WITH_MASK);
