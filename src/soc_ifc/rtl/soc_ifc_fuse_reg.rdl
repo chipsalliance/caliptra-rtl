@@ -24,14 +24,14 @@ reg {
     name = "Unique Device Secret";
     desc = "Obfuscated UDS.
             [br]Caliptra Access: -
-            [br]SOC Access:      WL-S";
+            [br]SOC Access:      WL-S (passive mode). Not writable in subsystem mode, where the value is loaded from the fuse controller.";
     secret seed[32]=0;
 } fuse_uds_seed[16] @0x200;
 reg {
     name = "Field Entropy";
     desc = "Obfuscated Field Entropy.
             [br]Caliptra Access: -
-            [br]SOC Access:      WL-S";
+            [br]SOC Access:      WL-S (passive mode). Not writable in subsystem mode, where the value is loaded from the fuse controller.";
     secret seed[32]=0;
 } fuse_field_entropy[8];
 reg {
