@@ -398,12 +398,12 @@ end
 
   test_vector_t test_vector;
 
-  reg [31 : 0]  cycle_ctr;
+  reg [31 : 0]  cycle_ctr = '0;
 
   //reg [31 : 0]  read_data;
   reg [383: 0]  reg_read_data;
 
-  reg [7:0] test_case_num;
+  reg [7:0] test_case_num = '0;
 
   //--------------------
   //Reset task
@@ -683,7 +683,7 @@ end
 
       end_time = cycle_ctr - start_time;
 
-      //$display("*** keygen test processing time = %01d cycles.", end_time);
+      $display("*** keygen test processing time = %01d cycles.", end_time);
       /*      
       if (!test_otf_reset) begin 
         $display("@ %0t privkey    : 0x%96x", $time, test_vector.privkey);
@@ -753,7 +753,7 @@ end
       S = reg_read_data;
 
       end_time = cycle_ctr - start_time;
-      //$display("*** signing test processing time = %01d cycles.", end_time);
+      $display("*** signing test processing time = %01d cycles.", end_time);
 
       /*
       if (!test_otf_reset) begin
@@ -822,7 +822,7 @@ end
       verify_r = reg_read_data;
 
       end_time = cycle_ctr - start_time;
-      //$display("*** verifying test processing time = %01d cycles.", end_time);
+      $display("*** verifying test processing time = %01d cycles.", end_time);
 
       /*
       if (!test_otf_reset) begin
@@ -887,6 +887,7 @@ end
       // trig_ECC()
 
       end_time = cycle_ctr - start_time;
+      $display("*** DH shared key test processing time = %01d cycles.", end_time);
     end
   endtask
 
@@ -1068,4 +1069,3 @@ endinterface
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

@@ -71,12 +71,14 @@ module ecc_montgomerymultiplier_tb #(
   logic       reset_n_tb;
 
   logic       start_i_tb;
+  logic       reduce_i_tb;
   operand_t   opa_i_tb;
   operand_t   opb_i_tb;
   operand_t   n_i_tb;
   word_t      n_prime_i_tb;
   operand_t   p_o_tb;
   logic       ready_tb;
+  logic       result_ready_tb;
   int         test_vector_cnt;
 
   test_vector_t [TEST_VECTOR_NUM-1:0] test_vectors;
@@ -98,10 +100,11 @@ module ecc_montgomerymultiplier_tb #(
       .opb_i      (opb_i_tb),
       .n_i        (n_i_tb),
       .n_prime_i  (n_prime_i_tb),
-      .reduce_i   (1'b1),
+      .reduce_i   (reduce_i_tb),
       .p_o        (p_o_tb),
       .accept_o   (),
-      .ready_o    (ready_tb)
+      .ready_o    (ready_tb),
+      .result_ready_o (result_ready_tb)
   );
 
   //----------------------------------------------------------------
@@ -152,6 +155,7 @@ module ecc_montgomerymultiplier_tb #(
   //----------------------------------------------------------------
   task display_test_results;
     begin
+      $display("ECC_MM_SUMMARY tests=%0d error_ctr=%0d", tc_ctr, error_ctr);
       if (error_ctr == 0)
         begin
           $display("*** All %02d test cases completed successfully", tc_ctr);
@@ -184,6 +188,7 @@ module ecc_montgomerymultiplier_tb #(
       reset_n_tb    = 0;
 
       start_i_tb    = 0;
+      reduce_i_tb   = 1;
       opa_i_tb      = '0;
       opb_i_tb      = '0;
       n_i_tb        = '0;
@@ -195,17 +200,20 @@ module ecc_montgomerymultiplier_tb #(
   //----------------------------------------------------------------
   // wait_ready()
   //
-  // Initialize all counters and testbed functionality as well
-  // as setting the DUT inputs to defined values.
+  // Bound the wait and sample after the DUT's rising-edge updates.
   //----------------------------------------------------------------
-  task wait_ready;
+  task wait_ready(input bit result_phase);
+    int unsigned waited;
     begin
-      while (ready_tb == 0)
-        begin
-            #CLK_PERIOD;
-        end
+      waited = 0;
+      while ((result_phase ? result_ready_tb : ready_tb) !== 1'b1 && waited < 3*S_NUM + 4) begin
+        @(negedge clk_tb);
+        waited++;
+      end
+      if ((result_phase ? result_ready_tb : ready_tb) !== 1'b1)
+        $fatal(1, "* TESTCASE FAILED: MM ready timeout after %0d cycles", waited);
     end
-  endtask // init_sim
+  endtask // wait_ready
 
   
   //----------------------------------------------------------------
@@ -214,7 +222,10 @@ module ecc_montgomerymultiplier_tb #(
   // Perform a single Montgomery multiplication block test.
   //----------------------------------------------------------------
   task mm_single_block_test(input [7 : 0]   tc_number,
-                            input test_vector_t test_vector);
+                            input test_vector_t test_vector,
+                            output stat_t elapsed_cycles);
+    time launch_time;
+    logic [OPERAND_WIDTH-1:0] result_at_ready;
     begin
       $display("*** TC %0d mm test started.", tc_number);
       tc_ctr = tc_ctr + 1;
@@ -226,13 +237,15 @@ module ecc_montgomerymultiplier_tb #(
       //only need to pass the last few bits of n_prime
       n_prime_i_tb = test_vector.n_prime[WORD_WIDTH-1:0];
 
-      #CLK_PERIOD;
-
+      @(negedge clk_tb);
       start_i_tb = 1;
-      #CLK_PERIOD;
-
+      @(posedge clk_tb);
+      launch_time = $time;
+      @(negedge clk_tb);
       start_i_tb = 0;
-      wait_ready();
+      wait_ready(1'b1);
+      elapsed_cycles = ($time - launch_time) / CLK_PERIOD;
+      result_at_ready = p_o_tb;
 
       if (p_o_tb == test_vector.product)
         begin
@@ -248,6 +261,17 @@ module ecc_montgomerymultiplier_tb #(
 
           error_ctr = error_ctr + 1;
         end
+      wait_ready(1'b0);
+      if (($time - launch_time) / CLK_PERIOD != 3*S_NUM)
+        $fatal(1, "* TESTCASE FAILED: MM full pipeline latency changed");
+      if (p_o_tb !== result_at_ready)
+        $fatal(1, "* TESTCASE FAILED: MM result changed after result-ready");
+      for (int held_cycles = 1; held_cycles <= 4; held_cycles++) begin
+        @(negedge clk_tb);
+        if (p_o_tb !== result_at_ready)
+          $fatal(1, "* TESTCASE FAILED: MM TC %0d result changed %0d cycles after full-ready",
+                 tc_number, held_cycles);
+      end
     end
   endtask // mm_single_block_test
 
@@ -257,10 +281,24 @@ module ecc_montgomerymultiplier_tb #(
   // mm_test()
   //
   //----------------------------------------------------------------
-  task mm_test;        
+  task mm_test;
+    stat_t elapsed_cycles, minimum_cycles, maximum_cycles;
+    begin
+      minimum_cycles = '1;
+      maximum_cycles = '0;
       for (int i = 0; i < test_vector_cnt; i++) begin: test_vector_loop
-          mm_single_block_test(i, test_vectors[i]);
+          mm_single_block_test(i, test_vectors[i], elapsed_cycles);
+          if (elapsed_cycles < minimum_cycles)
+            minimum_cycles = elapsed_cycles;
+          if (elapsed_cycles > maximum_cycles)
+            maximum_cycles = elapsed_cycles;
       end
+      if (minimum_cycles != maximum_cycles)
+        $fatal(1, "* TESTCASE FAILED: MM latency varies across operands");
+      $display("ECC_MM_TIMING reduced=%0d operand_bits=%0d radix=%0d vectors=%0d min=%0d max=%0d",
+               reduce_i_tb, OPERAND_WIDTH, WORD_WIDTH, test_vector_cnt,
+               minimum_cycles, maximum_cycles);
+    end
   endtask
 
   task read_test_vectors(input string fname);
@@ -278,14 +316,16 @@ module ecc_montgomerymultiplier_tb #(
 
       fin = $fopen(fname, "r");
       if (fin == 0)
-          $error("Can't open file %s", fname);
+          $fatal(1, "* TESTCASE FAILED: Can't open file %s", fname);
       while (!$feof(fin)) begin
           rv = $fscanf(fin, "%h\n", val);
           if (rv != 1) begin
-              $error("Failed to read a matching string");
-              $fclose(fin);
-              $finish;
+              if ($feof(fin))
+                  break;
+              $fatal(1, "* TESTCASE FAILED: Malformed vector in %s", fname);
           end
+          if (test_vector_cnt >= TEST_VECTOR_NUM)
+              $fatal(1, "* TESTCASE FAILED: Too many vectors in %s", fname);
           // ATTN: the number of cases must be equal to 'values_per_test_vector'.
           // ATTN: the order of values must be the same as in gen_mm_test_vectors.py script.
           case (line_cnt % values_per_test_vector)
@@ -304,6 +344,9 @@ module ecc_montgomerymultiplier_tb #(
           line_cnt++;
       end
       $fclose(fin);
+      if (line_cnt != values_per_test_vector * TEST_VECTOR_NUM ||
+          test_vector_cnt != TEST_VECTOR_NUM)
+          $fatal(1, "* TESTCASE FAILED: Incomplete vector file %s", fname);
 
       $display("Read %0d test vectors from %s", test_vector_cnt, fname);
   endtask
@@ -328,6 +371,14 @@ module ecc_montgomerymultiplier_tb #(
       reset_dut();
 
       mm_test();
+
+      if ($test$plusargs("ECC_MM_RAW_CHECK")) begin
+        fname = $sformatf("mm_test_vectors_%0d_key_%0d_word_%0d_raw.hex",
+                         TEST_VECTOR_NUM, OPERAND_WIDTH, WORD_WIDTH);
+        read_test_vectors(fname);
+        reduce_i_tb = 0;
+        mm_test();
+      end
 
       display_test_results();
       

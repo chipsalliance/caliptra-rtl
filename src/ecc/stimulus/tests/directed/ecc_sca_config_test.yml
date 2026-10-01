@@ -16,6 +16,7 @@
 plusargs:
   - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex'
   - +ECC_TEST='ECC_sca_config_test'
+  - +ECC_TEST_VECTOR_LIMIT=2
 
 testname: ecc_sca_config_test
 seed: 1

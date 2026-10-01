@@ -1,0 +1,11 @@
+# SPDX-License-Identifier: Apache-2.0
+---
+plusargs:
+  - +ECC_TEST_VECTOR_FILE='${CALIPTRA_ROOT}/src/ecc/tb/test_vectors/ecc_drbg_mbedtls.hex'
+  - +ECC_TEST='ECC_invalid_point_test'
+  - +ECC_TEST_VECTOR_LIMIT=1
+  - +ECC_MAX_OP_CYCLES=500000
+  - +ECC_MAX_CYCLES=1000000
+
+testname: ecc_invalid_point_test
+seed: 1

@@ -122,6 +122,87 @@ module ecc_top_tb
 
   wire error_intr_tb;
   wire notif_intr_tb;
+  wire ecc_busy_tb;
+  int max_operation_cycles = 1000000;
+  int max_total_cycles = 50000000;
+  int unsigned operation_cycles = 0;
+  int unsigned total_cycles = 0;
+  int unsigned protected_ladder_steps = 0;
+  int unsigned last_operation_cycles = 0;
+  int unsigned last_ready_wait_cycles = 0;
+  int unsigned point_formula_issues = 0;
+  int reset_mm_phase = -1;
+  int reset_mm_mode = 0;
+  localparam MM_FULL_CYCLES =
+      3 * ((REG_SIZE + ecc_params_pkg::MULT_RADIX - 1) / ecc_params_pkg::MULT_RADIX + 1);
+  wire reset_mm_launch = dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.mult_start_s;
+  wire reset_mm_reduce = dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.reduce_i;
+  wire [REG_SIZE-1:0] reset_mm_modulus =
+      dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.n_i;
+  wire reset_mm_inflight = |dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_fau_i.i_MULTIPLIER.push_reg;
+  wire reset_mm_full_ready = dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.mult_accept_s;
+  wire reset_mm_result_ready = dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.mult_ready_s;
+
+  function automatic int unsigned read_reset_decimal(
+      input string arg_name, input int unsigned maximum);
+    string text;
+    int unsigned value, digit;
+    if (!$value$plusargs({arg_name, "=%s"}, text) || (text.len() == 0))
+      $fatal(1, "%s requires an unsigned decimal value", arg_name);
+    value = 0;
+    for (int i = 0; i < text.len(); i++) begin
+      if ((text[i] < 8'h30) || (text[i] > 8'h39))
+        $fatal(1, "%s requires decimal digits only, got '%s'", arg_name, text);
+      digit = text[i] - 8'h30;
+      if ((value > maximum / 10) ||
+          ((value == maximum / 10) && (digit > maximum % 10)))
+        $fatal(1, "%s must be in [0,%0d]", arg_name, maximum);
+      value = value * 10 + digit;
+    end
+    return value;
+  endfunction
+
+  initial begin
+    if ($test$plusargs("ECC_RESET_MM_PHASE"))
+      reset_mm_phase = read_reset_decimal("ECC_RESET_MM_PHASE", MM_FULL_CYCLES - 1);
+    if ($test$plusargs("ECC_RESET_MM_MODE")) begin
+      reset_mm_mode = read_reset_decimal("ECC_RESET_MM_MODE", 2);
+      if (reset_mm_phase < 0)
+        $fatal(1, "ECC_RESET_MM_MODE requires ECC_RESET_MM_PHASE");
+    end
+    if ($value$plusargs("ECC_MAX_OP_CYCLES=%d", max_operation_cycles) &&
+        (max_operation_cycles <= 0))
+      $fatal(1, "ECC_MAX_OP_CYCLES must be positive");
+    if ($value$plusargs("ECC_MAX_CYCLES=%d", max_total_cycles) &&
+        (max_total_cycles <= 0))
+      $fatal(1, "ECC_MAX_CYCLES must be positive");
+    $display("ECC watchdog: operation limit %0d cycles, total limit %0d cycles",
+             max_operation_cycles, max_total_cycles);
+  end
+
+  always @(posedge clk_tb) begin
+    total_cycles++;
+    if (reset_n_tb && dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.req_digit)
+      protected_ladder_steps++;
+    if (reset_n_tb &&
+        dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_pm_ctrl_i.instruction_issue &&
+        (dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_pm_ctrl_i.prog_instr_pipe2_addr inside {
+          [ecc_pm_uop_pkg::PA_S:ecc_pm_uop_pkg::PA_E],
+          [ecc_pm_uop_pkg::PD_S:ecc_pm_uop_pkg::PD_E],
+          [ecc_pm_uop_pkg::PD_PA_S:ecc_pm_uop_pkg::PD_PA_E],
+          [ecc_pm_uop_pkg::VER2_PA_S:ecc_pm_uop_pkg::VER2_PA_E]}))
+      point_formula_issues++;
+    if (!reset_n_tb || !ecc_busy_tb)
+      operation_cycles = 0;
+    else
+      operation_cycles++;
+    if (operation_cycles >= max_operation_cycles)
+      $fatal(1, "* TESTCASE FAILED: ECC operation exceeded %0d cycles",
+             max_operation_cycles);
+    if (total_cycles >= max_total_cycles)
+      $fatal(1, "* TESTCASE FAILED: ECC simulation exceeded %0d cycles",
+             max_total_cycles);
+  end
 
   //reg [31 : 0]  read_data;
   reg [31 : 0]  read_data;
@@ -143,8 +224,15 @@ module ecc_top_tb
       ecc_test_to_run = "default";
       $display("%m: Running default test = %s", ecc_test_to_run);
     end
+    case (ecc_test_to_run)
+      "default", "ECC_normal_test", "ECC_otf_reset_test",
+      "ECC_verify_only_test", "ECC_sca_config_test", "ECC_invalid_point_test": ;
+      default: $fatal(1, "* TESTCASE FAILED: unknown ECC_TEST=%s", ecc_test_to_run);
+    endcase
 
     ecc_test_vector_limit = (ecc_test_to_run == "ECC_verify_only_test") ? TEST_VECTOR_NUM : 10;
+    if (ecc_test_to_run == "ECC_invalid_point_test")
+      ecc_test_vector_limit = 1;
     if ($value$plusargs("ECC_TEST_VECTOR_LIMIT=%d", ecc_test_vector_limit)) begin
       if (ecc_test_vector_limit > TEST_VECTOR_NUM) begin
         ecc_test_vector_limit = TEST_VECTOR_NUM;
@@ -154,6 +242,8 @@ module ecc_top_tb
       end
       $display("%m: Running with ECC_TEST_VECTOR_LIMIT = %0d", ecc_test_vector_limit);
     end
+    if ((ecc_test_to_run == "ECC_invalid_point_test") && (ecc_test_vector_limit == 0))
+      $fatal(1, "* TESTCASE FAILED: invalid-point test requires a positive control vector");
   end
 
   //bind coverage file
@@ -188,7 +278,7 @@ module ecc_top_tb
              .kv_rd_resp(kv_rd_resp_tb),
              .kv_wr_resp(kv_wr_resp_tb),
              .pcr_signing_data(pcr_signing_data_tb),
-             .busy_o(),
+             .busy_o(ecc_busy_tb),
              .error_intr(error_intr_tb),
              .notif_intr(notif_intr_tb),
              .ocp_lock_in_progress(1'b0),
@@ -488,7 +578,9 @@ module ecc_top_tb
     operand_t       privkey;
     affn_point_t    pubkey;
     begin
+      start_time = cycle_ctr;
       wait_ready();
+      last_ready_wait_cycles = cycle_ctr - start_time;
 
       $display("*** TC %0d keygen test started.", tc_number);
       tc_ctr = tc_ctr + 1;
@@ -522,6 +614,7 @@ module ecc_top_tb
       trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
 
       end_time = cycle_ctr - start_time;
+      last_operation_cycles = end_time;
       $display("*** keygen test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", privkey);
       $display("pubkeyx    : 0x%96x", pubkey.x);
@@ -560,7 +653,9 @@ module ecc_top_tb
     operand_t       S;
     
     begin
+      start_time = cycle_ctr;
       wait_ready();
+      last_ready_wait_cycles = cycle_ctr - start_time;
 
       $display("*** TC %0d signing test started.", tc_number);
       tc_ctr = tc_ctr + 1;
@@ -590,6 +685,7 @@ module ecc_top_tb
       trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
 
       end_time = cycle_ctr - start_time;
+      last_operation_cycles = end_time;
       $display("*** signing test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkey);
 
@@ -740,6 +836,76 @@ module ecc_top_tb
         end
     end
   endtask // ecc_verify_negative_test
+
+  task ecc_invalid_point_test(input test_vector_t test_vector);
+    reg [31:0] status;
+    reg [REG_SIZE-1:0] result;
+    int unsigned start_issues;
+    int unsigned start_cycle;
+    bit rejected;
+    begin
+      if ((test_vector.pubkey.x >= PRIME) || (test_vector.pubkey.y >= PRIME) ||
+          (test_vector.pubkey.y == '0) || (point_formula_issues == 0))
+        $fatal(1, "* TESTCASE FAILED: invalid-point test requires a valid canonical KAT and an exercised formula monitor");
+
+      for (int shared = 0; shared < 2; shared++) begin
+        for (int point_case = 0; point_case < 2; point_case++) begin
+          reset_dut();
+          wait_ready();
+          tc_ctr++;
+          write_single_word(`ECC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,
+                            `ECC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK);
+          write_single_word(`ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,
+                            `ECC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK);
+          write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg);
+          // With valid nonzero Y, (X,0) is off-curve; (0,0) is also off-curve.
+          write_block(`ECC_REG_ECC_PUBKEY_X_0,
+                      point_case == 0 ? test_vector.pubkey.x : operand_t'('0));
+          write_block(`ECC_REG_ECC_PUBKEY_Y_0, '0);
+          write_block(`ECC_REG_ECC_SIGN_R_0, test_vector.R);
+          write_block(`ECC_REG_ECC_SIGN_S_0, test_vector.S);
+          write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkeyB);
+          write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
+
+          start_issues = point_formula_issues;
+          start_cycle = cycle_ctr;
+          trig_ECC(shared ? ECC_CMD_DH_SHARED : ECC_CMD_VERIFYING);
+          read_single_word(`ECC_REG_ECC_STATUS);
+          while (read_data[`ECC_REG_ECC_STATUS_READY_LOW] !== 1'b1)
+            read_single_word(`ECC_REG_ECC_STATUS);
+          #(2 * CLK_PERIOD);
+          read_single_word(`ECC_REG_ECC_STATUS);
+          status = read_data;
+          read_block(shared ? `ECC_REG_ECC_DH_SHARED_KEY_0 : `ECC_REG_ECC_VERIFY_R_0);
+          result = reg_read_data;
+
+          rejected = (error_intr_tb === 1'b1) &&
+                     (dut.ecc_dsa_ctrl_i.error_flag_reg === 1'b1) &&
+                     !$isunknown(dut.ecc_dsa_ctrl_i.pk_chk_reg) &&
+                     (dut.ecc_dsa_ctrl_i.pk_chk_reg != '0) &&
+                     (status[`ECC_REG_ECC_STATUS_READY_LOW] === 1'b1) &&
+                     (status[`ECC_REG_ECC_STATUS_VALID_LOW] === 1'b0) &&
+                     (status[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW] === 1'b0) &&
+                     (point_formula_issues == start_issues) &&
+                     (shared ? (result === '0) : (result === ~test_vector.R));
+          if (rejected) begin
+            $display("*** invalid point rejected: shared=%0d case=%0d cycles=%0d formula_issues=%0d",
+                     shared, point_case, cycle_ctr - start_cycle,
+                     point_formula_issues - start_issues);
+          end
+          else begin
+            error_ctr++;
+            $display("*** ERROR: invalid point not safely rejected: shared=%0d case=%0d status=%h error_intr=%b error_flag=%b pk_check_nonzero=%b formula_issues=%0d",
+                     shared, point_case, status, error_intr_tb,
+                     dut.ecc_dsa_ctrl_i.error_flag_reg,
+                     (dut.ecc_dsa_ctrl_i.pk_chk_reg != '0),
+                     point_formula_issues - start_issues);
+          end
+        end
+      end
+      reset_dut();
+    end
+  endtask
 
 
 
@@ -1188,12 +1354,68 @@ module ecc_top_tb
     end
   endtask // ecc_keygen_test
 
+  // IV controls countermeasure randomness, not the golden key/signature.
+  task ecc_sca_test(input int vector_index, input test_vector_t test_vector);
+    test_vector_t masked_vector;
+    int unsigned reference_cycles[3];
+    int unsigned start_cycle;
+    int unsigned start_steps;
+    int unsigned elapsed;
+    int unsigned steps;
+    begin
+      if (ecc_params_pkg::RND_SIZE != 192)
+        $fatal(1, "* TESTCASE FAILED: expected 192-bit scalar blinding");
+      masked_vector = test_vector;
+      for (int variation = 0; variation < 3; variation++) begin
+        case (variation)
+          0: masked_vector.IV = test_vector.IV;
+          1: masked_vector.IV = '0;
+          2: masked_vector.IV = '1;
+        endcase
+        for (int operation = 0; operation < 3; operation++) begin
+          start_cycle = cycle_ctr;
+          start_steps = protected_ladder_steps;
+          case (operation)
+            0: ecc_keygen_test(vector_index, masked_vector);
+            1: ecc_signing_test(vector_index, masked_vector);
+            2: ecc_DH_sharedkey_test(vector_index, masked_vector);
+          endcase
+          // Entry wait drains prior reset/zeroize, not the measured operation.
+          elapsed = last_operation_cycles;
+          if (cycle_ctr - start_cycle != elapsed + last_ready_wait_cycles) begin
+            $display("*** ERROR: SCA operation/entry-wait timing accounting mismatch.");
+            error_ctr++;
+          end
+          steps = protected_ladder_steps - start_steps;
+          if (steps != REG_SIZE + ecc_params_pkg::RND_SIZE) begin
+            $display("*** ERROR: SCA protected ladder has %0d steps, expected %0d.",
+                     steps, REG_SIZE + ecc_params_pkg::RND_SIZE);
+            error_ctr++;
+          end
+          if (variation == 0)
+            reference_cycles[operation] = elapsed;
+          else if (elapsed != reference_cycles[operation]) begin
+            $display("*** ERROR: SCA IV changed operation %0d timing: %0d vs %0d.",
+                     operation, elapsed, reference_cycles[operation]);
+            error_ctr++;
+          end
+          $display("*** SCA invariant vector=%0d iv=%0d op=%0d steps=%0d cycles=%0d entry_wait=%0d total_cycles=%0d",
+                   vector_index, variation, operation, steps, elapsed,
+                   last_ready_wait_cycles, cycle_ctr - start_cycle);
+        end
+      end
+    end
+  endtask
+
   //----------------------------------------------------------------
   // ecc_test()
   //
   //----------------------------------------------------------------
   task ecc_test();
     begin  
+      if ((reset_mm_phase >= 0) &&
+          ((ecc_test_to_run != "ECC_otf_reset_test") || (ecc_test_vector_limit <= 0)))
+        $fatal(1, "Active-MM reset requires ECC_otf_reset_test with at least one vector");
       for (int i = 0; i < ecc_test_vector_limit; i++) begin: test_vector_loop
         if ((ecc_test_to_run == "ECC_normal_test") || (ecc_test_to_run == "default")) begin
           ecc_keygen_test(i, test_vectors[i]);
@@ -1207,14 +1429,25 @@ module ecc_top_tb
         else if (ecc_test_to_run == "ECC_verify_only_test") begin
           ecc_verifying_test(i, test_vectors[i]);
         end
+        else if (ecc_test_to_run == "ECC_sca_config_test") begin
+          ecc_sca_test(i, test_vectors[i]);
+        end
+        else if (ecc_test_to_run == "ECC_invalid_point_test") begin
+          ecc_verifying_test(i, test_vectors[i]);
+          ecc_DH_sharedkey_test(i, test_vectors[i]);
+          ecc_invalid_point_test(test_vectors[i]);
+        end
       end
 
-      if (ecc_test_to_run != "ECC_verify_only_test") begin
+      if ((ecc_test_to_run != "ECC_verify_only_test") &&
+          (ecc_test_to_run != "ECC_invalid_point_test")) begin
         continuous_cmd_test(test_vectors[0]);
         zeroize_test(test_vectors[1]);
         ecc_verify_negative_test(test_vectors[2]);
         ecc_fault_test();
       end
+      if ((ecc_test_to_run == "ECC_normal_test") || (ecc_test_to_run == "default"))
+        ecc_invalid_point_test(test_vectors[0]);
     end
   endtask // ecc_test
 
@@ -1311,10 +1544,23 @@ module ecc_top_tb
       write_block(`ECC_REG_ECC_PRIVKEY_IN_0, test_vector.privkey);
       write_block(`ECC_REG_ECC_IV_0, test_vector.IV);
 
-      trig_ECC(ECC_CMD_SIGNING);
-      #(500 * CLK_PERIOD);
+      if ((reset_mm_phase >= 0) && (reset_mm_mode == 1)) begin
+        write_block(`ECC_REG_ECC_PUBKEY_X_0, test_vector.pubkey.x);
+        write_block(`ECC_REG_ECC_PUBKEY_Y_0, test_vector.pubkey.y);
+        write_block(`ECC_REG_ECC_SIGN_R_0, test_vector.R);
+        write_block(`ECC_REG_ECC_SIGN_S_0, test_vector.S);
+        trig_ECC(ECC_CMD_VERIFYING);
+      end
+      else
+        trig_ECC(ECC_CMD_SIGNING);
+      if (reset_mm_phase >= 0)
+        wait_for_active_mm_reset();
+      else
+        #(500 * CLK_PERIOD);
 
       reset_dut();
+      if (reset_mm_phase >= 0)
+        check_canceled_mm();
       wait_ready();
 
       read_block(`ECC_REG_ECC_SIGN_R_0);
@@ -1344,8 +1590,66 @@ module ecc_top_tb
 
           error_ctr = error_ctr + 1;
         end
+      if (reset_mm_phase >= 0) begin
+        ecc_signing_test(tc_number, test_vector);
+        $display("ECC_MM_RESET_RECOVERY mode=%0d phase=%0d", reset_mm_mode, reset_mm_phase);
+      end
     end
   endtask // ecc_onthefly_reset_test
+
+  task wait_for_active_mm_reset;
+    bit found;
+    int unsigned waited;
+    begin
+      found = 0;
+      waited = 0;
+      while (!found && (waited < max_operation_cycles)) begin
+        @(posedge clk_tb);
+        waited++;
+        if (reset_mm_launch === 1'b1) begin
+          case (reset_mm_mode)
+            0: found = (reset_mm_reduce === 1'b0) &&
+                       (reset_mm_modulus === ecc_params_pkg::PRIME);
+            1: found = (reset_mm_reduce === 1'b1) &&
+                       (reset_mm_modulus === ecc_params_pkg::PRIME);
+            2: found = (reset_mm_reduce === 1'b0) &&
+                       (reset_mm_modulus === ecc_params_pkg::GROUP_ORDER);
+            default: $fatal(1, "* TESTCASE FAILED: invalid active-MM reset mode");
+          endcase
+        end
+      end
+      if (!found)
+        $fatal(1, "* TESTCASE FAILED: no selected MM launch within %0d cycles", waited);
+      @(negedge clk_tb);
+      repeat (reset_mm_phase) @(negedge clk_tb);
+      if ((reset_mm_inflight !== 1'b1) || (reset_mm_full_ready !== 1'b0))
+        $fatal(1, "* TESTCASE FAILED: selected MM is not active at reset phase %0d", reset_mm_phase);
+      // Assert away from either clock edge, including just before full completion.
+      #1;
+      $display("ECC_MM_RESET_ACTIVE mode=%0d phase=%0d result_ready=%0b full_ready=%0b",
+               reset_mm_mode, reset_mm_phase, reset_mm_result_ready, reset_mm_full_ready);
+    end
+  endtask
+
+  task check_canceled_mm;
+    begin
+      if ((reset_mm_inflight !== 1'b0) ||
+          (dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_pm_ctrl_i.mult_pending !== 1'b0) ||
+          (dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_pm_ctrl_i.mult_busy !== 1'b0) ||
+          (dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_pm_ctrl_i.mult_launch_pending !== 1'b0))
+        $fatal(1, "* TESTCASE FAILED: reset did not cancel multiplier ownership/timing state");
+      // The legacy full-ready detector settles after reset release.
+      repeat (2) @(negedge clk_tb);
+      repeat (MM_FULL_CYCLES + 2) begin
+        @(negedge clk_tb);
+        if ((reset_mm_launch !== 1'b0) || (reset_mm_inflight !== 1'b0) ||
+            (reset_mm_full_ready !== 1'b0) || (reset_mm_result_ready !== 1'b0) ||
+            (dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.ecc_instr_s.opcode.mult_we !== 1'b0))
+          $fatal(1, "* TESTCASE FAILED: canceled MM produced a stale launch/result/store");
+      end
+      $display("ECC_MM_RESET_CANCELED mode=%0d phase=%0d", reset_mm_mode, reset_mm_phase);
+    end
+  endtask
 
 
 
@@ -1361,7 +1665,9 @@ module ecc_top_tb
     operand_t       DH_sharedkey;
     
     begin
+      start_time = cycle_ctr;
       wait_ready();
+      last_ready_wait_cycles = cycle_ctr - start_time;
 
       $display("*** TC %0d DH shared key test started.", tc_number);
       tc_ctr = tc_ctr + 1;
@@ -1389,6 +1695,7 @@ module ecc_top_tb
       trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
 
       end_time = cycle_ctr - start_time;
+      last_operation_cycles = end_time;
       $display("*** DH shared key test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkeyB);
 

@@ -1,0 +1,9 @@
+---
+seed: 1
+plusargs:
+  - +UVM_TESTNAME=ECC_normal_test
+  - +ECC_TEST_ITERATIONS=1
+  - +ECC_OPERATION=keygen
+  - +ECC_MAX_OP_CYCLES=500000
+  - +ECC_MAX_CYCLES=600000
+testname: ECC_shadow_smoke_test

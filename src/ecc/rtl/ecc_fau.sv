@@ -63,6 +63,7 @@ module ecc_fau #(
 
     logic                   add_ready_o;
     logic                   mult_ready_s;
+    logic                   mult_result_ready_s;
     logic                   mult_accept_s;
 
     logic                   ready_garbage_bit;
@@ -92,7 +93,8 @@ module ecc_fau #(
         .reduce_i(reduce_i),
         .p_o(mult_res_s),
         .accept_o(mult_accept_s),
-        .ready_o(mult_ready_s)
+        .ready_o(mult_ready_s),
+        .result_ready_o(mult_result_ready_s)
     );
 
 
@@ -166,7 +168,7 @@ module ecc_fau #(
     assign mult_res_o   = mult_res_s;
     assign mult_start_o  = mult_start_edge;
     assign mult_accept_o = mult_accept_s;
-    assign mult_ready_o = mult_ready_s;
+    assign mult_ready_o = mult_result_ready_s;
     assign add_res_o    = add_res_s;
 
 endmodule
