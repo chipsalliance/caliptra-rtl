@@ -1144,7 +1144,8 @@ import kv_defines_pkg::*;
                     // Final transfer and read out of AES is done so go into
                     // AES_ERROR or AES_DONE state
                     if (aes_to_axi_last_transfer) begin
-                        if(aes_error) begin
+                        // Include an error on this final read before the sticky flag updates.
+                        if(aes_error || (aes_err && aes_req_dv)) begin
                             aes_fsm_ns = AES_ERROR;
                         end else begin
                             aes_fsm_ns = AES_DONE;
@@ -1518,6 +1519,8 @@ import kv_defines_pkg::*;
     `CALIPTRA_ASSERT(AXI_DMA_MIN_WR_CRED, !((wr_credits < 1) && wr_req_hshake), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_RST_WR_CRED, (ctrl_fsm_ps == DMA_DONE) |-> (wr_credits == 0), clk, !rst_n)
     // AES FSM sync with DMA FSM
+    `CALIPTRA_ASSERT(AXI_DMA_AES_FINAL_READ_ERR,
+        (aes_fsm_ps == AES_READ_OUTPUT && aes_cif_read_block_done && aes_to_axi_last_transfer && (aes_error || (aes_err && aes_req_dv))) |=> (aes_fsm_ps == AES_ERROR), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_DONE_SYNC,    (ctrl_fsm_ps == DMA_DONE && hwif_out.ctrl.aes_mode_en.value) |-> (aes_fsm_ps == AES_DONE || aes_fsm_ps == AES_IDLE), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_ERR_SYNC,     (ctrl_fsm_ps == DMA_ERROR && hwif_out.ctrl.aes_mode_en.value && !cmd_parse_error) |-> (aes_fsm_ps == AES_ERROR), clk, !rst_n)
     `CALIPTRA_ASSERT(AXI_DMA_AES_FSM_IDLE_SYNC,    (aes_fsm_ps != AES_IDLE) |-> (ctrl_fsm_ps != DMA_IDLE), clk, !rst_n)
