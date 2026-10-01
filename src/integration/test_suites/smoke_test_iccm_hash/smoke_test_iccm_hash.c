@@ -58,6 +58,32 @@ void main(void) {
     // Write test data to ICCM (both modes -- ICCM writes always work)
     VPRINTF(LOW, "Writing test data to ICCM...\n");
     volatile uint32_t *iccm = (volatile uint32_t *)RV_ICCM_SADR;
+
+    // Lock-gating negative check (sha512_acc_iccm_hash.sv: iccm_hash_trigger gated
+    // by ~lock_value): the SHA acc boots LOCKED (reset-default LOCK=1). Write
+    // "poison" data to ICCM BEFORE releasing the lock. The ICCM-write snoop must
+    // NOT arm the hash while the accelerator is locked, so these writes must be
+    // excluded from the measurement. If the ~lock_value gate were broken, they
+    // would be folded into the hashed write-stream and PCR4 would mismatch
+    // expected_pcr4 below (which is SHA-384 of the {1,2,3,4} stream only).
+    iccm[0] = 0xBADC0DE0;
+    iccm[1] = 0xBADC0DE1;
+    iccm[2] = 0xBADC0DE2;
+    iccm[3] = 0xBADC0DE3;
+
+    // Ordering barrier: the ICCM-write snoop arms the hash only while the SHA acc
+    // lock is FREE, so every poison write above must be committed on the ICCM
+    // write bus (and snooped-while-LOCKED, i.e. ignored) BEFORE the lock-clear
+    // store below takes effect. Without this, the last poison write races the
+    // lock-clear MMIO write (different LSU targets/latencies) and can be captured
+    // into the hashed stream -> PCR4 mismatch. FENCE drains the ICCM stores before
+    // the unlock store is issued, closing the race.
+    __asm__ volatile ("fence");
+
+    // Free the SHA acc reset-default lock (LOCK resets to 1, held for the SHA acc
+    // KAT) so the ICCM-write snoop can arm the hash (it only arms while the lock
+    // is free). Write-1 clears the lock (woclr); do not read it back or it re-locks.
+    lsu_write_32(CLP_SHA512_ACC_CSR_LOCK, SHA512_ACC_CSR_LOCK_LOCK_MASK);
     iccm[0] = 0x00000001;
     iccm[1] = 0x00000002;
     iccm[2] = 0x00000003;

@@ -3635,7 +3635,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.lock = new("lock");
-            this.lock.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            this.lock.configure(this, 1, 0, "W1S", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(lock_bit_cg[bt]) lock_bit_cg[bt] = new();
             end

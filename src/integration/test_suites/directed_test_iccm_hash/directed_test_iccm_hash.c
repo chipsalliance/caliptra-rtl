@@ -285,9 +285,11 @@ void main(void) {
         VPRINTF(LOW, "PCR4 confirmed cleared\n");
     }
 
-    // HW auto-arms ICCM hash on the first ICCM write (or on iccm_lock for
-    // the zero-length case), so no SHA acc lock acquire or MODE write is
-    // needed from firmware.
+    // Free the SHA acc reset-default lock so the ICCM-write snoop can arm the
+    // hash (LOCK resets to 1 for the KAT and re-locks after each fw_update_reset;
+    // the hash only arms while the lock is free). Done every iteration before the
+    // ICCM writes. No other FW-side arming or MODE write is needed.
+    free_sha_acc_lock();
 
     if (iteration == 0) {
         // Sequence 1: 64 words (256 bytes, spans 2 SHA-384 blocks)

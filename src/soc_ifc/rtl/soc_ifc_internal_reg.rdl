@@ -282,10 +282,17 @@ reg {
             the four ICCM address registers cannot be modified until the next reset.
             Setting this register also arms the boot flow monitor -- any ICCM fetch
             before this lock is set triggers a fatal error.
+            [br][br]This lock is hardware-cleared at the end of every reset flow,
+            including a firmware-update (hitless) reset, via the same iccm_unlock
+            pulse used for internal_iccm_lock. A hitless update only asserts
+            cptra_uc_rst_b (not cptra_noncore_rst_b), so without this hardware
+            clear the lock would persist and freeze stale ICCM region boundaries.
+            ROM must therefore reprogram all four ICCM region address registers and
+            re-set this lock on every boot, including after a hitless update.
             [br]Caliptra Access: RW1S
             [br]SOC Access:      RO (writes rejected via swwel)";
 
-    field {desc = "Lock bit for ICCM region registers. Write 1 to set -- cannot be cleared by SW."; hw = r; sw = rw; onwrite = woset; swwel = soc_req; resetsignal = cptra_rst_b;} lock = 1'b0;
+    field {desc = "Lock bit for ICCM region registers. Write 1 to set -- cannot be cleared by SW. Hardware-cleared at end of every reset flow (incl. hitless update) so ROM can reprogram and re-lock."; hw = r; hwclr = true; sw = rw; onwrite = woset; precedence = hw; swwel = soc_req; resetsignal = cptra_rst_b;} lock = 1'b0;
 } internal_iccm_region_lock;
 
 reg {
