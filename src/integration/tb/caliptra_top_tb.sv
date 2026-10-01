@@ -64,6 +64,9 @@ module caliptra_top_tb (
     
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key;
 
+    logic [`CLP_OBF_UDS_DWORDS-1:0][31:0]          cptra_obf_uds_seed;
+    logic [`CLP_OBF_FE_DWORDS-1:0][31:0]           cptra_obf_field_entropy;
+
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
     logic [0:OCP_LOCK_HEK_NUM_DWORDS-1][31:0]      cptra_hek_rand;
@@ -164,6 +167,8 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 
     .cptra_obf_key      (cptra_obf_key   ),
     .cptra_csr_hmac_key (cptra_csr_hmac_key),
+    .cptra_obf_uds_seed      (cptra_obf_uds_seed     ),
+    .cptra_obf_field_entropy (cptra_obf_field_entropy),
 
     .strap_ss_key_release_key_size,
     .strap_ss_key_release_base_addr,
@@ -230,10 +235,10 @@ caliptra_top caliptra_top_dut (
     .clk                        (core_clk),
 
     .cptra_obf_key              (cptra_obf_key),
-    .cptra_obf_uds_seed_vld     ('0), //validated at caliptra-ss
-    .cptra_obf_uds_seed         ('0), //validated at caliptra-ss
-    .cptra_obf_field_entropy_vld('0), //validated at caliptra-ss
-    .cptra_obf_field_entropy    ('0), //validated at caliptra-ss
+    .cptra_obf_uds_seed_vld     (1'b1),
+    .cptra_obf_uds_seed         (cptra_obf_uds_seed),
+    .cptra_obf_field_entropy_vld(1'b1),
+    .cptra_obf_field_entropy    (cptra_obf_field_entropy),
     .cptra_csr_hmac_key         (cptra_csr_hmac_key),
 
     .jtag_tck(jtag_tck),

@@ -763,14 +763,22 @@ end
 // Make the relevant fuses sticky on fuse_wr_done
 always_comb begin
     for (int i=0; i < `CLP_OBF_UDS_DWORDS; i++) begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = 1'b1;
+`else
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+`endif
     end
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.fuse_vendor_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
 
     for (int i=0; i < `CLP_OBF_FE_DWORDS; i++) begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = 1'b1;
+`else
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+`endif
     end
 
     for (int i=0; i<24; i++) begin
