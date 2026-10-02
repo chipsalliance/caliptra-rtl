@@ -40,8 +40,15 @@ SECTIONS {
   /* ------- DCCM-resident RW data + BSS (VMA == LMA) -------
    * Backdoor-loaded via dccm.hex; no crt0 copy. The .bss/.sbss inputs are
    * folded in here (with =0x0000 fill) so they are zero-initialized by the
-   * DCCM preload rather than copied from ROM at reset. */
-  _data_vma_start = 0x50000000;
+   * DCCM preload rather than copied from ROM at reset.
+   *
+   * Data starts at 0x5002_0000 (the UPPER half of DCCM). The LOWER half
+   * (0x5000_0000..0x5001_ffff) is deliberately left free: the integration /
+   * validation ROM copies remote firmware images (FMC/RT, whose own .data is
+   * linked at 0x5000_0000) into the lower half via the mailbox FW flow. Placing
+   * this firmware's data/stack in the lower half would be overwritten by that
+   * copy and corrupt the ROM mid-transfer. Do not move this below 0x5002_0000. */
+  _data_vma_start = 0x50020000;
   .data _data_vma_start : AT(_data_vma_start) {
       *(.dccm*)
       *(.*data) *(.*data.*)
