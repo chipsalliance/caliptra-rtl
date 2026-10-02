@@ -307,7 +307,6 @@ import caliptra_top_tb_pkg::*; #(
         m_axi_bfm_if.rst_mgr();
 
 `ifndef VERILATOR
-        // Legacy VCD dump (+dumpon). Prefer +fsdbon in caliptra_top_tb.sv for FSDB/Verdi.
         if($test$plusargs("dumpon")) $dumpvars;
 `endif
 
