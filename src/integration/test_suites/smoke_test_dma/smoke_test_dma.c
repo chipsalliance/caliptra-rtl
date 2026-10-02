@@ -47,10 +47,10 @@ enum tb_fifo_mode {
     FIFO_AUTO_WRITE_OFF = 0x8d,
     FIFO_CLEAR          = 0x8e,
     RAND_DELAY_TOGGLE   = 0x8f,
-    FIFO_RD_ERR_INJ_ON  = 0x527f,
-    FIFO_WR_ERR_INJ_ON  = 0x537f,
-    FIFO_RD_ERR_INJ_OFF = 0x547f,
-    FIFO_WR_ERR_INJ_OFF = 0x557f,
+    FIFO_RD_ERR_INJ_ON  = 0x52a2,
+    FIFO_WR_ERR_INJ_ON  = 0x53a2,
+    FIFO_RD_ERR_INJ_OFF = 0x54a2,
+    FIFO_WR_ERR_INJ_OFF = 0x55a2,
 };
 
 
@@ -137,6 +137,7 @@ void main(void) {
         uint32_t read_payload[16];
         uint32_t mbox_read_payload[17];
         uint32_t fixed_read_payload[17];
+        uint32_t timeout = 10000;
 
         VPRINTF(LOW, "----------------------------------\nSmoke Test AXI DMA  !!\n----------------------------------\n");
         rst_count++;
@@ -460,8 +461,13 @@ void main(void) {
             reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
         }
 
-        if ((cptra_intr_rcv.soc_ifc_error & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_LOCK_STS_MASK) == 0) {
-            VPRINTF(ERROR, "Transaction didn't cause an error!\n");
+        // Wait for the mailbox lock error interrupt
+        timeout = 10000;
+        while (((cptra_intr_rcv.soc_ifc_error & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_MBOX_LOCK_STS_MASK) == 0) && (timeout > 0)) {
+            timeout--;
+        }
+        if (timeout == 0) {
+            VPRINTF(ERROR, "Transaction didn't cause an error (timeout)!\n");
             fail = 1;
         }
 
@@ -480,8 +486,13 @@ void main(void) {
         }
         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
 
-        if ((cptra_intr_rcv.soc_ifc_error & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_RD_STS_MASK) == 0) {
-            VPRINTF(ERROR, "Transaction didn't cause an error!\n");
+        // Wait for the AXI read error interrupt
+        timeout = 10000;
+        while (((cptra_intr_rcv.soc_ifc_error & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_RD_STS_MASK) == 0) && (timeout > 0)) {
+            timeout--;
+        }
+        if (timeout == 0) {
+            VPRINTF(ERROR, "Transaction didn't cause an error (timeout)!\n");
             fail = 1;
         }
 
@@ -506,8 +517,13 @@ void main(void) {
         }
         lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
 
-        if ((cptra_intr_rcv.soc_ifc_error & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_WR_STS_MASK) == 0) {
-            VPRINTF(ERROR, "Transaction didn't cause an error!\n");
+        // Wait for the AXI write error interrupt
+        timeout = 10000;
+        while (((cptra_intr_rcv.soc_ifc_error & AXI_DMA_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_AXI_WR_STS_MASK) == 0) && (timeout > 0)) {
+            timeout--;
+        }
+        if (timeout == 0) {
+            VPRINTF(ERROR, "Transaction didn't cause an error (timeout)!\n");
             fail = 1;
         }
 
