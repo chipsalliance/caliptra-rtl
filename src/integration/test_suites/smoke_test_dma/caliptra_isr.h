@@ -305,6 +305,13 @@ inline void service_axi_dma_notif_intr() {
         SEND_STDOUT_CTRL(0x1);
         while(1);
     }
+    reg = (uint32_t *) (CLP_AXI_DMA_REG_STATUS0);
+    if ((sts & AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_TXN_DONE_STS_MASK) &&
+        (*reg & AXI_DMA_REG_STATUS0_ERROR_MASK)) {
+        VPRINTF(LOW,"TXN_DONE in error state, flushing DMA ctrl to avoid loop\n");
+        reg = (uint32_t *) (CLP_AXI_DMA_REG_CTRL);
+        *reg = AXI_DMA_REG_CTRL_FLUSH_MASK;
+    }
 }
 
 
