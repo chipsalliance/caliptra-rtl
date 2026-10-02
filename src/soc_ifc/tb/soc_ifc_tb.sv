@@ -850,11 +850,11 @@ module soc_ifc_tb
       //                256'he1dd72419beccddff77c722d992cdcc87e9c7486f56ab406ea608d8c6aeb060c,
       //                256'h64cf2785ad1a159147567e39e303370da445247526d95942bf4d7e88057178b0};
       cptra_uds_tb = 512'hb32e2b171b63827034ebb0d1909f7ef1d51c5f82c1bb9bc26bc4ac4dccdee8357dca6154c2510ae1c87b1b422b02b621bb06cac280023894fcff3406af08ee9b;
-      cptra_uds_vld_tb = 1'b1;
+      cptra_uds_vld_tb = subsystem_mode_tb;
       
       //Key for FE
       cptra_fe_tb = 256'he4046d05385ab789c6a72866e08350f93f583e2a005ca0faecc32b5cfc323d46;
-      cptra_fe_vld_tb = 1'b1;
+      cptra_fe_vld_tb = subsystem_mode_tb;
 
       // SS Straps
       ss_debug_intent_tb = 1'b0;
