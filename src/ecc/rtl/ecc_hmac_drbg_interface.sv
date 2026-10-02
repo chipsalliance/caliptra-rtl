@@ -43,8 +43,6 @@
 //                  There is NO RESEED process.
 //
 //======================================================================
-import hmac_param_pkg::*;
-
 module ecc_hmac_drbg_interface#(
     parameter                  REG_SIZE       = 384,
     parameter [REG_SIZE-1 : 0] GROUP_ORDER    = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973
@@ -70,6 +68,8 @@ module ecc_hmac_drbg_interface#(
     output wire  [REG_SIZE-1 : 0]   masking_rnd,
     output wire  [REG_SIZE-1 : 0]   drbg
     );
+
+    import hmac_param_pkg::*;
 
     //----------------------------------------------------------------
     // Registers including update variables and write enable.
