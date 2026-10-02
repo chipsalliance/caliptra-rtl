@@ -64,6 +64,36 @@ package sha3_reg_uvm;
         endfunction : build
     endclass : sha3_reg__SHA3_VERSION
 
+    // Reg - sha3_reg::SHA3_CTRL
+    class sha3_reg__SHA3_CTRL extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        sha3_reg__SHA3_CTRL_bit_cg ZEROIZE_bit_cg[1];
+        sha3_reg__SHA3_CTRL_fld_cg fld_cg;
+        rand uvm_reg_field ZEROIZE;
+
+        function new(string name = "sha3_reg__SHA3_CTRL");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.ZEROIZE = new("ZEROIZE");
+            this.ZEROIZE.configure(this, 1, 0, "WO", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(ZEROIZE_bit_cg[bt]) ZEROIZE_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : sha3_reg__SHA3_CTRL
+
     // Reg - sha3_reg::ALERT_TEST
     class sha3_reg__ALERT_TEST extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -1101,6 +1131,7 @@ package sha3_reg_uvm;
     class sha3_reg extends uvm_reg_block;
         rand sha3_reg__SHA3_NAME SHA3_NAME[2];
         rand sha3_reg__SHA3_VERSION SHA3_VERSION[2];
+        rand sha3_reg__SHA3_CTRL SHA3_CTRL;
         rand sha3_reg__ALERT_TEST ALERT_TEST;
         rand sha3_reg__CFG_REGWEN CFG_REGWEN;
         rand sha3_reg__CFG_SHADOWED CFG_SHADOWED;
@@ -1131,6 +1162,11 @@ package sha3_reg_uvm;
                 this.SHA3_VERSION[i0].build();
                 this.default_map.add_reg(this.SHA3_VERSION[i0], 'h8 + i0*'h4);
             end
+            this.SHA3_CTRL = new("SHA3_CTRL");
+            this.SHA3_CTRL.configure(this);
+
+            this.SHA3_CTRL.build();
+            this.default_map.add_reg(this.SHA3_CTRL, 'h10);
             this.ALERT_TEST = new("ALERT_TEST");
             this.ALERT_TEST.configure(this);
 

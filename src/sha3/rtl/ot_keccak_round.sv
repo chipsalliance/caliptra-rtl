@@ -93,7 +93,9 @@ module ot_keccak_round
   //                     permitted window
   output logic             rst_storage_error_o,
 
-  input  mubi4_t clear_i     // Clear internal state to '0
+  input  mubi4_t clear_i,    // Clear internal state to '0
+
+  input          zeroize_i   // Clear internal state to '0 and return to Idle in any state
 );
 
   import ot_sha3_pkg::*;
@@ -400,6 +402,14 @@ module ot_keccak_round
     if (lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i)) begin
       keccak_st_d = KeccakStTerminalError;
     end
+
+    // Zeroize has the highest priority.
+    // Abort any round in progress and return to Idle.
+    if (zeroize_i) begin
+      keccak_st_d = KeccakStIdle;
+
+      complete_d = 1'b 0;
+    end
   end
 
   // When taking the lower lane halves in, the upper lane halves are output and
@@ -466,6 +476,8 @@ module ot_keccak_round
   logic [Width-1:0] storage_d [Share];
   always_ff @(posedge clk_i or negedge rst_n) begin
     if (!rst_n) begin
+      storage <= '{default:'0};
+    end else if (zeroize_i) begin
       storage <= '{default:'0};
     end else if (rst_storage) begin
       storage <= '{default:'0};
@@ -553,12 +565,15 @@ module ot_keccak_round
   // Round number
   // This primitive is used to place a hardened counter
   // SEC_CM: CTR.REDUN
+  logic clr_rnd_num;
+  assign clr_rnd_num = rst_rnd_num || zeroize_i;
+
   caliptra_prim_count #(
     .Width(RndW)
   ) u_round_count (
     .clk_i,
     .rst_ni,
-    .clr_i(rst_rnd_num),
+    .clr_i(clr_rnd_num),
     .set_i(1'b0),
     .set_cnt_i('0),
     .incr_en_i(inc_rnd_num),

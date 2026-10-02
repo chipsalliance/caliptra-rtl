@@ -1048,6 +1048,7 @@ In the current use cases of the SHA3 HW IP, either (a) messages are not consider
 - Support arbitrary output length for SHAKE, cSHAKE
 - Support customization input string S, and function-name N up to 36 bytes total
 - 64b x 10 depth Message FIFO
+- Zeroize through the `SHA3_CTRL.ZEROIZE` register and on debug/scan mode switch
 - Performance (at 100 MHz):
   - SHA3-224: 2.93 B/cycle, 2.34 Gbit/s - 1.19 B/cycle, 952 Mbit/s (DOM)
   - SHA3-512: 1.47 B/cycle, 1.18 Gbit/s - 0.59 B/cycle, 472 Mbit/s (DOM)
@@ -1179,6 +1180,25 @@ The software should check `STATUS.squeeze` register field for the readiness of `
 
 After the software reads all the digest values, it issues Done command to `CMD` register to clear the internal states.
 Done command clears the Keccak state, FSM in SHA3, and a few internal variables.
+
+#### Zeroize
+
+Writing 1 to `SHA3_CTRL.ZEROIZE` clears all message and digest data and aborts any operation in progress, in any state.
+SHA3 is also zeroized on debug lock/unlock, scan mode and lifecycle change.
+While a Caliptra fatal error is asserted, SHA3 is held in zeroize.
+Each register is cleared synchronously in the zeroize cycle.
+
+Zeroize clears:
+- the Keccak state, the padding buffer and the message FIFO
+- the `STATE` read data, including the copy held in the TL-UL adapter
+- the SHA3 FSMs, the internal counters and any pending command, the engine returns to idle
+
+Bus transactions in flight complete normally.
+A `STATE` read in the zeroize cycle returns 0.
+Zeroize has precedence over the terminal error state and returns the SHA3 FSMs to idle.
+The FSMs only return to the terminal error state if the escalation signal is still asserted.
+
+After zeroize, the software must wait for `STATUS.sha3_idle` to start a new operation with the Start command.
 
 #### Endianness
 

@@ -1931,6 +1931,7 @@
 `define CLP_SHA3_SHA3_NAME_1                                                                        (32'h10041004)
 `define CLP_SHA3_SHA3_VERSION_0                                                                     (32'h10041008)
 `define CLP_SHA3_SHA3_VERSION_1                                                                     (32'h1004100c)
+`define CLP_SHA3_SHA3_CTRL                                                                          (32'h10041010)
 `define CLP_SHA3_ALERT_TEST                                                                         (32'h1004101c)
 `define CLP_SHA3_CFG_REGWEN                                                                         (32'h10041020)
 `define CLP_SHA3_CFG_SHADOWED                                                                       (32'h10041024)
