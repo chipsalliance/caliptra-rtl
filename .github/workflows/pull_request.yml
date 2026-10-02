@@ -12,6 +12,14 @@ jobs:
   # Call auxiliary workflows
   pre_run:
     uses: ./.github/workflows/pre-run-check.yml
+  ascii_check:
+    name: ASCII Check (C test suites)
+    runs-on: ubuntu-22.04
+    steps:
+      - name: Checkout RTL repo
+        uses: actions/checkout@v4
+      - name: Check test-suite sources are ASCII [0x06-0x7E]
+        run: python3 .github/scripts/check_ascii.py
   verilator:
     uses: ./.github/workflows/build-test-verilator.yml
     needs: pre_run
@@ -34,7 +42,7 @@ jobs:
   post_run:
     name: Call Post Run Final
     runs-on: ubuntu-22.04
-    needs: [pre_run, verilator, interactive_dbg, doc_gen]
+    needs: [pre_run, verilator, interactive_dbg, doc_gen, ascii_check]
     # Force to run even if the prerequisites are skipped for any reason
     if: ${{ !cancelled() }}
     steps:

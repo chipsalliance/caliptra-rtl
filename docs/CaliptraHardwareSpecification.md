@@ -210,7 +210,7 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 
 ### Fault tolerance and FI hardening
 
-The Caliptra VeeR EL2 configuration enables several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep detection is controlled by the subsystem and observable through a read-only status bit, and the DCCM write-readback feature exposes a runtime firmware control; both are described below.
+The Caliptra VeeR EL2 configuration provides several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep (DCLS) detection is enabled in this release; it is controlled by the subsystem and observable through a read-only status bit. The **DCCM write-readback** and **DCCM / ICCM address-XOR integrity** features are **disabled in this release** until the features mature - they are compiled out of the delivered configuration and are documented below for reference. All three are described below.
 
 #### Dual-core lockstep (DCLS)
 
@@ -222,17 +222,21 @@ While detection is enabled, a detected mismatch asserts [CPTRA_HW_ERROR_FATAL](h
 
 #### DCCM write-readback
 
+> **Disabled in this release:** the DCCM write-readback feature is compiled out of the delivered core configuration (`RV_DCCM_WR_READBACK` is not set) and is inactive until the feature matures. The description below applies when the feature is re-enabled in a future release.
+
 The DCCM store path is protected by a write-readback check (enabled by `RV_DCCM_WR_READBACK`). After a store commits to the DCCM, the hardware reads the target location back and compares it against the data that was intended to be written; a mismatch indicates the store was corrupted (for example, by a fault injected on the write datapath) and is reported as a fault.
 
-The write-readback check is *enabled out of reset*. It can be disabled at runtime through bit [7] of the microarchitectural feature-disable CSR (`MFDC`, `dec_tlu_dccm_wr_readback_disable`), which is internal to the core and accessible only to code running on the RISC-V core. The core does not take an internal trap on the mismatch; the fault is reported solely through the exported error pin described below.
+When compiled in, the write-readback check is *enabled out of reset*. It can be disabled at runtime through bit [7] of the microarchitectural feature-disable CSR (`MFDC`, `dec_tlu_dccm_wr_readback_disable`), which is internal to the core and accessible only to code running on the RISC-V core. The core does not take an internal trap on the mismatch; the fault is reported solely through the exported error pin described below.
 
 A detected mismatch asserts [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL)`.dccm_wr_readback_err` (bit [8]; see [Error register summary](#error-register-summary)) and raises the `cptra_error_fatal` interrupt to the SoC. The status bit and the interrupt clear independently: the bit is RW1C, so Caliptra firmware or the SoC can clear it, but its reset is `cptra_pwrgood`, so it survives a warm Caliptra reset. The interrupt has no clear mechanism by design — clearing the status bit does not deassert it, and it deasserts only on a Caliptra reset. The interrupt assertion can be masked by firmware via [internal_hw_error_fatal_mask](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.internal_hw_error_fatal_mask)`.mask_dccm_wr_readback_err`; masking suppresses only the interrupt output, not the sticky status bit.
 
 #### DCCM / ICCM address-XOR integrity
 
+> **Disabled in this release:** the DCCM/ICCM address-XOR integrity scheme is compiled out of the delivered core configuration (`RV_DCCM_ADDR_XOR` and `RV_ICCM_ADDR_XOR` are not set) and is inactive until the feature matures. The description below applies when the feature is re-enabled in a future release.
+
 The core's tightly-coupled memories are protected by an address-XOR integrity scheme (enabled by `RV_DCCM_ADDR_XOR` and `RV_ICCM_ADDR_XOR`). On a write, the replicated word address is XOR-folded into the stored data bits before the ECC codeword is formed; on a read, the same address is XOR-ed back out before the ECC check. When the read address matches the address used at write time, the original data is recovered and the ECC check passes. If a fault causes an access to resolve to the wrong line (for example, an address-decode glitch), the recovered data is garbled and the existing ECC logic flags it as an uncorrectable error — converting a silent mis-address into a detectable fault. Such errors surface through the standard uncorrectable-ECC reporting path (`CPTRA_HW_ERROR_FATAL.dccm_ecc_unc` for DCCM, `iccm_ecc_unc` for ICCM).
 
-> **Backdoor-access note:** any access to DCCM/ICCM that bypasses the core's normal datapath (testbench preload, external loader, debug read/write, memory dump) must apply the address-XOR itself - XOR the data with the replicated word address on write, and de-XOR it on read.
+> **Backdoor-access note:** while this feature is enabled, any access to DCCM/ICCM that bypasses the core's normal datapath (testbench preload, external loader, debug read/write, memory dump) must apply the address-XOR itself - XOR the data with the replicated word address on write, and de-XOR it on read.
 
 ## Watchdog timer
 

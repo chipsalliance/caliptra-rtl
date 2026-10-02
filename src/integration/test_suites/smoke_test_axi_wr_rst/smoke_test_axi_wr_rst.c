@@ -15,6 +15,7 @@
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
+#include "riscv_hw_if.h"
 #include <stdint.h>
 #include "printf.h"
 
@@ -28,7 +29,24 @@ enum printf_verbosity verbosity_g = HIGH;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+// Value the SoC BFM writes to CPTRA_FW_EXTENDED_ERROR_INFO_0 while the core is
+// held in reset (see caliptra_top_tb_soc_bfm.sv, +SOC_WRITE_RST). The register
+// is reset only on cptra_pwrgood, so the value survives the noncore reset
+// deassertion and is observable here in firmware.
+#define SOC_WR_RST_EXPECTED 0xBAADB000
+
 void main(void) {
-    // The test is fully executed during the boot stage in the testbench
-    while(1);
+    VPRINTF(LOW, "----------------------------------\nSoC Write Under Reset Test  !!\n----------------------------------\n");
+
+    uint32_t rdata = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_FW_EXTENDED_ERROR_INFO_0);
+    if (rdata != SOC_WR_RST_EXPECTED) {
+        VPRINTF(FATAL, "[FAIL] SoC write-under-reset value not observed by FW: expected=0x%08x got=0x%08x\n",
+                (uint32_t)SOC_WR_RST_EXPECTED, rdata);
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
+
+    VPRINTF(LOW, "FW observed SoC write-under-reset value 0x%08x\n", rdata);
+    SEND_STDOUT_CTRL(0xff); // PASS
+    while (1);
 }

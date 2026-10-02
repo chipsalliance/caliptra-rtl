@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Directed KV length-mismatch test — AXI-DMA MEK path.
+// Directed KV length-mismatch test -- AXI-DMA MEK path.
 //
-// STATUS: SKELETON — DMA KV read is driven by the OCP LOCK key-release
+// STATUS: SKELETON -- DMA KV read is driven by the OCP LOCK key-release
 // protocol, not by an FW-programmable KV_RD_CTRL. This test currently:
 //   1) Seeds a wrong-size KV entry (12 dwords via SHA-384) into slot
 //      KV_OCP_LOCK_KEY_RELEASE_KV_SLOT with dest_valid=DMA.
@@ -23,7 +23,7 @@
 //      wired (see smoke_test_dma_aes_kv for the setup sequence).
 //   4) Verifies the KV_RD_INTR_COUNT increments.
 //
-// See tasks/round-1-directed-mismatch-tests.md — flagged as follow-up.
+// See tasks/round-1-directed-mismatch-tests.md -- flagged as follow-up.
 //
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -64,7 +64,7 @@ static void kv_seed_via_sha(uint8_t slot, enum sha512_mode_e mode, dest_valid_t 
 }
 
 void main(void) {
-    VPRINTF(LOW,"---- KV len-mismatch (AXI-DMA MEK) — SKELETON ----\n");
+    VPRINTF(LOW,"---- KV len-mismatch (AXI-DMA MEK) -- SKELETON ----\n");
     init_interrupts();
 
     // KV_OCP_LOCK_KEY_RELEASE_KV_SLOT is normally 23; hard-code here to

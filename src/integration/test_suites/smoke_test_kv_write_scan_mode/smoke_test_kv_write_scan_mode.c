@@ -25,7 +25,6 @@
 #include "doe.h"
 #include "mldsa.h"
 #include "mlkem.h"
-#include "aes.h"
 #include <stdlib.h>
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;

@@ -76,6 +76,8 @@ static void nonstd_veer_isr_sha512_acc_error (void) __attribute__ ((interrupt ("
 static void nonstd_veer_isr_sha512_acc_notif (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_axi_dma_error (void) __attribute__ ((interrupt ("machine")));
 static void nonstd_veer_isr_axi_dma_notif (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_aes_error     (void) __attribute__ ((interrupt ("machine")));
+static void nonstd_veer_isr_aes_notif     (void) __attribute__ ((interrupt ("machine")));
 
 // Could be much more fancy with C preprocessing to pair up the ISR with Vector
 // numbers as defined in caliptra_defines.h.... TODO
@@ -92,8 +94,8 @@ static void (* const nonstd_veer_isr_9 ) (void) = nonstd_veer_isr_sha512_error; 
 static void (* const nonstd_veer_isr_10) (void) = nonstd_veer_isr_sha512_notif;    //        |
 static void (* const nonstd_veer_isr_11) (void) = nonstd_veer_isr_sha256_error;    //        |
 static void (* const nonstd_veer_isr_12) (void) = nonstd_veer_isr_sha256_notif;    //        |
-static void (* const nonstd_veer_isr_13) (void) = std_rv_nop_machine          ;    // Definitions come
-static void (* const nonstd_veer_isr_14) (void) = std_rv_nop_machine          ;    // from the param'd
+static void (* const nonstd_veer_isr_13) (void) = nonstd_veer_isr_aes_error   ;    // Definitions come
+static void (* const nonstd_veer_isr_14) (void) = nonstd_veer_isr_aes_notif   ;    // from the param'd
 static void (* const nonstd_veer_isr_15) (void) = std_rv_nop_machine          ;    // macro "nonstd_veer_isr"
 static void (* const nonstd_veer_isr_16) (void) = std_rv_nop_machine          ;    // below
 static void (* const nonstd_veer_isr_17) (void) = nonstd_veer_isr_sha3_error  ;    //        |
@@ -327,6 +329,13 @@ void init_interrupts(void) {
                  KMAC_INTR_ENABLE_KMAC_DONE_MASK |
                  KMAC_INTR_ENABLE_FIFO_EMPTY_MASK |
                  KMAC_INTR_ENABLE_KMAC_ERR_MASK);
+
+    // AES
+    lsu_write_32(CLP_AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,
+                 AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |
+                 AES_CLP_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK);
+    lsu_write_32(CLP_AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R,
+                 AES_CLP_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R_NOTIF_CMD_DONE_EN_MASK);
 
     // ABR
     abr_reg[ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R /sizeof(uint32_t)] = ABR_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R_ERROR_INTERNAL_EN_MASK;
@@ -819,4 +828,9 @@ nonstd_veer_isr(abr_notif)
 nonstd_veer_isr(axi_dma_error)
 // Non-Standard Vectored Interrupt Handler (AXI DMA Notification = vector 26)
 nonstd_veer_isr(axi_dma_notif)
+
+// Non-Standard Vectored Interrupt Handler (AES Error = vector 13)
+nonstd_veer_isr(aes_error)
+// Non-Standard Vectored Interrupt Handler (AES Notification = vector 14)
+nonstd_veer_isr(aes_notif)
 

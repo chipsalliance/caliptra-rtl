@@ -224,6 +224,8 @@ inline void service_sha512_acc_notif_intr() {
     }
 }
 
+inline void service_aes_error_intr() {return;}
+inline void service_aes_notif_intr() {return;}
 inline void service_abr_error_intr() {
     volatile uint32_t * reg = (volatile uint32_t *) (CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
     uint32_t sts = *reg;

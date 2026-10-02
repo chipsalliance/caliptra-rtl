@@ -24,7 +24,6 @@
 #include "printf.h"
 #include "soc_ifc.h"
 #include "hmac.h"
-#include "aes.h"
 #include "ecc.h"
 #include "mlkem.h"
 #include "keyvault.h"

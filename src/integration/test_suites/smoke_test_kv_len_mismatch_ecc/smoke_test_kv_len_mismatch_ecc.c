@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// KV length-mismatch — ECC privkey/seed path (single-shot randomized).
+// KV length-mismatch -- ECC privkey/seed path (single-shot randomized).
 // Round-6 rewrite. Each invocation exercises exactly ONE KV read.
 //
 // ECC consumer expected sizes:
-//   privkey → 11 (12 dwords)
-//   seed    → 11 (12 dwords)
+//   privkey -> 11 (12 dwords)
+//   seed    -> 11 (12 dwords)
 // dest_valid bits: bit3=ECC_PKEY, bit4=ECC_SEED
 //
 #include "caliptra_defines.h"
@@ -82,7 +82,7 @@ static uint32_t kv_read_and_wait(uint32_t rd_ctrl, uint32_t rd_status,
 
 void main(void) {
     VPRINTF(LOW, "-------------------------------------------------\n");
-    VPRINTF(LOW, " KV length-mismatch — ECC (single-shot random)\n");
+    VPRINTF(LOW, " KV length-mismatch -- ECC (single-shot random)\n");
     VPRINTF(LOW, "-------------------------------------------------\n");
     init_interrupts();
 

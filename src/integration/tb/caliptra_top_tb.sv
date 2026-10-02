@@ -118,8 +118,15 @@ module caliptra_top_tb (
     logic [31:0] strap_ss_strap_generic_3;
 
     ras_test_ctrl_t ras_test_ctrl;
+    generic_input_wire_ctrl_t generic_input_wire_ctrl;
     axi_complex_ctrl_t axi_complex_ctrl;
-    logic [63:0] generic_input_wires;
+    logic [63:0] generic_input_wires;      // muxed net fed to the core
+    logic [63:0] generic_input_wires_bfm;  // SoC BFM's driven value
+    // FW-directed override (TB command 8'h96) takes precedence over the SoC BFM
+    // so generic_input_wires can be forced for toggle coverage regardless of the
+    // BFM's mailbox-processing loop state.
+    assign generic_input_wires = generic_input_wire_ctrl.override_en ? generic_input_wire_ctrl.value
+                                                                     : generic_input_wires_bfm;
     logic        etrng0_req;
     logic        etrng1_req;
     logic  [3:0] itrng_data;
@@ -190,7 +197,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 
     .ras_test_ctrl(ras_test_ctrl),
 
-    .generic_input_wires(generic_input_wires),
+    .generic_input_wires(generic_input_wires_bfm),
 
     .cptra_error_fatal(cptra_error_fatal),
     .cptra_error_non_fatal(cptra_error_non_fatal),
@@ -441,6 +448,7 @@ caliptra_top_tb_services #(
 
     // TB Controls
     .ras_test_ctrl(ras_test_ctrl),
+    .generic_input_wire_ctrl(generic_input_wire_ctrl),
     .cycleCnt(cycleCnt),
     .axi_complex_ctrl(axi_complex_ctrl),
 

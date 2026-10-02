@@ -38,10 +38,10 @@
 #include "aes.h"
 
 // =====================================================================
-// TEST VECTORS — Edit this section to update inputs and expected outputs
+// TEST VECTORS -- Edit this section to update inputs and expected outputs
 // =====================================================================
 
-// HMAC-512 key (64 bytes / 16 DWORDs) — tag -> seed_d || seed_z
+// HMAC-512 key (64 bytes / 16 DWORDs) -- tag -> seed_d || seed_z
 #define HMAC_KEY { \
     0x00000000, 0x00000000, 0x00000000, 0x00000000, \
     0x00000000, 0x00000000, 0x00000000, 0x00000000, \
@@ -101,7 +101,7 @@
     "0ab42ab216f3c9c0557b3669ace6aa32"
 
 // KV slot assignments
-#define KV_HMAC_TAG_SLOT    6   // HMAC tag -> ML-KEM seed (16 DWORDs) — avoid slots used by TB ECC inject
+#define KV_HMAC_TAG_SLOT    6   // HMAC tag -> ML-KEM seed (16 DWORDs) -- avoid slots used by TB ECC inject
 #define KV_SHARED_KEY_SLOT  8   // ML-KEM shared key -> AES key (8 DWORDs)
 
 // =====================================================================
