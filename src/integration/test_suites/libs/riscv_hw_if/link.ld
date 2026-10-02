@@ -16,54 +16,61 @@
 OUTPUT_ARCH( "riscv" )
 ENTRY(_start)
 
+/*
+ * Unified simulation linker script.
+ *
+ * All read/write data (.data/.rodata/.sdata) AND .bss live directly in DCCM
+ * (VMA == LMA) and are backdoor-loaded into DCCM via dccm.hex. crt0 performs NO
+ * ROM->DCCM copy of either .data or .bss (these benches are simulation-only and
+ * DCCM is always preloaded). Only .text remains in the ROM/imem program image.
+ *
+ * Data is placed at the DCCM base (0x5000_0000) so a test has the full 256 KiB
+ * of DCCM available. (Previously .data started at 0x5002_0000 and the lower half
+ * was nominally reserved for remote-firmware images; that reservation is unused
+ * in these benches, and many tests already relocated data to the lower half.)
+ */
 SECTIONS {
+  /* ------------------- ROM / imem ------------------- */
   . = 0x0;
-  .text   : { *(.text*) }
-
+  .text     : { *(.text*) }
   .eh_frame : { *(.eh_frame) }
-  /* DCCM as VMA */
-  /* Data is bundled with ROM image in iMem */
-  /* Align data to 4-bytes to allow LSU access to work
-   * when copying to DCCM */
-  /* Only upper half of DCCM is used for ROM image */
-  _data_lma_start = ALIGN(4);
-  _data_vma_start = 0x50020000;
-  .data _data_vma_start : AT(_data_lma_start) { *(.*data) *(.*data.*) *(.rodata*) *(.srodata*) ; . = ALIGN(4);} =0x0000,
-  _data_lma_end = _data_lma_start + SIZEOF(.data);
-  _data_vma_end = _data_vma_start + SIZEOF(.data);
+  _rom_end = .;
+  ASSERT( _rom_end < 0x00018000, "ERROR: ROM (.text) size exceeds 96KiB")
 
-  _bss_lma_start = _data_lma_end;
-  _bss_vma_start = _data_vma_end;
-  .bss _bss_vma_start : AT(_bss_lma_start) { *(.sbss) *(.bss) ; . = ALIGN(4);} =0x0000,
-  _bss_lma_end = _bss_lma_start + SIZEOF(.bss);
-  _bss_vma_end = _bss_vma_start + SIZEOF(.bss);
+  /* ------- DCCM-resident RW data + BSS (VMA == LMA) -------
+   * Backdoor-loaded via dccm.hex; no crt0 copy. The .bss/.sbss inputs are
+   * folded in here (with =0x0000 fill) so they are zero-initialized by the
+   * DCCM preload rather than copied from ROM at reset. */
+  _data_vma_start = 0x50000000;
+  .data _data_vma_start : AT(_data_vma_start) {
+      *(.dccm*)
+      *(.*data) *(.*data.*)
+      *(.rodata*) *(.srodata*)
+      *(.sbss) *(.bss)
+      . = ALIGN(4);
+  } =0x0000
+  _data_vma_end = .;
 
-  _end = _bss_lma_end;
-  ASSERT( _end < 0x00018000, "ERROR: ROM size exceeds 96KiB")
-
-  /* DCCM as VMA and LMA */
-  . = _bss_vma_end;
-  _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
-  _dccm_vma_start = _bss_vma_end; /* ----/         */
-  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) . = ALIGN(4); } =0x0000,
+  /* ------------------- ICCM code images -------------------
+   * VMA is in ICCM; LMA is staged in DCCM (loaded via dccm.hex) and copied into
+   * ICCM by the test at runtime. iccm0 sits at the ICCM base; iccm1/iccm2 are
+   * placed at distinct ICCM offsets so a test may load them to COEXIST with
+   * iccm0 (e.g. a ROM image at the base plus an RT image at 0x8000). Tests that
+   * use only one image leave the others empty (zero size), so these fixed
+   * offsets are harmless for them. A test that loads an image must copy it to,
+   * execute it at, and vector NMIs to that image's linked VMA. */
   iccm_code0_start = .;
-
-  /* ICCM as VMA */
-  /* All of these sections start at the base address of ICCM, and cannot coexist */
-  /* The code in these sections will be loaded to DCCM alongside .data and later
-   * copied into ICCM for execution.
-   * NOTE: none of these sections will be used by the val image/FMC/RT flows */
-  .data_iccm0 0x40000000 : AT(iccm_code0_start) {*(.data_iccm0) ; . = ALIGN(4); } =0x0000, /* iccm_code0_start, after .data, as LMA */
+  .data_iccm0 0x40000000 : AT(iccm_code0_start) { *(.data_iccm0) ; . = ALIGN(4); } =0x0000
   iccm_code0_end = iccm_code0_start + SIZEOF(.data_iccm0);
   iccm_code1_start = ALIGN(iccm_code0_end,4);
-  .data_iccm1 0x40000000 : AT(iccm_code1_start) {*(.data_iccm1) ; . = ALIGN(4); } =0x0000, /* iccm_code1_start, after .data, as LMA */
+  .data_iccm1 0x40008000 : AT(iccm_code1_start) { *(.data_iccm1) ; . = ALIGN(4); } =0x0000
   iccm_code1_end = iccm_code1_start + SIZEOF(.data_iccm1);
   iccm_code2_start = ALIGN(iccm_code1_end,4);
-  .data_iccm2 0x40000000 : AT(iccm_code2_start) {*(.data_iccm2) ; . = ALIGN(4); } =0x0000, /* iccm_code2_start, after .data, as LMA */
+  .data_iccm2 0x4003D000 : AT(iccm_code2_start) { *(.data_iccm2) ; . = ALIGN(4); } =0x0000
   iccm_code2_end = iccm_code2_start + SIZEOF(.data_iccm2);
 
-  /* Stack is at the end of DCCM after .data_iccm2 */
+  /* ------------------- Stack ------------------- */
   . = ALIGN(iccm_code2_end,16);
-  STACK = ALIGN(16) + 0x4000;
-  ASSERT( (STACK < 0x50040000), "ERROR: Stack overflows the DCCM -- note: lower half of DCCM is allocated in the validation image for remote firmware images")
+  STACK = ALIGN(16) + 0x8000;
+  ASSERT( (STACK < 0x50040000), "ERROR: Stack overflows the DCCM")
 }

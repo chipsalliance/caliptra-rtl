@@ -19,9 +19,6 @@
 
 .set    mfdc, 0x7f9
 .set    mrac, 0x7c0
-.extern _data_lma_start, _data_lma_end
-.extern _bss_lma_start, _bss_lma_end
-.extern _data_vma_start, _bss_vma_start
 .section .text.init
 .global _start
 _start:
@@ -57,25 +54,12 @@ _start:
     la t0, early_trap_vector
     csrw mtvec, t0
 
-    // .data is backdoor-loaded straight into DCCM via dccm.hex (see
-    // tools/scripts/Makefile), so crt0 no longer copies it from ROM. This saves
-    // the slow ROM->DCCM word copy on every cold and warm reset. These benches
-    // are simulation-only, where DCCM is always preloaded.
+    // Both .data and .bss are backdoor-loaded straight into DCCM via dccm.hex
+    // (see tools/scripts/Makefile): .bss is folded into the DCCM .data section
+    // with zero fill by the linker script, so crt0 copies nothing from ROM.
+    // This saves the slow ROM->DCCM word copy on every cold and warm reset.
+    // These benches are simulation-only, where DCCM is always preloaded.
 
-bss_cp_setup:
-    // Copy .bss from ROM (imem) to DCCM
-    la t0, _bss_lma_start
-    la t1, _bss_lma_end
-    la t2, _bss_vma_start
-    bgeu t0, t1, post_cp_loops
-bss_cp_loop:
-    lw t3, 0(t0)
-    sw t3, 0(t2)
-    addi t0, t0, 4
-    addi t2, t2, 4
-    bltu t0, t1, bss_cp_loop
-
-post_cp_loops:
     // Init. the stack and transfer operation to main
     la sp, STACK
 

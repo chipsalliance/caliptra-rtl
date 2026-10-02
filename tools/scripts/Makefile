@@ -404,20 +404,21 @@ program.hex:
 else
 # Build program.hex from source (test_suites)
 #
-# These benches are simulation-only. Rather than have crt0 copy .data from the
-# ROM image into DCCM on every reset (a slow ROM->DCCM word copy that dominates
-# startup), .data is backdoor-loaded straight into DCCM via dccm.hex. crt0 no
-# longer does the copy, so this saves it on every cold and warm reset. The DCCM
-# offset for .data is derived from the linked image's _data_vma_start (tests use
-# either 0x50000000 or 0x50020000 depending on their linker script), so this
-# works regardless of which half of DCCM the test's .data lives in.
+# These benches are simulation-only. Rather than have crt0 copy .data/.bss from
+# the ROM image into DCCM on every reset (a slow ROM->DCCM word copy that
+# dominates startup), all RW data and .bss are backdoor-loaded straight into
+# DCCM via dccm.hex. crt0 no longer does any copy, so this saves it on every
+# cold and warm reset. .data now has a DCCM LMA (VMA==LMA), so it is excluded
+# from program.hex (the ROM/imem image) and emitted only into dccm.hex. Because
+# .data now has a DCCM LMA (VMA==LMA), its dccm.hex offset is obtained by the
+# same static "-0x50000000" LMA rebase used for .dccm and the .data_iccm*
+# staging sections -- no per-build address computation is needed.
 program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILE_CRT) $(OFILES) -nostartfiles  $(TEST_LIBS)
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x18000 --no-change-warnings $(TESTNAME).exe program.hex
-	-DATA_OFF=$$(printf '0x%08x' $$(( $$($(GCC_PREFIX)-objdump -t $(TESTNAME).exe | awk '/ _data_vma_start$$/{print "0x"$$1; exit}') - 0x50000000 ))); \
-	 $(GCC_PREFIX)-objcopy -O verilog -j .data -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
-			      --change-section-lma       .data=$$DATA_OFF \
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x18000 --no-change-warnings $(TESTNAME).exe program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
+			      --change-section-lma       .data-0x50000000 \
 			      --change-section-lma .data_iccm0-0x50000000 \
 			      --change-section-lma .data_iccm1-0x50000000 \
 			      --change-section-lma .data_iccm2-0x50000000 \
