@@ -14,6 +14,7 @@
 # limitations under the License.
 #
 import os
+import json
 import yaml
 
 def main():
@@ -44,8 +45,30 @@ def main():
                     test_list.append(test_name)
                 break
 
-    # Output names
-    print(test_list)
+    # Extract per-test runtime plusargs from each test's own <test>.yml under
+    # "plusargs:". BFM-gating plusargs (e.g. +CALIPTRA_TEST_STASH_BANK for the
+    # RFC #673 stash-bank tests) must reach the Verilator sim or the bench never
+    # executes its expected behavior and the test hangs. These are attached to
+    # the matrix via "include" so the workflow can pass them as RUN_PLUSARGS,
+    # while "test_name" remains the primary matrix dimension (clean job names).
+    include = []
+    for test_name in test_list:
+        test_yml = f"src/integration/test_suites/{test_name}/{test_name}.yml"
+        plusargs = []
+        try:
+            with open(test_yml, "r") as fp:
+                test_cfg = yaml.safe_load(fp) or {}
+            plusargs = test_cfg.get("plusargs") or []
+        except FileNotFoundError:
+            pass
+        include.append({
+            "test_name": test_name,
+            "plusargs": " ".join(str(p) for p in plusargs),
+        })
+
+    # Emit the full matrix object (valid JSON) for the workflow's
+    # `strategy: matrix: ${{ fromJSON(...) }}`.
+    print(json.dumps({"test_name": test_list, "include": include}))
 
 if __name__ == "__main__":
     main()

@@ -10,3 +10,4 @@ contents:
         - ../test_suites/smoke_test_entropy_combiner_conditioned/smoke_test_entropy_combiner_conditioned.yml
         - ../test_suites/smoke_test_entropy_combiner_multiseed/smoke_test_entropy_combiner_multiseed.yml
         - ../test_suites/smoke_test_entropy_combiner_lock_op/smoke_test_entropy_combiner_lock_op.yml
+        - ../test_suites/smoke_test_stash_bank_ss/smoke_test_stash_bank_ss.yml

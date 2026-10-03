@@ -73,6 +73,13 @@ typedef struct packed {
     logic do_ooo_access;
 } ras_test_ctrl_t;
 
+// Stash bank (RFC #673) BFM test-control signals. Split out of ras_test_ctrl_t
+// since these are unrelated to smoke_test_ras and its RAS error-injection bundle.
+typedef struct packed {
+    logic do_stash_bad_pauser_writes;
+    logic do_stash_post_cptra_lock_writes;
+} stash_test_ctrl_t;
+
 typedef struct packed {
     logic fifo_auto_push;
     logic fifo_auto_pop;
@@ -103,6 +110,8 @@ localparam CRYPTO_ERROR_OBSERVED           = 32'hdeadface;
 localparam FSM_ERROR_OBSERVED              = 32'hdead0f5e;
 localparam DMA_ERROR_OBSERVED              = 32'hfadebadd;
 localparam ERROR_NONE_SET                  = 32'hba5eba11; /* default value for a test with no activity observed by TB */
+localparam STASH_POST_CPTRA_LOCK_DONE      = 32'h600d573b; /* BFM finished post-CPTRA_LOCK stash negative writes */
+localparam STASH_BAD_PAUSER_DONE           = 32'h600d573a; /* BFM finished invalid-PAUSER stash bank overwrite attempt */
 
 // AXI SRAM config
 localparam AXI_SRAM_SIZE_BYTES   = 262144;
