@@ -156,20 +156,6 @@ void main(void) {
         VPRINTF(LOW, "----------------------------------\nRand Test AXI DMA  !!\n----------------------------------\n");
         rst_count++;
 
-        // The TB stages random testcase descriptors in the upper half of DCCM
-        // (this FW reads them from RV_DCCM_EADR downward). This firmware's data +
-        // stack must stay in the lower half so it never clobbers that region.
-        // With the default linker the stack lands well below this boundary; this
-        // guard replaces the custom-linker ASSERT that used to enforce it, and
-        // catches any future growth of the FW's static data.
-        extern char STACK;
-        if ((uintptr_t)&STACK >= (RV_DCCM_SADR + (RV_DCCM_SIZE * 1024u) / 2u)) {
-            VPRINTF(FATAL, "FATAL: FW data/stack (STACK=0x%x) overflows into the DCCM testcase-data region (>= 0x%x)\n",
-                    (uintptr_t)&STACK, (RV_DCCM_SADR + (RV_DCCM_SIZE * 1024u) / 2u));
-            SEND_STDOUT_CTRL(0x1);
-            while (1);
-        }
-
         // Setup the interrupt CSR configuration
         init_interrupts();
         reg = lsu_read_32(CLP_AXI_DMA_REG_INTR_BLOCK_RF_NOTIF_INTR_EN_R);

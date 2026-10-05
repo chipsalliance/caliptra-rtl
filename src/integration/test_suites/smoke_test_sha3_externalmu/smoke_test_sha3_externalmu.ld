@@ -42,13 +42,11 @@ SECTIONS {
    * folded in here (with =0x0000 fill) so they are zero-initialized by the
    * DCCM preload rather than copied from ROM at reset.
    *
-   * Data starts at 0x5002_0000 (the UPPER half of DCCM). The LOWER half
-   * (0x5000_0000..0x5001_ffff) is deliberately left free: the integration /
-   * validation ROM copies remote firmware images (FMC/RT, whose own .data is
-   * linked at 0x5000_0000) into the lower half via the mailbox FW flow. Placing
-   * this firmware's data/stack in the lower half would be overwritten by that
-   * copy and corrupt the ROM mid-transfer. Do not move this below 0x5002_0000. */
-  _data_vma_start = 0x50020000;
+   * This test's data footprint (external-mu vectors) exceeds the 128 KiB upper
+   * half, so data starts at 0x5000_0000 to use the FULL 256 KiB of DCCM. This is
+   * a standalone test that does NOT run the remote-FW mailbox copy flow, so
+   * using the lower half is safe here (nothing else is staged into DCCM). */
+  _data_vma_start = 0x50000000;
   .data _data_vma_start : AT(_data_vma_start) {
       *(.dccm*)
       *(.*data) *(.*data.*)
@@ -60,20 +58,20 @@ SECTIONS {
 
   /* ------------------- ICCM code images -------------------
    * VMA is in ICCM; LMA is staged in DCCM (loaded via dccm.hex) and copied into
-   * ICCM by the test at runtime. All three share the ICCM base address and
-   * cannot coexist in a single image: a test loads ONE of them to the base and
-   * runs it (e.g. iccm_lock copies iccm0, then after a reset copies iccm1 to the
-   * SAME base to verify the rewrite took effect). Tests that need to load
-   * multiple ICCM images simultaneously at distinct offsets provide their own
-   * linker script (e.g. the directed_kv_* tests place iccm1 at 0x4000_8000). */
+   * ICCM by the test at runtime. iccm0 sits at the ICCM base; iccm1/iccm2 are
+   * placed at distinct ICCM offsets so a test may load them to COEXIST with
+   * iccm0 (e.g. a ROM image at the base plus an RT image at 0x8000). Tests that
+   * use only one image leave the others empty (zero size), so these fixed
+   * offsets are harmless for them. A test that loads an image must copy it to,
+   * execute it at, and vector NMIs to that image's linked VMA. */
   iccm_code0_start = .;
   .data_iccm0 0x40000000 : AT(iccm_code0_start) { *(.data_iccm0) ; . = ALIGN(4); } =0x0000
   iccm_code0_end = iccm_code0_start + SIZEOF(.data_iccm0);
   iccm_code1_start = ALIGN(iccm_code0_end,4);
-  .data_iccm1 0x40000000 : AT(iccm_code1_start) { *(.data_iccm1) ; . = ALIGN(4); } =0x0000
+  .data_iccm1 0x40008000 : AT(iccm_code1_start) { *(.data_iccm1) ; . = ALIGN(4); } =0x0000
   iccm_code1_end = iccm_code1_start + SIZEOF(.data_iccm1);
   iccm_code2_start = ALIGN(iccm_code1_end,4);
-  .data_iccm2 0x40000000 : AT(iccm_code2_start) { *(.data_iccm2) ; . = ALIGN(4); } =0x0000
+  .data_iccm2 0x4003D000 : AT(iccm_code2_start) { *(.data_iccm2) ; . = ALIGN(4); } =0x0000
   iccm_code2_end = iccm_code2_start + SIZEOF(.data_iccm2);
 
   /* ------------------- Stack ------------------- */

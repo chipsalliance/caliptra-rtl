@@ -60,20 +60,17 @@ SECTIONS {
 
   /* ------------------- ICCM code images -------------------
    * VMA is in ICCM; LMA is staged in DCCM (loaded via dccm.hex) and copied into
-   * ICCM by the test at runtime. All three share the ICCM base address and
-   * cannot coexist in a single image: a test loads ONE of them to the base and
-   * runs it (e.g. iccm_lock copies iccm0, then after a reset copies iccm1 to the
-   * SAME base to verify the rewrite took effect). Tests that need to load
-   * multiple ICCM images simultaneously at distinct offsets provide their own
-   * linker script (e.g. the directed_kv_* tests place iccm1 at 0x4000_8000). */
+   * ICCM by the test at runtime. This test loads MULTIPLE images that COEXIST in
+   * ICCM, so iccm1 is placed at 0x4000_8000 (and iccm2 at a distinct offset) to
+   * sit alongside iccm0 at the base rather than overlapping it. */
   iccm_code0_start = .;
   .data_iccm0 0x40000000 : AT(iccm_code0_start) { *(.data_iccm0) ; . = ALIGN(4); } =0x0000
   iccm_code0_end = iccm_code0_start + SIZEOF(.data_iccm0);
   iccm_code1_start = ALIGN(iccm_code0_end,4);
-  .data_iccm1 0x40000000 : AT(iccm_code1_start) { *(.data_iccm1) ; . = ALIGN(4); } =0x0000
+  .data_iccm1 0x40008000 : AT(iccm_code1_start) { *(.data_iccm1) ; . = ALIGN(4); } =0x0000
   iccm_code1_end = iccm_code1_start + SIZEOF(.data_iccm1);
   iccm_code2_start = ALIGN(iccm_code1_end,4);
-  .data_iccm2 0x40000000 : AT(iccm_code2_start) { *(.data_iccm2) ; . = ALIGN(4); } =0x0000
+  .data_iccm2 0x4003D000 : AT(iccm_code2_start) { *(.data_iccm2) ; . = ALIGN(4); } =0x0000
   iccm_code2_end = iccm_code2_start + SIZEOF(.data_iccm2);
 
   /* ------------------- Stack ------------------- */

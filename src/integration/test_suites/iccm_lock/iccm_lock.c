@@ -59,20 +59,14 @@ void main(void) {
         volatile uint32_t * soc_ifc_nmi_vector             = (uint32_t *) (CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR);
 
         uint32_t * code_word = 0;
-        // Each ICCM code image is linked for its own VMA (the default linker
-        // places .data_iccm1 above the ICCM base so it can coexist with iccm0).
-        // Copy to, execute at, and vector NMIs to the active image's linked VMA
-        // so the test is agnostic to where the linker placed each image. Under a
-        // single-base layout these resolve to RV_ICCM_SADR, preserving behavior.
-        void (* iccm_fn) (void) = persistent_is_second_pass ? execute_second_pass_from_iccm
-                                                            : execute_first_pass_from_iccm;
-        uint32_t * iccm_dest = (uint32_t *) iccm_fn;
+        uint32_t * iccm_dest = ICCM;
+        void (* iccm_fn) (void) = (void*) ICCM;
 
         VPRINTF(LOW, "----------------------------------\nICCM Lock Test from VeeR EL2  !!\n----------------------------------\n");
 
         // Setup the interrupt CSR configuration
         init_interrupts();
-        *soc_ifc_nmi_vector = (uint32_t) iccm_fn;
+        *soc_ifc_nmi_vector = RV_ICCM_SADR;
 
         // Initialize the globals
         intr_count = 0;
@@ -157,7 +151,7 @@ void main(void) {
         // Read ICCM here to check that:
         //   - reads are getting expected data
         //   - no error occurs when reading while ICCM is locked
-        iccm_dest = (uint32_t *) iccm_fn;
+        iccm_dest = ICCM;
         if (persistent_is_second_pass) {
             code_word = (uint32_t *) &iccm_code1_start;
             VPRINTF(LOW,"Comparing second pass of the copy code from %x [through %x] to %x\n", (uintptr_t) code_word, &iccm_code1_end, (uintptr_t) iccm_dest);
