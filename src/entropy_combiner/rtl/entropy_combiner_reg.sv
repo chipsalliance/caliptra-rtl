@@ -188,7 +188,7 @@ module entropy_combiner_reg (
             struct packed{
                 logic next;
                 logic load_next;
-            } zeroize_sha3;
+            } zeroize;
         } COMBINER_CTRL;
         struct packed{
             struct packed{
@@ -434,7 +434,7 @@ module entropy_combiner_reg (
             } es_fips_cfg;
             struct packed{
                 logic value;
-            } zeroize_sha3;
+            } zeroize;
         } COMBINER_CTRL;
         struct packed{
             struct packed{
@@ -628,6 +628,9 @@ module entropy_combiner_reg (
         if(decoded_reg_strb.KAT_MSG_LEN && decoded_req_is_wr) begin // SW write
             next_c = (field_storage.KAT_MSG_LEN.msg_len.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
             load_next_c = '1;
+        end else if(hwif_in.KAT_MSG_LEN.msg_len.hwclr) begin // HW Clear
+            next_c = '0;
+            load_next_c = '1;
         end
         field_combo.KAT_MSG_LEN.msg_len.next = next_c;
         field_combo.KAT_MSG_LEN.msg_len.load_next = load_next_c;
@@ -649,6 +652,9 @@ module entropy_combiner_reg (
             load_next_c = '0;
             if(decoded_reg_strb.KAT_MSG[i0] && decoded_req_is_wr) begin // SW write
                 next_c = (field_storage.KAT_MSG[i0].data.value & ~decoded_wr_biten[31:0]) | (decoded_wr_data[31:0] & decoded_wr_biten[31:0]);
+                load_next_c = '1;
+            end else if(hwif_in.KAT_MSG[i0].data.hwclr) begin // HW Clear
+                next_c = '0;
                 load_next_c = '1;
             end
             field_combo.KAT_MSG[i0].data.next = next_c;
@@ -705,30 +711,30 @@ module entropy_combiner_reg (
         end
     end
     assign hwif_out.COMBINER_CTRL.es_fips_cfg.value = field_storage.COMBINER_CTRL.es_fips_cfg.value;
-    // Field: entropy_combiner_reg.COMBINER_CTRL.zeroize_sha3
+    // Field: entropy_combiner_reg.COMBINER_CTRL.zeroize
     always_comb begin
         automatic logic [0:0] next_c;
         automatic logic load_next_c;
-        next_c = field_storage.COMBINER_CTRL.zeroize_sha3.value;
+        next_c = field_storage.COMBINER_CTRL.zeroize.value;
         load_next_c = '0;
         if(decoded_reg_strb.COMBINER_CTRL && decoded_req_is_wr) begin // SW write
-            next_c = (field_storage.COMBINER_CTRL.zeroize_sha3.value & ~decoded_wr_biten[16:16]) | (decoded_wr_data[16:16] & decoded_wr_biten[16:16]);
+            next_c = (field_storage.COMBINER_CTRL.zeroize.value & ~decoded_wr_biten[16:16]) | (decoded_wr_data[16:16] & decoded_wr_biten[16:16]);
             load_next_c = '1;
         end else begin // singlepulse clears back to 0
             next_c = '0;
             load_next_c = '1;
         end
-        field_combo.COMBINER_CTRL.zeroize_sha3.next = next_c;
-        field_combo.COMBINER_CTRL.zeroize_sha3.load_next = load_next_c;
+        field_combo.COMBINER_CTRL.zeroize.next = next_c;
+        field_combo.COMBINER_CTRL.zeroize.load_next = load_next_c;
     end
     always_ff @(posedge clk or negedge hwif_in.reset_b) begin
         if(~hwif_in.reset_b) begin
-            field_storage.COMBINER_CTRL.zeroize_sha3.value <= 1'h0;
-        end else if(field_combo.COMBINER_CTRL.zeroize_sha3.load_next) begin
-            field_storage.COMBINER_CTRL.zeroize_sha3.value <= field_combo.COMBINER_CTRL.zeroize_sha3.next;
+            field_storage.COMBINER_CTRL.zeroize.value <= 1'h0;
+        end else if(field_combo.COMBINER_CTRL.zeroize.load_next) begin
+            field_storage.COMBINER_CTRL.zeroize.value <= field_combo.COMBINER_CTRL.zeroize.next;
         end
     end
-    assign hwif_out.COMBINER_CTRL.zeroize_sha3.value = field_storage.COMBINER_CTRL.zeroize_sha3.value;
+    assign hwif_out.COMBINER_CTRL.zeroize.value = field_storage.COMBINER_CTRL.zeroize.value;
     // Field: entropy_combiner_reg.AHB_LOCK.lock
     always_comb begin
         automatic logic [3:0] next_c;

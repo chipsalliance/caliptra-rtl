@@ -695,18 +695,30 @@ read back as 0, and the FIPS combine policy is frozen, so runtime firmware canno
 observe KAT state or weaken the combination. Entropy never appears in any
 AHB-readable register — the ES0/ES1 → combiner → CSRNG path is internal only.
 
-### SHA3 zeroize
+### Zeroize
 
-Writing 1 to `COMBINER_CTRL.zeroize_sha3` zeroizes the combiner's `ot_sha3` core
-in the following cycle. The field is a single-cycle pulse and reads back as 0.
-Zeroize clears the Keccak state, the padding buffer, the SHA3 FSMs and internal
-counters, and aborts any SHA3 operation in progress. It does not clear the
-combiner's own state.
+Writing 1 to `COMBINER_CTRL.zeroize` zeroizes the combiner in the following
+cycle and aborts any combine or KAT operation in progress. The field is a
+single-cycle pulse and reads back as 0.
 
-The combiner FSM is not aware of the zeroize: if it is issued while a combine or
-KAT operation is in progress, the combiner keeps waiting for the SHA3 core and
-stops servicing CSRNG until reset. Firmware must therefore only use
-`zeroize_sha3` while the combiner is idle.
+The combiner is also zeroized on debug lock/unlock, scan mode and lifecycle
+change.
+
+Zeroize clears:
+- the captured ES0/ES1 seeds and the combined digest
+- the KAT message, length and digest, including the `KAT_MSG` and `KAT_MSG_LEN` registers
+- the combiner FSM and the `ot_sha3` core
+
+Zeroize does not clear the configuration (`COMBINER_CTRL.es_fips_policy`,
+`es_fips_cfg`, `AHB_LOCK`) or the interrupt status registers.
+
+`zeroize` remains writable after `AHB_LOCK` is set.
+
+Outstanding ES0/ES1 requests stay asserted until they are acknowledged, and
+seeds that were already captured are discarded and requested again. A CSRNG
+request that was not yet acknowledged is completed with a digest of fresh seeds
+from ES0 and ES1. A CSRNG request that was already acknowledged still waits for
+`es_req` to be deasserted.
 
 ### Fault handling
 

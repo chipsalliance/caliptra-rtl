@@ -208,6 +208,8 @@ module entropy_combiner_es_csrng_tb
 
     .rt_active_i      (rt_active_tb),
 
+    .debugUnlock_or_scan_mode_switch(1'b0),
+
     .haddr_i          (32'h0),
     .hwdata_i         (32'h0),
     .hsel_i           (1'b0),

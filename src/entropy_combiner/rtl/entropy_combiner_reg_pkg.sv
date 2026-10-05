@@ -23,6 +23,14 @@ package entropy_combiner_reg_pkg;
     } entropy_combiner_reg__COMBINER_VERSION__in_t;
 
     typedef struct packed{
+        logic hwclr;
+    } entropy_combiner_reg__KAT_MSG_LEN__msg_len__in_t;
+
+    typedef struct packed{
+        entropy_combiner_reg__KAT_MSG_LEN__msg_len__in_t msg_len;
+    } entropy_combiner_reg__KAT_MSG_LEN__in_t;
+
+    typedef struct packed{
         logic next;
     } entropy_combiner_reg__KAT_STATUS__busy__in_t;
 
@@ -34,6 +42,14 @@ package entropy_combiner_reg_pkg;
         entropy_combiner_reg__KAT_STATUS__busy__in_t busy;
         entropy_combiner_reg__KAT_STATUS__valid__in_t valid;
     } entropy_combiner_reg__KAT_STATUS__in_t;
+
+    typedef struct packed{
+        logic hwclr;
+    } entropy_combiner_reg__KAT_MSG__data__in_t;
+
+    typedef struct packed{
+        entropy_combiner_reg__KAT_MSG__data__in_t data;
+    } entropy_combiner_reg__KAT_MSG__in_t;
 
     typedef struct packed{
         logic [31:0] next;
@@ -119,7 +135,9 @@ package entropy_combiner_reg_pkg;
         logic error_reset_b;
         entropy_combiner_reg__COMBINER_NAME__in_t [2-1:0]COMBINER_NAME;
         entropy_combiner_reg__COMBINER_VERSION__in_t [2-1:0]COMBINER_VERSION;
+        entropy_combiner_reg__KAT_MSG_LEN__in_t KAT_MSG_LEN;
         entropy_combiner_reg__KAT_STATUS__in_t KAT_STATUS;
+        entropy_combiner_reg__KAT_MSG__in_t [24-1:0]KAT_MSG;
         entropy_combiner_reg__KAT_DIGEST__in_t [12-1:0]KAT_DIGEST;
         entropy_combiner_reg__COMBINER_CTRL__in_t COMBINER_CTRL;
         entropy_combiner_reg__AHB_LOCK__in_t AHB_LOCK;
@@ -161,12 +179,12 @@ package entropy_combiner_reg_pkg;
 
     typedef struct packed{
         logic value;
-    } entropy_combiner_reg__COMBINER_CTRL__zeroize_sha3__out_t;
+    } entropy_combiner_reg__COMBINER_CTRL__zeroize__out_t;
 
     typedef struct packed{
         entropy_combiner_reg__COMBINER_CTRL__es_fips_policy__out_t es_fips_policy;
         entropy_combiner_reg__COMBINER_CTRL__es_fips_cfg__out_t es_fips_cfg;
-        entropy_combiner_reg__COMBINER_CTRL__zeroize_sha3__out_t zeroize_sha3;
+        entropy_combiner_reg__COMBINER_CTRL__zeroize__out_t zeroize;
     } entropy_combiner_reg__COMBINER_CTRL__out_t;
 
     typedef struct packed{

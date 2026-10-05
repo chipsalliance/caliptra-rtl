@@ -179,6 +179,7 @@ module entropy_combiner_es_integration_tb
 
     // Hardware AHB-lock backstop unused here (no AHB traffic in this TB).
     .rt_active_i      (1'b0),
+    .debugUnlock_or_scan_mode_switch(1'b0),
 
     // Combiner AHB (KAT) port unused here.
     .haddr_i          (32'h0),

@@ -56,7 +56,8 @@ addrmap entropy_combiner_reg {
             sw = rw;
             hw = r;
             reset = 0x0;
-            desc = "KAT message length in bytes. ROM programs a multiple of 8 in 0..96 inclusive, matching the 768-bit KAT_MSG window and staying below the 832-bit SHA3-384 rate.";
+            hwclr;
+            desc = "KAT message length in bytes. ROM programs a multiple of 8 in 0..96 inclusive, matching the 768-bit KAT_MSG window and staying below the 832-bit SHA3-384 rate. Cleared by COMBINER_CTRL.zeroize.";
         } msg_len[31:0];
     } KAT_MSG_LEN @ 0x0014;
 
@@ -86,7 +87,8 @@ addrmap entropy_combiner_reg {
         default hw = r;
         field {
             reset = 0x0;
-            desc = "KAT message data word. ROM (SW) writes the KAT vector; hardware only reads it on KAT start. No hardware write path, so there is no SW/HW write collision.";
+            hwclr;
+            desc = "KAT message data word. ROM (SW) writes the KAT vector; hardware only reads it on KAT start. Cleared by COMBINER_CTRL.zeroize.";
         } data[32];
     } KAT_MSG[24] @ 0x001C;
 
@@ -132,10 +134,11 @@ addrmap entropy_combiner_reg {
             hw = r;
             singlepulse;
             reset = 0x0;
-            desc = "Zeroize the SHA3 core: clear all message and digest data inside the SHA3 core and abort any operation in progress.
+            desc = "Zeroize the entropy combiner: abort any operation in progress and clear all combiner and SHA3 state
+                    (seeds, digest, KAT message, length and digest). Configuration (FIPS policy, AHB_LOCK) and interrupt status are kept.
                     [br] Software write generates only a single-cycle pulse on the
                     hardware interface and then will be erased";
-        } zeroize_sha3[16:16];
+        } zeroize[16:16];
     } COMBINER_CTRL @ 0x00AC;
 
     reg {

@@ -8471,8 +8471,8 @@
 `define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_POLICY_MASK                                      (32'h3)
 `define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_LOW                                          (8)
 `define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_MASK                                         (32'h100)
-`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ZEROIZE_SHA3_LOW                                         (16)
-`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ZEROIZE_SHA3_MASK                                        (32'h10000)
+`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ZEROIZE_LOW                                              (16)
+`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ZEROIZE_MASK                                             (32'h10000)
 `endif
 `ifndef ENTROPY_COMBINER_REG_AHB_LOCK
 `define ENTROPY_COMBINER_REG_AHB_LOCK                                                               (32'hb0)
