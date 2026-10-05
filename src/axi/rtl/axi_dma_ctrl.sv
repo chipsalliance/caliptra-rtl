@@ -151,7 +151,8 @@ import kv_defines_pkg::*;
         AES_WAIT_OUTPUT_VALID,
         AES_READ_OUTPUT,
         AES_DONE,
-        AES_ERROR
+        AES_ERROR,
+        AES_FINAL_CHECK
     } aes_fsm_ns, aes_fsm_ps;
 
     logic start_aes_fsm;
@@ -1141,21 +1142,16 @@ import kv_defines_pkg::*;
             end
             AES_READ_OUTPUT: begin
                 if (aes_cif_read_block_done) begin
-                    // Final transfer and read out of AES is done so go into
-                    // AES_ERROR or AES_DONE state
+                    // Resolve the final read's error after the sticky flag updates.
                     if (aes_to_axi_last_transfer) begin
-                        if(aes_error) begin
-                            aes_fsm_ns = AES_ERROR;
-                        end else begin
-                            aes_fsm_ns = AES_DONE;
-                        end
+                        aes_fsm_ns = AES_FINAL_CHECK;
                     end
                     // At this point we have transerted all data into 
                     // AES but we still have one more block to read out of 
                     // AES that we "buffered" into the AES on the first set of 
                     // writes into AES. This allows us to read that last bit
                     // of data out of AES and the next time around we will
-                    // transition into AES_ERROR or AES_DONE. This only
+                    // transition into AES_FINAL_CHECK. This only
                     // happens when the size of the transfer is > 4 DWORDs
                     // anything smaller and there is not buffering of data
                     // since the payload is too small.
@@ -1174,6 +1170,13 @@ import kv_defines_pkg::*;
                     else begin
                         aes_fsm_ns = AES_WRITE_BLOCK;
                     end
+                end
+            end
+            AES_FINAL_CHECK: begin
+                if(aes_error) begin
+                    aes_fsm_ns = AES_ERROR;
+                end else begin
+                    aes_fsm_ns = AES_DONE;
                 end
             end
             AES_DONE: begin
