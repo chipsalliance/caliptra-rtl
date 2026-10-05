@@ -108,9 +108,6 @@ module csrng_tb
   //----------------------------------------------------------------
   entropy_src_hw_if_req_t entropy_src_hw_if_req;
   entropy_src_hw_if_rsp_t entropy_src_hw_if_rsp;
-  cs_aes_halt_req_t       csrng_cs_aes_halt_req;
-  cs_aes_halt_rsp_t       csrng_cs_aes_halt_rsp;
-  entropy_src_rng_rsp_t   entropy_src_rng_rsp;
 
   csrng #(
     .RndCnstCsKeymgrDivNonProduction('0),
@@ -139,8 +136,6 @@ module csrng_tb
       // Entropy Interface
       .entropy_src_hw_if_o(entropy_src_hw_if_req),
       .entropy_src_hw_if_i(entropy_src_hw_if_rsp),
-      .cs_aes_halt_i      (csrng_cs_aes_halt_req),
-      .cs_aes_halt_o      (csrng_cs_aes_halt_rsp),
       // Application Interfaces
       .csrng_cmd_i('0),
       .csrng_cmd_o(),
@@ -221,8 +216,6 @@ module csrng_tb
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
 
-      csrng_cs_aes_halt_req = '{default:'0};
-      entropy_src_rng_rsp = '{default:'0};
       entropy_src_hw_if_rsp = '{default:'0};
     end
   endtask // init_dut
