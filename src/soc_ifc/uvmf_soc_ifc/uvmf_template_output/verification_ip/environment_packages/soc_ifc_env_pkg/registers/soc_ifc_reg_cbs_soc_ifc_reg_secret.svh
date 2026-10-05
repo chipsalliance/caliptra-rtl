@@ -46,6 +46,10 @@ class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
                 end
                 UVM_PREDICT_WRITE: begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+                    `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s in subsystem mode. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
+                    value = previous;
+`else
                     if (rm.CPTRA_FUSE_WR_DONE.done.get_mirrored_value()) begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict blocked write attempt to field %s due to CPTRA_FUSE_WR_DONE. value: 0x%x previous: 0x%x", fld.get_full_name(), value, previous), UVM_LOW)
                         value = previous;
@@ -57,6 +61,7 @@ class soc_ifc_reg_cbs_soc_ifc_reg_secret extends uvm_reg_cbs;
                     else begin
                         `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect. value: 0x%x previous: 0x%x", kind, value, previous), UVM_FULL)
                     end
+`endif
                 end
                 default: begin
                     `uvm_info("SOC_IFC_REG_CBS", $sformatf("post_predict called with kind [%p] has no effect", kind), UVM_FULL)

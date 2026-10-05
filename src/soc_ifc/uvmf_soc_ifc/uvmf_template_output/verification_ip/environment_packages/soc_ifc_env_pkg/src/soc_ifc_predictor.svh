@@ -2966,16 +2966,24 @@ class soc_ifc_predictor #(
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
             ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+                `uvm_info("PRED_AXI", $sformatf("Write to %s is ignored in subsystem mode. Nothing to do.", axs_reg.get_name()), UVM_HIGH)
+`else
                 if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
                     `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
+`endif
             end
             ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+                `uvm_info("PRED_AXI", $sformatf("Write to %s is ignored in subsystem mode. Nothing to do.", axs_reg.get_name()), UVM_HIGH)
+`else
                 if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
                     `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
+`endif
             end
             // Sized per OCP_LOCK_HEK_NUM_DWORDS
             ["fuse_hek_seed[0]" :"fuse_hek_seed[7]" ]: begin
