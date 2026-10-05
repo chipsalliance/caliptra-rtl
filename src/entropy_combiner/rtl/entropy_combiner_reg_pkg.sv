@@ -160,8 +160,13 @@ package entropy_combiner_reg_pkg;
     } entropy_combiner_reg__COMBINER_CTRL__es_fips_cfg__out_t;
 
     typedef struct packed{
+        logic value;
+    } entropy_combiner_reg__COMBINER_CTRL__zeroize_sha3__out_t;
+
+    typedef struct packed{
         entropy_combiner_reg__COMBINER_CTRL__es_fips_policy__out_t es_fips_policy;
         entropy_combiner_reg__COMBINER_CTRL__es_fips_cfg__out_t es_fips_cfg;
+        entropy_combiner_reg__COMBINER_CTRL__zeroize_sha3__out_t zeroize_sha3;
     } entropy_combiner_reg__COMBINER_CTRL__out_t;
 
     typedef struct packed{

@@ -10603,6 +10603,8 @@
 #define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_POLICY_MASK                                      (0x3)
 #define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_LOW                                          (8)
 #define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_MASK                                         (0x100)
+#define ENTROPY_COMBINER_REG_COMBINER_CTRL_ZEROIZE_SHA3_LOW                                         (16)
+#define ENTROPY_COMBINER_REG_COMBINER_CTRL_ZEROIZE_SHA3_MASK                                        (0x10000)
 #endif
 #define CLP_ENTROPY_COMBINER_REG_AHB_LOCK                                                           (0x200050b0)
 #ifndef ENTROPY_COMBINER_REG_AHB_LOCK

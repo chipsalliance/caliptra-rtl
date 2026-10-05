@@ -185,6 +185,10 @@ module entropy_combiner_reg (
                 logic next;
                 logic load_next;
             } es_fips_cfg;
+            struct packed{
+                logic next;
+                logic load_next;
+            } zeroize_sha3;
         } COMBINER_CTRL;
         struct packed{
             struct packed{
@@ -428,6 +432,9 @@ module entropy_combiner_reg (
             struct packed{
                 logic value;
             } es_fips_cfg;
+            struct packed{
+                logic value;
+            } zeroize_sha3;
         } COMBINER_CTRL;
         struct packed{
             struct packed{
@@ -698,6 +705,30 @@ module entropy_combiner_reg (
         end
     end
     assign hwif_out.COMBINER_CTRL.es_fips_cfg.value = field_storage.COMBINER_CTRL.es_fips_cfg.value;
+    // Field: entropy_combiner_reg.COMBINER_CTRL.zeroize_sha3
+    always_comb begin
+        automatic logic [0:0] next_c;
+        automatic logic load_next_c;
+        next_c = field_storage.COMBINER_CTRL.zeroize_sha3.value;
+        load_next_c = '0;
+        if(decoded_reg_strb.COMBINER_CTRL && decoded_req_is_wr) begin // SW write
+            next_c = (field_storage.COMBINER_CTRL.zeroize_sha3.value & ~decoded_wr_biten[16:16]) | (decoded_wr_data[16:16] & decoded_wr_biten[16:16]);
+            load_next_c = '1;
+        end else begin // singlepulse clears back to 0
+            next_c = '0;
+            load_next_c = '1;
+        end
+        field_combo.COMBINER_CTRL.zeroize_sha3.next = next_c;
+        field_combo.COMBINER_CTRL.zeroize_sha3.load_next = load_next_c;
+    end
+    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
+        if(~hwif_in.reset_b) begin
+            field_storage.COMBINER_CTRL.zeroize_sha3.value <= 1'h0;
+        end else if(field_combo.COMBINER_CTRL.zeroize_sha3.load_next) begin
+            field_storage.COMBINER_CTRL.zeroize_sha3.value <= field_combo.COMBINER_CTRL.zeroize_sha3.next;
+        end
+    end
+    assign hwif_out.COMBINER_CTRL.zeroize_sha3.value = field_storage.COMBINER_CTRL.zeroize_sha3.value;
     // Field: entropy_combiner_reg.AHB_LOCK.lock
     always_comb begin
         automatic logic [3:0] next_c;

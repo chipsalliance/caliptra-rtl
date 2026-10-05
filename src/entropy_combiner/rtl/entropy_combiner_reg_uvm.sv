@@ -227,9 +227,11 @@ package entropy_combiner_reg_uvm;
 
         entropy_combiner_reg__COMBINER_CTRL_bit_cg es_fips_policy_bit_cg[2];
         entropy_combiner_reg__COMBINER_CTRL_bit_cg es_fips_cfg_bit_cg[1];
+        entropy_combiner_reg__COMBINER_CTRL_bit_cg zeroize_sha3_bit_cg[1];
         entropy_combiner_reg__COMBINER_CTRL_fld_cg fld_cg;
         rand uvm_reg_field es_fips_policy;
         rand uvm_reg_field es_fips_cfg;
+        rand uvm_reg_field zeroize_sha3;
 
         function new(string name = "entropy_combiner_reg__COMBINER_CTRL");
             super.new(name, 32, build_coverage(UVM_CVR_ALL));
@@ -245,9 +247,12 @@ package entropy_combiner_reg_uvm;
             this.es_fips_policy.configure(this, 2, 0, "RW", 0, 'h0, 1, 1, 0);
             this.es_fips_cfg = new("es_fips_cfg");
             this.es_fips_cfg.configure(this, 1, 8, "RW", 0, 'h0, 1, 1, 0);
+            this.zeroize_sha3 = new("zeroize_sha3");
+            this.zeroize_sha3.configure(this, 1, 16, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(es_fips_policy_bit_cg[bt]) es_fips_policy_bit_cg[bt] = new();
                 foreach(es_fips_cfg_bit_cg[bt]) es_fips_cfg_bit_cg[bt] = new();
+                foreach(zeroize_sha3_bit_cg[bt]) zeroize_sha3_bit_cg[bt] = new();
             end
             if (has_coverage(UVM_CVR_FIELD_VALS))
                 fld_cg = new();

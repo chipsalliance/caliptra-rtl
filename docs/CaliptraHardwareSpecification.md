@@ -695,6 +695,19 @@ read back as 0, and the FIPS combine policy is frozen, so runtime firmware canno
 observe KAT state or weaken the combination. Entropy never appears in any
 AHB-readable register — the ES0/ES1 → combiner → CSRNG path is internal only.
 
+### SHA3 zeroize
+
+Writing 1 to `COMBINER_CTRL.zeroize_sha3` zeroizes the combiner's `ot_sha3` core
+in the following cycle. The field is a single-cycle pulse and reads back as 0.
+Zeroize clears the Keccak state, the padding buffer, the SHA3 FSMs and internal
+counters, and aborts any SHA3 operation in progress. It does not clear the
+combiner's own state.
+
+The combiner FSM is not aware of the zeroize: if it is issued while a combine or
+KAT operation is in progress, the combiner keeps waiting for the SHA3 core and
+stops servicing CSRNG until reset. Firmware must therefore only use
+`zeroize_sha3` while the combiner is idle.
+
 ### Fault handling
 
 The combiner is fault-hardened consistently with the surrounding OpenTitan

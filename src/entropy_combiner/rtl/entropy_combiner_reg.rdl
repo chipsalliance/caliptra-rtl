@@ -126,6 +126,16 @@ addrmap entropy_combiner_reg {
             reset = 0x0;
             desc = "es_fips value used when es_fips_policy is CONFIG_VALUE. SW writes are gated by hardware swwe (=!AHB_LOCK) and frozen once ROM sets W1S AHB_LOCK.";
         } es_fips_cfg[8:8];
+
+        field {
+            sw = w;
+            hw = r;
+            singlepulse;
+            reset = 0x0;
+            desc = "Zeroize the SHA3 core: clear all message and digest data inside the SHA3 core and abort any operation in progress.
+                    [br] Software write generates only a single-cycle pulse on the
+                    hardware interface and then will be erased";
+        } zeroize_sha3[16:16];
     } COMBINER_CTRL @ 0x00AC;
 
     reg {

@@ -191,6 +191,10 @@ module entropy_combiner
   // self-determined 4-bit add that could wrap (fixes SelfDeterminedExpr lint).
   logic [4:0] feed_idx_next;
 
+  // Zeroize the SHA3 core on COMBINER_CTRL.zeroize_sha3
+  logic zeroize_sha3;
+  assign zeroize_sha3 = hwif_out.COMBINER_CTRL.zeroize_sha3.value;
+
   assign ahb_hold = 1'b0;
   // MuBi4 AHB lock: locked unless stored value is strict MuBi4False (fail-safe:
   // True or any glitched/invalid code => locked).
@@ -749,7 +753,7 @@ module entropy_combiner
     .run_req_o(sha3_run_req),
     .run_ack_i(1'b1),
     .lc_escalate_en_i(lc_ctrl_pkg::Off),
-    .zeroize_i(1'b0),
+    .zeroize_i(zeroize_sha3),
     .error_o(sha3_error),
     .sparse_fsm_error_o(sha3_sparse_fsm_error),
     .count_error_o(sha3_count_error),
