@@ -369,7 +369,8 @@ package axi_dma_reg_pkg;
         axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e__AES_WAIT_OUTPUT_VALID = 'h5,
         axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e__AES_READ_OUTPUT = 'h6,
         axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e__AES_DONE = 'h7,
-        axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e__AES_ERROR = 'h8
+        axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e__AES_ERROR = 'h8,
+        axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e__AES_FINAL_CHECK = 'h9
     } axi_dma_reg__status0__axi_dma_aes_fsm_ps__axi_dma_aes_fsm_e_e;
 
     localparam AXI_DMA_REG_ADDR_WIDTH = 32'd12;

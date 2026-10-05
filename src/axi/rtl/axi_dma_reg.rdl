@@ -181,6 +181,9 @@ addrmap axi_dma_reg {
                 AES_ERROR = 4'd8 {
                     desc = "AES FSM completed or parsed with an error";
                 };
+                AES_FINAL_CHECK = 4'd9 {
+                    desc = "AES FSM has completed the final output read and resolves the registered AES error before reporting success or error. DMA completion still waits for outstanding AXI writes.";
+                };
 
             };
             sw=r; hw=rw; encode = axi_dma_aes_fsm_e;
