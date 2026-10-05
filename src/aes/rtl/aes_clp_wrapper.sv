@@ -179,8 +179,9 @@ always_ff @(posedge clk or negedge reset_n) begin
     end
 end
 
-// Pulse on the rising edge of aes_output_valid to indicate that the AES command is done
-assign aes_cmd_done_pulse = aes_output_valid && !aes_output_valid_r;
+// Pulse to indicate the AES command is done; drives the NOTIF_CMD_DONE interrupt.
+assign aes_cmd_done_pulse = (aes_output_valid && !aes_output_valid_r) ||
+                            caliptra2aes.kv_write_done;
 
 //AHB interface
 ahb_slv_sif #(
