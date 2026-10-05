@@ -33,10 +33,6 @@ module csrng_ctr_drbg_upd #(
   output logic               ctr_drbg_upd_ack_o, // final ack when update process has been completed
   input logic                ctr_drbg_upd_rdy_i, // readu to process the ack above
 
-   // es_req/ack
-  input logic                ctr_drbg_upd_es_req_i,
-  output logic               ctr_drbg_upd_es_ack_o,
-
    // block encrypt interface
   output logic               block_encrypt_req_o,
   input logic                block_encrypt_rdy_i,
@@ -179,7 +175,6 @@ module csrng_ctr_drbg_upd #(
   typedef enum logic [BlkEncStateWidth-1:0] {
     ReqIdle = 5'b11000,
     ReqSend = 5'b10011,
-    ESHalt  = 5'b01110,
     BEError = 5'b00101
   } blk_enc_state_e;
 
@@ -330,15 +325,10 @@ module csrng_ctr_drbg_upd #(
     sfifo_bencreq_push = 1'b0;
     sfifo_updreq_pop = 1'b0;
     ctr_drbg_updbe_sm_err_o = 1'b0;
-    ctr_drbg_upd_es_ack_o = 1'b0;
     unique case (blk_enc_state_q)
       // ReqIdle: increment v this cycle, push in next
       ReqIdle: begin
-        // Prioritize halt requests from entropy_src over disable, as CSRNG would otherwise starve
-        // those requests while it is idle.
-        if (ctr_drbg_upd_es_req_i) begin
-          blk_enc_state_d = ESHalt;
-        end else if (!ctr_drbg_upd_enable_i) begin
+        if (!ctr_drbg_upd_enable_i) begin
           blk_enc_state_d = ReqIdle;
         end else if (sfifo_updreq_not_empty && !sfifo_bencreq_full && !sfifo_pdata_full) begin
           v_ctr_load = 1'b1;
@@ -357,12 +347,6 @@ module csrng_ctr_drbg_upd #(
           end
         end else begin
           sfifo_updreq_pop = 1'b1;
-          blk_enc_state_d = ReqIdle;
-        end
-      end
-      ESHalt: begin
-        ctr_drbg_upd_es_ack_o = 1'b1;
-        if (!ctr_drbg_upd_es_req_i) begin
           blk_enc_state_d = ReqIdle;
         end
       end

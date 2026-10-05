@@ -92,7 +92,7 @@ module entropy_combiner_es_csrng_tb
   // entropy_src registers / values (raw/bypass, as in entropy_src_tb.sv).
   localparam logic [31:0] ES_ADDR_MODULE_ENABLE = 32'h20;
   localparam logic [31:0] ES_ADDR_CONF          = 32'h24;
-  localparam logic [31:0] ES_CONF_RAW_BYPASS    = 32'h2649999;
+  localparam logic [31:0] ES_CONF_RAW_BYPASS    = 32'h0999999;
   localparam logic [31:0] ES_MODULE_ENABLE_ON   = 32'h6;
   localparam logic [31:0] ES_MODULE_ENABLE_OFF  = 32'h9;
 
@@ -150,15 +150,12 @@ module entropy_combiner_es_csrng_tb
   entropy_src_hw_if_req_t comb_csrng_req;           // CSRNG -> combiner (es_req)
   entropy_src_hw_if_rsp_t comb_csrng_rsp;           // combiner -> CSRNG (es_ack/es_bits)
 
-  // cs_aes_halt handshake: ES -> combiner request, combiner -> ES ack.
-  cs_aes_halt_req_t es0_cs_halt_req, es1_cs_halt_req;
-  cs_aes_halt_rsp_t es0_cs_halt_ack, es1_cs_halt_ack;
-
   //----------------------------------------------------------------
   // itrng wiring
   //----------------------------------------------------------------
-  entropy_src_rng_req_t es0_rng_req, es1_rng_req;
-  entropy_src_rng_rsp_t es0_rng_rsp, es1_rng_rsp;
+  logic       es0_rng_enable, es1_rng_enable;
+  logic       es0_rng_valid,  es1_rng_valid;
+  logic [3:0] es0_rng_bits,   es1_rng_bits;
 
   logic combine_en_tb;
 
@@ -200,11 +197,6 @@ module entropy_combiner_es_csrng_tb
     .csrng_hw_if_req_i(comb_csrng_req),
     .csrng_hw_if_rsp_o(comb_csrng_rsp),
 
-    .es0_cs_aes_halt_i(es0_cs_halt_req),
-    .es1_cs_aes_halt_i(es1_cs_halt_req),
-    .es0_cs_aes_halt_o(es0_cs_halt_ack),
-    .es1_cs_aes_halt_o(es1_cs_halt_ack),
-
     .es0_hw_if_req_o  (es0_hw_req),
     .es0_hw_if_rsp_i  (es0_hw_rsp),
     .es1_hw_if_req_o  (es1_hw_req),
@@ -239,48 +231,46 @@ module entropy_combiner_es_csrng_tb
     .AHBDataWidth(AHB_DATA_W),
     .AHBAddrWidth(AHB_ADDR_W)
   ) u_es0 (
-    .clk_i               (clk_tb),
-    .rst_ni              (reset_n_tb),
-    .haddr_i             (es_haddr),
-    .hwdata_i            (es_hwdata),
-    .hsel_i              (es_hsel),
-    .hwrite_i            (es_hwrite),
-    .hready_i            (es_hready),
-    .htrans_i            (es_htrans),
-    .hsize_i             (es_hsize),
-    .hresp_o             (es0_hresp),
-    .hreadyout_o         (es0_hreadyout),
-    .hrdata_o            (es0_hrdata),
-    .entropy_src_hw_if_i (es0_hw_req),
-    .entropy_src_hw_if_o (es0_hw_rsp),
-    .cs_aes_halt_o       (es0_cs_halt_req),
-    .cs_aes_halt_i       (es0_cs_halt_ack),
-    .entropy_src_rng_o   (es0_rng_req),
-    .entropy_src_rng_i   (es0_rng_rsp)
+    .clk_i                    (clk_tb),
+    .rst_ni                   (reset_n_tb),
+    .haddr_i                  (es_haddr),
+    .hwdata_i                 (es_hwdata),
+    .hsel_i                   (es_hsel),
+    .hwrite_i                 (es_hwrite),
+    .hready_i                 (es_hready),
+    .htrans_i                 (es_htrans),
+    .hsize_i                  (es_hsize),
+    .hresp_o                  (es0_hresp),
+    .hreadyout_o              (es0_hreadyout),
+    .hrdata_o                 (es0_hrdata),
+    .entropy_src_hw_if_i      (es0_hw_req),
+    .entropy_src_hw_if_o      (es0_hw_rsp),
+    .entropy_src_rng_enable_o (es0_rng_enable),
+    .entropy_src_rng_valid_i  (es0_rng_valid),
+    .entropy_src_rng_bits_i   (es0_rng_bits)
   );
 
   entropy_src_raw_wrap #(
     .AHBDataWidth(AHB_DATA_W),
     .AHBAddrWidth(AHB_ADDR_W)
   ) u_es1 (
-    .clk_i               (clk_tb),
-    .rst_ni              (reset_n_tb),
-    .haddr_i             (es_haddr),
-    .hwdata_i            (es_hwdata),
-    .hsel_i              (es_hsel),
-    .hwrite_i            (es_hwrite),
-    .hready_i            (es_hready),
-    .htrans_i            (es_htrans),
-    .hsize_i             (es_hsize),
-    .hresp_o             (es1_hresp),
-    .hreadyout_o         (es1_hreadyout),
-    .hrdata_o            (es1_hrdata),
-    .entropy_src_hw_if_i (es1_hw_req),
-    .entropy_src_hw_if_o (es1_hw_rsp),
-    .cs_aes_halt_o       (es1_cs_halt_req),
-    .cs_aes_halt_i       (es1_cs_halt_ack),
-    .entropy_src_rng_o   (es1_rng_req),
-    .entropy_src_rng_i   (es1_rng_rsp)
+    .clk_i                    (clk_tb),
+    .rst_ni                   (reset_n_tb),
+    .haddr_i                  (es_haddr),
+    .hwdata_i                 (es_hwdata),
+    .hsel_i                   (es_hsel),
+    .hwrite_i                 (es_hwrite),
+    .hready_i                 (es_hready),
+    .htrans_i                 (es_htrans),
+    .hsize_i                  (es_hsize),
+    .hresp_o                  (es1_hresp),
+    .hreadyout_o              (es1_hreadyout),
+    .hrdata_o                 (es1_hrdata),
+    .entropy_src_hw_if_i      (es1_hw_req),
+    .entropy_src_hw_if_o      (es1_hw_rsp),
+    .entropy_src_rng_enable_o (es1_rng_enable),
+    .entropy_src_rng_valid_i  (es1_rng_valid),
+    .entropy_src_rng_bits_i   (es1_rng_bits)
   );
 
   physical_rng #(
@@ -289,9 +279,9 @@ module entropy_combiner_es_csrng_tb
     .DutyCycle     (RNG_DUTY_CYCLE)
   ) u_rng0 (
     .clk    (clk_tb),
-    .enable (es0_rng_req.rng_enable & rng0_go),
-    .data   (es0_rng_rsp.rng_b),
-    .valid  (es0_rng_rsp.rng_valid)
+    .enable (es0_rng_enable & rng0_go),
+    .data   (es0_rng_bits),
+    .valid  (es0_rng_valid)
   );
 
   physical_rng #(
@@ -300,9 +290,9 @@ module entropy_combiner_es_csrng_tb
     .DutyCycle     (RNG_DUTY_CYCLE)
   ) u_rng1 (
     .clk    (clk_tb),
-    .enable (es1_rng_req.rng_enable & rng1_go),
-    .data   (es1_rng_rsp.rng_b),
-    .valid  (es1_rng_rsp.rng_valid)
+    .enable (es1_rng_enable & rng1_go),
+    .data   (es1_rng_bits),
+    .valid  (es1_rng_valid)
   );
 
   //----------------------------------------------------------------
