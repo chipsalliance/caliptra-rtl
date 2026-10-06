@@ -654,6 +654,7 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = ecc_privkey_tb[dword_i][31 : 0];
                         end
                         inject_mldsa_seed <= 1'b1;
+                        release_kv_inject_flags <= '0;
                         if (slot_id == KV_ENTRY_FOR_MLDSA_SIGNING) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b100;
