@@ -1014,6 +1014,21 @@ class soc_ifc_predictor #(
         end
         else
         case (axs_reg.get_name()) inside
+            // AXI-only stash registers (RFC 673): RTL drops Caliptra/AHB-side
+            // writes at the soc_req gate in soc_ifc_top.sv, so an AHB write must
+            // NOT update the RAL mirror (reads stay valid: SLOT_DATA is Caliptra-RO
+            // and the W1S lock regs read 0). Without disabling prediction here the
+            // frontdoor write below would desync the mirror from hardware and later
+            // read prediction would mismatch RTL.
+            ["STASH_BANK_SLOT_DATA[0]":"STASH_BANK_SLOT_DATA[9]"],
+            ["STASH_BANK_SLOT_DATA[10]":"STASH_BANK_SLOT_DATA[99]"],
+            ["STASH_BANK_SLOT_DATA[100]":"STASH_BANK_SLOT_DATA[207]"],
+            "STASH_BANK_SOC_LOCK",
+            "STASH_END_STASH": begin
+                if (ahb_txn.RnW == AHB_WRITE) begin
+                    do_reg_prediction = 1'b0;
+                end
+            end
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
             // setting a new bit, so we need the previous value to catch the edges
             "CPTRA_FW_ERROR_FATAL",
@@ -2294,6 +2309,15 @@ class soc_ifc_predictor #(
     end
     else begin
         case (axs_reg.get_name()) inside
+            // Caliptra/AHB-only stash register (RFC 673): RTL drops SoC/AXI-side
+            // writes at the soc_req gate in soc_ifc_top.sv, so an AXI write must
+            // NOT update the RAL mirror. Mirror image of the AHB-side handling of
+            // the AXI-only stash registers.
+            "STASH_BANK_CPTRA_LOCK": begin
+                if (axi_txn.is_write()) begin
+                    do_reg_prediction = 1'b0;
+                end
+            end
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
             // setting a new bit, so we need the previous value to catch the edges
             "CPTRA_FW_ERROR_FATAL",
