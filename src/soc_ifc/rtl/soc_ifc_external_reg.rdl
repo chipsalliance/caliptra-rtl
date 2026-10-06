@@ -502,8 +502,8 @@ reg {
     desc = "Adaptive threshold values for entropy source health tests.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    field {sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
-    field {sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
+    field {desc = "Adaptive Proportion test low threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src ADAPTP_LO_THRESHOLD. If single_bit_mode is 0, it is not used and must be 0 (ADAPTP_LO_THRESHOLD stays at its reset value 0x0000)."; sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
+    field {desc = "Adaptive Proportion test high threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src ADAPTP_HI_THRESHOLD and ADAPTPS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into ADAPTPS_THRESHOLD and ADAPTP_HI_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
  } CPTRA_iTRNG_ENTROPY_CONFIG_0 @0x180;
 
 reg {
@@ -511,7 +511,7 @@ reg {
     desc = "Repetition count value for entropy source health tests.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    field {sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
+    field {desc = "Repetition count threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src REPCNT_THRESHOLD and REPCNTS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into REPCNTS_THRESHOLD and REPCNT_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
     field {sw=rw; resetsignal=cptra_rst_b;} RSVD[16]=0;
  } CPTRA_iTRNG_ENTROPY_CONFIG_1;
 
@@ -522,7 +522,7 @@ reg {
             Refer to the Caliptra ROM Specification for additional details.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
+    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. The window is given in symbols: in multi-channel mode each symbol consists of one bit per RNG lane, in single-bit mode a symbol consists of one bit of the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
     field {desc = "Entropy source single-bit mode. ROM clears threshold_scope during entropy source initialization. When this bit is set to 1, ROM enables rng_bit_enable."; sw=rw; resetsignal=cptra_rst_b;} single_bit_mode=0;
     field {desc = "Entropy source single-bit mode rng_bit_sel. Selects which RNG bit stream to process when single-bit mode is enabled."; sw=rw; resetsignal=cptra_rst_b;} rng_bit_sel[2]=0;
     field {desc = "RESERVED/unused, must be tied to 0."; sw=rw; resetsignal=cptra_rst_b;} RSVD[12]=0;
@@ -534,8 +534,8 @@ reg {
     desc = "Adaptive threshold values for the secondary entropy source health tests.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    field {sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
-    field {sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
+    field {desc = "Adaptive Proportion test low threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src ADAPTP_LO_THRESHOLD. If single_bit_mode is 0, it is not used and must be 0 (ADAPTP_LO_THRESHOLD stays at its reset value 0x0000)."; sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
+    field {desc = "Adaptive Proportion test high threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src ADAPTP_HI_THRESHOLD and ADAPTPS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into ADAPTPS_THRESHOLD and ADAPTP_HI_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
  } CPTRA_iTRNG1_ENTROPY_CONFIG_0;
 
 reg {
@@ -543,7 +543,7 @@ reg {
     desc = "Repetition count value for the secondary entropy source health tests.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    field {sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
+    field {desc = "Repetition count threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src REPCNT_THRESHOLD and REPCNTS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into REPCNTS_THRESHOLD and REPCNT_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
     field {sw=rw; resetsignal=cptra_rst_b;} RSVD[16]=0;
  } CPTRA_iTRNG1_ENTROPY_CONFIG_1;
 
@@ -554,7 +554,7 @@ reg {
             Refer to the Caliptra ROM Specification for additional details.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
+    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. The window is given in symbols: in multi-channel mode each symbol consists of one bit per RNG lane, in single-bit mode a symbol consists of one bit of the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
     field {desc = "Entropy source single-bit mode. ROM clears threshold_scope during entropy source initialization. When this bit is set to 1, ROM enables rng_bit_enable."; sw=rw; resetsignal=cptra_rst_b;} single_bit_mode=0;
     field {desc = "Entropy source single-bit mode rng_bit_sel. Selects which RNG bit stream to process when single-bit mode is enabled."; sw=rw; resetsignal=cptra_rst_b;} rng_bit_sel[2]=0;
     field {desc = "RESERVED/unused, must be tied to 0."; sw=rw; resetsignal=cptra_rst_b;} RSVD[12]=0;
