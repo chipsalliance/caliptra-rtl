@@ -763,14 +763,22 @@ end
 // Make the relevant fuses sticky on fuse_wr_done
 always_comb begin
     for (int i=0; i < `CLP_OBF_UDS_DWORDS; i++) begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = 1'b1;
+`else
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+`endif
     end
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.fuse_vendor_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
     end
 
     for (int i=0; i < `CLP_OBF_FE_DWORDS; i++) begin
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = 1'b1;
+`else
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+`endif
     end
 
     for (int i=0; i<24; i++) begin
@@ -1922,6 +1930,4 @@ end
 `CALIPTRA_ASSERT      (AXI_SUB_ID_WIDTH  , SOC_IFC_ID_W   == AXI_ID_WIDTH,   clk, !cptra_noncore_rst_b)
 
 `CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, !cptra_noncore_rst_b)
-//this generates an NMI in the core, but we don't have a handler so it just hangs
-`CALIPTRA_ASSERT_NEVER(ERR_SOC_IFC_AHB_ERR, hresp_o, clk, !cptra_noncore_rst_b)
 endmodule

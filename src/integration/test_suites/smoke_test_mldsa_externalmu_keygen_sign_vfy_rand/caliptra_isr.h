@@ -152,6 +152,8 @@ inline void service_soc_ifc_notif_intr () {return;}
 inline void service_sha512_acc_error_intr() {return;}
 inline void service_sha512_acc_notif_intr() {return;}
 
+inline void service_aes_error_intr() {return;}
+inline void service_aes_notif_intr() {return;}
 inline void service_abr_error_intr() {
     uint32_t * reg = (uint32_t *) (CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R);
     uint32_t sts = *reg;

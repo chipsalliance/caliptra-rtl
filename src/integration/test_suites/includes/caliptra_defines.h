@@ -23,6 +23,13 @@
 #include "defines.h"
 #include "caliptra_reg.h"
 
+/* ---- Common boolean defines (also defined identically in several lib headers) ---- */
+#ifndef TRUE
+  #define TRUE  1u
+#endif
+#ifndef FALSE
+  #define FALSE 0u
+#endif
 
 /* ---- Key Vault ---- */
 

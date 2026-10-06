@@ -347,7 +347,7 @@ void main() {
     case 1:
         // ============================================================
         // Iter 1: Warm reset clears region registers -- reprogram
-        // Uses commit/lock split to hit write×committed coverage
+        // Uses commit/lock split to hit writexcommitted coverage
         // ============================================================
         VPRINTF(LOW, "ROM[1]: Verifying registers cleared by warm reset\n");
         verify_regs_reset();
@@ -355,7 +355,7 @@ void main() {
         populate_dice_slots();
         VPRINTF(LOW, "ROM[1]: Committing ICCM shadows (2-phase, no lock yet)\n");
         commit_iccm_shadows();
-        // Write again after commit (committed=1, unlocked) -- hits write×committed
+        // Write again after commit (committed=1, unlocked) -- hits writexcommitted
         VPRINTF(LOW, "ROM[1]: Extra write after commit (coverage: write x committed)\n");
         lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
         lsu_write_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR, FMC_ICCM_START_REL);
@@ -455,7 +455,7 @@ void main() {
                 while(1);
             }
             VPRINTF(LOW, "  shadow_update_err confirmed (NON_FATAL=0x%08x)\n", nf_err);
-            // Read shadow register while err_update active (coverage: read×err_update)
+            // Read shadow register while err_update active (coverage: readxerr_update)
             VPRINTF(LOW, "ROM[6]: Reading shadow reg during err_update (coverage)\n");
             lsu_read_32(CLP_SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR);
             // W1C clear -- we've verified the fault detection works

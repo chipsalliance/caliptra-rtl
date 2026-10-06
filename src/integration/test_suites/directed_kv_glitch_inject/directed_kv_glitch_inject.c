@@ -163,7 +163,7 @@ void main() {
             // This is by design -- recovery requires reset.
             //
             // Uses commit_iccm_shadows() (no lock) so write attempts
-            // during err_storage produce we=1 (coverage: write×err_storage).
+            // during err_storage produce we=1 (coverage: writexerr_storage).
             // ========================================================
 
             // Commit shadow values (2-phase) without locking

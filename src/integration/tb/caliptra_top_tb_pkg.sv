@@ -80,6 +80,15 @@ typedef struct packed {
     logic do_stash_post_cptra_lock_writes;
 } stash_test_ctrl_t;
 
+// FW-directed drive of generic_input_wires for toggle coverage (TB command
+// 8'h96). Kept separate from ras_test_ctrl_t so the RAS control struct is not
+// disturbed. Once 'override_en' is set, the top-level testbench mux forces
+// generic_input_wires to 'value' (independent of the SoC BFM's mailbox loop).
+typedef struct packed {
+    logic        override_en;
+    logic [63:0] value;
+} generic_input_wire_ctrl_t;
+
 typedef struct packed {
     logic fifo_auto_push;
     logic fifo_auto_pop;

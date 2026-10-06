@@ -35,6 +35,8 @@ import caliptra_top_tb_pkg::*; #(
 
     output logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key,
     output logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key,
+    output logic [`CLP_OBF_UDS_DWORDS-1:0][31:0]          cptra_obf_uds_seed,
+    output logic [`CLP_OBF_FE_DWORDS-1:0][31:0]           cptra_obf_field_entropy,
 
     input  logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand,
     input  logic [0:`CLP_OBF_FE_DWORDS-1] [31:0]          cptra_fe_rand,
@@ -93,6 +95,12 @@ import caliptra_top_tb_pkg::*; #(
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_tb;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_tb;
     logic [0:OCP_LOCK_HEK_NUM_DWORDS-1] [31:0]     cptra_hek_tb;
+
+    // Word i of the TB arrays maps to fuse register index i
+    always_comb begin
+        for (int dw = 0; dw < `CLP_OBF_UDS_DWORDS; dw++) cptra_obf_uds_seed[dw]      = cptra_uds_tb[dw];
+        for (int dw = 0; dw < `CLP_OBF_FE_DWORDS;  dw++) cptra_obf_field_entropy[dw] = cptra_fe_tb[dw];
+    end
 
     // AXI request signals
     axi_resp_e wresp, rresp;
@@ -400,6 +408,7 @@ import caliptra_top_tb_pkg::*; #(
 
                     for (int rpt=0; rpt < 5; rpt++) @(posedge core_clk);
 
+`ifndef CALIPTRA_MODE_SUBSYSTEM
                     $display ("SoC: Writing obfuscated UDS to fuse bank\n");
                     for (int dw=0; dw < `CLP_OBF_UDS_DWORDS; dw++) begin
                         m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_UDS_SEED_0 + 4 * dw), .data(cptra_uds_tb[dw]), .resp(wresp), .resp_user(buser));
@@ -409,6 +418,7 @@ import caliptra_top_tb_pkg::*; #(
                     for (int dw=0; dw < `CLP_OBF_FE_DWORDS; dw++) begin
                         m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_FIELD_ENTROPY_0 + 4 * dw), .data(cptra_fe_tb[dw]), .resp(wresp), .resp_user(buser));
                     end
+`endif
 
                     $display ("SoC: Writing obfuscated HEK seed to fuse bank\n");
                     for (int dw=0; dw < OCP_LOCK_HEK_NUM_DWORDS; dw++) begin
@@ -1248,8 +1258,10 @@ initial begin
                         $finish;
                     end
 
-                    $display("* TEST PASSED");
-                    $finish;
+                    // SoC-side under-reset write/readback passed. Do NOT finish
+                    // here: let the core boot normally and have the firmware
+                    // confirm the written value survives
+                    $display("SoC: Write-under-reset check passed; handing off to firmware");
                 end
             join
         end

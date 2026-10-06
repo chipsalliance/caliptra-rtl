@@ -13,64 +13,68 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
-/* Custom linker script for KV boot flow monitor test.
- * Places .data_iccm0 (FMC) at VMA 0x40000000 and
- *        .data_iccm1 (RT)  at VMA 0x40008000
- * so that PC-relative addressing works correctly when each
- * function executes from its respective ICCM region. */
-
 OUTPUT_ARCH( "riscv" )
 ENTRY(_start)
 
+/*
+ * Unified simulation linker script.
+ *
+ * All read/write data (.data/.rodata/.sdata) AND .bss live directly in DCCM
+ * (VMA == LMA) and are backdoor-loaded into DCCM via dccm.hex. crt0 performs NO
+ * ROM->DCCM copy of either .data or .bss (these benches are simulation-only and
+ * DCCM is always preloaded). Only .text remains in the ROM/imem program image.
+ *
+ * Data is placed at the DCCM base (0x5000_0000) so a test has the full 256 KiB
+ * of DCCM available. (Previously .data started at 0x5002_0000 and the lower half
+ * was nominally reserved for remote-firmware images; that reservation is unused
+ * in these benches, and many tests already relocated data to the lower half.)
+ */
 SECTIONS {
+  /* ------------------- ROM / imem ------------------- */
   . = 0x0;
-  .text   : { *(.text*) }
-
+  .text     : { *(.text*) }
   .eh_frame : { *(.eh_frame) }
-  /* DCCM as VMA */
-  /* Data is bundled with ROM image in iMem */
-  /* Align data to 4-bytes to allow LSU access to work
-   * when copying to DCCM */
-  /* Only upper half of DCCM is used for ROM image */
-  _data_lma_start = ALIGN(4);
+  _rom_end = .;
+  ASSERT( _rom_end < 0x00018000, "ERROR: ROM (.text) size exceeds 96KiB")
+
+  /* ------- DCCM-resident RW data + BSS (VMA == LMA) -------
+   * Backdoor-loaded via dccm.hex; no crt0 copy. The .bss/.sbss inputs are
+   * folded in here (with =0x0000 fill) so they are zero-initialized by the
+   * DCCM preload rather than copied from ROM at reset.
+   *
+   * Data starts at 0x5002_0000 (the UPPER half of DCCM). The LOWER half
+   * (0x5000_0000..0x5001_ffff) is deliberately left free: the integration /
+   * validation ROM copies remote firmware images (FMC/RT, whose own .data is
+   * linked at 0x5000_0000) into the lower half via the mailbox FW flow. Placing
+   * this firmware's data/stack in the lower half would be overwritten by that
+   * copy and corrupt the ROM mid-transfer. Do not move this below 0x5002_0000. */
   _data_vma_start = 0x50020000;
-  .data _data_vma_start : AT(_data_lma_start) { *(.*data) *(.*data.*) *(.rodata*) *(.srodata*) ; . = ALIGN(4);} =0x0000,
-  _data_lma_end = _data_lma_start + SIZEOF(.data);
-  _data_vma_end = _data_vma_start + SIZEOF(.data);
+  .data _data_vma_start : AT(_data_vma_start) {
+      *(.dccm*)
+      *(.*data) *(.*data.*)
+      *(.rodata*) *(.srodata*)
+      *(.sbss) *(.bss)
+      . = ALIGN(4);
+  } =0x0000
+  _data_vma_end = .;
 
-  _bss_lma_start = _data_lma_end;
-  _bss_vma_start = _data_vma_end;
-  .bss _bss_vma_start : AT(_bss_lma_start) { *(.sbss) *(.bss) ; . = ALIGN(4);} =0x0000,
-  _bss_lma_end = _bss_lma_start + SIZEOF(.bss);
-  _bss_vma_end = _bss_vma_start + SIZEOF(.bss);
-
-  _end = _bss_lma_end;
-  ASSERT( _end < 0x00018000, "ERROR: ROM size exceeds 96KiB")
-
-  /* DCCM as VMA and LMA */
-  . = _bss_vma_end;
-  _dccm_lma_start = _bss_vma_end; /* ----\___ SAME */
-  _dccm_vma_start = _bss_vma_end; /* ----/         */
-  .dccm _dccm_vma_start : AT(_dccm_lma_start) { *(.dccm*) . = ALIGN(4); } =0x0000,
+  /* ------------------- ICCM code images -------------------
+   * VMA is in ICCM; LMA is staged in DCCM (loaded via dccm.hex) and copied into
+   * ICCM by the test at runtime. This test loads MULTIPLE images that COEXIST in
+   * ICCM, so iccm1 is placed at 0x4000_8000 (and iccm2 at a distinct offset) to
+   * sit alongside iccm0 at the base rather than overlapping it. */
   iccm_code0_start = .;
-
-  /* ICCM sections for boot flow monitor test.
-   * Unlike the default linker script, each section has a DISTINCT VMA
-   * matching its intended execution address in ICCM:
-   *   .data_iccm0 (FMC) -> VMA 0x40000000  (ICCM base)
-   *   .data_iccm1 (RT)  -> VMA 0x40008000  (FMC_SIZE = 32 KiB offset) */
-  .data_iccm0 0x40000000 : AT(iccm_code0_start) {*(.data_iccm0) ; . = ALIGN(4); } =0x0000,
+  .data_iccm0 0x40000000 : AT(iccm_code0_start) { *(.data_iccm0) ; . = ALIGN(4); } =0x0000
   iccm_code0_end = iccm_code0_start + SIZEOF(.data_iccm0);
   iccm_code1_start = ALIGN(iccm_code0_end,4);
-  .data_iccm1 0x40008000 : AT(iccm_code1_start) {*(.data_iccm1) ; . = ALIGN(4); } =0x0000,
+  .data_iccm1 0x40008000 : AT(iccm_code1_start) { *(.data_iccm1) ; . = ALIGN(4); } =0x0000
   iccm_code1_end = iccm_code1_start + SIZEOF(.data_iccm1);
   iccm_code2_start = ALIGN(iccm_code1_end,4);
-  .data_iccm2 0x40000000 : AT(iccm_code2_start) {*(.data_iccm2) ; . = ALIGN(4); } =0x0000,
+  .data_iccm2 0x40000000 : AT(iccm_code2_start) { *(.data_iccm2) ; . = ALIGN(4); } =0x0000
   iccm_code2_end = iccm_code2_start + SIZEOF(.data_iccm2);
 
-  /* Stack is at the end of DCCM after .data_iccm2 */
+  /* ------------------- Stack ------------------- */
   . = ALIGN(iccm_code2_end,16);
-  STACK = ALIGN(16) + 0x4000;
-  ASSERT( (STACK < 0x50040000), "ERROR: Stack overflows the DCCM -- note: lower half of DCCM is allocated in the validation image for remote firmware images")
+  STACK = ALIGN(16) + 0x8000;
+  ASSERT( (STACK < 0x50040000), "ERROR: Stack overflows the DCCM")
 }

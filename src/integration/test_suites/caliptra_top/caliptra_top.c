@@ -16,7 +16,6 @@
 
 #include "caliptra_defines.h"
 #include "riscv_hw_if.h"
-#include "aes.h"
 #include "doe.h"
 #include "ecc.h"
 #include "hmac.h"

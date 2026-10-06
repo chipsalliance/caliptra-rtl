@@ -71,8 +71,7 @@ endif
 #endif
 
 # Libraries providing functionality for each peripheral component in Caliptra
-COMP_LIB_NAMES := aes \
-		  doe \
+COMP_LIB_NAMES := doe \
 		  ecc \
 		  mldsa \
 		  mlkem \
@@ -92,10 +91,18 @@ COMP_LIBS := $(foreach name, $(COMP_LIB_NAMES), $(CALIPTRA_ROOT)/src/integration
 -include $(TEST_DIR)/$(TESTNAME).mk
 
 AUX_HEADER_FILES ?=
+# Use the shared default ISR header (libs/caliptra_isr/common/caliptra_isr.h)
+# unless the test dir ships its own override.
+ifeq (,$(wildcard $(TEST_DIR)/caliptra_isr.h))
+DEFAULT_ISR_HEADER := $(ISR_DIR)/common/caliptra_isr.h
+else
+DEFAULT_ISR_HEADER :=
+endif
 HEADER_FILES := $(INCLUDES_DIR)/caliptra_defines.h \
 		$(INCLUDES_DIR)/defines.h \
 		$(CLP_REG_DIR)/caliptra_reg.h  \
 		$(RISCV_HW_IF_DIR)/riscv_hw_if.h \
+		$(DEFAULT_ISR_HEADER) \
 		$(wildcard $(TEST_DIR)/*.h) \
 		$(PRINTF_DIR)/printf.h \
 		$(ISR_DIR)/riscv-csr.h \
@@ -120,9 +127,8 @@ endif
 AUX_OFILES ?=
 OFILES += $(AUX_OFILES)
 OFILES += $(TESTNAME).o
-ifeq (0,$(shell test -e $(TEST_DIR)/caliptra_isr.h && echo $$?))
-	OFILES += caliptra_isr.o
-endif
+# The ISR is a common library now, so every test compiles it.
+OFILES += caliptra_isr.o
 # Assume all tests will import our printf lib
 OFILES += printf.o
 # Always compile the lib files - for every target
@@ -405,11 +411,22 @@ program.hex:
 
 else
 # Build program.hex from source (test_suites)
+#
+# These benches are simulation-only. Rather than have crt0 copy .data/.bss from
+# the ROM image into DCCM on every reset (a slow ROM->DCCM word copy that
+# dominates startup), all RW data and .bss are backdoor-loaded straight into
+# DCCM via dccm.hex. crt0 no longer does any copy, so this saves it on every
+# cold and warm reset. .data now has a DCCM LMA (VMA==LMA), so it is excluded
+# from program.hex (the ROM/imem image) and emitted only into dccm.hex. Because
+# .data now has a DCCM LMA (VMA==LMA), its dccm.hex offset is obtained by the
+# same static "-0x50000000" LMA rebase used for .dccm and the .data_iccm*
+# staging sections -- no per-build address computation is needed.
 program.hex: $(OFILE_CRT) $(OFILES) $(LINK)
 	@echo Building $(TESTNAME)
 	$(GCC_PREFIX)-gcc $(ABI) -Wl,-Map=$(TESTNAME).map -lgcc -T$(LINK) -o $(TESTNAME).exe $(OFILE_CRT) $(OFILES) -nostartfiles  $(TEST_LIBS)
-	-$(GCC_PREFIX)-objcopy -O verilog -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x18000 --no-change-warnings $(TESTNAME).exe program.hex
-	-$(GCC_PREFIX)-objcopy -O verilog -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
+	-$(GCC_PREFIX)-objcopy -O verilog -R .data -R .data_iccm0 -R .data_iccm1 -R .data_iccm2 -R .iccm -R .dccm -R .eh_frame --pad-to 0x18000 --no-change-warnings $(TESTNAME).exe program.hex
+	-$(GCC_PREFIX)-objcopy -O verilog -j .data -j .data_iccm0 -j .data_iccm1 -j .data_iccm2 -j .dccm \
+			      --change-section-lma       .data-0x50000000 \
 			      --change-section-lma .data_iccm0-0x50000000 \
 			      --change-section-lma .data_iccm1-0x50000000 \
 			      --change-section-lma .data_iccm2-0x50000000 \

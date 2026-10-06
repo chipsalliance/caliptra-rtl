@@ -64,6 +64,14 @@ module caliptra_top_tb (
     
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key;
 
+    logic [`CLP_OBF_UDS_DWORDS-1:0][31:0]          cptra_obf_uds_seed;
+    logic [`CLP_OBF_FE_DWORDS-1:0][31:0]           cptra_obf_field_entropy;
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+    logic                                          cptra_obf_uds_fe_vld = 1'b1;
+`else
+    logic                                          cptra_obf_uds_fe_vld = 1'b0;
+`endif
+
     logic [0:`CLP_OBF_UDS_DWORDS-1][31:0]          cptra_uds_rand;
     logic [0:`CLP_OBF_FE_DWORDS-1][31:0]           cptra_fe_rand;
     logic [0:OCP_LOCK_HEK_NUM_DWORDS-1][31:0]      cptra_hek_rand;
@@ -119,8 +127,15 @@ module caliptra_top_tb (
 
     ras_test_ctrl_t ras_test_ctrl;
     stash_test_ctrl_t stash_test_ctrl;
+    generic_input_wire_ctrl_t generic_input_wire_ctrl;
     axi_complex_ctrl_t axi_complex_ctrl;
-    logic [63:0] generic_input_wires;
+    logic [63:0] generic_input_wires;      // muxed net fed to the core
+    logic [63:0] generic_input_wires_bfm;  // SoC BFM's driven value
+    // FW-directed override (TB command 8'h96) takes precedence over the SoC BFM
+    // so generic_input_wires can be forced for toggle coverage regardless of the
+    // BFM's mailbox-processing loop state.
+    assign generic_input_wires = generic_input_wire_ctrl.override_en ? generic_input_wire_ctrl.value
+                                                                     : generic_input_wires_bfm;
     logic        etrng0_req;
     logic        etrng1_req;
     logic  [3:0] itrng_data;
@@ -165,6 +180,8 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 
     .cptra_obf_key      (cptra_obf_key   ),
     .cptra_csr_hmac_key (cptra_csr_hmac_key),
+    .cptra_obf_uds_seed      (cptra_obf_uds_seed     ),
+    .cptra_obf_field_entropy (cptra_obf_field_entropy),
 
     .strap_ss_key_release_key_size,
     .strap_ss_key_release_base_addr,
@@ -192,7 +209,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
     .ras_test_ctrl(ras_test_ctrl),
     .stash_test_ctrl(stash_test_ctrl),
 
-    .generic_input_wires(generic_input_wires),
+    .generic_input_wires(generic_input_wires_bfm),
 
     .cptra_error_fatal(cptra_error_fatal),
     .cptra_error_non_fatal(cptra_error_non_fatal),
@@ -232,10 +249,10 @@ caliptra_top caliptra_top_dut (
     .clk                        (core_clk),
 
     .cptra_obf_key              (cptra_obf_key),
-    .cptra_obf_uds_seed_vld     ('0), //validated at caliptra-ss
-    .cptra_obf_uds_seed         ('0), //validated at caliptra-ss
-    .cptra_obf_field_entropy_vld('0), //validated at caliptra-ss
-    .cptra_obf_field_entropy    ('0), //validated at caliptra-ss
+    .cptra_obf_uds_seed_vld     (cptra_obf_uds_fe_vld),
+    .cptra_obf_uds_seed         (cptra_obf_uds_seed),
+    .cptra_obf_field_entropy_vld(cptra_obf_uds_fe_vld),
+    .cptra_obf_field_entropy    (cptra_obf_field_entropy),
     .cptra_csr_hmac_key         (cptra_csr_hmac_key),
 
     .jtag_tck(jtag_tck),
@@ -444,6 +461,7 @@ caliptra_top_tb_services #(
     // TB Controls
     .ras_test_ctrl(ras_test_ctrl),
     .stash_test_ctrl(stash_test_ctrl),
+    .generic_input_wire_ctrl(generic_input_wire_ctrl),
     .cycleCnt(cycleCnt),
     .axi_complex_ctrl(axi_complex_ctrl),
 

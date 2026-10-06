@@ -165,17 +165,23 @@ assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(aes_idle) || ~kv_key_ready || ~kv_write_ready;
 assign status_idle_o = caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
 
-// Register the full mubi4 encoding of aes_idle (preserve encoded protection),
-// and derive the single-bit not-idle→idle pulse at the read side.
-caliptra_prim_mubi_pkg::mubi4_t aes_idle_r;
+// Detect when AES output is valid and the core is idle
+logic aes_output_valid, aes_output_valid_r;
 logic aes_cmd_done_pulse;
-always_ff @(posedge clk or negedge reset_n) begin
-    if (!reset_n) aes_idle_r <= caliptra_prim_mubi_pkg::MuBi4True;
-    else          aes_idle_r <= aes_idle;
-end
-assign aes_cmd_done_pulse = ~caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle_r)
-                         &&  caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
 
+always_comb aes_output_valid = output_valid_o && caliptra_prim_mubi_pkg::mubi4_test_true_loose(aes_idle);
+
+always_ff @(posedge clk or negedge reset_n) begin
+    if (!reset_n) begin
+        aes_output_valid_r <= 1'b0;
+    end else begin
+        aes_output_valid_r <= aes_output_valid;
+    end
+end
+
+// Pulse to indicate the AES command is done; drives the NOTIF_CMD_DONE interrupt.
+assign aes_cmd_done_pulse = (aes_output_valid && !aes_output_valid_r) ||
+                            caliptra2aes.kv_write_done;
 
 //AHB interface
 ahb_slv_sif #(

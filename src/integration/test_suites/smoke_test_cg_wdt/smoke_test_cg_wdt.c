@@ -22,7 +22,6 @@
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count       = 0;
-volatile uint32_t  hmac_intr_status;
 volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
 
 #ifdef CPT_VERBOSITY

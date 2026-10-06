@@ -279,6 +279,11 @@ module soc_ifc_axi_sha_acc_dis_tb
     .cptra_uncore_dmi_reg_rdata(),
     .cptra_uncore_dmi_reg_addr(7'h0),
     .cptra_uncore_dmi_reg_wdata(0),
+
+    // DCLS feature outputs (no VeeR core at this block level) - observe-only
+    .dcls_disable_corruption_detection(),
+    .trace_shadow_core_sel(),
+
     .busy()
   );
 
