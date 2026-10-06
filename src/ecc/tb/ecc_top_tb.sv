@@ -1803,6 +1803,11 @@ module ecc_top_tb
       
       string fname;
 
+      if (!(ecc_params_pkg::MULT_RADIX inside {48, 64}))
+        $fatal(1, "* TESTCASE FAILED: MULT_RADIX must be 48 or 64, got %0d",
+               ecc_params_pkg::MULT_RADIX);
+      $display("ECC_RADIX_CONFIG: MULT_RADIX=%0d", ecc_params_pkg::MULT_RADIX);
+
       $display("   -= Testbench for ecc started =-");
       $display("    ==============================");
       $display("");
