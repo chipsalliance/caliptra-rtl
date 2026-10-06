@@ -106,7 +106,7 @@ jobs:
     needs: build_tools
     if: ${{ inputs.run_vltr == 'true' }}
     outputs:
-      test_names: ${{ steps.output-matrix.outputs.test_names }}
+      matrix: ${{ steps.output-matrix.outputs.matrix }}
     env:
       EXCLUDE_TESTS: "smoke_test_clk_gating, smoke_test_cg_wdt, smoke_test_mbox_cg, smoke_test_kv_cg, smoke_test_doe_cg, smoke_test_dma, smoke_test_wdt_rst"
 
@@ -118,7 +118,7 @@ jobs:
 
       - name: Build matrix
         id: output-matrix
-        run: echo "test_names=$(python3 .github/scripts/build_tests_matrix.py)" >> $GITHUB_OUTPUT
+        run: echo "matrix=$(python3 .github/scripts/build_tests_matrix.py)" >> $GITHUB_OUTPUT
 
 
   build_and_test:
@@ -129,8 +129,7 @@ jobs:
 
     strategy:
       fail-fast: false
-      matrix:
-        test_name: ${{ fromJSON(needs.build_matrix.outputs.test_names) }}
+      matrix: ${{ fromJSON(needs.build_matrix.outputs.matrix) }}
 
     steps:
       - uses: actions/checkout@v3
@@ -194,13 +193,20 @@ jobs:
           export CALIPTRA_PRIM_ROOT=$CALIPTRA_ROOT/src/caliptra_prim_generic
           export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
 
+          # Per-test runtime plusargs (e.g. +CALIPTRA_TEST_STASH_BANK) come from
+          # the test's yml, parsed in .github/scripts/build_tests_matrix.py and
+          # attached to the matrix. BFM-gating plusargs must reach the sim or the
+          # test never executes its expected behavior and hangs.
+          echo "Runtime plusargs for ${{ matrix.test_name }}: ${{ matrix.plusargs }}"
+
           cd tools/scripts
           make verilator \
             CALIPTRA_ROOT=$CALIPTRA_ROOT \
             ADAMSBRIDGE_ROOT=$ADAMSBRIDGE_ROOT \
             CALIPTRA_PRIM_ROOT=$CALIPTRA_PRIM_ROOT \
             CALIPTRA_PRIM_MODULE_PREFIX=$CALIPTRA_PRIM_MODULE_PREFIX \
-            TESTNAME=${{ matrix.test_name }} | tee output.log
+            TESTNAME=${{ matrix.test_name }} \
+            RUN_PLUSARGS="${{ matrix.plusargs }}" | tee output.log
 
           tail -n 30 output.log | grep "TESTCASE PASSED"
 
