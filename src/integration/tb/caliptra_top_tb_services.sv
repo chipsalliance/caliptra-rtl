@@ -69,7 +69,8 @@ module caliptra_top_tb_services
     output logic scan_mode,
 
     // TB Controls
-    output var   ras_test_ctrl_t ras_test_ctrl,
+    output var   ras_test_ctrl_t   ras_test_ctrl,
+    output var   stash_test_ctrl_t stash_test_ctrl,
     output int   cycleCnt,
     output var   axi_complex_ctrl_t axi_complex_ctrl,
 
@@ -397,7 +398,9 @@ module caliptra_top_tb_services
     //         8'hc1        - Force DCLS lockstep corruption inject WITHOUT the TB self-check
     //                        (negative test: smoke_test_dcls_dis injects while detection is
     //                         disabled and verifies in FW that rv_dcls_err stays 0)
-    //         8'hc2: 8'hc7 - Unused
+    //         8'hc2        - Request BFM post-CPTRA_LOCK stash bank negative writes
+    //         8'hc3        - Request BFM stash bank random overwrite with invalid AXI USER (PAUSER)
+    //         8'hc4: 8'hc7 - Unused
     //         8'hc8        - Inject key 0x0 into slot 16 for AES
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
@@ -488,24 +491,46 @@ module caliptra_top_tb_services
 
     always @(negedge clk or negedge cptra_rst_b) begin
         if (!cptra_rst_b) begin
-            ras_test_ctrl.do_no_lock_access     <= 1'b0;
-            ras_test_ctrl.do_ooo_access         <= 1'b0;
+            stash_test_ctrl.do_stash_post_cptra_lock_writes <= 1'b0;
         end
-        else if((WriteData[7:0] == 8'he5) && mailbox_write) begin
-            ras_test_ctrl.do_no_lock_access     <= 1'b1;
-            ras_test_ctrl.do_ooo_access         <= 1'b0;
-        end
-        else if((WriteData[7:0] == 8'he6) && mailbox_write) begin
-            ras_test_ctrl.do_no_lock_access     <= 1'b0;
-            ras_test_ctrl.do_ooo_access         <= 1'b1;
-        end
-        else if ((WriteData[7:0] == 8'he7) && mailbox_write) begin
-            ras_test_ctrl.do_no_lock_access     <= 1'b0;
-            ras_test_ctrl.do_ooo_access         <= 1'b0;
+        else if ((WriteData[7:0] == 8'hc2) && mailbox_write) begin
+            stash_test_ctrl.do_stash_post_cptra_lock_writes <= 1'b1;
         end
         else begin
-            ras_test_ctrl.do_no_lock_access     <= 1'b0;
-            ras_test_ctrl.do_ooo_access         <= 1'b0;
+            stash_test_ctrl.do_stash_post_cptra_lock_writes <= 1'b0;
+        end
+    end
+
+    always @(negedge clk or negedge cptra_rst_b) begin
+        if (!cptra_rst_b) begin
+            ras_test_ctrl.do_no_lock_access             <= 1'b0;
+            ras_test_ctrl.do_ooo_access                 <= 1'b0;
+            stash_test_ctrl.do_stash_bad_pauser_writes   <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'he5) && mailbox_write) begin
+            ras_test_ctrl.do_no_lock_access             <= 1'b1;
+            ras_test_ctrl.do_ooo_access                 <= 1'b0;
+            stash_test_ctrl.do_stash_bad_pauser_writes   <= 1'b0;
+        end
+        else if((WriteData[7:0] == 8'he6) && mailbox_write) begin
+            ras_test_ctrl.do_no_lock_access             <= 1'b0;
+            ras_test_ctrl.do_ooo_access                 <= 1'b1;
+            stash_test_ctrl.do_stash_bad_pauser_writes   <= 1'b0;
+        end
+        else if ((WriteData[7:0] == 8'hc3) && mailbox_write) begin
+            ras_test_ctrl.do_no_lock_access             <= 1'b0;
+            ras_test_ctrl.do_ooo_access                 <= 1'b0;
+            stash_test_ctrl.do_stash_bad_pauser_writes   <= 1'b1;
+        end
+        else if ((WriteData[7:0] == 8'he7) && mailbox_write) begin
+            ras_test_ctrl.do_no_lock_access             <= 1'b0;
+            ras_test_ctrl.do_ooo_access                 <= 1'b0;
+            stash_test_ctrl.do_stash_bad_pauser_writes   <= 1'b0;
+        end
+        else begin
+            ras_test_ctrl.do_no_lock_access             <= 1'b0;
+            ras_test_ctrl.do_ooo_access                 <= 1'b0;
+            stash_test_ctrl.do_stash_bad_pauser_writes   <= 1'b0;
         end
     end
 

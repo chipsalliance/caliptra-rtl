@@ -33,6 +33,11 @@ package soc_ifc_pkg;
     parameter SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS = 2;
     parameter SOC_IFC_WDT_TIMEOUT_PERIOD_W = SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS * 32;
 
+    parameter SOC_IFC_STASH_NUM_SLOTS       = 8;
+    parameter SOC_IFC_STASH_DWORDS_PER_SLOT = 26;
+    parameter SOC_IFC_STASH_NUM_SLOT_DATA   = SOC_IFC_STASH_NUM_SLOTS * SOC_IFC_STASH_DWORDS_PER_SLOT;
+    parameter SOC_IFC_STASH_SLOT_IDX_W      = $clog2(SOC_IFC_STASH_NUM_SLOTS);
+
     parameter SOC_IFC_REG_OFFSET = 32'h3000_0000;
     
     //Mailbox size configuration

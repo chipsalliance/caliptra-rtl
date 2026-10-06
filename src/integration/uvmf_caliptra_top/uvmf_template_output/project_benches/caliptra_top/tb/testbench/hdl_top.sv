@@ -117,6 +117,7 @@ import aaxi_uvm_pkg::*;
     bit                         int_flag;
     bit                         cycleCnt_smpl_en;
     ras_test_ctrl_t             ras_test_ctrl;
+    stash_test_ctrl_t           stash_test_ctrl;
 
     //jtag interface
     logic                       jtag_tck    = '0; // JTAG clk
@@ -605,6 +606,7 @@ import aaxi_uvm_pkg::*;
 
         // TB Controls
         .ras_test_ctrl(ras_test_ctrl),
+        .stash_test_ctrl(stash_test_ctrl),
         .cycleCnt(cycleCnt),
         .cycleCnt_smpl_en(cycleCnt_smpl_en),
 
