@@ -106,9 +106,11 @@ def verilateTB(scratch):
 
 def getTestNames():
     l0_regress_file = os.path.join(os.environ.get('CALIPTRA_ROOT'), "src/integration/stimulus/L0_regression.yml")
+    l0_regress_dir = os.path.dirname(l0_regress_file)
     testPaths = []
     x = ''
     integrationTestSuiteList = []
+    testPlusargs = {}
 
     with open (l0_regress_file) as f:
         dict = yaml.load(f, Loader=yaml.FullLoader)
@@ -125,9 +127,23 @@ def getTestNames():
         # https://github.com/chipsalliance/caliptra-rtl/issues/126
         if (re.search(r'(smoke_test_clk_gating|smoke_test_cg_wdt|smoke_test_mbox_cg|smoke_test_kv_cg|smoke_test_doe_cg|smoke_test_dma|smoke_test_wdt_rst)',x.groups()[0])) :
             continue
-        integrationTestSuiteList.append(x.groups()[0])
+        testname = x.groups()[0]
+        integrationTestSuiteList.append(testname)
 
-    return integrationTestSuiteList
+        # Each test's own <testname>.yml may declare extra runtime plusargs
+        # (e.g. +CALIPTRA_TEST_STASH_BANK for the RFC #673 stash-bank smoke
+        # tests, following the same convention as e.g. smoke_test_dma.yml's
+        # +CLP_DMA_TB_MODE_NOT_EMPTY). Read them here and forward them via
+        # RUN_PLUSARGS in runTest() below -- otherwise firmware that gates
+        # functionality on a plusarg at runtime hangs forever waiting for
+        # BFM work that's never requested. See the same convention
+        # documented in tools/scripts/Makefile around RUN_PLUSARGS.
+        testYmlPath = os.path.normpath(os.path.join(l0_regress_dir, testYml))
+        with open(testYmlPath) as tf:
+            testYmlDict = yaml.load(tf, Loader=yaml.FullLoader) or {}
+        testPlusargs[testname] = list(testYmlDict.get('plusargs', []))
+
+    return integrationTestSuiteList, testPlusargs
 
 def init_pool(lock, arr):
     global printlock
@@ -137,7 +153,7 @@ def init_pool(lock, arr):
 
 def runTest(args):
 
-    (test, scratch, verilated, idx) = args;
+    (test, scratch, verilated, idx, plusargs) = args;
 
     testdir = os.path.join(scratch, test)
     # Reuse pristine verilator-build output for each test
@@ -161,7 +177,12 @@ def runTest(args):
     # Invoke makefile for the current test
     mfile = os.path.join(os.environ.get('CALIPTRA_ROOT'),"tools/scripts/Makefile")
     testname = "TESTNAME=" + test
-    cmd = " ".join(["make", "-C", testdir, "-f", mfile, testname, "verilator", "VERILATOR_RUN_ARGS=+CLP_REGRESSION"])
+    # Forward this test's YAML-declared plusargs (e.g. +CALIPTRA_TEST_STASH_BANK)
+    # via RUN_PLUSARGS, same convention consumed by the `verilator` Makefile
+    # target. Quoted so a (currently unused) multi-plusarg list still comes
+    # through as a single RUN_PLUSARGS value.
+    run_plusargs = "RUN_PLUSARGS=\"" + " ".join(plusargs) + "\""
+    cmd = " ".join(["make", "-C", testdir, "-f", mfile, testname, "verilator", "VERILATOR_RUN_ARGS=+CLP_REGRESSION", run_plusargs])
     exitcode, resultout, resulterr = runBashScript(cmd)
 
     # Parse and log the results
@@ -218,15 +239,15 @@ def main():
     scratch = createScratch()
     # Verilate the code into a single pristine obj folder
     verilated = verilateTB(scratch)
-    # Parse yaml file for test list
-    testnames=getTestNames()
+    # Parse yaml file for test list (and each test's declared runtime plusargs)
+    testnames, testPlusargs = getTestNames()
     # Set up args for the multiprocessing Pool
     failcount=0
     printlock=Lock()
     ones = []
     for i in testnames: ones.append(1)
     pending_tests=Array('B', ones, lock=True)
-    run_args = [(testname, scratch, verilated, testnames.index(testname)) for testname in testnames]
+    run_args = [(testname, scratch, verilated, testnames.index(testname), testPlusargs.get(testname, [])) for testname in testnames]
     # Run all tests in parallel and accumulate error status codes to the global failcount
     async_res = Pool(len(testnames), init_pool, (printlock, pending_tests)).map_async(runTest, run_args)
     while True:
