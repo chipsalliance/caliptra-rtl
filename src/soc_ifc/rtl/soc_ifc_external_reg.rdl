@@ -522,7 +522,7 @@ reg {
             Refer to the Caliptra ROM Specification for additional details.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
+    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. The window is given in symbols: in multi-channel mode each symbol consists of one bit per RNG lane, in single-bit mode a symbol consists of one bit of the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
     field {desc = "Entropy source single-bit mode. ROM clears threshold_scope during entropy source initialization. When this bit is set to 1, ROM enables rng_bit_enable."; sw=rw; resetsignal=cptra_rst_b;} single_bit_mode=0;
     field {desc = "Entropy source single-bit mode rng_bit_sel. Selects which RNG bit stream to process when single-bit mode is enabled."; sw=rw; resetsignal=cptra_rst_b;} rng_bit_sel[2]=0;
     field {desc = "RESERVED/unused, must be tied to 0."; sw=rw; resetsignal=cptra_rst_b;} RSVD[12]=0;
@@ -554,7 +554,7 @@ reg {
             Refer to the Caliptra ROM Specification for additional details.
             [br]Caliptra Access: RW
             [br]SOC Access:      RW";
-    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
+    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. The window is given in symbols: in multi-channel mode each symbol consists of one bit per RNG lane, in single-bit mode a symbol consists of one bit of the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
     field {desc = "Entropy source single-bit mode. ROM clears threshold_scope during entropy source initialization. When this bit is set to 1, ROM enables rng_bit_enable."; sw=rw; resetsignal=cptra_rst_b;} single_bit_mode=0;
     field {desc = "Entropy source single-bit mode rng_bit_sel. Selects which RNG bit stream to process when single-bit mode is enabled."; sw=rw; resetsignal=cptra_rst_b;} rng_bit_sel[2]=0;
     field {desc = "RESERVED/unused, must be tied to 0."; sw=rw; resetsignal=cptra_rst_b;} RSVD[12]=0;
