@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// KV length-mismatch — HMAC KEY path (single-shot randomized).
+// KV length-mismatch -- HMAC KEY path (single-shot randomized).
 // Each invocation exercises exactly ONE KV read; the regression obtains
 // diversity by running the test many times with distinct random seeds.
 //
@@ -21,13 +21,13 @@
 //
 // HMAC KEY-side length check is enforced (crypto correctness: wrong-size
 // key would produce a wrong HMAC). BLOCK-side length check is intentionally
-// disabled — the HMAC block is a message chunk (not a security-sized key)
-// and legitimate consumers (e.g., OCP LOCK HEK seed, 8 dwords → HMAC_BLOCK)
+// disabled -- the HMAC block is a message chunk (not a security-sized key)
+// and legitimate consumers (e.g., OCP LOCK HEK seed, 8 dwords -> HMAC_BLOCK)
 // rely on PAD=1 zero-extension for short entries.
 //
 // HMAC consumer expected sizes:
-//   HMAC-384 key → 11
-//   HMAC-512 key → 15
+//   HMAC-384 key -> 11
+//   HMAC-512 key -> 15
 // dest_valid bits: bit0=HMAC_KEY, bit1=HMAC_BLOCK
 //
 #include "caliptra_defines.h"
@@ -57,7 +57,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define DV_HMAC_KEY   0x01u
 #define DV_HMAC_BLOCK 0x02u
 
-// Consumer enumeration (KEY paths only — BLOCK-side length check removed).
+// Consumer enumeration (KEY paths only -- BLOCK-side length check removed).
 enum { HMAC_384_KEY = 0, HMAC_512_KEY };
 
 static const char* consumer_name(int c) {
@@ -76,7 +76,7 @@ static void fail_test(const char* m){
     while(1);
 }
 
-// TB inject cmd 0xa2 — arbitrary slot/last_dword/dest_valid.
+// TB inject cmd 0xa2 -- arbitrary slot/last_dword/dest_valid.
 static inline void kv_inject(uint8_t slot, uint8_t last_dword, uint8_t dest_valid) {
     uint32_t cmd = 0xa2u
                  | ((uint32_t)(slot & 0x1Fu) << 8)
@@ -101,7 +101,7 @@ static uint32_t kv_read_and_wait(uint32_t rd_ctrl, uint32_t rd_status,
 
 void main(void) {
     VPRINTF(LOW, "-------------------------------------------------\n");
-    VPRINTF(LOW, " KV length-mismatch — HMAC (single-shot random)\n");
+    VPRINTF(LOW, " KV length-mismatch -- HMAC (single-shot random)\n");
     VPRINTF(LOW, "-------------------------------------------------\n");
     init_interrupts();
 
@@ -150,7 +150,7 @@ void main(void) {
     kv_inject(slot, last_dword, dv);
 
     // 5. Trigger KV read + bounded wait. For HMAC, LEN_CHECK_AT_KEY_USE=1
-    //    so the length check fires on INIT/NEXT (not on read completion) —
+    //    so the length check fires on INIT/NEXT (not on read completion) --
     //    KV_RD_STATUS.ERROR at this point is still KV_SUCCESS regardless
     //    of last_dword.
     uint32_t st_after_read = kv_read_and_wait(rd_ctrl, rd_status, slot);
@@ -158,7 +158,7 @@ void main(void) {
             st_after_read);
 
     // 6. Preload block + LFSR seed and trigger INIT with the chosen mode.
-    //    KEY-side test — block is FW-loaded.
+    //    KEY-side test -- block is FW-loaded.
     volatile uint32_t* bp = (uint32_t*) CLP_HMAC_REG_HMAC512_BLOCK_0;
     for (int i = 0; i < 32; i++) *bp++ = (i == 31) ? 0x00000440u : 0;
     volatile uint32_t* lp = (uint32_t*) CLP_HMAC_REG_HMAC512_LFSR_SEED_0;
@@ -202,7 +202,7 @@ void main(void) {
     //    Security contract: on KEY-path mismatch, FW must observe
     //    KV_RD_STATUS.ERROR=KV_RD_LEN_MISMATCH after INIT, and HMAC must
     //    NOT complete (cleared key prevents the engine from advancing).
-    //    BLOCK-path length check is intentionally disabled — see hmac.sv.
+    //    BLOCK-path length check is intentionally disabled -- see hmac.sv.
     if (expect_mismatch) {
         if (err != KV_ERR_LEN_MISMATCH) {
             VPRINTF(FATAL, "post-INIT STATUS=0x%x err=%u HMAC_STATUS=0x%x\n", st, err, hs);

@@ -45,12 +45,12 @@ $RV_ROOT/configs/veer.config    \
 -set=div_bit=4                      \
 -set=div_new=1                      \
 -set=dccm_enable=1                  \
--set=dccm_addr_xor=1                \
+-set=dccm_addr_xor=0                \
 -set=dccm_num_banks=4               \
 -set=dccm_region=0x5                \
 -set=dccm_offset=0x00000            \
 -set=dccm_size=256                  \
--set=dccm_wr_readback=1             \
+-set=dccm_wr_readback=0             \
 -set=dma_buf_depth=5                \
 -set=fast_interrupt_redirect=1      \
 -set=icache_enable=0                \
@@ -64,7 +64,7 @@ $RV_ROOT/configs/veer.config    \
 -set=icache_num_tag_bypass=2        \
 -set=icache_tag_bypass_enable=1     \
 -set=iccm_enable=1                  \
--set=iccm_addr_xor=1                \
+-set=iccm_addr_xor=0                \
 -set=iccm_num_banks=4               \
 -set=iccm_region=0x4                \
 -set=iccm_offset=0x0                \

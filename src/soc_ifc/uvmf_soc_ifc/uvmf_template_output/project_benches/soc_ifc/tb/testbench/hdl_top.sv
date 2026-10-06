@@ -435,7 +435,13 @@ import pv_defines_pkg::*;
         .cptra_uncore_dmi_reg_wr_en(1'b0 ),
         .cptra_uncore_dmi_reg_rdata(     ),
         .cptra_uncore_dmi_reg_addr (7'h0 ),
-        .cptra_uncore_dmi_reg_wdata(32'h0)
+        .cptra_uncore_dmi_reg_wdata(32'h0),
+
+        // DCLS feature outputs (no VeeR core in this bench) - observe-only
+        .dcls_disable_corruption_detection(),
+        .trace_shadow_core_sel            (),
+
+        .busy                      (     )
     );
 
     soc_ifc_sha_status_if sha_status_if (

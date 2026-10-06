@@ -12,29 +12,29 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// KV length-mismatch — AES key path (single-shot randomized).
+// KV length-mismatch -- AES key path (single-shot randomized).
 // Exercises BOTH check-timing orderings on each invocation:
-//   Order A — set CTRL_SHADOWED.key_len → then KV read.
+//   Order A -- set CTRL_SHADOWED.key_len -> then KV read.
 //             Fires the first-edge check on kv_key_done.
-//   Order B — set an initial permissive key_len (AES-128) → KV read →
+//   Order B -- set an initial permissive key_len (AES-128) -> KV read ->
 //             then reprogram CTRL_SHADOWED.key_len to the target size.
 //             Fires the deferred check via keymgr_key.valid
 //             (LEN_CHECK_AT_KEY_USE=1 arms check_key_size on this edge too).
 //
 // Regression obtains ordering/consumer/slot/last_dword diversity through
 // PLAYBOOK_RANDOM_SEED across nightly runs; the deferred-check hit window
-// (last_dword ∈ [3, expected(target)-1] under Order B) is covered
+// (last_dword in [3, expected(target)-1] under Order B) is covered
 // probabilistically.
 //
 // AES key expected sizes (from CTRL_SHADOWED.key_len):
-//   AES-128 → expected=3   (4 dwords)
-//   AES-192 → expected=5   (6 dwords)
-//   AES-256 → expected=7   (8 dwords)
+//   AES-128 -> expected=3   (4 dwords)
+//   AES-192 -> expected=5   (6 dwords)
+//   AES-256 -> expected=7   (8 dwords)
 // dest_valid bit5 = AES_KEY (encoded 0x20).
 //
 // AES has no CPU-visible interrupt: error_intr/notif_intr are tied off in
 // aes_clp_wrapper.sv and dropped at caliptra_top.sv:1268. FW MUST poll
-// AES_KV_RD_KEY_STATUS.ERROR — both after VALID rises AND after any
+// AES_KV_RD_KEY_STATUS.ERROR -- both after VALID rises AND after any
 // reprogram of CTRL_SHADOWED.KEY_LEN that follows a KV key read
 // (LEN_CHECK_AT_KEY_USE=1 fires the deferred check at the second edge).
 //
@@ -96,7 +96,7 @@ static inline void kv_inject(uint8_t slot, uint8_t last_dword, uint8_t dest_vali
     for (volatile int i = 0; i < 32; i++) __asm__ volatile("nop");
 }
 
-// AES CTRL_SHADOWED is a shadow register — must be written twice.
+// AES CTRL_SHADOWED is a shadow register -- must be written twice.
 static void aes_set_key_len(uint32_t key_len_code) {
     uint32_t v = (key_len_code & 0x7u) << AES_REG_CTRL_SHADOWED_KEY_LEN_LOW;
     lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, v);
@@ -115,7 +115,7 @@ static uint32_t aes_kv_read_and_wait(uint8_t slot) {
 
 void main(void) {
     VPRINTF(LOW, "-------------------------------------------------\n");
-    VPRINTF(LOW, " KV length-mismatch — AES (single-shot random)\n");
+    VPRINTF(LOW, " KV length-mismatch -- AES (single-shot random)\n");
     VPRINTF(LOW, "-------------------------------------------------\n");
     init_interrupts();
 

@@ -824,8 +824,10 @@ initial begin
                         $finish;
                     end
 
-                    $display("* TEST PASSED");
-                    $finish;
+                    // SoC-side under-reset write/readback passed. Do NOT finish
+                    // here: let the core boot normally and have the firmware
+                    // confirm the written value survives
+                    $display("SoC: Write-under-reset check passed; handing off to firmware");
                 end
             join
         end

@@ -1229,7 +1229,6 @@ void main(void) {
 
         VPRINTF(LOW, "Boot Count: %d\n", boot_count);
         
-        // Test Mailbox SRAM ECC
         if (boot_count == BEFORE_FIRST_ICCM_FAILURE) {
             test_mbox_sram_ecc(NO_MASK);
             test_mbox_sram_ecc(WITH_MASK);

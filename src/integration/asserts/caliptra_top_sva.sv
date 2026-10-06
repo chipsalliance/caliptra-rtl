@@ -642,7 +642,11 @@ module caliptra_top_sva
       DOE_UDS_data_check:  assert property (
                                             @(posedge `SVA_RDC_CLK)
                                             disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
-                                            (`SERVICES_PATH.WriteData == 'hEC && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_uds_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.uds_plaintext[dword])
+                                            // OCP-lock exception: a DOE write to the OCP-lock key-release slot (KV23) is
+                                            // rejected whenever the ocp_lock_en strap is set (doe_fsm.sv drives the KV
+                                            // write rule from ocp_lock_en, not the in-progress reg), so KV23 is left
+                                            // unwritten -- skip the plaintext check in that rejected case.
+                                            (`SERVICES_PATH.WriteData == 'hEC && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_uds_flow) |=> ((`SOC_IFC_TOP_PATH.ss_ocp_lock_en && (`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value == OCP_LOCK_KEY_RELEASE_KV_SLOT)) || (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.uds_plaintext[dword]))
                                 
                                           )
                                   else $display("SVA ERROR: DOE UDS output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.uds_plaintext[dword]);
@@ -656,7 +660,11 @@ module caliptra_top_sva
       DOE_FE_data_check:   assert property (
                                             @(posedge `SVA_RDC_CLK)
                                             disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
-                                            (`SERVICES_PATH.WriteData == 'hED && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_fe_flow) |=> (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.fe_plaintext[dword])
+                                            // OCP-lock exception: a DOE write to the OCP-lock key-release slot (KV23) is
+                                            // rejected whenever the ocp_lock_en strap is set (doe_fsm.sv drives the KV
+                                            // write rule from ocp_lock_en, not the in-progress reg), so KV23 is left
+                                            // unwritten -- skip the plaintext check in that rejected case.
+                                            (`SERVICES_PATH.WriteData == 'hED && `SERVICES_PATH.mailbox_write) |=> ##[1:$] $rose(`DOE_PATH.lock_fe_flow) |=> ((`SOC_IFC_TOP_PATH.ss_ocp_lock_en && (`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value == OCP_LOCK_KEY_RELEASE_KV_SLOT)) || (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value == `SERVICES_PATH.doe_test_vector.fe_plaintext[dword]))
                                           )
                                   else $display("SVA ERROR: DOE FE output %h does not match plaintext %h!", `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[`DOE_REG_PATH.hwif_out.DOE_CTRL.DEST.value][dword].data.value, `SERVICES_PATH.doe_test_vector.fe_plaintext[dword]);
 

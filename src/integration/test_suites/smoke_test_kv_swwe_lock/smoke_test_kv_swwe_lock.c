@@ -125,7 +125,7 @@ static void wait_for_ecc_complete(void) {
 // HMAC using direct register writes (no KV read/write), then immediately try
 // to overwrite the ctrl regs (including setting enable=1) while the engine is
 // busy.  Readback must equal the pre-loaded values.  No KV access plumbing
-// needed — SWWE=0 is driven purely by core_ready=0 during computation.
+// needed -- SWWE=0 is driven purely by core_ready=0 during computation.
 // =============================================================================
 static int test_hmac_kv_swwe_lock(void) {
     int pass = 1;
@@ -183,7 +183,7 @@ static int test_hmac_kv_swwe_lock(void) {
 
     // ------------------------------------------------------------------
     // Step 3: Start HMAC, then IMMEDIATELY attempt attack writes.
-    //         No VPRINTFs or polls between INIT and the attacks — HMAC
+    //         No VPRINTFs or polls between INIT and the attacks -- HMAC
     //         completes in hundreds of cycles; extra AHB ops burn that
     //         budget and let the engine go idle (SWWE re-opens) before
     //         our attack arrives.
@@ -214,7 +214,7 @@ static int test_hmac_kv_swwe_lock(void) {
     uint32_t rd_block_after = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_BLOCK_CTRL);
 
     // ------------------------------------------------------------------
-    // Step 4: Wait for HMAC to finish (poll STATUS.READY — no WFI/interrupt
+    // Step 4: Wait for HMAC to finish (poll STATUS.READY -- no WFI/interrupt
     //         dependency).  All logging happens after the timing window.
     // ------------------------------------------------------------------
     while ((lsu_read_32(CLP_HMAC_REG_HMAC512_STATUS) & HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
@@ -289,7 +289,7 @@ static int test_hmac_kv_swwe_lock(void) {
 // =============================================================================
 // TEST 2: ECC KV SWWE Lock During Operation
 //
-// Strategy: same as TEST 1 — pre-load KV ctrl regs (no enable), run ECC
+// Strategy: same as TEST 1 -- pre-load KV ctrl regs (no enable), run ECC
 // keygen using direct register writes, immediately attack while busy.
 // No KV read/write or TB injection needed.
 // =============================================================================

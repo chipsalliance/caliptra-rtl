@@ -20,7 +20,7 @@
 //   injection. Before the fix, error detection was gated by validated_read_en
 //   (a one-cycle pulse on beat 0). If lock_use was set DURING the multi-beat
 //   KV read (after beat 0), kv_resp.error on beats 1-15 was ignored and
-//   error_code remained KV_SUCCESS — allowing a crypto engine to consume a
+//   error_code remained KV_SUCCESS -- allowing a crypto engine to consume a
 //   partially-zeroed key without detecting the fault.
 //
 //   The fix gates error detection by read_allow (held high for all beats),
@@ -31,7 +31,7 @@
 //   2. Pre-compute the lock_use write value (minimize instructions between
 //      the KV read trigger and the lock_use write)
 //   3. Trigger HMAC KV key read from the slot
-//   4. Immediately write lock_use to the same slot — the RISC-V instruction
+//   4. Immediately write lock_use to the same slot -- the RISC-V instruction
 //      pipeline delay ensures this lands mid-read (after beat 0 but before
 //      the 16-beat read completes)
 //   5. Wait for the read to complete, verify KV_RD_KEY_STATUS reports error
@@ -93,7 +93,7 @@ void main() {
             HMAC_REG_HMAC512_STATUS_READY_MASK) == 0);
 
     // ------------------------------------------------------------------
-    // Step 3: Trigger HMAC KV key read — starts a 16-beat read from KV
+    // Step 3: Trigger HMAC KV key read -- starts a 16-beat read from KV
     // Step 4: Set lock_use after a short delay to ensure it lands after
     //         validated_read_en has de-asserted (i.e., after beat 0)
     //
@@ -106,11 +106,11 @@ void main() {
     // With the old (buggy) code:
     //   - Beat 0: kv_resp.error=0, error_code=KV_SUCCESS
     //   - Beats 1-15: kv_resp.error=1 (lock_use now active), but
-    //     validated_read_en=0 so error not captured → KV_SUCCESS
+    //     validated_read_en=0 so error not captured -> KV_SUCCESS
     //
     // With the fix:
     //   - Beat 0: kv_resp.error=0, error_code=KV_SUCCESS
-    //   - Beats 1+: kv_resp.error=1, read_allow=1 → KV_READ_FAIL
+    //   - Beats 1+: kv_resp.error=1, read_allow=1 -> KV_READ_FAIL
     // ------------------------------------------------------------------
     VPRINTF(LOW, "[TEST] Triggering HMAC KV key read + delayed lock_use...\n");
 
@@ -164,11 +164,11 @@ void main() {
     key_ctrl_readback = lsu_read_32(key_ctrl_addr);
 
     if (!(key_ctrl_readback & KV_REG_KEY_CTRL_0_LOCK_USE_MASK)) {
-        VPRINTF(ERROR, "[FAIL] lock_use was cleared by SW — not sticky!\n");
+        VPRINTF(ERROR, "[FAIL] lock_use was cleared by SW -- not sticky!\n");
         SEND_STDOUT_CTRL(0x01);
         while(1);
     }
-    VPRINTF(LOW, "[PASS] lock_use is sticky — cannot be cleared by SW\n");
+    VPRINTF(LOW, "[PASS] lock_use is sticky -- cannot be cleared by SW\n");
 
     // ------------------------------------------------------------------
     // Done
