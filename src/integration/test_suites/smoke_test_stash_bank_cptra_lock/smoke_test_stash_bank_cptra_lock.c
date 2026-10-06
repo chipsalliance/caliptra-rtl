@@ -151,7 +151,7 @@ void main(void) {
     }
     VPRINTF(LOW, "FW: drained partial slot %0d\n", PARTIAL_SLOT);
 
-    // Step D: assert CPTRA_LOCK (RFC 694 §4.4 / §7.3 post-drain seal).
+    // Step D: assert CPTRA_LOCK (RFC 694 sec 4.4 / sec 7.3 post-drain seal).
     lsu_write_32(CLP_SOC_IFC_REG_STASH_BANK_CPTRA_LOCK, 1);
     status = lsu_read_32(CLP_SOC_IFC_REG_STASH_BANK_STATUS);
     if ((status & SOC_IFC_REG_STASH_BANK_STATUS_CPTRA_LOCK_MASK) == 0) {

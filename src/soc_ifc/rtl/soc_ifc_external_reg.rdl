@@ -566,7 +566,7 @@ reg {
 // SOC-writable direct register interface for early-boot measurement
 // deposit, bypassing the STASH_MEASUREMENT mailbox protocol.
 //
-// Layout (per RFC 673 §3):
+// Layout (per RFC 673 sec 3):
 //   8 slots, 26 dwords each (104 B per slot) - flat 1-D array, idx = slot*26 + dword
 //     dword  0       : metadata (4 B)
 //     dwords 1-12    : measurement (48 B - SHA-384 digest)
@@ -594,7 +594,7 @@ reg {
 reg {
     desc = "Stash measurement slot data dword. Flat index = slot_idx * 26 + dword_idx,
             with slot_idx in [0..7] and dword_idx in [0..25].
-            Slot payload (per RFC 673 §3): dword 0 = metadata, dwords 1-12 = measurement (SHA-384),
+            Slot payload (per RFC 673 sec 3): dword 0 = metadata, dwords 1-12 = measurement (SHA-384),
             dwords 13-24 = context, dword 25 = svn.
             [br]Caliptra Access: RO
             [br]SOC Access:      RW (writes dropped when STASH_BANK_SOC_LOCK[slot_idx], STASH_END_STASH, or STASH_BANK_CPTRA_LOCK is set, or when AXI USER does not match MBOX_PAUSER)";

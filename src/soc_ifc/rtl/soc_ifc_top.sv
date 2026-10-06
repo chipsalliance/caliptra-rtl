@@ -827,7 +827,7 @@ end
 // STASH measurement register bank (RFC 673) - lock / PAUSER / status glue.
 //
 // The bank shares the mailbox AXI USER set instead of defining its own
-// STASH_PAUSER (RFC 673 §4.1). A request qualifies on either of the two terms
+// STASH_PAUSER (RFC 673 sec 4.1). A request qualifies on either of the two terms
 // soc_ifc_arb.sv uses for valid_mbox_req: a match against one of the five
 // resolved valid_mbox_users[] entries, or a match against
 // CPTRA_DEF_MBOX_VALID_AXI_USER, which is valid unconditionally. Both terms are
@@ -837,7 +837,7 @@ end
 // Subsystem mode (CALIPTRA_MODE_SUBSYSTEM) implements slot 0 only - see
 // stash_slot_locked below.
 //
-// STASH_BANK_CPTRA_LOCK is Caliptra-only (RFC 673 §4.4): Caliptra Runtime FW
+// STASH_BANK_CPTRA_LOCK is Caliptra-only (RFC 673 sec 4.4): Caliptra Runtime FW
 // writes it after the post-DPE-init drain to seal the bank for the rest of the boot.
 logic stash_axi_user_valid;
 always_comb begin
@@ -911,7 +911,7 @@ always_comb begin
     soc_ifc_reg_hwif_in.STASH_BANK_CPTRA_LOCK.cptra_lock.swwe = ~soc_ifc_reg_req_data.soc_req;
 end
 
-// Status mirror (hw=w pass-through fields). Per RFC 673 §4.5, STATUS is the single
+// Status mirror (hw=w pass-through fields). Per RFC 673 sec 4.5, STATUS is the single
 // read path for all stash bank lock state - the three lock registers above are W1S
 // write-only and read as 0.
 always_comb begin

@@ -161,7 +161,7 @@ void main(void) {
     VPRINTF(LOW, "FW: STASH_END_STASH write of 0 ignored (STATUS=0x%08x)\n", status);
 
     // Step D: write-only lock registers must read as 0 on the uC path.
-    // Lock state is observable only via STASH_BANK_STATUS (RFC 694 §4.5).
+    // Lock state is observable only via STASH_BANK_STATUS (RFC 694 sec 4.5).
     expect_lock_reg_read_zero("STASH_BANK_SOC_LOCK", CLP_SOC_IFC_REG_STASH_BANK_SOC_LOCK);
     expect_lock_reg_read_zero("STASH_END_STASH", CLP_SOC_IFC_REG_STASH_END_STASH);
     expect_lock_reg_read_zero("STASH_BANK_CPTRA_LOCK", CLP_SOC_IFC_REG_STASH_BANK_CPTRA_LOCK);
@@ -179,7 +179,7 @@ void main(void) {
                               CLP_SOC_IFC_REG_STASH_BANK_CPTRA_LOCK);
     VPRINTF(LOW, "FW: uC write of 0 to STASH_BANK_CPTRA_LOCK ignored (STATUS=0x%08x)\n", status);
 
-    // Step F: assert CPTRA_LOCK from Caliptra (post-drain seal, RFC 694 §4.4 / §7.3).
+    // Step F: assert CPTRA_LOCK from Caliptra (post-drain seal, RFC 694 sec 4.4 / sec 7.3).
     lsu_write_32(CLP_SOC_IFC_REG_STASH_BANK_CPTRA_LOCK, 1);
     status = lsu_read_32(CLP_SOC_IFC_REG_STASH_BANK_STATUS);
     if ((status & SOC_IFC_REG_STASH_BANK_STATUS_CPTRA_LOCK_MASK) == 0) {

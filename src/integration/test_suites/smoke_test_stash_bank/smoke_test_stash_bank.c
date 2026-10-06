@@ -15,8 +15,13 @@
 // Stash measurement register bank smoke test (RFC #673).
 //
 // Companion to caliptra_top_tb_soc_bfm.sv::write_stash_bank() which runs
-// when +CALIPTRA_TEST_STASH_BANK is passed at simv invocation (auto-set
-// by the Makefile when TESTNAME matches smoke_test_stash_bank*).
+// when +CALIPTRA_TEST_STASH_BANK is passed at simv invocation. That plusarg
+// is declared in this test's smoke_test_stash_bank.yml (plusargs:) and the
+// regression runner forwards it on the sim command line via RUN_PLUSARGS; it
+// is NOT pattern-matched from TESTNAME by the Makefile. A direct
+// 'make ... TESTNAME=smoke_test_stash_bank verilator' must therefore pass
+// RUN_PLUSARGS=+CALIPTRA_TEST_STASH_BANK explicitly, or the firmware hangs
+// waiting on BFM work that never happens.
 //
 // Boot ordering (positive path):
 //   1. BFM writes fuses + FUSE_WR_DONE.
@@ -26,7 +31,7 @@
 //   4. BFM writes BOOTFSM_GO, uC starts running this firmware.
 //   5. FW (this code) reads STASH_BANK_STATUS, compares slot data against
 //      the expected pattern, sets STASH_BANK_CPTRA_LOCK, and exits PASSED.
-//      (In a real Caliptra boot per RFC 673 §7.3, the CPTRA_LOCK assert is
+//      (In a real Caliptra boot per RFC 673 sec 7.3, the CPTRA_LOCK assert is
 //      done by Caliptra Runtime FW after the post-DPE-init drain. This smoke
 //      test simulates that sealing step.)
 //   6. FW requests the BFM (STDOUT 0xc3) to overwrite every slot with random
@@ -164,7 +169,7 @@ void main(void) {
     expect_lock_reg_read_zero("STASH_BANK_CPTRA_LOCK", CLP_SOC_IFC_REG_STASH_BANK_CPTRA_LOCK);
 
     // Step F: Caliptra writes STASH_BANK_CPTRA_LOCK = 1 (post-drain seal,
-    // RFC 694 §4.4 / §7.3). The write goes through the uC AHB path
+    // RFC 694 sec 4.4 / sec 7.3). The write goes through the uC AHB path
     // (soc_req=0); the glue gates CPTRA_LOCK.swwe on ~soc_req so the
     // write is accepted only from Caliptra.
     VPRINTF(LOW, "FW: writing STASH_BANK_CPTRA_LOCK = 1\n");
