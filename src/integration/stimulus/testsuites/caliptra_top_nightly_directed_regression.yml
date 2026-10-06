@@ -25,6 +25,17 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/hello_world_iccm/hello_world_iccm.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/iccm_lock/iccm_lock.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_dma_soc_access/ifc_reg_dma_soc_access.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_intr_test/ifc_reg_intr_test.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_invalid_access/ifc_reg_invalid_access.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_rand_test/ifc_reg_rand_test.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_ro_reg_rand_test/ifc_reg_ro_reg_rand_test.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_rw_hw/ifc_reg_rw_hw.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_soc_rw_cptra_ro_config/ifc_reg_soc_rw_cptra_ro_config.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_soc_rw_cptra_ro_idevid/ifc_reg_soc_rw_cptra_ro_idevid.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_soc_rw_cptra_ro_misc/ifc_reg_soc_rw_cptra_ro_misc.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_soc_rw_cptra_ro_pk_hash/ifc_reg_soc_rw_cptra_ro_pk_hash.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/ifc_reg_soc_rw_hw_ro/ifc_reg_soc_rw_hw_ro.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/c_intr_handler/c_intr_handler.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_keygen/smoke_test_ecc_keygen.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_ecc_sign/smoke_test_ecc_sign.yml
