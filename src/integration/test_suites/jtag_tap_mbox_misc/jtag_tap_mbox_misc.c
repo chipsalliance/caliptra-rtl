@@ -304,8 +304,8 @@ void main() {
 
         uint32_t rdptr = soc_ifc_mbox_read_rdptr();
         uint32_t dataout = soc_read_user_32(CLP_MBOX_CSR_MBOX_DATAOUT, new_axi_user).rdata;
-        if (soc_ifc_mbox_read_rdptr() != rdptr)
-            FAIL("ERROR: DATAOUT access as a valid MBOX user other than the requester increased the rdptr and returned a value: 0x%x\n", dataout);
+        if (dataout != 0 || soc_ifc_mbox_read_rdptr() != rdptr)
+            FAIL("ERROR: DATAOUT access as a valid MBOX user other than the requester returned 0x%x or changed the rdptr\n", dataout);
     }
 
     VPRINTF(LOW, "FW: Verifying MBOX response\n");

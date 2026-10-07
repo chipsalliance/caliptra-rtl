@@ -114,4 +114,6 @@ void main () {
 
     if (!(cptra_intr_rcv.soc_ifc_error & SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_CMD_FAIL_STS_MASK))
         FAIL("ERROR: Mailbox did not report an OOO error!\n");
+
+    SEND_STDOUT_CTRL(0xFF);
 }

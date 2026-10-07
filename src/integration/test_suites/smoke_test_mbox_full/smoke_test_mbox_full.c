@@ -104,7 +104,7 @@ void main () {
       SEND_STDOUT_CTRL(TB_CMD_FAIL);
       while(1);
     }
-    if (cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK != 0) {
+    if ((cptra_intr_rcv.soc_ifc_notif & SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_SOC_REQ_LOCK_STS_MASK) != 0) {
       VPRINTF(ERROR, "ERROR: Mailbox notified after mailbox write overflow!\n");
       SEND_STDOUT_CTRL(TB_CMD_FAIL);
       while(1);

@@ -376,3 +376,51 @@ jobs:
           ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
             -f board/caliptra-verilator.cfg \
             -f ${CALIPTRA_ROOT}/src/integration/test_suites/infinite_loop/jtag_locked.tcl
+
+      - name: Build Verilated simulation
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export CALIPTRA_AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
+          export CALIPTRA_PRIM_ROOT=$CALIPTRA_ROOT/src/caliptra_prim_generic
+          export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
+          rm -rf run/*
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=jtag_tap_mbox DEBUG_UNLOCKED=1 \
+            OBJCACHE=""
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=jtag_tap_mbox
+
+      - name: Test JTAG mailbox access
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export CALIPTRA_AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
+          export CALIPTRA_PRIM_ROOT=$CALIPTRA_ROOT/src/caliptra_prim_generic
+          export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
+          cd run
+          ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
+            -f board/caliptra-verilator-rst.cfg \
+            -f ${CALIPTRA_ROOT}/src/integration/test_suites/jtag_tap_mbox/jtag_tap_mbox.tcl
+
+      - name: Build Verilated simulation
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export CALIPTRA_AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
+          export CALIPTRA_PRIM_ROOT=$CALIPTRA_ROOT/src/caliptra_prim_generic
+          export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
+          rm -rf run/*
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile verilator-build TESTNAME=jtag_tap_mbox_misc DEBUG_UNLOCKED=1 \
+            OBJCACHE=""
+          make -C run -f ${CALIPTRA_ROOT}/tools/scripts/Makefile program.hex TESTNAME=jtag_tap_mbox_misc
+
+      - name: Test JTAG/SoC/Caliptra mailbox edge-case access
+        run: |
+          export CALIPTRA_ROOT=$(pwd)
+          export ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
+          export CALIPTRA_AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
+          export CALIPTRA_PRIM_ROOT=$CALIPTRA_ROOT/src/caliptra_prim_generic
+          export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
+          cd run
+          ${CALIPTRA_ROOT}/.github/scripts/openocd_test.sh \
+            -f board/caliptra-verilator-rst.cfg \
+            -f ${CALIPTRA_ROOT}/src/integration/test_suites/jtag_tap_mbox_misc/jtag_tap_mbox_misc.tcl

@@ -262,7 +262,9 @@ for {set i 0} {$i < $dlen_words} {incr i} {
 puts "Intentionally not setting state done"
 puts "Wait for force unlock..."
 
-while {($status & 0x0000000F) != 0x00000000} {
+set status [riscv dmi_read $mbox_status_dmi_addr]
+while {($status & 0x000001C0) != 0x00000000} {
+    after 100
     set status [riscv dmi_read $mbox_status_dmi_addr]
 }
 

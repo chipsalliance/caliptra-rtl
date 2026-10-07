@@ -15,7 +15,7 @@
 proc compare {x y} {
     puts "'$x' vs. '$y'"
 
-    if {[llength $y] != [llength $y]} {
+    if {[llength $x] != [llength $y]} {
         puts "length mismatch!"
         return -1
     }
@@ -28,6 +28,18 @@ proc compare {x y} {
     }
 
     return 0
+}
+
+proc timeoutWhile {max_it cond body} {
+    set it 0
+    while {$it < $max_it && [uplevel 1 [list expr $cond]]} {
+        uplevel 1 $body
+        incr it
+    }
+    if {$it >= $max_it} {
+        error "Timeout!"
+        shutdown error
+    }
 }
 
 set STDOUT 0x300300cc
