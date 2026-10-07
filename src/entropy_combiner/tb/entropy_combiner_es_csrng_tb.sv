@@ -62,8 +62,10 @@ module entropy_combiner_es_csrng_tb
   // distinct-but-identically-named enum types that VCS refuses to compare or
   // assign. Comparing against the raw sparse encodings avoids the type
   // dependency entirely; the forced value is cast to the DUT's own type.
-  localparam logic [8:0] COMB_ST_IDLE  = 9'b011110101;
-  localparam logic [8:0] COMB_ST_ERROR = 9'b001110011;
+  localparam logic [8:0] COMB_ST_IDLE        = 9'b011110101;
+  localparam logic [8:0] COMB_ST_REQ_ENTROPY = 9'b111010010;
+  localparam logic [8:0] COMB_ST_SHA_WAIT    = 9'b010111111;
+  localparam logic [8:0] COMB_ST_ERROR       = 9'b001110011;
   // Not a valid code in the Hamming-distance-3 encoding, so it must trap.
   localparam logic [8:0] COMB_ST_BOGUS = 9'b101010101;
 
@@ -92,6 +94,7 @@ module entropy_combiner_es_csrng_tb
   localparam logic [31:0] ES_ADDR_CONF          = 32'h24;
   localparam logic [31:0] ES_CONF_RAW_BYPASS    = 32'h2649999;
   localparam logic [31:0] ES_MODULE_ENABLE_ON   = 32'h6;
+  localparam logic [31:0] ES_MODULE_ENABLE_OFF  = 32'h9;
 
   // csrng registers / commands (as in csrng_tb.sv).
   localparam logic [31:0] CS_ADDR_CTRL        = 32'h14;
@@ -167,6 +170,9 @@ module entropy_combiner_es_csrng_tb
   // arrival, or to keep the secondary source disabled).
   logic rng0_go, rng1_go;
 
+  // Zeroize stimulus, driven into the combiner's debugUnlock_or_scan_mode_switch.
+  logic zeroize_tb;
+
   // combiner AHB (KAT) unused + open outputs.
   logic          comb_hresp, comb_hreadyout;
   logic [31:0]   comb_hrdata;
@@ -208,7 +214,7 @@ module entropy_combiner_es_csrng_tb
 
     .rt_active_i      (rt_active_tb),
 
-    .debugUnlock_or_scan_mode_switch(1'b0),
+    .debugUnlock_or_scan_mode_switch(zeroize_tb),
 
     .haddr_i          (32'h0),
     .hwdata_i         (32'h0),
@@ -360,6 +366,7 @@ module entropy_combiner_es_csrng_tb
       rt_active_tb  = 1'b0;
       rng0_go       = 1'b0;
       rng1_go       = 1'b0;
+      zeroize_tb    = 1'b0;
       read_data     = '0;
       error_ctr     = 0;
       tc_ctr        = 0;
@@ -727,11 +734,221 @@ module entropy_combiner_es_csrng_tb
   endtask
 
   //----------------------------------------------------------------
-  // Main - same inputs (IS0/IS1), four ES timing/config cases + 1 error case.
+  // run_zeroize_case()
+  //
+  // Zeroize the combiner (through debugUnlock_or_scan_mode_switch) in the
+  // different states of a combine and check that nothing hangs: the CSRNG
+  // instantiate must still complete and a following generate must return bits.
+  //
+  //   ZEROIZE_IDLE     - combiner idle, no request outstanding.
+  //   ZEROIZE_BOTH_ES  - CSRNG has requested entropy, both ES requests are
+  //                      outstanding (no seed captured yet).
+  //   ZEROIZE_ONE_ES   - CSRNG has requested entropy, ES0 has delivered its seed
+  //                      and the ES1 request is outstanding. Zeroize drops the
+  //                      captured ES0 seed, so ES0 is requested again.
+  //   ZEROIZE_SHA3     - both seeds captured, SHA3 is running and the ack to
+  //                      CSRNG is outstanding. Zeroize returns the combiner to
+  //                      idle and the still pending CSRNG request starts over.
+  //
+  // All cases are checked against the golden combine seed/genbits. In ONE_ES
+  // and SHA3 the seed delivered before the zeroize is dropped and the ES is
+  // requested again.
+  //----------------------------------------------------------------
+  localparam int ZEROIZE_IDLE    = 0;
+  localparam int ZEROIZE_BOTH_ES = 1;
+  localparam int ZEROIZE_ONE_ES  = 2;
+  localparam int ZEROIZE_SHA3    = 3;
+
+  // Single-cycle zeroize pulse, driven on the negedge so it is sampled on
+  // exactly one posedge.
+  task pulse_zeroize;
+    begin
+      @(negedge clk_tb);
+      zeroize_tb = 1'b1;
+      @(negedge clk_tb);
+      zeroize_tb = 1'b0;
+    end
+  endtask
+
+  // Release an itrng source for exactly one seed: stop it once physical_rng has
+  // produced the 96 InitialSeed nibbles, before it moves on to $urandom data.
+  task release_rng0_one_seed;
+    begin
+      rng0_go = 1'b1;
+      wait (u_rng0.pulse_count == SEED_W/4);
+      rng0_go = 1'b0;
+    end
+  endtask
+
+  task release_rng1_one_seed;
+    begin
+      rng1_go = 1'b1;
+      wait (u_rng1.pulse_count == SEED_W/4);
+      rng1_go = 1'b0;
+    end
+  endtask
+
+  // Disable and re-enable both entropy_src. In boot-time mode this restarts the
+  // boot phase so that the next request is answered with a new seed.
+  task restart_es;
+    begin
+      write_es(ES_ADDR_MODULE_ENABLE, ES_MODULE_ENABLE_OFF);
+      repeat (20) @(posedge clk_tb);
+      write_es(ES_ADDR_MODULE_ENABLE, ES_MODULE_ENABLE_ON);
+    end
+  endtask
+
+  // Wait until the combiner FSM reaches `state`, with a timeout.
+  task wait_comb_state(input logic [8:0] state, input string tag);
+    integer cycles;
+    begin
+      cycles = 0;
+      while (u_combiner.state_q !== state && cycles <= 20000) begin
+        @(posedge clk_tb);
+        cycles = cycles + 1;
+      end
+      if (u_combiner.state_q !== state) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] ERROR: timeout waiting for combiner state %b (state=%b)",
+                 tag, state, u_combiner.state_q);
+      end
+    end
+  endtask
+
+  // Check the combiner directly after a zeroize pulse: expected state and no
+  // captured seed or digest left.
+  task check_zeroized(input logic [8:0] exp_state, input string tag);
+    begin
+      if (u_combiner.state_q !== exp_state) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] ERROR: state after zeroize = %b, expected %b",
+                 tag, u_combiner.state_q, exp_state);
+      end
+      if (u_combiner.es0_valid_q || u_combiner.es1_valid_q ||
+          u_combiner.es0_bits_q !== '0 || u_combiner.es1_bits_q !== '0 ||
+          u_combiner.digest_q !== '0) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] ERROR: combiner data not cleared by zeroize", tag);
+      end
+    end
+  endtask
+
+  task run_zeroize_case(input int mode, input string tag);
+    integer err_at_entry;
+    integer cycles;
+    integer j;
+    begin
+      err_at_entry = error_ctr;
+
+      rng0_go = 1'b0;
+      rng1_go = 1'b0;
+      combine_en_tb = 1'b1;
+      reset_dut();
+      repeat (50) @(posedge clk_tb);
+      configure_es();
+      repeat (20) @(posedge clk_tb);
+      write_cs(CS_ADDR_CTRL, CS_CTRL_ENABLE);
+      repeat (20) @(posedge clk_tb);
+
+      if (mode == ZEROIZE_IDLE) begin
+        // Zeroize while idle, then run a normal instantiate.
+        $display("*** [%s] zeroize in idle, then INSTANTIATE", tag);
+        pulse_zeroize();
+        check_zeroized(COMB_ST_IDLE, tag);
+        write_cs(CS_ADDR_CMD_REQ, CS_CMD_INSTANTIATE);
+        rng0_go = 1'b1;
+        rng1_go = 1'b1;
+      end else begin
+        $display("*** [%s] INSTANTIATE", tag);
+        write_cs(CS_ADDR_CMD_REQ, CS_CMD_INSTANTIATE);
+        wait_comb_state(COMB_ST_REQ_ENTROPY, tag);
+
+        if (mode == ZEROIZE_BOTH_ES) begin
+          // Both itrng sources are held, so neither ES can answer yet.
+          repeat (100) @(posedge clk_tb);
+          if (u_combiner.es0_valid_q || u_combiner.es1_valid_q) begin
+            error_ctr = error_ctr + 1;
+            $display("*** [%s] ERROR: ES seed captured before zeroize", tag);
+          end
+          $display("    [%s] zeroize with both ES requests outstanding", tag);
+          pulse_zeroize();
+          check_zeroized(COMB_ST_REQ_ENTROPY, tag);
+          rng0_go = 1'b1;
+          rng1_go = 1'b1;
+        end else if (mode == ZEROIZE_ONE_ES) begin
+          // Release ES0 for one seed only and wait until it is captured.
+          release_rng0_one_seed();
+          cycles = 0;
+          while (!u_combiner.es0_valid_q && cycles <= 20000) begin
+            @(posedge clk_tb);
+            cycles = cycles + 1;
+          end
+          if (!u_combiner.es0_valid_q || u_combiner.es1_valid_q) begin
+            error_ctr = error_ctr + 1;
+            $display("*** [%s] ERROR: expected only the ES0 seed before zeroize (es0=%0b es1=%0b)",
+                     tag, u_combiner.es0_valid_q, u_combiner.es1_valid_q);
+          end
+          $display("    [%s] zeroize with ES0 delivered and ES1 outstanding", tag);
+          pulse_zeroize();
+          check_zeroized(COMB_ST_REQ_ENTROPY, tag);
+          // ES0 is requested again and delivers IS0 again after the restart;
+          // ES1 delivers IS1.
+          restart_es();
+          rng0_go = 1'b1;
+          rng1_go = 1'b1;
+        end else begin
+          // Release both sources for one seed and zeroize while SHA3 is running.
+          fork
+            release_rng0_one_seed();
+            release_rng1_one_seed();
+          join
+          wait_comb_state(COMB_ST_SHA_WAIT, tag);
+          $display("    [%s] zeroize while SHA3 is running, CSRNG ack outstanding", tag);
+          pulse_zeroize();
+          check_zeroized(COMB_ST_IDLE, tag);
+          // Both ES are requested again and deliver IS0/IS1 again after the restart.
+          restart_es();
+          rng0_go = 1'b1;
+          rng1_go = 1'b1;
+        end
+      end
+
+      // Nothing may hang: the instantiate completes and generate returns bits.
+      poll_cs(CS_ADDR_SW_CMD_STS, CS_SW_CMD_RDY, "instantiate SW_CMD_STS");
+      if (!csrng_seed_valid) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] ERROR: no seed delivered to CSRNG", tag);
+      end else if (csrng_seed_seen !== EXP_SEED_COMBINE) begin
+        error_ctr = error_ctr + 1;
+        $display("*** [%s] combiner->CSRNG seed MISMATCH", tag);
+        $display("      exp = %096h", EXP_SEED_COMBINE);
+        $display("      got = %096h", csrng_seed_seen);
+      end
+
+      write_cs(CS_ADDR_CMD_REQ, CS_CMD_GENERATE_128);
+      poll_cs(CS_ADDR_GENBITS_VLD, CS_GENBITS_VALID, "generate GENBITS_VLD");
+      for (j = 0; j < 4; j = j + 1) begin
+        read_cs(CS_ADDR_GENBITS);
+        if (read_data !== EXP_GENBITS_COMBINE[j]) begin
+          error_ctr = error_ctr + 1;
+          $display("*** [%s] GENBITS[%0d] MISMATCH exp=0x%08x got=0x%08x",
+                   tag, j, EXP_GENBITS_COMBINE[j], read_data);
+        end
+      end
+
+      if (error_ctr == err_at_entry)
+        $display("    [%s] PASS  seed=%096h", tag, csrng_seed_seen);
+      tc_ctr = tc_ctr + 1;
+      repeat (30) @(posedge clk_tb);
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // Main - same inputs (IS0/IS1), ES timing/config, error, AHB-lock and zeroize cases.
   //----------------------------------------------------------------
   initial begin
     init_sim();
-    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 7 cases");
+    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 11 cases");
 
     // 1) ES1 (primary/ES0) arrives faster than ES2 (secondary/ES1).
     run_case(1'b1, 0,   257, 1'b1, 1'b0, "case1-ES1-faster-than-ES2");
@@ -752,6 +969,12 @@ module entropy_combiner_es_csrng_tb
     //    re-run the both-arrive-together combine with rt_active_i asserted after
     //    reset release, and expect the same combined seed/genbits as case3.
     run_case(1'b1, 0,   0,   1'b1, 1'b1, "case7-combine-while-rt-active");
+
+    // 8-11) Zeroize in every state of a combine; nothing may hang.
+    run_zeroize_case(ZEROIZE_IDLE,    "case8-zeroize-idle");
+    run_zeroize_case(ZEROIZE_BOTH_ES, "case9-zeroize-both-es-outstanding");
+    run_zeroize_case(ZEROIZE_ONE_ES,  "case10-zeroize-one-es-outstanding");
+    run_zeroize_case(ZEROIZE_SHA3,    "case11-zeroize-sha3-running");
 
     display_test_result();
     $finish;
