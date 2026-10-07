@@ -14,10 +14,10 @@
 #
 ---
 seed: 1
-testname: jtag_tap_mbox
+testname: jtag_tap_mbox_misc
 plusargs:
   - +CALIPTRA_DEBUG_UNLOCKED
 # Test needs jtag
 jtag: 1
-jtag_tcl: jtag_tap_mbox.tcl
+jtag_tcl: jtag_tap_mbox_misc.tcl
 jtag_cfg: $CALIPTRA_ROOT/tools/scripts/openocd/board/caliptra-verilator-rst.cfg
