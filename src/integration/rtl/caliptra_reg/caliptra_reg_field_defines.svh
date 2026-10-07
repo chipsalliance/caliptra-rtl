@@ -7100,6 +7100,11 @@
 `ifndef SHA3_SHA3_VERSION_1
 `define SHA3_SHA3_VERSION_1                                                                         (32'hc)
 `endif
+`ifndef SHA3_SHA3_CTRL
+`define SHA3_SHA3_CTRL                                                                              (32'h10)
+`define SHA3_SHA3_CTRL_ZEROIZE_LOW                                                                  (0)
+`define SHA3_SHA3_CTRL_ZEROIZE_MASK                                                                 (32'h1)
+`endif
 `ifndef SHA3_ALERT_TEST
 `define SHA3_ALERT_TEST                                                                             (32'h1c)
 `define SHA3_ALERT_TEST_RECOV_OPERATION_ERR_LOW                                                     (0)
@@ -8466,6 +8471,8 @@
 `define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_POLICY_MASK                                      (32'h3)
 `define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_LOW                                          (8)
 `define ENTROPY_COMBINER_REG_COMBINER_CTRL_ES_FIPS_CFG_MASK                                         (32'h100)
+`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ZEROIZE_LOW                                              (16)
+`define ENTROPY_COMBINER_REG_COMBINER_CTRL_ZEROIZE_MASK                                             (32'h10000)
 `endif
 `ifndef ENTROPY_COMBINER_REG_AHB_LOCK
 `define ENTROPY_COMBINER_REG_AHB_LOCK                                                               (32'hb0)

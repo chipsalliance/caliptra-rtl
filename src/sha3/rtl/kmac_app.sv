@@ -121,6 +121,9 @@ module kmac_app
   // Life cycle
   input  lc_ctrl_pkg::lc_tx_t lc_escalate_en_i,
 
+  // Zeroize: drop the current operation and return to Idle.
+  input zeroize_i,
+
   output logic sparse_fsm_error_o
 );
 
@@ -609,6 +612,24 @@ module kmac_app
       if ((st_d != StTerminalError) && keymgr_key_used && !keymgr_key_i.valid) begin
         st_d = StKeyMgrErrKeyNotValid;
       end
+    end
+
+    // Zeroize has the highest priority.
+    // It drops the current operation and returns to Idle.
+    if (zeroize_i) begin
+      st_d = StIdle;
+
+      cmd_o      = CmdNone;
+      absorbed_o = MuBi4False;
+
+      set_appid = 1'b 0;
+      clr_appid = 1'b 1;
+
+      fsm_data_ready    = 1'b 0;
+      fsm_digest_done_d = 1'b 0;
+
+      service_rejected_error_set = 1'b 0;
+      service_rejected_error_clr = 1'b 1;
     end
 
   end

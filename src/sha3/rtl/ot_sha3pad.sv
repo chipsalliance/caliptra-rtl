@@ -66,6 +66,9 @@ module ot_sha3pad
   // Life cycle
   input  lc_ctrl_pkg::lc_tx_t lc_escalate_en_i,
 
+  // Zeroize: clear internal variables and return to Idle in any state
+  input zeroize_i,
+
   // Indication that there was a fault in the sparse encoding
   output logic sparse_fsm_error_o,
 
@@ -186,6 +189,9 @@ module ot_sha3pad
   // bits. The `sent_message` is used to check sent_blocksize.
   logic [KeccakCountW-1:0] sent_message;
   logic inc_sentmsg, clr_sentmsg;
+  logic clr_sentmsg_cnt;
+
+  assign clr_sentmsg_cnt = clr_sentmsg || zeroize_i;
 
   // This primitive is used to place a hardened counter
   // SEC_CM: CTR.REDUN
@@ -194,7 +200,7 @@ module ot_sha3pad
   ) u_sentmsg_count (
     .clk_i,
     .rst_ni,
-    .clr_i(clr_sentmsg),
+    .clr_i(clr_sentmsg_cnt),
     .set_i(1'b0),
     .set_cnt_i(KeccakCountW'(0)),
     .incr_en_i(inc_sentmsg),
@@ -266,6 +272,8 @@ module ot_sha3pad
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
+      process_latched <= 1'b 0;
+    end else if (zeroize_i) begin
       process_latched <= 1'b 0;
     end else if (process_i) begin
       process_latched <= 1'b 1;
@@ -495,6 +503,20 @@ module ot_sha3pad
     if (lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i)) begin
       st_d = StTerminalError;
     end
+
+    // Zeroize has the highest priority: it drops the current operation, clears
+    // the internal buffers and returns to Idle, also from the terminal error
+    // state.
+    if (zeroize_i) begin
+      st_d = StPadIdle;
+
+      keccak_run_o     = 1'b 0;
+      sel_mux          = MuxNone;
+      fsm_keccak_valid = 1'b 0;
+      hold_msg         = 1'b 0;
+      en_msgbuf        = 1'b 0;
+      absorbed_d       = MuBi4False;
+    end
   end
 
   //////////////
@@ -665,6 +687,9 @@ module ot_sha3pad
     if (!rst_ni) begin
       msg_buf  <= '{default:'0};
       msg_strb <= '0;
+    end else if (zeroize_i) begin
+      msg_buf  <= '{default:'0};
+      msg_strb <= '0;
     end else if (en_msgbuf) begin
       for (int i = 0 ; i < Share ; i++) begin
         msg_buf[i]  <= msg_data_i[i][0+:(MsgWidth-8)];
@@ -779,6 +804,8 @@ module ot_sha3pad
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       start_valid <= 1'b 1;
+    end else if (zeroize_i) begin
+      start_valid <= 1'b 1;
     end else if (start_i) begin
       start_valid <= 1'b 0;
     end else if (mubi4_test_true_strict(done_i)) begin
@@ -787,6 +814,8 @@ module ot_sha3pad
   end
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
+      process_valid <= 1'b 0;
+    end else if (zeroize_i) begin
       process_valid <= 1'b 0;
     end else if (start_i) begin
       process_valid <= 1'b 1;
@@ -797,6 +826,8 @@ module ot_sha3pad
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
+      done_valid <= 1'b 0;
+    end else if (zeroize_i) begin
       done_valid <= 1'b 0;
     end else if (mubi4_test_true_strict(absorbed_o)) begin
       done_valid <= 1'b 1;
@@ -830,7 +861,7 @@ module ot_sha3pad
   `CALIPTRA_ASSERT(CompleteBlockWhenProcess_A,
     $rose(process_latched) && (!end_of_block && !sent_blocksize )
     && !(st inside {StPrefixWait, StMessageWait}) |-> ##[1:5] keccak_valid_o,
-    clk_i, !rst_ni || lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i))
+    clk_i, !rst_ni || lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en_i) || zeroize_i)
 
   // If process_i asserted, completion shall be asserted shall be asserted
   //`CALIPTRA_ASSERT(ProcessToAbsorbed_A, process_i |=> strong(##[24*Share:$] absorbed_o))

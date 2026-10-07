@@ -43,6 +43,19 @@ addrmap sha3_reg {
 
 
     reg {
+        name = "SHA3 CTRL";
+        desc = "SHA3 component control register type definition";
+
+        default sw = w;
+        default hw = r;
+        default resetsignal = reset_b;
+        field {desc = "Zeroize all internal registers: Zeroize all internal registers after SHA3 process, to avoid SCA leakage.
+                                [br] Software write generates only a single-cycle pulse on the
+                                hardware interface and then will be erased"; singlepulse;} ZEROIZE = 1'b0;
+
+    } SHA3_CTRL @0x00000010;
+
+    reg {
         name = "SHA3 component alert test register";
         field {
             sw = w;

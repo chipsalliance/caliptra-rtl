@@ -44,6 +44,9 @@ module kmac_msgfifo
   // Control
   input mubi4_t clear_i,
 
+  // Zeroize: drop all buffered message data and return to idle.
+  input logic  zeroize_i,
+
   // process_i --> process_o
   // process_o asserted after all internal messages are flushed out to MSG interface
   input        process_i,
@@ -95,6 +98,7 @@ module kmac_msgfifo
   logic  fifo_rvalid;
   fifo_t fifo_rdata;
   logic  fifo_rready;
+  logic  fifo_clr;
 
   logic fifo_err; // FIFO dup. counter error
 
@@ -130,6 +134,8 @@ module kmac_msgfifo
     .flush_i      (process_i),
     .flush_done_o (packer_flush_done),
 
+    .clr_i        (zeroize_i),
+
     .err_o (packer_err)
   );
 
@@ -146,14 +152,15 @@ module kmac_msgfifo
 
   // MsgFIFO
   caliptra_prim_fifo_sync #(
-    .Width  ($bits(fifo_t)),
-    .Pass   (1'b 1),
-    .Depth  (MsgDepth),
-    .Secure (EnMasking)
+    .Width        ($bits(fifo_t)),
+    .Pass         (1'b 1),
+    .Depth        (MsgDepth),
+    .Secure       (EnMasking),
+    .resetOnClear (1)
   ) u_msgfifo (
     .clk_i,
     .rst_ni,
-    .clr_i   (mubi4_test_true_strict(clear_i)),
+    .clr_i   (fifo_clr),
 
     .wvalid_i(fifo_wvalid),
     .wready_o(fifo_wready),
@@ -176,6 +183,9 @@ module kmac_msgfifo
   assign fifo_rready = msg_ready_i;
   assign msg_data_o  = fifo_rdata.data;
   assign msg_strb_o  = fifo_rdata.strb;
+
+  // MsgFIFO is cleared at the end of a hash or on zeroize
+  assign fifo_clr = mubi4_test_true_strict(clear_i) || zeroize_i;
 
   assign fifo_empty_o = !fifo_rvalid;
 
@@ -234,6 +244,13 @@ module kmac_msgfifo
         flush_st_d = FlushIdle;
       end
     endcase
+
+    // Zeroize drops any flush in progress
+    if (zeroize_i) begin
+      flush_st_d = FlushIdle;
+
+      msgfifo_flush_done = 1'b 0;
+    end
   end
 
   assign process_o = msgfifo_flush_done;

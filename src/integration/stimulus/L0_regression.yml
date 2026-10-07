@@ -20,6 +20,7 @@ contents:
         - ../test_suites/smoke_test_sha3/smoke_test_sha3.yml
         - ../test_suites/smoke_test_sha3_interrupt/smoke_test_sha3_interrupt.yml
         - ../test_suites/smoke_test_sha3_regs/smoke_test_sha3_regs.yml
+        - ../test_suites/smoke_test_sha3_zeroize/smoke_test_sha3_zeroize.yml
         - ../test_suites/smoke_test_cshake/smoke_test_cshake.yml
         - ../test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
         - ../test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml

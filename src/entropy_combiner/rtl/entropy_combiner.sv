@@ -75,6 +75,9 @@ module entropy_combiner
   // set AHB_LOCK. Tie to 0 in integrations without a boot-flow monitor.
   input logic rt_active_i,
 
+  // Zeroize on debug lock/unlock, scan mode entry, lifecycle change.
+  input logic debugUnlock_or_scan_mode_switch,
+
   input logic [AHB_ADDR_WIDTH-1:0] haddr_i,
   input logic [AHB_DATA_WIDTH-1:0] hwdata_i,
   input logic hsel_i,
@@ -190,6 +193,10 @@ module entropy_combiner
   // Next feed index, widened by one bit so the completion compare is not a
   // self-determined 4-bit add that could wrap (fixes SelfDeterminedExpr lint).
   logic [4:0] feed_idx_next;
+
+  // Zeroize the combiner and its SHA3 core on COMBINER_CTRL.zeroize or on debug/scan mode switch
+  logic zeroize;
+  assign zeroize = hwif_out.COMBINER_CTRL.zeroize.value || debugUnlock_or_scan_mode_switch;
 
   assign ahb_hold = 1'b0;
   // MuBi4 AHB lock: locked unless stored value is strict MuBi4False (fail-safe:
@@ -527,6 +534,35 @@ module entropy_combiner
         state_d = combiner_st_error;
       end
     endcase
+
+    // Zeroize has the highest priority: abort any operation and clear all state.
+    // The es_req/es_ack protocol must not be violated:
+    // - req_entropy keeps requesting, so outstanding ES requests complete and
+    //   seeds that were already captured are requested again.
+    // - An already acked CSRNG request still waits for es_req to drop.
+    if (zeroize) begin
+      unique case (state_q)
+        combiner_st_req_entropy:  state_d = combiner_st_req_entropy;
+        combiner_st_comb_ack,
+        combiner_st_wait_req_low: state_d = combiner_st_wait_req_low;
+        default:                  state_d = combiner_st_idle;
+      endcase
+      op_is_kat_d = 1'b0;
+      es0_valid_d = 1'b0;
+      es1_valid_d = 1'b0;
+      es0_bits_d = '0;
+      es1_bits_d = '0;
+      es0_fips_d = 1'b0;
+      es1_fips_d = 1'b0;
+      digest_d = '0;
+      digest_fips_d = 1'b0;
+      kat_msg_d = '0;
+      kat_digest_d = '0;
+      kat_msg_len_d = '0;
+      kat_digest_valid_d = 1'b0;
+      feed_idx_d = '0;
+      feed_words_d = '0;
+    end
   end
 
   always_ff @(posedge clk or negedge reset_n) begin
@@ -716,6 +752,12 @@ module entropy_combiner
     // the ES0/ES1 FIPS combination after boot.
     hwif_in.COMBINER_CTRL.es_fips_policy.swwe = !ahb_locked;
     hwif_in.COMBINER_CTRL.es_fips_cfg.swwe    = !ahb_locked;
+
+    // Zeroize clears the KAT input registers
+    for (int word_idx = 0; word_idx < kat_msg_words32; word_idx++) begin
+      hwif_in.KAT_MSG[word_idx].data.hwclr = zeroize;
+    end
+    hwif_in.KAT_MSG_LEN.msg_len.hwclr = zeroize;
   end
 
   ot_sha3 #(
@@ -749,6 +791,7 @@ module entropy_combiner
     .run_req_o(sha3_run_req),
     .run_ack_i(1'b1),
     .lc_escalate_en_i(lc_ctrl_pkg::Off),
+    .zeroize_i(zeroize),
     .error_o(sha3_error),
     .sparse_fsm_error_o(sha3_sparse_fsm_error),
     .count_error_o(sha3_count_error),
@@ -893,6 +936,22 @@ module entropy_combiner
       clk, !reset_n)
   `CALIPTRA_ASSERT(CsAesHaltGrantEs1_A,
       (es1_cs_aes_halt_o.cs_aes_halt_ack === es1_cs_aes_halt_i.cs_aes_halt_req),
+      clk, !reset_n)
+
+  // --- Zeroize -----------------------------------------------------------
+  // All seed, digest and KAT data is zero in the cycle after zeroize.
+  `CALIPTRA_ASSERT(ZeroizeCombinerData_A,
+      zeroize |=> (es0_bits_q == '0 && es1_bits_q == '0 && digest_q == '0 &&
+                   kat_msg_q == '0 && kat_digest_q == '0 && kat_msg_len_q == '0),
+      clk, !reset_n)
+  // The KAT input registers are cleared in the cycle after zeroize.
+  for (genvar gi = 0; gi < kat_msg_words32; gi++) begin : gen_zeroize_kat_msg
+    `CALIPTRA_ASSERT(ZeroizeKatMsgReg_A,
+        zeroize |=> (hwif_out.KAT_MSG[gi].data.value == '0),
+        clk, !reset_n)
+  end
+  `CALIPTRA_ASSERT(ZeroizeKatMsgLenReg_A,
+      zeroize |=> (hwif_out.KAT_MSG_LEN.msg_len.value == '0),
       clk, !reset_n)
 
 endmodule

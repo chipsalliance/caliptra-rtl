@@ -82,6 +82,10 @@ logic intr_kmac_done, intr_kmac_done_reg, intr_kmac_done_edge;
 logic intr_fifo_empty, intr_fifo_empty_reg, intr_fifo_empty_edge;
 logic intr_kmac_err, intr_kmac_err_reg, intr_kmac_err_edge;
 
+// Zeroize on SHA3_CTRL.ZEROIZE or on debug/scan mode switch
+logic zeroize;
+assign zeroize = hwif_out.SHA3_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
+
 assign busy_o = caliptra_prim_mubi_pkg::mubi4_test_false_loose(sha_idle);
 
 //AHB interface
@@ -249,6 +253,9 @@ u_sha_inst (
 
   // Life cycle
   .lc_escalate_en_i               (lc_ctrl_pkg::Off),
+
+  // Zeroize
+  .zeroize_i                      (zeroize),
 
   // interrupts
   .intr_kmac_done_o               (intr_kmac_done),

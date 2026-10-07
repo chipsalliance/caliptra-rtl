@@ -74,6 +74,9 @@ module kmac
   // Life cycle
   input  lc_ctrl_pkg::lc_tx_t lc_escalate_en_i,
 
+  // Zeroize internal state
+  input  logic zeroize_i,
+
   // interrupts
   output logic intr_kmac_done_o,
   output logic intr_fifo_empty_o,
@@ -604,6 +607,8 @@ module kmac
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       idle_o <= MuBi4True;
+    end else if (zeroize_i) begin
+      idle_o <= MuBi4False;
     end else if ((sha3_fsm == ot_sha3_pkg::StIdle) && (msgfifo_empty || SecIdleAcceptSwMsg)) begin
       idle_o <= MuBi4True;
     end else begin
@@ -699,6 +704,9 @@ module kmac
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       msgfifo_empty_q     <= 1'b 0;
+      msgfifo_full_seen_q <= 1'b 0;
+    end else if (zeroize_i) begin
+      msgfifo_empty_q     <= msgfifo_empty;
       msgfifo_full_seen_q <= 1'b 0;
     end else begin
       msgfifo_empty_q     <= msgfifo_empty;
@@ -911,6 +919,14 @@ module kmac
     if (lc_ctrl_pkg::lc_tx_test_true_loose(lc_escalate_en[0])) begin
       kmac_st_d = KmacTerminalError;
     end
+
+    // Zeroize has the highest priority.
+    // Drops the current operation and returns to Idle.
+    if (zeroize_i) begin
+      kmac_st_d = KmacIdle;
+
+      entropy_in_keyblock = 1'b 0;
+    end
   end
   `CALIPTRA_ASSERT_KNOWN(KmacStKnown_A, kmac_st)
 
@@ -1049,6 +1065,8 @@ module kmac
     // LC escalation
     .lc_escalate_en_i (lc_escalate_en[2]),
 
+    .zeroize_i,
+
     .absorbed_o  (sha3_absorbed),
     .squeezing_o (unused_sha3_squeeze),
 
@@ -1114,7 +1132,8 @@ module kmac
     .readback_en_i              (MuBi4False),
     .readback_error_o           (),
     .wr_collision_i             (1'b0),
-    .write_pending_i            (1'b0)
+    .write_pending_i            (1'b0),
+    .zeroize_rspfifo_i          (1'b0)
   );
 
   assign sw_msg_valid = tlram_req & tlram_we ;
@@ -1221,6 +1240,8 @@ module kmac
     // LC escalation
     .lc_escalate_en_i (lc_escalate_en[3]),
 
+    .zeroize_i,
+
     // Error report
     .error_o            (app_err),
     .sparse_fsm_error_o (kmac_app_state_error)
@@ -1252,6 +1273,8 @@ module kmac
 
     .clear_i (sha3_done),
 
+    .zeroize_i,
+
     .process_i (reg2msgfifo_process ),
     .process_o (msgfifo2kmac_process),
 
@@ -1278,7 +1301,9 @@ module kmac
 
     .state_i (reg_state_tl),
 
-    .endian_swap_i (reg2hw.cfg_shadowed.state_endianness.q)
+    .endian_swap_i (reg2hw.cfg_shadowed.state_endianness.q),
+
+    .zeroize_i
   );
 
   // Error checker
@@ -1315,6 +1340,8 @@ module kmac
 
     .err_processed_i (err_processed),
     .clear_after_error_i (clear_after_error),
+
+    .zeroize_i,
 
     .error_o            (errchecker_err),
     .sparse_fsm_error_o (kmac_errchk_state_error)
@@ -1713,4 +1740,26 @@ module kmac
   `CALIPTRA_ASSERT(StrippedKmacMaskingDisabled_A, EnFullKmac == 0 |-> EnMasking == 0)
   `CALIPTRA_ASSUME(StrippedKmacState_M, EnFullKmac == 0 |-> kmac_st inside
       {KmacIdle, KmacPrefix, KmacMsgFeed, KmacDigest, KmacTerminalError})
+
+  // Zeroize assertions
+  // All storage along the data path from the message input (MSG_FIFO window) to the digest
+  // output (STATE window) must be zero in the cycle after zeroize_i.
+  // Message input: packer and MsgFIFO storage
+  `CALIPTRA_ASSERT(ZeroizeMsgPacker_A, zeroize_i |=> u_msgfifo.u_packer.stored_data == '0)
+  `CALIPTRA_ASSERT(ZeroizeMsgFifoStorage_A,
+                   zeroize_i |=> u_msgfifo.u_msgfifo.gen_normal_fifo.storage == '0)
+
+  for (genvar i = 0 ; i < Share ; i++) begin : gen_zeroize_share_chk
+    // Partial message word buffered in the pad logic
+    `CALIPTRA_ASSERT(ZeroizePadMsgBuf_A, zeroize_i |=> u_sha3.u_pad.msg_buf[i] == '0)
+    // Keccak state
+    `CALIPTRA_ASSERT(ZeroizeKeccakState_A, zeroize_i |=> u_sha3.u_keccak.storage[i] == '0)
+    // Digest output towards the STATE window
+    `CALIPTRA_ASSERT(ZeroizeDigestOut_A, zeroize_i |=> state[i] == '0)
+  end
+
+  // Digest output: STATE read data register and TL-UL adapter response FIFO storage
+  `CALIPTRA_ASSERT(ZeroizeStateRdData_A, zeroize_i |=> u_staterd.tlram_rdata == '0)
+  `CALIPTRA_ASSERT(ZeroizeStateRspFifo_A,
+                   zeroize_i |=> u_staterd.u_tlul_adapter.u_rspfifo.gen_normal_fifo.storage == '0)
 endmodule

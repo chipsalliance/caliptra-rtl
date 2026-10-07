@@ -126,6 +126,7 @@ module entropy_combiner_tb
 
     // Hardware AHB-lock backstop unused here (no AHB traffic in this TB).
     .rt_active_i      (1'b0),
+    .debugUnlock_or_scan_mode_switch(1'b0),
 
     // AHB port unused: quiescent slave inputs.
     .haddr_i          (32'h0),

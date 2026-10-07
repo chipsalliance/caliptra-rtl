@@ -1693,6 +1693,8 @@ entropy_combiner #(
     // once the boot-flow monitor observes the first FMC/RT instruction fetch, the
     // combiner's KAT register file is closed even if ROM never set AHB_LOCK.
     .rt_active_i            (mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
+    // Zeroize on debug/scan mode switch, lifecycle change and fatal error
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
     // AMBA AHB Lite Interface (ROM power-on KAT only)
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_COMBINER)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_COMBINER].hwdata),
