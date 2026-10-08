@@ -500,15 +500,16 @@ The following figure shows the top level signals defined in caliptra\_top.
 
 The following table provides descriptions of the entropy source signals.
 
-| Name                     | Input or output | Description                                                                                            |
-| :----------------------- | :-------------- | :----------------------------------------------------------------------------------------------------- |
-| clk_i                    | input           | All signal timings are related to the rising edge of clk.                                              |
-| rst_ni                   | input           | The reset signal is active LOW and resets the core.                                                    |
-| entropy_src_rng_enable_o | output          | Request from the entropy_src module to the physical true random noise source to start generating data. |
-| entropy_src_rng_valid_i  | input           | Flag indicating the TRNG data is valid. Valid is asserted high for one cycle when data is valid.       |
-| entropy_src_rng_bits_i   | input           | The internal TRNG data. Sampled when entropy_src_rng_valid_i is asserted high.                         |
-| entropy_src_hw_if_i      | input           | Downstream block request for entropy bits.                                                             |
-| entropy_src_hw_if_o      | output          | 384 bits of entropy data. Valid when es_ack is asserted high.                                          |
+| Name                            | Input or output | Description                                                                                                                        |
+| :------------------------------ | :-------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
+| clk_i                           | input           | All signal timings are related to the rising edge of clk.                                                                          |
+| rst_ni                          | input           | The reset signal is active LOW and resets the core.                                                                                |
+| debugUnlock_or_scan_mode_switch | input           | Zeroizes entropy\_src on debug lock/unlock, scan mode and lifecycle change. See [Entropy source zeroize](#entropy-source-zeroize). |
+| entropy_src_rng_enable_o        | output          | Request from the entropy_src module to the physical true random noise source to start generating data.                             |
+| entropy_src_rng_valid_i         | input           | Flag indicating the TRNG data is valid. Valid is asserted high for one cycle when data is valid.                                   |
+| entropy_src_rng_bits_i          | input           | The internal TRNG data. Sampled when entropy_src_rng_valid_i is asserted high.                                                     |
+| entropy_src_hw_if_i             | input           | Downstream block request for entropy bits.                                                                                         |
+| entropy_src_hw_if_o             | output          | 384 bits of entropy data. Valid when es_ack is asserted high.                                                                      |
 
 While `entropy_src_rng_enable_o` is asserted, entropy\_src accepts every `entropy_src_rng_bits_i` value marked by an asserted `entropy_src_rng_valid_i`; the noise source cannot be back-pressured.
 The maximum supported rate is one `entropy_src_rng_bits_i` value (i.e. one sample) every two clock cycles.
@@ -518,6 +519,31 @@ The following figure shows the entropy source signals.
 *Figure: Entropy source signals*
 
 ![](./images/entropy_source_signals.png)
+
+### Entropy source zeroize
+
+Writing 1 to `ENTROPY_SRC_CTRL.ZEROIZE` zeroizes entropy\_src and aborts any operation in progress, in any state.
+entropy\_src is also zeroized on debug lock/unlock, scan mode and lifecycle change (`debugUnlock_or_scan_mode_switch`).
+While a Caliptra fatal error is asserted, entropy\_src is held in zeroize.
+
+Zeroize clears:
+- all FIFOs, including their storage: the raw entropy FIFOs, the observe FIFO and the esfinal FIFO that holds the conditioned seeds
+- the main and ack state machines, which return to idle
+- the health test state, the health test watermark and the alert counters
+- the SHA3 conditioner (see the Zeroize section of [SHA3](#sha3))
+
+All state is cleared synchronously at the end of the zeroize cycle, except for the data of the packer FIFOs, which is cleared one cycle later and is never output in between.
+In the zeroize cycle, no seed is acknowledged on the hardware interface, and `ENTROPY_DATA` and `FW_OV_RD_DATA` read 0.
+Zeroize has precedence over the Error state of the state machines. They only return to the Error state if the local escalation is still asserted.
+
+Zeroize does not clear:
+- the configuration registers
+- the interrupt and alert status
+- the enable of the noise source: the noise source keeps running. The sample received in the zeroize cycle is dropped.
+
+If entropy\_src is enabled, it restarts on its own after the zeroize: it runs the boot or startup health tests again and then delivers new seeds.
+No seed is delivered from the state before the zeroize, so firmware does not need to disable and re-enable entropy\_src.
+A pending request from CSRNG stays asserted and is served with a seed produced after the zeroize.
 
 ### CSRNG signal descriptions
 
