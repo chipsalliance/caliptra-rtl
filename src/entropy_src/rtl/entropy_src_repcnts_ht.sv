@@ -11,6 +11,7 @@ module entropy_src_repcnts_ht #(
 ) (
   input logic clk_i,
   input logic rst_ni,
+  input logic zeroize_i,
 
    // ins req interface
   input logic [RngBusWidth-1:0] entropy_bit_i,
@@ -37,6 +38,9 @@ module entropy_src_repcnts_ht #(
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
+      prev_sample_q      <= '0;
+      fail_sample_mask_q <= '0;
+    end else if (zeroize_i) begin
       prev_sample_q      <= '0;
       fail_sample_mask_q <= '0;
     end else begin

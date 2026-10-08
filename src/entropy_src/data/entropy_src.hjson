@@ -1746,5 +1746,26 @@
         }
       ]
     },
+    { name: "ENTROPY_SRC_CTRL",
+      desc: "ENTROPY_SRC component control register type definition",
+      swaccess: "wo",
+      hwaccess: "hro",
+      hwext: "true",
+      hwqe:  "true",
+      tags: [// Writing ZEROIZE clears the conditioner and disturbs ongoing operations.
+             "excl:CsrNonInitTests:CsrExclWrite"]
+      fields: [
+        { bits: "0",
+          name: "ZEROIZE",
+          desc: '''
+                Zeroize all internal registers: Zeroize all internal state of ENTROPY_SRC (FIFOs, state machines, health test state and the SHA3 conditioner), to avoid SCA leakage.
+                The configuration registers are kept and the noise source is not disturbed.
+                If ENTROPY_SRC is enabled, it restarts on its own after the zeroize and delivers new seeds once the startup health tests have passed.
+                Software write generates only a single-cycle pulse on the
+                hardware interface and then will be erased.
+                '''
+        }
+      ]
+    },
   ]
 }

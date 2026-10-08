@@ -816,4 +816,14 @@ addrmap entropy_src {
             sw = r;
         } MAIN_SM_STATE[8:0] = 0xF5;
     } MAIN_SM_STATE @ 0xD0;
+    reg {
+        field {
+            desc = "Zeroize all internal registers: Zeroize all internal state of ENTROPY_SRC (FIFOs, state machines, health test state and the SHA3 conditioner), to avoid SCA leakage.
+            The configuration registers are kept and the noise source is not disturbed.
+            If ENTROPY_SRC is enabled, it restarts on its own after the zeroize and delivers new seeds once the startup health tests have passed.
+            Software write generates only a single-cycle pulse on the
+            hardware interface and then will be erased.";
+            sw = w;
+        } ZEROIZE[0:0];
+    } ENTROPY_SRC_CTRL @ 0xD4;
 };

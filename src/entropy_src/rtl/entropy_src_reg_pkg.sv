@@ -14,7 +14,7 @@ package entropy_src_reg_pkg;
   parameter int BlockAw = 8;
 
   // Number of registers for every interface
-  parameter int NumRegs = 53;
+  parameter int NumRegs = 54;
 
   // Alert indices
   typedef enum int {
@@ -240,6 +240,11 @@ package entropy_src_reg_pkg;
     logic [4:0]  q;
     logic        qe;
   } entropy_src_reg2hw_err_code_test_reg_t;
+
+  typedef struct packed {
+    logic        q;
+    logic        qe;
+  } entropy_src_reg2hw_entropy_src_ctrl_reg_t;
 
   typedef struct packed {
     struct packed {
@@ -578,35 +583,36 @@ package entropy_src_reg_pkg;
 
   // Register -> HW type
   typedef struct packed {
-    entropy_src_reg2hw_intr_state_reg_t intr_state; // [430:427]
-    entropy_src_reg2hw_intr_enable_reg_t intr_enable; // [426:423]
-    entropy_src_reg2hw_intr_test_reg_t intr_test; // [422:415]
-    entropy_src_reg2hw_alert_test_reg_t alert_test; // [414:411]
-    entropy_src_reg2hw_sw_regupd_reg_t sw_regupd; // [410:410]
-    entropy_src_reg2hw_module_enable_reg_t module_enable; // [409:406]
-    entropy_src_reg2hw_conf_reg_t conf; // [405:374]
-    entropy_src_reg2hw_entropy_control_reg_t entropy_control; // [373:366]
-    entropy_src_reg2hw_entropy_data_reg_t entropy_data; // [365:333]
-    entropy_src_reg2hw_health_test_windows_reg_t health_test_windows; // [332:301]
-    entropy_src_reg2hw_threshold_oneway_reg_t threshold_oneway; // [300:297]
-    entropy_src_reg2hw_repcnt_threshold_reg_t repcnt_threshold; // [296:280]
-    entropy_src_reg2hw_repcnts_threshold_reg_t repcnts_threshold; // [279:263]
-    entropy_src_reg2hw_adaptp_hi_threshold_reg_t adaptp_hi_threshold; // [262:246]
-    entropy_src_reg2hw_adaptp_lo_threshold_reg_t adaptp_lo_threshold; // [245:229]
-    entropy_src_reg2hw_adaptps_threshold_reg_t adaptps_threshold; // [228:212]
-    entropy_src_reg2hw_bucket_threshold_reg_t bucket_threshold; // [211:195]
-    entropy_src_reg2hw_markov_hi_threshold_reg_t markov_hi_threshold; // [194:178]
-    entropy_src_reg2hw_markov_lo_threshold_reg_t markov_lo_threshold; // [177:161]
-    entropy_src_reg2hw_extht_hi_threshold_reg_t extht_hi_threshold; // [160:144]
-    entropy_src_reg2hw_extht_lo_threshold_reg_t extht_lo_threshold; // [143:127]
-    entropy_src_reg2hw_ht_watermark_num_reg_t ht_watermark_num; // [126:122]
-    entropy_src_reg2hw_alert_threshold_reg_t alert_threshold; // [121:90]
-    entropy_src_reg2hw_fw_ov_control_reg_t fw_ov_control; // [89:82]
-    entropy_src_reg2hw_fw_ov_sha3_start_reg_t fw_ov_sha3_start; // [81:78]
-    entropy_src_reg2hw_fw_ov_rd_data_reg_t fw_ov_rd_data; // [77:45]
-    entropy_src_reg2hw_fw_ov_wr_data_reg_t fw_ov_wr_data; // [44:12]
-    entropy_src_reg2hw_observe_fifo_thresh_reg_t observe_fifo_thresh; // [11:6]
-    entropy_src_reg2hw_err_code_test_reg_t err_code_test; // [5:0]
+    entropy_src_reg2hw_intr_state_reg_t intr_state; // [432:429]
+    entropy_src_reg2hw_intr_enable_reg_t intr_enable; // [428:425]
+    entropy_src_reg2hw_intr_test_reg_t intr_test; // [424:417]
+    entropy_src_reg2hw_alert_test_reg_t alert_test; // [416:413]
+    entropy_src_reg2hw_sw_regupd_reg_t sw_regupd; // [412:412]
+    entropy_src_reg2hw_module_enable_reg_t module_enable; // [411:408]
+    entropy_src_reg2hw_conf_reg_t conf; // [407:376]
+    entropy_src_reg2hw_entropy_control_reg_t entropy_control; // [375:368]
+    entropy_src_reg2hw_entropy_data_reg_t entropy_data; // [367:335]
+    entropy_src_reg2hw_health_test_windows_reg_t health_test_windows; // [334:303]
+    entropy_src_reg2hw_threshold_oneway_reg_t threshold_oneway; // [302:299]
+    entropy_src_reg2hw_repcnt_threshold_reg_t repcnt_threshold; // [298:282]
+    entropy_src_reg2hw_repcnts_threshold_reg_t repcnts_threshold; // [281:265]
+    entropy_src_reg2hw_adaptp_hi_threshold_reg_t adaptp_hi_threshold; // [264:248]
+    entropy_src_reg2hw_adaptp_lo_threshold_reg_t adaptp_lo_threshold; // [247:231]
+    entropy_src_reg2hw_adaptps_threshold_reg_t adaptps_threshold; // [230:214]
+    entropy_src_reg2hw_bucket_threshold_reg_t bucket_threshold; // [213:197]
+    entropy_src_reg2hw_markov_hi_threshold_reg_t markov_hi_threshold; // [196:180]
+    entropy_src_reg2hw_markov_lo_threshold_reg_t markov_lo_threshold; // [179:163]
+    entropy_src_reg2hw_extht_hi_threshold_reg_t extht_hi_threshold; // [162:146]
+    entropy_src_reg2hw_extht_lo_threshold_reg_t extht_lo_threshold; // [145:129]
+    entropy_src_reg2hw_ht_watermark_num_reg_t ht_watermark_num; // [128:124]
+    entropy_src_reg2hw_alert_threshold_reg_t alert_threshold; // [123:92]
+    entropy_src_reg2hw_fw_ov_control_reg_t fw_ov_control; // [91:84]
+    entropy_src_reg2hw_fw_ov_sha3_start_reg_t fw_ov_sha3_start; // [83:80]
+    entropy_src_reg2hw_fw_ov_rd_data_reg_t fw_ov_rd_data; // [79:47]
+    entropy_src_reg2hw_fw_ov_wr_data_reg_t fw_ov_wr_data; // [46:14]
+    entropy_src_reg2hw_observe_fifo_thresh_reg_t observe_fifo_thresh; // [13:8]
+    entropy_src_reg2hw_err_code_test_reg_t err_code_test; // [7:2]
+    entropy_src_reg2hw_entropy_src_ctrl_reg_t entropy_src_ctrl; // [1:0]
   } entropy_src_reg2hw_t;
 
   // HW -> register type
@@ -703,6 +709,7 @@ package entropy_src_reg_pkg;
   parameter logic [BlockAw-1:0] ENTROPY_SRC_ERR_CODE_OFFSET = 8'h c8;
   parameter logic [BlockAw-1:0] ENTROPY_SRC_ERR_CODE_TEST_OFFSET = 8'h cc;
   parameter logic [BlockAw-1:0] ENTROPY_SRC_MAIN_SM_STATE_OFFSET = 8'h d0;
+  parameter logic [BlockAw-1:0] ENTROPY_SRC_ENTROPY_SRC_CTRL_OFFSET = 8'h d4;
 
   // Reset values for hwext registers and their fields
   parameter logic [3:0] ENTROPY_SRC_INTR_TEST_RESVAL = 4'h 0;
@@ -758,6 +765,7 @@ package entropy_src_reg_pkg;
   parameter logic [5:0] ENTROPY_SRC_OBSERVE_FIFO_DEPTH_RESVAL = 6'h 0;
   parameter logic [17:0] ENTROPY_SRC_DEBUG_STATUS_RESVAL = 18'h 10000;
   parameter logic [0:0] ENTROPY_SRC_DEBUG_STATUS_MAIN_SM_IDLE_RESVAL = 1'h 1;
+  parameter logic [0:0] ENTROPY_SRC_ENTROPY_SRC_CTRL_RESVAL = 1'h 0;
 
   // Register index
   typedef enum logic [31:0] {
@@ -813,11 +821,12 @@ package entropy_src_reg_pkg;
     ENTROPY_SRC_RECOV_ALERT_STS,
     ENTROPY_SRC_ERR_CODE,
     ENTROPY_SRC_ERR_CODE_TEST,
-    ENTROPY_SRC_MAIN_SM_STATE
+    ENTROPY_SRC_MAIN_SM_STATE,
+    ENTROPY_SRC_ENTROPY_SRC_CTRL
   } entropy_src_id_e;
 
   // Register width information to check illegal writes
-  parameter logic [3:0] ENTROPY_SRC_PERMIT [53] = '{
+  parameter logic [3:0] ENTROPY_SRC_PERMIT [54] = '{
     4'b 0001, // index[ 0] ENTROPY_SRC_INTR_STATE
     4'b 0001, // index[ 1] ENTROPY_SRC_INTR_ENABLE
     4'b 0001, // index[ 2] ENTROPY_SRC_INTR_TEST
@@ -870,7 +879,8 @@ package entropy_src_reg_pkg;
     4'b 1111, // index[49] ENTROPY_SRC_RECOV_ALERT_STS
     4'b 1111, // index[50] ENTROPY_SRC_ERR_CODE
     4'b 0001, // index[51] ENTROPY_SRC_ERR_CODE_TEST
-    4'b 0011  // index[52] ENTROPY_SRC_MAIN_SM_STATE
+    4'b 0011, // index[52] ENTROPY_SRC_MAIN_SM_STATE
+    4'b 0001  // index[53] ENTROPY_SRC_ENTROPY_SRC_CTRL
   };
 
 endpackage

@@ -1567,6 +1567,7 @@ entropy_src #(
 ) entropy_src (
     .clk_i                  (clk_cg),
     .rst_ni                 (cptra_noncore_rst_b),
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
     // AMBA AHB Lite Interface
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hwdata),
@@ -1613,6 +1614,7 @@ entropy_src #(
 ) entropy_src1 (
     .clk_i                  (clk_cg),
     .rst_ni                 (cptra_noncore_rst_b),
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
     // AMBA AHB Lite Interface
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hwdata),
