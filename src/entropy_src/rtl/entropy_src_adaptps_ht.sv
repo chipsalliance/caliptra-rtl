@@ -15,6 +15,7 @@ module entropy_src_adaptps_ht #(
 ) (
   input logic clk_i,
   input logic rst_ni,
+  input logic zeroize_i,
 
   input  logic [RngBusWidth-1:0] entropy_bit_i,
   input  logic                   entropy_bit_vld_i,
@@ -43,6 +44,9 @@ module entropy_src_adaptps_ht #(
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
+      cur_symbol_q     <= '0;
+      cur_symbol_vld_q <= 1'b0;
+    end else if (zeroize_i) begin
       cur_symbol_q     <= '0;
       cur_symbol_vld_q <= 1'b0;
     end else begin

@@ -34,6 +34,9 @@ module entropy_src_enable_delay import caliptra_prim_mubi_pkg::*; (
   input logic  clk_i,
   input logic  rst_ni,
 
+  // Zeroize: all FIFOs and the SHA3 engine are cleared, no need to extend or suppress the enable
+  input logic  zeroize_i,
+
   input logic  enable_i,
 
   // Unconsumed FIFO inputs
@@ -69,6 +72,11 @@ module entropy_src_enable_delay import caliptra_prim_mubi_pkg::*; (
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
+      sha3_active_post_en_q   <= 1'b0;
+      fifo_timer_q            <= '0;
+      sha3_block_processed_q  <= 1'b0;
+      extend_enable_q         <= 1'b0;
+    end else if (zeroize_i) begin
       sha3_active_post_en_q   <= 1'b0;
       fifo_timer_q            <= '0;
       sha3_block_processed_q  <= 1'b0;
