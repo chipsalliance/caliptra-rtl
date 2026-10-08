@@ -127,7 +127,7 @@ module caliptra_top
 
     // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
     input logic        ss_ocp_lock_en,
-    // Subsystem mode strap input indicating DCLS is enabled
+    // DCLS reporting enable in both profiles; synchronous to clk.
     input logic        ss_dcls_en,
 
     // Subsystem mode debug outputs
@@ -247,7 +247,7 @@ module caliptra_top
     logic dccm_write_readback_error;
     // RISC-V dual-core lockstep error (MuBi encoded)
     el2_mubi_pkg::el2_mubi_t rv_dcls_error;
-    // DCLS corruption detection disable control (MuBi4, from SW register)
+    // DCLS disable control (MuBi4), from read-only CPTRA_HW_CONFIG.DCLS_en
     el2_mubi_pkg::el2_mubi_t dcls_disable_corruption_detection;
 
     // RISC-V trace-port core select (from SW register): 0 = main core (default), 1 = shadow core

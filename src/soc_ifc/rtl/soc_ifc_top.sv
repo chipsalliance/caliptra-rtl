@@ -166,6 +166,7 @@ module soc_ifc_top
 
     // Subsystem mode OCP LOCK status
     input  logic         ss_ocp_lock_en,
+    // DCLS reporting enable in both profiles; synchronous to clk.
     input  logic         ss_dcls_en,
     output logic         ss_ocp_lock_in_progress,
     output logic [15:0]  ss_key_release_key_size,
@@ -569,13 +570,12 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
   `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
   `endif
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.DCLS_en.next = ss_dcls_en;
 `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b0;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.DCLS_en.next = 1'b0;
 `endif
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.DCLS_en.next = ss_dcls_en;
 // dual_iTRNG_en stored value exported to drive the entropy combiner's combine_en
 // (0 unless subsystem mode + internal TRNG).
 always_comb dual_itrng_en_o = soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.dual_iTRNG_en.value;

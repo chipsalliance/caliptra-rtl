@@ -96,6 +96,11 @@ void main(void) {
             fail = 1;
         }
 
+        if ((data & SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK) == 0) {
+            VPRINTF(FATAL, "HW Config reports DCLS disabled, expected +CLP_DCLS_EN!\n");
+            fail = 1;
+        }
+
         // Ending status
         if (fail) {
             SEND_STDOUT_CTRL(0x1);
