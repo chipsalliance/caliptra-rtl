@@ -17,12 +17,12 @@
 #include <stdarg.h>
 #include <stdint.h>
 
-extern volatile char *stdout;
+extern volatile uint32_t *stdout;
 
 static int
 whisperPutc(char c)
 {
-  *stdout = c;
+  *stdout = (uint32_t) c;
   return (int) c;
 }
 
