@@ -24,7 +24,7 @@ schema_version: 2.4.0
 requires:
   - entropy_src_pkg
   - libs
-  - kmac
+  - ot_sha3
   - caliptra_prim_generic
   - caliptra_prim
 targets:
