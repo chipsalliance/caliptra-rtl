@@ -425,7 +425,7 @@ module entropy_src_core
   logic [HealthTestWindowWidth-1:0] window_cntr;
   logic                         window_cntr_incr_en;
 
-  logic [sha3_pkg::StateW-1:0] sha3_state[Sha3Share];
+  logic [ot_sha3_pkg::StateW-1:0] sha3_state[Sha3Share];
   logic [PreCondWidth-1:0] msg_data[Sha3Share];
   logic                    es_rdata_capt_vld;
   logic                    window_cntr_err;
@@ -2673,7 +2673,7 @@ module entropy_src_core
   assign pfifo_cond_rdata = sha3_state[0][SeedLen-1:0];
 
   // SHA3 hashing engine
-  sha3 #(
+  ot_sha3 #(
     .EnMasking (Sha3EnMasking)
   ) u_sha3 (
     .clk_i,
@@ -2697,8 +2697,8 @@ module entropy_src_core
     .ns_data_i       ('0), // ns_prefix),
 
     // Configurations
-    .mode_i     (sha3_pkg::Sha3), // Use SHA3 mode
-    .strength_i (sha3_pkg::L384), // Use keccak_strength_e of L384
+    .mode_i     (ot_sha3_pkg::Sha3), // Use SHA3 mode
+    .strength_i (ot_sha3_pkg::L384), // Use keccak_strength_e of L384
 
     // Controls (CMD register)
     .start_i    (sha3_start       ),
@@ -2708,6 +2708,9 @@ module entropy_src_core
 
     // LC escalation
     .lc_escalate_en_i (lc_ctrl_pkg::Off),
+
+    // Zeroize - not using
+    .zeroize_i (1'b0),
 
     .absorbed_o (sha3_absorbed),
     .squeezing_o (sha3_squeezing),
@@ -3027,7 +3030,7 @@ module entropy_src_core
   //--------------------------------------------
 
   assign unused_err_code_test_bit = (|{err_code_test_bit[27:25],err_code_test_bit[19:4]});
-  assign unused_sha3_state = (|sha3_state[0][sha3_pkg::StateW-1:SeedLen]);
+  assign unused_sha3_state = (|sha3_state[0][ot_sha3_pkg::StateW-1:SeedLen]);
   assign unused_entropy_data = (|reg2hw.entropy_data.q);
   assign unused_fw_ov_rd_data = (|reg2hw.fw_ov_rd_data.q);
   assign unused_sfifo_esrng_not_full = sfifo_esrng_not_full;
