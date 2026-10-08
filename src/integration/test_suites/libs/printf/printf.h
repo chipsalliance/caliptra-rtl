@@ -39,13 +39,12 @@ int putchar(int c);
 int puts(const char* s);
 int printf(const char* format, ...);
 
-
-#define VPRINTF(VERBOSITY, format, ...) \
-    if (VERBOSITY <= verbosity_g) { \
-        static const char fmt[] __attribute__((section(".text"))) = format; \
-        printf(fmt, ##__VA_ARGS__); \
-    }
-
+#define VPRINTF(VERBOSITY, ...)           \
+    do {                                  \
+        if (VERBOSITY <= verbosity_g) {   \
+            printf(__VA_ARGS__);          \
+        }                                 \
+    } while (0)
 
 inline int SEND_STDOUT_CTRL(char ctrl) {return putchar(ctrl);}
 

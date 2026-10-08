@@ -113,7 +113,7 @@ void main() {
         
         VPRINTF(LOW, "Stall until timer2 times out\n");
         while (!(lsu_read_32(SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK)));
-        VPRINTF(LOW, "WDT T2 timed out as expected\n")
+        VPRINTF(LOW, "WDT T2 timed out as expected\n");
         //Release forced timer periods from tb so test can set them
         // SEND_STDOUT_CTRL(0xf1);
 
