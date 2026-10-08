@@ -1846,6 +1846,7 @@ module soc_ifc_tb
   `include "debug_unlock_manuf_test.svh"
   `include "ss_strap_reg_reset_test.svh"
   `include "ss_soc_dbg_unlock_level_test.svh"
+  `include "dcls_hw_config_test.svh"
 //----------------------------------------------------------------
 
 
@@ -1980,6 +1981,12 @@ module soc_ifc_tb
           set_security_state_byname("RANDOM");
           sim_dut_init(.drive_straps(1'b1));
           ss_strap_reg_wrmrst_test();
+
+        end else if (soc_ifc_testname == "dcls_hw_config_test") begin
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          ocp_lock_en_tb = 1'b0;
+          sim_dut_init();
+          dcls_hw_config_test();
 
         end else if (soc_ifc_testname == "ss_soc_dbg_unlock_level_test") begin
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});

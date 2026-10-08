@@ -146,6 +146,7 @@ module caliptra_top_tb (
     logic        itrng_valid1;
 
     logic cptra_error_fatal;
+    logic dcls_test_start;
     logic cptra_error_non_fatal;
 
     //Interrupt flags
@@ -208,6 +209,7 @@ caliptra_top_tb_soc_bfm soc_bfm_inst (
 
     .ras_test_ctrl(ras_test_ctrl),
     .stash_test_ctrl(stash_test_ctrl),
+    .dcls_test_start(dcls_test_start),
 
     .generic_input_wires(generic_input_wires_bfm),
 
@@ -461,6 +463,7 @@ caliptra_top_tb_services #(
     // TB Controls
     .ras_test_ctrl(ras_test_ctrl),
     .stash_test_ctrl(stash_test_ctrl),
+    .dcls_test_start(dcls_test_start),
     .generic_input_wire_ctrl(generic_input_wire_ctrl),
     .cycleCnt(cycleCnt),
     .axi_complex_ctrl(axi_complex_ctrl),

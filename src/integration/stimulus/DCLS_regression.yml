@@ -1,0 +1,16 @@
+# SPDX-License-Identifier: Apache-2.0
+# Run with --subsystem 0 and 1; directed variants require VCS.
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["DCLS", "directed", "firmware"]
+      paths:
+        - ../test_suites/smoke_test_hw_config/smoke_test_hw_config.yml
+        - ../test_suites/smoke_test_dcls_dis/smoke_test_dcls_dis.yml
+        - ../test_suites/smoke_test_dcls_inject/smoke_test_dcls_inject.yml
+        - ../test_suites/directed_dcls_reporting/directed_dcls_reporting_outputs.yml
+        - ../test_suites/directed_dcls_reporting/directed_dcls_reporting_regfile.yml
+        - ../test_suites/directed_dcls_reporting/directed_dcls_reporting_control.yml
+        - ../test_suites/directed_dcls_reporting/directed_dcls_reporting_qualifications.yml

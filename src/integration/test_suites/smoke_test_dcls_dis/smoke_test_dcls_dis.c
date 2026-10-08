@@ -12,16 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-// Smoke test: confirm DCLS (Dual-Core Lockstep) corruption detection is DISABLED.
+// Smoke test: confirm DCLS (Dual-Core Lockstep) mismatch reporting is DISABLED.
 //
-// The SW-writable disable-corruption register was removed from the Caliptra core.
-// Corruption detection is now controlled by the subsystem (MCU / ss_dcls_en strap)
-// and is reflected read-only in CPTRA_HW_CONFIG.DCLS_en (1=enabled, 0=disabled).
-// Detection is disabled whenever:
-//   - the core is in passive (non-subsystem) mode -- DCLS is ALWAYS disabled, or
-//   - the subsystem drives ss_dcls_en=0 (this test uses +CLP_DCLS_DIS).
-// This test reads CPTRA_HW_CONFIG and confirms DCLS_en == 0 in both situations.
-// The enabled path is covered by smoke_test_dcls_inject (+CLP_DCLS_EN).
+// +CLP_DCLS_DIS disables reporting in passive and subsystem profiles.
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -31,7 +24,7 @@
 #include "riscv_hw_if.h"
 
 // TB control code: force a DCLS lockstep corruption inject WITHOUT the TB self-check
-// (caliptra_top_tb_services.sv). FW keeps running (detection is disabled here, so no
+// (caliptra_top_tb_services.sv). FW keeps running (reporting is disabled here, so no
 // cptra_error_fatal) and verifies rv_dcls_err stays 0 itself.
 #define TB_CTRL_DCLS_INJECT_NOCHK (0xc1u)
 // Number of times to poll the fatal-error register after the inject. Each read
@@ -70,9 +63,17 @@ void main() {
     VPRINTF(LOW, "CPTRA_HW_CONFIG=0x%x subsystem_mode=%u DCLS_en=%u\n",
             hw_config, ss_mode, dcls_en);
 
-    // Step 1: Confirm DCLS corruption detection is disabled:
-    //   - passive (non-subsystem) mode: always disabled, or
-    //   - subsystem mode with +CLP_DCLS_DIS: ss_dcls_en=0 -> DCLS_en=0.
+#ifdef CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
+    if (ss_mode != 1u) {
+#else
+    if (ss_mode != 0u) {
+#endif
+        VPRINTF(FATAL, "ERROR: RTL subsystem mode does not match firmware build\n");
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
+
+    // Step 1: +CLP_DCLS_DIS must disable reporting in either profile.
     if (dcls_en != 0u) {
         VPRINTF(FATAL, "ERROR: DCLS_en=%u but expected 0 (disabled). subsystem_mode=%u\n",
                 dcls_en, ss_mode);
@@ -82,7 +83,7 @@ void main() {
     VPRINTF(LOW, "DCLS corruption detection disabled as expected (subsystem_mode=%u)\n", ss_mode);
 
     // Step 2: Inject a lockstep mismatch and confirm it does NOT latch an error.
-    // With detection disabled the disable gate suppresses corruption_detected_o, so
+    // With reporting disabled the disable gate suppresses corruption_detected_o, so
     // rv_dcls_err must stay 0 and cptra_error_fatal must not fire. Use the no-self-check
     // inject (0xc1) so FW survives to check CPTRA_HW_ERROR_FATAL.rv_dcls_err.
     VPRINTF(LOW, "Injecting lockstep mismatch (ctrl 0x%x) with detection disabled\n",

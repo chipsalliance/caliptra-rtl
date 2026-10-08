@@ -70,6 +70,7 @@ import caliptra_top_tb_pkg::*; #(
 
     input  var  ras_test_ctrl_t   ras_test_ctrl,
     input  var  stash_test_ctrl_t stash_test_ctrl,
+    input logic dcls_test_start,
 
     output logic [63:0] generic_input_wires,
 
@@ -125,6 +126,22 @@ import caliptra_top_tb_pkg::*; #(
     logic [`CALIPTRA_AXI_DATA_WIDTH-1:0] soc_ifc_hw_error_wdata;
 
     process boot_and_cmd_flow;
+
+    // Directed DCLS checks own AXI/error recovery for the entire test.
+    bit dcls_suite_owner;
+    bit dcls_bringup_done;
+    bit dcls_assert_warm_rst, dcls_deassert_warm_rst;
+    bit dcls_assert_hard_rst, dcls_deassert_hard_rst;
+    initial begin
+        dcls_suite_owner = $test$plusargs("CALIPTRA_TEST_DCLS");
+        dcls_bringup_done = 0;
+        dcls_assert_warm_rst = 0; dcls_deassert_warm_rst = 0;
+        dcls_assert_hard_rst = 0; dcls_deassert_hard_rst = 0;
+`ifdef VERILATOR
+        if (dcls_suite_owner)
+            $fatal(1, "Directed DCLS requires an event-driven simulator supporting hierarchical force/release");
+`endif
+    end
 
     logic assert_rst_flag_from_fatal;
     logic assert_rst_flag;
@@ -251,6 +268,8 @@ import caliptra_top_tb_pkg::*; #(
             ss_ocp_lock_en = $urandom();
         end
         
+        if ($test$plusargs("CLP_DCLS_EN") && $test$plusargs("CLP_DCLS_DIS"))
+            $fatal(1, "CLP_DCLS_EN and CLP_DCLS_DIS are mutually exclusive");
         if ($test$plusargs("CLP_DCLS_EN")) begin
             ss_dcls_en = 1'b1;
         end
@@ -258,8 +277,8 @@ import caliptra_top_tb_pkg::*; #(
             ss_dcls_en = 1'b0;
         end
         else begin
-            // Randomize when neither plusarg is set
-            ss_dcls_en = $urandom();
+            // DCLS reporting defaults to enabled.
+            ss_dcls_en = 1'b1;
         end
 
         if ($test$plusargs("CLP_ITRNG1_EN")) begin
@@ -478,6 +497,10 @@ import caliptra_top_tb_pkg::*; #(
 
                     $display ("CLP: ROM Flow in progress...\n");
 
+                    // Yield AXI ownership to directed DCLS until reset.
+                    dcls_bringup_done = 1;
+                    if (dcls_suite_owner) wait (!cptra_rst_b);
+
                     // Test sequence (Mailbox or error handling)
                     wait(ready_for_mb_processing || ras_test_ctrl.error_injection_seen);
 
@@ -560,7 +583,7 @@ import caliptra_top_tb_pkg::*; #(
 
                     // Mailbox response flow and RAS functionality
                     forever begin
-                        if (cptra_error_fatal_dly_p) begin
+                        if (cptra_error_fatal_dly_p && !dcls_suite_owner) begin
                             $display("SoC: Observed cptra_error_fatal; reading Caliptra register\n");
                             m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_FATAL), .data(rdata), .resp(rresp), .resp_user(buser));
                             if (rdata[`SOC_IFC_REG_CPTRA_HW_ERROR_FATAL_ICCM_ECC_UNC_LOW]) begin
@@ -593,7 +616,7 @@ import caliptra_top_tb_pkg::*; #(
                             assert_rst_flag_from_fatal = 1;
                             wait(cptra_rst_b == 0);
                         end
-                        else if (cptra_error_non_fatal_dly_p) begin
+                        else if (cptra_error_non_fatal_dly_p && !dcls_suite_owner) begin
                             $display("SoC: Observed cptra_error_non_fatal; reading Caliptra register\n");
                             m_axi_bfm_if.axi_read_single(.addr(`CLP_SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL), .data(rdata), .resp(rresp), .resp_user(buser));
                             if (rdata[`SOC_IFC_REG_CPTRA_HW_ERROR_NON_FATAL_MBOX_PROT_NO_LOCK_LOW]) begin
@@ -745,17 +768,18 @@ import caliptra_top_tb_pkg::*; #(
 //                    disable BOOT_AND_CMD_FLOW; 
                     if (boot_and_cmd_flow != null) boot_and_cmd_flow.kill();
                     assert_rst_flag_from_fatal = 1'b0;
+                    dcls_bringup_done = 0;
                     m_axi_bfm_if.rst_mgr();
                 end: RESET_FLOW
             join_any
         end
     end
 
-    assign assert_rst_flag   =   assert_rst_flag_from_service ||   assert_rst_flag_from_fatal;
-    assign deassert_rst_flag = deassert_rst_flag_from_service || deassert_rst_flag_from_fatal;
+    assign assert_rst_flag   =   assert_rst_flag_from_service ||   assert_rst_flag_from_fatal || dcls_assert_warm_rst;
+    assign deassert_rst_flag = deassert_rst_flag_from_service || deassert_rst_flag_from_fatal || dcls_deassert_warm_rst;
     always @(posedge core_clk) begin
         //Reset/pwrgood assertion during runtime
-        if (cycleCnt == 15 || deassert_hard_rst_flag) begin
+        if (cycleCnt == 15 || deassert_hard_rst_flag || dcls_deassert_hard_rst) begin
             $display ("SoC: Asserting cptra_pwrgood and breakpoint. cycleCnt [%d] deassert_hard_rst_flag[%d]\n", cycleCnt, deassert_hard_rst_flag);
             //assert power good
             cptra_pwrgood <= 1'b1;
@@ -765,7 +789,7 @@ import caliptra_top_tb_pkg::*; #(
             //de-assert reset
             cptra_rst_b <= 1'b1;
         end
-        else if (assert_hard_rst_flag) begin
+        else if (assert_hard_rst_flag || dcls_assert_hard_rst) begin
             cptra_pwrgood <= 'b0;
             cptra_rst_b <= 'b0;
         end
@@ -773,6 +797,15 @@ import caliptra_top_tb_pkg::*; #(
             cptra_rst_b <= 'b0;
         end
     end
+
+`ifndef VERILATOR
+`ifdef RV_LOCKSTEP_ENABLE
+    `include "caliptra_top_tb_dcls.svh"
+`else
+    initial if ($test$plusargs("CALIPTRA_TEST_DCLS"))
+        $fatal(1, "Directed DCLS requires RV_LOCKSTEP_ENABLE");
+`endif
+`endif
 
 `define RV_INST `CPTRA_TOP_PATH.rvtop
 `define RV_IDMA_RESP_INST `CPTRA_TOP_PATH.responder_inst[`CALIPTRA_SLAVE_SEL_IDMA]

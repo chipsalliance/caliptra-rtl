@@ -89,7 +89,7 @@ The RISC-V core is highly configurable and has the following settings.
 | Fast Interrupt Redirect | Enabled       |
 | External Interrupts     | 31            |
 | PMP                     | Enabled       |
-| Dual-Core Lockstep      | Enabled       |
+| Dual-Core Lockstep      | Enabled; reporting controlled by `ss_dcls_en` |
 | RF Read Port Comparison | Enabled       |
 | DCCM Address Infection  | Enabled       |
 | ICCM Address Infection  | Enabled       |
@@ -210,13 +210,13 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 
 ### Fault tolerance and FI hardening
 
-The Caliptra VeeR EL2 configuration provides several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep (DCLS) detection is enabled in this release; it is controlled by the subsystem and observable through a read-only status bit. The **DCCM write-readback** and **DCCM / ICCM address-XOR integrity** features are **disabled in this release** until the features mature - they are compiled out of the delivered configuration and are documented below for reference. All three are described below.
+The Caliptra VeeR EL2 configuration provides several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep (DCLS) mismatch reporting is controlled by `ss_dcls_en` in both passive and subsystem profiles. The **DCCM write-readback** and **DCCM / ICCM address-XOR integrity** features are **disabled in this release** until the features mature - they are compiled out of the delivered configuration and are documented below for reference. All three are described below.
 
 #### Dual-core lockstep (DCLS)
 
 The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A redundant *shadow* core is driven with the same input stream as the main core, offset by a fixed number of pipeline stages. The main core's outputs are delayed by the same offset and compared cycle-by-cycle against the shadow core's outputs; any divergence indicates a fault in one of the cores. Optimization barriers are inserted on the shadow-core boundary so that synthesis cannot prove the redundant logic and comparison away. The shadow core is not architecturally visible and drives no system state; it exists solely for comparison.
 
-Corruption detection is controlled by the subsystem. In subsystem mode, the `ss_dcls_en` strap input selects whether lockstep comparison is active, allowing the subsystem (for example, the MCU) to disable the feature should a late issue be found. In non-subsystem (passive) mode, lockstep comparison is always disabled. The effective state is reflected read-only in [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG)`.DCLS_en` (`1` = enabled, `0` = disabled); this status bit is read-only to both Caliptra firmware and the SoC, which can observe the state but cannot change it. The comparison logic fails safe: an invalid multi-bit encoding on the internal disable control is treated as a detected corruption.
+The `ss_dcls_en` input controls normal DCLS mismatch reporting in both passive and subsystem profiles (`1` = enabled, `0` = disabled). Integrators may tie it low or high, or drive it from a synchronous SoC register. The sampled enable is reflected read-only to firmware and the SoC in [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG)`.DCLS_en`. The comparison logic fails safe: an invalid multi-bit encoding on the internal disable control is treated as a detected corruption.
 
 While detection is enabled, a detected mismatch asserts [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL)`.rv_dcls_err` (bit [7]; see [Error register summary](#error-register-summary)) and raises the `cptra_error_fatal` interrupt to the SoC. The status bit and the interrupt clear independently: the bit is RW1C, so Caliptra firmware or the SoC can clear it, but its reset is `cptra_pwrgood`, so it survives a warm Caliptra reset. The interrupt has no clear mechanism by design — clearing the status bit does not deassert it, and it deasserts only on a Caliptra reset.
 
@@ -3043,7 +3043,7 @@ Once the boot flow monitor detects that execution has transitioned to FMC or RT 
 | :------- | :-- | :---- | :------ |
 | CPTRA_HW_ERROR_FATAL | 4 | kv_error | Boot flow error OR KV monitor alert |
 | CPTRA_HW_ERROR_FATAL | 5 | shadow_storage_err | ICCM region shadow register storage fault |
-| CPTRA_HW_ERROR_FATAL | 7 | rv_dcls_err | RISC-V dual-core lockstep (DCLS) corruption detected; gated by the subsystem DCLS enable (`CPTRA_HW_CONFIG.DCLS_en`) |
+| CPTRA_HW_ERROR_FATAL | 7 | rv_dcls_err | RISC-V dual-core lockstep (DCLS) mismatch; normal reporting enabled by `CPTRA_HW_CONFIG.DCLS_en` in both profiles |
 | CPTRA_HW_ERROR_FATAL | 8 | dccm_wr_readback_err | DCCM write-readback mismatch detected (store corrupted); maskable via `internal_hw_error_fatal_mask` |
 | CPTRA_HW_ERROR_NON_FATAL | 3 | shadow_update_err | ICCM region shadow register phase mismatch |
 
@@ -3224,7 +3224,7 @@ The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditio
 | 4 | kv_error | No | KV boot-flow monitor `dest_valid` mismatch or boot-flow error |
 | 5 | shadow_storage_err | No | ICCM region shadow-register storage fault (register/shadow corrupted) |
 | 6 | fsm_error | No | Sparse-encoded security FSM entered an invalid/illegal state (fault-injection/glitch detection) |
-| 7 | rv_dcls_err | No | RISC-V dual-core lockstep (DCLS) mismatch between the main and shadow core; gated by the subsystem DCLS enable (`CPTRA_HW_CONFIG.DCLS_en`) |
+| 7 | rv_dcls_err | No | RISC-V dual-core lockstep (DCLS) mismatch; normal reporting enabled by `CPTRA_HW_CONFIG.DCLS_en` in both profiles |
 | 8 | dccm_wr_readback_err | Yes (`mask_dccm_wr_readback_err`) | DCCM write-readback mismatch — data read back after a store did not match what was written |
 | 31:9 | rsvd | — | Reserved |
 

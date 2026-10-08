@@ -14,7 +14,7 @@
 //
 // DCLS (Dual-Core Lockstep) corruption-injection test.
 //
-// Check if DCLS corruption detection is enabled, then asks the testbench to inject a
+// Require DCLS mismatch reporting to be enabled, then ask the testbench to inject a
 // lockstep mismatch (TB control code 0xbf forces lockstep_err_injection_en_i =
 // El2MuBiTrue). The corruption asserts cptra_error_fatal and latches
 // CPTRA_HW_ERROR_FATAL.rv_dcls_err =1.
@@ -55,34 +55,29 @@ void main() {
 
     init_interrupts();
 
-    // Step 1: Confirm the precondition for a meaningful injection. 
-    //   (a) DCLS_en == 1 (detection enabled)      -> proceed to inject, or
-    //   (b) we are NOT in subsystem mode (passive) -> DCLS is always disabled here,
-    //       so injection is not applicable; skip and pass.
+    // Require enabled reporting in either profile; a disabled run is a failure.
     hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
     ss_mode   = (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK) ? 1u : 0u;
     dcls_en   = (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK)           ? 1u : 0u;
     VPRINTF(LOW, "CPTRA_HW_CONFIG=0x%x subsystem_mode=%u DCLS_en=%u\n",
             hw_config, ss_mode, dcls_en);
 
+#ifdef CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
+    if (ss_mode != 1u) {
+#else
+    if (ss_mode != 0u) {
+#endif
+        VPRINTF(FATAL, "ERROR: RTL subsystem mode does not match firmware build\n");
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
     if (!dcls_en) {
-        if (!ss_mode) {
-            // Passive (non-subsystem) mode: DCLS is always disabled; injection is
-            // not applicable. Skip and pass.
-            VPRINTF(LOW, "Non-subsystem mode: DCLS disabled; skipping injection.\n");
-            VPRINTF(LOW, "DCLS corruption inject test PASSED (detection not applicable)\n");
-            SEND_STDOUT_CTRL(0xff);
-            while (1);
-        }
-        // Subsystem mode but detection disabled: the test expects detection enabled
-        // here (run with +CLP_DCLS_EN). Injecting now would never latch the error,
-        // so flag the unexpected state instead of silently passing.
-        VPRINTF(FATAL, "ERROR: subsystem mode but DCLS_en=0 (expected enabled via +CLP_DCLS_EN)\n");
+        VPRINTF(FATAL, "ERROR: DCLS_en=0 (expected enabled via +CLP_DCLS_EN)\n");
         SEND_STDOUT_CTRL(0x1);
         while (1);
     }
 
-    // Step 2: Detection confirmed enabled -- ask the TB to inject a lockstep
+    // Step 2: Reporting confirmed enabled -- ask the TB to inject a lockstep
     // corruption. From here the TB takes over: corruption_detected_o asserts,
     // rv_dcls_err latches, cptra_error_fatal fires, and the TB self-check ends the
     // simulation with PASS/FAIL.
