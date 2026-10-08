@@ -67,6 +67,7 @@ module entropy_src_raw_wrap
   ) u_entropy_src (
     .clk_i                                (clk_i),
     .rst_ni                               (rst_ni),
+    .debugUnlock_or_scan_mode_switch      (1'b0),
 
     .haddr_i                              (haddr_i),
     .hwdata_i                             (hwdata_i),

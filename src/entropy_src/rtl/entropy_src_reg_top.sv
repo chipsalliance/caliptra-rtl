@@ -63,9 +63,9 @@ module entropy_src_reg_top #(
 
   // also check for spurious write enables
   logic reg_we_err;
-  logic [52:0] reg_we_check;
+  logic [53:0] reg_we_check;
   caliptra_prim_reg_we_check #(
-    .OneHotWidth(53)
+    .OneHotWidth(54)
   ) u_caliptra_prim_reg_we_check (
     .clk_i(clk_i),
     .rst_ni(rst_ni),
@@ -386,6 +386,8 @@ module entropy_src_reg_top #(
   logic [4:0] err_code_test_qs;
   logic [4:0] err_code_test_wd;
   logic [8:0] main_sm_state_qs;
+  logic entropy_src_ctrl_we;
+  logic entropy_src_ctrl_wd;
 
   // Register instances
   // R[intr_state]: V(False)
@@ -3132,8 +3134,28 @@ module entropy_src_reg_top #(
   );
 
 
+  // R[entropy_src_ctrl]: V(True)
+  logic entropy_src_ctrl_qe;
+  logic [0:0] entropy_src_ctrl_flds_we;
+  assign entropy_src_ctrl_qe = &entropy_src_ctrl_flds_we;
+  caliptra_prim_subreg_ext #(
+    .DW    (1)
+  ) u_entropy_src_ctrl (
+    .re     (1'b0),
+    .we     (entropy_src_ctrl_we),
+    .wd     (entropy_src_ctrl_wd),
+    .d      ('0),
+    .qre    (),
+    .qe     (entropy_src_ctrl_flds_we[0]),
+    .q      (reg2hw.entropy_src_ctrl.q),
+    .ds     (),
+    .qs     ()
+  );
+  assign reg2hw.entropy_src_ctrl.qe = entropy_src_ctrl_qe;
 
-  logic [52:0] addr_hit;
+
+
+  logic [53:0] addr_hit;
   always_comb begin
     addr_hit[ 0] = (reg_addr == ENTROPY_SRC_INTR_STATE_OFFSET);
     addr_hit[ 1] = (reg_addr == ENTROPY_SRC_INTR_ENABLE_OFFSET);
@@ -3188,6 +3210,7 @@ module entropy_src_reg_top #(
     addr_hit[50] = (reg_addr == ENTROPY_SRC_ERR_CODE_OFFSET);
     addr_hit[51] = (reg_addr == ENTROPY_SRC_ERR_CODE_TEST_OFFSET);
     addr_hit[52] = (reg_addr == ENTROPY_SRC_MAIN_SM_STATE_OFFSET);
+    addr_hit[53] = (reg_addr == ENTROPY_SRC_ENTROPY_SRC_CTRL_OFFSET);
   end
 
   assign addrmiss = (reg_re || reg_we) ? ~|addr_hit : 1'b0;
@@ -3247,7 +3270,8 @@ module entropy_src_reg_top #(
                (addr_hit[49] & (|(ENTROPY_SRC_PERMIT[49] & ~reg_be))) |
                (addr_hit[50] & (|(ENTROPY_SRC_PERMIT[50] & ~reg_be))) |
                (addr_hit[51] & (|(ENTROPY_SRC_PERMIT[51] & ~reg_be))) |
-               (addr_hit[52] & (|(ENTROPY_SRC_PERMIT[52] & ~reg_be)))));
+               (addr_hit[52] & (|(ENTROPY_SRC_PERMIT[52] & ~reg_be))) |
+               (addr_hit[53] & (|(ENTROPY_SRC_PERMIT[53] & ~reg_be)))));
   end
 
   // Generate write-enables
@@ -3446,6 +3470,9 @@ module entropy_src_reg_top #(
   assign err_code_test_we = addr_hit[51] & reg_we & !reg_error;
 
   assign err_code_test_wd = reg_wdata[4:0];
+  assign entropy_src_ctrl_we = addr_hit[53] & reg_we & !reg_error;
+
+  assign entropy_src_ctrl_wd = reg_wdata[0];
 
   // Assign write-enables to checker logic vector.
   always_comb begin
@@ -3502,62 +3529,63 @@ module entropy_src_reg_top #(
     reg_we_check[50] = 1'b0;
     reg_we_check[51] = err_code_test_we;
     reg_we_check[52] = 1'b0;
+    reg_we_check[53] = entropy_src_ctrl_we;
   end
 
   // Read data return
   always_comb begin
     reg_rdata_next = '0;
     unique case (addr_hit) inside
-      53'h00000000000001: begin
+      54'h00000000000001: begin
         reg_rdata_next[0] = intr_state_es_entropy_valid_qs;
         reg_rdata_next[1] = intr_state_es_health_test_failed_qs;
         reg_rdata_next[2] = intr_state_es_observe_fifo_ready_qs;
         reg_rdata_next[3] = intr_state_es_fatal_err_qs;
       end
 
-      53'h00000000000002: begin
+      54'h00000000000002: begin
         reg_rdata_next[0] = intr_enable_es_entropy_valid_qs;
         reg_rdata_next[1] = intr_enable_es_health_test_failed_qs;
         reg_rdata_next[2] = intr_enable_es_observe_fifo_ready_qs;
         reg_rdata_next[3] = intr_enable_es_fatal_err_qs;
       end
 
-      53'h00000000000004: begin
+      54'h00000000000004: begin
         reg_rdata_next[0] = '0;
         reg_rdata_next[1] = '0;
         reg_rdata_next[2] = '0;
         reg_rdata_next[3] = '0;
       end
 
-      53'h00000000000008: begin
+      54'h00000000000008: begin
         reg_rdata_next[0] = '0;
         reg_rdata_next[1] = '0;
         reg_rdata_next[31] = alert_test_regwen_qs;
       end
 
-      53'h00000000000010: begin
+      54'h00000000000010: begin
         reg_rdata_next[0] = me_regwen_qs;
       end
 
-      53'h00000000000020: begin
+      54'h00000000000020: begin
         reg_rdata_next[0] = sw_regupd_qs;
       end
 
-      53'h00000000000040: begin
+      54'h00000000000040: begin
         reg_rdata_next[0] = regwen_qs;
       end
 
-      53'h00000000000080: begin
+      54'h00000000000080: begin
         reg_rdata_next[7:0] = rev_abi_revision_qs;
         reg_rdata_next[15:8] = rev_hw_revision_qs;
         reg_rdata_next[23:16] = rev_chip_type_qs;
       end
 
-      53'h00000000000100: begin
+      54'h00000000000100: begin
         reg_rdata_next[3:0] = module_enable_qs;
       end
 
-      53'h00000000000200: begin
+      54'h00000000000200: begin
         reg_rdata_next[3:0] = conf_fips_enable_qs;
         reg_rdata_next[7:4] = conf_fips_flag_qs;
         reg_rdata_next[11:8] = conf_rng_fips_qs;
@@ -3567,122 +3595,122 @@ module entropy_src_reg_top #(
         reg_rdata_next[31:24] = conf_rng_bit_sel_qs;
       end
 
-      53'h00000000000400: begin
+      54'h00000000000400: begin
         reg_rdata_next[3:0] = entropy_control_es_route_qs;
         reg_rdata_next[7:4] = entropy_control_es_type_qs;
       end
 
-      53'h00000000000800: begin
+      54'h00000000000800: begin
         reg_rdata_next[31:0] = entropy_data_qs;
       end
 
-      53'h00000000001000: begin
+      54'h00000000001000: begin
         reg_rdata_next[15:0] = health_test_windows_fips_window_qs;
         reg_rdata_next[31:16] = health_test_windows_bypass_window_qs;
       end
 
-      53'h00000000002000: begin
+      54'h00000000002000: begin
         reg_rdata_next[3:0] = threshold_oneway_qs;
       end
 
-      53'h00000000004000: begin
+      54'h00000000004000: begin
         reg_rdata_next[15:0] = repcnt_threshold_qs;
       end
 
-      53'h00000000008000: begin
+      54'h00000000008000: begin
         reg_rdata_next[15:0] = repcnts_threshold_qs;
       end
 
-      53'h00000000010000: begin
+      54'h00000000010000: begin
         reg_rdata_next[15:0] = adaptp_hi_threshold_qs;
       end
 
-      53'h00000000020000: begin
+      54'h00000000020000: begin
         reg_rdata_next[15:0] = adaptp_lo_threshold_qs;
       end
 
-      53'h00000000040000: begin
+      54'h00000000040000: begin
         reg_rdata_next[15:0] = adaptps_threshold_qs;
       end
 
-      53'h00000000080000: begin
+      54'h00000000080000: begin
         reg_rdata_next[15:0] = bucket_threshold_qs;
       end
 
-      53'h00000000100000: begin
+      54'h00000000100000: begin
         reg_rdata_next[15:0] = markov_hi_threshold_qs;
       end
 
-      53'h00000000200000: begin
+      54'h00000000200000: begin
         reg_rdata_next[15:0] = markov_lo_threshold_qs;
       end
 
-      53'h00000000400000: begin
+      54'h00000000400000: begin
         reg_rdata_next[15:0] = extht_hi_threshold_qs;
       end
 
-      53'h00000000800000: begin
+      54'h00000000800000: begin
         reg_rdata_next[15:0] = extht_lo_threshold_qs;
       end
 
-      53'h00000001000000: begin
+      54'h00000001000000: begin
         reg_rdata_next[3:0] = ht_watermark_num_qs;
       end
 
-      53'h00000002000000: begin
+      54'h00000002000000: begin
         reg_rdata_next[15:0] = ht_watermark_qs;
       end
 
-      53'h00000004000000: begin
+      54'h00000004000000: begin
         reg_rdata_next[31:0] = repcnt_total_fails_qs;
       end
 
-      53'h00000008000000: begin
+      54'h00000008000000: begin
         reg_rdata_next[31:0] = repcnts_total_fails_qs;
       end
 
-      53'h00000010000000: begin
+      54'h00000010000000: begin
         reg_rdata_next[31:0] = adaptp_hi_total_fails_qs;
       end
 
-      53'h00000020000000: begin
+      54'h00000020000000: begin
         reg_rdata_next[31:0] = adaptp_lo_total_fails_qs;
       end
 
-      53'h00000040000000: begin
+      54'h00000040000000: begin
         reg_rdata_next[31:0] = adaptps_total_fails_qs;
       end
 
-      53'h00000080000000: begin
+      54'h00000080000000: begin
         reg_rdata_next[31:0] = bucket_total_fails_qs;
       end
 
-      53'h00000100000000: begin
+      54'h00000100000000: begin
         reg_rdata_next[31:0] = markov_hi_total_fails_qs;
       end
 
-      53'h00000200000000: begin
+      54'h00000200000000: begin
         reg_rdata_next[31:0] = markov_lo_total_fails_qs;
       end
 
-      53'h00000400000000: begin
+      54'h00000400000000: begin
         reg_rdata_next[31:0] = extht_hi_total_fails_qs;
       end
 
-      53'h00000800000000: begin
+      54'h00000800000000: begin
         reg_rdata_next[31:0] = extht_lo_total_fails_qs;
       end
 
-      53'h00001000000000: begin
+      54'h00001000000000: begin
         reg_rdata_next[15:0] = alert_threshold_alert_threshold_qs;
         reg_rdata_next[31:16] = alert_threshold_alert_threshold_inv_qs;
       end
 
-      53'h00002000000000: begin
+      54'h00002000000000: begin
         reg_rdata_next[15:0] = alert_summary_fail_counts_qs;
       end
 
-      53'h00004000000000: begin
+      54'h00004000000000: begin
         reg_rdata_next[3:0] = alert_fail_counts_repcnt_fail_count_qs;
         reg_rdata_next[7:4] = alert_fail_counts_repcnts_fail_count_qs;
         reg_rdata_next[11:8] = alert_fail_counts_adaptp_hi_fail_count_qs;
@@ -3693,45 +3721,45 @@ module entropy_src_reg_top #(
         reg_rdata_next[31:28] = alert_fail_counts_markov_lo_fail_count_qs;
       end
 
-      53'h00008000000000: begin
+      54'h00008000000000: begin
         reg_rdata_next[3:0] = extht_fail_counts_extht_hi_fail_count_qs;
         reg_rdata_next[7:4] = extht_fail_counts_extht_lo_fail_count_qs;
       end
 
-      53'h00010000000000: begin
+      54'h00010000000000: begin
         reg_rdata_next[3:0] = fw_ov_control_fw_ov_mode_qs;
         reg_rdata_next[7:4] = fw_ov_control_fw_ov_entropy_insert_qs;
       end
 
-      53'h00020000000000: begin
+      54'h00020000000000: begin
         reg_rdata_next[3:0] = fw_ov_sha3_start_qs;
       end
 
-      53'h00040000000000: begin
+      54'h00040000000000: begin
         reg_rdata_next[0] = fw_ov_wr_fifo_full_qs;
       end
 
-      53'h00080000000000: begin
+      54'h00080000000000: begin
         reg_rdata_next[0] = fw_ov_rd_fifo_overflow_qs;
       end
 
-      53'h00100000000000: begin
+      54'h00100000000000: begin
         reg_rdata_next[31:0] = fw_ov_rd_data_qs;
       end
 
-      53'h00200000000000: begin
+      54'h00200000000000: begin
         reg_rdata_next[31:0] = '0;
       end
 
-      53'h00400000000000: begin
+      54'h00400000000000: begin
         reg_rdata_next[5:0] = observe_fifo_thresh_qs;
       end
 
-      53'h00800000000000: begin
+      54'h00800000000000: begin
         reg_rdata_next[5:0] = observe_fifo_depth_qs;
       end
 
-      53'h01000000000000: begin
+      54'h01000000000000: begin
         reg_rdata_next[1:0] = debug_status_entropy_fifo_depth_qs;
         reg_rdata_next[5:3] = debug_status_sha3_fsm_qs;
         reg_rdata_next[6] = debug_status_sha3_block_pr_qs;
@@ -3742,7 +3770,7 @@ module entropy_src_reg_top #(
         reg_rdata_next[17] = debug_status_main_sm_boot_done_qs;
       end
 
-      53'h02000000000000: begin
+      54'h02000000000000: begin
         reg_rdata_next[0] = recov_alert_sts_fips_enable_field_alert_qs;
         reg_rdata_next[1] = recov_alert_sts_entropy_data_reg_en_field_alert_qs;
         reg_rdata_next[2] = recov_alert_sts_module_enable_field_alert_qs;
@@ -3764,7 +3792,7 @@ module entropy_src_reg_top #(
         reg_rdata_next[31] = recov_alert_sts_postht_entropy_drop_alert_qs;
       end
 
-      53'h04000000000000: begin
+      54'h04000000000000: begin
         reg_rdata_next[0] = err_code_sfifo_esrng_err_qs;
         reg_rdata_next[1] = err_code_sfifo_distr_err_qs;
         reg_rdata_next[2] = err_code_sfifo_observe_err_qs;
@@ -3779,12 +3807,16 @@ module entropy_src_reg_top #(
         reg_rdata_next[30] = err_code_fifo_state_err_qs;
       end
 
-      53'h08000000000000: begin
+      54'h08000000000000: begin
         reg_rdata_next[4:0] = err_code_test_qs;
       end
 
-      53'h10000000000000: begin
+      54'h10000000000000: begin
         reg_rdata_next[8:0] = main_sm_state_qs;
+      end
+
+      54'h20000000000000: begin
+        reg_rdata_next[0] = '0;
       end
 
       default: begin

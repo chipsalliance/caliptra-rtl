@@ -11,6 +11,9 @@ module entropy_src_ack_sm (
   input logic                clk_i,
   input logic                rst_ni,
 
+  // Zeroize: drop the current request handling and return to Idle in any state
+  input logic                zeroize_i,
+
   input logic                enable_i,
   input logic                req_i,
   output logic               ack_o,
@@ -60,6 +63,17 @@ module entropy_src_ack_sm (
     endcase
     if (local_escalate_i) begin
       state_d = Error;
+    end
+
+    // Zeroize has the highest priority.
+    // No ack is given in the zeroize cycle. The requester keeps req_i asserted and is served
+    // with a new seed after the zeroize. The FSM only returns to the Error state if the local
+    // escalation is still asserted.
+    if (zeroize_i) begin
+      state_d = Idle;
+
+      ack_o      = 1'b0;
+      fifo_pop_o = 1'b0;
     end
   end
 

@@ -12,6 +12,7 @@ module entropy_src_markov_ht #(
 ) (
   input logic clk_i,
   input logic rst_ni,
+  input logic zeroize_i,
 
    // ins req interface
   input logic [RngBusWidth-1:0]       entropy_bit_i,
@@ -46,6 +47,9 @@ module entropy_src_markov_ht #(
 
   always_ff @(posedge clk_i or negedge rst_ni)
     if (!rst_ni) begin
+      toggle_q         <= '0;
+      prev_sample_q    <= '0;
+    end else if (zeroize_i) begin
       toggle_q         <= '0;
       prev_sample_q    <= '0;
     end else begin

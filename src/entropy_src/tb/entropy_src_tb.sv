@@ -145,6 +145,7 @@ module entropy_src_tb
   ) dut (
     .clk_i                                (clk_tb),
     .rst_ni                               (reset_n_tb),
+    .debugUnlock_or_scan_mode_switch      (1'b0),
     // AMBA AHB Lite Interface
     .haddr_i                              (haddr_i_tb),
     .hwdata_i                             (hwdata_i_tb),

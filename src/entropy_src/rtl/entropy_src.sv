@@ -25,6 +25,9 @@ module entropy_src
   input logic clk_i,
   input logic rst_ni,
 
+  // Zeroize the SHA3 conditioner on debug unlock or scan mode switch
+  input logic debugUnlock_or_scan_mode_switch,
+
   // AMBA AHB Lite Interface
   input logic [AHBAddrWidth-1:0]  haddr_i,
   input logic [AHBDataWidth-1:0]  hwdata_i,
@@ -193,6 +196,7 @@ module entropy_src
   ) u_entropy_src_core (
     .clk_i,
     .rst_ni(core_rst_n),
+    .debugUnlock_or_scan_mode_switch,
     .reg2hw,
     .hw2reg(core_hw2reg),
 

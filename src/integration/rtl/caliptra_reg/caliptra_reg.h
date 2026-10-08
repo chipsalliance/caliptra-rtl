@@ -9878,6 +9878,12 @@
 #define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                             (0)
 #define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                            (0x1ff)
 #endif
+#define CLP_ENTROPY_SRC_REG_ENTROPY_SRC_CTRL                                                        (0x200030d4)
+#ifndef ENTROPY_SRC_REG_ENTROPY_SRC_CTRL
+#define ENTROPY_SRC_REG_ENTROPY_SRC_CTRL                                                            (0xd4)
+#define ENTROPY_SRC_REG_ENTROPY_SRC_CTRL_ZEROIZE_LOW                                                (0)
+#define ENTROPY_SRC_REG_ENTROPY_SRC_CTRL_ZEROIZE_MASK                                               (0x1)
+#endif
 #define CLP_ENTROPY_SRC1_REG_BASE_ADDR                                                              (0x20004000)
 #define CLP_ENTROPY_SRC1_REG_INTERRUPT_STATE                                                        (0x20004000)
 #ifndef ENTROPY_SRC1_REG_INTERRUPT_STATE
@@ -10304,6 +10310,12 @@
 #define ENTROPY_SRC1_REG_MAIN_SM_STATE                                                              (0xd0)
 #define ENTROPY_SRC1_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                            (0)
 #define ENTROPY_SRC1_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                           (0x1ff)
+#endif
+#define CLP_ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL                                                       (0x200040d4)
+#ifndef ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL
+#define ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL                                                           (0xd4)
+#define ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL_ZEROIZE_LOW                                               (0)
+#define ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL_ZEROIZE_MASK                                              (0x1)
 #endif
 #define CLP_ENTROPY_COMBINER_REG_BASE_ADDR                                                          (0x20005000)
 #define CLP_ENTROPY_COMBINER_REG_COMBINER_NAME_0                                                    (0x20005000)
