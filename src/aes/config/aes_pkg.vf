@@ -7,6 +7,7 @@
 +incdir+${CALIPTRA_ROOT}/src/lc_ctrl/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_prim_generic/rtl
 +incdir+${CALIPTRA_ROOT}/src/aes/rtl
+${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_util_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_main_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_ack_sm_pkg.sv
 ${CALIPTRA_ROOT}/src/entropy_src/rtl/entropy_src_reg_pkg.sv
@@ -24,7 +25,6 @@ ${CALIPTRA_ROOT}/src/libs/rtl/clk_gate.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_2ff_sync.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_to_reg_adapter.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/skidbuffer.v
-${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_util_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_alert_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_subreg_pkg.sv
 ${CALIPTRA_ROOT}/src/caliptra_prim/rtl/caliptra_prim_mubi_pkg.sv

@@ -74,9 +74,9 @@ static const uint32_t exp_genbits[NUM_SEEDS][4] = {
 };
 
 // ES FIPS-mode config (see smoke_test_entropy_combiner_conditioned).
-#define ES_CONF_FIPS          0x2649996
+#define ES_CONF_FIPS          0x0999996
 #define ES_ENTROPY_CONTROL    0x99
-#define ES_HT_WINDOWS         0x00600400  // FIPS_WINDOW=1024, BYPASS_WINDOW=96
+#define ES_HT_WINDOWS         0x01800400  // FIPS_WINDOW=1024, BYPASS_WINDOW=384 bits
 #define ES_MODULE_ENABLE       0x6
 #define ES1_OFFSET (CLP_ENTROPY_SRC1_REG_BASE_ADDR - CLP_ENTROPY_SRC_REG_BASE_ADDR)
 
@@ -136,9 +136,9 @@ int configure_es_fips(uint32_t es_offset) {
   lsu_write_32(CLP_ENTROPY_SRC_REG_CONF + es_offset, ES_CONF_FIPS);
   lsu_write_32(CLP_ENTROPY_SRC_REG_ENTROPY_CONTROL + es_offset, ES_ENTROPY_CONTROL);
   lsu_write_32(CLP_ENTROPY_SRC_REG_HEALTH_TEST_WINDOWS + es_offset, ES_HT_WINDOWS);
-  lsu_write_32(CLP_ENTROPY_SRC_REG_REPCNT_THRESHOLDS    + es_offset, 0xFFFFFFFF);
-  lsu_write_32(CLP_ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLDS + es_offset, 0xFFFFFFFF);
-  lsu_write_32(CLP_ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLDS + es_offset, 0x00000000);
+  lsu_write_32(CLP_ENTROPY_SRC_REG_REPCNT_THRESHOLD    + es_offset, 0xFFFF);
+  lsu_write_32(CLP_ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLD + es_offset, 0xFFFF);
+  lsu_write_32(CLP_ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLD + es_offset, 0x0000);
   lsu_write_32(CLP_ENTROPY_SRC_REG_MODULE_ENABLE + es_offset, ES_MODULE_ENABLE);
 
   // Verify the FIPS config is as expected once the conditioner is enabled.

@@ -49,17 +49,6 @@ module entropy_combiner
   input entropy_src_hw_if_req_t csrng_hw_if_req_i,
   output entropy_src_hw_if_rsp_t csrng_hw_if_rsp_o,
 
-  // cs_aes_halt: the ES0/ES1 SHA3 conditioners (inside entropy_src) assert a halt
-  // request before each Keccak permutation and STALL until they see the ack. The
-  // halt only reduces CSRNG-AES/ES-SHA3 current overlap - it has no functional
-  // role - so the combiner terminates the handshake locally, granting each ES its
-  // ack immediately. This guarantees the conditioners never dead-lock waiting on
-  // CSRNG (whose own cs_aes_halt input is tied off at the top level).
-  input  cs_aes_halt_req_t es0_cs_aes_halt_i,
-  input  cs_aes_halt_req_t es1_cs_aes_halt_i,
-  output cs_aes_halt_rsp_t es0_cs_aes_halt_o,
-  output cs_aes_halt_rsp_t es1_cs_aes_halt_o,
-
   output entropy_src_hw_if_req_t es0_hw_if_req_o,
   input entropy_src_hw_if_rsp_t es0_hw_if_rsp_i,
   output entropy_src_hw_if_req_t es1_hw_if_req_o,
@@ -273,13 +262,6 @@ module entropy_combiner
   // Word-granular views of the seed registers, used by the constant-index beat mux.
   assign es0_words = es0_bits_q;
   assign es1_words = es1_bits_q;
-
-  // Grant each ES SHA3-conditioner halt request immediately (ack == req): the
-  // conditioner permutes as soon as it asks and never stalls. cs_aes_halt is inert
-  // (current-overlap mitigation only), so no arbitration or CSRNG round-trip is
-  // needed. The ES req is a registered signal, so ack==req is not a comb loop.
-  assign es0_cs_aes_halt_o.cs_aes_halt_ack = es0_cs_aes_halt_i.cs_aes_halt_req;
-  assign es1_cs_aes_halt_o.cs_aes_halt_ack = es1_cs_aes_halt_i.cs_aes_halt_req;
 
   // Combined es_fips policy is register-controlled. Reset/default is
   // AND_OF_BOTH_ES, PRIMARY_ES0_ONLY preserves ES0's FIPS bit, and CONFIG_VALUE
@@ -842,7 +824,7 @@ module entropy_combiner
                                               any_sha3_cm_error, 1'b0, 30, clk, !reset_n)
 
   //==========================================================================
-  // Behavioral SVAs (bypass / combine / KAT / AHB-lock / cs_aes_halt).
+  // Behavioral SVAs (bypass / combine / KAT / AHB-lock).
   // All use CALIPTRA_ASSERT and are disabled during reset (!reset_n).
   //==========================================================================
 
@@ -925,17 +907,6 @@ module entropy_combiner
   `CALIPTRA_ASSERT(AhbLockFreezesFipsPolicy_A,
       ahb_locked |-> (!hwif_in.COMBINER_CTRL.es_fips_policy.swwe &&
                       !hwif_in.COMBINER_CTRL.es_fips_cfg.swwe),
-      clk, !reset_n)
-
-  // --- cs_aes_halt local grant (deadlock freedom) ------------------------
-  // What: the combiner grants each ES conditioner's halt request locally (ack=req),
-  //       so an ES conditioner is never left waiting on a halt ack.
-  // Note: === because ack is a direct copy of req (X-safe identity check).
-  `CALIPTRA_ASSERT(CsAesHaltGrantEs0_A,
-      (es0_cs_aes_halt_o.cs_aes_halt_ack === es0_cs_aes_halt_i.cs_aes_halt_req),
-      clk, !reset_n)
-  `CALIPTRA_ASSERT(CsAesHaltGrantEs1_A,
-      (es1_cs_aes_halt_o.cs_aes_halt_ack === es1_cs_aes_halt_i.cs_aes_halt_req),
       clk, !reset_n)
 
   // --- Zeroize -----------------------------------------------------------
