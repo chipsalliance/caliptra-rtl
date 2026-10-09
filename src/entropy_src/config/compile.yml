@@ -1,6 +1,8 @@
 ---
 provides: [entropy_src_pkg]
 schema_version: 2.4.0
+requires:
+  - caliptra_prim_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
@@ -22,7 +24,7 @@ schema_version: 2.4.0
 requires:
   - entropy_src_pkg
   - libs
-  - kmac
+  - ot_sha3
   - caliptra_prim_generic
   - caliptra_prim
 targets:
@@ -38,6 +40,8 @@ targets:
       - $COMPILE_ROOT/rtl/entropy_src_main_sm.sv
       - $COMPILE_ROOT/rtl/entropy_src_repcnts_ht.sv
       - $COMPILE_ROOT/rtl/entropy_src_adaptp_ht.sv
+      - $COMPILE_ROOT/rtl/entropy_src_adaptps_ht.sv
+      - $COMPILE_ROOT/rtl/entropy_src_field_en.sv
       - $COMPILE_ROOT/rtl/entropy_src_core.sv
       - $COMPILE_ROOT/rtl/entropy_src_repcnt_ht.sv
       - $COMPILE_ROOT/rtl/entropy_src_ack_sm.sv

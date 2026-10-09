@@ -500,22 +500,50 @@ The following figure shows the top level signals defined in caliptra\_top.
 
 The following table provides descriptions of the entropy source signals.
 
-| Name | Input or output | Description |
-| :------------------ | :-------------- | :--------------- |
-| clk_i               | input           | All signal timings are related to the rising edge of clk.                                                                         |
-| rst_ni              | input           | The reset signal is active LOW and resets the core.                                                                               |
-| entropy_src_rng_req | output          | Request from the entropy_src module to the physical true random noise source to start generating data.                            |
-| entropy_src_rng_rsp | input           | Contains the internal TRNG data and a flag indicating the data is valid. Valid is asserted high for one cycle when data is valid. |
-| entropy_src_hw_if_i | input           | Downstream block request for entropy bits.                                                                                        |
-| entropy_src_hw_if_o | output          | 384 bits of entropy data. Valid when es_ack is asserted high.                                                                     |
-| cs_aes_halt_i       | input           | Response from csrng that all requests to AES block are halted.                                                                    |
-| cs_aes_halt_o       | output          | Request to csrng to halt requests to the AES block for power leveling purposes.                                                   |
+| Name                            | Input or output | Description                                                                                                                        |
+| :------------------------------ | :-------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
+| clk_i                           | input           | All signal timings are related to the rising edge of clk.                                                                          |
+| rst_ni                          | input           | The reset signal is active LOW and resets the core.                                                                                |
+| debugUnlock_or_scan_mode_switch | input           | Zeroizes entropy\_src on debug lock/unlock, scan mode and lifecycle change. See [Entropy source zeroize](#entropy-source-zeroize). |
+| entropy_src_rng_enable_o        | output          | Request from the entropy_src module to the physical true random noise source to start generating data.                             |
+| entropy_src_rng_valid_i         | input           | Flag indicating the TRNG data is valid. Valid is asserted high for one cycle when data is valid.                                   |
+| entropy_src_rng_bits_i          | input           | The internal TRNG data. Sampled when entropy_src_rng_valid_i is asserted high.                                                     |
+| entropy_src_hw_if_i             | input           | Downstream block request for entropy bits.                                                                                         |
+| entropy_src_hw_if_o             | output          | 384 bits of entropy data. Valid when es_ack is asserted high.                                                                      |
+
+While `entropy_src_rng_enable_o` is asserted, entropy\_src accepts every `entropy_src_rng_bits_i` value marked by an asserted `entropy_src_rng_valid_i`; the noise source cannot be back-pressured.
+The maximum supported rate is one `entropy_src_rng_bits_i` value (i.e. one sample) every two clock cycles.
 
 The following figure shows the entropy source signals.
 
 *Figure: Entropy source signals*
 
 ![](./images/entropy_source_signals.png)
+
+### Entropy source zeroize
+
+Writing 1 to `ENTROPY_SRC_CTRL.ZEROIZE` zeroizes entropy\_src and aborts any operation in progress, in any state.
+entropy\_src is also zeroized on debug lock/unlock, scan mode and lifecycle change (`debugUnlock_or_scan_mode_switch`).
+While a Caliptra fatal error is asserted, entropy\_src is held in zeroize.
+
+Zeroize clears:
+- all FIFOs, including their storage: the raw entropy FIFOs, the observe FIFO and the esfinal FIFO that holds the conditioned seeds
+- the main and ack state machines, which return to idle
+- the health test state, the health test watermark and the alert counters
+- the SHA3 conditioner (see the Zeroize section of [SHA3](#sha3))
+
+All state is cleared synchronously at the end of the zeroize cycle, except for the data of the packer FIFOs, which is cleared one cycle later and is never output in between.
+In the zeroize cycle, no seed is acknowledged on the hardware interface, and `ENTROPY_DATA` and `FW_OV_RD_DATA` read 0.
+Zeroize has precedence over the Error state of the state machines. They only return to the Error state if the local escalation is still asserted.
+
+Zeroize does not clear:
+- the configuration registers
+- the interrupt and alert status
+- the enable of the noise source: the noise source keeps running. The sample received in the zeroize cycle is dropped.
+
+If entropy\_src is enabled, it restarts on its own after the zeroize: it runs the boot or startup health tests again and then delivers new seeds.
+No seed is delivered from the state before the zeroize, so firmware does not need to disable and re-enable entropy\_src.
+A pending request from CSRNG stays asserted and is served with a seed produced after the zeroize.
 
 ### CSRNG signal descriptions
 
@@ -529,10 +557,9 @@ The following table provides descriptions for the CSRNG signals.
 | lc_hw_debug_en_i           | input           | Lifecycle that selects which diversification value is used for xoring with the seed from entropy_src. |
 | entropy_src_hw_if_i        | input           | 384 bits of entropy data. Valid when es_ack is asserted high.                                         |
 | entropy_src_hw_if_o        | output          | Downstream block request for entropy bits.                                                            |
-| cs_aes_halt_i              | input           | Request from entropy_src to halt requests to the AES block for power leveling purposes.               |
-| cs_aes_halt_o              | output          | Response to entropy_src that all requests to AES block are halted.                                    |
 
-The CSRNG may only be enabled if entropy\_src is enabled. After it is disabled, CSRNG may only be re-enabled after entropy\_src has been disabled and re-enabled.
+The recommended enable sequence is to first enable entropy\_src and then CSRNG.
+entropy\_src can be disabled and re-enabled while CSRNG remains enabled; pending seed requests from CSRNG are served once entropy\_src is re-enabled.
 
 ### FIPS considerations
 
@@ -543,100 +570,172 @@ required for FIPS compliance. Additional details can be found in NIST
 publication SP 800-90B.
 
 The TRNG must be re-initialized whenever self-test parameter changes are
-needed. As described in the previous section, the initialization steps
-are as follows:
+needed. The initialization steps are as follows:
 
-1. Disable `csrng` and `entropy_src` in that order.
+1. Disable `entropy_src`. `csrng` can remain enabled.
 2. Apply new self-test configuration.
-3. Enable `entropy_src` and `csrng` in that order.
+3. Enable `entropy_src`.
 
 ### Adaptive self-test window and thresholds
 
-This section details the configuration of the `entropy_src`, focusing on how
-the test window size for the adaptive self-test is determined and how it
-relates to threshold calculations.
+This section details the configuration of the `entropy_src` health test
+windows and of the adaptive self-test thresholds.
 
-#### Understanding Test Window Sizes
+#### Test windows
 
-The adaptive self-test within the `entropy_src` block utilizes a
-configurable test window. To clarify its interpretation, two terms are
-defined:
+The size of a sample is determined by `CONF.RNG_BIT_ENABLE`:
 
-* `ENTROPY_TEST_WINDOW`: This refers to the test window size directly
-  configured in the hardware registers of the `entropy_src` block.
-* `ACTUAL_TEST_WINDOW`: This refers to the effective window size used for
-  the adaptive self-test threshold calculations. Its value depends on how
-  the test scores are aggregated.
+* In multi-channel mode (`CONF.RNG_BIT_ENABLE` disabled), a sample consists of
+  one bit from each of the 4 noise source lines.
+* In single-channel mode (`CONF.RNG_BIT_ENABLE` enabled), a sample is one bit
+  of the line selected by `CONF.RNG_BIT_SEL`.
 
-The aggregation method is determined by the CONF.THRESHOLD_SCOPE setting in
-the entropy_src block.
+The window size, in samples, depends on the operating mode:
 
-#### Aggregate per symbol
+* FIPS mode (`CONF.FIPS_ENABLE` enabled): the window size is configured in
+  `HEALTH_TEST_WINDOWS.FIPS_WINDOW`, in samples.
+* Boot-time / bypass mode (`CONF.FIPS_ENABLE` disabled): the window is
+  configured in `HEALTH_TEST_WINDOWS.BYPASS_WINDOW`, in bits over all tested
+  lines, so the window size is `BYPASS_WINDOW` / 4 samples in multi-channel
+  mode and `BYPASS_WINDOW` samples in single-channel mode. Only the default
+  value of 384 bits (the seed length) is supported.
 
-When CONF.THRESHOLD_SCOPE is enabled:
+In both modes, each tested noise source line contributes one bit per sample,
+i.e. window size bits per window.
 
-* The adaptive test combines the inputs from all physical entropy lines
-  into a single, cumulative score.
-* The test essentially treats the combined input as a single binary stream,
-  counting the occurrences of '1's.
-* In this configuration:
-  * If `ENTROPY_TEST_WINDOW` is set to 1024, then
-  * `ACTUAL_TEST_WINDOW` = `ENTROPY_TEST_WINDOW` = 1024
+#### Threshold scope
 
-#### Handle each physical noise source separately
+Some health tests are executed on each noise source line individually. For
+example, the Adaptive Proportion test counts the number of '1's of each line
+over the window. In multi-channel mode, `CONF.THRESHOLD_SCOPE` selects the
+scope in which the results of these tests are compared against the thresholds
+and health test failures are counted:
 
-When `CONF.THRESHOLD_SCOPE` is disabled:
+* `CONF.THRESHOLD_SCOPE` disabled: the count of each line is compared against
+  the thresholds individually. This allows detecting the failure of a single
+  noise source line.
+* `CONF.THRESHOLD_SCOPE` enabled: the counts of all lines are summed up and the
+  sum is compared against the thresholds.
 
-* The adaptive test scores each individual physical noise input line
-  independently.
-* This allows for monitoring the health of each noise source.
-* In this configuration (assuming, for example, 4 noise sources):
-  * If `ENTROPY_TEST_WINDOW` is set to 4096 bits, then
-  * `ACTUAL_TEST_WINDOW` = (`ENTROPY_TEST_WINDOW` / 4) = 1024
+In single-channel mode, `CONF.THRESHOLD_SCOPE` has no effect.
 
 #### Configuring adaptive self-test thresholds
 
-Once the `ACTUAL_TEST_WINDOW` is determined, the adaptive self-test
-thresholds can be configured as follows:
+`entropy_src` provides two variants of the NIST SP 800-90B Adaptive Proportion
+test (Section 4.4.2), which declares an error if the count reaches the cutoff
+value $C = 1 + critbinom(W, 2^{-H}, 1 - α)$, where $W$ is the window size and
+$H$ the min-entropy per sample:
 
-* `ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = `adaptp_cutoff`
-* `ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `ACTUAL_TEST_WINDOW` - `adaptp_cutoff`
+* The Adaptive Proportion test (`ADAPTP_HI_THRESHOLD`, `ADAPTP_LO_THRESHOLD`)
+  treats the noise source lines as binary sources and counts the number of
+  '1's. It is used when the lines are modeled as binary noise sources.
+* The Adaptive Proportion Symbol test (`ADAPTPS_THRESHOLD`) treats the 4 lines
+  together as a non-binary source producing 4-bit symbols. It counts how often
+  the first symbol of the window occurs within the window.
 
-Here, `adaptp_cutoff` represents the pre-determined cutoff value for the
-adaptive proportion test, as defined by NIST SP 800-90B. See the threshold
-calculations below as an example.
+##### Adaptive Proportion test
+
+The thresholds depend on the number of bits `N` over which the compared count
+is taken:
+
+| Mode           | `CONF.THRESHOLD_SCOPE` disabled | `CONF.THRESHOLD_SCOPE` enabled |
+| :------------- | :------------------------------ | :----------------------------- |
+| Multi-channel  | `N` = window size               | `N` = 4 * window size          |
+| Single-channel | `N` = window size               | `N` = window size              |
+
+The test fails if the count of '1's is above `ADAPTP_HI_THRESHOLD` or below
+`ADAPTP_LO_THRESHOLD`, i.e. if either the '1's or the '0's reach the cutoff
+value $C$. The thresholds can then be configured as follows:
+
+* `ADAPTP_HI_THRESHOLD` = $C - 1$
+* `ADAPTP_LO_THRESHOLD` = `N` - $C + 1$
+
+with $W$ = `N` and $H$ the min-entropy per bit. See the threshold calculations
+below as an example.
 
 $α = 2^{-40}$ (recommended)\
 $H = 0.5$ (example, estimated entropy measured from hardware)\
-$W$ = `ACTUAL_TEST_WINDOW`\
-`adaptp_cutoff` =  $1 + critbinom(W, 2^{-H}, 1 - α)$
+$W$ = `N`\
+$C = 1 + critbinom(W, 2^{-H}, 1 - α)$
+
+##### Adaptive Proportion Symbol test
+
+The Adaptive Proportion Symbol test is used in multi-channel mode, where each
+sample is a 4-bit symbol. The test fails if the count of the first symbol
+reaches `ADAPTPS_THRESHOLD`, so the threshold can be configured as follows:
+
+* `ADAPTPS_THRESHOLD` = $C$
+
+with $W$ = window size and $H$ the min-entropy per 4-bit symbol.
+
+The same threshold registers are used in FIPS mode and in bypass mode.
+Thresholds calculated for the FIPS window do not work for the much smaller
+bypass window. The thresholds therefore have to be set for the window of the
+mode that is used, and reprogrammed (while `entropy_src` is disabled) when
+switching between bypass and FIPS mode.
 
 > Note: The `critbinom` function (critical binomial distribution function) is
 > implemented by most spreadsheet applications.
 
 ### Recommended configuration
 
-The following configuration is recommended for the adaptive and repetition
-count tests:
+The configuration of the health tests depends on how the 4 noise source lines
+can be modeled in the sense of NIST SP 800-90B. For the window size in the
+different operating modes, see [Test windows](#test-windows).
 
-#### Adaptive test
+#### Four independent binary noise sources
 
-1. Set `CONF.THRESHOLD_SCOPE` to disabled. This allows the test to monitor
-   and score each physical noise source individually, providing more granular
-   health information.
-2. Set `HEALTH_TEST_WINDOWS.FIPS_WINDOW` to 4096 bits. This value serves
-   as the `ENTROPY_TEST_WINDOW`. With the current 4 noise source configuration,
-   this is equivalent to 1024 bits per noise source, where each source produces
-   1 bit of entropy as defined in NIST SP 800-90B.
-3. Calculate thresholds. Use an `ACTUAL_TEST_WINDOW` of 1024 bits (derived
-   from step 2) in the adaptive test threshold formulas provided earlier in
-   this subsection.
+If the 4 lines come from independent noise sources, each line can be health
+tested as a separate binary noise source:
+
+1. Set `CONF.THRESHOLD_SCOPE` to disabled, so that the Adaptive Proportion
+   test evaluates each line individually. The Repetition Count test always
+   evaluates each line individually.
+2. Set the window size to the window size defined by NIST SP 800-90B
+   for binary noise sources. Each line is then tested over window size bits.
+3. Calculate the `ADAPTP_HI_THRESHOLD`, `ADAPTP_LO_THRESHOLD` and
+   `REPCNT_THRESHOLD` cutoffs with `N` = window size.
+
+`entropy_src` only supports one set of cutoff values, shared by all 4 lines.
+This configuration therefore requires a justification that:
+
+* the 4 lines can legitimately be treated as independent noise sources, and
+* the common cutoff values are appropriate for every line, i.e. they are
+  derived from an entropy estimate that holds for each of the 4 lines.
+
+If this cannot be justified, this configuration must not be used. Use one of
+the following configurations instead.
+
+#### Single-lane mode
+
+Health test and condition a single binary line:
+
+1. Set `CONF.RNG_BIT_ENABLE` to enabled and select the line with
+   `CONF.RNG_BIT_SEL`. `CONF.THRESHOLD_SCOPE` has no effect in this mode.
+2. Set the window size to the window size defined by NIST SP 800-90B
+   for binary noise sources. The selected line is then tested over window
+   size bits.
+3. Calculate the `ADAPTP_HI_THRESHOLD`, `ADAPTP_LO_THRESHOLD` and
+   `REPCNT_THRESHOLD` cutoffs for the selected line with `N` = window size.
+
+#### 4-bit symbol mode
+
+Treat the 4 lines together as a single noise source producing 4-bit symbols:
+
+1. Keep `CONF.RNG_BIT_ENABLE` disabled (multi-channel mode).
+2. Set the window size to the window size defined by NIST SP 800-90B
+   for non-binary noise sources. Each sample is a 4-bit symbol.
+3. Use the symbol-based tests: calculate the `ADAPTPS_THRESHOLD` (see
+   [Adaptive Proportion Symbol test](#adaptive-proportion-symbol-test)) with
+   `W` = window size and the `REPCNTS_THRESHOLD` (Repetition Count Symbol
+   test), both with the min-entropy `H` per 4-bit symbol.
 
 #### Repetition count test
 
 The methodology used for calculating the repetition count threshold in the
-ROM boot phase can be directly applied for this test as well. The threshold is
-applied on a per-noise-source basis.
+ROM boot phase can be directly applied in all three configurations, using
+the min-entropy per bit (independent sources, single-lane mode) or per 4-bit
+symbol (4-bit symbol mode).
 
 
 ## Dual iTRNG entropy combiner
@@ -727,9 +826,7 @@ blocks: `AHB_LOCK` uses a MuBi4 encoding that is fail-safe to *locked*, and the
 datapath sequencer uses a sparse Hamming-distance-3 (HD-3) FSM encoding. A
 single-bit glitch that produces an undefined FSM code is trapped to a terminal
 error state and latched into the combiner's error-interrupt status (alongside the
-`ot_sha3` countermeasure errors). The `cs_aes_halt` current-management
-handshake between each entropy source and CSRNG is terminated locally inside the
-combiner so that a conditioner is never left waiting on an acknowledge.
+`ot_sha3` countermeasure errors).
 
 
 ## External-TRNG REQ HW API

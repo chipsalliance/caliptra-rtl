@@ -9495,6 +9495,8 @@
 #define ENTROPY_SRC_REG_ALERT_TEST_RECOV_ALERT_MASK                                                 (0x1)
 #define ENTROPY_SRC_REG_ALERT_TEST_FATAL_ALERT_LOW                                                  (1)
 #define ENTROPY_SRC_REG_ALERT_TEST_FATAL_ALERT_MASK                                                 (0x2)
+#define ENTROPY_SRC_REG_ALERT_TEST_REGWEN_LOW                                                       (31)
+#define ENTROPY_SRC_REG_ALERT_TEST_REGWEN_MASK                                                      (0x80000000)
 #endif
 #define CLP_ENTROPY_SRC_REG_ME_REGWEN                                                               (0x20003010)
 #ifndef ENTROPY_SRC_REG_ME_REGWEN
@@ -9541,12 +9543,12 @@
 #define ENTROPY_SRC_REG_CONF_RNG_FIPS_MASK                                                          (0xf00)
 #define ENTROPY_SRC_REG_CONF_RNG_BIT_ENABLE_LOW                                                     (12)
 #define ENTROPY_SRC_REG_CONF_RNG_BIT_ENABLE_MASK                                                    (0xf000)
-#define ENTROPY_SRC_REG_CONF_RNG_BIT_SEL_LOW                                                        (16)
-#define ENTROPY_SRC_REG_CONF_RNG_BIT_SEL_MASK                                                       (0x30000)
-#define ENTROPY_SRC_REG_CONF_THRESHOLD_SCOPE_LOW                                                    (18)
-#define ENTROPY_SRC_REG_CONF_THRESHOLD_SCOPE_MASK                                                   (0x3c0000)
-#define ENTROPY_SRC_REG_CONF_ENTROPY_DATA_REG_ENABLE_LOW                                            (22)
-#define ENTROPY_SRC_REG_CONF_ENTROPY_DATA_REG_ENABLE_MASK                                           (0x3c00000)
+#define ENTROPY_SRC_REG_CONF_THRESHOLD_SCOPE_LOW                                                    (16)
+#define ENTROPY_SRC_REG_CONF_THRESHOLD_SCOPE_MASK                                                   (0xf0000)
+#define ENTROPY_SRC_REG_CONF_ENTROPY_DATA_REG_ENABLE_LOW                                            (20)
+#define ENTROPY_SRC_REG_CONF_ENTROPY_DATA_REG_ENABLE_MASK                                           (0xf00000)
+#define ENTROPY_SRC_REG_CONF_RNG_BIT_SEL_LOW                                                        (24)
+#define ENTROPY_SRC_REG_CONF_RNG_BIT_SEL_MASK                                                       (0xff000000)
 #endif
 #define CLP_ENTROPY_SRC_REG_ENTROPY_CONTROL                                                         (0x20003028)
 #ifndef ENTROPY_SRC_REG_ENTROPY_CONTROL
@@ -9568,275 +9570,215 @@
 #define ENTROPY_SRC_REG_HEALTH_TEST_WINDOWS_BYPASS_WINDOW_LOW                                       (16)
 #define ENTROPY_SRC_REG_HEALTH_TEST_WINDOWS_BYPASS_WINDOW_MASK                                      (0xffff0000)
 #endif
-#define CLP_ENTROPY_SRC_REG_REPCNT_THRESHOLDS                                                       (0x20003034)
-#ifndef ENTROPY_SRC_REG_REPCNT_THRESHOLDS
-#define ENTROPY_SRC_REG_REPCNT_THRESHOLDS                                                           (0x34)
-#define ENTROPY_SRC_REG_REPCNT_THRESHOLDS_FIPS_THRESH_LOW                                           (0)
-#define ENTROPY_SRC_REG_REPCNT_THRESHOLDS_FIPS_THRESH_MASK                                          (0xffff)
-#define ENTROPY_SRC_REG_REPCNT_THRESHOLDS_BYPASS_THRESH_LOW                                         (16)
-#define ENTROPY_SRC_REG_REPCNT_THRESHOLDS_BYPASS_THRESH_MASK                                        (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_THRESHOLD_ONEWAY                                                        (0x20003034)
+#ifndef ENTROPY_SRC_REG_THRESHOLD_ONEWAY
+#define ENTROPY_SRC_REG_THRESHOLD_ONEWAY                                                            (0x34)
+#define ENTROPY_SRC_REG_THRESHOLD_ONEWAY_THRESHOLD_ONEWAY_LOW                                       (0)
+#define ENTROPY_SRC_REG_THRESHOLD_ONEWAY_THRESHOLD_ONEWAY_MASK                                      (0xf)
 #endif
-#define CLP_ENTROPY_SRC_REG_REPCNTS_THRESHOLDS                                                      (0x20003038)
-#ifndef ENTROPY_SRC_REG_REPCNTS_THRESHOLDS
-#define ENTROPY_SRC_REG_REPCNTS_THRESHOLDS                                                          (0x38)
-#define ENTROPY_SRC_REG_REPCNTS_THRESHOLDS_FIPS_THRESH_LOW                                          (0)
-#define ENTROPY_SRC_REG_REPCNTS_THRESHOLDS_FIPS_THRESH_MASK                                         (0xffff)
-#define ENTROPY_SRC_REG_REPCNTS_THRESHOLDS_BYPASS_THRESH_LOW                                        (16)
-#define ENTROPY_SRC_REG_REPCNTS_THRESHOLDS_BYPASS_THRESH_MASK                                       (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_REPCNT_THRESHOLD                                                        (0x20003038)
+#ifndef ENTROPY_SRC_REG_REPCNT_THRESHOLD
+#define ENTROPY_SRC_REG_REPCNT_THRESHOLD                                                            (0x38)
+#define ENTROPY_SRC_REG_REPCNT_THRESHOLD_REPCNT_THRESHOLD_LOW                                       (0)
+#define ENTROPY_SRC_REG_REPCNT_THRESHOLD_REPCNT_THRESHOLD_MASK                                      (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLDS                                                    (0x2000303c)
-#ifndef ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLDS
-#define ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLDS                                                        (0x3c)
-#define ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLDS_FIPS_THRESH_LOW                                        (0)
-#define ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLDS_FIPS_THRESH_MASK                                       (0xffff)
-#define ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLDS_BYPASS_THRESH_LOW                                      (16)
-#define ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLDS_BYPASS_THRESH_MASK                                     (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_REPCNTS_THRESHOLD                                                       (0x2000303c)
+#ifndef ENTROPY_SRC_REG_REPCNTS_THRESHOLD
+#define ENTROPY_SRC_REG_REPCNTS_THRESHOLD                                                           (0x3c)
+#define ENTROPY_SRC_REG_REPCNTS_THRESHOLD_REPCNTS_THRESHOLD_LOW                                     (0)
+#define ENTROPY_SRC_REG_REPCNTS_THRESHOLD_REPCNTS_THRESHOLD_MASK                                    (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLDS                                                    (0x20003040)
-#ifndef ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLDS
-#define ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLDS                                                        (0x40)
-#define ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLDS_FIPS_THRESH_LOW                                        (0)
-#define ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLDS_FIPS_THRESH_MASK                                       (0xffff)
-#define ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLDS_BYPASS_THRESH_LOW                                      (16)
-#define ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLDS_BYPASS_THRESH_MASK                                     (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLD                                                     (0x20003040)
+#ifndef ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLD
+#define ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLD                                                         (0x40)
+#define ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLD_ADAPTP_HI_THRESHOLD_LOW                                 (0)
+#define ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLD_ADAPTP_HI_THRESHOLD_MASK                                (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_BUCKET_THRESHOLDS                                                       (0x20003044)
-#ifndef ENTROPY_SRC_REG_BUCKET_THRESHOLDS
-#define ENTROPY_SRC_REG_BUCKET_THRESHOLDS                                                           (0x44)
-#define ENTROPY_SRC_REG_BUCKET_THRESHOLDS_FIPS_THRESH_LOW                                           (0)
-#define ENTROPY_SRC_REG_BUCKET_THRESHOLDS_FIPS_THRESH_MASK                                          (0xffff)
-#define ENTROPY_SRC_REG_BUCKET_THRESHOLDS_BYPASS_THRESH_LOW                                         (16)
-#define ENTROPY_SRC_REG_BUCKET_THRESHOLDS_BYPASS_THRESH_MASK                                        (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLD                                                     (0x20003044)
+#ifndef ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLD
+#define ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLD                                                         (0x44)
+#define ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLD_ADAPTP_LO_THRESHOLD_LOW                                 (0)
+#define ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLD_ADAPTP_LO_THRESHOLD_MASK                                (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_MARKOV_HI_THRESHOLDS                                                    (0x20003048)
-#ifndef ENTROPY_SRC_REG_MARKOV_HI_THRESHOLDS
-#define ENTROPY_SRC_REG_MARKOV_HI_THRESHOLDS                                                        (0x48)
-#define ENTROPY_SRC_REG_MARKOV_HI_THRESHOLDS_FIPS_THRESH_LOW                                        (0)
-#define ENTROPY_SRC_REG_MARKOV_HI_THRESHOLDS_FIPS_THRESH_MASK                                       (0xffff)
-#define ENTROPY_SRC_REG_MARKOV_HI_THRESHOLDS_BYPASS_THRESH_LOW                                      (16)
-#define ENTROPY_SRC_REG_MARKOV_HI_THRESHOLDS_BYPASS_THRESH_MASK                                     (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_ADAPTPS_THRESHOLD                                                       (0x20003048)
+#ifndef ENTROPY_SRC_REG_ADAPTPS_THRESHOLD
+#define ENTROPY_SRC_REG_ADAPTPS_THRESHOLD                                                           (0x48)
+#define ENTROPY_SRC_REG_ADAPTPS_THRESHOLD_ADAPTPS_THRESHOLD_LOW                                     (0)
+#define ENTROPY_SRC_REG_ADAPTPS_THRESHOLD_ADAPTPS_THRESHOLD_MASK                                    (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_MARKOV_LO_THRESHOLDS                                                    (0x2000304c)
-#ifndef ENTROPY_SRC_REG_MARKOV_LO_THRESHOLDS
-#define ENTROPY_SRC_REG_MARKOV_LO_THRESHOLDS                                                        (0x4c)
-#define ENTROPY_SRC_REG_MARKOV_LO_THRESHOLDS_FIPS_THRESH_LOW                                        (0)
-#define ENTROPY_SRC_REG_MARKOV_LO_THRESHOLDS_FIPS_THRESH_MASK                                       (0xffff)
-#define ENTROPY_SRC_REG_MARKOV_LO_THRESHOLDS_BYPASS_THRESH_LOW                                      (16)
-#define ENTROPY_SRC_REG_MARKOV_LO_THRESHOLDS_BYPASS_THRESH_MASK                                     (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_BUCKET_THRESHOLD                                                        (0x2000304c)
+#ifndef ENTROPY_SRC_REG_BUCKET_THRESHOLD
+#define ENTROPY_SRC_REG_BUCKET_THRESHOLD                                                            (0x4c)
+#define ENTROPY_SRC_REG_BUCKET_THRESHOLD_BUCKET_THRESHOLD_LOW                                       (0)
+#define ENTROPY_SRC_REG_BUCKET_THRESHOLD_BUCKET_THRESHOLD_MASK                                      (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_EXTHT_HI_THRESHOLDS                                                     (0x20003050)
-#ifndef ENTROPY_SRC_REG_EXTHT_HI_THRESHOLDS
-#define ENTROPY_SRC_REG_EXTHT_HI_THRESHOLDS                                                         (0x50)
-#define ENTROPY_SRC_REG_EXTHT_HI_THRESHOLDS_FIPS_THRESH_LOW                                         (0)
-#define ENTROPY_SRC_REG_EXTHT_HI_THRESHOLDS_FIPS_THRESH_MASK                                        (0xffff)
-#define ENTROPY_SRC_REG_EXTHT_HI_THRESHOLDS_BYPASS_THRESH_LOW                                       (16)
-#define ENTROPY_SRC_REG_EXTHT_HI_THRESHOLDS_BYPASS_THRESH_MASK                                      (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_MARKOV_HI_THRESHOLD                                                     (0x20003050)
+#ifndef ENTROPY_SRC_REG_MARKOV_HI_THRESHOLD
+#define ENTROPY_SRC_REG_MARKOV_HI_THRESHOLD                                                         (0x50)
+#define ENTROPY_SRC_REG_MARKOV_HI_THRESHOLD_MARKOV_HI_THRESHOLD_LOW                                 (0)
+#define ENTROPY_SRC_REG_MARKOV_HI_THRESHOLD_MARKOV_HI_THRESHOLD_MASK                                (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_EXTHT_LO_THRESHOLDS                                                     (0x20003054)
-#ifndef ENTROPY_SRC_REG_EXTHT_LO_THRESHOLDS
-#define ENTROPY_SRC_REG_EXTHT_LO_THRESHOLDS                                                         (0x54)
-#define ENTROPY_SRC_REG_EXTHT_LO_THRESHOLDS_FIPS_THRESH_LOW                                         (0)
-#define ENTROPY_SRC_REG_EXTHT_LO_THRESHOLDS_FIPS_THRESH_MASK                                        (0xffff)
-#define ENTROPY_SRC_REG_EXTHT_LO_THRESHOLDS_BYPASS_THRESH_LOW                                       (16)
-#define ENTROPY_SRC_REG_EXTHT_LO_THRESHOLDS_BYPASS_THRESH_MASK                                      (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_MARKOV_LO_THRESHOLD                                                     (0x20003054)
+#ifndef ENTROPY_SRC_REG_MARKOV_LO_THRESHOLD
+#define ENTROPY_SRC_REG_MARKOV_LO_THRESHOLD                                                         (0x54)
+#define ENTROPY_SRC_REG_MARKOV_LO_THRESHOLD_MARKOV_LO_THRESHOLD_LOW                                 (0)
+#define ENTROPY_SRC_REG_MARKOV_LO_THRESHOLD_MARKOV_LO_THRESHOLD_MASK                                (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_REPCNT_HI_WATERMARKS                                                    (0x20003058)
-#ifndef ENTROPY_SRC_REG_REPCNT_HI_WATERMARKS
-#define ENTROPY_SRC_REG_REPCNT_HI_WATERMARKS                                                        (0x58)
-#define ENTROPY_SRC_REG_REPCNT_HI_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
-#define ENTROPY_SRC_REG_REPCNT_HI_WATERMARKS_FIPS_WATERMARK_MASK                                    (0xffff)
-#define ENTROPY_SRC_REG_REPCNT_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
-#define ENTROPY_SRC_REG_REPCNT_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                  (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_EXTHT_HI_THRESHOLD                                                      (0x20003058)
+#ifndef ENTROPY_SRC_REG_EXTHT_HI_THRESHOLD
+#define ENTROPY_SRC_REG_EXTHT_HI_THRESHOLD                                                          (0x58)
+#define ENTROPY_SRC_REG_EXTHT_HI_THRESHOLD_EXTHT_HI_THRESHOLD_LOW                                   (0)
+#define ENTROPY_SRC_REG_EXTHT_HI_THRESHOLD_EXTHT_HI_THRESHOLD_MASK                                  (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_REPCNTS_HI_WATERMARKS                                                   (0x2000305c)
-#ifndef ENTROPY_SRC_REG_REPCNTS_HI_WATERMARKS
-#define ENTROPY_SRC_REG_REPCNTS_HI_WATERMARKS                                                       (0x5c)
-#define ENTROPY_SRC_REG_REPCNTS_HI_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
-#define ENTROPY_SRC_REG_REPCNTS_HI_WATERMARKS_FIPS_WATERMARK_MASK                                   (0xffff)
-#define ENTROPY_SRC_REG_REPCNTS_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
-#define ENTROPY_SRC_REG_REPCNTS_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                 (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_EXTHT_LO_THRESHOLD                                                      (0x2000305c)
+#ifndef ENTROPY_SRC_REG_EXTHT_LO_THRESHOLD
+#define ENTROPY_SRC_REG_EXTHT_LO_THRESHOLD                                                          (0x5c)
+#define ENTROPY_SRC_REG_EXTHT_LO_THRESHOLD_EXTHT_LO_THRESHOLD_LOW                                   (0)
+#define ENTROPY_SRC_REG_EXTHT_LO_THRESHOLD_EXTHT_LO_THRESHOLD_MASK                                  (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_ADAPTP_HI_WATERMARKS                                                    (0x20003060)
-#ifndef ENTROPY_SRC_REG_ADAPTP_HI_WATERMARKS
-#define ENTROPY_SRC_REG_ADAPTP_HI_WATERMARKS                                                        (0x60)
-#define ENTROPY_SRC_REG_ADAPTP_HI_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
-#define ENTROPY_SRC_REG_ADAPTP_HI_WATERMARKS_FIPS_WATERMARK_MASK                                    (0xffff)
-#define ENTROPY_SRC_REG_ADAPTP_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
-#define ENTROPY_SRC_REG_ADAPTP_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                  (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_HT_WATERMARK_NUM                                                        (0x20003060)
+#ifndef ENTROPY_SRC_REG_HT_WATERMARK_NUM
+#define ENTROPY_SRC_REG_HT_WATERMARK_NUM                                                            (0x60)
+#define ENTROPY_SRC_REG_HT_WATERMARK_NUM_HT_WATERMARK_NUM_LOW                                       (0)
+#define ENTROPY_SRC_REG_HT_WATERMARK_NUM_HT_WATERMARK_NUM_MASK                                      (0xf)
 #endif
-#define CLP_ENTROPY_SRC_REG_ADAPTP_LO_WATERMARKS                                                    (0x20003064)
-#ifndef ENTROPY_SRC_REG_ADAPTP_LO_WATERMARKS
-#define ENTROPY_SRC_REG_ADAPTP_LO_WATERMARKS                                                        (0x64)
-#define ENTROPY_SRC_REG_ADAPTP_LO_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
-#define ENTROPY_SRC_REG_ADAPTP_LO_WATERMARKS_FIPS_WATERMARK_MASK                                    (0xffff)
-#define ENTROPY_SRC_REG_ADAPTP_LO_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
-#define ENTROPY_SRC_REG_ADAPTP_LO_WATERMARKS_BYPASS_WATERMARK_MASK                                  (0xffff0000)
+#define CLP_ENTROPY_SRC_REG_HT_WATERMARK                                                            (0x20003064)
+#ifndef ENTROPY_SRC_REG_HT_WATERMARK
+#define ENTROPY_SRC_REG_HT_WATERMARK                                                                (0x64)
+#define ENTROPY_SRC_REG_HT_WATERMARK_HT_WATERMARK_LOW                                               (0)
+#define ENTROPY_SRC_REG_HT_WATERMARK_HT_WATERMARK_MASK                                              (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_EXTHT_HI_WATERMARKS                                                     (0x20003068)
-#ifndef ENTROPY_SRC_REG_EXTHT_HI_WATERMARKS
-#define ENTROPY_SRC_REG_EXTHT_HI_WATERMARKS                                                         (0x68)
-#define ENTROPY_SRC_REG_EXTHT_HI_WATERMARKS_FIPS_WATERMARK_LOW                                      (0)
-#define ENTROPY_SRC_REG_EXTHT_HI_WATERMARKS_FIPS_WATERMARK_MASK                                     (0xffff)
-#define ENTROPY_SRC_REG_EXTHT_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                    (16)
-#define ENTROPY_SRC_REG_EXTHT_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                   (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC_REG_EXTHT_LO_WATERMARKS                                                     (0x2000306c)
-#ifndef ENTROPY_SRC_REG_EXTHT_LO_WATERMARKS
-#define ENTROPY_SRC_REG_EXTHT_LO_WATERMARKS                                                         (0x6c)
-#define ENTROPY_SRC_REG_EXTHT_LO_WATERMARKS_FIPS_WATERMARK_LOW                                      (0)
-#define ENTROPY_SRC_REG_EXTHT_LO_WATERMARKS_FIPS_WATERMARK_MASK                                     (0xffff)
-#define ENTROPY_SRC_REG_EXTHT_LO_WATERMARKS_BYPASS_WATERMARK_LOW                                    (16)
-#define ENTROPY_SRC_REG_EXTHT_LO_WATERMARKS_BYPASS_WATERMARK_MASK                                   (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC_REG_BUCKET_HI_WATERMARKS                                                    (0x20003070)
-#ifndef ENTROPY_SRC_REG_BUCKET_HI_WATERMARKS
-#define ENTROPY_SRC_REG_BUCKET_HI_WATERMARKS                                                        (0x70)
-#define ENTROPY_SRC_REG_BUCKET_HI_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
-#define ENTROPY_SRC_REG_BUCKET_HI_WATERMARKS_FIPS_WATERMARK_MASK                                    (0xffff)
-#define ENTROPY_SRC_REG_BUCKET_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
-#define ENTROPY_SRC_REG_BUCKET_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                  (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC_REG_MARKOV_HI_WATERMARKS                                                    (0x20003074)
-#ifndef ENTROPY_SRC_REG_MARKOV_HI_WATERMARKS
-#define ENTROPY_SRC_REG_MARKOV_HI_WATERMARKS                                                        (0x74)
-#define ENTROPY_SRC_REG_MARKOV_HI_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
-#define ENTROPY_SRC_REG_MARKOV_HI_WATERMARKS_FIPS_WATERMARK_MASK                                    (0xffff)
-#define ENTROPY_SRC_REG_MARKOV_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
-#define ENTROPY_SRC_REG_MARKOV_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                  (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC_REG_MARKOV_LO_WATERMARKS                                                    (0x20003078)
-#ifndef ENTROPY_SRC_REG_MARKOV_LO_WATERMARKS
-#define ENTROPY_SRC_REG_MARKOV_LO_WATERMARKS                                                        (0x78)
-#define ENTROPY_SRC_REG_MARKOV_LO_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
-#define ENTROPY_SRC_REG_MARKOV_LO_WATERMARKS_FIPS_WATERMARK_MASK                                    (0xffff)
-#define ENTROPY_SRC_REG_MARKOV_LO_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
-#define ENTROPY_SRC_REG_MARKOV_LO_WATERMARKS_BYPASS_WATERMARK_MASK                                  (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC_REG_REPCNT_TOTAL_FAILS                                                      (0x2000307c)
+#define CLP_ENTROPY_SRC_REG_REPCNT_TOTAL_FAILS                                                      (0x20003068)
 #ifndef ENTROPY_SRC_REG_REPCNT_TOTAL_FAILS
-#define ENTROPY_SRC_REG_REPCNT_TOTAL_FAILS                                                          (0x7c)
+#define ENTROPY_SRC_REG_REPCNT_TOTAL_FAILS                                                          (0x68)
 #endif
-#define CLP_ENTROPY_SRC_REG_REPCNTS_TOTAL_FAILS                                                     (0x20003080)
+#define CLP_ENTROPY_SRC_REG_REPCNTS_TOTAL_FAILS                                                     (0x2000306c)
 #ifndef ENTROPY_SRC_REG_REPCNTS_TOTAL_FAILS
-#define ENTROPY_SRC_REG_REPCNTS_TOTAL_FAILS                                                         (0x80)
+#define ENTROPY_SRC_REG_REPCNTS_TOTAL_FAILS                                                         (0x6c)
 #endif
-#define CLP_ENTROPY_SRC_REG_ADAPTP_HI_TOTAL_FAILS                                                   (0x20003084)
+#define CLP_ENTROPY_SRC_REG_ADAPTP_HI_TOTAL_FAILS                                                   (0x20003070)
 #ifndef ENTROPY_SRC_REG_ADAPTP_HI_TOTAL_FAILS
-#define ENTROPY_SRC_REG_ADAPTP_HI_TOTAL_FAILS                                                       (0x84)
+#define ENTROPY_SRC_REG_ADAPTP_HI_TOTAL_FAILS                                                       (0x70)
 #endif
-#define CLP_ENTROPY_SRC_REG_ADAPTP_LO_TOTAL_FAILS                                                   (0x20003088)
+#define CLP_ENTROPY_SRC_REG_ADAPTP_LO_TOTAL_FAILS                                                   (0x20003074)
 #ifndef ENTROPY_SRC_REG_ADAPTP_LO_TOTAL_FAILS
-#define ENTROPY_SRC_REG_ADAPTP_LO_TOTAL_FAILS                                                       (0x88)
+#define ENTROPY_SRC_REG_ADAPTP_LO_TOTAL_FAILS                                                       (0x74)
 #endif
-#define CLP_ENTROPY_SRC_REG_BUCKET_TOTAL_FAILS                                                      (0x2000308c)
+#define CLP_ENTROPY_SRC_REG_ADAPTPS_TOTAL_FAILS                                                     (0x20003078)
+#ifndef ENTROPY_SRC_REG_ADAPTPS_TOTAL_FAILS
+#define ENTROPY_SRC_REG_ADAPTPS_TOTAL_FAILS                                                         (0x78)
+#endif
+#define CLP_ENTROPY_SRC_REG_BUCKET_TOTAL_FAILS                                                      (0x2000307c)
 #ifndef ENTROPY_SRC_REG_BUCKET_TOTAL_FAILS
-#define ENTROPY_SRC_REG_BUCKET_TOTAL_FAILS                                                          (0x8c)
+#define ENTROPY_SRC_REG_BUCKET_TOTAL_FAILS                                                          (0x7c)
 #endif
-#define CLP_ENTROPY_SRC_REG_MARKOV_HI_TOTAL_FAILS                                                   (0x20003090)
+#define CLP_ENTROPY_SRC_REG_MARKOV_HI_TOTAL_FAILS                                                   (0x20003080)
 #ifndef ENTROPY_SRC_REG_MARKOV_HI_TOTAL_FAILS
-#define ENTROPY_SRC_REG_MARKOV_HI_TOTAL_FAILS                                                       (0x90)
+#define ENTROPY_SRC_REG_MARKOV_HI_TOTAL_FAILS                                                       (0x80)
 #endif
-#define CLP_ENTROPY_SRC_REG_MARKOV_LO_TOTAL_FAILS                                                   (0x20003094)
+#define CLP_ENTROPY_SRC_REG_MARKOV_LO_TOTAL_FAILS                                                   (0x20003084)
 #ifndef ENTROPY_SRC_REG_MARKOV_LO_TOTAL_FAILS
-#define ENTROPY_SRC_REG_MARKOV_LO_TOTAL_FAILS                                                       (0x94)
+#define ENTROPY_SRC_REG_MARKOV_LO_TOTAL_FAILS                                                       (0x84)
 #endif
-#define CLP_ENTROPY_SRC_REG_EXTHT_HI_TOTAL_FAILS                                                    (0x20003098)
+#define CLP_ENTROPY_SRC_REG_EXTHT_HI_TOTAL_FAILS                                                    (0x20003088)
 #ifndef ENTROPY_SRC_REG_EXTHT_HI_TOTAL_FAILS
-#define ENTROPY_SRC_REG_EXTHT_HI_TOTAL_FAILS                                                        (0x98)
+#define ENTROPY_SRC_REG_EXTHT_HI_TOTAL_FAILS                                                        (0x88)
 #endif
-#define CLP_ENTROPY_SRC_REG_EXTHT_LO_TOTAL_FAILS                                                    (0x2000309c)
+#define CLP_ENTROPY_SRC_REG_EXTHT_LO_TOTAL_FAILS                                                    (0x2000308c)
 #ifndef ENTROPY_SRC_REG_EXTHT_LO_TOTAL_FAILS
-#define ENTROPY_SRC_REG_EXTHT_LO_TOTAL_FAILS                                                        (0x9c)
+#define ENTROPY_SRC_REG_EXTHT_LO_TOTAL_FAILS                                                        (0x8c)
 #endif
-#define CLP_ENTROPY_SRC_REG_ALERT_THRESHOLD                                                         (0x200030a0)
+#define CLP_ENTROPY_SRC_REG_ALERT_THRESHOLD                                                         (0x20003090)
 #ifndef ENTROPY_SRC_REG_ALERT_THRESHOLD
-#define ENTROPY_SRC_REG_ALERT_THRESHOLD                                                             (0xa0)
+#define ENTROPY_SRC_REG_ALERT_THRESHOLD                                                             (0x90)
 #define ENTROPY_SRC_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_LOW                                         (0)
 #define ENTROPY_SRC_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_MASK                                        (0xffff)
 #define ENTROPY_SRC_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_INV_LOW                                     (16)
 #define ENTROPY_SRC_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_INV_MASK                                    (0xffff0000)
 #endif
-#define CLP_ENTROPY_SRC_REG_ALERT_SUMMARY_FAIL_COUNTS                                               (0x200030a4)
+#define CLP_ENTROPY_SRC_REG_ALERT_SUMMARY_FAIL_COUNTS                                               (0x20003094)
 #ifndef ENTROPY_SRC_REG_ALERT_SUMMARY_FAIL_COUNTS
-#define ENTROPY_SRC_REG_ALERT_SUMMARY_FAIL_COUNTS                                                   (0xa4)
+#define ENTROPY_SRC_REG_ALERT_SUMMARY_FAIL_COUNTS                                                   (0x94)
 #define ENTROPY_SRC_REG_ALERT_SUMMARY_FAIL_COUNTS_ANY_FAIL_COUNT_LOW                                (0)
 #define ENTROPY_SRC_REG_ALERT_SUMMARY_FAIL_COUNTS_ANY_FAIL_COUNT_MASK                               (0xffff)
 #endif
-#define CLP_ENTROPY_SRC_REG_ALERT_FAIL_COUNTS                                                       (0x200030a8)
+#define CLP_ENTROPY_SRC_REG_ALERT_FAIL_COUNTS                                                       (0x20003098)
 #ifndef ENTROPY_SRC_REG_ALERT_FAIL_COUNTS
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS                                                           (0xa8)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_LOW                                     (4)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_MASK                                    (0xf0)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS                                                           (0x98)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_LOW                                     (0)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_MASK                                    (0xf)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_LOW                                    (4)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_MASK                                   (0xf0)
 #define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_ADAPTP_HI_FAIL_COUNT_LOW                                  (8)
 #define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_ADAPTP_HI_FAIL_COUNT_MASK                                 (0xf00)
 #define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_ADAPTP_LO_FAIL_COUNT_LOW                                  (12)
 #define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_ADAPTP_LO_FAIL_COUNT_MASK                                 (0xf000)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_LOW                                     (16)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_MASK                                    (0xf0000)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_LOW                                  (20)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_MASK                                 (0xf00000)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_LOW                                  (24)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_MASK                                 (0xf000000)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_LOW                                    (28)
-#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_MASK                                   (0xf0000000)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_ADAPTPS_FAIL_COUNT_LOW                                    (16)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_ADAPTPS_FAIL_COUNT_MASK                                   (0xf0000)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_LOW                                     (20)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_MASK                                    (0xf00000)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_LOW                                  (24)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_MASK                                 (0xf000000)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_LOW                                  (28)
+#define ENTROPY_SRC_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_MASK                                 (0xf0000000)
 #endif
-#define CLP_ENTROPY_SRC_REG_EXTHT_FAIL_COUNTS                                                       (0x200030ac)
+#define CLP_ENTROPY_SRC_REG_EXTHT_FAIL_COUNTS                                                       (0x2000309c)
 #ifndef ENTROPY_SRC_REG_EXTHT_FAIL_COUNTS
-#define ENTROPY_SRC_REG_EXTHT_FAIL_COUNTS                                                           (0xac)
+#define ENTROPY_SRC_REG_EXTHT_FAIL_COUNTS                                                           (0x9c)
 #define ENTROPY_SRC_REG_EXTHT_FAIL_COUNTS_EXTHT_HI_FAIL_COUNT_LOW                                   (0)
 #define ENTROPY_SRC_REG_EXTHT_FAIL_COUNTS_EXTHT_HI_FAIL_COUNT_MASK                                  (0xf)
 #define ENTROPY_SRC_REG_EXTHT_FAIL_COUNTS_EXTHT_LO_FAIL_COUNT_LOW                                   (4)
 #define ENTROPY_SRC_REG_EXTHT_FAIL_COUNTS_EXTHT_LO_FAIL_COUNT_MASK                                  (0xf0)
 #endif
-#define CLP_ENTROPY_SRC_REG_FW_OV_CONTROL                                                           (0x200030b0)
+#define CLP_ENTROPY_SRC_REG_FW_OV_CONTROL                                                           (0x200030a0)
 #ifndef ENTROPY_SRC_REG_FW_OV_CONTROL
-#define ENTROPY_SRC_REG_FW_OV_CONTROL                                                               (0xb0)
+#define ENTROPY_SRC_REG_FW_OV_CONTROL                                                               (0xa0)
 #define ENTROPY_SRC_REG_FW_OV_CONTROL_FW_OV_MODE_LOW                                                (0)
 #define ENTROPY_SRC_REG_FW_OV_CONTROL_FW_OV_MODE_MASK                                               (0xf)
 #define ENTROPY_SRC_REG_FW_OV_CONTROL_FW_OV_ENTROPY_INSERT_LOW                                      (4)
 #define ENTROPY_SRC_REG_FW_OV_CONTROL_FW_OV_ENTROPY_INSERT_MASK                                     (0xf0)
 #endif
-#define CLP_ENTROPY_SRC_REG_FW_OV_SHA3_START                                                        (0x200030b4)
+#define CLP_ENTROPY_SRC_REG_FW_OV_SHA3_START                                                        (0x200030a4)
 #ifndef ENTROPY_SRC_REG_FW_OV_SHA3_START
-#define ENTROPY_SRC_REG_FW_OV_SHA3_START                                                            (0xb4)
+#define ENTROPY_SRC_REG_FW_OV_SHA3_START                                                            (0xa4)
 #define ENTROPY_SRC_REG_FW_OV_SHA3_START_FW_OV_INSERT_START_LOW                                     (0)
 #define ENTROPY_SRC_REG_FW_OV_SHA3_START_FW_OV_INSERT_START_MASK                                    (0xf)
 #endif
-#define CLP_ENTROPY_SRC_REG_FW_OV_WR_FIFO_FULL                                                      (0x200030b8)
+#define CLP_ENTROPY_SRC_REG_FW_OV_WR_FIFO_FULL                                                      (0x200030a8)
 #ifndef ENTROPY_SRC_REG_FW_OV_WR_FIFO_FULL
-#define ENTROPY_SRC_REG_FW_OV_WR_FIFO_FULL                                                          (0xb8)
+#define ENTROPY_SRC_REG_FW_OV_WR_FIFO_FULL                                                          (0xa8)
 #define ENTROPY_SRC_REG_FW_OV_WR_FIFO_FULL_FW_OV_WR_FIFO_FULL_LOW                                   (0)
 #define ENTROPY_SRC_REG_FW_OV_WR_FIFO_FULL_FW_OV_WR_FIFO_FULL_MASK                                  (0x1)
 #endif
-#define CLP_ENTROPY_SRC_REG_FW_OV_RD_FIFO_OVERFLOW                                                  (0x200030bc)
+#define CLP_ENTROPY_SRC_REG_FW_OV_RD_FIFO_OVERFLOW                                                  (0x200030ac)
 #ifndef ENTROPY_SRC_REG_FW_OV_RD_FIFO_OVERFLOW
-#define ENTROPY_SRC_REG_FW_OV_RD_FIFO_OVERFLOW                                                      (0xbc)
+#define ENTROPY_SRC_REG_FW_OV_RD_FIFO_OVERFLOW                                                      (0xac)
 #define ENTROPY_SRC_REG_FW_OV_RD_FIFO_OVERFLOW_FW_OV_RD_FIFO_OVERFLOW_LOW                           (0)
 #define ENTROPY_SRC_REG_FW_OV_RD_FIFO_OVERFLOW_FW_OV_RD_FIFO_OVERFLOW_MASK                          (0x1)
 #endif
-#define CLP_ENTROPY_SRC_REG_FW_OV_RD_DATA                                                           (0x200030c0)
+#define CLP_ENTROPY_SRC_REG_FW_OV_RD_DATA                                                           (0x200030b0)
 #ifndef ENTROPY_SRC_REG_FW_OV_RD_DATA
-#define ENTROPY_SRC_REG_FW_OV_RD_DATA                                                               (0xc0)
+#define ENTROPY_SRC_REG_FW_OV_RD_DATA                                                               (0xb0)
 #endif
-#define CLP_ENTROPY_SRC_REG_FW_OV_WR_DATA                                                           (0x200030c4)
+#define CLP_ENTROPY_SRC_REG_FW_OV_WR_DATA                                                           (0x200030b4)
 #ifndef ENTROPY_SRC_REG_FW_OV_WR_DATA
-#define ENTROPY_SRC_REG_FW_OV_WR_DATA                                                               (0xc4)
+#define ENTROPY_SRC_REG_FW_OV_WR_DATA                                                               (0xb4)
 #endif
-#define CLP_ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH                                                     (0x200030c8)
+#define CLP_ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH                                                     (0x200030b8)
 #ifndef ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH
-#define ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH                                                         (0xc8)
+#define ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH                                                         (0xb8)
 #define ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH_OBSERVE_FIFO_THRESH_LOW                                 (0)
 #define ENTROPY_SRC_REG_OBSERVE_FIFO_THRESH_OBSERVE_FIFO_THRESH_MASK                                (0x3f)
 #endif
-#define CLP_ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH                                                      (0x200030cc)
+#define CLP_ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH                                                      (0x200030bc)
 #ifndef ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH
-#define ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH                                                          (0xcc)
+#define ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH                                                          (0xbc)
 #define ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH_OBSERVE_FIFO_DEPTH_LOW                                   (0)
 #define ENTROPY_SRC_REG_OBSERVE_FIFO_DEPTH_OBSERVE_FIFO_DEPTH_MASK                                  (0x3f)
 #endif
-#define CLP_ENTROPY_SRC_REG_DEBUG_STATUS                                                            (0x200030d0)
+#define CLP_ENTROPY_SRC_REG_DEBUG_STATUS                                                            (0x200030c0)
 #ifndef ENTROPY_SRC_REG_DEBUG_STATUS
-#define ENTROPY_SRC_REG_DEBUG_STATUS                                                                (0xd0)
+#define ENTROPY_SRC_REG_DEBUG_STATUS                                                                (0xc0)
 #define ENTROPY_SRC_REG_DEBUG_STATUS_ENTROPY_FIFO_DEPTH_LOW                                         (0)
 #define ENTROPY_SRC_REG_DEBUG_STATUS_ENTROPY_FIFO_DEPTH_MASK                                        (0x3)
 #define ENTROPY_SRC_REG_DEBUG_STATUS_SHA3_FSM_LOW                                                   (3)
@@ -9854,9 +9796,9 @@
 #define ENTROPY_SRC_REG_DEBUG_STATUS_MAIN_SM_BOOT_DONE_LOW                                          (17)
 #define ENTROPY_SRC_REG_DEBUG_STATUS_MAIN_SM_BOOT_DONE_MASK                                         (0x20000)
 #endif
-#define CLP_ENTROPY_SRC_REG_RECOV_ALERT_STS                                                         (0x200030d4)
+#define CLP_ENTROPY_SRC_REG_RECOV_ALERT_STS                                                         (0x200030c4)
 #ifndef ENTROPY_SRC_REG_RECOV_ALERT_STS
-#define ENTROPY_SRC_REG_RECOV_ALERT_STS                                                             (0xd4)
+#define ENTROPY_SRC_REG_RECOV_ALERT_STS                                                             (0xc4)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_FIPS_ENABLE_FIELD_ALERT_LOW                                 (0)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_FIPS_ENABLE_FIELD_ALERT_MASK                                (0x1)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_ENTROPY_DATA_REG_EN_FIELD_ALERT_LOW                         (1)
@@ -9865,6 +9807,8 @@
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_MODULE_ENABLE_FIELD_ALERT_MASK                              (0x4)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_THRESHOLD_SCOPE_FIELD_ALERT_LOW                             (3)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_THRESHOLD_SCOPE_FIELD_ALERT_MASK                            (0x8)
+#define ENTROPY_SRC_REG_RECOV_ALERT_STS_THRESHOLD_ONEWAY_FIELD_ALERT_LOW                            (4)
+#define ENTROPY_SRC_REG_RECOV_ALERT_STS_THRESHOLD_ONEWAY_FIELD_ALERT_MASK                           (0x10)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_RNG_BIT_ENABLE_FIELD_ALERT_LOW                              (5)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_RNG_BIT_ENABLE_FIELD_ALERT_MASK                             (0x20)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_FW_OV_SHA3_START_FIELD_ALERT_LOW                            (7)
@@ -9894,9 +9838,9 @@
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_POSTHT_ENTROPY_DROP_ALERT_LOW                               (31)
 #define ENTROPY_SRC_REG_RECOV_ALERT_STS_POSTHT_ENTROPY_DROP_ALERT_MASK                              (0x80000000)
 #endif
-#define CLP_ENTROPY_SRC_REG_ERR_CODE                                                                (0x200030d8)
+#define CLP_ENTROPY_SRC_REG_ERR_CODE                                                                (0x200030c8)
 #ifndef ENTROPY_SRC_REG_ERR_CODE
-#define ENTROPY_SRC_REG_ERR_CODE                                                                    (0xd8)
+#define ENTROPY_SRC_REG_ERR_CODE                                                                    (0xc8)
 #define ENTROPY_SRC_REG_ERR_CODE_SFIFO_ESRNG_ERR_LOW                                                (0)
 #define ENTROPY_SRC_REG_ERR_CODE_SFIFO_ESRNG_ERR_MASK                                               (0x1)
 #define ENTROPY_SRC_REG_ERR_CODE_SFIFO_DISTR_ERR_LOW                                                (1)
@@ -9922,17 +9866,23 @@
 #define ENTROPY_SRC_REG_ERR_CODE_FIFO_STATE_ERR_LOW                                                 (30)
 #define ENTROPY_SRC_REG_ERR_CODE_FIFO_STATE_ERR_MASK                                                (0x40000000)
 #endif
-#define CLP_ENTROPY_SRC_REG_ERR_CODE_TEST                                                           (0x200030dc)
+#define CLP_ENTROPY_SRC_REG_ERR_CODE_TEST                                                           (0x200030cc)
 #ifndef ENTROPY_SRC_REG_ERR_CODE_TEST
-#define ENTROPY_SRC_REG_ERR_CODE_TEST                                                               (0xdc)
+#define ENTROPY_SRC_REG_ERR_CODE_TEST                                                               (0xcc)
 #define ENTROPY_SRC_REG_ERR_CODE_TEST_ERR_CODE_TEST_LOW                                             (0)
 #define ENTROPY_SRC_REG_ERR_CODE_TEST_ERR_CODE_TEST_MASK                                            (0x1f)
 #endif
-#define CLP_ENTROPY_SRC_REG_MAIN_SM_STATE                                                           (0x200030e0)
+#define CLP_ENTROPY_SRC_REG_MAIN_SM_STATE                                                           (0x200030d0)
 #ifndef ENTROPY_SRC_REG_MAIN_SM_STATE
-#define ENTROPY_SRC_REG_MAIN_SM_STATE                                                               (0xe0)
+#define ENTROPY_SRC_REG_MAIN_SM_STATE                                                               (0xd0)
 #define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                             (0)
 #define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                            (0x1ff)
+#endif
+#define CLP_ENTROPY_SRC_REG_ENTROPY_SRC_CTRL                                                        (0x200030d4)
+#ifndef ENTROPY_SRC_REG_ENTROPY_SRC_CTRL
+#define ENTROPY_SRC_REG_ENTROPY_SRC_CTRL                                                            (0xd4)
+#define ENTROPY_SRC_REG_ENTROPY_SRC_CTRL_ZEROIZE_LOW                                                (0)
+#define ENTROPY_SRC_REG_ENTROPY_SRC_CTRL_ZEROIZE_MASK                                               (0x1)
 #endif
 #define CLP_ENTROPY_SRC1_REG_BASE_ADDR                                                              (0x20004000)
 #define CLP_ENTROPY_SRC1_REG_INTERRUPT_STATE                                                        (0x20004000)
@@ -9978,6 +9928,8 @@
 #define ENTROPY_SRC1_REG_ALERT_TEST_RECOV_ALERT_MASK                                                (0x1)
 #define ENTROPY_SRC1_REG_ALERT_TEST_FATAL_ALERT_LOW                                                 (1)
 #define ENTROPY_SRC1_REG_ALERT_TEST_FATAL_ALERT_MASK                                                (0x2)
+#define ENTROPY_SRC1_REG_ALERT_TEST_REGWEN_LOW                                                      (31)
+#define ENTROPY_SRC1_REG_ALERT_TEST_REGWEN_MASK                                                     (0x80000000)
 #endif
 #define CLP_ENTROPY_SRC1_REG_ME_REGWEN                                                              (0x20004010)
 #ifndef ENTROPY_SRC1_REG_ME_REGWEN
@@ -10024,12 +9976,12 @@
 #define ENTROPY_SRC1_REG_CONF_RNG_FIPS_MASK                                                         (0xf00)
 #define ENTROPY_SRC1_REG_CONF_RNG_BIT_ENABLE_LOW                                                    (12)
 #define ENTROPY_SRC1_REG_CONF_RNG_BIT_ENABLE_MASK                                                   (0xf000)
-#define ENTROPY_SRC1_REG_CONF_RNG_BIT_SEL_LOW                                                       (16)
-#define ENTROPY_SRC1_REG_CONF_RNG_BIT_SEL_MASK                                                      (0x30000)
-#define ENTROPY_SRC1_REG_CONF_THRESHOLD_SCOPE_LOW                                                   (18)
-#define ENTROPY_SRC1_REG_CONF_THRESHOLD_SCOPE_MASK                                                  (0x3c0000)
-#define ENTROPY_SRC1_REG_CONF_ENTROPY_DATA_REG_ENABLE_LOW                                           (22)
-#define ENTROPY_SRC1_REG_CONF_ENTROPY_DATA_REG_ENABLE_MASK                                          (0x3c00000)
+#define ENTROPY_SRC1_REG_CONF_THRESHOLD_SCOPE_LOW                                                   (16)
+#define ENTROPY_SRC1_REG_CONF_THRESHOLD_SCOPE_MASK                                                  (0xf0000)
+#define ENTROPY_SRC1_REG_CONF_ENTROPY_DATA_REG_ENABLE_LOW                                           (20)
+#define ENTROPY_SRC1_REG_CONF_ENTROPY_DATA_REG_ENABLE_MASK                                          (0xf00000)
+#define ENTROPY_SRC1_REG_CONF_RNG_BIT_SEL_LOW                                                       (24)
+#define ENTROPY_SRC1_REG_CONF_RNG_BIT_SEL_MASK                                                      (0xff000000)
 #endif
 #define CLP_ENTROPY_SRC1_REG_ENTROPY_CONTROL                                                        (0x20004028)
 #ifndef ENTROPY_SRC1_REG_ENTROPY_CONTROL
@@ -10051,275 +10003,215 @@
 #define ENTROPY_SRC1_REG_HEALTH_TEST_WINDOWS_BYPASS_WINDOW_LOW                                      (16)
 #define ENTROPY_SRC1_REG_HEALTH_TEST_WINDOWS_BYPASS_WINDOW_MASK                                     (0xffff0000)
 #endif
-#define CLP_ENTROPY_SRC1_REG_REPCNT_THRESHOLDS                                                      (0x20004034)
-#ifndef ENTROPY_SRC1_REG_REPCNT_THRESHOLDS
-#define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS                                                          (0x34)
-#define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS_FIPS_THRESH_LOW                                          (0)
-#define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS_FIPS_THRESH_MASK                                         (0xffff)
-#define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS_BYPASS_THRESH_LOW                                        (16)
-#define ENTROPY_SRC1_REG_REPCNT_THRESHOLDS_BYPASS_THRESH_MASK                                       (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_THRESHOLD_ONEWAY                                                       (0x20004034)
+#ifndef ENTROPY_SRC1_REG_THRESHOLD_ONEWAY
+#define ENTROPY_SRC1_REG_THRESHOLD_ONEWAY                                                           (0x34)
+#define ENTROPY_SRC1_REG_THRESHOLD_ONEWAY_THRESHOLD_ONEWAY_LOW                                      (0)
+#define ENTROPY_SRC1_REG_THRESHOLD_ONEWAY_THRESHOLD_ONEWAY_MASK                                     (0xf)
 #endif
-#define CLP_ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS                                                     (0x20004038)
-#ifndef ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS
-#define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS                                                         (0x38)
-#define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS_FIPS_THRESH_LOW                                         (0)
-#define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS_FIPS_THRESH_MASK                                        (0xffff)
-#define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS_BYPASS_THRESH_LOW                                       (16)
-#define ENTROPY_SRC1_REG_REPCNTS_THRESHOLDS_BYPASS_THRESH_MASK                                      (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_REPCNT_THRESHOLD                                                       (0x20004038)
+#ifndef ENTROPY_SRC1_REG_REPCNT_THRESHOLD
+#define ENTROPY_SRC1_REG_REPCNT_THRESHOLD                                                           (0x38)
+#define ENTROPY_SRC1_REG_REPCNT_THRESHOLD_REPCNT_THRESHOLD_LOW                                      (0)
+#define ENTROPY_SRC1_REG_REPCNT_THRESHOLD_REPCNT_THRESHOLD_MASK                                     (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS                                                   (0x2000403c)
-#ifndef ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS
-#define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS                                                       (0x3c)
-#define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS_FIPS_THRESH_LOW                                       (0)
-#define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS_FIPS_THRESH_MASK                                      (0xffff)
-#define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS_BYPASS_THRESH_LOW                                     (16)
-#define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLDS_BYPASS_THRESH_MASK                                    (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_REPCNTS_THRESHOLD                                                      (0x2000403c)
+#ifndef ENTROPY_SRC1_REG_REPCNTS_THRESHOLD
+#define ENTROPY_SRC1_REG_REPCNTS_THRESHOLD                                                          (0x3c)
+#define ENTROPY_SRC1_REG_REPCNTS_THRESHOLD_REPCNTS_THRESHOLD_LOW                                    (0)
+#define ENTROPY_SRC1_REG_REPCNTS_THRESHOLD_REPCNTS_THRESHOLD_MASK                                   (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS                                                   (0x20004040)
-#ifndef ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS
-#define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS                                                       (0x40)
-#define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS_FIPS_THRESH_LOW                                       (0)
-#define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS_FIPS_THRESH_MASK                                      (0xffff)
-#define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS_BYPASS_THRESH_LOW                                     (16)
-#define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLDS_BYPASS_THRESH_MASK                                    (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLD                                                    (0x20004040)
+#ifndef ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLD
+#define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLD                                                        (0x40)
+#define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLD_ADAPTP_HI_THRESHOLD_LOW                                (0)
+#define ENTROPY_SRC1_REG_ADAPTP_HI_THRESHOLD_ADAPTP_HI_THRESHOLD_MASK                               (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_BUCKET_THRESHOLDS                                                      (0x20004044)
-#ifndef ENTROPY_SRC1_REG_BUCKET_THRESHOLDS
-#define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS                                                          (0x44)
-#define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS_FIPS_THRESH_LOW                                          (0)
-#define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS_FIPS_THRESH_MASK                                         (0xffff)
-#define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS_BYPASS_THRESH_LOW                                        (16)
-#define ENTROPY_SRC1_REG_BUCKET_THRESHOLDS_BYPASS_THRESH_MASK                                       (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLD                                                    (0x20004044)
+#ifndef ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLD
+#define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLD                                                        (0x44)
+#define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLD_ADAPTP_LO_THRESHOLD_LOW                                (0)
+#define ENTROPY_SRC1_REG_ADAPTP_LO_THRESHOLD_ADAPTP_LO_THRESHOLD_MASK                               (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS                                                   (0x20004048)
-#ifndef ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS
-#define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS                                                       (0x48)
-#define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS_FIPS_THRESH_LOW                                       (0)
-#define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS_FIPS_THRESH_MASK                                      (0xffff)
-#define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS_BYPASS_THRESH_LOW                                     (16)
-#define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLDS_BYPASS_THRESH_MASK                                    (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_ADAPTPS_THRESHOLD                                                      (0x20004048)
+#ifndef ENTROPY_SRC1_REG_ADAPTPS_THRESHOLD
+#define ENTROPY_SRC1_REG_ADAPTPS_THRESHOLD                                                          (0x48)
+#define ENTROPY_SRC1_REG_ADAPTPS_THRESHOLD_ADAPTPS_THRESHOLD_LOW                                    (0)
+#define ENTROPY_SRC1_REG_ADAPTPS_THRESHOLD_ADAPTPS_THRESHOLD_MASK                                   (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS                                                   (0x2000404c)
-#ifndef ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS
-#define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS                                                       (0x4c)
-#define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS_FIPS_THRESH_LOW                                       (0)
-#define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS_FIPS_THRESH_MASK                                      (0xffff)
-#define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS_BYPASS_THRESH_LOW                                     (16)
-#define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLDS_BYPASS_THRESH_MASK                                    (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_BUCKET_THRESHOLD                                                       (0x2000404c)
+#ifndef ENTROPY_SRC1_REG_BUCKET_THRESHOLD
+#define ENTROPY_SRC1_REG_BUCKET_THRESHOLD                                                           (0x4c)
+#define ENTROPY_SRC1_REG_BUCKET_THRESHOLD_BUCKET_THRESHOLD_LOW                                      (0)
+#define ENTROPY_SRC1_REG_BUCKET_THRESHOLD_BUCKET_THRESHOLD_MASK                                     (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS                                                    (0x20004050)
-#ifndef ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS
-#define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS                                                        (0x50)
-#define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS_FIPS_THRESH_LOW                                        (0)
-#define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS_FIPS_THRESH_MASK                                       (0xffff)
-#define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS_BYPASS_THRESH_LOW                                      (16)
-#define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLDS_BYPASS_THRESH_MASK                                     (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLD                                                    (0x20004050)
+#ifndef ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLD
+#define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLD                                                        (0x50)
+#define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLD_MARKOV_HI_THRESHOLD_LOW                                (0)
+#define ENTROPY_SRC1_REG_MARKOV_HI_THRESHOLD_MARKOV_HI_THRESHOLD_MASK                               (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS                                                    (0x20004054)
-#ifndef ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS
-#define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS                                                        (0x54)
-#define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS_FIPS_THRESH_LOW                                        (0)
-#define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS_FIPS_THRESH_MASK                                       (0xffff)
-#define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS_BYPASS_THRESH_LOW                                      (16)
-#define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLDS_BYPASS_THRESH_MASK                                     (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLD                                                    (0x20004054)
+#ifndef ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLD
+#define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLD                                                        (0x54)
+#define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLD_MARKOV_LO_THRESHOLD_LOW                                (0)
+#define ENTROPY_SRC1_REG_MARKOV_LO_THRESHOLD_MARKOV_LO_THRESHOLD_MASK                               (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS                                                   (0x20004058)
-#ifndef ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS
-#define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS                                                       (0x58)
-#define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
-#define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS_FIPS_WATERMARK_MASK                                   (0xffff)
-#define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
-#define ENTROPY_SRC1_REG_REPCNT_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                 (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLD                                                     (0x20004058)
+#ifndef ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLD
+#define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLD                                                         (0x58)
+#define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLD_EXTHT_HI_THRESHOLD_LOW                                  (0)
+#define ENTROPY_SRC1_REG_EXTHT_HI_THRESHOLD_EXTHT_HI_THRESHOLD_MASK                                 (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS                                                  (0x2000405c)
-#ifndef ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS
-#define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS                                                      (0x5c)
-#define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS_FIPS_WATERMARK_LOW                                   (0)
-#define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS_FIPS_WATERMARK_MASK                                  (0xffff)
-#define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                 (16)
-#define ENTROPY_SRC1_REG_REPCNTS_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLD                                                     (0x2000405c)
+#ifndef ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLD
+#define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLD                                                         (0x5c)
+#define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLD_EXTHT_LO_THRESHOLD_LOW                                  (0)
+#define ENTROPY_SRC1_REG_EXTHT_LO_THRESHOLD_EXTHT_LO_THRESHOLD_MASK                                 (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS                                                   (0x20004060)
-#ifndef ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS
-#define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS                                                       (0x60)
-#define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
-#define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS_FIPS_WATERMARK_MASK                                   (0xffff)
-#define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
-#define ENTROPY_SRC1_REG_ADAPTP_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                 (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_HT_WATERMARK_NUM                                                       (0x20004060)
+#ifndef ENTROPY_SRC1_REG_HT_WATERMARK_NUM
+#define ENTROPY_SRC1_REG_HT_WATERMARK_NUM                                                           (0x60)
+#define ENTROPY_SRC1_REG_HT_WATERMARK_NUM_HT_WATERMARK_NUM_LOW                                      (0)
+#define ENTROPY_SRC1_REG_HT_WATERMARK_NUM_HT_WATERMARK_NUM_MASK                                     (0xf)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS                                                   (0x20004064)
-#ifndef ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS
-#define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS                                                       (0x64)
-#define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
-#define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS_FIPS_WATERMARK_MASK                                   (0xffff)
-#define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
-#define ENTROPY_SRC1_REG_ADAPTP_LO_WATERMARKS_BYPASS_WATERMARK_MASK                                 (0xffff0000)
+#define CLP_ENTROPY_SRC1_REG_HT_WATERMARK                                                           (0x20004064)
+#ifndef ENTROPY_SRC1_REG_HT_WATERMARK
+#define ENTROPY_SRC1_REG_HT_WATERMARK                                                               (0x64)
+#define ENTROPY_SRC1_REG_HT_WATERMARK_HT_WATERMARK_LOW                                              (0)
+#define ENTROPY_SRC1_REG_HT_WATERMARK_HT_WATERMARK_MASK                                             (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS                                                    (0x20004068)
-#ifndef ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS
-#define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS                                                        (0x68)
-#define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
-#define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS_FIPS_WATERMARK_MASK                                    (0xffff)
-#define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
-#define ENTROPY_SRC1_REG_EXTHT_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                  (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS                                                    (0x2000406c)
-#ifndef ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS
-#define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS                                                        (0x6c)
-#define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS_FIPS_WATERMARK_LOW                                     (0)
-#define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS_FIPS_WATERMARK_MASK                                    (0xffff)
-#define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS_BYPASS_WATERMARK_LOW                                   (16)
-#define ENTROPY_SRC1_REG_EXTHT_LO_WATERMARKS_BYPASS_WATERMARK_MASK                                  (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS                                                   (0x20004070)
-#ifndef ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS
-#define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS                                                       (0x70)
-#define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
-#define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS_FIPS_WATERMARK_MASK                                   (0xffff)
-#define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
-#define ENTROPY_SRC1_REG_BUCKET_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                 (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS                                                   (0x20004074)
-#ifndef ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS
-#define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS                                                       (0x74)
-#define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
-#define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS_FIPS_WATERMARK_MASK                                   (0xffff)
-#define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
-#define ENTROPY_SRC1_REG_MARKOV_HI_WATERMARKS_BYPASS_WATERMARK_MASK                                 (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS                                                   (0x20004078)
-#ifndef ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS
-#define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS                                                       (0x78)
-#define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS_FIPS_WATERMARK_LOW                                    (0)
-#define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS_FIPS_WATERMARK_MASK                                   (0xffff)
-#define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS_BYPASS_WATERMARK_LOW                                  (16)
-#define ENTROPY_SRC1_REG_MARKOV_LO_WATERMARKS_BYPASS_WATERMARK_MASK                                 (0xffff0000)
-#endif
-#define CLP_ENTROPY_SRC1_REG_REPCNT_TOTAL_FAILS                                                     (0x2000407c)
+#define CLP_ENTROPY_SRC1_REG_REPCNT_TOTAL_FAILS                                                     (0x20004068)
 #ifndef ENTROPY_SRC1_REG_REPCNT_TOTAL_FAILS
-#define ENTROPY_SRC1_REG_REPCNT_TOTAL_FAILS                                                         (0x7c)
+#define ENTROPY_SRC1_REG_REPCNT_TOTAL_FAILS                                                         (0x68)
 #endif
-#define CLP_ENTROPY_SRC1_REG_REPCNTS_TOTAL_FAILS                                                    (0x20004080)
+#define CLP_ENTROPY_SRC1_REG_REPCNTS_TOTAL_FAILS                                                    (0x2000406c)
 #ifndef ENTROPY_SRC1_REG_REPCNTS_TOTAL_FAILS
-#define ENTROPY_SRC1_REG_REPCNTS_TOTAL_FAILS                                                        (0x80)
+#define ENTROPY_SRC1_REG_REPCNTS_TOTAL_FAILS                                                        (0x6c)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ADAPTP_HI_TOTAL_FAILS                                                  (0x20004084)
+#define CLP_ENTROPY_SRC1_REG_ADAPTP_HI_TOTAL_FAILS                                                  (0x20004070)
 #ifndef ENTROPY_SRC1_REG_ADAPTP_HI_TOTAL_FAILS
-#define ENTROPY_SRC1_REG_ADAPTP_HI_TOTAL_FAILS                                                      (0x84)
+#define ENTROPY_SRC1_REG_ADAPTP_HI_TOTAL_FAILS                                                      (0x70)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ADAPTP_LO_TOTAL_FAILS                                                  (0x20004088)
+#define CLP_ENTROPY_SRC1_REG_ADAPTP_LO_TOTAL_FAILS                                                  (0x20004074)
 #ifndef ENTROPY_SRC1_REG_ADAPTP_LO_TOTAL_FAILS
-#define ENTROPY_SRC1_REG_ADAPTP_LO_TOTAL_FAILS                                                      (0x88)
+#define ENTROPY_SRC1_REG_ADAPTP_LO_TOTAL_FAILS                                                      (0x74)
 #endif
-#define CLP_ENTROPY_SRC1_REG_BUCKET_TOTAL_FAILS                                                     (0x2000408c)
+#define CLP_ENTROPY_SRC1_REG_ADAPTPS_TOTAL_FAILS                                                    (0x20004078)
+#ifndef ENTROPY_SRC1_REG_ADAPTPS_TOTAL_FAILS
+#define ENTROPY_SRC1_REG_ADAPTPS_TOTAL_FAILS                                                        (0x78)
+#endif
+#define CLP_ENTROPY_SRC1_REG_BUCKET_TOTAL_FAILS                                                     (0x2000407c)
 #ifndef ENTROPY_SRC1_REG_BUCKET_TOTAL_FAILS
-#define ENTROPY_SRC1_REG_BUCKET_TOTAL_FAILS                                                         (0x8c)
+#define ENTROPY_SRC1_REG_BUCKET_TOTAL_FAILS                                                         (0x7c)
 #endif
-#define CLP_ENTROPY_SRC1_REG_MARKOV_HI_TOTAL_FAILS                                                  (0x20004090)
+#define CLP_ENTROPY_SRC1_REG_MARKOV_HI_TOTAL_FAILS                                                  (0x20004080)
 #ifndef ENTROPY_SRC1_REG_MARKOV_HI_TOTAL_FAILS
-#define ENTROPY_SRC1_REG_MARKOV_HI_TOTAL_FAILS                                                      (0x90)
+#define ENTROPY_SRC1_REG_MARKOV_HI_TOTAL_FAILS                                                      (0x80)
 #endif
-#define CLP_ENTROPY_SRC1_REG_MARKOV_LO_TOTAL_FAILS                                                  (0x20004094)
+#define CLP_ENTROPY_SRC1_REG_MARKOV_LO_TOTAL_FAILS                                                  (0x20004084)
 #ifndef ENTROPY_SRC1_REG_MARKOV_LO_TOTAL_FAILS
-#define ENTROPY_SRC1_REG_MARKOV_LO_TOTAL_FAILS                                                      (0x94)
+#define ENTROPY_SRC1_REG_MARKOV_LO_TOTAL_FAILS                                                      (0x84)
 #endif
-#define CLP_ENTROPY_SRC1_REG_EXTHT_HI_TOTAL_FAILS                                                   (0x20004098)
+#define CLP_ENTROPY_SRC1_REG_EXTHT_HI_TOTAL_FAILS                                                   (0x20004088)
 #ifndef ENTROPY_SRC1_REG_EXTHT_HI_TOTAL_FAILS
-#define ENTROPY_SRC1_REG_EXTHT_HI_TOTAL_FAILS                                                       (0x98)
+#define ENTROPY_SRC1_REG_EXTHT_HI_TOTAL_FAILS                                                       (0x88)
 #endif
-#define CLP_ENTROPY_SRC1_REG_EXTHT_LO_TOTAL_FAILS                                                   (0x2000409c)
+#define CLP_ENTROPY_SRC1_REG_EXTHT_LO_TOTAL_FAILS                                                   (0x2000408c)
 #ifndef ENTROPY_SRC1_REG_EXTHT_LO_TOTAL_FAILS
-#define ENTROPY_SRC1_REG_EXTHT_LO_TOTAL_FAILS                                                       (0x9c)
+#define ENTROPY_SRC1_REG_EXTHT_LO_TOTAL_FAILS                                                       (0x8c)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ALERT_THRESHOLD                                                        (0x200040a0)
+#define CLP_ENTROPY_SRC1_REG_ALERT_THRESHOLD                                                        (0x20004090)
 #ifndef ENTROPY_SRC1_REG_ALERT_THRESHOLD
-#define ENTROPY_SRC1_REG_ALERT_THRESHOLD                                                            (0xa0)
+#define ENTROPY_SRC1_REG_ALERT_THRESHOLD                                                            (0x90)
 #define ENTROPY_SRC1_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_LOW                                        (0)
 #define ENTROPY_SRC1_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_MASK                                       (0xffff)
 #define ENTROPY_SRC1_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_INV_LOW                                    (16)
 #define ENTROPY_SRC1_REG_ALERT_THRESHOLD_ALERT_THRESHOLD_INV_MASK                                   (0xffff0000)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS                                              (0x200040a4)
+#define CLP_ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS                                              (0x20004094)
 #ifndef ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS
-#define ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS                                                  (0xa4)
+#define ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS                                                  (0x94)
 #define ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS_ANY_FAIL_COUNT_LOW                               (0)
 #define ENTROPY_SRC1_REG_ALERT_SUMMARY_FAIL_COUNTS_ANY_FAIL_COUNT_MASK                              (0xffff)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS                                                      (0x200040a8)
+#define CLP_ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS                                                      (0x20004098)
 #ifndef ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS                                                          (0xa8)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_LOW                                    (4)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_MASK                                   (0xf0)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS                                                          (0x98)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_LOW                                    (0)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNT_FAIL_COUNT_MASK                                   (0xf)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_LOW                                   (4)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_MASK                                  (0xf0)
 #define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTP_HI_FAIL_COUNT_LOW                                 (8)
 #define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTP_HI_FAIL_COUNT_MASK                                (0xf00)
 #define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTP_LO_FAIL_COUNT_LOW                                 (12)
 #define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTP_LO_FAIL_COUNT_MASK                                (0xf000)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_LOW                                    (16)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_MASK                                   (0xf0000)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_LOW                                 (20)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_MASK                                (0xf00000)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_LOW                                 (24)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_MASK                                (0xf000000)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_LOW                                   (28)
-#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_REPCNTS_FAIL_COUNT_MASK                                  (0xf0000000)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTPS_FAIL_COUNT_LOW                                   (16)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_ADAPTPS_FAIL_COUNT_MASK                                  (0xf0000)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_LOW                                    (20)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_BUCKET_FAIL_COUNT_MASK                                   (0xf00000)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_LOW                                 (24)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_HI_FAIL_COUNT_MASK                                (0xf000000)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_LOW                                 (28)
+#define ENTROPY_SRC1_REG_ALERT_FAIL_COUNTS_MARKOV_LO_FAIL_COUNT_MASK                                (0xf0000000)
 #endif
-#define CLP_ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS                                                      (0x200040ac)
+#define CLP_ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS                                                      (0x2000409c)
 #ifndef ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS
-#define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS                                                          (0xac)
+#define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS                                                          (0x9c)
 #define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS_EXTHT_HI_FAIL_COUNT_LOW                                  (0)
 #define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS_EXTHT_HI_FAIL_COUNT_MASK                                 (0xf)
 #define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS_EXTHT_LO_FAIL_COUNT_LOW                                  (4)
 #define ENTROPY_SRC1_REG_EXTHT_FAIL_COUNTS_EXTHT_LO_FAIL_COUNT_MASK                                 (0xf0)
 #endif
-#define CLP_ENTROPY_SRC1_REG_FW_OV_CONTROL                                                          (0x200040b0)
+#define CLP_ENTROPY_SRC1_REG_FW_OV_CONTROL                                                          (0x200040a0)
 #ifndef ENTROPY_SRC1_REG_FW_OV_CONTROL
-#define ENTROPY_SRC1_REG_FW_OV_CONTROL                                                              (0xb0)
+#define ENTROPY_SRC1_REG_FW_OV_CONTROL                                                              (0xa0)
 #define ENTROPY_SRC1_REG_FW_OV_CONTROL_FW_OV_MODE_LOW                                               (0)
 #define ENTROPY_SRC1_REG_FW_OV_CONTROL_FW_OV_MODE_MASK                                              (0xf)
 #define ENTROPY_SRC1_REG_FW_OV_CONTROL_FW_OV_ENTROPY_INSERT_LOW                                     (4)
 #define ENTROPY_SRC1_REG_FW_OV_CONTROL_FW_OV_ENTROPY_INSERT_MASK                                    (0xf0)
 #endif
-#define CLP_ENTROPY_SRC1_REG_FW_OV_SHA3_START                                                       (0x200040b4)
+#define CLP_ENTROPY_SRC1_REG_FW_OV_SHA3_START                                                       (0x200040a4)
 #ifndef ENTROPY_SRC1_REG_FW_OV_SHA3_START
-#define ENTROPY_SRC1_REG_FW_OV_SHA3_START                                                           (0xb4)
+#define ENTROPY_SRC1_REG_FW_OV_SHA3_START                                                           (0xa4)
 #define ENTROPY_SRC1_REG_FW_OV_SHA3_START_FW_OV_INSERT_START_LOW                                    (0)
 #define ENTROPY_SRC1_REG_FW_OV_SHA3_START_FW_OV_INSERT_START_MASK                                   (0xf)
 #endif
-#define CLP_ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL                                                     (0x200040b8)
+#define CLP_ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL                                                     (0x200040a8)
 #ifndef ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL
-#define ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL                                                         (0xb8)
+#define ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL                                                         (0xa8)
 #define ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL_FW_OV_WR_FIFO_FULL_LOW                                  (0)
 #define ENTROPY_SRC1_REG_FW_OV_WR_FIFO_FULL_FW_OV_WR_FIFO_FULL_MASK                                 (0x1)
 #endif
-#define CLP_ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW                                                 (0x200040bc)
+#define CLP_ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW                                                 (0x200040ac)
 #ifndef ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW
-#define ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW                                                     (0xbc)
+#define ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW                                                     (0xac)
 #define ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW_FW_OV_RD_FIFO_OVERFLOW_LOW                          (0)
 #define ENTROPY_SRC1_REG_FW_OV_RD_FIFO_OVERFLOW_FW_OV_RD_FIFO_OVERFLOW_MASK                         (0x1)
 #endif
-#define CLP_ENTROPY_SRC1_REG_FW_OV_RD_DATA                                                          (0x200040c0)
+#define CLP_ENTROPY_SRC1_REG_FW_OV_RD_DATA                                                          (0x200040b0)
 #ifndef ENTROPY_SRC1_REG_FW_OV_RD_DATA
-#define ENTROPY_SRC1_REG_FW_OV_RD_DATA                                                              (0xc0)
+#define ENTROPY_SRC1_REG_FW_OV_RD_DATA                                                              (0xb0)
 #endif
-#define CLP_ENTROPY_SRC1_REG_FW_OV_WR_DATA                                                          (0x200040c4)
+#define CLP_ENTROPY_SRC1_REG_FW_OV_WR_DATA                                                          (0x200040b4)
 #ifndef ENTROPY_SRC1_REG_FW_OV_WR_DATA
-#define ENTROPY_SRC1_REG_FW_OV_WR_DATA                                                              (0xc4)
+#define ENTROPY_SRC1_REG_FW_OV_WR_DATA                                                              (0xb4)
 #endif
-#define CLP_ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH                                                    (0x200040c8)
+#define CLP_ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH                                                    (0x200040b8)
 #ifndef ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH
-#define ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH                                                        (0xc8)
+#define ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH                                                        (0xb8)
 #define ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH_OBSERVE_FIFO_THRESH_LOW                                (0)
 #define ENTROPY_SRC1_REG_OBSERVE_FIFO_THRESH_OBSERVE_FIFO_THRESH_MASK                               (0x3f)
 #endif
-#define CLP_ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH                                                     (0x200040cc)
+#define CLP_ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH                                                     (0x200040bc)
 #ifndef ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH
-#define ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH                                                         (0xcc)
+#define ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH                                                         (0xbc)
 #define ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH_OBSERVE_FIFO_DEPTH_LOW                                  (0)
 #define ENTROPY_SRC1_REG_OBSERVE_FIFO_DEPTH_OBSERVE_FIFO_DEPTH_MASK                                 (0x3f)
 #endif
-#define CLP_ENTROPY_SRC1_REG_DEBUG_STATUS                                                           (0x200040d0)
+#define CLP_ENTROPY_SRC1_REG_DEBUG_STATUS                                                           (0x200040c0)
 #ifndef ENTROPY_SRC1_REG_DEBUG_STATUS
-#define ENTROPY_SRC1_REG_DEBUG_STATUS                                                               (0xd0)
+#define ENTROPY_SRC1_REG_DEBUG_STATUS                                                               (0xc0)
 #define ENTROPY_SRC1_REG_DEBUG_STATUS_ENTROPY_FIFO_DEPTH_LOW                                        (0)
 #define ENTROPY_SRC1_REG_DEBUG_STATUS_ENTROPY_FIFO_DEPTH_MASK                                       (0x3)
 #define ENTROPY_SRC1_REG_DEBUG_STATUS_SHA3_FSM_LOW                                                  (3)
@@ -10337,9 +10229,9 @@
 #define ENTROPY_SRC1_REG_DEBUG_STATUS_MAIN_SM_BOOT_DONE_LOW                                         (17)
 #define ENTROPY_SRC1_REG_DEBUG_STATUS_MAIN_SM_BOOT_DONE_MASK                                        (0x20000)
 #endif
-#define CLP_ENTROPY_SRC1_REG_RECOV_ALERT_STS                                                        (0x200040d4)
+#define CLP_ENTROPY_SRC1_REG_RECOV_ALERT_STS                                                        (0x200040c4)
 #ifndef ENTROPY_SRC1_REG_RECOV_ALERT_STS
-#define ENTROPY_SRC1_REG_RECOV_ALERT_STS                                                            (0xd4)
+#define ENTROPY_SRC1_REG_RECOV_ALERT_STS                                                            (0xc4)
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FIPS_ENABLE_FIELD_ALERT_LOW                                (0)
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FIPS_ENABLE_FIELD_ALERT_MASK                               (0x1)
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_ENTROPY_DATA_REG_EN_FIELD_ALERT_LOW                        (1)
@@ -10348,6 +10240,8 @@
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_MODULE_ENABLE_FIELD_ALERT_MASK                             (0x4)
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_THRESHOLD_SCOPE_FIELD_ALERT_LOW                            (3)
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_THRESHOLD_SCOPE_FIELD_ALERT_MASK                           (0x8)
+#define ENTROPY_SRC1_REG_RECOV_ALERT_STS_THRESHOLD_ONEWAY_FIELD_ALERT_LOW                           (4)
+#define ENTROPY_SRC1_REG_RECOV_ALERT_STS_THRESHOLD_ONEWAY_FIELD_ALERT_MASK                          (0x10)
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_RNG_BIT_ENABLE_FIELD_ALERT_LOW                             (5)
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_RNG_BIT_ENABLE_FIELD_ALERT_MASK                            (0x20)
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_FW_OV_SHA3_START_FIELD_ALERT_LOW                           (7)
@@ -10377,9 +10271,9 @@
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_POSTHT_ENTROPY_DROP_ALERT_LOW                              (31)
 #define ENTROPY_SRC1_REG_RECOV_ALERT_STS_POSTHT_ENTROPY_DROP_ALERT_MASK                             (0x80000000)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ERR_CODE                                                               (0x200040d8)
+#define CLP_ENTROPY_SRC1_REG_ERR_CODE                                                               (0x200040c8)
 #ifndef ENTROPY_SRC1_REG_ERR_CODE
-#define ENTROPY_SRC1_REG_ERR_CODE                                                                   (0xd8)
+#define ENTROPY_SRC1_REG_ERR_CODE                                                                   (0xc8)
 #define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_ESRNG_ERR_LOW                                               (0)
 #define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_ESRNG_ERR_MASK                                              (0x1)
 #define ENTROPY_SRC1_REG_ERR_CODE_SFIFO_DISTR_ERR_LOW                                               (1)
@@ -10405,17 +10299,23 @@
 #define ENTROPY_SRC1_REG_ERR_CODE_FIFO_STATE_ERR_LOW                                                (30)
 #define ENTROPY_SRC1_REG_ERR_CODE_FIFO_STATE_ERR_MASK                                               (0x40000000)
 #endif
-#define CLP_ENTROPY_SRC1_REG_ERR_CODE_TEST                                                          (0x200040dc)
+#define CLP_ENTROPY_SRC1_REG_ERR_CODE_TEST                                                          (0x200040cc)
 #ifndef ENTROPY_SRC1_REG_ERR_CODE_TEST
-#define ENTROPY_SRC1_REG_ERR_CODE_TEST                                                              (0xdc)
+#define ENTROPY_SRC1_REG_ERR_CODE_TEST                                                              (0xcc)
 #define ENTROPY_SRC1_REG_ERR_CODE_TEST_ERR_CODE_TEST_LOW                                            (0)
 #define ENTROPY_SRC1_REG_ERR_CODE_TEST_ERR_CODE_TEST_MASK                                           (0x1f)
 #endif
-#define CLP_ENTROPY_SRC1_REG_MAIN_SM_STATE                                                          (0x200040e0)
+#define CLP_ENTROPY_SRC1_REG_MAIN_SM_STATE                                                          (0x200040d0)
 #ifndef ENTROPY_SRC1_REG_MAIN_SM_STATE
-#define ENTROPY_SRC1_REG_MAIN_SM_STATE                                                              (0xe0)
+#define ENTROPY_SRC1_REG_MAIN_SM_STATE                                                              (0xd0)
 #define ENTROPY_SRC1_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                            (0)
 #define ENTROPY_SRC1_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                           (0x1ff)
+#endif
+#define CLP_ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL                                                       (0x200040d4)
+#ifndef ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL
+#define ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL                                                           (0xd4)
+#define ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL_ZEROIZE_LOW                                               (0)
+#define ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL_ZEROIZE_MASK                                              (0x1)
 #endif
 #define CLP_ENTROPY_COMBINER_REG_BASE_ADDR                                                          (0x20005000)
 #define CLP_ENTROPY_COMBINER_REG_COMBINER_NAME_0                                                    (0x20005000)

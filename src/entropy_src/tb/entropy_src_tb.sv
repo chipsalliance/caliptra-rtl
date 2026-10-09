@@ -39,63 +39,60 @@ module entropy_src_tb
   parameter CLK_HALF_PERIOD = 2;
 
   // The address map.
-  parameter ADDR_INTR_STATE                = 32'h0;
-  parameter ADDR_INTR_ENABLE               = 32'h4;
-  parameter ADDR_INTR_TEST                 = 32'h8;
-  parameter ADDR_ALERT_TEST                = 32'hc;
-  parameter ADDR_ME_REGWEN                 = 32'h10;
-  parameter ADDR_SW_REGUPD                 = 32'h14;
-  parameter ADDR_REGWEN                    = 32'h18;
-  parameter ADDR_REV                       = 32'h1c;
-  parameter ADDR_MODULE_ENABLE             = 32'h20;
-  parameter ADDR_CONF                      = 32'h24;
-  parameter ADDR_ENTROPY_CONTROL           = 32'h28;
-  parameter ADDR_ENTROPY_DATA              = 32'h2c;
-  parameter ADDR_HEALTH_TEST_WINDOWS       = 32'h30;
-  parameter ADDR_REPCNT_THRESHOLDS         = 32'h34;
-  parameter ADDR_REPCNTS_THRESHOLDS        = 32'h38;
-  parameter ADDR_ADAPTP_HI_THRESHOLDS      = 32'h3c;
-  parameter ADDR_ADAPTP_LO_THRESHOLDS      = 32'h40;
-  parameter ADDR_BUCKET_THRESHOLDS         = 32'h44;
-  parameter ADDR_MARKOV_HI_THRESHOLDS      = 32'h48;
-  parameter ADDR_MARKOV_LO_THRESHOLDS      = 32'h4c;
-  parameter ADDR_EXTHT_HI_THRESHOLDS       = 32'h50;
-  parameter ADDR_EXTHT_LO_THRESHOLDS       = 32'h54;
-  parameter ADDR_REPCNT_HI_WATERMARKS      = 32'h58;
-  parameter ADDR_REPCNTS_HI_WATERMARKS     = 32'h5c;
-  parameter ADDR_ADAPTP_HI_WATERMARKS      = 32'h60;
-  parameter ADDR_ADAPTP_LO_WATERMARKS      = 32'h64;
-  parameter ADDR_EXTHT_HI_WATERMARKS       = 32'h68;
-  parameter ADDR_EXTHT_LO_WATERMARKS       = 32'h6c;
-  parameter ADDR_BUCKET_HI_WATERMARKS      = 32'h70;
-  parameter ADDR_MARKOV_HI_WATERMARKS      = 32'h74;
-  parameter ADDR_MARKOV_LO_WATERMARKS      = 32'h78;
-  parameter ADDR_REPCNT_TOTAL_FAILS        = 32'h7c;
-  parameter ADDR_REPCNTS_TOTAL_FAILS       = 32'h80;
-  parameter ADDR_ADAPTP_HI_TOTAL_FAILS     = 32'h84;
-  parameter ADDR_ADAPTP_LO_TOTAL_FAILS     = 32'h88;
-  parameter ADDR_BUCKET_TOTAL_FAILS        = 32'h8c;
-  parameter ADDR_MARKOV_HI_TOTAL_FAILS     = 32'h90;
-  parameter ADDR_MARKOV_LO_TOTAL_FAILS     = 32'h94;
-  parameter ADDR_EXTHT_HI_TOTAL_FAILS      = 32'h98;
-  parameter ADDR_EXTHT_LO_TOTAL_FAILS      = 32'h9c;
-  parameter ADDR_ALERT_THRESHOLD           = 32'ha0;
-  parameter ADDR_ALERT_SUMMARY_FAIL_COUNTS = 32'ha4;
-  parameter ADDR_ALERT_FAIL_COUNTS         = 32'ha8;
-  parameter ADDR_EXTHT_FAIL_COUNTS         = 32'hac;
-  parameter ADDR_FW_OV_CONTROL             = 32'hb0;
-  parameter ADDR_FW_OV_SHA3_START          = 32'hb4;
-  parameter ADDR_FW_OV_WR_FIFO_FULL        = 32'hb8;
-  parameter ADDR_FW_OV_RD_FIFO_OVERFLOW    = 32'hbc;
-  parameter ADDR_FW_OV_RD_DATA             = 32'hc0;
-  parameter ADDR_FW_OV_WR_DATA             = 32'hc4;
-  parameter ADDR_OBSERVE_FIFO_THRESH       = 32'hc8;
-  parameter ADDR_OBSERVE_FIFO_DEPTH        = 32'hcc;
-  parameter ADDR_DEBUG_STATUS              = 32'hd0;
-  parameter ADDR_RECOV_ALERT_STS           = 32'hd4;
-  parameter ADDR_ERR_CODE                  = 32'hd8;
-  parameter ADDR_ERR_CODE_TEST             = 32'hdc;
-  parameter ADDR_MAIN_SM_STATE             = 32'he0;
+  parameter ADDR_INTR_STATE                = ENTROPY_SRC_INTR_STATE_OFFSET;
+  parameter ADDR_INTR_ENABLE               = ENTROPY_SRC_INTR_ENABLE_OFFSET;
+  parameter ADDR_INTR_TEST                 = ENTROPY_SRC_INTR_TEST_OFFSET;
+  parameter ADDR_ALERT_TEST                = ENTROPY_SRC_ALERT_TEST_OFFSET;
+  parameter ADDR_ME_REGWEN                 = ENTROPY_SRC_ME_REGWEN_OFFSET;
+  parameter ADDR_SW_REGUPD                 = ENTROPY_SRC_SW_REGUPD_OFFSET;
+  parameter ADDR_REGWEN                    = ENTROPY_SRC_REGWEN_OFFSET;
+  parameter ADDR_REV                       = ENTROPY_SRC_REV_OFFSET;
+  parameter ADDR_MODULE_ENABLE             = ENTROPY_SRC_MODULE_ENABLE_OFFSET;
+  parameter ADDR_CONF                      = ENTROPY_SRC_CONF_OFFSET;
+  parameter ADDR_ENTROPY_CONTROL           = ENTROPY_SRC_ENTROPY_CONTROL_OFFSET;
+  parameter ADDR_ENTROPY_DATA              = ENTROPY_SRC_ENTROPY_DATA_OFFSET;
+  parameter ADDR_HEALTH_TEST_WINDOWS       = ENTROPY_SRC_HEALTH_TEST_WINDOWS_OFFSET;
+  parameter ADDR_THRESHOLD_ONEWAY          = ENTROPY_SRC_THRESHOLD_ONEWAY_OFFSET;
+  parameter ADDR_REPCNT_THRESHOLD          = ENTROPY_SRC_REPCNT_THRESHOLD_OFFSET;
+  parameter ADDR_REPCNTS_THRESHOLD         = ENTROPY_SRC_REPCNTS_THRESHOLD_OFFSET;
+  parameter ADDR_ADAPTP_HI_THRESHOLD       = ENTROPY_SRC_ADAPTP_HI_THRESHOLD_OFFSET;
+  parameter ADDR_ADAPTP_LO_THRESHOLD       = ENTROPY_SRC_ADAPTP_LO_THRESHOLD_OFFSET;
+  parameter ADDR_ADAPTPS_THRESHOLD         = ENTROPY_SRC_ADAPTPS_THRESHOLD_OFFSET;
+  parameter ADDR_BUCKET_THRESHOLD          = ENTROPY_SRC_BUCKET_THRESHOLD_OFFSET;
+  parameter ADDR_MARKOV_HI_THRESHOLD       = ENTROPY_SRC_MARKOV_HI_THRESHOLD_OFFSET;
+  parameter ADDR_MARKOV_LO_THRESHOLD       = ENTROPY_SRC_MARKOV_LO_THRESHOLD_OFFSET;
+  parameter ADDR_EXTHT_HI_THRESHOLD        = ENTROPY_SRC_EXTHT_HI_THRESHOLD_OFFSET;
+  parameter ADDR_EXTHT_LO_THRESHOLD        = ENTROPY_SRC_EXTHT_LO_THRESHOLD_OFFSET;
+  parameter ADDR_HT_WATERMARK_NUM          = ENTROPY_SRC_HT_WATERMARK_NUM_OFFSET;
+  parameter ADDR_HT_WATERMARK              = ENTROPY_SRC_HT_WATERMARK_OFFSET;
+  parameter ADDR_REPCNT_TOTAL_FAILS        = ENTROPY_SRC_REPCNT_TOTAL_FAILS_OFFSET;
+  parameter ADDR_REPCNTS_TOTAL_FAILS       = ENTROPY_SRC_REPCNTS_TOTAL_FAILS_OFFSET;
+  parameter ADDR_ADAPTP_HI_TOTAL_FAILS     = ENTROPY_SRC_ADAPTP_HI_TOTAL_FAILS_OFFSET;
+  parameter ADDR_ADAPTP_LO_TOTAL_FAILS     = ENTROPY_SRC_ADAPTP_LO_TOTAL_FAILS_OFFSET;
+  parameter ADDR_ADAPTPS_TOTAL_FAILS       = ENTROPY_SRC_ADAPTPS_TOTAL_FAILS_OFFSET;
+  parameter ADDR_BUCKET_TOTAL_FAILS        = ENTROPY_SRC_BUCKET_TOTAL_FAILS_OFFSET;
+  parameter ADDR_MARKOV_HI_TOTAL_FAILS     = ENTROPY_SRC_MARKOV_HI_TOTAL_FAILS_OFFSET;
+  parameter ADDR_MARKOV_LO_TOTAL_FAILS     = ENTROPY_SRC_MARKOV_LO_TOTAL_FAILS_OFFSET;
+  parameter ADDR_EXTHT_HI_TOTAL_FAILS      = ENTROPY_SRC_EXTHT_HI_TOTAL_FAILS_OFFSET;
+  parameter ADDR_EXTHT_LO_TOTAL_FAILS      = ENTROPY_SRC_EXTHT_LO_TOTAL_FAILS_OFFSET;
+  parameter ADDR_ALERT_THRESHOLD           = ENTROPY_SRC_ALERT_THRESHOLD_OFFSET;
+  parameter ADDR_ALERT_SUMMARY_FAIL_COUNTS = ENTROPY_SRC_ALERT_SUMMARY_FAIL_COUNTS_OFFSET;
+  parameter ADDR_ALERT_FAIL_COUNTS         = ENTROPY_SRC_ALERT_FAIL_COUNTS_OFFSET;
+  parameter ADDR_EXTHT_FAIL_COUNTS         = ENTROPY_SRC_EXTHT_FAIL_COUNTS_OFFSET;
+  parameter ADDR_FW_OV_CONTROL             = ENTROPY_SRC_FW_OV_CONTROL_OFFSET;
+  parameter ADDR_FW_OV_SHA3_START          = ENTROPY_SRC_FW_OV_SHA3_START_OFFSET;
+  parameter ADDR_FW_OV_WR_FIFO_FULL        = ENTROPY_SRC_FW_OV_WR_FIFO_FULL_OFFSET;
+  parameter ADDR_FW_OV_RD_FIFO_OVERFLOW    = ENTROPY_SRC_FW_OV_RD_FIFO_OVERFLOW_OFFSET;
+  parameter ADDR_FW_OV_RD_DATA             = ENTROPY_SRC_FW_OV_RD_DATA_OFFSET;
+  parameter ADDR_FW_OV_WR_DATA             = ENTROPY_SRC_FW_OV_WR_DATA_OFFSET;
+  parameter ADDR_OBSERVE_FIFO_THRESH       = ENTROPY_SRC_OBSERVE_FIFO_THRESH_OFFSET;
+  parameter ADDR_OBSERVE_FIFO_DEPTH        = ENTROPY_SRC_OBSERVE_FIFO_DEPTH_OFFSET;
+  parameter ADDR_DEBUG_STATUS              = ENTROPY_SRC_DEBUG_STATUS_OFFSET;
+  parameter ADDR_RECOV_ALERT_STS           = ENTROPY_SRC_RECOV_ALERT_STS_OFFSET;
+  parameter ADDR_ERR_CODE                  = ENTROPY_SRC_ERR_CODE_OFFSET;
+  parameter ADDR_ERR_CODE_TEST             = ENTROPY_SRC_ERR_CODE_TEST_OFFSET;
+  parameter ADDR_MAIN_SM_STATE             = ENTROPY_SRC_MAIN_SM_STATE_OFFSET;
+  parameter ADDR_ENTROPY_SRC_CTRL          = ENTROPY_SRC_ENTROPY_SRC_CTRL_OFFSET;
 
   parameter AHB_HTRANS_IDLE     = 0;
   parameter AHB_HTRANS_BUSY     = 1;
@@ -112,6 +109,7 @@ module entropy_src_tb
   reg [31 : 0] error_ctr;
   reg [31 : 0] tc_ctr;
   logic        generate_rng;
+  logic        zeroize_tb;        // drives debugUnlock_or_scan_mode_switch
 
 
 `ifndef VERILATOR
@@ -139,58 +137,62 @@ module entropy_src_tb
   //----------------------------------------------------------------
   entropy_src_hw_if_req_t entropy_src_hw_if_req;
   entropy_src_hw_if_rsp_t entropy_src_hw_if_rsp;
-  entropy_src_rng_req_t entropy_src_rng_req;
-  entropy_src_rng_rsp_t entropy_src_rng_rsp;
+  logic                 entropy_src_rng_enable;
+  logic                 entropy_src_rng_valid;
+  logic [3:0]           entropy_src_rng_bits;
 
   entropy_src #(
     .AHBDataWidth(AHB_DATA_WIDTH),
     .AHBAddrWidth(AHB_ADDR_WIDTH)
   ) dut (
-    .clk_i       (clk_tb),
-    .rst_ni      (reset_n_tb),
+    .clk_i                                (clk_tb),
+    .rst_ni                               (reset_n_tb),
+    .debugUnlock_or_scan_mode_switch      (zeroize_tb),
     // AMBA AHB Lite Interface
-    .haddr_i     (haddr_i_tb),
-    .hwdata_i    (hwdata_i_tb),
-    .hsel_i      (hsel_i_tb),
-    .hwrite_i    (hwrite_i_tb),
-    .hready_i    (hready_i_tb),
-    .htrans_i    (htrans_i_tb),
-    .hsize_i     (hsize_i_tb),
-    .hresp_o     (hresp_o_tb),
-    .hreadyout_o (hreadyout_o_tb),
-    .hrdata_o    (hrdata_o_tb),
+    .haddr_i                              (haddr_i_tb),
+    .hwdata_i                             (hwdata_i_tb),
+    .hsel_i                               (hsel_i_tb),
+    .hwrite_i                             (hwrite_i_tb),
+    .hready_i                             (hready_i_tb),
+    .htrans_i                             (htrans_i_tb),
+    .hsize_i                              (hsize_i_tb),
+    .hresp_o                              (hresp_o_tb),
+    .hreadyout_o                          (hreadyout_o_tb),
+    .hrdata_o                             (hrdata_o_tb),
     // OTP Interface
-    .otp_en_entropy_src_fw_read_i (caliptra_prim_mubi_pkg::MuBi8True),
-    .otp_en_entropy_src_fw_over_i (caliptra_prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_read_i         (caliptra_prim_mubi_pkg::MuBi8True),
+    .otp_en_entropy_src_fw_over_i         (caliptra_prim_mubi_pkg::MuBi8True),
     // RNG Interface
-    .rng_fips_o          (),
+    .rng_fips_o                           (),
     // Entropy Interface
-    .entropy_src_hw_if_i (entropy_src_hw_if_req),
-    .entropy_src_hw_if_o (entropy_src_hw_if_rsp),
+    .entropy_src_hw_if_i                  (entropy_src_hw_if_req),
+    .entropy_src_hw_if_o                  (entropy_src_hw_if_rsp),
     // RNG Interface
-    .entropy_src_rng_o   (entropy_src_rng_req),
-    .entropy_src_rng_i   (entropy_src_rng_rsp),
-    // CSRNG Interface
-    .cs_aes_halt_o       (),
-    .cs_aes_halt_i       (cs_aes_halt_rsp_t'('0)),
+    .entropy_src_rng_enable_o             (entropy_src_rng_enable),
+    .entropy_src_rng_valid_i              (entropy_src_rng_valid),
+    .entropy_src_rng_bits_i               (entropy_src_rng_bits),
     // External Health Test Interface
-    .entropy_src_xht_o   (),
-    .entropy_src_xht_i   (entropy_src_xht_rsp_t'('0)),
+    .entropy_src_xht_valid_o              (),
+    .entropy_src_xht_bits_o               (),
+    .entropy_src_xht_bit_sel_o            (),
+    .entropy_src_xht_health_test_window_o (),
+    .entropy_src_xht_meta_o               (),
+    .entropy_src_xht_meta_i               (entropy_src_xht_meta_rsp_t'('0)),
     // Alerts
-    .alert_rx_i          ('0),
-    .alert_tx_o          (),
+    .alert_rx_i                           ('0),
+    .alert_tx_o                           (),
     // Interrupts
-    .intr_es_entropy_valid_o      (),
-    .intr_es_health_test_failed_o (),
-    .intr_es_observe_fifo_ready_o (),
-    .intr_es_fatal_err_o          ()
+    .intr_es_entropy_valid_o              (),
+    .intr_es_health_test_failed_o         (),
+    .intr_es_observe_fifo_ready_o         (),
+    .intr_es_fatal_err_o                  ()
     );
 
   physical_rng physical_rng (
     .clk    (clk_tb),
-    .enable (entropy_src_rng_req.rng_enable),
-    .data   (entropy_src_rng_rsp.rng_b),
-    .valid  (entropy_src_rng_rsp.rng_valid)
+    .enable (entropy_src_rng_enable),
+    .data   (entropy_src_rng_bits),
+    .valid  (entropy_src_rng_valid)
   );
 
   //----------------------------------------------------------------
@@ -246,6 +248,7 @@ module entropy_src_tb
   task init_sim;
     begin
       generate_rng = '0;
+      zeroize_tb   = '0;
       error_ctr    = '0;
       tc_ctr       = '0;
 `ifndef VERILATOR
@@ -329,14 +332,17 @@ module entropy_src_tb
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hsize_i_tb      = 3'b010;
 
+      // Address phase
       @(posedge clk_tb);
       hwdata_i_tb     = 0;
       haddr_i_tb      = 'Z;
       htrans_i_tb     = AHB_HTRANS_IDLE;
-      read_data       = hrdata_o_tb;
-      wait(hreadyout_o_tb == 1'b1);
 
-      @(posedge clk_tb);
+      // Data phase: the read data is valid at the clock edge where hreadyout is high
+      do begin
+        @(posedge clk_tb);
+      end while (hreadyout_o_tb != 1'b1);
+      read_data       = hrdata_o_tb;
       hsel_i_tb       = 0;
       $display("[%t] read_single_word(addr=0x%x) = 0x%x", $time, address, read_data);
 
@@ -360,11 +366,11 @@ module entropy_src_tb
     // 7:4 FIPS_FLAG
     // 11:8 RNG_FIPS
     // 15:12 RNG_BIT_ENABLE
-    // 17:16 RNG_BIT_SEL
-    // 21:18 THRESHOLD_SCOPE
-    // 25:22 ENTROPY_DATA_REG_ENABLE
+    // 19:16 THRESHOLD_SCOPE
+    // 23:20 ENTROPY_DATA_REG_ENABLE
+    // 31:24 RNG_BIT_SEL
     // 6 = True, 9 = False
-    write_single_word(ADDR_CONF, 32'h2649999);
+    write_single_word(ADDR_CONF, 32'h00999999);
 
     // Enable
     write_single_word(ADDR_MODULE_ENABLE, 32'h6);
@@ -392,25 +398,239 @@ module entropy_src_tb
   endtask // run_hw_if_test
 
   //----------------------------------------------------------------
+  // Seed checker
+  //
+  // Count the delivered seeds and check that no seed is all-zero and
+  // that each seed differs from the previous one.
+  // The zeroize behavior inside entropy_src (no ack in the zeroize
+  // cycle, FIFOs and FSMs cleared, noise source undisturbed) is
+  // checked by the Zeroize*_A assertions in entropy_src_core.
+  //----------------------------------------------------------------
+  int                                                    seed_cnt;
+  logic [$bits(entropy_src_hw_if_rsp.es_bits)-1:0]       last_seed;
+
+  initial begin
+    seed_cnt  = 0;
+    last_seed = '0;
+    forever begin
+      @(posedge clk_tb);
+      if (entropy_src_hw_if_rsp.es_ack) begin
+        if (entropy_src_hw_if_rsp.es_bits == '0) begin
+          $display("[%t] ERROR: all-zero seed delivered", $time);
+          error_ctr += 1;
+        end
+        if (entropy_src_hw_if_rsp.es_bits == last_seed) begin
+          $display("[%t] ERROR: seed equal to the previous seed", $time);
+          error_ctr += 1;
+        end
+        last_seed = entropy_src_hw_if_rsp.es_bits;
+        seed_cnt += 1;
+      end
+    end
+  end
+
+  //----------------------------------------------------------------
+  // zeroize_pulse()
+  //
+  // Assert debugUnlock_or_scan_mode_switch for the given number of
+  // cycles, starting in the current cycle.
+  //----------------------------------------------------------------
+  task zeroize_pulse(input int cycles);
+    zeroize_tb = 1'b1;
+    repeat (cycles) @(negedge clk_tb);
+    zeroize_tb = 1'b0;
+  endtask // zeroize_pulse
+
+  //----------------------------------------------------------------
+  // wait_new_seed()
+  //
+  // Wait until a new seed has been delivered on the hw interface.
+  //----------------------------------------------------------------
+  task wait_new_seed(input string ctx);
+    int start_cnt;
+    int ii;
+    start_cnt = seed_cnt;
+    for (ii = 0; ii < 2_000_000; ii++) begin
+      @(posedge clk_tb);
+      if (seed_cnt != start_cnt) break;
+    end
+    if (seed_cnt == start_cnt) begin
+      $display("[%t] ERROR: %s: no seed delivered (main SM state = %s)", $time, ctx,
+               dut.u_entropy_src_core.u_entropy_src_main_sm.state_q.name());
+      error_ctr += 1;
+    end
+  endtask // wait_new_seed
+
+  //----------------------------------------------------------------
+  // check_no_error()
+  //
+  // Check that the main SM is not in the Error state and that no
+  // error has been recorded.
+  //----------------------------------------------------------------
+  task check_no_error(input string ctx);
+    if (dut.u_entropy_src_core.u_entropy_src_main_sm.state_q == entropy_src_main_sm_pkg::Error) begin
+      $display("[%t] ERROR: %s: main SM in Error state", $time, ctx);
+      error_ctr += 1;
+    end
+    read_single_word(ADDR_ERR_CODE);
+    if (read_data != '0) begin
+      $display("[%t] ERROR: %s: ERR_CODE = 0x%x", $time, ctx, read_data);
+      error_ctr += 1;
+    end
+  endtask // check_no_error
+
+  //----------------------------------------------------------------
+  // run_bypass_zeroize_test()
+  //
+  // entropy_src is in boot (bypass) mode and has delivered its seed.
+  // Zeroize via ENTROPY_SRC_CTRL or debugUnlock_or_scan_mode_switch.
+  // entropy_src restarts and delivers a new boot seed, which must
+  // consist of the RNG bits received after the zeroize.
+  //----------------------------------------------------------------
+  task run_bypass_zeroize_test(input bit use_reg);
+    $display("*** Bypass mode zeroize via %s", use_reg ? "ENTROPY_SRC_CTRL" : "pin");
+    tc_ctr += 1;
+
+    if (use_reg) begin
+      write_single_word(ADDR_ENTROPY_SRC_CTRL, 32'h1);
+    end else begin
+      @(negedge clk_tb);
+      zeroize_pulse(1);
+    end
+
+    // Request and wait for response
+    entropy_src_hw_if_req.es_req = 1;
+    wait (entropy_src_hw_if_rsp.es_ack == 1'b1);
+
+    // Check the value received against the expected test_vector
+    for (int ii = 0; ii < $bits(entropy_src_hw_if_rsp.es_bits)/32; ii += 1) begin
+      if (entropy_src_hw_if_rsp.es_bits[ii*32+:32] != test_vector_q[0]) begin
+        $display("[%d] Got: %x Want: %x", ii,
+                                          entropy_src_hw_if_rsp.es_bits[ii*32+:32],
+                                          test_vector_q[0]);
+        error_ctr += 1;
+      end
+      test_vector_q.pop_front();
+    end
+    repeat (1) @(posedge clk_tb);
+    entropy_src_hw_if_req.es_req = 0;
+    repeat (1000) @(posedge clk_tb);
+
+    check_no_error("bypass mode zeroize");
+  endtask // run_bypass_zeroize_test
+
+  //----------------------------------------------------------------
+  // run_fips_zeroize_test()
+  //
+  // entropy_src runs in FIPS mode and the hw interface keeps
+  // requesting seeds. Zeroize via debugUnlock_or_scan_mode_switch in
+  // each state of the main SM. After each zeroize, entropy_src must
+  // restart on its own and deliver a new seed (no hang). Then zeroize
+  // via ENTROPY_SRC_CTRL and with a multi-cycle zeroize.
+  //
+  // The startup states are only visited right after a (re)start, so
+  // they directly follow a zeroize without waiting for a seed in
+  // between (wait_seed = 0).
+  //----------------------------------------------------------------
+  localparam int NumTargets = 9;
+  entropy_src_main_sm_pkg::state_e targets [NumTargets] = '{
+    entropy_src_main_sm_pkg::Sha3Process,
+    entropy_src_main_sm_pkg::Sha3Valid,
+    entropy_src_main_sm_pkg::Sha3Done,
+    entropy_src_main_sm_pkg::Sha3MsgDone,
+    entropy_src_main_sm_pkg::ContHTStart,
+    entropy_src_main_sm_pkg::ContHTRunning,
+    entropy_src_main_sm_pkg::StartupHTStart,
+    entropy_src_main_sm_pkg::StartupPhase1,
+    entropy_src_main_sm_pkg::StartupPass1
+  };
+  bit wait_seed [NumTargets] = '{1, 1, 1, 1, 1, 0, 0, 0, 1};
+
+  task run_fips_zeroize_test;
+    int ii;
+    int jj;
+    $display("*** FIPS mode zeroize");
+
+    // Disable and reconfigure for FIPS mode
+    write_single_word(ADDR_MODULE_ENABLE, 32'h9);
+    repeat (100) @(posedge clk_tb);
+    write_single_word(ADDR_CONF, 32'h00999996);
+    // FIPS_WINDOW = 128 samples to keep the sim short, BYPASS_WINDOW = 384 bits
+    write_single_word(ADDR_HEALTH_TEST_WINDOWS, 32'h01800080);
+    write_single_word(ADDR_MODULE_ENABLE, 32'h6);
+    repeat (10) @(posedge clk_tb);
+
+    entropy_src_hw_if_req.es_req = 1;
+    wait_new_seed("first FIPS seed");
+
+    // Zeroize in each state of the main SM
+    for (ii = 0; ii < NumTargets; ii++) begin
+      tc_ctr += 1;
+      for (jj = 0; jj < 2_000_000; jj++) begin
+        @(negedge clk_tb);
+        if (dut.u_entropy_src_core.u_entropy_src_main_sm.state_q == targets[ii]) break;
+      end
+      if (dut.u_entropy_src_core.u_entropy_src_main_sm.state_q != targets[ii]) begin
+        $display("[%t] ERROR: main SM never reached %s", $time, targets[ii].name());
+        error_ctr += 1;
+      end else begin
+        $display("[%t] Zeroize in state %s", $time, targets[ii].name());
+        zeroize_pulse(1);
+      end
+      if (wait_seed[ii]) wait_new_seed(targets[ii].name());
+    end
+
+    // Zeroize via ENTROPY_SRC_CTRL while the conditioner is absorbing
+    tc_ctr += 1;
+    wait (dut.u_entropy_src_core.u_entropy_src_main_sm.state_q ==
+          entropy_src_main_sm_pkg::ContHTRunning);
+    $display("[%t] Zeroize via ENTROPY_SRC_CTRL", $time);
+    write_single_word(ADDR_ENTROPY_SRC_CTRL, 32'h1);
+    wait_new_seed("ENTROPY_SRC_CTRL zeroize");
+
+    // Multi-cycle zeroize (e.g. the switch signal stays asserted)
+    tc_ctr += 1;
+    wait (dut.u_entropy_src_core.u_entropy_src_main_sm.state_q ==
+          entropy_src_main_sm_pkg::ContHTRunning);
+    $display("[%t] Multi-cycle zeroize", $time);
+    @(negedge clk_tb);
+    zeroize_pulse(1000);
+    wait_new_seed("multi-cycle zeroize");
+
+    @(posedge clk_tb);
+    entropy_src_hw_if_req.es_req = 0;
+    repeat (1000) @(posedge clk_tb);
+
+    check_no_error("FIPS mode zeroize");
+  endtask // run_fips_zeroize_test
+
+  //----------------------------------------------------------------
   // Scoreboard RNG Data
   //----------------------------------------------------------------
   int index;
   logic [AHB_DATA_WIDTH-1:0] test_vector;
 
-  localparam int NUM_RNG_BITS = $bits(entropy_src_rng_rsp.rng_b);
+  localparam int NUM_RNG_BITS = $bits(entropy_src_rng_bits);
   initial begin
     index = 0;
     test_vector_q = {};
 
     forever begin
       @(posedge clk_tb)
+      // Zeroize drops all the RNG bits held inside entropy_src, including the sample of the
+      // zeroize cycle. Restart the scoreboard.
+      if (dut.u_entropy_src_core.zeroize) begin
+        test_vector_q = {};
+        test_vector   = '0;
+        index         = 0;
+      end else
       // The Physical RNG outputs 4 bits of data.  We collect this in a shift
       // register until we receive 32 bits.  Then append to test_vector_q for
       // easier comparison downstream.
-      if (entropy_src_rng_rsp.rng_valid) begin
+      if (entropy_src_rng_valid) begin
         test_vector >>= NUM_RNG_BITS;
         // Append to MSB
-        test_vector[$bits(test_vector) - NUM_RNG_BITS +: NUM_RNG_BITS] = entropy_src_rng_rsp.rng_b;
+        test_vector[$bits(test_vector) - NUM_RNG_BITS +: NUM_RNG_BITS] = entropy_src_rng_bits;
 
         index += 1;
         if (index == $bits(test_vector) / NUM_RNG_BITS) begin
@@ -433,6 +653,9 @@ module entropy_src_tb
       reset_dut();
 
       run_hw_if_test();
+      run_bypass_zeroize_test(.use_reg(1'b1));
+      run_bypass_zeroize_test(.use_reg(1'b0));
+      run_fips_zeroize_test();
 
       display_test_result();
 

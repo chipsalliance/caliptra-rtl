@@ -42,6 +42,7 @@ contents:
         - ../test_suites/smoke_test_kv/smoke_test_kv.yml
         - ../test_suites/smoke_test_sram_ecc/smoke_test_sram_ecc.yml
         - ../test_suites/smoke_test_trng/smoke_test_trng.yml
+        - ../test_suites/smoke_test_entropy_src_zeroize/smoke_test_entropy_src_zeroize.yml
         - ../test_suites/smoke_test_hw_config/smoke_test_hw_config.yml
         - ../test_suites/smoke_test_strap/smoke_test_strap.yml
         - ../test_suites/smoke_test_kv_uds_reset/smoke_test_kv_uds_reset.yml

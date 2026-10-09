@@ -1507,25 +1507,19 @@ entropy_src_hw_if_rsp_t entropy_src_hw_if_rsp1;
 // either ES0 (bypass) or SHA3-384(ES0||ES1) (combine) to CSRNG.
 entropy_src_hw_if_req_t csrng_hw_if_req;
 entropy_src_hw_if_rsp_t csrng_hw_if_rsp;
-cs_aes_halt_req_t       entropy_src_cs_aes_halt_req;
-cs_aes_halt_req_t       entropy_src_cs_aes_halt_req1;
-cs_aes_halt_rsp_t       combiner_es0_cs_aes_halt_rsp;
-cs_aes_halt_rsp_t       combiner_es1_cs_aes_halt_rsp;
-entropy_src_rng_req_t   entropy_src_rng_req;
-entropy_src_rng_rsp_t   entropy_src_rng_rsp;
-entropy_src_rng_req_t   entropy_src_rng_req1;
-entropy_src_rng_rsp_t   entropy_src_rng_rsp1;
+logic                   entropy_src_rng_enable;
+logic                   entropy_src_rng_valid;
+logic [3:0]             entropy_src_rng_bits;
+logic                   entropy_src_rng_enable1;
+logic                   entropy_src_rng_valid1;
+logic [3:0]             entropy_src_rng_bits1;
 
-assign etrng0_req = entropy_src_rng_req.rng_enable;
-assign etrng1_req = itrng1_en & entropy_src_rng_req1.rng_enable;
-assign entropy_src_rng_rsp.rng_valid = itrng0_valid;
-assign entropy_src_rng_rsp.rng_b = itrng0_data;
-assign entropy_src_rng_rsp1.rng_valid = itrng1_en & itrng1_valid;
-assign entropy_src_rng_rsp1.rng_b = itrng1_en ? itrng1_data : '0;
-// cs_aes_halt is functionally inert (only a CSRNG-AES/ES-SHA3 current-overlap
-// mitigation). The entropy_combiner grants each ES conditioner's halt request
-// locally (see combiner) so the conditioners never stall; CSRNG's cs_aes_halt
-// input is tied off below and its AES is left free-running.
+assign etrng0_req = entropy_src_rng_enable;
+assign etrng1_req = itrng1_en & entropy_src_rng_enable1;
+assign entropy_src_rng_valid = itrng0_valid;
+assign entropy_src_rng_bits = itrng0_data;
+assign entropy_src_rng_valid1 = itrng1_en & itrng1_valid;
+assign entropy_src_rng_bits1 = itrng1_en ? itrng1_data : '0;
 
 // TODO: Revisit ports and verify connectivity
 
@@ -1554,8 +1548,6 @@ csrng #(
     // Entropy Interface
     .entropy_src_hw_if_o    (csrng_hw_if_req),
     .entropy_src_hw_if_i    (csrng_hw_if_rsp),
-    .cs_aes_halt_i          (cs_aes_halt_req_t'('0)),
-    .cs_aes_halt_o          (),
     // Application Interfaces
     .csrng_cmd_i            ('0),
     .csrng_cmd_o            (),
@@ -1575,6 +1567,7 @@ entropy_src #(
 ) entropy_src (
     .clk_i                  (clk_cg),
     .rst_ni                 (cptra_noncore_rst_b),
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
     // AMBA AHB Lite Interface
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hwdata),
@@ -1590,27 +1583,29 @@ entropy_src #(
     .otp_en_entropy_src_fw_read_i(caliptra_prim_mubi_pkg::MuBi8True),
     .otp_en_entropy_src_fw_over_i(caliptra_prim_mubi_pkg::MuBi8True),
     // RNG Interface
-    .rng_fips_o                       (),
+    .rng_fips_o                           (),
     // Entropy Interface
-    .entropy_src_hw_if_i              (entropy_src_hw_if_req),
-    .entropy_src_hw_if_o              (entropy_src_hw_if_rsp),
+    .entropy_src_hw_if_i                  (entropy_src_hw_if_req),
+    .entropy_src_hw_if_o                  (entropy_src_hw_if_rsp),
     // RNG Interface
-    .entropy_src_rng_o                (entropy_src_rng_req),
-    .entropy_src_rng_i                (entropy_src_rng_rsp),
-    // CSRNG Interface
-    .cs_aes_halt_o                    (entropy_src_cs_aes_halt_req),
-    .cs_aes_halt_i                    (combiner_es0_cs_aes_halt_rsp),
+    .entropy_src_rng_enable_o             (entropy_src_rng_enable),
+    .entropy_src_rng_valid_i              (entropy_src_rng_valid),
+    .entropy_src_rng_bits_i               (entropy_src_rng_bits),
     // External Health Test Interface
-    .entropy_src_xht_o                (),
-    .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
+    .entropy_src_xht_valid_o              (),
+    .entropy_src_xht_bits_o               (),
+    .entropy_src_xht_bit_sel_o            (),
+    .entropy_src_xht_health_test_window_o (),
+    .entropy_src_xht_meta_o               (),
+    .entropy_src_xht_meta_i               (entropy_src_xht_meta_rsp_t'('0)),
     // Alerts
-    .alert_rx_i                       ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
-    .alert_tx_o                       (),
+    .alert_rx_i                           ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
+    .alert_tx_o                           (),
     // Interrupts
-    .intr_es_entropy_valid_o          (),
-    .intr_es_health_test_failed_o     (),
-    .intr_es_observe_fifo_ready_o     (),
-    .intr_es_fatal_err_o              ()
+    .intr_es_entropy_valid_o              (),
+    .intr_es_health_test_failed_o         (),
+    .intr_es_observe_fifo_ready_o         (),
+    .intr_es_fatal_err_o                  ()
     );
 
 entropy_src #(
@@ -1619,6 +1614,7 @@ entropy_src #(
 ) entropy_src1 (
     .clk_i                  (clk_cg),
     .rst_ni                 (cptra_noncore_rst_b),
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
     // AMBA AHB Lite Interface
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hwdata),
@@ -1634,27 +1630,29 @@ entropy_src #(
     .otp_en_entropy_src_fw_read_i(caliptra_prim_mubi_pkg::MuBi8True),
     .otp_en_entropy_src_fw_over_i(caliptra_prim_mubi_pkg::MuBi8True),
     // RNG Interface
-    .rng_fips_o                       (),
+    .rng_fips_o                           (),
     // Entropy Interface
-    .entropy_src_hw_if_i              (entropy_src_hw_if_req1),
-    .entropy_src_hw_if_o              (entropy_src_hw_if_rsp1),
+    .entropy_src_hw_if_i                  (entropy_src_hw_if_req1),
+    .entropy_src_hw_if_o                  (entropy_src_hw_if_rsp1),
     // RNG Interface
-    .entropy_src_rng_o                (entropy_src_rng_req1),
-    .entropy_src_rng_i                (entropy_src_rng_rsp1),
-    // CSRNG Interface
-    .cs_aes_halt_o                    (entropy_src_cs_aes_halt_req1),
-    .cs_aes_halt_i                    (combiner_es1_cs_aes_halt_rsp),
+    .entropy_src_rng_enable_o             (entropy_src_rng_enable1),
+    .entropy_src_rng_valid_i              (entropy_src_rng_valid1),
+    .entropy_src_rng_bits_i               (entropy_src_rng_bits1),
     // External Health Test Interface
-    .entropy_src_xht_o                (),
-    .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
+    .entropy_src_xht_valid_o              (),
+    .entropy_src_xht_bits_o               (),
+    .entropy_src_xht_bit_sel_o            (),
+    .entropy_src_xht_health_test_window_o (),
+    .entropy_src_xht_meta_o               (),
+    .entropy_src_xht_meta_i               (entropy_src_xht_meta_rsp_t'('0)),
     // Alerts
-    .alert_rx_i                       ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
-    .alert_tx_o                       (),
+    .alert_rx_i                           ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
+    .alert_tx_o                           (),
     // Interrupts
-    .intr_es_entropy_valid_o          (),
-    .intr_es_health_test_failed_o     (),
-    .intr_es_observe_fifo_ready_o     (),
-    .intr_es_fatal_err_o              ()
+    .intr_es_entropy_valid_o              (),
+    .intr_es_health_test_failed_o         (),
+    .intr_es_observe_fifo_ready_o         (),
+    .intr_es_fatal_err_o                  ()
     );
 
 // SHA3-384 entropy combiner: inserted between CSRNG and ES0/ES1.
@@ -1676,11 +1674,6 @@ entropy_combiner #(
     // CSRNG-facing entropy_src_hw_if
     .csrng_hw_if_req_i      (csrng_hw_if_req),
     .csrng_hw_if_rsp_o      (csrng_hw_if_rsp),
-    // cs_aes_halt: combiner grants each ES conditioner's halt request locally (no stall)
-    .es0_cs_aes_halt_i      (entropy_src_cs_aes_halt_req),
-    .es1_cs_aes_halt_i      (entropy_src_cs_aes_halt_req1),
-    .es0_cs_aes_halt_o      (combiner_es0_cs_aes_halt_rsp),
-    .es1_cs_aes_halt_o      (combiner_es1_cs_aes_halt_rsp),
     // ES0/ES1-facing entropy_src_hw_if
     .es0_hw_if_req_o        (entropy_src_hw_if_req),
     .es0_hw_if_rsp_i        (entropy_src_hw_if_rsp),

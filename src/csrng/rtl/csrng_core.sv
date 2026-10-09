@@ -34,8 +34,6 @@ module csrng_core
   input  entropy_src_pkg::entropy_src_hw_if_rsp_t entropy_src_hw_if_i,
 
   // Entropy Interface
-  input  entropy_src_pkg::cs_aes_halt_req_t       cs_aes_halt_i,
-  output entropy_src_pkg::cs_aes_halt_rsp_t       cs_aes_halt_o,
 
   // Application Interfaces
   input  csrng_req_t [NHwApps-1:0]                csrng_cmd_i,
@@ -351,9 +349,6 @@ module csrng_core
   logic [NApps-1:0]            int_state_read_enable;
 
   logic [30:0]                 err_code_test_bit;
-  logic                        ctr_drbg_upd_es_ack;
-  logic                        ctr_drbg_gen_es_ack;
-  logic                        block_encrypt_quiet;
 
   logic                        cs_rdata_capt_vld;
   logic                        cs_bus_cmp_alert;
@@ -385,7 +380,6 @@ module csrng_core
   logic                      genbits_stage_fips_sw_q, genbits_stage_fips_sw_d;
   logic                      cmd_req_dly_q, cmd_req_dly_d;
   logic [Cmd-1:0]            cmd_req_ccmd_dly_q, cmd_req_ccmd_dly_d;
-  logic                      cs_aes_halt_q, cs_aes_halt_d;
   logic [SeedLen-1:0]        entropy_src_seed_q, entropy_src_seed_d;
   logic                      entropy_src_fips_q, entropy_src_fips_d;
   logic [63:0]               cs_rdata_capt_q, cs_rdata_capt_d;
@@ -405,7 +399,6 @@ module csrng_core
       genbits_stage_fips_sw_q <= '0;
       cmd_req_dly_q           <= '0;
       cmd_req_ccmd_dly_q      <= '0;
-      cs_aes_halt_q           <= '0;
       entropy_src_seed_q      <= '0;
       entropy_src_fips_q      <= '0;
       cs_rdata_capt_q         <= '0;
@@ -423,7 +416,6 @@ module csrng_core
       genbits_stage_fips_sw_q <= genbits_stage_fips_sw_d;
       cmd_req_dly_q           <= cmd_req_dly_d;
       cmd_req_ccmd_dly_q      <= cmd_req_ccmd_dly_d;
-      cs_aes_halt_q           <= cs_aes_halt_d;
       entropy_src_seed_q      <= entropy_src_seed_d;
       entropy_src_fips_q      <= entropy_src_fips_d;
       cs_rdata_capt_q         <= cs_rdata_capt_d;
@@ -1481,10 +1473,6 @@ module csrng_core
     .ctr_drbg_upd_key_o(updblk_key),
     .ctr_drbg_upd_v_o(updblk_v),
 
-    // es halt interface
-    .ctr_drbg_upd_es_req_i(cs_aes_halt_i.cs_aes_halt_req),
-    .ctr_drbg_upd_es_ack_o(ctr_drbg_upd_es_ack),
-
     .block_encrypt_req_o(updblk_benblk_arb_req),
     .block_encrypt_rdy_i(updblk_benblk_arb_req_rdy),
     .block_encrypt_ccmd_o(updblk_benblk_cmd_arb_din),
@@ -1595,7 +1583,6 @@ module csrng_core
     .block_encrypt_cmd_o(benblk_cmd),
     .block_encrypt_id_o(benblk_inst_id),
     .block_encrypt_v_o(benblk_v),
-    .block_encrypt_quiet_o(block_encrypt_quiet),
     .block_encrypt_aes_cipher_sm_err_o(aes_cipher_sm_err),
     .block_encrypt_sfifo_blkenc_err_o(block_encrypt_sfifo_blkenc_err)
   );
@@ -1675,10 +1662,6 @@ module csrng_core
     .ctr_drbg_gen_rc_o(gen_result_rc),
     .ctr_drbg_gen_bits_o(gen_result_bits),
 
-    // es halt interface
-    .ctr_drbg_gen_es_req_i(cs_aes_halt_i.cs_aes_halt_req),
-    .ctr_drbg_gen_es_ack_o(ctr_drbg_gen_es_ack),
-
     // interface to updblk from genblk
     .gen_upd_req_o(genblk_updblk_arb_req),
     .upd_gen_rdy_i(updblk_genblk_arb_req_rdy),
@@ -1717,13 +1700,6 @@ module csrng_core
   );
 
 
-  // es to cs halt request to reduce power spikes
-  assign cs_aes_halt_d =
-         (ctr_drbg_upd_es_ack && ctr_drbg_gen_es_ack && block_encrypt_quiet &&
-          cs_aes_halt_i.cs_aes_halt_req);
-
-  assign cs_aes_halt_o.cs_aes_halt_ack = cs_aes_halt_q;
-
   //--------------------------------------------
   // observe state machine
   //--------------------------------------------
@@ -1749,30 +1725,6 @@ module csrng_core
   // Assertions
   //--------------------------------------------
 `ifdef CALIPTRA_INC_ASSERT
-  // Track activity of AES.
-  logic aes_active_d, aes_active_q;
-  assign aes_active_d =
-      (u_csrng_block_encrypt.u_aes_cipher_core.in_valid_i == aes_pkg::SP2V_HIGH &&
-       u_csrng_block_encrypt.u_aes_cipher_core.in_ready_o == aes_pkg::SP2V_HIGH)  ? 1'b1 : // set
-      (u_csrng_block_encrypt.u_aes_cipher_core.out_valid_o == aes_pkg::SP2V_HIGH &&
-       u_csrng_block_encrypt.u_aes_cipher_core.out_ready_i == aes_pkg::SP2V_HIGH) ? 1'b0 : // clear
-      aes_active_q;                                                                        // keep
-
-  // Track state of AES Halt req/ack with entropy_src.
-  logic cs_aes_halt_active;
-  assign cs_aes_halt_active = cs_aes_halt_i.cs_aes_halt_req & cs_aes_halt_o.cs_aes_halt_ack;
-
-  // Assert that when AES Halt is active, AES is not active.
-  `CALIPTRA_ASSERT(AesNotActiveWhileCsAesHaltActive_A, cs_aes_halt_active |-> !aes_active_d)
-
-  always_ff @(posedge clk_i, negedge rst_ni) begin
-    if (!rst_ni) begin
-      aes_active_q <= '0;
-    end else begin
-      aes_active_q <= aes_active_d;
-    end
-  end
-
   logic state_db_zeroize;
   assign state_db_zeroize = state_db_wr_req && (state_db_wr_ccmd == UNI);
   `CALIPTRA_ASSERT(CsrngUniZeroizeFips_A, state_db_zeroize -> (state_db_wr_fips == '0))
