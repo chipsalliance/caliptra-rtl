@@ -1014,21 +1014,6 @@ class soc_ifc_predictor #(
         end
         else
         case (axs_reg.get_name()) inside
-            // AXI-only stash registers (RFC 673): RTL drops Caliptra/AHB-side
-            // writes at the soc_req gate in soc_ifc_top.sv, so an AHB write must
-            // NOT update the RAL mirror (reads stay valid: SLOT_DATA is Caliptra-RO
-            // and the W1S lock regs read 0). Without disabling prediction here the
-            // frontdoor write below would desync the mirror from hardware and later
-            // read prediction would mismatch RTL.
-            ["STASH_BANK_SLOT_DATA[0]":"STASH_BANK_SLOT_DATA[9]"],
-            ["STASH_BANK_SLOT_DATA[10]":"STASH_BANK_SLOT_DATA[99]"],
-            ["STASH_BANK_SLOT_DATA[100]":"STASH_BANK_SLOT_DATA[207]"],
-            "STASH_BANK_SOC_LOCK",
-            "STASH_END_STASH": begin
-                if (ahb_txn.RnW == AHB_WRITE) begin
-                    do_reg_prediction = 1'b0;
-                end
-            end
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
             // setting a new bit, so we need the previous value to catch the edges
             "CPTRA_FW_ERROR_FATAL",
@@ -2309,15 +2294,6 @@ class soc_ifc_predictor #(
     end
     else begin
         case (axs_reg.get_name()) inside
-            // Caliptra/AHB-only stash register (RFC 673): RTL drops SoC/AXI-side
-            // writes at the soc_req gate in soc_ifc_top.sv, so an AXI write must
-            // NOT update the RAL mirror. Mirror image of the AHB-side handling of
-            // the AXI-only stash registers.
-            "STASH_BANK_CPTRA_LOCK": begin
-                if (axi_txn.is_write()) begin
-                    do_reg_prediction = 1'b0;
-                end
-            end
             // CPTRA_FW_ERROR_<NON>_FATAL writes only trigger interrupt when
             // setting a new bit, so we need the previous value to catch the edges
             "CPTRA_FW_ERROR_FATAL",
@@ -2928,28 +2904,55 @@ class soc_ifc_predictor #(
             ["STASH_BANK_SLOT_DATA[100]":"STASH_BANK_SLOT_DATA[207]"]: begin
                 // SoC/AXI-only write; RTL silently drops the write once the owning
                 // slot is locked (STASH_BANK_SOC_LOCK) or stash is ended
-                // (STASH_END_STASH). No additional predictor-side state to track;
-                // the RAL mirror is updated by the frontdoor write itself.
+                // (STASH_END_STASH), once STASH_BANK_CPTRA_LOCK is set, for any
+                // AXI USER not in the mailbox PAUSER table, or (in
+                // CALIPTRA_MODE_SUBSYSTEM builds) for any slot other than slot 0.
+                // The frontdoor write below would otherwise update the RAL mirror
+                // unconditionally, so gate do_reg_prediction on the exact same
+                // acceptance condition soc_ifc_top.sv uses for the real
+                // write-enable rather than relying on the write alone.
                 if (axi_txn.is_write()) begin
-                    `uvm_info("PRED_AXI", $sformatf("Write to %s stores stash bank slot data (dropped if slot locked or stash ended)", axs_reg.get_name()), UVM_HIGH)
+                    int flat_idx;
+                    int slot_idx;
+                    void'($sscanf(axs_reg.get_name(), "STASH_BANK_SLOT_DATA[%0d]", flat_idx));
+                    slot_idx = flat_idx / 26;
+                    do_reg_prediction = (axi_txn.awuser inside {mbox_valid_users}) &&
+                        !p_soc_ifc_rm.soc_ifc_reg_rm.STASH_BANK_SOC_LOCK.lock.get_mirrored_value()[slot_idx] &&
+                        !p_soc_ifc_rm.soc_ifc_reg_rm.STASH_END_STASH.end_stash.get_mirrored_value() &&
+                        !p_soc_ifc_rm.soc_ifc_reg_rm.STASH_BANK_CPTRA_LOCK.cptra_lock.get_mirrored_value() &&
+                        (!configuration.subsystem_mode || slot_idx == 0);
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s stores stash bank slot data (dropped if slot locked or stash ended): do_reg_prediction=%0d", axs_reg.get_name(), do_reg_prediction), UVM_HIGH)
                 end
                 else begin
                     `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_HIGH)
                 end
             end
             "STASH_BANK_SOC_LOCK": begin
-                // W1S, SoC/AXI-only; sets per-slot lock bits, cleared only on reset
+                // W1S, SoC/AXI-only; sets per-slot lock bits, cleared only on
+                // reset. RTL drops the write for an invalid AXI USER, once
+                // STASH_END_STASH is set, or once STASH_BANK_CPTRA_LOCK is set -
+                // gate do_reg_prediction the same way so the mirror never shows a
+                // lock bit the hardware never actually latched.
                 if (axi_txn.is_write()) begin
-                    `uvm_info("PRED_AXI", $sformatf("Write to %s sets SoC-side per-slot stash lock bit(s) (W1S, cleared only on reset)", axs_reg.get_name()), UVM_MEDIUM)
+                    do_reg_prediction = (axi_txn.awuser inside {mbox_valid_users}) &&
+                        !p_soc_ifc_rm.soc_ifc_reg_rm.STASH_END_STASH.end_stash.get_mirrored_value() &&
+                        !p_soc_ifc_rm.soc_ifc_reg_rm.STASH_BANK_CPTRA_LOCK.cptra_lock.get_mirrored_value();
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s sets SoC-side per-slot stash lock bit(s) (W1S, cleared only on reset): do_reg_prediction=%0d", axs_reg.get_name(), do_reg_prediction), UVM_MEDIUM)
                 end
                 else begin
                     `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_HIGH)
                 end
             end
             "STASH_END_STASH": begin
-                // WO, SoC/AXI-only; marks the stash bank contents as finalized
+                // WO, SoC/AXI-only; marks the stash bank contents as finalized.
+                // RTL drops the write for an invalid AXI USER or once
+                // STASH_BANK_CPTRA_LOCK is set - gate do_reg_prediction the same
+                // way so the mirror never shows the latch set when the hardware
+                // never actually set it.
                 if (axi_txn.is_write()) begin
-                    `uvm_info("PRED_AXI", $sformatf("Write to %s marks the stash bank contents as finalized", axs_reg.get_name()), UVM_MEDIUM)
+                    do_reg_prediction = (axi_txn.awuser inside {mbox_valid_users}) &&
+                        !p_soc_ifc_rm.soc_ifc_reg_rm.STASH_BANK_CPTRA_LOCK.cptra_lock.get_mirrored_value();
+                    `uvm_info("PRED_AXI", $sformatf("Write to %s marks the stash bank contents as finalized: do_reg_prediction=%0d", axs_reg.get_name(), do_reg_prediction), UVM_MEDIUM)
                 end
                 else begin
                     `uvm_info("PRED_AXI", {"Read to ", axs_reg.get_name(), " has no effect on system"}, UVM_HIGH)
@@ -3077,24 +3080,16 @@ class soc_ifc_predictor #(
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
             ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-                `uvm_info("PRED_AXI", $sformatf("Write to %s is ignored in subsystem mode. Nothing to do.", axs_reg.get_name()), UVM_HIGH)
-`else
                 if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
                     `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
-`endif
             end
             ["fuse_field_entropy[0]" :"fuse_field_entropy[7]" ]: begin
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-                `uvm_info("PRED_AXI", $sformatf("Write to %s is ignored in subsystem mode. Nothing to do.", axs_reg.get_name()), UVM_HIGH)
-`else
                 if (fuse_update_enabled && !p_soc_ifc_rm.soc_ifc_reg_rm.clear_obf_secrets && axi_txn.is_write() && |axi_txn.beatQ[0]) begin
                     `uvm_info("PRED_AXI", $sformatf("Write to %s results in expected cptra status transaction", axs_reg.get_name()), UVM_HIGH)
                     send_cptra_sts_txn       = 1'b1;
                 end
-`endif
             end
             // Sized per OCP_LOCK_HEK_NUM_DWORDS
             ["fuse_hek_seed[0]" :"fuse_hek_seed[7]" ]: begin
