@@ -18,6 +18,7 @@
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
 #include "printf.h"
+#include <stdlib.h>
 #include "ecc.h"
 #include "caliptra_rtl_lib.h"
 

@@ -53,6 +53,10 @@ void free_sha_acc_lock(void);
 // Returns 1 on success, 0 on timeout.
 uint8_t wait_pcr4_ready(void);
 
+// Poll until PCR5 word 0 is nonzero (at most 20000 reads).
+// Returns 1 if observed, otherwise 0.
+uint8_t wait_pcr5_ready(void);
+
 // Run an ICCM hash with the default 64-word pattern. Writes data to ICCM
 // (the ICCM-write snoop engages the hash on the first write), asserts
 // iccm_lock, waits for PCR4. Returns 1 on success, 0 on timeout.

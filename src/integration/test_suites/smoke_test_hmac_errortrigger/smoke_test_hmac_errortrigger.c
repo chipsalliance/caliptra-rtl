@@ -16,6 +16,7 @@
 #include "caliptra_isr.h"
 #include "riscv_hw_if.h"
 #include "riscv-csr.h"
+#include <stdlib.h>
 #include <string.h>
 #include <stdint.h>
 #include "printf.h"
