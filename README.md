@@ -66,14 +66,27 @@ RDC:
    - `2022.A.P18.3`
 
 RDL Compiler:
- - systemrdl-compiler==1.27.3
- - peakrdl-systemrdl==0.3.0
- - peakrdl-regblock==0.21.0
- - peakrdl-uvm==2.3.0
- - peakrdl-ipxact==3.4.3
- - peakrdl-html==2.10.1
- - peakrdl-cheader==1.0.0
- - peakrdl==1.1.0
+ - Python requirements as follows:
+```
+antlr4-python3-runtime==4.13.2
+colorama==0.4.6
+git-me-the-url==2.1.0
+gitdb==4.0.12
+GitPython==3.1.45
+Jinja2==3.1.6
+Markdown==3.8.2
+MarkupSafe==3.0.2
+peakrdl==1.1.0
+peakrdl-cheader==1.0.0
+peakrdl-html==2.10.1
+peakrdl-ipxact==3.4.3
+peakrdl-regblock==0.21.0
+peakrdl-systemrdl==0.3.0
+peakrdl-uvm==2.3.0
+python-markdown-math==0.9
+smmap==5.0.2
+systemrdl-compiler==1.27.3
+```
 
 Other:
  - Playbook (Microsoft Internal workflow management tool)
