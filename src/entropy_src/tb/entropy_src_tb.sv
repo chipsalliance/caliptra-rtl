@@ -294,6 +294,7 @@ module entropy_src_tb
                   input [31 : 0] word);
     begin
       $display("[%t] write_single_word(addr=0x%x, word=0x%x)", $time, address, word);
+      @(negedge clk_tb);
       hsel_i_tb       = 1;
       haddr_i_tb      = address;
       hwdata_i_tb     = word;
@@ -302,7 +303,11 @@ module entropy_src_tb
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hsize_i_tb      = 3'b010;
 
+      // Address phase. Drive and end it on a negedge, so that the DUT samples
+      // it on exactly one posedge (changing it in the same time step as the
+      // posedge races the DUT).
       @(posedge clk_tb);
+      @(negedge clk_tb);
       haddr_i_tb      = 'Z;
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
@@ -322,6 +327,7 @@ module entropy_src_tb
   //----------------------------------------------------------------
   task read_single_word(input [31 : 0]  address);
     begin
+      @(negedge clk_tb);
       hsel_i_tb       = 1;
       haddr_i_tb      = address;
       hwrite_i_tb     = 0;
@@ -329,8 +335,11 @@ module entropy_src_tb
       htrans_i_tb     = AHB_HTRANS_NONSEQ;
       hsize_i_tb      = 3'b010;
 
-      // Address phase
+      // Address phase. Drive and end it on a negedge, so that the DUT samples
+      // it on exactly one posedge (changing it in the same time step as the
+      // posedge races the DUT).
       @(posedge clk_tb);
+      @(negedge clk_tb);
       hwdata_i_tb     = 0;
       haddr_i_tb      = 'Z;
       htrans_i_tb     = AHB_HTRANS_IDLE;
@@ -602,6 +611,209 @@ module entropy_src_tb
   endtask // run_fips_zeroize_test
 
   //----------------------------------------------------------------
+  // run_ht_fail_fw_ov_zeroize_test()
+  //
+  // Zeroize in the main SM states that are only reached when the health
+  // tests fail (StartupFail1, AlertState, AlertHang) or in firmware
+  // override insert mode (FWInsertStart, FWInsertMsg). The default
+  // configuration is restored afterwards.
+  //----------------------------------------------------------------
+  task zeroize_in_state(input entropy_src_main_sm_pkg::state_e state);
+    int ii;
+    tc_ctr += 1;
+    for (ii = 0; ii < 2_000_000; ii++) begin
+      @(negedge clk_tb);
+      if (dut.u_entropy_src_core.u_entropy_src_main_sm.state_q == state) break;
+    end
+    if (dut.u_entropy_src_core.u_entropy_src_main_sm.state_q != state) begin
+      $display("[%t] ERROR: main SM never reached %s", $time, state.name());
+      error_ctr += 1;
+    end else begin
+      $display("[%t] Zeroize in state %s", $time, state.name());
+      zeroize_pulse(1);
+    end
+  endtask // zeroize_in_state
+
+  task run_ht_fail_fw_ov_zeroize_test;
+    $display("*** Zeroize with failing health tests and in firmware override mode");
+    entropy_src_hw_if_req.es_req = 0;
+
+    // FIPS mode with an ADAPTP high threshold that every window exceeds. After
+    // each zeroize, the startup health tests run and fail again.
+    write_single_word(ADDR_MODULE_ENABLE, 32'h9);
+    repeat (100) @(posedge clk_tb);
+    write_single_word(ADDR_CONF, 32'h00999996);
+    write_single_word(ADDR_HEALTH_TEST_WINDOWS, 32'h01800080);
+    write_single_word(ADDR_ADAPTP_HI_THRESHOLD, 32'h1);
+    write_single_word(ADDR_MODULE_ENABLE, 32'h6);
+    zeroize_in_state(entropy_src_main_sm_pkg::StartupFail1);
+    zeroize_in_state(entropy_src_main_sm_pkg::AlertState);
+    zeroize_in_state(entropy_src_main_sm_pkg::AlertHang);
+
+    // Firmware override insert mode: the main SM waits in FWInsertStart until
+    // FW_OV_SHA3_START is set, then moves to FWInsertMsg.
+    write_single_word(ADDR_MODULE_ENABLE, 32'h9);
+    repeat (100) @(posedge clk_tb);
+    write_single_word(ADDR_ADAPTP_HI_THRESHOLD, 32'hFFFF);
+    write_single_word(ADDR_FW_OV_CONTROL, 32'h66);  // FW_OV_MODE, FW_OV_ENTROPY_INSERT
+    write_single_word(ADDR_MODULE_ENABLE, 32'h6);
+    zeroize_in_state(entropy_src_main_sm_pkg::FWInsertStart);
+    write_single_word(ADDR_FW_OV_SHA3_START, 32'h6);
+    zeroize_in_state(entropy_src_main_sm_pkg::FWInsertMsg);
+
+    // Restore the default configuration
+    write_single_word(ADDR_FW_OV_SHA3_START, 32'h9);
+    write_single_word(ADDR_MODULE_ENABLE, 32'h9);
+    repeat (100) @(posedge clk_tb);
+    write_single_word(ADDR_FW_OV_CONTROL, 32'h99);
+    check_no_error("health test failure / firmware override zeroize");
+  endtask // run_ht_fail_fw_ov_zeroize_test
+
+  //----------------------------------------------------------------
+  // Random zeroize
+  //
+  // In boot-time / bypass mode, entropy_src only delivers one seed per start, so
+  // every seed of the random bypass zeroize test is the first seed after a
+  // zeroize. It must consist of the first RNG bits received by entropy_src after
+  // that zeroize.
+  bit bypass_seed_check_en;
+
+  initial begin
+    bypass_seed_check_en = 1'b0;
+    forever begin
+      @(posedge clk_tb);
+      if (bypass_seed_check_en && entropy_src_hw_if_rsp.es_ack) begin
+        for (int ii = 0; ii < $bits(entropy_src_hw_if_rsp.es_bits)/32; ii += 1) begin
+          if (ii >= test_vector_q.size() ||
+              entropy_src_hw_if_rsp.es_bits[ii*32+:32] != test_vector_q[ii]) begin
+            $display("[%t] ERROR: bypass seed word %0d does not match the RNG bits after the zeroize",
+                     $time, ii);
+            error_ctr += 1;
+          end
+        end
+      end
+    end
+  end
+
+  //----------------------------------------------------------------
+  // run_random_zeroize_test()
+  //
+  // Zeroize at random points in FIPS or bypass mode: on entering a randomly
+  // chosen main SM state or a random delay later, through the pin (1 or more
+  // cycles) or ENTROPY_SRC_CTRL. entropy_src must keep delivering seeds and
+  // record no error.
+  // Iterations: +ES_RAND_ZEROIZE_ITER=<n> (default 20).
+  //----------------------------------------------------------------
+  localparam int NumBypassTargets = 3;
+  entropy_src_main_sm_pkg::state_e bypass_targets [NumBypassTargets] = '{
+    entropy_src_main_sm_pkg::BootHTRunning,
+    entropy_src_main_sm_pkg::BootPostHTChk,
+    entropy_src_main_sm_pkg::BootPhaseDone
+  };
+
+  task run_random_zeroize_test(input bit fips);
+    int num_iter;
+    int max_delay;
+    int delay;
+    int src;
+    int jj;
+    bit seed_pending;
+    string ctx;
+    entropy_src_main_sm_pkg::state_e target;
+
+    if (!$value$plusargs("ES_RAND_ZEROIZE_ITER=%d", num_iter)) num_iter = 20;
+    ctx = fips ? "FIPS mode random zeroize" : "bypass mode random zeroize";
+    $display("*** %s (%0d iterations)", ctx, num_iter);
+
+    // Disable and reconfigure. FIPS_WINDOW = 128 samples to keep the sim
+    // short, BYPASS_WINDOW = 384 bits.
+    entropy_src_hw_if_req.es_req = 0;
+    write_single_word(ADDR_MODULE_ENABLE, 32'h9);
+    repeat (100) @(posedge clk_tb);
+    write_single_word(ADDR_CONF, fips ? 32'h00999996 : 32'h00999999);
+    write_single_word(ADDR_HEALTH_TEST_WINDOWS, 32'h01800080);
+    write_single_word(ADDR_MODULE_ENABLE, 32'h6);
+
+    // The delays cover a full startup (2 windows in FIPS mode, 1 window in
+    // bypass mode) plus some margin.
+    max_delay = fips ? 3 * 128 * physical_rng.DutyCycle : 2 * 96 * physical_rng.DutyCycle;
+
+    // In bypass mode, the scoreboard only holds the RNG bits since the last
+    // zeroize. Zeroize once before checking any seed against it.
+    if (!fips) begin
+      @(negedge clk_tb);
+      zeroize_pulse(1);
+      bypass_seed_check_en = 1'b1;
+    end
+    entropy_src_hw_if_req.es_req = 1;
+
+    for (int ii = 0; ii < num_iter; ii++) begin
+      tc_ctr += 1;
+      // Wait for a randomly chosen main SM state, most of which only last a
+      // single cycle, and zeroize when entering it (1 of 2 cases), 1-3 cycles
+      // later (1 of 4) or at a random point in time later (1 of 4), e.g. in
+      // the middle of a long state.
+      target = fips ? targets[$urandom_range(NumTargets-1)] :
+                      bypass_targets[$urandom_range(NumBypassTargets-1)];
+      case ($urandom_range(3))
+        0:       delay = $urandom_range(1, 3);
+        1:       delay = $urandom_range(max_delay);
+        default: delay = 0;
+      endcase
+      // The startup / boot states are only visited after a restart. If the
+      // main SM is already past them, restart it with a zeroize first.
+      if (target inside {entropy_src_main_sm_pkg::StartupHTStart,
+                         entropy_src_main_sm_pkg::StartupPhase1,
+                         entropy_src_main_sm_pkg::StartupPass1,
+                         entropy_src_main_sm_pkg::BootHTRunning,
+                         entropy_src_main_sm_pkg::BootPostHTChk} &&
+          !(dut.u_entropy_src_core.u_entropy_src_main_sm.state_q inside
+            {entropy_src_main_sm_pkg::Idle,
+             entropy_src_main_sm_pkg::BootHTRunning,
+             entropy_src_main_sm_pkg::BootPostHTChk,
+             entropy_src_main_sm_pkg::StartupHTStart,
+             entropy_src_main_sm_pkg::StartupPhase1,
+             entropy_src_main_sm_pkg::StartupPass1,
+             entropy_src_main_sm_pkg::StartupFail1})) begin
+        @(negedge clk_tb);
+        zeroize_pulse(1);
+      end
+      for (jj = 0; jj < max_delay; jj++) begin
+        @(negedge clk_tb);
+        if (dut.u_entropy_src_core.u_entropy_src_main_sm.state_q == target) break;
+      end
+      repeat (delay) @(negedge clk_tb);
+
+      // 0-1: 1-cycle pulse on the pin, 2: multi-cycle pulse, 3: ENTROPY_SRC_CTRL
+      // (takes effect a few cycles later, when the write completes)
+      src = $urandom_range(3);
+      $display("[%t] Random zeroize %0d, %0d cycles after %s%s via %s", $time, ii, delay,
+               target.name(), jj < max_delay ? "" : " (not reached)",
+               src == 3 ? "ENTROPY_SRC_CTRL" : src == 2 ? "pin (multi-cycle)" : "pin");
+      if (src == 3) begin
+        write_single_word(ADDR_ENTROPY_SRC_CTRL, 32'h1);
+      end else begin
+        zeroize_pulse(src == 2 ? $urandom_range(2, 64) : 1);
+      end
+
+      seed_pending = 1'b1;
+      if ($urandom_range(1) != 0) begin
+        wait_new_seed(ctx);
+        seed_pending = 1'b0;
+      end
+    end
+
+    // After the last zeroize, a seed must still be delivered
+    if (seed_pending) wait_new_seed(ctx);
+    @(posedge clk_tb);
+    entropy_src_hw_if_req.es_req = 0;
+    bypass_seed_check_en = 1'b0;
+    repeat (1000) @(posedge clk_tb);
+
+    check_no_error(ctx);
+  endtask // run_random_zeroize_test
+
+  //----------------------------------------------------------------
   // Scoreboard RNG Data
   //----------------------------------------------------------------
   int index;
@@ -653,6 +865,9 @@ module entropy_src_tb
       run_bypass_zeroize_test(.use_reg(1'b1));
       run_bypass_zeroize_test(.use_reg(1'b0));
       run_fips_zeroize_test();
+      run_ht_fail_fw_ov_zeroize_test();
+      run_random_zeroize_test(.fips(1'b1));
+      run_random_zeroize_test(.fips(1'b0));
 
       display_test_result();
 
