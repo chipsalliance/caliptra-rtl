@@ -21,6 +21,10 @@
 //   3. Zeroize during the startup health tests.
 //   4. Zeroize during the continuous health tests (SHA3 is absorbing).
 //   5. Zeroize several times back-to-back.
+//   6. Zeroize at random points: a random number of polls of MAIN_SM_STATE
+//      after the previous zeroize or seed, then zeroize. Only read a seed after
+//      about half of the zeroizes, so that the startup states are also hit.
+//      The random points depend on MY_RANDOM_SEED.
 //   After each zeroize, entropy_src restarts on its own (it stays enabled).
 //   Check that a new seed is delivered, that it is not all-zero and that it
 //   differs from all the previous seeds. Also check that no error or alert was
@@ -30,6 +34,7 @@
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
+#include "caliptra_rtl_lib.h"
 #include "printf.h"
 #include "riscv-csr.h"
 #include "riscv_hw_if.h"
@@ -63,8 +68,13 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define ES_MAIN_SM_ERROR            0x073
 
 #define SEED_WORDS        12
-#define NUM_SEEDS         8
 #define NUM_BACK_TO_BACK  4
+#define NUM_RAND_ZEROIZE  8
+// Upper bound of the random number of MAIN_SM_STATE polls before a zeroize.
+// Covers the startup health tests and the first continuous window.
+#define MAX_RAND_POLLS    512
+// Steps 1 to 5 read 5 seeds, step 6 at most one per zeroize and one at the end
+#define NUM_SEEDS         (5 + NUM_RAND_ZEROIZE + 1)
 #define MAX_POLLS         1000000
 
 uint32_t seeds[NUM_SEEDS][SEED_WORDS];
@@ -234,6 +244,35 @@ void main() {
   }
   check_zeroized("back-to-back zeroizes");
   read_and_check_seed("seed after back-to-back zeroizes");
+
+  // ---------------------------------------------------------------------
+  // 6. Zeroize at random points
+  // ---------------------------------------------------------------------
+  VPRINTF(LOW, "Step 6: zeroize at random points (seed 0x%x)\n", MY_RANDOM_SEED);
+  uint32_t seed_pending = 0;
+  for (int i = 0; i < NUM_RAND_ZEROIZE; i++) {
+    uint32_t polls = xorshift32() % MAX_RAND_POLLS;
+    uint32_t state = 0;
+
+    for (uint32_t p = 0; p < polls; p++) {
+      state = lsu_read_32(CLP_ENTROPY_SRC_REG_MAIN_SM_STATE);
+    }
+    entropy_src_zeroize();
+    // Check right after the zeroize: printing first takes long enough for a new
+    // seed to arrive with a fast noise source.
+    check_zeroized("random zeroize");
+    VPRINTF(LOW, "Step 6.%d: zeroized after %d polls (MAIN_SM_STATE before = 0x%x)\n", i, polls,
+            state);
+
+    seed_pending = 1;
+    if (xorshift32() % 2) {
+      read_and_check_seed("seed after random zeroize");
+      seed_pending = 0;
+    }
+  }
+  if (seed_pending) {
+    read_and_check_seed("seed after the last random zeroize");
+  }
 
   VPRINTF(LOW, "ENTROPY_SRC zeroize test passed\n");
 
