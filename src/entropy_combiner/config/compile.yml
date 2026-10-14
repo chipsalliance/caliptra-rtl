@@ -115,6 +115,8 @@ requires:
   - csrng_raw_wrap
   - physical_rng
   - caliptra_top_reg_defines
+  - entropy_src_coverage
+  - entropy_combiner_coverage
 targets:
   tb:
     directories: [$COMPILE_ROOT/tb]
@@ -129,3 +131,15 @@ global:
         - +define+CLP_ASSERT_ON
         - +define+SIMULATION
         - '-noinherit_timescale=1ns/1ps'
+---
+provides: [entropy_combiner_coverage]
+schema_version: 2.4.0
+requires:
+  - entropy_combiner
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/entropy_combiner_cov_if.sv
+      - $COMPILE_ROOT/coverage/entropy_combiner_cov_bind.sv

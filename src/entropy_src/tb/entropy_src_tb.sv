@@ -874,6 +874,10 @@ module entropy_src_tb
       $display("   -- Testbench for entropy_src done. --");
       $finish;
     end // main
+
+`ifndef VERILATOR
+  entropy_src_cov_bind i_entropy_src_cov_bind();
+`endif
 endmodule // entropy_src_tb
 
 //======================================================================

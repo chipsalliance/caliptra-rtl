@@ -14,6 +14,8 @@
 +incdir+${CALIPTRA_ROOT}/src/keyvault/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg
 +incdir+${CALIPTRA_ROOT}/src/entropy_src/tb
++incdir+${CALIPTRA_ROOT}/src/entropy_src/coverage
++incdir+${CALIPTRA_ROOT}/src/entropy_combiner/coverage
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_defines_pkg.sv
@@ -265,4 +267,8 @@ ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/entropy_combiner/tb/csrng_raw_wrap.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng_deterministic.sv
+${CALIPTRA_ROOT}/src/entropy_src/coverage/entropy_src_cov_if.sv
+${CALIPTRA_ROOT}/src/entropy_src/coverage/entropy_src_cov_bind.sv
+${CALIPTRA_ROOT}/src/entropy_combiner/coverage/entropy_combiner_cov_if.sv
+${CALIPTRA_ROOT}/src/entropy_combiner/coverage/entropy_combiner_cov_bind.sv
 ${CALIPTRA_ROOT}/src/entropy_combiner/tb/entropy_combiner_es_csrng_tb.sv

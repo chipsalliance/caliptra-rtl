@@ -1085,4 +1085,9 @@ module entropy_combiner_es_csrng_tb
     $finish;
   end
 
+`ifndef VERILATOR
+  entropy_src_cov_bind i_entropy_src_cov_bind();
+  entropy_combiner_cov_bind i_entropy_combiner_cov_bind();
+`endif
+
 endmodule
