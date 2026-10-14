@@ -67,6 +67,9 @@
 +incdir+${CALIPTRA_ROOT}/src/axi/coverage
 +incdir+${CALIPTRA_ROOT}/src/aes/coverage
 +incdir+${CALIPTRA_ROOT}/src/doe/coverage
++incdir+${CALIPTRA_ROOT}/src/sha3/coverage
++incdir+${CALIPTRA_ROOT}/src/entropy_src/coverage
++incdir+${CALIPTRA_ROOT}/src/entropy_combiner/coverage
 +incdir+${CALIPTRA_ROOT}/src/integration/tb
 +incdir+${CALIPTRA_ROOT}/src/integration/coverage
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
@@ -659,6 +662,12 @@ ${CALIPTRA_ROOT}/src/aes/coverage/aes_cov_if.sv
 ${CALIPTRA_ROOT}/src/aes/coverage/aes_cov_bind.sv
 ${CALIPTRA_ROOT}/src/doe/coverage/doe_cov_if.sv
 ${CALIPTRA_ROOT}/src/doe/coverage/doe_cov_bind.sv
+${CALIPTRA_ROOT}/src/sha3/coverage/sha3_cov_if.sv
+${CALIPTRA_ROOT}/src/sha3/coverage/sha3_cov_bind.sv
+${CALIPTRA_ROOT}/src/entropy_src/coverage/entropy_src_cov_if.sv
+${CALIPTRA_ROOT}/src/entropy_src/coverage/entropy_src_cov_bind.sv
+${CALIPTRA_ROOT}/src/entropy_combiner/coverage/entropy_combiner_cov_if.sv
+${CALIPTRA_ROOT}/src/entropy_combiner/coverage/entropy_combiner_cov_bind.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_top_tb_pkg.sv
 ${CALIPTRA_ROOT}/src/integration/tb/dma_testcase_generator.sv
 ${CALIPTRA_ROOT}/src/integration/tb/caliptra_veer_sram_export.sv

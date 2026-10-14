@@ -3696,6 +3696,9 @@ pcrvault_cov_bind i_pcrvault_cov_bind();
 axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 aes_cov_bind i_aes_cov_bind();
 doe_cov_bind i_doe_cov_bind();
+sha3_cov_bind i_sha3_cov_bind();
+entropy_src_cov_bind i_entropy_src_cov_bind();
+entropy_combiner_cov_bind i_entropy_combiner_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */
