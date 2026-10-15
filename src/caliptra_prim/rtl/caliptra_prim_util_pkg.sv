@@ -44,6 +44,25 @@ package caliptra_prim_util_pkg;
     return (value == 1) ? 1 : $clog2(value);
   endfunction
 
+  /**
+   * Computes the ceiling division of two integer values.
+   *
+   * This function performs integer division and rounds the result up to the nearest integer.
+   * It effectively computes the smallest integer greater than or equal to dividend / divisor.
+   *
+   * @param dividend The integer dividend.
+   * @param divisor The integer divisor.
+   * @return The ceiling division result (dividend / divisor, rounded up).
+   *
+   * Example:
+   * ceil_div(10, 3) returns 4
+   * ceil_div(12, 4) returns 3
+   * ceil_div(15, 6) returns 3
+   */
+  function automatic integer ceil_div(input integer dividend, input integer divisor);
+    ceil_div = ((dividend % divisor) != 0) ? (dividend / divisor) + 1 : (dividend / divisor);
+  endfunction
+
 `ifdef CALIPTRA_INC_ASSERT
   // Package-scoped variable to detect the end of simulation.
   //
