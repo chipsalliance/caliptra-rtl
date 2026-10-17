@@ -18,6 +18,7 @@
 #include "riscv-csr.h"
 #include <string.h>
 #include <stdint.h>
+#include <stdlib.h>
 #include "printf.h"
 #include "hmac.h"
 #include "caliptra_rtl_lib.h"
