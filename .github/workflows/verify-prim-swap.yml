@@ -96,6 +96,11 @@ jobs:
 
       - name: Build caliptra_top_tb against fake tech-cell primitives
         run: |
+          # Don't rely on the default shell's pipefail behavior -- set it
+          # explicitly so `make | tee` can't silently swallow a `make`
+          # failure behind tee's own (near-always-successful) exit code.
+          set -euo pipefail
+
           CALIPTRA_ROOT=$(pwd)
           ADAMSBRIDGE_ROOT=$CALIPTRA_ROOT/submodules/adams-bridge
           export CALIPTRA_AXI4PC_DIR=$CALIPTRA_ROOT/src/integration/tb
@@ -114,3 +119,13 @@ jobs:
             CALIPTRA_PRIM_ROOT=$CALIPTRA_PRIM_ROOT \
             CALIPTRA_PRIM_MODULE_PREFIX=$CALIPTRA_PRIM_MODULE_PREFIX \
             2>&1 | tee verilator_build.log
+
+          # Defense in depth: explicitly verify the Makefile recipe's
+          # completion marker (its final `touch verilator-build` step) is
+          # present, independent of `set -euo pipefail` above, in case any
+          # future refactor of this step reintroduces a swallowed exit code.
+          if [[ ! -f verilator-build ]]; then
+            echo "ERROR: verilator-build completion marker not found -- build did not complete successfully"
+            exit 1
+          fi
+          echo "verilator-build completed successfully (completion marker present)"
