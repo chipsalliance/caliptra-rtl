@@ -69,8 +69,8 @@ The following table describes integration parameters.
 | USER_EC_RV_ICG              | config_defines.svh   | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
 | TECH_SPECIFIC_EC_RV_ICG     | config_defines.svh   | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_EC_RV_ICG macro) to be used in place of the native RISC-V core clock gate module. |
 | CALIPTRA_AXI_DMA_ADDR_WIDTH | config_defines.svh   | Defines the address width for the Caliptra AXI Manager interface, driven by Caliptra's DMA assist block. The address width value assigned to this macro should match the address width that is expected at the integrator's SoC AXI interconnect. |
-| CALIPTRA_PRIM_ROOT          | environment variable | The integrator needs to set this environment variable to the path to technology specific modules for synthesis. Defaults to $CALIPTRA_ROOT/src/caliptra_prim_generic. |
-| CALIPTRA_PRIM_MODULE_PREFIX | environment variable | The integrator needs to set this environment variable to specify the module name prefix for technology specific modules for synthesus. Defaults to 'caliptra_prim_generic'. |
+| CALIPTRA_PRIM_ROOT          | environment variable | The integrator needs to set this environment variable to the path to technology-specific Caliptra and Adams Bridge primitive wrappers for synthesis. Defaults to $CALIPTRA_ROOT/src/caliptra_prim_generic for the generic Caliptra implementation. |
+| CALIPTRA_PRIM_MODULE_PREFIX | environment variable | The integrator needs to set this environment variable to specify the module name prefix for technology-specific Caliptra modules for synthesis. Defaults to 'caliptra_prim_generic'. Adams Bridge's own primitives automatically resolve to this same prefix when compiled as part of Caliptra, so no separate Adams Bridge module name prefix is needed. |
 
 ## Interface
 
@@ -1108,7 +1108,7 @@ To ensure the integrity of security countermeasures, silicon integrators **must*
 
 Caliptra uses redundant logic to counteract Fault Injection (FI) and Side Channel Analysis (SCA). This logic is built using generic primitive modules, which act as placeholders. Integrators must replace these generic primitives with corresponding technology-specific cells from their standard cell library. This abstraction allows for applying the necessary constraints directly to the technology cells.
 
-The following generic primitives require replacement with technology-specific cells. Ensure the instance names for these replacement cells include the `u__size_only__` tag, as shown in the example below.
+The following Caliptra generic primitives require replacement with technology-specific cells. Ensure the instance names for these replacement cells include the `u__size_only__` tag, as shown in the example below.
 
 *   `caliptra_prim_generic_and2`
 *   `caliptra_prim_generic_buf`
@@ -1118,7 +1118,11 @@ The following generic primitives require replacement with technology-specific ce
 *   `caliptra_prim_generic_flop`
 *   `caliptra_prim_generic_flop_en`
 
-To integrate technology-specific replacements, set the `CALIPTRA_PRIM_MODULE_PREFIX` and `CALIPTRA_PRIM_ROOT` environment variables. For details on how `CALIPTRA_PRIM_MODULE_PREFIX` is used to select between generic and technology-specific modules, see the implementation in [`caliptra_prim_module_name_macros.svh`](../src/caliptra_prim/rtl/caliptra_prim_module_name_macros.svh).
+The Adams Bridge accelerator shares this same primitive swap mechanism automatically: when compiled as part of Caliptra, Adams Bridge's `buf`/`flop`/`flop_en`/`xor2` primitives resolve to the identical `CALIPTRA_PRIM_MODULE_PREFIX`-named files listed above, so the technology-specific replacements above cover Adams Bridge too -- no separate Adams Bridge-specific primitives, path variables, or renaming are required. See [AdamsBridgeIntegrationSpecification.md](../submodules/adams-bridge/docs/AdamsBridgeIntegrationSpecification.md) for how this automatic resolution works.
+
+For details on how `CALIPTRA_PRIM_MODULE_PREFIX` selects between generic and
+technology-specific Caliptra modules, see
+[`caliptra_prim_module_name_macros.svh`](../src/caliptra_prim/rtl/caliptra_prim_module_name_macros.svh).
 
 **Example: Technology-Specific Buffer**
 
