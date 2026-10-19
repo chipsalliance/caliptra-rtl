@@ -89,6 +89,10 @@ jobs:
           path: /opt/riscv
           key: riscv-${{ env.RISCV_VERSION }}-${{ env.CUSTOM_CACHE_BUSTER }}
 
+      - name: Install ccache
+        run: |
+          sudo apt-get install -y git ccache
+
       - name: Setup paths
         run: |
           echo /opt/verilator/bin >> $GITHUB_PATH
