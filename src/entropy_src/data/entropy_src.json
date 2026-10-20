@@ -340,13 +340,13 @@
           "bits": "15:8",
           "name": "HW_REVISION",
           "desc": "Read of this register shows the revision of this block.",
-          "resval": "0x3"
+          "resval": "0x4"
         },
         {
           "bits": "7:0",
           "name": "ABI_REVISION",
           "desc": "Read of this register shows the ABI of this block.",
-          "resval": "0x3"
+          "resval": "0x4"
         }
       ]
     },

@@ -831,11 +831,11 @@ module entropy_src_reg_top #(
   // R[rev]: V(False)
   //   F[abi_revision]: 7:0
   // constant-only read
-  assign rev_abi_revision_qs = 8'h3;
+  assign rev_abi_revision_qs = 8'h4;
 
   //   F[hw_revision]: 15:8
   // constant-only read
-  assign rev_hw_revision_qs = 8'h3;
+  assign rev_hw_revision_qs = 8'h4;
 
   //   F[chip_type]: 23:16
   // constant-only read

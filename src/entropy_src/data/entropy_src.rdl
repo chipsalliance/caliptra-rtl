@@ -101,11 +101,11 @@ addrmap entropy_src {
         field {
             desc = "Read of this register shows the ABI of this block.";
             sw = r;
-        } ABI_REVISION[7:0] = 0x3;
+        } ABI_REVISION[7:0] = 0x4;
         field {
             desc = "Read of this register shows the revision of this block.";
             sw = r;
-        } HW_REVISION[15:8] = 0x3;
+        } HW_REVISION[15:8] = 0x4;
         field {
             desc = "Read of this register shows the type of chip using this block.";
             sw = r;
