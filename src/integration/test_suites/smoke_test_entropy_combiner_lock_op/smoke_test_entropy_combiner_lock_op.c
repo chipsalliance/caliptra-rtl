@@ -72,7 +72,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define EXP_GENBITS_COMBINE_3 0x08c811aa
 
 // Raw entropy_src config: es_bits == streamed InitialSeed (identity packing).
-#define ES_CONF_RAW           0x2649999
+#define ES_CONF_RAW           0x0999999
 #define ES_MODULE_ENABLE       0x6
 // ES1's register map is ES0's base + 0x1000.
 #define ES1_OFFSET (CLP_ENTROPY_SRC1_REG_BASE_ADDR - CLP_ENTROPY_SRC_REG_BASE_ADDR)
