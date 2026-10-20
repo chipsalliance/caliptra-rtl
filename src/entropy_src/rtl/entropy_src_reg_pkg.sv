@@ -17,7 +17,7 @@ package entropy_src_reg_pkg;
   parameter int NumRegs = 53;
 
   // Alert indices
-  typedef enum int {
+  typedef enum logic [0:0] {
     AlertRecovAlertIdx = 0,
     AlertFatalAlertIdx = 1
   } entropy_src_alert_idx_t;
