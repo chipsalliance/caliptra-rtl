@@ -298,8 +298,9 @@ module caliptra_prim_lfsr #(
     // lockup condition is all-zero
     assign lockup = ~(|lfsr_q);
 
-    // check that seed is not all-zero
-    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, |DefaultSeedLocal)
+    // check that seed is not all-zero. DefaultSeedLocal may still be X at time 0 in simulation,
+    // and its randomized values are constrained to exclude all-zero, so check the parameter.
+    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, |DefaultSeed)
 
 
   ////////////////////
@@ -323,8 +324,9 @@ module caliptra_prim_lfsr #(
     // lockup condition is all-ones
     assign lockup = &lfsr_q;
 
-    // check that seed is not all-ones
-    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, !(&DefaultSeedLocal))
+    // check that seed is not all-ones. DefaultSeedLocal may still be X at time 0 in simulation,
+    // and its randomized values are constrained to exclude all-ones, so check the parameter.
+    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, !(&DefaultSeed))
 
 
   /////////////
