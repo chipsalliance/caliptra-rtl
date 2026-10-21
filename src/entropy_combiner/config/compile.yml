@@ -1,4 +1,16 @@
 ---
+provides: [entropy_combiner_pkg]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/entropy_combiner_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/entropy_combiner_pkg.sv
+---
 provides: [entropy_combiner]
 schema_version: 2.4.0
 requires:
@@ -7,11 +19,11 @@ requires:
   - lc_ctrl_pkg
   - entropy_src_pkg
   - sha3_ctrl
+  - entropy_combiner_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/entropy_combiner_pkg.sv
       - $COMPILE_ROOT/rtl/entropy_combiner_reg_pkg.sv
       - $COMPILE_ROOT/rtl/entropy_combiner_reg.sv
       - $COMPILE_ROOT/rtl/entropy_combiner.sv
@@ -135,6 +147,7 @@ global:
 provides: [entropy_combiner_coverage]
 schema_version: 2.4.0
 requires:
+  - entropy_combiner_pkg
   - entropy_combiner
 targets:
   tb:

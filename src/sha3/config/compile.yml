@@ -1,14 +1,26 @@
 ---
-provides: [ot_sha3]
+provides: [ot_sha3_pkg]
 schema_version: 2.4.0
-requires:
-  - caliptra_prim_pkg
-  - lc_ctrl_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
       - $COMPILE_ROOT/rtl/ot_sha3_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/ot_sha3_pkg.sv
+---
+provides: [ot_sha3]
+schema_version: 2.4.0
+requires:
+  - caliptra_prim_pkg
+  - lc_ctrl_pkg
+  - ot_sha3_pkg
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
       - $COMPILE_ROOT/rtl/ot_keccak_2share.sv
       - $COMPILE_ROOT/rtl/ot_keccak_round.sv
       - $COMPILE_ROOT/rtl/ot_sha3pad.sv
@@ -53,6 +65,7 @@ targets:
 provides: [sha3_coverage]
 schema_version: 2.4.0
 requires:
+  - ot_sha3_pkg
   - ot_sha3
 targets:
   tb:
