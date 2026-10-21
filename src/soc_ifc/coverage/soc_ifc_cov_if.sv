@@ -1302,6 +1302,18 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_SS_OCP_LOCK_CTRL;
   logic [31:0]   full_addr_SS_OCP_LOCK_CTRL = `CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL;
 
+  logic          hit_SS_OTP_FC_STATUS_CFG;
+  logic [3:0]    bus_SS_OTP_FC_STATUS_CFG;
+  logic [31:0]   full_addr_SS_OTP_FC_STATUS_CFG = `CLP_SOC_IFC_REG_SS_OTP_FC_STATUS_CFG;
+
+  logic          hit_SS_OTP_FC_CMD_CFG;
+  logic [3:0]    bus_SS_OTP_FC_CMD_CFG;
+  logic [31:0]   full_addr_SS_OTP_FC_CMD_CFG = `CLP_SOC_IFC_REG_SS_OTP_FC_CMD_CFG;
+
+  logic          hit_SS_FW_FEATURE_CFG;
+  logic [3:0]    bus_SS_FW_FEATURE_CFG;
+  logic [31:0]   full_addr_SS_FW_FEATURE_CFG = `CLP_SOC_IFC_REG_SS_FW_FEATURE_CFG;
+
   logic          hit_SS_STRAP_GENERIC[0:3];
   logic [3:0]    bus_SS_STRAP_GENERIC[0:3];
   logic [31:0]   full_addr_SS_STRAP_GENERIC[0:3];
@@ -2194,6 +2206,15 @@ interface soc_ifc_cov_if
 
   assign hit_SS_OCP_LOCK_CTRL = (soc_ifc_reg_req_data.addr == full_addr_SS_OCP_LOCK_CTRL[AXI_ADDR_WIDTH-1:0]);
   assign bus_SS_OCP_LOCK_CTRL = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_OCP_LOCK_CTRL}};
+
+  assign hit_SS_OTP_FC_STATUS_CFG = (soc_ifc_reg_req_data.addr == full_addr_SS_OTP_FC_STATUS_CFG[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_OTP_FC_STATUS_CFG = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_OTP_FC_STATUS_CFG}};
+
+  assign hit_SS_OTP_FC_CMD_CFG = (soc_ifc_reg_req_data.addr == full_addr_SS_OTP_FC_CMD_CFG[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_OTP_FC_CMD_CFG = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_OTP_FC_CMD_CFG}};
+
+  assign hit_SS_FW_FEATURE_CFG = (soc_ifc_reg_req_data.addr == full_addr_SS_FW_FEATURE_CFG[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_FW_FEATURE_CFG = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_FW_FEATURE_CFG}};
 
   assign hit_SS_STRAP_GENERIC[0] = (soc_ifc_reg_req_data.addr == full_addr_SS_STRAP_GENERIC[0][18-1:0]);
   assign bus_SS_STRAP_GENERIC[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_STRAP_GENERIC[0]}};
@@ -3840,6 +3861,33 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP SS_OTP_FC_STATUS_CFG -----------------------
+  covergroup soc_ifc_SS_OTP_FC_STATUS_CFG_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_OTP_FC_STATUS_CFG_cp : coverpoint i_soc_ifc_reg.field_storage.SS_OTP_FC_STATUS_CFG;
+    bus_SS_OTP_FC_STATUS_CFG_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP SS_OTP_FC_CMD_CFG -----------------------
+  covergroup soc_ifc_SS_OTP_FC_CMD_CFG_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_OTP_FC_CMD_CFG_cp : coverpoint i_soc_ifc_reg.field_storage.SS_OTP_FC_CMD_CFG;
+    bus_SS_OTP_FC_CMD_CFG_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP SS_FW_FEATURE_CFG -----------------------
+  covergroup soc_ifc_SS_FW_FEATURE_CFG_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_FW_FEATURE_CFG_cp : coverpoint i_soc_ifc_reg.field_storage.SS_FW_FEATURE_CFG;
+    bus_SS_FW_FEATURE_CFG_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
   // ----------------------- COVERGROUP SS_STRAP_GENERIC [0:3] -----------------------
   covergroup soc_ifc_SS_STRAP_GENERIC_cg (ref logic [3:0] bus_event[0:3]) @(posedge clk);
     SS_STRAP_GENERIC0_cp : coverpoint i_soc_ifc_reg.field_storage.SS_STRAP_GENERIC[0];
@@ -4523,6 +4571,9 @@ interface soc_ifc_cov_if
   soc_ifc_SS_KEY_RELEASE_BASE_ADDR_H_cg SS_KEY_RELEASE_BASE_ADDR_H_cg = new(bus_SS_KEY_RELEASE_BASE_ADDR_H);
   soc_ifc_SS_KEY_RELEASE_SIZE_cg SS_KEY_RELEASE_SIZE_cg = new(bus_SS_KEY_RELEASE_SIZE);
   soc_ifc_SS_OCP_LOCK_CTRL_cg SS_OCP_LOCK_CTRL_cg = new(bus_SS_OCP_LOCK_CTRL);
+  soc_ifc_SS_OTP_FC_STATUS_CFG_cg SS_OTP_FC_STATUS_CFG_cg = new(bus_SS_OTP_FC_STATUS_CFG);
+  soc_ifc_SS_OTP_FC_CMD_CFG_cg SS_OTP_FC_CMD_CFG_cg = new(bus_SS_OTP_FC_CMD_CFG);
+  soc_ifc_SS_FW_FEATURE_CFG_cg SS_FW_FEATURE_CFG_cg = new(bus_SS_FW_FEATURE_CFG);
   soc_ifc_SS_STRAP_GENERIC_cg SS_STRAP_GENERIC_cg = new(bus_SS_STRAP_GENERIC);
   soc_ifc_SS_DBG_SERVICE_REG_REQ_cg SS_DBG_SERVICE_REG_REQ_cg = new(bus_SS_DBG_SERVICE_REG_REQ);
   soc_ifc_SS_DBG_SERVICE_REG_RSP_cg SS_DBG_SERVICE_REG_RSP_cg = new(bus_SS_DBG_SERVICE_REG_RSP);

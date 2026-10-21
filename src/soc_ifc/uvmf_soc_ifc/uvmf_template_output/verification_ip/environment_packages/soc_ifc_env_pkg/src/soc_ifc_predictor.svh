@@ -1725,12 +1725,6 @@ class soc_ifc_predictor #(
                     end
                 end
                 ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
-                "CPTRA_iTRNG_ENTROPY_CONFIG_0",
-                "CPTRA_iTRNG_ENTROPY_CONFIG_1",
-                "CPTRA_iTRNG_ENTROPY_CONFIG_2",
-                "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
-                "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
-                "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
                 ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                     `uvm_info("PRED_AHB", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
                 end
@@ -1791,6 +1785,12 @@ class soc_ifc_predictor #(
                 "fuse_pqc_key_type",
                 ["fuse_soc_manifest_svn[0]":"fuse_soc_manifest_svn[3]"],
                 "fuse_soc_manifest_max_svn",
+                "CPTRA_iTRNG_ENTROPY_CONFIG_0",
+                "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+                "CPTRA_iTRNG_ENTROPY_CONFIG_2",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
+                "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
                 ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -1815,6 +1815,9 @@ class soc_ifc_predictor #(
                 "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
                 "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
                 "SS_DEBUG_INTENT",
+                "SS_OTP_FC_STATUS_CFG",
+                "SS_OTP_FC_CMD_CFG",
+                "SS_FW_FEATURE_CFG",
                 ["SS_STRAP_GENERIC[0]":"SS_STRAP_GENERIC[3]"]: begin
                     // Handled in callbacks via reg predictor
                     `uvm_info("PRED_AHB", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -3047,12 +3050,6 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             ["CPTRA_WDT_CFG[0]":"CPTRA_WDT_CFG[1]"],
-            "CPTRA_iTRNG_ENTROPY_CONFIG_0",
-            "CPTRA_iTRNG_ENTROPY_CONFIG_1",
-            "CPTRA_iTRNG_ENTROPY_CONFIG_2",
-            "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
-            "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
-            "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
             ["CPTRA_RSVD_REG[0]":"CPTRA_RSVD_REG[1]"]: begin
                 `uvm_info("PRED_AXI", {"Access to ", axs_reg.get_name(), " has no effect on system"}, UVM_MEDIUM)
             end
@@ -3121,6 +3118,12 @@ class soc_ifc_predictor #(
             "fuse_pqc_key_type",
             ["fuse_soc_manifest_svn[0]":"fuse_soc_manifest_svn[3]"],
             "fuse_soc_manifest_max_svn",
+            "CPTRA_iTRNG_ENTROPY_CONFIG_0",
+            "CPTRA_iTRNG_ENTROPY_CONFIG_1",
+            "CPTRA_iTRNG_ENTROPY_CONFIG_2",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_0",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_1",
+            "CPTRA_iTRNG1_ENTROPY_CONFIG_2",
             ["internal_obf_key[0]":"internal_obf_key[7]"]: begin
                 // Handled in callbacks via reg predictor
                 `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
@@ -3145,6 +3148,9 @@ class soc_ifc_predictor #(
             "SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET",
             "SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES",
             "SS_DEBUG_INTENT",
+            "SS_OTP_FC_STATUS_CFG",
+            "SS_OTP_FC_CMD_CFG",
+            "SS_FW_FEATURE_CFG",
             ["SS_STRAP_GENERIC[0]":"SS_STRAP_GENERIC[3]"]: begin
                 // Handled in callbacks via reg predictor
                 `uvm_info("PRED_AXI", $sformatf("Handling access to strap register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)

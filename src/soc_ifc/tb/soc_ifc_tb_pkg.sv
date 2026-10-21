@@ -251,7 +251,10 @@ package soc_ifc_tb_pkg;
     "SS_KEY_RELEASE_BASE_ADDR_H"              : SOCIFC_BASE + `SOC_IFC_REG_SS_KEY_RELEASE_BASE_ADDR_H,                            // 0x544
     "SS_KEY_RELEASE_SIZE"                     : SOCIFC_BASE + `SOC_IFC_REG_SS_KEY_RELEASE_SIZE,                                   // 0x548
     "SS_OCP_LOCK_CTRL"                        : SOCIFC_BASE + `SOC_IFC_REG_SS_OCP_LOCK_CTRL,                                      // 0x54c
-    // 0x550..0x59c
+    "SS_OTP_FC_STATUS_CFG"                    : SOCIFC_BASE + `SOC_IFC_REG_SS_OTP_FC_STATUS_CFG,                                  // 0x550
+    "SS_OTP_FC_CMD_CFG"                       : SOCIFC_BASE + `SOC_IFC_REG_SS_OTP_FC_CMD_CFG,                                     // 0x554
+    "SS_FW_FEATURE_CFG"                       : SOCIFC_BASE + `SOC_IFC_REG_SS_FW_FEATURE_CFG,                                     // 0x558
+    // 0x55c..0x59c
     "SS_STRAP_GENERIC"                              : SOCIFC_BASE + `SOC_IFC_REG_SS_STRAP_GENERIC_0,                                    // 0x5a0 [4]
     // 0x5b0..0x5bc
     "SS_DBG_SERVICE_REG_REQ"                        : SOCIFC_BASE + `SOC_IFC_REG_SS_DBG_SERVICE_REG_REQ,                                 // 0x5c0
@@ -353,7 +356,7 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h0294, addr_max: SOCIFC_BASE + 16'h02b0},
     '{addr_min: SOCIFC_BASE + 16'h03a4, addr_max: SOCIFC_BASE + 16'h03bc},
     '{addr_min: SOCIFC_BASE + 16'h03e0, addr_max: SOCIFC_BASE + 16'h04fc},
-    '{addr_min: SOCIFC_BASE + 16'h0550, addr_max: SOCIFC_BASE + 16'h059c},
+    '{addr_min: SOCIFC_BASE + 16'h055c, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
     '{addr_min: SOCIFC_BASE + 16'h0664, addr_max: SOCIFC_BASE + 16'h07fc},
@@ -419,6 +422,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_CFG"                                    : 32'hffff_ffff,                           
     "CPTRA_OWNER_PK_HASH"                              : 32'hffff_ffff, 
     "CPTRA_OWNER_PK_HASH_LOCK"                         : 32'h1, 
+    "CPTRA_ITRNG"                                      : 32'hffff_ffff, // CPTRA_ITRNG_ENTROPY_CONFIG_*, CPTRA_ITRNG1_ENTROPY_CONFIG_*
     "INTERNAL_RV_MTIME"                                : 32'hffff_ffff, // for MTIME_L/H, MTIMECMP_L/H
     "INTR_BRF_ERROR_INTERNAL_INTR_R"                   : 32'hff,        // fields 5:0
     "INTR_BRF_ERROR_INTERNAL_INTR_COUNT_R"             : 32'hffff_ffff,          
@@ -449,6 +453,10 @@ package soc_ifc_tb_pkg;
     "SS_KEY_RELEASE_BASE_ADDR_H"                       : 32'hffff_ffff,
     "SS_KEY_RELEASE_SIZE"                              : 32'h0000_ffff,
     "SS_STRAP_GENERIC"                                 : 32'hffff_ffff,
+    "SS_OTP_FC_STATUS_CFG"                             : 32'hffff_ffff,
+    "SS_OTP_FC_CMD_CFG"                                : `SOC_IFC_REG_SS_OTP_FC_CMD_CFG_DIRECT_ACCESS_CMD_OFFSET_MASK,
+    "SS_FW_FEATURE_CFG"                                : (`SOC_IFC_REG_SS_FW_FEATURE_CFG_STABLE_OWNER_KEY_EN_MASK |
+                                                          `SOC_IFC_REG_SS_FW_FEATURE_CFG_VENDOR_DEBUG_IMAGES_DIS_MASK),
     "SS_OCP_LOCK_CTRL"                                 : `SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK
   };
 
@@ -523,6 +531,9 @@ package soc_ifc_tb_pkg;
                                                           `SOC_IFC_REG_SS_DBG_SERVICE_REG_RSP_TAP_MAILBOX_AVAILABLE_MASK),
     "SS_KEY_RELEASE_SIZE"                              : `SOC_IFC_REG_SS_KEY_RELEASE_SIZE_SIZE_MASK,
     "SS_OCP_LOCK_CTRL"                                 : `SOC_IFC_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK,
+    "SS_OTP_FC_CMD_CFG"                                : `SOC_IFC_REG_SS_OTP_FC_CMD_CFG_DIRECT_ACCESS_CMD_OFFSET_MASK,
+    "SS_FW_FEATURE_CFG"                                : (`SOC_IFC_REG_SS_FW_FEATURE_CFG_STABLE_OWNER_KEY_EN_MASK |
+                                                          `SOC_IFC_REG_SS_FW_FEATURE_CFG_VENDOR_DEBUG_IMAGES_DIS_MASK),
     "INTERNAL_ICCM_LOCK"                               : `SOC_IFC_REG_INTERNAL_ICCM_LOCK_LOCK_MASK, 
     "INTERNAL_ICCM_FMC_START_ADDR"                     : `SOC_IFC_REG_INTERNAL_ICCM_FMC_START_ADDR_ADDR_MASK,
     "INTERNAL_ICCM_FMC_END_ADDR"                       : `SOC_IFC_REG_INTERNAL_ICCM_FMC_END_ADDR_ADDR_MASK,
@@ -985,7 +996,7 @@ package soc_ifc_tb_pkg;
                     mask_shifted(tmp_data, `SOC_IFC_REG_CPTRA_HW_REV_ID_CPTRA_GENERATION_MASK) |  // add back cptra_generation 
                     mask_shifted(exp_data, `SOC_IFC_REG_CPTRA_HW_REV_ID_SOC_STEPPING_ID_MASK);    // and new stepping_id 
 
-      end else if (str_startswith(addr_name, "FUSE_"))
+      end else if (str_startswith(addr_name, "FUSE_") || str_startswith(addr_name, "CPTRA_ITRNG"))
         exp_data = fuses_locked ? curr_data : (ahb_rodata | axi_indata & get_mask(addr_name)); // ahb-RO 
 
       else if (str_startswith(addr_name, "CPTRA_MBOX_VALID_AXI_USER")) begin    // find equivalent pauser lock & if set, apb-RO 
@@ -1286,6 +1297,9 @@ package soc_ifc_tb_pkg;
           "SS_KEY_RELEASE_BASE_ADDR_L"                    : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_KEY_RELEASE_BASE_ADDR_H"                    : exp_data = fuses_locked ? curr_data : axi_indata;
           "SS_KEY_RELEASE_SIZE"                           : exp_data = fuses_locked ? curr_data : axi_indata & get_mask(addr_name);
+          "SS_OTP_FC_STATUS_CFG",
+          "SS_OTP_FC_CMD_CFG",
+          "SS_FW_FEATURE_CFG"                             : exp_data = fuses_locked ? curr_data : (ahb_rodata | axi_indata & get_mask(addr_name));
 
           "SS_DBG_SERVICE_REG_REQ"                  : begin
             ss_debug_intent = _exp_register_data_dict["SS_DEBUG_INTENT"];
@@ -1352,12 +1366,18 @@ package soc_ifc_tb_pkg;
   endfunction
 
 
+  // FUSE_* registers plus the fuse-like iTRNG entropy configuration registers
+  function automatic bit reg_is_fuse(string rkey);
+      return str_startswith(rkey, "FUSE") || str_startswith(rkey, "CPTRA_ITRNG");
+  endfunction
+
+
   function automatic strq_t get_fuse_regnames();
 
     strq_t fuse_regs; 
 
     foreach (_soc_register_dict[rkey]) begin
-      if (rkey.substr(0,3) == "FUSE")
+      if (reg_is_fuse(rkey))
         fuse_regs.push_back(rkey); 
       // SS_* registers are straps that get their initial values from 
       // input wires to soc_ifc and can be written until CPTRA_FUSE_WR_DONE 
@@ -1375,7 +1395,7 @@ package soc_ifc_tb_pkg;
     strq_t fuse_regs; 
 
     foreach (_soc_register_dict[rkey]) begin
-      if (rkey.substr(0,3) == "FUSE")
+      if (reg_is_fuse(rkey))
         fuse_regs.push_back(rkey); 
     end 
 
@@ -1482,7 +1502,7 @@ package soc_ifc_tb_pkg;
     foreach (_soc_register_dict[rkey]) begin
       if (str_startswith(rkey, "INTR_BRF") || 
           str_startswith(rkey, "SHA_ACC_INTR_BRF") || 
-          str_startswith(rkey, "FUSE") ||
+          reg_is_fuse(rkey) ||
           reg_is_ss_strap(rkey)) 
         continue;
       soc_regs.push_back(rkey); 

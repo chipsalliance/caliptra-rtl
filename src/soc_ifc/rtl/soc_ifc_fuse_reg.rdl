@@ -127,7 +127,15 @@ reg {
 } fuse_pqc_key_type;
 reg {
     name = "SOC Manifest SVN Fuse";
-    desc = "One-hot encoded value for the SOC authorization manifest minimum supported SVN.
+    desc = "Minimum supported SVNs, one per register. Each register holds an unsigned integer SVN decoded by the SoC
+            from integrator-defined OTP, not raw one-hot OTP bits.
+            [br]
+            [br]Register decode:
+            [br] [lb]0[rb] - SoC authorization manifest minimum SVN
+            [br] [lb]1[rb] - MCU runtime minimum SVN
+            [br] [lb]2[rb] - Owner SoC authorization manifest minimum SVN
+            [br] [lb]3[rb] - Not used by Caliptra firmware; available for late-binding features
+            [br]
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     Fuse svn[32]=32'b0;
