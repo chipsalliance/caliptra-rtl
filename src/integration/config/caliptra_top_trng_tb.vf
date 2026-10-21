@@ -47,9 +47,9 @@
 +incdir+${CALIPTRA_ROOT}/submodules/adams-bridge/src/decompress/rtl
 +incdir+${CALIPTRA_ROOT}/src/axi/rtl
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/rtl
++incdir+${CALIPTRA_ROOT}/src/sha3/rtl
 +incdir+${CALIPTRA_ROOT}/src/aes/rtl
 +incdir+${CALIPTRA_ROOT}/src/caliptra_tlul/rtl
-+incdir+${CALIPTRA_ROOT}/src/sha3/rtl
 +incdir+${CALIPTRA_ROOT}/src/entropy_combiner/rtl
 +incdir+${CALIPTRA_ROOT}/src/integration/asserts
 +incdir+${CALIPTRA_AXI4PC_DIR}
@@ -337,10 +337,6 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_mubi_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_cipher_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_sparse_fsm_pkg.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim_generic/rtl/abr_prim_generic_flop_en.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim_generic/rtl/abr_prim_generic_flop.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim_generic/rtl/abr_prim_generic_buf.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim_generic/rtl/abr_prim_generic_xor2.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_flop_en.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_cdc_rand_delay.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_flop_2sync.sv
