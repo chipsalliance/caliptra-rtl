@@ -37,6 +37,7 @@ provides: [pcrvault]
 schema_version: 2.4.0
 requires: 
   - libs
+  - caliptra_prim_pkg
   - pv_defines_pkg
 targets:
   rtl:
