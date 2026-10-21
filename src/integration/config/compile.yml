@@ -11,6 +11,14 @@ targets:
     files:
       - $COMPILE_ROOT/rtl/config_defines.svh
 ---
+provides: [caliptra_top_reg_field_defines]
+schema_version: 2.4.0
+targets:
+  tb:
+    directories: [$COMPILE_ROOT/rtl/caliptra_reg]
+  rtl:
+    directories: [$COMPILE_ROOT/rtl/caliptra_reg]
+---
 provides: [caliptra_top_reg_defines]
 schema_version: 2.4.0
 targets:
