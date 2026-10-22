@@ -32,6 +32,10 @@
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
 `include "caliptra_reg_field_defines.svh"
+// Explicit include so el2_mubi_pkg:: resolves regardless of overall file-list
+// compile order (this file uses it directly at line ~2014 for the DCLS
+// mismatch check).
+`include "el2_mubi_pkg.sv"
 
 
 module caliptra_top_tb_services
