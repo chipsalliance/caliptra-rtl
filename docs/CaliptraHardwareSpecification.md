@@ -91,8 +91,9 @@ The RISC-V core is highly configurable and has the following settings.
 | PMP                     | Enabled       |
 | Dual-Core Lockstep      | Enabled       |
 | RF Read Port Comparison | Enabled       |
-| DCCM Address Infection  | Enabled       |
-| ICCM Address Infection  | Enabled       |
+| DCCM Write-Readback     | Disabled      |
+| DCCM Address Infection  | Disabled      |
+| ICCM Address Infection  | Disabled      |
 
 ### Embedded memory export
 
