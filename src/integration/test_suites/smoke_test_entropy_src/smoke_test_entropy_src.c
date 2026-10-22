@@ -68,11 +68,13 @@ static uint32_t mubi4(uint32_t b) {
   return b ? MUBI4_TRUE : MUBI4_FALSE;
 }
 
-void fail_if_itrng_disabled(void) {
+// The L0 regression also runs configurations without the internal TRNG. Like the
+// other TRNG tests, skip the test there.
+void end_sim_if_itrng_disabled(void) {
   uint32_t hw_cfg = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
   if (!(hw_cfg & SOC_IFC_REG_CPTRA_HW_CONFIG_ITRNG_EN_MASK)) {
-    VPRINTF(ERROR, "Internal TRNG is not enabled, test cannot run\n");
-    SEND_STDOUT_CTRL(0x1);
+    VPRINTF(FATAL, "Internal TRNG is not enabled, skipping test\n");
+    SEND_STDOUT_CTRL(0xFF);
     while (1);
   }
 }
@@ -188,7 +190,7 @@ void main() {
   VPRINTF(LOW, " ENTROPY_SRC smoke test\n"          );
   VPRINTF(LOW, "----------------------------------\n");
 
-  fail_if_itrng_disabled();
+  end_sim_if_itrng_disabled();
 
   for (uint32_t c = 0; c < ES_NUM_CONFIGS; c++) {
     const es_test_cfg_t *cfg = &es_configs[c];
