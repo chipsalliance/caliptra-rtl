@@ -934,11 +934,113 @@ module entropy_combiner_es_csrng_tb
   endtask
 
   //----------------------------------------------------------------
+  // run_random_zeroize_cases()
+  //
+  // Zeroize the combiner at a random point of a combine (random delay after
+  // the instantiate, ES0/ES1 skew and pulse length). No seed or digest may be
+  // left afterwards, and after restarting both ES the instantiate must
+  // complete with the golden seed and genbits.
+  // Iterations: +COMB_RAND_ZEROIZE_ITER=<n> (default 20).
+  //----------------------------------------------------------------
+  task run_random_zeroize_cases(input string tag);
+    integer err_at_entry;
+    integer num_iter;
+    integer es0_delay, es1_delay, zeroize_delay, pulse_len;
+    integer i, j;
+    begin
+      if (!$value$plusargs("COMB_RAND_ZEROIZE_ITER=%d", num_iter)) num_iter = 20;
+      $display("*** [%s] %0d random zeroizes", tag, num_iter);
+
+      for (i = 0; i < num_iter; i = i + 1) begin
+        err_at_entry = error_ctr;
+
+        rng0_go = 1'b0;
+        rng1_go = 1'b0;
+        combine_en_tb = 1'b1;
+        reset_dut();
+        repeat (50) @(posedge clk_tb);
+        configure_es();
+        repeat (20) @(posedge clk_tb);
+        write_cs(CS_ADDR_CTRL, CS_CTRL_ENABLE);
+        repeat (20) @(posedge clk_tb);
+
+        // The zeroize delay covers the whole combine (one seed takes SEED_W/4
+        // RNG samples) plus some margin.
+        es0_delay     = $urandom_range(300);
+        es1_delay     = $urandom_range(300);
+        zeroize_delay = $urandom_range(300 + 2 * (SEED_W/4) * RNG_DUTY_CYCLE);
+        pulse_len     = $urandom_range(3) ? 1 : $urandom_range(2, 32);
+
+        write_cs(CS_ADDR_CMD_REQ, CS_CMD_INSTANTIATE);
+        fork
+          begin
+            repeat (es0_delay) @(posedge clk_tb);
+            rng0_go = 1'b1;
+          end
+          begin
+            repeat (es1_delay) @(posedge clk_tb);
+            rng1_go = 1'b1;
+          end
+          begin
+            repeat (zeroize_delay) @(posedge clk_tb);
+            @(negedge clk_tb);
+            $display("    [%s] iter %0d: es0_delay=%0d es1_delay=%0d zeroize after %0d cycles for %0d cycles (state=%b es0_valid=%0b es1_valid=%0b)",
+                     tag, i, es0_delay, es1_delay, zeroize_delay, pulse_len,
+                     u_combiner.state_q, u_combiner.es0_valid_q, u_combiner.es1_valid_q);
+            zeroize_tb = 1'b1;
+            repeat (pulse_len) @(negedge clk_tb);
+            zeroize_tb = 1'b0;
+          end
+        join
+
+        // Directly after the zeroize: no captured seed or digest left.
+        if (u_combiner.es0_valid_q || u_combiner.es1_valid_q ||
+            u_combiner.es0_bits_q !== '0 || u_combiner.es1_bits_q !== '0 ||
+            u_combiner.digest_q !== '0) begin
+          error_ctr = error_ctr + 1;
+          $display("*** [%s] iter %0d: ERROR: combiner data not cleared by zeroize", tag, i);
+        end
+
+        // Restart both ES so that they deliver IS0/IS1 again if requested.
+        restart_es();
+
+        // Nothing may hang: the instantiate completes and generate returns bits.
+        poll_cs(CS_ADDR_SW_CMD_STS, CS_SW_CMD_RDY, "instantiate SW_CMD_STS");
+        if (!csrng_seed_valid) begin
+          error_ctr = error_ctr + 1;
+          $display("*** [%s] iter %0d: ERROR: no seed delivered to CSRNG", tag, i);
+        end else if (csrng_seed_seen !== EXP_SEED_COMBINE) begin
+          error_ctr = error_ctr + 1;
+          $display("*** [%s] iter %0d: combiner->CSRNG seed MISMATCH", tag, i);
+          $display("      exp = %096h", EXP_SEED_COMBINE);
+          $display("      got = %096h", csrng_seed_seen);
+        end
+
+        write_cs(CS_ADDR_CMD_REQ, CS_CMD_GENERATE_128);
+        poll_cs(CS_ADDR_GENBITS_VLD, CS_GENBITS_VALID, "generate GENBITS_VLD");
+        for (j = 0; j < 4; j = j + 1) begin
+          read_cs(CS_ADDR_GENBITS);
+          if (read_data !== EXP_GENBITS_COMBINE[j]) begin
+            error_ctr = error_ctr + 1;
+            $display("*** [%s] iter %0d: GENBITS[%0d] MISMATCH exp=0x%08x got=0x%08x",
+                     tag, i, j, EXP_GENBITS_COMBINE[j], read_data);
+          end
+        end
+
+        if (error_ctr == err_at_entry)
+          $display("    [%s] iter %0d: PASS", tag, i);
+        tc_ctr = tc_ctr + 1;
+        repeat (30) @(posedge clk_tb);
+      end
+    end
+  endtask
+
+  //----------------------------------------------------------------
   // Main - same inputs (IS0/IS1), ES timing/config, error, AHB-lock and zeroize cases.
   //----------------------------------------------------------------
   initial begin
     init_sim();
-    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 11 cases");
+    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 12 cases");
 
     // 1) ES1 (primary/ES0) arrives faster than ES2 (secondary/ES1).
     run_case(1'b1, 0,   257, 1'b1, 1'b0, "case1-ES1-faster-than-ES2");
@@ -966,6 +1068,9 @@ module entropy_combiner_es_csrng_tb
     run_zeroize_case(ZEROIZE_ONE_ES,  "case10-zeroize-one-es-outstanding");
     run_zeroize_case(ZEROIZE_SHA3,    "case11-zeroize-sha3-running");
 
+    // 12) Zeroize at random points in time during a combine.
+    run_random_zeroize_cases("case12-zeroize-random");
+
     display_test_result();
     $finish;
   end
@@ -979,5 +1084,10 @@ module entropy_combiner_es_csrng_tb
     $display("* TESTCASE FAILED");
     $finish;
   end
+
+`ifndef VERILATOR
+  entropy_src_cov_bind i_entropy_src_cov_bind();
+  entropy_combiner_cov_bind i_entropy_combiner_cov_bind();
+`endif
 
 endmodule

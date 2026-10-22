@@ -23,6 +23,9 @@ module entropy_src_core
   input logic clk_i,
   input logic rst_ni,
 
+  // Zeroize the SHA3 conditioner on debug unlock or scan mode switch
+  input logic debugUnlock_or_scan_mode_switch,
+
   input  entropy_src_reg_pkg::entropy_src_reg2hw_t reg2hw,
   output entropy_src_reg_pkg::entropy_src_hw2reg_t hw2reg,
 
@@ -421,7 +424,7 @@ module entropy_src_core
   logic [HealthTestWindowWidth-1:0] window_cntr;
   logic                         window_cntr_incr_en;
 
-  logic [sha3_pkg::StateW-1:0] sha3_state[Sha3Share];
+  logic [ot_sha3_pkg::StateW-1:0] sha3_state[Sha3Share];
   logic [PreCondWidth-1:0] msg_data[Sha3Share];
   logic                    es_rdata_capt_vld;
   logic                    window_cntr_err;
@@ -491,6 +494,11 @@ module entropy_src_core
   logic        sha3_flush_q, sha3_flush_d;
   logic [1:0]  fw_ov_corrupted_q, fw_ov_corrupted_d;
 
+  // Zeroize on ENTROPY_SRC_CTRL.ZEROIZE or on debug/scan mode switch.
+  logic zeroize;
+  assign zeroize = (reg2hw.entropy_src_ctrl.qe && reg2hw.entropy_src_ctrl.q) ||
+                   debugUnlock_or_scan_mode_switch;
+
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       ht_failed_q            <= '0;
@@ -506,6 +514,20 @@ module entropy_src_core
       sha3_start_mask_q      <= '0;
       fw_ov_corrupted_q      <= 2'b00;
       rng_enable_q           <= 1'b 0;
+    end else if (zeroize) begin
+      ht_failed_q            <= '0;
+      ht_failed_qq           <= '0;
+      ht_done_pulse_q        <= '0;
+      ht_done_pulse_qq       <= '0;
+      sha3_err_q             <= '0;
+      es_rdata_capt_q        <= '0;
+      es_rdata_capt_vld_q    <= '0;
+      fw_ov_sha3_start_pfe_q <= '0;
+      mubi_mod_en_dly_q      <= mubi_mod_en_dly_d;
+      sha3_flush_q           <= '0;
+      sha3_start_mask_q      <= '0;
+      fw_ov_corrupted_q      <= 2'b00;
+      rng_enable_q           <= rng_enable_d;
     end else begin
       ht_failed_q            <= ht_failed_d;
       ht_failed_qq           <= ht_failed_q;
@@ -615,6 +637,7 @@ module entropy_src_core
   entropy_src_enable_delay u_enable_delay (
     .clk_i,
     .rst_ni,
+    .zeroize_i(zeroize),
     .enable_i(es_enable_fo[0]),
     .esrng_fifo_not_empty_i(sfifo_esrng_not_empty),
     .esbit_fifo_not_empty_i(pfifo_esbit_not_empty),
@@ -781,7 +804,8 @@ module entropy_src_core
   assign fw_ov_mode = fw_ov_mode_pfe;
   assign fw_ov_mode_entropy_insert = fw_ov_mode && fw_ov_entropy_insert_pfe;
   assign fw_ov_fifo_rd_pulse = reg2hw.fw_ov_rd_data.re;
-  assign hw2reg.fw_ov_rd_data.d = sfifo_observe_rdata;
+  // The observe FIFO is cleared at the end of the zeroize cycle, read 0 in that cycle.
+  assign hw2reg.fw_ov_rd_data.d = zeroize ? '0 : sfifo_observe_rdata;
   assign fw_ov_fifo_wr_pulse = reg2hw.fw_ov_wr_data.qe;
   assign fw_ov_wr_data = reg2hw.fw_ov_wr_data.q;
 
@@ -1037,7 +1061,8 @@ module entropy_src_core
     .Pass(0),
     .Depth(2),
     .OutputZeroIfEmpty(0),
-    .Secure(1)
+    .Secure(1),
+    .resetOnClear(1)
   ) u_caliptra_prim_fifo_sync_esrng (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
@@ -1056,10 +1081,11 @@ module entropy_src_core
   // fifo controls
   // We can't handle any backpressure at this point. Unless the ENTROPY_SRC block is turned off,
   // the input coming from the noise source / RNG needs to be accepted without dropping samples.
+  // The only exception is zeroize: the sample received in the zeroize cycle is dropped.
   assign sfifo_esrng_push = es_enable_fo[5] && es_delayed_enable && entropy_src_rng_valid_i &&
-                            rng_enable_q;
+                            rng_enable_q && !zeroize;
 
-  assign sfifo_esrng_clr   = ~es_delayed_enable;
+  assign sfifo_esrng_clr   = ~es_delayed_enable || zeroize;
   assign sfifo_esrng_wdata = entropy_src_rng_bits_i;
   // We can't apply any backpressure at this point. Every sample is presented to the health tests
   // for exactly one clock cycle. If the receiving FIFO is full, the sample is dropped but the
@@ -1098,7 +1124,9 @@ module entropy_src_core
   assign extht_active = 1'b1;
 
   // Only reset health tests on re-enable
-  assign health_test_clr = module_en_pulse_fo[0];
+  // Zeroize returns the health tests, the watermark and the alert counters to the state they
+  // have after enabling the module.
+  assign health_test_clr = module_en_pulse_fo[0] || zeroize;
 
   assign health_test_fips_window = reg2hw.health_test_windows.fips_window.q;
   assign health_test_bypass_window = reg2hw.health_test_windows.bypass_window.q;
@@ -1427,7 +1455,7 @@ module entropy_src_core
   ) u_caliptra_prim_count_window_cntr (
     .clk_i,
     .rst_ni,
-    .clr_i(!es_delayed_enable),
+    .clr_i(!es_delayed_enable || zeroize),
     .set_i(health_test_done_pulse),
     .set_cnt_i(HealthTestWindowWidth'(0)),
     .incr_en_i(window_cntr_incr_en),
@@ -1493,6 +1521,7 @@ module entropy_src_core
   ) u_entropy_src_repcnt_ht (
     .clk_i               (clk_i),
     .rst_ni              (rst_ni),
+    .zeroize_i           (zeroize),
     .entropy_bit_i       (health_test_esbus),
     .entropy_bit_vld_i   (health_test_esbus_vld),
     .rng_bit_en_i        (rng_bit_en),
@@ -1531,6 +1560,7 @@ module entropy_src_core
   ) u_entropy_src_repcnts_ht (
     .clk_i               (clk_i),
     .rst_ni              (rst_ni),
+    .zeroize_i           (zeroize),
     .entropy_bit_i       (health_test_esbus),
     .entropy_bit_vld_i   (health_test_esbus_vld),
     .clear_i             (health_test_clr),
@@ -1626,6 +1656,7 @@ module entropy_src_core
   ) u_entropy_src_adaptps_ht (
     .clk_i              (clk_i),
     .rst_ni             (rst_ni),
+    .zeroize_i          (zeroize),
     .entropy_bit_i      (health_test_esbus),
     .entropy_bit_vld_i  (health_test_esbus_vld),
     .clear_i            (health_test_clr),
@@ -1729,6 +1760,7 @@ module entropy_src_core
   ) u_entropy_src_markov_ht (
     .clk_i               (clk_i),
     .rst_ni              (rst_ni),
+    .zeroize_i           (zeroize),
     .entropy_bit_i       (health_test_esbus),
     .entropy_bit_vld_i   (health_test_esbus_vld),
     .rng_bit_en_i        (rng_bit_en),
@@ -2298,7 +2330,7 @@ module entropy_src_core
   // be dropped before the esbit FIFO in case of backpressure. The samples are however still
   // tested.
   assign pfifo_esbit_push = rng_bit_en && sfifo_esrng_not_empty;
-  assign pfifo_esbit_clr = ~es_delayed_enable;
+  assign pfifo_esbit_clr = ~es_delayed_enable || zeroize;
   assign pfifo_esbit_pop = rng_bit_en && pfifo_esbit_not_empty && pfifo_postht_not_full;
 
   always_comb begin
@@ -2352,7 +2384,8 @@ module entropy_src_core
   // Also, there is no association between SHA data and health test windows in FW_OV mode, so there
   // is no benefit in this mode to clearing the SHA FIFOs at the same time we clear the HT
   // statistics.
-  assign pfifo_postht_clr = fw_ov_mode_entropy_insert ? !es_enable_fo[7] : !es_delayed_enable;
+  assign pfifo_postht_clr = (fw_ov_mode_entropy_insert ? !es_enable_fo[7] : !es_delayed_enable) ||
+                            zeroize;
 
   // Pop whenever the distribution FIFO is not full. The distribution FIFO can be sized such that
   // it's never going to be full even under pessimistic operating conditions.
@@ -2374,7 +2407,8 @@ module entropy_src_core
     .Pass(1),
     .Depth(DistrFifoDepth),
     .OutputZeroIfEmpty(0),
-    .Secure(1)
+    .Secure(1),
+    .resetOnClear(1)
   ) u_caliptra_prim_fifo_sync_distr (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
@@ -2395,7 +2429,8 @@ module entropy_src_core
   assign sfifo_distr_push = pfifo_postht_not_empty;
   assign sfifo_distr_wdata = pfifo_postht_rdata;
 
-  assign sfifo_distr_clr = fw_ov_mode_entropy_insert ? !es_enable_fo[19] : !es_delayed_enable;
+  assign sfifo_distr_clr = (fw_ov_mode_entropy_insert ? !es_enable_fo[19] : !es_delayed_enable) ||
+                           zeroize;
 
   // In firmware override mode with extract & insert enabled, post-health test entropy bits can
   // only move into the observe FIFO. Once the observe FIFO is full, post-health test entropy is
@@ -2426,7 +2461,8 @@ module entropy_src_core
     .Pass(0),
     .Depth(ObserveFifoDepth),
     .OutputZeroIfEmpty(1), // Prevent SVA from firing due unknown module outputs.
-    .Secure(1)
+    .Secure(1),
+    .resetOnClear(1)
   ) u_caliptra_prim_fifo_sync_observe (
     .clk_i      (clk_i),
     .rst_ni     (rst_ni),
@@ -2456,6 +2492,8 @@ module entropy_src_core
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
       sfifo_observe_gate_q <= 1'b1;
+    end else if (zeroize) begin
+      sfifo_observe_gate_q <= 1'b1;
     end else begin
       sfifo_observe_gate_q <= sfifo_observe_gate_d;
     end
@@ -2473,7 +2511,7 @@ module entropy_src_core
   assign sfifo_observe_push = fw_ov_mode && sfifo_distr_pop &&
                               (sfifo_observe_gate_q || !sfifo_observe_not_empty);
 
-  assign sfifo_observe_clr  = ~es_enable_fo[9];
+  assign sfifo_observe_clr  = ~es_enable_fo[9] || zeroize;
 
   assign sfifo_observe_wdata = sfifo_distr_rdata;
 
@@ -2539,9 +2577,10 @@ module entropy_src_core
   // let it stay in the FIFO until the SHA engine has picked it up, as verification has no way
   // of knowing if a word will get stalled by SHA backpressure.  This is not a problem however
   // as the reset is only important for clearing 32-bit half-SHA-words.
-  assign pfifo_precon_clr = fw_ov_mode_entropy_insert ?
-                            ~es_enable_fo[10] & ~pfifo_precon_not_empty :
-                            ~es_delayed_enable & ~pfifo_precon_not_empty;
+  assign pfifo_precon_clr = (fw_ov_mode_entropy_insert ?
+                             ~es_enable_fo[10] & ~pfifo_precon_not_empty :
+                             ~es_delayed_enable & ~pfifo_precon_not_empty) ||
+                            zeroize;
 
   assign pfifo_precon_pop = (pfifo_cond_push && sha3_msgfifo_ready);
 
@@ -2625,7 +2664,7 @@ module entropy_src_core
   ) u_caliptra_prim_count_pipeline_depth (
     .clk_i,
     .rst_ni,
-    .clr_i(!es_delayed_enable),
+    .clr_i(!es_delayed_enable || zeroize),
     .set_i(pipeline_depth_cntr_set),
     .set_cnt_i(pipeline_depth_cntr_set_cnt),
     .incr_en_i(1'b0),
@@ -2648,7 +2687,7 @@ module entropy_src_core
   assign pfifo_cond_rdata = sha3_state[0][SeedLen-1:0];
 
   // SHA3 hashing engine
-  sha3 #(
+  ot_sha3 #(
     .EnMasking (Sha3EnMasking)
   ) u_sha3 (
     .clk_i,
@@ -2672,8 +2711,8 @@ module entropy_src_core
     .ns_data_i       ('0), // ns_prefix),
 
     // Configurations
-    .mode_i     (sha3_pkg::Sha3), // Use SHA3 mode
-    .strength_i (sha3_pkg::L384), // Use keccak_strength_e of L384
+    .mode_i     (ot_sha3_pkg::Sha3), // Use SHA3 mode
+    .strength_i (ot_sha3_pkg::L384), // Use keccak_strength_e of L384
 
     // Controls (CMD register)
     .start_i    (sha3_start       ),
@@ -2683,6 +2722,9 @@ module entropy_src_core
 
     // LC escalation
     .lc_escalate_en_i (lc_ctrl_pkg::Off),
+
+    // Zeroize
+    .zeroize_i (zeroize),
 
     .absorbed_o (sha3_absorbed),
     .squeezing_o (sha3_squeezing),
@@ -2739,7 +2781,7 @@ module entropy_src_core
   assign pfifo_bypass_wdata = fw_ov_mode_entropy_insert ? fw_ov_wr_data :
                               sfifo_distr_rdata;
 
-  assign pfifo_bypass_clr = !es_enable_fo[11];
+  assign pfifo_bypass_clr = !es_enable_fo[11] || zeroize;
 
   // Corner case: If the main state machine encounters an alert, drain the
   // bypass fifo, to get rid of the seeds and let the HT stats continue.
@@ -2763,6 +2805,7 @@ module entropy_src_core
     u_entropy_src_main_sm (
     .clk_i                (clk_i),
     .rst_ni               (rst_ni),
+    .zeroize_i            (zeroize),
     .enable_i             (main_sm_enable),
     .fw_ov_ent_insert_i   (fw_ov_mode_entropy_insert),
     .fw_ov_sha3_start_i   (fw_ov_sha3_start_pfe),
@@ -2851,7 +2894,8 @@ module entropy_src_core
     .Pass(0),
     .Depth(EsFifoDepth),
     .OutputZeroIfEmpty(0),
-    .Secure(1)
+    .Secure(1),
+    .resetOnClear(1)
   ) u_caliptra_prim_fifo_sync_esfinal (
     .clk_i          (clk_i),
     .rst_ni         (rst_ni),
@@ -2880,10 +2924,11 @@ module entropy_src_core
          fw_ov_mode_entropy_insert && es_bypass_mode ? pfifo_bypass_not_empty :
          main_stage_push;
 
-  assign sfifo_esfinal_clr  = !es_enable_fo[14];
+  assign sfifo_esfinal_clr  = !es_enable_fo[14] || zeroize;
   assign sfifo_esfinal_wdata = {fips_compliance,final_es_data};
   assign sfifo_esfinal_pop = es_route_to_sw ? swread_done : es_hw_if_fifo_pop;
-  assign {esfinal_fips_flag,esfinal_data} = sfifo_esfinal_rdata;
+  // The esfinal FIFO is cleared at the end of the zeroize cycle, output 0 in that cycle.
+  assign {esfinal_fips_flag,esfinal_data} = zeroize ? '0 : sfifo_esfinal_rdata;
 
   // fifo err
   // Note that for the used caliptra_prim_fifo_sync and caliptra_prim_packer_fifo primitives it is not an error to
@@ -2904,6 +2949,7 @@ module entropy_src_core
   entropy_src_ack_sm u_entropy_src_ack_sm (
     .clk_i            (clk_i),
     .rst_ni           (rst_ni),
+    .zeroize_i        (zeroize),
     .enable_i         (es_enable_fo[15]),
     .req_i            (es_hw_if_req),
     .ack_o            (es_hw_if_ack),
@@ -2962,6 +3008,8 @@ module entropy_src_core
   always_ff @(posedge clk_i or negedge rst_ni) begin : swread_idx_reg
     if (!rst_ni) begin
       swread_idx_q <= '0;
+    end else if (zeroize) begin
+      swread_idx_q <= '0;
     end else begin
       swread_idx_q <= swread_idx_d;
     end
@@ -2990,7 +3038,7 @@ module entropy_src_core
   //--------------------------------------------
 
   assign unused_err_code_test_bit = (|{err_code_test_bit[27:25],err_code_test_bit[19:4]});
-  assign unused_sha3_state = (|sha3_state[0][sha3_pkg::StateW-1:SeedLen]);
+  assign unused_sha3_state = (|sha3_state[0][ot_sha3_pkg::StateW-1:SeedLen]);
   assign unused_entropy_data = (|reg2hw.entropy_data.q);
   assign unused_fw_ov_rd_data = (|reg2hw.fw_ov_rd_data.q);
   assign unused_sfifo_esrng_not_full = sfifo_esrng_not_full;
@@ -2999,6 +3047,38 @@ module entropy_src_core
   //--------------------------------------------
   // Assertions
   //--------------------------------------------
+
+  // Zeroize: no seed and no stored data is output in the zeroize cycle.
+  `CALIPTRA_ASSERT(ZeroizeNoAck_A, zeroize |-> !es_hw_if_ack)
+  `CALIPTRA_ASSERT(ZeroizeOutputsZero_A,
+          zeroize |-> (esfinal_data == '0) && !esfinal_fips_flag &&
+                      (hw2reg.entropy_data.d == '0) && (hw2reg.fw_ov_rd_data.d == '0))
+
+  // Zeroize: all FIFOs are empty and the FIFO storage is cleared after the zeroize cycle.
+  // The packer FIFOs clear their data one cycle later but never output it in between.
+  `CALIPTRA_ASSERT(ZeroizeFifosEmpty_A,
+          zeroize |=> !sfifo_esrng_not_empty && !sfifo_distr_not_empty &&
+                      !sfifo_observe_not_empty && !sfifo_esfinal_not_empty)
+  `CALIPTRA_ASSERT(ZeroizeFifosCleared_A,
+          zeroize |=> (sfifo_esrng_rdata == '0) && (sfifo_distr_rdata == '0) &&
+                      (sfifo_esfinal_rdata == '0))
+  `CALIPTRA_ASSERT(ZeroizePackerFifosEmpty_A,
+          zeroize |=> (!pfifo_esbit_not_empty && !pfifo_postht_not_empty &&
+                       !pfifo_precon_not_empty && !pfifo_bypass_not_empty)[*2])
+
+  // Zeroize: the FSMs and the SHA3 conditioner return to idle.
+  `CALIPTRA_ASSERT(ZeroizeMainSmIdle_A,
+          zeroize |=> es_main_sm_state == entropy_src_main_sm_pkg::Idle)
+  `CALIPTRA_ASSERT(ZeroizeAckSmIdle_A,
+          zeroize |=> u_entropy_src_ack_sm.state_q == entropy_src_ack_sm_pkg::Idle)
+  `CALIPTRA_ASSERT(ZeroizeSha3Idle_A, zeroize |=> !sha3_state_vld && !sha3_squeezing)
+
+  // Zeroize does not disturb the noise source: an enabled noise source stays enabled, and the
+  // enable is neither extended nor suppressed after the zeroize.
+  `CALIPTRA_ASSERT(ZeroizeNoiseSourceEnabled_A,
+          zeroize && es_enable_fo[1] && es_delayed_enable |=> entropy_src_rng_enable_o)
+  `CALIPTRA_ASSERT(ZeroizeNoEnableDelay_A, zeroize |=> es_delayed_enable == es_enable_fo[0])
+
 `ifdef CALIPTRA_INC_ASSERT
 
   // Assert that we request high quality entropy only when the rng_fips field of the conf register
@@ -3336,6 +3416,21 @@ module entropy_src_core
       precon_post_startup_push_bit_cnt_q  <= '0;
       precon_push_bit_cnt_q               <= '0;
       rng_valid_bit_cnt_q                 <= '0;
+    end else if (zeroize) begin
+      // Zeroize drops all entropy in flight, restart the bookkeeping.
+      esbit_push_bit_cnt_q                <= '0;
+      esfinal_non_bypass_push_cnt_q       <= '0;
+      esfinal_post_startup_push_bit_cnt_q <= '0;
+      esrng_push_bit_cnt_q                <= '0;
+      postht_from_esbit_push_bit_cnt_q    <= '0;
+      postht_from_esrng_push_bit_cnt_q    <= '0;
+      postht_non_bypass_pop_bit_cnt_q     <= '0;
+      postht_push_bit_cnt_q               <= '0;
+      distr_non_bypass_pop_bit_cnt_q      <= '0;
+      distr_non_bypass_push_bit_cnt_q     <= '0;
+      precon_post_startup_push_bit_cnt_q  <= '0;
+      precon_push_bit_cnt_q               <= '0;
+      rng_valid_bit_cnt_q                 <= '0;
     end else if (es_delayed_enable & !fw_ov_mode_entropy_insert) begin
       // All these counters get updated if and only if entropy_src is enabled and the firmware
       // override entropy insertion mode is disabled.  Otherwise, there are no guarantees on how
@@ -3361,6 +3456,14 @@ module entropy_src_core
       bsc_state_q                             <= BscStIncomplete;
       disable_cnt_q                           <= '0;
       es_delayed_enable_q                     <= '0;
+      esfinal_post_startup_exp_push_bit_cnt_q <= '0;
+      ht_state_q                              <= HtStNoResult;
+      precon_post_startup_exp_push_bit_cnt_q  <= '0;
+    end else if (zeroize) begin
+      // Zeroize drops all entropy in flight, restart the bookkeeping.
+      bsc_state_q                             <= BscStIncomplete;
+      disable_cnt_q                           <= disable_cnt_d;
+      es_delayed_enable_q                     <= es_delayed_enable_d;
       esfinal_post_startup_exp_push_bit_cnt_q <= '0;
       ht_state_q                              <= HtStNoResult;
       precon_post_startup_exp_push_bit_cnt_q  <= '0;
