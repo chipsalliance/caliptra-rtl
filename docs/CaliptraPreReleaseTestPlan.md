@@ -444,7 +444,7 @@ Single iteration, 3 steps:
 
 ## DCLS Reporting in Passive and Subsystem Profiles
 
-In both profiles, verify that `ss_dcls_en=0` suppresses normal mismatch reporting and `ss_dcls_en=1` enables fatal reporting, with matching `DCLS_en` readback. Run the integration tests using `src/integration/stimulus/DCLS_regression.yml`.
+In both profiles, verify that `dcls_en=0` suppresses normal mismatch reporting and `dcls_en=1` enables fatal reporting, with matching `DCLS_en` readback. Run the integration tests using `src/integration/stimulus/DCLS_regression.yml`.
 
 | Test / YAML variant | Coverage |
 | :--- | :--- |

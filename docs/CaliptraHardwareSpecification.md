@@ -89,7 +89,7 @@ The RISC-V core is highly configurable and has the following settings.
 | Fast Interrupt Redirect | Enabled       |
 | External Interrupts     | 31            |
 | PMP                     | Enabled       |
-| Dual-Core Lockstep      | Enabled; reporting controlled by `ss_dcls_en` |
+| Dual-Core Lockstep      | Enabled       |
 | RF Read Port Comparison | Enabled       |
 | DCCM Address Infection  | Enabled       |
 | ICCM Address Infection  | Enabled       |
@@ -210,13 +210,13 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 
 ### Fault tolerance and FI hardening
 
-The Caliptra VeeR EL2 configuration provides several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep (DCLS) mismatch reporting is controlled by `ss_dcls_en` in both passive and subsystem profiles. The **DCCM write-readback** and **DCCM / ICCM address-XOR integrity** features are **disabled in this release** until the features mature - they are compiled out of the delivered configuration and are documented below for reference. All three are described below.
+The Caliptra VeeR EL2 configuration provides several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep (DCLS) is enabled through `dcls_en` in both passive and subsystem profiles. The **DCCM write-readback** and **DCCM / ICCM address-XOR integrity** features are **disabled in this release** until the features mature - they are compiled out of the delivered configuration and are documented below for reference. All three are described below.
 
 #### Dual-core lockstep (DCLS)
 
-The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A redundant *shadow* core is driven with the same input stream as the main core, offset by a fixed number of pipeline stages. The main core's outputs are delayed by the same offset and compared cycle-by-cycle against the shadow core's outputs; any divergence indicates a fault in one of the cores. Optimization barriers are inserted on the shadow-core boundary so that synthesis cannot prove the redundant logic and comparison away. The shadow core is not architecturally visible and drives no system state; it exists solely for comparison.
+The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A redundant *shadow* core is driven with the same input stream as the main core, offset by a fixed number of pipeline stages. The main core's outputs are delayed by the same offset and compared cycle-by-cycle against the shadow core's outputs; any divergence indicates a fault in one of the cores. Tying `dcls_en` low may allow synthesis to remove the shadow core and comparison logic. The shadow core is not architecturally visible and drives no system state; it exists solely for comparison.
 
-The `ss_dcls_en` input controls normal DCLS mismatch reporting in both passive and subsystem profiles (`1` = enabled, `0` = disabled). Integrators may tie it low or high, or drive it from a synchronous SoC register. The sampled enable is reflected read-only to firmware and the SoC in [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG)`.DCLS_en`. The comparison logic fails safe: an invalid multi-bit encoding on the internal disable control is treated as a detected corruption.
+The `dcls_en` input enables DCLS in both passive and subsystem profiles (`1` = enabled, `0` = disabled), controlling normal mismatch reporting. Integrators may tie it low or high, or drive it from a synchronous SoC register. The sampled enable is reflected read-only to firmware and the SoC in [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG)`.DCLS_en`. The comparison logic fails safe: an invalid multi-bit encoding on the internal disable control is treated as a detected corruption.
 
 While detection is enabled, a detected mismatch asserts [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL)`.rv_dcls_err` (bit [7]; see [Error register summary](#error-register-summary)) and raises the `cptra_error_fatal` interrupt to the SoC. The status bit and the interrupt clear independently: the bit is RW1C, so Caliptra firmware or the SoC can clear it, but its reset is `cptra_pwrgood`, so it survives a warm Caliptra reset. The interrupt has no clear mechanism by design — clearing the status bit does not deassert it, and it deasserts only on a Caliptra reset.
 

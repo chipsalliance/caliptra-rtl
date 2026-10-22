@@ -49,7 +49,7 @@ import caliptra_top_tb_pkg::*; #(
     output logic [63:0] strap_ss_key_release_base_addr,
 
     output logic ss_ocp_lock_en,
-    output logic ss_dcls_en,
+    output logic dcls_en,
 
     output logic itrng1_en,
 
@@ -271,14 +271,14 @@ import caliptra_top_tb_pkg::*; #(
         if ($test$plusargs("CLP_DCLS_EN") && $test$plusargs("CLP_DCLS_DIS"))
             $fatal(1, "CLP_DCLS_EN and CLP_DCLS_DIS are mutually exclusive");
         if ($test$plusargs("CLP_DCLS_EN")) begin
-            ss_dcls_en = 1'b1;
+            dcls_en = 1'b1;
         end
         else if ($test$plusargs("CLP_DCLS_DIS")) begin
-            ss_dcls_en = 1'b0;
+            dcls_en = 1'b0;
         end
         else begin
             // DCLS reporting defaults to enabled.
-            ss_dcls_en = 1'b1;
+            dcls_en = 1'b1;
         end
 
         if ($test$plusargs("CLP_ITRNG1_EN")) begin

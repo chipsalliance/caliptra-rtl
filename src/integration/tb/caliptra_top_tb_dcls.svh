@@ -101,7 +101,7 @@ endtask
 
 task automatic dcls_set_enable(input bit enabled);
     @(negedge core_clk);
-    ss_dcls_en = enabled;
+    dcls_en = enabled;
     repeat (8) @(negedge core_clk);
     dcls_check_config(enabled);
     $display("DCLS: reporting enable=%0d", enabled);
@@ -273,7 +273,7 @@ task automatic dcls_warm_reset(input bit retained_status);
     repeat (4) @(negedge core_clk);
     dcls_deassert_warm_rst = 0;
     dcls_wait_boot(previous_boot);
-    dcls_check_config(ss_dcls_en);
+    dcls_check_config(dcls_en);
     dcls_check_status(retained_status, 0);
     $display("DCLS: warm reset retained status=%0d and cleared fatal output", retained_status);
 endtask
@@ -293,7 +293,7 @@ task automatic dcls_power_reset;
     repeat (4) @(negedge core_clk);
     dcls_deassert_warm_rst = 0;
     dcls_wait_boot(previous_boot);
-    dcls_check_config(ss_dcls_en);
+    dcls_check_config(dcls_en);
     dcls_check_status(0, 0);
     $display("DCLS: power-good reset cleared status/output");
 endtask

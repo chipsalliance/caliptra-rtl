@@ -1780,7 +1780,7 @@ module caliptra_top_sva
   DCLS_enable_sampled: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
       `SOC_IFC_TOP_PATH.cptra_noncore_rst_b |=> `SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.DCLS_en.value ==
-                 $past(`CPTRA_TOP_PATH.ss_dcls_en))
+                 $past(`CPTRA_TOP_PATH.dcls_en))
     else $error("SVA ERROR: DCLS input was not sampled into read-only HW_CONFIG");
 
   DCLS_reset_qualifies_report: assert property (

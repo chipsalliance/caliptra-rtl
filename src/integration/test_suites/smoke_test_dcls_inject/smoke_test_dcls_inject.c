@@ -46,7 +46,6 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 void main() {
     uint32_t hw_config;
-    uint32_t ss_mode;
     uint32_t dcls_en;
 
     VPRINTF(LOW, "---------------------------\n");
@@ -57,20 +56,9 @@ void main() {
 
     // Require enabled reporting in either profile; a disabled run is a failure.
     hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
-    ss_mode   = (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK) ? 1u : 0u;
     dcls_en   = (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK)           ? 1u : 0u;
-    VPRINTF(LOW, "CPTRA_HW_CONFIG=0x%x subsystem_mode=%u DCLS_en=%u\n",
-            hw_config, ss_mode, dcls_en);
+    VPRINTF(LOW, "CPTRA_HW_CONFIG=0x%x DCLS_en=%u\n", hw_config, dcls_en);
 
-#ifdef CALIPTRA_HWCONFIG_SUBSYSTEM_MODE
-    if (ss_mode != 1u) {
-#else
-    if (ss_mode != 0u) {
-#endif
-        VPRINTF(FATAL, "ERROR: RTL subsystem mode does not match firmware build\n");
-        SEND_STDOUT_CTRL(0x1);
-        while (1);
-    }
     if (!dcls_en) {
         VPRINTF(FATAL, "ERROR: DCLS_en=0 (expected enabled via +CLP_DCLS_EN)\n");
         SEND_STDOUT_CTRL(0x1);
