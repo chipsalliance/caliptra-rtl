@@ -156,3 +156,11 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h10/fw_test_lms_n32_w8_h10.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h15/fw_test_lms_n32_w8_h15.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/fw_test_lms_n32_w8_h20/fw_test_lms_n32_w8_h20.yml
+
+        # DCLS reporting
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dcls_dis/smoke_test_dcls_dis.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_dcls_inject/smoke_test_dcls_inject.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_dcls_reporting/directed_dcls_reporting_outputs.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_dcls_reporting/directed_dcls_reporting_regfile.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_dcls_reporting/directed_dcls_reporting_control.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/directed_dcls_reporting/directed_dcls_reporting_qualifications.yml

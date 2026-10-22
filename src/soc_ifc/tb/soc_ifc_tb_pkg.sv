@@ -855,14 +855,19 @@ package soc_ifc_tb_pkg;
 
     begin
       exp_cptra_hw_config = get_initval("CPTRA_HW_CONFIG");
-      if (subsystem_mode_tb && (ocp_lock_en_tb === 1'b1 || dcls_en_tb === 1'b1)) begin
-        exp_cptra_hw_config |= ocp_lock_en_tb ? dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) : dword_t'(0);
-        exp_cptra_hw_config |= dcls_en_tb     ? dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK)          : dword_t'(0);
+      // Clear the previous DCLS value before sampling the requested enable.
+      exp_cptra_hw_config &= ~dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK);
+      exp_cptra_hw_config |= dcls_en_tb ? dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_DCLS_EN_MASK) : dword_t'(0);
+      if (subsystem_mode_tb && ocp_lock_en_tb === 1'b1)
+        exp_cptra_hw_config |= dword_t'(`SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK);
+      if (subsystem_mode_tb)
         _soc_register_initval_ss_dict["CPTRA_HW_CONFIG"] = exp_cptra_hw_config;
-        update_exp_regval("CPTRA_HW_CONFIG", exp_cptra_hw_config, SET_DIRECT);
-      end
+      else
+        _soc_register_initval_passive_dict["CPTRA_HW_CONFIG"] = exp_cptra_hw_config;
+      update_exp_regval("CPTRA_HW_CONFIG", exp_cptra_hw_config, SET_DIRECT);
 
       $display("TB INFO. Updated expected value of CPTRA_HW_CONFIG = 0x%0x.", _exp_register_data_dict["CPTRA_HW_CONFIG"]);
+      return exp_cptra_hw_config;
     end
 
   endfunction // update_CPTRA_HW_CONFIG

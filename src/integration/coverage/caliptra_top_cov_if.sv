@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+`include "common_defines.sv"
 `ifndef VERILATOR
 
 interface caliptra_top_cov_if   
@@ -41,6 +42,43 @@ interface caliptra_top_cov_if
     assign wdt_timer2_en = caliptra_top.soc_ifc_top1.i_wdt.timer2_en;
     assign nmi_int = caliptra_top.nmi_int;
     
+
+`ifdef RV_LOCKSTEP_ENABLE
+    logic dcls_profile, dcls_enable, dcls_outputs_mismatch, dcls_regfile_mismatch;
+    logic dcls_shadow_reset_released, dcls_debug_history, dcls_disable_invalid;
+    assign dcls_profile = caliptra_top.soc_ifc_top1.soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.value;
+    assign dcls_enable = caliptra_top.soc_ifc_top1.soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.DCLS_en.value;
+    assign dcls_outputs_mismatch = caliptra_top.rvtop.lockstep.outputs_corrupted;
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+    assign dcls_regfile_mismatch = caliptra_top.rvtop.lockstep.regfile_corrupted;
+`else
+    assign dcls_regfile_mismatch = 0;
+`endif
+    assign dcls_shadow_reset_released = caliptra_top.rvtop.lockstep.rst_n;
+    assign dcls_debug_history = caliptra_top.rvtop.lockstep.dbg_detected == el2_mubi_pkg::El2MuBiTrue;
+    assign dcls_disable_invalid = caliptra_top.rvtop.lockstep.disable_detection_invalid == el2_mubi_pkg::El2MuBiTrue;
+
+    covergroup dcls_reporting_cg @(posedge clk);
+        option.per_instance = 1;
+        profile: coverpoint dcls_profile;
+        enable: coverpoint dcls_enable {
+            bins disabled = {0}; bins enabled = {1};
+            bins enable_transition = (0 => 1);
+            bins disable_transition = (1 => 0);
+        }
+        output_mismatch: coverpoint dcls_outputs_mismatch;
+        regfile_mismatch: coverpoint dcls_regfile_mismatch;
+        reset_released: coverpoint dcls_shadow_reset_released;
+        debug_history: coverpoint dcls_debug_history;
+        invalid_disable: coverpoint dcls_disable_invalid;
+        fatal: coverpoint cptra_error_fatal;
+        profile_enable_output: cross profile, enable, output_mismatch;
+        profile_enable_regfile: cross profile, enable, regfile_mismatch;
+        qualifications: cross enable, reset_released, debug_history, output_mismatch;
+        failsafe: cross enable, reset_released, debug_history, invalid_disable, fatal;
+    endgroup
+    dcls_reporting_cg dcls_reporting_cov = new();
+`endif
 
     covergroup caliptra_top_cov_grp @(posedge clk);
         option.per_instance = 1;
