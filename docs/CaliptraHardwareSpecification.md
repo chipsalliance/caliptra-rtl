@@ -345,7 +345,7 @@ Caliptra provides a clock gating feature that turns off clocks when the microcon
 
 | Control register     | Start address     | Description               |
 | :------------------- | :---------------- | :------------------------ |
-| CPTRA_CLK_GATING_EN  | 0x300300bc        | Register bit to enable or disable the clock gating feature. |
+| CPTRA_CLK_GATING_EN  | 0x300300c0        | Register bit to enable or disable the clock gating feature. |
 
 When enabled, halting the microcontroller turns off clocks to all of the cryptographic subsystem, the vaults (key vault, PCR vault, and data vault), mailbox SRAM, SoC interface, and peripherals subsystem. The Watchdog timer and SoC registers run on the gated RDC clock. The RV core implements its own clock gating mechanism. Halting the core automatically turns off its clock.
 
