@@ -5,9 +5,7 @@
 `include "caliptra_prim_assert.sv"
 `include "caliptra_prim_module_name_macros.svh"
 
-module caliptra_prim_generic_rst_mux2 #(
-  parameter bit NoFpgaBufG = 1'b0 // this parameter serves no function in the generic model
-) (
+module caliptra_prim_generic_rst_mux2 (
   input        rst0_i,
   input        rst1_i,
   input        sel_i,
