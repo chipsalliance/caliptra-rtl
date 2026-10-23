@@ -501,13 +501,13 @@ The following registers carry the firmware configuration previously provided thr
 | SS_FW_FEATURE_CFG      | [0]     | STABLE_OWNER_KEY_EN        | Stable Owner Key enable. When set to 1, ROM derives the Stable Owner Root Key from the HEK seed and allows `CM_DERIVE_STABLE_KEY` with `key_type = OwnerKey` when the other availability requirements are met (subsystem mode active and OCP LOCK disabled). Hardware also uses this bit to preserve key vault slot 15 at the ROM to FMC and FMC to RT transitions. |
 | SS_FW_FEATURE_CFG      | [31]    | VENDOR_DEBUG_IMAGES_DIS    | Disable vendor-authorized debug images. |
 
-`FUSE_SOC_MANIFEST_SVN[0..3]` hold minimum SVNs as unsigned integers decoded by the SoC from integrator-defined OTP (not raw one-hot OTP bits):
+The assigned `FUSE_SOC_MANIFEST_SVN` registers hold minimum SVNs as unsigned integers decoded by the SoC from integrator-defined OTP (not raw one-hot OTP bits):
 
 | Register                 | Description |
 | :---------               | :---------  |
 | FUSE_SOC_MANIFEST_SVN[0] | SoC authorization manifest minimum SVN. |
-| FUSE_SOC_MANIFEST_SVN[1] | MCU runtime minimum SVN. |
-| FUSE_SOC_MANIFEST_SVN[2] | Owner SoC authorization manifest minimum SVN. |
+| FUSE_SOC_MANIFEST_SVN[1] | Owner SoC authorization manifest minimum SVN. |
+| FUSE_SOC_MANIFEST_SVN[2] | Not used by Caliptra firmware; available for late-binding features. |
 | FUSE_SOC_MANIFEST_SVN[3] | Not used by Caliptra firmware; available for late-binding features. |
 
 # SoC interface operation
