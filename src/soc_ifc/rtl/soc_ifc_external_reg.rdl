@@ -516,7 +516,7 @@ reg {
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     field {desc = "Repetition count threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src REPCNT_THRESHOLD and REPCNTS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into REPCNTS_THRESHOLD and REPCNT_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; swwel; resetsignal=cptra_pwrgood;} repetition_count[16]=0;
-    field {desc = "Alert threshold. ROM programs it into entropy_src ALERT_THRESHOLD: the number of health test failures that trigger a recoverable alert. If 0, ROM uses its default value."; sw=rw; swwel; resetsignal=cptra_pwrgood;} alert_threshold[16]=0;
+    field {desc = "Alert threshold. ROM programs it into entropy_src ALERT_THRESHOLD: the number of consecutive health test windows with one or more failures at which entropy_src signals a recoverable alert and stops operating. If 0, ROM uses its default value."; sw=rw; swwel; resetsignal=cptra_pwrgood;} alert_threshold[16]=0;
  } CPTRA_iTRNG_ENTROPY_CONFIG_1;
 
 reg {
@@ -551,7 +551,7 @@ reg {
             [br]Caliptra Access: RO
             [br]SOC Access:      RWL-S";
     field {desc = "Repetition count threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src REPCNT_THRESHOLD and REPCNTS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into REPCNTS_THRESHOLD and REPCNT_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; swwel; resetsignal=cptra_pwrgood;} repetition_count[16]=0;
-    field {desc = "Alert threshold. ROM programs it into entropy_src ALERT_THRESHOLD: the number of health test failures that trigger a recoverable alert. If 0, ROM uses its default value."; sw=rw; swwel; resetsignal=cptra_pwrgood;} alert_threshold[16]=0;
+    field {desc = "Alert threshold. ROM programs it into entropy_src ALERT_THRESHOLD: the number of consecutive health test windows with one or more failures at which entropy_src signals a recoverable alert and stops operating. If 0, ROM uses its default value."; sw=rw; swwel; resetsignal=cptra_pwrgood;} alert_threshold[16]=0;
  } CPTRA_iTRNG1_ENTROPY_CONFIG_1;
 
 reg {
