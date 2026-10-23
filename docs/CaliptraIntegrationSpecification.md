@@ -1296,9 +1296,20 @@ Several files contain code that may be specific to an integrator's implementatio
 | [soc_ifc_pkg.sv](../src/soc_ifc/rtl/soc_ifc_pkg.sv)                                    | Define AXI USER default behavior and (if applicable) override values. See [Integration Parameters](#integration-parameters). |
 | [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with a technology-specific clock gater.<br>Modifying this file is not necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_ICG. |
 | [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvclkhdr/rvoclkhdr with a technology-specific clock gater.<br>Modifying this file may not be necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_EC_RV_ICG. |
-| [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvsyncss (and rvsyncss_fpga if the design will be implemented on an FPGA) with a technology-specific sync cell. |
+| [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvsyncss (and rvsyncss_fpga if the design will be implemented on an FPGA) with a technology-specific sync cell. See [Synchronizers and dual-core lockstep](#synchronizers-and-dual-core-lockstep) for where these cells are placed relative to dual-core lockstep. |
 | [caliptra_prim_flop_2sync.sv](../src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with a technology-specific sync cell.                            |
 | [dmi_jtag_to_core_sync.v](../src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v)  | Replace with a technology-specific sync cell. This synchronizer implements edge detection logic using a delayed flip flop on the output domain to produce a pulse output. Integrators must take care to ensure logical equivalence when replacing this logic with custom cells. |
+
+### Synchronizers and dual-core lockstep
+
+The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A shadow core runs a fixed number of cycles behind the main core, and their outputs are compared. Both cores must therefore observe the same input history, shifted only by that fixed delay.
+
+To guarantee this, the asynchronous inputs of the core are synchronized once in [el2_veer_wrapper.sv](../src/riscv_core/veer_el2/rtl/el2_veer_wrapper.sv), before the main/shadow split:
+- `syncro_ff`: `nmi_int`, `timer_int`, `soft_int`, `i_cpu_halt_req`, `i_cpu_run_req`, `mpc_debug_halt_req`, `mpc_debug_run_req`
+- `extint_syncro_ff`: `extintsrc_req`
+- `rstl_syncff`: the core reset `rst_l`, as sampled by the debug module (`dmstatus`)
+
+Both cores consume the synchronized signals. No synchronizer cell remains inside the cores, so lockstep places no additional requirement on the replacement sync cell or its simulation model.
 
 ## Synthesis Constraints
 
