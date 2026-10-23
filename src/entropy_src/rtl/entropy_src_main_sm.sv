@@ -14,6 +14,9 @@ module entropy_src_main_sm
   input logic                   clk_i,
   input logic                   rst_ni,
 
+  // Zeroize: drop the current operation and return to Idle in any state
+  input logic                   zeroize_i,
+
   input logic                   enable_i,
   input logic                   fw_ov_ent_insert_i,
   input logic                   fw_ov_sha3_start_i,
@@ -281,6 +284,22 @@ module entropy_src_main_sm
     endcase
     if (local_escalate_i) begin
       state_d = Error;
+    end
+
+    // Zeroize has the highest priority.
+    // Drops the current operation and returns to Idle, also from the Error state. The FSM only
+    // returns to the Error state if the local escalation is still asserted.
+    if (zeroize_i) begin
+      state_d = Idle;
+
+      alert_cntr_clr_ok_o = 1'b0;
+      main_stage_push_o   = 1'b0;
+      bypass_stage_pop_o  = 1'b0;
+      boot_phase_done_o   = 1'b0;
+      sha3_start_o        = 1'b0;
+      sha3_process_o      = 1'b0;
+      sha3_done_o         = caliptra_prim_mubi_pkg::MuBi4False;
+      main_sm_alert_o     = 1'b0;
     end
   end
 

@@ -7853,6 +7853,11 @@
 `define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                             (0)
 `define ENTROPY_SRC_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                            (32'h1ff)
 `endif
+`ifndef ENTROPY_SRC_REG_ENTROPY_SRC_CTRL
+`define ENTROPY_SRC_REG_ENTROPY_SRC_CTRL                                                            (32'hd4)
+`define ENTROPY_SRC_REG_ENTROPY_SRC_CTRL_ZEROIZE_LOW                                                (0)
+`define ENTROPY_SRC_REG_ENTROPY_SRC_CTRL_ZEROIZE_MASK                                               (32'h1)
+`endif
 `ifndef ENTROPY_SRC1_REG_INTERRUPT_STATE
 `define ENTROPY_SRC1_REG_INTERRUPT_STATE                                                            (32'h0)
 `define ENTROPY_SRC1_REG_INTERRUPT_STATE_ES_ENTROPY_VALID_LOW                                       (0)
@@ -8225,6 +8230,11 @@
 `define ENTROPY_SRC1_REG_MAIN_SM_STATE                                                              (32'hd0)
 `define ENTROPY_SRC1_REG_MAIN_SM_STATE_MAIN_SM_STATE_LOW                                            (0)
 `define ENTROPY_SRC1_REG_MAIN_SM_STATE_MAIN_SM_STATE_MASK                                           (32'h1ff)
+`endif
+`ifndef ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL
+`define ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL                                                           (32'hd4)
+`define ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL_ZEROIZE_LOW                                               (0)
+`define ENTROPY_SRC1_REG_ENTROPY_SRC_CTRL_ZEROIZE_MASK                                              (32'h1)
 `endif
 `ifndef ENTROPY_COMBINER_REG_COMBINER_NAME_0
 `define ENTROPY_COMBINER_REG_COMBINER_NAME_0                                                        (32'h0)
