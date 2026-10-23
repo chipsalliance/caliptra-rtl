@@ -10,9 +10,7 @@
 
 `include "caliptra_prim_module_name_macros.svh"
 
-module caliptra_prim_rst_mux2 #(
-  parameter bit NoFpgaBufG = 1'b0
-) (
+module caliptra_prim_rst_mux2 (
   input        rst0_i,
   input        rst1_i,
   input        sel_i,
@@ -20,9 +18,7 @@ module caliptra_prim_rst_mux2 #(
 );
 
 if (1) begin : gen_generic
-  `CALIPTRA_PRIM_MODULE_NAME(rst_mux2) #(
-    .NoFpgaBufG(NoFpgaBufG)
-  ) u_impl_generic (
+  `CALIPTRA_PRIM_MODULE_NAME(rst_mux2) u_impl_generic (
     .*
   );
 end
