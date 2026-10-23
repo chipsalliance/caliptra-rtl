@@ -844,6 +844,9 @@ always_comb begin
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value | ~soc_ifc_reg_req_data.soc_req;
     end
+    for (int i=0; i<12; i++) begin
+        soc_ifc_reg_hwif_in.CPTRA_AUX_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_AUX_PK_HASH_LOCK.lock.value | ~soc_ifc_reg_req_data.soc_req;
+    end
 end
 
 // STASH measurement register bank (RFC 673) - lock / PAUSER / status glue.
@@ -1153,9 +1156,10 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_d
 // CPTRA_CAP_LOCK is a lockable register.
 // "lock" can be written by Caliptra if it is already NOT '1. SoC can only read this bit. The bit gets reset on warm reset
 always_comb soc_ifc_reg_hwif_in.CPTRA_CAP_LOCK.lock.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
-// OWNER PK HASH LOCK is a lockable register.
+// OWNER and AUX PK HASH LOCK are lockable registers.
 // "lock" can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on cold reset
 always_comb soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH_LOCK.lock.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value;
+always_comb soc_ifc_reg_hwif_in.CPTRA_AUX_PK_HASH_LOCK.lock.swwe   = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_AUX_PK_HASH_LOCK.lock.value;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //When TRNG_AXI_USER_LOCK is one only allow valid users to write to TRNG

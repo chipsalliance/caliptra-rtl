@@ -138,6 +138,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_CFG"                         : 2, 
     "CPTRA_RSVD_REG"                        : 2, 
     "CPTRA_OWNER_PK_HASH"                   : 12,
+    "CPTRA_AUX_PK_HASH"                     : 12,
     "FUSE_UDS_SEED"                         : 12,
     "FUSE_FIELD_ENTROPY"                    : 8,
     "FUSE_VENDOR_PK_HASH"                   : 12,
@@ -203,6 +204,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_ITRNG1_ENTROPY_CONFIG_0"                 : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0,                        // 0x18c      Caliptra iTRNG1 Entropy Configuration 0
     "CPTRA_ITRNG1_ENTROPY_CONFIG_1"                 : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1,                        // 0x190      Caliptra iTRNG1 Entropy Configuration 1
     "CPTRA_ITRNG1_ENTROPY_CONFIG_2"                 : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2,                        // 0x194      Caliptra iTRNG1 Entropy Configuration 2
+    "CPTRA_AUX_PK_HASH"                             : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_AUX_PK_HASH_0,                                  // 0x198 [12] Auxiliary PK hash
+    "CPTRA_AUX_PK_HASH_LOCK"                        : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_AUX_PK_HASH_LOCK,                               // 0x1c8      Auxiliary PK hash lock
     "CPTRA_RSVD_REG"                                : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_RSVD_REG_0,                                     // 0x120 [2]  Caliptra Reserved Registers
     "CPTRA_HW_CAPABILITIES"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_HW_CAPABILITIES,                                // 0x128      Caliptra HW Capabilities
     "CPTRA_FW_CAPABILITIES"                         : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_FW_CAPABILITIES,                                // 0x12c      Caliptra FW Capabilities
@@ -210,7 +213,7 @@ package soc_ifc_tb_pkg;
     // 0x134..0x13c
     "CPTRA_OWNER_PK_HASH"                           : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_0,                                // 0x140 [12] - 
     "CPTRA_OWNER_PK_HASH_LOCK"                      : SOCIFC_BASE + `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK,                             // 0x170      - 
-    // 0x174..0x17c, 0x198..0x1fc
+    // 0x174..0x17c, 0x1cc..0x1fc
     "FUSE_UDS_SEED"                                 : SOCIFC_BASE + `SOC_IFC_REG_FUSE_UDS_SEED_0,                                      // 0x200 [12] Unique Device Secret 
     "FUSE_FIELD_ENTROPY"                            : SOCIFC_BASE + `SOC_IFC_REG_FUSE_FIELD_ENTROPY_0,                                 // 0x240 [8]  Field Entropy 
     "FUSE_VENDOR_PK_HASH"                           : SOCIFC_BASE + `SOC_IFC_REG_FUSE_VENDOR_PK_HASH_0,                                // 0x260 [12] - 
@@ -352,7 +355,7 @@ package soc_ifc_tb_pkg;
   extent_t _undefined_addr_ranges [$] = {
     '{addr_min: SOCIFC_BASE + 16'h0134, addr_max: SOCIFC_BASE + 16'h013c},
     '{addr_min: SOCIFC_BASE + 16'h0174, addr_max: SOCIFC_BASE + 16'h017c},
-    '{addr_min: SOCIFC_BASE + 16'h0198, addr_max: SOCIFC_BASE + 16'h01fc},
+    '{addr_min: SOCIFC_BASE + 16'h01cc, addr_max: SOCIFC_BASE + 16'h01fc},
     '{addr_min: SOCIFC_BASE + 16'h0294, addr_max: SOCIFC_BASE + 16'h02b0},
     '{addr_min: SOCIFC_BASE + 16'h03a4, addr_max: SOCIFC_BASE + 16'h03bc},
     '{addr_min: SOCIFC_BASE + 16'h03e0, addr_max: SOCIFC_BASE + 16'h04fc},
@@ -422,6 +425,8 @@ package soc_ifc_tb_pkg;
     "CPTRA_WDT_CFG"                                    : 32'hffff_ffff,                           
     "CPTRA_OWNER_PK_HASH"                              : 32'hffff_ffff, 
     "CPTRA_OWNER_PK_HASH_LOCK"                         : 32'h1, 
+    "CPTRA_AUX_PK_HASH"                                : 32'hffff_ffff,
+    "CPTRA_AUX_PK_HASH_LOCK"                           : 32'h1,
     "CPTRA_ITRNG"                                      : 32'hffff_ffff, // CPTRA_ITRNG_ENTROPY_CONFIG_*, CPTRA_ITRNG1_ENTROPY_CONFIG_*
     "INTERNAL_RV_MTIME"                                : 32'hffff_ffff, // for MTIME_L/H, MTIMECMP_L/H
     "INTR_BRF_ERROR_INTERNAL_INTR_R"                   : 32'hff,        // fields 5:0
@@ -494,6 +499,7 @@ package soc_ifc_tb_pkg;
                                                           `SOC_IFC_REG_CPTRA_WDT_STATUS_T2_TIMEOUT_MASK),
     "CPTRA_FUSE_AXI_USER_LOCK"                           : `SOC_IFC_REG_CPTRA_FUSE_AXI_USER_LOCK_LOCK_MASK, 
     "CPTRA_OWNER_PK_HASH_LOCK"                         : `SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK_LOCK_MASK,
+    "CPTRA_AUX_PK_HASH_LOCK"                           : `SOC_IFC_REG_CPTRA_AUX_PK_HASH_LOCK_LOCK_MASK,
     "CPTRA_CAP_LOCK_MASK"                              : `SOC_IFC_REG_CPTRA_CAP_LOCK_LOCK_MASK, 
     "FUSE_ANTI_ROLLBACK_DISABLE"                       : `SOC_IFC_REG_FUSE_ANTI_ROLLBACK_DISABLE_DIS_MASK, 
     "FUSE_ECC_REVOCATION"                              : `SOC_IFC_REG_FUSE_ECC_REVOCATION_ECC_REVOCATION_MASK,
@@ -898,7 +904,7 @@ package soc_ifc_tb_pkg;
     string tmpstr; 
     string axi_user_suffix; 
     string axi_user_lock_regname; 
-    int axi_user_locked, owner_pk_hash_locked, fuses_locked, lock_mask, iccm_locked, iccm_region_locked, cap_locked;
+    int axi_user_locked, owner_pk_hash_locked, aux_pk_hash_locked, fuses_locked, lock_mask, iccm_locked, iccm_region_locked, cap_locked;
     int shidx;
     string mask_name; 
 
@@ -1029,6 +1035,11 @@ package soc_ifc_tb_pkg;
       else if (str_startswith(addr_name, "CPTRA_OWNER_PK_HASH") & !str_endswith(addr_name, "LOCK")) begin
         owner_pk_hash_locked = _exp_register_data_dict["CPTRA_OWNER_PK_HASH_LOCK"];
         exp_data = owner_pk_hash_locked ? curr_data : (axi_indata | ahb_rodata); // all bits are ahb-RO
+      end
+
+      else if (str_startswith(addr_name, "CPTRA_AUX_PK_HASH") & !str_endswith(addr_name, "LOCK")) begin
+        aux_pk_hash_locked = _exp_register_data_dict["CPTRA_AUX_PK_HASH_LOCK"];
+        exp_data = aux_pk_hash_locked ? curr_data : (axi_indata | ahb_rodata); // all bits are ahb-RO
       end
 
       else if (str_startswith(addr_name, "INTERNAL_OBF_KEY"))            
@@ -1166,6 +1177,11 @@ package soc_ifc_tb_pkg;
             owner_pk_hash_locked = _exp_register_data_dict["CPTRA_OWNER_PK_HASH_LOCK"];
             exp_data = owner_pk_hash_locked ? curr_data : ahb_rodata | (axi_indata & get_mask(addr_name));
             $display("Expected data: 0x%x", exp_data);
+          end
+
+          "CPTRA_AUX_PK_HASH_LOCK": begin
+            aux_pk_hash_locked = _exp_register_data_dict["CPTRA_AUX_PK_HASH_LOCK"];
+            exp_data = aux_pk_hash_locked ? curr_data : ahb_rodata | (axi_indata & get_mask(addr_name));
           end
 
           "CPTRA_CAP_LOCK": begin

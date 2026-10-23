@@ -1747,6 +1747,14 @@ class soc_ifc_predictor #(
                 "CPTRA_OWNER_PK_HASH_LOCK": begin
                     `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
                 end
+                ["CPTRA_AUX_PK_HASH[0]" :"CPTRA_AUX_PK_HASH[9]"],
+                ["CPTRA_AUX_PK_HASH[10]":"CPTRA_AUX_PK_HASH[11]"]: begin
+                    // Handled in callbacks via reg predictor
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
+                "CPTRA_AUX_PK_HASH_LOCK": begin
+                    `uvm_info("PRED_AHB", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+                end
                 ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],
                 ["fuse_uds_seed[10]":"fuse_uds_seed[15]"]: begin
                     if (fuse_update_enabled) begin
@@ -3070,6 +3078,14 @@ class soc_ifc_predictor #(
                 `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             "CPTRA_OWNER_PK_HASH_LOCK": begin
+                `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            ["CPTRA_AUX_PK_HASH[0]" :"CPTRA_AUX_PK_HASH[9]"],
+            ["CPTRA_AUX_PK_HASH[10]":"CPTRA_AUX_PK_HASH[11]"]: begin
+                // Handled in callbacks via reg predictor
+                `uvm_info("PRED_AXI", $sformatf("Handling access to fuse/key/secret register %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
+            end
+            "CPTRA_AUX_PK_HASH_LOCK": begin
                 `uvm_info("PRED_AXI", $sformatf("Handling access to %s. Nothing to do.", axs_reg.get_name()), UVM_DEBUG)
             end
             ["fuse_uds_seed[0]" :"fuse_uds_seed[9]" ],

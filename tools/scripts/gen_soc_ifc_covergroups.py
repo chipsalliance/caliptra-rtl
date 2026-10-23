@@ -68,6 +68,8 @@ soc_regs_txt = """
     CPTRA_CAP_LOCK
     CPTRA_OWNER_PK_HASH 12
     CPTRA_OWNER_PK_HASH_LOCK
+    CPTRA_AUX_PK_HASH 12
+    CPTRA_AUX_PK_HASH_LOCK
     fuse_uds_seed 16
     fuse_field_entropy 8
     fuse_vendor_pk_hash 12

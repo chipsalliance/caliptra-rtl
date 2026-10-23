@@ -569,6 +569,22 @@ reg {
     field {desc = "Entropy bypass mode. When set to 1, enables bypass mode (es_type) to allow entropy characterization directly without passing through conditioning."; sw=rw; swwel; resetsignal=cptra_pwrgood;} bypass_mode=0;
  } CPTRA_iTRNG1_ENTROPY_CONFIG_2;
 
+reg {
+    name = "Auxiliary PK hash";
+    desc = "Auxiliary PK hash lockable register.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    field {sw = rw; hw = r; swwel; resetsignal = cptra_pwrgood;} hash[32]=0;
+} CPTRA_AUX_PK_HASH[12] @0x198;
+
+reg {
+    name = "Auxiliary PK hash register lock";
+    desc = "Auxiliary PK hash register lock. Locks further writes to Auxiliary PK hash register. Reset only by power cycle.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RW1-S";
+    field {sw=rw; hw=r; swwe; resetsignal=cptra_pwrgood;} lock=0;
+} CPTRA_AUX_PK_HASH_LOCK;
+
 ////////////////////////////////////////////////////////////////
 // STASH measurement register bank (RFC 673)
 // SOC-writable direct register interface for early-boot measurement
