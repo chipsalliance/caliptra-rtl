@@ -15,6 +15,9 @@
 //
 // Implementation derived from https://github.com/lowRISC/opentitan/blob/891c6079b2f19650f2bb6d248c28ea4cfbd746d2/hw/ip/prim/rtl/prim_mubi_pkg.sv#L31
 
+`ifndef EL2_MUBI_PKG_SV
+`define EL2_MUBI_PKG_SV
+
 `include "common_defines.sv"
 `include "lib/el2_assert.sv"
 
@@ -80,3 +83,5 @@ package el2_mubi_pkg;
   endfunction : mubi_and
 
 endpackage
+
+`endif // EL2_MUBI_PKG_SV
