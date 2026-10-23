@@ -1314,6 +1314,7 @@ The following Caliptra generic primitives require replacement with technology-sp
 *   `caliptra_prim_generic_and2`
 *   `caliptra_prim_generic_buf`
 *   `caliptra_prim_generic_clock_mux2`
+*   `caliptra_prim_generic_rst_mux2`
 *   `caliptra_prim_generic_xnor2`
 *   `caliptra_prim_generic_xor2`
 *   `caliptra_prim_generic_flop`
@@ -1356,6 +1357,18 @@ module caliptra_prim_tech_name_buf #(
 
 endmodule : caliptra_prim_tech_name_buf
 ```
+
+### Reset Multiplexor Instantiation
+
+Integrators must map `caliptra_prim_generic_rst_mux2` to a technology-specific library cell that implements a glitchless reset multiplexor. The generic implementation, `caliptra_prim_generic_rst_mux2`, uses combinational AND/OR logic and does not guarantee glitchless behavior after synthesis. Its assertions check that the select signal is known, not that the output is glitchless. A mapped AND/OR implementation can generate an unintended reset pulse when its select signal changes, even when both active-low reset inputs remain deasserted. This can cause a spurious reset when switching between functional and scan resets.
+
+Use the same replacement mechanism described in [Primitive Instantiation](#primitive-instantiation):
+
+1. Provide a technology-specific replacement for `caliptra_prim_generic_rst_mux2`. Preserve the `rst0_i`, `rst1_i`, `sel_i`, and `rst_o` ports and the `NoFpgaBufG` bit parameter, which defaults to `1'b0` and is unused in the generic model. A low `sel_i` must select `rst0_i`; a high `sel_i` must select `rst1_i`. The replacement must explicitly instantiate a library cell qualified for glitchless reset multiplexing, rather than infer a multiplexor from behavioral RTL. Ensure the cell supports reset inputs that can remain static; a glitchless clock multiplexor that requires toggling inputs is not sufficient.
+2. Place the replacement in `${CALIPTRA_PRIM_ROOT}/rtl/${CALIPTRA_PRIM_MODULE_PREFIX}_rst_mux2.sv`, with a matching module name. For example, setting `CALIPTRA_PRIM_MODULE_PREFIX` to `caliptra_prim_tech_name` selects the module `caliptra_prim_tech_name_rst_mux2` in `rtl/caliptra_prim_tech_name_rst_mux2.sv`. Set `CALIPTRA_PRIM_ROOT` and `CALIPTRA_PRIM_MODULE_PREFIX` consistently with the other technology-specific primitive replacements; the `caliptra_prim_rst_mux2` instantiations in Caliptra RTL remain unchanged.
+3. Include the `u__size_only__` tag in the library cell instance name, such as `u__size_only__rst_mux2`, and apply the `size_only` or equivalent constraints described above. Ensure synthesis and PNR preserve the intended glitchless cell rather than replace it with ordinary combinational logic.
+
+Integrators must verify the mapped implementation against the library cell's reset and select timing requirements, including transitions between functional and scan modes. Review the mapped netlist and verify these transitions using gate-level simulation with timing delays. In particular, changing the select signal while both reset inputs are deasserted must not produce an assertion pulse on the reset output. RDC analysis with the select constrained to a constant does not verify glitchless behavior during these transitions.
 
 
 # CDC analysis and constraints
