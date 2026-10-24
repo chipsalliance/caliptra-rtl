@@ -318,24 +318,24 @@ void copy_to_iccm(uint32_t dest, uint32_t *lma_start, uint32_t *lma_end) {
 }
 
 //
-// Read CPTRA_HW_CONFIG and SS_STRAP_GENERIC_3 to determine conditional enables.
+// Read CPTRA_HW_CONFIG and SS_FW_FEATURE_CFG to determine conditional enables.
 // Mirrors the RTL logic in soc_ifc_top.sv:
-//   stable_owner_key_en = SUBSYSTEM_MODE_en & ~OCP_LOCK_MODE_en & SS_STRAP_GENERIC_3[0]
+//   stable_owner_key_en = SUBSYSTEM_MODE_en & ~OCP_LOCK_MODE_en & SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN
 //   ocp_lock_mode_en = OCP_LOCK_MODE_en (only meaningful when SUBSYSTEM_MODE_en)
 //
 void compute_conditional_enables(uint32_t *stable_owner_key_en, uint32_t *ocp_lock_mode_en) {
     uint32_t hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
     uint32_t ss_mode = (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK) != 0;
     uint32_t ocp_lock = (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) != 0;
-    uint32_t strap3 = lsu_read_32(CLP_SOC_IFC_REG_SS_STRAP_GENERIC_3);
-    uint32_t strap3_bit0 = strap3 & 0x1;
+    uint32_t fw_feature_cfg = lsu_read_32(CLP_SOC_IFC_REG_SS_FW_FEATURE_CFG);
+    uint32_t stable_owner_key_cfg = (fw_feature_cfg & SOC_IFC_REG_SS_FW_FEATURE_CFG_STABLE_OWNER_KEY_EN_MASK) != 0;
 
     *ocp_lock_mode_en = ocp_lock;
-    *stable_owner_key_en = ss_mode && !ocp_lock && strap3_bit0;
+    *stable_owner_key_en = ss_mode && !ocp_lock && stable_owner_key_cfg;
 
-    VPRINTF(LOW, "  Conditional enables: ss_mode=%d ocp_lock=%d strap3[0]=%d "
+    VPRINTF(LOW, "  Conditional enables: ss_mode=%d ocp_lock=%d STABLE_OWNER_KEY_EN=%d "
             "=> stable_owner_key_en=%d ocp_lock_mode_en=%d\n",
-            ss_mode, ocp_lock, strap3_bit0, *stable_owner_key_en, *ocp_lock_mode_en);
+            ss_mode, ocp_lock, stable_owner_key_cfg, *stable_owner_key_en, *ocp_lock_mode_en);
 }
 
 //
