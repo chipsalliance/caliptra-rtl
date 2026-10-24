@@ -32,6 +32,10 @@
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
 `include "caliptra_reg_field_defines.svh"
+// Explicit include so el2_mubi_pkg:: resolves regardless of overall file-list
+// compile order (this file uses it directly at line ~2014 for the DCLS
+// mismatch check).
+`include "el2_mubi_pkg.sv"
 
 
 module caliptra_top_tb_services
@@ -2001,6 +2005,24 @@ endgenerate //IV_NO
     end
 `endif // RV_LOCKSTEP_ENABLE
 
+    // Fail the test on any main/shadow core divergence, independent of whether
+    // DCLS detection is enabled (ss_dcls_en) or which mode Caliptra runs in.
+    // Error injection (smoke_test_dcls_inject/_dis) bypasses corruption_detected,
+    // and the comparison is invalid once the core has entered debug mode.
+    logic dcls_mismatch_detected;
+    initial dcls_mismatch_detected = 1'b0;
+`ifdef RV_LOCKSTEP_ENABLE
+    always @(posedge clk) begin
+        if (!dcls_mismatch_detected &&
+            `CPTRA_TOP_PATH.rvtop.lockstep.rst_n &&
+            (`CPTRA_TOP_PATH.rvtop.lockstep.corruption_detected == el2_mubi_pkg::El2MuBiTrue) &&
+            (`CPTRA_TOP_PATH.rvtop.lockstep.dbg_detected        == el2_mubi_pkg::El2MuBiFalse)) begin
+            dcls_mismatch_detected <= 1'b1;
+            $error("TB: unexpected DCLS mismatch between main and shadow core");
+        end
+    end
+`endif // RV_LOCKSTEP_ENABLE
+
     // Shadow storage bit-flip injection on ICCM fmc_start (auto-release after 5 clocks)
     logic [63:0] shadow_flip_cycle;
     initial shadow_flip_cycle = '0;
@@ -2872,6 +2894,11 @@ endgenerate //IV_NO
                 $error("* TESTCASE FAILED");
                 $display(" -- Extending simulation for 100 clock cycles to capture ending waveform");
             end
+        end
+        if (dcls_mismatch_detected && !(|cycleCntKillReq) && !UVM_TB) begin
+            cycleCntKillReq <= cycleCnt;
+            $error("* TESTCASE FAILED");
+            $display(" -- DCLS mismatch: extending simulation for 100 clock cycles to capture ending waveform");
         end
         if (|cycleCntKillReq && (cycleCnt == (cycleCntKillReq + 100))) begin
                 $error("Dumping memory contents at simulation end due to FAILURE");
