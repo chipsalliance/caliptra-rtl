@@ -506,8 +506,8 @@ The assigned `FUSE_SOC_MANIFEST_SVN` registers hold minimum SVNs as unsigned int
 | Register                 | Description |
 | :---------               | :---------  |
 | FUSE_SOC_MANIFEST_SVN[0] | SoC authorization manifest minimum SVN. |
-| FUSE_SOC_MANIFEST_SVN[1] | Owner SoC authorization manifest minimum SVN. |
-| FUSE_SOC_MANIFEST_SVN[2] | Not used by Caliptra firmware; available for late-binding features. |
+| FUSE_SOC_MANIFEST_SVN[1] | MCU runtime minimum SVN. |
+| FUSE_SOC_MANIFEST_SVN[2] | Owner SoC authorization manifest minimum SVN. |
 | FUSE_SOC_MANIFEST_SVN[3] | Not used by Caliptra firmware; available for late-binding features. |
 
 # SoC interface operation
