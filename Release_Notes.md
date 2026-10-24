@@ -14,7 +14,36 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2026/03/19*_
+_*Last Update: 2026/10/06*_
+
+### Rev pre-2.2 (Draft) ###
+
+_*Status: Draft; not a final 2.2 release.*_
+
+#### RTL Enhancements ####
+- VeeR dual-core lockstep (DCLS), ICCM/DCCM address-integrity checks, and DCCM write-readback
+- Shared masked HMAC-SHA-384/512 engine with updated seed, LAST, and readiness interface
+- Key Vault boot-policy enforcement, key-length checks, and firmware-update isolation
+- AES Key Vault key masking and entropy-reseed restrictions
+- Subsystem-mode hardware ICCM SHA-384 measurement and PCR updates
+- Explicit ECC and ML-DSA signature verification-pass status
+- Dual-iTRNG SHA3-384 entropy combiner with KAT controls
+- DMA command limit increased to 2 GiB, with route-specific limits
+
+#### Adams Bridge ####
+- Architectural masking, masked Keccak/SHAKE, and configurable SRAM timing
+- Local storage/pipeline optimizations, butterfly-product reuse, and consumer-fused recombination
+- KV readiness/data isolation, zero-seed handling, and operation-boundary zeroization improvements
+
+#### Bug Fixes ####
+- DMA response tracking and spurious mailbox ECC errors on DMA writes
+- Debug-unlock security-state handling and stale KV write controls after zeroization
+- ML-KEM seed ordering, secret-key decode/compression, and ML-DSA private-key write bounds
+
+#### Verification and Integration ####
+- Expanded crypto KATs, DCLS, KV, entropy, DMA, and reset/error tests and coverage
+- Added reusable DV infrastructure, AHB agent, dvsim/Nix/FuseSoC support, and build/model updates
+- Clarified integration/trademark requirements, AXI USER policy, device-key protection, memory interfaces, and exemption guidance
 
 ### Rev 2.1 ###
 
