@@ -18,6 +18,9 @@
 `include "caliptra_macros.svh"
 `include "caliptra_sva.svh"
 `include "config_defines.svh"
+// Explicit include so el2_mubi_pkg:: resolves regardless of overall file-list
+// compile order (this file uses it directly in the DCLS assertions below).
+`include "el2_mubi_pkg.sv"
 //`include "kv_defines_pkg.sv"
 //`include "doe_defines_pkg.sv"
 `ifndef CPTRA_TB_TOP_NAME

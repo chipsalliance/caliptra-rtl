@@ -13,6 +13,9 @@
 // limitations under the License.
 
 `include "common_defines.sv"
+// Explicit include so el2_mubi_pkg:: resolves regardless of overall file-list
+// compile order (the RV_LOCKSTEP_ENABLE covergroup below uses it directly).
+`include "el2_mubi_pkg.sv"
 `ifndef VERILATOR
 
 interface caliptra_top_cov_if   

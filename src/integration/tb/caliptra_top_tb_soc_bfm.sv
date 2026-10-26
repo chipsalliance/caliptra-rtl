@@ -18,6 +18,9 @@
 `include "caliptra_reg_defines.svh"
 `include "caliptra_reg_field_defines.svh"
 `include "caliptra_macros.svh"
+// Explicit include so el2_mubi_pkg:: resolves regardless of overall file-list
+// compile order (caliptra_top_tb_dcls.svh, `included below, uses it directly).
+`include "el2_mubi_pkg.sv"
 
 module caliptra_top_tb_soc_bfm
 import axi_pkg::*;
