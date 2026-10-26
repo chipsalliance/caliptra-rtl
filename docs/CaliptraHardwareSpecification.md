@@ -3112,7 +3112,7 @@ The Stable Owner Root Key is conditionally derived by ROM when all three conditi
 
 - `SUBSYSTEM_MODE_en` = 1 (Caliptra operating in subsystem mode)
 - `OCP_LOCK_MODE_en` = 0 (OCP Lock feature is not active)
-- `SS_STRAP_GENERIC[3][0]` = 1 (SoC strap enabling the stable owner key feature)
+- `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1 (SoC configuration, written prior to `CPTRA_FUSE_WR_DONE`, enabling the stable owner key feature)
 
 The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared normally.
 
@@ -3126,7 +3126,7 @@ When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at
 
 Only the specific slots that ROM or FMC actually derive (16 and 22) are preserved — not the entire OCP Lock range (16–23). Slots 17–21 and 23 are always cleared.
 
-**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is always cleared even if `SS_STRAP_GENERIC[3][0]` = 1.
+**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is always cleared even if `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1.
 
 #### Error escalation
 

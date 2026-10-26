@@ -28,6 +28,8 @@ logic [31:0] fuse_idevid_cert_attr [0:23];
 logic [31:0] fuse_idevid_manuf_hsm_id [0:3]; 
 logic [31:0] fuse_lms_revocation; 
 logic [31:0] fuse_mldsa_revocation; 
+logic [31:0] itrng_entropy_config [0:2]; 
+logic [31:0] itrng1_entropy_config [0:2]; 
 
 
 `FORLOOP_COMB( 12 ) fuse_uds_seed[j]                  = `REG_HIER_PFX.fuse_uds_seed[j].seed.value;
@@ -41,6 +43,16 @@ logic [31:0] fuse_mldsa_revocation;
 `FORLOOP_COMB( 4 )  fuse_idevid_manuf_hsm_id[j]       = `REG_HIER_PFX.fuse_idevid_manuf_hsm_id[j].hsm_id.value;
   always_comb       fuse_lms_revocation               = `REG_HIER_PFX.fuse_lms_revocation.lms_revocation.value;
   always_comb       fuse_mldsa_revocation             = `REG_HIER_PFX.fuse_mldsa_revocation.mldsa_revocation.value;
+  always_comb       itrng_entropy_config[0]           = {`REG_HIER_PFX.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.value, `REG_HIER_PFX.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.value};
+  always_comb       itrng_entropy_config[1]           = {`REG_HIER_PFX.CPTRA_iTRNG_ENTROPY_CONFIG_1.alert_threshold.value, `REG_HIER_PFX.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.value};
+  always_comb       itrng_entropy_config[2]           = {`REG_HIER_PFX.CPTRA_iTRNG_ENTROPY_CONFIG_2.bypass_mode.value, `REG_HIER_PFX.CPTRA_iTRNG_ENTROPY_CONFIG_2.RSVD.value,
+                                                `REG_HIER_PFX.CPTRA_iTRNG_ENTROPY_CONFIG_2.rng_bit_sel.value, `REG_HIER_PFX.CPTRA_iTRNG_ENTROPY_CONFIG_2.single_bit_mode.value,
+                                                `REG_HIER_PFX.CPTRA_iTRNG_ENTROPY_CONFIG_2.fips_window_size.value};
+  always_comb       itrng1_entropy_config[0]          = {`REG_HIER_PFX.CPTRA_iTRNG1_ENTROPY_CONFIG_0.high_threshold.value, `REG_HIER_PFX.CPTRA_iTRNG1_ENTROPY_CONFIG_0.low_threshold.value};
+  always_comb       itrng1_entropy_config[1]          = {`REG_HIER_PFX.CPTRA_iTRNG1_ENTROPY_CONFIG_1.alert_threshold.value, `REG_HIER_PFX.CPTRA_iTRNG1_ENTROPY_CONFIG_1.repetition_count.value};
+  always_comb       itrng1_entropy_config[2]          = {`REG_HIER_PFX.CPTRA_iTRNG1_ENTROPY_CONFIG_2.bypass_mode.value, `REG_HIER_PFX.CPTRA_iTRNG1_ENTROPY_CONFIG_2.RSVD.value,
+                                                `REG_HIER_PFX.CPTRA_iTRNG1_ENTROPY_CONFIG_2.rng_bit_sel.value, `REG_HIER_PFX.CPTRA_iTRNG1_ENTROPY_CONFIG_2.single_bit_mode.value,
+                                                `REG_HIER_PFX.CPTRA_iTRNG1_ENTROPY_CONFIG_2.fips_window_size.value};
 
 
 //----------------------------------------------------------------
@@ -282,6 +294,12 @@ function dword_t get_fuse_regval(string rname);
       "FUSE_ANTI_ROLLBACK_DISABLE"          :  regval = fuse_anti_rollback_disable; 
       "FUSE_LMS_REVOCATION"                 :  regval = fuse_lms_revocation; 
       "FUSE_MLDSA_REVOCATION"               :  regval = fuse_mldsa_revocation; 
+      "CPTRA_ITRNG_ENTROPY_CONFIG_0"        :  regval = itrng_entropy_config[0];
+      "CPTRA_ITRNG_ENTROPY_CONFIG_1"        :  regval = itrng_entropy_config[1];
+      "CPTRA_ITRNG_ENTROPY_CONFIG_2"        :  regval = itrng_entropy_config[2];
+      "CPTRA_ITRNG1_ENTROPY_CONFIG_0"       :  regval = itrng1_entropy_config[0];
+      "CPTRA_ITRNG1_ENTROPY_CONFIG_1"       :  regval = itrng1_entropy_config[1];
+      "CPTRA_ITRNG1_ENTROPY_CONFIG_2"       :  regval = itrng1_entropy_config[2];
 
       default: begin
         foreach (prefixes[i]) begin

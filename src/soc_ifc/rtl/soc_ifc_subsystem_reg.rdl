@@ -214,6 +214,39 @@ reg {
 } SS_OCP_LOCK_CTRL;
 
 reg {
+    name = "Subsystem OTP Fuse Controller Status Configuration";
+    desc = "Location of the OTP fuse controller STATUS register and of its DAI idle indicator. Used by the Caliptra ROM
+            during UDS and Field Entropy programming.
+            [br]Reset only by power cycle. May be written by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    field {desc="Offset of the OTP fuse controller STATUS register, relative to SS_OTP_FC_BASE_ADDR."; sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} STATUS_OFFSET[15:0] = 16'h0;
+    field {desc="Bit index of the DAI idle indicator within the OTP fuse controller STATUS register."; sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} DAI_IDLE_BIT_NUM[31:16] = 16'h0;
+} SS_OTP_FC_STATUS_CFG @0x550;
+
+reg {
+    name = "Subsystem OTP Fuse Controller Direct Access Command Configuration";
+    desc = "Location of the OTP fuse controller DIRECT_ACCESS_CMD register. Used by the Caliptra ROM during UDS and
+            Field Entropy programming.
+            [br]Reset only by power cycle. May be written by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    field {desc="Offset of the OTP fuse controller DIRECT_ACCESS_CMD register, relative to SS_OTP_FC_BASE_ADDR."; sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} DIRECT_ACCESS_CMD_OFFSET[15:0] = 16'h0;
+} SS_OTP_FC_CMD_CFG;
+
+reg {
+    name = "Subsystem Firmware Feature Configuration";
+    desc = "Platform controls for Caliptra firmware features.
+            [br]Reset only by power cycle. May be written by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    field {desc="Stable Owner Key enable. Effective only when subsystem mode is active and OCP LOCK is disabled. When effective,
+                 ROM derives the Stable Owner Root Key from the HEK seed and key vault slot 15 is not cleared at the ROM to FMC and FMC to RT transitions."; sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} STABLE_OWNER_KEY_EN[0:0] = 1'b0;
+    field {desc="Disable vendor-authorized debug images. When set, Caliptra firmware rejects vendor-authorized debug firmware images
+                 and authorization manifests."; sw=rw; hw=r; swwel; resetsignal=cptra_pwrgood;} VENDOR_DEBUG_IMAGES_DIS[31:31] = 1'b0;
+} SS_FW_FEATURE_CFG;
+
+reg {
     name = "GENERIC STRAP";
     desc = "Straps reserved for late-binding features for survivability.
             [br]Strap that is initialized from Caliptra input port at cptra_rst_b deassertion. May be overwritten by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.

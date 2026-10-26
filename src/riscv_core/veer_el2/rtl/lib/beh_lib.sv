@@ -432,6 +432,64 @@ endmodule
 
 
 
+`ifndef SYNTHESIS
+// Simulation-only first synchronizer stage with a metastability model, used by
+// rvsyncss and rvsyncss_fpga. Enabled with +RV_SYNC_RAND_DELAY: each input
+// transition is randomly captured one cycle late, so the synchronizer latency
+// is 2 or 3 cycles. Each instance draws from its own random state, seeded from
+// its hierarchical path, so otherwise identical instances (e.g. in the main and
+// the shadow core) resolve independently, like real synchronizers. Without the
+// plusarg it behaves like a plain flop.
+module rvsyncss_sim_ff1 #(parameter WIDTH = 1)
+   (
+     input  logic                 clk,
+     input  logic                 rst_l,
+     input  logic [WIDTH-1:0]     din,
+     output logic [WIDTH-1:0]     dout
+     );
+
+   bit                            rand_delay_en;
+   integer                        rng;
+   integer                        r;
+   logic [WIDTH-1:0]              din_q;
+
+   // FNV-1a hash of the instance path
+   function automatic int unsigned path_hash(string s);
+      int unsigned h = 32'h811c9dc5;
+      for (int i = 0; i < s.len(); i++)
+         h = (h ^ s[i]) * 32'h01000193;
+      return h;
+   endfunction
+
+   // $urandom alone is not enough: every module instance starts from the same
+   // default seed (IEEE 1800 18.14), so identical instances would draw identical
+   // sequences. The path hash makes them differ; $urandom ties in +ntb_random_seed.
+   initial begin
+      rand_delay_en = $test$plusargs("RV_SYNC_RAND_DELAY");
+      rng           = path_hash($sformatf("%m")) ^ $urandom;
+   end
+
+   // Plain always (not always_ff): rng is updated in place by $random.
+   always @(posedge clk or negedge rst_l) begin
+      if (rst_l == 0) begin
+         din_q <= '0;
+         dout  <= '0;
+      end else begin
+         din_q <= din;
+         for (int i = 0; i < WIDTH; i++) begin
+            if (rand_delay_en && din[i] != din_q[i]) begin
+               r = $random(rng);
+               dout[i] <= r[16] ? din_q[i] : din[i];
+            end else begin
+               dout[i] <= din[i];
+            end
+         end
+      end
+   end
+
+endmodule // rvsyncss_sim_ff1
+`endif
+
 module rvsyncss #(parameter WIDTH = 251)
    (
      input  logic                 clk,
@@ -442,7 +500,11 @@ module rvsyncss #(parameter WIDTH = 251)
 
    logic [WIDTH-1:0]              din_ff1;
 
+`ifdef SYNTHESIS
    rvdff #(WIDTH) sync_ff1  (.*, .din (din[WIDTH-1:0]),     .dout(din_ff1[WIDTH-1:0]));
+`else
+   rvsyncss_sim_ff1 #(WIDTH) sync_ff1 (.clk(clk), .rst_l(rst_l), .din(din), .dout(din_ff1));
+`endif
    rvdff #(WIDTH) sync_ff2  (.*, .din (din_ff1[WIDTH-1:0]), .dout(dout[WIDTH-1:0]));
 
 endmodule // rvsyncss
@@ -459,7 +521,14 @@ module rvsyncss_fpga #(parameter WIDTH = 251)
 
    logic [WIDTH-1:0]              din_ff1;
 
+`ifdef SYNTHESIS
    rvdff_fpga #(WIDTH) sync_ff1  (.*, .clk(gw_clk), .rawclk(rawclk), .clken(clken), .din (din[WIDTH-1:0]),     .dout(din_ff1[WIDTH-1:0]));
+`elsif RV_FPGA_OPTIMIZE
+   rvdff_fpga #(WIDTH) sync_ff1  (.*, .clk(gw_clk), .rawclk(rawclk), .clken(clken), .din (din[WIDTH-1:0]),     .dout(din_ff1[WIDTH-1:0]));
+`else
+   // ASIC build: rvdff_fpga is a plain flop on gw_clk, so the model can replace it
+   rvsyncss_sim_ff1 #(WIDTH) sync_ff1 (.clk(gw_clk), .rst_l(rst_l), .din(din), .dout(din_ff1));
+`endif
    rvdff_fpga #(WIDTH) sync_ff2  (.*, .clk(gw_clk), .rawclk(rawclk), .clken(clken), .din (din_ff1[WIDTH-1:0]), .dout(dout[WIDTH-1:0]));
 
 endmodule // rvsyncss
