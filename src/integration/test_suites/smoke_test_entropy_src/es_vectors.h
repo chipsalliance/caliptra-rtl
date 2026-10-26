@@ -52,7 +52,7 @@ static const es_test_cfg_t es_configs[ES_NUM_CONFIGS] = {
   },
   { // boot-time mode, single lane
     .name = "boot-time mode, single lane", .fips_mode = 0, .single_lane = 1, .lane = 2, .fips_window = 1024,
-    .repcnt_thresh = 0x0051, .repcnts_thresh = 0xffff, .adaptp_hi_thresh = 0x014a, .adaptp_lo_thresh = 0x0036, .adaptps_thresh = 0xffff,
+    .repcnt_thresh = 0x0051, .repcnts_thresh = 0xffff, .adaptp_hi_thresh = 0x014b, .adaptp_lo_thresh = 0x0035, .adaptps_thresh = 0xffff,
     .skip_seeds = 0, .num_seeds = 1,
     .exp_seeds = {
       {0x7bdcee35, 0xa72369b0, 0x60de4f71, 0x19ab1ff2, 0x64816dba, 0xe24a352a,
@@ -72,7 +72,7 @@ static const es_test_cfg_t es_configs[ES_NUM_CONFIGS] = {
   },
   { // FIPS mode, single lane
     .name = "FIPS mode, single lane", .fips_mode = 1, .single_lane = 1, .lane = 2, .fips_window = 1024,
-    .repcnt_thresh = 0x0051, .repcnts_thresh = 0xffff, .adaptp_hi_thresh = 0x0337, .adaptp_lo_thresh = 0x00c9, .adaptps_thresh = 0xffff,
+    .repcnt_thresh = 0x0051, .repcnts_thresh = 0xffff, .adaptp_hi_thresh = 0x0338, .adaptp_lo_thresh = 0x00c8, .adaptps_thresh = 0xffff,
     .skip_seeds = 1, .num_seeds = 2,
     .exp_seeds = {
       {0x83a7524c, 0xd895c538, 0xd4f62cad, 0x552cbec3, 0x43ed60cf, 0xa53bad54,

@@ -959,16 +959,17 @@ example uses a window size of 2048 samples.
 > Note: The `critbinom` function (critical binomial distribution function) is
 > implemented by most spreadsheet applications.
 
-The test fails if the count of '1's is above the high threshold or below the
-low threshold, so the cutoff value $C$ is converted as follows:
+The test fails if the count of '1's is greater than or equal to the high
+threshold or less than or equal to the low threshold, i.e. if either the '1's
+or the '0's reach the cutoff value $C$:
 
 $C = 1 + critbinom(N, 2^{-H}, 1 - α)$\
 $C = 1 + critbinom(2048, 2^{-0.5}, 1 - 2^{-40})$\
 $C = 1591$
 
-`CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold` =  $C - 1$ = 1590
+`CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold` =  $C$ = 1591
 
-`CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold` =  $N - C + 1$ = 458
+`CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold` =  $N - C$ = 457
 
 ### Adaptive proportion symbol test
 
@@ -1101,6 +1102,11 @@ mode and in bypass mode. The watermark registers of 2.1 are replaced by
   [Adaptive proportion symbol test](#adaptive-proportion-symbol-test).
 * Repetition Count tests: the first sample after enable now counts as one
   (2.1: one too high for a stream starting with zeros).
+* Adaptive Proportion test: fails if the count of '1's is greater than or
+  equal to `ADAPTP_HI_THRESHOLD` or less than or equal to
+  `ADAPTP_LO_THRESHOLD` (2.1: greater than / less than), so the thresholds are
+  $C$ and $N - C$ (2.1: $C - 1$ and $N - C + 1$). An `ADAPTP_LO_THRESHOLD` of 0
+  disables the low check.
 
 # SRAM implementation
 
