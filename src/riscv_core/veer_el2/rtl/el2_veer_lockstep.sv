@@ -1201,12 +1201,13 @@ module el2_veer_lockstep
   //    * `lockstep_err_injection_en_i` drives invalid multibit encoding
   // Scenario II:
   // - Shadow Core is out of reset
+  // - Scan mode was not active since the last reset
   // - `disable_corruption_detection_i` drives invalid multibit encoding
   el2_mubi_t any_corruption, case0, case1;
 
   assign any_corruption = mubi_or(mubi_or(corruption_detected, lockstep_err_injection_en_i), err_injection_invalid);
   assign case0 = mubi_and(mubi_and(mubi_and(any_corruption, ~disable_corruption_detection_i),
                                    ~dbg_detected), ~scan_detected);
-  assign case1 = disable_detection_invalid;
+  assign case1 = mubi_and(disable_detection_invalid, ~scan_detected);
   assign corruption_detected_o = mubi_and(mubi_or(case0, case1), mubi_from_bool(rst_n));
 endmodule : el2_veer_lockstep
