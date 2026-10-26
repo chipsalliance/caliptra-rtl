@@ -244,8 +244,18 @@ end
 
 //protect resets during scan mode
 //utilize warm reset pin to drive reset during scan mode
-assign cptra_noncore_rst_b = scan_mode ? cptra_rst_b : cptra_noncore_rst_b_nq;
-assign cptra_uc_rst_b = scan_mode ? cptra_rst_b : cptra_uc_rst_b_nq;
+caliptra_prim_rst_mux2 cptra_noncore_rst_mux (
+  .rst0_i(cptra_noncore_rst_b_nq),
+  .rst1_i(cptra_rst_b),
+  .sel_i (scan_mode),
+  .rst_o (cptra_noncore_rst_b)
+);
+caliptra_prim_rst_mux2 cptra_uc_rst_mux (
+  .rst0_i(cptra_uc_rst_b_nq),
+  .rst1_i(cptra_rst_b),
+  .sel_i (scan_mode),
+  .rst_o (cptra_uc_rst_b)
+);
 
 //uC reset generation
 always_ff @(posedge clk or negedge cptra_rst_b) begin
@@ -273,7 +283,7 @@ always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
     end
 end
 
-caliptra_2ff_sync #(.WIDTH(1), .RST_VAL('d1)) i_rst_window_sync (.clk(clk), .rst_b(cptra_pwrgood), .din(cptra_rst_window), .dout(cptra_rst_window_sync));
+caliptra_prim_flop_2sync #(.Width(1), .ResetValue(1'd1)) i_rst_window_sync (.clk_i(clk), .rst_ni(cptra_pwrgood), .d_i(cptra_rst_window), .q_o(cptra_rst_window_sync));
 
 //Check for x prop
 `CALIPTRA_ASSERT_KNOWN(ERR_FSM_ARC_X, {arc_BOOT_FUSE_BOOT_DONE, arc_BOOT_DONE_BOOT_FWRST, arc_BOOT_WAIT_BOOT_DONE}, clk, !cptra_rst_b)
