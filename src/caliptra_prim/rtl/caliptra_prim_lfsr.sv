@@ -174,6 +174,9 @@ module caliptra_prim_lfsr #(
        168'h5000000000028000000000000,
        168'h8000000004000000000000000,
        168'h18600000000000000000000000,
+       // 102 bits: taps 102,101,26,25. The previous taps (102,101,36,35) formed a
+       // reducible polynomial, so the LFSR was not maximal-length and some seeds
+       // fell into short cycles. The new taps form a primitive polynomial.
        168'h30000000000000000003000000,
        168'h40200000000000000000000000,
        168'hC0300000000000000000000000,
