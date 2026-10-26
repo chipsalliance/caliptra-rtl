@@ -316,18 +316,20 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG_NO_CP_NONCORE_RST(this.CPTRA_FUSE_VALID_AXI_USER                )
                                                               `REG_NO_CP_NONCORE_RST(this.CPTRA_FUSE_AXI_USER_LOCK                 )
             foreach(this.CPTRA_WDT_CFG[ii])                   `REG_NO_CP_NONCORE_RST(this.CPTRA_WDT_CFG[ii]                        )
-                                                              `REG____CP_NONCORE_RST(this.CPTRA_iTRNG_ENTROPY_CONFIG_0             )
-                                                              `REG____CP_NONCORE_RST(this.CPTRA_iTRNG_ENTROPY_CONFIG_1             )
-                                                              `REG____CP_NONCORE_RST(this.CPTRA_iTRNG_ENTROPY_CONFIG_2             )
-                                                              `REG____CP_NONCORE_RST(this.CPTRA_iTRNG1_ENTROPY_CONFIG_0            )
-                                                              `REG____CP_NONCORE_RST(this.CPTRA_iTRNG1_ENTROPY_CONFIG_1            )
-                                                              `REG____CP_NONCORE_RST(this.CPTRA_iTRNG1_ENTROPY_CONFIG_2            )
+                                                              `REG_NO_CP_NONCORE_RST(this.CPTRA_iTRNG_ENTROPY_CONFIG_0             )
+                                                              `REG_NO_CP_NONCORE_RST(this.CPTRA_iTRNG_ENTROPY_CONFIG_1             )
+                                                              `REG_NO_CP_NONCORE_RST(this.CPTRA_iTRNG_ENTROPY_CONFIG_2             )
+                                                              `REG_NO_CP_NONCORE_RST(this.CPTRA_iTRNG1_ENTROPY_CONFIG_0            )
+                                                              `REG_NO_CP_NONCORE_RST(this.CPTRA_iTRNG1_ENTROPY_CONFIG_1            )
+                                                              `REG_NO_CP_NONCORE_RST(this.CPTRA_iTRNG1_ENTROPY_CONFIG_2            )
             foreach(this.CPTRA_RSVD_REG[ii])                  `REG____CP_NONCORE_RST(this.CPTRA_RSVD_REG[ii]                       )
                                                               `REG____CP_NONCORE_RST(this.CPTRA_HW_CAPABILITIES                    )
                                                               `REG____CP_NONCORE_RST(this.CPTRA_FW_CAPABILITIES                    )
                                                               `REG____CP_NONCORE_RST(this.CPTRA_CAP_LOCK                           )
             foreach(this.CPTRA_OWNER_PK_HASH[ii])             `REG_NO_CP_NONCORE_RST(this.CPTRA_OWNER_PK_HASH[ii]                  )
                                                               `REG_NO_CP_NONCORE_RST(this.CPTRA_OWNER_PK_HASH_LOCK                 )
+            foreach(this.CPTRA_AUX_PK_HASH[ii])             `REG_NO_CP_NONCORE_RST(this.CPTRA_AUX_PK_HASH[ii]                    )
+                                                              `REG_NO_CP_NONCORE_RST(this.CPTRA_AUX_PK_HASH_LOCK                   )
             foreach(this.fuse_uds_seed[ii])                   `REG_NO_CP_NONCORE_RST(this.fuse_uds_seed[ii]                        )
             foreach(this.fuse_field_entropy[ii])              `REG_NO_CP_NONCORE_RST(this.fuse_field_entropy[ii]                   )
             foreach(this.fuse_vendor_pk_hash[ii])             `REG_NO_CP_NONCORE_RST(this.fuse_vendor_pk_hash[ii]                  )
@@ -361,6 +363,9 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG_NO_CP_NONCORE_RST(this.SS_KEY_RELEASE_BASE_ADDR_H                               )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_KEY_RELEASE_SIZE                                      )
                                                               `FLD_NO_CP_NONCORE_RST(this.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS                        )
+                                                              `REG_NO_CP_NONCORE_RST(this.SS_OTP_FC_STATUS_CFG                                     )
+                                                              `REG_NO_CP_NONCORE_RST(this.SS_OTP_FC_CMD_CFG                                        )
+                                                              `REG_NO_CP_NONCORE_RST(this.SS_FW_FEATURE_CFG                                        )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_PROD_DEBUG_UNLOCK_AUTH_PK_HASH_REG_BANK_OFFSET        )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES               )
                                                               `REG_NO_CP_NONCORE_RST(this.SS_DEBUG_INTENT                                          )
@@ -959,6 +964,8 @@ package soc_ifc_reg_model_top_pkg;
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_OWNER_PK_HASH_LOCK_LOCK.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_AUX_PK_HASH_HASH.svh"
+    `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_AUX_PK_HASH_LOCK_LOCK.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_CAPABILITIES_CAP.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_FW_CAPABILITIES_CAP.svh"
     `include "soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_CAP_LOCK_LOCK.svh"
@@ -1121,6 +1128,8 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART        soc_ifc_reg_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH                    soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_OWNER_PK_HASH_LOCK_LOCK               soc_ifc_reg_CPTRA_OWNER_PK_HASH_LOCK_LOCK_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_AUX_PK_HASH_HASH                      soc_ifc_reg_CPTRA_AUX_PK_HASH_HASH_cb;
+        soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_AUX_PK_HASH_LOCK_LOCK                 soc_ifc_reg_CPTRA_AUX_PK_HASH_LOCK_LOCK_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_CAPABILITIES_CAP                   soc_ifc_reg_CPTRA_HW_CAPABILITIES_CAP_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_FW_CAPABILITIES_CAP                   soc_ifc_reg_CPTRA_FW_CAPABILITIES_CAP_cb;
         soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_CAP_LOCK_LOCK                         soc_ifc_reg_CPTRA_CAP_LOCK_LOCK_cb;
@@ -1265,6 +1274,8 @@ package soc_ifc_reg_model_top_pkg;
         soc_ifc_reg_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_cb = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART::type_id::create("soc_ifc_reg_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_cb");
         soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH_cb                 = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH          ::type_id::create("soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH_cb");
         soc_ifc_reg_CPTRA_OWNER_PK_HASH_LOCK_LOCK_cb            = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_OWNER_PK_HASH_LOCK_LOCK     ::type_id::create("soc_ifc_reg_CPTRA_OWNER_PK_HASH_LOCK_LOCK_cb");
+        soc_ifc_reg_CPTRA_AUX_PK_HASH_HASH_cb                   = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_AUX_PK_HASH_HASH            ::type_id::create("soc_ifc_reg_CPTRA_AUX_PK_HASH_HASH_cb");
+        soc_ifc_reg_CPTRA_AUX_PK_HASH_LOCK_LOCK_cb              = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_AUX_PK_HASH_LOCK_LOCK       ::type_id::create("soc_ifc_reg_CPTRA_AUX_PK_HASH_LOCK_LOCK_cb");
         soc_ifc_reg_CPTRA_HW_CAPABILITIES_CAP_cb                = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_HW_CAPABILITIES_CAP         ::type_id::create("soc_ifc_reg_CPTRA_HW_CAPABILITIES_CAP_cb");
         soc_ifc_reg_CPTRA_FW_CAPABILITIES_CAP_cb                = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_FW_CAPABILITIES_CAP         ::type_id::create("soc_ifc_reg_CPTRA_FW_CAPABILITIES_CAP_cb");
         soc_ifc_reg_CPTRA_CAP_LOCK_LOCK_cb                      = soc_ifc_reg_cbs_soc_ifc_reg_CPTRA_CAP_LOCK_LOCK               ::type_id::create("soc_ifc_reg_CPTRA_CAP_LOCK_LOCK_cb");
@@ -1442,6 +1453,8 @@ package soc_ifc_reg_model_top_pkg;
                                                          uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_WDT_TIMER2_CTRL    .timer2_restart, soc_ifc_reg_CPTRA_WDT_TIMER2_CTRL_TIMER2_RESTART_cb );
         foreach (soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH[ii]) uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH[ii].hash            , soc_ifc_reg_CPTRA_OWNER_PK_HASH_HASH_cb);
                                                          uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_OWNER_PK_HASH_LOCK.lock           , soc_ifc_reg_CPTRA_OWNER_PK_HASH_LOCK_LOCK_cb);
+        foreach (soc_ifc_reg_rm.CPTRA_AUX_PK_HASH[ii])   uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_AUX_PK_HASH[ii].hash              , soc_ifc_reg_CPTRA_AUX_PK_HASH_HASH_cb);
+                                                         uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_AUX_PK_HASH_LOCK.lock             , soc_ifc_reg_CPTRA_AUX_PK_HASH_LOCK_LOCK_cb);
                                                          uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_HW_CAPABILITIES.cap               , soc_ifc_reg_CPTRA_HW_CAPABILITIES_CAP_cb);
                                                          uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_FW_CAPABILITIES.cap               , soc_ifc_reg_CPTRA_FW_CAPABILITIES_CAP_cb);
                                                          uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_CAP_LOCK.lock                     , soc_ifc_reg_CPTRA_CAP_LOCK_LOCK_cb);
@@ -1463,6 +1476,24 @@ package soc_ifc_reg_model_top_pkg;
         foreach (soc_ifc_reg_rm.fuse_soc_manifest_svn[ii])          uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_soc_manifest_svn[ii].svn                           , soc_ifc_reg_fuse_cb);
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_soc_manifest_max_svn.svn                           , soc_ifc_reg_fuse_cb);
         foreach (soc_ifc_reg_rm.fuse_hek_seed[ii])                  uvm_reg_field_cb::add(soc_ifc_reg_rm.fuse_hek_seed[ii].seed                                  , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold    , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold   , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_1.alert_threshold  , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_2.fips_window_size , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_2.single_bit_mode  , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_2.rng_bit_sel      , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_2.RSVD             , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG_ENTROPY_CONFIG_2.bypass_mode      , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG1_ENTROPY_CONFIG_0.low_threshold   , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG1_ENTROPY_CONFIG_0.high_threshold  , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG1_ENTROPY_CONFIG_1.repetition_count, soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG1_ENTROPY_CONFIG_1.alert_threshold , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG1_ENTROPY_CONFIG_2.fips_window_size, soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG1_ENTROPY_CONFIG_2.single_bit_mode , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG1_ENTROPY_CONFIG_2.rng_bit_sel     , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG1_ENTROPY_CONFIG_2.RSVD            , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.CPTRA_iTRNG1_ENTROPY_CONFIG_2.bypass_mode     , soc_ifc_reg_fuse_cb); // locked by CPTRA_FUSE_WR_DONE
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_L.addr_l                          , soc_ifc_reg_fuse_cb); //--\
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_CALIPTRA_BASE_ADDR_H.addr_h                          , soc_ifc_reg_fuse_cb); //   \
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_MCI_BASE_ADDR_L.addr_l                               , soc_ifc_reg_fuse_cb); //    \
@@ -1482,6 +1513,11 @@ package soc_ifc_reg_model_top_pkg;
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_NUM_OF_PROD_DEBUG_UNLOCK_AUTH_PK_HASHES.num          , soc_ifc_reg_fuse_cb); //    /
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_CALIPTRA_DMA_AXI_USER.user                           , soc_ifc_reg_fuse_cb); //   /
         foreach (soc_ifc_reg_rm.SS_STRAP_GENERIC[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_STRAP_GENERIC[ii].data                               , soc_ifc_reg_fuse_cb); //--/
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_OTP_FC_STATUS_CFG.STATUS_OFFSET            , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_OTP_FC_STATUS_CFG.DAI_IDLE_BIT_NUM         , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_OTP_FC_CMD_CFG.DIRECT_ACCESS_CMD_OFFSET    , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN         , soc_ifc_reg_fuse_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_FW_FEATURE_CFG.VENDOR_DEBUG_IMAGES_DIS     , soc_ifc_reg_fuse_cb);
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DEBUG_INTENT.debug_intent                            , soc_ifc_reg_fuse_cb); // TODO needs a more sophisticated callback accounting for security states
 //                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ       , soc_ifc_reg_fuse_cb); // TODO these all need better CB for we/swwe behavior
 //                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_DBG_SERVICE_REG_REQ.PROD_DBG_UNLOCK_REQ        , soc_ifc_reg_fuse_cb);

@@ -909,11 +909,11 @@
     endgroup
     covergroup soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1_fld_cg with function sample(
     input bit [16-1:0] repetition_count,
-    input bit [16-1:0] RSVD
+    input bit [16-1:0] alert_threshold
     );
         option.per_instance = 1;
         repetition_count_cp : coverpoint repetition_count;
-        RSVD_cp : coverpoint RSVD;
+        alert_threshold_cp : coverpoint alert_threshold;
 
     endgroup
 
@@ -981,11 +981,11 @@
     endgroup
     covergroup soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1_fld_cg with function sample(
     input bit [16-1:0] repetition_count,
-    input bit [16-1:0] RSVD
+    input bit [16-1:0] alert_threshold
     );
         option.per_instance = 1;
         repetition_count_cp : coverpoint repetition_count;
-        RSVD_cp : coverpoint RSVD;
+        alert_threshold_cp : coverpoint alert_threshold;
 
     endgroup
 
@@ -1130,6 +1130,46 @@
 
     endgroup
     covergroup soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK_fld_cg with function sample(
+    input bit [1-1:0] lock
+    );
+        option.per_instance = 1;
+        lock_cp : coverpoint lock;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__CPTRA_AUX_PK_HASH COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__CPTRA_AUX_PK_HASH_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__CPTRA_AUX_PK_HASH_fld_cg with function sample(
+    input bit [32-1:0] hash
+    );
+        option.per_instance = 1;
+        hash_cp : coverpoint hash;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__CPTRA_AUX_PK_HASH_LOCK COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK_fld_cg with function sample(
     input bit [1-1:0] lock
     );
         option.per_instance = 1;
@@ -1922,6 +1962,70 @@
     );
         option.per_instance = 1;
         LOCK_IN_PROGRESS_cp : coverpoint LOCK_IN_PROGRESS;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_OTP_FC_STATUS_CFG COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_OTP_FC_STATUS_CFG_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_OTP_FC_STATUS_CFG_fld_cg with function sample(
+    input bit [16-1:0] STATUS_OFFSET,
+    input bit [16-1:0] DAI_IDLE_BIT_NUM
+    );
+        option.per_instance = 1;
+        STATUS_OFFSET_cp : coverpoint STATUS_OFFSET;
+        DAI_IDLE_BIT_NUM_cp : coverpoint DAI_IDLE_BIT_NUM;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_OTP_FC_CMD_CFG COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_OTP_FC_CMD_CFG_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_OTP_FC_CMD_CFG_fld_cg with function sample(
+    input bit [16-1:0] DIRECT_ACCESS_CMD_OFFSET
+    );
+        option.per_instance = 1;
+        DIRECT_ACCESS_CMD_OFFSET_cp : coverpoint DIRECT_ACCESS_CMD_OFFSET;
+
+    endgroup
+
+    /*----------------------- SOC_IFC_REG__SS_FW_FEATURE_CFG COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__SS_FW_FEATURE_CFG_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__SS_FW_FEATURE_CFG_fld_cg with function sample(
+    input bit [1-1:0] STABLE_OWNER_KEY_EN,
+    input bit [1-1:0] VENDOR_DEBUG_IMAGES_DIS
+    );
+        option.per_instance = 1;
+        STABLE_OWNER_KEY_EN_cp : coverpoint STABLE_OWNER_KEY_EN;
+        VENDOR_DEBUG_IMAGES_DIS_cp : coverpoint VENDOR_DEBUG_IMAGES_DIS;
 
     endgroup
 

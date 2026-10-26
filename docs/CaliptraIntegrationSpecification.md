@@ -69,8 +69,8 @@ The following table describes integration parameters.
 | USER_EC_RV_ICG              | config_defines.svh   | If added by an integrator, provides the name of the custom clock gating module that is used in the RISC-V core. USER_EC_RV_ICG replaces the clock gating module, TEC_RV_ICG, defined in [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv). This substitution is only performed if integrators also define TECH_SPECIFIC_EC_RV_ICG. |
 | TECH_SPECIFIC_EC_RV_ICG     | config_defines.svh   | Defining this causes the custom, integrator-defined clock gate module (indicated by the USER_EC_RV_ICG macro) to be used in place of the native RISC-V core clock gate module. |
 | CALIPTRA_AXI_DMA_ADDR_WIDTH | config_defines.svh   | Defines the address width for the Caliptra AXI Manager interface, driven by Caliptra's DMA assist block. The address width value assigned to this macro should match the address width that is expected at the integrator's SoC AXI interconnect. |
-| CALIPTRA_PRIM_ROOT          | environment variable | The integrator needs to set this environment variable to the path to technology specific modules for synthesis. Defaults to $CALIPTRA_ROOT/src/caliptra_prim_generic. |
-| CALIPTRA_PRIM_MODULE_PREFIX | environment variable | The integrator needs to set this environment variable to specify the module name prefix for technology specific modules for synthesus. Defaults to 'caliptra_prim_generic'. |
+| CALIPTRA_PRIM_ROOT          | environment variable | The integrator needs to set this environment variable to the path to technology-specific Caliptra and Adams Bridge primitive wrappers for synthesis. Defaults to $CALIPTRA_ROOT/src/caliptra_prim_generic for the generic Caliptra implementation. |
+| CALIPTRA_PRIM_MODULE_PREFIX | environment variable | The integrator needs to set this environment variable to specify the module name prefix for technology-specific Caliptra modules for synthesis. Defaults to 'caliptra_prim_generic'. Adams Bridge's own primitives automatically resolve to this same prefix when compiled as part of Caliptra, so no separate Adams Bridge module name prefix is needed. |
 
 ## Interface
 
@@ -230,10 +230,10 @@ The mux only re-sources these observation-only ports; it does not affect functio
 |  strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset  | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_num_of_prod_debug_unlock_auth_pk_hashes         | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_caliptra_dma_axi_user                           | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | Formerly provided the Caliptra ROM with the OTP fuse controller STATUS register offset and DAI idle bit index. That configuration has moved to the `SS_OTP_FC_STATUS_CFG` register. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
+|  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | Formerly provided the Caliptra ROM with the OTP fuse controller DIRECT_ACCESS_CMD register offset. That configuration has moved to the `SS_OTP_FC_CMD_CFG` register. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
 |  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Formerly provided the Caliptra ROM with entropy source (CSRNG) configuration. That configuration has moved to the `CPTRA_iTRNG_ENTROPY_CONFIG_*` (ES0) and `CPTRA_iTRNG1_ENTROPY_CONFIG_*` (ES1) architectural registers and this strap is **no longer used for entropy-source configuration**. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
-|  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Formerly provided Caliptra firmware feature controls (Stable Owner Key enable, vendor-authorized debug image disable). Those controls have moved to the `SS_FW_FEATURE_CFG` register. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
 |  ss_ocp_lock_en                                           | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC enables OCP LOCK features of Caliptra. Must be tied to a constant value. For example, driving this input from a programmable register or from a package pin is not permitted. |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | Enables unlock of the debug interface in the Manufacturing security state, for Subsystem mode only. |
@@ -315,11 +315,18 @@ configured independently and so the values are software-readable:
 * `CPTRA_iTRNG1_ENTROPY_CONFIG_0/1/2` — secondary entropy source (ES1).
 
 For each source, `..._CONFIG_0` carries the adaptive-proportion low/high
-thresholds, `..._CONFIG_1` carries the repetition-count threshold, and
+thresholds, `..._CONFIG_1` carries the repetition-count and alert thresholds, and
 `..._CONFIG_2` carries the health-test window size, single-bit mode /
 `rng_bit_sel`, and entropy bypass (`es_type`) controls — the same fields
 previously encoded in the strap. Refer to the Caliptra ROM Specification for the
 programming sequence.
+
+These registers follow the same access rules as the fuse registers:
+
+* They are reset only by `cptra_pwrgood`, so their values persist across warm resets.
+* The SoC may write them prior to `CPTRA_FUSE_WR_DONE`; writes are locked once `CPTRA_FUSE_WR_DONE` is set.
+* They are read-only to Caliptra.
+* SoC access is restricted to the fuse AXI USER (see [FUSE AXI USER attribute](#fuse-axi-user-attribute)).
 
 ## Architectural registers and fuses
 
@@ -352,7 +359,7 @@ SoC SHALL not use value 0xFFFFFFFF as a valid AXI user value for any of the belo
 
 #### FUSE AXI USER Programmable register
 
-Caliptra provides 1 programmable register that SoC can set at boot time to limit access to the fuse register set. If the CPTRA_FUSE_AXI_USER_LOCK.LOCK is set to ‘0, then access to the fuse registers by any agent is allowed. If the lock is set to ‘1, only an agent whose AXI USER matches the register CPTRA_FUSE_VALID_AXI_USER.AXI_USER can write to fuse registers. Any access by an unallowed AXI USER will return an AXI error response. CPTRA_FUSE_VALID_AXI_USER registers become valid once the corresponding lock bit CPTRA_FUSE_AXI_USER_LOCK.LOCK is set.
+Caliptra provides 1 programmable register that SoC can set at boot time to limit access to the fuse register set. The fuse register set includes the fuse registers, the subsystem strap and configuration registers in the same address range, and the `CPTRA_iTRNG_ENTROPY_CONFIG_*` / `CPTRA_iTRNG1_ENTROPY_CONFIG_*` registers. If the CPTRA_FUSE_AXI_USER_LOCK.LOCK is set to ‘0, then access to the fuse registers by any agent is allowed. If the lock is set to ‘1, only an agent whose AXI USER matches the register CPTRA_FUSE_VALID_AXI_USER.AXI_USER can write to fuse registers. Any access by an unallowed AXI USER will return an AXI error response. CPTRA_FUSE_VALID_AXI_USER registers become valid once the corresponding lock bit CPTRA_FUSE_AXI_USER_LOCK.LOCK is set.
 
 #### FUSE AXI USER Parameter override
 
@@ -477,10 +484,31 @@ The following table describes the allocation of functionality to strap\_ss\_stra
 
 | N          | Name               | Description                                                                                                                 |
 | :--------- | :---------         | :---------                                                                                                                  |
-| 0          | strap_ss_strap_generic_0           | Provides the Caliptra ROM with a 32-bit pointer that encodes the location of the fuse controller's status register and the bit position of the idle indicator. Upper 16 bits: Bit index of the IDLE_BIT_STATUS within SOC_OTP_CTRL_STATUS. Lower 16 bits: Offset address of SOC_OTP_CTRL_STATUS within the SOC_IFC_REG space, relative to SOC_OTP_CTRL_BASE_ADDR.|
-| 1          | strap_ss_strap_generic_1           | Provides the Caliptra ROM with a 32-bit pointer to the fuse controller’s command register (CMD), enabling ROM-level control or triggering of fuse operations. |
+| 0          | strap_ss_strap_generic_0           | Formerly provided the Caliptra ROM with the location of the fuse controller's status register and the bit position of the DAI idle indicator. That configuration has moved to `SS_OTP_FC_STATUS_CFG` (`STATUS_OFFSET`, `DAI_IDLE_BIT_NUM`). This strap is available as a general-purpose late-binding strap. |
+| 1          | strap_ss_strap_generic_1           | Formerly provided the Caliptra ROM with the offset of the fuse controller's DIRECT_ACCESS_CMD register. That configuration has moved to `SS_OTP_FC_CMD_CFG` (`DIRECT_ACCESS_CMD_OFFSET`). This strap is available as a general-purpose late-binding strap. |
 | 2          | strap_ss_strap_generic_2           | Formerly provided the Caliptra ROM with entropy source (CSRNG) configuration during initialization. That configuration (health-test window size, single-bit mode / `rng_bit_sel`, and entropy bypass `es_type`) has moved to the `CPTRA_iTRNG_ENTROPY_CONFIG_2` (ES0) and `CPTRA_iTRNG1_ENTROPY_CONFIG_2` (ES1) architectural registers, with thresholds/repetition count in the `..._CONFIG_0`/`..._CONFIG_1` registers. This strap is **no longer used for entropy-source configuration** and is available as a general-purpose late-binding strap. Refer to the Caliptra ROM Specification for additional details. |
-| 3          | strap_ss_strap_generic_3           | Provides the Caliptra ROM with Stable Owner Key controls. Bit [0]: Stable Owner Key enable. When set to 1, ROM derives the Stable Owner Root Key from the HEK seed and allows `CM_DERIVE_STABLE_KEY` with `key_type = OwnerKey` when the other availability requirements are met (subsystem mode active and OCP LOCK disabled). When clear, Stable Owner Key derivation is disabled. Bits [31:1]: RESERVED/unused, must be tied to 0. Refer to the Caliptra ROM Specification for additional details. |
+| 3          | strap_ss_strap_generic_3           | Formerly provided Caliptra firmware feature controls. Those controls have moved to `SS_FW_FEATURE_CFG` (`STABLE_OWNER_KEY_EN`, `VENDOR_DEBUG_IMAGES_DIS`). This strap is available as a general-purpose late-binding strap. |
+
+The following registers carry the firmware configuration previously provided through `strap_ss_strap_generic_N`. They have no input ports: they reset to 0 on `cptra_pwrgood`, may be written by the SoC prior to `CPTRA_FUSE_WR_DONE`, are locked once `CPTRA_FUSE_WR_DONE` is set, and are read-only to Caliptra.
+
+*Firmware configuration registers*
+
+| Register               | Bits    | Field                      | Description |
+| :---------             | :------ | :---------                 | :---------  |
+| SS_OTP_FC_STATUS_CFG   | [15:0]  | STATUS_OFFSET              | Offset of the OTP fuse controller STATUS register, relative to `SS_OTP_FC_BASE_ADDR`. |
+| SS_OTP_FC_STATUS_CFG   | [31:16] | DAI_IDLE_BIT_NUM           | Bit index of the DAI idle indicator within the OTP fuse controller STATUS register. |
+| SS_OTP_FC_CMD_CFG      | [15:0]  | DIRECT_ACCESS_CMD_OFFSET   | Offset of the OTP fuse controller DIRECT_ACCESS_CMD register, relative to `SS_OTP_FC_BASE_ADDR`. |
+| SS_FW_FEATURE_CFG      | [0]     | STABLE_OWNER_KEY_EN        | Stable Owner Key enable. When set to 1, ROM derives the Stable Owner Root Key from the HEK seed and allows `CM_DERIVE_STABLE_KEY` with `key_type = OwnerKey` when the other availability requirements are met (subsystem mode active and OCP LOCK disabled). Hardware also uses this bit to preserve key vault slot 15 at the ROM to FMC and FMC to RT transitions. |
+| SS_FW_FEATURE_CFG      | [31]    | VENDOR_DEBUG_IMAGES_DIS    | Disable vendor-authorized debug images. |
+
+The assigned `FUSE_SOC_MANIFEST_SVN` registers hold minimum SVNs as unsigned integers decoded by the SoC from integrator-defined OTP (not raw one-hot OTP bits):
+
+| Register                 | Description |
+| :---------               | :---------  |
+| FUSE_SOC_MANIFEST_SVN[0] | SoC authorization manifest minimum SVN. |
+| FUSE_SOC_MANIFEST_SVN[1] | MCU runtime minimum SVN. |
+| FUSE_SOC_MANIFEST_SVN[2] | Owner SoC authorization manifest minimum SVN. |
+| FUSE_SOC_MANIFEST_SVN[3] | Not used by Caliptra firmware; available for late-binding features. |
 
 # SoC interface operation
 
@@ -760,25 +788,60 @@ configured for FIPS compliance, but rather to ensure that the quality of the
 entropy output is sufficient for ROM operation.
 
 The default self-test parameters are provided to the ROM via the
-`SS_STRAP_GENERIC[2]`, `CPTRA_iTRNG_ENTROPY_CONFIG0`, and
-`CPTRA_iTRNG_ENTROPY_CONFIG1` registers.
+`CPTRA_iTRNG_ENTROPY_CONFIG_0`, `CPTRA_iTRNG_ENTROPY_CONFIG_1`, and
+`CPTRA_iTRNG_ENTROPY_CONFIG_2` registers (`CPTRA_iTRNG1_ENTROPY_CONFIG_*` for
+the secondary entropy source).
+
+> Previous versions of `entropy_src` multiplied the FIPS mode window
+> size (`HEALTH_TEST_WINDOWS.FIPS_WINDOW`) by 4 in single-bit mode
+> (`CONF.RNG_BIT_ENABLE` enabled). This is no longer the case: in FIPS mode
+> and single-bit mode, the window size is now used as is. A window size
+> programmed in `CPTRA_iTRNG_ENTROPY_CONFIG_2.fips_window_size` based on the
+> old behavior now results
+> in a window that is 4 times smaller. For example, a value of 256 that
+> previously resulted in a 1024-bit window now results in a 256-bit window.
+>
+> In multi-channel mode, the FIPS mode window size is unchanged. In boot-time
+> / bypass mode, the window (`HEALTH_TEST_WINDOWS.BYPASS_WINDOW`) is given in
+> bits over all tested lines (previously in symbols), so single-bit mode still
+> tests 4 times as many samples as multi-channel mode.
 
 The ROM configures self tests with the following parameters.
 
 ### Adaptive test
 
-The adaptive self-test thresholds are configured as follows if the high and low
-thresholds provided in the `CPTRA_iTRNG_ENTROPY_CONFIG0` are non-zero.
+The ROM configures the Adaptive Proportion test (`ADAPTP`) in single-bit mode
+and the Adaptive Proportion Symbol test (`ADAPTPS`) in multi-channel mode. The
+test that is not used is left at its reset value, which never fails.
 
-`entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.HIGH_THRESHOLD`\
-`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG0.LOW_THRESHOLD`
+Single-bit mode (`CPTRA_iTRNG_ENTROPY_CONFIG_2.single_bit_mode` = 1), if the
+high and low thresholds provided in `CPTRA_iTRNG_ENTROPY_CONFIG_0` are
+non-zero:
 
-Otherwise, the ROM will use 75% and 25% of the FIPS window size for the default
-high and low thresholds.
+`entropy_src.ADAPTP_HI_THRESHOLD` = `CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold`\
+`entropy_src.ADAPTP_LO_THRESHOLD` = `CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold`\
+`entropy_src.ADAPTPS_THRESHOLD` = 0xFFFF (reset value)
 
-For example, when `W` = 2048 bits:\
-`entropy_src.ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = $3 * (W / 4)$ = 1536 \
-`entropy_src.ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = $W / 4$ = 512
+Otherwise, the ROM will use 75% and 25% of `N` for the default high and low
+thresholds, where `N` is the number of bits over which the count of the
+Adaptive Proportion test is taken (see the Adaptive Proportion test in the
+[hardware specification](CaliptraHardwareSpecification.md#adaptive-proportion-test)).
+In single-bit mode, `N` is equal to the window size configured in
+`CPTRA_iTRNG_ENTROPY_CONFIG_2.fips_window_size`.
+
+`entropy_src.ADAPTP_HI_THRESHOLD` = $3 * (N / 4)$ \
+`entropy_src.ADAPTP_LO_THRESHOLD` = $N / 4$
+
+Multi-channel mode (`CPTRA_iTRNG_ENTROPY_CONFIG_2.single_bit_mode` = 0), if
+the high threshold provided in `CPTRA_iTRNG_ENTROPY_CONFIG_0` is non-zero
+(the low threshold is not used and must be 0):
+
+`entropy_src.ADAPTPS_THRESHOLD` = `CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold`\
+`entropy_src.ADAPTP_HI_THRESHOLD` = 0xFFFF (reset value)\
+`entropy_src.ADAPTP_LO_THRESHOLD` = 0x0000 (reset value)
+
+Otherwise, the ROM uses a default `ADAPTPS_THRESHOLD`. Refer to the Caliptra
+ROM Specification for the default value.
 
 It is strongly recommended to avoid using the default values.
 
@@ -787,16 +850,26 @@ It is strongly recommended to avoid using the default values.
 Caliptra supports two implementations of the repetition count test, one that
 counts repetitions per physical noise source (REPCNT); and, another
 that counts repetitions at the symbol level (REPCNTS). The ROM configures
-the REPCNT version.
+REPCNT in single-bit mode and REPCNTS in multi-channel mode. The test that is
+not used is left at its reset value, which never fails.
 
-The self-test is configured as follows if the `CPTRA_iTRNG_ENTROPY_CONFIG1`
+The self-test is configured as follows if the `CPTRA_iTRNG_ENTROPY_CONFIG_1`
 register is not zero.
 
-`entropy_src.REPCNT_THRESHOLDS.FIPS_THRESH` = `CPTRA_iTRNG_ENTROPY_CONFIG1.REPETITION_COUNT`
+Single-bit mode (`CPTRA_iTRNG_ENTROPY_CONFIG_2.single_bit_mode` = 1):
 
-Otherwise, the ROM will use a default value configuration:
+`entropy_src.REPCNT_THRESHOLD` = `CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count`\
+`entropy_src.REPCNTS_THRESHOLD` = 0xFFFF (reset value)
 
-`entropy_src.REPCNT_THRESHOLDS.FIPS_THRESH` = 41
+Multi-channel mode (`CPTRA_iTRNG_ENTROPY_CONFIG_2.single_bit_mode` = 0):
+
+`entropy_src.REPCNTS_THRESHOLD` = `CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count`\
+`entropy_src.REPCNT_THRESHOLD` = 0xFFFF (reset value)
+
+Otherwise, the ROM will use a default value configuration (refer to the
+Caliptra ROM Specification for the default value in multi-channel mode):
+
+`entropy_src.REPCNT_THRESHOLD` = 41
 
 It is strongly recommended to avoid using the default values.
 
@@ -806,15 +879,55 @@ The thresholds should be tuned to match the entropy estimate of the
 noise source (H), which is calculated by applying a NIST-approved entropy
 estimate calculation against raw entropy extracted from the target silicon.
 
-> Important: It is important to note that the TRNG will discard samples that do
-> not pass any of the health tests. Since there is a compression function
-> requiring 2048 bits of good entropy to produce a 384 bit seed, the ROM may
-> stall if the self-test thresholds are too aggressive or if the values are
-> misconfigured. To avoid boot stall issues, it is strongly recommended to
-> characterize the noise source on target silicon and select reliable test
-> parameters. The ROM only needs to provide sufficient entropy for
-> countermeasures, so FIPS-level checks can be performed later, in a less
-> boot-timing-sensitive stage.
+> Choosing a noise-source model: A single window size (`FIPS_WINDOW`)
+> drives every health test and the conditioner. An integrator therefore needs
+> to select one of the following models:
+>
+> * One 4-bit symbol source: the 4 lines are treated as a single non-binary
+>   noise source, tested with `ADAPTPS` and `REPCNTS` over the window size
+>   defined by NIST SP 800-90B for non-binary noise sources (512 samples).
+> * Single-bit mode: one selected line is treated as a binary noise source,
+>   tested with `ADAPTP` and `REPCNT` over the window size defined by
+>   NIST SP 800-90B for binary noise sources (1024 samples).
+>
+> Treating the 4 lines as independent binary noise sources requires an
+> additional justification, see the recommended configuration in the
+> [hardware specification](CaliptraHardwareSpecification.md#recommended-configuration).
+
+#### Configuring the health tests for the selected model
+
+`entropy_src` knows the operating mode only through `CONF.RNG_BIT_ENABLE`
+(single-bit mode or multi-channel mode). All health tests are always active.
+A test is effectively disabled by leaving its threshold at the reset value,
+which never fails: 0xFFFF for the high and count thresholds, and 0x0 for the
+low thresholds.
+
+* Single-bit mode (`CONF.RNG_BIT_ENABLE` enabled): configure the
+  `REPCNT_THRESHOLD`, `ADAPTP_HI_THRESHOLD` and `ADAPTP_LO_THRESHOLD`, and
+  leave the `REPCNTS_THRESHOLD` and `ADAPTPS_THRESHOLD` at their reset values.
+  Only the selected line is then tested, by the Repetition Count test and the
+  Adaptive Proportion test.
+* Symbol mode (`CONF.RNG_BIT_ENABLE` disabled): configure the
+  `REPCNTS_THRESHOLD` and `ADAPTPS_THRESHOLD`, and leave the
+  `REPCNT_THRESHOLD`, `ADAPTP_HI_THRESHOLD` and `ADAPTP_LO_THRESHOLD` at their
+  reset values, so that the per-line Repetition Count and Adaptive Proportion
+  tests are effectively disabled.
+
+Integrators therefore need to select the window size and configure the health
+test thresholds consistently with the selected operating mode.
+
+> Important: It is important to note that the TRNG only produces a seed after
+> the health tests have passed. The conditioner absorbs the samples of every
+> window, but a 384 bit seed is only produced after a window has passed the
+> health tests (two consecutive windows for the startup seed). If health test
+> failures reach the configured alert threshold, the TRNG stops producing
+> seeds and raises an alert. Therefore, the ROM may stall if the
+> self-test thresholds are too aggressive or if the values are misconfigured.
+> To avoid boot stall issues, it is strongly recommended to characterize
+> the noise source on target silicon and select reliable test parameters.
+> The ROM only needs to provide sufficient entropy for countermeasures,
+> so FIPS-level checks can be performed later, in a less boot-timing-sensitive
+> stage.
 
 The following sections illustrate the self-test parameter configuration. The
 `entropy_src` block provides additional tests, but Caliptra's ROM focuses
@@ -828,24 +941,60 @@ The variable names are as defined in NIST SP 800-90B.
 
 $α = 2^{-40}$ (recommended)\
 $H = 0.5$ (example, implementation specific)\
-$W = 2048$ (example health-test window in bits)
+$N = 2048$ (example, bits over which the adaptive test count is taken, see
+below)
 
 ### Adaptive proportion test
 
 The ROM clears `entropy_src.CONF.THRESHOLD_SCOPE`, so the adaptive proportion
 test scores the RNG lanes individually. The following example treats one lane
-as a binary stream, counting the occurrences of '1's over the selected window.
+as a binary stream, counting the occurrences of '1's over the window. `N` is
+the number of bits over which this count is taken, as defined for the
+Adaptive Proportion test in the
+[hardware specification](CaliptraHardwareSpecification.md#adaptive-proportion-test):
+with `THRESHOLD_SCOPE` cleared, `N` is equal to the window size configured in
+`CPTRA_iTRNG_ENTROPY_CONFIG_2.fips_window_size`. The
+example uses a window size of 2048 samples.
 
 > Note: The `critbinom` function (critical binomial distribution function) is
 > implemented by most spreadsheet applications.
 
-`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(W, 2^{-H}, 1 - α)$\
-`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  $1 + critbinom(2048, 2^{-H}, 1 - 2^{-40})$\
-`CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold` =  1591
+The test fails if the count of '1's is above the high threshold or below the
+low threshold, so the cutoff value $C$ is converted as follows:
 
-`CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  W - `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold`\
-`CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  2048 - `CPTRA_iTRNG_ENTROPY_CONFIG0.high_threshold`\
-`CPTRA_iTRNG_ENTROPY_CONFIG0.low_threshold` =  457
+$C = 1 + critbinom(N, 2^{-H}, 1 - α)$\
+$C = 1 + critbinom(2048, 2^{-0.5}, 1 - 2^{-40})$\
+$C = 1591$
+
+`CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold` =  $C - 1$ = 1590
+
+`CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold` =  $N - C + 1$ = 458
+
+### Adaptive proportion symbol test
+
+This version of `entropy_src` adds the Adaptive Proportion Symbol test
+(`ADAPTPS`). Together with the Repetition Count Symbol test (`REPCNTS`), the
+RTL supports the symbol test requirements of FIPS: both approved
+continuous health tests of NIST SP 800-90B, the Repetition Count test
+(Section 4.4.1) and the Adaptive Proportion test (Section 4.4.2), can be run
+on 4-bit symbols.
+
+`ADAPTPS` is the Adaptive Proportion test of NIST SP 800-90B (Section 4.4.2)
+for non-binary noise sources: in multi-channel mode, the 4
+lines are treated together as a single noise source producing 4-bit symbols.
+The test takes the first symbol of the window and counts how often it occurs
+within the window.
+
+The window size and the cutoff are derived as follows:
+
+* Window size: in multi-channel mode, each sample is a 4-bit symbol, so the
+  window covers window size symbols (see
+  [Test windows](CaliptraHardwareSpecification.md#test-windows)). The window
+  size is set to the window size defined by NIST SP 800-90B for non-binary
+  noise sources.
+* Cutoff: $C = 1 + critbinom(W, 2^{-H}, 1 - α)$, with $W$ = window size and
+  $H$ the min-entropy per 4-bit symbol. The test fails if the count reaches
+  `ADAPTPS_THRESHOLD`, so `entropy_src.ADAPTPS_THRESHOLD` = $C$.
 
 ### Repetition count threshold
 
@@ -863,13 +1012,93 @@ $$
 \end{aligned}
 $$
 
-`CPTRA_iTRNG_ENTROPY_CONFIG1.repetition_count` = `RcThresh` = 81
+`CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count` = `RcThresh` = 81
 
 ### FIPS Compliance
 
 Caliptra 1.x and 2.0 do not make any FIPS conformance claims on the self-tests
 configured by the ROM and executed by the internal TRNG. This is due to the
 test configuration. See previous sections for more details.
+
+The `entropy_src` RTL supports the symbol test requirements of FIPS through
+the Adaptive Proportion Symbol test (`ADAPTPS`) and the Repetition Count
+Symbol test (`REPCNTS`), see
+[Adaptive proportion symbol test](#adaptive-proportion-symbol-test).
+
+## entropy_src register changes between Caliptra 2.1 and 2.2
+
+Caliptra 2.2 updates `entropy_src` to a newer OpenTitan version. This changes
+the `entropy_src` register map.
+
+### Removed registers
+
+The threshold registers of 2.1 had a `FIPS_THRESH` and a `BYPASS_THRESH`
+field. In 2.2, each test has a single threshold register that is used in FIPS
+mode and in bypass mode. The watermark registers of 2.1 are replaced by
+`HT_WATERMARK`, which shows the watermark of the health test selected in
+`HT_WATERMARK_NUM`.
+
+| Register (2.1)          | Replacement in 2.2                         |
+| :---------------------- | :----------------------------------------- |
+| `REPCNT_THRESHOLDS`     | `REPCNT_THRESHOLD`                         |
+| `REPCNTS_THRESHOLDS`    | `REPCNTS_THRESHOLD`                        |
+| `ADAPTP_HI_THRESHOLDS`  | `ADAPTP_HI_THRESHOLD`                      |
+| `ADAPTP_LO_THRESHOLDS`  | `ADAPTP_LO_THRESHOLD`                      |
+| `BUCKET_THRESHOLDS`     | `BUCKET_THRESHOLD`                         |
+| `MARKOV_HI_THRESHOLDS`  | `MARKOV_HI_THRESHOLD`                      |
+| `MARKOV_LO_THRESHOLDS`  | `MARKOV_LO_THRESHOLD`                      |
+| `EXTHT_HI_THRESHOLDS`   | `EXTHT_HI_THRESHOLD`                       |
+| `EXTHT_LO_THRESHOLDS`   | `EXTHT_LO_THRESHOLD`                       |
+| `REPCNT_HI_WATERMARKS`  | `HT_WATERMARK` with `HT_WATERMARK_NUM` = 0 |
+| `REPCNTS_HI_WATERMARKS` | `HT_WATERMARK` with `HT_WATERMARK_NUM` = 1 |
+| `ADAPTP_HI_WATERMARKS`  | `HT_WATERMARK` with `HT_WATERMARK_NUM` = 2 |
+| `ADAPTP_LO_WATERMARKS`  | `HT_WATERMARK` with `HT_WATERMARK_NUM` = 3 |
+| `EXTHT_HI_WATERMARKS`   | `HT_WATERMARK` with `HT_WATERMARK_NUM` = 8 |
+| `EXTHT_LO_WATERMARKS`   | `HT_WATERMARK` with `HT_WATERMARK_NUM` = 9 |
+| `BUCKET_HI_WATERMARKS`  | `HT_WATERMARK` with `HT_WATERMARK_NUM` = 5 |
+| `MARKOV_HI_WATERMARKS`  | `HT_WATERMARK` with `HT_WATERMARK_NUM` = 6 |
+| `MARKOV_LO_WATERMARKS`  | `HT_WATERMARK` with `HT_WATERMARK_NUM` = 7 |
+
+### Added registers
+
+| Register              | Description                                                        |
+| :-------------------- | :----------------------------------------------------------------- |
+| `THRESHOLD_ONEWAY`    | When set to True, the threshold registers can only be tightened.   |
+| `REPCNT_THRESHOLD`    | Repetition Count test threshold                                    |
+| `REPCNTS_THRESHOLD`   | Repetition Count Symbol test threshold                             |
+| `ADAPTP_HI_THRESHOLD` | Adaptive Proportion test high threshold                            |
+| `ADAPTP_LO_THRESHOLD` | Adaptive Proportion test low threshold                             |
+| `ADAPTPS_THRESHOLD`   | Adaptive Proportion Symbol test threshold (new test)               |
+| `BUCKET_THRESHOLD`    | Bucket test threshold                                              |
+| `MARKOV_HI_THRESHOLD` | Markov test high threshold                                         |
+| `MARKOV_LO_THRESHOLD` | Markov test low threshold                                          |
+| `EXTHT_HI_THRESHOLD`  | External health test high threshold                                |
+| `EXTHT_LO_THRESHOLD`  | External health test low threshold                                 |
+| `HT_WATERMARK_NUM`    | Selects the health test whose watermark is shown in `HT_WATERMARK` |
+| `HT_WATERMARK`        | Watermark of the selected health test                              |
+| `ADAPTPS_TOTAL_FAILS` | Total failures of the Adaptive Proportion Symbol test              |
+
+### Changed fields
+
+| Register              | Field                          | 2.1                    | 2.2                                                                                |
+| :-------------------- | :----------------------------- | :--------------------- | :--------------------------------------------------------------------------------- |
+| `ALERT_TEST`          | `REGWEN`                       | -                      | [31], RW0C, reset 1. Once cleared, writes to `ALERT_TEST` are ignored until reset. |
+| `HEALTH_TEST_WINDOWS` | `BYPASS_WINDOW`                | In symbols, reset 0x60 | In bits over all tested lines, reset 0x180                                         |
+| `ALERT_FAIL_COUNTS`   | `ADAPTPS_FAIL_COUNT`           | -                      | [19:16]                                                                            |
+| `RECOV_ALERT_STS`     | `THRESHOLD_ONEWAY_FIELD_ALERT` | -                      | [4]                                                                                |
+
+
+### Behavioral changes
+
+* Thresholds: one threshold per test is used in FIPS mode and in bypass mode.
+  The thresholds have to be set for the window of the mode that is used.
+* Threshold one-way behavior: in 2.1, the thresholds could only be tightened.
+  In 2.2, this is only the case once `THRESHOLD_ONEWAY` is set.
+* `FIPS_WINDOW` in single-bit mode: in 2.1, the window size was multiplied by
+  4 in single-bit mode. In 2.2, it is used as is (see the note at the
+  beginning of this chapter).
+* Adaptive Proportion Symbol test: new test (`ADAPTPS`), see
+  [Adaptive proportion symbol test](#adaptive-proportion-symbol-test).
 
 # SRAM implementation
 
@@ -1095,10 +1324,21 @@ Several files contain code that may be specific to an integrator's implementatio
 | [soc_ifc_pkg.sv](../src/soc_ifc/rtl/soc_ifc_pkg.sv)                                    | Define AXI USER default behavior and (if applicable) override values. See [Integration Parameters](#integration-parameters). |
 | [caliptra_icg.sv](../src/libs/rtl/caliptra_icg.sv)                                     | Replace with a technology-specific clock gater.<br>Modifying this file is not necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_ICG. |
 | [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvclkhdr/rvoclkhdr with a technology-specific clock gater.<br>Modifying this file may not be necessary if integrators override the clock gate module that is used by setting TECH_SPECIFIC_EC_RV_ICG. |
-| [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvsyncss (and rvsyncss_fpga if the design will be implemented on an FPGA) with a technology-specific sync cell. |
+| [beh_lib.sv](../src/riscv_core/veer_el2/rtl/lib/beh_lib.sv)                            | Replace rvsyncss (and rvsyncss_fpga if the design will be implemented on an FPGA) with a technology-specific sync cell. See [Synchronizers and dual-core lockstep](#synchronizers-and-dual-core-lockstep) for where these cells are placed relative to dual-core lockstep. |
 | [caliptra_prim_flop_2sync.sv](../src/caliptra_prim/rtl/caliptra_prim_flop_2sync.sv)    | Replace with a technology-specific sync cell.                            |
 | [caliptra_2ff_sync.sv](../src/libs/rtl/caliptra_2ff_sync.sv)                           | Replace with a technology-specific sync cell.                            |
 | [dmi_jtag_to_core_sync.v](../src/riscv_core/veer_el2/rtl/dmi/dmi_jtag_to_core_sync.v)  | Replace with a technology-specific sync cell. This synchronizer implements edge detection logic using a delayed flip flop on the output domain to produce a pulse output. Integrators must take care to ensure logical equivalence when replacing this logic with custom cells. |
+
+### Synchronizers and dual-core lockstep
+
+The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A shadow core runs a fixed number of cycles behind the main core, and their outputs are compared. Both cores must therefore observe the same input history, shifted only by that fixed delay.
+
+To guarantee this, the asynchronous inputs of the core are synchronized once in [el2_veer_wrapper.sv](../src/riscv_core/veer_el2/rtl/el2_veer_wrapper.sv), before the main/shadow split:
+- `syncro_ff`: `nmi_int`, `timer_int`, `soft_int`, `i_cpu_halt_req`, `i_cpu_run_req`, `mpc_debug_halt_req`, `mpc_debug_run_req`
+- `extint_syncro_ff`: `extintsrc_req`
+- `rstl_syncff`: the core reset `rst_l`, as sampled by the debug module (`dmstatus`)
+
+Both cores consume the synchronized signals. No synchronizer cell remains inside the cores, so lockstep places no additional requirement on the replacement sync cell or its simulation model.
 
 ## Synthesis Constraints
 
@@ -1108,7 +1348,7 @@ To ensure the integrity of security countermeasures, silicon integrators **must*
 
 Caliptra uses redundant logic to counteract Fault Injection (FI) and Side Channel Analysis (SCA). This logic is built using generic primitive modules, which act as placeholders. Integrators must replace these generic primitives with corresponding technology-specific cells from their standard cell library. This abstraction allows for applying the necessary constraints directly to the technology cells.
 
-The following generic primitives require replacement with technology-specific cells. Ensure the instance names for these replacement cells include the `u__size_only__` tag, as shown in the example below.
+The following Caliptra generic primitives require replacement with technology-specific cells. Ensure the instance names for these replacement cells include the `u__size_only__` tag, as shown in the example below.
 
 *   `caliptra_prim_generic_and2`
 *   `caliptra_prim_generic_buf`
@@ -1118,7 +1358,11 @@ The following generic primitives require replacement with technology-specific ce
 *   `caliptra_prim_generic_flop`
 *   `caliptra_prim_generic_flop_en`
 
-To integrate technology-specific replacements, set the `CALIPTRA_PRIM_MODULE_PREFIX` and `CALIPTRA_PRIM_ROOT` environment variables. For details on how `CALIPTRA_PRIM_MODULE_PREFIX` is used to select between generic and technology-specific modules, see the implementation in [`caliptra_prim_module_name_macros.svh`](../src/caliptra_prim/rtl/caliptra_prim_module_name_macros.svh).
+The Adams Bridge accelerator shares this same primitive swap mechanism automatically: when compiled as part of Caliptra, Adams Bridge's `buf`/`flop`/`flop_en`/`xor2` primitives resolve to the identical `CALIPTRA_PRIM_MODULE_PREFIX`-named files listed above, so the technology-specific replacements above cover Adams Bridge too -- no separate Adams Bridge-specific primitives, path variables, or renaming are required. See [AdamsBridgeIntegrationSpecification.md](../submodules/adams-bridge/docs/AdamsBridgeIntegrationSpecification.md) for how this automatic resolution works.
+
+For details on how `CALIPTRA_PRIM_MODULE_PREFIX` selects between generic and
+technology-specific Caliptra modules, see
+[`caliptra_prim_module_name_macros.svh`](../src/caliptra_prim/rtl/caliptra_prim_module_name_macros.svh).
 
 **Example: Technology-Specific Buffer**
 

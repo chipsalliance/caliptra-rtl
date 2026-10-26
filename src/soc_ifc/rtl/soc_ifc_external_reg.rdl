@@ -497,22 +497,26 @@ reg {
 // Read by the Caliptra ROM during entropy source initialization when
 // CALIPTRA_INTERNAL_TRNG is enabled, including Passive mode. Grouped here at an
 // explicit base to keep all six words contiguous.
+// Fuse-like access: power-good reset, SoC-writable until CPTRA_FUSE_WR_DONE, then
+// locked. SoC writes are restricted to CPTRA_FUSE_VALID_AXI_USER (see soc_ifc_arb).
 reg {
     name = "Caliptra iTRNG Entropy Configuration 0";
     desc = "Adaptive threshold values for entropy source health tests.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    field {sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
-    field {sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
+            [br]Reset only by power cycle. May be written by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    field {desc = "Adaptive Proportion test low threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src ADAPTP_LO_THRESHOLD. If single_bit_mode is 0, it is not used and must be 0 (ADAPTP_LO_THRESHOLD stays at its reset value 0x0000)."; sw=rw; swwel; resetsignal=cptra_pwrgood;} low_threshold[16]=0;
+    field {desc = "Adaptive Proportion test high threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src ADAPTP_HI_THRESHOLD and ADAPTPS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into ADAPTPS_THRESHOLD and ADAPTP_HI_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; swwel; resetsignal=cptra_pwrgood;} high_threshold[16]=0;
  } CPTRA_iTRNG_ENTROPY_CONFIG_0 @0x180;
 
 reg {
     name = "Caliptra iTRNG Entropy Configuration 1";
-    desc = "Repetition count value for entropy source health tests.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    field {sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
-    field {sw=rw; resetsignal=cptra_rst_b;} RSVD[16]=0;
+    desc = "Repetition count and alert threshold values for entropy source health tests.
+            [br]Reset only by power cycle. May be written by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    field {desc = "Repetition count threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src REPCNT_THRESHOLD and REPCNTS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into REPCNTS_THRESHOLD and REPCNT_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; swwel; resetsignal=cptra_pwrgood;} repetition_count[16]=0;
+    field {desc = "Alert threshold. ROM programs it into entropy_src ALERT_THRESHOLD: the number of consecutive health test windows with one or more failures at which entropy_src signals a recoverable alert and stops operating. If 0, ROM uses its default value."; sw=rw; swwel; resetsignal=cptra_pwrgood;} alert_threshold[16]=0;
  } CPTRA_iTRNG_ENTROPY_CONFIG_1;
 
 reg {
@@ -520,31 +524,34 @@ reg {
     desc = "Entropy source (CSRNG) configuration used by the Caliptra ROM during
             initialization when CALIPTRA_INTERNAL_TRNG is enabled, including Passive mode.
             Refer to the Caliptra ROM Specification for additional details.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
-    field {desc = "Entropy source single-bit mode. ROM clears threshold_scope during entropy source initialization. When this bit is set to 1, ROM enables rng_bit_enable."; sw=rw; resetsignal=cptra_rst_b;} single_bit_mode=0;
-    field {desc = "Entropy source single-bit mode rng_bit_sel. Selects which RNG bit stream to process when single-bit mode is enabled."; sw=rw; resetsignal=cptra_rst_b;} rng_bit_sel[2]=0;
-    field {desc = "RESERVED/unused, must be tied to 0."; sw=rw; resetsignal=cptra_rst_b;} RSVD[12]=0;
-    field {desc = "Entropy bypass mode. When set to 1, enables bypass mode (es_type) to allow entropy characterization directly without passing through conditioning."; sw=rw; resetsignal=cptra_rst_b;} bypass_mode=0;
+            [br]Reset only by power cycle. May be written by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. The window is given in symbols: in multi-channel mode each symbol consists of one bit per RNG lane, in single-bit mode a symbol consists of one bit of the selected lane."; sw=rw; swwel; resetsignal=cptra_pwrgood;} fips_window_size[16]=0;
+    field {desc = "Entropy source single-bit mode. ROM clears threshold_scope during entropy source initialization. When this bit is set to 1, ROM enables rng_bit_enable."; sw=rw; swwel; resetsignal=cptra_pwrgood;} single_bit_mode=0;
+    field {desc = "Entropy source single-bit mode rng_bit_sel. Selects which RNG bit stream to process when single-bit mode is enabled."; sw=rw; swwel; resetsignal=cptra_pwrgood;} rng_bit_sel[2]=0;
+    field {desc = "RESERVED/unused, must be tied to 0."; sw=rw; swwel; resetsignal=cptra_pwrgood;} RSVD[12]=0;
+    field {desc = "Entropy bypass mode. When set to 1, enables bypass mode (es_type) to allow entropy characterization directly without passing through conditioning."; sw=rw; swwel; resetsignal=cptra_pwrgood;} bypass_mode=0;
  } CPTRA_iTRNG_ENTROPY_CONFIG_2;
 
 reg {
     name = "Caliptra Secondary iTRNG Entropy Configuration 0";
     desc = "Adaptive threshold values for the secondary entropy source health tests.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    field {sw=rw; resetsignal=cptra_rst_b;} low_threshold[16]=0;
-    field {sw=rw; resetsignal=cptra_rst_b;} high_threshold[16]=0;
+            [br]Reset only by power cycle. May be written by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    field {desc = "Adaptive Proportion test low threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src ADAPTP_LO_THRESHOLD. If single_bit_mode is 0, it is not used and must be 0 (ADAPTP_LO_THRESHOLD stays at its reset value 0x0000)."; sw=rw; swwel; resetsignal=cptra_pwrgood;} low_threshold[16]=0;
+    field {desc = "Adaptive Proportion test high threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src ADAPTP_HI_THRESHOLD and ADAPTPS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into ADAPTPS_THRESHOLD and ADAPTP_HI_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; swwel; resetsignal=cptra_pwrgood;} high_threshold[16]=0;
  } CPTRA_iTRNG1_ENTROPY_CONFIG_0;
 
 reg {
     name = "Caliptra Secondary iTRNG Entropy Configuration 1";
-    desc = "Repetition count value for the secondary entropy source health tests.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    field {sw=rw; resetsignal=cptra_rst_b;} repetition_count[16]=0;
-    field {sw=rw; resetsignal=cptra_rst_b;} RSVD[16]=0;
+    desc = "Repetition count and alert threshold values for the secondary entropy source health tests.
+            [br]Reset only by power cycle. May be written by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    field {desc = "Repetition count threshold. If single_bit_mode (Entropy Configuration 2) is 1, ROM programs it into entropy_src REPCNT_THRESHOLD and REPCNTS_THRESHOLD stays at its reset value 0xFFFF. If single_bit_mode is 0, ROM programs it into REPCNTS_THRESHOLD and REPCNT_THRESHOLD stays at its reset value 0xFFFF."; sw=rw; swwel; resetsignal=cptra_pwrgood;} repetition_count[16]=0;
+    field {desc = "Alert threshold. ROM programs it into entropy_src ALERT_THRESHOLD: the number of consecutive health test windows with one or more failures at which entropy_src signals a recoverable alert and stops operating. If 0, ROM uses its default value."; sw=rw; swwel; resetsignal=cptra_pwrgood;} alert_threshold[16]=0;
  } CPTRA_iTRNG1_ENTROPY_CONFIG_1;
 
 reg {
@@ -552,14 +559,31 @@ reg {
     desc = "Secondary entropy source (CSRNG) configuration used by the Caliptra ROM during
             initialization when CALIPTRA_INTERNAL_TRNG is enabled, including Passive mode.
             Refer to the Caliptra ROM Specification for additional details.
-            [br]Caliptra Access: RW
-            [br]SOC Access:      RW";
-    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. In single-bit mode, the entropy source internally tests four times this many samples on the selected lane."; sw=rw; resetsignal=cptra_rst_b;} fips_window_size[16]=0;
-    field {desc = "Entropy source single-bit mode. ROM clears threshold_scope during entropy source initialization. When this bit is set to 1, ROM enables rng_bit_enable."; sw=rw; resetsignal=cptra_rst_b;} single_bit_mode=0;
-    field {desc = "Entropy source single-bit mode rng_bit_sel. Selects which RNG bit stream to process when single-bit mode is enabled."; sw=rw; resetsignal=cptra_rst_b;} rng_bit_sel[2]=0;
-    field {desc = "RESERVED/unused, must be tied to 0."; sw=rw; resetsignal=cptra_rst_b;} RSVD[12]=0;
-    field {desc = "Entropy bypass mode. When set to 1, enables bypass mode (es_type) to allow entropy characterization directly without passing through conditioning."; sw=rw; resetsignal=cptra_rst_b;} bypass_mode=0;
+            [br]Reset only by power cycle. May be written by SoC prior to CPTRA_FUSE_WR_DONE. Locked by CPTRA_FUSE_WR_DONE.
+            [br]Caliptra Access: RO
+            [br]SOC Access:      RWL-S";
+    field {desc = "Health test window size for FIPS mode. This is the window size for all health tests when entropy is tested in FIPS mode. The window is given in symbols: in multi-channel mode each symbol consists of one bit per RNG lane, in single-bit mode a symbol consists of one bit of the selected lane."; sw=rw; swwel; resetsignal=cptra_pwrgood;} fips_window_size[16]=0;
+    field {desc = "Entropy source single-bit mode. ROM clears threshold_scope during entropy source initialization. When this bit is set to 1, ROM enables rng_bit_enable."; sw=rw; swwel; resetsignal=cptra_pwrgood;} single_bit_mode=0;
+    field {desc = "Entropy source single-bit mode rng_bit_sel. Selects which RNG bit stream to process when single-bit mode is enabled."; sw=rw; swwel; resetsignal=cptra_pwrgood;} rng_bit_sel[2]=0;
+    field {desc = "RESERVED/unused, must be tied to 0."; sw=rw; swwel; resetsignal=cptra_pwrgood;} RSVD[12]=0;
+    field {desc = "Entropy bypass mode. When set to 1, enables bypass mode (es_type) to allow entropy characterization directly without passing through conditioning."; sw=rw; swwel; resetsignal=cptra_pwrgood;} bypass_mode=0;
  } CPTRA_iTRNG1_ENTROPY_CONFIG_2;
+
+reg {
+    name = "Auxiliary PK hash";
+    desc = "Auxiliary PK hash lockable register.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RWL-S";
+    field {sw = rw; hw = r; swwel; resetsignal = cptra_pwrgood;} hash[32]=0;
+} CPTRA_AUX_PK_HASH[12] @0x198;
+
+reg {
+    name = "Auxiliary PK hash register lock";
+    desc = "Auxiliary PK hash register lock. Locks further writes to Auxiliary PK hash register. Reset only by power cycle.
+             [br]Caliptra Access: RO
+             [br]SOC Access:      RW1-S";
+    field {sw=rw; hw=r; swwe; resetsignal=cptra_pwrgood;} lock=0;
+} CPTRA_AUX_PK_HASH_LOCK;
 
 ////////////////////////////////////////////////////////////////
 // STASH measurement register bank (RFC 673)

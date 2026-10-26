@@ -159,7 +159,7 @@ void check_doe_locked(const char *phase);
 // Copy code from LMA storage to an ICCM destination address.
 void copy_to_iccm(uint32_t dest, uint32_t *lma_start, uint32_t *lma_end);
 
-// Read CPTRA_HW_CONFIG and SS_STRAP_GENERIC_3 to compute stable_owner_key_en
+// Read CPTRA_HW_CONFIG and SS_FW_FEATURE_CFG to compute stable_owner_key_en
 // and ocp_lock_mode_en at runtime.
 void compute_conditional_enables(uint32_t *stable_owner_key_en, uint32_t *ocp_lock_mode_en);
 

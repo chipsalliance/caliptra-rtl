@@ -44,10 +44,6 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   output logic [BlkLen-1:0]  ctr_drbg_gen_bits_o,
   output logic               ctr_drbg_gen_fips_o,
 
-   // es_req/ack
-  input logic                ctr_drbg_gen_es_req_i,
-  output logic               ctr_drbg_gen_es_ack_o,
-
   // update interface
   output logic               gen_upd_req_o,
   input logic                upd_gen_rdy_i,
@@ -214,7 +210,6 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   typedef enum logic [StateWidth-1:0] {
     ReqIdle  = 5'b01101,
     ReqSend  = 5'b00011,
-    ESHalt   = 5'b11000,
     ReqError = 5'b10110
 } state_e;
 
@@ -341,15 +336,10 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
     block_encrypt_req_o = 1'b0;
     sfifo_genreq_pop = 1'b0;
     ctr_drbg_gen_sm_err_o = 1'b0;
-    ctr_drbg_gen_es_ack_o = 1'b0;
     unique case (state_q)
       // ReqIdle: increment v this cycle, push in next
       ReqIdle: begin
-        // Prioritize halt requests from entropy_src over disable, as CSRNG would otherwise starve
-        // those requests while it is idle.
-        if (ctr_drbg_gen_es_req_i) begin
-          state_d = ESHalt;
-        end else if (!ctr_drbg_gen_enable_i) begin
+        if (!ctr_drbg_gen_enable_i) begin
           state_d = ReqIdle;
         end else if (sfifo_genreq_not_empty && !sfifo_adstage_full) begin
           v_ctr_load = 1'b1;
@@ -368,12 +358,6 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
           end
         end else begin
           sfifo_genreq_pop = 1'b1;
-          state_d = ReqIdle;
-        end
-      end
-      ESHalt: begin
-        ctr_drbg_gen_es_ack_o = 1'b1;
-        if (!ctr_drbg_gen_es_req_i) begin
           state_d = ReqIdle;
         end
       end
@@ -604,5 +588,5 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
   `CALIPTRA_ASSERT(CsrngDrbgGenErrorStStable_A, state_q == ReqError |=> $stable(state_q))
   // If in error state, the error output must be high.
   `CALIPTRA_ASSERT(CsrngDrbgGenErrorOutput_A,
-          !(state_q inside {ReqIdle, ReqSend, ESHalt}) |-> ctr_drbg_gen_sm_err_o)
+          !(state_q inside {ReqIdle, ReqSend}) |-> ctr_drbg_gen_sm_err_o)
 endmodule

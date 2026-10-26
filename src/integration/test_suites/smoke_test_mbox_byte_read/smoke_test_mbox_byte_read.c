@@ -57,10 +57,10 @@ void main () {
     for (data = CLP_MBOX_SRAM_BASE_ADDR; data < CLP_MBOX_SRAM_END_ADDR; data+=1024) {
         // Data written is the address being written to
         if (((data & 0x3fff) == 0) || (verbosity_g > MEDIUM)) {
-            VPRINTF(MEDIUM, "Writing [0x%x] to addr [0x%x]\n", data, data)
+            VPRINTF(MEDIUM, "Writing [0x%x] to addr [0x%x]\n", data, data);
         }
         lsu_write_32((uintptr_t) data, data);
-        VPRINTF(HIGH, "Writing [0x%x] to addr [0x%x]\n", data + 1020, data + 1020)
+        VPRINTF(HIGH, "Writing [0x%x] to addr [0x%x]\n", data + 1020, data + 1020);
         lsu_write_32((uintptr_t) data + 1020, data + 1020);
     }
 
@@ -68,7 +68,7 @@ void main () {
     read_addr = (uint8_t*) CLP_MBOX_SRAM_BASE_ADDR;
     while(read_addr <= (uint8_t*) CLP_MBOX_SRAM_END_ADDR) {
         if ((((uintptr_t)read_addr & 0x3fff) == 0) || (verbosity_g > MEDIUM)) {
-            VPRINTF(MEDIUM, "Reading from addr [0x%x]\n", read_addr)
+            VPRINTF(MEDIUM, "Reading from addr [0x%x]\n", read_addr);
         }
         // Data should match the address being read from
         if (*read_addr != (uint8_t)(((uintptr_t) read_addr)      )) {

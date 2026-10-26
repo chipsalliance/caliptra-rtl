@@ -161,6 +161,9 @@ requires:
   - axi_dma_coverage
   - aes_coverage
   - doe_coverage
+  - sha3_coverage
+  - entropy_src_coverage
+  - entropy_combiner_coverage
 targets:
   dpi_compile:
     directories:

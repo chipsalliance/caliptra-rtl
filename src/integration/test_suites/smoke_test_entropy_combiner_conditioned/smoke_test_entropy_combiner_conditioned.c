@@ -94,19 +94,19 @@ static const uint32_t kat_empty_digest[12] = {
   0xbb715e99, 0x2a3a98ee, 0x313871c3, 0x47db4a26, 0xe0d16bfb, 0x04f0d558
 };
 
-// ES FIPS-mode config. Same as the raw config (0x2649999) but FIPS_ENABLE=[3:0]
+// ES FIPS-mode config. Same as the raw config (0x0999999) but FIPS_ENABLE=[3:0]
 // MuBi4True (0x6) instead of MuBi4False (0x9): conditioner + FIPS startup path on,
 // RNG_BIT_ENABLE stays MuBi4False (4-lane), THRESHOLD_SCOPE / ENTROPY_DATA_REG
 // stay MuBi4False.
-#define ES_CONF_FIPS          0x2649996
+#define ES_CONF_FIPS          0x0999996
 // ENTROPY_CONTROL: ES_ROUTE=MuBi4False (to CSRNG, not SW), ES_TYPE=MuBi4False
 // (use conditioner, not bypass).
 #define ES_ENTROPY_CONTROL    0x99
 // HEALTH_TEST_WINDOWS: FIPS_WINDOW[15:0]=1024 (0x400) is the conditioned-mode
-// window used here. BYPASS_WINDOW[31:16]=96 is the bypass/boot-mode window
-// (unused in FIPS mode; kept at the required SeedLen/4=96 so the register is
-// well-formed).
-#define ES_HT_WINDOWS         0x00600400
+// window used here. BYPASS_WINDOW[31:16]=384 (0x180) is the bypass/boot-mode
+// window in bits (unused in FIPS mode; kept at the required SeedLen=384 so the
+// register is well-formed).
+#define ES_HT_WINDOWS         0x01800400
 #define ES_MODULE_ENABLE       0x6
 
 // ES1's register map is ES0's base + 0x1000.
@@ -185,9 +185,9 @@ int configure_es_fips(uint32_t es_offset) {
   // thresholds so the deterministic stream never trips them and stalls the ES.
   // REPCNTS (symbol), BUCKET and MARKOV are not implemented/used and are left at
   // their never-fail reset defaults (HI=0xffff, LO=0x0), i.e. disabled.
-  lsu_write_32(CLP_ENTROPY_SRC_REG_REPCNT_THRESHOLDS    + es_offset, 0xFFFFFFFF);
-  lsu_write_32(CLP_ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLDS + es_offset, 0xFFFFFFFF);
-  lsu_write_32(CLP_ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLDS + es_offset, 0x00000000);
+  lsu_write_32(CLP_ENTROPY_SRC_REG_REPCNT_THRESHOLD    + es_offset, 0xFFFF);
+  lsu_write_32(CLP_ENTROPY_SRC_REG_ADAPTP_HI_THRESHOLD + es_offset, 0xFFFF);
+  lsu_write_32(CLP_ENTROPY_SRC_REG_ADAPTP_LO_THRESHOLD + es_offset, 0x0000);
 
   lsu_write_32(CLP_ENTROPY_SRC_REG_MODULE_ENABLE + es_offset, ES_MODULE_ENABLE);
 

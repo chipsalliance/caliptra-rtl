@@ -151,6 +151,13 @@ import caliptra_top_tb_pkg::*; #(
 
     logic [31:0] fw_blob [];
 
+    // SS_FW_FEATURE_CFG value programmed over AXI before CPTRA_FUSE_WR_DONE
+    logic [31:0] ss_fw_feature_cfg;
+
+    // smoke_test_fw_cfg_lock: number of fuse downloads seen (selects per-boot stimulus)
+    int fw_cfg_lock_boot_cnt = 0;
+    bit fw_cfg_lock_pass;
+
     // smoke_test_stash_bank_rst: populate stash only on the first boot; skip
     // on subsequent warm-reset boots so FW can observe cleared lock state.
     bit stash_bank_rst_boot_complete;
@@ -300,14 +307,19 @@ import caliptra_top_tb_pkg::*; #(
             endcase
             $display("STRAP_SS_STRAP_GENERIC_%0d randomized to 0x%08x", i, strap_val);
         end
-        if ($test$plusargs("CLP_SS_STRAP_GENERIC_3_EN")) begin
-            strap_ss_strap_generic_3[0] = 1'b1;
-            $display("STRAP_SS_STRAP_GENERIC_3[0] forced to 1 by +CLP_SS_STRAP_GENERIC_3_EN");
+
+        // Initialize SS_FW_FEATURE_CFG: randomize by default, plusarg overrides STABLE_OWNER_KEY_EN
+        ss_fw_feature_cfg = $urandom() & (`SOC_IFC_REG_SS_FW_FEATURE_CFG_STABLE_OWNER_KEY_EN_MASK |
+                                          `SOC_IFC_REG_SS_FW_FEATURE_CFG_VENDOR_DEBUG_IMAGES_DIS_MASK);
+        if ($test$plusargs("CLP_STABLE_OWNER_KEY_EN")) begin
+            ss_fw_feature_cfg |= `SOC_IFC_REG_SS_FW_FEATURE_CFG_STABLE_OWNER_KEY_EN_MASK;
+            $display("SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN forced to 1 by +CLP_STABLE_OWNER_KEY_EN");
         end
-        else if ($test$plusargs("CLP_SS_STRAP_GENERIC_3_DIS")) begin
-            strap_ss_strap_generic_3[0] = 1'b0;
-            $display("STRAP_SS_STRAP_GENERIC_3[0] forced to 0 by +CLP_SS_STRAP_GENERIC_3_DIS");
+        else if ($test$plusargs("CLP_STABLE_OWNER_KEY_DIS")) begin
+            ss_fw_feature_cfg &= ~`SOC_IFC_REG_SS_FW_FEATURE_CFG_STABLE_OWNER_KEY_EN_MASK;
+            $display("SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN forced to 0 by +CLP_STABLE_OWNER_KEY_DIS");
         end
+        $display("SS_FW_FEATURE_CFG initialized to 0x%08x", ss_fw_feature_cfg);
 
         // Initialize strap_ss_key_release_base_addr based on plusargs
         if ($test$plusargs("STRAP_SS_KEY_RELEASE_BASE_ADDR_RAND_SRAM")) begin
@@ -447,8 +459,37 @@ import caliptra_top_tb_pkg::*; #(
                     $display ("SoC: Writing SOC Stepping ID to fuse bank\n");
                     m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_FUSE_SOC_STEPPING_ID), .data($urandom()), .resp(wresp), .resp_user(buser));
 
+                    if ($test$plusargs("CALIPTRA_TEST_FW_CFG_LOCK")) begin
+                        // smoke_test_fw_cfg_lock controls SS_FW_FEATURE_CFG as part of its patterns
+                        if (fw_cfg_lock_boot_cnt == 0) begin
+                            $display ("[fw_cfg_lock] BFM: programming pattern A before CPTRA_FUSE_WR_DONE\n");
+                            write_fw_cfg_regs(FW_CFG_PATTERN_A);
+                        end
+                        else if (fw_cfg_lock_boot_cnt == 1) begin
+                            $display ("[fw_cfg_lock] BFM: warm boot, attempting pattern B before CPTRA_FUSE_WR_DONE write\n");
+                            write_fw_cfg_regs(FW_CFG_PATTERN_B);
+                        end
+                        else if (fw_cfg_lock_boot_cnt == 2) begin
+                            fw_cfg_lock_reset_and_axi_user_check(fw_cfg_lock_pass);
+                            generic_input_wires = {32'h0, (fw_cfg_lock_pass ? FW_CFG_AXI_USER_CHECK_PASS : FW_CFG_AXI_USER_CHECK_FAIL)};
+                        end
+                    end
+                    else begin
+                        $display ("SoC: Writing SS_FW_FEATURE_CFG\n");
+                        m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_SS_FW_FEATURE_CFG), .data(ss_fw_feature_cfg), .resp(wresp), .resp_user(buser));
+                    end
+
                     $display ("SoC: Writing fuse done register\n");
                     m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FUSE_WR_DONE), .data(32'h00000001), .resp(wresp), .resp_user(buser));
+
+                    if ($test$plusargs("CALIPTRA_TEST_FW_CFG_LOCK")) begin
+                        if (fw_cfg_lock_boot_cnt == 0) begin
+                            $display ("[fw_cfg_lock] BFM: attempting pattern B after CPTRA_FUSE_WR_DONE\n");
+                            write_fw_cfg_regs(FW_CFG_PATTERN_B);
+                            generic_input_wires = {32'h0, FW_CFG_POST_LOCK_WR_DONE};
+                        end
+                        fw_cfg_lock_boot_cnt++;
+                    end
 
                     // Stash measurement register bank smoke-test hook (RFC #673).
                     // Gated by +CALIPTRA_TEST_STASH_BANK plusarg; happens after
@@ -887,6 +928,83 @@ initial begin
             force_ahb_dma_loop_read(ras_test_ctrl.iccm_read_burst.addr, ras_test_ctrl.iccm_read_burst.count);
     end
 end
+
+//==========================================================================
+// Fuse-like firmware configuration register smoke-test driver
+// (smoke_test_fw_cfg_lock, gated by +CALIPTRA_TEST_FW_CFG_LOCK at the call site).
+//
+// SoC-side stimulus per boot (must match smoke_test_fw_cfg_lock.c):
+//   boot 0 (cold): pattern A before CPTRA_FUSE_WR_DONE (must land), pattern B
+//                  after it (must be dropped), then FW_CFG_POST_LOCK_WR_DONE.
+//   boot 1 (warm): pattern B before the CPTRA_FUSE_WR_DONE write (must be
+//                  dropped: CPTRA_FUSE_WR_DONE and the registers survive warm reset).
+//   boot 2 (cold): registers must read back 0; with the fuse AXI_USER locked,
+//                  default-user pattern C must get AXI errors and a valid-user
+//                  pattern D must land. Result reported on generic_input_wires.
+//==========================================================================
+localparam int FW_CFG_NUM_REGS = 9;
+localparam logic [31:0] FW_CFG_REG_ADDR [FW_CFG_NUM_REGS] = '{
+    `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0,
+    `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1,
+    `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2,
+    `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_0,
+    `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1,
+    `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2,
+    `CLP_SOC_IFC_REG_SS_OTP_FC_STATUS_CFG,
+    `CLP_SOC_IFC_REG_SS_OTP_FC_CMD_CFG,
+    `CLP_SOC_IFC_REG_SS_FW_FEATURE_CFG
+};
+
+function automatic logic [31:0] fw_cfg_value(input logic [31:0] pattern, input int idx);
+    return pattern ^ (32'h1111_1111 * (idx + 1));
+endfunction
+
+task automatic write_fw_cfg_regs(input logic [31:0] pattern);
+    axi_resp_e resp;
+    logic [`CALIPTRA_AXI_USER_WIDTH-1:0] ruser;
+    for (int i = 0; i < FW_CFG_NUM_REGS; i++) begin
+        m_axi_bfm_if.axi_write_single(.addr(FW_CFG_REG_ADDR[i]), .data(fw_cfg_value(pattern, i)), .resp(resp), .resp_user(ruser));
+    end
+endtask
+
+task automatic fw_cfg_lock_reset_and_axi_user_check(output bit pass);
+    axi_resp_e resp;
+    logic [`CALIPTRA_AXI_USER_WIDTH-1:0] ruser;
+    logic [`CALIPTRA_AXI_DATA_WIDTH-1:0] rd;
+
+    pass = 1'b1;
+
+    $display("[fw_cfg_lock] BFM: checking reset values after cold reset");
+    for (int i = 0; i < FW_CFG_NUM_REGS; i++) begin
+        m_axi_bfm_if.axi_read_single(.addr(FW_CFG_REG_ADDR[i]), .data(rd), .resp(resp), .resp_user(ruser));
+        if ((resp != AXI_RESP_OKAY) || (rd != '0)) begin
+            $error("[fw_cfg_lock] 0x%08x: expected reset value 0x0 with OKAY, got 0x%08x with %s", FW_CFG_REG_ADDR[i], rd, resp.name());
+            pass = 1'b0;
+        end
+    end
+
+    $display("[fw_cfg_lock] BFM: locking fuse AXI_USER to 0x%08x", FW_CFG_VALID_AXI_USER);
+    m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FUSE_VALID_AXI_USER), .data(FW_CFG_VALID_AXI_USER), .resp(resp), .resp_user(ruser));
+    m_axi_bfm_if.axi_write_single(.addr(`CLP_SOC_IFC_REG_CPTRA_FUSE_AXI_USER_LOCK), .data(32'h1), .resp(resp), .resp_user(ruser));
+
+    for (int i = 0; i < FW_CFG_NUM_REGS; i++) begin
+        m_axi_bfm_if.axi_write_single(.addr(FW_CFG_REG_ADDR[i]), .data(fw_cfg_value(FW_CFG_PATTERN_C, i)), .resp(resp), .resp_user(ruser));
+        if (resp == AXI_RESP_OKAY) begin
+            $error("[fw_cfg_lock] 0x%08x: write with invalid AXI_USER was accepted", FW_CFG_REG_ADDR[i]);
+            pass = 1'b0;
+        end
+        m_axi_bfm_if.axi_read_single(.addr(FW_CFG_REG_ADDR[i]), .data(rd), .resp(resp), .resp_user(ruser));
+        if (resp == AXI_RESP_OKAY) begin
+            $error("[fw_cfg_lock] 0x%08x: read with invalid AXI_USER was accepted", FW_CFG_REG_ADDR[i]);
+            pass = 1'b0;
+        end
+        m_axi_bfm_if.axi_write_single(.addr(FW_CFG_REG_ADDR[i]), .user(FW_CFG_VALID_AXI_USER), .data(fw_cfg_value(FW_CFG_PATTERN_D, i)), .resp(resp), .resp_user(ruser));
+        if (resp != AXI_RESP_OKAY) begin
+            $error("[fw_cfg_lock] 0x%08x: write with valid AXI_USER returned %s", FW_CFG_REG_ADDR[i], resp.name());
+            pass = 1'b0;
+        end
+    end
+endtask
 
 //==========================================================================
 // Stash measurement register bank smoke-test driver (RFC #673)

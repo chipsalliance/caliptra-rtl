@@ -428,7 +428,7 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         if (aes_input.aes_err_inj.sideload_corrupt) {
           lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
           lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
-          VPRINTF(LOW, "ATTEMPT TO FLIP SIDELOAD BIT\n")
+          VPRINTF(LOW, "ATTEMPT TO FLIP SIDELOAD BIT\n");
         }
 
         if( !aes_input.key_o.kv_intf ) {

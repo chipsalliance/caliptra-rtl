@@ -237,6 +237,7 @@ module sha512
       kv_read_data_present <= '0;
       digest_we            <= '0;
       block_reg_lock       <= '0;
+      pcr_hash_extend_ip   <= '0;
     end
     else begin
       ready_reg        <= core_ready;
