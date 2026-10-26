@@ -5,7 +5,7 @@
 `include "caliptra_prim_assert.sv"
 `include "caliptra_prim_module_name_macros.svh"
 
-module faketech_rst_mux2 (
+module faketech_prim_rst_mux2 (
   input        rst0_i,
   input        rst1_i,
   input        sel_i,
@@ -21,4 +21,4 @@ module faketech_rst_mux2 (
   `CALIPTRA_ASSERT(selKnown0, ##1 !$isunknown(sel_i), rst0_i, 0)
   `CALIPTRA_ASSERT(selKnown1, ##1 !$isunknown(sel_i), rst1_i, 0)
 
-endmodule : faketech_rst_mux2
+endmodule : faketech_prim_rst_mux2
