@@ -1099,6 +1099,8 @@ mode and in bypass mode. The watermark registers of 2.1 are replaced by
   beginning of this chapter).
 * Adaptive Proportion Symbol test: new test (`ADAPTPS`), see
   [Adaptive proportion symbol test](#adaptive-proportion-symbol-test).
+* Repetition Count tests: the first sample after enable now counts as one
+  (2.1: one too high for a stream starting with zeros).
 
 # SRAM implementation
 
