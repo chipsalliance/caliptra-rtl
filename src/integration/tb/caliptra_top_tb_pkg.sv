@@ -121,6 +121,17 @@ localparam DMA_ERROR_OBSERVED              = 32'hfadebadd;
 localparam ERROR_NONE_SET                  = 32'hba5eba11; /* default value for a test with no activity observed by TB */
 localparam STASH_POST_CPTRA_LOCK_DONE      = 32'h600d573b; /* BFM finished post-CPTRA_LOCK stash negative writes */
 localparam STASH_BAD_PAUSER_DONE           = 32'h600d573a; /* BFM finished invalid-PAUSER stash bank overwrite attempt */
+localparam FW_CFG_POST_LOCK_WR_DONE        = 32'h600dfc01; /* BFM finished fw cfg register writes after CPTRA_FUSE_WR_DONE */
+localparam FW_CFG_AXI_USER_CHECK_PASS      = 32'h600dfc02; /* BFM fw cfg reset-value and fuse AXI_USER checks passed */
+localparam FW_CFG_AXI_USER_CHECK_FAIL      = 32'hdeadfc03; /* BFM fw cfg reset-value or fuse AXI_USER checks failed */
+
+// smoke_test_fw_cfg_lock: register i of the fw cfg register list is written with
+// (pattern ^ (32'h1111_1111 * (i+1))). Must match smoke_test_fw_cfg_lock.c.
+localparam FW_CFG_PATTERN_A                = 32'ha5a55a5a; /* boot 0: before CPTRA_FUSE_WR_DONE, must land     */
+localparam FW_CFG_PATTERN_B                = 32'h5a5aa5a5; /* boot 0/1: CPTRA_FUSE_WR_DONE set, must be dropped */
+localparam FW_CFG_PATTERN_C                = 32'h0ff0f00f; /* boot 2: invalid fuse AXI_USER, must be rejected  */
+localparam FW_CFG_PATTERN_D                = 32'h3cc3c33c; /* boot 2: valid fuse AXI_USER, must land           */
+localparam FW_CFG_VALID_AXI_USER           = 32'h0000c0de; /* fuse AXI_USER locked in by the boot 2 check      */
 
 // AXI SRAM config
 localparam AXI_SRAM_SIZE_BYTES   = 262144;

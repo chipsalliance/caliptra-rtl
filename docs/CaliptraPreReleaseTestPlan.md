@@ -113,7 +113,7 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 
 | Area | Description | Priority |
 | :--- | :---------- | :------- |
-| Stable owner key preservation | Enable `stable_owner_key_en` strap (SS_STRAP_GENERIC[3] bit 0) and verify slot 15 preserved at enter_fmc (`StableOwnerPreservedAtFmc_C`) | Medium |
+| Stable owner key preservation | Enable `stable_owner_key_en` via SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN and verify slot 15 preserved at enter_fmc (`StableOwnerPreservedAtFmc_C`) | Medium |
 | OCP Lock slot preservation | Enable `ocp_lock_mode_en` straps and verify MDK/HEK slots preserved at enter_fmc (`OcpLockMdkPreservedAtFmc_C`, `OcpLockHekPreservedAtFmc_C`) | Medium |
 | Multi-write arbitration | Trigger >1 crypto engine writing same KV slot simultaneously (`cg_multi_write`) | Low |
 | Counter clears on scan mode | Write to slots 6,7,8, enter scan mode -- all 3 counters return to 0 | Low |

@@ -230,10 +230,10 @@ The mux only re-sources these observation-only ports; it does not affect functio
 |  strap_ss_prod_debug_unlock_auth_pk_hash_reg_bank_offset  | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_num_of_prod_debug_unlock_auth_pk_hashes         | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
 |  strap_ss_caliptra_dma_axi_user                           | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
-|  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_0                                 | 32  | Input Strap | Synchronous to clk | Formerly provided the Caliptra ROM with the OTP fuse controller STATUS register offset and DAI idle bit index. That configuration has moved to the `SS_OTP_FC_STATUS_CFG` register. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
+|  strap_ss_strap_generic_1                                 | 32  | Input Strap | Synchronous to clk | Formerly provided the Caliptra ROM with the OTP fuse controller DIRECT_ACCESS_CMD register offset. That configuration has moved to the `SS_OTP_FC_CMD_CFG` register. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
 |  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Formerly provided the Caliptra ROM with entropy source (CSRNG) configuration. That configuration has moved to the `CPTRA_iTRNG_ENTROPY_CONFIG_*` (ES0) and `CPTRA_iTRNG1_ENTROPY_CONFIG_*` (ES1) architectural registers and this strap is **no longer used for entropy-source configuration**. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
-|  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Used in Subsystem mode only. In Passive mode, integrators shall tie this input to 0.|
+|  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Formerly provided Caliptra firmware feature controls (Stable Owner Key enable, vendor-authorized debug image disable). Those controls have moved to the `SS_FW_FEATURE_CFG` register. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
 |  ss_ocp_lock_en                                           | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC enables OCP LOCK features of Caliptra. Must be tied to a constant value. For example, driving this input from a programmable register or from a package pin is not permitted. |
 |  ss_dcls_en                                               | 1   | Input | Synchronous to clk | Used in Subsystem mode only. Selects whether RISC-V dual-core lockstep (DCLS) corruption detection is active (1 = enabled, 0 = disabled), allowing the subsystem to disable the feature should a late issue be found. The effective state is reflected read-only to firmware and the SoC in `CPTRA_HW_CONFIG.DCLS_en`. In Passive mode, lockstep detection is always disabled; integrators shall tie this input to 0. |
@@ -315,11 +315,18 @@ configured independently and so the values are software-readable:
 * `CPTRA_iTRNG1_ENTROPY_CONFIG_0/1/2` — secondary entropy source (ES1).
 
 For each source, `..._CONFIG_0` carries the adaptive-proportion low/high
-thresholds, `..._CONFIG_1` carries the repetition-count threshold, and
+thresholds, `..._CONFIG_1` carries the repetition-count and alert thresholds, and
 `..._CONFIG_2` carries the health-test window size, single-bit mode /
 `rng_bit_sel`, and entropy bypass (`es_type`) controls — the same fields
 previously encoded in the strap. Refer to the Caliptra ROM Specification for the
 programming sequence.
+
+These registers follow the same access rules as the fuse registers:
+
+* They are reset only by `cptra_pwrgood`, so their values persist across warm resets.
+* The SoC may write them prior to `CPTRA_FUSE_WR_DONE`; writes are locked once `CPTRA_FUSE_WR_DONE` is set.
+* They are read-only to Caliptra.
+* SoC access is restricted to the fuse AXI USER (see [FUSE AXI USER attribute](#fuse-axi-user-attribute)).
 
 ## Architectural registers and fuses
 
@@ -352,7 +359,7 @@ SoC SHALL not use value 0xFFFFFFFF as a valid AXI user value for any of the belo
 
 #### FUSE AXI USER Programmable register
 
-Caliptra provides 1 programmable register that SoC can set at boot time to limit access to the fuse register set. If the CPTRA_FUSE_AXI_USER_LOCK.LOCK is set to ‘0, then access to the fuse registers by any agent is allowed. If the lock is set to ‘1, only an agent whose AXI USER matches the register CPTRA_FUSE_VALID_AXI_USER.AXI_USER can write to fuse registers. Any access by an unallowed AXI USER will return an AXI error response. CPTRA_FUSE_VALID_AXI_USER registers become valid once the corresponding lock bit CPTRA_FUSE_AXI_USER_LOCK.LOCK is set.
+Caliptra provides 1 programmable register that SoC can set at boot time to limit access to the fuse register set. The fuse register set includes the fuse registers, the subsystem strap and configuration registers in the same address range, and the `CPTRA_iTRNG_ENTROPY_CONFIG_*` / `CPTRA_iTRNG1_ENTROPY_CONFIG_*` registers. If the CPTRA_FUSE_AXI_USER_LOCK.LOCK is set to ‘0, then access to the fuse registers by any agent is allowed. If the lock is set to ‘1, only an agent whose AXI USER matches the register CPTRA_FUSE_VALID_AXI_USER.AXI_USER can write to fuse registers. Any access by an unallowed AXI USER will return an AXI error response. CPTRA_FUSE_VALID_AXI_USER registers become valid once the corresponding lock bit CPTRA_FUSE_AXI_USER_LOCK.LOCK is set.
 
 #### FUSE AXI USER Parameter override
 
@@ -477,10 +484,31 @@ The following table describes the allocation of functionality to strap\_ss\_stra
 
 | N          | Name               | Description                                                                                                                 |
 | :--------- | :---------         | :---------                                                                                                                  |
-| 0          | strap_ss_strap_generic_0           | Provides the Caliptra ROM with a 32-bit pointer that encodes the location of the fuse controller's status register and the bit position of the idle indicator. Upper 16 bits: Bit index of the IDLE_BIT_STATUS within SOC_OTP_CTRL_STATUS. Lower 16 bits: Offset address of SOC_OTP_CTRL_STATUS within the SOC_IFC_REG space, relative to SOC_OTP_CTRL_BASE_ADDR.|
-| 1          | strap_ss_strap_generic_1           | Provides the Caliptra ROM with a 32-bit pointer to the fuse controller’s command register (CMD), enabling ROM-level control or triggering of fuse operations. |
+| 0          | strap_ss_strap_generic_0           | Formerly provided the Caliptra ROM with the location of the fuse controller's status register and the bit position of the DAI idle indicator. That configuration has moved to `SS_OTP_FC_STATUS_CFG` (`STATUS_OFFSET`, `DAI_IDLE_BIT_NUM`). This strap is available as a general-purpose late-binding strap. |
+| 1          | strap_ss_strap_generic_1           | Formerly provided the Caliptra ROM with the offset of the fuse controller's DIRECT_ACCESS_CMD register. That configuration has moved to `SS_OTP_FC_CMD_CFG` (`DIRECT_ACCESS_CMD_OFFSET`). This strap is available as a general-purpose late-binding strap. |
 | 2          | strap_ss_strap_generic_2           | Formerly provided the Caliptra ROM with entropy source (CSRNG) configuration during initialization. That configuration (health-test window size, single-bit mode / `rng_bit_sel`, and entropy bypass `es_type`) has moved to the `CPTRA_iTRNG_ENTROPY_CONFIG_2` (ES0) and `CPTRA_iTRNG1_ENTROPY_CONFIG_2` (ES1) architectural registers, with thresholds/repetition count in the `..._CONFIG_0`/`..._CONFIG_1` registers. This strap is **no longer used for entropy-source configuration** and is available as a general-purpose late-binding strap. Refer to the Caliptra ROM Specification for additional details. |
-| 3          | strap_ss_strap_generic_3           | Provides the Caliptra ROM with Stable Owner Key controls. Bit [0]: Stable Owner Key enable. When set to 1, ROM derives the Stable Owner Root Key from the HEK seed and allows `CM_DERIVE_STABLE_KEY` with `key_type = OwnerKey` when the other availability requirements are met (subsystem mode active and OCP LOCK disabled). When clear, Stable Owner Key derivation is disabled. Bits [31:1]: RESERVED/unused, must be tied to 0. Refer to the Caliptra ROM Specification for additional details. |
+| 3          | strap_ss_strap_generic_3           | Formerly provided Caliptra firmware feature controls. Those controls have moved to `SS_FW_FEATURE_CFG` (`STABLE_OWNER_KEY_EN`, `VENDOR_DEBUG_IMAGES_DIS`). This strap is available as a general-purpose late-binding strap. |
+
+The following registers carry the firmware configuration previously provided through `strap_ss_strap_generic_N`. They have no input ports: they reset to 0 on `cptra_pwrgood`, may be written by the SoC prior to `CPTRA_FUSE_WR_DONE`, are locked once `CPTRA_FUSE_WR_DONE` is set, and are read-only to Caliptra.
+
+*Firmware configuration registers*
+
+| Register               | Bits    | Field                      | Description |
+| :---------             | :------ | :---------                 | :---------  |
+| SS_OTP_FC_STATUS_CFG   | [15:0]  | STATUS_OFFSET              | Offset of the OTP fuse controller STATUS register, relative to `SS_OTP_FC_BASE_ADDR`. |
+| SS_OTP_FC_STATUS_CFG   | [31:16] | DAI_IDLE_BIT_NUM           | Bit index of the DAI idle indicator within the OTP fuse controller STATUS register. |
+| SS_OTP_FC_CMD_CFG      | [15:0]  | DIRECT_ACCESS_CMD_OFFSET   | Offset of the OTP fuse controller DIRECT_ACCESS_CMD register, relative to `SS_OTP_FC_BASE_ADDR`. |
+| SS_FW_FEATURE_CFG      | [0]     | STABLE_OWNER_KEY_EN        | Stable Owner Key enable. When set to 1, ROM derives the Stable Owner Root Key from the HEK seed and allows `CM_DERIVE_STABLE_KEY` with `key_type = OwnerKey` when the other availability requirements are met (subsystem mode active and OCP LOCK disabled). Hardware also uses this bit to preserve key vault slot 15 at the ROM to FMC and FMC to RT transitions. |
+| SS_FW_FEATURE_CFG      | [31]    | VENDOR_DEBUG_IMAGES_DIS    | Disable vendor-authorized debug images. |
+
+The assigned `FUSE_SOC_MANIFEST_SVN` registers hold minimum SVNs as unsigned integers decoded by the SoC from integrator-defined OTP (not raw one-hot OTP bits):
+
+| Register                 | Description |
+| :---------               | :---------  |
+| FUSE_SOC_MANIFEST_SVN[0] | SoC authorization manifest minimum SVN. |
+| FUSE_SOC_MANIFEST_SVN[1] | MCU runtime minimum SVN. |
+| FUSE_SOC_MANIFEST_SVN[2] | Owner SoC authorization manifest minimum SVN. |
+| FUSE_SOC_MANIFEST_SVN[3] | Not used by Caliptra firmware; available for late-binding features. |
 
 # SoC interface operation
 
