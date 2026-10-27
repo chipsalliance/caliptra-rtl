@@ -20,7 +20,9 @@ interface entropy_combiner_cov_if (
   input logic                                     clk,
   input logic                                     reset_n,
   input logic                                     zeroize,
-  input entropy_combiner_pkg::entropy_combiner_state_e state,
+  // Plain vector: when RTL and TB are compiled into separate libraries, each has
+  // its own copy of entropy_combiner_pkg and the enum types do not match.
+  input logic [$bits(entropy_combiner_pkg::entropy_combiner_state_e)-1:0] state,
   input logic                                     op_is_kat,    // KAT in progress
   input logic                                     es0_pending,  // ES0 request outstanding
   input logic                                     es1_pending   // ES1 request outstanding

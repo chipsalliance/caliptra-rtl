@@ -22,9 +22,18 @@ interface entropy_src_cov_if (
   input logic                                   zeroize,
   input logic                                   zeroize_reg,  // ENTROPY_SRC_CTRL.ZEROIZE
   input logic                                   zeroize_pin,  // debugUnlock_or_scan_mode_switch
-  input entropy_src_main_sm_pkg::state_e        main_sm_state,
-  input entropy_src_ack_sm_pkg::state_e         ack_sm_state
+  input logic [$bits(entropy_src_main_sm_pkg::state_e)-1:0] main_sm_state,
+  input logic [$bits(entropy_src_ack_sm_pkg::state_e)-1:0]  ack_sm_state
 );
+
+  // The FSM states cross the bind as plain vectors: when RTL and TB are compiled
+  // into separate libraries, each has its own copy of the packages and the enum
+  // types do not match. Cast back to the enums here.
+  entropy_src_main_sm_pkg::state_e main_sm_state_e;
+  entropy_src_ack_sm_pkg::state_e  ack_sm_state_e;
+
+  assign main_sm_state_e = entropy_src_main_sm_pkg::state_e'(main_sm_state);
+  assign ack_sm_state_e  = entropy_src_ack_sm_pkg::state_e'(ack_sm_state);
 
   logic zeroize_q;
 
@@ -35,10 +44,10 @@ interface entropy_src_cov_if (
 
   covergroup entropy_src_zeroize_cov_grp @(posedge clk_i iff (rst_ni && zeroize && !zeroize_q));
     // All main SM states except the illegal Error state
-    main_sm_state_cp: coverpoint main_sm_state {
+    main_sm_state_cp: coverpoint main_sm_state_e {
       ignore_bins illegal = {entropy_src_main_sm_pkg::Error};
     }
-    ack_sm_state_cp: coverpoint ack_sm_state {
+    ack_sm_state_cp: coverpoint ack_sm_state_e {
       ignore_bins illegal = {entropy_src_ack_sm_pkg::Error};
     }
     source_cp: coverpoint {zeroize_reg, zeroize_pin} {
