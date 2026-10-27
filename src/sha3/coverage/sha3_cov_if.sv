@@ -20,8 +20,15 @@ interface sha3_cov_if (
   input logic                             clk_i,
   input logic                             rst_ni,
   input logic                             zeroize,
-  input ot_sha3_pkg::sha3_st_sparse_e     sha3_st
+  input logic [$bits(ot_sha3_pkg::sha3_st_sparse_e)-1:0] sha3_st
 );
+
+  // The FSM state crosses the bind as a plain vector: when RTL and TB are
+  // compiled into separate libraries, each has its own copy of ot_sha3_pkg and
+  // the enum types do not match. Cast back to the enum here.
+  ot_sha3_pkg::sha3_st_sparse_e sha3_st_e;
+
+  assign sha3_st_e = ot_sha3_pkg::sha3_st_sparse_e'(sha3_st);
 
   logic zeroize_q;
 
@@ -31,7 +38,7 @@ interface sha3_cov_if (
   end
 
   covergroup sha3_zeroize_cov_grp @(posedge clk_i iff (rst_ni && zeroize && !zeroize_q));
-    sha3_st_cp: coverpoint sha3_st {
+    sha3_st_cp: coverpoint sha3_st_e {
       ignore_bins error = {ot_sha3_pkg::StTerminalError_sparse};
       // StFlush only lasts one cycle after DONE and cannot be hit by firmware
       ignore_bins flush = {ot_sha3_pkg::StFlush_sparse};
