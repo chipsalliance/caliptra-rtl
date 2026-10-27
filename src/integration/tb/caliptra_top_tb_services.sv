@@ -1982,7 +1982,9 @@ endgenerate //IV_NO
             dcls_inject_cycle <= cycleCnt;
             $display("TB: Forced lockstep_err_injection_en_i = El2MuBiTrue (DCLS corruption inject)");
         end
-        else if (dcls_inject_cycle != '0 && cycleCnt == dcls_inject_cycle + 'd5) begin
+    end
+    always @(negedge clk) begin
+        if (dcls_inject_cycle != '0 && cycleCnt >= dcls_inject_cycle + 'd5) begin
             release `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i;
             dcls_inject_cycle <= '0;
             $display("TB: Released lockstep_err_injection_en_i force (auto)");
