@@ -130,9 +130,13 @@ module entropy_src_adaptp_ht #(
                          threshold_scope_i ? test_cnt_sum :
                          test_cnt_min;
 
+  // As in the NIST algorithm (SP 800-90B, Section 4.4.2), the test fails if the
+  // count of 1's or of 0's reaches the cutoff C, so thresh_hi_i = C and
+  // thresh_lo_i = N - C. A low threshold of zero (reset value) never fails.
   // the pulses will be only one clock in length
-  assign test_fail_hi_pulse_o = active_i && window_wrap_pulse_i && (test_cnt_hi_o > thresh_hi_i);
-  assign test_fail_lo_pulse_o = active_i && window_wrap_pulse_i && (test_cnt_lo_o < thresh_lo_i);
+  assign test_fail_hi_pulse_o = active_i && window_wrap_pulse_i && (test_cnt_hi_o >= thresh_hi_i);
+  assign test_fail_lo_pulse_o = active_i && window_wrap_pulse_i && (thresh_lo_i != '0) &&
+                                (test_cnt_lo_o <= thresh_lo_i);
   assign count_err_o = |test_cnt_err;
 
 endmodule

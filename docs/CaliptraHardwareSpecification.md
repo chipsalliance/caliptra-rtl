@@ -651,12 +651,14 @@ is taken:
 `CONF.THRESHOLD_SCOPE` enabled is listed for completeness only and should not
 be used in Caliptra.
 
-The test fails if the count of '1's is above `ADAPTP_HI_THRESHOLD` or below
-`ADAPTP_LO_THRESHOLD`, i.e. if either the '1's or the '0's reach the cutoff
-value $C$. The thresholds can then be configured as follows:
+The test fails if the count of '1's is greater than or equal to
+`ADAPTP_HI_THRESHOLD` or less than or equal to `ADAPTP_LO_THRESHOLD`, i.e. if
+either the '1's or the '0's reach the cutoff value $C$. An
+`ADAPTP_LO_THRESHOLD` of 0 (reset value) disables the low check. The
+thresholds can then be configured as follows:
 
-* `ADAPTP_HI_THRESHOLD` = $C - 1$
-* `ADAPTP_LO_THRESHOLD` = `N` - $C + 1$
+* `ADAPTP_HI_THRESHOLD` = $C$
+* `ADAPTP_LO_THRESHOLD` = `N` - $C$
 
 with $W$ = `N` and $H$ the min-entropy per bit. See the threshold calculations
 below as an example.
