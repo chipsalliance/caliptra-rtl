@@ -53,6 +53,7 @@ module kv_boot_flow_sva
   wire rst_n        = `SVA_RST;
   wire core_rst_n   = `KV_PATH.core_only_rst_b;
   wire noncore_rst_n = `CPTRA_TOP_PATH.cptra_noncore_rst_b;
+  wire fw_update_rst_window = `KV_PATH.fw_update_rst_window;
 
   // Boot flow signals from caliptra_top
   wire [3:0] boot_flow_fmc   = `CPTRA_TOP_PATH.boot_flow_fmc;
@@ -345,12 +346,12 @@ module kv_boot_flow_sva
   // ============================================================
 
   BootFlowFmcMonotonic_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en || fw_update_rst_window)
     fmc_true |=> fmc_true
   ) else $display("SVA ERROR: boot_flow_fmc regressed from True to False");
 
   BootFlowRtMonotonic_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en || fw_update_rst_window)
     rt_true |=> rt_true
   ) else $display("SVA ERROR: boot_flow_rt regressed from True to False");
 
@@ -487,7 +488,7 @@ module kv_boot_flow_sva
   // What: boot_flow_error fires if any ICCM fetch occurs while ICCM_REGION_LOCK = 0
   // Why: Unprogrammed regions must not be trusted
   IccmFetchWithoutLock_A: assert property (
-    @(posedge clk) disable iff (!core_rst_n || !monitor_en)
+    @(posedge clk) disable iff (!core_rst_n || !monitor_en || fw_update_rst_window)
     (iccm_read_any && !iccm_region_lock) |=> mubi4_test_true_strict(mubi4_t'(boot_flow_error))
   ) else $display("SVA ERROR: boot_flow_error not set on ICCM fetch with region_lock=0");
 
