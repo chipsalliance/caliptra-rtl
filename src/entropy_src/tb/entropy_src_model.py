@@ -135,8 +135,8 @@ def thresholds(fips, single_lane, fips_window, h_bit, h_symbol, alpha_log2):
     if single_lane:
         n = fips_window if fips else BYPASS_WINDOW
         c = apt_cutoff(n, h_bit, alpha_log2)
-        t['adaptp_hi'] = c - 1
-        t['adaptp_lo'] = n - c + 1
+        t['adaptp_hi'] = c
+        t['adaptp_lo'] = max(0, n - c)
         t['repcnt'] = rct_cutoff(h_bit, alpha_log2)
     else:
         w = fips_window if fips else BYPASS_WINDOW // 4
