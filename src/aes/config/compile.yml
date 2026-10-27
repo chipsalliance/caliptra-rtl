@@ -39,7 +39,7 @@ requires:
   - aes_pkg
   - keyvault
   - caliptra_tlul_pkg
-  - caliptra_top_reg_field_defines
+  - caliptra_top_reg_defines
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
