@@ -254,7 +254,6 @@ module caliptra_top_sva
     if ((debug_unlocked_latched || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && `KEYVAULT_PATH.cptra_pwrgood) begin
       for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
         if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
-          $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", entry, dword, expected_value, `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
           return 1'b0;
         end
       end
@@ -586,7 +585,6 @@ module caliptra_top_sva
 
           // Check if this key word matches the FIFO entry
           if (fifo_entry == key_word) begin
-            $display("[%t] SVA ERROR: AXI DMA KV Assertion: Found key in DMA FIFO: KEY_ENTRY[23][%0d] = %h FIFO entry[%0d] = %h", $time, fifo_idx, fifo_entry, key_word_idx, key_word);
             match_found = 1'b1;
             break;
           end
@@ -701,8 +699,6 @@ module caliptra_top_sva
     for (int dword = 0; dword < PRIVKEY_REG_NUM_DWORDS; dword++) begin
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.privkey[dword]);
       if (`ABR_PATH.abr_scratch_reg.raw[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA keygen] SK register %h does not match expected %h at index %h", 
-                 `ABR_PATH.abr_scratch_reg.raw[dword], expected, dword);
         return 1'b0;
       end
     end
@@ -712,8 +708,6 @@ module caliptra_top_sva
       int idx = PRIVKEY_REG_NUM_DWORDS + (2*dword);
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.privkey[idx]);
       if (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA keygen] SK bank0 %h does not match expected %h at index %h",
-                 `ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword], expected, idx);
         return 1'b0;
       end
     end
@@ -723,8 +717,6 @@ module caliptra_top_sva
       int idx = PRIVKEY_REG_NUM_DWORDS + 1 + (2*dword);
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.privkey[idx]);
       if (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA keygen] SK bank1 %h does not match expected %h at index %h",
-                 `ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword], expected, idx);
         return 1'b0;
       end
     end
@@ -738,8 +730,6 @@ module caliptra_top_sva
     for (int dword = 0; dword < 8; dword++) begin
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.pubkey[dword]);
       if (`ABR_PATH.abr_scratch_reg.raw[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA keygen] PK register %h does not match expected %h at index %h", 
-                 `ABR_PATH.abr_scratch_reg.raw[dword], expected, dword);
         return 1'b0;
       end
     end
@@ -754,8 +744,6 @@ module caliptra_top_sva
                                `ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][(j*4)+1],
                                `ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][(j*4)+0]};
         if (actual != expected) begin
-          $display("SVA ERROR: [MLDSA keygen] PK memory %h does not match expected %h at index %0d %0d", 
-                   actual, expected, i, j);
           return 1'b0;
         end
       end
@@ -770,8 +758,6 @@ module caliptra_top_sva
     for (int dword = 0; dword < SIGNATURE_C_NUM_DWORDS; dword++) begin
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.signature[dword]);
       if (`ABR_PATH.signature_reg.raw[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA signing] Signature C %h does not match expected %h at index %h",
-                 `ABR_PATH.signature_reg.raw[dword], expected, dword);
         return 1'b0;
       end
     end
@@ -781,8 +767,6 @@ module caliptra_top_sva
       int sig_idx = (SIGNATURE_NUM_DWORDS-1) - ((SIGNATURE_H_NUM_DWORDS-1) - dword);
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.signature[sig_idx]);
       if (`ABR_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS + dword] != expected) begin
-        $display("SVA ERROR: [MLDSA signing] Signature H %h does not match expected %h at index %h",
-                 `ABR_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS + dword], expected, SIGNATURE_C_NUM_DWORDS + dword);
         return 1'b0;
       end
     end
@@ -798,8 +782,6 @@ module caliptra_top_sva
                                `ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][(j*4)+0]};
         
         if (actual != expected) begin
-          $display("SVA ERROR: [MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", 
-                   actual, expected, i, j);
           return 1'b0;
         end
       end
@@ -814,8 +796,6 @@ module caliptra_top_sva
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.verify_res[dword]);
       
       if (`ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA verify] Verify output %h does not match expected verify res %h at index %h",
-                 `ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword], expected, dword);
         return 1'b0;
       end
     end
@@ -1073,8 +1053,6 @@ module caliptra_top_sva
     // Check bank0 memory (even addresses)
     for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
       if (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] != 0) begin
-        $display("SVA ERROR: [MLDSA zeroize] SK bank0 at index %0d is not zero: %h", 
-                 dword, `ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword]);
         return 1'b0;
       end
     end
@@ -1082,8 +1060,6 @@ module caliptra_top_sva
     // Check bank1 memory (odd addresses)  
     for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
       if (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] != 0) begin
-        $display("SVA ERROR: [MLDSA zeroize] SK bank1 at index %0d is not zero: %h", 
-                 dword, `ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword]);
         return 1'b0;
       end
     end
