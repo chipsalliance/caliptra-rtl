@@ -219,6 +219,8 @@ The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A 
 
 The `dcls_en` input enables DCLS in both passive and subsystem profiles (`1` = enabled, `0` = disabled), controlling normal mismatch reporting. Integrators may tie it low or high, or drive it from a synchronous SoC register. The sampled enable is reflected read-only to firmware and the SoC in [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG)`.DCLS_en`. The comparison logic fails safe: an invalid multi-bit encoding on the internal disable control is treated as a detected corruption.
 
+In scan mode (`scan_mode` = 1), the shadow core's resets are driven directly by the reset inputs so that they are controllable for scan test. The shadow core is then no longer aligned to the main core. Corruption detection is therefore suspended while `scan_mode` is set, and remains suspended until the next Caliptra reset after `scan_mode` is cleared.
+
 While detection is enabled, a detected mismatch asserts [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL)`.rv_dcls_err` (bit [7]; see [Error register summary](#error-register-summary)) and raises the `cptra_error_fatal` interrupt to the SoC. The status bit and the interrupt clear independently: the bit is RW1C, so Caliptra firmware or the SoC can clear it, but its reset is `cptra_pwrgood`, so it survives a warm Caliptra reset. The interrupt has no clear mechanism by design — clearing the status bit does not deassert it, and it deasserts only on a Caliptra reset.
 
 #### DCCM write-readback
