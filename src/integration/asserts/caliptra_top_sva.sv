@@ -1797,7 +1797,8 @@ module caliptra_top_sva
       (`DCLS_ASSERT_PATH.rst_n &&
        `DCLS_ASSERT_PATH.any_corruption == el2_mubi_pkg::El2MuBiTrue &&
        `DCLS_ASSERT_PATH.disable_corruption_detection_i == el2_mubi_pkg::El2MuBiFalse &&
-       `DCLS_ASSERT_PATH.dbg_detected == el2_mubi_pkg::El2MuBiFalse) |->
+       `DCLS_ASSERT_PATH.dbg_detected == el2_mubi_pkg::El2MuBiFalse &&
+       `DCLS_ASSERT_PATH.scan_detected == el2_mubi_pkg::El2MuBiFalse) |->
         `DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue)
     else $error("SVA ERROR: qualified DCLS mismatch was not reported");
 
@@ -1813,7 +1814,8 @@ module caliptra_top_sva
   DCLS_invalid_disable_failsafe: assert property (
       @(posedge `SVA_CLK) disable iff (!`DCLS_ASSERT_PATH.rst_n)
       (`DCLS_ASSERT_PATH.rst_n &&
-       `DCLS_ASSERT_PATH.disable_detection_invalid == el2_mubi_pkg::El2MuBiTrue) |->
+       `DCLS_ASSERT_PATH.disable_detection_invalid == el2_mubi_pkg::El2MuBiTrue &&
+       `DCLS_ASSERT_PATH.scan_detected == el2_mubi_pkg::El2MuBiFalse) |->
         `DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue)
     else $error("SVA ERROR: invalid MuBi disable did not fail safe");
 

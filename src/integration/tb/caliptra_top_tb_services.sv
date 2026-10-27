@@ -2020,7 +2020,9 @@ endgenerate //IV_NO
     // DCLS detection is enabled (ss_dcls_en) or which mode Caliptra runs in.
     // Error injection (smoke_test_dcls_inject/_dis) bypasses corruption_detected,
     // and the comparison is invalid once the core has entered debug mode or while
-    // scan mode is (or was, since the last reset) active.
+    // scan mode is (or was, since the last reset) active. Directed output/regfile
+    // fault injection (caliptra_top_tb_dcls.svh) creates a real divergence on
+    // purpose, so also exempt its active fault windows.
     logic dcls_mismatch_detected;
     initial dcls_mismatch_detected = 1'b0;
 `ifdef RV_LOCKSTEP_ENABLE
@@ -2029,7 +2031,9 @@ endgenerate //IV_NO
             `CPTRA_TOP_PATH.rvtop.lockstep.rst_n &&
             (`CPTRA_TOP_PATH.rvtop.lockstep.corruption_detected == el2_mubi_pkg::El2MuBiTrue) &&
             (`CPTRA_TOP_PATH.rvtop.lockstep.dbg_detected        == el2_mubi_pkg::El2MuBiFalse) &&
-            (`CPTRA_TOP_PATH.rvtop.lockstep.scan_detected       == el2_mubi_pkg::El2MuBiFalse)) begin
+            (`CPTRA_TOP_PATH.rvtop.lockstep.scan_detected       == el2_mubi_pkg::El2MuBiFalse) &&
+            !`CALIPTRA_TOP.soc_bfm_inst.dcls_output_fault_active &&
+            !`CALIPTRA_TOP.soc_bfm_inst.dcls_regfile_fault_active) begin
             dcls_mismatch_detected <= 1'b1;
             $error("TB: unexpected DCLS mismatch between main and shadow core");
         end
