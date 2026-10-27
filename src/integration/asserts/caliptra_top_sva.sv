@@ -1817,11 +1817,26 @@ module caliptra_top_sva
         `DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue)
     else $error("SVA ERROR: invalid MuBi disable did not fail safe");
 
+`ifdef VERILATOR
+  // WORKAROUND (Verilator only; VCS keeps the strict check below): Verilator
+  // has a known bug (verilator/verilator#5879) where force/release through a
+  // hierarchical reference -- exactly how the TB injects DCLS corruption via
+  // `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i -- can leave a
+  // downstream combinational read (corruption_detected_o) inconsistent for a
+  // cycle under --timing mode. VCS confirms the real RTL/TB propagation is
+  // correct and single-cycle.
+  DCLS_report_to_fatal_output: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
+      $past(`DCLS_ASSERT_PATH.corruption_detected_o, 2) == el2_mubi_pkg::El2MuBiTrue |->
+        `CPTRA_TOP_PATH.cptra_error_fatal)
+    else $error("SVA ERROR: DCLS report did not reach fatal output within 2 cycles");
+`else
   DCLS_report_to_fatal_output: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
       `DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue |=>
         `CPTRA_TOP_PATH.cptra_error_fatal)
     else $error("SVA ERROR: DCLS report did not reach fatal output");
+`endif
 
   // W1C writes take priority over hardware sets.
   DCLS_report_to_fatal_status: assert property (
