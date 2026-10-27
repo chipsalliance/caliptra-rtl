@@ -1036,7 +1036,7 @@ import el2_pkg::*;
    if (`RV_LOCKSTEP_DELAY > 0) begin
       property p_const_delay;
       @(posedge clk)
-      disable iff (!core_rst_l || disable_const_delay_assertion)
+      disable iff (!core_rst_l || disable_const_delay_assertion || el2_mubi_pkg::mubi_check_true(lockstep.scan_detected))
        shadow_core_trace_rv_i_valid_ip |-> (
          $past(trace_rv_i_valid_ip, `RV_LOCKSTEP_DELAY) &&
          shadow_core_trace_rv_i_insn_ip      == $past(trace_rv_i_insn_ip,      `RV_LOCKSTEP_DELAY) &&
@@ -1051,7 +1051,7 @@ import el2_pkg::*;
     end else begin
       property p_const_delay;
       @(posedge clk)
-      disable iff (!core_rst_l || disable_const_delay_assertion)
+      disable iff (!core_rst_l || disable_const_delay_assertion || el2_mubi_pkg::mubi_check_true(lockstep.scan_detected))
        shadow_core_trace_rv_i_valid_ip |-> (
          trace_rv_i_valid_ip &&
          shadow_core_trace_rv_i_insn_ip      == trace_rv_i_insn_ip      &&

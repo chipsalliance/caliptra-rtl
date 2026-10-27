@@ -251,6 +251,7 @@ global:
         - +define+RV_TOP=caliptra_top_tb.caliptra_top_dut.rvtop
         - +define+CLP_ASSERT_ON
         - +define+ABR_ASSERT_ON
+        - +define+RV_ASSERT_ON
         - +define+SIMULATION
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
@@ -405,6 +406,7 @@ global:
         - '+define+RV_TOP=caliptra_top_tb.caliptra_top_dut.rvtop'
         - '+define+CLP_ASSERT_ON'
         - '+define+ABR_ASSERT_ON'
+        - '+define+RV_ASSERT_ON'
         - '+define+SIMULATION'
         - '-noinherit_timescale=1ns/1ps'
       sim:
