@@ -2031,9 +2031,14 @@ endgenerate //IV_NO
             `CPTRA_TOP_PATH.rvtop.lockstep.rst_n &&
             (`CPTRA_TOP_PATH.rvtop.lockstep.corruption_detected == el2_mubi_pkg::El2MuBiTrue) &&
             (`CPTRA_TOP_PATH.rvtop.lockstep.dbg_detected        == el2_mubi_pkg::El2MuBiFalse) &&
-            (`CPTRA_TOP_PATH.rvtop.lockstep.scan_detected       == el2_mubi_pkg::El2MuBiFalse) &&
-            !`CALIPTRA_TOP.soc_bfm_inst.dcls_output_fault_active &&
-            !`CALIPTRA_TOP.soc_bfm_inst.dcls_regfile_fault_active) begin
+            (`CPTRA_TOP_PATH.rvtop.lockstep.scan_detected       == el2_mubi_pkg::El2MuBiFalse)
+`ifdef CALIPTRA_TOP_TB
+`ifndef VERILATOR
+            && !`CALIPTRA_TOP.soc_bfm_inst.dcls_output_fault_active
+            && !`CALIPTRA_TOP.soc_bfm_inst.dcls_regfile_fault_active
+`endif
+`endif
+            ) begin
             dcls_mismatch_detected <= 1'b1;
             $error("TB: unexpected DCLS mismatch between main and shadow core");
         end

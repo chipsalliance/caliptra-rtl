@@ -1856,10 +1856,21 @@ module caliptra_top_sva
       else if (`DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue)
           dcls_report_seen <= 1'b1;
   end
+`ifdef VERILATOR
+  // Mirror DCLS_report_to_fatal_output's 2-cycle allowance (verilator#5879):
+  // dcls_report_seen is already 1 cycle behind corruption_detected_o, so one
+  // more cycle of slack here lines up with that same 2-cycle window instead
+  // of re-imposing the 1-cycle requirement the workaround above relaxed.
+  DCLS_fatal_sticky: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
+      $past(dcls_report_seen) |-> `CPTRA_TOP_PATH.cptra_error_fatal)
+    else $error("SVA ERROR: DCLS fatal output cleared without noncore reset");
+`else
   DCLS_fatal_sticky: assert property (
       @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
       dcls_report_seen |-> `CPTRA_TOP_PATH.cptra_error_fatal)
     else $error("SVA ERROR: DCLS fatal output cleared without noncore reset");
+`endif
 
   DCLS_output_divergence_C: cover property (
       @(posedge `SVA_CLK) disable iff (!`DCLS_ASSERT_PATH.rst_n)
