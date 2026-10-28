@@ -18,7 +18,7 @@ on:
 env:
   CARGO_INCREMENTAL: 0
   RISCV_VERSION: v12.1.0
-  VERILATOR_VERSION: v5.044
+  VERILATOR_VERSION: v5.046
   PKG_CONFIG_PATH: /opt/verilator/share/pkgconfig
 
   # cache bust if needed
@@ -194,10 +194,11 @@ jobs:
           export CALIPTRA_PRIM_MODULE_PREFIX=caliptra_prim_generic
 
           # Per-test runtime plusargs (e.g. +CALIPTRA_TEST_STASH_BANK) come from
-          # the test's yml, parsed in .github/scripts/build_tests_matrix.py and
-          # attached to the matrix. BFM-gating plusargs must reach the sim or the
-          # test never executes its expected behavior and hangs.
-          echo "Runtime plusargs for ${{ matrix.test_name }}: ${{ matrix.plusargs }}"
+          # the yml that L0 lists for this entry, parsed in
+          # .github/scripts/build_tests_matrix.py and attached to the matrix.
+          # BFM-gating plusargs must reach the sim or the test never executes
+          # its expected behavior and hangs.
+          echo "Runtime plusargs for ${{ matrix.test_yml }} (TESTNAME=${{ matrix.test_name }}): ${{ matrix.plusargs }}"
 
           cd tools/scripts
           make verilator \

@@ -138,6 +138,9 @@ module soc_ifc_top
     output kv_read_t    kv_read,
     input  kv_rd_resp_t kv_rd_resp,
 
+    // DCLS enable in both profiles; synchronous to clk.
+    input  logic         dcls_en,
+
     // Subsystem mode straps
     input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
@@ -166,7 +169,6 @@ module soc_ifc_top
 
     // Subsystem mode OCP LOCK status
     input  logic         ss_ocp_lock_en,
-    input  logic         ss_dcls_en,
     output logic         ss_ocp_lock_in_progress,
     output logic [15:0]  ss_key_release_key_size,
 
@@ -175,7 +177,7 @@ module soc_ifc_top
     input  logic         dual_itrng_en,
     output logic         dual_itrng_en_o,
 
-    // Stable owner key enable (subsystem_mode & strap_generic_3[0] & !ocp_lock)
+    // Stable owner key enable (subsystem_mode & SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN & !ocp_lock)
     output logic         stable_owner_key_en,
 
     // NMI Vector 
@@ -569,13 +571,12 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.LMS_acc_en.next = 1'b1;
   `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
   `endif
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.DCLS_en.next = ss_dcls_en;
 `else
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.next = 1'b0;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.next = 1'b0;
     always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.dual_iTRNG_en.next = 1'b0;
-    always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.DCLS_en.next = 1'b0;
 `endif
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_CONFIG.DCLS_en.next = dcls_en;
 // dual_iTRNG_en stored value exported to drive the entropy combiner's combine_en
 // (0 unless subsystem mode + internal TRNG).
 always_comb dual_itrng_en_o = soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.dual_iTRNG_en.value;
@@ -600,6 +601,12 @@ always_comb begin
         //Only if debug locked, not scan mode, and the fuse valid bit is set
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && mubi4_test_true_loose(security_state.debug_locked) && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.next = cptra_obf_uds_seed[i];
+        //Sticky on fuse_wr_done.
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = 1'b1;
+`else
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+`endif
         obf_uds_seed[i] = soc_ifc_reg_hwif_out.fuse_uds_seed[i].seed.value;
     end
     for (int i = 0; i < `CLP_OBF_FE_DWORDS; i++) begin
@@ -608,6 +615,12 @@ always_comb begin
         //Only if debug locked, not scan mode, and the fuse valid bit is set
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && mubi4_test_true_loose(security_state.debug_locked) && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.next = cptra_obf_field_entropy[i];
+        //Sticky on fuse_wr_done.
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = 1'b1;
+`else
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+`endif
         obf_field_entropy[i] = soc_ifc_reg_hwif_out.fuse_field_entropy[i].seed.value;
     end
     for (int i = 0; i < OCP_LOCK_HEK_NUM_DWORDS; i++) begin
@@ -761,24 +774,10 @@ always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
 end
 
 // Make the relevant fuses sticky on fuse_wr_done
+// (fuse_uds_seed and fuse_field_entropy are made sticky with their other fields, above)
 always_comb begin
-    for (int i=0; i < `CLP_OBF_UDS_DWORDS; i++) begin
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = 1'b1;
-`else
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-`endif
-    end
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.fuse_vendor_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-    end
-
-    for (int i=0; i < `CLP_OBF_FE_DWORDS; i++) begin
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = 1'b1;
-`else
-        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-`endif
     end
 
     for (int i=0; i<24; i++) begin
@@ -815,12 +814,37 @@ always_comb soc_ifc_reg_hwif_in.fuse_soc_stepping_id.soc_stepping_id.swwel   = s
 always_comb soc_ifc_reg_hwif_in.fuse_pqc_key_type.key_type.swwel             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.fuse_soc_manifest_max_svn.svn.swwel          = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
+// iTRNG entropy source configuration is locked like fuses on fuse_wr_done
+always_comb begin
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG_ENTROPY_CONFIG_0.low_threshold.swwel     = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG_ENTROPY_CONFIG_0.high_threshold.swwel    = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG_ENTROPY_CONFIG_1.repetition_count.swwel  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG_ENTROPY_CONFIG_1.alert_threshold.swwel   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG_ENTROPY_CONFIG_2.fips_window_size.swwel  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG_ENTROPY_CONFIG_2.single_bit_mode.swwel   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG_ENTROPY_CONFIG_2.rng_bit_sel.swwel       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG_ENTROPY_CONFIG_2.RSVD.swwel              = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG_ENTROPY_CONFIG_2.bypass_mode.swwel       = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG1_ENTROPY_CONFIG_0.low_threshold.swwel    = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG1_ENTROPY_CONFIG_0.high_threshold.swwel   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG1_ENTROPY_CONFIG_1.repetition_count.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG1_ENTROPY_CONFIG_1.alert_threshold.swwel  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG1_ENTROPY_CONFIG_2.fips_window_size.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG1_ENTROPY_CONFIG_2.single_bit_mode.swwel  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG1_ENTROPY_CONFIG_2.rng_bit_sel.swwel      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG1_ENTROPY_CONFIG_2.RSVD.swwel             = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+    soc_ifc_reg_hwif_in.CPTRA_iTRNG1_ENTROPY_CONFIG_2.bypass_mode.swwel      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+end
+
 // Lockable registers
 always_comb begin
     soc_ifc_reg_hwif_in.CPTRA_HW_CAPABILITIES.cap.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
     soc_ifc_reg_hwif_in.CPTRA_FW_CAPABILITIES.cap.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value | ~soc_ifc_reg_req_data.soc_req;
+    end
+    for (int i=0; i<12; i++) begin
+        soc_ifc_reg_hwif_in.CPTRA_AUX_PK_HASH[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_AUX_PK_HASH_LOCK.lock.value | ~soc_ifc_reg_req_data.soc_req;
     end
 end
 
@@ -933,10 +957,10 @@ always_comb soc_ifc_reg_hwif_in.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.swwel = 1'b1;
 assign ss_ocp_lock_in_progress = soc_ifc_reg_hwif_out.SS_OCP_LOCK_CTRL.LOCK_IN_PROGRESS.value;
 assign ss_key_release_key_size = soc_ifc_reg_hwif_out.SS_KEY_RELEASE_SIZE.size.value;
 
-// Stable owner key enable: subsystem_mode & strap_generic_3[0] & !ocp_lock_mode_en
+// Stable owner key enable: subsystem_mode & SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN & !ocp_lock_mode_en
 assign stable_owner_key_en = soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.SUBSYSTEM_MODE_en.value &
                              ~soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.OCP_LOCK_MODE_en.value &
-                             soc_ifc_reg_hwif_out.SS_STRAP_GENERIC[3].data.value[0];
+                             soc_ifc_reg_hwif_out.SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN.value;
 
 
 //Uncore registers only open for debug unlock or manufacturing
@@ -1085,6 +1109,11 @@ always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[0].data.swwel                  
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[1].data.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[2].data.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 always_comb soc_ifc_reg_hwif_in.SS_STRAP_GENERIC[3].data.swwel                                   = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_OTP_FC_STATUS_CFG.STATUS_OFFSET.swwel                         = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_OTP_FC_STATUS_CFG.DAI_IDLE_BIT_NUM.swwel                      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_OTP_FC_CMD_CFG.DIRECT_ACCESS_CMD_OFFSET.swwel                 = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN.swwel                      = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+always_comb soc_ifc_reg_hwif_in.SS_FW_FEATURE_CFG.VENDOR_DEBUG_IMAGES_DIS.swwel                  = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
 
 // DEBUG service request signals are writable based on lifecycle state
 always_comb soc_ifc_reg_hwif_in.SS_DBG_SERVICE_REG_REQ.MANUF_DBG_UNLOCK_REQ.swwe = soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value && (security_state.device_lifecycle == DEVICE_MANUFACTURING);
@@ -1108,9 +1137,8 @@ always_comb ss_dbg_manuf_enable = soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MA
 
 // DEBUG unlock level signal is only writable by Caliptra, and only when DEBUG_INTENT is 1
 always_comb begin
-    for (int i=0; i<2; i++) begin
-        soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[i].LEVEL.swwel = soc_ifc_reg_req_data.soc_req || !soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value;
-    end
+    soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.swwel = soc_ifc_reg_req_data.soc_req || !soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value;
+    soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.swwel = soc_ifc_reg_req_data.soc_req || !soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value;
 end
 always_comb ss_soc_dbg_unlock_level = {soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.value,
                                        soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.value};
@@ -1126,9 +1154,10 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_FUSE_WR_DONE.done.swwe = soc_ifc_reg_req_d
 // CPTRA_CAP_LOCK is a lockable register.
 // "lock" can be written by Caliptra if it is already NOT '1. SoC can only read this bit. The bit gets reset on warm reset
 always_comb soc_ifc_reg_hwif_in.CPTRA_CAP_LOCK.lock.swwel = soc_ifc_reg_req_data.soc_req || soc_ifc_reg_hwif_out.CPTRA_CAP_LOCK.lock.value;
-// OWNER PK HASH LOCK is a lockable register.
+// OWNER and AUX PK HASH LOCK are lockable registers.
 // "lock" can be written by SOC if it is already NOT '1. uController can only read this bit. The bit gets reset on cold reset
 always_comb soc_ifc_reg_hwif_in.CPTRA_OWNER_PK_HASH_LOCK.lock.swwe = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_OWNER_PK_HASH_LOCK.lock.value;
+always_comb soc_ifc_reg_hwif_in.CPTRA_AUX_PK_HASH_LOCK.lock.swwe   = soc_ifc_reg_req_data.soc_req & ~soc_ifc_reg_hwif_out.CPTRA_AUX_PK_HASH_LOCK.lock.value;
 /////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //When TRNG_AXI_USER_LOCK is one only allow valid users to write to TRNG

@@ -91,8 +91,9 @@ The RISC-V core is highly configurable and has the following settings.
 | PMP                     | Enabled       |
 | Dual-Core Lockstep      | Enabled       |
 | RF Read Port Comparison | Enabled       |
-| DCCM Address Infection  | Enabled       |
-| ICCM Address Infection  | Enabled       |
+| DCCM Write-Readback     | Disabled      |
+| DCCM Address Infection  | Disabled      |
+| ICCM Address Infection  | Disabled      |
 
 ### Embedded memory export
 
@@ -210,13 +211,15 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 
 ### Fault tolerance and FI hardening
 
-The Caliptra VeeR EL2 configuration provides several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep (DCLS) detection is enabled in this release; it is controlled by the subsystem and observable through a read-only status bit. The **DCCM write-readback** and **DCCM / ICCM address-XOR integrity** features are **disabled in this release** until the features mature - they are compiled out of the delivered configuration and are documented below for reference. All three are described below.
+The Caliptra VeeR EL2 configuration provides several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep (DCLS) is enabled through `dcls_en` in both passive and subsystem profiles. The **DCCM write-readback** and **DCCM / ICCM address-XOR integrity** features are **disabled in this release** until the features mature - they are compiled out of the delivered configuration and are documented below for reference. All three are described below.
 
 #### Dual-core lockstep (DCLS)
 
-The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A redundant *shadow* core is driven with the same input stream as the main core, offset by a fixed number of pipeline stages. The main core's outputs are delayed by the same offset and compared cycle-by-cycle against the shadow core's outputs; any divergence indicates a fault in one of the cores. Optimization barriers are inserted on the shadow-core boundary so that synthesis cannot prove the redundant logic and comparison away. The shadow core is not architecturally visible and drives no system state; it exists solely for comparison.
+The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A redundant *shadow* core is driven with the same input stream as the main core, offset by a fixed number of pipeline stages. The main core's outputs are delayed by the same offset and compared cycle-by-cycle against the shadow core's outputs; any divergence indicates a fault in one of the cores. Tying `dcls_en` low may allow synthesis to remove the shadow core and comparison logic. The shadow core is not architecturally visible and drives no system state; it exists solely for comparison.
 
-Corruption detection is controlled by the subsystem. In subsystem mode, the `ss_dcls_en` strap input selects whether lockstep comparison is active, allowing the subsystem (for example, the MCU) to disable the feature should a late issue be found. In non-subsystem (passive) mode, lockstep comparison is always disabled. The effective state is reflected read-only in [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG)`.DCLS_en` (`1` = enabled, `0` = disabled); this status bit is read-only to both Caliptra firmware and the SoC, which can observe the state but cannot change it. The comparison logic fails safe: an invalid multi-bit encoding on the internal disable control is treated as a detected corruption.
+The `dcls_en` input enables DCLS in both passive and subsystem profiles (`1` = enabled, `0` = disabled), controlling normal mismatch reporting. Integrators may tie it low or high, or drive it from a synchronous SoC register. The sampled enable is reflected read-only to firmware and the SoC in [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG)`.DCLS_en`. The comparison logic fails safe: an invalid multi-bit encoding on the internal disable control is treated as a detected corruption.
+
+In scan mode (`scan_mode` = 1), the shadow core's resets are driven directly by the reset inputs so that they are controllable for scan test. The shadow core is then no longer aligned to the main core. Corruption detection is therefore suspended while `scan_mode` is set, and remains suspended until the next Caliptra reset after `scan_mode` is cleared.
 
 While detection is enabled, a detected mismatch asserts [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL)`.rv_dcls_err` (bit [7]; see [Error register summary](#error-register-summary)) and raises the `cptra_error_fatal` interrupt to the SoC. The status bit and the interrupt clear independently: the bit is RW1C, so Caliptra firmware or the SoC can clear it, but its reset is `cptra_pwrgood`, so it survives a warm Caliptra reset. The interrupt has no clear mechanism by design — clearing the status bit does not deassert it, and it deasserts only on a Caliptra reset.
 
@@ -500,22 +503,50 @@ The following figure shows the top level signals defined in caliptra\_top.
 
 The following table provides descriptions of the entropy source signals.
 
-| Name | Input or output | Description |
-| :------------------ | :-------------- | :--------------- |
-| clk_i               | input           | All signal timings are related to the rising edge of clk.                                                                         |
-| rst_ni              | input           | The reset signal is active LOW and resets the core.                                                                               |
-| entropy_src_rng_req | output          | Request from the entropy_src module to the physical true random noise source to start generating data.                            |
-| entropy_src_rng_rsp | input           | Contains the internal TRNG data and a flag indicating the data is valid. Valid is asserted high for one cycle when data is valid. |
-| entropy_src_hw_if_i | input           | Downstream block request for entropy bits.                                                                                        |
-| entropy_src_hw_if_o | output          | 384 bits of entropy data. Valid when es_ack is asserted high.                                                                     |
-| cs_aes_halt_i       | input           | Response from csrng that all requests to AES block are halted.                                                                    |
-| cs_aes_halt_o       | output          | Request to csrng to halt requests to the AES block for power leveling purposes.                                                   |
+| Name                            | Input or output | Description                                                                                                                        |
+| :------------------------------ | :-------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
+| clk_i                           | input           | All signal timings are related to the rising edge of clk.                                                                          |
+| rst_ni                          | input           | The reset signal is active LOW and resets the core.                                                                                |
+| debugUnlock_or_scan_mode_switch | input           | Zeroizes entropy\_src on debug lock/unlock, scan mode and lifecycle change. See [Entropy source zeroize](#entropy-source-zeroize). |
+| entropy_src_rng_enable_o        | output          | Request from the entropy_src module to the physical true random noise source to start generating data.                             |
+| entropy_src_rng_valid_i         | input           | Flag indicating the TRNG data is valid. Valid is asserted high for one cycle when data is valid.                                   |
+| entropy_src_rng_bits_i          | input           | The internal TRNG data. Sampled when entropy_src_rng_valid_i is asserted high.                                                     |
+| entropy_src_hw_if_i             | input           | Downstream block request for entropy bits.                                                                                         |
+| entropy_src_hw_if_o             | output          | 384 bits of entropy data. Valid when es_ack is asserted high.                                                                      |
+
+While `entropy_src_rng_enable_o` is asserted, entropy\_src accepts every `entropy_src_rng_bits_i` value marked by an asserted `entropy_src_rng_valid_i`; the noise source cannot be back-pressured.
+The maximum supported rate is one `entropy_src_rng_bits_i` value (i.e. one sample) every two clock cycles.
 
 The following figure shows the entropy source signals.
 
 *Figure: Entropy source signals*
 
 ![](./images/entropy_source_signals.png)
+
+### Entropy source zeroize
+
+Writing 1 to `ENTROPY_SRC_CTRL.ZEROIZE` zeroizes entropy\_src and aborts any operation in progress, in any state.
+entropy\_src is also zeroized on debug lock/unlock, scan mode and lifecycle change (`debugUnlock_or_scan_mode_switch`).
+While a Caliptra fatal error is asserted, entropy\_src is held in zeroize.
+
+Zeroize clears:
+- all FIFOs, including their storage: the raw entropy FIFOs, the observe FIFO and the esfinal FIFO that holds the conditioned seeds
+- the main and ack state machines, which return to idle
+- the health test state, the health test watermark and the alert counters
+- the SHA3 conditioner (see the Zeroize section of [SHA3](#sha3))
+
+All state is cleared synchronously at the end of the zeroize cycle, except for the data of the packer FIFOs, which is cleared one cycle later and is never output in between.
+In the zeroize cycle, no seed is acknowledged on the hardware interface, and `ENTROPY_DATA` and `FW_OV_RD_DATA` read 0.
+Zeroize has precedence over the Error state of the state machines. They only return to the Error state if the local escalation is still asserted.
+
+Zeroize does not clear:
+- the configuration registers
+- the interrupt and alert status
+- the enable of the noise source: the noise source keeps running. The sample received in the zeroize cycle is dropped.
+
+If entropy\_src is enabled, it restarts on its own after the zeroize: it runs the boot or startup health tests again and then delivers new seeds.
+No seed is delivered from the state before the zeroize, so firmware does not need to disable and re-enable entropy\_src.
+A pending request from CSRNG stays asserted and is served with a seed produced after the zeroize.
 
 ### CSRNG signal descriptions
 
@@ -529,10 +560,9 @@ The following table provides descriptions for the CSRNG signals.
 | lc_hw_debug_en_i           | input           | Lifecycle that selects which diversification value is used for xoring with the seed from entropy_src. |
 | entropy_src_hw_if_i        | input           | 384 bits of entropy data. Valid when es_ack is asserted high.                                         |
 | entropy_src_hw_if_o        | output          | Downstream block request for entropy bits.                                                            |
-| cs_aes_halt_i              | input           | Request from entropy_src to halt requests to the AES block for power leveling purposes.               |
-| cs_aes_halt_o              | output          | Response to entropy_src that all requests to AES block are halted.                                    |
 
-The CSRNG may only be enabled if entropy\_src is enabled. After it is disabled, CSRNG may only be re-enabled after entropy\_src has been disabled and re-enabled.
+The recommended enable sequence is to first enable entropy\_src and then CSRNG.
+entropy\_src can be disabled and re-enabled while CSRNG remains enabled; pending seed requests from CSRNG are served once entropy\_src is re-enabled.
 
 ### FIPS considerations
 
@@ -543,100 +573,180 @@ required for FIPS compliance. Additional details can be found in NIST
 publication SP 800-90B.
 
 The TRNG must be re-initialized whenever self-test parameter changes are
-needed. As described in the previous section, the initialization steps
-are as follows:
+needed. The initialization steps are as follows:
 
-1. Disable `csrng` and `entropy_src` in that order.
+1. Disable `entropy_src`. `csrng` can remain enabled.
 2. Apply new self-test configuration.
-3. Enable `entropy_src` and `csrng` in that order.
+3. Enable `entropy_src`.
 
 ### Adaptive self-test window and thresholds
 
-This section details the configuration of the `entropy_src`, focusing on how
-the test window size for the adaptive self-test is determined and how it
-relates to threshold calculations.
+This section details the configuration of the `entropy_src` health test
+windows and of the adaptive self-test thresholds.
 
-#### Understanding Test Window Sizes
+#### Test windows
 
-The adaptive self-test within the `entropy_src` block utilizes a
-configurable test window. To clarify its interpretation, two terms are
-defined:
+The size of a sample is determined by `CONF.RNG_BIT_ENABLE`:
 
-* `ENTROPY_TEST_WINDOW`: This refers to the test window size directly
-  configured in the hardware registers of the `entropy_src` block.
-* `ACTUAL_TEST_WINDOW`: This refers to the effective window size used for
-  the adaptive self-test threshold calculations. Its value depends on how
-  the test scores are aggregated.
+* In multi-channel mode (`CONF.RNG_BIT_ENABLE` disabled), a sample consists of
+  one bit from each of the 4 noise source lines.
+* In single-channel mode (`CONF.RNG_BIT_ENABLE` enabled), a sample is one bit
+  of the line selected by `CONF.RNG_BIT_SEL`.
 
-The aggregation method is determined by the CONF.THRESHOLD_SCOPE setting in
-the entropy_src block.
+The window size, in samples, depends on the operating mode:
 
-#### Aggregate per symbol
+* FIPS mode (`CONF.FIPS_ENABLE` enabled): the window size is configured in
+  `HEALTH_TEST_WINDOWS.FIPS_WINDOW`, in samples.
+* Boot-time / bypass mode (`CONF.FIPS_ENABLE` disabled): the window is
+  configured in `HEALTH_TEST_WINDOWS.BYPASS_WINDOW`, in bits over all tested
+  lines, so the window size is `BYPASS_WINDOW` / 4 samples in multi-channel
+  mode and `BYPASS_WINDOW` samples in single-channel mode. Only the default
+  value of 384 bits is supported: without the conditioner, each window of
+  tested bits is output directly as one 384-bit seed (the CSRNG seed width).
 
-When CONF.THRESHOLD_SCOPE is enabled:
+In both modes, each tested noise source line contributes one bit per sample,
+i.e. window size bits per window.
 
-* The adaptive test combines the inputs from all physical entropy lines
-  into a single, cumulative score.
-* The test essentially treats the combined input as a single binary stream,
-  counting the occurrences of '1's.
-* In this configuration:
-  * If `ENTROPY_TEST_WINDOW` is set to 1024, then
-  * `ACTUAL_TEST_WINDOW` = `ENTROPY_TEST_WINDOW` = 1024
+#### Threshold scope
 
-#### Handle each physical noise source separately
+Some health tests are executed on each noise source line individually. For
+example, the Adaptive Proportion test counts the number of '1's of each line
+over the window. In multi-channel mode (`CONF.RNG_BIT_ENABLE` disabled),
+`CONF.THRESHOLD_SCOPE` selects the scope in which the results of these tests
+are compared against the thresholds and health test failures are counted:
 
-When `CONF.THRESHOLD_SCOPE` is disabled:
+* `CONF.THRESHOLD_SCOPE` disabled: the count of each line is compared against
+  the thresholds individually. This allows detecting the failure of a single
+  noise source line.
+* `CONF.THRESHOLD_SCOPE` enabled: the counts of all lines are summed up and the
+  sum is compared against the thresholds. This setting should not be used in
+  Caliptra.
 
-* The adaptive test scores each individual physical noise input line
-  independently.
-* This allows for monitoring the health of each noise source.
-* In this configuration (assuming, for example, 4 noise sources):
-  * If `ENTROPY_TEST_WINDOW` is set to 4096 bits, then
-  * `ACTUAL_TEST_WINDOW` = (`ENTROPY_TEST_WINDOW` / 4) = 1024
+In single-channel mode (`CONF.RNG_BIT_ENABLE` enabled), `CONF.THRESHOLD_SCOPE` has no effect.
 
 #### Configuring adaptive self-test thresholds
 
-Once the `ACTUAL_TEST_WINDOW` is determined, the adaptive self-test
-thresholds can be configured as follows:
+`entropy_src` provides two variants of the NIST SP 800-90B Adaptive Proportion
+test (Section 4.4.2), which declares an error if the count reaches the cutoff
+value $C = 1 + critbinom(W, 2^{-H}, 1 - α)$, where $W$ is the window size and
+$H$ the min-entropy per sample:
 
-* `ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = `adaptp_cutoff`
-* `ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `ACTUAL_TEST_WINDOW` - `adaptp_cutoff`
+* The Adaptive Proportion test (`ADAPTP_HI_THRESHOLD`, `ADAPTP_LO_THRESHOLD`)
+  treats the noise source lines as binary sources and counts the number of
+  '1's. It is used when the lines are modeled as binary noise sources.
+* The Adaptive Proportion Symbol test (`ADAPTPS_THRESHOLD`) treats the 4 lines
+  together as a non-binary source producing 4-bit symbols. It counts how often
+  the first symbol of the window occurs within the window.
 
-Here, `adaptp_cutoff` represents the pre-determined cutoff value for the
-adaptive proportion test, as defined by NIST SP 800-90B. See the threshold
-calculations below as an example.
+##### Adaptive Proportion test
+
+The thresholds depend on the number of bits `N` over which the compared count
+is taken:
+
+| Mode           | `CONF.THRESHOLD_SCOPE` disabled | `CONF.THRESHOLD_SCOPE` enabled |
+| :------------- | :------------------------------ | :----------------------------- |
+| Multi-channel  | `N` = window size               | `N` = 4 * window size          |
+| Single-channel | `N` = window size               | `N` = window size              |
+
+`CONF.THRESHOLD_SCOPE` enabled is listed for completeness only and should not
+be used in Caliptra.
+
+The test fails if the count of '1's is greater than or equal to
+`ADAPTP_HI_THRESHOLD` or less than or equal to `ADAPTP_LO_THRESHOLD`, i.e. if
+either the '1's or the '0's reach the cutoff value $C$. An
+`ADAPTP_LO_THRESHOLD` of 0 (reset value) disables the low check. The
+thresholds can then be configured as follows:
+
+* `ADAPTP_HI_THRESHOLD` = $C$
+* `ADAPTP_LO_THRESHOLD` = `N` - $C$
+
+with $W$ = `N` and $H$ the min-entropy per bit. See the threshold calculations
+below as an example.
 
 $α = 2^{-40}$ (recommended)\
 $H = 0.5$ (example, estimated entropy measured from hardware)\
-$W$ = `ACTUAL_TEST_WINDOW`\
-`adaptp_cutoff` =  $1 + critbinom(W, 2^{-H}, 1 - α)$
+$W$ = `N`\
+$C = 1 + critbinom(W, 2^{-H}, 1 - α)$
+
+##### Adaptive Proportion Symbol test
+
+The Adaptive Proportion Symbol test is used in multi-channel mode, where each
+sample is a 4-bit symbol. The test fails if the count of the first symbol
+reaches `ADAPTPS_THRESHOLD`, so the threshold can be configured as follows:
+
+* `ADAPTPS_THRESHOLD` = $C$
+
+with $W$ = window size and $H$ the min-entropy per 4-bit symbol.
+
+The same threshold registers are used in FIPS mode and in bypass mode.
+Since the counts are accumulated over the window, the cutoff $C$ depends on
+the window size, so thresholds calculated for the FIPS window are wrong for the
+much smaller bypass window and vice versa. The thresholds therefore have to be set for the window of the
+mode that is used, and reprogrammed (while `entropy_src` is disabled) when
+switching between bypass and FIPS mode.
 
 > Note: The `critbinom` function (critical binomial distribution function) is
 > implemented by most spreadsheet applications.
 
 ### Recommended configuration
 
-The following configuration is recommended for the adaptive and repetition
-count tests:
+The configuration of the health tests depends on how the 4 noise source lines
+can be modeled in the sense of NIST SP 800-90B. For the window size in the
+different operating modes, see [Test windows](#test-windows).
 
-#### Adaptive test
+#### Four independent binary noise sources
 
-1. Set `CONF.THRESHOLD_SCOPE` to disabled. This allows the test to monitor
-   and score each physical noise source individually, providing more granular
-   health information.
-2. Set `HEALTH_TEST_WINDOWS.FIPS_WINDOW` to 4096 bits. This value serves
-   as the `ENTROPY_TEST_WINDOW`. With the current 4 noise source configuration,
-   this is equivalent to 1024 bits per noise source, where each source produces
-   1 bit of entropy as defined in NIST SP 800-90B.
-3. Calculate thresholds. Use an `ACTUAL_TEST_WINDOW` of 1024 bits (derived
-   from step 2) in the adaptive test threshold formulas provided earlier in
-   this subsection.
+If the 4 lines come from independent noise sources, each line can be health
+tested as a separate binary noise source:
+
+1. Set `CONF.THRESHOLD_SCOPE` to disabled, so that the Adaptive Proportion
+   test evaluates each line individually. The Repetition Count test always
+   evaluates each line individually.
+2. Set the window size to the window size defined by NIST SP 800-90B
+   for binary noise sources. Each line is then tested over window size bits.
+3. Calculate the `ADAPTP_HI_THRESHOLD`, `ADAPTP_LO_THRESHOLD` and
+   `REPCNT_THRESHOLD` cutoffs with `N` = window size.
+
+`entropy_src` only supports one set of cutoff values, shared by all 4 lines.
+This configuration therefore requires a justification that:
+
+* the 4 lines can legitimately be treated as independent noise sources, and
+* the common cutoff values are appropriate for every line, i.e. they are
+  derived from an entropy estimate that holds for each of the 4 lines.
+
+If this cannot be justified, this configuration must not be used. Use one of
+the following configurations instead.
+
+#### Single-lane mode
+
+Health test and condition a single binary line:
+
+1. Set `CONF.RNG_BIT_ENABLE` to enabled and select the line with
+   `CONF.RNG_BIT_SEL`. `CONF.THRESHOLD_SCOPE` has no effect in this mode.
+2. Set the window size to the window size defined by NIST SP 800-90B
+   for binary noise sources. The selected line is then tested over window
+   size bits.
+3. Calculate the `ADAPTP_HI_THRESHOLD`, `ADAPTP_LO_THRESHOLD` and
+   `REPCNT_THRESHOLD` cutoffs for the selected line with `N` = window size.
+
+#### 4-bit symbol mode
+
+Treat the 4 lines together as a single noise source producing 4-bit symbols:
+
+1. Keep `CONF.RNG_BIT_ENABLE` disabled (multi-channel mode).
+2. Set the window size to the window size defined by NIST SP 800-90B
+   for non-binary noise sources. Each sample is a 4-bit symbol.
+3. Use the symbol-based tests: calculate the `ADAPTPS_THRESHOLD` (see
+   [Adaptive Proportion Symbol test](#adaptive-proportion-symbol-test)) with
+   `W` = window size and the `REPCNTS_THRESHOLD` (Repetition Count Symbol
+   test), both with the min-entropy `H` per 4-bit symbol.
 
 #### Repetition count test
 
 The methodology used for calculating the repetition count threshold in the
-ROM boot phase can be directly applied for this test as well. The threshold is
-applied on a per-noise-source basis.
+ROM boot phase can be directly applied in all three configurations, using
+the min-entropy per bit (independent sources, single-lane mode) or per 4-bit
+symbol (4-bit symbol mode).
 
 
 ## Dual iTRNG entropy combiner
@@ -727,9 +837,7 @@ blocks: `AHB_LOCK` uses a MuBi4 encoding that is fail-safe to *locked*, and the
 datapath sequencer uses a sparse Hamming-distance-3 (HD-3) FSM encoding. A
 single-bit glitch that produces an undefined FSM code is trapped to a terminal
 error state and latched into the combiner's error-interrupt status (alongside the
-`ot_sha3` countermeasure errors). The `cs_aes_halt` current-management
-handshake between each entropy source and CSRNG is terminated locally inside the
-combiner so that a conditioner is never left waiting on an acknowledge.
+`ot_sha3` countermeasure errors).
 
 
 ## External-TRNG REQ HW API
@@ -3008,7 +3116,7 @@ The Stable Owner Root Key is conditionally derived by ROM when all three conditi
 
 - `SUBSYSTEM_MODE_en` = 1 (Caliptra operating in subsystem mode)
 - `OCP_LOCK_MODE_en` = 0 (OCP Lock feature is not active)
-- `SS_STRAP_GENERIC[3][0]` = 1 (SoC strap enabling the stable owner key feature)
+- `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1 (SoC configuration, written prior to `CPTRA_FUSE_WR_DONE`, enabling the stable owner key feature)
 
 The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared normally.
 
@@ -3022,7 +3130,7 @@ When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at
 
 Only the specific slots that ROM or FMC actually derive (16 and 22) are preserved — not the entire OCP Lock range (16–23). Slots 17–21 and 23 are always cleared.
 
-**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is always cleared even if `SS_STRAP_GENERIC[3][0]` = 1.
+**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is always cleared even if `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1.
 
 #### Error escalation
 
@@ -3043,7 +3151,7 @@ Once the boot flow monitor detects that execution has transitioned to FMC or RT 
 | :------- | :-- | :---- | :------ |
 | CPTRA_HW_ERROR_FATAL | 4 | kv_error | Boot flow error OR KV monitor alert |
 | CPTRA_HW_ERROR_FATAL | 5 | shadow_storage_err | ICCM region shadow register storage fault |
-| CPTRA_HW_ERROR_FATAL | 7 | rv_dcls_err | RISC-V dual-core lockstep (DCLS) corruption detected; gated by the subsystem DCLS enable (`CPTRA_HW_CONFIG.DCLS_en`) |
+| CPTRA_HW_ERROR_FATAL | 7 | rv_dcls_err | RISC-V dual-core lockstep (DCLS) mismatch; normal reporting enabled by `CPTRA_HW_CONFIG.DCLS_en` in both profiles |
 | CPTRA_HW_ERROR_FATAL | 8 | dccm_wr_readback_err | DCCM write-readback mismatch detected (store corrupted); maskable via `internal_hw_error_fatal_mask` |
 | CPTRA_HW_ERROR_NON_FATAL | 3 | shadow_update_err | ICCM region shadow register phase mismatch |
 
@@ -3224,7 +3332,7 @@ The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditio
 | 4 | kv_error | No | KV boot-flow monitor `dest_valid` mismatch or boot-flow error |
 | 5 | shadow_storage_err | No | ICCM region shadow-register storage fault (register/shadow corrupted) |
 | 6 | fsm_error | No | Sparse-encoded security FSM entered an invalid/illegal state (fault-injection/glitch detection) |
-| 7 | rv_dcls_err | No | RISC-V dual-core lockstep (DCLS) mismatch between the main and shadow core; gated by the subsystem DCLS enable (`CPTRA_HW_CONFIG.DCLS_en`) |
+| 7 | rv_dcls_err | No | RISC-V dual-core lockstep (DCLS) mismatch; normal reporting enabled by `CPTRA_HW_CONFIG.DCLS_en` in both profiles |
 | 8 | dccm_wr_readback_err | Yes (`mask_dccm_wr_readback_err`) | DCCM write-readback mismatch — data read back after a store did not match what was written |
 | 31:9 | rsvd | — | Reserved |
 

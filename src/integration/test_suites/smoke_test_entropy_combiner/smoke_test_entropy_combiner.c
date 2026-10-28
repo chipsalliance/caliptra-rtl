@@ -65,7 +65,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 // Raw entropy_src config used for a deterministic seed: FIPS/health-test
 // conditioning off (CONF) and MODULE_ENABLE on, so es_bits == the InitialSeed
 // streamed by physical_rng (identity packing). Same values as smoke_test_trng.
-#define ES_CONF_RAW          0x2649999
+#define ES_CONF_RAW          0x0999999
 #define ES_MODULE_ENABLE      0x6
 // ES1's register map is ES0's base + 0x1000.
 #define ES1_OFFSET (CLP_ENTROPY_SRC1_REG_BASE_ADDR - CLP_ENTROPY_SRC_REG_BASE_ADDR)

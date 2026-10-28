@@ -12,28 +12,16 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-module caliptra_2ff_sync  #( parameter WIDTH=1,
-                             parameter RST_VAL=0)
-    (
-    input logic clk,
-    input logic rst_b,
-    input logic [WIDTH-1:0] din,
-    output logic [WIDTH-1:0] dout
-
-);
-
-logic din_ff;
-
-always_ff@(posedge clk or negedge rst_b) begin
-    if(!rst_b) begin
-        dout <= RST_VAL;
-        din_ff <= RST_VAL;
-    end
-    else begin 
-        din_ff <= din;
-        dout <= din_ff;
-    end
-end
-
-
+module entropy_src_cov_bind;
+  `ifdef FCOV
+  bind entropy_src_core entropy_src_cov_if i_entropy_src_cov_if (
+    .clk_i         (clk_i),
+    .rst_ni        (rst_ni),
+    .zeroize       (zeroize),
+    .zeroize_reg   (reg2hw.entropy_src_ctrl.qe && reg2hw.entropy_src_ctrl.q),
+    .zeroize_pin   (debugUnlock_or_scan_mode_switch),
+    .main_sm_state (u_entropy_src_main_sm.state_q),
+    .ack_sm_state  (u_entropy_src_ack_sm.state_q)
+  );
+  `endif
 endmodule

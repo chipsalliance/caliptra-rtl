@@ -32,6 +32,10 @@
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
 `include "caliptra_reg_field_defines.svh"
+// Explicit include so el2_mubi_pkg:: resolves regardless of overall file-list
+// compile order (this file uses it directly at line ~2014 for the DCLS
+// mismatch check).
+`include "el2_mubi_pkg.sv"
 
 
 module caliptra_top_tb_services
@@ -71,6 +75,7 @@ module caliptra_top_tb_services
     // TB Controls
     output var   ras_test_ctrl_t   ras_test_ctrl,
     output var   stash_test_ctrl_t stash_test_ctrl,
+    output logic dcls_test_start,
     output int   cycleCnt,
     output var   axi_complex_ctrl_t axi_complex_ctrl,
 
@@ -400,7 +405,8 @@ module caliptra_top_tb_services
     //                         disabled and verifies in FW that rv_dcls_err stays 0)
     //         8'hc2        - Request BFM post-CPTRA_LOCK stash bank negative writes
     //         8'hc3        - Request BFM stash bank random overwrite with invalid AXI USER (PAUSER)
-    //         8'hc4: 8'hc7 - Unused
+    //         8'hc4        - Start directed DCLS (+CALIPTRA_TEST_DCLS only)
+    //         8'hc5: 8'hc7 - Unused
     //         8'hc8        - Inject key 0x0 into slot 16 for AES
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
@@ -1949,6 +1955,15 @@ endgenerate //IV_NO
     end
 
 `ifdef RV_LOCKSTEP_ENABLE
+    initial dcls_test_start = 0;
+    always @(posedge clk) begin
+        dcls_test_start <= 0;
+        if (mailbox_write && WriteData[7:0] == 8'hc4 && $test$plusargs("CALIPTRA_TEST_DCLS")) begin
+            if (UVM_TB) $fatal(1, "Directed DCLS requires the standalone SoC BFM");
+            dcls_test_start <= 1;
+        end
+    end
+
     // DCLS lockstep corruption injection (auto-release after 5 clocks).
     // Forces lockstep_err_injection_en_i = El2MuBiTrue (4'h6) to trigger corruption_detected_o.
     // NOTE: corruption detection must be ENABLED for corruption_detected_o to propagate.
@@ -1997,6 +2012,35 @@ endgenerate //IV_NO
                 $display("* TESTCASE FAILED");
                 $finish;
             end
+        end
+    end
+`endif // RV_LOCKSTEP_ENABLE
+
+    // Fail the test on any main/shadow core divergence, independent of whether
+    // DCLS detection is enabled (ss_dcls_en) or which mode Caliptra runs in.
+    // Error injection (smoke_test_dcls_inject/_dis) bypasses corruption_detected,
+    // and the comparison is invalid once the core has entered debug mode or while
+    // scan mode is (or was, since the last reset) active. Directed output/regfile
+    // fault injection (caliptra_top_tb_dcls.svh) creates a real divergence on
+    // purpose, so also exempt its active fault windows.
+    logic dcls_mismatch_detected;
+    initial dcls_mismatch_detected = 1'b0;
+`ifdef RV_LOCKSTEP_ENABLE
+    always @(posedge clk) begin
+        if (!dcls_mismatch_detected &&
+            `CPTRA_TOP_PATH.rvtop.lockstep.rst_n &&
+            (`CPTRA_TOP_PATH.rvtop.lockstep.corruption_detected == el2_mubi_pkg::El2MuBiTrue) &&
+            (`CPTRA_TOP_PATH.rvtop.lockstep.dbg_detected        == el2_mubi_pkg::El2MuBiFalse) &&
+            (`CPTRA_TOP_PATH.rvtop.lockstep.scan_detected       == el2_mubi_pkg::El2MuBiFalse)
+`ifdef CALIPTRA_TOP_TB
+`ifndef VERILATOR
+            && !`CALIPTRA_TOP.soc_bfm_inst.dcls_output_fault_active
+            && !`CALIPTRA_TOP.soc_bfm_inst.dcls_regfile_fault_active
+`endif
+`endif
+            ) begin
+            dcls_mismatch_detected <= 1'b1;
+            $error("TB: unexpected DCLS mismatch between main and shadow core");
         end
     end
 `endif // RV_LOCKSTEP_ENABLE
@@ -2873,6 +2917,11 @@ endgenerate //IV_NO
                 $display(" -- Extending simulation for 100 clock cycles to capture ending waveform");
             end
         end
+        if (dcls_mismatch_detected && !(|cycleCntKillReq) && !UVM_TB) begin
+            cycleCntKillReq <= cycleCnt;
+            $error("* TESTCASE FAILED");
+            $display(" -- DCLS mismatch: extending simulation for 100 clock cycles to capture ending waveform");
+        end
         if (|cycleCntKillReq && (cycleCnt == (cycleCntKillReq + 100))) begin
                 $error("Dumping memory contents at simulation end due to FAILURE");
                 dump_memory_contents(MEMTYPE_LMEM, MBOX_DIR_START_ADDR, MBOX_DIR_END_ADDR);
@@ -3696,6 +3745,9 @@ pcrvault_cov_bind i_pcrvault_cov_bind();
 axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 aes_cov_bind i_aes_cov_bind();
 doe_cov_bind i_doe_cov_bind();
+sha3_cov_bind i_sha3_cov_bind();
+entropy_src_cov_bind i_entropy_src_cov_bind();
+entropy_combiner_cov_bind i_entropy_combiner_cov_bind();
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

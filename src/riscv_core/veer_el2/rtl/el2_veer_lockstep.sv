@@ -27,6 +27,7 @@ module el2_veer_lockstep
     input logic        clk,
     input logic        rst_l,
     input logic        dbg_rst_l,
+    input logic        rst_l_sync,  // rst_l synchronized in el2_veer_wrapper
     input logic [31:1] rst_vec,
     input logic        nmi_int,
     input logic [31:1] nmi_vec,
@@ -423,10 +424,10 @@ module el2_veer_lockstep
     assign delayed_main_core_outputs_pre = delay_output_d[LockstepDelayPipeStages];
 
     // Shadow core enters reset immediately with main core but gets out of reset
-    // after the delay
+    // after the delay. In scan mode, the reset inputs drive it directly.
     logic [LockstepDelayPipeStages:0] rst_shadow_sr, rst_dbg_shadow_sr;
-    assign rst_shadow = &rst_shadow_sr;
-    assign rst_dbg_shadow = &rst_dbg_shadow_sr;
+    assign rst_shadow = scan_mode ? rst_l : &rst_shadow_sr;
+    assign rst_dbg_shadow = scan_mode ? dbg_rst_l : &rst_dbg_shadow_sr;
 
     always_ff @(posedge clk or negedge rst_l) begin
       if (!rst_l) begin
@@ -485,6 +486,7 @@ module el2_veer_lockstep
   );
 
   // Capture input
+  assign main_core_inputs.rst_l_sync = rst_l_sync;
   assign main_core_inputs.rst_vec = rst_vec;
   assign main_core_inputs.nmi_int = nmi_int;
   assign main_core_inputs.nmi_vec = nmi_vec;
@@ -587,7 +589,6 @@ module el2_veer_lockstep
   assign main_core_inputs.extintsrc_req = extintsrc_req;
   assign main_core_inputs.timer_int = timer_int;
   assign main_core_inputs.soft_int = soft_int;
-  assign main_core_inputs.scan_mode = scan_mode;
 
   // Capture output
   assign main_core_outputs.core_rst_l = core_rst_l;
@@ -785,6 +786,25 @@ module el2_veer_lockstep
 
   assign dbg_detected = debug_mode_status_latch;
 
+  // Latch the scan mode: in scan mode the shadow core leaves reset together with
+  // the main core, so both are only aligned again after a reset without scan mode
+  el2_mubi_t scan_mode_latch;
+  el2_mubi_t scan_detected;
+
+  always_ff @(posedge clk or negedge rst_l) begin
+    if (~rst_l) begin
+      scan_mode_latch <= El2MuBiFalse;
+    end else begin
+      if (scan_mode) begin
+        scan_mode_latch <= El2MuBiTrue;
+      end else begin
+        scan_mode_latch <= scan_mode_latch;
+      end
+    end
+  end
+
+  assign scan_detected = mubi_or(mubi_from_bool(scan_mode), scan_mode_latch);
+
 `ifdef RV_LOCKSTEP_REGFILE_ENABLE
 `endif
 `ifdef RV_LOCKSTEP_REGFILE_ENABLE
@@ -832,6 +852,7 @@ module el2_veer_lockstep
       .clk(clk),
       .rst_l(rst_shadow),
       .dbg_rst_l(rst_dbg_shadow),
+      .rst_l_sync(shadow_core_inputs.rst_l_sync),
       .rst_vec(shadow_core_inputs.rst_vec),
       .nmi_int(shadow_core_inputs.nmi_int),
       .nmi_vec(shadow_core_inputs.nmi_vec),
@@ -1138,7 +1159,7 @@ module el2_veer_lockstep
       .extintsrc_req(shadow_core_inputs.extintsrc_req),
       .timer_int(shadow_core_inputs.timer_int),
       .soft_int(shadow_core_inputs.soft_int),
-      .scan_mode(shadow_core_inputs.scan_mode)
+      .scan_mode(scan_mode)
   );
 
   // Trace
@@ -1168,22 +1189,32 @@ module el2_veer_lockstep
   assign err_injection_invalid = mubi_check_invalid(lockstep_err_injection_en_i);
   assign disable_detection_invalid = mubi_check_invalid(disable_corruption_detection_i);
 
-  // Report corruption if one of the scenarios is fulfilled:
-  // Scenario I:
-  // - Shadow Core is out of reset
-  // - Shadow Core is enabled
-  // - Main Core was never in debug state
-  // - One of:
-  //    * IOs (or regfiles if enabled) of Main Core and Shadow Core differ
-  //    * error injection (`lockstep_err_injection_en_i`) is enabled
-  //    * `lockstep_err_injection_en_i` drives invalid multibit encoding
-  // Scenario II:
-  // - Shadow Core is out of reset
-  // - `disable_corruption_detection_i` drives invalid multibit encoding
-  el2_mubi_t any_corruption, case0, case1;
+  // Report corruption if one of the scenarios is fulfilled, except while scan
+  // mode has been active since the last reset (scan_detected): the shadow
+  // core is not kept aligned with the main core while scan_mode is driven
+  // directly, so neither scenario is meaningful until the next reset.
+  // Scenario I (normal_mismatch_report): a real mismatch was observed, or
+  // error injection is requested/invalid. Also suppressed while:
+  // - software has explicitly disabled detection (disable_corruption_detection_i)
+  // - Main Core has been in debug state since the last reset (dbg_detected)
+  // Scenario II (invalid_disable_failsafe): disable_corruption_detection_i
+  // itself reads an invalid multibit encoding (e.g. a glitch/attack on that
+  // control signal) -- always reported as corruption regardless of debug
+  // state, as a fail-safe.
+  el2_mubi_t any_corruption;
+  el2_mubi_t normal_mismatch_report, invalid_disable_failsafe, any_report;
 
   assign any_corruption = mubi_or(mubi_or(corruption_detected, lockstep_err_injection_en_i), err_injection_invalid);
-  assign case0 = mubi_and(mubi_and(any_corruption, ~disable_corruption_detection_i), ~dbg_detected);
-  assign case1 = disable_detection_invalid;
-  assign corruption_detected_o = mubi_and(mubi_or(case0, case1), mubi_from_bool(rst_n));
+
+  assign normal_mismatch_report =
+      mubi_and(any_corruption,
+          mubi_and(~disable_corruption_detection_i, ~dbg_detected));
+
+  assign invalid_disable_failsafe = disable_detection_invalid;
+
+  assign any_report = mubi_or(normal_mismatch_report, invalid_disable_failsafe);
+
+  assign corruption_detected_o =
+      mubi_and(mubi_and(any_report, ~scan_detected),
+                mubi_from_bool(rst_n));
 endmodule : el2_veer_lockstep

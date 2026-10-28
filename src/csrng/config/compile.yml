@@ -19,7 +19,6 @@ provides: [csrng]
 schema_version: 2.4.0
 requires:
   - libs
-  - caliptra_prim_generic
   - caliptra_prim
   - lc_ctrl_pkg
   - entropy_src_pkg

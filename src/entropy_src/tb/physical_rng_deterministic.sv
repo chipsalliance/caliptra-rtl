@@ -42,11 +42,12 @@
 //       return nib, s
 //
 // A distinct nonzero LfsrSeed per source makes ES0 and ES1 stream different
-// entropy. The LFSR is seeded once at time 0 and HELD (paused) whenever disabled,
-// so the sample sequence is a single contiguous deterministic stream regardless
-// of enable gaps -- the reference model just takes the first N samples. The
-// emitted values are independent of DutyCycle (which only sets the streaming
-// rate); a small DutyCycle keeps sims fast.
+// entropy. The LFSR is reloaded with LfsrSeed whenever the source is disabled
+// (like physical_rng restarts its InitialSeed), so every time entropy_src is
+// (re-)enabled, the sample sequence starts from LfsrSeed again -- the reference
+// model just takes the first N samples after each enable. The emitted values are
+// independent of DutyCycle (which only sets the streaming rate); a small
+// DutyCycle keeps sims fast.
 //
 //======================================================================
 
@@ -102,10 +103,10 @@ module physical_rng_deterministic #(
         count  <= '0;
       end
     end else begin
-      // Hold (pause) the LFSR while disabled so the emitted sample sequence is a
-      // single contiguous deterministic stream across enable gaps (e.g. entropy_src
-      // FIFO backpressure). The LFSR is seeded once at time 0 (initial block), so
-      // the reference model simply takes the first N samples from LfsrSeed.
+      // Reload the LFSR while disabled so that every enable starts the sample
+      // sequence from LfsrSeed. This makes tests that disable, reconfigure and
+      // re-enable entropy_src predictable by the reference model.
+      lfsr  <= LfsrSeed;
       valid <= 1'b0;
       count <= '0;
     end

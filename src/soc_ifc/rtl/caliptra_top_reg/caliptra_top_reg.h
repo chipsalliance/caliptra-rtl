@@ -564,8 +564,8 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1                                           (0x184)
 #define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_LOW                      (0)
 #define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_REPETITION_COUNT_MASK                     (0xffff)
-#define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_LOW                                  (16)
-#define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_RSVD_MASK                                 (0xffff0000)
+#define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_ALERT_THRESHOLD_LOW                       (16)
+#define GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_1_ALERT_THRESHOLD_MASK                      (0xffff0000)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2                          (0x30188)
 #ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG_ENTROPY_CONFIG_2
@@ -594,8 +594,8 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1                                          (0x190)
 #define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_REPETITION_COUNT_LOW                     (0)
 #define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_REPETITION_COUNT_MASK                    (0xffff)
-#define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_RSVD_LOW                                 (16)
-#define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_RSVD_MASK                                (0xffff0000)
+#define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_ALERT_THRESHOLD_LOW                      (16)
+#define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_1_ALERT_THRESHOLD_MASK                     (0xffff0000)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2                         (0x30194)
 #ifndef GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2
@@ -610,6 +610,60 @@
 #define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_RSVD_MASK                                (0x7ff80000)
 #define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_BYPASS_MODE_LOW                          (31)
 #define GENERIC_AND_FUSE_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2_BYPASS_MODE_MASK                         (0x80000000)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_0                                   (0x30198)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_0
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_0                                                    (0x198)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_1                                   (0x3019c)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_1
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_1                                                    (0x19c)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_2                                   (0x301a0)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_2
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_2                                                    (0x1a0)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_3                                   (0x301a4)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_3
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_3                                                    (0x1a4)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_4                                   (0x301a8)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_4
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_4                                                    (0x1a8)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_5                                   (0x301ac)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_5
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_5                                                    (0x1ac)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_6                                   (0x301b0)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_6
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_6                                                    (0x1b0)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_7                                   (0x301b4)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_7
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_7                                                    (0x1b4)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_8                                   (0x301b8)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_8
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_8                                                    (0x1b8)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_9                                   (0x301bc)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_9
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_9                                                    (0x1bc)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_10                                  (0x301c0)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_10
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_10                                                   (0x1c0)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_11                                  (0x301c4)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_11
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_11                                                   (0x1c4)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_LOCK                                (0x301c8)
+#ifndef GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_LOCK
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_LOCK                                                 (0x1c8)
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_LOCK_LOCK_LOW                                        (0)
+#define GENERIC_AND_FUSE_REG_CPTRA_AUX_PK_HASH_LOCK_LOCK_MASK                                       (0x1)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_FUSE_UDS_SEED_0                                       (0x30200)
 #ifndef GENERIC_AND_FUSE_REG_FUSE_UDS_SEED_0
@@ -1124,6 +1178,28 @@
 #define GENERIC_AND_FUSE_REG_SS_OCP_LOCK_CTRL                                                       (0x54c)
 #define GENERIC_AND_FUSE_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_LOW                                  (0)
 #define GENERIC_AND_FUSE_REG_SS_OCP_LOCK_CTRL_LOCK_IN_PROGRESS_MASK                                 (0x1)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_OTP_FC_STATUS_CFG                                  (0x30550)
+#ifndef GENERIC_AND_FUSE_REG_SS_OTP_FC_STATUS_CFG
+#define GENERIC_AND_FUSE_REG_SS_OTP_FC_STATUS_CFG                                                   (0x550)
+#define GENERIC_AND_FUSE_REG_SS_OTP_FC_STATUS_CFG_STATUS_OFFSET_LOW                                 (0)
+#define GENERIC_AND_FUSE_REG_SS_OTP_FC_STATUS_CFG_STATUS_OFFSET_MASK                                (0xffff)
+#define GENERIC_AND_FUSE_REG_SS_OTP_FC_STATUS_CFG_DAI_IDLE_BIT_NUM_LOW                              (16)
+#define GENERIC_AND_FUSE_REG_SS_OTP_FC_STATUS_CFG_DAI_IDLE_BIT_NUM_MASK                             (0xffff0000)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_OTP_FC_CMD_CFG                                     (0x30554)
+#ifndef GENERIC_AND_FUSE_REG_SS_OTP_FC_CMD_CFG
+#define GENERIC_AND_FUSE_REG_SS_OTP_FC_CMD_CFG                                                      (0x554)
+#define GENERIC_AND_FUSE_REG_SS_OTP_FC_CMD_CFG_DIRECT_ACCESS_CMD_OFFSET_LOW                         (0)
+#define GENERIC_AND_FUSE_REG_SS_OTP_FC_CMD_CFG_DIRECT_ACCESS_CMD_OFFSET_MASK                        (0xffff)
+#endif
+#define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_FW_FEATURE_CFG                                     (0x30558)
+#ifndef GENERIC_AND_FUSE_REG_SS_FW_FEATURE_CFG
+#define GENERIC_AND_FUSE_REG_SS_FW_FEATURE_CFG                                                      (0x558)
+#define GENERIC_AND_FUSE_REG_SS_FW_FEATURE_CFG_STABLE_OWNER_KEY_EN_LOW                              (0)
+#define GENERIC_AND_FUSE_REG_SS_FW_FEATURE_CFG_STABLE_OWNER_KEY_EN_MASK                             (0x1)
+#define GENERIC_AND_FUSE_REG_SS_FW_FEATURE_CFG_VENDOR_DEBUG_IMAGES_DIS_LOW                          (31)
+#define GENERIC_AND_FUSE_REG_SS_FW_FEATURE_CFG_VENDOR_DEBUG_IMAGES_DIS_MASK                         (0x80000000)
 #endif
 #define CALIPTRA_TOP_REG_GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0                                    (0x305a0)
 #ifndef GENERIC_AND_FUSE_REG_SS_STRAP_GENERIC_0

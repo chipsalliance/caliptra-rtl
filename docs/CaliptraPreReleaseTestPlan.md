@@ -113,7 +113,7 @@ Hardware-enforced DICE key integrity monitoring and slot access control across R
 
 | Area | Description | Priority |
 | :--- | :---------- | :------- |
-| Stable owner key preservation | Enable `stable_owner_key_en` strap (SS_STRAP_GENERIC[3] bit 0) and verify slot 15 preserved at enter_fmc (`StableOwnerPreservedAtFmc_C`) | Medium |
+| Stable owner key preservation | Enable `stable_owner_key_en` via SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN and verify slot 15 preserved at enter_fmc (`StableOwnerPreservedAtFmc_C`) | Medium |
 | OCP Lock slot preservation | Enable `ocp_lock_mode_en` straps and verify MDK/HEK slots preserved at enter_fmc (`OcpLockMdkPreservedAtFmc_C`, `OcpLockHekPreservedAtFmc_C`) | Medium |
 | Multi-write arbitration | Trigger >1 crypto engine writing same KV slot simultaneously (`cg_multi_write`) | Low |
 | Counter clears on scan mode | Write to slots 6,7,8, enter scan mode -- all 3 counters return to 0 | Low |
@@ -439,3 +439,20 @@ Single iteration, 3 steps:
 
 - `src/integration/stimulus/L0_regression.yml` -- smoke_test_iccm_hash
 - `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- directed_test_iccm_hash, directed_test_iccm_pcr5_journey, directed_test_iccm_fw_write_block, directed_test_iccm_sha_ctrl_block, directed_test_iccm_clear_hatch, directed_test_iccm_sha_acc_reuse, directed_test_iccm_cold_reset_pcr5, directed_test_iccm_replay_block, directed_test_iccm_hash_sizes, directed_test_iccm_hash_fill, directed_test_iccm_hash_overflow
+
+---
+
+## DCLS Reporting in Passive and Subsystem Profiles
+
+In both profiles, verify that `dcls_en=0` suppresses normal mismatch reporting and `dcls_en=1` enables fatal reporting, with matching `DCLS_en` readback. Run the integration tests using `src/integration/stimulus/DCLS_regression.yml`.
+
+| Test / YAML variant | Coverage |
+| :--- | :--- |
+| `smoke_test_dcls_inject` | Enabled readback and fatal reporting (`+CLP_DCLS_EN`) |
+| `smoke_test_dcls_dis` | Disabled readback and reporting suppression (`+CLP_DCLS_DIS`) |
+| `smoke_test_hw_config` | Profile and enabled readback |
+| `dcls_hw_config_test` | DCLS configuration readback and transitions |
+| `directed_dcls_reporting_outputs` | Output comparator mismatch and fatal handling |
+| `directed_dcls_reporting_regfile` | Register-file comparator mismatch |
+| `directed_dcls_reporting_control` | Runtime enable/disable transitions and sticky fatal state |
+| `directed_dcls_reporting_qualifications` | Debug/reset qualifications and invalid MuBi encoding |

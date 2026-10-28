@@ -1,0 +1,9 @@
+# SPDX-License-Identifier: Apache-2.0
+---
+seed: 1
+testname: directed_dcls_reporting
+simulators: [vcs]
+plusargs:
+  - +CLP_DCLS_EN
+  - +CALIPTRA_TEST_DCLS
+  - +DCLS_SCENARIO=outputs
