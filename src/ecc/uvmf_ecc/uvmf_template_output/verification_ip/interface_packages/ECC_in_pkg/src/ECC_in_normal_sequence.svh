@@ -44,7 +44,21 @@ class ECC_in_normal_sequence #(
   // start(sequencerHandle) task.
   //
   task body();
+    string operation;
+    bit select_operation;
+    ecc_in_op_transactions selected_operation;
     begin
+      select_operation = $value$plusargs("ECC_OPERATION=%s", operation);
+      selected_operation = key_gen;
+      if (select_operation) begin
+        case (operation)
+          "keygen": selected_operation = key_gen;
+          "signing": selected_operation = key_sign;
+          "verifying": selected_operation = key_verify;
+          "ecdh": selected_operation = ecdh_sharedkey;
+          default: `uvm_fatal("ECC_OPERATION", {"Unknown ECC_OPERATION: ", operation})
+        endcase
+      end
       // Construct the transaction
       req=ECC_in_transaction#(
                 .AHB_DATA_WIDTH(AHB_DATA_WIDTH),
@@ -52,7 +66,10 @@ class ECC_in_normal_sequence #(
                 )::type_id::create("req");
       start_item(req);
       // Randomize the transaction
-      if(!req.randomize() with { test == ecc_normal_test; }) `uvm_fatal("SEQ", "ECC_in_normal_sequence::body()-ECC_in_transaction randomization failed")
+      if (!req.randomize() with {
+        test == ecc_normal_test;
+        if (local::select_operation) op == local::selected_operation;
+      }) `uvm_fatal("SEQ", "ECC_in_normal_sequence::body()-ECC_in_transaction randomization failed")
       // set the operation
       //req.test = ecc_normal_test;
       //$display("*** ANJANA*** op = %h", req.test);
@@ -64,4 +81,3 @@ class ECC_in_normal_sequence #(
   endtask
 
 endclass: ECC_in_normal_sequence
-

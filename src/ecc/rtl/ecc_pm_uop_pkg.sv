@@ -53,6 +53,8 @@ typedef struct packed
 
 localparam pm_opcode_t UOP_NOP          = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
 localparam pm_opcode_t UOP_DO_MUL_p     = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0, red_en:1'b0};
+// sub_sel is unused by MUL; it marks a nonblocking multiply issue.
+localparam pm_opcode_t UOP_DO_MUL_SHADOW_p = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0, red_en:1'b0};
 localparam pm_opcode_t UOP_DO_MUL_p_red = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0, red_en:1'b1};
 localparam pm_opcode_t UOP_ST_MUL_p     = '{mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
 localparam pm_opcode_t UOP_DO_ADD_p     = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
@@ -157,9 +159,9 @@ localparam [PROG_ADDR_W-1 : 0] PM_INIT_G_E          = PM_INIT_G_S + 5;
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_S            = PM_INIT_G_E + 2; // R0 INIT with O
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_E            = PM_INIT_S + 9;
 localparam [PROG_ADDR_W-1 : 0] PA_S                 = PM_INIT_E + 2;   // Point Addition
-localparam [PROG_ADDR_W-1 : 0] PA_E                 = PA_S + 85;
+localparam [PROG_ADDR_W-1 : 0] PA_E                 = PA_S + 86;
 localparam [PROG_ADDR_W-1 : 0] PD_S                 = PA_E + 2;        // Point Doubling
-localparam [PROG_ADDR_W-1 : 0] PD_E                 = PD_S + 83;
+localparam [PROG_ADDR_W-1 : 0] PD_E                 = PD_S + 82;
 localparam [PROG_ADDR_W-1 : 0] INV_S                = PD_E + 2;        // Inversion mod p
 localparam [PROG_ADDR_W-1 : 0] INV_E                = INV_S + 793;
 localparam [PROG_ADDR_W-1 : 0] CONV_S               = INV_E + 2;       // PM result conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
@@ -170,7 +172,7 @@ localparam [PROG_ADDR_W-1 : 0] CONV_X_E             = CONV_X_S + 9;
 localparam [PROG_ADDR_W-1 : 0] SIGN0_S              = CONV_X_E + 2;   // signing proof r part0
 localparam [PROG_ADDR_W-1 : 0] SIGN0_E              = SIGN0_S + 27;
 localparam [PROG_ADDR_W-1 : 0] INVq_S               = SIGN0_E + 2;    // Inversion mod q
-localparam [PROG_ADDR_W-1 : 0] INVq_E               = INVq_S + 953;
+localparam [PROG_ADDR_W-1 : 0] INVq_E               = INVq_S + 863;
 localparam [PROG_ADDR_W-1 : 0] SIGN1_S              = INVq_E + 2;     // signing proof r part1
 localparam [PROG_ADDR_W-1 : 0] SIGN1_E              = SIGN1_S + 11;
 
@@ -202,6 +204,8 @@ localparam [PROG_ADDR_W-1 : 0] VER_NEG_P1_S         = VER_LOAD_GMK_E + 2;  // ve
 localparam [PROG_ADDR_W-1 : 0] VER_NEG_P1_E         = VER_NEG_P1_S + 5;
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_S         = VER_NEG_P1_E + 2;  // Deffie-Helman Shared Key R1 INIT with PK
 localparam [PROG_ADDR_W-1 : 0] PM_INIT_DH_E         = PM_INIT_DH_S + 9;
+localparam [PROG_ADDR_W-1 : 0] PD_PA_S              = PM_INIT_DH_E + 2;
+localparam [PROG_ADDR_W-1 : 0] PD_PA_E              = PD_PA_S + 5;
 
 endpackage
 

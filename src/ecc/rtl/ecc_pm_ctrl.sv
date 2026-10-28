@@ -69,9 +69,10 @@ module ecc_pm_ctrl
     //----------------------------------------------------------------
     // Internal constant and parameter definitions.
     //----------------------------------------------------------------
-    localparam [7 : 0] MULT_DELAY          = 8'd21; // 3*S_NUM for RADIX=64
+    // Geometry reference for the legacy formal model, not a controller stall.
+    localparam [7 : 0] MULT_DELAY = 3 * ((REG_SIZE + ecc_params_pkg::MULT_RADIX - 1) /
+                                       ecc_params_pkg::MULT_RADIX + 1);
     localparam [7 : 0] ADD_DELAY           = 8'd1;  // 2 -1;
-    localparam [7 : 0] MULT_RETIRE_DELAY   = MULT_DELAY - 8'd5;
     
     localparam [9 : 0] Secp384_SCA_MONT_COUNT   = REG_SIZE[9 : 0] + RND_SIZE[9 : 0];
     localparam [9 : 0] Secp384_MONT_COUNT       = REG_SIZE[9 : 0];
@@ -90,19 +91,30 @@ module ecc_pm_ctrl
     pm_instr_struct_t prog_instr;
     pm_instr_struct_t prog_instr_pipe1;
     pm_instr_struct_t prog_instr_pipe2;
+    logic [PROG_ADDR_W-1 : 0] prog_instr_addr;
+    logic [PROG_ADDR_W-1 : 0] prog_instr_pipe1_addr;
+    logic [PROG_ADDR_W-1 : 0] prog_instr_pipe2_addr;
+    logic [PROG_ADDR_W-1 : 0] issued_addr;
+    logic issued_valid;
+    logic instruction_consumed;
+    logic instruction_issue;
+    logic pipeline_wait;
+    logic mult_busy;
+    logic mult_launch_pending;
+    logic mult_issue_wait;
+    logic mult_pending;
+    logic mult_store_issue;
     
     logic [3 : 0]  ecc_cmd_reg;
 
     logic stalled, stalled_pipe1;
     logic stall_flag;
     logic add_issue;
-    logic add_issue_q;
+    logic mult_issue;
     logic add_store_wait;
     logic add_pipe_store_wait;
     logic [7 : 0] add_retire_cntr;
-    logic mult_store_wait;
     logic mult_pipe_store_wait;
-    logic [7 : 0] mult_retire_cntr;
     logic mont_ladder;
     logic shamir_digit_g;
     logic shamir_digit_pk;
@@ -114,6 +126,8 @@ module ecc_pm_ctrl
     logic shamir_precompute_active;
     logic shamir_precompute_pk_done;
     logic shamir_precompute_gminus;
+    logic                              add_store_ready;
+    logic                              mult_pipe_store_ready;
 
     function automatic [OPR_ADDR_WIDTH-1 : 0] map_shamir_addr(
         input [OPR_ADDR_WIDTH-1 : 0] addr,
@@ -143,10 +157,19 @@ module ecc_pm_ctrl
         .clka(clk),
         .reset_n(reset_n),
         .zeroize(zeroize),
-        .ena(1'b1),
+        .ena(!pipeline_wait),
         .addra(prog_addr),
         .douta(prog_instr)
     );
+
+    always_ff @(posedge clk or negedge reset_n) begin
+        if (!reset_n)
+            prog_instr_addr <= '0;
+        else if (zeroize)
+            prog_instr_addr <= '0;
+        else if (!pipeline_wait)
+            prog_instr_addr <= prog_addr;
+    end
     
     always_ff @(posedge clk or negedge reset_n) 
     begin : ff_stalled_reg
@@ -154,7 +177,7 @@ module ecc_pm_ctrl
             stalled_pipe1 <= '0;
         else if (zeroize) 
             stalled_pipe1 <= '0;
-        else
+        else if (!pipeline_wait)
             stalled_pipe1 <= stalled;
     end // ff_stalled_reg
 
@@ -171,9 +194,12 @@ module ecc_pm_ctrl
             prog_cntr   <= '0;
             mont_cntr   <= '0;
             stall_cntr  <= '0;
-            add_issue_q <= 1'b0;
+            issued_addr <= '0;
+            issued_valid <= 1'b0;
+            mult_busy <= 1'b0;
+            mult_launch_pending <= 1'b0;
+            mult_pending <= 1'b0;
             add_retire_cntr <= '0;
-            mult_retire_cntr <= '0;
             stalled     <= '0;
             req_digit_o <= '0;
             mont_ladder <= '0;
@@ -193,9 +219,12 @@ module ecc_pm_ctrl
             prog_cntr   <= '0;
             mont_cntr   <= '0;
             stall_cntr  <= '0;
-            add_issue_q <= 1'b0;
+            issued_addr <= '0;
+            issued_valid <= 1'b0;
+            mult_busy <= 1'b0;
+            mult_launch_pending <= 1'b0;
+            mult_pending <= 1'b0;
             add_retire_cntr <= '0;
-            mult_retire_cntr <= '0;
             stalled     <= '0;
             req_digit_o <= '0;
             mont_ladder <= '0;
@@ -212,34 +241,38 @@ module ecc_pm_ctrl
             shamir_precompute_gminus <= '0;
         end
         else begin
-            add_issue_q <= prog_instr_pipe2.opcode.add_en & !(add_pipe_store_wait || mult_pipe_store_wait);
+            if (instruction_issue) begin
+                issued_addr <= prog_instr_pipe2_addr;
+                issued_valid <= 1'b1;
+            end
+            if (mult_issue) begin
+                mult_busy <= 1'b1;
+            end
+            else if (mult_ready_i && !mult_launch_pending)
+                mult_busy <= 1'b0;
+            if (mult_issue)
+                mult_launch_pending <= 1'b1;
+            else if (mult_start_i)
+                mult_launch_pending <= 1'b0;
+            // One multiply owns the live result until its in-order store issues.
+            if (mult_issue)
+                mult_pending <= 1'b1;
+            else if (mult_store_issue)
+                mult_pending <= 1'b0;
 
             if (add_issue)
                 add_retire_cntr <= ADD_DELAY;
             else if (add_retire_cntr != '0)
                 add_retire_cntr <= add_retire_cntr - 1'b1;
 
-            if (mult_start_i)
-                mult_retire_cntr <= MULT_RETIRE_DELAY;
-            else if (mult_retire_cntr != '0)
-                mult_retire_cntr <= mult_retire_cntr - 1'b1;
-
-            if (stalled & (stall_cntr > 0)) begin
+            if (pipeline_wait) begin
+                // Freeze the decoded-stall pipeline along with its instructions.
+                // Functional-unit retirement above must continue to release it.
+            end
+            else if (stalled & (stall_cntr > 0)) begin
                 stall_cntr <= stall_cntr - 1;
             end
-            else if (add_pipe_store_wait || mult_pipe_store_wait) begin
-                stalled    <= 1'b1;
-                stall_cntr <= '0;
-            end
             else if (stalled & prog_instr.opcode.add_we & add_store_wait) begin
-                stalled    <= 1'b1;
-                stall_cntr <= '0;
-            end
-            else if (stalled & prog_instr.opcode.mult_we & mult_store_wait) begin
-                stalled    <= 1'b1;
-                stall_cntr <= '0;
-            end
-            else if (stalled & prog_instr.opcode.mult_en & !mult_ready_i) begin
                 stalled    <= 1'b1;
                 stall_cntr <= '0;
             end
@@ -248,10 +281,11 @@ module ecc_pm_ctrl
                     UOP_DO_ADD_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
                     UOP_DO_MUL_p,
-                    UOP_DO_MUL_p_red :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
+                    UOP_DO_MUL_p_red,
+                    UOP_DO_MUL_SHADOW_p,
+                    UOP_DO_MUL_q : begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end
                     UOP_DO_ADD_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
-                    UOP_DO_MUL_q :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
                     UOP_ST_ADD_p,
                     UOP_ST_ADD_q :  begin stalled <= 1'b1; stall_cntr <= '0; end
                     UOP_ST_MUL_p,
@@ -354,7 +388,8 @@ module ecc_pm_ctrl
                         end
                     end
                                         
-                    PA_S : begin //Start of point addtion
+                    PA_S,
+                    PA_S + 1 : begin // Clear the digit request even when PA's MUL was prefetched.
                         req_digit_o <= 0;
                         prog_cntr <= prog_cntr + 1;
                     end
@@ -365,7 +400,22 @@ module ecc_pm_ctrl
                     end
                     
                     PA_E : begin //End of point addtion
-                        prog_cntr <= PD_S;
+                        // Skip the PD multiply scheduled in PA's tail.
+                        prog_cntr <= PD_S + 1;
+                    end
+
+                    PD_S + 77 : begin
+                        if (mont_ladder && (mont_cntr != 0) &&
+                            (ecc_cmd_reg inside {KEYGEN_CMD, SIGN_CMD, DH_SHARED_CMD}))
+                            prog_cntr <= PD_PA_S;
+                        else
+                            prog_cntr <= prog_cntr + 1;
+                    end
+
+                    PD_PA_E : begin
+                        mont_cntr <= mont_cntr - 1;
+                        req_digit_o <= 1;
+                        prog_cntr <= PA_S + 1;
                     end
                     
                     PD_E : begin //End of point doubling
@@ -573,29 +623,43 @@ module ecc_pm_ctrl
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : sequencer_pipeline1
-        if (!reset_n) 
+        if (!reset_n) begin
             prog_instr_pipe1 <= '{UOP_NOP, '0, '0};
-        else if (zeroize) 
+            prog_instr_pipe1_addr <= '0;
+        end
+        else if (zeroize) begin
             prog_instr_pipe1 <= '{UOP_NOP, '0, '0};
+            prog_instr_pipe1_addr <= '0;
+        end
         else begin
-            if (stalled_pipe1 || mult_pipe_store_wait)
+            if (stalled_pipe1 || pipeline_wait)
                 prog_instr_pipe1 <= prog_instr_pipe1;
-            else 
+            else begin
                 prog_instr_pipe1 <= prog_instr;
+                prog_instr_pipe1_addr <= prog_instr_addr;
+            end
         end
     end // sequencer_pipeline1
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : sequencer_pipeline2
-        if (!reset_n) 
+        if (!reset_n) begin
             prog_instr_pipe2 <= '{UOP_NOP, '0, '0};
-        else if (zeroize) 
+            prog_instr_pipe2_addr <= '0;
+        end
+        else if (zeroize) begin
             prog_instr_pipe2 <= '{UOP_NOP, '0, '0};
+            prog_instr_pipe2_addr <= '0;
+        end
         else begin
-            if (stalled_pipe1 || add_pipe_store_wait || mult_pipe_store_wait)
+            // A retired MUL store can drain pipe2 despite a held fetch-stall phase.
+            // Real backpressure and the once-only issue guard remain authoritative.
+            if (pipeline_wait || (stalled_pipe1 && !mult_store_issue))
                 prog_instr_pipe2 <= prog_instr_pipe2;
-            else 
+            else begin
                 prog_instr_pipe2 <= prog_instr_pipe1;
+                prog_instr_pipe2_addr <= prog_instr_pipe1_addr;
+            end
         end
     end // sequencer_pipeline2
 
@@ -614,24 +678,42 @@ module ecc_pm_ctrl
     end // delay_flag
     */
 
-    always_comb add_issue = prog_instr_pipe2.opcode.add_en & !add_issue_q &
-                            !(add_pipe_store_wait || mult_pipe_store_wait);
-    always_comb add_store_wait = prog_instr.opcode.add_we & (add_retire_cntr != '0);
-    always_comb add_pipe_store_wait = prog_instr_pipe2.opcode.add_we & (add_retire_cntr != '0);
-    always_comb mult_store_wait = prog_instr.opcode.mult_we & (mult_retire_cntr != '0);
-    always_comb mult_pipe_store_wait = prog_instr_pipe2.opcode.mult_we & (mult_retire_cntr != '0);
-    always_comb stall_flag = (prog_instr.opcode.add_en || prog_instr.opcode.mult_en || add_store_wait || mult_store_wait);
+    // A frozen pipeline may present one ROM instruction for many cycles.
+    assign instruction_consumed = issued_valid & (issued_addr == prog_instr_pipe2_addr);
+    assign pipeline_wait = add_pipe_store_wait | mult_pipe_store_wait | mult_issue_wait;
+    assign instruction_issue = !instruction_consumed & !pipeline_wait;
+    assign mult_issue_wait = prog_instr_pipe2.opcode.mult_en & !instruction_consumed &
+                             ((mult_busy & !mult_ready_i) | mult_pending);
+    always_comb add_issue = prog_instr_pipe2.opcode.add_en & instruction_issue;
+    always_comb mult_issue = prog_instr_pipe2.opcode.mult_en & instruction_issue;
+    assign mult_store_issue = prog_instr_pipe2.opcode.mult_we & instruction_issue;
+    always_comb add_store_ready = (add_retire_cntr == '0);
+    // Only actual completion permits a store. Busy retains completion after
+    // the ready pulse; launch qualification excludes a previous result.
+    always_comb mult_pipe_store_ready = mult_pending & !mult_launch_pending &
+                                       (!mult_busy | mult_ready_i);
+    always_comb add_store_wait = prog_instr.opcode.add_we & !add_store_ready;
+    always_comb add_pipe_store_wait = prog_instr_pipe2.opcode.add_we & !instruction_consumed & !add_store_ready;
+    always_comb mult_pipe_store_wait = prog_instr_pipe2.opcode.mult_we & !instruction_consumed & !mult_pipe_store_ready;
+    always_comb stall_flag = (prog_instr.opcode.add_en || prog_instr.opcode.mult_en || add_store_wait);
      
 
     //Instruction out to arithmetic units and memory
     always_ff @(posedge clk or negedge reset_n) 
     begin : instruction_out
-        if (!reset_n)
+        if (!reset_n) begin
             instr_o <= '{UOP_NOP, '0, '0};
-        else if (zeroize)
+        end
+        else if (zeroize) begin
             instr_o <= '{UOP_NOP, '0, '0};
-        else if (add_pipe_store_wait || mult_pipe_store_wait)
-            instr_o <= '{UOP_NOP, '0, '0};
+        end
+        else if (!instruction_issue) begin
+            // Preserve operands and modulus through RAM/FAU input capture.
+            instr_o.opcode.add_en <= 1'b0;
+            instr_o.opcode.mult_en <= 1'b0;
+            instr_o.opcode.add_we <= 1'b0;
+            instr_o.opcode.mult_we <= 1'b0;
+        end
         else begin
             instr_o.opcode <= prog_instr_pipe2.opcode;
             

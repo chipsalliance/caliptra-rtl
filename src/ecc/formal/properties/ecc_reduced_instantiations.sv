@@ -69,7 +69,8 @@ ecc_montgomerymultiplier #(
         .reduce_i(1'b1),
         .p_o(p_o),
         .accept_o(),
-        .ready_o(ready_o)
+        .ready_o(ready_o),
+        .result_ready_o()
     );
 
 ecc_pe_first  #(.RADIX(4)) ecc_pe_first_reduced(

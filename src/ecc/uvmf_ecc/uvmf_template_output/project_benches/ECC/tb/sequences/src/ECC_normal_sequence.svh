@@ -31,6 +31,10 @@ class ECC_normal_sequence #(int AHB_DATA_WIDTH = 64,
   endfunction : new
 
   virtual task body();
+    int iterations = 10;
+    uvm_report_server report_server;
+    if ($value$plusargs("ECC_TEST_ITERATIONS=%d", iterations) && (iterations <= 0))
+      `uvm_fatal("ECC_TEST_ITERATIONS", "ECC_TEST_ITERATIONS must be positive")
     //ECC_in_agent_random_seq = ECC_in_random_sequence#()::type_id::create("ECC_in_agent_random_seq");
     ECC_in_normal_s = ECC_in_normal_sequence#()::type_id::create("ECC_in_normal_s");
 
@@ -40,7 +44,7 @@ class ECC_normal_sequence #(int AHB_DATA_WIDTH = 64,
     join
 
     //repeat (10) ECC_in_agent_random_seq.start(ECC_in_agent_sequencer);
-    repeat (10) ECC_in_normal_s.start(ECC_in_agent_sequencer);
+    repeat (iterations) ECC_in_normal_s.start(ECC_in_agent_sequencer);
     //repeat (5) ECC_in_agent_random_seq.start(ECC_in_agent_sequencer);
 
     fork
@@ -48,7 +52,9 @@ class ECC_normal_sequence #(int AHB_DATA_WIDTH = 64,
       ECC_out_agent_config.wait_for_num_clocks(50);
     join
 
-    if (1) // TODO -- how to properly choose which to print?
+    report_server = uvm_report_server::get_server();
+    if ((report_server.get_severity_count(UVM_ERROR) == 0) &&
+        (report_server.get_severity_count(UVM_FATAL) == 0))
         $display("* TESTCASE PASSED");
     else
         $display("* TESTCASE FAILED");

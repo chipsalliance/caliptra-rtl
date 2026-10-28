@@ -56,7 +56,8 @@ module ecc_montgomerymultiplier #(
     input  wire                  reduce_i,
     output logic [REG_SIZE-1:0]  p_o,
     output logic                 accept_o,
-    output logic                 ready_o
+    output logic                 ready_o,
+    output logic                 result_ready_o
 );
     //----------------------------------------------------------------
     // Local Parameters
@@ -304,7 +305,8 @@ module ecc_montgomerymultiplier #(
                     sub_b_o[t1] <= '0;
                 else if (zeroize)
                     sub_b_o[t1] <= '0;
-                else
+                // Hold the final reduction decision with the completed result.
+                else if ((t1 != 2*(PE_UNITS+1)) || push_reg[0])
                     sub_b_o[t1] <= sub_res[t1][RADIX];
             end
         end
@@ -378,5 +380,9 @@ module ecc_montgomerymultiplier #(
     assign push_reg_eq_zero = push_reg == 'b0;
     assign ready_o  = push_reg_eq_zero & ~push_reg_eq_zero_ff;
     assign accept_o = ready_o;
+    // The last push writes padding when the output ends on a word boundary.
+    // Reduction still needs the final carry; full pipeline readiness is unchanged.
+    assign result_ready_o = (!reduce_reg && (REG_SIZE % RADIX == 0) && (S_NUM % 2 == 1)) ?
+                            push_reg[0] : ready_o;
 
 endmodule

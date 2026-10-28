@@ -362,9 +362,11 @@ module ecc_arith_unit
     assign digit_neg_in = jsf_active & jsf_digit_g_neg[0];
     assign digit_pk_neg_in = jsf_active & jsf_digit_pk_neg[0];
 
-    assign addra_mux_s = (ecc_busy_s & mult_addr_hold_valid & !ecc_instr_s.opcode.add_we) ? mult_opa_addr :
+    assign addra_mux_s = (ecc_busy_s & mult_addr_hold_valid & !ecc_instr_s.opcode.add_we &
+                          !ecc_instr_s.opcode.add_en) ? mult_opa_addr :
                          ecc_instr_s.opa_addr;
-    assign addrb_mux_s = (ecc_busy_s & mult_addr_hold_valid & !ecc_instr_s.opcode.mult_we) ? mult_opb_addr :
+    assign addrb_mux_s = (ecc_busy_s & mult_addr_hold_valid & !ecc_instr_s.opcode.mult_we &
+                          !ecc_instr_s.opcode.add_en) ? mult_opb_addr :
                          (ecc_busy_s ? ecc_instr_s.opb_addr : reg_addr_r);
     assign web_mux_s   = ecc_busy_s ? ecc_instr_s.opcode.mult_we    : reg_web_r;
     assign dinb_mux_s  = ecc_busy_s ? mult_res_s                    : reg_dinb_r;
