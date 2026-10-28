@@ -69,7 +69,7 @@ module ecc_pm_ctrl
     //----------------------------------------------------------------
     // Internal constant and parameter definitions.
     //----------------------------------------------------------------
-    localparam [7 : 0] MULT_DELAY          = 8'd27; //28 -1;
+    localparam [7 : 0] MULT_DELAY          = 8'd21; // 3*S_NUM for RADIX=64
     localparam [7 : 0] ADD_DELAY           = 8'd1;  // 2 -1;
     localparam [7 : 0] MULT_RETIRE_DELAY   = MULT_DELAY - 8'd5;
     
