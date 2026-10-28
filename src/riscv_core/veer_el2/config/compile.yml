@@ -74,6 +74,8 @@ targets:
       - $COMPILE_ROOT/rtl/el2_veer.sv
       - $COMPILE_ROOT/rtl/lib/el2_prim_generic_buf.sv
       - $COMPILE_ROOT/rtl/lib/el2_prim_buf.sv
+      - $COMPILE_ROOT/rtl/lib/el2_prim_generic_rst_mux2.sv
+      - $COMPILE_ROOT/rtl/lib/el2_prim_rst_mux2.sv
       - $COMPILE_ROOT/rtl/el2_veer_lockstep.sv
       - $COMPILE_ROOT/rtl/el2_veer_wrapper.sv
     tops: [el2_veer_wrapper]
@@ -90,8 +92,7 @@ global:
 ---
 provides: [el2_veer_wrapper_tb]  
 schema_version: 2.4.0
-requires: 
-  - caliptra_top_defines
+requires:
   - el2_veer_pkg
   - el2_veer_wrapper
 targets:
