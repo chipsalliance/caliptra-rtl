@@ -217,6 +217,8 @@ ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_client.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_client.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_read_rule_check.sv
 ${CALIPTRA_ROOT}/src/keyvault/rtl/kv_write_rule_check.sv
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_field_defines.svh
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_sbox_canright_masked.sv
 ${CALIPTRA_ROOT}/src/aes/rtl/aes_cipher_core.sv
@@ -264,7 +266,6 @@ ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_block_encrypt.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_state_db.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng_cmd_stage.sv
 ${CALIPTRA_ROOT}/src/csrng/rtl/csrng.sv
-${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
 ${CALIPTRA_ROOT}/src/entropy_combiner/tb/csrng_raw_wrap.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng.sv
 ${CALIPTRA_ROOT}/src/entropy_src/tb/physical_rng_deterministic.sv

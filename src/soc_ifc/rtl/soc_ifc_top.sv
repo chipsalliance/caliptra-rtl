@@ -601,6 +601,12 @@ always_comb begin
         //Only if debug locked, not scan mode, and the fuse valid bit is set
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.we = ~Warm_Reset_Capture_Flag && mubi4_test_true_loose(security_state.debug_locked) && ~scan_mode_f && !clear_obf_secrets && cptra_obf_uds_seed_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.next = cptra_obf_uds_seed[i];
+        //Sticky on fuse_wr_done.
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = 1'b1;
+`else
+        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+`endif
         obf_uds_seed[i] = soc_ifc_reg_hwif_out.fuse_uds_seed[i].seed.value;
     end
     for (int i = 0; i < `CLP_OBF_FE_DWORDS; i++) begin
@@ -609,6 +615,12 @@ always_comb begin
         //Only if debug locked, not scan mode, and the fuse valid bit is set
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.we = ~Warm_Reset_Capture_Flag && mubi4_test_true_loose(security_state.debug_locked) && ~scan_mode_f && !clear_obf_secrets && cptra_obf_field_entropy_vld && ~soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
         soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.next = cptra_obf_field_entropy[i];
+        //Sticky on fuse_wr_done.
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = 1'b1;
+`else
+        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
+`endif
         obf_field_entropy[i] = soc_ifc_reg_hwif_out.fuse_field_entropy[i].seed.value;
     end
     for (int i = 0; i < OCP_LOCK_HEK_NUM_DWORDS; i++) begin
@@ -762,24 +774,10 @@ always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
 end
 
 // Make the relevant fuses sticky on fuse_wr_done
+// (fuse_uds_seed and fuse_field_entropy are made sticky with their other fields, above)
 always_comb begin
-    for (int i=0; i < `CLP_OBF_UDS_DWORDS; i++) begin
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = 1'b1;
-`else
-        soc_ifc_reg_hwif_in.fuse_uds_seed[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-`endif
-    end
     for (int i=0; i<12; i++) begin
         soc_ifc_reg_hwif_in.fuse_vendor_pk_hash[i].hash.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-    end
-
-    for (int i=0; i < `CLP_OBF_FE_DWORDS; i++) begin
-`ifdef CALIPTRA_MODE_SUBSYSTEM
-        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = 1'b1;
-`else
-        soc_ifc_reg_hwif_in.fuse_field_entropy[i].seed.swwel = soc_ifc_reg_hwif_out.CPTRA_FUSE_WR_DONE.done.value;
-`endif
     end
 
     for (int i=0; i<24; i++) begin
@@ -1139,9 +1137,8 @@ always_comb ss_dbg_manuf_enable = soc_ifc_reg_hwif_out.SS_DBG_SERVICE_REG_RSP.MA
 
 // DEBUG unlock level signal is only writable by Caliptra, and only when DEBUG_INTENT is 1
 always_comb begin
-    for (int i=0; i<2; i++) begin
-        soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[i].LEVEL.swwel = soc_ifc_reg_req_data.soc_req || !soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value;
-    end
+    soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.swwel = soc_ifc_reg_req_data.soc_req || !soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value;
+    soc_ifc_reg_hwif_in.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.swwel = soc_ifc_reg_req_data.soc_req || !soc_ifc_reg_hwif_out.SS_DEBUG_INTENT.debug_intent.value;
 end
 always_comb ss_soc_dbg_unlock_level = {soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[1].LEVEL.value,
                                        soc_ifc_reg_hwif_out.SS_SOC_DBG_UNLOCK_LEVEL[0].LEVEL.value};

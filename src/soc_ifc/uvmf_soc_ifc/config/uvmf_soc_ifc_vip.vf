@@ -59,6 +59,7 @@
 +incdir+${CALIPTRA_ROOT}/src/soc_ifc/uvmf_soc_ifc/uvmf_template_output/verification_ip/environment_packages/soc_ifc_env_pkg/registers
 ${CALIPTRA_ROOT}/src/integration/rtl/config_defines.svh
 ${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_defines.svh
+${CALIPTRA_ROOT}/src/integration/rtl/caliptra_reg/caliptra_reg_field_defines.svh
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_sram.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/ahb_defines_pkg.sv
 ${CALIPTRA_ROOT}/src/libs/rtl/caliptra_ahb_srom.sv

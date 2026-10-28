@@ -18,10 +18,12 @@ targets:
     directories: [$COMPILE_ROOT/rtl/caliptra_reg]
     files:
       - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_field_defines.svh
   rtl:
     directories: [$COMPILE_ROOT/rtl/caliptra_reg]
     files:
       - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_field_defines.svh
 ---
 provides: [caliptra_top_reg_ss_defines]
 schema_version: 2.4.0
@@ -30,10 +32,12 @@ targets:
     directories: [$COMPILE_ROOT/rtl/caliptra_reg_ss]
     files:
       - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_field_defines.svh
   rtl:
     directories: [$COMPILE_ROOT/rtl/caliptra_reg_ss]
     files:
       - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_field_defines.svh
 ---
 provides: [caliptra_top]
 schema_version: 2.4.0

@@ -121,7 +121,7 @@ void kv_hmac512_flow(uint8_t block_id, uint8_t tag_id){
     hmac_zeroize();
 }
 
-kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext_str){
+void kv_aes_flow(uint8_t aes_kv_id, const char *plaintext_str, const char *ciphertext_str){
     VPRINTF(LOW, "\n\nEncryption in ECB mode\n");
     aes_op_e op = AES_ENC;
     aes_mode_e mode = AES_ECB;
