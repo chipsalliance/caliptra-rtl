@@ -111,54 +111,22 @@ module ecc_arith_unit
         input logic [REG_SIZE-1 : 0] scalar_g,
         input logic [REG_SIZE-1 : 0] scalar_pk
     );
-        logic [REG_SIZE+1 : 0] g_work;
-        logic [REG_SIZE+1 : 0] pk_work;
-        logic [REG_SIZE : 0] g_nonzero;
-        logic [REG_SIZE : 0] pk_nonzero;
-        logic [REG_SIZE : 0] g_neg;
-        logic [REG_SIZE : 0] pk_neg;
-        logic g_use_digit;
-        logic pk_use_digit;
-        logic g_use_neg;
-        logic pk_use_neg;
-        int unsigned idx;
+        logic [REG_SIZE+1 : 0] g_three;
+        logic [REG_SIZE+1 : 0] pk_three;
+        logic [REG_SIZE : 0] g_half;
+        logic [REG_SIZE : 0] pk_half;
         begin
-            g_work = {{2{1'b0}}, scalar_g};
-            pk_work = {{2{1'b0}}, scalar_pk};
-            g_nonzero = '0;
-            pk_nonzero = '0;
-            g_neg = '0;
-            pk_neg = '0;
-            for (idx = 0; idx < REG_SIZE+1; idx++) begin
-                g_use_digit = g_work[0];
-                pk_use_digit = pk_work[0];
-                g_use_neg = g_use_digit & (&g_work[1:0]);
-                pk_use_neg = pk_use_digit & (&pk_work[1:0]);
-
-                if (g_use_digit & !g_use_neg & (g_work[2:0] == 3'b011) & (pk_work[1:0] == 2'b10)) begin
-                    g_use_neg = 1'b1;
-                end
-                if (pk_use_digit & !pk_use_neg & (pk_work[2:0] == 3'b011) & (g_work[1:0] == 2'b10)) begin
-                    pk_use_neg = 1'b1;
-                end
-
-                g_nonzero[idx] = g_use_digit;
-                pk_nonzero[idx] = pk_use_digit;
-                g_neg[idx] = g_use_neg;
-                pk_neg[idx] = pk_use_neg;
-
-                if (g_use_digit) begin
-                    g_work = g_use_neg ? (g_work + {{(REG_SIZE+1){1'b0}}, 1'b1}) :
-                                         (g_work - {{(REG_SIZE+1){1'b0}}, 1'b1});
-                end
-                if (pk_use_digit) begin
-                    pk_work = pk_use_neg ? (pk_work + {{(REG_SIZE+1){1'b0}}, 1'b1}) :
-                                           (pk_work - {{(REG_SIZE+1){1'b0}}, 1'b1});
-                end
-                g_work = {1'b0, g_work[REG_SIZE+1 : 1]};
-                pk_work = {1'b0, pk_work[REG_SIZE+1 : 1]};
-            end
-            jsf_recode = {g_nonzero, g_neg, pk_nonzero, pk_neg};
+            // Preserve the existing independent NAF streams: nonzero=(3k^k)>>1,
+            // negative=(~3k&k)>>1. Widen before adding to retain digit REG_SIZE.
+            // The former joint tie-breaks were unreachable for a low word of 3.
+            g_three = {1'b0, scalar_g, 1'b0} + {2'b00, scalar_g};
+            pk_three = {1'b0, scalar_pk, 1'b0} + {2'b00, scalar_pk};
+            g_half = {2'b00, scalar_g[REG_SIZE-1 : 1]};
+            pk_half = {2'b00, scalar_pk[REG_SIZE-1 : 1]};
+            jsf_recode = {g_three[REG_SIZE+1 : 1] ^ g_half,
+                         ~g_three[REG_SIZE+1 : 1] & g_half,
+                         pk_three[REG_SIZE+1 : 1] ^ pk_half,
+                         ~pk_three[REG_SIZE+1 : 1] & pk_half};
         end
     endfunction
 

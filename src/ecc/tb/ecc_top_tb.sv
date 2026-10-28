@@ -1651,6 +1651,83 @@ module ecc_top_tb
     end
   endtask
 
+  task automatic check_jsf_pair(
+      input operand_t scalar_g, input operand_t scalar_pk,
+      input int unsigned case_number);
+    logic [4*(REG_SIZE+1)-1:0] actual;
+    logic [REG_SIZE:0] g_nonzero, g_negative, pk_nonzero, pk_negative;
+    logic [REG_SIZE+1:0] reconstructed_g, reconstructed_pk;
+    actual = dut.ecc_dsa_ctrl_i.ecc_arith_unit_i.jsf_recode(scalar_g, scalar_pk);
+    {g_nonzero, g_negative, pk_nonzero, pk_negative} = actual;
+    // Reconstruction plus non-adjacency uniquely specifies each scalar's NAF.
+    reconstructed_g = {1'b0, g_nonzero} - ({1'b0, g_negative} << 1);
+    reconstructed_pk = {1'b0, pk_nonzero} - ({1'b0, pk_negative} << 1);
+    if ($isunknown(actual) ||
+        (reconstructed_g !== {2'b00, scalar_g}) ||
+        (reconstructed_pk !== {2'b00, scalar_pk}) ||
+        ((g_negative & ~g_nonzero) !== '0) ||
+        ((pk_negative & ~pk_nonzero) !== '0) ||
+        ((g_nonzero & (g_nonzero << 1)) !== '0) ||
+        ((pk_nonzero & (pk_nonzero << 1)) !== '0)) begin
+      error_ctr++;
+      $fatal(1, "* TESTCASE FAILED: signed-digit recoding case %0d", case_number);
+    end
+  endtask
+
+  task automatic ecc_jsf_recode_test;
+    operand_t boundaries [12];
+    operand_t scalar_g, scalar_pk, one;
+    logic [31:0] random_state;
+    int unsigned checks;
+    one = {{(REG_SIZE-1){1'b0}}, 1'b1};
+    boundaries[0] = '0;
+    boundaries[1] = one;
+    boundaries[2] = one << 1;
+    boundaries[3] = (one << 1) + one;
+    boundaries[4] = one << 2;
+    boundaries[5] = (one << 2) + one;
+    boundaries[6] = (one << 3) - one;
+    boundaries[7] = '1;
+    boundaries[8] = one << (REG_SIZE-1);
+    boundaries[9] = (one << (REG_SIZE-1)) - one;
+    boundaries[10] = {REG_SIZE/2{2'b10}};
+    boundaries[11] = {REG_SIZE/2{2'b01}};
+    checks = 0;
+    foreach (boundaries[i])
+      foreach (boundaries[j]) begin
+        check_jsf_pair(boundaries[i], boundaries[j], checks);
+        checks++;
+      end
+    for (int i = 0; i < REG_SIZE; i++) begin
+      scalar_g = one << i;
+      check_jsf_pair(scalar_g, ~scalar_g, checks++);
+      check_jsf_pair(scalar_g - one, scalar_g, checks++);
+      check_jsf_pair(scalar_g, scalar_g - one, checks++);
+      check_jsf_pair(~scalar_g, scalar_g + one, checks++);
+    end
+    for (int unsigned i = 0; i < 4096; i++) begin
+      scalar_g = operand_t'(i);
+      check_jsf_pair(scalar_g, ~scalar_g, checks++);
+    end
+    random_state = 32'h20261002;
+    for (int i = 0; i < 1024; i++) begin
+      for (int word_index = 0; word_index < REG_SIZE/32; word_index++) begin
+        random_state ^= random_state << 13;
+        random_state ^= random_state >> 17;
+        random_state ^= random_state << 5;
+        scalar_g[word_index*32 +: 32] = random_state;
+        random_state ^= random_state << 13;
+        random_state ^= random_state >> 17;
+        random_state ^= random_state << 5;
+        scalar_pk[word_index*32 +: 32] = random_state;
+      end
+      check_jsf_pair(scalar_g, scalar_pk, checks++);
+    end
+    if (checks != 144 + 4*REG_SIZE + 4096 + 1024)
+      $fatal(1, "* TESTCASE FAILED: incomplete signed-digit checks");
+    $display("ECC_JSF_RECODE_CHECKS: %0d pairs passed reconstruction and non-adjacency", checks);
+  endtask
+
 
 
   //----------------------------------------------------------------
@@ -1726,6 +1803,11 @@ module ecc_top_tb
       
       string fname;
 
+      if (!(ecc_params_pkg::MULT_RADIX inside {48, 64}))
+        $fatal(1, "* TESTCASE FAILED: MULT_RADIX must be 48 or 64, got %0d",
+               ecc_params_pkg::MULT_RADIX);
+      $display("ECC_RADIX_CONFIG: MULT_RADIX=%0d", ecc_params_pkg::MULT_RADIX);
+
       $display("   -= Testbench for ecc started =-");
       $display("    ==============================");
       $display("");
@@ -1736,6 +1818,7 @@ module ecc_top_tb
       init_sim();
       reset_dut();
       check_name_version();
+      ecc_jsf_recode_test();
 
       //ecc_openssl_test();
 
