@@ -49,8 +49,13 @@ package ecc_reg_pkg;
     } ecc_reg__ECC_STATUS__VALID__in_t;
 
     typedef struct packed{
+        logic next;
+    } ecc_reg__ECC_STATUS__VERIFY_PASS__in_t;
+
+    typedef struct packed{
         ecc_reg__ECC_STATUS__READY__in_t READY;
         ecc_reg__ECC_STATUS__VALID__in_t VALID;
+        ecc_reg__ECC_STATUS__VERIFY_PASS__in_t VERIFY_PASS;
     } ecc_reg__ECC_STATUS__in_t;
 
     typedef struct packed{

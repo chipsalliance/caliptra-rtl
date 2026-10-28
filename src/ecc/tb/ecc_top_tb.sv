@@ -28,12 +28,13 @@
 module ecc_top_tb 
     import kv_defines_pkg::*;
 #(
-    parameter   TEST_VECTOR_NUM = 10
+    parameter   TEST_VECTOR_NUM = 100
 )
 ();
 
   string      ecc_test_vector_file; // Input test vector file
   string      ecc_test_to_run;      // ECC tests - default, ECC_normal_test, ECC_otf_reset_test
+  integer     ecc_test_vector_limit;
 
   localparam ECC_CMD_KEYGEN              = 2'b01;
   localparam ECC_CMD_SIGNING             = 2'b10;
@@ -141,6 +142,17 @@ module ecc_top_tb
     end else begin
       ecc_test_to_run = "default";
       $display("%m: Running default test = %s", ecc_test_to_run);
+    end
+
+    ecc_test_vector_limit = (ecc_test_to_run == "ECC_verify_only_test") ? TEST_VECTOR_NUM : 10;
+    if ($value$plusargs("ECC_TEST_VECTOR_LIMIT=%d", ecc_test_vector_limit)) begin
+      if (ecc_test_vector_limit > TEST_VECTOR_NUM) begin
+        ecc_test_vector_limit = TEST_VECTOR_NUM;
+      end
+      else if (ecc_test_vector_limit < 0) begin
+        ecc_test_vector_limit = 0;
+      end
+      $display("%m: Running with ECC_TEST_VECTOR_LIMIT = %0d", ecc_test_vector_limit);
     end
   end
 
@@ -611,6 +623,8 @@ module ecc_top_tb
     reg [31  : 0]   start_time;
     reg [31  : 0]   end_time;
     operand_t       verify_r;
+    reg             hw_verify_pass;
+    reg             fw_verify_pass;
     
     begin
       wait_ready();
@@ -639,14 +653,20 @@ module ecc_top_tb
       $display("*** TC %0d reading ECC_CMD_VERIFYING R value", tc_number);
       read_block(`ECC_REG_ECC_VERIFY_R_0);
       verify_r = reg_read_data;
-      
+
+      // Explicit hardware verification result must be read before zeroize clears it
+      read_single_word(`ECC_REG_ECC_STATUS);
+      hw_verify_pass = read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW];
+
       trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
 
       end_time = cycle_ctr - start_time;
       $display("*** verifying test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkey);
 
-      if (verify_r == test_vector.R)
+      fw_verify_pass = (verify_r == test_vector.R);
+
+      if (fw_verify_pass)
         begin
           $display("*** TC %0d verifying successful.", tc_number);
           $display("");
@@ -660,8 +680,66 @@ module ecc_top_tb
 
           error_ctr = error_ctr + 1;
         end
+
+      // ECC_STATUS.VERIFY_PASS must always agree with the returned ECC_VERIFY_R data
+      if (hw_verify_pass !== fw_verify_pass)
+        begin
+          $display("*** ERROR: TC %0d ECC_STATUS.VERIFY_PASS = %0b but ECC_VERIFY_R comparison = %0b",
+                   tc_number, hw_verify_pass, fw_verify_pass);
+          error_ctr = error_ctr + 1;
+        end
     end
   endtask // ecc_verifying_test
+
+  //----------------------------------------------------------------
+  // ecc_verify_negative_test()
+  //
+  // Perform a single negative verification with a public-data mutation.
+  //----------------------------------------------------------------
+  task ecc_verify_negative_test(input test_vector_t test_vector);
+    operand_t       verify_r;
+    reg             hw_verify_pass;
+
+    begin
+      wait_ready();
+
+      $display("*** verify negative test started.");
+      tc_ctr = tc_ctr + 1;
+
+      write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg ^ operand_t'(1));
+      write_block(`ECC_REG_ECC_PUBKEY_X_0, test_vector.pubkey.x);
+      write_block(`ECC_REG_ECC_PUBKEY_Y_0, test_vector.pubkey.y);
+      write_block(`ECC_REG_ECC_SIGN_R_0, test_vector.R);
+      write_block(`ECC_REG_ECC_SIGN_S_0, test_vector.S);
+
+      trig_ECC(ECC_CMD_VERIFYING);
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_VERIFY_R_0);
+      verify_r = reg_read_data;
+
+      read_single_word(`ECC_REG_ECC_STATUS);
+      hw_verify_pass = read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW];
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+
+      if ((verify_r != test_vector.R) && !hw_verify_pass)
+        begin
+          $display("*** TC %0d verify negative successful.", tc_ctr);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d verify negative NOT successful.", tc_ctr);
+          $display("Expected mismatch from R: 0x%96x", test_vector.R);
+          $display("Got:                      0x%96x", verify_r);
+          $display("ECC_STATUS.VERIFY_PASS:   %0b", hw_verify_pass);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+    end
+  endtask // ecc_verify_negative_test
 
 
 
@@ -677,6 +755,8 @@ module ecc_top_tb
     operand_t     R;
     operand_t     S;
     operand_t     verify_r;
+    reg           hw_verify_pass;
+    reg           fw_verify_pass;
 
     begin
 
@@ -806,10 +886,16 @@ module ecc_top_tb
 
       read_block(`ECC_REG_ECC_VERIFY_R_0);
       verify_r = reg_read_data;
-      
+
+      // Explicit hardware verification result must be read before zeroize clears it
+      read_single_word(`ECC_REG_ECC_STATUS);
+      hw_verify_pass = read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW];
+
       trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
 
-      if (verify_r == test_vector.R)
+      fw_verify_pass = (verify_r == test_vector.R);
+
+      if (fw_verify_pass)
         begin
           $display("*** TC %0d verifying successful.", tc_ctr);
           $display("");
@@ -821,6 +907,14 @@ module ecc_top_tb
           $display("Got:        0x%96x", verify_r);
           $display("");
 
+          error_ctr = error_ctr + 1;
+        end
+
+      // ECC_STATUS.VERIFY_PASS must always agree with the returned ECC_VERIFY_R data
+      if (hw_verify_pass !== fw_verify_pass)
+        begin
+          $display("*** ERROR: TC %0d ECC_STATUS.VERIFY_PASS = %0b but ECC_VERIFY_R comparison = %0b",
+                   tc_ctr, hw_verify_pass, fw_verify_pass);
           error_ctr = error_ctr + 1;
         end
     end
@@ -943,7 +1037,15 @@ module ecc_top_tb
 
         read_block(`ECC_REG_ECC_VERIFY_R_0);
         verify_r = reg_read_data;
-        
+
+        // Zeroize must also clear the explicit hardware verification result
+        read_single_word(`ECC_REG_ECC_STATUS);
+        if (read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW] !== 1'b0)
+          begin
+            $display("*** ERROR: TC %0d ECC_STATUS.VERIFY_PASS is set after zeroize.", tc_ctr);
+            error_ctr = error_ctr + 1;
+          end
+
         if (verify_r == 0)
           begin
             $display("*** TC %0d verifying successful.", tc_ctr);
@@ -1092,7 +1194,7 @@ module ecc_top_tb
   //----------------------------------------------------------------
   task ecc_test();
     begin  
-      for (int i = 0; i < 10; i++) begin: test_vector_loop
+      for (int i = 0; i < ecc_test_vector_limit; i++) begin: test_vector_loop
         if ((ecc_test_to_run == "ECC_normal_test") || (ecc_test_to_run == "default")) begin
           ecc_keygen_test(i, test_vectors[i]);
           ecc_signing_test(i, test_vectors[i]);
@@ -1102,11 +1204,17 @@ module ecc_top_tb
         else if (ecc_test_to_run == "ECC_otf_reset_test") begin
           ecc_onthefly_reset_test(i, test_vectors[i]);
         end
+        else if (ecc_test_to_run == "ECC_verify_only_test") begin
+          ecc_verifying_test(i, test_vectors[i]);
+        end
       end
-      
-      continuous_cmd_test(test_vectors[0]);
-      zeroize_test(test_vectors[1]);
-      ecc_fault_test();
+
+      if (ecc_test_to_run != "ECC_verify_only_test") begin
+        continuous_cmd_test(test_vectors[0]);
+        zeroize_test(test_vectors[1]);
+        ecc_verify_negative_test(test_vectors[2]);
+        ecc_fault_test();
+      end
     end
   endtask // ecc_test
 

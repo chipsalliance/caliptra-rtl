@@ -98,6 +98,15 @@ addrmap ecc_reg {
                                 a control command and process the block.";} READY = 1'b0;
         field {desc = "Status valid bit: ​Indicates if the process is done and the
                                 hash value stored in DIGEST registers is valid.";} VALID = 1'b0;
+        field {desc = "Signature verification result: set to 1 only when the last
+                                ECDSA VERIFY operation completed and the internally
+                                recomputed R matched the supplied signature R
+                                (ECC_SIGN_R). The comparison is latched while the
+                                engine is busy, during which software writes to
+                                ECC_SIGN_R are blocked (swwe = ecc_ready), so the
+                                result cannot be perturbed mid-operation. Software
+                                may overwrite ECC_SIGN_R once READY is set again;
+                                that does not re-evaluate this bit.";} VERIFY_PASS = 1'b0;
     
     } ECC_STATUS @0x00000018;
 
@@ -275,8 +284,12 @@ addrmap ecc_reg {
         name = "ECC VERIFY R";
         desc = "ECC component verify R result register type definition
                 12 32-bit registers storing the result of verifying operation in big-endian representation.
-                Firmware is responsible for comparing the computed result with 
-                the signature R, and if they are equal the signature is valid.
+                Hardware compares the computed result against the signature R and
+                reports the outcome in ECC_STATUS.VERIFY_PASS. Firmware may
+                independently compare this register against its own copy of the
+                signature R as a fault-attack check on ECC_STATUS.VERIFY_PASS; the
+                comparison reference must be a firmware-held copy of R for that check
+                to be independent.
                 The verify R result should be in [1 : q-1] while q is the group
                 order of the Secp384r1 curve.";
 

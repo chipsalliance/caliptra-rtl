@@ -66,7 +66,9 @@ ecc_montgomerymultiplier #(
         .opb_i(opb_i),
         .n_i(n_i),
         .n_prime_i(n_prime_i), 
+        .reduce_i(1'b1),
         .p_o(p_o),
+        .accept_o(),
         .ready_o(ready_o)
     );
 
@@ -113,5 +115,3 @@ bind ecc_dsa_ctrl ecc_reduced_instantiations ecc_reduced_instantiation_inst (
     .reset_n(reset_n),
     .zeroize(ecc_dsa_ctrl.zeroize_reg)
 );
-
-

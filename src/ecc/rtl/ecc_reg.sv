@@ -2011,7 +2011,8 @@ module ecc_reg (
     end
     assign readback_array[4][0:0] = (decoded_reg_strb.ECC_STATUS && !decoded_req_is_wr) ? hwif_in.ECC_STATUS.READY.next : '0;
     assign readback_array[4][1:1] = (decoded_reg_strb.ECC_STATUS && !decoded_req_is_wr) ? hwif_in.ECC_STATUS.VALID.next : '0;
-    assign readback_array[4][31:2] = '0;
+    assign readback_array[4][2:2] = (decoded_reg_strb.ECC_STATUS && !decoded_req_is_wr) ? hwif_in.ECC_STATUS.VERIFY_PASS.next : '0;
+    assign readback_array[4][31:3] = '0;
     for(genvar i0=0; i0<12; i0++) begin
         assign readback_array[i0*1 + 5][31:0] = (decoded_reg_strb.ECC_PRIVKEY_OUT[i0] && !decoded_req_is_wr) ? field_storage.ECC_PRIVKEY_OUT[i0].PRIVKEY_OUT.value : '0;
     end
