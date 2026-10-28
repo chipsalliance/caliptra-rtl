@@ -62,8 +62,13 @@ ISR_DIR    = $(CALIPTRA_ROOT)/src/integration/test_suites/libs/caliptra_isr
 PRINTF_DIR = $(CALIPTRA_ROOT)/src/integration/test_suites/libs/printf
 ifeq ($(CALIPTRA_MODE_SUBSYSTEM), 1)
 CLP_REG_DIR = $(CALIPTRA_ROOT)/src/integration/rtl/caliptra_reg_ss
+# Subsystem profile: compile against the subsystem register map/RTL set
+# (caliptra_top_ss_mode_tb.vf) instead of the passive-profile default, or
+# simulation would silently exercise the wrong address map.
+CALIPTRA_TOP_TB_VF = caliptra_top_ss_mode_tb.vf
 else
 CLP_REG_DIR = $(CALIPTRA_ROOT)/src/integration/rtl/caliptra_reg
+CALIPTRA_TOP_TB_VF = caliptra_top_tb.vf
 endif
 # Determine test directory
 #ifneq (,$(wildcard $(TBDIR)/tests/$(TEST)))
@@ -185,7 +190,7 @@ AUX_LIB_DIR ?=
 VPATH = $(TEST_DIR) $(BUILD_DIR) $(TBDIR) $(RISCV_HW_IF_DIR) $(ISR_DIR) $(PRINTF_DIR) $(COMP_LIBS) $(AUX_LIB_DIR)
 
 # Use eval to expand env variables in the .vf file
-$(eval TBFILES = $(shell cat $(TBDIR)/../config/caliptra_top_tb.vf | grep -v '+incdir+'))
+$(eval TBFILES = $(shell cat $(TBDIR)/../config/$(CALIPTRA_TOP_TB_VF) | grep -v '+incdir+'))
 
 #defines  = $(BUILD_DIR)/common_defines.vh
 #defines += $(RV_ROOT)/design/include/el2_def.sv
@@ -329,25 +334,25 @@ clean_fw:
 
 ############ Model Builds ###############################
 
-verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_VERILATOR_SRCS) $(TBDIR)/../config/caliptra_top_tb.vf
+verilator-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_VERILATOR_SRCS) $(TBDIR)/../config/$(CALIPTRA_TOP_TB_VF)
 	set -eo pipefail; $(VERILATOR) $(TB_VERILATOR_SRCS) --cc -CFLAGS "$(CFLAGS)" \
 	  +libext+.v+.sv +define+RV_OPENSOURCE \
 	  --timescale 1ns/100ps \
 	  --timing \
 	  $(includes) \
 	  $(suppress) \
-	  -f $(TBDIR)/../config/caliptra_top_tb.vf --top-module caliptra_top_tb \
+	  -f $(TBDIR)/../config/$(CALIPTRA_TOP_TB_VF) --top-module caliptra_top_tb \
 	  -f $(TBDIR)/../config/caliptra_top_tb.vlt \
 	  -exe test_caliptra_top_tb.cpp --autoflush $(VERILATOR_DEBUG) \
 	  $(TB_DEFS) 2>&1 | tee verilator_build.log
 	set -eo pipefail; $(MAKE) -j`nproc` -e -C obj_dir/ -f Vcaliptra_top_tb.mk $(VERILATOR_MAKE_FLAGS) VM_PARALLEL_BUILDS=1 2>&1 | tee verilator_make.log
 	touch verilator-build
 
-vcs-build: $(TBFILES) $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
+vcs-build: $(TBFILES) $(TBDIR)/caliptra_top_tb_dcls.svh $(INCLUDES_DIR)/defines.h $(TB_DPI_SRCS)
 	vlogan -full64 -sverilog -kdb -incr_vlogan \
 	  $(VCS_COMP_OPTS) \
 	  -l vcs_compile.log \
-	  -f $(TBDIR)/../config/caliptra_top_tb.vf
+	  -f $(TBDIR)/../config/$(CALIPTRA_TOP_TB_VF)
 	vcs -full64 -kdb -lca -debug_access+all -j8 +vcs+lic+wait -partcomp -fastpartcomp=j8 $(COVERAGE_ARGS) \
 	  -l vcs_elab.log \
 	  $(VCS_ELAB_OPTS) \

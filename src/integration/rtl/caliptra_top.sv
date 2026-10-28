@@ -107,6 +107,9 @@ module caliptra_top
     input  logic             itrng1_valid,
     input  logic             itrng1_en,
 
+    // DCLS enable in both profiles; synchronous to clk.
+    input logic        dcls_en,
+
     // Subsystem mode straps
     input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
@@ -127,8 +130,6 @@ module caliptra_top
 
     // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
     input logic        ss_ocp_lock_en,
-    // Subsystem mode strap input indicating DCLS is enabled
-    input logic        ss_dcls_en,
 
     // Subsystem mode debug outputs
     output logic        ss_dbg_manuf_enable,
@@ -247,7 +248,7 @@ module caliptra_top
     logic dccm_write_readback_error;
     // RISC-V dual-core lockstep error (MuBi encoded)
     el2_mubi_pkg::el2_mubi_t rv_dcls_error;
-    // DCLS corruption detection disable control (MuBi4, from SW register)
+    // DCLS disable control (MuBi4), from read-only CPTRA_HW_CONFIG.DCLS_en
     el2_mubi_pkg::el2_mubi_t dcls_disable_corruption_detection;
 
     // RISC-V trace-port core select (from SW register): 0 = main core (default), 1 = shadow core
@@ -1825,6 +1826,8 @@ soc_ifc_top1
     .kv_read   (kv_read   [KV_DEST_IDX_DMA_DATA]),
     .kv_rd_resp(kv_rd_resp[KV_DEST_IDX_DMA_DATA]),
 
+    .dcls_en(dcls_en),
+
     // Subsystem mode straps
     .strap_ss_caliptra_base_addr                            (strap_ss_caliptra_base_addr                            ),
     .strap_ss_mci_base_addr                                 (strap_ss_mci_base_addr                                 ),
@@ -1852,7 +1855,6 @@ soc_ifc_top1
 
     // Subsystem mode OCP LOCK status
     .ss_ocp_lock_en(ss_ocp_lock_en),
-    .ss_dcls_en(ss_dcls_en),
     .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
     .ss_key_release_key_size(ss_key_release_key_size),
     // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out (-> combiner)
