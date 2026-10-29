@@ -1199,25 +1199,32 @@ module el2_veer_lockstep
   assign err_injection_invalid = mubi_check_invalid(lockstep_err_injection_en_i);
   assign disable_detection_invalid = mubi_check_invalid(disable_corruption_detection_i);
 
-  // Report corruption if one of the scenarios is fulfilled:
-  // Scenario I:
-  // - Shadow Core is out of reset
-  // - Shadow Core is enabled
-  // - Main Core was never in debug state
-  // - Scan mode was not active since the last reset
-  // - One of:
-  //    * IOs (or regfiles if enabled) of Main Core and Shadow Core differ
-  //    * error injection (`lockstep_err_injection_en_i`) is enabled
-  //    * `lockstep_err_injection_en_i` drives invalid multibit encoding
-  // Scenario II:
-  // - Shadow Core is out of reset
-  // - Scan mode was not active since the last reset
-  // - `disable_corruption_detection_i` drives invalid multibit encoding
-  el2_mubi_t any_corruption, case0, case1;
+  // Report corruption if one of the scenarios is fulfilled, except while scan
+  // mode has been active since the last reset (scan_detected): the shadow
+  // core is not kept aligned with the main core while scan_mode is driven
+  // directly, so neither scenario is meaningful until the next reset.
+  // Scenario I (normal_mismatch_report): a real mismatch was observed, or
+  // error injection is requested/invalid. Also suppressed while:
+  // - software has explicitly disabled detection (disable_corruption_detection_i)
+  // - Main Core has been in debug state since the last reset (dbg_detected)
+  // Scenario II (invalid_disable_failsafe): disable_corruption_detection_i
+  // itself reads an invalid multibit encoding (e.g. a glitch/attack on that
+  // control signal) -- always reported as corruption regardless of debug
+  // state, as a fail-safe.
+  el2_mubi_t any_corruption;
+  el2_mubi_t normal_mismatch_report, invalid_disable_failsafe, any_report;
 
   assign any_corruption = mubi_or(mubi_or(corruption_detected, lockstep_err_injection_en_i), err_injection_invalid);
-  assign case0 = mubi_and(mubi_and(mubi_and(any_corruption, ~disable_corruption_detection_i),
-                                   ~dbg_detected), ~scan_detected);
-  assign case1 = disable_detection_invalid;
-  assign corruption_detected_o = mubi_and(mubi_or(case0, case1), mubi_from_bool(rst_n));
+
+  assign normal_mismatch_report =
+      mubi_and(any_corruption,
+          mubi_and(~disable_corruption_detection_i, ~dbg_detected));
+
+  assign invalid_disable_failsafe = disable_detection_invalid;
+
+  assign any_report = mubi_or(normal_mismatch_report, invalid_disable_failsafe);
+
+  assign corruption_detected_o =
+      mubi_and(mubi_and(any_report, ~scan_detected),
+                mubi_from_bool(rst_n));
 endmodule : el2_veer_lockstep

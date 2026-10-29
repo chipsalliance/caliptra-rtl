@@ -517,7 +517,7 @@ void kv_mldsa(uint8_t seed_id){
     for (int i = 0; i < MLDSA87_PUBKEY_SIZE; i++)
         pubkey[i] = mldsa_pubkey[MLDSA87_PUBKEY_SIZE-1-i];
 
-    uint32_t privkey; //no returnable when seed came from KV
+    uint32_t privkey[MLDSA87_PRIVKEY_SIZE]; //no returnable when seed came from KV
 
     mldsa_keygen_flow(seed, entropy, privkey, pubkey);
     mldsa_zeroize();

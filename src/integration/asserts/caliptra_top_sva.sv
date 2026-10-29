@@ -16,7 +16,11 @@
 
 
 `include "caliptra_macros.svh"
+`include "caliptra_sva.svh"
 `include "config_defines.svh"
+// Explicit include so el2_mubi_pkg:: resolves regardless of overall file-list
+// compile order (this file uses it directly in the DCLS assertions below).
+`include "el2_mubi_pkg.sv"
 //`include "kv_defines_pkg.sv"
 //`include "doe_defines_pkg.sv"
 `ifndef CPTRA_TB_TOP_NAME
@@ -254,7 +258,6 @@ module caliptra_top_sva
     if ((debug_unlocked_latched || `SOC_IFC_TOP_PATH.cptra_error_fatal || `CPTRA_TOP_PATH.cptra_scan_mode_Latched) && `KEYVAULT_PATH.cptra_pwrgood) begin
       for (int dword = 0; dword < KV_NUM_DWORDS; dword++) begin
         if (`KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value != expected_value) begin
-          $display("SVA ERROR: KV[%0d][%0d] debug flush failed. Expected: %h, Got: %h, SelValue: %0d", entry, dword, expected_value, `KEYVAULT_PATH.kv_reg1.hwif_out.KEY_ENTRY[entry][dword].data.value, sel_value);
           return 1'b0;
         end
       end
@@ -586,7 +589,6 @@ module caliptra_top_sva
 
           // Check if this key word matches the FIFO entry
           if (fifo_entry == key_word) begin
-            $display("[%t] SVA ERROR: AXI DMA KV Assertion: Found key in DMA FIFO: KEY_ENTRY[23][%0d] = %h FIFO entry[%0d] = %h", $time, fifo_idx, fifo_entry, key_word_idx, key_word);
             match_found = 1'b1;
             break;
           end
@@ -701,8 +703,6 @@ module caliptra_top_sva
     for (int dword = 0; dword < PRIVKEY_REG_NUM_DWORDS; dword++) begin
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.privkey[dword]);
       if (`ABR_PATH.abr_scratch_reg.raw[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA keygen] SK register %h does not match expected %h at index %h", 
-                 `ABR_PATH.abr_scratch_reg.raw[dword], expected, dword);
         return 1'b0;
       end
     end
@@ -712,8 +712,6 @@ module caliptra_top_sva
       int idx = PRIVKEY_REG_NUM_DWORDS + (2*dword);
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.privkey[idx]);
       if (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA keygen] SK bank0 %h does not match expected %h at index %h",
-                 `ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword], expected, idx);
         return 1'b0;
       end
     end
@@ -723,8 +721,6 @@ module caliptra_top_sva
       int idx = PRIVKEY_REG_NUM_DWORDS + 1 + (2*dword);
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.privkey[idx]);
       if (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA keygen] SK bank1 %h does not match expected %h at index %h",
-                 `ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword], expected, idx);
         return 1'b0;
       end
     end
@@ -738,8 +734,6 @@ module caliptra_top_sva
     for (int dword = 0; dword < 8; dword++) begin
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.pubkey[dword]);
       if (`ABR_PATH.abr_scratch_reg.raw[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA keygen] PK register %h does not match expected %h at index %h", 
-                 `ABR_PATH.abr_scratch_reg.raw[dword], expected, dword);
         return 1'b0;
       end
     end
@@ -754,8 +748,6 @@ module caliptra_top_sva
                                `ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][(j*4)+1],
                                `ABR_RAMS_PATH.abr_pk_mem_inst.ram[i][(j*4)+0]};
         if (actual != expected) begin
-          $display("SVA ERROR: [MLDSA keygen] PK memory %h does not match expected %h at index %0d %0d", 
-                   actual, expected, i, j);
           return 1'b0;
         end
       end
@@ -770,8 +762,6 @@ module caliptra_top_sva
     for (int dword = 0; dword < SIGNATURE_C_NUM_DWORDS; dword++) begin
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.signature[dword]);
       if (`ABR_PATH.signature_reg.raw[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA signing] Signature C %h does not match expected %h at index %h",
-                 `ABR_PATH.signature_reg.raw[dword], expected, dword);
         return 1'b0;
       end
     end
@@ -781,8 +771,6 @@ module caliptra_top_sva
       int sig_idx = (SIGNATURE_NUM_DWORDS-1) - ((SIGNATURE_H_NUM_DWORDS-1) - dword);
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.signature[sig_idx]);
       if (`ABR_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS + dword] != expected) begin
-        $display("SVA ERROR: [MLDSA signing] Signature H %h does not match expected %h at index %h",
-                 `ABR_PATH.signature_reg.raw[SIGNATURE_C_NUM_DWORDS + dword], expected, SIGNATURE_C_NUM_DWORDS + dword);
         return 1'b0;
       end
     end
@@ -798,8 +786,6 @@ module caliptra_top_sva
                                `ABR_RAMS_PATH.abr_sig_z_mem_inst.ram[i][(j*4)+0]};
         
         if (actual != expected) begin
-          $display("SVA ERROR: [MLDSA signing] Sig output %h does not match expected sig %h at index %0d %0d", 
-                   actual, expected, i, j);
           return 1'b0;
         end
       end
@@ -814,8 +800,6 @@ module caliptra_top_sva
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.verify_res[dword]);
       
       if (`ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword] != expected) begin
-        $display("SVA ERROR: [MLDSA verify] Verify output %h does not match expected verify res %h at index %h",
-                 `ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword], expected, dword);
         return 1'b0;
       end
     end
@@ -1073,8 +1057,6 @@ module caliptra_top_sva
     // Check bank0 memory (even addresses)
     for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
       if (`ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword] != 0) begin
-        $display("SVA ERROR: [MLDSA zeroize] SK bank0 at index %0d is not zero: %h", 
-                 dword, `ABR_RAMS_PATH.abr_sk_mem_bank0_inst.ram[dword]);
         return 1'b0;
       end
     end
@@ -1082,8 +1064,6 @@ module caliptra_top_sva
     // Check bank1 memory (odd addresses)  
     for (int dword = 0; dword < PRIVKEY_MEM_NUM_DWORDS/2; dword++) begin
       if (`ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword] != 0) begin
-        $display("SVA ERROR: [MLDSA zeroize] SK bank1 at index %0d is not zero: %h", 
-                 dword, `ABR_RAMS_PATH.abr_sk_mem_bank1_inst.ram[dword]);
         return 1'b0;
       end
     end
@@ -1772,5 +1752,121 @@ module caliptra_top_sva
   KV_dma_len_mismatch_C: cover property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       `AXI_DMA_CTRL_PATH.dma_data_kv_read.length_mismatch);
+
+
+`ifdef RV_LOCKSTEP_ENABLE
+  `define DCLS_ASSERT_PATH `CPTRA_TOP_PATH.rvtop.lockstep
+  DCLS_enable_sampled: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
+      `SOC_IFC_TOP_PATH.cptra_noncore_rst_b |=> `SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.DCLS_en.value ==
+                 $past(`CPTRA_TOP_PATH.dcls_en))
+    else $error("SVA ERROR: DCLS input was not sampled into read-only HW_CONFIG");
+
+  DCLS_reset_qualifies_report: assert property (
+      @(posedge `SVA_CLK)
+      !`DCLS_ASSERT_PATH.rst_n |->
+        `DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiFalse)
+    else $error("SVA ERROR: DCLS reported while shadow reset was asserted");
+
+  DCLS_normal_report: assert property (
+      @(posedge `SVA_CLK) disable iff (!`DCLS_ASSERT_PATH.rst_n)
+      (`DCLS_ASSERT_PATH.rst_n &&
+       `DCLS_ASSERT_PATH.any_corruption == el2_mubi_pkg::El2MuBiTrue &&
+       `DCLS_ASSERT_PATH.disable_corruption_detection_i == el2_mubi_pkg::El2MuBiFalse &&
+       `DCLS_ASSERT_PATH.dbg_detected == el2_mubi_pkg::El2MuBiFalse &&
+       `DCLS_ASSERT_PATH.scan_detected == el2_mubi_pkg::El2MuBiFalse) |->
+        `DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue)
+    else $error("SVA ERROR: qualified DCLS mismatch was not reported");
+
+  DCLS_disable_debug_suppression: assert property (
+      @(posedge `SVA_CLK) disable iff (!`DCLS_ASSERT_PATH.rst_n)
+      (`DCLS_ASSERT_PATH.rst_n &&
+       `DCLS_ASSERT_PATH.disable_detection_invalid == el2_mubi_pkg::El2MuBiFalse &&
+       (`DCLS_ASSERT_PATH.disable_corruption_detection_i == el2_mubi_pkg::El2MuBiTrue ||
+        `DCLS_ASSERT_PATH.dbg_detected == el2_mubi_pkg::El2MuBiTrue)) |->
+        `DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiFalse)
+    else $error("SVA ERROR: normal DCLS reporting bypassed disable/debug suppression");
+
+  DCLS_invalid_disable_failsafe: assert property (
+      @(posedge `SVA_CLK) disable iff (!`DCLS_ASSERT_PATH.rst_n)
+      (`DCLS_ASSERT_PATH.rst_n &&
+       `DCLS_ASSERT_PATH.disable_detection_invalid == el2_mubi_pkg::El2MuBiTrue &&
+       `DCLS_ASSERT_PATH.scan_detected == el2_mubi_pkg::El2MuBiFalse) |->
+        `DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue)
+    else $error("SVA ERROR: invalid MuBi disable did not fail safe");
+
+`ifdef VERILATOR
+  // WORKAROUND (Verilator only; VCS keeps the strict check below): Verilator
+  // has a known bug (verilator/verilator#5879) where force/release through a
+  // hierarchical reference -- exactly how the TB injects DCLS corruption via
+  // `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i -- can leave a
+  // downstream combinational read (corruption_detected_o) inconsistent for a
+  // cycle under --timing mode. VCS confirms the real RTL/TB propagation is
+  // correct and single-cycle.
+  DCLS_report_to_fatal_output: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
+      $past(`DCLS_ASSERT_PATH.corruption_detected_o, 2) == el2_mubi_pkg::El2MuBiTrue |->
+        `CPTRA_TOP_PATH.cptra_error_fatal)
+    else $error("SVA ERROR: DCLS report did not reach fatal output within 2 cycles");
+`else
+  DCLS_report_to_fatal_output: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
+      `DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue |=>
+        `CPTRA_TOP_PATH.cptra_error_fatal)
+    else $error("SVA ERROR: DCLS report did not reach fatal output");
+`endif
+
+  // W1C writes take priority over hardware sets.
+  DCLS_report_to_fatal_status: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b || !`CPTRA_TOP_PATH.cptra_pwrgood)
+      (`DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue &&
+       !(`SOC_IFC_TOP_PATH.i_soc_ifc_reg.decoded_reg_strb.CPTRA_HW_ERROR_FATAL &&
+         `SOC_IFC_TOP_PATH.i_soc_ifc_reg.decoded_req_is_wr)) |=>
+        `SOC_IFC_TOP_PATH.soc_ifc_reg_hwif_out.CPTRA_HW_ERROR_FATAL.rv_dcls_err.value)
+    else $error("SVA ERROR: DCLS report did not reach fatal status");
+
+  // Track DCLS reports independently of W1C and core reset.
+  logic dcls_report_seen;
+  always_ff @(posedge `SVA_RDC_CLK or negedge `SOC_IFC_TOP_PATH.cptra_noncore_rst_b) begin
+      if (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b) dcls_report_seen <= 1'b0;
+      else if (`DCLS_ASSERT_PATH.corruption_detected_o == el2_mubi_pkg::El2MuBiTrue)
+          dcls_report_seen <= 1'b1;
+  end
+`ifdef VERILATOR
+  // Mirror DCLS_report_to_fatal_output's 2-cycle allowance (verilator#5879):
+  // dcls_report_seen is already 1 cycle behind corruption_detected_o, so one
+  // more cycle of slack here lines up with that same 2-cycle window instead
+  // of re-imposing the 1-cycle requirement the workaround above relaxed.
+  DCLS_fatal_sticky: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
+      $past(dcls_report_seen) |-> `CPTRA_TOP_PATH.cptra_error_fatal)
+    else $error("SVA ERROR: DCLS fatal output cleared without noncore reset");
+`else
+  DCLS_fatal_sticky: assert property (
+      @(posedge `SVA_RDC_CLK) disable iff (!`SOC_IFC_TOP_PATH.cptra_noncore_rst_b)
+      dcls_report_seen |-> `CPTRA_TOP_PATH.cptra_error_fatal)
+    else $error("SVA ERROR: DCLS fatal output cleared without noncore reset");
+`endif
+
+  DCLS_output_divergence_C: cover property (
+      @(posedge `SVA_CLK) disable iff (!`DCLS_ASSERT_PATH.rst_n)
+      `DCLS_ASSERT_PATH.outputs_corrupted &&
+      `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i == el2_mubi_pkg::El2MuBiFalse);
+`ifdef RV_LOCKSTEP_REGFILE_ENABLE
+  DCLS_regfile_divergence_C: cover property (
+      @(posedge `SVA_CLK) disable iff (!`DCLS_ASSERT_PATH.rst_n)
+      `DCLS_ASSERT_PATH.regfile_corrupted &&
+      `CPTRA_TOP_PATH.rvtop.lockstep_err_injection_en_i == el2_mubi_pkg::El2MuBiFalse);
+`endif
+  DCLS_debug_history_C: cover property (
+      @(posedge `SVA_CLK) disable iff (!`DCLS_ASSERT_PATH.rst_n)
+      !`CPTRA_TOP_PATH.o_debug_mode_status &&
+      `DCLS_ASSERT_PATH.dbg_detected == el2_mubi_pkg::El2MuBiTrue);
+  DCLS_reset_invalid_C: cover property (
+      @(posedge `SVA_CLK)
+      !`DCLS_ASSERT_PATH.rst_n &&
+      `DCLS_ASSERT_PATH.disable_detection_invalid == el2_mubi_pkg::El2MuBiTrue);
+  `undef DCLS_ASSERT_PATH
+`endif
 
 endmodule
