@@ -377,8 +377,10 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
                                          (iccm_mode & iccm_hash_dv_i));
 
   // ICCM zero-length: lock asserts from IDLE with no prior writes -- skip to PAD0
-  always_comb arc_SHA_IDLE_SHA_PAD0 = (sha_fsm_ps == SHA_IDLE) & iccm_mode_execute &
-                                      (iccm_num_bytes_wr == '0);
+  always_comb arc_SHA_IDLE_SHA_PAD0 = (sha_fsm_ps == SHA_IDLE) & (
+                                        (iccm_mode & iccm_mode_execute & (iccm_num_bytes_wr == '0)) |
+                                        (~iccm_mode & execute_set & (effective_dlen == '0))
+                                      );
   //When a full block is complete, send INIT and move to BLOCK_N state
   always_comb arc_SHA_BLOCK_0_SHA_BLOCK_N = (sha_fsm_ps == SHA_BLOCK_0) & block_full & core_ready_q;
   always_comb arc_SHA_BLOCK_N_SHA_BLOCK_N = (sha_fsm_ps == SHA_BLOCK_N) & block_full & core_ready_q;
