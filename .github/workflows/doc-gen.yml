@@ -15,7 +15,7 @@ on:
     branches: ["main", "nightly-results-main"]
 
 concurrency:
-  group: "pages"
+  group: ${{ github.event_name == 'push' && 'pages' || github.run_id }}
   cancel-in-progress: true
 
 jobs:
