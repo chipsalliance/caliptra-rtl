@@ -63,6 +63,7 @@ jobs:
 
   build-1_1:
     name: Build v1.1
+    if: github.repository == 'chipsalliance/caliptra-rtl'
 
     runs-on: ubuntu-22.04
 
@@ -104,6 +105,7 @@ jobs:
 
   build-2_0:
     name: Build v2.0
+    if: github.repository == 'chipsalliance/caliptra-rtl'
 
     runs-on: ubuntu-22.04
 
@@ -146,6 +148,7 @@ jobs:
 
   build-2_1:
     name: Build v2.1
+    if: github.repository == 'chipsalliance/caliptra-rtl'
 
     runs-on: ubuntu-22.04
 
