@@ -4,8 +4,6 @@
 name: Verilator
 
 on:
-  push:
-    branches: ["main", "dev-goog", "dev-msft"]
   workflow_call:
     inputs:
       run_vltr:
@@ -14,6 +12,12 @@ on:
         type: string
         default: 'true'
   workflow_dispatch:
+    inputs:
+      run_vltr:
+        description: "Control parameter indicating if Verilator tests should be run or skipped"
+        required: true
+        type: string
+        default: 'true'
 
 env:
   CARGO_INCREMENTAL: 0
