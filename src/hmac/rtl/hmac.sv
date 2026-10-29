@@ -194,8 +194,6 @@ module hmac
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n)
     begin : reg_update
-      integer ii;
-
       if (!reset_n)
         begin
           kv_reg          <= '0;

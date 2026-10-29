@@ -179,7 +179,7 @@ module ecc_dsa_ctrl
     logic [31:0] kv_seed_write_data;
   
     logic dest_keyvault;
-    kv_error_code_e kv_privkey_error, kv_seed_error, kv_nonce_error, kv_write_error;
+    kv_error_code_e kv_privkey_error, kv_seed_error, kv_write_error;
     logic kv_privkey_ready, kv_privkey_done;
     logic kv_seed_ready, kv_seed_done ;
     logic kv_write_ready, kv_write_done;
