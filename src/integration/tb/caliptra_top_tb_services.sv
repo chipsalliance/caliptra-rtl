@@ -3710,7 +3710,7 @@ $fwrite(fd, "\n");
 
 endfunction
 
-function void read_line(int fd, int bit_length_words, ref bit [31:0] array []);
+function automatic void read_line(int fd, int bit_length_words, ref bit [31:0] array []);
 string line;
 int words_read;
 bit [31:0] word;
