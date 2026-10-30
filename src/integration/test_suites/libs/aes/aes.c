@@ -340,11 +340,8 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
           soc_ifc_axi_dma_send_axi_to_axi_no_wait(aes_input.dma_transfer_data.src_addr, src_fixed, aes_input.dma_transfer_data.dst_addr, dst_fixed,  aes_input.text_len, block_size, 1, gcm_mode);
           for (size_t i = 0; i < 100; i++)
           {
-            //-- send AES Read
-            aes_ctrl = lsu_read_32(CLP_AES_REG_STATUS);
-            //write shadowed ctrl twice
-            lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
-            lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+            // Provoke a collision without reconfiguring AES before DMA reaches the CIF.
+            (void)lsu_read_32(CLP_AES_REG_STATUS);
           }
           VPRINTF(FATAL, "AES collision error must result in NMI, and firmware reset\n");
           SEND_STDOUT_CTRL(fail_cmd);
