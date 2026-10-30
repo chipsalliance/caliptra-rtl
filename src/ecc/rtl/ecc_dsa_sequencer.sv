@@ -133,8 +133,9 @@ module ecc_dsa_sequencer
                     DSA_VER_S+ 18 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
                     DSA_VER_S+ 19 : douta <= {DSA_UOP_VERIFY2,        NOP_ID,             UOP_OPR_DONTCARE};
                     DSA_VER_S+ 20 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
-                    DSA_VER_S+ 21 : douta <= {DSA_UOP_RD_CORE,        VERIFY_R_ID,        UOP_OPR_Qx_AFFN};
-                    DSA_VER_S+ 22 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
+                    DSA_VER_S+ 21 : douta <= {DSA_UOP_RD_CORE,        VERIFY_Z_ID,        UOP_OPR_Qy_AFFN};
+                    DSA_VER_S+ 22 : douta <= {DSA_UOP_RD_CORE,        VERIFY_R_ID,        UOP_OPR_Qx_AFFN};
+                    DSA_VER_S+ 23 : douta <= {DSA_UOP_NOP,            NOP_ID,             UOP_OPR_DONTCARE};
 
 
                     //DH SHARED_KEY

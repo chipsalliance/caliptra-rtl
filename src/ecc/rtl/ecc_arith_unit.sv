@@ -132,15 +132,12 @@ module ecc_arith_unit
             for (idx = 0; idx < REG_SIZE+1; idx++) begin
                 g_use_digit = g_work[0];
                 pk_use_digit = pk_work[0];
-                g_use_neg = g_use_digit & (&g_work[1:0]);
-                pk_use_neg = pk_use_digit & (&pk_work[1:0]);
-
-                if (g_use_digit & !g_use_neg & (g_work[2:0] == 3'b011) & (pk_work[1:0] == 2'b10)) begin
-                    g_use_neg = 1'b1;
-                end
-                if (pk_use_digit & !pk_use_neg & (pk_work[2:0] == 3'b011) & (g_work[1:0] == 2'b10)) begin
-                    pk_use_neg = 1'b1;
-                end
+                // Solinas JSF: digit = 2 - (l mod 4), negated when l mod 8 is 3 or 5
+                // and the other scalar is 2 mod 4. Both use the pre-update values.
+                g_use_neg = g_use_digit & (g_work[1] ^ (((g_work[2:0] == 3'b011) | (g_work[2:0] == 3'b101)) &
+                                                         (pk_work[1:0] == 2'b10)));
+                pk_use_neg = pk_use_digit & (pk_work[1] ^ (((pk_work[2:0] == 3'b011) | (pk_work[2:0] == 3'b101)) &
+                                                            (g_work[1:0] == 2'b10)));
 
                 g_nonzero[idx] = g_use_digit;
                 pk_nonzero[idx] = pk_use_digit;

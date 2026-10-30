@@ -35,6 +35,10 @@
 //      From (3) and (4):
 //          p_subtracted_internal < 2*n_i - n_i = n_i
 //          p_o < n_i
+//      reduce_i = 0 skips step (4) only while p_internal fits in REG_SIZE bits;
+//      p_o is then congruent to the product but may lie in [n_i, 2^REG_SIZE).
+//      If p_internal >= 2^REG_SIZE (possible when 2*n_i > 2^REG_SIZE) the
+//      subtraction is always applied so no carry is truncated.
 //======================================================================
 
 module ecc_montgomerymultiplier #(
@@ -104,6 +108,7 @@ module ecc_montgomerymultiplier #(
     logic   [FULL_REG_SIZE-1:0]       p_subtracted_internal;
     logic                             last_reduction;
     logic                             reduce_reg;
+    logic                             p_internal_overflow;
 
     //----------------------------------------------------------------
     // Processing elements (PEs)
@@ -352,7 +357,8 @@ module ecc_montgomerymultiplier #(
     endgenerate
 
     always_comb last_reduction = (sub_b_o[2*(PE_UNITS+1)]);
-    assign p_o = (reduce_reg & last_reduction)? p_subtracted_internal[REG_SIZE-1:0] : p_internal[REG_SIZE-1:0];
+    assign p_internal_overflow = |p_internal[FULL_REG_SIZE-1:REG_SIZE];
+    assign p_o = ((reduce_reg | p_internal_overflow) & last_reduction)? p_subtracted_internal[REG_SIZE-1:0] : p_internal[REG_SIZE-1:0];
 
     // Determines when results are ready based on S_NUM
     always_ff @(posedge clk or negedge reset_n) begin

@@ -52,14 +52,13 @@ typedef struct packed
 } pm_instr_struct_t;
 
 localparam pm_opcode_t UOP_NOP          = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
-localparam pm_opcode_t UOP_DO_MUL_p     = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0, red_en:1'b0};
-localparam pm_opcode_t UOP_DO_MUL_p_red = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0, red_en:1'b1};
+localparam pm_opcode_t UOP_DO_MUL_p     = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b0, red_en:1'b1};
 localparam pm_opcode_t UOP_ST_MUL_p     = '{mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
 localparam pm_opcode_t UOP_DO_ADD_p     = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
 localparam pm_opcode_t UOP_DO_SUB_p     = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
 localparam pm_opcode_t UOP_ST_ADD_p     = '{mult_we:1'b0, add_we:1'b1, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b0, red_en:1'b0};
 
-localparam pm_opcode_t UOP_DO_MUL_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b1, red_en:1'b0};
+localparam pm_opcode_t UOP_DO_MUL_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b1, mod_q_sel:1'b1, red_en:1'b1};
 localparam pm_opcode_t UOP_ST_MUL_q = '{mult_we:1'b1, add_we:1'b0, sub_sel:1'b0, add_en:1'b0, mult_en:1'b0, mod_q_sel:1'b1, red_en:1'b0};
 localparam pm_opcode_t UOP_DO_ADD_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b0, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1, red_en:1'b0};
 localparam pm_opcode_t UOP_DO_SUB_q = '{mult_we:1'b0, add_we:1'b0, sub_sel:1'b1, add_en:1'b1, mult_en:1'b0, mod_q_sel:1'b1, red_en:1'b0};
@@ -165,7 +164,7 @@ localparam [PROG_ADDR_W-1 : 0] INV_E                = INV_S + 793;
 localparam [PROG_ADDR_W-1 : 0] CONV_S               = INV_E + 2;       // PM result conversion from projective Mont (X,Y,Z) to affine normanl (x,y)
 localparam [PROG_ADDR_W-1 : 0] CONV_E               = CONV_S + 11;
 localparam [PROG_ADDR_W-1 : 0] CONV_X_S             = CONV_E + 2;
-localparam [PROG_ADDR_W-1 : 0] CONV_X_E             = CONV_X_S + 9;
+localparam [PROG_ADDR_W-1 : 0] CONV_X_E             = CONV_X_S + 11;
 
 localparam [PROG_ADDR_W-1 : 0] SIGN0_S              = CONV_X_E + 2;   // signing proof r part0
 localparam [PROG_ADDR_W-1 : 0] SIGN0_E              = SIGN0_S + 27;

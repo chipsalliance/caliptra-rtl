@@ -1068,16 +1068,18 @@ module ecc_pm_sequencer
                     CONV_S+ 10  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
                     CONV_S+ 11  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
 
-                    CONV_X_S      : douta <= {UOP_DO_MUL_p_red, UOP_OPR_SIGN_R,   UOP_OPR_CONST_R2_p};    // verify: A = r in p-Montgomery domain
+                    CONV_X_S      : douta <= {UOP_DO_MUL_p,   UOP_OPR_SIGN_R,     UOP_OPR_CONST_R2_p};     // verify: A = r in p-Montgomery domain
                     CONV_X_S+ 1   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
-                    CONV_X_S+ 2   : douta <= {UOP_DO_MUL_p_red, UOP_OPR_A,        UOP_OPR_R0_Z};          // B = r * Z in simple projective coordinates
+                    CONV_X_S+ 2   : douta <= {UOP_DO_MUL_p,   UOP_OPR_A,          UOP_OPR_R0_Z};           // B = r * Z in simple projective coordinates
                     CONV_X_S+ 3   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
-                    CONV_X_S+ 4   : douta <= {UOP_DO_MUL_p_red, UOP_OPR_R0_X,     UOP_OPR_CONST_ONE_MONT}; // G = canonical X in Montgomery domain
+                    CONV_X_S+ 4   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_X,       UOP_OPR_CONST_ONE_MONT}; // G = canonical X in Montgomery domain
                     CONV_X_S+ 5   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_G};
-                    CONV_X_S+ 6   : douta <= {UOP_DO_SUB_p,   UOP_OPR_G,          UOP_OPR_B};             // Qx_AFFN = 0 iff x == r
-                    CONV_X_S+ 7   : douta <= {UOP_ST_ADD_p,   UOP_OPR_Qx_AFFN,    UOP_OPR_DONTCARE};
-                    CONV_X_S+ 8   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-                    CONV_X_S+ 9   : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+                    CONV_X_S+ 6   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_CONST_ONE_MONT}; // Qy_AFFN = canonical Z; zero iff the result is the point at infinity
+                    CONV_X_S+ 7   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_Qy_AFFN};
+                    CONV_X_S+ 8   : douta <= {UOP_DO_SUB_p,   UOP_OPR_G,          UOP_OPR_B};              // Qx_AFFN = 0 iff x == r
+                    CONV_X_S+ 9   : douta <= {UOP_ST_ADD_p,   UOP_OPR_Qx_AFFN,    UOP_OPR_DONTCARE};
+                    CONV_X_S+ 10  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+                    CONV_X_S+ 11  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
 
                     // SIGNATURE R
                     SIGN0_S     : douta <= {UOP_DO_ADD_q,   UOP_OPR_CONST_ZERO, UOP_OPR_Qx_AFFN};       // R = Qx_AFFN
@@ -2316,7 +2318,7 @@ module ecc_pm_sequencer
                     VER_LOAD_GMK_S+ 13 : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,      UOP_OPR_DONTCARE};
 
                     // VERIFY signed addend support: canonicalize P1.Y, then P1 = -P1 by negating Y.
-                    VER_NEG_P1_S     : douta <= {UOP_DO_MUL_p_red, UOP_OPR_P1_Y_MONT,    UOP_OPR_CONST_ONE_MONT};
+                    VER_NEG_P1_S     : douta <= {UOP_DO_MUL_p,   UOP_OPR_P1_Y_MONT,    UOP_OPR_CONST_ONE_MONT};
                     VER_NEG_P1_S+ 1  : douta <= {UOP_ST_MUL_p,     UOP_OPR_DONTCARE,     UOP_OPR_P1_Y_MONT};
                     VER_NEG_P1_S+ 2  : douta <= {UOP_DO_SUB_p,     UOP_OPR_CONST_ZERO,   UOP_OPR_P1_Y_MONT};
                     VER_NEG_P1_S+ 3  : douta <= {UOP_ST_ADD_p,     UOP_OPR_P1_Y_MONT,    UOP_OPR_DONTCARE};

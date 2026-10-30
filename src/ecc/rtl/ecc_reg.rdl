@@ -290,8 +290,11 @@ addrmap ecc_reg {
                 signature R as a fault-attack check on ECC_STATUS.VERIFY_PASS; the
                 comparison reference must be a firmware-held copy of R for that check
                 to be independent.
-                The verify R result should be in [1 : q-1] while q is the group
-                order of the Secp384r1 curve.";
+                The register holds the signature R XOR the hardware comparison
+                residue, so it equals R only when the computed residue is zero
+                and the verification result is not the point at infinity. On
+                failure, infinity, or an aborted operation it holds a value
+                different from R.";
 
         default sw = r;
         default hw = rw;

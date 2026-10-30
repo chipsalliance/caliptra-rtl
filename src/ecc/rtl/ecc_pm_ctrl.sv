@@ -247,8 +247,7 @@ module ecc_pm_ctrl
                 unique case (prog_instr.opcode)
                     UOP_DO_ADD_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_p :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
-                    UOP_DO_MUL_p,
-                    UOP_DO_MUL_p_red :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
+                    UOP_DO_MUL_p :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT
                     UOP_DO_ADD_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // ADD
                     UOP_DO_SUB_q :  begin stalled <= 1'b1; stall_cntr <= ADD_DELAY; end  // SUB
                     UOP_DO_MUL_q :  begin stalled <= 1'b1; stall_cntr <= MULT_DELAY; end // MULT

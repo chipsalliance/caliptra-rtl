@@ -742,6 +742,61 @@ module ecc_top_tb
   endtask // ecc_verify_negative_test
 
 
+  //----------------------------------------------------------------
+  // ecc_verify_infinity_test()
+  //
+  // With Q = -G and h = r = s = 1, u1*G + u2*Q is the point at
+  // infinity. All inputs are in range, so verification must fail
+  // without raising an error.
+  //----------------------------------------------------------------
+  task ecc_verify_infinity_test();
+    operand_t       one_operand;
+    operand_t       verify_r;
+    reg             hw_verify_pass;
+
+    begin
+      one_operand = operand_t'(1);
+      wait_ready();
+
+      $display("*** verify infinity test started.");
+      tc_ctr = tc_ctr + 1;
+
+      write_block(`ECC_REG_ECC_MSG_0, one_operand);
+      write_block(`ECC_REG_ECC_PUBKEY_X_0, 384'haa87ca22be8b05378eb1c71ef320ad746e1d3b628ba79b9859f741e082542a385502f25dbf55296c3a545e3872760ab7);
+      write_block(`ECC_REG_ECC_PUBKEY_Y_0, 384'hc9e821b569d9d390a26167406d6d23d6070be242d765eb831625ceec4a0f473ef59f4e30e2817e6285bce2846f15f1a0);
+      write_block(`ECC_REG_ECC_SIGN_R_0, one_operand);
+      write_block(`ECC_REG_ECC_SIGN_S_0, one_operand);
+
+      trig_ECC(ECC_CMD_VERIFYING);
+      wait_ready();
+
+      read_block(`ECC_REG_ECC_VERIFY_R_0);
+      verify_r = reg_read_data;
+
+      read_single_word(`ECC_REG_ECC_STATUS);
+      hw_verify_pass = read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW];
+
+      if ((verify_r != one_operand) && !hw_verify_pass && (dut.ecc_dsa_ctrl_i.error_flag_reg == 0))
+        begin
+          $display("*** TC %0d verify infinity rejected successfully.", tc_ctr);
+          $display("");
+        end
+      else
+        begin
+          $display("*** ERROR: TC %0d verify infinity NOT rejected.", tc_ctr);
+          $display("Got VERIFY_R:             0x%96x", verify_r);
+          $display("ECC_STATUS.VERIFY_PASS:   %0b", hw_verify_pass);
+          $display("error_flag_reg:           %0b", dut.ecc_dsa_ctrl_i.error_flag_reg);
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
+
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+    end
+  endtask // ecc_verify_infinity_test
+
+
 
   //----------------------------------------------------------------
   // continuous_cmd_test()
@@ -1213,6 +1268,7 @@ module ecc_top_tb
         continuous_cmd_test(test_vectors[0]);
         zeroize_test(test_vectors[1]);
         ecc_verify_negative_test(test_vectors[2]);
+        ecc_verify_infinity_test();
         ecc_fault_test();
       end
     end

@@ -122,6 +122,7 @@ module ecc_dsa_ctrl
     logic hw_scalar_G_we;
     logic hw_scalar_PK_we;
     logic hw_verify_r_we;
+    logic hw_verify_z_we;
     logic hw_pk_chk_we;
     logic hw_sharedkey_we;
     logic scalar_G_sel;
@@ -132,6 +133,7 @@ module ecc_dsa_ctrl
     logic ecc_verify_res_match;
     logic ecc_verify_projective_match;
     logic ecc_verify_pass_reg;
+    logic ecc_verify_z_nonzero_reg;
 
     logic ecc_valid_reg;
     logic ecc_ready_reg;
@@ -438,10 +440,13 @@ module ecc_dsa_ctrl
 
         for (int dword=0; dword < 12; dword++)begin 
             //Preload with the complement of the supplied signature R at the start of a
-            //VERIFY operation so an aborted verification cannot leave a stale match
+            //VERIFY operation so an aborted verification cannot leave a stale match.
+            //The result is R xor the projective residue, so it equals R only when the
+            //computed residue is zero; it does not depend on the 1-bit match comparator.
+            //A point-at-infinity result (Z == 0) returns ~R.
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = (hw_verify_r_we | ecc_verify_start) & !zeroize_reg;
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = ecc_verify_start ? ~r_reg[11-dword] :
-                                                        ecc_verify_projective_match ? r_reg[11-dword] : read_reg[11-dword];
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = (ecc_verify_start | !ecc_verify_z_nonzero_reg) ? ~r_reg[11-dword] :
+                                                        (r_reg[11-dword] ^ read_reg[11-dword]);
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.hwclr = zeroize_reg;
         end
 
@@ -584,6 +589,7 @@ module ecc_dsa_ctrl
         hw_scalar_G_we = 0;
         hw_scalar_PK_we = 0;
         hw_verify_r_we = 0;
+        hw_verify_z_we = 0;
         hw_pk_chk_we = 0;
         hw_sharedkey_we = 0;
         if ((prog_instr.opcode == DSA_UOP_RD_CORE) & (cycle_cnt == 0)) begin
@@ -596,6 +602,7 @@ module ecc_dsa_ctrl
                 SCALAR_G_ID     : hw_scalar_G_we = 1;
                 SCALAR_PK_ID    : hw_scalar_PK_we = 1;
                 VERIFY_R_ID     : hw_verify_r_we = 1;
+                VERIFY_Z_ID     : hw_verify_z_we = 1;
                 PK_VALID_ID     : hw_pk_chk_we = 1;
                 DH_SHAREDKEY_ID : hw_sharedkey_we = 1;
                 default         : 
@@ -608,6 +615,7 @@ module ecc_dsa_ctrl
                         hw_scalar_G_we = 0;
                         hw_scalar_PK_we = 0;
                         hw_verify_r_we = 0;
+                        hw_verify_z_we = 0;
                         hw_pk_chk_we = 0;
                         hw_sharedkey_we = 0;
                     end
@@ -745,7 +753,19 @@ module ecc_dsa_ctrl
     always_comb ecc_cmd_start    = (prog_cntr == ECC_NOP) & (|cmd_reg);
     always_comb ecc_verify_start = (prog_cntr == ECC_NOP) & (cmd_reg == VERIFY);
     always_comb ecc_verify_projective_match = read_reg == '0;
-    always_comb ecc_verify_res_match = ecc_verify_projective_match & (|r_reg);
+    always_comb ecc_verify_res_match = ecc_verify_projective_match & ecc_verify_z_nonzero_reg & (|r_reg);
+
+    //Canonical Z of the verification sum is read back before the residue;
+    //Z == 0 (point at infinity) must be rejected.
+    always_ff @(posedge clk or negedge reset_n)
+    begin : ecc_verify_z_chk
+        if (!reset_n)
+            ecc_verify_z_nonzero_reg <= 1'b0;
+        else if (zeroize_reg | ecc_cmd_start)
+            ecc_verify_z_nonzero_reg <= 1'b0;
+        else if (verifying_process & hw_verify_z_we)
+            ecc_verify_z_nonzero_reg <= |read_reg;
+    end // ecc_verify_z_chk
 
     always_ff @(posedge clk or negedge reset_n)
     begin : ecc_verify_result
