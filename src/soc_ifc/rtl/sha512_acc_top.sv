@@ -87,6 +87,7 @@ module sha512_acc_top
   //extra bit for roll over on full read
   logic [CPTRA_MBOX_ADDR_W:0] mbox_rdptr;
   logic [CPTRA_MBOX_ADDR_W-1:0] mbox_start_addr, mbox_end_addr;
+  logic mbox_end_addr_carry;
   logic mbox_read_to_end;
   logic mbox_read_en;
   logic mbox_read_done;
@@ -355,15 +356,19 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
   //Convert DLEN to an end address. DLEN is in bytes, address is in dwords
   //detect overflow of end address to indicate we want to read to the end of the mailbox
-  always_comb {mbox_read_to_end, mbox_end_addr} = mbox_start_addr + 
+  always_comb {mbox_end_addr_carry, mbox_end_addr} = mbox_start_addr +
                                                   hwif_out.DLEN.LENGTH.value[CPTRA_MBOX_ADDR_W+2:2] + 
                                                   (hwif_out.DLEN.LENGTH.value[1] | hwif_out.DLEN.LENGTH.value[0]);
+
+  // Mailbox-sized or larger lengths must stop at the end even if the limited sum wraps.
+  always_comb mbox_read_to_end = mbox_end_addr_carry |
+                                (|hwif_out.DLEN.LENGTH.value[31:CPTRA_MBOX_ADDR_W+2]);
   
   always_comb mbox_read_done = (sha_fsm_ps == SHA_IDLE) | ~mailbox_mode | 
-                               //If the DLEN overflowed our end address, just read to the end of the mailbox and stop
-                               //Otherwise read until read pointer == end address
-                               (~mbox_read_to_end & mbox_rdptr[CPTRA_MBOX_ADDR_W-1:0] == mbox_end_addr) | 
-                               (mbox_read_to_end & mbox_rdptr[CPTRA_MBOX_ADDR_W]);
+                               // Always stop at the physical boundary, independent of the end-address calculation.
+                               mbox_rdptr[CPTRA_MBOX_ADDR_W] |
+                               // Otherwise stop at the programmed end unless the request is clipped.
+                               (~mbox_read_to_end & mbox_rdptr[CPTRA_MBOX_ADDR_W-1:0] == mbox_end_addr);
 
   //HW API State Machine
   //whenever lock is cleared, go back to idle (in iccm_mode, lock is held by HW so this won't fire)
