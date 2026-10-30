@@ -69,8 +69,12 @@ module hmac
   reg init_reg;
   reg next_reg;
   reg last_reg;
+  reg is_last_op_reg;
 
   reg mode_reg;
+  logic csr_mode_reg;
+  logic op_active;
+  logic orphan_next_error, orphan_next_error_reg, orphan_next_error_edge;
   
   reg ready_reg;
   reg tag_valid_reg;
@@ -205,6 +209,7 @@ module hmac
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
           kv_block_data_present <= '0;
+          is_last_op_reg  <= '0;
         end
       else if (zeroize_reg)
         begin
@@ -215,16 +220,21 @@ module hmac
           block_reg_lock  <= '0;
           kv_key_data_present <= '0;
           kv_block_data_present <= '0;
+          is_last_op_reg  <= '0;
         end
       else
         begin
           tag_valid_reg <= core_tag_valid & ~error_flag_reg;
           ready_reg     <= core_ready; 
 
+          if (init_reg | next_reg)
+            is_last_op_reg <= last_reg;
+
           //write to sw register
-          if (core_tag_we & ~(dest_keyvault | kv_data_present))
+          //intermediate tags of CSR-keyed operations are never SW-visible
+          if (core_tag_we & ~(dest_keyvault | kv_data_present | (csr_mode_reg & ~is_last_op_reg)))
             tag_reg <= core_tag & get_mask;
-          if (core_tag_we & (dest_keyvault | kv_data_present))
+          if (core_tag_we & (dest_keyvault | kv_data_present | (csr_mode_reg & ~is_last_op_reg)))
             kv_reg <= core_tag & get_mask;
 
           block_reg_lock <= block_reg_lock_nxt;
@@ -245,8 +255,9 @@ always_comb begin
   hwif_in.HMAC512_NAME[1].NAME.next = HMAC_CORE_NAME[63:32];
   hwif_in.HMAC512_VERSION[0].VERSION.next = HMAC_CORE_VERSION[31:0];
   hwif_in.HMAC512_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
-  //Only allow setting CSR MODE when ready is set
-  hwif_in.HMAC512_CTRL.CSR_MODE.swwe = ready_reg;
+  //Only allow setting CSR MODE when ready is set and no multi-block operation
+  //is in flight, so the key source cannot be swapped between INIT and LAST
+  hwif_in.HMAC512_CTRL.CSR_MODE.swwe = ready_reg & ~op_active;
   hwif_in.HMAC512_CTRL.INIT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.NEXT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.LAST.swwe = ready_reg;
@@ -254,9 +265,11 @@ always_comb begin
 
   //assign hardware readable registers to drive hmac core
   //mask the command until kv clients are idle
+  //NEXT must continue an operation started by INIT; never resume stale core state
   init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
-  next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready;
-  last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready;
+  next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready & ~orphan_next_error;
+  last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready & ~orphan_next_error;
+  csr_mode_reg = hwif_out.HMAC512_CTRL.CSR_MODE.value;
   zeroize_reg = hwif_out.HMAC512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
   mode_reg = hwif_out.HMAC512_CTRL.MODE.value;
 
@@ -303,7 +316,7 @@ always_comb begin
   hwif_in.HMAC512_KV_WR_CTRL.write_en.hwclr = ~kv_write_ready | zeroize_reg;
   //assign hardware readable registers to drive hmac core
   for (int dword=0; dword < KEY_NUM_DWORDS; dword++) begin
-    key_reg[dword] = hwif_out.HMAC512_CTRL.CSR_MODE.value ? cptra_csr_hmac_key[dword] : hwif_out.HMAC512_KEY[dword].KEY.value;
+    key_reg[dword] = csr_mode_reg ? cptra_csr_hmac_key[dword] : hwif_out.HMAC512_KEY[dword].KEY.value;
   end
   for (int dword=0; dword < BLOCK_NUM_DWORDS; dword++)begin
     block_reg[dword] = hwif_out.HMAC512_BLOCK[dword].BLOCK.value;
@@ -336,13 +349,14 @@ always_comb begin
 end
 
 // Software write-enables to prevent KV reg manipulation mid-operation
-always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.swwe         = !kv_key_data_present && !busy_o;
-always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_entry.swwe      = !kv_key_data_present && !busy_o;
+// KV material may only be loaded before INIT: no KV read once an operation is in flight
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.swwe         = !kv_key_data_present && !busy_o && !op_active;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_entry.swwe      = !kv_key_data_present && !busy_o && !op_active;
 always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = 0; //NA for keyvault
 always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.rsvd.swwe            = 0;
 
-always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe         = !kv_block_data_present && !busy_o;
-always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe      = !kv_block_data_present && !busy_o;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe         = !kv_block_data_present && !busy_o && !op_active;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe      = !kv_block_data_present && !busy_o && !op_active;
 always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.swwe = 0; //NA for keyvault
 always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe            = 0;
 
@@ -371,7 +385,11 @@ always_comb hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe                  = 0;
 always_comb kv_key_data_present_set = kv_key_read_ctrl_reg.read_en;
 always_comb kv_block_data_present_set = kv_block_read_ctrl_reg.read_en;
 always_comb kv_data_present = kv_key_data_present | kv_block_data_present;
-always_comb kv_data_present_reset = kv_data_present & core_tag_we;
+// KV provenance is held for the whole operation and only released on the
+// final tag (or zeroize). Releasing it on an intermediate tag would expose
+// the KV-keyed inner chaining state on the next non-final block, unlock the
+// KEY registers before OPAD, and drop provenance from the KV write rules.
+always_comb kv_data_present_reset = kv_data_present & core_tag_we & is_last_op_reg;
 
 // Register block
 hmac_reg i_hmac_reg (
@@ -398,6 +416,7 @@ hmac_reg i_hmac_reg (
 always_comb key_mode_error = kv_key_data_present & (init_reg | next_reg) & (mode_reg == HMAC512_MODE) & (key_reg[KEY_NUM_DWORDS-1 : HMAC384_KEY_SIZE/DATA_WIDTH] == '0);
 always_comb key_zero_error = kv_key_data_present & (init_reg | next_reg) & (key_reg == '0);
 always_comb last_alone_error = hwif_out.HMAC512_CTRL.LAST.value & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.NEXT.value;
+always_comb orphan_next_error = hwif_out.HMAC512_CTRL.NEXT.value & ~hwif_out.HMAC512_CTRL.INIT.value & ~hwif_out.HMAC512_CTRL.ZEROIZE.value & ~op_active;
 
 // last_alone_error is a soft notification: the engine never started,
 // so it must NOT join error_flag (which gates core_tag_we and is
@@ -411,12 +430,14 @@ begin : error_detection
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
       last_alone_error_reg <= 1'b0;
+      orphan_next_error_reg <= 1'b0;
     end
     else if(zeroize_reg) begin
       error_flag_reg <= 1'b0;
       key_mode_error_reg <= 1'b0;
       key_zero_error_reg <= 1'b0;
       last_alone_error_reg <= 1'b0;
+      orphan_next_error_reg <= 1'b0;
     end
     else begin
       if (error_flag)
@@ -424,6 +445,7 @@ begin : error_detection
       key_mode_error_reg <= key_mode_error;
       key_zero_error_reg <= key_zero_error;
       last_alone_error_reg <= last_alone_error;
+      orphan_next_error_reg <= orphan_next_error;
     end
 end // error_detection
 
@@ -431,12 +453,27 @@ always_comb error_flag_edge = error_flag & (!error_flag_reg);
 always_comb key_mode_error_edge = key_mode_error & (!key_mode_error_reg);
 always_comb key_zero_error_edge = key_zero_error & (!key_zero_error_reg);
 always_comb last_alone_error_edge = last_alone_error & (!last_alone_error_reg);
+always_comb orphan_next_error_edge = orphan_next_error & (!orphan_next_error_reg);
+
+// Tracks an operation that has accepted a command but not produced its
+// final tag yet. Cleared by the final tag or zeroize.
+always_ff @(posedge clk or negedge reset_n)
+begin : op_active_tracker
+    if (!reset_n)
+      op_active <= 1'b0;
+    else if (zeroize_reg)
+      op_active <= 1'b0;
+    else if (init_reg | next_reg)
+      op_active <= 1'b1;
+    else if (core_tag_we & is_last_op_reg)
+      op_active <= 1'b0;
+end
 
 //Interrupts hardware interface
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = core_tag_we;
 assign hwif_in.intr_block_rf.error_internal_intr_r.key_mode_error_sts.hwset = key_mode_error_edge;
 assign hwif_in.intr_block_rf.error_internal_intr_r.key_zero_error_sts.hwset = key_zero_error_edge;
-assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = last_alone_error_edge;
+assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = last_alone_error_edge | orphan_next_error_edge;
 assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
 
 assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
@@ -566,7 +603,7 @@ hmac_result_kv_write
 
   //interface with client
   .dest_keyvault(dest_keyvault),
-  .dest_data_avail(core_tag_we),
+  .dest_data_avail(core_tag_we & is_last_op_reg),
   .dest_data(kv_reg),
 
   .error_code(kv_write_error),
@@ -575,6 +612,20 @@ hmac_result_kv_write
 );
 
 always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_ready;
+
+// What: KV provenance is never released before the final tag of the operation.
+// Why: releasing it on an intermediate tag exposes the KV-keyed inner state in TAG.
+// Timing: 1 cycle; the flags are registered and only cleared by zeroize or final tag.
+`CALIPTRA_ASSERT(HmacKvTaintHeldUntilFinal_A,
+    (kv_data_present & ~zeroize_reg & ~(core_tag_we & is_last_op_reg)) |=> kv_data_present,
+    clk, !reset_n)
+
+// What: CSR_MODE cannot change while an operation is in flight.
+// Why: swapping the key source mid-operation would expose CSR-keyed inner state.
+// Timing: 1 cycle; CSR_MODE swwe is gated by op_active.
+`CALIPTRA_ASSERT(HmacCsrModeStableInOp_A,
+    op_active |=> $stable(csr_mode_reg),
+    clk, !reset_n)
 
 
 endmodule // hmac
