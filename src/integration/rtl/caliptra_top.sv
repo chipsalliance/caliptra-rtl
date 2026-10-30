@@ -192,28 +192,9 @@ module caliptra_top
     logic                       o_cpu_halt_status;
     logic                       o_cpu_run_ack;
 
-    logic                       mailbox_write;
-    logic        [63:0]         dma_hrdata       ;
-    logic        [63:0]         dma_hwdata       ;
-    logic                       dma_hready       ;
-    logic                       dma_hresp        ;
-
-    logic                       mpc_debug_halt_req;
-    logic                       mpc_debug_run_req;
-    logic                       mpc_reset_run_req;
     logic                       mpc_debug_halt_ack;
     logic                       mpc_debug_run_ack;
     logic                       debug_brkpt_status;
-
-    integer                     cycleCnt;
-    logic                       mailbox_data_val;
-
-    wire                        dma_hready_out;
-    integer                     commit_count;
-
-    logic                       wb_valid;
-    logic [4:0]                 wb_dest;
-    logic [31:0]                wb_data;
 
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
     logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
@@ -370,9 +351,6 @@ module caliptra_top
     logic [2:0] imem_hsize;
     logic [63:0] imem_hrdata;
     logic imem_hresp;
-    
-    logic lsu_addr_ph, lsu_data_ph, lsu_sel;
-    logic ic_addr_ph, ic_data_ph, ic_sel;
 
     logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
     logic aes_busy_filtered, ecc_busy_filtered;
