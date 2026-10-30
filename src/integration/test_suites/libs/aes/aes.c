@@ -336,12 +336,27 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
         }
 
         if(aes_input.aes_collision_err == TRUE) {
+          uint32_t reg;
+          uint32_t dma_aes_fsm;
           VPRINTF(LOW, "Injecting AES collision err\n");
           soc_ifc_axi_dma_send_axi_to_axi_no_wait(aes_input.dma_transfer_data.src_addr, src_fixed, aes_input.dma_transfer_data.dst_addr, dst_fixed,  aes_input.text_len, block_size, 1, gcm_mode);
+          // Only the DMA accesses that collide are rejected; any other CTRL
+          // write lands in AES. If it lands while the DMA is still feeding the
+          // (idle) core, it clears the key/IV and the DMA waits forever for
+          // output. Wait for the transfer to start and for the block to be
+          // loaded (AES busy), then hammer CTRL so the writes collide with the
+          // DMA's DATA_OUT reads instead.
+          for (size_t i = 0; i < 1000; i++) {
+            if (lsu_read_32(CLP_AXI_DMA_REG_STATUS0) & AXI_DMA_REG_STATUS0_BUSY_MASK) break;
+          }
+          do {
+            reg = lsu_read_32(CLP_AXI_DMA_REG_STATUS0);
+            dma_aes_fsm = (reg & AXI_DMA_REG_STATUS0_AXI_DMA_AES_FSM_PS_MASK) >> AXI_DMA_REG_STATUS0_AXI_DMA_AES_FSM_PS_LOW;
+          } while ((reg & AXI_DMA_REG_STATUS0_BUSY_MASK) &&
+                   (dma_aes_fsm != AXI_DMA_AES_FSM_WAIT_OUTPUT_VALID) &&
+                   (dma_aes_fsm != AXI_DMA_AES_FSM_READ_OUTPUT));
           for (size_t i = 0; i < 100; i++)
           {
-            //-- send AES Read
-            aes_ctrl = lsu_read_32(CLP_AES_REG_STATUS);
             //write shadowed ctrl twice
             lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
             lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);

@@ -59,6 +59,20 @@ typedef enum {
   GCM_TAG     = (1 << 5)
 } gcm_phase_e;
 
+// Mirrors the aes_fsm_ps encoding in axi_dma_ctrl.sv (STATUS0.axi_dma_aes_fsm_ps)
+typedef enum {
+  AXI_DMA_AES_FSM_IDLE              = 0,
+  AXI_DMA_AES_FSM_WAIT_INPUT_READY  = 1,
+  AXI_DMA_AES_FSM_WAIT_IDLE         = 2,
+  AXI_DMA_AES_FSM_UPDATE_BYTE_COUNT = 3,
+  AXI_DMA_AES_FSM_WRITE_BLOCK       = 4,
+  AXI_DMA_AES_FSM_WAIT_OUTPUT_VALID = 5,
+  AXI_DMA_AES_FSM_READ_OUTPUT       = 6,
+  AXI_DMA_AES_FSM_DONE              = 7,
+  AXI_DMA_AES_FSM_ERROR             = 8,
+  AXI_DMA_AES_FSM_FINAL_CHECK       = 9
+} axi_dma_aes_fsm_e;
+
 typedef struct {
     BOOL      kv_intf;
     BOOL      kv_reuse_key;
