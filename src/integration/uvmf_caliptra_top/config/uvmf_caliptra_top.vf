@@ -412,10 +412,6 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_mubi_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_cipher_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_sparse_fsm_pkg.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim_generic/rtl/abr_prim_generic_flop_en.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim_generic/rtl/abr_prim_generic_flop.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim_generic/rtl/abr_prim_generic_buf.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim_generic/rtl/abr_prim_generic_xor2.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_lfsr.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_sec_anchor_buf.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_prim/rtl/abr_prim_count.sv
