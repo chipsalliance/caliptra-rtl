@@ -231,10 +231,11 @@ module caliptra_top
     logic [31:0]                cptra_uncore_dmi_reg_wdata;
     logic                       unlock_caliptra_security_state;
     security_state_t            cptra_security_state_Latched;
-    security_state_t            cptra_security_state_Latched_d;
-    security_state_t            cptra_security_state_Latched_f;
+    device_lifecycle_e          device_lifecycle_d;
+    device_lifecycle_e          device_lifecycle_f;
     caliptra_prim_mubi_pkg::mubi4_t debug_locked_d;
     caliptra_prim_mubi_pkg::mubi4_t debug_locked_f;
+    caliptra_prim_mubi_pkg::mubi4_t debug_locked_d_next;
 
     logic                       cptra_dmi_reg_en_preQ;
     
@@ -352,7 +353,8 @@ module caliptra_top
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key_dbg;
     logic                                      cptra_in_debug_scan_mode;
 
-    // Subsystem mode OCP LOCK status
+    // Subsystem mode OCP LOCK configuration and status
+    logic ocp_lock_en;
     logic ss_ocp_lock_in_progress;
     // Key release size (used as input to AES operation)
     logic [15:0] ss_key_release_key_size;
@@ -930,34 +932,37 @@ el2_veer_wrapper rvtop (
     end
 
     always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
-        if (~cptra_noncore_rst_b) begin //Setting the default value to be debug locked and in production mode
-            cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4True}; 
-            cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4True};
+        if (~cptra_noncore_rst_b) begin
+            device_lifecycle_d <= DEVICE_PRODUCTION;
+            device_lifecycle_f <= DEVICE_PRODUCTION;
         end
-        else if (unlock_caliptra_security_state) begin //capture the new value at reset or when unlocked
-            cptra_security_state_Latched_d <= security_state;
-            cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
-        end else begin //hold the previous value when locked
-            cptra_security_state_Latched_d <= cptra_security_state_Latched_d;
-            cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
+        else begin
+            if (unlock_caliptra_security_state) begin
+                device_lifecycle_d <= security_state.device_lifecycle;
+            end
+            device_lifecycle_f <= device_lifecycle_d;
         end
     end
 
-    //MUBI4 buffer
+    always_comb debug_locked_d_next = unlock_caliptra_security_state ? security_state.debug_locked : debug_locked_d;
+
+    // Keep both existing stages in MuBi senders backed by technology-swappable flops.
     caliptra_prim_mubi4_sender #(
-        .AsyncOn (0)
+        .AsyncOn (1),
+        .ResetValue (MuBi4True)
     ) u_debug_locked_d_sender (
         .clk_i   (clk),
         .rst_ni  (cptra_noncore_rst_b),
-        .mubi_i  (cptra_security_state_Latched_d.debug_locked),
+        .mubi_i  (debug_locked_d_next),
         .mubi_o  (debug_locked_d)
     );
     caliptra_prim_mubi4_sender #(
-        .AsyncOn (0)
+        .AsyncOn (1),
+        .ResetValue (MuBi4True)
     ) u_debug_locked_f_sender (
         .clk_i   (clk),
         .rst_ni  (cptra_noncore_rst_b),
-        .mubi_i  (cptra_security_state_Latched_f.debug_locked),
+        .mubi_i  (debug_locked_d),
         .mubi_o  (debug_locked_f)
     );
 
@@ -975,7 +980,7 @@ el2_veer_wrapper rvtop (
     //Lock debug unless both flops are unlocked (MuBi4 OR: result is True/locked if either input is True/locked)
     always_comb cptra_security_state_Latched.debug_locked = mubi4_or_hi(debug_locked_d, debug_locked_f);
     //Pass on the latched value of device lifecycle
-    always_comb cptra_security_state_Latched.device_lifecycle = cptra_security_state_Latched_f.device_lifecycle;
+    always_comb cptra_security_state_Latched.device_lifecycle = device_lifecycle_f;
     //Only assert scan mode once both flops have set
     always_comb cptra_scan_mode_Latched = cptra_scan_mode_Latched_d & cptra_scan_mode_Latched_f;
     
@@ -986,8 +991,8 @@ el2_veer_wrapper rvtop (
     // Detect transition of debug mode
     always_comb debug_lock_switch = mubi4_test_true_loose(debug_locked_d) ^ mubi4_test_true_loose(debug_locked_f);
     // Detect transition from valid lifecycle state to invalid
-    always_comb device_lifecycle_switch = (cptra_security_state_Latched_f.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION}) &
-                                         ~(cptra_security_state_Latched_d.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION});
+    always_comb device_lifecycle_switch = (device_lifecycle_f inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION}) &
+                                         ~(device_lifecycle_d inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION});
 
     assign debug_lock_or_scan_mode_switch = debug_lock_switch | scan_mode_switch | device_lifecycle_switch | cptra_error_fatal;
 
@@ -1216,6 +1221,12 @@ sha3_ctrl #(
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+assign ocp_lock_en = ss_ocp_lock_en;
+`else
+assign ocp_lock_en = 1'b0;
+`endif
+
 //override device secrets with debug values in Debug, Debug Intent, or Scan Mode or any device lifecycle other than PROD and MANUF
 always_comb cptra_in_debug_scan_mode = mubi4_test_false_strict(cptra_security_state_Latched.debug_locked) | cptra_scan_mode_Latched | cptra_ss_debug_intent |
                                        ~(cptra_security_state_Latched.device_lifecycle inside {DEVICE_PRODUCTION, DEVICE_MANUFACTURING});
@@ -1253,7 +1264,7 @@ doe_ctrl #(
     .busy_o(doe_busy),
     .kv_write (kv_write[KV_WRITE_IDX_DOE]),
     .kv_wr_resp (kv_wr_resp[KV_WRITE_IDX_DOE]),
-    .ocp_lock_en(ss_ocp_lock_en),
+    .ocp_lock_en(ocp_lock_en),
     .doe_cmd_lock(mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
@@ -1435,7 +1446,7 @@ key_vault1
     .boot_flow_rt (boot_flow_rt),
     .boot_flow_error (boot_flow_error),
     .stable_owner_key_en (stable_owner_key_en),
-    .ocp_lock_mode_en (ss_ocp_lock_en),
+    .ocp_lock_mode_en (ocp_lock_en),
 
     .kv_read              (kv_read),
     .kv_write             (kv_write),
@@ -1854,7 +1865,7 @@ soc_ifc_top1
     .ss_generic_fw_exec_ctrl(ss_generic_fw_exec_ctrl),
 
     // Subsystem mode OCP LOCK status
-    .ss_ocp_lock_en(ss_ocp_lock_en),
+    .ss_ocp_lock_en(ocp_lock_en),
     .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
     .ss_key_release_key_size(ss_key_release_key_size),
     // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out (-> combiner)

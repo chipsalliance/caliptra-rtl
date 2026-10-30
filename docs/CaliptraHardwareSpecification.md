@@ -3122,6 +3122,8 @@ The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and route
 
 **OCP Lock Keys (Slots 16 and 22)**
 
+OCP Lock mode is supported only when `CALIPTRA_MODE_SUBSYSTEM` is defined. In Passive mode, the incoming strap is ignored and `ocp_lock_mode_en` is forced to 0.
+
 When OCP Lock mode is enabled (`ocp_lock_mode_en` = 1 from the `ss_ocp_lock_en` strap), DOE populates slot 16 (MDK) and slot 22 (HEK seed) before ROM runs. FMC and RT firmware require these keys for EPK, VEK, and MEK derivation in OCP Lock flows.
 
 When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at both transitions. When inactive, they are cleared normally.
