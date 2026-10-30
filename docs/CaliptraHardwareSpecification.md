@@ -1241,6 +1241,17 @@ The HMAC architecture has the finite-state machine as shown in the following fig
 
 When the CSR Mode register is set, the HMAC512 core uses the value latched from the cptra_csr_hmac_key interface pins in place of the API key register. These pins are latched internally after powergood assertion during DEVICE_MANUFACTURING lifecycle state. During debug mode operation this value is overridden with all 1's, and during any other lifecycle state it has a value of zero.
 
+### Save and restore
+
+After any non-final block (INIT or NEXT without LAST), firmware may read the 16 `HMAC512_TAG` dwords to snapshot the inner SHA-512 chaining state, and later resume by writing them back to `HMAC512_TAG`, re-supplying the same `CTRL.MODE` and `HMAC512_KEY`, and pulsing `CTRL.RESTORE|NEXT` (or `CTRL.RESTORE|LAST`).
+
+Save/restore is supported only for firmware-provided keys and data. When the key or block is sourced from the Key Vault, or `CSR_MODE` is set:
+* The Key Vault provenance (and the KV-loaded `HMAC512_KEY`/`HMAC512_BLOCK` contents) is held for the whole operation and released only on the final tag or on zeroize. Intermediate tags are never written to `HMAC512_TAG` (reads return zero and set `error3_sts`) and never written to a Key Vault slot.
+* `CTRL.RESTORE` is rejected with `error2_sts`, and `CTRL.NEXT` without a preceding `CTRL.INIT` is rejected with `error2_sts`.
+* Key Vault reads (`HMAC512_KV_RD_KEY_CTRL`, `HMAC512_KV_RD_BLOCK_CTRL`) and `CTRL.CSR_MODE` cannot be changed between the first command of an operation and its final tag.
+
+Results destined for the Key Vault (`HMAC512_KV_WR_CTRL.write_en`) are written only on the final (LAST) tag.
+
 ### Signal descriptions
 
 The HMAC architecture inputs and outputs are described in the following table.

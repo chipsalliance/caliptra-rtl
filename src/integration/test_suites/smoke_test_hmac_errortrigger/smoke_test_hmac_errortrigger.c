@@ -106,8 +106,8 @@ void main() {
         // Check that HMAC KEY is loaded
         while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS) & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) == 0);
 
-        // Enable HMAC core
-        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_NEXT_MASK |
+        // Enable HMAC core (a KV-keyed operation must start with INIT)
+        lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
                                                     (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
         // wait for HMAC process to be done
         wait_for_hmac_intr();
