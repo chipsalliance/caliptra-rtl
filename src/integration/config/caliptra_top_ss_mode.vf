@@ -121,6 +121,8 @@ ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_pmp.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/el2_prim_generic_buf.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/el2_prim_buf.sv
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/el2_prim_generic_rst_mux2.sv
+${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/lib/el2_prim_rst_mux2.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer_lockstep.sv
 ${CALIPTRA_ROOT}/src/riscv_core/veer_el2/rtl/el2_veer_wrapper.sv
 ${CALIPTRA_ROOT}/src/ahb_lite_bus/rtl/ahb_lite_bus_inf.sv

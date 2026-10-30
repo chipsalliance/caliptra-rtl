@@ -24,6 +24,13 @@
   `define RV_PRIM_BUF_IMPL caliptra_prim_buf
 `endif
 
+// Redirect the VeeR EL2 lockstep shadow-core reset mux (el2_prim_rst_mux2) to
+// Caliptra's swappable glitchless reset mux primitive. Guarded so a
+// command-line +define+ can still override it.
+`ifndef RV_PRIM_RST_MUX2_IMPL
+  `define RV_PRIM_RST_MUX2_IMPL caliptra_prim_rst_mux2
+`endif
+
 // Uncomment to enable Caliptra Internal TRNG
 //`define CALIPTRA_INTERNAL_TRNG
 
