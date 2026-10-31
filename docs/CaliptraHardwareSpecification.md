@@ -419,11 +419,7 @@ Debug mode values may be set by integrators in the Caliptra configuration files.
 
 ## Clock gating
 
-Caliptra provides a clock gating feature that turns off clocks when the microcontroller is halted. Clock gating is disabled by default, but can be globally enabled via the following register.
-
-| Control register     | Start address     | Description               |
-| :------------------- | :---------------- | :------------------------ |
-| CPTRA_CLK_GATING_EN  | 0x300300bc        | Register bit to enable or disable the clock gating feature. |
+Caliptra provides a clock gating feature that turns off clocks when the microcontroller is halted. Clock gating is disabled by default, but can be globally enabled via the [CPTRA_CLK_GATING_EN](https://chipsalliance.github.io/caliptra-rtl/v1_1/external-regs/?p=caliptra_top_reg.generic_and_fuse_reg.CPTRA_CLK_GATING_EN) register.
 
 When enabled, halting the microcontroller turns off clocks to all of the cryptographic subsystem, the vaults (key vault, PCR vault, and data vault), mailbox SRAM, SoC interface, and peripherals subsystem. The Watchdog timer and SoC registers run on the gated RDC clock. The RV core implements its own clock gating mechanism. Halting the core automatically turns off its clock.
 
