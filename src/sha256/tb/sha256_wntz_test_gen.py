@@ -89,14 +89,7 @@ def generate_expected_wntz_digest(w, n):
     #Generate 1st digest using OpenSSL sha256
     command = 'echo '+msg_str+' | xxd -r -p | openssl dgst -sha256'
     digest = subprocess.check_output(command, shell=True)
-    digest_str = str(digest)
-
-    #Chomp extra chars at beginning and end if python 3.6.8 is loaded
-    if digest_str[1] == "'":
-        digest_str = digest_str[11:-3]
-    else:
-        digest_str = digest_str.rstrip()
-        digest_str = digest_str[9:]
+    digest_str = digest.decode().split('=')[-1].strip()
 
     h.write('DIGEST_0 = '+digest_str+'\n')
 
@@ -114,14 +107,7 @@ def generate_expected_wntz_digest(w, n):
         # print(str(j) + ":" +digest_str)
         command = 'echo '+digest_str+' | xxd -r -p | openssl dgst -sha256'
         digest = subprocess.check_output(command, shell=True)
-        digest_str = str(digest)
-
-        #Chomp extra chars at beginning and end if python 3.6.8 is loaded
-        if digest_str[1] == "'":
-            digest_str = digest_str[11:-3]
-        else:
-            digest_str = digest_str.rstrip()
-            digest_str = digest_str[9:]
+        digest_str = digest.decode().split('=')[-1].strip()
 
         #Truncate digest to 192 bits in n = 0 mode and feed to next iteration
         if n == 0:
