@@ -1473,6 +1473,56 @@ module hmac_ctrl_tb
     end
   endtask // csr_back_to_back_last_test
 
+  //----------------------------------------------------------------
+  // csr_init_edge_test()
+  //
+  // Single-block CSR-keyed HMAC. `gap` cycles after INIT|LAST|CSR_MODE,
+  // CTRL is rewritten with CSR_MODE=0 and no command, landing on or right
+  // after the cycle the core accepts INIT. The operation must still use
+  // the CSR key, so the tag must equal HMAC-SHA512(csr_key, M).
+  //----------------------------------------------------------------
+  task csr_init_edge_test(input int gap,
+                          input [BLOCK_SIZE-1:0] block,
+                          input [LFSR_SEED_SIZE-1:0] seed,
+                          input [TAG_SIZE-1:0] expected);
+    begin
+      $display("*** TC%01d - CSR INIT-edge CSR_MODE clear test (gap=%0d) started.", tc_ctr, gap);
+
+      hmac_write_key('0);
+      write_block(block);
+      write_seed(seed);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, HMAC512_MODE | CTRL_INIT_VALUE | CTRL_LAST_VALUE | `HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
+      if (gap > 0)
+        begin
+          hsel_i_tb       = 0;
+          repeat (gap) #(CLK_PERIOD);
+        end
+      write_single_word(`HMAC_REG_HMAC512_CTRL, HMAC512_MODE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR - operation did not use the CSR key (gap=%0d)", tc_ctr, gap);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - CSR INIT-edge CSR_MODE clear test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // csr_init_edge_test
+
   task hmac_csr_tests;
     begin
       reg [KEY_SIZE-1   : 0] key;
@@ -1526,6 +1576,9 @@ module hmac_ctrl_tb
           1024'h611aed9d86915a085981c8f303efe5fe91dc8365c19ebc612fb0b337e7750f96383062748f414edcd6d81e8bde4e012cc16bd8388c387c5e338000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dc8,
           random_gen(),
           512'hf39ba60c96000cc7478073c5d30fb6390c07d9366b79022d9b3e85cb6f6f769041388e545c0c05f73ee469f5beeb6293f07fe076c1a72cee922ec86570d084f3);
+
+      for (int gap = 0; gap < 4; gap++)
+        csr_init_edge_test(gap, data, random_gen(), expected);
       
       $display("*** Testcases for CSR completed.");
     end

@@ -15,10 +15,12 @@
 // Multi-block HMAC512 with a KeyVault-sourced key must never expose the
 // KV-keyed inner SHA-512 chaining state through the FW-readable TAG.
 //
-//  1. KV key: INIT (no LAST), NEXT (no LAST) WITHOUT reloading the key,
-//     then NEXT|LAST to a KV slot. Both intermediate TAG reads must be
-//     zero and a FW write to KEY between blocks must be ignored. The KV
-//     result is checked through ECC signing with it as the private key.
+//  1. KV key, KV destination armed before INIT: INIT (no LAST), NEXT
+//     (no LAST) WITHOUT reloading the key, then NEXT|LAST. Both
+//     intermediate TAG reads must be zero, no KV write may happen on an
+//     intermediate block, and a FW write to KEY between blocks must be
+//     ignored. The KV result is checked through ECC signing with it as
+//     the private key.
 //  2. KV key: after a final KV-keyed operation, NEXT without INIT must be
 //     rejected (error2) and must not expose the stale chaining state.
 //  3. KV key: NEXT|LAST without a preceding INIT must be rejected (error2).
@@ -263,6 +265,20 @@ static void check_kv_result_with_ecc(void) {
     ecc_zeroize();
 }
 
+// Intermediate block: the armed KV write must not fire. Give the KV write
+// client time to run if it were (wrongly) triggered, then check it is idle,
+// reported nothing, and still holds the write request for the final tag.
+static void expect_no_kv_write(const char *label) {
+    for (int i = 0; i < 64; i++) {
+        if (lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK)
+            fail(label);
+    }
+    if ((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_READY_MASK) == 0)
+        fail(label);
+    if ((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL) & HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK) == 0)
+        fail(label);
+}
+
 // Command rejected: error2 raised and no tag produced
 static void expect_rejected(const char *label) {
     for (int i = 0; i < 200; i++) __asm__ volatile ("nop");
@@ -274,11 +290,13 @@ static void test_kv_key_no_intermediate_leak(void) {
     VPRINTF(LOW, "--- KV key, INIT/NEXT/NEXT|LAST without key reload ---\n");
     t_wait_ready();
     load_kv_key();
+    set_kv_dest();
     write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_LFSR_SEED_0, lfsr_seed_dwords, 6);
     write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0, b1, 32);
     t_ctrl_write(HMAC_REG_HMAC512_CTRL_INIT_MASK, HMAC512_MODE, FALSE);
     t_wait_valid();
     expect_tag_hidden("intermediate TAG after INIT not hidden");
+    expect_no_kv_write("KV write fired on the intermediate INIT tag");
 
     // KEY must stay locked until the final tag: this write must be ignored
     write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0, zero_key, 16);
@@ -286,8 +304,8 @@ static void test_kv_key_no_intermediate_leak(void) {
     t_ctrl_write(HMAC_REG_HMAC512_CTRL_NEXT_MASK, HMAC512_MODE, FALSE);
     t_wait_valid();
     expect_tag_hidden("KV-keyed inner state leaked in TAG after NEXT");
+    expect_no_kv_write("KV write fired on the intermediate NEXT tag");
 
-    set_kv_dest();
     write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0, zero_key, 16);
     write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0, b3f, 32);
     t_ctrl_write(HMAC_REG_HMAC512_CTRL_NEXT_MASK | HMAC_REG_HMAC512_CTRL_LAST_MASK, HMAC512_MODE, FALSE);

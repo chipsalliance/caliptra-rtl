@@ -75,6 +75,7 @@ module hmac
   logic csr_mode_reg;
   logic op_active;
   logic cmd_accepted;
+  logic key_src_lock;
   logic orphan_next_error, orphan_next_error_reg, orphan_next_error_edge;
   
   reg ready_reg;
@@ -258,9 +259,9 @@ always_comb begin
   hwif_in.HMAC512_NAME[1].NAME.next = HMAC_CORE_NAME[63:32];
   hwif_in.HMAC512_VERSION[0].VERSION.next = HMAC_CORE_VERSION[31:0];
   hwif_in.HMAC512_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
-  //Only allow setting CSR MODE when ready is set and no multi-block operation
-  //is in flight, so the key source cannot be swapped between INIT and LAST
-  hwif_in.HMAC512_CTRL.CSR_MODE.swwe = ready_reg & ~op_active;
+  //Only allow setting CSR MODE when ready is set and no operation is in flight
+  //or being accepted, so the key source cannot be swapped between INIT and LAST
+  hwif_in.HMAC512_CTRL.CSR_MODE.swwe = ready_reg & ~key_src_lock;
   hwif_in.HMAC512_CTRL.INIT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.NEXT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.LAST.swwe = ready_reg;
@@ -272,10 +273,6 @@ always_comb begin
   init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
   next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready & ~orphan_next_error;
   last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready & ~orphan_next_error;
-  //ready_reg lags core_ready by a cycle, so a CTRL write landing right after
-  //an accepted command reaches init_reg/next_reg while the core is busy and
-  //is ignored by the core
-  cmd_accepted = (init_reg | next_reg) & core_ready;
   csr_mode_reg = hwif_out.HMAC512_CTRL.CSR_MODE.value;
   zeroize_reg = hwif_out.HMAC512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
   mode_reg = hwif_out.HMAC512_CTRL.MODE.value;
@@ -355,15 +352,22 @@ always_comb begin
   end
 end
 
+//ready_reg lags core_ready by a cycle, so a CTRL write landing right after
+//an accepted command reaches init_reg/next_reg while the core is busy and
+//is ignored by the core
+always_comb cmd_accepted = (init_reg | next_reg) & core_ready;
+//op_active rises the cycle after the accepting edge; cover that edge too
+always_comb key_src_lock = op_active | cmd_accepted;
+
 // Software write-enables to prevent KV reg manipulation mid-operation
 // KV material may only be loaded before INIT: no KV read once an operation is in flight
-always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.swwe         = !kv_key_data_present && !busy_o && !op_active;
-always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_entry.swwe      = !kv_key_data_present && !busy_o && !op_active;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_en.swwe         = !kv_key_data_present && !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.read_entry.swwe      = !kv_key_data_present && !busy_o && !key_src_lock;
 always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.pcr_hash_extend.swwe = 0; //NA for keyvault
 always_comb hwif_in.HMAC512_KV_RD_KEY_CTRL.rsvd.swwe            = 0;
 
-always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe         = !kv_block_data_present && !busy_o && !op_active;
-always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe      = !kv_block_data_present && !busy_o && !op_active;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_en.swwe         = !kv_block_data_present && !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.read_entry.swwe      = !kv_block_data_present && !busy_o && !key_src_lock;
 always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.pcr_hash_extend.swwe = 0; //NA for keyvault
 always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe            = 0;
 
@@ -627,11 +631,20 @@ always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_r
     (kv_data_present & ~zeroize_reg & ~(core_tag_we & is_last_op_reg)) |=> kv_data_present,
     clk, !reset_n)
 
-// What: CSR_MODE cannot change while an operation is in flight.
-// Why: swapping the key source mid-operation would expose CSR-keyed inner state.
-// Timing: 1 cycle; CSR_MODE swwe is gated by op_active.
+// What: CSR_MODE cannot change while an operation is in flight or being accepted.
+// Why: swapping the key source mid-operation would expose CSR-keyed inner state
+//      or run the operation with a key other than the one requested.
+// Timing: 1 cycle; CSR_MODE swwe is gated by key_src_lock.
 `CALIPTRA_ASSERT(HmacCsrModeStableInOp_A,
-    op_active |=> $stable(csr_mode_reg),
+    key_src_lock |=> $stable(csr_mode_reg),
+    clk, !reset_n)
+
+// What: no new KV key/block load starts once an operation is accepted.
+// Why: a KV load on the INIT edge would bypass the KV key checks done at
+//      INIT and change the key source of an operation already in flight.
+// Timing: 1 cycle; KV read_en swwe is gated by key_src_lock.
+`CALIPTRA_ASSERT(HmacNoKvLoadInOp_A,
+    (key_src_lock & ~zeroize_reg) |=> ~(kv_key_read_ctrl_reg.read_en | kv_block_read_ctrl_reg.read_en),
     clk, !reset_n)
 
 // What: the wrapper's view of LAST matches the block the core just finished.
