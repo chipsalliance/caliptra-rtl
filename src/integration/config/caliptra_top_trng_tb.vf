@@ -318,8 +318,6 @@ ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_top/rtl/abr_ctrl_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/ntt_top/rtl/ntt_defines_pkg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_1r1w_ram.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_1r1w_be_ram.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_1r1w_512x4_ram.sv
-${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_ram_regout.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_icg.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_2ff_sync.sv
 ${CALIPTRA_ROOT}/submodules/adams-bridge/src/abr_libs/rtl/abr_piso_multi.sv
