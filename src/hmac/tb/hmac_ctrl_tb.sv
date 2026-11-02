@@ -1395,6 +1395,84 @@ module hmac_ctrl_tb
     end
   endtask // hmac_tests
 
+  //----------------------------------------------------------------
+  // csr_back_to_back_last_test()
+  //
+  // CSR-keyed three-block HMAC. Right after the intermediate NEXT is
+  // accepted, a NEXT|LAST is written `gap` cycles later while the core
+  // is busy. The core ignores it, so the intermediate CSR-keyed state
+  // must stay hidden from TAG and the real final block must still
+  // produce HMAC-SHA512(csr_key, M).
+  //----------------------------------------------------------------
+  task csr_back_to_back_last_test(input int gap,
+                                  input [BLOCK_SIZE-1:0] block0,
+                                  input [BLOCK_SIZE-1:0] block1,
+                                  input [BLOCK_SIZE-1:0] block2,
+                                  input [LFSR_SEED_SIZE-1:0] seed,
+                                  input [TAG_SIZE-1:0] expected);
+    begin
+      reg [31:0] csr_ctrl;
+      csr_ctrl = HMAC512_MODE | `HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK;
+
+      $display("*** TC%01d - CSR back-to-back NEXT|LAST test (gap=%0d) started.", tc_ctr, gap);
+
+      hmac_write_key('0);
+      write_block(block0);
+      write_seed(seed);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, csr_ctrl | CTRL_INIT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+
+      write_block(block1);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, csr_ctrl | CTRL_NEXT_VALUE);
+      if (gap > 0)
+        begin
+          hsel_i_tb       = 0;
+          repeat (gap) #(CLK_PERIOD);
+        end
+      write_single_word(`HMAC_REG_HMAC512_CTRL, csr_ctrl | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      if (digest_data != '0)
+        begin
+          $display("TC%01d: ERROR - CSR-keyed intermediate state exposed in TAG (gap=%0d)", tc_ctr, gap);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      write_block(block2);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, csr_ctrl | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest (gap=%0d)", tc_ctr, gap);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - CSR back-to-back NEXT|LAST test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // csr_back_to_back_last_test
+
   task hmac_csr_tests;
     begin
       reg [KEY_SIZE-1   : 0] key;
@@ -1438,6 +1516,16 @@ module hmac_ctrl_tb
       
       $display("*** TC%01d - CSR test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
+
+      // Expected = HMAC-SHA512(csr_key, M) from Python hmac/hashlib, with M
+      // recovered from the padded blocks below
+      for (int gap = 0; gap < 4; gap++)
+        csr_back_to_back_last_test(gap,
+          1024'h8dbc773dac62e446067bca3a361ab54da9e5f8b43aeb7eed2666d4efa98c7a3fd8ccfa285ea19650b4efc000061d39458bebedcd6a140fe5032a98ed9131f078a594c95ee6e2383dca9b47ac304622093cfdab71bffa5dd843f1d06952c3580f6e0db840b06084b22e200c77a74b7b01a2a47d2b2c2ff885cd688bb6a96b30f4,
+          1024'ha576778214cf8c8a552b806cf287cd13aa6df4ec9aad70fdfdd4744ff52b2739cd6bbc5c2f82e2ea84340325dafd2a8b9eff488d1d1ed697c5770eef651d0288677d87796f541fd7a797cac728d0b948daca9ac5a27de97947ab217e16c165b6a50e227245a01f6cd5f0fdf9980c49ebaa59e14ee56588bbecb4696cba50bb53,
+          1024'h611aed9d86915a085981c8f303efe5fe91dc8365c19ebc612fb0b337e7750f96383062748f414edcd6d81e8bde4e012cc16bd8388c387c5e338000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dc8,
+          random_gen(),
+          512'hf39ba60c96000cc7478073c5d30fb6390c07d9366b79022d9b3e85cb6f6f769041388e545c0c05f73ee469f5beeb6293f07fe076c1a72cee922ec86570d084f3);
       
       $display("*** Testcases for CSR completed.");
     end

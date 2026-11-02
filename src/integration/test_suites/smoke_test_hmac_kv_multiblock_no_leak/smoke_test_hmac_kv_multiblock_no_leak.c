@@ -17,7 +17,8 @@
 //
 //  1. KV key: INIT (no LAST), NEXT (no LAST) WITHOUT reloading the key,
 //     then NEXT|LAST to a KV slot. Both intermediate TAG reads must be
-//     zero; the final result must land in KV.
+//     zero and a FW write to KEY between blocks must be ignored. The KV
+//     result is checked through ECC signing with it as the private key.
 //  2. KV key: after a final KV-keyed operation, NEXT without INIT must be
 //     rejected (error2) and must not expose the stale chaining state.
 //  3. KV key: NEXT|LAST without a preceding INIT must be rejected (error2).
@@ -27,7 +28,9 @@
 //  5. CSR key: INIT (no LAST) with CSR_MODE, then NEXT (no LAST) written
 //     with CSR_MODE=0 must not expose the CSR-keyed inner state.
 //
-// Expected values were generated with Python hashlib/hmac (HMAC-SHA512).
+// Expected values were generated with Python hashlib/hmac (HMAC-SHA512) and,
+// for the ECC check, python-ecdsa (RFC 6979 deterministic ECDSA P-384 over
+// the 384-bit prefix of the HMAC result, as read by the ECC KV client).
 //
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -38,6 +41,7 @@
 #include <stdlib.h>
 #include "printf.h"
 #include "hmac.h"
+#include "ecc.h"
 #include "caliptra_rtl_lib.h"
 
 #ifdef CPT_VERBOSITY
@@ -88,6 +92,42 @@ static uint32_t b2f[32] = {
     0xe6e7ecd2, 0xc643df12, 0xe8d31df9, 0xa2a21a83,
     0x01729953, 0x80000000, 0x00000000, 0x00000000,
     0x00000000, 0x00000000, 0x00000000, 0x00000b20};
+
+// Same message tail as b2f, padded for b1 || b2 || tail:
+// (128 ipad + 128 + 128 + 100) bytes * 8 = 0xf20 bits
+static uint32_t b3f[32] = {
+    0x83afd049, 0xee34195e, 0x1642f714, 0xea8f0156,
+    0x24563ebe, 0x326bfa09, 0x61b461c5, 0xeabd8cbc,
+    0x50742f38, 0x9effe9a1, 0x3e78f831, 0x4ac5d38e,
+    0xf822d8f3, 0x901e820b, 0xaa86861f, 0x312100c7,
+    0x119661cc, 0x6ec0a7d5, 0x3377d345, 0xe45c1805,
+    0xe6e7ecd2, 0xc643df12, 0xe8d31df9, 0xa2a21a83,
+    0x01729953, 0x80000000, 0x00000000, 0x00000000,
+    0x00000000, 0x00000000, 0x00000000, 0x00000f20};
+
+// ECDSA P-384 over the KV result of test 1:
+// privkey = HMAC-SHA512(0x0b * 64, b1 || b2 || tail)[0:384]
+static uint32_t ecc_msg[12] = {
+    0x4c58f520, 0x29cb8dfa, 0x4d2eb26e, 0xc6fca3f5,
+    0x88ae3290, 0x9c980da3, 0x93511124, 0x6928cf26,
+    0xa261fbf3, 0x8ede4e3e, 0x445910a3, 0x3e3518d5};
+
+static uint32_t ecc_iv[12] = {
+    0x3401cefa, 0xe20a7376, 0x49073ac1, 0xa351e329,
+    0x26db9ed0, 0xdb6b1cff, 0xab0493da, 0xafb93ddd,
+    0xd83edea2, 0x8a803d0d, 0x003b2633, 0xb9d0f1bf};
+
+static uint32_t exp_sign_r[12] = {
+    0xfb75f0d9, 0x8b7bebba, 0x4ab0a83f, 0xdceb98cd,
+    0x77c83edc, 0x766787e2, 0x36d4cbe7, 0x84851e30,
+    0x549d6959, 0x3c1f8458, 0xfb4e4d55, 0x41591702};
+
+static uint32_t exp_sign_s[12] = {
+    0x633bde88, 0x2f3c8671, 0x995632af, 0xb0d5be65,
+    0x346feaaf, 0x5ddb5087, 0xd8d57b6a, 0x99783026,
+    0x36258c28, 0x982dcd4b, 0x496879be, 0x60f1784f};
+
+static uint32_t zero_key[16] = {0};
 
 static uint32_t h1_fw[16] = {
     0x994dcf40, 0x088f616d, 0xc94b2dfe, 0x2a47df02,
@@ -177,8 +217,50 @@ static void set_kv_dest(void) {
     lsu_write_32(CLP_HMAC_REG_HMAC512_KV_WR_CTRL,
         HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
         HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK |
+        HMAC_REG_HMAC512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK |
         ((KV_DEST_SLOT << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) &
          HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK));
+}
+
+// Sign ecc_msg with the private key held in KV_DEST_SLOT and compare the
+// FW-readable signature against the independent reference.
+static void check_kv_result_with_ecc(void) {
+    volatile uint32_t *p;
+    while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+    lsu_write_32(CLP_ECC_REG_ECC_KV_RD_PKEY_CTRL,
+        ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_EN_MASK |
+        ((KV_DEST_SLOT << ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_LOW) &
+         ECC_REG_ECC_KV_RD_PKEY_CTRL_READ_ENTRY_MASK));
+    while ((lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) &
+            (ECC_REG_ECC_KV_RD_PKEY_STATUS_VALID_MASK | ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_MASK)) == 0);
+    if (lsu_read_32(CLP_ECC_REG_ECC_KV_RD_PKEY_STATUS) & ECC_REG_ECC_KV_RD_PKEY_STATUS_ERROR_MASK)
+        fail("ECC KV read of HMAC result failed");
+
+    p = (uint32_t *)CLP_ECC_REG_ECC_MSG_0;
+    for (int i = 0; i < 12; i++) p[i] = ecc_msg[i];
+    p = (uint32_t *)CLP_ECC_REG_ECC_IV_0;
+    for (int i = 0; i < 12; i++) p[i] = ecc_iv[i];
+
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, ECC_CMD_SIGNING);
+    while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
+    if (lsu_read_32(CLP_ECC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R) != 0)
+        fail("ECC signing with KV HMAC result raised an error");
+
+    p = (uint32_t *)CLP_ECC_REG_ECC_SIGN_R_0;
+    for (int i = 0; i < 12; i++) {
+        if (p[i] != exp_sign_r[i]) {
+            VPRINTF(LOW, "SIGN_R[%d] act 0x%08x exp 0x%08x\n", i, p[i], exp_sign_r[i]);
+            fail("KV HMAC result != HMAC-SHA512(KV key, M) (ECC SIGN_R)");
+        }
+    }
+    p = (uint32_t *)CLP_ECC_REG_ECC_SIGN_S_0;
+    for (int i = 0; i < 12; i++) {
+        if (p[i] != exp_sign_s[i]) {
+            VPRINTF(LOW, "SIGN_S[%d] act 0x%08x exp 0x%08x\n", i, p[i], exp_sign_s[i]);
+            fail("KV HMAC result != HMAC-SHA512(KV key, M) (ECC SIGN_S)");
+        }
+    }
+    ecc_zeroize();
 }
 
 // Command rejected: error2 raised and no tag produced
@@ -198,19 +280,23 @@ static void test_kv_key_no_intermediate_leak(void) {
     t_wait_valid();
     expect_tag_hidden("intermediate TAG after INIT not hidden");
 
+    // KEY must stay locked until the final tag: this write must be ignored
+    write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0, zero_key, 16);
     write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0, b2, 32);
     t_ctrl_write(HMAC_REG_HMAC512_CTRL_NEXT_MASK, HMAC512_MODE, FALSE);
     t_wait_valid();
     expect_tag_hidden("KV-keyed inner state leaked in TAG after NEXT");
 
     set_kv_dest();
-    write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0, b2f, 32);
+    write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_KEY_0, zero_key, 16);
+    write_hmac_reg((volatile uint32_t *)CLP_HMAC_REG_HMAC512_BLOCK_0, b3f, 32);
     t_ctrl_write(HMAC_REG_HMAC512_CTRL_NEXT_MASK | HMAC_REG_HMAC512_CTRL_LAST_MASK, HMAC512_MODE, FALSE);
     t_wait_valid();
     while ((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
     if (lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_MASK) fail("KV write error");
     expect_tag_hidden("final KV-keyed TAG not hidden");
     hmac_zeroize();
+    check_kv_result_with_ecc();
 }
 
 static void test_kv_key_next_without_init_rejected(void) {

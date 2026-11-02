@@ -74,6 +74,7 @@ module hmac
   reg mode_reg;
   logic csr_mode_reg;
   logic op_active;
+  logic cmd_accepted;
   logic orphan_next_error, orphan_next_error_reg, orphan_next_error_edge;
   
   reg ready_reg;
@@ -227,7 +228,9 @@ module hmac
           tag_valid_reg <= core_tag_valid & ~error_flag_reg;
           ready_reg     <= core_ready; 
 
-          if (init_reg | next_reg)
+          //track LAST only for commands the core actually accepts, so it
+          //always matches the block the core is processing
+          if (cmd_accepted)
             is_last_op_reg <= last_reg;
 
           //write to sw register
@@ -269,6 +272,10 @@ always_comb begin
   init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
   next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready & ~orphan_next_error;
   last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready & ~orphan_next_error;
+  //ready_reg lags core_ready by a cycle, so a CTRL write landing right after
+  //an accepted command reaches init_reg/next_reg while the core is busy and
+  //is ignored by the core
+  cmd_accepted = (init_reg | next_reg) & core_ready;
   csr_mode_reg = hwif_out.HMAC512_CTRL.CSR_MODE.value;
   zeroize_reg = hwif_out.HMAC512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
   mode_reg = hwif_out.HMAC512_CTRL.MODE.value;
@@ -463,7 +470,7 @@ begin : op_active_tracker
       op_active <= 1'b0;
     else if (zeroize_reg)
       op_active <= 1'b0;
-    else if (init_reg | next_reg)
+    else if (cmd_accepted)
       op_active <= 1'b1;
     else if (core_tag_we & is_last_op_reg)
       op_active <= 1'b0;
@@ -625,6 +632,14 @@ always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_r
 // Timing: 1 cycle; CSR_MODE swwe is gated by op_active.
 `CALIPTRA_ASSERT(HmacCsrModeStableInOp_A,
     op_active |=> $stable(csr_mode_reg),
+    clk, !reset_n)
+
+// What: the wrapper's view of LAST matches the block the core just finished.
+// Why: a mismatch would treat an intermediate tag as final (releasing KV
+//      provenance, writing KV, exposing CSR-keyed state) or vice versa.
+// Timing: 0 cycles; both latch on the same accepted command at core IDLE.
+`CALIPTRA_ASSERT(HmacLastTracksCore_A,
+    core_tag_we |-> (is_last_op_reg == core.is_last_block),
     clk, !reset_n)
 
 
