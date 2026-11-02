@@ -796,6 +796,168 @@ module ecc_top_tb
     end
   endtask // ecc_verify_infinity_test
 
+  // With h=0 and s=r, u1=0 and u2=1, so the verification sum is Q.
+  // These on-curve points exercise x>=n directly (random vectors almost
+  // never do). The x=0 point probes forbidden r+n=p and 385-bit carry.
+  task ecc_verify_mod_n_case(input string label,
+                            input operand_t r,
+                            input operand_t x,
+                            input operand_t y,
+                            input bit expect_pass,
+                            input operand_t expected_alt,
+                            input bit inject_match_fault = 0);
+    logic [383:0] verify_r;
+    logic hw_pass;
+    begin
+      wait_ready();
+      tc_ctr++;
+      $display("*** modulo-n boundary %s started.", label);
+      write_block(`ECC_REG_ECC_MSG_0, '0);
+      write_block(`ECC_REG_ECC_PUBKEY_X_0, x);
+      write_block(`ECC_REG_ECC_PUBKEY_Y_0, y);
+      write_block(`ECC_REG_ECC_SIGN_R_0, r);
+      write_block(`ECC_REG_ECC_SIGN_S_0, r);
+      // TB-only comparator fault: the full VERIFY_R evidence must remain a
+      // mismatch even if the single-bit hardware match indication is stuck high.
+      if (inject_match_fault)
+        force dut.ecc_dsa_ctrl_i.ecc_verify_projective_match = 1'b1;
+      trig_ECC(ECC_CMD_VERIFYING);
+      if (dut.ecc_dsa_ctrl_i.verify_r_alt !== expected_alt) begin
+        $display("*** ERROR: modulo-n %s selected wrong second candidate.", label);
+        error_ctr++;
+      end
+      wait_ready();
+      read_block(`ECC_REG_ECC_VERIFY_R_0);
+      verify_r = reg_read_data;
+      read_single_word(`ECC_REG_ECC_STATUS);
+      hw_pass = read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW];
+      if (inject_match_fault)
+        release dut.ecc_dsa_ctrl_i.ecc_verify_projective_match;
+      if (((verify_r == r) !== expect_pass) || (hw_pass !== (expect_pass | inject_match_fault)) ||
+          (dut.ecc_dsa_ctrl_i.error_flag_reg !== 1'b0)) begin
+        $display("*** ERROR: modulo-n %s expected pass=%0b, HW=%0b, VERIFY_R=%096x.",
+                 label, expect_pass, hw_pass, verify_r);
+        error_ctr++;
+      end
+      else
+        $display("*** modulo-n boundary %s successful.", label);
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+    end
+  endtask
+
+  task ecc_verify_mod_n_test();
+    operand_t n_plus_two;
+    operand_t n_plus_two_y;
+    operand_t p_minus_one;
+    operand_t p_minus_one_y;
+    operand_t zero_x_y;
+    operand_t p_minus_n;
+    operand_t carry_r;
+    begin
+      n_plus_two = 384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52975;
+      n_plus_two_y = 384'h674db71d55d1948b3c7d4c562474ad137465f9605bc7c67cb9fab6bf9f3ca2ef87d56a8d920568aa26f7eaf13ee70a45;
+      p_minus_one = PRIME - operand_t'(1);
+      p_minus_one_y = 384'h8cdeadbbd04911a3c1931e26df3fa6439dca9c7eb286fbd46fc319f0e2bb780232baf57825fc0c1912ada2fefe84024c;
+      zero_x_y = 384'hc306610fb0ae5a159cf45c06069f22a6c5eb3641c602d42dea2c4b4f75550793406d80d2b91ad54f9048bd487af1ade1;
+      p_minus_n = 384'h000000000000000000000000000000000000000000000000389cb27e0bc8d21fa7e5f24cb74f58851313e696333ad68c;
+      carry_r = 384'h000000000000000000000000000000000000000000000000389cb27e0bc8d220a7e5f24db74f58851313e695333ad68d;
+      ecc_verify_mod_n_case("x=n+2", operand_t'(2), n_plus_two, n_plus_two_y, 1, n_plus_two);
+      ecc_verify_mod_n_case("x=p-1", p_minus_n - operand_t'(1), p_minus_one, p_minus_one_y, 1, p_minus_one);
+      ecc_verify_mod_n_case("mismatched r+n", operand_t'(3), n_plus_two, n_plus_two_y, 0,
+                           n_plus_two + operand_t'(1));
+      ecc_verify_mod_n_case("r+n=p rejected", p_minus_n, '0, zero_x_y, 0, p_minus_n);
+      ecc_verify_mod_n_case("r+n=2^384 rejected", carry_r, '0, zero_x_y, 0, carry_r);
+      ecc_verify_mod_n_case("independent FW evidence under match-bit fault", operand_t'(3),
+                           n_plus_two, n_plus_two_y, 0, n_plus_two + operand_t'(1), 1);
+    end
+  endtask
+
+`define ECC_JSF_AU dut.ecc_dsa_ctrl_i.ecc_arith_unit_i
+`define ECC_JSF_PM `ECC_JSF_AU.ecc_pm_ctrl_i
+
+  // Abort at actual JSF states, rather than a fixed delay that only reaches
+  // the preceding scalar inversion. No internal signals are forced.
+  task ecc_verify_jsf_abort_test(input test_vector_t test_vector, input int abort_stage);
+    bit reached;
+    logic [383:0] verify_r;
+    begin
+      wait_ready();
+      tc_ctr++;
+      $display("*** active-JSF abort stage %0d started.", abort_stage);
+      write_block(`ECC_REG_ECC_MSG_0, test_vector.hashed_msg);
+      write_block(`ECC_REG_ECC_PUBKEY_X_0, test_vector.pubkey.x);
+      write_block(`ECC_REG_ECC_PUBKEY_Y_0, test_vector.pubkey.y);
+      write_block(`ECC_REG_ECC_SIGN_R_0, test_vector.R);
+      write_block(`ECC_REG_ECC_SIGN_S_0, test_vector.S);
+      trig_ECC(ECC_CMD_VERIFYING);
+      reached = 0;
+      for (int timeout_cycles = 0; timeout_cycles < 2000000; timeout_cycles++) begin
+        @(negedge clk_tb);
+        if (`ECC_JSF_AU.jsf_active &&
+            (`ECC_JSF_PM.ecc_cmd_reg == ecc_pm_uop_pkg::VER_PART2_CMD)) begin
+          case (abort_stage)
+            0: reached = `ECC_JSF_PM.shamir_precompute_active && `ECC_JSF_PM.shamir_precompute_gminus;
+            1: reached = !`ECC_JSF_PM.shamir_precompute_active &&
+                         (`ECC_JSF_PM.mont_cntr < 300) && `ECC_JSF_PM.shamir_addend_neg &&
+                         (`ECC_JSF_PM.prog_cntr == ecc_pm_uop_pkg::VER_NEG_P1_S + 2);
+            2: reached = !`ECC_JSF_PM.shamir_precompute_active && (`ECC_JSF_PM.mont_cntr == 0);
+            default: $fatal(1, "Unknown JSF abort stage");
+          endcase
+        end
+        if (reached) break;
+      end
+      if (!reached) $fatal(1, "Active-JSF abort stage %0d not reached", abort_stage);
+
+      read_block(`ECC_REG_ECC_VERIFY_R_0);
+      verify_r = reg_read_data;
+      read_single_word(`ECC_REG_ECC_STATUS);
+      if (((verify_r != test_vector.R) !== 1'b1) ||
+          (read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW] !== 1'b0)) begin
+        $display("*** ERROR: active-JSF operation exposed a premature match.");
+        error_ctr++;
+      end
+      if (abort_stage == 2)
+        reset_dut();
+      else
+        trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+      #(2 * CLK_PERIOD);
+      if ({`ECC_JSF_AU.jsf_active, `ECC_JSF_AU.jsf_digit_g, `ECC_JSF_AU.jsf_digit_pk,
+           `ECC_JSF_AU.jsf_digit_g_neg, `ECC_JSF_AU.jsf_digit_pk_neg,
+           `ECC_JSF_AU.secret_key, `ECC_JSF_AU.secret_key_pk,
+           `ECC_JSF_PM.shamir_digit_g, `ECC_JSF_PM.shamir_digit_pk,
+           `ECC_JSF_PM.shamir_digit_g_neg, `ECC_JSF_PM.shamir_digit_pk_neg,
+           `ECC_JSF_PM.shamir_addend_neg, `ECC_JSF_PM.shamir_add_pk_pending,
+           `ECC_JSF_PM.shamir_add_pk_pending_neg, `ECC_JSF_PM.shamir_precompute_active,
+           `ECC_JSF_PM.shamir_precompute_pk_done, `ECC_JSF_PM.shamir_precompute_gminus,
+           `ECC_JSF_PM.ecc_cmd_reg, `ECC_JSF_PM.mont_cntr,
+           dut.ecc_dsa_ctrl_i.ecc_verify_pass_reg,
+           dut.ecc_dsa_ctrl_i.ecc_verify_z_nonzero_reg} !== '0) begin
+        $display("*** ERROR: JSF state survived abort stage %0d.", abort_stage);
+        error_ctr++;
+      end
+      wait_ready();
+      read_block(`ECC_REG_ECC_VERIFY_R_0);
+      verify_r = reg_read_data;
+      read_single_word(`ECC_REG_ECC_STATUS);
+      if ((verify_r !== '0) || (read_data[`ECC_REG_ECC_STATUS_VERIFY_PASS_LOW] !== 1'b0) ||
+          (read_data[`ECC_REG_ECC_STATUS_VALID_LOW] !== 1'b0)) begin
+        $display("*** ERROR: stale verification result after JSF abort.");
+        error_ctr++;
+      end
+      // The first command after each abort must work without an intervening
+      // reset/zeroize; cover both non-JSF commands and verification restart.
+      case (abort_stage)
+        0: ecc_keygen_test(tc_ctr[7:0], test_vector);
+        1: ecc_signing_test(tc_ctr[7:0], test_vector);
+        2: ecc_verifying_test(tc_ctr[7:0], test_vector);
+      endcase
+      $display("*** active-JSF abort stage %0d and recovery completed.", abort_stage);
+    end
+  endtask
+
+`undef ECC_JSF_PM
+`undef ECC_JSF_AU
+
 
 
   //----------------------------------------------------------------
@@ -1269,6 +1431,9 @@ module ecc_top_tb
         zeroize_test(test_vectors[1]);
         ecc_verify_negative_test(test_vectors[2]);
         ecc_verify_infinity_test();
+        ecc_verify_mod_n_test();
+        for (int stage = 0; stage < 3; stage++)
+          ecc_verify_jsf_abort_test(test_vectors[0], stage);
         ecc_fault_test();
       end
     end

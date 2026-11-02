@@ -291,7 +291,9 @@ addrmap ecc_reg {
                 comparison reference must be a firmware-held copy of R for that check
                 to be independent.
                 The register holds the signature R XOR the hardware comparison
-                residue, so it equals R only when the computed residue is zero
+                residue (the Montgomery-domain product modulo p of X-R*Z and X-R_alt*Z, where
+                R_alt is R+n if R+n is less than p, otherwise R), so it
+                equals R only when the computed residue is zero
                 and the verification result is not the point at infinity. On
                 failure, infinity, or an aborted operation it holds a value
                 different from R.";

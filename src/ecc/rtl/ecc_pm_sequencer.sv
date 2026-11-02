@@ -1076,10 +1076,22 @@ module ecc_pm_sequencer
                     CONV_X_S+ 5   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_G};
                     CONV_X_S+ 6   : douta <= {UOP_DO_MUL_p,   UOP_OPR_R0_Z,       UOP_OPR_CONST_ONE_MONT}; // Qy_AFFN = canonical Z; zero iff the result is the point at infinity
                     CONV_X_S+ 7   : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_Qy_AFFN};
-                    CONV_X_S+ 8   : douta <= {UOP_DO_SUB_p,   UOP_OPR_G,          UOP_OPR_B};              // Qx_AFFN = 0 iff x == r
-                    CONV_X_S+ 9   : douta <= {UOP_ST_ADD_p,   UOP_OPR_Qx_AFFN,    UOP_OPR_DONTCARE};
-                    CONV_X_S+ 10  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
-                    CONV_X_S+ 11  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+                    CONV_X_S+ 8   : douta <= {UOP_DO_SUB_p,   UOP_OPR_G,          UOP_OPR_B};              // C = X - r*Z
+                    CONV_X_S+ 9   : douta <= {UOP_ST_ADD_p,   UOP_OPR_C,          UOP_OPR_DONTCARE};
+                    CONV_X_S+ 10  : douta <= {UOP_DO_MUL_p,   UOP_OPR_VERIFY_R_ALT, UOP_OPR_CONST_R2_p};   // A = second candidate in Montgomery domain
+                    CONV_X_S+ 11  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_A};
+                    CONV_X_S+ 12  : douta <= {UOP_DO_MUL_p,   UOP_OPR_A,          UOP_OPR_R0_Z};
+                    CONV_X_S+ 13  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_B};
+                    CONV_X_S+ 14  : douta <= {UOP_DO_SUB_p,   UOP_OPR_G,          UOP_OPR_B};              // D = X - second_candidate*Z
+                    CONV_X_S+ 15  : douta <= {UOP_ST_ADD_p,   UOP_OPR_D,          UOP_OPR_DONTCARE};
+                    // A field has no zero divisors: the product is zero iff either
+                    // candidate matches. Return the full residue, not a match-bit mux.
+                    CONV_X_S+ 16  : douta <= {UOP_DO_MUL_p,   UOP_OPR_C,          UOP_OPR_D};
+                    CONV_X_S+ 17  : douta <= {UOP_ST_MUL_p,   UOP_OPR_DONTCARE,   UOP_OPR_Qx_AFFN};
+                    CONV_X_S+ 18  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+                    CONV_X_S+ 19  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+                    CONV_X_S+ 20  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
+                    CONV_X_S+ 21  : douta <= {UOP_NOP,        UOP_OPR_DONTCARE,   UOP_OPR_DONTCARE};
 
                     // SIGNATURE R
                     SIGN0_S     : douta <= {UOP_DO_ADD_q,   UOP_OPR_CONST_ZERO, UOP_OPR_Qx_AFFN};       // R = Qx_AFFN

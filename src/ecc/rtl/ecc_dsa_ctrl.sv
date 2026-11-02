@@ -134,6 +134,8 @@ module ecc_dsa_ctrl
     logic ecc_verify_projective_match;
     logic ecc_verify_pass_reg;
     logic ecc_verify_z_nonzero_reg;
+    logic [REG_SIZE : 0] verify_r_plus_n;
+    logic [REG_SIZE-1 : 0] verify_r_alt;
 
     logic ecc_valid_reg;
     logic ecc_ready_reg;
@@ -647,6 +649,7 @@ module ecc_dsa_ctrl
                 PUBKEYX_ID            : write_reg = {zero_pad, pubkeyx_reg};
                 PUBKEYY_ID            : write_reg = {zero_pad, pubkeyy_reg};
                 R_ID                  : write_reg = {zero_pad, r_reg};
+                VERIFY_R_ALT_ID       : write_reg = {zero_pad, verify_r_alt};
                 S_ID                  : write_reg = {zero_pad, s_reg};
                 SCALAR_G_ID           : write_reg = {zero_pad, scalar_G_reg};
                 LAMBDA_ID             : write_reg = {zero_pad, lambda_reg};
@@ -752,6 +755,12 @@ module ecc_dsa_ctrl
     //----------------------------------------------------------------
     always_comb ecc_cmd_start    = (prog_cntr == ECC_NOP) & (|cmd_reg);
     always_comb ecc_verify_start = (prog_cntr == ECC_NOP) & (cmd_reg == VERIFY);
+    // Since n < p < 2*n, x mod n == r allows x == r or x == r+n.
+    // Keep the carry when checking the second candidate; an invalid candidate
+    // duplicates r so it cannot introduce an additional projective match.
+    assign verify_r_plus_n = {1'b0, r_reg} + {1'b0, GROUP_ORDER};
+    assign verify_r_alt = (verify_r_plus_n < {1'b0, PRIME}) ?
+                          verify_r_plus_n[REG_SIZE-1:0] : r_reg;
     always_comb ecc_verify_projective_match = read_reg == '0;
     always_comb ecc_verify_res_match = ecc_verify_projective_match & ecc_verify_z_nonzero_reg & (|r_reg);
 
