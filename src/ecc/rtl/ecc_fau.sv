@@ -35,12 +35,17 @@ module ecc_fau #(
     input  wire                 add_en_i,
     input  wire                 sub_i,
     input  wire                 mult_en_i,
+    input  wire                 reduce_i,
     input  wire [REG_SIZE-1:0]  prime_i,
+    input  wire [REG_SIZE-1:0]  mult_prime_i,
     input  wire [RADIX-1 : 0]   mult_mu_i,
     input  wire [REG_SIZE-1:0]  opa_i,
     input  wire [REG_SIZE-1:0]  opb_i,
     output wire [REG_SIZE-1:0]  add_res_o,
-    output wire [REG_SIZE-1:0]  mult_res_o
+    output wire [REG_SIZE-1:0]  mult_res_o,
+    output wire                 mult_start_o,
+    output wire                 mult_accept_o,
+    output wire                 mult_ready_o
     );
 
     logic [REG_SIZE-1 : 0]  mult_res_s;
@@ -57,7 +62,8 @@ module ecc_fau #(
     reg                     sub;
 
     logic                   add_ready_o;
-    logic                   mult_ready_o;
+    logic                   mult_ready_s;
+    logic                   mult_accept_s;
 
     logic                   ready_garbage_bit;
 
@@ -81,10 +87,12 @@ module ecc_fau #(
         .start_i(mult_start_edge),
         .opa_i(mult_opa),
         .opb_i(mult_opb),
-        .n_i(prime_i),
+        .n_i(mult_prime_i),
         .n_prime_i(mult_mu_i), // only need the last few bits
+        .reduce_i(reduce_i),
         .p_o(mult_res_s),
-        .ready_o(mult_ready_o)
+        .accept_o(mult_accept_s),
+        .ready_o(mult_ready_s)
     );
 
 
@@ -146,7 +154,7 @@ module ecc_fau #(
         end
     end
     
-    assign ready_garbage_bit = add_ready_o & mult_ready_o;
+    assign ready_garbage_bit = add_ready_o;
     
     // generate a pulse enable for mult
     assign mult_start_edge = mult_start & ~mult_start_dly;
@@ -155,7 +163,10 @@ module ecc_fau #(
     //----------------------------------------------------------------
     // Concurrent connectivity for ports etc.
     //----------------------------------------------------------------
-    assign mult_res_o = mult_res_s;
-    assign add_res_o  = add_res_s;
+    assign mult_res_o   = mult_res_s;
+    assign mult_start_o  = mult_start_edge;
+    assign mult_accept_o = mult_accept_s;
+    assign mult_ready_o = mult_ready_s;
+    assign add_res_o    = add_res_s;
 
 endmodule

@@ -106,6 +106,8 @@ localparam [DSA_OPR_ADDR_WIDTH-1 : 0] LAMBDA_ID                = 6'd27;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] MASKING_ID               = 6'd28;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] PK_VALID_ID              = 6'd29;
 localparam [DSA_OPR_ADDR_WIDTH-1 : 0] DH_SHAREDKEY_ID          = 6'd30;
+localparam [DSA_OPR_ADDR_WIDTH-1 : 0] VERIFY_Z_ID              = 6'd31;
+localparam [DSA_OPR_ADDR_WIDTH-1 : 0] VERIFY_R_ALT_ID          = 6'd32;
 
 
 // DSA Subroutine listing
@@ -116,7 +118,7 @@ localparam [DSA_PROG_ADDR_W-1 : 0] DSA_KG_E                     = DSA_KG_S + 12;
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SGN_S                    = DSA_KG_E + 2; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_SGN_E                    = DSA_SGN_S + 14; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_S                    = DSA_SGN_E + 2; 
-localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_E                    = DSA_VER_S + 23;
+localparam [DSA_PROG_ADDR_W-1 : 0] DSA_VER_E                    = DSA_VER_S + 25;
 localparam [DSA_PROG_ADDR_W-1 : 0] DH_SHARED_S                  = DSA_VER_E + 2; 
 localparam [DSA_PROG_ADDR_W-1 : 0] DH_SHARED_E                  = DH_SHARED_S + 17; 
 

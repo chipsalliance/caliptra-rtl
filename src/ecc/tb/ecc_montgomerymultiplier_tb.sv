@@ -75,6 +75,7 @@ module ecc_montgomerymultiplier_tb #(
   operand_t   opb_i_tb;
   operand_t   n_i_tb;
   word_t      n_prime_i_tb;
+  logic       reduce_i_tb;
   operand_t   p_o_tb;
   logic       ready_tb;
   int         test_vector_cnt;
@@ -98,7 +99,9 @@ module ecc_montgomerymultiplier_tb #(
       .opb_i      (opb_i_tb),
       .n_i        (n_i_tb),
       .n_prime_i  (n_prime_i_tb),
+      .reduce_i   (reduce_i_tb),
       .p_o        (p_o_tb),
+      .accept_o   (),
       .ready_o    (ready_tb)
   );
 
@@ -186,6 +189,7 @@ module ecc_montgomerymultiplier_tb #(
       opb_i_tb      = '0;
       n_i_tb        = '0;
       n_prime_i_tb  = '0;
+      reduce_i_tb   = 1'b1;
     end
   endtask // init_sim
 
@@ -261,6 +265,83 @@ module ecc_montgomerymultiplier_tb #(
       end
   endtask
 
+  //----------------------------------------------------------------
+  // mm_overflow_test()
+  //
+  // For an odd n with 2^OPERAND_WIDTH - n = d < n, a = n-1 and
+  // b = (-R*d) mod n give an unreduced product of exactly
+  // 2^OPERAND_WIDTH (= d + n). The output must be d with and without
+  // reduce_i; truncating the carry would return 0.
+  //----------------------------------------------------------------
+  localparam int unsigned BIG_WIDTH = (2 * R_WIDTH) + (2 * OPERAND_WIDTH);
+  typedef logic [BIG_WIDTH-1:0] big_t;
+
+  task mm_overflow_single_test(input operand_t n, input logic reduce);
+    big_t       big_n;
+    big_t       big_r;
+    big_t       big_d;
+    big_t       big_b;
+    word_t      n_inv;
+    begin
+      tc_ctr = tc_ctr + 1;
+      big_n = big_t'(n);
+      big_r = big_t'(1) << (S_NUM * WORD_WIDTH);
+      big_d = (big_t'(1) << OPERAND_WIDTH) - big_n;
+      big_b = (big_n - ((big_r * big_d) % big_n)) % big_n;
+
+      // n_inv = n^(-1) mod 2^WORD_WIDTH by Newton iteration
+      n_inv = word_t'(1);
+      for (int i = 0; i < $clog2(WORD_WIDTH) + 1; i++)
+        n_inv = n_inv * (word_t'(2) - word_t'(n) * n_inv);
+
+      opa_i_tb     = n - operand_t'(1);
+      opb_i_tb     = operand_t'(big_b);
+      n_i_tb       = n;
+      n_prime_i_tb = word_t'(0) - n_inv;
+      reduce_i_tb  = reduce;
+
+      #CLK_PERIOD;
+      start_i_tb = 1;
+      #CLK_PERIOD;
+      start_i_tb = 0;
+      wait_ready();
+
+      if (p_o_tb == operand_t'(big_d))
+        $display("*** TC %0d overflow test successful (reduce_i=%0b).", tc_ctr, reduce);
+      else
+        begin
+          $display("*** ERROR: TC %0d overflow test NOT successful (reduce_i=%0b).", tc_ctr, reduce);
+          $display("Modulus:  0x%0x", n);
+          $display("Expected: 0x%0x", operand_t'(big_d));
+          $display("Got:      0x%0x", p_o_tb);
+          error_ctr = error_ctr + 1;
+        end
+      reduce_i_tb = 1'b1;
+      #CLK_PERIOD;
+    end
+  endtask // mm_overflow_single_test
+
+  task mm_overflow_test;
+    operand_t moduli [5];
+    int       moduli_num;
+    begin
+      moduli[0] = '1;
+      moduli[1] = operand_t'('1) - operand_t'(2);
+      moduli[2] = operand_t'('1) - operand_t'(16);
+      moduli_num = 3;
+      if (OPERAND_WIDTH == 384) begin
+        // Secp384r1 field prime p and group order q
+        moduli[3] = operand_t'(384'hfffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffffeffffffff0000000000000000ffffffff);
+        moduli[4] = operand_t'(384'hffffffffffffffffffffffffffffffffffffffffffffffffc7634d81f4372ddf581a0db248b0a77aecec196accc52973);
+        moduli_num = 5;
+      end
+      for (int i = 0; i < moduli_num; i++) begin
+        mm_overflow_single_test(moduli[i], 1'b1);
+        mm_overflow_single_test(moduli[i], 1'b0);
+      end
+    end
+  endtask // mm_overflow_test
+
   task read_test_vectors(input string fname);
       integer values_per_test_vector;
       integer line_cnt;
@@ -326,6 +407,7 @@ module ecc_montgomerymultiplier_tb #(
       reset_dut();
 
       mm_test();
+      mm_overflow_test();
 
       display_test_results();
       

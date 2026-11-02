@@ -122,9 +122,20 @@ module ecc_dsa_ctrl
     logic hw_scalar_G_we;
     logic hw_scalar_PK_we;
     logic hw_verify_r_we;
+    logic hw_verify_z_we;
     logic hw_pk_chk_we;
     logic hw_sharedkey_we;
     logic scalar_G_sel;
+
+    //Explicit hardware signature verification result
+    logic ecc_cmd_start;
+    logic ecc_verify_start;
+    logic ecc_verify_res_match;
+    logic ecc_verify_projective_match;
+    logic ecc_verify_pass_reg;
+    logic ecc_verify_z_nonzero_reg;
+    logic [REG_SIZE : 0] verify_r_plus_n;
+    logic [REG_SIZE-1 : 0] verify_r_alt;
 
     logic ecc_valid_reg;
     logic ecc_ready_reg;
@@ -357,6 +368,8 @@ module ecc_dsa_ctrl
 
     always_comb hwif_in.ECC_STATUS.READY.next = ecc_ready_reg;
     always_comb hwif_in.ECC_STATUS.VALID.next = ecc_valid_reg;
+    // Only expose the verification result once the engine is idle again.
+    always_comb hwif_in.ECC_STATUS.VERIFY_PASS.next = ecc_verify_pass_reg & ~error_flag_reg & ecc_ready_reg;
 
     
     always_comb begin // ecc_reg_writing
@@ -428,8 +441,14 @@ module ecc_dsa_ctrl
         end
 
         for (int dword=0; dword < 12; dword++)begin 
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = hw_verify_r_we & !zeroize_reg;       
-            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = read_reg[11-dword];
+            //Preload with the complement of the supplied signature R at the start of a
+            //VERIFY operation so an aborted verification cannot leave a stale match.
+            //The result is R xor the projective residue, so it equals R only when the
+            //computed residue is zero; it does not depend on the 1-bit match comparator.
+            //A point-at-infinity result (Z == 0) returns ~R.
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.we = (hw_verify_r_we | ecc_verify_start) & !zeroize_reg;
+            hwif_in.ECC_VERIFY_R[dword].VERIFY_R.next = (ecc_verify_start | !ecc_verify_z_nonzero_reg) ? ~r_reg[11-dword] :
+                                                        (r_reg[11-dword] ^ read_reg[11-dword]);
             hwif_in.ECC_VERIFY_R[dword].VERIFY_R.hwclr = zeroize_reg;
         end
 
@@ -572,6 +591,7 @@ module ecc_dsa_ctrl
         hw_scalar_G_we = 0;
         hw_scalar_PK_we = 0;
         hw_verify_r_we = 0;
+        hw_verify_z_we = 0;
         hw_pk_chk_we = 0;
         hw_sharedkey_we = 0;
         if ((prog_instr.opcode == DSA_UOP_RD_CORE) & (cycle_cnt == 0)) begin
@@ -584,6 +604,7 @@ module ecc_dsa_ctrl
                 SCALAR_G_ID     : hw_scalar_G_we = 1;
                 SCALAR_PK_ID    : hw_scalar_PK_we = 1;
                 VERIFY_R_ID     : hw_verify_r_we = 1;
+                VERIFY_Z_ID     : hw_verify_z_we = 1;
                 PK_VALID_ID     : hw_pk_chk_we = 1;
                 DH_SHAREDKEY_ID : hw_sharedkey_we = 1;
                 default         : 
@@ -596,6 +617,7 @@ module ecc_dsa_ctrl
                         hw_scalar_G_we = 0;
                         hw_scalar_PK_we = 0;
                         hw_verify_r_we = 0;
+                        hw_verify_z_we = 0;
                         hw_pk_chk_we = 0;
                         hw_sharedkey_we = 0;
                     end
@@ -627,6 +649,7 @@ module ecc_dsa_ctrl
                 PUBKEYX_ID            : write_reg = {zero_pad, pubkeyx_reg};
                 PUBKEYY_ID            : write_reg = {zero_pad, pubkeyy_reg};
                 R_ID                  : write_reg = {zero_pad, r_reg};
+                VERIFY_R_ALT_ID       : write_reg = {zero_pad, verify_r_alt};
                 S_ID                  : write_reg = {zero_pad, s_reg};
                 SCALAR_G_ID           : write_reg = {zero_pad, scalar_G_reg};
                 LAMBDA_ID             : write_reg = {zero_pad, lambda_reg};
@@ -719,6 +742,49 @@ module ecc_dsa_ctrl
                         pubkey_input_invalid | pcr_sign_input_invalid |
                         privkey_output_outofrange | pubkeyx_output_outofrange | pubkeyy_output_outofrange |
                         sharedkey_outofrange;
+
+    //----------------------------------------------------------------
+    // Explicit hardware signature verification result
+    //
+    // The recomputed R is compared against the supplied signature R by
+    // hardware, in the exact same cycle (and with the exact same data)
+    // that populates ECC_VERIFY_R. This guarantees the reported pass/fail
+    // bit and the data returned to firmware can never disagree. Firmware
+    // may still compare ECC_VERIFY_R against its own copy of R as a
+    // fault-attack check on this bit.
+    //----------------------------------------------------------------
+    always_comb ecc_cmd_start    = (prog_cntr == ECC_NOP) & (|cmd_reg);
+    always_comb ecc_verify_start = (prog_cntr == ECC_NOP) & (cmd_reg == VERIFY);
+    // Since n < p < 2*n, x mod n == r allows x == r or x == r+n.
+    // Keep the carry when checking the second candidate; an invalid candidate
+    // duplicates r so it cannot introduce an additional projective match.
+    assign verify_r_plus_n = {1'b0, r_reg} + {1'b0, GROUP_ORDER};
+    assign verify_r_alt = (verify_r_plus_n < {1'b0, PRIME}) ?
+                          verify_r_plus_n[REG_SIZE-1:0] : r_reg;
+    always_comb ecc_verify_projective_match = read_reg == '0;
+    always_comb ecc_verify_res_match = ecc_verify_projective_match & ecc_verify_z_nonzero_reg & (|r_reg);
+
+    //Canonical Z of the verification sum is read back before the residue;
+    //Z == 0 (point at infinity) must be rejected.
+    always_ff @(posedge clk or negedge reset_n)
+    begin : ecc_verify_z_chk
+        if (!reset_n)
+            ecc_verify_z_nonzero_reg <= 1'b0;
+        else if (zeroize_reg | ecc_cmd_start)
+            ecc_verify_z_nonzero_reg <= 1'b0;
+        else if (verifying_process & hw_verify_z_we)
+            ecc_verify_z_nonzero_reg <= |read_reg;
+    end // ecc_verify_z_chk
+
+    always_ff @(posedge clk or negedge reset_n)
+    begin : ecc_verify_result
+        if (!reset_n)
+            ecc_verify_pass_reg <= 1'b0;
+        else if (zeroize_reg | error_flag | error_flag_reg | ecc_cmd_start)
+            ecc_verify_pass_reg <= 1'b0;
+        else if (verifying_process & hw_verify_r_we)
+            ecc_verify_pass_reg <= ecc_verify_res_match;
+    end // ecc_verify_result
 
     //----------------------------------------------------------------
     // ECDSA_FSM_flow
