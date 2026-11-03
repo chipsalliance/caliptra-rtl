@@ -134,6 +134,9 @@ module ecc_dsa_ctrl
 
     logic ecc_valid_reg;
     logic ecc_ready_reg;
+    logic ecc_idle;
+    logic ecc_zeroize_req;
+    logic ecc_zeroize_req_set;
 
     logic ecc_status_done_d;
     logic ecc_status_done_p;
@@ -189,6 +192,7 @@ module ecc_dsa_ctrl
     //KV Key Data Present
     logic kv_key_data_present;
     logic kv_key_data_present_set, kv_key_data_present_reset;
+    logic kv_reg_clr;
     
     kv_read_ctrl_reg_t kv_privkey_read_ctrl_reg;
     kv_read_ctrl_reg_t kv_seed_read_ctrl_reg;
@@ -339,6 +343,8 @@ module ecc_dsa_ctrl
             sharedkey_we_reg <= hw_sharedkey_we;
             if (secretkey_we & (dest_keyvault | kv_seed_data_present))            
                 kv_reg <= read_reg;
+            else if (kv_reg_clr)
+                kv_reg <= '0;
 
             kv_seed_data_present <= kv_seed_data_present_set ? '1 :
                                     kv_seed_data_present_reset ? '0 : kv_seed_data_present;
@@ -364,7 +370,7 @@ module ecc_dsa_ctrl
     always_comb hwif_in.ECC_STATUS.READY.next = ecc_ready_reg;
     always_comb hwif_in.ECC_STATUS.VALID.next = ecc_valid_reg;
     // Only expose the verification result once the engine is idle again. 
-    always_comb hwif_in.ECC_STATUS.VERIFY_PASS.next = ecc_verify_pass_reg & ~error_flag_reg & ecc_ready_reg;
+    always_comb hwif_in.ECC_STATUS.VERIFY_PASS.next = ecc_verify_pass_reg & ~error_flag_reg & ecc_idle;
 
     
     always_comb begin // ecc_reg_writing
@@ -376,7 +382,7 @@ module ecc_dsa_ctrl
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.next = pcr_sign_mode       ? pcr_signing_data.pcr_ecc_signing_privkey[dword] : 
                                                             kv_privkey_write_en ? kv_privkey_write_data : 
                                                                                   read_reg[11-dword];
-            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | (kv_privkey_error != KV_SUCCESS);
+            hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.hwclr = zeroize_reg | kv_key_data_present_reset | error_flag_reg | (kv_privkey_error != KV_SUCCESS);
             hwif_in.ECC_PRIVKEY_IN[dword].PRIVKEY_IN.swwe = ecc_ready_reg & ~kv_key_data_present;
         end 
 
@@ -391,7 +397,7 @@ module ecc_dsa_ctrl
             seed_reg[dword] = hwif_out.ECC_SEED[11-dword].SEED.value;
             hwif_in.ECC_SEED[dword].SEED.we = (kv_seed_write_en & (kv_seed_write_offset == dword)) & !zeroize_reg;
             hwif_in.ECC_SEED[dword].SEED.next = kv_seed_write_data;
-            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | (kv_seed_error != KV_SUCCESS);
+            hwif_in.ECC_SEED[dword].SEED.hwclr = zeroize_reg | kv_seed_data_present_reset | error_flag_reg | (kv_seed_error != KV_SUCCESS);
             hwif_in.ECC_SEED[dword].SEED.swwe  = ecc_ready_reg & ~kv_seed_data_present;
         end
 
@@ -505,13 +511,15 @@ module ecc_dsa_ctrl
     end
 
     // Software write-enables to prevent KV reg manipulation mid-operation
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o;
-    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o;
+    // or before the mandatory zeroize that follows every operation (ecc_ready_reg
+    // closes in the same cycle an operation retires, PCR_SIGN is written, or an error occurs)
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_en.swwe         = !kv_key_data_present && !busy_o && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_pkey_ctrl.read_entry.swwe      = !kv_key_data_present && !busy_o && ecc_ready_reg;
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
     always_comb hwif_in.ecc_kv_rd_pkey_ctrl.rsvd.swwe            = 0;
 
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o;
-    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_en.swwe         = !kv_seed_data_present && !busy_o && ecc_ready_reg;
+    always_comb hwif_in.ecc_kv_rd_seed_ctrl.read_entry.swwe      = !kv_seed_data_present && !busy_o && ecc_ready_reg;
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.pcr_hash_extend.swwe = 0; //NA for keyvault
     always_comb hwif_in.ecc_kv_rd_seed_ctrl.rsvd.swwe            = 0;
 
@@ -540,8 +548,14 @@ module ecc_dsa_ctrl
     always_comb kv_seed_data_present_set = kv_seed_read_ctrl_reg.read_en;
     always_comb kv_seed_data_present_reset = kv_seed_data_present & ecc_status_done_p;
     
-    always_comb kv_key_data_present_set = kv_privkey_read_ctrl_reg.read_en;
+    // The PCR signing key is sourced from KV (slot 7) and is treated like any other
+    // KV-sourced key: inputs locked and PRIVKEY_IN cleared by HW when the operation ends.
+    always_comb kv_key_data_present_set = kv_privkey_read_ctrl_reg.read_en | pcr_sign_mode;
     always_comb kv_key_data_present_reset = kv_key_data_present & ecc_status_done_p;
+
+    // Clear the KV-bound key copy once it has been written to KV, or once the operation
+    // ends (done or error) with no KV write in flight.
+    always_comb kv_reg_clr = kv_write_done | (kv_write_ready & (ecc_status_done_p | error_flag_reg));
 
     always_comb pcr_sign_mode = hwif_out.ECC_CTRL.PCR_SIGN.value;
 
@@ -717,7 +731,8 @@ module ecc_dsa_ctrl
     assign pubkeyy_input_outofrange = (verifying_process | sharedkey_process) & (pubkeyy_reg >= PRIME);
     assign pubkey_input_invalid     = (verifying_process | sharedkey_process) & (pk_chk_reg != 0);
 
-    assign pcr_sign_input_invalid   = ((cmd_reg == KEYGEN) | (cmd_reg == VERIFY) | (cmd_reg == SHARED_KEY)) & pcr_sign_mode;
+    // PCR signing must be requested atomically with SIGN; a bare PCR_SIGN (which loads the KV slot 7 key) is an error
+    assign pcr_sign_input_invalid   = pcr_sign_mode & (cmd_reg != SIGN);
 
     assign privkey_output_outofrange = keygen_process & (hw_privkey_we & ((read_reg == 0) | (read_reg >= GROUP_ORDER)));
     assign pubkeyx_output_outofrange = keygen_process & (hw_pubkeyx_we & (read_reg >= PRIME));
@@ -919,9 +934,28 @@ module ecc_dsa_ctrl
             ecc_status_done_d <= hwif_in.ECC_STATUS.VALID.next;
     always_comb ecc_status_done_p = hwif_in.ECC_STATUS.VALID.next && !ecc_status_done_d;
 
+    // Mandatory zeroize: once an operation completes, an error is detected, or
+    // the PCR signing key is loaded, the engine stays not-ready (all API inputs,
+    // commands and KV read requests locked) until firmware issues ZEROIZE, which
+    // clears every secret-bearing register before the next operation starts.
+    always_comb ecc_zeroize_req_set = ecc_valid_reg | error_flag | error_flag_reg | pcr_sign_mode;
+
+    always_ff @(posedge clk or negedge reset_n)
+    begin : ecc_zeroize_req_flag
+        if (!reset_n)
+            ecc_zeroize_req <= 1'b0;
+        else if (zeroize_reg)
+            ecc_zeroize_req <= 1'b0;
+        else if (ecc_zeroize_req_set)
+            ecc_zeroize_req <= 1'b1;
+    end // ecc_zeroize_req_flag
+
     // Set the ready/busy flag of ECC
     assign dsa_busy = (prog_cntr == ECC_NOP)? 1'b0 : 1'b1;
-    always_comb ecc_ready_reg = !(dsa_busy | pm_busy_o);
+    always_comb ecc_idle      = !(dsa_busy | pm_busy_o);
+    // ecc_valid_reg/pcr_sign_mode/error_flag_reg are also checked directly so READY
+    // and the input/command write enables close in the same cycle the condition arises
+    always_comb ecc_ready_reg = ecc_idle & !(ecc_zeroize_req | ecc_valid_reg | pcr_sign_mode | error_flag_reg);
     
     //Key Vault Control Modules
     always_comb begin
@@ -1038,8 +1072,28 @@ module ecc_dsa_ctrl
         .dest_done(kv_write_done)
     );
 
-always_comb busy_o = ~ecc_ready_reg | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
+always_comb busy_o = ~ecc_idle | ~kv_write_ready | ~kv_seed_ready | ~kv_privkey_ready;
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_PRIVKEY_WE_MUTEX, {hw_privkey_we, privkey_we_reg}, clk, !reset_n)
     `CALIPTRA_ASSERT_MUTEX(ERR_ECC_SHAREDKEY_WE_MUTEX, {hw_sharedkey_we , sharedkey_we_reg}, clk, !reset_n)
+
+    // Engine must not report ready (accept new inputs/commands) after an operation or
+    // a PCR key load until zeroize has been issued
+    `CALIPTRA_ASSERT(ECC_NO_READY_WITHOUT_ZEROIZE, ((ecc_valid_reg | pcr_sign_mode | error_flag_reg) & !zeroize_reg) |-> (!ecc_ready_reg until_with zeroize_reg), clk, !reset_n)
+
+    // KV/PCR-sourced key material must be cleared by HW when the operation ends (done or error)
+    `CALIPTRA_ASSERT(ECC_PRIVKEY_IN_HWCLR_AFTER_OP, ((kv_key_data_present_reset | error_flag_reg) & !pcr_sign_mode & !kv_privkey_write_en) |=> (privkey_reg == '0), clk, !reset_n)
+    `CALIPTRA_ASSERT(ECC_SEED_HWCLR_AFTER_OP, ((kv_seed_data_present_reset | error_flag_reg) & !kv_seed_write_en) |=> (seed_reg == '0), clk, !reset_n)
+    `CALIPTRA_ASSERT(ECC_KV_REG_CLR_AFTER_KV_WRITE, (kv_reg_clr & !(secretkey_we & (dest_keyvault | kv_seed_data_present))) |=> (kv_reg == '0), clk, !reset_n)
+
+`ifndef SYNTHESIS
+    // Independent of kv_key_data_present: once PCR_SIGN has loaded the KV slot 7 key, HW must
+    // clear PRIVKEY_IN on the cycle after the operation completes or an error is flagged
+    logic pcr_key_loaded;
+    always_ff @(posedge clk or negedge reset_n)
+        if (!reset_n)           pcr_key_loaded <= 1'b0;
+        else if (zeroize_reg)   pcr_key_loaded <= 1'b0;
+        else if (pcr_sign_mode) pcr_key_loaded <= 1'b1;
+    `CALIPTRA_ASSERT(ECC_PCR_KEY_CLR_AFTER_OP, (pcr_key_loaded & (ecc_status_done_p | error_flag_reg) & !kv_privkey_write_en & !zeroize_reg) |=> (privkey_reg == '0), clk, !reset_n)
+`endif
 
 endmodule

@@ -937,6 +937,15 @@ module caliptra_top_sva
   )
   else $display("SVA ERROR: [ECC verify] VERIFY_PASS not cleared at command dispatch");
 
+  // A zeroize is mandatory between ECC commands and must always clear the
+  // previous verification result.
+  ECC_verify_pass_clear_on_zeroize: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    (`ECC_PATH.zeroize_reg |=> !`ECC_PATH.ecc_verify_pass_reg)
+  )
+  else $display("SVA ERROR: [ECC verify] VERIFY_PASS not cleared on zeroize");
+
 
   // MLDSA Scan, Debug and Zeroization Assertions
   generate
@@ -1403,7 +1412,7 @@ module caliptra_top_sva
 
   ECC_valid_flag:       assert property (
                                     @(posedge `SVA_RDC_CLK)
-                                    `ECC_PATH.ecc_valid_reg |-> `ECC_PATH.ecc_ready_reg 
+                                    `ECC_PATH.ecc_valid_reg |-> `ECC_PATH.ecc_idle 
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");
                         

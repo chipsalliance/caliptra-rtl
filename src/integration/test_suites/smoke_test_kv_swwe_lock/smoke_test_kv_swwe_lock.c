@@ -356,9 +356,11 @@ static int test_ecc_kv_swwe_lock(void) {
     uint32_t rd_seed_after = lsu_read_32(CLP_ECC_REG_ECC_KV_RD_SEED_CTRL);
 
     // ------------------------------------------------------------------
-    // Step 4: Wait for ECC to complete (poll STATUS.READY).
+    // Step 4: Wait for ECC to complete (poll STATUS.VALID; READY stays low
+    // after an operation until zeroize).
     // ------------------------------------------------------------------
-    while ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+    while (((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0) &&
+           (cptra_intr_rcv.ecc_error == 0));
     cptra_intr_rcv.ecc_error = 0;
     cptra_intr_rcv.ecc_notif = 0;
 
