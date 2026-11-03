@@ -1368,6 +1368,8 @@ The following Caliptra generic primitives require replacement with technology-sp
 
 The Adams Bridge accelerator shares this same primitive swap mechanism automatically: when compiled as part of Caliptra, Adams Bridge's `buf`/`flop`/`flop_en`/`xor2` primitives resolve to the identical `CALIPTRA_PRIM_MODULE_PREFIX`-named files listed above, so the technology-specific replacements above cover Adams Bridge too -- no separate Adams Bridge-specific primitives, path variables, or renaming are required. See [AdamsBridgeIntegrationSpecification.md](../submodules/adams-bridge/docs/AdamsBridgeIntegrationSpecification.md) for how this automatic resolution works.
 
+The VeeR EL2 core also reuses these primitives. Because VeeR does not depend on Caliptra RTL, its dual-core lockstep logic in [el2_veer_lockstep.sv](../src/riscv_core/veer_el2/rtl/el2_veer_lockstep.sv) instantiates VeeR-local wrappers whose implementation is selected by a define: `el2_prim_buf` (optimization barrier, selected by `RV_PRIM_BUF_IMPL`) and `el2_prim_rst_mux2` (shadow core reset mux, selected by `RV_PRIM_RST_MUX2_IMPL`). Standalone VeeR defaults these to `el2_prim_generic_buf` and `el2_prim_generic_rst_mux2`. [config_defines.svh](../src/integration/rtl/config_defines.svh) redirects them to `caliptra_prim_buf` and `caliptra_prim_rst_mux2`, so the technology-specific replacements above cover VeeR too. Integrators must not replace the `el2_prim_generic_*` modules or override the `RV_PRIM_*_IMPL` defines when integrating Caliptra.
+
 For details on how `CALIPTRA_PRIM_MODULE_PREFIX` selects between generic and
 technology-specific Caliptra modules, see
 [`caliptra_prim_module_name_macros.svh`](../src/caliptra_prim/rtl/caliptra_prim_module_name_macros.svh).
@@ -1407,6 +1409,8 @@ endmodule : caliptra_prim_tech_name_buf
 ### Reset Multiplexor Instantiation
 
 Integrators must map `caliptra_prim_generic_rst_mux2` to a technology-specific library cell that implements a glitchless reset multiplexor. The generic implementation, `caliptra_prim_generic_rst_mux2`, uses combinational AND/OR logic and does not guarantee glitchless behavior after synthesis. Its assertions check that the select signal is known, not that the output is glitchless. A mapped AND/OR implementation can generate an unintended reset pulse when its select signal changes, even when both active-low reset inputs remain deasserted. This can cause a spurious reset when switching between functional and scan resets.
+
+`caliptra_prim_rst_mux2` is instantiated in [soc_ifc_boot_fsm.sv](../src/soc_ifc/rtl/soc_ifc_boot_fsm.sv) for the `cptra_noncore_rst_b` and `cptra_uc_rst_b` scan-mode muxes, and in [el2_veer_lockstep.sv](../src/riscv_core/veer_el2/rtl/el2_veer_lockstep.sv) for the dual-core lockstep shadow core reset muxes (`rst_shadow` and `rst_dbg_shadow`). The VeeR instances reach `caliptra_prim_rst_mux2` through the `el2_prim_rst_mux2` wrapper (see [Primitive Instantiation](#primitive-instantiation)), so a single replacement of `caliptra_prim_generic_rst_mux2` covers all of them.
 
 Use the same replacement mechanism described in [Primitive Instantiation](#primitive-instantiation):
 
