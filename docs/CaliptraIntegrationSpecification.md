@@ -459,6 +459,8 @@ The key must follow the security rules defined in the [SOC integration requireme
 
 SoC must ensure that there are no SCAN cells on the flops that latch this key internally to Caliptra.
 
+Caliptra ROM sets `internal_csr_hmac_key_lock` before handing off to FMC. After that, the key is cleared internally and is not available to FMC or Runtime FW until the next warm or cold reset.
+
 ## Late binding interface signals
 
 The interface signals generic\_input\_wires, generic\_output\_wires, and strap\_ss\_strap\_generic\_N are placeholders on the SoC interface reserved for late binding features. This may include any feature that is required for correct operation of the design in the final integrated SoC and that may not be accommodated through existing interface signaling (such as the mailbox).

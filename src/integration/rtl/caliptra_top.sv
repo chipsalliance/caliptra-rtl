@@ -284,6 +284,7 @@ module caliptra_top
     logic [pt.ICCM_BITS-1:0] iccm_rt_start_addr;
     logic [pt.ICCM_BITS-1:0] iccm_rt_end_addr;
     logic        iccm_region_lock;
+    logic        csr_hmac_key_lock;
     // AES status signals
     logic aes_input_ready;
     logic aes_output_valid;
@@ -999,8 +1000,10 @@ el2_veer_wrapper rvtop (
         if (~cptra_noncore_rst_b) begin
             cptra_csr_hmac_key_reg <= '0;
         end
-        //Only latch the value during device manufacturing
-        else if (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) begin
+        //Only latch the value during device manufacturing, and only until ROM sets the
+        //CSR HMAC key lock (before handoff to FMC). The lock is not cleared by a
+        //firmware-update reset, so the key is never available to FMC or Runtime FW.
+        else if ((cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) && !csr_hmac_key_lock) begin
             cptra_csr_hmac_key_reg <= cptra_csr_hmac_key;
         end
         else begin
@@ -1882,6 +1885,8 @@ soc_ifc_top1
     .iccm_rt_start_addr (iccm_rt_start_addr),
     .iccm_rt_end_addr   (iccm_rt_end_addr),
     .iccm_region_lock   (iccm_region_lock),
+    // CSR HMAC Key Lock
+    .csr_hmac_key_lock  (csr_hmac_key_lock),
     //uC reset
     .cptra_noncore_rst_b (cptra_noncore_rst_b),
     .cptra_uc_rst_b (cptra_uc_rst_b),

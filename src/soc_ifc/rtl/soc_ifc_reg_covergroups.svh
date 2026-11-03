@@ -2587,6 +2587,26 @@
 
     endgroup
 
+    /*----------------------- SOC_IFC_REG__INTERNAL_CSR_HMAC_KEY_LOCK COVERGROUPS -----------------------*/
+    covergroup soc_ifc_reg__internal_csr_hmac_key_lock_bit_cg with function sample(input bit reg_bit);
+        option.per_instance = 1;
+        reg_bit_cp : coverpoint reg_bit {
+            bins value[2] = {0,1};
+        }
+        reg_bit_edge_cp : coverpoint reg_bit {
+            bins rise = (0 => 1);
+            bins fall = (1 => 0);
+        }
+
+    endgroup
+    covergroup soc_ifc_reg__internal_csr_hmac_key_lock_fld_cg with function sample(
+    input bit [1-1:0] lock
+    );
+        option.per_instance = 1;
+        lock_cp : coverpoint lock;
+
+    endgroup
+
     /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__GLOBAL_INTR_EN_T COVERGROUPS -----------------------*/
     covergroup soc_ifc_reg__intr_block_t__global_intr_en_t_bit_cg with function sample(input bit reg_bit);
         option.per_instance = 1;

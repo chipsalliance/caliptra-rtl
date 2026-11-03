@@ -1435,6 +1435,8 @@ An HMAC operation starts with `INIT` on the first block and ends with the first 
 
 When the CSR Mode register is set, the HMAC512 core uses the value latched from the cptra_csr_hmac_key interface pins in place of the API key register. These pins are latched internally after powergood assertion during DEVICE_MANUFACTURING lifecycle state. During debug mode operation this value is overridden with all 1's, and during any other lifecycle state it has a value of zero.
 
+ROM must set `internal_csr_hmac_key_lock` (write-1-to-set) before handing off to FMC. Once the lock is set, the latched CSR HMAC key is cleared to zero, so FMC and Runtime FW can never use it. The lock is cleared only by warm or cold reset. A firmware-update (hitless) reset does not clear it, so the key stays unavailable through hitless updates.
+
 ### Signal descriptions
 
 The HMAC architecture inputs and outputs are described in the following table.
