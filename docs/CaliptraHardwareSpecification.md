@@ -1422,6 +1422,15 @@ The HMAC architecture has the finite-state machine as shown in the following fig
 
 ![](./images/HMAC_FSM.png)
 
+### Multi-block operations
+
+An HMAC operation starts with `INIT` on the first block and ends with the first block that has `LAST` set (`INIT|LAST` for a single block, otherwise `NEXT|LAST`). Each block without `LAST` produces an intermediate SHA-512 chaining state, not an HMAC tag.
+
+* `NEXT` is accepted only while an operation started by `INIT` is in flight. A `NEXT` (with or without `LAST`) issued after the final tag, after zeroize, or before any `INIT` is rejected and sets `error2_sts`.
+* If the key or block was read from the key vault, or the result is routed to the key vault, no intermediate or final result is written to `TAG`. The key vault provenance and the `KEY` register lock are held until the final tag or zeroize, and the key vault write happens only on the final tag.
+* In CSR mode, intermediate results are not written to `TAG`; only the final tag is.
+* Key vault read controls and `CSR_MODE` cannot be changed while an operation is in flight. They must be programmed before `INIT`, or the operation must be zeroized.
+
 ### CSR Mode
 
 When the CSR Mode register is set, the HMAC512 core uses the value latched from the cptra_csr_hmac_key interface pins in place of the API key register. These pins are latched internally after powergood assertion during DEVICE_MANUFACTURING lifecycle state. During debug mode operation this value is overridden with all 1's, and during any other lifecycle state it has a value of zero.
@@ -2876,7 +2885,7 @@ must observe `AES_KV_RD_KEY_STATUS.ERROR` after the status VALID bit
 sets. The `AES_KV_RD_KEY_STATUS.ERROR` field encodes the KV error
 code (`KV_SUCCESS=0`, `KV_READ_FAIL=1`, `KV_RD_LEN_MISMATCH=3`).
 
-If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
+If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable. For HMAC, an iteration is a complete `INIT` ... `LAST` operation: the lock is held across all of its blocks, the key vault read controls cannot be reprogrammed until it ends, and the key vault write status becomes valid only after the final block (see [Multi-block operations](#multi-block-operations)).
 
 The following tables describe read, write, and status values for key vault blocks.
 

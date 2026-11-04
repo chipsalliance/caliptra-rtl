@@ -192,6 +192,7 @@ static int test_hmac_kv_swwe_lock(void) {
     //         All must be blocked while core_ready=0.
     // ------------------------------------------------------------------
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                            HMAC_REG_HMAC512_CTRL_LAST_MASK |
                                             (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
 
     uint32_t attack_wr = HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
