@@ -108,6 +108,7 @@ void main(){
 
     VPRINTF(LOW, "Enable HMAC core\n");
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                HMAC_REG_HMAC512_CTRL_LAST_MASK |
                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));    
 
     // wait for HMAC process to be done
