@@ -208,7 +208,8 @@ void hmac384_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
         if (tag.kv_intf){
             // wait for HMAC process - check dest done
             VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
-            while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
+            // KV write happens only on the final tag
+            if (last) while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
         }
         else {
             VPRINTF(LOW, "Load TAG data from HMAC\n");
@@ -394,7 +395,8 @@ void hmac512_flow(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io tag, BO
         if (tag.kv_intf){
             // wait for HMAC process - check dest done
             VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
-            while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
+            // KV write happens only on the final tag
+            if (last) while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
         }
         else {
             // Load TAG data from HMAC
@@ -570,7 +572,8 @@ void hmac512_flow_return(hmac_io key, hmac_io block, hmac_io lfsr_seed, hmac_io 
     if (tag.kv_intf){
         // wait for HMAC process - check dest done
         VPRINTF(LOW, "Load TAG data from HMAC to KV\n");
-        while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
+        // KV write happens only on the final tag
+        if (last) while((lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS) & HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0);
     }
     else{
         VPRINTF(LOW, "Load TAG data from HMAC\n");
