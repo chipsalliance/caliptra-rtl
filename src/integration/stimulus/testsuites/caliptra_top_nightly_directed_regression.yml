@@ -22,6 +22,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha3_interrupt/smoke_test_sha3_interrupt.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_cshake/smoke_test_cshake.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha_accel/smoke_test_sha_accel.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_sha_accel_basic/smoke_test_sha_accel_basic.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_ROM_to_dccm/memCpy_ROM_to_dccm.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/memCpy_dccm_to_iccm/memCpy_dccm_to_iccm.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/hello_world_iccm/hello_world_iccm.yml
