@@ -799,7 +799,7 @@ module ot_sha3pad
   // These valid signals are qualifier of FPV to trigger the control signal
   // It is a little bit hard to specify these criteria in SVA property so creating
   // qualifiers in RTL form is easier.
-  logic start_valid, process_valid, absorb_valid, done_valid;
+  logic start_valid, process_valid, done_valid;
 
   always_ff @(posedge clk_i or negedge rst_ni) begin
     if (!rst_ni) begin
