@@ -473,6 +473,7 @@ module soc_ifc_tb
              .iccm_rt_start_addr(),
              .iccm_rt_end_addr(),
              .iccm_region_lock(),
+             .csr_hmac_key_lock(),
 
              .cptra_noncore_rst_b(cptra_noncore_rst_b_tb),
              .cptra_uc_rst_b(cptra_uc_rst_b_tb),
