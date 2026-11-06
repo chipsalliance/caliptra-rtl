@@ -210,6 +210,9 @@ module soc_ifc_top
     output logic [ICCM_ADDR_WIDTH-1:0] iccm_rt_end_addr,
     output logic        iccm_region_lock,
 
+    // CSR HMAC Key Lock
+    output logic        csr_hmac_key_lock,
+
     //Other blocks reset
     output logic cptra_noncore_rst_b,
     //uC reset
@@ -1282,6 +1285,7 @@ assign soc_ifc_notif_intr = soc_ifc_reg_hwif_out.intr_block_rf.notif_global_intr
 assign nmi_vector = soc_ifc_reg_hwif_out.internal_nmi_vector.vec.value;
 assign iccm_lock  = soc_ifc_reg_hwif_out.internal_iccm_lock.lock.value;
 assign iccm_unlock_o = iccm_unlock;
+assign csr_hmac_key_lock = soc_ifc_reg_hwif_out.internal_csr_hmac_key_lock.lock.value;
 assign dcls_disable_corruption_detection = mubi4_bool_to_mubi(~soc_ifc_reg_hwif_out.CPTRA_HW_CONFIG.DCLS_en.value);
 
 assign trace_shadow_core_sel = soc_ifc_reg_hwif_out.internal_trace_ctrl.trace_shadow_core_sel.value;

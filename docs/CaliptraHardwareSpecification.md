@@ -856,6 +856,7 @@ Using the HW API:
 * A user of the HW API first locks the accelerator by reading the LOCK register. A read that returns the value 0 indicates that the resource was locked for exclusive use by the requesting user. A write of ‘1 clears the lock.
 * The USER register captures the AXI USERID value of the requestor that locked the SHA accelerator. This is the only user that is allowed to control the SHA accelerator by performing AXI register writes. Writes by any other agent on the AXI subordinate interface are dropped.
 * SHA supports **Mailbox** mode: SHA is computed on LENGTH (DLEN) bytes of data stored in the mailbox beginning at START\_ADDRESS. This computation is performed when the EXECUTE register is set by the user. When the operation is completed and the result in the DIGEST register is valid, SHA accelerator sets the VALID bit of the STATUS register.
+* Mailbox-mode requests with START\_ADDRESS + DLEN greater than the mailbox capacity are rejected before any mailbox reads or hashing. Exact-fit requests are accepted. A rejected request leaves STATUS.VALID clear, clears EXECUTE, and sets the sticky ERROR1\_STS bit in the SHA accelerator's ERROR\_INTERNAL\_INTR\_R register. The corresponding error interrupt is asserted if enabled. Software may clear this write-one-to-clear status bit, correct the range, and retry under the same lock without resetting the accelerator. This range check does not apply to streaming or ICCM hashing.
 * Note that even though the mailbox size is fixed, due to SHA save/restore function enhancement, there is no limit on the size of the block that needs to be SHAd. SOC needs to follow FW API
 * The SHA computation engine in the SHA accelerator requires big endian data, but the SHA accelerator can accommodate mailbox input data in either the little endian or big endian format. By default, input data is assumed to be little endian and is swizzled to big endian at the byte level prior to computation. For the big endian format, data is loaded into the SHA engine as-is. Users may configure the SHA accelerator to treat data as big endian by setting the ENDIAN\_TOGGLE bit appropriately.
 * See the register definition for the encodings.
@@ -1430,6 +1431,8 @@ An HMAC operation starts with `INIT` on the first block and ends with the first 
 ### CSR Mode
 
 When the CSR Mode register is set, the HMAC512 core uses the value latched from the cptra_csr_hmac_key interface pins in place of the API key register. These pins are latched internally after powergood assertion during DEVICE_MANUFACTURING lifecycle state. During debug mode operation this value is overridden with all 1's, and during any other lifecycle state it has a value of zero.
+
+ROM must set `internal_csr_hmac_key_lock` (write-1-to-set) before handing off to FMC. Once the lock is set, the latched CSR HMAC key is cleared to zero, so FMC and Runtime FW can never use it. The lock is cleared only by warm or cold reset. A firmware-update (hitless) reset does not clear it, so the key stays unavailable through hitless updates.
 
 ### Signal descriptions
 
@@ -3150,6 +3153,8 @@ The Stable Owner Root Key is conditionally derived by ROM when all three conditi
 The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared normally.
 
 **OCP Lock Keys (Slots 16 and 22)**
+
+OCP Lock mode is supported only when `CALIPTRA_MODE_SUBSYSTEM` is defined. In Passive mode, the incoming strap is ignored and `ocp_lock_mode_en` is forced to 0.
 
 When OCP Lock mode is enabled (`ocp_lock_mode_en` = 1 from the `ss_ocp_lock_en` strap), DOE populates slot 16 (MDK) and slot 22 (HEK seed) before ROM runs. FMC and RT firmware require these keys for EPK, VEK, and MEK derivation in OCP Lock flows.
 

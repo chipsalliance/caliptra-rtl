@@ -235,7 +235,7 @@ The mux only re-sources these observation-only ports; it does not affect functio
 |  strap_ss_strap_generic_2                                 | 32  | Input Strap | Synchronous to clk | Formerly provided the Caliptra ROM with entropy source (CSRNG) configuration. That configuration has moved to the `CPTRA_iTRNG_ENTROPY_CONFIG_*` (ES0) and `CPTRA_iTRNG1_ENTROPY_CONFIG_*` (ES1) architectural registers and this strap is **no longer used for entropy-source configuration**. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
 |  strap_ss_strap_generic_3                                 | 32  | Input Strap | Synchronous to clk | Formerly provided Caliptra firmware feature controls (Stable Owner Key enable, vendor-authorized debug image disable). Those controls have moved to the `SS_FW_FEATURE_CFG` register. It remains available as a general-purpose late-binding strap; integrators shall tie this input to 0 if unused.|
 |  ss_debug_intent                                          | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC is in debug mode and a user intends to request unlock of debug mode through the TAP mailbox. In Passive mode, integrators shall tie this input to 0. |
-|  ss_ocp_lock_en                                           | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. Indicates that the SoC enables OCP LOCK features of Caliptra. Must be tied to a constant value. For example, driving this input from a programmable register or from a package pin is not permitted. |
+|  ss_ocp_lock_en                                           | 1   | Input | Synchronous to clk | Sampled on cold reset. Used in Subsystem mode only. In Passive mode, this input is ignored and the effective OCP LOCK enable is forced to 0. Indicates that the SoC enables OCP LOCK features of Caliptra. Must be tied to a constant value. For example, driving this input from a programmable register or from a package pin is not permitted. |
 |  ss_dbg_manuf_enable                                      | 1   | Output      | Synchronous to clk | Enables unlock of the debug interface in the Manufacturing security state, for Subsystem mode only. |
 |  ss_soc_dbg_unlock_level                                  | 64  | Output      | Synchronous to clk | Enables unlock of the debug interface in the Production security state, for Subsystem mode only. |
 |  ss_generic_fw_exec_ctrl                                  | 128 | Output      | Synchronous to clk | Enables SoC processors to execute firmware once authenticated by Caliptra. |
@@ -458,6 +458,8 @@ SoC drives the key at the tape-in time of the SoC using an Engineering Change Or
 The key must follow the security rules defined in the [SOC integration requirements](#soc-integration-requirements).
 
 SoC must ensure that there are no SCAN cells on the flops that latch this key internally to Caliptra.
+
+Caliptra ROM sets `internal_csr_hmac_key_lock` before handing off to FMC. After that, the key is cleared internally and is not available to FMC or Runtime FW until the next warm or cold reset.
 
 ## Late binding interface signals
 

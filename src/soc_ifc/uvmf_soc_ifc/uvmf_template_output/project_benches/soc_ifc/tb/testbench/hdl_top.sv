@@ -429,6 +429,7 @@ import pv_defines_pkg::*;
         .iccm_rt_start_addr   (                                           ),
         .iccm_rt_end_addr     (                                           ),
         .iccm_region_lock     (                                           ),
+        .csr_hmac_key_lock    (                                           ),
 
         //caliptra uncore jtag ports
         .cptra_uncore_dmi_reg_en   (1'b0 ),
