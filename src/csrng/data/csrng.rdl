@@ -24,22 +24,18 @@ addrmap csrng {
     reg {
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Enable interrupt when cs_cmd_req_done is set.";
         } CS_CMD_REQ_DONE[0:0];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Enable interrupt when cs_entropy_req is set.";
         } CS_ENTROPY_REQ[1:1];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Enable interrupt when cs_hw_inst_exc is set.";
         } CS_HW_INST_EXC[2:2];
         field {
             sw = rw;
-            onwrite = woclr;
             desc = "Enable interrupt when cs_fatal_err is set.";
         } CS_FATAL_ERR[3:3];
     } INTERRUPT_ENABLE @ 0x4;
@@ -76,7 +72,7 @@ addrmap csrng {
             desc = "When true, all writeable registers can be modified.
             When false, they become read-only.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } REGWEN[0:0] = 0x1;
     } REGWEN @ 0x10;
     reg {
@@ -231,7 +227,7 @@ addrmap csrng {
             desc = "INT_STATE_READ_ENABLE register configuration enable bit.
             If this is cleared to 0, the INT_STATE_READ_ENABLE register cannot be written anymore.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } INT_STATE_READ_ENABLE_REGWEN[0:0] = 0x1;
     } INT_STATE_READ_ENABLE_REGWEN @ 0x3C;
     reg {
@@ -283,7 +279,7 @@ addrmap csrng {
             to the SW instance, check the !!SW_CMD_STS register). Writing a zero to this register
             resets the status bits.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } HW_EXC_STS[15:0];
     } HW_EXC_STS @ 0x4C;
     reg {
@@ -292,41 +288,41 @@ addrmap csrng {
             a value other than kMultiBitBool4True or kMultiBitBool4False.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ENABLE_FIELD_ALERT[0:0];
         field {
             desc = "This bit is set when the SW_APP_ENABLE field in the !!CTRL register is set to
             a value other than kMultiBitBool4True or kMultiBitBool4False.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } SW_APP_ENABLE_FIELD_ALERT[1:1];
         field {
             desc = "This bit is set when the READ_INT_STATE field in the !!CTRL register is set to
             a value other than kMultiBitBool4True or kMultiBitBool4False.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } READ_INT_STATE_FIELD_ALERT[2:2];
         field {
             desc = "This bit is set when the FIPS_FORCE_ENABLE field in the !!CTRL register is set to a value other than kMultiBitBool4True or kMultiBitBool4False.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } FIPS_FORCE_ENABLE_FIELD_ALERT[3:3];
         field {
             desc = "This bit is set when the FLAG0 field in the Application Command is set to
             a value other than kMultiBitBool4True or kMultiBitBool4False.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } ACMD_FLAG0_FIELD_ALERT[4:4];
         field {
             desc = "This bit is set when the software application port genbits bus value is equal
             to the prior valid value on the bus, indicating a possible attack.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } CS_BUS_CMP_ALERT[12:12];
         field {
             desc = "This bit is set when an unsupported/illegal CSRNG command is received by the
@@ -334,7 +330,7 @@ addrmap csrng {
             The invalid command is ignored and CSRNG continues to operate.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } CMD_STAGE_INVALID_ACMD_ALERT[13:13];
         field {
             desc = "This bit is set when an out of order command is received by the main state machine.
@@ -344,7 +340,7 @@ addrmap csrng {
             The invalid command is ignored and CSRNG continues to operate.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } CMD_STAGE_INVALID_CMD_SEQ_ALERT[14:14];
         field {
             desc = "This bit is set when the maximum number of generate requests between reseeds is
@@ -352,7 +348,7 @@ addrmap csrng {
             The invalid generate command is ignored and CSRNG continues to operate.
             Writing a zero resets this status bit.";
             sw = rw;
-            onwrite = woclr;
+            onwrite = wzc;
         } CMD_STAGE_RESEED_CNT_ALERT[15:15];
     } RECOV_ALERT_STS @ 0x50;
     reg {
