@@ -492,6 +492,8 @@ void main() {
 
     // Mandatory ECC zeroize after the PCR signing operation
     lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+    // Zeroize re-runs ECC initialization; wait for it before starting ML-DSA
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     VPRINTF(MEDIUM,"MLDSA: Running PCR Sign Function\n");
     //run MLDSA keygen+signing on PCR
