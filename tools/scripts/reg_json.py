@@ -34,6 +34,16 @@ from systemrdl.rdltypes import OnReadType
 from systemrdl.rdltypes import OnWriteType
 
 
+def mubi_true(width: int) -> int:
+  # MuBi4True=0x6, MuBi8True=0x96, MuBi12True=0x696, MuBi16True=0x9696
+  return sum((0x6 if i % 2 == 0 else 0x9) << (4 * i) for i in range(width // 4))
+
+
+def mubi_false(width: int) -> int:
+  # MuBi4False=0x9, MuBi8False=0x69, MuBi12False=0x969, MuBi16False=0x6969
+  return ~mubi_true(width) & ((1 << width) - 1)
+
+
 class JsonImporter(RDLImporter):
 
   def import_file(self, path: str) -> None:
@@ -90,41 +100,54 @@ class JsonImporter(RDLImporter):
     comp_def = self.create_field_definition()
 
     msb, lsb = self.parse_digits(field_obj['bits'])
+    width = int(msb) - int(lsb) + 1
+    mubi = str(field_obj.get('mubi', 'false')).lower() == 'true'
+    if mubi and width not in (4, 8, 12, 16):
+      self.msg.fatal(
+          "'%s' has an invalid MuBi width of %d" % (name, width), self.default_src_ref
+      )
 
     # Apply reset property if it was set
     if 'resval' in field_obj:
       resval = str(field_obj['resval']).lower()
-      mubi = str(field_obj.get('mubi', 'false')).lower() == 'true'
-      mubi8 = mubi and int(msb) - int(lsb) + 1 == 8
       if resval == 'false':
-        if mubi8:
-          resval = 0x69
-        elif mubi:
-          resval = 0x9
+        if mubi:
+          resval = mubi_false(width)
         else:
           resval = 0
       elif resval == 'true':
-        if mubi8:
-          resval = 0x96
-        elif mubi:
-          resval = 0x6
+        if mubi:
+          resval = mubi_true(width)
         else:
           resval = 1
       else:
         resval = int(resval, 0)
       self.assign_property(comp_def, 'reset', resval)
 
-    self.assign_property(comp_def, 'desc', field_obj['desc'])
-
-    # decode and apply the sw access property.
     # A field's own swaccess takes precedence over the register's swaccess.
     access_type = field_obj.get('swaccess', reg_obj.get('swaccess'))
+
+    desc = field_obj['desc']
+    if access_type == 'rw1s' and mubi:
+      desc += (
+          '\n\nWrites take effect per bit: bits that are set in kMultiBitBool%dTrue (0x%x) are'
+          ' set by writing 1, all other bits are cleared by writing 0. Hence, once this field'
+          ' no longer reads as kMultiBitBool%dFalse (0x%x), it cannot be returned to it until'
+          ' reset.' % (width, mubi_true(width), width, mubi_false(width))
+      )
+    self.assign_property(comp_def, 'desc', desc)
+
+    # decode and apply the sw access property.
     if access_type == 'rw0c':
       self.assign_property(comp_def, 'sw', AccessType['rw'])
       self.assign_property(comp_def, 'onwrite', OnWriteType['wzc'])
     elif access_type == 'rw1s':
       self.assign_property(comp_def, 'sw', AccessType['rw'])
-      self.assign_property(comp_def, 'onwrite', OnWriteType['woset'])
+      # For MuBi fields, the hardware ORs in "true" polarity (caliptra_prim_subreg_arb,
+      # mubiN_or_hi), i.e. bits that are 1 in MuBiTrue are set by writing 1 and all other bits are
+      # cleared by writing 0. As no onwrite type expresses this, it is only described in desc.
+      if not mubi:
+        self.assign_property(comp_def, 'onwrite', OnWriteType['woset'])
     elif access_type == 'rw':
       self.assign_property(comp_def, 'sw', AccessType['rw'])
     elif access_type == 'ro':
@@ -137,9 +160,7 @@ class JsonImporter(RDLImporter):
       )
 
     # Instantiate the component definition
-    inst = self.instantiate_field(
-        comp_def, name, int(lsb), int(msb) - int(lsb) + 1
-    )
+    inst = self.instantiate_field(comp_def, name, int(lsb), width)
     return inst
 
   def decode_reg(self, reg_obj: dict, addr: int) -> comp.Reg:
