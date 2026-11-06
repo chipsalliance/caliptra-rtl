@@ -108,6 +108,77 @@ class kv_wr_rd_debug_warm_rst_sequence #(
         
     endfunction
 
+    task check_reset_debug_overlap();
+        uvm_status_e status;
+        uvm_reg_data_t actual, metadata;
+        localparam int ENTRY = KV_NUM_KEYS - 1;
+        localparam int WORD = KV_NUM_DWORDS - 1;
+        localparam logic [KV_DATA_W-1:0] SEED = 32'hc35aa53c;
+        // Selector 0 pattern from src/libs/rtl/caliptra_macros.svh.
+        localparam logic [KV_DATA_W-1:0] DEBUG_FILL = 32'haaaa_aaaa;
+
+        `uvm_info("KV_WARM_DEBUG_OVERLAP", "Checking main reset with debug/scan-transition flush", UVM_MEDIUM)
+        // Keep the original randomized debug/reset phase intact. Start the
+        // additional directed phase with no pending clear and selector 0.
+        kv_rst_agent_poweron_seq_2.start(configuration.kv_rst_agent_config.sequencer);
+        configuration.kv_rst_agent_config.wait_for_num_clocks(5);
+        reg_model.kv_reg_rm.KEY_ENTRY[ENTRY][WORD].write(
+            status, SEED, UVM_FRONTDOOR, reg_model.kv_hmac_write_map, this);
+        if (status != UVM_IS_OK)
+            `uvm_fatal("KV_WARM_DEBUG_OVERLAP", "Seed write failed")
+        checked_read(configuration.kv_hmac_key_read_agent_config, ENTRY, WORD, SEED, 0, WORD);
+        metadata = (uvm_reg_data_t'((1 << KV_NUM_READ) - 1) <<
+                    reg_model.kv_reg_rm.KEY_CTRL[ENTRY].dest_valid.get_lsb_pos()) |
+                   (uvm_reg_data_t'(WORD) <<
+                    reg_model.kv_reg_rm.KEY_CTRL[ENTRY].last_dword.get_lsb_pos());
+        reg_model.kv_reg_rm.KEY_CTRL[ENTRY].write(
+            status, 'h3, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+        if (status != UVM_IS_OK)
+            `uvm_fatal("KV_WARM_DEBUG_OVERLAP", "Lock write failed")
+        reg_model.kv_reg_rm.KEY_CTRL[ENTRY].read(
+            status, actual, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+        if (status != UVM_IS_OK || actual !== (metadata | 'h3))
+            `uvm_fatal("KV_WARM_DEBUG_OVERLAP", "Seed metadata/locks did not reach hardware")
+
+        // The reset BFM holds this combination over monitor clocks and checks
+        // its actual pin response. debug_mode is the transition input, not just
+        // cptra_in_debug_scan_mode. Main reset does NOT clear the key storage.
+        kv_rst_agent_warm_rst_seq.overlap_debug_transition = 1'b1;
+        kv_rst_agent_warm_rst_seq.start(configuration.kv_rst_agent_config.sequencer);
+        kv_rst_agent_warm_rst_seq.overlap_debug_transition = 1'b0;
+        configuration.kv_rst_agent_config.wait_for_num_clocks(5);
+        @(negedge configuration.kv_rst_agent_config.monitor_bfm.clk_i);
+        if (configuration.kv_rst_agent_config.monitor_bfm.cptra_pwrgood_i !== 1'b1 ||
+            configuration.kv_rst_agent_config.monitor_bfm.rst_b_i !== 1'b1 ||
+            configuration.kv_rst_agent_config.monitor_bfm.core_only_rst_b_i !== 1'b1 ||
+            configuration.kv_rst_agent_config.monitor_bfm.fw_update_rst_window_i !== 1'b0 ||
+            configuration.kv_rst_agent_config.monitor_bfm.debug_locked_i !== 1'b0 ||
+            configuration.kv_rst_agent_config.monitor_bfm.cptra_in_debug_scan_mode_i !== 1'b0)
+            `uvm_fatal("KV_WARM_DEBUG_OVERLAP", "Reset/debug pins did not return to normal")
+        reg_model.kv_reg_rm.KEY_CTRL[ENTRY].read(
+            status, actual, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+        if (status != UVM_IS_OK || actual !== metadata)
+            `uvm_fatal("KV_WARM_DEBUG_OVERLAP", $sformatf(
+                "Main reset must clear locks and retain metadata: actual=%h expected=%h", actual, metadata))
+        reg_model.kv_reg_rm.CLEAR_SECRETS.read(
+            status, actual, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+        if (status != UVM_IS_OK || actual !== '0)
+            `uvm_fatal("KV_WARM_DEBUG_OVERLAP", "CLEAR_SECRETS did not reset")
+        for (int offset = 0; offset < KV_NUM_DWORDS; offset++)
+            checked_read(configuration.kv_hmac_key_read_agent_config,
+                         ENTRY, offset, DEBUG_FILL, 0, WORD);
+
+        // Prove the transition has ended: an ordinary write must now persist,
+        // while a different, unwritten dword retains the completed debug fill.
+        reg_model.kv_reg_rm.KEY_ENTRY[ENTRY][0].write(
+            status, ~SEED, UVM_FRONTDOOR, reg_model.kv_hmac_write_map, this);
+        if (status != UVM_IS_OK)
+            `uvm_fatal("KV_WARM_DEBUG_OVERLAP", "Recovery write failed")
+        checked_read(configuration.kv_hmac_key_read_agent_config, ENTRY, 0, ~SEED, 0, 0);
+        checked_read(configuration.kv_hmac_key_read_agent_config,
+                     ENTRY, WORD, DEBUG_FILL, 0, 0);
+    endtask
+
     virtual task body();
         uvm_status_e sts;
         //uvm_reg_data_t rd_data;
@@ -179,5 +250,6 @@ class kv_wr_rd_debug_warm_rst_sequence #(
             end
             
         
+        check_reset_debug_overlap();
     endtask
 endclass

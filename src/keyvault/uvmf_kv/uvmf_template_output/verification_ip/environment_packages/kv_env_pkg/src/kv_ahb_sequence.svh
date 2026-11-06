@@ -40,6 +40,41 @@ class kv_ahb_sequence #(
         if(!this.randomize()) `uvm_error("KV AHB", "Failed to randomize KV RST poweron seq");
     endfunction
 
+    task check_reserved_ctrl_bits();
+        uvm_status_e status;
+        uvm_reg_data_t baseline, expected, actual;
+        localparam uvm_reg_data_t RESERVED_MASK = 'h000001f8;
+
+        // Let any preceding single-pulse clear and its metadata update finish.
+        // Do not reset here: preserve the caller's sticky locks and key metadata.
+        configuration.kv_rst_agent_config.wait_for_num_clocks(5);
+        for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+            reg_model.kv_reg_rm.KEY_CTRL[entry].read(
+                status, baseline, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+            if (status != UVM_IS_OK || $isunknown(baseline) || baseline[2] !== 1'b0)
+                `uvm_fatal("KV_AHB_RESERVED", $sformatf(
+                    "KEY_CTRL[%0d] baseline is not quiescent: status=%s data=%h",
+                    entry, status.name(), baseline))
+            baseline &= ~RESERVED_MASK;
+            // rsvd0[0] and rsvd1[4:0] are RW storage at bits [8:3].
+            // Preserve both sticky lock bits; never replay the clear pulse.
+            for (int phase = 0; phase < 3; phase++) begin
+                expected = baseline | ((phase == 1) ? RESERVED_MASK : '0);
+                reg_model.kv_reg_rm.KEY_CTRL[entry].write(
+                    status, expected, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+                if (status != UVM_IS_OK)
+                    `uvm_fatal("KV_AHB_RESERVED", $sformatf(
+                        "KEY_CTRL[%0d] reserved phase %0d write failed", entry, phase))
+                reg_model.kv_reg_rm.KEY_CTRL[entry].read(
+                    status, actual, UVM_FRONTDOOR, reg_model.kv_AHB_map, this);
+                if (status != UVM_IS_OK || actual !== expected)
+                    `uvm_fatal("KV_AHB_RESERVED", $sformatf(
+                        "KEY_CTRL[%0d] reserved phase %0d: status=%s actual=%h expected=%h",
+                        entry, phase, status.name(), actual, expected))
+            end
+        end
+    endtask
+
     virtual task body();
         uvm_status_e sts;
         int offset;
@@ -52,6 +87,8 @@ class kv_ahb_sequence #(
         //    1 <= iter <= 5; 
         // };
         iter = 1;
+
+        check_reserved_ctrl_bits();
         
         //KEY ENTRY reg writes
         for (i = 0; i < iter; i++) begin

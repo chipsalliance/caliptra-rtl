@@ -33,7 +33,7 @@
     input bit [1-1:0] clear,
     input bit [1-1:0] rsvd0,
     input bit [5-1:0] rsvd1,
-    input bit [8-1:0] dest_valid,
+    input bit [9-1:0] dest_valid,
     input bit [4-1:0] last_dword
     );
         option.per_instance = 1;
