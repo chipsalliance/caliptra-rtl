@@ -688,7 +688,7 @@ package soc_ifc_tb_pkg;
     else 
       return -1;
 
-  endfunction // get_ss_code
+  endfunction : get_ss_code
 
 
   function string get_ss_name(input int ss_code);
@@ -699,14 +699,14 @@ package soc_ifc_tb_pkg;
     end
     return "";
 
-  endfunction // get_ss_name
+  endfunction : get_ss_name
 
 
   function dword_t get_mask(string addr_name);
 
     return _soc_register_mask_dict.exists(addr_name) ? _soc_register_mask_dict[addr_name] : 32'hffff_ffff; 
 
-  endfunction // get_mask
+  endfunction : get_mask
 
 
   function dword_t get_initval(string addr_name);
@@ -754,7 +754,7 @@ package soc_ifc_tb_pkg;
       return _soc_register_initval_dict.exists(addr_name) ? _soc_register_initval_dict[addr_name] : '0; 
     end
 
-  endfunction // get_initval
+  endfunction : get_initval
 
 
   function void set_initval(string addr_name, dword_t value); 
@@ -764,7 +764,7 @@ package soc_ifc_tb_pkg;
       $display("TB INFO. Adding new register init value for %s with value 0x%08x", addr_name, value);
     _soc_register_initval_dict[addr_name] = value;
     
-  endfunction // set_initval
+  endfunction : set_initval
 
   // Needs RMW of register without APB or AHB writes 
   function automatic dword_t update_CPTRA_SECURITY_STATE(logic scan_mode, logic debug_state, logic [1:0] lifecycle); 
@@ -780,7 +780,7 @@ package soc_ifc_tb_pkg;
       return _exp_register_data_dict["CPTRA_SECURITY_STATE"];
     end 
 
-  endfunction // update_CPTRA_SECURITY_STATE
+  endfunction : update_CPTRA_SECURITY_STATE
 
 
   // Can update only 1 GENERIC_INPUT_WIRE bus at a time 
@@ -798,7 +798,7 @@ package soc_ifc_tb_pkg;
       end
     end
 
-  endfunction // update_CPTRA_GENERIC_INPUT_WIRES
+  endfunction : update_CPTRA_GENERIC_INPUT_WIRES
 
 
   // Needs RMW of register without APB or AHB writes 
@@ -819,7 +819,7 @@ package soc_ifc_tb_pkg;
       return _exp_register_data_dict["INTR_BRF_NOTIF_INTERNAL_INTR_R"];
     end 
 
-  endfunction // update_INTR_BRF_NOTIF_INTERNAL_INTR_R
+  endfunction : update_INTR_BRF_NOTIF_INTERNAL_INTR_R
 
 
   // Needs RMW of register without AXI or AHB writes 
@@ -852,7 +852,7 @@ package soc_ifc_tb_pkg;
       return _exp_register_data_dict["CPTRA_FLOW_STATUS"];
     end 
 
-  endfunction // update_CPTRA_FLOW_STATUS
+  endfunction : update_CPTRA_FLOW_STATUS
 
 
   // Needs RMW of register without APB or AHB writes 
@@ -868,7 +868,7 @@ package soc_ifc_tb_pkg;
       return _exp_register_data_dict["CPTRA_RESET_REASON"];
     end 
 
-  endfunction // update_CPTRA_RESET_REASON
+  endfunction : update_CPTRA_RESET_REASON
 
   function automatic dword_t update_CPTRA_HW_CONFIG();
     
@@ -891,7 +891,7 @@ package soc_ifc_tb_pkg;
       return exp_cptra_hw_config;
     end
 
-  endfunction // update_CPTRA_HW_CONFIG
+  endfunction : update_CPTRA_HW_CONFIG
 
   function automatic void update_SS_STRAPS();
       strq_t ss_straps_q = get_ss_strap_regnames();
@@ -900,7 +900,7 @@ package soc_ifc_tb_pkg;
           update_exp_regval(ss_straps_q[ix], get_initval(ss_straps_q[ix]), SET_DIRECT);
           $display("TB INFO. Updated expected value of %s = 0x%0x", ss_straps_q[ix], _exp_register_data_dict[ss_straps_q[ix]]);
       end
-  endfunction // update_SS_STRAPS
+  endfunction : update_SS_STRAPS
 
 
   function void update_exp_regval(string addr_name, dword_t indata, access_t modify, string pfx="DEFAULT");
@@ -1361,7 +1361,7 @@ package soc_ifc_tb_pkg;
     end
     //$display("Done update_exp_regval: %s", addr_name);
 
-  endfunction // update_exp_regval
+  endfunction : update_exp_regval
 
 
   function automatic strq_t get_soc_regnames();
@@ -1374,7 +1374,7 @@ package soc_ifc_tb_pkg;
 
     return soc_regs;
 
-  endfunction // get_soc_regnames
+  endfunction : get_soc_regnames
 
 
   function automatic bit reg_is_ss_strap(string rkey);
@@ -1413,7 +1413,7 @@ package soc_ifc_tb_pkg;
 
     return fuse_regs;
 
-  endfunction // get_fuse_regnames
+  endfunction : get_fuse_regnames
 
   function automatic strq_t get_fuse_regnames_minus_ss_straps();
 
@@ -1426,7 +1426,7 @@ package soc_ifc_tb_pkg;
 
     return fuse_regs;
 
-  endfunction // get_fuse_regnames_minus_ss_straps
+  endfunction : get_fuse_regnames_minus_ss_straps
 
   function automatic strq_t get_ss_strap_regnames();
 
@@ -1443,7 +1443,7 @@ package soc_ifc_tb_pkg;
 
     return ss_strap_regs;
 
-  endfunction // get_ss_strap_regnames
+  endfunction : get_ss_strap_regnames
 
 
   function automatic strq_t get_intrblk_regnames();
@@ -1457,7 +1457,7 @@ package soc_ifc_tb_pkg;
 
     return intr_regs;
 
-  endfunction // get_intrblk_regnames
+  endfunction : get_intrblk_regnames
 
 
   function automatic strq_t get_sha_acc_intrblk_regnames();
@@ -1471,7 +1471,7 @@ package soc_ifc_tb_pkg;
 
     return sha_intr_regs;
 
-  endfunction // get_intrblk_regnames
+  endfunction : get_sha_acc_intrblk_regnames
 
 
   function automatic strq_t get_intrblk_regnames_minus_incr();
@@ -1485,7 +1485,7 @@ package soc_ifc_tb_pkg;
 
     return intr_regs;
 
-  endfunction // get_intrblk_regnames_minus_incr
+  endfunction : get_intrblk_regnames_minus_incr
 
 
   // INTR_BRF *_INTR_COUNT_INCR_R registers only (the set excluded by
@@ -1501,7 +1501,7 @@ package soc_ifc_tb_pkg;
 
     return intr_regs;
 
-  endfunction // get_intrblk_regnames_incr_only
+  endfunction : get_intrblk_regnames_incr_only
 
 
   // NOTE the logic below is wrong, and this is unused
@@ -1533,7 +1533,7 @@ package soc_ifc_tb_pkg;
 
     return soc_regs;
 
-  endfunction // get_soc_regnames_minus_intr
+  endfunction : get_soc_regnames_minus_intr
 
 
   function automatic strq_t get_soc_regnames_minus_fuse_intr();
@@ -1551,7 +1551,7 @@ package soc_ifc_tb_pkg;
 
     return soc_regs;
 
-  endfunction // get_soc_regnames_minus_fuse_intr
+  endfunction : get_soc_regnames_minus_fuse_intr
 
 
   function automatic word_addrq_t get_undef_regs();
@@ -1576,7 +1576,7 @@ package soc_ifc_tb_pkg;
 
     return undef_addrs;
 
-  endfunction  // get_undef_regs
+  endfunction : get_undef_regs
         
 
   function automatic void reset_exp_data();
@@ -1592,7 +1592,7 @@ package soc_ifc_tb_pkg;
       iccm_shadow_phase = '0;
       foreach (iccm_shadow_staged[i]) iccm_shadow_staged[i] = '0;
     end
-  endfunction // reset_exp_data
+  endfunction : reset_exp_data
 
 
   function automatic void warm_reset_exp_data();
@@ -1629,7 +1629,7 @@ package soc_ifc_tb_pkg;
       foreach (iccm_shadow_staged[i]) iccm_shadow_staged[i] = '0;
     end 
 
-  endfunction // warm_reset_exp_data();
+  endfunction : warm_reset_exp_data
 
 
   function automatic int is_pulsed_reg(string rname);
@@ -1641,7 +1641,7 @@ package soc_ifc_tb_pkg;
       return (tmplist.size() > 0);
     end 
 
-  endfunction // is_pulsed_reg
+  endfunction : is_pulsed_reg
 
 
   // ---------------------------------------------------------------------------
@@ -1651,7 +1651,7 @@ package soc_ifc_tb_pkg;
 
     return(s2 == s1.substr(0, s2.len() - 1));
 
-  endfunction  // str_startswith
+  endfunction : str_startswith
 
 
   function automatic int str_endswith(string s1, string s2);
@@ -1661,7 +1661,7 @@ package soc_ifc_tb_pkg;
 
     return (s2 == s1.substr(s1_eix - s2_eix, s1_eix));
 
-  endfunction  // str_endswith
+  endfunction : str_endswith
 
   function automatic int str_contains(string s1, string s2); 
     
@@ -1683,7 +1683,7 @@ package soc_ifc_tb_pkg;
     //$display("Substring NOT found");
     return 0; // Substring not found
 
-  endfunction // str_contains
+  endfunction : str_contains
 
 
   function automatic del_from_strq(inout strq_t mutable_strq, input string name);  
@@ -1697,7 +1697,7 @@ package soc_ifc_tb_pkg;
     
     mutable_strq.delete(j);
 
-  endfunction // del_from_strq
+  endfunction : del_from_strq
 
 
   function automatic delm_from_strq(inout strq_t mutable_strq, input string pfx);  
@@ -1714,7 +1714,7 @@ package soc_ifc_tb_pkg;
     mutable_strq = {}; 
     mutable_strq = filtq;
 
-  endfunction // delm_from_strq
+  endfunction : delm_from_strq
 
   function automatic add_to_strq(inout strq_t mutable_strq, input string name); 
   // NOTE: This function works ONLY for a single name that will be stored in one index
@@ -1732,7 +1732,7 @@ package soc_ifc_tb_pkg;
     */
 
     return v << count_trailing_zeros(n);
-  endfunction // mask_shifted
+  endfunction : mask_shifted
 
 
   function automatic int count_trailing_zeros(dword_t n);
@@ -1750,7 +1750,7 @@ package soc_ifc_tb_pkg;
       end
       return k;
 
-  endfunction // count_trailing_zeros
+  endfunction : count_trailing_zeros
 
 
   function automatic void print_banner(string txtstr, string s = "-");
@@ -1760,7 +1760,7 @@ package soc_ifc_tb_pkg;
       $display(txtstr); 
       $display({L{s}});
 
-  endfunction // print_banner
+  endfunction : print_banner
 
   // ================================================================================ 
   // Class definitions 
@@ -1781,7 +1781,7 @@ package soc_ifc_tb_pkg;
     extern function void display(); 
     extern function void copy_from(WordTransaction atrans); 
 
-  endclass // WordTransaction
+  endclass : WordTransaction
 
 
   function void WordTransaction::update(word_addr_t addr, dword_t data, int tid);    
@@ -1856,7 +1856,7 @@ package soc_ifc_tb_pkg;
     extern function void display_exp_regs();      
     extern function dword_t get_exp_regval(string rname);      
 
-  endclass // SocRegisters
+  endclass : SocRegisters
 
 
   function SocRegisters::new();
@@ -1873,7 +1873,7 @@ package soc_ifc_tb_pkg;
     reset_exp_data();
     setup_done = 1'b1;
  
-  endfunction  // new 
+  endfunction : new
 
 
   task SocRegisters::wait_setup_done();
@@ -1887,7 +1887,7 @@ package soc_ifc_tb_pkg;
     
     _fuses_locked = 1;  // set this global var for now 
 
-  endfunction  // lock_fuses 
+  endfunction : lock_fuses
 
 
   function SocRegisters::unlock_fuses();
@@ -1895,7 +1895,7 @@ package soc_ifc_tb_pkg;
 
     _fuses_locked = 0; 
 
-  endfunction  // unlock_fuses 
+  endfunction : unlock_fuses
  
 
   function void SocRegisters::build_inverse_addr_map();
@@ -1906,7 +1906,7 @@ package soc_ifc_tb_pkg;
     foreach (_soc_register_dict[tmpstr]) 
       _imap_soc_register_dict[_soc_register_dict[tmpstr]] = tmpstr;   
 
-  endfunction  // build_inverse_addr_map
+  endfunction : build_inverse_addr_map
 
 
   function void SocRegisters::init_regs();
@@ -1950,7 +1950,7 @@ package soc_ifc_tb_pkg;
     // foreach (_soc_register_initval_dict[rname]) 
     //   $display ("-- INIT VAL %30s <= 0x%08x", rname, _soc_register_initval_dict[rname]);
 
-  endfunction  // init_regs
+  endfunction : init_regs
 
 
   function word_addr_t SocRegisters::get_addr(string name);
@@ -1963,7 +1963,7 @@ package soc_ifc_tb_pkg;
       return '0; 
     end
 
-  endfunction // get_addr
+  endfunction : get_addr
 
 
   function string SocRegisters::get_name(word_addr_t addr);
@@ -1975,14 +1975,14 @@ package soc_ifc_tb_pkg;
       return ""; 
     end
 
-  endfunction // get_name
+  endfunction : get_name
 
 
   function void SocRegisters::update_security_state(string ssname);
 
     security_state_name = ssname; 
 
-  endfunction // update_security_state
+  endfunction : update_security_state
 
 
   function void SocRegisters::display_exp_regs();      
@@ -1994,7 +1994,7 @@ package soc_ifc_tb_pkg;
     end
     $display (" ---------------------------------------------\n "); 
 
-  endfunction // display_exp_regs
+  endfunction : display_exp_regs
 
 
   function dword_t SocRegisters::get_exp_regval(string rname);      
@@ -2002,7 +2002,7 @@ package soc_ifc_tb_pkg;
     // $display (" -- expected value of addr %-40s (0x%08x) = 0x%08x", 
     //   rname, get_addr(rname), _exp_register_data_dict[rname]);
     return _exp_register_data_dict[rname];
-  endfunction // get_exp_regval
+  endfunction : get_exp_regval
 
 
   // -------------------------------------------------------------------------------- 
@@ -2025,7 +2025,7 @@ package soc_ifc_tb_pkg;
     extern function void del_all();
     extern function void display_all();      
 
-  endclass // RegScoreboard
+  endclass : RegScoreboard
 
 
   function RegScoreboard::new();
@@ -2035,7 +2035,7 @@ package soc_ifc_tb_pkg;
     begin
       err_count = 0;
     end 
-  endfunction // new
+  endfunction : new
 
 
   function void RegScoreboard::record_reset_values(tid, access_t modify); 
@@ -2065,7 +2065,7 @@ package soc_ifc_tb_pkg;
         addr_table[addr] = {new_trans}; 
     end
 
-  endfunction  // record_reset_vaules
+  endfunction : record_reset_values
 
 
   function void RegScoreboard::record_entry(WordTransaction transaction, access_t modify, string pfx="DEFAULT"); 
@@ -2100,7 +2100,7 @@ package soc_ifc_tb_pkg;
       addr_table[addr] = {new_trans}; 
     end
 
-  endfunction // record_entry
+  endfunction : record_entry
 
 
   function intpair_t RegScoreboard::find_matching_transaction(word_addr_t addr, int tid); 
@@ -2159,7 +2159,7 @@ package soc_ifc_tb_pkg;
     matched_p = {d: matched_d, v: int'(err_found == 0)};
     return matched_p; 
 
-  endfunction // find_matching_transaction
+  endfunction : find_matching_transaction
 
 
   function int RegScoreboard::check_entry(WordTransaction transaction);
@@ -2185,7 +2185,7 @@ package soc_ifc_tb_pkg;
     err_count += err_found;   
     return err_count; 
 
-  endfunction // check_entry 
+  endfunction : check_entry
 
 
   function int RegScoreboard::check_entry_inrange(WordTransaction transaction, int minval, int maxval);
@@ -2211,7 +2211,7 @@ package soc_ifc_tb_pkg;
     err_count += err_found;   
     return err_count; 
 
-  endfunction  // check_entry_in_range
+  endfunction : check_entry_inrange
 
 
   function transq_t RegScoreboard::get_entries (string addr_name);
@@ -2228,7 +2228,7 @@ package soc_ifc_tb_pkg;
 
     return entries;
 
-  endfunction  // get_entries
+  endfunction : get_entries
 
 
   function transq_t RegScoreboard::get_entries_withtid (string addr_name, int tid);
@@ -2245,7 +2245,7 @@ package soc_ifc_tb_pkg;
 
     return entries;
 
-  endfunction // get_entries_withtid 
+  endfunction : get_entries_withtid
 
 
   function void RegScoreboard::del_entry_withtid(string addr_name, int tid);
@@ -2273,7 +2273,7 @@ package soc_ifc_tb_pkg;
         addr_table[addr].delete(qi[i]);
     end
 
-  endfunction  // del_entry_withtid
+  endfunction : del_entry_withtid
 
 
   function void RegScoreboard::del_entries(string addr_name);
@@ -2287,7 +2287,7 @@ package soc_ifc_tb_pkg;
     else   
       $display("TB WARNING. del_entries: No addr %s (0x%08x) found in scoreboard", addr_name, addr);
 
-  endfunction  // del_entries
+  endfunction : del_entries
 
 
   function void RegScoreboard::del_all();
@@ -2295,7 +2295,7 @@ package soc_ifc_tb_pkg;
     foreach (addr_table[addr])
       addr_table.delete(addr);
 
-  endfunction  // del_all
+  endfunction : del_all
 
 
   function void RegScoreboard::display_all();      
@@ -2316,9 +2316,9 @@ package soc_ifc_tb_pkg;
       $display (" --------------------------------------------- "); 
     end
 
-  endfunction // display_all
+  endfunction : display_all
 
 
-endpackage // soc_ifc_tb_pkg
+endpackage : soc_ifc_tb_pkg
 
 `endif // SOC_IFC_TB_PKG

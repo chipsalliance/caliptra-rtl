@@ -199,7 +199,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       if (core_digest_valid & ~digest_valid_reg)
         digest_reg <= core_digest;
     end
-  end // reg_update
+  end : sha_regs
 
   //SHA API
   //Acquire the lock and store the user
@@ -574,4 +574,4 @@ always_comb begin
 end
 `endif // CALIPTRA_MODE_SUBSYSTEM
 
-endmodule // sha512_acc_top
+endmodule : sha512_acc_top

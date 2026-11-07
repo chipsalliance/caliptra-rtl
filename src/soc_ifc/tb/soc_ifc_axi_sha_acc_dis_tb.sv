@@ -297,7 +297,7 @@ module soc_ifc_axi_sha_acc_dis_tb
     begin : clk_gen
       #CLK_HALF_PERIOD;
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
   //----------------------------------------------------------------
   // sys_monitor()
@@ -332,7 +332,7 @@ module soc_ifc_axi_sha_acc_dis_tb
       // repeat (2) @(posedge clk_tb);
       $display("");
     end
-endtask // reset_dut
+endtask : reset_dut
 
 //----------------------------------------------------------------
 // warm_reset_dut()
@@ -349,7 +349,7 @@ task warm_reset_dut;
     // repeat (2) @(posedge clk_tb);
     $display("");
   end
-endtask // reset_dut
+endtask : warm_reset_dut
 
 //----------------------------------------------------------------
   // display_test_results()
@@ -370,7 +370,7 @@ task display_test_results;
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_results
+  endtask : display_test_results
 
   //----------------------------------------------------------------
   // init_sim()
@@ -441,7 +441,7 @@ task display_test_results;
       random_user_tb = 0;
       access = 1;
     end
-endtask // init_sim
+endtask : init_sim
 
 task axi_txn_check(input axi_resp_e resp, input rw_e rw);
   logic error;
@@ -480,7 +480,7 @@ begin
   hwrite_i_tb     = 0;
   htrans_i_tb     = AHB_HTRANS_IDLE;
 end
-endtask // write_single_word
+endtask : write_single_word
 
 //----------------------------------------------------------------
   // read_single_word()
@@ -505,7 +505,7 @@ task read_single_word(input [31 : 0]  address);
     htrans_i_tb     = AHB_HTRANS_IDLE;
     read_data = hrdata_o_tb;
   end
-endtask // read_single_word
+endtask : read_single_word
 //-----------------------------------------
 task axi_sha_access_test;
 

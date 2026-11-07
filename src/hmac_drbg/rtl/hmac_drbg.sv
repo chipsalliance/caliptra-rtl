@@ -175,7 +175,7 @@ module hmac_drbg
   begin : edge_detector
     first_round = (drbg_st_reg == drbg_st_reg_last)? 1'b0 : 1'b1;
     HMAC_tag_valid_edge = HMAC_tag_valid & (!HMAC_tag_valid_last);
-  end // edge_detector
+  end : edge_detector
 
   always_ff @ (posedge clk or negedge reset_n) 
   begin
@@ -224,7 +224,7 @@ module hmac_drbg
         end
       endcase
     end
-  end // valid_drbg_regs_updates
+  end : valid_drbg_regs_updates
 
   always_ff @ (posedge clk or negedge reset_n) 
   begin : hmac_command_update
@@ -261,7 +261,7 @@ module hmac_drbg
         endcase
       end
     end
-  end // hmac_command_update
+  end : hmac_command_update
 
   always_ff @ (posedge clk or negedge reset_n) 
   begin : hmac_inputs_update
@@ -293,7 +293,7 @@ module hmac_drbg
         endcase
       end
     end
-  end // hmac_inputs_update
+  end : hmac_inputs_update
 
   always_comb
   begin : hmac_block_update
@@ -310,7 +310,7 @@ module hmac_drbg
       V3_ST:          HMAC_block  = {V_reg, 1'h1, ZERO_PAD_V, V_SIZE};
       default:        HMAC_block  = '0;
     endcase
-  end // hmac_block_update
+  end : hmac_block_update
 
   always_ff @ (posedge clk or negedge reset_n) 
   begin : state_update
@@ -320,7 +320,7 @@ module hmac_drbg
       drbg_st_reg      <= IDLE_ST;
     else 
       drbg_st_reg      <= drbg_next_st;
-  end // state_update
+  end : state_update
 
   always_ff @ (posedge clk or negedge reset_n) 
   begin : ff_state_update
@@ -330,7 +330,7 @@ module hmac_drbg
       drbg_st_reg_last <= IDLE_ST;
     else 
       drbg_st_reg_last <= drbg_st_reg;
-  end // ff_state_update
+  end : ff_state_update
    
   //----------------------------------------------------------------
   // FSM_flow
@@ -380,7 +380,7 @@ module hmac_drbg
       default: drbg_next_st      = IDLE_ST;
 
     endcase
-  end //state_logic
+  end : state_logic
 
   always_comb failure_check = (HMAC_tag==0) || (HMAC_tag >= HMAC_DRBG_PRIME);
 
@@ -391,7 +391,7 @@ module hmac_drbg
   assign valid = valid_reg;
   assign drbg = drbg_reg;
 
-endmodule // hmac_drbg
+endmodule : hmac_drbg
 
 //======================================================================
 // EOF hmac_drbg.v

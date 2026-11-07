@@ -131,7 +131,7 @@ module hmac_drbg_tb();
     begin : clk_gen
       #CLK_HALF_PERIOD;
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
 
   //----------------------------------------------------------------
@@ -184,7 +184,7 @@ module hmac_drbg_tb();
       $display("");
 
     end
-  endtask // dump_dut_state
+  endtask : dump_dut_state
 
 
   //----------------------------------------------------------------
@@ -201,7 +201,7 @@ module hmac_drbg_tb();
       reset_n_tb = 1;
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -223,7 +223,7 @@ module hmac_drbg_tb();
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_results
+  endtask : display_test_results
 
 
   //----------------------------------------------------------------
@@ -252,7 +252,7 @@ module hmac_drbg_tb();
 
       failure_injected  = 0;
     end
-  endtask // init_sim
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -304,7 +304,7 @@ module hmac_drbg_tb();
         tc_number = tc_number+1;
 
     end
-  endtask // hmac384_drbg
+  endtask : hmac384_drbg
 
 
   //----------------------------------------------------------------
@@ -364,7 +364,7 @@ module hmac_drbg_tb();
 
         tc_number = tc_number+1;
     end
-  endtask // hmac384_drbg_multi_rounds
+  endtask : hmac384_drbg_multi_rounds
   //----------------------------------------------------------------
   // hmac_drbg_test()
   //
@@ -438,7 +438,7 @@ module hmac_drbg_tb();
         hmac384_drbg_failure_injection(nist_entropy, nist_nonce, seed, nist_expected); 
 
     end
-  endtask // hmac_drbg_test
+  endtask : hmac_drbg_test
 
   //----------------------------------------------------------------
   // hmac_drbg_multi_rounds_directed_test()
@@ -596,7 +596,7 @@ module hmac_drbg_tb();
         tc_number = tc_number+1;
 
     end
-  endtask // hmac384_drbg_failure_injection
+  endtask : hmac384_drbg_failure_injection
 
   task hmac_drbg_zeroize_test();
     begin
@@ -703,9 +703,9 @@ module hmac_drbg_tb();
 
       #(2 * CLK_PERIOD);
       $finish;
-    end // main
+    end : main
 
-endmodule // hmac_drbg_tb
+endmodule : hmac_drbg_tb
 
 //======================================================================
 // EOF hmac_drbg_tb.sv

@@ -97,7 +97,7 @@ module sha512_masked_core_tb
   always
     begin : clk_gen
       #CLK_HALF_PERIOD clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
   //----------------------------------------------------------------
   // sys_monitor
@@ -123,7 +123,7 @@ module sha512_masked_core_tb
       #(4 * CLK_HALF_PERIOD);
       reset_n_tb = 1;
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
   //----------------------------------------------------------------
   // wait_ready()
@@ -144,7 +144,7 @@ module sha512_masked_core_tb
           #(CLK_PERIOD);
         end
     end
-  endtask // wait_ready
+  endtask : wait_ready
 
   //----------------------------------------------------------------
   // init_sim()
@@ -169,7 +169,7 @@ module sha512_masked_core_tb
 
       entropy_tb     = '0;
     end
-  endtask // init_dut
+  endtask : init_sim
 
   //----------------------------------------------------------------
   // display_test_result()
@@ -190,7 +190,7 @@ module sha512_masked_core_tb
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_result
+  endtask : display_test_result
 
   //----------------------------------------------------------------
   // get_mask()
@@ -237,7 +237,7 @@ module sha512_masked_core_tb
           end
       endcase // case (mode)
     end
-  endfunction // get_mask
+  endfunction : get_mask
 
   //----------------------------------------------------------------
   // single_block_test()
@@ -298,7 +298,7 @@ module sha512_masked_core_tb
       $display("*** TC%01d - Single block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // single_block_test
+  endtask : single_block_test
 
 
   //----------------------------------------------------------------
@@ -389,7 +389,7 @@ module sha512_masked_core_tb
       $display("*** TC%01d - Double block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // double_block_test
+  endtask : double_block_test
 
 
   //----------------------------------------------------------------
@@ -472,6 +472,6 @@ module sha512_masked_core_tb
       
       $display("   -- Testbench for sha512 done. --");
       $finish;
-  end //sha512_test
+  end : sha512_test
 
 endmodule

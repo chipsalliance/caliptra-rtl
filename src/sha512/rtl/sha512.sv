@@ -261,7 +261,7 @@ module sha512
       kv_read_data_present <= kv_read_data_present_set ? '1 :
                               kv_read_data_present_reset ? '0 : kv_read_data_present;
     end
-  end // reg_update
+  end : reg_update
 
   always_comb begin
     pcr_sign_we = (dest_data_avail & gen_hash_ip);
@@ -540,7 +540,7 @@ pv_gen_hash1
   .pv_rd_resp(pv_rd_resp)
 );
 
-endmodule // sha512
+endmodule : sha512
 
 //======================================================================
 // EOF sha512.sv

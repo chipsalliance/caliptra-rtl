@@ -1107,9 +1107,9 @@ module caliptra_top_tb_services
                         end
                     end
                 end
-            end // inject_dword_loop
-        end // inject_slot_loop
-    end // inject_kv_function
+            end : inject_dword_loop
+        end : inject_slot_loop
+    end : inject_kv_function
     endgenerate
 
     //Keyvault check for MLKEM
@@ -2580,7 +2580,7 @@ endgenerate //IV_NO
         file_name = "secp384_testvector.hex";
         if (!UVM_TB) ecc_read_test_vectors(file_name);
         end
-    endtask // ecc_test
+    endtask : ecc_testvector_generator
 
     task static ecc_read_test_vectors (input string fname);
         integer values_per_test_vector;

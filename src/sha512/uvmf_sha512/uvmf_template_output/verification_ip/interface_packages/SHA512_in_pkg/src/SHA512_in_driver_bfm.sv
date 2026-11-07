@@ -427,7 +427,7 @@ end
       hwrite_o     = 0;
       htrans_o     = AHB_HTRANS_IDLE;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
   task read_single_word_driverbfm(input [31 : 0]  address);
     begin
@@ -442,7 +442,7 @@ end
       hwdata_o     = 0;
 
     end
-  endtask // read_single_word_driverbfm
+  endtask : read_single_word_driverbfm
 
   task write_block(input [1023 : 0] block);
     begin
@@ -479,7 +479,7 @@ end
       write_single_word(ADDR_BLOCK30, block[63   :  32]);
       write_single_word(ADDR_BLOCK31, block[31   :   0]);
     end
-  endtask // write_block
+  endtask : write_block
 
   task read_digest_bfm;
     begin
@@ -500,7 +500,7 @@ end
       read_single_word_driverbfm(ADDR_DIGEST14);
       read_single_word_driverbfm(ADDR_DIGEST15);
     end
-  endtask // read_digest_bfm
+  endtask : read_digest_bfm
 
   task sha512_testbench(input sha512_in_op_transactions op,
                                   input bit [7:0] test_case_sel);
@@ -681,7 +681,7 @@ end
       @(posedge clk_i);
 
     end
-  endtask // double_block_test
+  endtask : sha512_testbench
 
   // ****************************************************************************
   // steven mod ends

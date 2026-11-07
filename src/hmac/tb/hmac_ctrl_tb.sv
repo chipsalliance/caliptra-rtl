@@ -133,7 +133,7 @@ module hmac_ctrl_tb
   always
     begin : clk_gen
       #CLK_HALF_PERIOD clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
 
   //----------------------------------------------------------------
@@ -174,7 +174,7 @@ module hmac_ctrl_tb
       #(2 * CLK_PERIOD);
       reset_n_tb = 1;
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -203,7 +203,7 @@ module hmac_ctrl_tb
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
     end
-  endtask // init_dut
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -225,7 +225,7 @@ module hmac_ctrl_tb
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_result
+  endtask : display_test_result
 
 
   //----------------------------------------------------------------
@@ -248,7 +248,7 @@ module hmac_ctrl_tb
           read_single_word(`HMAC_REG_HMAC512_STATUS);
         end
     end
-  endtask // wait_ready
+  endtask : wait_ready
 
 
   //----------------------------------------------------------------
@@ -272,7 +272,7 @@ module hmac_ctrl_tb
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
 
   //----------------------------------------------------------------
@@ -316,7 +316,7 @@ module hmac_ctrl_tb
       write_single_word(`HMAC_REG_HMAC512_BLOCK_31, block[31 : 0  ]);
       
     end
-  endtask // write_block
+  endtask : write_block
 
 
   //----------------------------------------------------------------
@@ -343,7 +343,7 @@ module hmac_ctrl_tb
       write_single_word(`HMAC_REG_HMAC512_KEY_14, key[63 : 32 ]);
       write_single_word(`HMAC_REG_HMAC512_KEY_15, key[31 : 0  ]);
     end
-  endtask // hmac384_write_key
+  endtask : hmac_write_key
 
   //----------------------------------------------------------------
   // write_seed()
@@ -359,7 +359,7 @@ module hmac_ctrl_tb
       write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_4,  seed[ 63:  32]);
       write_single_word(`HMAC_REG_HMAC512_LFSR_SEED_5,  seed[ 31:   0]);
     end
-  endtask // write_seed
+  endtask : write_seed
 
   //----------------------------------------------------------------
   // read_single_word()
@@ -383,7 +383,7 @@ module hmac_ctrl_tb
       htrans_i_tb     = AHB_HTRANS_IDLE;
       read_data = address[2] ? hrdata_o_tb[63:32] : hrdata_o_tb[31:0];
     end
-  endtask // read_single_word
+  endtask : read_single_word
 
 
   //----------------------------------------------------------------
@@ -412,7 +412,7 @@ module hmac_ctrl_tb
                version[47 : 40], version[39 : 32],
                version[63 : 56], version[55 : 48]);
     end
-  endtask // check_name_version
+  endtask : check_name_version
 
 
   //----------------------------------------------------------------
@@ -456,7 +456,7 @@ module hmac_ctrl_tb
       read_single_word(`HMAC_REG_HMAC512_TAG_15);
       digest_data[31  :   0] = read_data;
     end
-  endtask // hmac_read_digest
+  endtask : hmac_read_digest
 
   //----------------------------------------------------------------
   // hmac_single_block_test()
@@ -510,7 +510,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - Single block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // hmac_single_block_test
+  endtask : hmac_single_block_test
 
 
   //----------------------------------------------------------------
@@ -579,7 +579,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - Double block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // hmac_double_block_test
+  endtask : hmac_double_block_test
 
 
   //----------------------------------------------------------------
@@ -662,7 +662,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - continuous_cmd_test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // continuous_cmd_test
+  endtask : continuous_cmd_test
 
 
   //----------------------------------------------------------------
@@ -735,7 +735,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - Three-block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // hmac_three_block_test
+  endtask : hmac_three_block_test
 
 
   //----------------------------------------------------------------
@@ -805,7 +805,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - LAST-alone error2_sts test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // last_alone_error_test
+  endtask : last_alone_error_test
 
 
   //----------------------------------------------------------------
@@ -891,7 +891,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - continuous_cmd_last_test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // continuous_cmd_last_test
+  endtask : continuous_cmd_last_test
 
 
   //----------------------------------------------------------------
@@ -961,7 +961,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - Zeroize mid-op test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // zeroize_mid_op_test
+  endtask : zeroize_mid_op_test
 
 
   //----------------------------------------------------------------
@@ -1013,7 +1013,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - INIT|NEXT conflict test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // init_next_conflict_test
+  endtask : init_next_conflict_test
 
 
   //----------------------------------------------------------------
@@ -1163,7 +1163,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - zeroize test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // zeroize_test
+  endtask : zeroize_test
 
   //----------------------------------------------------------------
   // hmac384_tests()
@@ -1275,7 +1275,7 @@ module hmac_ctrl_tb
       
       $display("*** Testcases for PRF-HMAC-SHA-384 functionality completed.");
     end
-  endtask // hmac384_tests
+  endtask : hmac384_tests
 
   //----------------------------------------------------------------
   // hmac512_tests()
@@ -1393,7 +1393,7 @@ module hmac_ctrl_tb
       
       $display("*** Testcases for PRF-HMAC-SHA-512 functionality completed.");
     end
-  endtask // hmac_tests
+  endtask : hmac512_tests
 
   //----------------------------------------------------------------
   // csr_back_to_back_last_test()
@@ -1471,7 +1471,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - CSR back-to-back NEXT|LAST test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // csr_back_to_back_last_test
+  endtask : csr_back_to_back_last_test
 
   //----------------------------------------------------------------
   // csr_init_edge_test()
@@ -1521,7 +1521,7 @@ module hmac_ctrl_tb
       $display("*** TC%01d - CSR INIT-edge CSR_MODE clear test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // csr_init_edge_test
+  endtask : csr_init_edge_test
 
   task hmac_csr_tests;
     begin
@@ -1582,7 +1582,7 @@ module hmac_ctrl_tb
       
       $display("*** Testcases for CSR completed.");
     end
-  endtask // hmac_csr_tests
+  endtask : hmac_csr_tests
 
   //----------------------------------------------------------------
   // The main test functionality.
@@ -1604,8 +1604,8 @@ module hmac_ctrl_tb
 
       $display("   -- Testbench for HMAC done. --");
       $finish;
-    end // main
-endmodule // hmac_ctrl_tb
+    end : main
+endmodule : hmac_ctrl_tb
 
 //======================================================================
 // EOF hmac_ctrl_tb.sv

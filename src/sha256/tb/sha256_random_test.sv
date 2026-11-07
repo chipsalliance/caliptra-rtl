@@ -114,7 +114,7 @@ module sha256_random_test();
     begin : clk_gen
       #CLK_HALF_PERIOD 
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
 
   //----------------------------------------------------------------
@@ -150,7 +150,7 @@ module sha256_random_test();
       @(posedge clk_tb);
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -176,7 +176,7 @@ module sha256_random_test();
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
     end
-  endtask // init_dut
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -198,7 +198,7 @@ module sha256_random_test();
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_result
+  endtask : display_test_result
 
 
   //----------------------------------------------------------------
@@ -219,7 +219,7 @@ module sha256_random_test();
           read_single_word(`SHA256_REG_SHA256_STATUS);
         end
     end
-  endtask // wait_ready
+  endtask : wait_ready
 
 
 
@@ -248,7 +248,7 @@ module sha256_random_test();
       @(posedge clk_tb);
       hsel_i_tb       <= 0;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
 
 
@@ -276,7 +276,7 @@ module sha256_random_test();
       write_single_word(`SHA256_REG_SHA256_BLOCK_14, block[63   :  32]);
       write_single_word(`SHA256_REG_SHA256_BLOCK_15, block[31   :   0]);
     end
-  endtask // write_block
+  endtask : write_block
 
 
   //----------------------------------------------------------------
@@ -304,7 +304,7 @@ module sha256_random_test();
       @(posedge clk_tb);
       hsel_i_tb       <= 0;      
     end
-  endtask // read_word
+  endtask : read_single_word
 
 
   //----------------------------------------------------------------
@@ -339,7 +339,7 @@ module sha256_random_test();
                version1[15 :  8], version1[7  :  0],
                version1[31 : 24], version1[23 : 16]);
     end
-  endtask // check_name_version
+  endtask : check_name_version
 
 
   //----------------------------------------------------------------
@@ -367,7 +367,7 @@ module sha256_random_test();
       read_single_word(`SHA256_REG_SHA256_DIGEST_7);
       digest_data[31  :   0] = hrdata_o_tb;
     end
-  endtask // read_digest
+  endtask : read_digest
 
 
   //----------------------------------------------------------------
@@ -423,7 +423,7 @@ module sha256_random_test();
       $display("*** TC%01d - Single block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // single_block_test
+  endtask : single_block_test
 
   //----------------------------------------------------------------
   // sha256_predictor()
@@ -503,7 +503,7 @@ module sha256_random_test();
 
       $display("*** Testcases for sha256 functionality completed.");
     end
-  endtask // sha256_tests
+  endtask : sha256_tests
 
 
 
@@ -524,8 +524,8 @@ module sha256_random_test();
 
       $display("   -- Testbench for randomized sha256 done. --");
       $finish;
-    end // main
-endmodule // sha256_ctrl_tb
+    end : main
+endmodule : sha256_random_test
 
 //======================================================================
 // EOF sha256_randomized_tb.sv

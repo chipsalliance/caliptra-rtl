@@ -360,7 +360,7 @@ module sha512_masked_core
             masking_rnd[3*rnd_ctr_reg[2 : 0]+2] <= entropy[191 : 128];
           end
         end
-    end // reg_update
+    end : reg_update
 
     always @ (posedge clk or negedge reset_n)
       begin : init_reg_update
@@ -372,7 +372,7 @@ module sha512_masked_core
           init_reg        <= 1'b1;
         else if (init_reg_reset)
           init_reg        <= 1'b0;
-      end // init_reg_update
+      end : init_reg_update
 
   //----------------------------------------------------------------
   // digest_logic
@@ -416,7 +416,7 @@ module sha512_masked_core
           H7_new = H7_reg + (h_reg.masked ^ h_reg.random);
           H_we = 1;
         end
-    end // digest_logic
+    end : digest_logic
 
   //----------------------------------------------------------------
   // t1_logic
@@ -448,7 +448,7 @@ module sha512_masked_core
       w_data_b2a = B2A_conv(w_data,   q_masking_rnd[4]);
 
       t1_b2a = masked_sum(h_reg_b2a, masked_sum(sum1_b2a, masked_sum(ch_b2a, masked_sum(k_data_b2a, w_data_b2a))));
-    end // t1_logic
+    end : t1_logic
 
 
   //----------------------------------------------------------------
@@ -472,7 +472,7 @@ module sha512_masked_core
       maj_b2a   = B2A_conv(maj,   q_masking_rnd[6]);
 
       t2_b2a = masked_sum(sum0_b2a, maj_b2a);
-    end // t2_logic
+    end : t2_logic
 
   //----------------------------------------------------------------
   // A2B_logic
@@ -488,7 +488,7 @@ module sha512_masked_core
       a_new_a2b = A2B_conv(masked_sum(t1_b2a, t2_b2a),    q_masking_rnd[8]);
       e_new_a2b = A2B_conv(masked_sum(d_reg_b2a, t1_b2a), q_masking_rnd[9]);
 
-    end // A2B_logic
+    end : A2B_logic
 
   //----------------------------------------------------------------
   // state_logic
@@ -548,7 +548,7 @@ module sha512_masked_core
           h_new  = g_reg;
           a_h_we = 1;
         end
-    end // state_logic
+    end : state_logic
 
 
   //----------------------------------------------------------------
@@ -573,7 +573,7 @@ module sha512_masked_core
           round_ctr_new = round_ctr_reg + 1'b1;
           round_ctr_we  = 1;
         end
-    end // round_ctr
+    end : round_ctr
 
   //----------------------------------------------------------------
   // rnd_ctr
@@ -597,7 +597,7 @@ module sha512_masked_core
           rnd_ctr_new = rnd_ctr_reg + 1'b1;
           rnd_ctr_we  = 1;
         end
-    end // rnd_ctr
+    end : rnd_ctr
 
   //----------------------------------------------------------------
   // masking_rnd
@@ -613,7 +613,7 @@ module sha512_masked_core
       if (masking_update) begin
         q_masking_rnd  = entropy[14 : 5];
       end
-    end // masking_rnd
+    end : masking_random
 
   //----------------------------------------------------------------
   // sha512_ctrl_fsm
@@ -727,9 +727,9 @@ module sha512_masked_core
           end
 
       endcase // case (sha512_ctrl_reg)
-    end // sha512_ctrl_fsm
+    end : sha512_ctrl_fsm
 
-endmodule // sha512_core
+endmodule : sha512_masked_core
 
 //======================================================================
 // EOF sha512_core.v

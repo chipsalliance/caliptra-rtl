@@ -131,7 +131,7 @@ module sha512_ctrl
     );
 
 
-endmodule  // sha512_ctrl
+endmodule : sha512_ctrl
 
 //======================================================================
 // EOF sha512_ctrl.sv

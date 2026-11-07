@@ -193,7 +193,7 @@ module ecc_top_tb
     begin : clk_gen
       #CLK_HALF_PERIOD;
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
 
   //----------------------------------------------------------------
@@ -228,7 +228,7 @@ module ecc_top_tb
 
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -250,7 +250,7 @@ module ecc_top_tb
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_results
+  endtask : display_test_results
 
 
 
@@ -282,7 +282,7 @@ module ecc_top_tb
       kv_wr_resp_tb   = '0;
       pcr_signing_data_tb = '0;
     end
-  endtask // init_dut
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -303,7 +303,7 @@ module ecc_top_tb
           read_single_word(`ECC_REG_ECC_STATUS);
         end
     end
-  endtask // wait_ready
+  endtask : wait_ready
 
 
 
@@ -328,7 +328,7 @@ module ecc_top_tb
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
   
   //----------------------------------------------------------------
@@ -351,7 +351,7 @@ module ecc_top_tb
       write_single_word(addr+4*10, block[63   :  32]);
       write_single_word(addr+4*11, block[31   :   0]);
     end
-  endtask // write_block
+  endtask : write_block
 
 
   //----------------------------------------------------------------
@@ -376,7 +376,7 @@ module ecc_top_tb
       htrans_i_tb     = AHB_HTRANS_IDLE;
       read_data       = address[2] ? hrdata_o_tb[63:32] : hrdata_o_tb[31:0];
     end
-  endtask // read_word
+  endtask : read_single_word
 
 
   //----------------------------------------------------------------
@@ -412,7 +412,7 @@ module ecc_top_tb
       read_single_word(addr +  4*11);
       reg_read_data[31  :   0] = read_data;
     end
-  endtask // read_digest
+  endtask : read_block
 
   //----------------------------------------------------------------
   // check_name_version()
@@ -446,7 +446,7 @@ module ecc_top_tb
                version1[15 :  8], version1[7  :  0],
                version1[31 : 24], version1[23 : 16]);
     end
-  endtask // check_name_version
+  endtask : check_name_version
 
 
   //----------------------------------------------------------------
@@ -461,7 +461,7 @@ module ecc_top_tb
       hsel_i_tb       = 0;
       #(CLK_PERIOD);
     end
-  endtask // trig_ECC
+  endtask : trig_ECC
 
 
   //----------------------------------------------------------------
@@ -532,7 +532,7 @@ module ecc_top_tb
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // ecc_keygen_test
+  endtask : ecc_keygen_test
 
 
   //----------------------------------------------------------------
@@ -598,7 +598,7 @@ module ecc_top_tb
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // ecc_signing_test
+  endtask : ecc_signing_test
 
 
   //----------------------------------------------------------------
@@ -677,7 +677,7 @@ module ecc_top_tb
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // ecc_verifying_test
+  endtask : ecc_verifying_test
 
 
 
@@ -856,7 +856,7 @@ module ecc_top_tb
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // continuous_cmd_test
+  endtask : continuous_cmd_test
 
 
   //----------------------------------------------------------------
@@ -1002,7 +1002,7 @@ module ecc_top_tb
 
       $display("*** TC%01d - zeroize test done.", tc_ctr);
     end
-  endtask // zeroize_test
+  endtask : zeroize_test
 
 
   //----------------------------------------------------------------
@@ -1065,7 +1065,7 @@ module ecc_top_tb
 
       reset_dut();
     end
-  endtask // ecc_fault_test
+  endtask : ecc_fault_test
 
   //----------------------------------------------------------------
   // ecc_openssl_keygen_test()
@@ -1124,7 +1124,7 @@ module ecc_top_tb
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // ecc_keygen_test
+  endtask : ecc_openssl_keygen_test
 
   //----------------------------------------------------------------
   // ecc_test()
@@ -1148,7 +1148,7 @@ module ecc_top_tb
       zeroize_test(test_vectors[1]);
       ecc_fault_test();
     end
-  endtask // ecc_test
+  endtask : ecc_test
 
 
   //----------------------------------------------------------------
@@ -1163,7 +1163,7 @@ module ecc_top_tb
         ecc_openssl_keygen_test(i, test_vectors[i]);
       end
     end
-  endtask // ecc_openssl_test
+  endtask : ecc_openssl_test
 
   //----------------------------------------------------------------
   // read_test_vectors()
@@ -1277,7 +1277,7 @@ module ecc_top_tb
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // ecc_onthefly_reset_test
+  endtask : ecc_onthefly_reset_test
 
 
 
@@ -1339,7 +1339,7 @@ module ecc_top_tb
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // ecc_DH_sharedkey_test
+  endtask : ecc_DH_sharedkey_test
 
   //----------------------------------------------------------------
   // main
@@ -1372,6 +1372,6 @@ module ecc_top_tb
       $display("");
       $display("*** ecc simulation done. ***");
       $finish;
-    end // main
+    end : main
 
-endmodule // ecc_top_tb
+endmodule : ecc_top_tb
