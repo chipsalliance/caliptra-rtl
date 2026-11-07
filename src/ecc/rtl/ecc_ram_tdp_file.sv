@@ -64,7 +64,7 @@ module ecc_ram_tdp_file #(
             if (enb)
                 doutb <= mem[addrb];
         end
-    end // reading_memory
+    end : reading_memory
 
     always_ff @ (posedge clk or negedge reset_n) 
     begin : writing_memory
@@ -83,6 +83,6 @@ module ecc_ram_tdp_file #(
             if (enb & web)
                 mem[addrb] <= dinb;
         end
-    end // writing_memory
+    end : writing_memory
 
 endmodule

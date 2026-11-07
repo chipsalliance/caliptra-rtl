@@ -265,7 +265,7 @@ end
         MODE_SHA_512:     get_mask = {16{32'hffffffff}};
       endcase // case (mode)
     end
-  endfunction // get_mask
+  endfunction : get_mask
 
 endinterface
 

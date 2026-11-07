@@ -219,7 +219,7 @@ module hmac_core
               is_last_block <= last_cmd;
           end
         end
-    end // reg_update
+    end : reg_update
 
 
   always_ff @(posedge clk or negedge reset_n)
@@ -438,9 +438,9 @@ module hmac_core
           end
 
       endcase // case (hmac_ctrl_reg)
-    end // hmac_ctrl_fsm
+    end : hmac_ctrl_fsm
 
-endmodule // hmac_core
+endmodule : hmac_core
 
 //======================================================================
 // EOF hmac_core.sv

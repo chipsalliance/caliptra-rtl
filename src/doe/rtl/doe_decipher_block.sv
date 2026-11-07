@@ -85,49 +85,49 @@ module doe_decipher_block(
     begin
       gm2 = {op[6 : 0], 1'b0} ^ (8'h1b & {8{op[7]}});
     end
-  endfunction // gm2
+  endfunction : gm2
 
   function automatic [7 : 0] gm3(input [7 : 0] op);
     begin
       gm3 = gm2(op) ^ op;
     end
-  endfunction // gm3
+  endfunction : gm3
 
   function automatic [7 : 0] gm4(input [7 : 0] op);
     begin
       gm4 = gm2(gm2(op));
     end
-  endfunction // gm4
+  endfunction : gm4
 
   function automatic [7 : 0] gm8(input [7 : 0] op);
     begin
       gm8 = gm2(gm4(op));
     end
-  endfunction // gm8
+  endfunction : gm8
 
   function automatic [7 : 0] gm09(input [7 : 0] op);
     begin
       gm09 = gm8(op) ^ op;
     end
-  endfunction // gm09
+  endfunction : gm09
 
   function automatic [7 : 0] gm11(input [7 : 0] op);
     begin
       gm11 = gm8(op) ^ gm2(op) ^ op;
     end
-  endfunction // gm11
+  endfunction : gm11
 
   function automatic [7 : 0] gm13(input [7 : 0] op);
     begin
       gm13 = gm8(op) ^ gm4(op) ^ op;
     end
-  endfunction // gm13
+  endfunction : gm13
 
   function automatic [7 : 0] gm14(input [7 : 0] op);
     begin
       gm14 = gm8(op) ^ gm4(op) ^ gm2(op);
     end
-  endfunction // gm14
+  endfunction : gm14
 
   function automatic [31 : 0] inv_mixw(input [31 : 0] w_val);
     reg [7 : 0] b0, b1, b2, b3;
@@ -145,7 +145,7 @@ module doe_decipher_block(
 
       inv_mixw = {mb0, mb1, mb2, mb3};
     end
-  endfunction // mixw
+  endfunction : inv_mixw
 
   function automatic [127 : 0] inv_mixcolumns(input [127 : 0] data);
     reg [31 : 0] w0, w1, w2, w3;
@@ -163,7 +163,7 @@ module doe_decipher_block(
 
       inv_mixcolumns = {ws0, ws1, ws2, ws3};
     end
-  endfunction // inv_mixcolumns
+  endfunction : inv_mixcolumns
 
   function automatic [127 : 0] inv_shiftrows(input [127 : 0] data);
     reg [31 : 0] w0, w1, w2, w3;
@@ -181,13 +181,13 @@ module doe_decipher_block(
 
       inv_shiftrows = {ws0, ws1, ws2, ws3};
     end
-  endfunction // inv_shiftrows
+  endfunction : inv_shiftrows
 
   function automatic [127 : 0] addroundkey(input [127 : 0] data, input [127 : 0] rkey);
     begin
       addroundkey = data ^ rkey;
     end
-  endfunction // addroundkey
+  endfunction : addroundkey
 
 
   //----------------------------------------------------------------
@@ -303,7 +303,7 @@ module doe_decipher_block(
           if (dec_ctrl_we)
             dec_ctrl_reg <= dec_ctrl_new;
         end
-    end // reg_update
+    end : reg_update
 
 
   //----------------------------------------------------------------
@@ -408,7 +408,7 @@ module doe_decipher_block(
             block_w3_we          = 1'b0;
           end
       endcase // case (update_type)
-    end // round_logic
+    end : round_logic
 
 
   //----------------------------------------------------------------
@@ -431,7 +431,7 @@ module doe_decipher_block(
           sword_ctr_new = sword_ctr_reg + 1'b1;
           sword_ctr_we  = 1'b1;
         end
-    end // sword_ctr
+    end : sword_ctr
 
 
   //----------------------------------------------------------------
@@ -461,7 +461,7 @@ module doe_decipher_block(
           round_ctr_new = round_ctr_reg - 1'b1;
           round_ctr_we  = 1'b1;
         end
-    end // round_ctr
+    end : round_ctr
 
 
   //----------------------------------------------------------------
@@ -547,9 +547,9 @@ module doe_decipher_block(
             // Empty. Just here to make the synthesis tool happy.
           end
       endcase // case (dec_ctrl_reg)
-    end // decipher_ctrl
+    end : decipher_ctrl
 
-endmodule // doe_decipher_block
+endmodule : doe_decipher_block
 
 //======================================================================
 // EOF doe_decipher_block.v

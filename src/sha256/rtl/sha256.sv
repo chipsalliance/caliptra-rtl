@@ -368,7 +368,7 @@ module sha256
           digest_reg <= core_digest & get_mask;
         end
       end
-    end // reg_update
+    end : reg_update
 
 
   //register hw interface
@@ -439,7 +439,7 @@ module sha256
 
     assign error_intr = hwif_out.intr_block_rf.error_global_intr_r.intr;
     assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;    
-endmodule // sha256
+endmodule : sha256
 
 //======================================================================
 // EOF sha256.v

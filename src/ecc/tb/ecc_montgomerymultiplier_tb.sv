@@ -140,7 +140,7 @@ module ecc_montgomerymultiplier_tb #(
       reset_n_tb = 1;
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -162,7 +162,7 @@ module ecc_montgomerymultiplier_tb #(
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_results
+  endtask : display_test_results
 
 
 
@@ -187,7 +187,7 @@ module ecc_montgomerymultiplier_tb #(
       n_i_tb        = '0;
       n_prime_i_tb  = '0;
     end
-  endtask // init_sim
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -203,7 +203,7 @@ module ecc_montgomerymultiplier_tb #(
             #CLK_PERIOD;
         end
     end
-  endtask // init_sim
+  endtask : wait_ready
 
   
   //----------------------------------------------------------------
@@ -247,7 +247,7 @@ module ecc_montgomerymultiplier_tb #(
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // mm_single_block_test
+  endtask : mm_single_block_test
 
 
 
@@ -332,6 +332,6 @@ module ecc_montgomerymultiplier_tb #(
       $display("");
       $display("*** mm simulation done. ***");
       $finish;
-    end // main
+    end : main
 
-endmodule // mm_tb
+endmodule : ecc_montgomerymultiplier_tb

@@ -137,7 +137,7 @@ module sha512_ctrl_tb
   always
     begin : clk_gen
       #CLK_HALF_PERIOD clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
   //----------------------------------------------------------------
   // PCR vault model: combinational read, write on clock edge.
@@ -207,7 +207,7 @@ module sha512_ctrl_tb
       reset_n_tb = 1;
       cptra_pwrgood_tb = 1;
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -236,7 +236,7 @@ module sha512_ctrl_tb
 
       pv_wr_resp_tb   = '0;
     end
-  endtask // init_dut
+  endtask : init_sim
 
   //----------------------------------------------------------------
   // display_test_result()
@@ -257,7 +257,7 @@ module sha512_ctrl_tb
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_result
+  endtask : display_test_result
 
   //----------------------------------------------------------------
   // wait_ready()
@@ -279,7 +279,7 @@ module sha512_ctrl_tb
           read_single_word(`SHA512_REG_SHA512_STATUS);
         end
     end
-  endtask // wait_ready
+  endtask : wait_ready
 
   //----------------------------------------------------------------
   // read_word()
@@ -305,7 +305,7 @@ module sha512_ctrl_tb
       read_data = address[2] ? hrdata_o_tb[63:32] : hrdata_o_tb[31:0];
 
     end
-  endtask // read_word
+  endtask : read_single_word
 
 
   //----------------------------------------------------------------
@@ -329,7 +329,7 @@ module sha512_ctrl_tb
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
 
   //----------------------------------------------------------------
@@ -372,7 +372,7 @@ module sha512_ctrl_tb
       write_single_word(`SHA512_REG_SHA512_BLOCK_30, block[63   :  32]);
       write_single_word(`SHA512_REG_SHA512_BLOCK_31, block[31   :   0]);
     end
-  endtask // write_block
+  endtask : write_block
 
   //----------------------------------------------------------------
   // mode_cmd()
@@ -430,7 +430,7 @@ module sha512_ctrl_tb
           end
       endcase // case (mode)
     end
-  endfunction // get_mask
+  endfunction : get_mask
 
   //----------------------------------------------------------------
   // read_digest()
@@ -473,7 +473,7 @@ module sha512_ctrl_tb
       read_single_word(`SHA512_REG_SHA512_DIGEST_15);
       digest_data[31  :   0] = read_data;
     end
-  endtask // read_digest
+  endtask : read_digest
 
 
   //----------------------------------------------------------------
@@ -500,7 +500,7 @@ module sha512_ctrl_tb
       write_single_word(`SHA512_REG_SHA512_DIGEST_14, digest[63   :  32]);
       write_single_word(`SHA512_REG_SHA512_DIGEST_15, digest[31   :   0]);
     end
-  endtask // write_digest
+  endtask : write_digest
 
   //----------------------------------------------------------------
   // check_name_version()
@@ -534,7 +534,7 @@ module sha512_ctrl_tb
                version1[15 :  8], version1[7  :  0],
                version1[31 : 24], version1[23 : 16]);
     end
-  endtask // check_name_version
+  endtask : check_name_version
 
   //----------------------------------------------------------------
   // single_block_test()
@@ -585,7 +585,7 @@ module sha512_ctrl_tb
       $display("*** TC%01d - Single block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // single_block_test
+  endtask : single_block_test
 
 
   //----------------------------------------------------------------
@@ -664,7 +664,7 @@ module sha512_ctrl_tb
       $display("*** TC%01d - Double block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // double_block_test
+  endtask : double_block_test
 
 
   //----------------------------------------------------------------
@@ -728,7 +728,7 @@ module sha512_ctrl_tb
       $display("*** TC%01d - Double block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // double_block_test
+  endtask : double_block_test_pipelined
 
   //----------------------------------------------------------------
   // restore_test()
@@ -806,7 +806,7 @@ module sha512_ctrl_tb
       $display("*** TC%01d - Double block test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // double_block_test
+  endtask : restore_test
   
   //----------------------------------------------------------------
   // continuous_cmd_test()
@@ -910,7 +910,7 @@ module sha512_ctrl_tb
       $display("*** TC%01d - Continuous command test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // continuous_cmd_test
+  endtask : continuous_cmd_test
 
 
   //----------------------------------------------------------------
@@ -1052,7 +1052,7 @@ module sha512_ctrl_tb
       $display("*** TC%01d - zeroize test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
     end
-  endtask // zeroize_test
+  endtask : zeroize_test
 
   //----------------------------------------------------------------
   // Command sequencing helpers and tests
@@ -1510,6 +1510,6 @@ module sha512_ctrl_tb
       
       $display("   -- Testbench for sha512 done. --");
       $finish;
-  end //sha512_test
+  end : sha512_test
 
 endmodule

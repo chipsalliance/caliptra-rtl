@@ -180,7 +180,7 @@ module doe_key_mem(
           if (key_mem_ctrl_we)
             key_mem_ctrl_reg <= key_mem_ctrl_new;
         end
-    end // reg_update
+    end : reg_update
 
 
   //----------------------------------------------------------------
@@ -191,7 +191,7 @@ module doe_key_mem(
   always @*
     begin : key_mem_read
       tmp_round_key = key_mem[round];
-    end // key_mem_read
+    end : key_mem_read
 
 
   //----------------------------------------------------------------
@@ -329,7 +329,7 @@ module doe_key_mem(
               end
           endcase // case (keylen)
         end
-    end // round_key_gen
+    end : round_key_gen
 
 
   //----------------------------------------------------------------
@@ -457,8 +457,8 @@ module doe_key_mem(
           end
       endcase // case (key_mem_ctrl_reg)
 
-    end // key_mem_ctrl
-endmodule // doe_key_mem
+    end : key_mem_ctrl
+endmodule : doe_key_mem
 
 //======================================================================
 // EOF doe_key_mem.v
