@@ -273,7 +273,6 @@ class kv_predictor #(
   logic [KV_NUM_KEYS-1:0] software_clear_request = 0;
   logic [KV_NUM_KEYS-1:0] software_clear_request_q = 0;
   logic [KV_NUM_KEYS-1:0] key_entry_clear_state = 0;
-  logic [KV_NUM_KEYS-1:0] key_entry_clear_q = 0;
 
   //Tracks fw_update_rst_window as seen by the READ path. The kv_read monitor is
   //0-delay (KV reads are async), so read beats and the window (also delivered with
@@ -1125,7 +1124,7 @@ endclass
       end
       else begin
         key_entry_ctrl_we[t_received.write_entry] = 1'b1;
-        if (key_entry_clear_q[t_received.write_entry]) begin
+        if (p_kv_rm.kv_reg_rm.key_entry_clear_q[t_received.write_entry]) begin
           t_expected.error = 1'b1;
           // Active clear supersedes any accepted beat preceding the clear.
           last_dword_written[t_received.write_entry] = '0;
@@ -1191,11 +1190,19 @@ endclass
       // Writer packets arrive one rising edge after capture. Mid-cycle stages
       // preserve the pre-update locks regardless of AHB callback ordering.
       @(negedge configuration.kv_hmac_write_agent_config.monitor_bfm.clk_i);
-      key_entry_clear_q = clear_before;
+      p_kv_rm.kv_reg_rm.key_entry_clear_q = clear_before;
       if (|clear_before) begin
-        // Hardware length clearing committed in NBA on the sampled edge.
-        for (int entry = 0; entry < KV_NUM_KEYS; entry++)
-          if (clear_before[entry]) last_dword_written[entry] = '0;
+        // These fields clear to their reset values. Field reset also updates a
+        // busy mirror without resetting the CTRL locks or its access semaphore.
+        for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+          if (clear_before[entry]) begin
+            last_dword_written[entry] = '0;
+            for (int word = 0; word < KV_NUM_DWORDS; word++)
+              p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][word].data.reset();
+            p_kv_rm.kv_reg_rm.KEY_CTRL[entry].dest_valid.reset();
+            p_kv_rm.kv_reg_rm.KEY_CTRL[entry].last_dword.reset();
+          end
+        end
       end
       if (!sampled_rst_b) begin
         key_entry_clear_state = '0;

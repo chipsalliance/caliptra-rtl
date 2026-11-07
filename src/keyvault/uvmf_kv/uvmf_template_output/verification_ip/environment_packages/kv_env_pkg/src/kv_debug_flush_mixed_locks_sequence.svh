@@ -110,6 +110,20 @@ class kv_debug_flush_mixed_locks_sequence #(
         // Clear locks, then use the existing scan sequence's transition pulse
         // followed by a steady mode level, so CLEAR_SECRETS is the flush source.
         kv_rst_agent_poweron_seq.start(configuration.kv_rst_agent_config.sequencer);
+        for (write_entry = 0; write_entry < KV_NUM_KEYS; write_entry++) begin
+            kv_write_transaction seed_write;
+            seed_write = kv_write_transaction#()::type_id::create("scan_seed_write");
+            start_item(seed_write, -1, configuration.kv_doe_write_agent_config.sequencer);
+            seed_write.write_en = 1'b1;
+            seed_write.write_entry = KV_ENTRY_ADDR_W'(write_entry);
+            seed_write.write_offset = KV_ENTRY_SIZE_W'(KV_NUM_DWORDS - 1);
+            seed_write.write_data = 32'h1357_9bdf;
+            seed_write.write_dest_valid = KV_NUM_READ'(1) << KV_DEST_IDX_HMAC_KEY;
+            finish_item(seed_write);
+            checked_read(configuration.kv_hmac_key_read_agent_config,
+                         write_entry, KV_NUM_DWORDS - 1, 32'h1357_9bdf,
+                         0, KV_NUM_DWORDS - 1);
+        end
         kv_rst_agent_scan_on_seq.start(configuration.kv_rst_agent_config.sequencer);
         configuration.kv_rst_agent_config.wait_for_num_clocks(5);
         // Entry starts with pattern 0; both requests should change that pattern.
@@ -120,14 +134,11 @@ class kv_debug_flush_mixed_locks_sequence #(
                 `uvm_fatal("DEBUG_FLUSH_MIXED", "CLEAR_SECRETS fill request failed")
             configuration.kv_rst_agent_config.wait_for_num_clocks(5);
             for (read_entry = 0; read_entry < KV_NUM_KEYS; read_entry++) begin
-                uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
-                    "uvm_test_top.environment.kv_hmac_key_read_agent.sequencer.hmac_key_read_seq",
-                    "local_read_entry", read_entry);
                 for (read_offset = 0; read_offset < KV_NUM_DWORDS; read_offset++) begin
-                    uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::set(null,
-                        "uvm_test_top.environment.kv_hmac_key_read_agent.sequencer.hmac_key_read_seq",
-                        "local_read_offset", read_offset);
-                    hmac_key_read_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
+                    checked_read(configuration.kv_hmac_key_read_agent_config,
+                                 read_entry, read_offset,
+                                 selection ? 32'h5555_5555 : 32'haaaa_aaaa,
+                                 0, KV_NUM_DWORDS - 1);
                 end
             end
         end

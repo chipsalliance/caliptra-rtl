@@ -170,6 +170,18 @@ class kv_access_control_sequence #(
         check_control(TARGET, lock_write, lock_use, ALL_DEST);
     endtask
 
+    function void check_cleared_mirrors(int entry);
+        for (int word = 0; word < KV_NUM_DWORDS; word++) begin
+            if (reg_model.kv_reg_rm.KEY_ENTRY[entry][word].get_mirrored_value() !== 0)
+                `uvm_error("KV_POLICY_MIRROR", $sformatf(
+                    "Entry %0d word %0d mirror retained data after clear", entry, word))
+        end
+        if (reg_model.kv_reg_rm.KEY_CTRL[entry].dest_valid.get_mirrored_value() !== 0 ||
+            reg_model.kv_reg_rm.KEY_CTRL[entry].last_dword.get_mirrored_value() !== 0)
+            `uvm_error("KV_POLICY_MIRROR", $sformatf(
+                "Entry %0d control mirror retained permissions or length after clear", entry))
+    endfunction
+
     task clear_overlap(int client, int entry = TARGET);
         kv_write_configuration cfg;
         kv_write_t request;
@@ -239,8 +251,9 @@ class kv_access_control_sequence #(
             `uvm_fatal("KV_POLICY", $sformatf(
                 "Writer %0d entry %0d: clear completed=%0b denial=%0b held=%0b",
                 client, entry, clear_done, blocked_seen, held_clear_seen))
-        check_control(entry, 0, 0, '0, 0);
+        check_cleared_mirrors(entry);
         read_all(entry, '0, 1, 0);
+        check_control(entry, 0, 0, '0, 0);
         check_control(witness_entry, 0, 0, ALL_DEST);
         read_all(witness_entry, DENIED_DATA, 0);
         park_reads(park_entry);
@@ -252,14 +265,16 @@ class kv_access_control_sequence #(
         park_reads(park_entry);
         control(entry, 0, 0, 1);
         settle();
-        check_control(entry, 0, 0, '0, 0);
+        check_cleared_mirrors(entry);
         read_all(entry, '0, 1, 0);
+        check_control(entry, 0, 0, '0, 0);
         check_control(witness_entry, 0, 0, ALL_DEST);
         read_all(witness_entry, DENIED_DATA, 0);
         control(witness_entry, 0, 0, 1);
         settle();
-        check_control(witness_entry, 0, 0, '0, 0);
+        check_cleared_mirrors(witness_entry);
         read_all(witness_entry, '0, 1, 0);
+        check_control(witness_entry, 0, 0, '0, 0);
         park_reads(park_entry);
     endtask
 

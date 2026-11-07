@@ -31,6 +31,7 @@ package kv_reg_model_top_pkg;
    import uvm_pkg::*;
 // pragma uvmf custom additional_imports begin
    import kv_reg_uvm::*;
+   import kv_defines_pkg::*;
 // pragma uvmf custom additional_imports end
 
    `include "uvm_macros.svh"
@@ -66,6 +67,7 @@ package kv_reg_model_top_pkg;
    endclass
 
    class kv_reg_ext extends kv_reg;
+      logic [KV_NUM_KEYS-1:0] key_entry_clear_q = '0;
       uvm_reg_map default_map_ext;
 
       //Write Interface
@@ -92,6 +94,11 @@ package kv_reg_model_top_pkg;
       function new(string name = "kv_reg_ext");
          super.new(name);
       endfunction : new
+
+      virtual function void reset(string kind = "HARD");
+         super.reset(kind);
+         if (kind == "HARD") key_entry_clear_q = '0;
+      endfunction
 
       virtual function void build();
          kv_key_data_write_protect_cbs cpu_write_cbs;
