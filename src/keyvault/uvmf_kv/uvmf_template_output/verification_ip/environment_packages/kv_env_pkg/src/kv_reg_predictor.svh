@@ -33,7 +33,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
 
     uvm_reg_adapter adapter;
 
-    extern function logic [(KV_NUM_READ + $clog2(KV_NUM_DWORDS))-1 :0] parse_wr_transaction(uvm_sequence_item bus_item);
+    extern function logic [KV_NUM_READ + $clog2(KV_NUM_DWORDS) :0] parse_wr_transaction(uvm_sequence_item bus_item);
 
     //Create new instance of this type
     function new (string name, uvm_component parent);
@@ -51,6 +51,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
         uvm_reg kv_reg_ctrl;
         uvm_reg_data_t kv_reg_ctrl_data;
         uvm_reg_item kv_reg_ctrl_item;
+        kv_reg_ext kv_block;
 
         uvm_reg clear_secrets_reg;
         uvm_reg_data_t clear_secrets_data;
@@ -72,6 +73,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
         logic lock_wr;
         logic lock_use;
         logic clear;
+        logic write_en;
 
         logic [KV_NUM_READ-1:0] write_dest_valid;
         logic [$clog2(KV_NUM_DWORDS)-1:0] last_dword;
@@ -91,8 +93,13 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
         //derive corresponding CTRL reg info
         //-----------------------------------------------
         if (rw.kind == UVM_WRITE) begin
-            //Get write_dest_valid and last_dword data from tx
-            {write_dest_valid, last_dword} = parse_wr_transaction(tr);
+            {write_en, write_dest_valid, last_dword} = parse_wr_transaction(tr);
+            if ($isunknown(write_en))
+                `uvm_fatal("KV_REG_PRED", "Writer packet enable is unknown")
+            if (!write_en) begin
+                `uvm_info("KV_REG_PRED", "Skipping inactive writer packet", UVM_FULL)
+                return;
+            end
 
             //Convert reg addr to entry/offset
             entry_offset = convert_addr_to_kv(rw.addr);
@@ -111,7 +118,17 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             kv_reg = map.get_reg_by_offset(rw.addr, (rw.kind == UVM_READ));
             kv_reg_ctrl = map.get_reg_by_offset(rw_ctrl.addr, (rw_ctrl.kind == UVM_READ));
             
-            //TODO: reg null check?
+            if (kv_reg == null || kv_reg_ctrl == null)
+                `uvm_fatal("KV_REG_PRED", "Writer packet has no mapped key-data or control register")
+            if (!$cast(kv_block, kv_reg_ctrl.get_parent()))
+                `uvm_fatal("KV_REG_PRED", "Writer map does not reference the extended KV block")
+            if ($isunknown(kv_block.key_entry_clear_q[entry_offset[4:0]]))
+                `uvm_fatal("KV_REG_PRED", "Sampled writer clear state is unknown")
+            if (kv_block.key_entry_clear_q[entry_offset[4:0]]) begin
+                `uvm_info("KV_REG_PRED", "Skipping writer packet denied by active clear", UVM_FULL)
+                return;
+            end
+
             //Read CTRL reg data
             kv_reg_ctrl_data = kv_reg_ctrl.get_mirrored_value();
             //Append dest valid to it
@@ -252,7 +269,7 @@ class kv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
     
 endclass
 
-function logic [(KV_NUM_READ + $clog2(KV_NUM_DWORDS))-1 :0] kv_reg_predictor::parse_wr_transaction(uvm_sequence_item bus_item);
+function logic [KV_NUM_READ + $clog2(KV_NUM_DWORDS) :0] kv_reg_predictor::parse_wr_transaction(uvm_sequence_item bus_item);
     kv_write_transaction #(
       .KV_WRITE_REQUESTOR("HMAC")
     )
@@ -260,10 +277,10 @@ function logic [(KV_NUM_READ + $clog2(KV_NUM_DWORDS))-1 :0] kv_reg_predictor::pa
 
     if (!$cast(trans_h, bus_item)) begin
       `uvm_fatal("ADAPT","Provided bus_item is not of the correct type")
-    //   return;
+      return '0;
     end
     // pragma uvmf custom bus2reg begin
-    parse_wr_transaction = {trans_h.write_dest_valid, trans_h.write_offset};
+    parse_wr_transaction = {trans_h.write_en, trans_h.write_dest_valid, trans_h.write_offset};
     // pragma uvmf custom bus2reg end
 
 endfunction: parse_wr_transaction

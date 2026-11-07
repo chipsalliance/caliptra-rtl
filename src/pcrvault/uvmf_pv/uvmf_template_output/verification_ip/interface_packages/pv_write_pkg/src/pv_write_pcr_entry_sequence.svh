@@ -41,6 +41,12 @@ extends pv_write_sequence_base #(
 // pragma uvmf custom class_item_additional begin
   logic [PV_ENTRY_ADDR_W-1:0] local_write_entry;
   logic [PV_ENTRY_SIZE_WIDTH-1:0] local_write_offset;
+  // Opt-in directed beats; the existing randomized/config-db path is unchanged.
+  bit directed = 0;
+  int unsigned beats = 1;
+  logic [PV_ENTRY_ADDR_W-1:0] directed_write_entry;
+  logic [PV_ENTRY_SIZE_WIDTH-1:0] directed_write_offset;
+  logic [PV_DATA_W-1:0] directed_write_data;
 // pragma uvmf custom class_item_additional end
 
 //*****************************************************************
@@ -54,9 +60,26 @@ endfunction: new
 // start(sequencerHandle) task.
 //
 task body();
+// pragma uvmf custom body begin
     int entry;
     int offset;
-   
+
+    if (directed) begin
+      if (beats == 0 || beats > 64 ||
+          $isunknown({directed_write_entry, directed_write_offset}) ||
+          directed_write_entry >= PV_NUM_PCR || directed_write_offset >= PV_NUM_DWORDS)
+        `uvm_fatal("PV_DIRECTED_WRITE", "Invalid bounded PCR write")
+      repeat (beats) begin
+        req = pv_write_transaction#(.PV_WRITE_REQUESTOR(PV_WRITE_REQUESTOR))::type_id::create("req");
+        start_item(req);
+        req.write_en = 1'b1;
+        req.write_entry = directed_write_entry;
+        req.write_offset = directed_write_offset;
+        req.write_data = directed_write_data;
+        finish_item(req);
+      end
+      return;
+    end
 
     // Construct the transaction
     //for(entry=0; entry<8; entry++) begin
@@ -91,11 +114,10 @@ task body();
         `uvm_do(req);
       end
 
-
+// pragma uvmf custom body end
 endtask
 
 endclass: pv_write_pcr_entry_sequence
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

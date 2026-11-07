@@ -33,6 +33,10 @@ class kv_rst_core_rst_sequence extends kv_rst_sequence_base;
 
     `uvm_object_utils( kv_rst_core_rst_sequence )
 
+    // Default core-only reset retains key data. The opt-in transition input
+    // deliberately flushes it, independently of the steady debug/scan level.
+    bit overlap_debug_transition = 1'b0;
+
     //*****************************************************************
   function new(string name = "");
     super.new(name);
@@ -55,10 +59,15 @@ class kv_rst_core_rst_sequence extends kv_rst_sequence_base;
     req.set_pwrgood = 1'b1;
     req.assert_rst = 1'b0;
     req.assert_core_rst = 1'b1;
-    req.debug_mode = 1'b0;
+    req.debug_mode = overlap_debug_transition;
     req.scan_mode = 1'b0;
+    if (overlap_debug_transition) req.wait_cycles = 5;
 
     finish_item(req);
+    if (overlap_debug_transition &&
+        (!req.set_pwrgood || req.assert_rst || !req.assert_core_rst ||
+         !req.debug_mode || req.scan_mode))
+      `uvm_fatal("KV_RST_CORE_RST", "Core reset/debug transition overlap was not driven")
     `uvm_info("KV_RST_CORE_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
     
     // Deassert core reset
@@ -72,8 +81,13 @@ class kv_rst_core_rst_sequence extends kv_rst_sequence_base;
     req.assert_core_rst = 1'b0;
     req.debug_mode = 1'b0;
     req.scan_mode = 1'b0;
+    if (overlap_debug_transition) req.wait_cycles = 5;
 
     finish_item(req);
+    if (overlap_debug_transition &&
+        (!req.set_pwrgood || req.assert_rst || req.assert_core_rst ||
+         req.debug_mode || req.scan_mode))
+      `uvm_fatal("KV_RST_CORE_RST", "Core reset/debug transition did not release")
     `uvm_info("KV_RST_CORE_RST", {"Response:",req.convert2string()},UVM_MEDIUM)
 
     

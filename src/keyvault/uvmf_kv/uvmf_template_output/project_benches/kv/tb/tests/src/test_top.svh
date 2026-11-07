@@ -72,14 +72,16 @@ uvmf_active_passive_t interface_activities[] = {
     ACTIVE /* kv_mlkem_write_agent     [3] */ , 
     ACTIVE /* kv_ecc_write_agent     [4] */ , 
     ACTIVE /* kv_doe_write_agent     [5] */ , 
-    ACTIVE /* kv_hmac_key_read_agent     [6] */ , 
-    ACTIVE /* kv_hmac_block_read_agent     [7] */ , 
-    ACTIVE /* kv_mldsa_key_read_agent     [8] */ , 
-    ACTIVE /* kv_ecc_privkey_read_agent     [9] */ , 
-    ACTIVE /* kv_ecc_seed_read_agent     [10] */ ,
-    ACTIVE /* kv_aes_key_read_agent     [11] */ ,
-    ACTIVE /* kv_mlkem_seed_read_agent     [12] */ , 
-    ACTIVE /* kv_mlkem_msg_read_agent     [14] */
+    ACTIVE /* kv_aes_write_agent     [6] */ ,
+    ACTIVE /* kv_hmac_key_read_agent     [7] */ ,
+    ACTIVE /* kv_hmac_block_read_agent     [8] */ ,
+    ACTIVE /* kv_mldsa_key_read_agent     [9] */ ,
+    ACTIVE /* kv_ecc_privkey_read_agent     [10] */ ,
+    ACTIVE /* kv_ecc_seed_read_agent     [11] */ ,
+    ACTIVE /* kv_aes_key_read_agent     [12] */ ,
+    ACTIVE /* kv_mlkem_seed_read_agent     [13] */ ,
+    ACTIVE /* kv_mlkem_msg_read_agent     [14] */ ,
+    ACTIVE /* kv_dma_read_agent     [15] */
 };
 
   // pragma uvmf custom class_item_additional begin
@@ -120,4 +122,3 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-
