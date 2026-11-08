@@ -348,9 +348,7 @@ import caliptra_top_tb_pkg::*; #(
         assert_rst_flag_from_fatal = 1'b0;
         m_axi_bfm_if.rst_mgr();
 
-`ifndef VERILATOR
         if($test$plusargs("dumpon")) $dumpvars;
-`endif
 
         if($test$plusargs("RAND_DOE_VALUES")) begin
             //cptra_obf_key = cptra_obf_key_tb;
@@ -732,11 +730,7 @@ import caliptra_top_tb_pkg::*; #(
                             join
                         end
                         else if (ras_test_ctrl.reset_generic_input_wires) begin
-                            `ifdef VERILATOR
-                            generic_input_wires = {32'h72746C76, ERROR_NONE_SET}; /* 32'h72746c76 is the big-endian ASCII representation of 'vltr' (r t l v) */
-                            `else
                             generic_input_wires = {32'h0, ERROR_NONE_SET};
-                            `endif
                         end
                         else if (rv_dma_resp_error) begin
                             generic_input_wires = {32'h0, DMA_ERROR_OBSERVED};
