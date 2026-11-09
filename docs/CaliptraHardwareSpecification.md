@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
-<p style="text-align: center;">Revision 2.1</p>
+<p style="text-align: center;">Revision 2.2</p>
 
 <div style="page-break-after: always"></div>
 
@@ -43,9 +43,15 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * [SHA3](#sha3)
 * [ML-KEM](#adams-bridge-kyber-ml-kem)
 
-## Pre-release Features
-* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement) -- HW-enforced DICE key integrity monitoring and slot access control across boot phases
-
+## Key Caliptra 2.2 Changes
+* [Dual-core lockstep (DCLS)](#dual-core-lockstep-dcls)
+* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement)
+* [ICCM write hash measurement](#iccm-write-hash-measurement-pcr4pcr5)
+* [Dual iTRNG entropy combiner](#dual-itrng-entropy-combiner)
+* HMAC masking and multi-block interface updates
+* Fault injection countermeasures for FSMs and debug controls
+* CSR HMAC key lock
+* SoC-side stash-measurement register bank
 
 ## Boot FSM
 
