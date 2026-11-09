@@ -32,7 +32,7 @@ _*Last Update: 2026/11/09*_
 - ECC and ML-DSA verification-pass status
 - Hardware ICCM hash measurement and PCR4/PCR5 updates in subsystem mode
 - Dual iTRNG entropy combiner
-- Updated OpenTitan entropy source and health-test register map
+- Updated entropy source and health-test register map
 - Stash-measurement register bank
 - DMA transfer limit increased to 2 GiB, subject to route-specific limits
 
