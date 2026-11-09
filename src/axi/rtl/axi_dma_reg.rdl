@@ -56,7 +56,7 @@ addrmap axi_dma_reg {
         field { desc="Initiate current configured operation."; sw=rw; swwel=dma_swwel; onwrite=woset; swmod; hw=r; hwclr=true; } go=1'b0;
         field { desc="Flush active operations, reset state machines, clear FIFO data. Not yet implemented: Any in-flight AXI transactions will be gracefully completed."; sw=rw; swwel=soc_req; onwrite=woset; hw=r; hwclr=true; } flush=1'b0;
         field { desc="AES mode enabled. Feeds data through AES for processing before sent to end destination."; sw=rw; swwel=dma_swwel; hw=r;} aes_mode_en=1'h0;
-        field { desc="Only used when aes_mode_en is set. Indicates AES is in GCM mode and will update GCM_SHADOW register as required by the spec when streaming text."; sw=rw; swwel=dma_swwel; hw=r;} aes_gcm_mode=1'h0;
+        field { desc="Only used when aes_mode_en is set. Indicates AES is in GCM mode and will update CTRL_GCM_SHADOWED register as required by the spec when streaming text."; sw=rw; swwel=dma_swwel; hw=r;} aes_gcm_mode=1'h0;
         field { desc="RESERVED."; sw=r; } rsvd0[12]=12'h0000;
         field { desc="Read Route. Configures how the AXI read channel operates for the current operation.";
                 enum rd_route_e {

@@ -442,11 +442,11 @@ addrmap kmac_reg {
         memwidth = 0x20;
         desc = "Keccak State (1600 bit) memory.
         The software can get the processed digest by reading this memory
-        region. Unlike MSG_FIFO, STATE memory space sees the addr[9:0].
+        region. Unlike MSG_FIFO, the address offset within the STATE window
+        selects the state word that is read.
         If Masking feature is enabled, the software reads two shares from
         this memory space.
-        0x200 - 0x2C7: State share
-        for Keccak State access:
+        For Keccak State access:
         1. Output length <= rate length, sha3_done will be raised or software can poll STATUS.squeeze become 1.
         2. Output length > rate length, after software read 1st keccak state, software should issue run cmd to trigger keccak round logic to run full 24 rounds.
         And then software should check STATUS.squeeze register field for the readiness of STATE value(SHA3 FSM become MANUAL_RUN before keccak state complete).";
@@ -461,7 +461,7 @@ addrmap kmac_reg {
         Any write operation to this window will be appended to MSG_FIFO. SW can
         simply write bytes/words to any address within this address range.
         Ordering and packing of the incoming bytes/words are handled
-        internally. Therefore, the least significant 10 bits of the address
+        internally. Therefore, the least significant 11 bits of the address
         are ignored.";
     } external MSG_FIFO @ 0x800;
 
