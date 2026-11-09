@@ -229,9 +229,11 @@ CSRNG: when the secondary source is enabled (`dual_iTRNG_en` strap =
 `CPTRA_HW_CONFIG.dual_iTRNG_en`, subsystem-mode only) the combiner delivers
 `seed = SHA3-384(ES0 || ES1)`; otherwise it bypasses ES1 and passes the ES0 seed
 through unchanged. The combiner also exposes an AHB slave used only by ROM for a
-power-on SHA3-384 KAT; after the KAT, ROM sets a W1S MuBi4 `AHB_LOCK` that scrubs
-the KAT registers and freezes the FIPS combine policy so RT FW cannot read KAT
-residuals or weaken the policy. The combiner never exposes raw entropy on any
+power-on SHA3-384 KAT; after the KAT, ROM sets a W1S MuBi4 `AHB_LOCK` that clears
+internal KAT message/length/digest snapshots, masks digest/status readback, and
+freezes the FIPS combine policy. The software-owned `KAT_MSG` and `KAT_MSG_LEN`
+input registers are not cleared by locking; their hardware clear is driven by
+zeroize. The combiner never exposes raw entropy on any
 readable register (ES0/ES1 -> SHA3 -> CSRNG is internal only). Boot-phase
 `rt_active_i` also locks the AHB interface without a software lock write; this
 lock must not interrupt the operational entropy path.
@@ -273,7 +275,7 @@ conditioned and multiseed tests add
 | KAT vectors A-D | Program `KAT_MSG[0..23]`, `KAT_MSG_LEN=96`, pulse START, poll VALID | `KAT_DIGEST` == `SHA3-384(ES0\|\|ES1)` golden (ordering guards) |
 | KAT empty message | `KAT_MSG_LEN=0`, START | `KAT_DIGEST` == `SHA3-384("")`; `KAT_MSG_LEN` reads back per value |
 | Policy sweep | Write `COMBINER_CTRL.es_fips_policy`/`es_fips_cfg` = {0,1,2,3, cfg} unlocked | Each value reads back |
-| Lock + scrub | Write `AHB_LOCK`=MuBi4True | `KAT_DIGEST`/`KAT_STATUS` read 0; lock reads locked |
+| Lock + result masking | Write `AHB_LOCK`=MuBi4True | `KAT_DIGEST`/`KAT_STATUS` read 0; lock reads locked; no input-register scrub is implied |
 | KAT blocked when locked | Program fresh message + START while locked | `KAT_STATUS` never busy/valid; digest stays 0 |
 | Policy frozen | Write different policy while locked | Read back unchanged (swwe=!lock) |
 | Lock sticky | Write MuBi4False (unlock) while locked | Reads back still locked (clears only on reset) |
@@ -285,9 +287,9 @@ conditioned and multiseed tests add
 | Bring-up (bypass) | Enable ES0/ES1 raw (one boot seed each), no instantiate yet | Both ES boot-done |
 | Pre-lock policy | Program `COMBINER_CTRL.es_fips_policy` unlocked | Reads back programmed value |
 | Lock | Set `AHB_LOCK`=MuBi4True | Reads locked |
-| Enforcement (pre-combine) | KAT scrubbed, policy frozen, lock sticky | All hold |
+| Enforcement (pre-combine) | Digest/status readback masked, policy frozen, lock sticky | All hold |
 | Combine while locked | Instantiate-from-entropy + generate through the locked combiner | genbits == golden `EXP_GENBITS_COMBINE`; no CSRNG exception/error |
-| Enforcement (post-combine) | Re-check KAT scrubbed / policy frozen / lock sticky | Live combine did not disturb the lock |
+| Enforcement (post-combine) | Re-check digest/status masking, policy freeze, and sticky lock | Live combine did not disturb the lock |
 
 #### `smoke_test_entropy_combiner_conditioned`
 
@@ -297,7 +299,7 @@ conditioned and multiseed tests add
 | Program policy + lock | Program `es_fips_policy`, set `AHB_LOCK` before entropy flows | Policy took; reads locked |
 | FIPS ES config | Both ES: `CONF.FIPS_ENABLE`=MuBi4True, `FIPS_WINDOW=1024`, widen REPCNT/ADAPTP | Config readback OK; `RECOV_ALERT_STS`=0 |
 | Conditioned combine (locked) | Instantiate + generate through the locked combiner | genbits == golden `EXP_GENBITS_CONDITIONED` (from `es_conditioner_model.py`) |
-| Post-lock enforcement | KAT digest scrubbed to 0, policy frozen, lock sticky | All hold (confidential KAT data not readable) |
+| Post-lock enforcement | KAT digest readback masked to 0, policy frozen, lock sticky | All hold; no input-register scrub is implied |
 
 #### `smoke_test_entropy_combiner_multiseed`
 
@@ -363,7 +365,9 @@ and implemented cases must be checked against the merged coverage results.
 
 | Mechanism | RTL Location | Description |
 | :-------- | :----------- | :---------- |
-| KAT register scrub on lock | `entropy_combiner.sv` | On W1S `AHB_LOCK`, `KAT_MSG`/`KAT_MSG_LEN`/`KAT_DIGEST`/`KAT_STATUS` are held 0 so RT FW cannot read KAT residuals |
+| Internal KAT snapshot clearing on lock | `entropy_combiner.sv` | `ahb_locked` synchronously clears and holds `kat_msg_q`, `kat_msg_len_q`, `kat_digest_q`, and `kat_digest_valid_q` at zero |
+| KAT result/status masking on lock | `entropy_combiner.sv` | `KAT_DIGEST` readback and `KAT_STATUS.busy/valid` are forced to zero while locked |
+| Software-owned KAT input clearing | `entropy_combiner.sv` | `KAT_MSG` and `KAT_MSG_LEN` hardware clear inputs are driven by zeroize, not `ahb_locked`; locking does not clear or hold these registers at zero |
 | KAT blocked when locked | `entropy_combiner.sv` | `kat_start_cmd = start && !ahb_locked` -- no KAT can run once locked |
 | FIPS policy freeze | `entropy_combiner.sv` | `COMBINER_CTRL.es_fips_policy/es_fips_cfg` `swwe = !ahb_locked` -- ROM freezes the combine policy after lock |
 | Lock write-once-sticky | `entropy_combiner_reg.rdl` | MuBi4 `AHB_LOCK` `swwe=strict-False`; any non-strict-False code is treated as locked (fail-safe); clears only on reset |
