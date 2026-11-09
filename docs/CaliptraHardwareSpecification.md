@@ -48,7 +48,9 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement)
 * [ICCM write hash measurement](#iccm-write-hash-measurement-pcr4pcr5)
 * [Dual iTRNG entropy combiner](#dual-itrng-entropy-combiner)
-* HMAC masking and multi-block interface updates
+* HMAC area optimization and multi-block interface updates
+* ECC area optimization
+* Adams Bridge v3.0 area optimizations and security hardening
 * Fault injection countermeasures for FSMs and debug controls
 * CSR HMAC key lock
 * SoC-side stash-measurement register bank

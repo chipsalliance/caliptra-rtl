@@ -22,13 +22,13 @@ _*Last Update: 2026/11/09*_
 - Caliptra IP Specification: see docs/ folder
 - Caliptra Integration Specification: see docs/ folder
 - Caliptra testplan: see docs/ folder
-- Adams Bridge with ML-DSA 87 and ML-KEM 1024 ([Release Notes](https://github.com/chipsalliance/adams-bridge/blob/v3.0-rc1/Release_Notes.md))
+- Adams Bridge v3.0-rc1 with ML-DSA 87 and ML-KEM 1024, area optimizations, and security hardening ([Release Notes](https://github.com/chipsalliance/adams-bridge/blob/v3.0-rc1/Release_Notes.md))
 - VeeR dual-core lockstep (DCLS) support in Passive and Subsystem modes
 - Fault injection countermeasures for FSMs, debug controls, and ICCM region registers
 - Key Vault boot flow monitoring, enforcement, and key-length checks
-- HMAC512 masking and multi-block interface updates
+- HMAC512 area optimization and multi-block interface updates
 - CSR HMAC key lock
-- ECC zeroization and Key Vault operand clearing
+- ECC area optimization, zeroization, and Key Vault operand clearing
 - ECC and ML-DSA verification-pass status
 - Hardware ICCM hash measurement and PCR4/PCR5 updates in subsystem mode
 - Dual iTRNG entropy combiner
