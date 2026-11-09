@@ -304,17 +304,35 @@ void main() {
 
         // Enable ECC PCR
         VPRINTF(LOW, "\nECC PCR without Signing\n");
+        cptra_intr_rcv.ecc_error = 0;
+        cptra_intr_rcv.ecc_notif = 0;
         lsu_write_32(CLP_ECC_REG_ECC_CTRL, ((1 << ECC_REG_ECC_CTRL_PCR_SIGN_LOW) & ECC_REG_ECC_CTRL_PCR_SIGN_MASK));
 
-        // check if ECC accepts the cmd
-        if ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0){
+        // PCR_SIGN without SIGN is reported as an error, and ECC must
+        // report not-ready (inputs/commands locked) until zeroize
+        if ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) != 0){
+            VPRINTF(ERROR, "\nECC still ready after PCR key load without zeroize.\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+        if ((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) != 0){
+            VPRINTF(ERROR, "\nECC PCR without Signing started an operation.\n");
+            SEND_STDOUT_CTRL(0x1);
+            while(1);
+        }
+        wait_for_ecc_intr();
+        if ((cptra_intr_rcv.ecc_error == 0)){
             VPRINTF(ERROR, "\nECC PCR without Signing error is not detected.\n");
             SEND_STDOUT_CTRL(0x1);
             while(1);
         }
-        else {
-            VPRINTF(LOW, "\nECC PCR without Signing is correctly ignored .\n");
-        }
+        VPRINTF(LOW, "\nECC PCR without Signing reported an error and locked ECC until zeroize.\n");
+
+        ecc_zeroize();
+        while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+        // Clear the recorded interrupts so the next check observes only the VERIFY result
+        cptra_intr_rcv.ecc_error = 0;
+        cptra_intr_rcv.ecc_notif = 0;
 
         // Enable ECC PCR VERIFYING core
         VPRINTF(LOW, "\nECC PCR VERIFYING\n");
