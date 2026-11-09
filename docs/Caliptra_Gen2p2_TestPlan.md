@@ -16,7 +16,7 @@ configuration does not count as feature coverage.
 | ECC and ML-DSA verification-pass status | [Verification status](#ecc-and-ml-dsa-verification-pass-status) |
 | Hardware ICCM measurement and PCR4/PCR5 updates | [ICCM write hash](#iccm-write-hash-measurement-pcr4pcr5) |
 | Dual iTRNG entropy combiner | [Entropy combiner](#dual-itrng-sha3-384-entropy-combiner) |
-| Entropy source and health-test register map | [Entropy source](#entropy-source-and-health-test-register-map) |
+| Entropy source and health-test register map | Entropy source |
 | Stash-measurement register bank | [Stash bank](#stash-measurement-register-bank) |
 
 Firmware test names below refer to `src/integration/test_suites/`, with YAML
