@@ -16,7 +16,7 @@ configuration does not count as feature coverage.
 | ECC and ML-DSA verification-pass status | [Verification status](#ecc-and-ml-dsa-verification-pass-status) |
 | Hardware ICCM measurement and PCR4/PCR5 updates | [ICCM write hash](#iccm-write-hash-measurement-pcr4pcr5) |
 | Dual iTRNG entropy combiner | [Entropy combiner](#dual-itrng-sha3-384-entropy-combiner) |
-| Entropy source and health-test register map | Entropy source |
+| Entropy source and health-test register map | [Entropy source](#entropy-source-and-health-test-register-map) |
 | Stash-measurement register bank | [Stash bank](#stash-measurement-register-bank) |
 
 Firmware test names below refer to `src/integration/test_suites/`, with YAML
@@ -394,7 +394,7 @@ Subsystem-only hardware SHA-384 measurement of ICCM writes during firmware loadi
 | Test | Category | Description |
 | :--- | :------- | :---------- |
 | `smoke_test_iccm_hash` | Smoke | Exclude poison writes while SHA lock is held, then measure 4 known words and cross-check PCR4 against a PCR0 extend |
-| `directed_test_iccm_hash` | Directed | Multi-block, extra-pad, zero-write attempt, exact-boundary, large, and tight-copy sequences; the zero-write attempt needs qualification |
+| `directed_test_iccm_hash` | Directed | Multi-block, extra-pad, empty-message, exact-boundary, large, and tight-copy sequences with PCR4 golden checks and nonempty PCR0 readback cross-checks |
 | `directed_test_iccm_hash_sizes` | Directed | Size-boundary sequences (1, 60, 284 words) targeting byte-count / extra-pad coverpoint and cross bins |
 | `directed_test_iccm_hash_fill` | Directed | Fill the ENTIRE ICCM (65536 dwords / 256 KiB) with an incrementing pattern; verify PCR4 & PCR5 match the full-ICCM extend-from-zero digest |
 | `directed_test_iccm_hash_overflow` | Directed | Fill ICCM then explicitly rewrite `iccm[0]`; verify PCR4 & PCR5 hash all 65537 writes |
@@ -423,7 +423,7 @@ Single iteration:
 | :--- | :------- | :---------- | :------------ |
 | 0 | 64 words {0x10..0x4F} | Multi-block (256 bytes, 2 SHA blocks + padding block) | PCR4 matches expected |
 | 1 | 28 words {0xBB00..0xBB1B} | Extra padding block required (112 bytes) | PCR4 matches expected |
-| 2 | 0 words | Zero-write attempt; no ICCM write to arm measurement | Pending qualification; not credited as demonstrated zero-length coverage |
+| 2 | 0 words | Release the SHA lock, then lock ICCM to arm and finalize empty-message measurement | PCR4 matches the empty-message extend golden `expected_seq3` |
 | 3 | 32 words {0xC000..0xC01F} | Exact SHA-384 block boundary (128 bytes) | PCR4 matches expected |
 | 4 | 260 words {0xD000..0xD103} | Large (1040 bytes, >1KB) | PCR4 matches expected |
 | 5 | 64 words {0x10..0x4F} tight | Back-to-back `sw` pairs via inline asm (LSU merge test) | PCR4 matches seq 0 |
@@ -433,10 +433,16 @@ The test requests `fw_update_reset` between iterations, clearing PCR4 through
 
 After the primary PCR4 check, each non-zero-length iteration runs an independent **readback cross-check**: the ICCM contents are read back and re-hashed with the SHA512 *controller* (byte-swapped so its big-endian BLOCK interpretation matches the snoop's little-endian byte stream, with FW-driven padding), spare PCR0 is cleared and extended from zero with that digest via `pcr_hash_extend`, and the test asserts `PCR0 == expected vector == PCR4`.
 
-The zero-write iteration performs no arm-triggering write but still waits for
-nonzero PCR4. Resolve that sequence's arming/expected-result behavior before
-crediting it; its presence in the source is not proof of working empty-message
-measurement.
+In iteration 2, firmware releases the SHA accelerator lock and writes no ICCM
+data, then sets `INTERNAL_ICCM_LOCK`. The trigger in
+`src/soc_ifc/rtl/sha512_acc_iccm_hash.sv` accepts `iccm_lock_i` as well as an ICCM
+write, so locking arms and finalizes the empty-message measurement. PCR4 is
+compared with `expected_seq3`, the golden for
+`SHA-384(48 zero bytes || SHA-384(empty))`.
+
+The empty-message stimulus and result check are implemented. Record successful
+Subsystem regression execution and coverage separately, as for the other
+iterations.
 
 #### `directed_test_iccm_hash_sizes`
 
@@ -526,7 +532,7 @@ Single iteration, 3 steps:
 | Mechanism | RTL Location | Description |
 | :-------- | :----------- | :---------- |
 | PCR4/PCR5 write guard | `pv.sv` | `pv_write[0]` (sha512_ctrl) blocked from targeting entry 4 or 5; only `pv_write[1]` (ICCM hash) can write |
-| Autonomous arming | `sha512_acc_top.sv` | `iccm_armed` sticky flop set combinationally by the first ICCM-write snoop; HW also acquires the SHA acc LOCK in the same cycle via `LOCK.hwset` |
+| Autonomous arming | `sha512_acc_iccm_hash.sv` | An eligible ICCM-write snoop or `iccm_lock_i` arms measurement while the SHA accelerator lock is free; HW acquires the lock and retains the armed state |
 | Hash measurement single-shot | `sha512_acc_top.sv` | `iccm_mode_done` sticky flag prevents re-trigger until `iccm_unlock` (which fires on `fw_update_reset`) |
 | PCR4 clear on FW update | `pv.sv` | Current-PCR hardware clear is qualified by `iccm_unlock` |
 | FW isolation | `sha512_acc_top.sv` | All extend FSM control signals (pv_read, write_entry, init) driven by HW state only — no CSR interface |
@@ -786,6 +792,52 @@ the cases actually present in each test.
 - `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- ECC verification/status tests and ML-DSA external-Mu smoke
 - `src/integration/stimulus/testsuites/caliptra_top_tb_nightly_random_regression.yml` -- ML-DSA random, invalid, edge, error, and external-Mu flows
 - `src/integration/stimulus/testsuites/caliptra_top_abr_regression.yml` -- ML-DSA status consumers
+
+---
+
+## Entropy Source and Health-test Register Map
+
+### Feature Summary
+
+The entropy source update changes health-test configuration/status registers
+and adds zeroization behavior. Primary-source tests exercise the firmware
+entropy-data path using the current register map; these are distinct from the
+dual-source combiner tests.
+
+### Test Content
+
+| Test | Configurations and Checks |
+| :--- | :------------------------ |
+| `smoke_test_entropy_src` | Boot/bypass and FIPS modes, each with multi-bit and single-lane input; compare delivered seeds with reference vectors and check error, recoverable-alert, and health-test failure status/counters |
+| `smoke_test_entropy_src_zeroize` | Zeroize with a queued seed, during startup and continuous health tests, back-to-back, and at randomized times; check an empty output FIFO, no error/recoverable alert, and fresh nonzero, nonrepeated seeds after recovery |
+
+`smoke_test_entropy_src` programs the repetition-count and adaptive-proportion
+thresholds, including REPCNTS and ADAPTPS for multi-bit symbols. Reference vectors
+and thresholds are generated from `src/entropy_src/tb/entropy_src_model.py`.
+Configured startup-seed skips are part of the test; do not describe skipped
+seeds as golden comparisons.
+
+The zeroize test widens health thresholds to isolate zeroization behavior. Its
+checks do not establish production-threshold compliance.
+
+### Build and Regression
+
+Both YAMLs use `+CLP_DETERMINISTIC_RNG` and require a build with
+`CALIPTRA_INTERNAL_TRNG`. Both firmware programs skip when the internal TRNG is
+absent; that outcome does not qualify entropy-source behavior.
+
+- `src/integration/stimulus/L0_regression.yml` -- enrolls both firmware tests
+- `src/integration/test_suites/smoke_test_entropy_src/smoke_test_entropy_src.yml` -- seed/configuration test settings
+- `src/integration/test_suites/smoke_test_entropy_src_zeroize/smoke_test_entropy_src_zeroize.yml` -- zeroize test settings
+
+### Qualification Limits
+
+These firmware tests use healthy streams and check that failure indicators stay
+clear; they do not inject deliberate health-test failures. Likewise, using the
+updated register map does not prove exhaustive threshold-lock, watermark,
+access-policy, or alert coverage. Qualify those requirements with the relevant
+register/unit checks and coverage evidence rather than crediting them to these
+two tests alone.
 
 ---
 
