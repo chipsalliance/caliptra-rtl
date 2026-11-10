@@ -26,6 +26,7 @@ module sha512_acc_iccm_hash
 
     // Snoop and control from ICCM / SHA acc top
     input  logic         iccm_hash_dv_i,
+    input  logic [DATA_WIDTH-1:0] iccm_hash_data_i,
     input  logic         iccm_lock_i,
     input  logic         iccm_unlock_i,
     input  logic         soc_has_lock,
@@ -47,6 +48,7 @@ module sha512_acc_iccm_hash
     output logic         iccm_lock_acquire,
     output logic         iccm_lock_clear,
     output logic         iccm_mode_block_we,
+    output logic [DATA_WIDTH-1:0] iccm_mode_data_o,
     output logic         iccm_mode_execute,
     output logic [31:0]  iccm_num_bytes_wr,
     output logic         extend_init,
@@ -97,11 +99,11 @@ module sha512_acc_iccm_hash
 // iccm_lock_i for the zero-length case. The OR with the live trigger
 // engages the same cycle the snoop fires to capture the first dword
 // without a one-cycle slip.
-// iccm_hash_trigger is gated so the hash does NOT arm while the SHA acc LOCK
-// is already held (e.g. the KAT holds the lock out of reset, LOCK resets to 1).
-// The sticky iccm_armed term keeps iccm_mode asserted after the hash acquires
-// the lock itself, so this gate only blocks arming against a pre-existing lock.
-always_comb iccm_hash_trigger = (iccm_hash_dv_i | iccm_lock_i) & ~soc_has_lock & ~lock_value;
+// iccm_hash_trigger is gated so the hash does NOT arm while a uC SHA acc LOCK
+// is already held (e.g. the KAT holds the lock out of reset, LOCK resets to 1),
+// while preempting any SoC-held lock so an external AXI agent cannot suppress
+// ICCM measurement into PCR4/PCR5.
+always_comb iccm_hash_trigger = (iccm_hash_dv_i | iccm_lock_i) & (~lock_value | soc_has_lock);
 
 always_comb iccm_mode = (iccm_armed | iccm_hash_trigger) & ~iccm_mode_done;
 
@@ -118,10 +120,47 @@ always_comb iccm_lock_clear = (extend_fsm_ps == EXTEND_DONE);
 // Extend FSM active flag
 always_comb iccm_extend_ip = (extend_fsm_ps != EXTEND_IDLE) & (extend_fsm_ps != EXTEND_DONE);
 
-// iccm_lock rising edge triggers finalization (equivalent to execute_set)
-always_comb iccm_mode_execute = iccm_mode & iccm_lock_i;
-// block_we for iccm mode: write when data valid and not stalled by block_full
-always_comb iccm_mode_block_we = iccm_mode & iccm_hash_dv_i & ~block_full;
+// Lossless snoop buffer (Pass=1 for zero-latency pass-through when ~block_full,
+// buffering bursts while block_full is asserted during 80-cycle compression).
+logic snoop_fifo_rvalid;
+logic snoop_fifo_rready;
+logic iccm_lock_latched;
+
+caliptra_prim_fifo_sync #(
+  .Width            (DATA_WIDTH),
+  .Pass             (1'b1),
+  .Depth            (64),
+  .OutputZeroIfEmpty(1'b1),
+  .resetOnClear     (1)
+) u_iccm_snoop_fifo (
+  .clk_i   (clk),
+  .rst_ni  (rst_b),
+  .clr_i   (iccm_unlock_i | (extend_fsm_ps == EXTEND_DONE)),
+  .wvalid_i(iccm_mode & iccm_hash_dv_i),
+  .wready_o(),
+  .wdata_i (iccm_hash_data_i),
+  .rvalid_o(snoop_fifo_rvalid),
+  .rready_i(snoop_fifo_rready),
+  .rdata_o (iccm_mode_data_o),
+  .full_o  (),
+  .depth_o (),
+  .err_o   ()
+);
+
+always_ff @(posedge clk or negedge rst_b) begin
+  if (!rst_b)
+    iccm_lock_latched <= 1'b0;
+  else if (iccm_unlock_i | (extend_fsm_ps == EXTEND_DONE))
+    iccm_lock_latched <= 1'b0;
+  else if (iccm_mode & iccm_lock_i)
+    iccm_lock_latched <= 1'b1;
+end
+
+always_comb snoop_fifo_rready = iccm_mode & ~block_full;
+// block_we for iccm mode: drain buffered/pass-through words whenever ~block_full
+always_comb iccm_mode_block_we = iccm_mode & snoop_fifo_rvalid & ~block_full;
+// iccm_lock finalization waits until all snooped words have drained into block_reg
+always_comb iccm_mode_execute = iccm_mode & (iccm_lock_i | iccm_lock_latched) & ~snoop_fifo_rvalid;
 
 // ICCM mode done flag: sticky until iccm_unlock re-enables measurement.
 // Prevents re-trigger of iccm_mode after hash completes.

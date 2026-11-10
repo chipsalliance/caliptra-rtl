@@ -148,6 +148,7 @@ module sha512_acc_top
   logic iccm_lock_acquire;
   logic iccm_lock_clear;
   logic iccm_mode_block_we;
+  logic [DATA_WIDTH-1:0] iccm_mode_data;
   logic iccm_mode_execute;
   logic [31:0] iccm_num_bytes_wr;
   logic extend_init;
@@ -158,7 +159,7 @@ module sha512_acc_top
   
   assign err = read_error | write_error;
 
-  assign zeroize_pulse = hwif_out.CONTROL.ZEROIZE.value;
+  assign zeroize_pulse = (hwif_out.CONTROL.ZEROIZE.value & ~iccm_mode) | (iccm_lock_acquire & soc_has_lock);
 
   //----------------------------------------------------------------
   // core instantiation.
@@ -261,7 +262,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       always_comb streaming_wdata[b] = req_data.wdata          [b*8 +: 8];
       always_comb input_data[b] = ({8{mailbox_mode}}   & mbox_rdata[b]     ) |
                                   ({8{streaming_mode}} & streaming_wdata[b]) |
-                                  ({8{iccm_mode}}      & iccm_hash_data_i[b*8 +: 8]);
+                                  ({8{iccm_mode}}      & iccm_mode_data[b*8 +: 8]);
       // In iccm_mode, force LE->BE byte swap (ENDIAN_TOGGLE=0 behavior)
       always_comb swizzled_data[b] = (iccm_mode | ~hwif_out.MODE.ENDIAN_TOGGLE.value) ?
                                      input_data[(DATA_NUM_BYTES-1-b)] : //convert data to big endian
@@ -285,10 +286,10 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
       num_bytes_wr  <= '0;
     end
     else begin
-      soc_has_lock <= (hwif_in.lock_set & req_data.soc_req) ? '1 : 
-                       hwif_out.LOCK.LOCK.value ? soc_has_lock : '0;
+      soc_has_lock <= (hwif_in.lock_set & req_data.soc_req & ~iccm_mode)     ? '1 : 
+                       (hwif_out.LOCK.LOCK.value & ~iccm_lock_acquire)       ? soc_has_lock : '0;
 
-      block_wptr <= (arc_SHA_BLOCK_0_SHA_BLOCK_N | arc_SHA_BLOCK_N_SHA_BLOCK_N | arc_IDLE) ? '0 :
+      block_wptr <= (arc_SHA_BLOCK_0_SHA_BLOCK_N | arc_SHA_BLOCK_N_SHA_BLOCK_N | arc_IDLE | (iccm_lock_acquire & soc_has_lock)) ? '0 :
                     block_we                                                               ? block_wptr + 'd1 : 
                                                                                              block_wptr;
 
@@ -298,7 +299,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 
       mbox_block_we <= mbox_read_en;
 
-      num_bytes_wr <= arc_IDLE ? '0 :
+      num_bytes_wr <= (arc_IDLE | (iccm_lock_acquire & soc_has_lock)) ? '0 :
                       block_we ? num_bytes_wr + 'd4 : num_bytes_wr;
 
       for (int dword = 0; dword < BLOCK_NO; dword++) begin
@@ -386,10 +387,10 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //Streaming mode - go to block 0 when first datain comes
   //Mailbox mode - go to block 0 when execute is set
   //ICCM mode - go to block 0 when first iccm write arrives
-  always_comb arc_SHA_IDLE_SHA_BLOCK_0 = (sha_fsm_ps == SHA_IDLE) & (
-                                         (streaming_mode & datain_write) |
-                                         (mailbox_mode & execute_set & ~mailbox_address_err) |
-                                         (iccm_mode & iccm_hash_dv_i));
+  always_comb arc_SHA_IDLE_SHA_BLOCK_0 = (sha_fsm_ps == SHA_IDLE) | (iccm_lock_acquire & soc_has_lock) ? (
+                                         ((sha_fsm_ps == SHA_IDLE) & streaming_mode & datain_write) |
+                                         ((sha_fsm_ps == SHA_IDLE) & mailbox_mode & execute_set & ~mailbox_address_err) |
+                                         (iccm_mode & iccm_mode_block_we)) : 1'b0;
 
   // ICCM zero-length: lock asserts from IDLE with no prior writes -- skip to PAD0
   always_comb arc_SHA_IDLE_SHA_PAD0 = (sha_fsm_ps == SHA_IDLE) & iccm_mode_execute &
@@ -529,6 +530,7 @@ sha512_acc_iccm_hash #(
   .rst_b             (rst_b),
 
   .iccm_hash_dv_i    (iccm_hash_dv_i),
+  .iccm_hash_data_i  (iccm_hash_data_i),
   .iccm_lock_i       (iccm_lock_i),
   .iccm_unlock_i     (iccm_unlock_i),
   .soc_has_lock      (soc_has_lock),
@@ -547,6 +549,7 @@ sha512_acc_iccm_hash #(
   .iccm_lock_acquire (iccm_lock_acquire),
   .iccm_lock_clear   (iccm_lock_clear),
   .iccm_mode_block_we(iccm_mode_block_we),
+  .iccm_mode_data_o  (iccm_mode_data),
   .iccm_mode_execute (iccm_mode_execute),
   .iccm_num_bytes_wr (iccm_num_bytes_wr),
   .extend_init       (extend_init),
@@ -564,6 +567,7 @@ always_comb begin
   iccm_lock_acquire = '0;
   iccm_lock_clear = '0;
   iccm_mode_block_we = '0;
+  iccm_mode_data = '0;
   iccm_mode_execute = '0;
   iccm_num_bytes_wr = '0;
   extend_init = '0;

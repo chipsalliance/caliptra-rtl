@@ -1020,16 +1020,27 @@ import kv_defines_pkg::*;
         end
     end
 
+    logic dma_secret_scrub_q;
+    always_ff @(posedge clk or negedge rst_n) begin
+        if (!rst_n) begin
+            dma_secret_scrub_q <= 1'b0;
+        end else if ((ctrl_fsm_ps == DMA_IDLE) && !debugUnlock_or_scan_mode_switch) begin
+            dma_secret_scrub_q <= 1'b0;
+        end else if (debugUnlock_or_scan_mode_switch || (ctrl_fsm_ps == DMA_ERROR) || hwif_out.ctrl.flush.value) begin
+            dma_secret_scrub_q <= 1'b1;
+        end
+    end
+
     ////////////////////////////////////////////////////
     // Read Route -> AXI
     ////////////////////////////////////////////////////
     assign w_valid_o = rd_route_valid;
-    assign w_data_o  = rd_route_data;
+    assign w_data_o  = dma_secret_scrub_q ? '0 : rd_route_data;
 
     ////////////////////////////////////////////////////
     // Read Route -> AHB
     ////////////////////////////////////////////////////
-    always_comb r_data_mask = {DW{hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO}};
+    always_comb r_data_mask = {DW{(hwif_out.ctrl.rd_route.value == axi_dma_reg__ctrl__rd_route__rd_route_e__AHB_FIFO) && !dma_secret_scrub_q}};
     always_comb hwif_in.read_data.rdata.next = rd_route_data & r_data_mask;
 
 
@@ -1410,8 +1421,8 @@ import kv_defines_pkg::*;
     ) i_fifo (
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
-      // synchronous clear / flush port
-      .clr_i   (ctrl_fsm_ps == DMA_IDLE), // TODO clear with debugUnlock_or_scan_mode_switch while allowing AXI to end gracefully?
+      // synchronous clear / flush port (wait for pending AXI write bursts to drain)
+      .clr_i   (ctrl_fsm_ps == DMA_IDLE || ((ctrl_fsm_ps == DMA_ERROR) && (wr_resp_pending == '0))),
       // write port
       .wvalid_i(fifo_w_valid  ),
       .wready_o(fifo_w_ready  ),
@@ -1451,8 +1462,8 @@ import kv_defines_pkg::*;
     ) i_aes_fifo (
       .clk_i   (clk     ),
       .rst_ni  (rst_n   ),
-      // synchronous clear / flush port
-      .clr_i   (ctrl_fsm_ps == DMA_IDLE), 
+      // synchronous clear / flush port (wait for pending AXI write bursts to drain)
+      .clr_i   (ctrl_fsm_ps == DMA_IDLE || ((ctrl_fsm_ps == DMA_ERROR) && (wr_resp_pending == '0))), 
       // write port
       .wvalid_i(aes_fifo_w_valid  ),
       .wready_o(aes_fifo_w_ready  ),
