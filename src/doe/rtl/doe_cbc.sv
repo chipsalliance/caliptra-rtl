@@ -87,6 +87,7 @@ module doe_cbc
 
   logic [BLOCK_NO-1:0][DATA_WIDTH-1:0] block_reg;
   logic [IV_NO-1:0][DATA_WIDTH-1:0] IV_reg;
+  logic [127:0] IV_latched;
   reg [127 : 0] kv_result_reg;
   reg           ready_reg;
 
@@ -130,7 +131,17 @@ module doe_cbc
   //----------------------------------------------------------------
   assign core_key     = {cptra_obf_key[0], cptra_obf_key[1], cptra_obf_key[2], cptra_obf_key[3], cptra_obf_key[4], cptra_obf_key[5], cptra_obf_key[6], cptra_obf_key[7]};
   assign core_block   = {block_reg[0], block_reg[1], block_reg[2], block_reg[3]};
-  assign core_IV      = {IV_reg[0], IV_reg[1], IV_reg[2], IV_reg[3]};
+  assign core_IV      = flow_in_progress ? IV_latched : {IV_reg[0], IV_reg[1], IV_reg[2], IV_reg[3]};
+
+  always_ff @(posedge clk or negedge reset_n) begin
+      if (!reset_n) begin
+          IV_latched <= '0;
+      end else if (zeroize) begin
+          IV_latched <= '0;
+      end else if (!flow_in_progress) begin
+          IV_latched <= {IV_reg[0], IV_reg[1], IV_reg[2], IV_reg[3]};
+      end
+  end
 
   assign core_init   = doe_init;
   assign core_next   = doe_next;
@@ -200,12 +211,17 @@ assign hwif_in.DOE_STATUS.DEOBF_SECRETS_CLEARED.hwset = clear_obf_secrets;
 assign hwif_in.DOE_STATUS.READY.hwset = ready_reg & ~(flow_in_progress);
 assign hwif_in.DOE_STATUS.READY.hwclr = ~ready_reg;
 assign hwif_in.DOE_STATUS.VALID.hwset = flow_done | clear_obf_secrets;
-assign hwif_in.DOE_STATUS.VALID.hwclr = hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod;
+assign hwif_in.DOE_STATUS.VALID.hwclr = (hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod) && !flow_in_progress;
 assign hwif_in.DOE_STATUS.ERROR.hwset = flow_error || doe_fsm_error;
-assign hwif_in.DOE_STATUS.ERROR.hwclr = clear_obf_secrets || hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod;
+assign hwif_in.DOE_STATUS.ERROR.hwclr = clear_obf_secrets || ((hwif_out.DOE_CTRL.CMD.swmod || hwif_out.DOE_CTRL.CMD_EXT.swmod) && !flow_in_progress);
 
 // Wire doe_cmd_lock to the register block swwel -- blocks SW writes to CMD/CMD_EXT
-always_comb hwif_in.doe_cmd_lock = doe_cmd_lock;
+// after boot flow lockout or during an active flow, except for DOE_CLEAR_OBF_SECRETS
+logic sw_wr_doe_clear;
+always_comb sw_wr_doe_clear = cs && we && !doe_cmd_lock &&
+                              (address[DOE_REG_ADDR_WIDTH-1:0] == 12'h010) &&
+                              (doe_cmd_e'({write_data[8:7], write_data[1:0]}) == DOE_CLEAR);
+always_comb hwif_in.doe_cmd_lock = doe_cmd_lock | (flow_in_progress & ~sw_wr_doe_clear);
 
 assign hwif_in.DOE_CTRL.CMD.hwclr     = flow_done | clear_obf_secrets | doe_cmd_lock;
 assign hwif_in.DOE_CTRL.CMD_EXT.hwclr = flow_done | clear_obf_secrets | doe_cmd_lock;
@@ -224,7 +240,7 @@ always_comb begin
   IV_updated = '0;
   for (int dword = 0; dword < IV_NO; dword++) begin
     IV_reg[dword] = hwif_out.DOE_IV[dword].IV.value;
-    IV_updated |= hwif_out.DOE_IV[dword].IV.swmod;
+    IV_updated |= hwif_out.DOE_IV[dword].IV.swmod & ~flow_in_progress;
   end
 end
 

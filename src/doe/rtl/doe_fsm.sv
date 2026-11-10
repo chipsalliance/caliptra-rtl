@@ -99,6 +99,8 @@ typedef enum logic [DoeStateWidth-1:0] {
 } kv_doe_fsm_state_e;
 
 logic running_uds, running_fe, running_hek;
+doe_cmd_e cmd_latched;
+doe_cmd_e active_cmd;
 
 //access filtering rule metrics
 //NOTE: must be stabilized 1 clock cycle prior to dest_data_avail
@@ -140,9 +142,10 @@ always_ff @(posedge clk or negedge rst_b) begin
     end
 end
 
-always_comb running_uds = (doe_cmd_reg.cmd == DOE_UDS);
-always_comb running_fe  = (doe_cmd_reg.cmd == DOE_FE );
-always_comb running_hek = (doe_cmd_reg.cmd == DOE_HEK);
+always_comb active_cmd  = (kv_doe_fsm_ps == DOE_IDLE) ? doe_cmd_reg.cmd : cmd_latched;
+always_comb running_uds = (active_cmd == DOE_UDS);
+always_comb running_fe  = (active_cmd == DOE_FE );
+always_comb running_hek = (active_cmd == DOE_HEK);
 always_comb block_done = running_uds ? (block_offset == (UDS_NUM_BLOCKS-1)) :
                          running_hek ? (block_offset == (HEK_NUM_BLOCKS-1)) :
                                        (block_offset == (FE_NUM_BLOCKS -1)) ;
@@ -154,7 +157,7 @@ always_comb dest_write_done = (dest_write_offset[DEST_OFFSET_W-1:0] == (DEST_NUM
 //move to init state when command is set and that command isn't locked
 always_comb arc_DOE_IDLE_DOE_INIT = (running_uds & ~lock_uds_flow) |
                                     (running_fe  & ~lock_fe_flow ) |
-                                    (running_hek & ~lock_hek_flow);
+                                    (running_hek & ~lock_hek_flow & ocp_lock_en);
 //wait to write when init is done and we have data to write
 always_comb arc_DOE_WAIT_DOE_WRITE = init_done & dest_data_avail;
 //wait to block when init is done and no data
@@ -183,8 +186,8 @@ always_comb begin : kv_doe_fsm
         DOE_IDLE: begin
             if (zeroize ) kv_doe_fsm_ns = DOE_IDLE;
             else if (arc_DOE_IDLE_DOE_INIT) kv_doe_fsm_ns = DOE_INIT;
-            //assert flow done if a locked flow is attempted
-            flow_done = (running_uds & lock_uds_flow) | (running_fe & lock_fe_flow) | (running_hek & lock_hek_flow);
+            //assert flow done if a locked or disabled flow is attempted
+            flow_done = (running_uds & lock_uds_flow) | (running_fe & lock_fe_flow) | (running_hek & (lock_hek_flow | ~ocp_lock_en));
         end
         DOE_INIT: begin
             if (zeroize ) kv_doe_fsm_ns = DOE_IDLE;
@@ -302,16 +305,23 @@ always_ff @(posedge clk or negedge rst_b) begin
         dest_write_offset <= '0;
         block_offset <= '0;
         dest_addr <= '0;
+        cmd_latched <= DOE_NOP;
     end
     else if (zeroize_reg) begin
         dest_write_offset <= '0;
         block_offset <= '0;
         dest_addr <= '0;
+        cmd_latched <= DOE_NOP;
     end
     else begin
         dest_write_offset <= dest_write_offset_en ? dest_write_offset_nxt : dest_write_offset;
         block_offset <= block_offset_en ? block_offset_nxt : block_offset;
         dest_addr <= dest_addr_en ? dest_addr_nxt : dest_addr;
+        if (dest_addr_en) begin
+            cmd_latched <= doe_cmd_reg.cmd;
+        end else if (kv_doe_fsm_ps == DOE_DONE) begin
+            cmd_latched <= DOE_NOP;
+        end
     end
 end
 
@@ -327,7 +337,7 @@ always_ff @(posedge clk or negedge hard_rst_b) begin
     else begin
         lock_uds_flow <= (running_uds & flow_done) ? '1 : lock_uds_flow;
         lock_fe_flow <= (running_fe & flow_done) ? '1 : lock_fe_flow;
-        lock_hek_flow <= (running_hek & flow_done) ? '1 : lock_hek_flow;
+        lock_hek_flow <= (running_hek & ocp_lock_en & flow_done) ? '1 : lock_hek_flow;
     end
 end
 
