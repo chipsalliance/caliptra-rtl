@@ -1,0 +1,13 @@
+document:
+  schema: 1.0
+
+contents:
+  - tests:
+      tags: ["L0", "directed", "nightly", "AES"]
+      paths:
+        - ${CALIPTRA_ROOT}/src/aes/stimulus/tests/directed/aes_ecb_acvp_test.yml
+        - ${CALIPTRA_ROOT}/src/aes/stimulus/tests/directed/aes_cbc_acvp_test.yml
+        - ${CALIPTRA_ROOT}/src/aes/stimulus/tests/directed/aes_cfb128_acvp_test.yml
+        - ${CALIPTRA_ROOT}/src/aes/stimulus/tests/directed/aes_ofb_acvp_test.yml
+        - ${CALIPTRA_ROOT}/src/aes/stimulus/tests/directed/aes_ctr_acvp_test.yml
+        - ${CALIPTRA_ROOT}/src/aes/stimulus/tests/directed/aes_gcm_acvp_test.yml
