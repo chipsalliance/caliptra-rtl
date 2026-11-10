@@ -257,18 +257,20 @@ always_comb begin
   hwif_in.HMAC512_NAME[1].NAME.next = HMAC_CORE_NAME[63:32];
   hwif_in.HMAC512_VERSION[0].VERSION.next = HMAC_CORE_VERSION[31:0];
   hwif_in.HMAC512_VERSION[1].VERSION.next = HMAC_CORE_VERSION[63:32];
-  //Only allow setting CSR MODE when ready is set and no operation is in flight
-  //or being accepted, so the key source cannot be swapped between INIT and LAST
+  //Only allow setting CSR MODE and MODE when ready is set and no operation is in flight
+  //or being accepted, so the key source or hash mode cannot be swapped between INIT and LAST
   hwif_in.HMAC512_CTRL.CSR_MODE.swwe = ready_reg & ~key_src_lock;
   hwif_in.HMAC512_CTRL.INIT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.NEXT.swwe = ready_reg;
   hwif_in.HMAC512_CTRL.LAST.swwe = ready_reg;
-  hwif_in.HMAC512_CTRL.MODE.swwe = ready_reg;
+  hwif_in.HMAC512_CTRL.MODE.swwe = ready_reg & ~key_src_lock;
 
   //assign hardware readable registers to drive hmac core
   //mask the command until kv clients are idle
   //NEXT must continue an operation started by INIT; never resume stale core state
-  init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready;
+  //INIT is blocked while an operation is already active so a mid-operation INIT
+  //cannot discard a KV-sourced block after block_reg_lock has been released
+  init_reg = hwif_out.HMAC512_CTRL.INIT.value & kv_key_ready & kv_block_ready & ~op_active;
   next_reg = hwif_out.HMAC512_CTRL.NEXT.value & kv_key_ready & kv_block_ready & ~orphan_next_error;
   last_reg = hwif_out.HMAC512_CTRL.LAST.value & kv_key_ready & kv_block_ready & ~orphan_next_error;
   csr_mode_reg = hwif_out.HMAC512_CTRL.CSR_MODE.value;
@@ -338,10 +340,10 @@ always_comb begin
 end
 
 //set the lock for the part of the block being written by KV logic
-//release the lock once init has been seen
+//release the lock once a command has been accepted by the core
 always_comb begin
   for (int dword=0; dword< BLOCK_NUM_DWORDS; dword++) begin
-    if (init_reg | next_reg) begin
+    if (cmd_accepted) begin
       block_reg_lock_nxt[dword] = '0;
     end
     else begin
@@ -371,18 +373,19 @@ always_comb hwif_in.HMAC512_KV_RD_BLOCK_CTRL.rsvd.swwe            = 0;
 
 // KV write control must be written before HMAC core operation begins, even though
 // output isn't written to KV until the end of the operation.
-// Prevent partial-key attacks by blocking register modifications during core execution.
-always_comb hwif_in.HMAC512_KV_WR_CTRL.write_en.swwe              = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.write_entry.swwe           = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.swwe = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe    = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.dma_data_dest_valid.swwe   = !busy_o;
+// Prevent partial-key attacks by blocking register modifications during core execution
+// or while a multi-block operation is active between INIT and LAST.
+always_comb hwif_in.HMAC512_KV_WR_CTRL.write_en.swwe              = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.write_entry.swwe           = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.hmac_block_dest_valid.swwe = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe    = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = !busy_o && !key_src_lock;
+always_comb hwif_in.HMAC512_KV_WR_CTRL.dma_data_dest_valid.swwe   = !busy_o && !key_src_lock;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe                  = 0;
 
 //keyvault control reg macros for assigning to struct

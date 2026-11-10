@@ -161,8 +161,8 @@ module sha256
                     block_reg[04], block_reg[05], block_reg[06], block_reg[07],
                     block_reg[08], block_reg[09], block_reg[10], block_reg[11],
                     block_reg[12], block_reg[13], block_reg[14], block_reg[15]};
-      core_init = init_reg;
-      core_next = next_reg;
+      core_init = init_reg & ~invalid_sha_op & ~(wntz_mode & (wntz_w_invalid | wntz_mode_invalid | wntz_j_invalid));
+      core_next = next_reg & ~invalid_sha_op & ~wntz_mode;
       core_mode = mode;
     end
   end   // always_comb
@@ -192,10 +192,11 @@ module sha256
   //----------------------------------------------------------------
   assign wntz_busy          = (wntz_fsm != WNTZ_IDLE);
   assign wntz_blk_done      = core_digest_valid & ~core_digest_valid_reg;
-  assign wntz_w_invalid     = wntz_busy & ~(wntz_w_reg inside {'h1, 'h2, 'h4, 'h8});
-  assign wntz_mode_invalid  = wntz_busy & ~mode_reg;
+  assign wntz_w_invalid     = (wntz_mode & ~(wntz_w inside {'h1, 'h2, 'h4, 'h8})) |
+                              (wntz_busy & ~(wntz_w_reg inside {'h1, 'h2, 'h4, 'h8}));
+  assign wntz_mode_invalid  = (wntz_mode & ~mode) | (wntz_busy & ~mode_reg);
   assign wntz_j_invalid     = wntz_mode & (wntz_j_init > wntz_iter);
-  assign invalid_sha_op     = init_reg & next_reg; //Trigger an error when init and next are high in the same cycle
+  assign invalid_sha_op     = (init_reg & next_reg) | (wntz_mode & ~init_reg); //Trigger an error when init and next are high in the same cycle, or wntz_mode without init
 
   always_comb begin
     unique case(wntz_w)
@@ -216,7 +217,7 @@ module sha256
     case (wntz_fsm)
       WNTZ_IDLE: 
         begin 
-          if (wntz_mode && init_reg && ready_reg && (wntz_j_init <= wntz_iter)) begin
+          if (wntz_mode && init_reg && ready_reg && ~wntz_w_invalid && ~wntz_mode_invalid && ~wntz_j_invalid && ~invalid_sha_op) begin
             wntz_fsm_next = WNTZ_1ST;
             wntz_enable = 1'b1;
           end else
