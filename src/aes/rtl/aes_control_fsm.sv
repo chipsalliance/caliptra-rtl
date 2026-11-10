@@ -139,6 +139,9 @@ module aes_control_fsm
   logic                     key_init_arm;
   logic                     key_init_ready;
   logic                     key_sideload;
+  logic                     key_sideload_latched_d, key_sideload_latched_q;
+  logic                     key_sideload_wipe_req;
+  logic                     key_dec_dirty_d, key_dec_dirty_q;
 
   logic  [NumSlicesCtr-1:0] iv_qe;
   logic                     iv_clear;
@@ -214,7 +217,8 @@ module aes_control_fsm
 
   // The cipher core is only ever allowed to start or finish if the control register holds a valid
   // configuration and if no fatal alert condition occured.
-  assign cfg_valid = ~((mode_i == AES_NONE) | ctrl_err_storage_i);
+  assign key_sideload_wipe_req = key_sideload_latched_q & (~sideload_i | ~key_sideload_valid_i);
+  assign cfg_valid = ~((mode_i == AES_NONE) | ctrl_err_storage_i | key_sideload_wipe_req);
   assign no_alert  = ~alert_fatal_i;
 
   // cipher_op_i is obtained from the configuration of the control register with additional logic.
@@ -462,14 +466,22 @@ module aes_control_fsm
 
           // Control register updates clear all register status trackers. As GCM initialization
           // advances the IV, we have to clear the IV status tracking when re-initializing GCM.
-          key_init_clear = ctrl_we_o;
+          key_init_clear = ctrl_we_o | key_sideload_wipe_req;
           iv_clear       = ctrl_we_o | (gcm_init & gcm_clear);
 
           // Also clear GCM-specific status tracking.
-          if (ctrl_we_o | gcm_clear) begin
+          if (ctrl_we_o | gcm_clear | key_sideload_wipe_req) begin
             hash_subkey_ready_d = 1'b0;
             s_ready_d           = 1'b0;
           end
+        end
+
+        if (!start_core && (key_sideload_wipe_req || (key_sideload_latched_q && ctrl_we_o))) begin
+          // Wipe previously sideloaded key material from key_init_q when leaving sideload mode,
+          // when the sideload key becomes invalid, or upon any main control register update.
+          key_init_sel_o = KEY_INIT_CLEAR;
+          key_init_we_o  = {NumSharesKey * NumRegsKey{1'b1}};
+          key_init_clear = 1'b1;
         end
 
         if (prng_reseed_i) begin
@@ -537,7 +549,7 @@ module aes_control_fsm
 
           // We got a new initial key, but want to do decryption. The cipher core must first
           // generate the start key for decryption.
-          cipher_dec_key_gen_o = (cipher_op_i == CIPH_INV) ? key_init_new : 1'b0;
+          cipher_dec_key_gen_o = (cipher_op_i == CIPH_INV) ? (key_init_new | key_dec_dirty_q) : 1'b0;
 
           // Previous input data register control
           data_in_prev_sel_o = doing_cbc_dec ? DIP_DATA_IN :
@@ -896,11 +908,32 @@ module aes_control_fsm
   // SEC_CM: MAIN.FSM.SPARSE
   `CALIPTRA_PRIM_FLOP_SPARSE_FSM(u_state_regs, aes_ctrl_ns, aes_ctrl_cs, aes_ctrl_e, CTRL_IDLE)
 
+  always_comb begin : key_sideload_track
+    key_sideload_latched_d = key_sideload_latched_q;
+    key_dec_dirty_d        = key_dec_dirty_q;
+    if ((key_init_sel_o == KEY_INIT_CLEAR) && (&key_init_we_o)) begin
+      key_sideload_latched_d = 1'b0;
+      if (key_sideload_latched_q) begin
+        key_dec_dirty_d = 1'b1;
+      end
+    end else if ((key_init_sel_o == KEY_INIT_KEYMGR) && (|key_init_we_o)) begin
+      key_sideload_latched_d = 1'b1;
+      key_dec_dirty_d        = 1'b0;
+    end
+    if (key_init_load || cipher_key_clear_i) begin
+      key_dec_dirty_d = 1'b0;
+    end
+  end
+
   always_ff @(posedge clk_i or negedge rst_ni) begin : reg_fsm
     if (!rst_ni) begin
-      prng_reseed_done_q <= 1'b0;
+      prng_reseed_done_q     <= 1'b0;
+      key_sideload_latched_q <= 1'b0;
+      key_dec_dirty_q        <= 1'b0;
     end else begin
-      prng_reseed_done_q <= prng_reseed_done_d;
+      prng_reseed_done_q     <= prng_reseed_done_d;
+      key_sideload_latched_q <= key_sideload_latched_d;
+      key_dec_dirty_q        <= key_dec_dirty_d;
     end
   end
 

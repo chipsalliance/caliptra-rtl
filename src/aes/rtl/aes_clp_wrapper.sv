@@ -444,6 +444,9 @@ always_ff@(posedge clk or negedge reset_n) begin
     if (!reset_n) begin
         kv_key_present_slot <= '0;
     end
+    else if (debugUnlock_or_scan_mode_switch) begin
+        kv_key_present_slot <= '0;
+    end
     else if (kv_key_read_ctrl_reg.read_en) begin
         kv_key_present_slot <= kv_key_read_ctrl_reg.read_entry;
     end
@@ -528,8 +531,7 @@ always_comb begin
 end
 
 always_comb caliptra2aes.block_reg_output = ocp_lock_in_progress &&
-                                            (aes2caliptra.kv_key_in_use && kv_key_present_slot == OCP_LOCK_RT_OBF_KEY_KV_SLOT) &&
-                                            aes2caliptra.aes_operation_is_ecb_decrypt;
+                                            (aes2caliptra.kv_key_in_use && kv_key_present_slot == OCP_LOCK_RT_OBF_KEY_KV_SLOT);
 
 //Write to keyvault
 kv_write_client #(

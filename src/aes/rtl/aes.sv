@@ -150,8 +150,8 @@ module aes
   logic output_blocked_de;
   logic output_valid_r;
 
-  // Mask to conceal data_out from reg API (when dest is KV)
-  assign hw2reg_data_out_mask = {$bits(aes_hw2reg_data_out_mreg_t){hw2reg_data_out_mask_en}};
+  // Mask to conceal data_out from reg API (when dest is KV or output is blocked)
+  assign hw2reg_data_out_mask = {$bits(aes_hw2reg_data_out_mreg_t){hw2reg_data_out_mask_en & ~caliptra2aes.block_reg_output & ~caliptra2aes.kv_en}};
 
   // Enable signal to drive an update to the status.output_lost register field
   always_comb output_blocked_de = hw2reg_caliptra.status.output_valid.de &&
@@ -172,6 +172,9 @@ module aes
       // Concealed
       foreach (hw2reg.data_out[idx]) begin
       hw2reg.data_out[idx].d                    = hw2reg_caliptra.data_out[idx].d & hw2reg_data_out_mask;
+      end
+      foreach (hw2reg.iv[idx]) begin
+      hw2reg.iv[idx].d                          = hw2reg_caliptra.iv[idx].d & {32{~caliptra2aes.block_reg_output & ~caliptra2aes.kv_en}};
       end
   end
   always_comb begin
