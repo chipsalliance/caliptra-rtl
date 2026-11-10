@@ -212,7 +212,7 @@ caliptra-rtl GitHub repository.
       - CALIPTRA_INTERNAL_TRNG
 1. Copy the test generator scripts to the run output directory:
     - [src/ecc/tb/ecc_secp384r1.exe](src/ecc/tb/ecc_secp384r1.exe)
-        * Necessary for [randomized_pcr_signing](src/integration/test_suites/randomized_pcr_signing)
+        * Necessary for [randomized_pcr_ecc_signing](src/integration/test_suites/randomized_pcr_ecc_signing)
         * OPTIONAL otherwise
     - [src/doe/tb/doe_test_gen.py](src/doe/tb/doe_test_gen.py)
         * Allows use of randomized secret field inputs during testing.

@@ -1573,7 +1573,7 @@ The HMAC_DRBG is embedded into ECC architecture, since there is no address map t
 
 ### SCA countermeasure
 
-For information, see SCA countermeasure in the [HMAC384](#hmac384) section.
+For information, see SCA countermeasure in the [HMAC512/HMAC384](#hmac512hmac384) section.
 
 ## ECC
 
