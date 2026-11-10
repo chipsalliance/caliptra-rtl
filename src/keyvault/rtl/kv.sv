@@ -153,13 +153,15 @@ always_comb debug_value = kv_reg_hwif_out.CLEAR_SECRETS.sel_debug_value.value ? 
 
 always_comb begin : keyvault_pcr_ecc_signing
     for (int dword = 0; dword < ECC_NUM_DWORDS; dword++) begin
-        pcr_ecc_signing_key[dword] = kv_reg_hwif_out.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword].data.value;
+        pcr_ecc_signing_key[dword] = (fw_update_rst_window | key_entry_clear[KV_ENTRY_FOR_ECC_SIGNING]) ? '0 :
+                                     kv_reg_hwif_out.KEY_ENTRY[KV_ENTRY_FOR_ECC_SIGNING][dword].data.value;
     end 
 end
 
 always_comb begin : keyvault_pcr_mldsa_signing
     for (int dword = 0; dword < MLDSA_NUM_DWORDS; dword++) begin
-        pcr_mldsa_signing_key[dword] = kv_reg_hwif_out.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword].data.value;
+        pcr_mldsa_signing_key[dword] = (fw_update_rst_window | key_entry_clear[KV_ENTRY_FOR_MLDSA_SIGNING]) ? '0 :
+                                       kv_reg_hwif_out.KEY_ENTRY[KV_ENTRY_FOR_MLDSA_SIGNING][dword].data.value;
     end 
 end
 
@@ -211,16 +213,22 @@ end
 // Multi-write errors clear all slots immediately.
 // boot_flow_key_clear and SW clear handle slot-selective clearing.
 // SW clear is blocked when lock bits are set, and clear is held while writes complete.
+logic [KV_NUM_KEYS-1:0] lock_wr_prev_q, lock_use_prev_q;
+
 generate
     for (genvar g_entry = 0; g_entry < KV_NUM_KEYS; g_entry++) begin
         always_ff@(posedge clk or negedge rst_b) begin
             if(~rst_b) begin
                 key_entry_clear[g_entry] <= '0;
+                lock_wr_prev_q[g_entry]  <= '0;
+                lock_use_prev_q[g_entry] <= '0;
             end
             else begin
+                lock_wr_prev_q[g_entry]  <= lock_wr_q[g_entry];
+                lock_use_prev_q[g_entry] <= lock_use_q[g_entry];
                 key_entry_clear[g_entry] <= kv_multi_write_err |
                                             boot_flow_key_clear[g_entry] |
-                                            (kv_reg_hwif_out.KEY_CTRL[g_entry].clear.value & ~lock_wr_q[g_entry] & ~lock_use_q[g_entry]) |
+                                            (kv_reg_hwif_out.KEY_CTRL[g_entry].clear.value & ~lock_wr_prev_q[g_entry] & ~lock_use_prev_q[g_entry] & ~boot_flow_lock_wr[g_entry] & ~boot_flow_lock_use[g_entry]) |
                                             (key_entry_clear[g_entry] & key_entry_ctrl_we[g_entry]);
             end
         end
@@ -277,7 +285,7 @@ always_comb begin : keyvault_ctrl
             for (int client = 0; client < KV_NUM_WRITE; client++) begin
                 key_entry_we[entry][dword] |= ((((kv_write[client].write_entry == entry) & (kv_write[client].write_offset == dword) & 
                                                 kv_write[client].write_en & ~fw_update_rst_window) | flush_keyvault) & 
-                                              ((~lock_wr_q[entry] & ~lock_use_q[entry]) | debugUnlock_or_scan_mode_switch));
+                                              ((~lock_wr_q[entry] & ~lock_use_q[entry]) | flush_keyvault));
                 key_entry_next[entry][dword] |= flush_keyvault ? debug_value :
                                                 kv_write[client].write_en & (kv_write[client].write_entry == entry) ? kv_write[client].write_data : '0;
             end
