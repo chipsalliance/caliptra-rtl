@@ -468,6 +468,7 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
+    ecc_zeroize();
 
     //******************************************************************
     // ECC_SIGN(MSG, PRIVKEY, IV)
@@ -539,30 +540,39 @@ void kv_mldsa(uint8_t seed_id){
     cptra_intr_rcv.abr_notif = 0;
 }
 
-void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_id, uint8_t *mldsa_seed_id, uint8_t *privkey_id, uint8_t *cdi_ldevid_id){
+void random_generator(uint8_t *fe_id, uint8_t *hek_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_id, uint8_t *mldsa_seed_id, uint8_t *privkey_id, uint8_t *cdi_ldevid_id){
 
     /* Intializes random number generator */  //TODO    
     srand(time);
 
+    //UDS uses slot 0. Never pick slot 23 for DOE destinations, it causes DOE FSM to hang
     do {
-        *fe_id = rand() % 24;   // FE kv id
+        *fe_id = rand() % 23;   // FE kv id
     } while(*fe_id == 0);
+
+    do {
+        *hek_id = rand() % 23;  // HEK kv id
+    } while((*hek_id == 0) | 
+            (*hek_id == *fe_id));
 
     do {
         *cdi_idevid_id = rand() % 24; 
     } while((*cdi_idevid_id == 0) | 
-            (*cdi_idevid_id == *fe_id));
+            (*cdi_idevid_id == *fe_id) | 
+            (*cdi_idevid_id == *hek_id));
     
     do {
         *cdi_ldevid_id = rand() % 24;
     } while((*cdi_ldevid_id == 0) | 
             (*cdi_ldevid_id == *fe_id) | 
+            (*cdi_ldevid_id == *hek_id) | 
             (*cdi_ldevid_id == *cdi_idevid_id));
 
     do {
         *ecc_seed_id = rand() % 24;
     } while((*ecc_seed_id == 0) | 
             (*ecc_seed_id == *fe_id) | 
+            (*ecc_seed_id == *hek_id) | 
             (*ecc_seed_id == *cdi_idevid_id) | 
             (*ecc_seed_id == *cdi_ldevid_id));
 
@@ -570,6 +580,7 @@ void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_
         *mldsa_seed_id = rand() % 24;
     } while((*mldsa_seed_id == 0) | 
             (*mldsa_seed_id == *fe_id) | 
+            (*mldsa_seed_id == *hek_id) | 
             (*mldsa_seed_id == *cdi_idevid_id) | 
             (*mldsa_seed_id == *cdi_ldevid_id)  | 
             (*mldsa_seed_id == *ecc_seed_id));
@@ -578,6 +589,7 @@ void random_generator(uint8_t *fe_id, uint8_t *cdi_idevid_id, uint8_t *ecc_seed_
         *privkey_id = rand() % 24;
     } while((*privkey_id == 0) | 
             (*privkey_id == *fe_id) | 
+            (*privkey_id == *hek_id) | 
             (*privkey_id == *cdi_idevid_id) | 
             (*privkey_id == *cdi_ldevid_id) |
             //(*privkey_id == *ecc_seed_id) |
@@ -604,7 +616,7 @@ void main(){
     init_interrupts();
 
     doe_uds_dest_id = 0;
-    random_generator(&doe_fe_dest_id, &cdi_idevid_id, &idevid_ecc_seed_id, &idevid_mldsa_seed_id, &idevid_ecc_privkey_id, &cdi_ldevid_id);
+    random_generator(&doe_fe_dest_id, &doe_hek_dest_id, &cdi_idevid_id, &idevid_ecc_seed_id, &idevid_mldsa_seed_id, &idevid_ecc_privkey_id, &cdi_ldevid_id);
     
     if(rst_count == 0) {
         VPRINTF(LOW, "1st FE flow + warm reset\n");

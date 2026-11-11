@@ -125,6 +125,7 @@
     word_addr_t addr; 
     int tid = 0; // TID is to be updated ONLY if multiple writes to an address 
     strq_t intrblk_regnames;
+    strq_t incr_regnames;
     string rname, associated_rname;
 
     WordTransaction wrtrans, rdtrans;
@@ -238,6 +239,23 @@
 
       // Don't need to test AHB/AXI write read anymore; included  in sequences above
       // $display ("1d. Writing/Reading back to back using AHB/AXI every 3 cycles");
+
+      // PHASE 1d. INCR_R registers: bus write->read transitions
+      // ------------------------------------------------------------
+      // Phases 1a-1c skip *_INCR_R (minus_incr); sweep them to hit the
+      // cov_if count_incr wr_rd transition bins.
+      $display ("\n------------------------------------------------------------------------------");
+      $display ("1d. INCR registers: write/read over AHB/AHB, AXI/AXI, and cross AHB<->AXI");
+      $display ("------------------------------------------------------------------------------");
+      tphase = "1d";
+      incr_regnames = get_intrblk_regnames_incr_only();
+      write_read_regs(SET_AHB, GET_AHB, incr_regnames, tid, 3);  // AHB_WR -> AHB_RD
+      write_read_regs(SET_AXI, GET_AXI, incr_regnames, tid, 3);  // AXI_WR -> AXI_RD
+      write_read_regs(SET_AHB, GET_AXI, incr_regnames, tid, 3);  // AHB_WR -> AXI_RD (cross)
+      write_read_regs(SET_AXI, GET_AHB, incr_regnames, tid, 3);  // AXI_WR -> AHB_RD (cross)
+
+      repeat (20) @(posedge clk_tb);
+      sb.del_all();
 
       $display ("\n------------------------------------------------------------------------------");
       $display ("2a. Handle WO special registers"); 

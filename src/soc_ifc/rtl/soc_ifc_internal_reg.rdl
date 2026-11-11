@@ -308,6 +308,24 @@ reg {
     } trace_shadow_core_sel = 1'b0;
 } internal_trace_ctrl;
 
+reg {
+    name = "CSR HMAC Key Lock";
+    desc = "Lock for the CSR HMAC key (cptra_csr_hmac_key). Write-1-to-set; once set,
+            the CSR HMAC key is removed from the HMAC512 engine (HMAC512_CTRL.CSR_MODE
+            uses an all-zero key) until the next warm or cold reset.
+            [br][br]ROM must set this lock before handing off to FMC so that the CSR
+            HMAC key is never available to FMC or Runtime FW.
+            [br][br]Unlike internal_iccm_lock, this lock is NOT cleared by a
+            firmware-update (hitless) reset. FW-programmable state that survives a
+            hitless reset (e.g. NMI vector, WDT) therefore cannot be used to execute
+            FMC/RT code while the key is available. Warm reset clears this lock along
+            with that FW-programmable state, and execution restarts in ROM.
+            [br]Caliptra Access: RW1S
+            [br]SOC Access:      RO (writes rejected via swwel)";
+
+    field {desc = "Lock bit for the CSR HMAC key. Write 1 to set -- cannot be cleared by SW. Cleared only by warm or cold reset (not by firmware-update reset)."; hw = r; sw = rw; onwrite = woset; swwel = soc_req; resetsignal = cptra_rst_b;} lock = 1'b0;
+} internal_csr_hmac_key_lock;
+
 
 ////////////////////////////////////////////////////////////////
 // Interrupts

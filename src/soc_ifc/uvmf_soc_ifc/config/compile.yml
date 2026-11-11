@@ -121,7 +121,6 @@ global:
         - '-full64'
         - +define+AVERY_VCS
         - +define+AVERY_ASSERT_ON
-        - +define+AVERY_COVERAGE_ON
         - +define+AVERY_MONITOR_ON
         - +define+AVERY_PASSIVE_MASTER
         - +define+AVERY_CLOCK=5
@@ -135,6 +134,7 @@ global:
         - +define+AAXI_MAX_DATA_WIDTH=32
         - +define+AAXI_MAX_ADDR_WIDTH=64
         - +define+AAXI_MAX_ID_WIDTH=5
+        - +define+AAXI_NO_COV
         #- +define+AAXI_TOP_PATH=aaxi_uvm_test_top
         - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
         - "-P $AVERY_PLI/tb_vcs64.tab"
@@ -199,7 +199,6 @@ global:
         - '-full64'
         - +define+AVERY_VCS
         - +define+AVERY_ASSERT_ON
-        - +define+AVERY_COVERAGE_ON
         - +define+AVERY_MONITOR_ON
         - +define+AVERY_PASSIVE_MASTER
         - +define+AVERY_CLOCK=5
@@ -213,6 +212,7 @@ global:
         - +define+AAXI_MAX_DATA_WIDTH=32
         - +define+AAXI_MAX_ADDR_WIDTH=64
         - +define+AAXI_MAX_ID_WIDTH=5
+        - +define+AAXI_NO_COV
         - "$AVERY_PLI/lib.linux/libtb_vcs64.so"
         - "-P $AVERY_PLI/tb_vcs64.tab"
       elab:

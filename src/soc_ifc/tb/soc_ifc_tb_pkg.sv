@@ -362,7 +362,7 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h055c, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
-    '{addr_min: SOCIFC_BASE + 16'h0664, addr_max: SOCIFC_BASE + 16'h07fc},
+    '{addr_min: SOCIFC_BASE + 16'h0668, addr_max: SOCIFC_BASE + 16'h07fc},
     '{addr_min: SOCIFC_BASE + 16'h0824, addr_max: SOCIFC_BASE + 16'h08fc},
     '{addr_min: SOCIFC_BASE + 16'h0920, addr_max: SOCIFC_BASE + 16'h097c},
     '{addr_min: SOCIFC_BASE + 16'h0998, addr_max: SOCIFC_BASE + 16'h09fc}
@@ -374,7 +374,7 @@ package soc_ifc_tb_pkg;
     "CPTRA_MBOX_VALID_AXI_USER"              : 32'hffff_ffff,
     "CPTRA_TRNG_VALID_AXI_USER"              : 32'hffff_ffff,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES" : 32'h5,
-    "CPTRA_HW_REV_ID"                      : 32'h0000_0012,
+    "CPTRA_HW_REV_ID"                      : 32'h0000_0022,
     //"CPTRA_HW_CONFIG"                      : 32'h0000_0010,  // LMS Acc Cap bit is set
     "CPTRA_WDT_TIMER1_TIMEOUT_PERIOD"      : 32'hffff_ffff,
     "CPTRA_WDT_TIMER2_TIMEOUT_PERIOD"      : 32'hffff_ffff,
@@ -613,6 +613,8 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R_PULSE_MASK,
     "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R_PULSE_MASK, 
     "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"    : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R_PULSE_MASK,
+    "INTR_BRF_NOTIF_SCAN_MODE_INTR_COUNT_INCR_R"       : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_SCAN_MODE_INTR_COUNT_INCR_R_PULSE_MASK,
+    "INTR_BRF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_INCR_R"   : `SOC_IFC_REG_INTR_BLOCK_RF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_INCR_R_PULSE_MASK,
     // SHA Accelerator Interrupt Block Registers
     "SHA_ACC_INTR_BRF_GLOBAL_INTR_EN_R"                :(`SHA512_ACC_CSR_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_MASK |    
                                                          `SHA512_ACC_CSR_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_NOTIF_EN_MASK ),
@@ -662,6 +664,8 @@ package soc_ifc_tb_pkg;
     "INTR_BRF_NOTIF_MBOX_ECC_COR_INTR_COUNT_INCR_R"  ,
     "INTR_BRF_NOTIF_DEBUG_LOCKED_INTR_COUNT_INCR_R"  , 
     "INTR_BRF_NOTIF_SOC_REQ_LOCK_INTR_COUNT_INCR_R"   ,
+    "INTR_BRF_NOTIF_SCAN_MODE_INTR_COUNT_INCR_R"      ,
+    "INTR_BRF_NOTIF_GEN_IN_TOGGLE_INTR_COUNT_INCR_R"  ,
     "SHA_ACC_INTR_BRF_ERROR_INTR_TRIG_R"              ,
     "SHA_ACC_INTR_BRF_NOTIF_INTR_TRIG_R"              ,
     "SHA_ACC_INTR_BRF_ERROR0_INTR_COUNT_INCR_R"        ,
@@ -1482,6 +1486,22 @@ package soc_ifc_tb_pkg;
     return intr_regs;
 
   endfunction // get_intrblk_regnames_minus_incr
+
+
+  // INTR_BRF *_INTR_COUNT_INCR_R registers only (the set excluded by
+  // get_intrblk_regnames_minus_incr). All are in _pulsed_regnames.
+  function automatic strq_t get_intrblk_regnames_incr_only();
+
+    strq_t intr_regs;
+
+    foreach (_soc_register_dict[rkey]) begin
+      if (str_startswith(rkey, "INTR_BRF") && str_endswith(rkey, "INCR_R"))
+        intr_regs.push_back(rkey);
+    end
+
+    return intr_regs;
+
+  endfunction // get_intrblk_regnames_incr_only
 
 
   // NOTE the logic below is wrong, and this is unused

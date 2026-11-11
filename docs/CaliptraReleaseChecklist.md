@@ -86,6 +86,7 @@ For each release, the following steps are followed to ensure code functionality 
 - Update documentation
   - Update lint rules in integration specification
   - Core logic changes documented in the [CaliptraHardwareSpecification](./CaliptraHardwareSpecification.md)
+  - Update the [trademark compliance documentation](https://github.com/chipsalliance/Caliptra/blob/main/doc/trademark/CaliptraChecklistAndEvaluationMethodology.md) in the `chipsalliance/Caliptra` repository to reflect release features and integration requirements
   - [README](../README.md) updates
   - Add latest synthesis results to the [CaliptraIntegrationSpecification](./CaliptraIntegrationSpecification.md#netlist-synthesis-data)
   - Update [Release_Notes](../Release_Notes.md)

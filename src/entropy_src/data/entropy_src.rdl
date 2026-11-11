@@ -216,98 +216,99 @@ addrmap entropy_src {
     reg {
         field {
             desc = "Setting this field to `kMultiBitBool4True` will enable enable the one-way behavior of the health test threshold registers.
-            After reset, this field reads as `kMultiBitBool4False` and the health test threshold registers can be configured without limitations.";
+            After reset, this field reads as `kMultiBitBool4False` and the health test threshold registers can be configured without limitations.
+
+            Writes take effect per bit: bits that are set in kMultiBitBool4True (0x6) are set by writing 1, all other bits are cleared by writing 0. Hence, once this field no longer reads as kMultiBitBool4False (0x9), it cannot be returned to it until reset.";
             sw = rw;
-            onwrite = woset;
         } THRESHOLD_ONEWAY[3:0] = 0x9;
     } THRESHOLD_ONEWAY @ 0x34;
     reg {
         field {
             desc = "This is the threshold for the Repetition Count Test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } REPCNT_THRESHOLD[15:0] = 0xFFFF;
     } REPCNT_THRESHOLD @ 0x38;
     reg {
         field {
             desc = "This is the threshold for the Repetition Count Symbol Test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } REPCNTS_THRESHOLD[15:0] = 0xFFFF;
     } REPCNTS_THRESHOLD @ 0x3C;
     reg {
         field {
             desc = "This is the threshold for the Adaptive Proportion Test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } ADAPTP_HI_THRESHOLD[15:0] = 0xFFFF;
     } ADAPTP_HI_THRESHOLD @ 0x40;
     reg {
         field {
             desc = "This is the threshold for the Adaptive Proportion Test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is greater than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is greater than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } ADAPTP_LO_THRESHOLD[15:0] = 0x0;
     } ADAPTP_LO_THRESHOLD @ 0x44;
     reg {
         field {
             desc = "This is the threshold for the Adaptive Proportion Symbol Test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } ADAPTPS_THRESHOLD[15:0] = 0xFFFF;
     } ADAPTPS_THRESHOLD @ 0x48;
     reg {
         field {
             desc = "This is the threshold size for the bucket health test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } BUCKET_THRESHOLD[15:0] = 0xFFFF;
     } BUCKET_THRESHOLD @ 0x4C;
     reg {
         field {
             desc = "This is the threshold size for the Markov health test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } MARKOV_HI_THRESHOLD[15:0] = 0xFFFF;
     } MARKOV_HI_THRESHOLD @ 0x50;
     reg {
         field {
             desc = "This is the threshold size for the Markov health test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is greater than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is greater than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } MARKOV_LO_THRESHOLD[15:0] = 0x0;
     } MARKOV_LO_THRESHOLD @ 0x54;
     reg {
         field {
             desc = "This is the threshold size for the external health test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing  to this register will only update the register if the written value is less than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing  to this register will only update the register if the written value is less than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } EXTHT_HI_THRESHOLD[15:0] = 0xFFFF;
     } EXTHT_HI_THRESHOLD @ 0x58;
     reg {
         field {
             desc = "This is the threshold size for the external health test.
-               This register must be written before the module is enabled.
-               If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is greater than the current value of this register.
-               A read from this register always reflects the current value.";
+            This register must be written before the module is enabled.
+            If !!THRESHOLD_ONEWAY is set to `kMultiBitBool4True`, writing to this register will only update the register if the written value is greater than the current value of this register.
+            A read from this register always reflects the current value.";
             sw = rw;
         } EXTHT_LO_THRESHOLD[15:0] = 0x0;
     } EXTHT_LO_THRESHOLD @ 0x5C;
@@ -331,70 +332,70 @@ addrmap entropy_src {
     reg {
         field {
             desc = "This register will hold a running count of test failures observed
-               during normal operation. It will persist until cleared.";
+            during normal operation. It will persist until cleared.";
             sw = r;
         } REPCNT_TOTAL_FAILS[31:0];
     } REPCNT_TOTAL_FAILS @ 0x68;
     reg {
         field {
             desc = "This register will hold a running count of test failures observed
-               during normal operation. It will persist until cleared.";
+            during normal operation. It will persist until cleared.";
             sw = r;
         } REPCNTS_TOTAL_FAILS[31:0];
     } REPCNTS_TOTAL_FAILS @ 0x6C;
     reg {
         field {
             desc = "This register will hold a running count of test failures observed
-               during normal operation. It will persist until cleared.";
+            during normal operation. It will persist until cleared.";
             sw = r;
         } ADAPTP_HI_TOTAL_FAILS[31:0];
     } ADAPTP_HI_TOTAL_FAILS @ 0x70;
     reg {
         field {
             desc = "This register will hold a running count of test failures observed
-               during normal operation. It will persist until cleared.";
+            during normal operation. It will persist until cleared.";
             sw = r;
         } ADAPTP_LO_TOTAL_FAILS[31:0];
     } ADAPTP_LO_TOTAL_FAILS @ 0x74;
     reg {
         field {
             desc = "This register will hold a running count of test failures observed during normal operation.
-               It will persist until cleared.";
+            It will persist until cleared.";
             sw = r;
         } ADAPTPS_TOTAL_FAILS[31:0];
     } ADAPTPS_TOTAL_FAILS @ 0x78;
     reg {
         field {
             desc = "This register will hold a running count of test failures observed
-               during normal operation. It will persist until cleared.";
+            during normal operation. It will persist until cleared.";
             sw = r;
         } BUCKET_TOTAL_FAILS[31:0];
     } BUCKET_TOTAL_FAILS @ 0x7C;
     reg {
         field {
             desc = "This register will hold a running count of test failures observed
-               during normal operation. It will persist until cleared.";
+            during normal operation. It will persist until cleared.";
             sw = r;
         } MARKOV_HI_TOTAL_FAILS[31:0];
     } MARKOV_HI_TOTAL_FAILS @ 0x80;
     reg {
         field {
             desc = "This register will hold a running count of test failures observed
-               during normal operation. It will persist until cleared.";
+            during normal operation. It will persist until cleared.";
             sw = r;
         } MARKOV_LO_TOTAL_FAILS[31:0];
     } MARKOV_LO_TOTAL_FAILS @ 0x84;
     reg {
         field {
             desc = "This register will hold a running count of test failures observed
-               during normal operation. It will persist until cleared.";
+            during normal operation. It will persist until cleared.";
             sw = r;
         } EXTHT_HI_TOTAL_FAILS[31:0];
     } EXTHT_HI_TOTAL_FAILS @ 0x88;
     reg {
         field {
             desc = "This register will hold a running count of test failures observed
-               during normal operation. It will persist until cleared.";
+            during normal operation. It will persist until cleared.";
             sw = r;
         } EXTHT_LO_TOTAL_FAILS[31:0];
     } EXTHT_LO_TOTAL_FAILS @ 0x8C;

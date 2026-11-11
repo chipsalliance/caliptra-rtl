@@ -325,7 +325,7 @@ addrmap sha3_reg {
         memwidth = 0x20;
         desc = "Keccak State (1600 bit) memory.
         The software can get the processed digest by reading this memory region.
-        Unlike MSG_FIFO, STATE memory space sees the addr[9:0].
+        Unlike MSG_FIFO, the address offset within the STATE window selects the state word that is read.
 
         1. Output length <= rate length, sha3_done will be raised or software can poll STATUS.squeeze become 1.
         2. Output length > rate length, after software read 1st keccak state, software should issue run cmd to trigger keccak round logic to run full 24 rounds.
@@ -337,11 +337,11 @@ addrmap sha3_reg {
         sw = w;
         mementries = 0x40;
         memwidth = 0x20;
-        desc = "Message FIFO. window size is 2048 bytes.
+        desc = "Message FIFO. window size is 256 bytes.
         Any write operation to this window will be appended to MSG_FIFO.
         Software can simply write bytes/words to any address within this address range.
         Ordering and packing of the incoming bytes/words are handled internally.
-        Therefore, the least significant 12 bits of the address are ignored.";
+        Therefore, the least significant 8 bits of the address are ignored.";
     } external MSG_FIFO @ 0xC00;
 
     /* ---- Global Interrupt Enable ---- */

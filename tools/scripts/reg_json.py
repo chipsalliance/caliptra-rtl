@@ -34,6 +34,16 @@ from systemrdl.rdltypes import OnReadType
 from systemrdl.rdltypes import OnWriteType
 
 
+def mubi_true(width: int) -> int:
+  # MuBi4True=0x6, MuBi8True=0x96, MuBi12True=0x696, MuBi16True=0x9696
+  return sum((0x6 if i % 2 == 0 else 0x9) << (4 * i) for i in range(width // 4))
+
+
+def mubi_false(width: int) -> int:
+  # MuBi4False=0x9, MuBi8False=0x69, MuBi12False=0x969, MuBi16False=0x6969
+  return ~mubi_true(width) & ((1 << width) - 1)
+
+
 class JsonImporter(RDLImporter):
 
   def import_file(self, path: str) -> None:
@@ -90,29 +100,54 @@ class JsonImporter(RDLImporter):
     comp_def = self.create_field_definition()
 
     msb, lsb = self.parse_digits(field_obj['bits'])
+    width = int(msb) - int(lsb) + 1
+    mubi = str(field_obj.get('mubi', 'false')).lower() == 'true'
+    if mubi and width not in (4, 8, 12, 16):
+      self.msg.fatal(
+          "'%s' has an invalid MuBi width of %d" % (name, width), self.default_src_ref
+      )
 
     # Apply reset property if it was set
     if 'resval' in field_obj:
-      resval = str(field_obj['resval'])
-      if 'False' in resval:
-        resval = 9
-      elif 'True' in resval:
-        resval = 6
+      resval = str(field_obj['resval']).lower()
+      if resval == 'false':
+        if mubi:
+          resval = mubi_false(width)
+        else:
+          resval = 0
+      elif resval == 'true':
+        if mubi:
+          resval = mubi_true(width)
+        else:
+          resval = 1
       else:
-        resval = int(resval, 16)
+        resval = int(resval, 0)
       self.assign_property(comp_def, 'reset', resval)
 
-    self.assign_property(comp_def, 'desc', field_obj['desc'])
+    # A field's own swaccess takes precedence over the register's swaccess.
+    access_type = field_obj.get('swaccess', reg_obj.get('swaccess'))
+
+    desc = field_obj['desc']
+    if access_type == 'rw1s' and mubi:
+      desc += (
+          '\n\nWrites take effect per bit: bits that are set in kMultiBitBool%dTrue (0x%x) are'
+          ' set by writing 1, all other bits are cleared by writing 0. Hence, once this field'
+          ' no longer reads as kMultiBitBool%dFalse (0x%x), it cannot be returned to it until'
+          ' reset.' % (width, mubi_true(width), width, mubi_false(width))
+      )
+    self.assign_property(comp_def, 'desc', desc)
 
     # decode and apply the sw access property.
-    # All fields in a register have the same access type
-    access_type = reg_obj['swaccess']
     if access_type == 'rw0c':
       self.assign_property(comp_def, 'sw', AccessType['rw'])
       self.assign_property(comp_def, 'onwrite', OnWriteType['wzc'])
-    if access_type == 'rw0c':
+    elif access_type == 'rw1s':
       self.assign_property(comp_def, 'sw', AccessType['rw'])
-      self.assign_property(comp_def, 'onwrite', OnWriteType['woclr'])
+      # For MuBi fields, the hardware ORs in "true" polarity (caliptra_prim_subreg_arb,
+      # mubiN_or_hi), i.e. bits that are 1 in MuBiTrue are set by writing 1 and all other bits are
+      # cleared by writing 0. As no onwrite type expresses this, it is only described in desc.
+      if not mubi:
+        self.assign_property(comp_def, 'onwrite', OnWriteType['woset'])
     elif access_type == 'rw':
       self.assign_property(comp_def, 'sw', AccessType['rw'])
     elif access_type == 'ro':
@@ -125,9 +160,7 @@ class JsonImporter(RDLImporter):
       )
 
     # Instantiate the component definition
-    inst = self.instantiate_field(
-        comp_def, name, int(lsb), int(msb) - int(lsb) + 1
-    )
+    inst = self.instantiate_field(comp_def, name, int(lsb), width)
     return inst
 
   def decode_reg(self, reg_obj: dict, addr: int) -> comp.Reg:
@@ -136,19 +169,19 @@ class JsonImporter(RDLImporter):
       self.msg.fatal("JSON object is missing 'name'", self.default_src_ref)
     if 'desc' not in reg_obj:
       self.msg.fatal(
-          "'%s' is missing 'desc'", reg_obj['name'], self.default_src_ref
+          "'%s' is missing 'desc'" % reg_obj['name'], self.default_src_ref
       )
-    if 'swaccess' not in reg_obj:
+    if 'swaccess' not in reg_obj and not all('swaccess' in f for f in reg_obj.get('fields', [])):
       self.msg.fatal(
-          "'%s' is missing 'swaccess'", reg_obj['name'], self.default_src_ref
+          "'%s' is missing 'swaccess'" % reg_obj['name'], self.default_src_ref
       )
-    if 'hwaccess' not in reg_obj:
+    if 'hwaccess' not in reg_obj and not all('hwaccess' in f for f in reg_obj.get('fields', [])):
       self.msg.fatal(
-          "'%s' is missing 'hwaccess'", reg_obj['name'], self.default_src_ref
+          "'%s' is missing 'hwaccess'" % reg_obj['name'], self.default_src_ref
       )
     if 'fields' not in reg_obj:
       self.msg.fatal(
-          "'%s' is missing 'fields'", reg_obj['name'], self.default_src_ref
+          "'%s' is missing 'fields'" % reg_obj['name'], self.default_src_ref
       )
 
     comp_def = self.create_reg_definition()
@@ -265,7 +298,6 @@ class JsonImporter(RDLImporter):
       elif addr == 0x4:
         field_desc = 'Enable interrupt when %s is set.' % field_name
         self.assign_property(field_def, 'sw', AccessType['rw'])
-        self.assign_property(field_def, 'onwrite', OnWriteType['woclr'])
       elif addr == 0x8:
         field_desc = 'Write 1 to force %s to 1.' % field_name
         self.assign_property(field_def, 'sw', AccessType['w'])
@@ -283,6 +315,23 @@ class JsonImporter(RDLImporter):
       )
 
       # Convert each child component and add it to our reg definition
+      self.add_child(comp_def, field_inst)
+
+    # Newer versions of OpenTitan's reggen add a REGWEN bit at bit 31 of every
+    # ALERT_TEST register. It is not described in the hjson, so it is only
+    # added when requested with --alert-test-regwen.
+    if addr == 0xC and getattr(self, 'alert_test_regwen', False):
+      field_def = self.create_field_definition()
+      self.assign_property(field_def, 'sw', AccessType['rw'])
+      self.assign_property(field_def, 'onwrite', OnWriteType['wzc'])
+      self.assign_property(field_def, 'reset', 1)
+      self.assign_property(
+          field_def,
+          'desc',
+          'Register write enable for the alert test fields. Once cleared, '
+          'writes to the alert test fields are ignored until reset.',
+      )
+      field_inst = self.instantiate_field(field_def, 'REGWEN', 31, 1)
       self.add_child(comp_def, field_inst)
 
     # Convert the definition into an instance
@@ -337,6 +386,8 @@ if __name__ == '__main__':
   parser.add_argument('files', nargs='+', help='RDL or JSON input files')
   parser.add_argument('--param', '-p', action='append', default=[], 
                       help='Set RDL parameter (format: NAME=VALUE). Can be used multiple times.')
+  parser.add_argument('--alert-test-regwen', action='store_true',
+                      help='Add the REGWEN bit (bit 31) that newer reggen versions add to ALERT_TEST.')
   args = parser.parse_args()
 
   # Process input files from parsed args
@@ -345,6 +396,7 @@ if __name__ == '__main__':
   # Create a compiler session, and an importer attached to it
   rdlc = RDLCompiler()
   json_importer = JsonImporter(rdlc)
+  json_importer.alert_test_regwen = args.alert_test_regwen
 
   try:
     # import each JSON file provided from the command line
