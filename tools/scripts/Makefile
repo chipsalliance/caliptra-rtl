@@ -23,9 +23,8 @@ PLAYBOOK_RANDOM_SEED ?= $(shell date +%s)
 VCS_RANDOM_SEED ?= $(PLAYBOOK_RANDOM_SEED)
 BUILD_CFLAGS ?= 
 # Cflags to give fw visibility to expected hw configuration
-# Current release version is 2.1 - smoke test uses this value to check HW_REV_ID register
-# Update the value here after 2.1
-CALIPTRA_HW_REV_ID=0x0012
+# Current hardware release is 2.2.0 - smoke test checks this against HW_REV_ID
+CALIPTRA_HW_REV_ID=0x0022
 # After 1.1, LMS accelerator is always available
 HWCFG_CFLAGS ?= -DCALIPTRA_HWCONFIG_LMS_EN -DCALIPTRA_HW_REV_ID=$(CALIPTRA_HW_REV_ID)
 TEST_CFLAGS = -g -O3 -DMY_RANDOM_SEED=$(PLAYBOOK_RANDOM_SEED) $(BUILD_CFLAGS)
@@ -471,4 +470,3 @@ help:
 	@echo Possible targets: verilator vcs irun vlog riviera help clean all verilator-build irun-build vcs-build riviera-build program.hex
 
 .PHONY: help clean clean_fw verilator vcs irun vlog riviera
-

@@ -14,7 +14,29 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2026/03/19*_
+_*Last Update: 2026/11/09*_
+
+### Rev 2.2-rc1 ###
+
+#### Rev 2.2-rc1 release date: 2026/11/09 ###
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Adams Bridge v3.0-rc1 with ML-DSA 87 and ML-KEM 1024, area optimizations, and security hardening ([Release Notes](https://github.com/chipsalliance/adams-bridge/blob/v3.0-rc1/Release_Notes.md))
+- VeeR dual-core lockstep (DCLS) support in Passive and Subsystem modes
+- Fault injection countermeasures for FSMs, debug controls, and ICCM region registers
+- Key Vault boot flow monitoring, enforcement, and key-length checks
+- HMAC512 area optimization and multi-block interface updates
+- CSR HMAC key lock
+- ECC area optimization, zeroization, and Key Vault operand clearing
+- ECC and ML-DSA verification-pass status
+- Hardware ICCM hash measurement and PCR4/PCR5 updates in subsystem mode
+- Dual iTRNG entropy combiner
+- Updated entropy source and health-test register map
+- Stash-measurement register bank
+- DMA transfer limit increased to 2 GiB, subject to route-specific limits
+
+## Previous Releases ##
 
 ### Rev 2.1 ###
 
@@ -28,8 +50,6 @@ _*Last Update: 2026/03/19*_
 - External Mu mode for ML-DSA 87 signing
 - Mailbox size reduced to 16KB in subsystem mode
 - Reviewed code for TODO/FIXME items; all feature/bug comments have been addressed, some TODO items remain as future beautification or optimizations
-
-## Previous Releases ##
 
 ### Rev 2.1-rc1 ###
 
@@ -353,7 +373,3 @@ _*Last Update: 2026/03/19*_
     - Smoke tests for all of the above passing including bring up/boot of the caliptra IP (KV testing for ECC & SHA are pending)
     - UVMF for multiple DUT blocks and SOC interface
     - NOTE: 0.8 release will have stress validation on SOC interface with random resets, clock gating, impactless update crossed with mailbox protocol etc.
-
-
-
-
