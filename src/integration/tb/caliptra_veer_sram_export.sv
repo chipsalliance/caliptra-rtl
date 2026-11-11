@@ -329,7 +329,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
 
    else if (pt.ICCM_INDEX_BITS == 7 ) begin : iccm
                ram_128x39 iccm_bank (
@@ -353,7 +353,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
 
      else if (pt.ICCM_INDEX_BITS == 8 ) begin : iccm
                ram_256x39 iccm_bank (
@@ -377,7 +377,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
      else if (pt.ICCM_INDEX_BITS == 9 ) begin : iccm
                ram_512x39 iccm_bank (
                                      // Primary ports
@@ -400,7 +400,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
      else if (pt.ICCM_INDEX_BITS == 10 ) begin : iccm
                ram_1024x39 iccm_bank (
                                      // Primary ports
@@ -423,7 +423,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
      else if (pt.ICCM_INDEX_BITS == 11 ) begin : iccm
                ram_2048x39 iccm_bank (
                                      // Primary ports
@@ -446,7 +446,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
      else if (pt.ICCM_INDEX_BITS == 12 ) begin : iccm
                ram_4096x39 iccm_bank (
                                      // Primary ports
@@ -469,7 +469,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
      else if (pt.ICCM_INDEX_BITS == 13 ) begin : iccm
                ram_8192x39 iccm_bank (
                                      // Primary ports
@@ -492,7 +492,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
      else if (pt.ICCM_INDEX_BITS == 14 ) begin : iccm
                ram_16384x39 iccm_bank (
                                      // Primary ports
@@ -515,7 +515,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
      else begin : iccm
                ram_32768x39 iccm_bank (
                                      // Primary ports
@@ -538,7 +538,7 @@ for (genvar i=0; i<pt.ICCM_NUM_BANKS; i++) begin: iccm_loop
                                      .BC2     (1'b0   )
 
                                       );
-     end // block: iccm
+     end : iccm
 `endif
 end : iccm_loop
 end : Gen_iccm_enable

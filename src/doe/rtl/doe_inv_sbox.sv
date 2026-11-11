@@ -316,7 +316,7 @@ module doe_inv_sbox(
   assign inv_sbox[8'hfe] = 8'h0c;
   assign inv_sbox[8'hff] = 8'h7d;
 
-endmodule // doe_inv_sbox
+endmodule : doe_inv_sbox
 
 //======================================================================
 // EOF doe_inv_sbox.v

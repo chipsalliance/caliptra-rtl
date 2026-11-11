@@ -500,7 +500,7 @@ end
             read_single_word(ADDR_STATUS);
           end
       end
-    endtask // wait_ready
+    endtask : wait_ready
   
 
   //----------------------------------------------------------------
@@ -530,7 +530,7 @@ end
       @(posedge clk_i);
       hsel_o      <= 0;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
   //----------------------------------------------------------------
   // write_block()
@@ -555,7 +555,7 @@ end
       write_single_word(addr+4*10, block[63   :  32]);
       write_single_word(addr+4*11, block[31   :   0]);
     end
-  endtask // write_block
+  endtask : write_block
 
   //----------------------------------------------------------------
   // Read a data word from the given address in the DUT.
@@ -582,7 +582,7 @@ end
       @(posedge clk_i);
       hsel_o      <= 0;
     end
-  endtask // read_single_word
+  endtask : read_single_word
   
   //----------------------------------------------------------------
   // read_block()
@@ -619,7 +619,7 @@ end
       read_single_word(addr +  4*11);
       reg_read_data[31  :   0] = hrdata_i;
     end
-  endtask // read_digest
+  endtask : read_block
 
   //----------------------------------------------------------------
   // trig_ECC()
@@ -630,7 +630,7 @@ end
       repeat (10) @(posedge clk_i);
       write_single_word(ADDR_CTRL  , 0);
     end
-  endtask // trig_ECC
+  endtask : trig_ECC
 
   //----------------------------------------------------------------
   // zeroize_and_check()
@@ -721,7 +721,7 @@ end
       end
       */
     end
-  endtask // ecc_keygen_test
+  endtask : ecc_keygen_test
 
   //----------------------------------------------------------------
   // ecc_signing_test()
@@ -794,7 +794,7 @@ end
       end
       */
     end
-  endtask // ecc_signing_test
+  endtask : ecc_signing_test
 
   //----------------------------------------------------------------
   // ecc_verifying_test()
@@ -865,7 +865,7 @@ end
       end
       */
     end
-  endtask // ecc_verifying_test
+  endtask : ecc_verifying_test
 
   task ecc_DH_sharedkey_test (
     input test_vector_t test_vector,
@@ -966,7 +966,7 @@ end
         ecc_DH_sharedkey_test(test_vector, test_otf_reset);
       end
     end
-  endtask // ecc_test
+  endtask : ecc_test
 
   task read_test_vectors (
     input string fname

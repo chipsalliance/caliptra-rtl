@@ -318,7 +318,7 @@ module doe_sbox(
   assign sbox[8'hfe] = 8'hbb;
   assign sbox[8'hff] = 8'h16;
 
-endmodule // doe_sbox
+endmodule : doe_sbox
 
 //======================================================================
 // EOF doe_sbox.v

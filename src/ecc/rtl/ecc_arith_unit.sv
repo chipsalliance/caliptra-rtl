@@ -210,7 +210,7 @@ module ecc_arith_unit
             else
                 d_o <= '0;
         end
-    end // reg_update
+    end : reg_update
 
     //Push key bit to ecc pm control
     assign digit_in = secret_key[0];

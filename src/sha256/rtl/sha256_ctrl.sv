@@ -116,7 +116,7 @@ module sha256_ctrl #(
         .rdata(sha256_read_data)
     );
 
-endmodule //sha256_ctrl
+endmodule : sha256_ctrl
 
 //======================================================================
 // EOF sha256_ctrl.sv

@@ -166,7 +166,7 @@ module caliptra_top_tb (
     always
     begin : clk_gen
       core_clk = #5ns ~core_clk;
-    end // clk_gen
+    end : clk_gen
 `endif
 
 

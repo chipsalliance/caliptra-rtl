@@ -185,7 +185,7 @@ module doe_cbc
           kv_result_reg <= core_result;
           block_reg <= doe_block_write_en ? doe_block_write_data : block_reg;
         end
-  end// reg_update
+  end : reg_update
 
 //DOE Register Hardware Interface
 
@@ -313,7 +313,7 @@ assign notif_intr = hwif_out.intr_block_rf.notif_global_intr_r.intr;
 
 always_comb busy_o = flow_in_progress | ~core_ready;
 
-endmodule // doe
+endmodule : doe_cbc
 
 //======================================================================
 // EOF doe.v
