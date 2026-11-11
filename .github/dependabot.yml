@@ -7,4 +7,27 @@ updates:
     schedule:
       # Check for updates to GitHub Actions every week
       interval: "weekly"
-      
+    commit-message:
+      # CONTRIBUTING.md requires an [AREA] prefix on pull request titles.
+      # The trailing space stops Dependabot from adding a colon.
+      prefix: "[ENV] "
+
+  # uv.lock files for the Nix development shells in flake.nix.
+  # lockfile-only leaves the pins in pyproject.toml alone, for example the
+  # PeakRDL versions listed in README.md, and "all" also covers indirect
+  # dependencies such as Pillow and GitPython.
+  - package-ecosystem: "uv"
+    directories:
+      - "/tools/dvsim/python"
+      - "/tools/scripts/python"
+    schedule:
+      interval: "weekly"
+    allow:
+      - dependency-type: "all"
+    versioning-strategy: "lockfile-only"
+    groups:
+      python:
+        patterns:
+          - "*"
+    commit-message:
+      prefix: "[ENV] "
