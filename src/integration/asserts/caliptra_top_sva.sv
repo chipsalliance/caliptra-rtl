@@ -608,7 +608,7 @@ module caliptra_top_sva
     ($rose(int'(`AXI_DMA_CTRL_PATH.ctrl_fsm_ps) == int'(axi_dma_reg__status0__axi_dma_fsm_ps__axi_dma_fsm_e__DMA_IDLE)) &&
      (int'(`AXI_DMA_CTRL_PATH.wr_route) == int'(axi_dma_reg__ctrl__wr_route__wr_route_e__KEYVAULT)))
 
-    |->
+    |=>
 
     // Check condition: No key data should exist in DMA FIFO
     (!key_data_exists_in_fifo());
