@@ -37,8 +37,8 @@ module caliptra_veer_sram_export import caliptra_top_tb_pkg::*; #(
 
     `ifndef VERILATOR
         initial begin
-            bitflip_mask_generator #(39) iccm_bitflip_gen = new();
-            bitflip_mask_generator #(39) dccm_bitflip_gen = new();
+            static bitflip_mask_generator #(39) iccm_bitflip_gen = new();
+            static bitflip_mask_generator #(39) dccm_bitflip_gen = new();
             forever begin
                 @(posedge el2_mem_export.clk)
                 if (~sram_error_injection_mode.iccm_single_bit_error && ~sram_error_injection_mode.iccm_double_bit_error) begin

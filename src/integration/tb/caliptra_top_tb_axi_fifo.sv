@@ -235,7 +235,7 @@ module caliptra_top_tb_axi_fifo #(
         $display("Randomized mode to %s", mode_pulse ? "mode_pulse" : mode_thresh ? "mode_thresh" : mode_not_empty ? "mode_not_empty" : "null");
         `ifndef VERILATOR
         if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
-            int block_size_idx = 0;
+            static int block_size_idx = 0;
             RECOVERY_BURST_TEST_SIZE = 4; // dummy init value
             wait(dma_gen_done);
             @(posedge en_recovery_emulation);
