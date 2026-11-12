@@ -118,7 +118,6 @@ module caliptra_top_tb_services
     localparam VERIFY_RES_NUM_DWORDS = 16;
 
 
-    `ifndef VERILATOR
     int MAX_CYCLES;
     initial begin
         // To use this from the command line, add "+CLP_MAX_CYCLES=<value>"
@@ -131,9 +130,6 @@ module caliptra_top_tb_services
             $info("No argument provided for CLP_MAX_CYCLES, defaulting to %d", MAX_CYCLES);
         end
     end
-    `else
-    parameter MAX_CYCLES = 20_000_000;
-    `endif
 
     parameter MEMTYPE_LMEM = 3'h1;
     parameter MEMTYPE_DCCM = 3'h2;
@@ -3288,9 +3284,7 @@ task static preload_iccm;
     bit[31:0] data;
     bit[31:0] addr, eaddr, saddr;
 
-    `ifndef VERILATOR
     init_iccm();
-    `endif
     saddr = `RV_ICCM_SADR;
     if ( (saddr < `RV_ICCM_SADR) || (saddr > `RV_ICCM_EADR)) return;
     `ifndef RV_ICCM_ENABLE
@@ -3320,9 +3314,7 @@ task static preload_dccm ();
     bit[31:0] data;
     bit[31:0] addr, saddr, eaddr;
 
-    `ifndef VERILATOR
     init_dccm();
-    `endif
     saddr = `RV_DCCM_SADR;
     if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
     `ifndef RV_DCCM_ENABLE

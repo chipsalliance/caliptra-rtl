@@ -348,9 +348,7 @@ import caliptra_top_tb_pkg::*; #(
         assert_rst_flag_from_fatal = 1'b0;
         m_axi_bfm_if.rst_mgr();
 
-`ifndef VERILATOR
         if($test$plusargs("dumpon")) $dumpvars;
-`endif
 
         if($test$plusargs("RAND_DOE_VALUES")) begin
             //cptra_obf_key = cptra_obf_key_tb;
