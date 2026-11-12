@@ -670,6 +670,8 @@ module sha512_ctrl_tb
       $display("*** Double block test pipelined processing time = %01d cycles", end_time);
       read_digest();
 
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
+
       mask = get_mask(mode);
 
       if ((digest_data & mask) == (expected & mask))
@@ -795,7 +797,12 @@ module sha512_ctrl_tb
 
       #(CLK_PERIOD);
 
-      for (int i=0; i<10; i++)
+      // Send the commands below only while the engine is busy (block takes ~80 cycles)
+      read_data = 1;
+      while (read_data[0])
+        read_single_word(`SHA512_REG_SHA512_STATUS);
+
+      for (int i=0; i<5; i++)
         begin
           write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
           #CLK_PERIOD;
@@ -822,6 +829,11 @@ module sha512_ctrl_tb
 
       #(CLK_PERIOD);
 
+      // Send the commands below only while the engine is busy (block takes ~80 cycles)
+      read_data = 1;
+      while (read_data[0])
+        read_single_word(`SHA512_REG_SHA512_STATUS);
+
       for (int i=0; i<10; i++)
         begin
           write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
@@ -839,6 +851,8 @@ module sha512_ctrl_tb
       end_time = cycle_ctr - start_time;
       $display("*** Continuous command test processing time = %01d cycles", end_time);
       read_digest();
+
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
 
       mask = get_mask(mode);
 

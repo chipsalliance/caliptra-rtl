@@ -339,6 +339,8 @@ void main() {
     }
 
     //read 384 bits from PCR31 and write to SHA512 BLOCK
+    sha512_zeroize();
+    sha512_poll_ready();
     VPRINTF(MEDIUM,"KV: polling for kv ready\n");
     kv_poll_ready(CLP_SHA512_REG_SHA512_VAULT_RD_STATUS);
     pv_hash_extend(0x1f);
@@ -388,6 +390,8 @@ void main() {
     }
 
     //check endianness of result
+    sha512_zeroize();
+    sha512_poll_ready();
     //Write first msg to block
     offset = 0;
     reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_BLOCK_0;
@@ -428,6 +432,7 @@ void main() {
         offset++;
     }
 
+    sha512_zeroize();
     sha_poll_gen_hash_ready();
     reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE_0;
     offset = 0;

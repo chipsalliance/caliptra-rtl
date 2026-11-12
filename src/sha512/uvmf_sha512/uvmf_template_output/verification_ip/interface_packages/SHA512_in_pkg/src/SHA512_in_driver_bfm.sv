@@ -680,6 +680,12 @@ end
       read_digest_bfm();
       @(posedge clk_i);
 
+      repeat (2) @(posedge clk_i);
+      write_single_word(ADDR_CTRL, 32'h10); // zeroize
+      @(posedge clk_i);
+      hsel_o       = 0;
+      repeat (5) @(posedge clk_i);
+
     end
   endtask // double_block_test
 

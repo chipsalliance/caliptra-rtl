@@ -162,6 +162,7 @@ void main() {
     mism_c = ordinary_hash_and_check("C");
 
     VPRINTF(LOW, "Phase D: second ordinary SHA-512 (persistence check)\n");
+    zeroize_and_settle();
     mism_d = ordinary_hash_and_check("D");
 
     if ((lsu_read_32(CLP_SHA512_REG_SHA512_GEN_PCR_HASH_STATUS) &
