@@ -352,6 +352,8 @@ logic t1_timeout_p;
 logic t2_timeout;
 logic t2_timeout_f; //To generate interrupt pulse
 logic t2_timeout_p;
+logic wdt_error_t1_intr_sts_f;
+logic wdt_error_t2_intr_sts_f;
 logic wdt_error_t1_intr_serviced;
 logic wdt_error_t2_intr_serviced;
 
@@ -1712,25 +1714,22 @@ end
 always_comb t1_timeout_p = t1_timeout & ~t1_timeout_f;
 always_comb t2_timeout_p = t2_timeout & ~t2_timeout_f;
 
-// NOTE: Since error_internal_intr_r is Write-1-to-clear, capture writes to the
-//       WDT interrupt bits to detect the interrupt being serviced.
-//       It would be preferable to decode this from interrupt signals somehow,
-//       but that would require modifying interrupt register RDL which has been
-//       standardized.
-always_ff @(posedge soc_ifc_clk_cg or negedge cptra_noncore_rst_b) begin
+// Only an accepted Caliptra W1C can clear these sticky status bits outside reset.
+always_ff @(posedge rdc_clk_cg or negedge cptra_noncore_rst_b) begin
     if(!cptra_noncore_rst_b) begin
-        wdt_error_t1_intr_serviced <= 1'b0;
-        wdt_error_t2_intr_serviced <= 1'b0;
-    end
-    else if (soc_ifc_reg_req_dv && soc_ifc_reg_req_data.write && (soc_ifc_reg_req_data.addr[SOC_IFC_REG_ADDR_WIDTH-1:0] == SOC_IFC_REG_ADDR_WIDTH'(`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R))) begin
-        wdt_error_t1_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER1_TIMEOUT_STS_LOW];
-        wdt_error_t2_intr_serviced <= soc_ifc_reg_req_data.wdata[`SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_WDT_TIMER2_TIMEOUT_STS_LOW];
+        wdt_error_t1_intr_sts_f <= 1'b0;
+        wdt_error_t2_intr_sts_f <= 1'b0;
     end
     else begin
-        wdt_error_t1_intr_serviced <= 1'b0;
-        wdt_error_t2_intr_serviced <= 1'b0;
+        wdt_error_t1_intr_sts_f <= soc_ifc_reg_hwif_out.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value;
+        wdt_error_t2_intr_sts_f <= soc_ifc_reg_hwif_out.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value;
     end
 end
+
+assign wdt_error_t1_intr_serviced = wdt_error_t1_intr_sts_f &
+                                  ~soc_ifc_reg_hwif_out.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value;
+assign wdt_error_t2_intr_serviced = wdt_error_t2_intr_sts_f &
+                                  ~soc_ifc_reg_hwif_out.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value;
 
 wdt #(
     .WDT_TIMEOUT_PERIOD_NUM_DWORDS(SOC_IFC_WDT_TIMEOUT_PERIOD_NUM_DWORDS)
@@ -1961,6 +1960,16 @@ end
 `CALIPTRA_ASSERT      (AXI_SUB_DATA_WIDTH, SOC_IFC_DATA_W == AXI_DATA_WIDTH, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_USER_WIDTH, SOC_IFC_USER_W == AXI_USER_WIDTH, clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT      (AXI_SUB_ID_WIDTH  , SOC_IFC_ID_W   == AXI_ID_WIDTH,   clk, !cptra_noncore_rst_b)
+
+// Service is sampled on the first RDC edge after the corresponding status clears.
+`CALIPTRA_ASSERT(WdtT1ServiceRequiresStatusClear_A,
+    wdt_error_t1_intr_serviced |->
+        $fell(soc_ifc_reg_hwif_out.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value),
+    rdc_clk_cg, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT(WdtT2ServiceRequiresStatusClear_A,
+    wdt_error_t2_intr_serviced |->
+        $fell(soc_ifc_reg_hwif_out.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value),
+    rdc_clk_cg, !cptra_noncore_rst_b)
 
 `CALIPTRA_ASSERT_KNOWN(ERR_AHB_INF_X, {hreadyout_o,hresp_o}, clk, !cptra_noncore_rst_b)
 endmodule
