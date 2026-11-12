@@ -1018,6 +1018,10 @@ The following pseudocode demonstrates how the SHA512 interface can be implemente
 
 ![](./images/SHA512_pseudo.png)
 
+### Command sequencing
+
+Only one “init” command, or one PCR hash generation start, is accepted between zeroize commands. FW must send a zeroize after each hash operation completes (and after reading the digest) before starting a new one; the first operation after reset does not require a prior zeroize. An “init” sent without an intervening zeroize is ignored: the digest registers are cleared, and the VALID status bit stays low and “next” and “restore” commands are ignored until the next zeroize.
+
 ### SCA countermeasure
 
 We do not propose any countermeasure to protect the hash functions. Inherently, hash functions do not work like other cryptographic engines. Hash functions target integrity without requiring a secret key. Hence, the attacker can target only messages. Also, the attacker cannot build a CPA or DPA platform on the hash function because the same message ideally gives the same side-channel behavior.
@@ -2735,6 +2739,8 @@ PCR entries are hash extended using a hash extension function. The hash extensio
 FW provides the PCR entry to use as source and destination of the hash extend. HW copies the PCR into the start of the SHA block and locks those dwords from FW access. FW then provides the new data, and runs the SHA function as usual. After initialization, the locked dwords are unlocked.
 
 FW must set a last cycle flag before running the last iteration of the SHA engine. This could be the first “init” cycle, or the Nth “next” cycle. This flag allows HW to copy the final resulting hash output back to the source PCR.
+
+While a hash extend is in progress, HW accepts “next” commands only after the “init” command and ignores any command after the last cycle has been sent. “Restore” and the PCR hash generation start command are ignored until the hash extend completes. To abandon a hash extend before completion, FW must send a zeroize. The SHA512 key vault read controls cannot be written while the core, the key vault read, or the key vault write is busy, so the hash extend target cannot change while the result is written back. As for any SHA512 operation, a zeroize is required before a new “init” is accepted.
 
 ### PCR signing
 
