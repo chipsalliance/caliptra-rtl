@@ -145,7 +145,7 @@ package mbox_csr_uvm;
 
         virtual function void build();
             this.datain = new("datain");
-            this.datain.configure(this, 32, 0, "RW", 0, 'h0, 1, 1, 0);
+            this.datain.configure(this, 32, 0, "WO", 0, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
                 foreach(datain_bit_cg[bt]) datain_bit_cg[bt] = new();
             end

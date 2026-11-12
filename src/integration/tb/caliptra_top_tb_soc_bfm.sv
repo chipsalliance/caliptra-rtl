@@ -582,6 +582,8 @@ import caliptra_top_tb_pkg::*; #(
                                                .resp      (wresp          ),
                                                .resp_user (buser          ));
 
+                        check_mbox_datain_write_only();
+
                         $display ("SoC: Setting the Execute Register\n");
                         m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_EXECUTE), .user(32'hFFFF_FFFF), .data(32'h00000001), .resp(wresp), .resp_user(buser));
 
@@ -590,6 +592,8 @@ import caliptra_top_tb_pkg::*; #(
 
                         $display("SoC: Reading the Status Register...\n");
                         m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_STATUS), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp), .resp_user(buser));
+
+                        check_mbox_datain_write_only();
 
                         if (((rdata & `MBOX_CSR_MBOX_STATUS_STATUS_MASK) >> `MBOX_CSR_MBOX_STATUS_STATUS_LOW) == DATA_READY) begin: READ_RESP_DATA
                             $display("SoC: Reading the Data Length Register...\n");
@@ -614,6 +618,8 @@ import caliptra_top_tb_pkg::*; #(
 
                         $display("SoC: Resetting the Execute Register\n");
                         m_axi_bfm_if.axi_write_single(.addr(`CLP_MBOX_CSR_MBOX_EXECUTE), .user(32'hFFFF_FFFF), .data(32'h0), .resp(wresp), .resp_user(buser));
+
+                        check_mbox_datain_write_only();
 
                         //Wait for Mailbox flow to be done before toggling generic_input_wires
                         @(negedge core_clk);
@@ -743,6 +749,8 @@ import caliptra_top_tb_pkg::*; #(
                             rv_dma_resp_error = 1'b0;
                         end
                         else if (mailbox_data_avail) begin
+                            check_mbox_datain_write_only();
+
                             $display("SoC: Reading the Data Length Register\n");
                             m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_DLEN), .user(32'hFFFF_FFFF), .data(rdata), .resp(rresp), .resp_user(buser));
 
@@ -931,6 +939,22 @@ initial begin
             force_ahb_dma_loop_read(ras_test_ctrl.iccm_read_burst.addr, ras_test_ctrl.iccm_read_burst.count);
     end
 end
+
+task automatic check_mbox_datain_write_only();
+    axi_resp_e resp;
+    logic [`CALIPTRA_AXI_USER_WIDTH-1:0] ruser;
+    logic [`CALIPTRA_AXI_DATA_WIDTH-1:0] rd;
+
+    if ($test$plusargs("MBOX_DATAIN_WO_CHECK")) begin
+        m_axi_bfm_if.axi_read_single(.addr(`CLP_MBOX_CSR_MBOX_DATAIN),
+                                     .user(32'hFFFF_FFFF),
+                                     .data(rd), .resp(resp), .resp_user(ruser));
+        if ((resp !== AXI_RESP_OKAY) || (rd !== '0)) begin
+            $fatal(1, "MBOX_DATAIN read returned 0x%08x with %s, expected zero with OKAY",
+                   rd, resp.name());
+        end
+    end
+endtask
 
 //==========================================================================
 // Fuse-like firmware configuration register smoke-test driver

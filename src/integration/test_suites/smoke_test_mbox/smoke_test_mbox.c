@@ -31,6 +31,15 @@ volatile uint32_t  intr_count       = 0;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
+static void check_datain_write_only(void) {
+    uint32_t data = lsu_read_32(CLP_MBOX_CSR_MBOX_DATAIN);
+    if (data != 0) {
+        VPRINTF(FATAL, "MBOX_DATAIN read returned 0x%x, expected zero\n", data);
+        SEND_STDOUT_CTRL(0x01);
+        while (1);
+    }
+}
+
 void main () {
 
     mbox_op_s op;
@@ -64,6 +73,7 @@ void main () {
 
     //read mbox command
     op = soc_ifc_read_mbox_cmd();
+    check_datain_write_only();
 
     //read from mbox
     VPRINTF(LOW, "FW: Reading %d bytes from mailbox\n", op.dlen);
@@ -82,6 +92,7 @@ void main () {
     for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
         VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
         lsu_write_32(CLP_MBOX_CSR_MBOX_DATAIN,mbox_data[ii]);
+        check_datain_write_only();
     }
 
     //set data ready status
@@ -101,6 +112,7 @@ void main () {
     //Wait for SoC to reset execute reg
     VPRINTF(LOW, "FW: Wait for SoC to reset execute register\n");
     while((lsu_read_32(CLP_MBOX_CSR_MBOX_EXECUTE) & MBOX_CSR_MBOX_EXECUTE_EXECUTE_MASK) == 1);
+    check_datain_write_only();
 
     //Force unlock
     lsu_write_32(CLP_MBOX_CSR_MBOX_UNLOCK, MBOX_CSR_MBOX_UNLOCK_UNLOCK_MASK);
@@ -119,6 +131,7 @@ void main () {
     for (ii = 0; ii < MBOX_DLEN_VAL/4; ii++) {
         VPRINTF(HIGH, "  datain: 0x%x\n", mbox_data[ii]);
         lsu_write_32(CLP_MBOX_CSR_MBOX_DATAIN,mbox_data[ii]);
+        check_datain_write_only();
     }
 
     //set execute
