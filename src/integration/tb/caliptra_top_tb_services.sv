@@ -1717,7 +1717,14 @@ endgenerate //IV_NO
     logic assert_scan_mode;
     logic assert_scan_mode_doe_done;
     logic assert_scan_mode_kv_write;
+
     always @(negedge clk) begin
+
+        scan_mode <= 1'b0;
+        assert_scan_mode <= 1'b0;
+        assert_scan_mode_doe_done <= 1'b0;
+        assert_scan_mode_kv_write <= 1'b0;
+       
         //Enable scan mode
         if ((WriteData[7:0] == 8'hef) && mailbox_write) begin
             cycleCnt_ff <= cycleCnt;
@@ -3094,7 +3101,6 @@ endgenerate //IV_NO
         cold_rst_done = 0;
         prandom_warm_rst = 0;
 
-        scan_mode = 0;
         wait_time_to_rst = 0;
 
         set_wdt_timer1_period = 0;
