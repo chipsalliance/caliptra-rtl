@@ -217,6 +217,8 @@ module soc_ifc_top
     output logic cptra_noncore_rst_b,
     //uC reset
     output logic cptra_uc_rst_b,
+    // Hardware reset context for cold-boot-only key clearing
+    output logic cold_boot,
     //Clock gating
     output logic clk_gating_en,
     output logic rdc_clk_dis,
@@ -712,6 +714,9 @@ always_comb begin
          soc_ifc_reg_hwif_in.CPTRA_RESET_REASON.WARM_RESET.next = soc_ifc_reg_hwif_out.CPTRA_RESET_REASON.WARM_RESET.value;
     end
 end
+
+always_comb cold_boot = ~(soc_ifc_reg_hwif_out.CPTRA_RESET_REASON.WARM_RESET.value |
+                          soc_ifc_reg_hwif_out.CPTRA_RESET_REASON.FW_UPD_RESET.value);
 
 
 // Generate a pulse to set the interrupt bit

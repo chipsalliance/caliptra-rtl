@@ -344,6 +344,7 @@ module caliptra_top
     logic dual_itrng_en_reg;
     // Stable owner key enable (from soc_ifc, used by KV enforcement)
     logic stable_owner_key_en;
+    logic cold_boot;
 
     logic [31:0] imem_haddr;
     logic imem_hsel;
@@ -1423,6 +1424,7 @@ key_vault1
 
     .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode),
     .debugUnlock_or_scan_mode_switch (debug_lock_or_scan_mode_switch),
+    .cold_boot (cold_boot),
     .boot_flow_fmc (boot_flow_fmc),
     .boot_flow_rt (boot_flow_rt),
     .boot_flow_error (boot_flow_error),
@@ -1879,6 +1881,7 @@ soc_ifc_top1
     //uC reset
     .cptra_noncore_rst_b (cptra_noncore_rst_b),
     .cptra_uc_rst_b (cptra_uc_rst_b),
+    .cold_boot(cold_boot),
     //Clock gating en
     .clk_gating_en(clk_gating_en),
     .rdc_clk_dis(rdc_clk_dis),

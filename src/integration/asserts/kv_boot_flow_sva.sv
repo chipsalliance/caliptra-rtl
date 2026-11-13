@@ -17,6 +17,7 @@
 //         DOE lockdown, write counters, and ICCM region register properties.
 
 `include "caliptra_macros.svh"
+`include "caliptra_sva.svh"
 
 `ifndef CPTRA_TB_TOP_NAME
   `ifdef UVMF_CALIPTRA_TOP
@@ -62,6 +63,9 @@ module kv_boot_flow_sva
   // Transition edges from kv.sv
   wire enter_fmc = `KV_PATH.enter_fmc;
   wire enter_rt  = `KV_PATH.enter_rt;
+  wire cold_boot = `KV_PATH.cold_boot;
+  wire cold_enter_fmc = cold_boot && enter_fmc;
+  wire cold_enter_rt  = cold_boot && enter_rt;
 
   // KV monitor alert
   wire kv_monitor_alert = `KV_PATH.kv_monitor_alert;
@@ -190,7 +194,7 @@ module kv_boot_flow_sva
 
   // ============================================================
   // Section 3: Enforcement Timing -- Slot clears
-  // What: Non-preserved slots must be cleared at each transition
+  // What: Non-preserved slots must be cleared at cold-boot transitions
   // Why: Destroys stale/temporary key material from prior boot phase
   // Timing: boot_flow_key_clear is combinational (same cycle as enter_fmc/enter_rt),
   //         key_entry_clear is registered (next cycle), dest_valid.hwclr fires from
@@ -203,6 +207,11 @@ module kv_boot_flow_sva
     assign key_entry_clear[s] = `KV_PATH.key_entry_clear[s];
   end
 
+  // Warm/update re-entry must not generate a transition clear request (same cycle).
+  `CALIPTRA_ASSERT(UnusedSlotClearColdOnly_A,
+      (|boot_flow_key_clear) |-> cold_boot,
+      clk, !core_rst_n || !monitor_en)
+
   // At enter_fmc: non-preserved slots cleared (slot 15 conditional on stable_owner_key_en,
   // MDK/HEK conditional on ocp_lock_mode_en)
   generate
@@ -213,12 +222,12 @@ module kv_boot_flow_sva
           // Slot 15: cleared only when stable_owner_key_en is NOT set
           ClearReqAtEnterFmc_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            (enter_fmc && !stable_owner_key_en) |-> boot_flow_key_clear[s]
+            (cold_enter_fmc && !stable_owner_key_en) |-> boot_flow_key_clear[s]
           ) else $display("SVA ERROR: slot %0d clear request not set at enter_fmc (stable_owner disabled)", s);
 
           ClearAtEnterFmc_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            (enter_fmc && !stable_owner_key_en) |=> key_entry_clear[s]
+            (cold_enter_fmc && !stable_owner_key_en) |=> key_entry_clear[s]
           ) else $display("SVA ERROR: slot %0d key_entry_clear not set after enter_fmc (stable_owner disabled)", s);
 
           StableOwnerPreserveAtEnterFmc_A: assert property (
@@ -229,12 +238,12 @@ module kv_boot_flow_sva
           // MDK/HEK: cleared only when ocp_lock_mode_en is NOT set
           ClearReqAtEnterFmc_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            (enter_fmc && !ocp_lock_mode_en) |-> boot_flow_key_clear[s]
+            (cold_enter_fmc && !ocp_lock_mode_en) |-> boot_flow_key_clear[s]
           ) else $display("SVA ERROR: slot %0d clear request not set at enter_fmc (ocp_lock disabled)", s);
 
           ClearAtEnterFmc_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            (enter_fmc && !ocp_lock_mode_en) |=> key_entry_clear[s]
+            (cold_enter_fmc && !ocp_lock_mode_en) |=> key_entry_clear[s]
           ) else $display("SVA ERROR: slot %0d key_entry_clear not set after enter_fmc (ocp_lock disabled)", s);
 
           OcpLockPreserveAtEnterFmc_A: assert property (
@@ -242,16 +251,16 @@ module kv_boot_flow_sva
             (enter_fmc && ocp_lock_mode_en) |-> !boot_flow_key_clear[s]
           ) else $display("SVA ERROR: slot %0d cleared at enter_fmc despite ocp_lock_mode_en", s);
         end else begin
-          // All other non-DICE slots: always cleared
+          // All other non-DICE slots: cleared during cold boot
           ClearReqAtEnterFmc_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            enter_fmc |-> boot_flow_key_clear[s]
+            cold_enter_fmc |-> boot_flow_key_clear[s]
           ) else $display("SVA ERROR: slot %0d clear request not set at enter_fmc", s);
 
           // Check registered key_entry_clear fires next cycle (drives hwclr)
           ClearAtEnterFmc_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            enter_fmc |=> key_entry_clear[s]
+            cold_enter_fmc |=> key_entry_clear[s]
           ) else $display("SVA ERROR: slot %0d key_entry_clear not set after enter_fmc", s);
         end
       end
@@ -268,12 +277,12 @@ module kv_boot_flow_sva
         if (s == KV_SLOT_STABLE_OWNER) begin
           ClearReqAtEnterRt_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            (enter_rt && !stable_owner_key_en) |-> boot_flow_key_clear[s]
+            (cold_enter_rt && !stable_owner_key_en) |-> boot_flow_key_clear[s]
           ) else $display("SVA ERROR: slot %0d clear request not set at enter_rt (stable_owner disabled)", s);
 
           ClearAtEnterRt_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            (enter_rt && !stable_owner_key_en) |=> key_entry_clear[s]
+            (cold_enter_rt && !stable_owner_key_en) |=> key_entry_clear[s]
           ) else $display("SVA ERROR: slot %0d key_entry_clear not set after enter_rt (stable_owner disabled)", s);
 
           StableOwnerPreserveAtEnterRt_A: assert property (
@@ -283,12 +292,12 @@ module kv_boot_flow_sva
         end else if (s inside {OCP_LOCK_RT_OBF_KEY_KV_SLOT, OCP_LOCK_HEK_SEED_KV_SLOT}) begin
           ClearReqAtEnterRt_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            (enter_rt && !ocp_lock_mode_en) |-> boot_flow_key_clear[s]
+            (cold_enter_rt && !ocp_lock_mode_en) |-> boot_flow_key_clear[s]
           ) else $display("SVA ERROR: slot %0d clear request not set at enter_rt (ocp_lock disabled)", s);
 
           ClearAtEnterRt_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            (enter_rt && !ocp_lock_mode_en) |=> key_entry_clear[s]
+            (cold_enter_rt && !ocp_lock_mode_en) |=> key_entry_clear[s]
           ) else $display("SVA ERROR: slot %0d key_entry_clear not set after enter_rt (ocp_lock disabled)", s);
 
           OcpLockPreserveAtEnterRt_A: assert property (
@@ -298,12 +307,12 @@ module kv_boot_flow_sva
         end else begin
           ClearReqAtEnterRt_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            enter_rt |-> boot_flow_key_clear[s]
+            cold_enter_rt |-> boot_flow_key_clear[s]
           ) else $display("SVA ERROR: slot %0d clear request not set at enter_rt", s);
 
           ClearAtEnterRt_A: assert property (
             @(posedge clk) disable iff (!core_rst_n || !monitor_en)
-            enter_rt |=> key_entry_clear[s]
+            cold_enter_rt |=> key_entry_clear[s]
           ) else $display("SVA ERROR: slot %0d key_entry_clear not set after enter_rt", s);
         end
       end

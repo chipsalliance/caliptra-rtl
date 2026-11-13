@@ -3116,9 +3116,11 @@ Enforcement is applied continuously based on the current boot phase and atomical
 
 The `lock_wr` and `lock_use` fields have `hwset` property in the register definition, allowing hardware to set them without firmware intervention. Once set, they can only be cleared by `core_only_rst_b` de-assertion.
 
-#### Slot clearing (atomic, on transition edge)
+#### Slot clearing (atomic, on cold-boot transition edges)
 
-**DICE slots** — unconditionally cleared or preserved at each transition:
+Unused-slot clearing runs only during cold boot, identified by both read-only `CPTRA_RESET_REASON.WARM_RESET` and `CPTRA_RESET_REASON.FW_UPD_RESET` being zero. Warm-reset and firmware-update transitions do not generate `boot_flow_key_clear` requests for any slot. Their key data, `dest_valid`, and `last_dword` are not modified by transition cleanup; firmware operations and independent clear/flush paths may still change them. Monitor checks, phase tracking, and lock enforcement remain active independently of this cold-boot gate.
+
+**DICE and runtime slots** — cold-boot transition behavior:
 
 | Slot | Purpose | ROM→FMC | FMC→RT |
 | :--- | :------ | :------ | :----- |
@@ -3132,9 +3134,11 @@ The `lock_wr` and `lock_use` fields have `hwset` property in the register defini
 | 7 | FMC_ECDSA | Preserved | Preserved |
 | 8 | FMC_MLDSA | Preserved | Preserved |
 | 9 | RT_MLDSA | Cleared | Preserved |
-| 10–14 | Unused | Cleared | Cleared |
+| 10–11 | DPE scratch | Cleared | Cleared |
+| 12 | Exported DPE CDI | Cleared | Cleared |
+| 13–14 | Unused | Cleared | Cleared |
 
-**Conditionally-preserved slots** — behavior depends on active mode:
+**Conditionally-preserved slots** — cold-boot behavior depends on active mode:
 
 | Slot | Purpose | Default (no optional features) | `stable_owner_key_en` | `ocp_lock_mode_en` |
 | :--- | :------ | :----------------------------- | :-------------------- | :----------------- |
@@ -3142,13 +3146,13 @@ The `lock_wr` and `lock_use` fields have `hwset` property in the register defini
 | 16 | MDK | Cleared | Cleared | Preserved |
 | 17–21 | Unused OCP range | Cleared | Cleared | Cleared |
 | 22 | HEK seed | Cleared | Cleared | Preserved |
-| 23 | MEK | Cleared | Cleared | **Always cleared** (DMA-accessible) |
+| 23 | MEK | Cleared | Cleared | Cleared (DMA-accessible) |
 
 Clearing destroys the key data and resets `dest_valid` and `last_dword` for the affected slots.
 
 #### Conditional slot preservation
 
-Two optional Caliptra features populate KV slots that must survive boot transitions when the feature is active, but must be cleared when inactive. These slots are **not monitored** (no dest_valid checks, no write counters) — the monitor is exclusively for DICE keys. Only the enforcement block (slot clearing) handles them conditionally.
+Two optional Caliptra features populate KV slots that must survive cold-boot transitions when the feature is active, but must be cleared when inactive. These slots are **not monitored** (no dest_valid checks, no write counters) — the monitor is exclusively for DICE keys. Only the enforcement block (slot clearing) handles them conditionally. Warm and firmware-update re-entry skip unused-slot clearing regardless of these feature enables.
 
 **Stable Owner Key (Slot 15)**
 
@@ -3158,7 +3162,7 @@ The Stable Owner Root Key is conditionally derived by ROM when all three conditi
 - `OCP_LOCK_MODE_en` = 0 (OCP Lock feature is not active)
 - `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1 (SoC configuration, written prior to `CPTRA_FUSE_WR_DONE`, enabling the stable owner key feature)
 
-The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared normally.
+The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both cold-boot ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared at those cold-boot transitions.
 
 **OCP Lock Keys (Slots 16 and 22)**
 
@@ -3166,13 +3170,13 @@ OCP Lock mode is supported only when `CALIPTRA_MODE_SUBSYSTEM` is defined. In Pa
 
 When OCP Lock mode is enabled (`ocp_lock_mode_en` = 1 from the `ss_ocp_lock_en` strap), DOE populates slot 16 (MDK) and slot 22 (HEK seed) before ROM runs. FMC and RT firmware require these keys for EPK, VEK, and MEK derivation in OCP Lock flows.
 
-When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at both transitions. When inactive, they are cleared normally.
+When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at both cold-boot transitions. When inactive, they are cleared at those cold-boot transitions.
 
-**Slot 23 (MEK) is always cleared** regardless of `ocp_lock_mode_en`. MEK has `DMA_DATA` in its `dest_valid` (it is DMA-accessible for key release), making it a security risk if it persists across transitions. RT firmware re-derives MEK when needed during OCP Lock key release flows.
+**Slot 23 (MEK) is always cleared at cold-boot transitions** regardless of `ocp_lock_mode_en`. This prevents early-stage key material from surviving in a DMA-accessible slot. Warm and firmware-update transitions do not clear it through this mechanism; runtime firmware remains responsible for its OCP Lock key lifecycle.
 
-Only the specific slots that ROM or FMC actually derive (16 and 22) are preserved — not the entire OCP Lock range (16–23). Slots 17–21 and 23 are always cleared.
+Only the specific slots that ROM or FMC actually derive (16 and 22) are preserved during cold boot — not the entire OCP Lock range (16–23). Slots 17–21 and 23 are cleared on cold-boot transitions.
 
-**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is always cleared even if `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1.
+**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is cleared at cold-boot transitions even if `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1.
 
 #### Error escalation
 

@@ -271,6 +271,7 @@ import uvmf_base_pkg_hdl::*;
       .fw_update_rst_window(kv_rst_agent_bus.fw_update_rst_window),
 
       //Boot flow signals - tied to inactive defaults for unit-level testing
+      .cold_boot(1'b1),
       .boot_flow_fmc (caliptra_prim_mubi_pkg::MuBi4False),
       .boot_flow_rt  (caliptra_prim_mubi_pkg::MuBi4False),
       .boot_flow_error(caliptra_prim_mubi_pkg::MuBi4False),
