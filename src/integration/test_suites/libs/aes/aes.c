@@ -603,11 +603,6 @@ void aes_flow(aes_op_e op, aes_mode_e mode, aes_key_len_e key_len, aes_flow_t ae
   }
   VPRINTF(LOW, "AES Operation Complete\n");
 
-  // Disable autostart. Note the control register is shadowed and thus needs to be written twice.
-  aes_ctrl = 0x1 << AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_LOW;
-  lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
-  lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
-
   // Clear all key, IV, Input Data and Output Data registers.
   lsu_write_32(CLP_AES_REG_TRIGGER, (0x1 << AES_REG_TRIGGER_KEY_IV_DATA_IN_CLEAR_LOW) |
                                      (0x1 << AES_REG_TRIGGER_DATA_OUT_CLEAR_LOW));

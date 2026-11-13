@@ -661,10 +661,9 @@ module aes_ghash
         in_ready_o = SP2V_HIGH;
         if (in_valid_i == SP2V_HIGH) begin
           if (clear_i) begin
-            // Clearing has highest priority. We clear the state using the unmasked cipher core
-            // output which is randomized at this point.
+            // Clearing has highest priority. Overwrite the state with the randomized cipher output.
             s_we              = SP2V_HIGH;
-            ghash_state_sel   = GHASH_STATE_ADD;
+            ghash_state_sel   = GHASH_STATE_INIT;
             ghash_state_we[0] = SP2V_HIGH;
             ghash_state_we[1] = SP2V_HIGH;
             hash_subkey_we    = SP2V_HIGH;
@@ -926,7 +925,7 @@ module aes_ghash
         if (out_ready_i == SP2V_HIGH) begin
           add_s_en_d        = 1'b0;
           s_we              = SP2V_HIGH;
-          ghash_state_sel   = GHASH_STATE_ADD;
+          ghash_state_sel   = GHASH_STATE_INIT;
           ghash_state_we[0] = SP2V_HIGH;
           ghash_state_we[1] = SP2V_HIGH;
           hash_subkey_we    = SP2V_HIGH;
