@@ -99,6 +99,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/kv_entry_read_err/kv_entry_read_err.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_swwe_lock/smoke_test_kv_swwe_lock.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_lock_use_mid_read/smoke_test_kv_lock_use_mid_read.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_entry_range/smoke_test_kv_entry_range.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_abr_kv_zero_error/smoke_test_abr_kv_zero_error.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_wr_ctrl_zeroize/smoke_test_kv_wr_ctrl_zeroize.yml
         # KV boot flow monitor/enforcement tests

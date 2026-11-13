@@ -312,10 +312,13 @@ always_comb begin : keyvault_readmux
         kv_rd_resp[client].error |= (kv_read[client].read_entry == entry) & 
                                     (lock_use_q[entry] | ~kv_reg_hwif_out.KEY_CTRL[entry].dest_valid.value[client] | fw_update_rst_window);
         end
+        //the entry field can address entries past the last one
+        kv_rd_resp[client].error |= (kv_read[client].read_entry >= KV_NUM_KEYS);
     end
 end
 
-//Write error when attempting to write to entry that is locked for writes, use, or is being cleared
+//Write error when attempting to write to entry that is locked for writes, use, or is being cleared,
+//or that does not exist
 always_comb begin : keyvault_write_resp
     for (int client = 0 ; client < KV_NUM_WRITE; client++) begin
         kv_wr_resp[client].error = '0;
@@ -323,6 +326,7 @@ always_comb begin : keyvault_write_resp
             kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & kv_write[client].write_en &
                                         (key_entry_clear[entry] | lock_wr_q[entry] | lock_use_q[entry] | fw_update_rst_window);
         end
+        kv_wr_resp[client].error |= (kv_write[client].write_entry >= KV_NUM_KEYS) & kv_write[client].write_en;
     end
 end
 

@@ -147,6 +147,7 @@ comparison of key contents.
 | `smoke_test_kv_swwe_lock` | Directed | Busy HMAC/ECC KV control writes are blocked; idle writes and PCR hash-extend control protection |
 | `smoke_test_kv_wr_ctrl_zeroize` | Directed | HMAC/ECC zeroize clears stale KV write controls/VALID before the next operation |
 | `smoke_test_kv_lock_use_mid_read` | Directed | Set lock_use after starting a HMAC key read; require a read error and sticky lock |
+| `smoke_test_kv_entry_range` | Directed | HMAC key reads, HMAC block reads, and HMAC tag writes to entries 24 to 31 complete with a read or write error |
 | `smoke_test_kv_mldsa` / `smoke_test_mldsa_kv_ocp_progress` / `smoke_test_mlkem_kv_ocp_progress` | Compatibility | Existing KV-seed flows inherit checked success/error status and engine-not-started checks after rejected reads |
 | `smoke_test_kv_rules_ocp_lock` | Compatibility | Existing HMAC/ML-KEM cross-region flows inherit strict KV read-status and rejected-read readiness checks |
 
