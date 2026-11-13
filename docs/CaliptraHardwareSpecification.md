@@ -1020,7 +1020,7 @@ The following pseudocode demonstrates how the SHA512 interface can be implemente
 
 ### Command sequencing
 
-Only one “init” command, or one PCR hash generation start, is accepted between zeroize commands. FW must send a zeroize after each hash operation completes (and after reading the digest) before starting a new one; the first operation after reset does not require a prior zeroize. An “init” sent without an intervening zeroize is ignored: the digest registers are cleared, and the VALID status bit stays low and “next” and “restore” commands are ignored until the next zeroize.
+Only one “init” command, or one PCR hash generation start, is accepted between zeroize commands. FW must send a zeroize after each hash operation completes (and after reading the digest) before starting a new one; the first operation after reset does not require a prior zeroize. An “init” sent without an intervening zeroize is ignored: the digest registers are cleared, and the VALID status bit stays low and “next” and “restore” commands are ignored until the next zeroize. The PCR hash generation VALID status bit is cleared by a zeroize and by every PCR hash generation start command, including one that is ignored. FW must poll READY before sending each command; commands other than zeroize are ignored while the engine is not ready.
 
 ### SCA countermeasure
 

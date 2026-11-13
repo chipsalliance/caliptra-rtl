@@ -256,6 +256,11 @@ void main() {
     settle();
     expect_pcr("lock", pcr);
 
+    // The expected PCR values below come from ordinary SHA-384; check that path against the FIPS 180 example.
+    for (uint32_t i = 0; i < BLOCK_DWORDS; i++) blk1[0][i] = abc_block[i];
+    ordinary_sha384(blk1, 1, now);
+    if (compare_words("sha384-kat", now, abc_sha384_kat, PCR_DWORDS)) fail("sha384-kat");
+
     VPRINTF(LOW, "Phase 1: single-block extend\n");
     read_pcr(pcr);
     build_one_block(pcr, 0x11111111, blk1[0]);
