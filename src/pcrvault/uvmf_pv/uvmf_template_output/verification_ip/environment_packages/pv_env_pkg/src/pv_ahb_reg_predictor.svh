@@ -45,11 +45,18 @@ class pv_ahb_reg_predictor #(type T = int,
         uvm_reg_data_t pv_reg_data;
         logic lock;
 
-        $cast(ahb_txn, tr);
+        if (!$cast(ahb_txn, tr))
+            `uvm_fatal("PV_AHB_TYPE", "Unexpected AHB monitor transaction type")
+        pv_reg = map.get_reg_by_offset(ahb_txn.address, ahb_txn.RnW == AHB_READ);
+        if (pv_reg == null) begin
+            // Unmapped transfers are still checked by the independent bus scoreboard.
+            `uvm_info("PV_AHB_UNMAPPED", $sformatf(
+                "No RAL register for AHB access at 0x%0h", ahb_txn.address), UVM_MEDIUM)
+            return;
+        end
         if(ahb_txn.RnW == AHB_WRITE) begin
             if((ahb_txn.address >= `PV_REG_PCR_CTRL_0) && (ahb_txn.address < `PV_REG_PCR_ENTRY_0_0)) begin
                 //`uvm_info("PV_AHB_REG", $sformatf("addr = %h, new data = %h", ahb_txn.address, ahb_txn.data[0]),UVM_MEDIUM);
-                pv_reg = map.get_reg_by_offset(ahb_txn.address);
                 pv_reg_data = pv_reg.get_mirrored_value();
                 lock = pv_reg_data[0];
                 `uvm_info("PV_AHB_REG", $sformatf("addr = %h, new data = %h, old data = %h, lock = %h", ahb_txn.address, ahb_txn.data[0], pv_reg_data, lock),UVM_MEDIUM);

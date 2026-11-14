@@ -122,9 +122,8 @@ interface keyvault_cov_if
         clear: coverpoint $countones(key_ctrl_clear) {
             bins none = {0};
             bins one  = {1};
-            bins few  = {[2:5]};
-            bins many = {[6:23]};
-            bins all  = {24};
+            // kv_reg.sv: one decoded CSR address/clock; nonselected clear singlepulses return to zero.
+            ignore_bins multiple_sw_clear = {[2:KV_NUM_KEYS]};
         }
         kv_write_en_cp: coverpoint {kv_write_en} 
         {

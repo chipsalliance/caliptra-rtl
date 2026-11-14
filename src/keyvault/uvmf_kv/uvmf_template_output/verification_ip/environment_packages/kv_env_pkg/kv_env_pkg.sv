@@ -154,6 +154,7 @@ package kv_env_pkg;
   `include "src/kv_wr_rd_debug_core_rst_sequence.svh"
   `include "src/kv_multi_write_collision_sequence.svh"
   `include "src/kv_debug_flush_mixed_locks_sequence.svh"
+  `include "src/kv_access_control_sequence.svh"
   // pragma uvmf custom package_item_additional end
 
 endpackage

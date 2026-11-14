@@ -31,6 +31,7 @@ package kv_reg_model_top_pkg;
    import uvm_pkg::*;
 // pragma uvmf custom additional_imports begin
    import kv_reg_uvm::*;
+   import kv_defines_pkg::*;
 // pragma uvmf custom additional_imports end
 
    `include "uvm_macros.svh"
@@ -38,7 +39,35 @@ package kv_reg_model_top_pkg;
    /* DEFINE REGISTER CLASSES */
 // pragma uvmf custom define_register_classes begin
 
+   class kv_key_data_write_protect_cbs extends uvm_reg_cbs;
+      local uvm_reg_map cpu_map;
+
+      function new(uvm_reg_map cpu_map);
+         super.new("kv_key_data_write_protect_cbs");
+         if (cpu_map == null)
+            `uvm_fatal("KV_CPU_PRED", "CPU map is required for key-data write protection")
+         this.cpu_map = cpu_map;
+      endfunction
+
+      virtual function void post_predict(input uvm_reg_field fld,
+                                         input uvm_reg_data_t previous,
+                                         inout uvm_reg_data_t value,
+                                         input uvm_predict_e kind,
+                                         input uvm_path_e path,
+                                         input uvm_reg_map map);
+         if (kind == UVM_PREDICT_WRITE &&
+             (path == UVM_FRONTDOOR || path == UVM_PREDICT)) begin
+            if (map != null) begin
+               // KV ties software key-data write enable off; keep hardware state.
+               if (map.get_root_map() == cpu_map.get_root_map())
+                  value = previous;
+            end
+         end
+      endfunction
+   endclass
+
    class kv_reg_ext extends kv_reg;
+      logic [KV_NUM_KEYS-1:0] key_entry_clear_q = '0;
       uvm_reg_map default_map_ext;
 
       //Write Interface
@@ -66,7 +95,13 @@ package kv_reg_model_top_pkg;
          super.new(name);
       endfunction : new
 
+      virtual function void reset(string kind = "HARD");
+         super.reset(kind);
+         if (kind == "HARD") key_entry_clear_q = '0;
+      endfunction
+
       virtual function void build();
+         kv_key_data_write_protect_cbs cpu_write_cbs;
          super.build();
          this.default_map_ext                = create_map("default_map_ext", 0, 4, UVM_LITTLE_ENDIAN);
 
@@ -90,6 +125,10 @@ package kv_reg_model_top_pkg;
          this.kv_reg_mlkem_seed_read_map     = create_map("keyvault_reg_mlkem_seed_read_map", 0, 4, UVM_LITTLE_ENDIAN);
          this.kv_reg_mlkem_msg_read_map      = create_map("keyvault_reg_mlkem_msg_read_map", 0, 4, UVM_LITTLE_ENDIAN);
          this.kv_reg_dma_read_map            = create_map("keyvault_reg_dma_read_map", 0, 4, UVM_LITTLE_ENDIAN);
+
+         cpu_write_cbs = new(this.kv_reg_AHB_map);
+         foreach (this.KEY_ENTRY[entry, offset])
+            uvm_reg_field_cb::add(this.KEY_ENTRY[entry][offset].data, cpu_write_cbs);
       endfunction
 
       virtual function void build_ext_maps();
@@ -543,4 +582,3 @@ endpackage
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

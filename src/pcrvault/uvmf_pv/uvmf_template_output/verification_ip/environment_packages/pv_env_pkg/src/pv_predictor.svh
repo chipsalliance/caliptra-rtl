@@ -132,6 +132,193 @@ class pv_predictor #(
   //updates the mirror before the AHB monitor broadcasts to this predictor.
   //RTL swwel uses the PREVIOUS cycle's lock value, so we need to track it ourselves.
   bit [PV_NUM_PCR-1:0] ctrl_lock_shadow;
+  logic [7:0] ctrl_data_shadow[PV_NUM_PCR];
+  bit [PV_NUM_PCR-1:0] clear_pending;
+  string pv_dut_path = "hdl_top.dut";
+  logic [PV_DATA_W-1:0] pcr_word[PV_NUM_PCR][PV_NUM_DWORDS];
+  bit word_dirty[PV_NUM_PCR][PV_NUM_DWORDS];
+  int mirror_jobs[$];
+  typedef struct packed {
+    logic [PV_ADDR_W-1:0] addr;
+    logic [PV_DATA_W-1:0] data;
+  } ahb_read_snapshot_t;
+  ahb_read_snapshot_t ahb_read_snapshots[$];
+  pv_sb_ahb_ap_output_transaction_t completed_ahb_reads[$];
+
+  function void update_word(int entry, int offset, logic [PV_DATA_W-1:0] data);
+    pcr_word[entry][offset] = data;
+    if (!word_dirty[entry][offset]) mirror_jobs.push_back(entry*PV_NUM_DWORDS+offset);
+    word_dirty[entry][offset] = 1;
+  endfunction
+
+  // RAL can be busy during a crypto frontdoor write. Retain the accepted WORD
+  // independently and defer only its mirror update, never its expected value.
+  function void flush_word_mirrors();
+    int index, entry, offset, count;
+    uvm_reg r;
+    count = mirror_jobs.size();
+    repeat (count) begin
+      index = mirror_jobs.pop_front();
+      entry = index / PV_NUM_DWORDS;
+      offset = index % PV_NUM_DWORDS;
+      r = p_pv_rm.pv_reg_rm.PCR_ENTRY[entry][offset];
+      if (r.is_busy()) mirror_jobs.push_back(index);
+      else begin
+        if (!r.predict(pcr_word[entry][offset]))
+          `uvm_fatal("PV_MIRROR", "Idle PCR mirror prediction failed")
+        r.set(pcr_word[entry][offset]);
+        word_dirty[entry][offset] = 0;
+      end
+    end
+  endfunction
+
+  function void publish_ahb_reads();
+    ahb_read_snapshot_t snapshot;
+    pv_sb_ahb_ap_output_transaction_t completed;
+    while (ahb_read_snapshots.size() && completed_ahb_reads.size()) begin
+      snapshot = ahb_read_snapshots.pop_front();
+      completed = completed_ahb_reads.pop_front();
+      if (PV_ADDR_W'(completed.address) !== snapshot.addr)
+        `uvm_fatal("PV_AHB_ORDER", "AHB callback address differs from sampled request")
+      completed.data[0] = ahb_lite_slave_0_params::AHB_RDATA_WIDTH'(snapshot.data) <<
+        (8*((snapshot.addr & ~(PV_DATA_W/8-1)) %
+            (ahb_lite_slave_0_params::AHB_RDATA_WIDTH/8)));
+      pv_sb_ahb_ap.write(completed);
+    end
+  endfunction
+
+  // The change-triggered write monitor reports a beat one clock late and does
+  // not report every beat of a constant stream. Sample SHA and actual raw
+  // CPU requests before NBA, not AHB completion callbacks. uc_req.wdata already
+  // has the AHB lane selected by ahb_slv_sif. No RTL storage/output is sampled.
+  virtual task run_phase(uvm_phase phase);
+    pv_write_t write_req;
+    pv_uc_req_t cpu_req;
+    uvm_hdl_data_t pin_value;
+    ahb_read_snapshot_t snapshot;
+    bit [PV_NUM_PCR-1:0] clear_before;
+    bit pwrgood_before, rst_before, core_before, window_before;
+    bit cpu_dv, cpu_reg_dv, permitted, hard_reset_seen = 0;
+    logic [PV_ENTRY_ADDR_W-1:0] read_entry;
+    logic [PV_ENTRY_SIZE_WIDTH-1:0] read_offset;
+    int entry, offset;
+    super.run_phase(phase);
+    fork
+      begin
+        forever begin
+          @(negedge configuration.pv_rst_agent_config.monitor_bfm.cptra_pwrgood_i);
+          // Storage resets asynchronously, before the next read-monitor callback.
+          foreach (pcr_word[e, w]) update_word(e, w, 0);
+        end
+      end
+    join_none
+    forever begin
+      @(posedge configuration.pv_sha512_write_agent_config.monitor_bfm.clk_i);
+      write_req = pv_write_t'(configuration.pv_sha512_write_agent_config.monitor_bfm.pv_write_i);
+      clear_before = clear_pending;
+      pwrgood_before = configuration.pv_rst_agent_config.monitor_bfm.cptra_pwrgood_i;
+      rst_before = configuration.pv_rst_agent_config.monitor_bfm.rst_b_i;
+      core_before = configuration.pv_rst_agent_config.monitor_bfm.core_only_rst_b_i;
+      window_before = configuration.pv_rst_agent_config.monitor_bfm.fw_update_rst_window_i;
+      if (!uvm_hdl_read({pv_dut_path, ".uc_req_dv"}, pin_value))
+        `uvm_fatal("PV_INPUT_PATH", "Cannot read PV request pins; build with -debug_access+all")
+      cpu_dv = pin_value[0];
+      cpu_reg_dv = 0;
+      cpu_req = '0;
+      if (cpu_dv) begin
+        if (!uvm_hdl_read({pv_dut_path, ".uc_req"}, pin_value))
+          `uvm_fatal("PV_INPUT_PATH", "Cannot read PV CPU request")
+        cpu_req = pv_uc_req_t'(pin_value);
+        cpu_reg_dv = (cpu_req.addr[PV_ADDR_W-1:pv_reg_pkg::PV_REG_ADDR_WIDTH] == 0);
+      end
+      // Freeze the pre-edge read result. Callback delivery can be before or
+      // after this worker; queues preserve ordering without a tolerance window.
+      if (cpu_dv && !cpu_req.write) begin
+        snapshot.addr = cpu_req.addr;
+        if (!cpu_reg_dv)
+          snapshot.data = 0;
+        else if (cpu_req.addr < PV_NUM_PCR*4 && cpu_req.addr[1:0] == 0)
+          snapshot.data = ctrl_data_shadow[cpu_req.addr/4];
+        else if (cpu_req.addr >= `PV_REG_PCR_ENTRY_0_0 &&
+                 cpu_req.addr < `PV_REG_PCR_ENTRY_0_0 + PV_NUM_PCR*PV_NUM_DWORDS*4 &&
+                 cpu_req.addr[1:0] == 0) begin
+          {read_offset, read_entry} = convert_addr_to_pv(cpu_req.addr);
+          snapshot.data = pcr_word[read_entry][read_offset];
+        end
+        else snapshot.data = 0; // Unmapped/unaligned read mux default in pv_reg.
+        ahb_read_snapshots.push_back(snapshot);
+        publish_ahb_reads();
+      end
+      uvm_wait_for_nba_region();
+      if (!configuration.pv_rst_agent_config.monitor_bfm.cptra_pwrgood_i) begin
+        if (!hard_reset_seen)
+          foreach (pcr_word[e, w]) update_word(e, w, 0);
+        hard_reset_seen = 1;
+      end
+      else if (pwrgood_before) begin
+        hard_reset_seen = 0;
+        if (rst_before) begin
+          for (int e = 0; e < PV_NUM_PCR; e++) begin
+            if (clear_before[e]) begin
+              for (int w = 0; w < PV_NUM_DWORDS; w++) update_word(e, w, 0);
+            end
+          end
+        end
+        permitted = 1;
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+        permitted = write_req.write_entry != PV_PCR_CUR &&
+                    write_req.write_entry != PV_PCR_JRN;
+`endif
+        if (write_req.write_en && permitted &&
+            write_req.write_entry < PV_NUM_PCR && write_req.write_offset < PV_NUM_DWORDS) begin
+          update_word(write_req.write_entry, write_req.write_offset, write_req.write_data);
+        end
+        else if (write_req.write_en && !permitted &&
+                 write_req.write_entry < PV_NUM_PCR && write_req.write_offset < PV_NUM_DWORDS) begin
+          // A denied SHA frontdoor write can still auto-predict the RAL mirror.
+          update_word(write_req.write_entry, write_req.write_offset,
+                      pcr_word[write_req.write_entry][write_req.write_offset]);
+        end
+      end
+      clear_pending = '0;
+      if (cpu_dv && cpu_reg_dv && cpu_req.write && cpu_req.addr < PV_NUM_PCR*4 &&
+          cpu_req.addr[1:0] == 0) begin
+        entry = cpu_req.addr/4;
+        if (rst_before) ctrl_data_shadow[entry][7:2] = cpu_req.wdata[7:2];
+        // Both CSR fields see the OLD lock, even for a combined lock+clear.
+        if (!ctrl_lock_shadow[entry] || window_before) begin
+          if (rst_before) clear_pending[entry] = cpu_req.wdata[1];
+          if (core_before) ctrl_lock_shadow[entry] = cpu_req.wdata[0];
+        end
+      end
+      for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
+        // Main reset clears pulse/reserved fields; core reset clears only lock.
+        if (!configuration.pv_rst_agent_config.monitor_bfm.rst_b_i) begin
+          ctrl_data_shadow[entry][7:1] = 0;
+          clear_pending[entry] = 0;
+        end
+        if (!configuration.pv_rst_agent_config.monitor_bfm.core_only_rst_b_i)
+          ctrl_lock_shadow[entry] = 0;
+        ctrl_data_shadow[entry][0] = ctrl_lock_shadow[entry];
+        ctrl_data_shadow[entry][1] = clear_pending[entry];
+        if (!p_pv_rm.pv_reg_rm.PCR_CTRL[entry].is_busy() &&
+            p_pv_rm.pv_reg_rm.PCR_CTRL[entry].get_mirrored_value() !==
+            uvm_reg_data_t'(ctrl_data_shadow[entry])) begin
+          if (!p_pv_rm.pv_reg_rm.PCR_CTRL[entry].predict(ctrl_data_shadow[entry]))
+            `uvm_fatal("PV_MIRROR", "Idle CTRL mirror prediction failed")
+          p_pv_rm.pv_reg_rm.PCR_CTRL[entry].set(ctrl_data_shadow[entry]);
+        end
+      end
+      flush_word_mirrors();
+      publish_ahb_reads();
+    end
+  endtask
+
+  virtual function void check_phase(uvm_phase phase);
+    super.check_phase(phase);
+    if (ahb_read_snapshots.size() || completed_ahb_reads.size() || mirror_jobs.size())
+      `uvm_error("PV_PENDING", "Unconsumed AHB read snapshots/callbacks or PCR mirror jobs")
+  endfunction
 
   extern function void populate_expected_pv_read_txn(ref pv_sha512_block_read_sb_ap_output_transaction_t t_expected, pv_read_transaction t_received);
   extern function void populate_expected_pv_write_txn(ref pv_sha512_write_sb_ap_output_transaction_t t_expected, pv_write_transaction t_received);
@@ -142,6 +329,8 @@ class pv_predictor #(
   function new(string name, uvm_component parent);
      super.new(name,parent);
   // pragma uvmf custom new begin
+    foreach (ctrl_data_shadow[entry]) ctrl_data_shadow[entry] = 0;
+    foreach (pcr_word[entry, offset]) pcr_word[entry][offset] = 0;
   // pragma uvmf custom new end
   endfunction
 
@@ -163,6 +352,8 @@ class pv_predictor #(
     p_pv_sha512_write_map         = p_pv_rm.get_map_by_name("pv_sha512_write_map");
     p_pv_sha512_block_read_map    = p_pv_rm.get_map_by_name("pv_sha512_block_read_map");
     p_pv_AHB_map                  = p_pv_rm.get_map_by_name("pv_AHB_map");
+    void'(uvm_config_db#(string)::get(null, configuration.get_full_name(),
+                                    "pv_dut_path", pv_dut_path));
 
   // pragma uvmf custom build_phase end
   endfunction
@@ -185,21 +376,8 @@ class pv_predictor #(
     pv_sha512_block_read_sb_ap_output_transaction.last = 'h0;
     pv_sha512_block_read_sb_ap_output_transaction.read_data = 'h0;
 
-    if (!t.set_pwrgood) begin
-      //Clear all regs on hard reset
-      p_pv_rm.reset();
-      ctrl_lock_shadow = '0;
-    end
-    else if (t.assert_core_rst) begin
-      //Core reset clears lock bits (core_only_rst_b resets PCR_CTRL.lock)
-      //Data survives (only resets on cptra_pwrgood)
-      for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
-        p_pv_rm.pv_reg_rm.PCR_CTRL[entry].predict('h0);
-        p_pv_rm.pv_reg_rm.PCR_CTRL[entry].set('h0);
-      end
-      ctrl_lock_shadow = '0;
-      `uvm_info("PRED", "Core reset: cleared all PCR_CTRL lock mirrors", UVM_MEDIUM)
-    end
+    // Delayed reset notifications remain checked, but only actual reset pins in
+    // run_phase change storage/CSR state; callbacks must not rewind later beats.
     
     // Code for sending output transaction out through pv_sha512_block_read_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
@@ -260,15 +438,6 @@ class pv_predictor #(
   virtual function void write_ahb_slave_0_ae(mvc_sequence_item_base t);
     // pragma uvmf custom ahb_slave_0_ae_predictor begin
     ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) ahb_txn;
-    uvm_reg pv_reg;
-    uvm_reg_data_t pv_reg_data;
-    uvm_reg val_reg;
-    uvm_reg_data_t val_reg_data;
-    int entry, offset;
-    uvm_status_e sts;
-    string reg_name;
-    reg [PV_DATA_W-1:0] data_active;
-    reg [ahb_lite_slave_0_params::AHB_WDATA_WIDTH-1:0] address_aligned;
 
     ahb_slave_0_ae_debug = t;
     `uvm_info("PRED", "Transaction Received through ahb_slave_0_ae", UVM_MEDIUM)
@@ -277,56 +446,18 @@ class pv_predictor #(
     pv_sb_ahb_ap_output_transaction = pv_sb_ahb_ap_output_transaction_t::type_id::create("pv_sb_ahb_ap_output_transaction");
     $cast(ahb_txn, t);
 
-    //Convert data from AHB to txn
-    address_aligned = ahb_txn.address & ~(PV_DATA_W/8 - 1);
-    data_active = PV_DATA_W'(ahb_txn.data[0] >> (8*(address_aligned % (ahb_lite_slave_0_params::AHB_WDATA_WIDTH/8))));
-
-    if(ahb_txn.RnW == AHB_WRITE) begin
-      //Copy txn and modify required fields later
-      pv_sb_ahb_ap_output_transaction.copy(ahb_txn);
-
-      //If this is a write to clear (and lock = 0), clear regs of that entry
-      if ((ahb_txn.address >= `PV_REG_PCR_CTRL_0) && (ahb_txn.address < `PV_REG_PCR_ENTRY_0_0)) begin
-        pv_reg = p_pv_AHB_map.get_reg_by_offset(ahb_txn.address);
-        reg_name = pv_reg.get_full_name();
-        pv_reg_data = pv_reg.get_mirrored_value();
-
-        val_reg = p_pv_AHB_map.get_reg_by_offset('h1_0000);
-        val_reg_data = val_reg.get();
-
-        //Check incoming write data for clear bit, and lock shadow for swwel gating.
-        //We use a local lock shadow (not the mirror) because reg.write() frontdoor
-        //may have already updated the mirror before this predictor runs.
-        //RTL swwel uses the PREVIOUS cycle's lock value, which our shadow tracks.
-        {offset, entry} = convert_addr_to_pv(ahb_txn.address);
-        if(!ctrl_lock_shadow[entry] && data_active[1]) begin
-          
-          //Clear the entry that is being accessed
-          for(offset = 0; offset < PV_NUM_DWORDS; offset++) begin
-            p_pv_rm.pv_reg_rm.PCR_ENTRY[entry][offset].predict('h0);
-            p_pv_rm.pv_reg_rm.PCR_ENTRY[entry][offset].set('h0);
-          end
-        end
-
-        //Update lock shadow AFTER clear logic (so clear sees the OLD lock state)
-        //Only update if lock was previously 0 (if locked, AHB write is blocked by swwel)
-        if(!ctrl_lock_shadow[entry])
-          ctrl_lock_shadow[entry] = data_active[0];
-      end
+    pv_sb_ahb_ap_output_transaction.copy(ahb_txn);
+    if (ahb_txn.RnW == AHB_READ) begin
+      completed_ahb_reads.push_back(pv_sb_ahb_ap_output_transaction);
+      publish_ahb_reads();
     end
-    else begin
-      //AHB Read
-      pv_reg = p_pv_AHB_map.get_reg_by_offset(ahb_txn.address);
-      pv_reg_data = pv_reg.get_mirrored_value();
-      pv_sb_ahb_ap_output_transaction.copy(ahb_txn);
-      pv_sb_ahb_ap_output_transaction.data[0] = pv_reg_data;
-    end
+    else
+      pv_sb_ahb_ap.write(pv_sb_ahb_ap_output_transaction);
     // Code for sending output transaction out through pv_sha512_write_sb_ap
     // Please note that each broadcasted transaction should be a different object than previously 
     // broadcasted transactions.  Creation of a different object is done by constructing the transaction 
     // using either new() or create().  Broadcasting a transaction object more than once to either the 
     // same subscriber or multiple subscribers will result in unexpected and incorrect behavior.
-    pv_sb_ahb_ap.write(pv_sb_ahb_ap_output_transaction);
     // pragma uvmf custom ahb_slave_0_ae_predictor end
   endfunction
 
@@ -341,7 +472,7 @@ endclass
 
 
     pv_reg = p_pv_rm.get_reg_by_name($sformatf("PCR_ENTRY[%0d][%0d]",t_received.read_entry,t_received.read_offset));
-    pv_reg_data = pv_reg.get_mirrored_value();
+    pv_reg_data = pcr_word[t_received.read_entry][t_received.read_offset];
 
     t_expected.read_data = pv_reg_data[31:0];
     t_expected.error = 'b0; //Currently no error logic in PCR
@@ -353,13 +484,10 @@ endclass
 
   function void pv_predictor::populate_expected_pv_write_txn (ref pv_sha512_write_sb_ap_output_transaction_t t_expected, pv_write_transaction t_received);
     
-    t_expected = t_received;
+    t_expected.copy(t_received);
     t_expected.error = 'b0; //Currently no error logic in PCR
-
-    //Update reg model mirror with crypto write data so subsequent reads predict correctly
-    p_pv_rm.pv_reg_rm.PCR_ENTRY[t_received.write_entry][t_received.write_offset].predict(t_received.write_data);
-    p_pv_rm.pv_reg_rm.PCR_ENTRY[t_received.write_entry][t_received.write_offset].set(t_received.write_data);
+    // Storage is committed by run_phase at the actual request edge, not by
+    // this delayed response packet. error=0 also applies to SS SHA PCR4/5 DROP.
 
   endfunction
 // pragma uvmf custom external end
-

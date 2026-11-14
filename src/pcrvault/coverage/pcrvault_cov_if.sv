@@ -68,20 +68,35 @@ interface pcrvault_cov_if
             bins active   = {1'b1};
         }
 
-        //Cover warm reset assertion while regs are locked/cleared
-        lockXwarm_rst:      cross lock, rst_b;
-        clearXwarm_rst:     cross clear, rst_b;
+        // Normal warm/cold reset relationships from soc_ifc_boot_fsm.sv qualify only these crosses.
+        // Independent/scan retention is separate; matching levels are safe in any mode because
+        // the ignores follow the field's own async reset. Pre-reset scenarios remain in pcrvault_cov_props.sv.
+        lockXwarm_rst:      cross lock, rst_b iff (rst_b || !core_only_rst_b) {
+            // Within this scope, rst_b low entails core_only_rst_b low, which async-clears lock (pv_reg.sv).
+            ignore_bins locked_in_reset = binsof(lock.locked) && binsof(rst_b) intersect {1'b0};
+        }
+        clearXwarm_rst:     cross clear, rst_b {
+            // pv_reg.sv asynchronously clears PCR_CTRL.clear on rst_b, independent of the core/cold reset pins.
+            ignore_bins active_in_reset = binsof(clear.active) && binsof(rst_b) intersect {1'b0};
+        }
 
-        //Cover cold reset assertion while regs are locked/cleared
-        lockXcold_rst:      cross lock, cptra_pwrgood;
-        clearXcold_rst:     cross clear, cptra_pwrgood;
+        // Normal cold reset asserts both control reset pins; cptra_pwrgood alone only resets PCR_ENTRY data.
+        lockXcold_rst:      cross lock, cptra_pwrgood iff (cptra_pwrgood || (!rst_b && !core_only_rst_b)) {
+            // In scoped cold reset, core_only_rst_b is low and pv_reg.sv asynchronously clears lock.
+            ignore_bins locked_in_reset = binsof(lock.locked) && binsof(cptra_pwrgood) intersect {1'b0};
+        }
+        clearXcold_rst:     cross clear, cptra_pwrgood iff (cptra_pwrgood || (!rst_b && !core_only_rst_b)) {
+            // In scoped cold reset, rst_b is low and pv_reg.sv asynchronously clears clear.
+            ignore_bins active_in_reset = binsof(clear.active) && binsof(cptra_pwrgood) intersect {1'b0};
+        }
 
-        //Cover core reset with lock_was_set — verifies lock survives warm reset
-        //but clears on core_only_rst_b. Uses latched signal because lock is
-        //async-cleared by core_only_rst_b (can't sample both high simultaneously).
+        // Cover lock history during core reset, not the reset result itself.
+        // pv_reg.sv asynchronously clears lock on core_only_rst_b; integrated
+        // warm reset also asserts that port (soc_ifc_boot_fsm.sv).
         cp_lock_was_set: coverpoint lock_was_set;
         cp_core_rst:     coverpoint core_only_rst_b;
         lock_was_setXcore_rst: cross cp_lock_was_set, cp_core_rst;
+        // pv_reg.sv resets clear on rst_b, so clear active with core reset low is reachable.
         clearXcore_rst:        cross clear, cp_core_rst;
 
         //Cover fw_update_rst_window — security bypass that re-enables clear when locked

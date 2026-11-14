@@ -255,6 +255,10 @@ class kv_predictor #(
   // bit send_hmac_write_txn = 0;
   logic [KV_NUM_KEYS-1:0] clear_secrets_debug0 = 0; 
   logic [KV_NUM_KEYS-1:0] clear_secrets_debug1 = 0;
+  logic [KV_NUM_KEYS-1:0] clear_secrets_sw_debug0 = 0;
+  logic [KV_NUM_KEYS-1:0] clear_secrets_sw_debug1 = 0;
+  logic [KV_NUM_KEYS-1:0] clear_secrets_sw_debug0_q = 0;
+  logic [KV_NUM_KEYS-1:0] clear_secrets_sw_debug1_q = 0;
   bit set_val_ctrl_derived = 0;
   logic [KV_NUM_KEYS-1:0] val_ctrl_derived_data = 0;
   logic [KV_NUM_KEYS-1:0] key_entry_ctrl_we = 0;
@@ -262,6 +266,13 @@ class kv_predictor #(
   //Set when lock_wr/lock_use is 0 and set by AHB txn. Reset only during reset
   logic [KV_NUM_KEYS-1:0] key_ctrl_lock_wr = 0;
   logic [KV_NUM_KEYS-1:0] key_ctrl_lock_use = 0;
+  logic [KV_NUM_KEYS-1:0] key_ctrl_lock_wr_sample = 0;
+  logic [KV_NUM_KEYS-1:0] key_ctrl_lock_use_sample = 0;
+  logic [KV_NUM_KEYS-1:0] key_ctrl_lock_wr_q = 0;
+  logic [KV_NUM_KEYS-1:0] key_ctrl_lock_use_q = 0;
+  logic [KV_NUM_KEYS-1:0] software_clear_request = 0;
+  logic [KV_NUM_KEYS-1:0] software_clear_request_q = 0;
+  logic [KV_NUM_KEYS-1:0] key_entry_clear_state = 0;
 
   //Tracks fw_update_rst_window as seen by the READ path. The kv_read monitor is
   //0-delay (KV reads are async), so read beats and the window (also delivered with
@@ -297,6 +308,7 @@ class kv_predictor #(
   extern function void handle_multi_write_collision();
   extern task          poll_and_run_delay_jobs();
   extern task          poll_and_run_clr_secrets_delay_job();
+  extern task          sample_write_control_state();
   // extern function      send_delayed_expected_transactions_hmac_write(kv_write_transaction t);
   // extern function      send_delayed_expected_transactions_mlkem_write(kv_write_transaction t);
   // extern function      send_delayed_expected_transactions_ecc_write(kv_write_transaction t);
@@ -385,6 +397,7 @@ class kv_predictor #(
     fork
       poll_and_run_delay_jobs();
       poll_and_run_clr_secrets_delay_job();
+      sample_write_control_state();
     join_none
     super.run_phase(phase);
   endtask
@@ -412,6 +425,14 @@ class kv_predictor #(
     kv_sb_ap_output_transaction = kv_sb_ap_output_transaction_t::type_id::create("kv_sb_ap_output_transaction");
 
     clear_secrets_reg = p_kv_rm.get_reg_by_name("CLEAR_SECRETS");
+    if (t.assert_rst) begin
+      // Main reset clears the selector/pulse even during a pin-triggered flush.
+      clear_secrets_reg.reset();
+      clear_secrets_sw_debug0 = '0;
+      clear_secrets_sw_debug1 = '0;
+      clear_secrets_sw_debug0_q = '0;
+      clear_secrets_sw_debug1_q = '0;
+    end
     clear_secrets_data = clear_secrets_reg.get_mirrored_value();
     
     if (!t.set_pwrgood) begin
@@ -423,11 +444,19 @@ class kv_predictor #(
       p_kv_rm.reset(); //all regs cleared on hard rst
       for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
         last_dword_written[entry] = 'h0; //Clear last dword on hard rst
-        // clear_secrets_debug0[entry] = 'h0;
-        // clear_secrets_debug1[entry] = 'h0;
       end
+      clear_secrets_debug0 = '0;
+      clear_secrets_debug1 = '0;
+      clear_secrets_sw_debug0 = '0;
+      clear_secrets_sw_debug1 = '0;
+      clear_secrets_sw_debug0_q = '0;
+      clear_secrets_sw_debug1_q = '0;
       key_ctrl_lock_wr = 'h0;
       key_ctrl_lock_use = 'h0;
+      key_ctrl_lock_wr_sample = '0;
+      key_ctrl_lock_use_sample = '0;
+      key_ctrl_lock_wr_q = '0;
+      key_ctrl_lock_use_q = '0;
       writes_this_step = 0;
       pending_collision_mirror_clear = 0;
       collision_tol_cnt = 0;
@@ -453,8 +482,6 @@ class kv_predictor #(
       end
     end
     else if(t.assert_rst) begin
-      //Reset clear_secrets on warm reset
-      clear_secrets_reg.reset();
       kv_sb_ap_output_transaction.read_entry = 'h0;
       kv_sb_ap_output_transaction.read_offset = 'h0;
       kv_sb_ap_output_transaction.error = 'h0;
@@ -479,6 +506,10 @@ class kv_predictor #(
       end
       key_ctrl_lock_wr = 'h0;
       key_ctrl_lock_use = 'h0;
+      key_ctrl_lock_wr_sample = '0;
+      key_ctrl_lock_use_sample = '0;
+      key_ctrl_lock_wr_q = '0;
+      key_ctrl_lock_use_q = '0;
       writes_this_step = 0;
       pending_collision_mirror_clear = 0;
       collision_tol_cnt = 0;
@@ -879,8 +910,8 @@ class kv_predictor #(
               kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
               kv_reg_data = kv_reg.get_mirrored_value();
               if(kv_reg_data[1:0] == 2'b00) begin
-                clear_secrets_debug0[entry] = 'h1;
-                clear_secrets_debug1[entry] = 'h0;
+                clear_secrets_sw_debug0[entry] = 'h1;
+                clear_secrets_sw_debug1[entry] = 'h0;
               end
             end
           end
@@ -892,8 +923,8 @@ class kv_predictor #(
               kv_reg = p_kv_rm.get_reg_by_name($sformatf("KEY_CTRL[%0d]",entry));
               kv_reg_data = kv_reg.get_mirrored_value();
               if(kv_reg_data[1:0] == 2'b00) begin
-                clear_secrets_debug0[entry] = 'h0;
-                clear_secrets_debug1[entry] = 'h1;
+                clear_secrets_sw_debug0[entry] = 'h0;
+                clear_secrets_sw_debug1[entry] = 'h1;
               end
             end
           end
@@ -905,6 +936,8 @@ class kv_predictor #(
         kv_reg_data = kv_reg.get_mirrored_value();
 
         {offset, entry} = convert_addr_to_kv(ahb_txn.address);
+        software_clear_request[entry] =
+            data_active[p_kv_rm.kv_reg_rm.KEY_CTRL[entry].clear.get_lsb_pos()];
 
         //If clear is set and lock_wr/use is 0, set the val_ctrl [1] to let kv_reg_predictor know
         val_ctrl = p_kv_rm.get_reg_by_name("val_ctrl");
@@ -927,7 +960,6 @@ class kv_predictor #(
           val_ctrl_data[entry] = 'b1; //In design, clear is a single pulse reg. This val_ctrl[*] will be reset in kv_reg_predictor
           // for (int i = 0; i < KV_NUM_KEYS; i++) begin
             this.val_ctrl_derived_data[entry] = 'b1;
-            last_dword_written[entry] = 'h0; //clear last dword of that entry
             // this.val_ctrl_derived_data[i] = (i == entry);
           // end
           // this.set_val_ctrl_derived = 'b1;
@@ -961,7 +993,10 @@ class kv_predictor #(
         kv_reg = p_kv_AHB_map.get_reg_by_offset(ahb_txn.address);
         kv_reg_data = kv_reg.get_mirrored_value();
         kv_sb_ahb_ap_output_transaction.copy(ahb_txn);
-        kv_sb_ahb_ap_output_transaction.data[0] = kv_reg_data;
+        // The scoreboard compares raw bus data, not the extracted register word.
+        kv_sb_ahb_ap_output_transaction.data[0] =
+            ahb_lite_slave_0_params::AHB_RDATA_WIDTH'(kv_reg_data) <<
+            (8 * (address_aligned % (ahb_lite_slave_0_params::AHB_RDATA_WIDTH / 8)));
       end
     end
  
@@ -1053,8 +1088,8 @@ endclass
   endfunction
 
   function void kv_predictor::populate_expected_kv_write_txn (ref kv_sb_ap_output_transaction_write_t t_expected, kv_write_transaction t_received);
-    uvm_reg kv_reg, val_ctrl_derived, val_ctrl;
-    uvm_reg_data_t kv_reg_data, val_ctrl_derived_data, val_ctrl_data;
+    uvm_reg kv_reg, val_ctrl;
+    uvm_reg_data_t kv_reg_data, val_ctrl_data;
     logic lock_use;
     logic lock_wr;
     logic clear;
@@ -1067,11 +1102,8 @@ endclass
 
     // lock_wr = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[t_received.write_entry].lock_wr.get_lsb_pos()];
     // lock_use = kv_reg_data[p_kv_rm.kv_reg_rm.KEY_CTRL[t_received.write_entry].lock_use.get_lsb_pos()];
-    lock_wr = key_ctrl_lock_wr[t_received.write_entry];
-    lock_use = key_ctrl_lock_use[t_received.write_entry];
-
-    val_ctrl_derived = p_kv_rm.get_reg_by_name("val_ctrl_derived");
-    val_ctrl_derived_data = val_ctrl_derived.get();
+    lock_wr = key_ctrl_lock_wr_q[t_received.write_entry];
+    lock_use = key_ctrl_lock_use_q[t_received.write_entry];
 
     val_ctrl = p_kv_rm.get_reg_by_name("val_ctrl");
     val_ctrl_data = val_ctrl.get();
@@ -1084,7 +1116,7 @@ endclass
     t_expected.write_data       = t_received.write_data;
     t_expected.write_dest_valid = t_received.write_dest_valid;
 
-    //Error should be set when writing to locked regs //TODO: error when entry is being cleared during write
+    // Gate responses with the policy state sampled with the delayed packet.
     if (t_received.write_en) begin
       if(fw_update_rst_window_q || lock_wr || lock_use) begin
         t_expected.error = 1'b1;
@@ -1092,8 +1124,10 @@ endclass
       end
       else begin
         key_entry_ctrl_we[t_received.write_entry] = 1'b1;
-        if (/*this.write_in_progress[t_received.write_entry] &&*/ val_ctrl_derived_data[t_received.write_entry]) begin
+        if (p_kv_rm.kv_reg_rm.key_entry_clear_q[t_received.write_entry]) begin
           t_expected.error = 1'b1;
+          // Active clear supersedes any accepted beat preceding the clear.
+          last_dword_written[t_received.write_entry] = '0;
           `uvm_info("PRED","Attempts to clear a reg while write is in progress results in an err", UVM_MEDIUM)
         end
         else begin
@@ -1122,6 +1156,72 @@ endclass
 
       
   endfunction
+
+  task kv_predictor::sample_write_control_state();
+    kv_write_t writes[KV_NUM_WRITE];
+    logic [KV_NUM_KEYS-1:0] qualified_write, unlocked_before, clear_before;
+    logic sampled_rst_b, sampled_fw_window;
+    int raw_write_count;
+    forever begin
+      // Capture producer inputs before their drivers update them in NBA.
+      @(posedge configuration.kv_hmac_write_agent_config.monitor_bfm.clk_i);
+      writes[KV_WRITE_IDX_HMAC] = kv_write_t'(configuration.kv_hmac_write_agent_config.monitor_bfm.kv_write_i);
+      writes[KV_WRITE_IDX_MLKEM] = kv_write_t'(configuration.kv_mlkem_write_agent_config.monitor_bfm.kv_write_i);
+      writes[KV_WRITE_IDX_ECC] = kv_write_t'(configuration.kv_ecc_write_agent_config.monitor_bfm.kv_write_i);
+      writes[KV_WRITE_IDX_DOE] = kv_write_t'(configuration.kv_doe_write_agent_config.monitor_bfm.kv_write_i);
+      writes[KV_WRITE_IDX_AES] = kv_write_t'(configuration.kv_aes_write_agent_config.monitor_bfm.kv_write_i);
+      sampled_rst_b = configuration.kv_rst_agent_config.monitor_bfm.rst_b_i;
+      sampled_fw_window = configuration.kv_rst_agent_config.monitor_bfm.fw_update_rst_window_i;
+      unlocked_before = ~(key_ctrl_lock_wr_sample | key_ctrl_lock_use_sample);
+      if (!configuration.kv_rst_agent_config.monitor_bfm.core_only_rst_b_i ||
+          sampled_fw_window)
+        unlocked_before = '1;
+      clear_before = sampled_rst_b ? key_entry_clear_state : '0;
+      raw_write_count = 0;
+      qualified_write = '0;
+      foreach (writes[client]) begin
+        if (writes[client].write_en) begin
+          raw_write_count++;
+          if (writes[client].write_entry < KV_NUM_KEYS && !sampled_fw_window)
+            qualified_write[writes[client].write_entry] |=
+                unlocked_before[writes[client].write_entry];
+        end
+      end
+      // Writer packets arrive one rising edge after capture. Mid-cycle stages
+      // preserve the pre-update locks regardless of AHB callback ordering.
+      @(negedge configuration.kv_hmac_write_agent_config.monitor_bfm.clk_i);
+      p_kv_rm.kv_reg_rm.key_entry_clear_q = clear_before;
+      if (|clear_before) begin
+        // These fields clear to their reset values. Field reset also updates a
+        // busy mirror without resetting the CTRL locks or its access semaphore.
+        for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+          if (clear_before[entry]) begin
+            last_dword_written[entry] = '0;
+            for (int word = 0; word < KV_NUM_DWORDS; word++)
+              p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][word].data.reset();
+            p_kv_rm.kv_reg_rm.KEY_CTRL[entry].dest_valid.reset();
+            p_kv_rm.kv_reg_rm.KEY_CTRL[entry].last_dword.reset();
+          end
+        end
+      end
+      if (!sampled_rst_b) begin
+        key_entry_clear_state = '0;
+        software_clear_request_q = '0;
+      end
+      else begin
+        // The CSR pulse precedes the registered clear; qualified writes hold it.
+        key_entry_clear_state = {KV_NUM_KEYS{raw_write_count > 1}} |
+                               (software_clear_request_q & unlocked_before) |
+                               (clear_before & qualified_write);
+        software_clear_request_q = software_clear_request;
+      end
+      software_clear_request = '0;
+      key_ctrl_lock_wr_q = key_ctrl_lock_wr_sample;
+      key_ctrl_lock_use_q = key_ctrl_lock_use_sample;
+      key_ctrl_lock_wr_sample = key_ctrl_lock_wr;
+      key_ctrl_lock_use_sample = key_ctrl_lock_use;
+    end
+  endtask
 
   //RTL: kv_multi_write_err clears ALL KEY_ENTRY data, dest_valid, and
   //last_dword for every entry (registered — takes effect next cycle).
@@ -1250,35 +1350,37 @@ endclass
 
   task kv_predictor::poll_and_run_clr_secrets_delay_job();
     int entry, offset;
+    logic [KV_NUM_KEYS-1:0] software_due;
     forever begin
-      fork
-        begin
-          //CLEAR SECRETS:
-          configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1);
-          `uvm_info("Delay Jobs",$sformatf(" |clear_secrets_debug0 = %b, |debug1 = %b\n", |clear_secrets_debug0, |clear_secrets_debug1), UVM_DEBUG)
-          if (|clear_secrets_debug0 || |clear_secrets_debug1) begin
-            `uvm_info("Delay Jobs", "Flushing key vault", UVM_MEDIUM)
-            for(entry = 0; entry < KV_NUM_KEYS; entry++) begin
-              if(clear_secrets_debug0[entry] == 'h1) begin
-                for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
-                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_0);
-                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_0);
-                end
-                clear_secrets_debug0[entry] = 'h0;
-              end
-              else if (clear_secrets_debug1[entry]== 'h1) begin
-                for(offset = 0; offset < KV_NUM_DWORDS; offset++) begin
-                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(CLP_DEBUG_MODE_KV_1);
-                  p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(CLP_DEBUG_MODE_KV_1);
-                end
-                clear_secrets_debug1[entry] = 'h0;
-              end
-            end //for loop
-          end //if block
-        end //begin
-      join_none
       configuration.kv_hmac_write_agent_config.wait_for_num_clocks(1);
+      // Read monitors sample pre-NBA data; synchronous fills become visible later.
+      uvm_wait_for_nba_region();
+      software_due = clear_secrets_sw_debug0_q | clear_secrets_sw_debug1_q;
+      if (|clear_secrets_debug0 || |clear_secrets_debug1 || |software_due) begin
+        `uvm_info("Delay Jobs", "Flushing key vault", UVM_MEDIUM)
+        for (entry = 0; entry < KV_NUM_KEYS; entry++) begin
+          if (clear_secrets_debug0[entry] || clear_secrets_debug1[entry] ||
+              software_due[entry]) begin
+            logic [KV_DATA_W-1:0] fill_data;
+            if (clear_secrets_debug0[entry] || clear_secrets_debug1[entry])
+              fill_data = clear_secrets_debug0[entry] ? CLP_DEBUG_MODE_KV_0 : CLP_DEBUG_MODE_KV_1;
+            else
+              fill_data = clear_secrets_sw_debug0_q[entry] ? CLP_DEBUG_MODE_KV_0 : CLP_DEBUG_MODE_KV_1;
+            for (offset = 0; offset < KV_NUM_DWORDS; offset++) begin
+              p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].predict(fill_data);
+              p_kv_rm.kv_reg_rm.KEY_ENTRY[entry][offset].set(fill_data);
+            end
+            clear_secrets_debug0[entry] = '0;
+            clear_secrets_debug1[entry] = '0;
+          end
+        end
+      end
+      // Software first updates CLEAR_SECRETS, then fills storage next edge.
+      // Keep newly accepted requests separate from fills already due.
+      clear_secrets_sw_debug0_q = clear_secrets_sw_debug0;
+      clear_secrets_sw_debug1_q = clear_secrets_sw_debug1;
+      clear_secrets_sw_debug0 = '0;
+      clear_secrets_sw_debug1 = '0;
     end
   endtask
 // pragma uvmf custom external end
-
