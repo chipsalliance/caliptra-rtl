@@ -140,6 +140,46 @@ module sha512_ctrl_tb
     end // clk_gen
 
   //----------------------------------------------------------------
+  // PCR vault model: combinational read, write on clock edge.
+  //----------------------------------------------------------------
+  logic [31:0] pcr_tb [PV_NUM_PCR][PV_NUM_DWORDS];
+
+  initial begin
+    for (int e = 0; e < PV_NUM_PCR; e++)
+      for (int d = 0; d < PV_NUM_DWORDS; d++)
+        pcr_tb[e][d] = '0;
+  end
+
+  always_comb begin
+    pv_rd_resp_tb = '0;
+    if (pv_read_tb.read_offset < PV_NUM_DWORDS)
+      pv_rd_resp_tb.read_data = pcr_tb[pv_read_tb.read_entry][pv_read_tb.read_offset];
+    pv_rd_resp_tb.last = (pv_read_tb.read_offset == PV_NUM_DWORDS-1);
+  end
+
+  always @(posedge clk_tb) begin
+    if (pv_write_tb.write_en && (pv_write_tb.write_offset < PV_NUM_DWORDS))
+      pcr_tb[pv_write_tb.write_entry][pv_write_tb.write_offset] <= pv_write_tb.write_data;
+  end
+
+  //----------------------------------------------------------------
+  // A READY status bit may only be reported while a command write
+  // to the corresponding control register would be accepted.
+  //----------------------------------------------------------------
+  always @(posedge clk_tb) begin
+    if (reset_n_tb) begin
+      if (dut.sha512_inst.hwif_in.SHA512_STATUS.READY.next && !dut.sha512_inst.hwif_in.sha512_ready) begin
+        $display("ERROR: SHA512_STATUS.READY set while SHA512_CTRL is not writable at cycle %0d", cycle_ctr);
+        error_ctr = error_ctr + 1;
+      end
+      if (dut.sha512_inst.hwif_in.SHA512_GEN_PCR_HASH_STATUS.READY.next && !dut.sha512_inst.hwif_in.sha512_ready) begin
+        $display("ERROR: GEN_PCR_HASH_STATUS.READY set while START is not writable at cycle %0d", cycle_ctr);
+        error_ctr = error_ctr + 1;
+      end
+    end
+  end
+
+  //----------------------------------------------------------------
   // sys_monitor
   //
   // Generates a cycle counter and displays information about
@@ -195,7 +235,6 @@ module sha512_ctrl_tb
       hsize_i_tb      = 3'b011;
 
       pv_wr_resp_tb   = '0;
-      pv_rd_resp_tb   = '0;
     end
   endtask // init_dut
 
@@ -670,6 +709,8 @@ module sha512_ctrl_tb
       $display("*** Double block test pipelined processing time = %01d cycles", end_time);
       read_digest();
 
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
+
       mask = get_mask(mode);
 
       if ((digest_data & mask) == (expected & mask))
@@ -795,7 +836,12 @@ module sha512_ctrl_tb
 
       #(CLK_PERIOD);
 
-      for (int i=0; i<10; i++)
+      // Send the commands below only while the engine is busy (block takes ~80 cycles)
+      read_data = 1;
+      while (read_data[0])
+        read_single_word(`SHA512_REG_SHA512_STATUS);
+
+      for (int i=0; i<5; i++)
         begin
           write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
           #CLK_PERIOD;
@@ -822,6 +868,11 @@ module sha512_ctrl_tb
 
       #(CLK_PERIOD);
 
+      // Send the commands below only while the engine is busy (block takes ~80 cycles)
+      read_data = 1;
+      while (read_data[0])
+        read_single_word(`SHA512_REG_SHA512_STATUS);
+
       for (int i=0; i<10; i++)
         begin
           write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(mode));
@@ -839,6 +890,8 @@ module sha512_ctrl_tb
       end_time = cycle_ctr - start_time;
       $display("*** Continuous command test processing time = %01d cycles", end_time);
       read_digest();
+
+      write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD); //zeroize
 
       mask = get_mask(mode);
 
@@ -1002,6 +1055,255 @@ module sha512_ctrl_tb
   endtask // zeroize_test
 
   //----------------------------------------------------------------
+  // Command sequencing helpers and tests
+  //----------------------------------------------------------------
+  function automatic [383:0] get_pcr(input int entry);
+    for (int d = 0; d < PV_NUM_DWORDS; d++)
+      get_pcr[383 - 32*d -: 32] = pcr_tb[entry][d];
+  endfunction
+
+  task automatic set_pcr(input int entry, input [383:0] value);
+    for (int d = 0; d < PV_NUM_DWORDS; d++)
+      pcr_tb[entry][d] = value[383 - 32*d -: 32];
+  endtask
+
+  task automatic idle_cycles(input int n);
+    hsel_i_tb = 0;
+    repeat (n) #(CLK_PERIOD);
+  endtask
+
+  task automatic zeroize_dut;
+    write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD);
+    idle_cycles(4);
+  endtask
+
+  task automatic wait_status_bit(input [31:0] address, input [31:0] mask, input string what);
+    int n;
+    n = 0;
+    read_data = 0;
+    while (((read_data & mask) == 0) && (n < 5000)) begin
+      read_single_word(address);
+      n++;
+    end
+    if ((read_data & mask) == 0) begin
+      $display("ERROR: timeout waiting for %s", what);
+      error_ctr = error_ctr + 1;
+    end
+  endtask
+
+  task automatic wait_extend_done;
+    int n;
+    n = 0;
+    hsel_i_tb = 0;
+    #(CLK_PERIOD);
+    while ((dut.sha512_inst.pcr_hash_extend_ip || !dut.sha512_inst.ready_reg || !dut.sha512_inst.kv_dest_ready) && (n < 5000)) begin
+      #(CLK_PERIOD);
+      n++;
+    end
+    if (n >= 5000) begin
+      $display("ERROR: timeout waiting for PCR hash extend to complete");
+      error_ctr = error_ctr + 1;
+    end
+    idle_cycles(4);
+  endtask
+
+  task automatic arm_extend(input int entry);
+    write_single_word(`SHA512_REG_SHA512_VAULT_RD_CTRL,
+                      `SHA512_REG_SHA512_VAULT_RD_CTRL_READ_EN_MASK |
+                      ((entry << `SHA512_REG_SHA512_VAULT_RD_CTRL_READ_ENTRY_LOW) & `SHA512_REG_SHA512_VAULT_RD_CTRL_READ_ENTRY_MASK) |
+                      `SHA512_REG_SHA512_VAULT_RD_CTRL_PCR_HASH_EXTEND_MASK);
+  endtask
+
+  task automatic check_pcr(input string tag, input int entry, input [383:0] expected);
+    if (get_pcr(entry) !== expected) begin
+      $display("TC%01d %s: ERROR PCR%0d", tc_ctr, tag, entry);
+      $display("  Expected: 0x%096x", expected);
+      $display("  Got:      0x%096x", get_pcr(entry));
+      error_ctr = error_ctr + 1;
+    end
+    else
+      $display("TC%01d %s: PCR%0d OK", tc_ctr, tag, entry);
+  endtask
+
+  // Start a PCR hash extend of entry src with the given block. The KV read
+  // fills the first 12 dwords; the remaining dwords come from the block.
+  task automatic start_extend(input int src, input [1023:0] block);
+    zeroize_dut();
+    arm_extend(src);
+    idle_cycles(1);
+    wait_status_bit(`SHA512_REG_SHA512_VAULT_RD_STATUS, `SHA512_REG_SHA512_VAULT_RD_STATUS_VALID_MASK, "PCR read");
+    write_block(block);
+  endtask
+
+  //----------------------------------------------------------------
+  // Re-arming the vault read control right after a command must not
+  // change the PCR written by the hash extend in progress.
+  //----------------------------------------------------------------
+  task automatic extend_retarget_test(input [1023:0] blk1, input [383:0] exp1,
+                                      input [1023:0] blk2a, input [1023:0] blk2b, input [383:0] exp2);
+    int SRC;
+    int DST;
+    logic [383:0] DST_INIT;
+    begin
+      SRC = 2;
+      DST = 3;
+      DST_INIT = {12{32'hB0B0_0003}};
+      $display("*** TC%01d - extend retarget test started.", tc_ctr);
+      for (int k = 0; k < 4; k++) begin
+        // single block, INIT|LAST
+        set_pcr(SRC, '0);
+        set_pcr(DST, DST_INIT);
+        start_extend(SRC, blk1);
+        write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | `SHA512_REG_SHA512_CTRL_LAST_MASK | mode_cmd(MODE_SHA_384));
+        if (k > 0) idle_cycles(k);
+        arm_extend(DST);
+        wait_extend_done();
+        check_pcr($sformatf("init+%0d src", k), SRC, exp1);
+        check_pcr($sformatf("init+%0d dst", k), DST, DST_INIT);
+
+        // two blocks, NEXT|LAST
+        set_pcr(SRC, '0);
+        set_pcr(DST, DST_INIT);
+        start_extend(SRC, blk2a);
+        write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(MODE_SHA_384));
+        idle_cycles(2);
+        wait_ready();
+        write_block(blk2b);
+        write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | `SHA512_REG_SHA512_CTRL_LAST_MASK | mode_cmd(MODE_SHA_384));
+        if (k > 0) idle_cycles(k);
+        arm_extend(DST);
+        wait_extend_done();
+        check_pcr($sformatf("next+%0d src", k), SRC, exp2);
+        check_pcr($sformatf("next+%0d dst", k), DST, DST_INIT);
+
+        // PCR hash generation START
+        set_pcr(DST, DST_INIT);
+        zeroize_dut();
+        write_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+        if (k > 0) idle_cycles(k);
+        arm_extend(DST);
+        idle_cycles(2);
+        wait_status_bit(`SHA512_REG_SHA512_GEN_PCR_HASH_STATUS, `SHA512_REG_SHA512_GEN_PCR_HASH_STATUS_VALID_MASK, "PCR hash generation");
+        wait_extend_done();
+        check_pcr($sformatf("start+%0d dst", k), DST, DST_INIT);
+      end
+      zeroize_dut();
+      $display("*** TC%01d - extend retarget test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // A NEXT|LAST sent while the first block is still being accepted must
+  // not cause the first block's result to be written to the PCR.
+  //----------------------------------------------------------------
+  task automatic extend_early_last_test(input [1023:0] blk2a, input [1023:0] blk2b, input [383:0] exp2);
+    int SRC;
+    begin
+      SRC = 6;
+      $display("*** TC%01d - extend early LAST test started.", tc_ctr);
+      for (int k = 0; k < 4; k++) begin
+        set_pcr(SRC, '0);
+        start_extend(SRC, blk2a);
+        write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(MODE_SHA_384));
+        if (k > 0) idle_cycles(k);
+        write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | `SHA512_REG_SHA512_CTRL_LAST_MASK | mode_cmd(MODE_SHA_384));
+        idle_cycles(2);
+        wait_ready();
+        idle_cycles(20);
+        write_block(blk2b);
+        write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | `SHA512_REG_SHA512_CTRL_LAST_MASK | mode_cmd(MODE_SHA_384));
+        wait_extend_done();
+        check_pcr($sformatf("early-last+%0d", k), SRC, exp2);
+      end
+      zeroize_dut();
+      $display("*** TC%01d - extend early LAST test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask
+
+  //----------------------------------------------------------------
+  // GEN_PCR_HASH VALID must not stay set after a rejected START or a
+  // zeroize.
+  //----------------------------------------------------------------
+  task automatic check_gen_valid_low(input string tag);
+    read_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_STATUS);
+    if (read_data & `SHA512_REG_SHA512_GEN_PCR_HASH_STATUS_VALID_MASK) begin
+      $display("TC%01d %s: ERROR GEN_PCR_HASH VALID still set", tc_ctr, tag);
+      error_ctr = error_ctr + 1;
+    end
+    else
+      $display("TC%01d %s: GEN_PCR_HASH VALID low OK", tc_ctr, tag);
+  endtask
+
+  task automatic run_gen_hash;
+    write_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+    idle_cycles(2);
+    wait_status_bit(`SHA512_REG_SHA512_GEN_PCR_HASH_STATUS, `SHA512_REG_SHA512_GEN_PCR_HASH_STATUS_VALID_MASK, "PCR hash generation");
+  endtask
+
+  task automatic gen_hash_valid_test(input [1023:0] blk);
+    int t_done;
+    begin
+      $display("*** TC%01d - PCR hash generation VALID test started.", tc_ctr);
+
+      // rejected START after a completed generation
+      zeroize_dut();
+      run_gen_hash();
+      write_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+      idle_cycles(4);
+      wait_ready();
+      check_gen_valid_low("rejected start");
+
+      // zeroize clears VALID; INIT then a rejected START keeps it low
+      zeroize_dut();
+      run_gen_hash();
+      zeroize_dut();
+      check_gen_valid_low("after zeroize");
+      write_block(blk);
+      write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(MODE_SHA_384));
+      idle_cycles(2);
+      wait_ready();
+      write_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+      idle_cycles(4);
+      check_gen_valid_low("zeroize init rejected start");
+
+      // generation -> NEXT -> START; VALID must not report the earlier result
+      zeroize_dut();
+      run_gen_hash();
+      write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(MODE_SHA_384));
+      read_data = 0;
+      while ((read_data & `SHA512_REG_SHA512_GEN_PCR_HASH_STATUS_READY_MASK) == 0)
+        read_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_STATUS);
+      write_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+      idle_cycles(4);
+      wait_ready();
+      check_gen_valid_low("next then start");
+
+      // zeroize around generation completion
+      zeroize_dut();
+      write_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+      t_done = cycle_ctr;
+      hsel_i_tb = 0;
+      while (!dut.sha512_inst.hwif_in.SHA512_GEN_PCR_HASH_STATUS.VALID.hwset) #(CLK_PERIOD);
+      t_done = cycle_ctr - t_done;
+      idle_cycles(4);
+      for (int d = -3; d <= 2; d++) begin
+        zeroize_dut();
+        write_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+        idle_cycles(t_done + d - 3);
+        write_single_word(`SHA512_REG_SHA512_CTRL, ZEROIZE_CMD);
+        idle_cycles(20);
+        check_gen_valid_low($sformatf("zeroize at done offset %0d", d));
+      end
+
+      zeroize_dut();
+      $display("*** TC%01d - PCR hash generation VALID test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask
+
+  //----------------------------------------------------------------
   // sha512_test
   // The main test functionality.
   //
@@ -1026,6 +1328,12 @@ module sha512_ctrl_tb
       reg [511 : 0]  tc10_expected;
       reg [511 : 0]  tc11_expected;
       reg [511 : 0]  tc12_expected;
+
+      reg [1023 : 0] extend_block1;
+      reg [383 : 0]  extend_exp1;
+      reg [1023 : 0] extend_block2a;
+      reg [1023 : 0] extend_block2b;
+      reg [383 : 0]  extend_exp2;
 
       $display("   -- Testbench for sha512 started --");
 
@@ -1092,6 +1400,20 @@ module sha512_ctrl_tb
       restore_test(8'h0e, MODE_SHA_512_256, double_block_one, double_block_two, tc9_expected, tc10_expected);
 
       restore_test(8'h0f, MODE_SHA_384, double_block_one, double_block_two, tc11_expected, tc12_expected);
+
+      // Expected PCR values computed independently (SHA-384 of the message
+      // formed by a zero PCR followed by the FW data).
+      extend_block1   = 1024'h0000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000005a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000280;
+      extend_exp1     = 384'hed82c108a3c5d4bebe73270294cebc3618c4cbf2d2ed37e834f572a82e826ebfbe8d21990eb67d2d4b5bd56727f669f1;
+      extend_block2a  = 1024'h000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a5;
+      extend_block2b  = 1024'ha5a5a5a5a5a5a5a5a5a5a5a5a5a5a5a580000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000480;
+      extend_exp2     = 384'h1c7b5582c54210d87fb06c5139a938d2d2dbb31649341f20d3bbe972f9781424dac02d67883c272a6851d0bb3ba10d69;
+
+      extend_retarget_test(extend_block1, extend_exp1, extend_block2a, extend_block2b, extend_exp2);
+
+      extend_early_last_test(extend_block2a, extend_block2b, extend_exp2);
+
+      gen_hash_valid_test(double_block_one);
       
       display_test_result();
       

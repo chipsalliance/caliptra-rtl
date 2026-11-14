@@ -85,7 +85,7 @@ module sha512
   reg init_reg;
   reg next_reg;
   reg restore_reg;
-  reg ready_reg;
+  reg core_ready_q;
   reg [1 : 0] mode_reg;
   logic zeroize_reg;
   logic last_reg;
@@ -128,6 +128,8 @@ module sha512
   kv_error_code_e kv_src_error, kv_dest_error;
   logic kv_src_ready, kv_src_done;
   logic kv_dest_ready, kv_dest_done;
+  logic busy;
+  logic ready_reg;
 
   logic dest_keyvault;
   kv_write_ctrl_reg_t kv_write_ctrl_reg;
@@ -143,6 +145,11 @@ module sha512
   logic pcr_hash_extend_ip;
   logic pcr_hash_extend_set, pcr_hash_extend_reset;
   logic [KV_ENTRY_ADDR_W-1:0] hash_extend_entry;
+  logic pcr_hash_extend_init_done;
+  logic pcr_hash_extend_last_done;
+  logic init_lock;
+  logic init_rejected;
+  logic init_req_rejected;
   logic dest_data_avail; 
   logic [31:0] block_reg_lock,block_reg_lock_nxt;
   //PCR Gen Hash Function
@@ -217,19 +224,23 @@ module sha512
   //----------------------------------------------------------------
   always @ (posedge clk or negedge reset_n) begin : reg_update
     if (!reset_n) begin
-      ready_reg            <= '0;
+      core_ready_q         <= '0;
       digest_reg           <= '0;
       digest_valid_reg     <= '0;
       kv_reg               <= '0;
       pcr_sign_reg         <= '0;
       block_reg_lock       <= '0;
       pcr_hash_extend_ip   <= '0;
+      pcr_hash_extend_init_done <= '0;
+      pcr_hash_extend_last_done <= '0;
+      init_lock            <= '0;
+      init_rejected        <= '0;
       hash_extend_entry    <= '0;
       kv_read_data_present <= '0;
       digest_we            <= '0;
     end
     else if (zeroize_reg) begin
-      ready_reg            <= '0;
+      core_ready_q         <= '0;
       digest_reg           <= '0;
       digest_valid_reg     <= '0;
       kv_reg               <= '0;
@@ -238,9 +249,13 @@ module sha512
       digest_we            <= '0;
       block_reg_lock       <= '0;
       pcr_hash_extend_ip   <= '0;
+      pcr_hash_extend_init_done <= '0;
+      pcr_hash_extend_last_done <= '0;
+      init_lock            <= '0;
+      init_rejected        <= '0;
     end
     else begin
-      ready_reg        <= core_ready;
+      core_ready_q     <= core_ready;
       digest_valid_reg <= core_digest_valid;
 
       if (core_digest_valid & ~digest_valid_reg & ~(dest_keyvault | kv_read_data_present)) begin
@@ -257,6 +272,12 @@ module sha512
       block_reg_lock <= block_reg_lock_nxt;
       pcr_hash_extend_ip <= pcr_hash_extend_set ? '1 :
                             pcr_hash_extend_reset ? '0 : pcr_hash_extend_ip;
+      pcr_hash_extend_init_done <= (pcr_hash_extend_set | pcr_hash_extend_reset) ? '0 :
+                                   (pcr_hash_extend_ip & init_reg) ? '1 : pcr_hash_extend_init_done;
+      pcr_hash_extend_last_done <= (pcr_hash_extend_set | pcr_hash_extend_reset) ? '0 :
+                                   (pcr_hash_extend_ip & (init_reg | next_reg) & last_reg) ? '1 : pcr_hash_extend_last_done;
+      init_lock <= init_lock | (init_reg & ~gen_hash_ip) | gen_hash_start;
+      init_rejected <= init_rejected | init_req_rejected;
       hash_extend_entry <= pcr_hash_extend_set ? kv_read_ctrl_reg.read_entry : hash_extend_entry;
       kv_read_data_present <= kv_read_data_present_set ? '1 :
                               kv_read_data_present_reset ? '0 : kv_read_data_present;
@@ -278,23 +299,29 @@ module sha512
     hwif_in.SHA512_VERSION[1].VERSION.next = SHA512_CORE_VERSION1;
 
     //Mask commands when keyvault is busy to prevent runs with partial keys.
-    init_reg = gen_hash_ip ? gen_hash_init_reg : (hwif_out.SHA512_CTRL.INIT.value & kv_src_ready);
-    next_reg = gen_hash_ip ? gen_hash_next_reg : (hwif_out.SHA512_CTRL.NEXT.value & kv_src_ready);
-    restore_reg = gen_hash_ip ? '0 : (hwif_out.SHA512_CTRL.RESTORE.value & kv_src_ready);
+    //Only one INIT (or PCR hash generation) is accepted between ZEROIZE commands. A rejected INIT
+    //clears the digest, holds VALID low and blocks NEXT and RESTORE until ZEROIZE.
+    //During PCR hash extend, INIT must precede NEXT and no NEXT is accepted after LAST.
+    init_req_rejected = hwif_out.SHA512_CTRL.INIT.value & init_lock;
+    init_reg = gen_hash_ip ? gen_hash_init_reg :
+               (hwif_out.SHA512_CTRL.INIT.value & kv_src_ready & ~init_lock);
+    next_reg = gen_hash_ip ? gen_hash_next_reg :
+               (hwif_out.SHA512_CTRL.NEXT.value & kv_src_ready & ~(init_rejected | init_req_rejected) & ~(pcr_hash_extend_ip & (~pcr_hash_extend_init_done | pcr_hash_extend_last_done)));
+    restore_reg = gen_hash_ip ? '0 : (hwif_out.SHA512_CTRL.RESTORE.value & kv_src_ready & ~(init_rejected | init_req_rejected) & ~pcr_hash_extend_ip);
     mode_reg = gen_hash_ip ? MODE_SHA_512 : hwif_out.SHA512_CTRL.MODE.value;
     zeroize_reg = hwif_out.SHA512_CTRL.ZEROIZE.value || debugUnlock_or_scan_mode_switch;
     last_reg = gen_hash_ip ? gen_hash_last_reg : hwif_out.SHA512_CTRL.LAST.value;
     hwif_in.SHA512_CTRL.LAST.hwclr = core_digest_valid & ~digest_valid_reg;
 
     hwif_in.SHA512_STATUS.READY.next = ready_reg;
-    hwif_in.SHA512_STATUS.VALID.next = digest_valid_reg;
+    hwif_in.SHA512_STATUS.VALID.next = digest_valid_reg & ~init_rejected;
 
     //output comes in big endian
     for (int dword =0; dword < DIG_NUM_DWORDS; dword++) begin
       restore_digest[dword] = hwif_out.SHA512_DIGEST[(DIG_NUM_DWORDS-1)-dword].DIGEST.value;
-      hwif_in.SHA512_DIGEST[dword].DIGEST.we = zeroize_reg? 0 : digest_we;
+      hwif_in.SHA512_DIGEST[dword].DIGEST.we = (zeroize_reg | init_req_rejected | init_rejected) ? 0 : digest_we;
       hwif_in.SHA512_DIGEST[dword].DIGEST.next = digest_reg[(DIG_NUM_DWORDS-1)-dword];
-      hwif_in.SHA512_DIGEST[dword].DIGEST.hwclr = zeroize_reg;
+      hwif_in.SHA512_DIGEST[dword].DIGEST.hwclr = zeroize_reg | init_req_rejected;
     end
     //output comes in big endian
     for (int dword =0; dword < PCR_HASH_NUM_DWORDS; dword++) begin
@@ -328,33 +355,37 @@ module sha512
     hwif_in.SHA512_VAULT_RD_CTRL.read_en.hwclr = ~kv_src_ready;
     hwif_in.SHA512_KV_WR_CTRL.write_en.hwclr = ~kv_dest_ready;
 
-    gen_hash_start = hwif_out.SHA512_GEN_PCR_HASH_CTRL.START.value;
-    hwif_in.SHA512_GEN_PCR_HASH_STATUS.READY.next = ~gen_hash_ip & ~pcr_hash_extend_ip & ready_reg;
-    hwif_in.SHA512_GEN_PCR_HASH_STATUS.VALID.hwset = gen_hash_ip & dest_data_avail;
-    hwif_in.SHA512_GEN_PCR_HASH_STATUS.VALID.hwclr = gen_hash_start;
+    gen_hash_start = hwif_out.SHA512_GEN_PCR_HASH_CTRL.START.value & ~pcr_hash_extend_ip & ~init_lock;
+    hwif_in.SHA512_GEN_PCR_HASH_STATUS.READY.next = ~pcr_hash_extend_ip & ready_reg;
+    hwif_in.SHA512_GEN_PCR_HASH_STATUS.VALID.hwset = gen_hash_ip & dest_data_avail & ~zeroize_reg;
+    hwif_in.SHA512_GEN_PCR_HASH_STATUS.VALID.hwclr = hwif_out.SHA512_GEN_PCR_HASH_CTRL.START.value | zeroize_reg;
 
   end
 
+    //core_ready_q lags core_ready by a cycle; also hold off in the cycle a command is accepted
+    always_comb ready_reg = core_ready_q & core_ready & ~init_reg & ~next_reg & ~gen_hash_start & ~gen_hash_ip;
+    always_comb busy = ~ready_reg | ~kv_src_ready | ~kv_dest_ready;
+
     // Software write-enables to prevent KV reg manipulation mid-operation
-    always_comb hwif_in.SHA512_VAULT_RD_CTRL.read_en.swwe         = !kv_read_data_present && ready_reg && !gen_hash_ip;
-    always_comb hwif_in.SHA512_VAULT_RD_CTRL.read_entry.swwe      = !kv_read_data_present && ready_reg && !gen_hash_ip;
-    always_comb hwif_in.SHA512_VAULT_RD_CTRL.pcr_hash_extend.swwe = !kv_read_data_present && ready_reg && !gen_hash_ip;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.read_en.swwe         = !kv_read_data_present && !busy;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.read_entry.swwe      = !kv_read_data_present && !busy;
+    always_comb hwif_in.SHA512_VAULT_RD_CTRL.pcr_hash_extend.swwe = !kv_read_data_present && !busy;
     always_comb hwif_in.SHA512_VAULT_RD_CTRL.rsvd.swwe            = 0;
 
     // KV write control must be written before SHA core operation begins, even though
     // output isn't written to KV until the end of the operation.
     // Prevent partial-key attacks by blocking register modifications during core execution.
-    always_comb hwif_in.SHA512_KV_WR_CTRL.write_en.swwe              = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.write_entry.swwe           = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.hmac_block_dest_valid.swwe = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.aes_key_dest_valid.swwe    = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = ready_reg && kv_dest_ready && !gen_hash_ip;
-    always_comb hwif_in.SHA512_KV_WR_CTRL.dma_data_dest_valid.swwe   = ready_reg && kv_dest_ready && !gen_hash_ip;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.write_en.swwe              = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.write_entry.swwe           = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.hmac_key_dest_valid.swwe   = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.hmac_block_dest_valid.swwe = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.mldsa_seed_dest_valid.swwe = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.aes_key_dest_valid.swwe    = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = ready_reg && kv_dest_ready;
+    always_comb hwif_in.SHA512_KV_WR_CTRL.dma_data_dest_valid.swwe   = ready_reg && kv_dest_ready;
     always_comb hwif_in.SHA512_KV_WR_CTRL.rsvd.swwe                  = 0;
 
   `CALIPTRA_KV_WRITE_CTRL_REG2STRUCT(kv_write_ctrl_reg, SHA512_KV_WR_CTRL)
@@ -521,7 +552,7 @@ pv_gen_hash1
   .rst_b(reset_n),
   .zeroize(zeroize_reg),
 
-  .core_ready(ready_reg),
+  .core_ready(core_ready_q),
   .core_digest_valid(gen_hash_ip & dest_data_avail),
 
   .start(gen_hash_start),
