@@ -1425,7 +1425,7 @@ module caliptra_top_sva
   //VALID flag SVA
   sha512_valid_flag:        assert property (
                                     @(posedge `SVA_RDC_CLK)
-                                    `SHA512_PATH.digest_valid_reg |-> `SHA512_PATH.ready_reg
+                                    `SHA512_PATH.digest_valid_reg |-> `SHA512_PATH.core_ready_q
                                     )
                         else $display("SVA ERROR: SHA512 VALID flag mismatch!");
                           
