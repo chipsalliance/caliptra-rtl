@@ -1128,7 +1128,7 @@ The SHA256 architecture inputs and outputs are described as follows.
 | digest\[255:0\] | output          | The hashed value of the given block.                                                         |
 | digest_valid    | output          | When HIGH, the signal indicates the result is ready.                                         |
 
-\* For more imformation about these inputs, please refer to LMS accelerator section.
+\* For more information about these inputs, please refer to LMS accelerator section.
 
 ### Address map
 
@@ -1581,7 +1581,7 @@ The HMAC_DRBG is embedded into ECC architecture, since there is no address map t
 
 ### SCA countermeasure
 
-For information, see SCA countermeasure in the [HMAC384](#hmac384) section.
+For information, see SCA countermeasure in the [HMAC512/HMAC384](#hmac512hmac384) section.
 
 ## ECC
 
@@ -1994,7 +1994,7 @@ The AES architecture inputs and outputs are described in the following table.
 | TRIGGER.DATA_OUT_CLEAR             | input           | Clears the DATA_OUT registers with pseudo-random data.      |
 | TRIGGER.KEY_IV_DATA_IN_CLEAR       | input           | Clears the Key, IV, and DATA_INT registers with pseudo-random data.      |
 | TRIGGER.START                      | input           | Triggers the encryption/decryption of one data block if in manual operation mode.      |
-| STATUS.ALERT_FATAL_FAULT           | output          | A fatal fault has ocurred and the AES unit needs to be reset.      |
+| STATUS.ALERT_FATAL_FAULT           | output          | A fatal fault has occurred and the AES unit needs to be reset.      |
 | STATUS.ALERT_RECOV_CTRL_UPDATE_ERR | output          | An update error has occurred in the shadowed Control Register. AES operation needs to be restarted by re-writing the Control Register.      |
 | STATUS.INPUT_READY                 | output          | The AES unit is ready to receive new data input via the DATA_IN registers.      |
 | STATUS.OUTPUT_VALID                | output          | The AES unit has alid output data.      |
@@ -2052,7 +2052,7 @@ We use them to increase our confidence in our SCA countermeasures and to close c
 
 ##### Prerequisites
 
-The [Alma-based formal masking verification flow together with a Howto](https://github.com/vogelpi/opentitan/tree/aes-gcm-review/hw/ip/aes/pre_sca/alma#readme) (including installation instructions) as well an [open source Yosys synthesis flow](https://github.com/vogelpi/opentitan/tree/aes-gcm-review/hw/ip/aes/pre_syn) are available open soure.
+The [Alma-based formal masking verification flow together with a Howto](https://github.com/vogelpi/opentitan/tree/aes-gcm-review/hw/ip/aes/pre_sca/alma#readme) (including installation instructions) as well as an [open source Yosys synthesis flow](https://github.com/vogelpi/opentitan/tree/aes-gcm-review/hw/ip/aes/pre_syn) are available open source.
 The tool can both run on generic Yosys netlists or on proprietary and technology-specific netlists.
 For the latter, a [slightly modified verification flow with an additional translation step](https://github.com/vogelpi/opentitan/tree/aes-gcm-review/hw/ip/aes/pre_sca/alma_post_syn#readme) is required.
 To verify the GHASH SCA countermeasure, the generic flow was used with the following tool versions:
