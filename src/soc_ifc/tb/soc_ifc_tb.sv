@@ -335,6 +335,7 @@ module soc_ifc_tb
 
              .cptra_pwrgood(cptra_pwrgood_tb),
              .cptra_rst_b(cptra_rst_b_tb),
+             .cold_boot(),
 
 
              .ready_for_fuses(ready_for_fuses),

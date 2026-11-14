@@ -7028,6 +7028,7 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.next;
         end
     end
+    assign hwif_out.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value = field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer1_timeout_sts.value;
     // Field: soc_ifc_reg.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts
     always_comb begin
         automatic logic [0:0] next_c;
@@ -7054,6 +7055,7 @@ module soc_ifc_reg (
             field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value <= field_combo.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.next;
         end
     end
+    assign hwif_out.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value = field_storage.intr_block_rf.error_internal_intr_r.error_wdt_timer2_timeout_sts.value;
     assign hwif_out.intr_block_rf.error_internal_intr_r.intr =
         |(field_storage.intr_block_rf.error_internal_intr_r.error_internal_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_internal_en.value)
         || |(field_storage.intr_block_rf.error_internal_intr_r.error_inv_dev_sts.value & field_storage.intr_block_rf.error_intr_en_r.error_inv_dev_en.value)

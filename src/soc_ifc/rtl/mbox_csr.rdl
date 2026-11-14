@@ -70,11 +70,11 @@ addrmap mbox_csr {
 
     reg {
         name="Mailbox DataIn";
-        desc="Data in register, write the next data to mailbox
-        [br]Caliptra Access: RW
-        [br]SOC Access:      RW
+        desc="Data in register, write the next data to mailbox. Reads return zero.
+        [br]Caliptra Access: WO
+        [br]SOC Access:      WO
         [br]TAP Access [in debug/manuf mode]: WO";
-        field {sw=rw; hw=na; swwe=valid_requester; swmod=true;} datain[32]=0;
+        field {sw=w; hw=na; swwe=valid_requester; swmod=true;} datain[32]=0;
     } mbox_datain;
 
     reg {
