@@ -394,10 +394,10 @@ module caliptra_top_tb_services
     //         8'hb8        - AXI Error Injection Disabled
     //         8'hb9        - Enable scan mode and run DOE back to back
     //         8'hba        - Enable scan mode with KV write
-    //         8'hbb        - Enable KV boot phase transition enforcement
-    //         8'hbc        - Force MuBi4 glitch on boot_flow_fmc (invalid encoding, auto-release after 5 clocks)
+    //         8'hbb        - Disabled until boot-flow monitor rework
+    //         8'hbc        - Disabled until boot-flow monitor rework
     //         8'hbd        - Arm KV fw-update-reset alignment hook; flavor in WriteData[15:8]: 0=HMAC write_en (Case A), 1=HMAC digest_valid_new (Case B), 2=DOE write_en (Case C), 3=HMAC kv_key_write_en / KEY read (Case D) (TB-only, directed_kv_fw_update_reset_abort)
-    //         8'hbe        - Force shadow storage bit-flip on ICCM fmc_start shadow register (auto-release after 5 clocks)
+    //         8'hbe        - Disabled until boot-flow monitor rework
     //         8'hbf        - Force DCLS lockstep corruption inject (lockstep_err_injection_en_i = El2MuBiTrue, auto-release after 5 clocks)
     //         8'hc0:       - Inject MLDSA_SEED to kv_key register
     //         8'hc1        - Force DCLS lockstep corruption inject WITHOUT the TB self-check
@@ -1928,6 +1928,16 @@ endgenerate //IV_NO
         end
     end
 
+    // Old firmware requests cannot enable the feature or interrupt validation.
+    always @(posedge clk) begin
+        if ((mailbox_write === 1'b1) &&
+            ((WriteData[7:0] === 8'hbb) || (WriteData[7:0] === 8'hbc) ||
+             (WriteData[7:0] === 8'hbe))) begin
+            $warning("TB: boot-flow monitor disabled; ignoring command 0x%02h", WriteData[7:0]);
+        end
+    end
+
+    /* Disabled until the boot-flow monitor is reworked.
     // Enable boot flow monitoring (TB command 0xbb)
     // Forces the disable signal to 0, which enables monitoring.
     // By default the boot flow monitoring is disabled in simulation so legacy tests work
@@ -1953,6 +1963,8 @@ endgenerate //IV_NO
             $display("TB: Released boot_flow_fmc force (auto)");
         end
     end
+
+    */
 
 `ifdef RV_LOCKSTEP_ENABLE
     initial dcls_test_start = 0;
@@ -2045,6 +2057,7 @@ endgenerate //IV_NO
     end
 `endif // RV_LOCKSTEP_ENABLE
 
+    /* Disabled until the boot-flow monitor is reworked.
     // Shadow storage bit-flip injection on ICCM fmc_start (auto-release after 5 clocks)
     logic [63:0] shadow_flip_cycle;
     initial shadow_flip_cycle = '0;
@@ -2061,6 +2074,8 @@ endgenerate //IV_NO
             $display("TB: Released shadow storage force (auto)");
         end
     end
+
+    */
 
     // ------------------------------------------------------------------
     // KV firmware-update-reset alignment hook for directed_kv_fw_update_reset_abort
