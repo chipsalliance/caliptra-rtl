@@ -63,9 +63,11 @@ void hmac_write_kv_slot(uint8_t slot, uint32_t dest_valid_mask) {
          HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
         dest_valid_mask);
 
-    // Kick off HMAC384 INIT
+    // Kick off a single-block HMAC384 (INIT|LAST); the KV write happens
+    // only on the final tag
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL,
         HMAC_REG_HMAC512_CTRL_INIT_MASK |
+        HMAC_REG_HMAC512_CTRL_LAST_MASK |
         (HMAC384_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));
 
     // Poll for HMAC completion (STATUS.VALID)

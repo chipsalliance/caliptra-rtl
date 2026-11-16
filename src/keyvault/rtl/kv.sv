@@ -35,6 +35,7 @@ module kv
     input logic debugUnlock_or_scan_mode_switch,
 
     //Boot flow signals
+    input logic cold_boot,
     input caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc,
     input caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt,
     input caliptra_prim_mubi_pkg::mubi4_t boot_flow_error,
@@ -401,7 +402,7 @@ end
 //KV Enforcement
 //This logic enforces that the keyvault is in the expected state at transition to FMC or RT
 //Asserts lock_wr, lock_use continuously in their appropriate layers
-//per-entry clear atomically in one cycle on each transition
+//per-entry clear atomically on cold-boot transitions only
 //Slot assignments from caliptra-sw KeyId: 0=UDS, 1=FE, 2=KeyLadder, 3=TMP,
 //  4=RT_CDI, 5=RT_ECDSA, 6=FMC_CDI, 7=FMC_ECDSA, 8=FMC_MLDSA, 9=RT_MLDSA, 10-12=DPE, 13-14=spare, 15=STABLE_OWNER
 //  16=MDK, 22=HEK (OCP Lock slots preserved conditionally)
@@ -414,13 +415,14 @@ always_comb begin : KV_ENFORCEMENT
                                      entry inside {KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA});
         boot_flow_lock_use[entry] = (mubi4_test_true_loose(boot_flow_rt) &&
                                      entry inside {KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA});
-        boot_flow_key_clear[entry] = (enter_fmc && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})
+        boot_flow_key_clear[entry] = cold_boot &&
+                                    ((enter_fmc && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})
                                                  && ~(stable_owner_key_en && entry == KV_SLOT_STABLE_OWNER)
                                                  && ~(ocp_lock_mode_en && entry inside {OCP_LOCK_RT_OBF_KEY_KV_SLOT, OCP_LOCK_HEK_SEED_KV_SLOT})) ||
                                      (enter_rt && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA,
                                                                   KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA})
                                                && ~(stable_owner_key_en && entry == KV_SLOT_STABLE_OWNER)
-                                               && ~(ocp_lock_mode_en && entry inside {OCP_LOCK_RT_OBF_KEY_KV_SLOT, OCP_LOCK_HEK_SEED_KV_SLOT}));
+                                               && ~(ocp_lock_mode_en && entry inside {OCP_LOCK_RT_OBF_KEY_KV_SLOT, OCP_LOCK_HEK_SEED_KV_SLOT})));
     end
 end
 

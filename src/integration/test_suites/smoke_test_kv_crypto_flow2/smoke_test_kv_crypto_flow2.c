@@ -470,6 +470,7 @@ void kv_ecc(uint8_t seed_id, uint8_t privkey_id){
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
+    ecc_zeroize();
 
     //******************************************************************
     // ECC_SIGN(MSG, PRIVKEY, IV)

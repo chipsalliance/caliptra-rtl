@@ -396,6 +396,7 @@ package soc_ifc_reg_model_top_pkg;
                                                               `REG____CP_NONCORE_RST(this.internal_iccm_rt_end_addr                )
                                                               `REG____CP_NONCORE_RST(this.internal_iccm_region_lock                )
                                                               `REG____CP_NONCORE_RST(this.internal_trace_ctrl                     )
+                                                              `REG____CP_NONCORE_RST(this.internal_csr_hmac_key_lock              )
                                                               `REG____CP_NONCORE_RST(this.internal_fw_update_reset                 )
                                                               `REG____CP_NONCORE_RST(this.internal_fw_update_reset_wait_cycles     )
                                                               `REG____CP_NONCORE_RST(this.internal_nmi_vector                      )
@@ -1536,6 +1537,7 @@ package soc_ifc_reg_model_top_pkg;
         foreach (soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[ii])        uvm_reg_field_cb::add(soc_ifc_reg_rm.SS_GENERIC_FW_EXEC_CTRL[ii].go                          , soc_ifc_reg_internal_cb);
         foreach (soc_ifc_reg_rm.internal_obf_key[ii])               uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_obf_key[ii].key                                , soc_ifc_reg_key_cb);
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_iccm_lock.lock                                 , soc_ifc_reg_internal_cb);
+                                                                    uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_csr_hmac_key_lock.lock                         , soc_ifc_reg_internal_cb);
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_fw_update_reset.core_rst                       , soc_ifc_reg_internal_fw_update_reset_cb) ;
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_nmi_vector.vec                                 , soc_ifc_reg_internal_cb);
                                                                     uvm_reg_field_cb::add(soc_ifc_reg_rm.internal_hw_error_fatal_mask.mask_iccm_ecc_unc          , soc_ifc_reg_internal_cb);

@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
-<p style="text-align: center;">Revision 2.1</p>
+<p style="text-align: center;">Revision 2.2</p>
 
 <div style="page-break-after: always"></div>
 
@@ -43,9 +43,17 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * [SHA3](#sha3)
 * [ML-KEM](#adams-bridge-kyber-ml-kem)
 
-## Pre-release Features
-* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement) -- HW-enforced DICE key integrity monitoring and slot access control across boot phases
-
+## Key Caliptra 2.2 Changes
+* [Dual-core lockstep (DCLS)](#dual-core-lockstep-dcls)
+* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement)
+* [ICCM write hash measurement](#iccm-write-hash-measurement-pcr4pcr5)
+* [Dual iTRNG entropy combiner](#dual-itrng-entropy-combiner)
+* HMAC area optimization and multi-block interface updates
+* ECC area optimization
+* Adams Bridge v3.0 area optimizations and security hardening
+* Fault injection countermeasures for FSMs and debug controls
+* CSR HMAC key lock
+* SoC-side stash-measurement register bank
 
 ## Boot FSM
 
@@ -343,11 +351,7 @@ Note: When entering debug or scan mode, all crypto engines are zeroized. Before 
 
 ## Clock gating
 
-Caliptra provides a clock gating feature that turns off clocks when the microcontroller is halted. Clock gating is disabled by default, but can be globally enabled via the following register.
-
-| Control register     | Start address     | Description               |
-| :------------------- | :---------------- | :------------------------ |
-| CPTRA_CLK_GATING_EN  | 0x300300bc        | Register bit to enable or disable the clock gating feature. |
+Caliptra provides a clock gating feature that turns off clocks when the microcontroller is halted. Clock gating is disabled by default, but can be globally enabled via the [CPTRA_CLK_GATING_EN](https://chipsalliance.github.io/caliptra-rtl/main/external-regs/?p=caliptra_top_reg.generic_and_fuse_reg.CPTRA_CLK_GATING_EN) register.
 
 When enabled, halting the microcontroller turns off clocks to all of the cryptographic subsystem, the vaults (key vault, PCR vault, and data vault), mailbox SRAM, SoC interface, and peripherals subsystem. The Watchdog timer and SoC registers run on the gated RDC clock. The RV core implements its own clock gating mechanism. Halting the core automatically turns off its clock.
 
@@ -860,6 +864,7 @@ Using the HW API:
 * A user of the HW API first locks the accelerator by reading the LOCK register. A read that returns the value 0 indicates that the resource was locked for exclusive use by the requesting user. A write of ‘1 clears the lock.
 * The USER register captures the AXI USERID value of the requestor that locked the SHA accelerator. This is the only user that is allowed to control the SHA accelerator by performing AXI register writes. Writes by any other agent on the AXI subordinate interface are dropped.
 * SHA supports **Mailbox** mode: SHA is computed on LENGTH (DLEN) bytes of data stored in the mailbox beginning at START\_ADDRESS. This computation is performed when the EXECUTE register is set by the user. When the operation is completed and the result in the DIGEST register is valid, SHA accelerator sets the VALID bit of the STATUS register.
+* Mailbox-mode requests with START\_ADDRESS + DLEN greater than the mailbox capacity are rejected before any mailbox reads or hashing. Exact-fit requests are accepted. A rejected request leaves STATUS.VALID clear, clears EXECUTE, and sets the sticky ERROR1\_STS bit in the SHA accelerator's ERROR\_INTERNAL\_INTR\_R register. The corresponding error interrupt is asserted if enabled. Software may clear this write-one-to-clear status bit, correct the range, and retry under the same lock without resetting the accelerator. This range check does not apply to streaming or ICCM hashing.
 * Note that even though the mailbox size is fixed, due to SHA save/restore function enhancement, there is no limit on the size of the block that needs to be SHAd. SOC needs to follow FW API
 * The SHA computation engine in the SHA accelerator requires big endian data, but the SHA accelerator can accommodate mailbox input data in either the little endian or big endian format. By default, input data is assumed to be little endian and is swizzled to big endian at the byte level prior to computation. For the big endian format, data is loaded into the SHA engine as-is. Users may configure the SHA accelerator to treat data as big endian by setting the ENDIAN\_TOGGLE bit appropriately.
 * See the register definition for the encodings.
@@ -1422,9 +1427,20 @@ The HMAC architecture has the finite-state machine as shown in the following fig
 
 ![](./images/HMAC_FSM.png)
 
+### Multi-block operations
+
+An HMAC operation starts with `INIT` on the first block and ends with the first block that has `LAST` set (`INIT|LAST` for a single block, otherwise `NEXT|LAST`). Each block without `LAST` produces an intermediate SHA-512 chaining state, not an HMAC tag.
+
+* `NEXT` is accepted only while an operation started by `INIT` is in flight. A `NEXT` (with or without `LAST`) issued after the final tag, after zeroize, or before any `INIT` is rejected and sets `error2_sts`.
+* If the key or block was read from the key vault, or the result is routed to the key vault, no intermediate or final result is written to `TAG`. The key vault provenance and the `KEY` register lock are held until the final tag or zeroize, and the key vault write happens only on the final tag.
+* In CSR mode, intermediate results are not written to `TAG`; only the final tag is.
+* Key vault read controls and `CSR_MODE` cannot be changed while an operation is in flight. They must be programmed before `INIT`, or the operation must be zeroized.
+
 ### CSR Mode
 
 When the CSR Mode register is set, the HMAC512 core uses the value latched from the cptra_csr_hmac_key interface pins in place of the API key register. These pins are latched internally after powergood assertion during DEVICE_MANUFACTURING lifecycle state. During debug mode operation this value is overridden with all 1's, and during any other lifecycle state it has a value of zero.
+
+ROM must set `internal_csr_hmac_key_lock` (write-1-to-set) before handing off to FMC. Once the lock is set, the latched CSR HMAC key is cleared to zero, so FMC and Runtime FW can never use it. The lock is cleared only by warm or cold reset. A firmware-update (hitless) reset does not clear it, so the key stays unavailable through hitless updates.
 
 ### Signal descriptions
 
@@ -1690,6 +1706,28 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 *Figure: ECDH sharedkey pseudocode*
 
 ![](./images/sharedkey_pseudo.png)
+
+### ECC zeroize
+
+Writing 1 to `ECC_CTRL.ZEROIZE` clears all ECC internal registers and API registers, including `ECC_PRIVKEY_IN`, `ECC_SEED`, `ECC_MSG`, and all outputs. ECC is also zeroized on debug lock/unlock and scan mode switch.
+
+Firmware must issue zeroize:
+- After every completed operation (KeyGen, Signing, Verifying, ECDH sharedkey, PCR signing), once the results have been read, before starting the next command.
+- After any error, before re-issuing a command.
+- After writing `ECC_CTRL.PCR_SIGN`, once the PCR signature has been read.
+
+Hardware enforces this requirement:
+- When an operation completes (`ECC_STATUS.VALID` set), when an error is detected, or when `ECC_CTRL.PCR_SIGN` loads the PCR signing key from key vault slot 7, `ECC_STATUS.READY` stays de-asserted until zeroize is issued.
+- While `ECC_STATUS.READY` is de-asserted, `ECC_CTRL` commands, all API input registers, and the key vault read controls cannot be written. Results remain readable.
+- After zeroize, the engine runs its internal initialization and then sets `ECC_STATUS.READY`.
+
+In addition, hardware clears key material sourced from the key vault without waiting for zeroize:
+- `ECC_PRIVKEY_IN` loaded from the key vault, including the PCR signing key loaded by `PCR_SIGN`, and `ECC_SEED` loaded from the key vault are cleared when the operation completes.
+- `ECC_PRIVKEY_IN` and `ECC_SEED` are cleared when an error is detected.
+- The internal copy of a generated private key or shared key destined for the key vault is cleared once the key vault write completes.
+- `ECC_CTRL.PCR_SIGN` must be written together with the Signing command in `ECC_CTRL.CTRL`. Any other combination, including `PCR_SIGN` alone, is reported as an error and clears the loaded key.
+
+This guarantees that a private key loaded into `ECC_PRIVKEY_IN`, in particular the PCR signing key that `PCR_SIGN` loads from key vault slot 7, is cleared before any subsequent firmware-controlled operation starts.
 
 ### SCA countermeasure
 
@@ -2706,6 +2744,8 @@ FW must set a last cycle flag before running the last iteration of the SHA engin
      * PCR Hash = Hash(PCR[0], …, PCR[31], Nonce)
 * HW also implements a HW function called SIGN\_PCR. This function takes the PCR digest that was generated by the previous routine and signs it using the key in key slot 7, following the same ECC sign flow defined in the [ECC](#ecc) section.
      * The resulting PCR DIGEST is used only once for signing by the HW. If a new PCR signing is required, GEN\_PCR\_HASH needs to be redone.
+     * `ECC_CTRL.PCR_SIGN` must be written in the same write as the Signing command; otherwise ECC reports an error. Hardware clears the key loaded from key slot 7 when the PCR signing completes or fails.
+     * Writing `ECC_CTRL.PCR_SIGN` locks the ECC engine (`ECC_STATUS.READY` de-asserted) until firmware issues zeroize, so the key loaded from key slot 7 can only be used to sign the hardware-generated PCR digest. See [ECC zeroize](#ecc-zeroize).
 
 ### ICCM write hash measurement (PCR4/PCR5)
 
@@ -2852,7 +2892,7 @@ must observe `AES_KV_RD_KEY_STATUS.ERROR` after the status VALID bit
 sets. The `AES_KV_RD_KEY_STATUS.ERROR` field encodes the KV error
 code (`KV_SUCCESS=0`, `KV_READ_FAIL=1`, `KV_RD_LEN_MISMATCH=3`).
 
-If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
+If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable. For HMAC, an iteration is a complete `INIT` ... `LAST` operation: the lock is held across all of its blocks, the key vault read controls cannot be reprogrammed until it ends, and the key vault write status becomes valid only after the final block (see [Multi-block operations](#multi-block-operations)).
 
 The following tables describe read, write, and status values for key vault blocks.
 
@@ -3076,9 +3116,11 @@ Enforcement is applied continuously based on the current boot phase and atomical
 
 The `lock_wr` and `lock_use` fields have `hwset` property in the register definition, allowing hardware to set them without firmware intervention. Once set, they can only be cleared by `core_only_rst_b` de-assertion.
 
-#### Slot clearing (atomic, on transition edge)
+#### Slot clearing (atomic, on cold-boot transition edges)
 
-**DICE slots** — unconditionally cleared or preserved at each transition:
+Unused-slot clearing runs only during cold boot, identified by both read-only `CPTRA_RESET_REASON.WARM_RESET` and `CPTRA_RESET_REASON.FW_UPD_RESET` being zero. Warm-reset and firmware-update transitions do not generate `boot_flow_key_clear` requests for any slot. Their key data, `dest_valid`, and `last_dword` are not modified by transition cleanup; firmware operations and independent clear/flush paths may still change them. Monitor checks, phase tracking, and lock enforcement remain active independently of this cold-boot gate.
+
+**DICE and runtime slots** — cold-boot transition behavior:
 
 | Slot | Purpose | ROM→FMC | FMC→RT |
 | :--- | :------ | :------ | :----- |
@@ -3092,9 +3134,11 @@ The `lock_wr` and `lock_use` fields have `hwset` property in the register defini
 | 7 | FMC_ECDSA | Preserved | Preserved |
 | 8 | FMC_MLDSA | Preserved | Preserved |
 | 9 | RT_MLDSA | Cleared | Preserved |
-| 10–14 | Unused | Cleared | Cleared |
+| 10–11 | DPE scratch | Cleared | Cleared |
+| 12 | Exported DPE CDI | Cleared | Cleared |
+| 13–14 | Unused | Cleared | Cleared |
 
-**Conditionally-preserved slots** — behavior depends on active mode:
+**Conditionally-preserved slots** — cold-boot behavior depends on active mode:
 
 | Slot | Purpose | Default (no optional features) | `stable_owner_key_en` | `ocp_lock_mode_en` |
 | :--- | :------ | :----------------------------- | :-------------------- | :----------------- |
@@ -3102,13 +3146,13 @@ The `lock_wr` and `lock_use` fields have `hwset` property in the register defini
 | 16 | MDK | Cleared | Cleared | Preserved |
 | 17–21 | Unused OCP range | Cleared | Cleared | Cleared |
 | 22 | HEK seed | Cleared | Cleared | Preserved |
-| 23 | MEK | Cleared | Cleared | **Always cleared** (DMA-accessible) |
+| 23 | MEK | Cleared | Cleared | Cleared (DMA-accessible) |
 
 Clearing destroys the key data and resets `dest_valid` and `last_dword` for the affected slots.
 
 #### Conditional slot preservation
 
-Two optional Caliptra features populate KV slots that must survive boot transitions when the feature is active, but must be cleared when inactive. These slots are **not monitored** (no dest_valid checks, no write counters) — the monitor is exclusively for DICE keys. Only the enforcement block (slot clearing) handles them conditionally.
+Two optional Caliptra features populate KV slots that must survive cold-boot transitions when the feature is active, but must be cleared when inactive. These slots are **not monitored** (no dest_valid checks, no write counters) — the monitor is exclusively for DICE keys. Only the enforcement block (slot clearing) handles them conditionally. Warm and firmware-update re-entry skip unused-slot clearing regardless of these feature enables.
 
 **Stable Owner Key (Slot 15)**
 
@@ -3118,19 +3162,21 @@ The Stable Owner Root Key is conditionally derived by ROM when all three conditi
 - `OCP_LOCK_MODE_en` = 0 (OCP Lock feature is not active)
 - `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1 (SoC configuration, written prior to `CPTRA_FUSE_WR_DONE`, enabling the stable owner key feature)
 
-The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared normally.
+The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both cold-boot ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared at those cold-boot transitions.
 
 **OCP Lock Keys (Slots 16 and 22)**
 
+OCP Lock mode is supported only when `CALIPTRA_MODE_SUBSYSTEM` is defined. In Passive mode, the incoming strap is ignored and `ocp_lock_mode_en` is forced to 0.
+
 When OCP Lock mode is enabled (`ocp_lock_mode_en` = 1 from the `ss_ocp_lock_en` strap), DOE populates slot 16 (MDK) and slot 22 (HEK seed) before ROM runs. FMC and RT firmware require these keys for EPK, VEK, and MEK derivation in OCP Lock flows.
 
-When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at both transitions. When inactive, they are cleared normally.
+When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at both cold-boot transitions. When inactive, they are cleared at those cold-boot transitions.
 
-**Slot 23 (MEK) is always cleared** regardless of `ocp_lock_mode_en`. MEK has `DMA_DATA` in its `dest_valid` (it is DMA-accessible for key release), making it a security risk if it persists across transitions. RT firmware re-derives MEK when needed during OCP Lock key release flows.
+**Slot 23 (MEK) is always cleared at cold-boot transitions** regardless of `ocp_lock_mode_en`. This prevents early-stage key material from surviving in a DMA-accessible slot. Warm and firmware-update transitions do not clear it through this mechanism; runtime firmware remains responsible for its OCP Lock key lifecycle.
 
-Only the specific slots that ROM or FMC actually derive (16 and 22) are preserved — not the entire OCP Lock range (16–23). Slots 17–21 and 23 are always cleared.
+Only the specific slots that ROM or FMC actually derive (16 and 22) are preserved during cold boot — not the entire OCP Lock range (16–23). Slots 17–21 and 23 are cleared on cold-boot transitions.
 
-**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is always cleared even if `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1.
+**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is cleared at cold-boot transitions even if `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1.
 
 #### Error escalation
 

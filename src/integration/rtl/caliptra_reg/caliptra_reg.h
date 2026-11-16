@@ -12697,6 +12697,12 @@
 #define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_LOW                                   (0)
 #define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_MASK                                  (0x1)
 #endif
+#define CLP_SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK                                                  (0x30030668)
+#ifndef SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK
+#define SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK                                                      (0x668)
+#define SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK_LOCK_LOW                                             (0)
+#define SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK_LOCK_MASK                                            (0x1)
+#endif
 #define CLP_SOC_IFC_REG_INTR_BLOCK_RF_START                                                         (0x30030800)
 #define CLP_SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                              (0x30030800)
 #ifndef SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R

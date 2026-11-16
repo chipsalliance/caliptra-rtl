@@ -794,16 +794,27 @@ module caliptra_top_sva
     return 1'b1;
   endfunction
 
-  // Function to check all MLDSA verify results at once  
-  function automatic logic check_mldsa_verify_results();
+  // Failure diagnostics for MLDSA_verify_comprehensive. For each mismatching
+  // dword, prints the HW result next to both references so a failure can be
+  // attributed: act==c but act!=exp points at the TB/model vector, act!=c
+  // points at the HW (MLDSA_verify_pass_implies_res_match should fire too).
+  function automatic void report_mldsa_verify_results();
+    int unsigned n_mismatch = 0;
     for (int dword = 0; dword < VERIFY_RES_NUM_DWORDS; dword++) begin
       logic [31:0] expected = byte_swap(`SERVICES_PATH.mldsa_test_vector.verify_res[dword]);
-      
-      if (`ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword] != expected) begin
-        return 1'b0;
+      logic [31:0] actual   = `ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword];
+      logic [31:0] sig_c    = `ABR_PATH.signature_reg.enc.c[dword];
+      if (actual !== expected) begin
+        n_mismatch++;
+        $display("SVA ERROR: [MLDSA verify]   VERIFY_RES[%0d]: act=0x%08h exp(model)=0x%08h sig.c=0x%08h",
+                 dword, actual, expected, sig_c);
       end
     end
-    return 1'b1;
+    $display("SVA ERROR: [MLDSA verify]   %0d/%0d dwords mismatch; VERIFY_PASS=%0b VALID=%0b zeroize=%0b res_we=%0b",
+             n_mismatch, VERIFY_RES_NUM_DWORDS,
+             `ABR_REG_PATH.hwif_in.MLDSA_STATUS.VERIFY_PASS.next,
+             `ABR_REG_PATH.hwif_out.MLDSA_STATUS.VALID.value,
+             `ABR_PATH.zeroize, `ABR_PATH.mldsa_verify_res_we);
   endfunction
 
   // Consolidated assertions
@@ -831,13 +842,33 @@ module caliptra_top_sva
   )
   else $display("SVA ERROR: [MLDSA signing] Signature verification failed");
 
+  // Timing: |=> because abr_status_done pulses in the cycle MLDSA_STATUS.VALID
+  // is being registered; VERIFY_RES is final by then and held until zeroize.
+  // Clocked like the sibling MLDSA checks: no combinational term in the
+  // clocking event (abr_status_done is a comb pulse).
+  // VERIFY_RES vs. the model vector is reduced to a plain signal so the
+  // assertion samples it like any other operand. Calling a function that
+  // reads hierarchical TB/register state directly in the consequent was
+  // evaluated as false by VCS Y-2026.03-SP1 even though every dword matched
+  // (VERIFY_RES is written only ~4 cycles before abr_status_done).
+  logic [VERIFY_RES_NUM_DWORDS-1:0] mldsa_verify_res_match;
+  for (genvar dword = 0; dword < VERIFY_RES_NUM_DWORDS; dword++) begin : g_mldsa_verify_res_match
+    assign mldsa_verify_res_match[dword] =
+      (`ABR_REG_PATH.hwif_out.MLDSA_VERIFY_RES[dword] ===
+       byte_swap(`SERVICES_PATH.mldsa_test_vector.verify_res[dword]));
+  end
+  wire mldsa_verify_res_ok = &mldsa_verify_res_match;
+
   MLDSA_verify_comprehensive: assert property (
-    @(posedge `SVA_RDC_CLK iff (`SERVICES_PATH.mldsa_verify || `ABR_PATH.abr_status_done))
-    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input || `SERVICES_PATH.disable_mldsa_sva)
     ((`SERVICES_PATH.mldsa_verify && `ABR_PATH.abr_status_done) |=> 
-     check_mldsa_verify_results())
+     mldsa_verify_res_ok)
   )
-  else $display("SVA ERROR: [MLDSA verify] Verification result check failed");
+  else begin
+    $display("SVA ERROR: [MLDSA verify] Verification result check failed");
+    report_mldsa_verify_results();
+  end
 
   // MLDSA_VERIFY_RES matches the c field of the supplied signature, i.e. the
   // condition that MLDSA_STATUS.VERIFY_PASS claims to have checked
@@ -936,6 +967,15 @@ module caliptra_top_sva
     (`ECC_PATH.ecc_cmd_start |=> !`ECC_PATH.ecc_verify_pass_reg)
   )
   else $display("SVA ERROR: [ECC verify] VERIFY_PASS not cleared at command dispatch");
+
+  // A zeroize is mandatory between ECC commands and must always clear the
+  // previous verification result.
+  ECC_verify_pass_clear_on_zeroize: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input)
+    (`ECC_PATH.zeroize_reg |=> !`ECC_PATH.ecc_verify_pass_reg)
+  )
+  else $display("SVA ERROR: [ECC verify] VERIFY_PASS not cleared on zeroize");
 
 
   // MLDSA Scan, Debug and Zeroization Assertions
@@ -1403,7 +1443,7 @@ module caliptra_top_sva
 
   ECC_valid_flag:       assert property (
                                     @(posedge `SVA_RDC_CLK)
-                                    `ECC_PATH.ecc_valid_reg |-> `ECC_PATH.ecc_ready_reg 
+                                    `ECC_PATH.ecc_valid_reg |-> `ECC_PATH.ecc_idle 
                                     )
                         else $display("SVA ERROR: ECC VALID flag mismatch!");
                         

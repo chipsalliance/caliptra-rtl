@@ -426,8 +426,18 @@ module el2_veer_lockstep
     // Shadow core enters reset immediately with main core but gets out of reset
     // after the delay. In scan mode, the reset inputs drive it directly.
     logic [LockstepDelayPipeStages:0] rst_shadow_sr, rst_dbg_shadow_sr;
-    assign rst_shadow = scan_mode ? rst_l : &rst_shadow_sr;
-    assign rst_dbg_shadow = scan_mode ? dbg_rst_l : &rst_dbg_shadow_sr;
+    el2_prim_rst_mux2 u_rst_shadow_mux (
+      .rst0_i(&rst_shadow_sr),
+      .rst1_i(rst_l),
+      .sel_i (scan_mode),
+      .rst_o (rst_shadow)
+    );
+    el2_prim_rst_mux2 u_rst_dbg_shadow_mux (
+      .rst0_i(&rst_dbg_shadow_sr),
+      .rst1_i(dbg_rst_l),
+      .sel_i (scan_mode),
+      .rst_o (rst_dbg_shadow)
+    );
 
     always_ff @(posedge clk or negedge rst_l) begin
       if (!rst_l) begin

@@ -87,7 +87,11 @@ module sha512_acc_top
   //extra bit for roll over on full read
   logic [CPTRA_MBOX_ADDR_W:0] mbox_rdptr;
   logic [CPTRA_MBOX_ADDR_W-1:0] mbox_start_addr, mbox_end_addr;
+  logic mbox_end_addr_carry;
   logic mbox_read_to_end;
+  logic [32:0] mailbox_end_byte_addr;
+  logic mailbox_address_err;
+  logic mailbox_execute_err;
   logic mbox_read_en;
   logic mbox_read_done;
   logic mbox_block_we;
@@ -353,17 +357,28 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //byte address aligning to mailbox read pointer
   always_comb mbox_start_addr = hwif_out.START_ADDRESS.ADDR.value[CPTRA_MBOX_ADDR_W+1:2];
 
+  // Validate the full byte range before the mailbox pointer is truncated.
+  assign mailbox_end_byte_addr = {1'b0, hwif_out.START_ADDRESS.ADDR.value} +
+                                 {1'b0, hwif_out.DLEN.LENGTH.value};
+  assign mailbox_address_err = (mailbox_end_byte_addr > CPTRA_MBOX_SIZE_BYTES);
+  assign mailbox_execute_err = (sha_fsm_ps == SHA_IDLE) & mailbox_mode &
+                               execute_set & mailbox_address_err;
+
   //Convert DLEN to an end address. DLEN is in bytes, address is in dwords
   //detect overflow of end address to indicate we want to read to the end of the mailbox
-  always_comb {mbox_read_to_end, mbox_end_addr} = mbox_start_addr + 
+  always_comb {mbox_end_addr_carry, mbox_end_addr} = mbox_start_addr +
                                                   hwif_out.DLEN.LENGTH.value[CPTRA_MBOX_ADDR_W+2:2] + 
                                                   (hwif_out.DLEN.LENGTH.value[1] | hwif_out.DLEN.LENGTH.value[0]);
+
+  // Mailbox-sized or larger lengths must stop at the end even if the limited sum wraps.
+  always_comb mbox_read_to_end = mbox_end_addr_carry |
+                                (|hwif_out.DLEN.LENGTH.value[31:CPTRA_MBOX_ADDR_W+2]);
   
   always_comb mbox_read_done = (sha_fsm_ps == SHA_IDLE) | ~mailbox_mode | 
-                               //If the DLEN overflowed our end address, just read to the end of the mailbox and stop
-                               //Otherwise read until read pointer == end address
-                               (~mbox_read_to_end & mbox_rdptr[CPTRA_MBOX_ADDR_W-1:0] == mbox_end_addr) | 
-                               (mbox_read_to_end & mbox_rdptr[CPTRA_MBOX_ADDR_W]);
+                               // Always stop at the physical boundary, independent of the end-address calculation.
+                               mbox_rdptr[CPTRA_MBOX_ADDR_W] |
+                               // Otherwise stop at the programmed end unless the request is clipped.
+                               (~mbox_read_to_end & mbox_rdptr[CPTRA_MBOX_ADDR_W-1:0] == mbox_end_addr);
 
   //HW API State Machine
   //whenever lock is cleared, go back to idle (in iccm_mode, lock is held by HW so this won't fire)
@@ -373,7 +388,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
   //ICCM mode - go to block 0 when first iccm write arrives
   always_comb arc_SHA_IDLE_SHA_BLOCK_0 = (sha_fsm_ps == SHA_IDLE) & (
                                          (streaming_mode & datain_write) |
-                                         (mailbox_mode & execute_set) |
+                                         (mailbox_mode & execute_set & ~mailbox_address_err) |
                                          (iccm_mode & iccm_hash_dv_i));
 
   // ICCM zero-length: lock asserts from IDLE with no prior writes -- skip to PAD0
@@ -451,7 +466,7 @@ always_comb core_digest_valid_q = core_digest_valid & ~(init_reg | next_reg);
 //register hw interface
 always_comb begin
   hwif_in.STATUS.VALID.next = (sha_fsm_ps == SHA_DONE) & ~iccm_mode;
-  hwif_in.EXECUTE.EXECUTE.hwclr = arc_IDLE;
+  hwif_in.EXECUTE.EXECUTE.hwclr = arc_IDLE | mailbox_execute_err;
   for (int dword =0; dword < 16; dword++) begin
     hwif_in.DIGEST[dword].DIGEST.next = digest_reg[dword];
     hwif_in.DIGEST[dword].DIGEST.hwclr = zeroize_pulse;
@@ -490,17 +505,12 @@ sha512_acc_csr i_sha512_acc_csr (
     .hwif_out(hwif_out)
 );
 
-//Error conditions
-//mailbox mode addressing errors
-logic mailbox_address_err;
-always_comb mailbox_address_err = (mbox_end_addr < mbox_start_addr); //calculated end comes before start
-
 //interrupt register hw interface
 assign hwif_in.cptra_rst_b = rst_b;
 assign hwif_in.cptra_pwrgood = cptra_pwrgood;
 assign hwif_in.intr_block_rf.notif_internal_intr_r.notif_cmd_done_sts.hwset = ~soc_has_lock & ~iccm_mode & (arc_SHA_PAD0_SHA_DONE | arc_SHA_PAD1_SHA_DONE);
 assign hwif_in.intr_block_rf.error_internal_intr_r.error0_sts.hwset = sha_fsm_error; // FSM glitch/invalid encoding detected
-assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = 1'b0; // TODO
+assign hwif_in.intr_block_rf.error_internal_intr_r.error1_sts.hwset = mailbox_execute_err;
 assign hwif_in.intr_block_rf.error_internal_intr_r.error2_sts.hwset = 1'b0; // TODO
 assign hwif_in.intr_block_rf.error_internal_intr_r.error3_sts.hwset = 1'b0; // TODO
 

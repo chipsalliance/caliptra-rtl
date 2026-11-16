@@ -272,6 +272,8 @@ void main(){
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
+    ecc_zeroize();
+
     for (int i = 0; i < ECC_INPUT_SIZE; i++)
         privkey.data[i] = ecc_privkey[i];
 

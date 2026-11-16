@@ -10163,6 +10163,11 @@
 `define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_LOW                                   (0)
 `define SOC_IFC_REG_INTERNAL_TRACE_CTRL_TRACE_SHADOW_CORE_SEL_MASK                                  (32'h1)
 `endif
+`ifndef SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK
+`define SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK                                                      (32'h668)
+`define SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK_LOCK_LOW                                             (0)
+`define SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK_LOCK_MASK                                            (32'h1)
+`endif
 `ifndef SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R
 `define SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R                                                  (32'h800)
 `define SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R_ERROR_EN_LOW                                     (0)

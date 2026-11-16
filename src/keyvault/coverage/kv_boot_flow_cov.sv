@@ -18,7 +18,7 @@
 //
 // Architecture notes (from kv.sv):
 //   - KV Monitor checks dest_valid and write counters ONLY on enter_fmc/enter_rt
-//   - KV Enforcement sets lock_wr/lock_use and clears non-preserved slots on transitions
+//   - KV Enforcement sets lock_wr/lock_use on transitions; slot clearing is cold-only
 //   - Multi-write detection (kv_write_cnt > 1) is bus arbitration, not boot-flow
 //   - Write counters track ROM-phase crypto writes to DICE slots 6/7/8; checked at enter_fmc
 
@@ -33,6 +33,7 @@ module kv_boot_flow_cov
     input logic core_only_rst_b,
 
     // Boot flow signals
+    input logic cold_boot,
     input mubi4_t boot_flow_fmc,
     input mubi4_t boot_flow_rt,
     input mubi4_t boot_flow_error,
@@ -169,6 +170,13 @@ module kv_boot_flow_cov
             bins fmc = {TRANS_FMC};
             bins rt  = {TRANS_RT};
         }
+
+        cp_cold_boot: coverpoint cold_boot {
+            bins cold = {1'b1};
+            bins retained = {1'b0};
+        }
+
+        transition_X_reset_context: cross cp_transition, cp_cold_boot;
 
         cp_alert: coverpoint kv_monitor_alert {
             bins pass = {1'b0};

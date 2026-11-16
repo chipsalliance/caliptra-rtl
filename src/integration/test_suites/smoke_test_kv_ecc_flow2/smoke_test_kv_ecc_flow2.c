@@ -282,6 +282,8 @@ void main(){
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
 
+    ecc_zeroize();
+
     ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
     cptra_intr_rcv.ecc_notif = 0;
 

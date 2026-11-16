@@ -64,9 +64,6 @@ typedef enum logic [3:0] {
     GEN_HASH_DONE    = 4'b1100
   } gen_hash_fsm_state_e;
 
-logic init_reg;
-logic next_reg;
-
 gen_hash_fsm_state_e gen_hash_fsm_ps, gen_hash_fsm_ns;
 
 logic arc_GEN_HASH_IDLE_GEN_HASH_BLOCK_0;

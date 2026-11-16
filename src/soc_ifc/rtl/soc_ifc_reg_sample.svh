@@ -3051,6 +3051,31 @@
         end
     endfunction
 
+    /*----------------------- SOC_IFC_REG__INTERNAL_CSR_HMAC_KEY_LOCK SAMPLE FUNCTIONS -----------------------*/
+    function void soc_ifc_reg__internal_csr_hmac_key_lock::sample(uvm_reg_data_t  data,
+                                                   uvm_reg_data_t  byte_en,
+                                                   bit             is_read,
+                                                   uvm_reg_map     map);
+        m_current = get();
+        m_data    = data;
+        m_is_read = is_read;
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(lock_bit_cg[bt]) this.lock_bit_cg[bt].sample(data[0 + bt]);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( data[0:0]/*lock*/   );
+        end
+    endfunction
+
+    function void soc_ifc_reg__internal_csr_hmac_key_lock::sample_values();
+        if (get_coverage(UVM_CVR_REG_BITS)) begin
+            foreach(lock_bit_cg[bt]) this.lock_bit_cg[bt].sample(lock.get_mirrored_value() >> bt);
+        end
+        if (get_coverage(UVM_CVR_FIELD_VALS)) begin
+            this.fld_cg.sample( lock.get_mirrored_value()   );
+        end
+    endfunction
+
     /*----------------------- SOC_IFC_REG__INTR_BLOCK_T__GLOBAL_INTR_EN_T SAMPLE FUNCTIONS -----------------------*/
     function void soc_ifc_reg__intr_block_t__global_intr_en_t::sample(uvm_reg_data_t  data,
                                                    uvm_reg_data_t  byte_en,

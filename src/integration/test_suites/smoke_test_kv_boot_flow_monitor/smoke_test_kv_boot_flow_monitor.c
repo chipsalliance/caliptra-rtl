@@ -23,21 +23,20 @@
 //     3. Copy FMC/RT functions to ICCM
 //     4. Jump to FMC (triggers ROM-to-FMC -- monitor checks dest_valid)
 //     5. FMC populates RT key slots, jumps to RT (triggers FMC-to-RT)
-//     6. RT validates enforcement, issues warm reset
+//     6. RT populates opaque runtime-slot canaries, checks HMAC access, issues warm reset
 //
 //   Boot 1 (warm reset):
-//     7. ROM detects warm reset, re-derives all DICE keys (KV slots persist
-//        but enforcement requires fresh derivation with correct write counts)
-//     8. ICCM code persists -- re-copy for safety, re-program region regs
+//     7. ROM detects warm reset, preserves DICE keys and runtime-slot canaries
+//     8. ICCM code persists -- re-program region regs without re-copying
 //     9. Jump to FMC -- monitor checks dest_valid again
-//    10. FMC re-derives RT keys, jumps to RT
+//    10. FMC re-derives RT keys, jumps to RT; runtime-slot canaries persist
 //    11. RT validates enforcement, issues firmware update reset
 //
 //   Boot 2 (fw update reset):
 //    12. ROM detects fw update reset, skips key derivation (keys persist)
 //    13. ICCM code persists -- jump directly to FMC
 //    14. FMC re-derives RT keys, jumps to RT
-//    15. RT validates enforcement again, test ends with success
+//    15. RT validates locks and runtime-slot retention again, test ends with success
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -47,6 +46,7 @@
 #include "printf.h"
 #include "riscv_hw_if.h"
 #include "kv_boot_flow.h"
+#include "hmac.h"
 
 volatile uint32_t* stdout = (uint32_t *)STDOUT;
 volatile uint32_t  intr_count = 0;
@@ -68,6 +68,107 @@ void fmc_entry(void) __attribute__((aligned(4), section(".data_iccm0")));
 // RT function: placed in .data_iccm1 section, will be copied to RT region (0x40008000)
 extern uintptr_t iccm_code1_start, iccm_code1_end;
 void rt_entry(void) __attribute__((aligned(4), section(".data_iccm1")));
+
+static const uint8_t runtime_slots[] = {
+    KV_SLOT_TMP, 10, 11, KV_SLOT_EXPORTED_DPE_CDI, 13, 14,
+    KV_SLOT_CANARY_OCP, KV_SLOT_MEK
+};
+
+static void check_exported_cdi_hmac_read(const char *phase) {
+    uint32_t status = 0;
+    uint32_t ctrl = 0;
+
+    // Let a preceding HMAC-to-KV write finish before zeroizing the engine.
+    for (uint32_t i = 0; i < 20000; i++) {
+        status = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS);
+        if (status & HMAC_REG_HMAC512_KV_WR_STATUS_READY_MASK) break;
+    }
+    if (!(status & HMAC_REG_HMAC512_KV_WR_STATUS_READY_MASK) ||
+        (status & HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_MASK)) {
+        goto failed;
+    }
+
+    hmac_zeroize();
+    __asm__ volatile ("fence" ::: "memory");
+    for (uint32_t i = 0; i < 20000; i++) {
+        ctrl = lsu_read_32(CLP_HMAC_REG_HMAC512_CTRL);
+        if (!(ctrl & HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK)) break;
+    }
+    if (ctrl & HMAC_REG_HMAC512_CTRL_ZEROIZE_MASK) {
+        goto failed;
+    }
+    lsu_write_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL,
+        HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK |
+        ((KV_SLOT_EXPORTED_DPE_CDI << HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_LOW) &
+         HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+    __asm__ volatile ("fence" ::: "memory");
+
+    // Acknowledge the new request before accepting a possibly sticky VALID.
+    for (uint32_t i = 0; i < 20000; i++) {
+        ctrl = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_CTRL);
+        if (!(ctrl & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK)) break;
+    }
+    for (uint32_t i = 0; i < 20000; i++) {
+        status = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_RD_KEY_STATUS);
+        if (status & (HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK |
+                      HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK)) break;
+    }
+    if ((ctrl & HMAC_REG_HMAC512_KV_RD_KEY_CTRL_READ_EN_MASK) ||
+        !(status & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_VALID_MASK) ||
+        (status & HMAC_REG_HMAC512_KV_RD_KEY_STATUS_ERROR_MASK)) {
+        goto failed;
+    }
+
+    hmac_zeroize();
+    check_slot_preserved(KV_SLOT_EXPORTED_DPE_CDI, phase);
+    VPRINTF(LOW, "  %s: exported CDI is HMAC-readable\n", phase);
+    return;
+
+failed:
+    VPRINTF(ERROR, "[FAIL] %s: exported CDI HMAC access (ctrl=0x%x status=0x%x)\n",
+            phase, ctrl, status);
+    SEND_STDOUT_CTRL(0x01);
+    while(1);
+}
+
+static void check_runtime_slots(const char *phase) {
+    const uint32_t expected_ctrl = (1u << KV_DEST_VALID_LOW) |
+                                  (11u << KV_REG_KEY_CTRL_0_LAST_DWORD_LOW);
+
+    check_exported_cdi_hmac_read(phase);
+    for (uint32_t i = 0; i < sizeof(runtime_slots) / sizeof(runtime_slots[0]); i++) {
+        check_reg(phase, KV_KEY_CTRL(runtime_slots[i]), expected_ctrl);
+    }
+}
+
+static void populate_runtime_slots(const char *phase) {
+    for (uint32_t i = 0; i < sizeof(runtime_slots) / sizeof(runtime_slots[0]); i++) {
+        const uint32_t done = HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK |
+                              HMAC_REG_HMAC512_KV_WR_STATUS_READY_MASK;
+        uint32_t status = 0;
+
+        hmac_write_kv_slot(runtime_slots[i], DV_HMAC_KEY);
+        for (uint32_t poll = 0; poll < 20000; poll++) {
+            status = lsu_read_32(CLP_HMAC_REG_HMAC512_KV_WR_STATUS);
+            if ((status & done) == done ||
+                (status & HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_MASK)) break;
+        }
+        if ((status & done) != done ||
+            (status & HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_MASK)) {
+            VPRINTF(ERROR, "[FAIL] %s: runtime slot %u write (status=0x%x)\n",
+                    phase, runtime_slots[i], status);
+            SEND_STDOUT_CTRL(0x01);
+            while(1);
+        }
+    }
+    check_runtime_slots(phase);
+}
+
+static void check_runtime_slots_cleared(const char *phase) {
+    for (uint32_t i = 0; i < sizeof(runtime_slots) / sizeof(runtime_slots[0]); i++) {
+        check_slot_cleared(runtime_slots[i], phase);
+    }
+}
 
 void main() {
     // Initialize interrupts (needed after every reset)
@@ -91,6 +192,7 @@ void main() {
 
         VPRINTF(LOW, "ROM: Populating DICE key slots...\n");
         populate_dice_slots();
+        populate_runtime_slots("ROM[0]");
 
         // Copy FMC and RT code to ICCM
         VPRINTF(LOW, "ROM: Copying FMC code to 0x%x\n", FMC_ICCM_ADDR);
@@ -103,7 +205,7 @@ void main() {
                       (uint32_t *)&iccm_code1_end);
     } else if (is_warm) {
         // ============================================================
-        // Boot 1: Warm reset -- keys persist (lock_wr in non-core domain),
+        // Boot 1: Warm reset -- key data and access metadata persist,
         // ROM does NOT re-derive DICE keys on warm reset.
         // ============================================================
         boot_count = 1;
@@ -112,6 +214,7 @@ void main() {
         VPRINTF(LOW, "============================================\n");
 
         VPRINTF(LOW, "ROM: Warm reset -- keys persist, skipping DICE derivation\n");
+        check_runtime_slots("ROM[1]");
 
         // ICCM content persists across warm reset -- no re-copy needed
     } else {
@@ -127,6 +230,7 @@ void main() {
         // lock_wr/lock_use were cleared by reset -- enforcement will re-apply
         // ICCM content persists -- no need to re-copy FMC/RT
         VPRINTF(LOW, "ROM: FW update reset detected, skipping key derivation\n");
+        check_runtime_slots("ROM[2]");
     }
 
     // Program ICCM region registers with 2-phase shadow protocol
@@ -161,14 +265,21 @@ void fmc_entry(void) {
     check_lock_wr(KV_SLOT_FMC_ECDSA, bp);
     check_lock_wr(KV_SLOT_FMC_MLDSA, bp);
 
-    // Non-preserved slots cleared at ROM-to-FMC (3,4,5,9,10-15)
-    VPRINTF(LOW, "%s: Checking non-preserved slots cleared...\n", bp);
-    check_slot_cleared(KV_SLOT_TMP, bp);
-    check_slot_cleared(KV_SLOT_RT_CDI, bp);
-    check_slot_cleared(KV_SLOT_RT_ECDSA, bp);
-    check_slot_cleared(KV_SLOT_RT_MLDSA, bp);
-    for (int i = 10; i < KV_NUM_KEYS; i++) {
-        check_slot_cleared(i, bp);
+    if (boot_count == 0) {
+        VPRINTF(LOW, "%s: Checking cold-boot slot clearing...\n", bp);
+        check_runtime_slots_cleared(bp);
+        check_slot_cleared(KV_SLOT_RT_CDI, bp);
+        check_slot_cleared(KV_SLOT_RT_ECDSA, bp);
+        check_slot_cleared(KV_SLOT_RT_MLDSA, bp);
+        for (int i = 10; i < KV_NUM_KEYS; i++) {
+            check_slot_cleared(i, bp);
+        }
+    } else {
+        VPRINTF(LOW, "%s: Checking runtime-slot retention...\n", bp);
+        check_runtime_slots(bp);
+        check_slot_preserved(KV_SLOT_RT_CDI, bp);
+        check_slot_preserved(KV_SLOT_RT_ECDSA, bp);
+        check_slot_preserved(KV_SLOT_RT_MLDSA, bp);
     }
 
     // DOE is locked
@@ -178,6 +289,9 @@ void fmc_entry(void) {
     // Mimic FMC DICE derivation -- populate RT key slots
     VPRINTF(LOW, "%s: Populating RT key slots...\n", bp);
     populate_rt_slots();
+    if (boot_count == 0) {
+        populate_runtime_slots(bp);
+    }
 
     // Jump to RT (triggers FMC-to-RT transition)
     VPRINTF(LOW, "%s: Jumping to RT at 0x%x...\n", bp, RT_ICCM_ADDR);
@@ -210,11 +324,15 @@ void rt_entry(void) {
     check_lock_use(KV_SLOT_FMC_ECDSA, bp);
     check_lock_use(KV_SLOT_FMC_MLDSA, bp);
 
-    // Non-preserved slots cleared at FMC-to-RT (3,10-15)
-    VPRINTF(LOW, "%s: Checking non-preserved slots cleared...\n", bp);
-    check_slot_cleared(KV_SLOT_TMP, bp);
-    for (int i = 10; i < KV_NUM_KEYS; i++) {
-        check_slot_cleared(i, bp);
+    if (boot_count == 0) {
+        VPRINTF(LOW, "%s: Checking cold-boot slot clearing...\n", bp);
+        check_runtime_slots_cleared(bp);
+        for (int i = 10; i < KV_NUM_KEYS; i++) {
+            check_slot_cleared(i, bp);
+        }
+    } else {
+        VPRINTF(LOW, "%s: Checking runtime-slot retention...\n", bp);
+        check_runtime_slots(bp);
     }
 
     // DOE still locked
@@ -222,6 +340,7 @@ void rt_entry(void) {
     check_doe_locked(bp);
 
     if (boot_count == 0) {
+        populate_runtime_slots(bp);
         // Boot 0: Issue warm reset -- will re-enter main()
         VPRINTF(LOW, "%s: Boot 0 checks passed, issuing warm reset...\n", bp);
         SEND_STDOUT_CTRL(TB_CMD_WARM_RESET);

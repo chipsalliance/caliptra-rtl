@@ -3746,8 +3746,10 @@ axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 aes_cov_bind i_aes_cov_bind();
 doe_cov_bind i_doe_cov_bind();
 sha3_cov_bind i_sha3_cov_bind();
+`ifdef CALIPTRA_INTERNAL_TRNG
 entropy_src_cov_bind i_entropy_src_cov_bind();
 entropy_combiner_cov_bind i_entropy_combiner_cov_bind();
+`endif
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

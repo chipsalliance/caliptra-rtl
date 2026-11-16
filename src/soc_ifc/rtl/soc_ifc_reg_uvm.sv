@@ -897,7 +897,7 @@ package soc_ifc_reg_uvm;
 
         virtual function void build();
             this.CPTRA_GENERATION = new("CPTRA_GENERATION");
-            this.CPTRA_GENERATION.configure(this, 16, 0, "RO", 0, 'h12, 1, 1, 0);
+            this.CPTRA_GENERATION.configure(this, 16, 0, "RO", 0, 'h22, 1, 1, 0);
             this.SOC_STEPPING_ID = new("SOC_STEPPING_ID");
             this.SOC_STEPPING_ID.configure(this, 16, 16, "RO", 1, 'h0, 1, 1, 0);
             if (has_coverage(UVM_CVR_REG_BITS)) begin
@@ -3834,6 +3834,36 @@ package soc_ifc_reg_uvm;
         endfunction : build
     endclass : soc_ifc_reg__internal_trace_ctrl
 
+    // Reg - soc_ifc_reg::internal_csr_hmac_key_lock
+    class soc_ifc_reg__internal_csr_hmac_key_lock extends uvm_reg;
+        protected uvm_reg_data_t m_current;
+        protected uvm_reg_data_t m_data;
+        protected bit            m_is_read;
+
+        soc_ifc_reg__internal_csr_hmac_key_lock_bit_cg lock_bit_cg[1];
+        soc_ifc_reg__internal_csr_hmac_key_lock_fld_cg fld_cg;
+        rand uvm_reg_field lock;
+
+        function new(string name = "soc_ifc_reg__internal_csr_hmac_key_lock");
+            super.new(name, 32, build_coverage(UVM_CVR_ALL));
+        endfunction : new
+        extern virtual function void sample_values();
+        extern protected virtual function void sample(uvm_reg_data_t  data,
+                                                      uvm_reg_data_t  byte_en,
+                                                      bit             is_read,
+                                                      uvm_reg_map     map);
+
+        virtual function void build();
+            this.lock = new("lock");
+            this.lock.configure(this, 1, 0, "W1S", 0, 'h0, 1, 1, 0);
+            if (has_coverage(UVM_CVR_REG_BITS)) begin
+                foreach(lock_bit_cg[bt]) lock_bit_cg[bt] = new();
+            end
+            if (has_coverage(UVM_CVR_FIELD_VALS))
+                fld_cg = new();
+        endfunction : build
+    endclass : soc_ifc_reg__internal_csr_hmac_key_lock
+
     // Reg - soc_ifc_reg::intr_block_t::global_intr_en_t
     class soc_ifc_reg__intr_block_t__global_intr_en_t extends uvm_reg;
         protected uvm_reg_data_t m_current;
@@ -5641,6 +5671,7 @@ package soc_ifc_reg_uvm;
         rand soc_ifc_reg__internal_iccm_rt_end_addr internal_iccm_rt_end_addr;
         rand soc_ifc_reg__internal_iccm_region_lock internal_iccm_region_lock;
         rand soc_ifc_reg__internal_trace_ctrl internal_trace_ctrl;
+        rand soc_ifc_reg__internal_csr_hmac_key_lock internal_csr_hmac_key_lock;
         rand soc_ifc_reg__intr_block_t intr_block_rf;
         rand soc_ifc_reg__STASH_BANK_SLOT_DATA STASH_BANK_SLOT_DATA[208];
         rand soc_ifc_reg__STASH_BANK_SOC_LOCK STASH_BANK_SOC_LOCK;
@@ -6286,6 +6317,11 @@ package soc_ifc_reg_uvm;
 
             this.internal_trace_ctrl.build();
             this.default_map.add_reg(this.internal_trace_ctrl, 'h664);
+            this.internal_csr_hmac_key_lock = new("internal_csr_hmac_key_lock");
+            this.internal_csr_hmac_key_lock.configure(this);
+
+            this.internal_csr_hmac_key_lock.build();
+            this.default_map.add_reg(this.internal_csr_hmac_key_lock, 'h668);
             this.intr_block_rf = new("intr_block_rf");
             this.intr_block_rf.configure(this);
             this.intr_block_rf.build();

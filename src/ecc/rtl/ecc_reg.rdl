@@ -327,8 +327,7 @@ addrmap ecc_reg {
                 These registers is read by ECC user after ECDH operation.
                 The shared key should be in [1 : p-1] while p is the prime
                 number of the Secp384r1 curve.
-                These registers are located at ECC_base_address + 
-                0x0000_0600 to 0x0000_062C in big-endian representation.";
+                These registers hold the key in big-endian representation.";
 
         default sw = r;
         default hw = w;
