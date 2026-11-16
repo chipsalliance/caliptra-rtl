@@ -1304,6 +1304,95 @@ module sha512_ctrl_tb
   endtask
 
   //----------------------------------------------------------------
+  // An operation started with NEXT (with or without RESTORE) also
+  // requires a zeroize before the next INIT or PCR hash generation.
+  //----------------------------------------------------------------
+  task automatic check_init_rejected(input string tag);
+    read_single_word(`SHA512_REG_SHA512_STATUS);
+    if (read_data & `SHA512_REG_SHA512_STATUS_VALID_MASK) begin
+      $display("TC%01d %s: ERROR INIT accepted without zeroize", tc_ctr, tag);
+      error_ctr = error_ctr + 1;
+    end
+    else
+      $display("TC%01d %s: INIT rejected OK", tc_ctr, tag);
+    read_digest();
+    if (digest_data != '0) begin
+      $display("TC%01d %s: ERROR digest not cleared: 0x%0128x", tc_ctr, tag, digest_data);
+      error_ctr = error_ctr + 1;
+    end
+  endtask
+
+  task automatic next_start_lock_test(input [1023:0] blk_one, input [1023:0] blk_two,
+                                      input [511:0] exp_one, input [511:0] exp_two,
+                                      input [1023:0] blk_single, input [511:0] exp_single);
+    begin
+      $display("*** TC%01d - NEXT/RESTORE start lock test started.", tc_ctr);
+
+      for (int restore = 1; restore >= 0; restore--) begin
+        zeroize_dut();
+        write_block(blk_two);
+        if (restore) begin
+          write_digest(exp_one);
+          write_single_word(`SHA512_REG_SHA512_CTRL, RESTORE_CMD | NEXT_CMD | mode_cmd(MODE_SHA_512));
+        end
+        else
+          write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(MODE_SHA_512));
+        idle_cycles(2);
+        wait_ready();
+        if (restore) begin
+          read_digest();
+          if (digest_data != exp_two) begin
+            $display("TC%01d restore: ERROR digest 0x%0128x", tc_ctr, digest_data);
+            error_ctr = error_ctr + 1;
+          end
+        end
+
+        write_block(blk_single);
+        write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(MODE_SHA_512));
+        idle_cycles(4);
+        wait_ready();
+        check_init_rejected(restore ? "restore then init" : "next then init");
+
+        zeroize_dut();
+        write_block(blk_two);
+        if (restore) begin
+          write_digest(exp_one);
+          write_single_word(`SHA512_REG_SHA512_CTRL, RESTORE_CMD | NEXT_CMD | mode_cmd(MODE_SHA_512));
+        end
+        else
+          write_single_word(`SHA512_REG_SHA512_CTRL, NEXT_CMD | mode_cmd(MODE_SHA_512));
+        idle_cycles(2);
+        wait_ready();
+        write_single_word(`SHA512_REG_SHA512_GEN_PCR_HASH_CTRL, `SHA512_REG_SHA512_GEN_PCR_HASH_CTRL_START_MASK);
+        idle_cycles(4);
+        wait_ready();
+        if (dut.sha512_inst.gen_hash_ip) begin
+          $display("TC%01d %s: ERROR PCR hash generation started without zeroize", tc_ctr, restore ? "restore" : "next");
+          error_ctr = error_ctr + 1;
+        end
+        check_gen_valid_low(restore ? "restore then start" : "next then start");
+      end
+
+      zeroize_dut();
+      write_block(blk_single);
+      write_single_word(`SHA512_REG_SHA512_CTRL, INIT_CMD | mode_cmd(MODE_SHA_512));
+      idle_cycles(2);
+      wait_ready();
+      read_digest();
+      if (digest_data != exp_single) begin
+        $display("TC%01d init after zeroize: ERROR digest 0x%0128x", tc_ctr, digest_data);
+        error_ctr = error_ctr + 1;
+      end
+      else
+        $display("TC%01d init after zeroize: OK", tc_ctr);
+
+      zeroize_dut();
+      $display("*** TC%01d - NEXT/RESTORE start lock test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask
+
+  //----------------------------------------------------------------
   // sha512_test
   // The main test functionality.
   //
@@ -1414,6 +1503,8 @@ module sha512_ctrl_tb
       extend_early_last_test(extend_block2a, extend_block2b, extend_exp2);
 
       gen_hash_valid_test(double_block_one);
+
+      next_start_lock_test(double_block_one, double_block_two, tc5_expected, tc6_expected, single_block, tc1_expected);
       
       display_test_result();
       

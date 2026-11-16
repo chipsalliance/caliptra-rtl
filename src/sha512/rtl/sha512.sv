@@ -276,7 +276,7 @@ module sha512
                                    (pcr_hash_extend_ip & init_reg) ? '1 : pcr_hash_extend_init_done;
       pcr_hash_extend_last_done <= (pcr_hash_extend_set | pcr_hash_extend_reset) ? '0 :
                                    (pcr_hash_extend_ip & (init_reg | next_reg) & last_reg) ? '1 : pcr_hash_extend_last_done;
-      init_lock <= init_lock | (init_reg & ~gen_hash_ip) | gen_hash_start;
+      init_lock <= init_lock | ((init_reg | next_reg) & ~gen_hash_ip) | gen_hash_start;
       init_rejected <= init_rejected | init_req_rejected;
       hash_extend_entry <= pcr_hash_extend_set ? kv_read_ctrl_reg.read_entry : hash_extend_entry;
       kv_read_data_present <= kv_read_data_present_set ? '1 :
@@ -299,7 +299,8 @@ module sha512
     hwif_in.SHA512_VERSION[1].VERSION.next = SHA512_CORE_VERSION1;
 
     //Mask commands when keyvault is busy to prevent runs with partial keys.
-    //Only one INIT (or PCR hash generation) is accepted between ZEROIZE commands. A rejected INIT
+    //Only one operation (started by INIT, NEXT/RESTORE or PCR hash generation) is accepted between
+    //ZEROIZE commands; later INIT or PCR hash generation START needs a ZEROIZE first. A rejected INIT
     //clears the digest, holds VALID low and blocks NEXT and RESTORE until ZEROIZE.
     //During PCR hash extend, INIT must precede NEXT and no NEXT is accepted after LAST.
     init_req_rejected = hwif_out.SHA512_CTRL.INIT.value & init_lock;
