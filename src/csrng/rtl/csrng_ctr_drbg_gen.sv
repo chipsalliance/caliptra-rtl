@@ -290,7 +290,8 @@ module csrng_ctr_drbg_gen import csrng_pkg::*; #(
 
   // SEC_CM: DRBG_GEN.CTR.REDUN
   caliptra_prim_count #(
-    .Width(CtrLen)
+    .Width(CtrLen),
+    .Saturate(1'b0)
   ) u_caliptra_prim_count_ctr_drbg (
     .clk_i,
     .rst_ni,
