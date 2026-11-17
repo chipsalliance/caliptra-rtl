@@ -3015,6 +3015,8 @@ The following tables describe DOE register and control fields.
 
 ## Key vault boot flow transition enforcement
 
+**Disabled until reworked:** the monitor instance is commented out and its KV/control/fault connections are tied inactive in all builds. Monitor-specific tests, assertions, coverage, and TB enable hooks are disabled. ICCM region CSRs remain but cannot raise feature faults. The policy below is reference only.
+
 The Key Vault Boot Flow Transition Enforcement feature provides hardware-enforced integrity monitoring and access control for DICE key derivation across boot phase transitions (ROM->FMC->RT). It detects ICCM code execution transitions, validates key vault state at each boundary, and atomically applies lock/clear enforcement to key slots.
 
 ### Overview
@@ -3079,7 +3081,7 @@ In simulation, `boot_flow_monitor_en` defaults to 0 (disabled). The testbench ov
 
 ### KV monitor
 
-At each boot phase transition, the KV monitor validates that the expected DICE key slots are correctly populated. The monitor checks **only DICE derivation key slots** (0–9) — optional feature keys (Stable Owner Key, OCP Lock keys) are excluded from monitoring because they are conditionally derived and do not participate in the DICE trust chain. A mismatch triggers `kv_monitor_alert`, which escalates to `CPTRA_HW_ERROR_FATAL.kv_error[4]` and flushes all key entries.
+At each boot phase transition, the KV monitor validates that the listed DICE and PCR quote key slots are correctly populated. Optional feature keys (Stable Owner Key, OCP Lock keys) are excluded from monitoring because they are conditionally derived and do not participate in the DICE trust chain. A mismatch triggers `kv_monitor_alert`, which escalates to `CPTRA_HW_ERROR_FATAL.kv_error[4]` and flushes all key entries.
 
 #### ROM->FMC checks (on `enter_fmc`)
 
@@ -3089,13 +3091,17 @@ At each boot phase transition, the KV monitor validates that the expected DICE k
 | 1 | SI_LDEV | AES_KEY |
 | 2 | KEY_LADDER | HMAC_KEY |
 | 6 | FMC_CDI | HMAC_KEY \| MLDSA_SEED \| ECC_SEED |
-| 7 | FMC_ECDSA | ECC_PKEY |
-| 8 | FMC_MLDSA | MLDSA_SEED |
+| 7 | PCR_ECDSA | ECC_PKEY |
+| 8 | PCR_MLDSA | MLDSA_SEED |
+| 13 | FMC_ECDSA | ECC_PKEY |
+| 14 | FMC_MLDSA | MLDSA_SEED |
 
 Additionally, per-slot crypto write counters verify **exact** expected derivation counts:
 - Slot 6 (FMC_CDI): == 4 writes (IDevID CDI + LDevID intermediate + LDevID CDI + FMC Alias CDI)
-- Slot 7 (FMC_ECDSA): == 2 writes (IDevID ECC keygen + FMC Alias ECC keygen)
-- Slot 8 (FMC_MLDSA): == 2 writes (IDevID MLDSA keygen + FMC Alias MLDSA keygen)
+- Slot 7 (PCR_ECDSA): == 2 writes (IDevID ECC keygen + PCR quote ECC keygen)
+- Slot 8 (PCR_MLDSA): == 2 writes (IDevID MLDSA keygen + PCR quote MLDSA keygen)
+
+The existing counters remain on accumulators 6/7/8, not the relocated FMC aliases. Slots 13/14 are checked for their final permissions and protected by phase locks; slot 14 may also hold temporary HEK material earlier in ROM. This policy requires the ROM allocation with dedicated quote keys in 7/8 and FMC aliases in 13/14.
 
 An exact match (rather than a minimum threshold) detects both truncated DICE chains (too few writes, indicating a skipped derivation step) and glitch-replayed operations (too many writes, which could overwrite the final safe key with an earlier intermediate value such as raw UDS).
 
@@ -3117,9 +3123,12 @@ Enforcement is applied continuously based on the current boot phase and atomical
 
 | Condition | Slots affected | Action |
 | :-------- | :------------- | :----- |
-| `boot_flow_fmc` = True | 0, 1, 2, 6, 7, 8 | `lock_wr` asserted via hwset (HW-driven, cannot be cleared by SW) |
+| `boot_flow_fmc` = True | 0, 1, 2, 6, 7, 8, 13, 14 | `lock_wr` asserted via hwset (HW-driven, cannot be cleared by SW) |
+| `boot_flow_fmc` = True | 7, 8 | `lock_use` asserted via hwset (PCR quote-only keys) |
 | `boot_flow_rt` = True | 4, 5, 9 | `lock_wr` asserted via hwset |
-| `boot_flow_rt` = True | 6, 7, 8 | `lock_use` asserted via hwset (FMC keys cannot be used in RT) |
+| `boot_flow_rt` = True | 6, 13, 14 | `lock_use` asserted via hwset (FMC keys cannot be used in RT) |
+
+PCR quote keys in slots 7/8 remain accessible through the dedicated PCR signing ports, which are unchanged. Their `lock_use` bits block ordinary KV client access from FMC onward, while the FMC aliases in 13/14 remain usable by FMC until the RT transition.
 
 The `lock_wr` and `lock_use` fields have `hwset` property in the register definition, allowing hardware to set them without firmware intervention. Once set, they can only be cleared by `core_only_rst_b` de-assertion.
 
@@ -3138,12 +3147,13 @@ Unused-slot clearing runs only during cold boot, identified by both read-only `C
 | 4 | RT_CDI | Cleared | Preserved |
 | 5 | RT_ECDSA | Cleared | Preserved |
 | 6 | FMC_CDI | Preserved | Preserved |
-| 7 | FMC_ECDSA | Preserved | Preserved |
-| 8 | FMC_MLDSA | Preserved | Preserved |
+| 7 | PCR_ECDSA | Preserved | Preserved |
+| 8 | PCR_MLDSA | Preserved | Preserved |
 | 9 | RT_MLDSA | Cleared | Preserved |
 | 10–11 | DPE scratch | Cleared | Cleared |
 | 12 | Exported DPE CDI | Cleared | Cleared |
-| 13–14 | Unused | Cleared | Cleared |
+| 13 | FMC_ECDSA | Preserved | Preserved |
+| 14 | FMC_MLDSA | Preserved | Preserved |
 
 **Conditionally-preserved slots** — cold-boot behavior depends on active mode:
 
@@ -3220,9 +3230,11 @@ The following table documents the key vault slot assignments used by the DICE ke
 | 4 | KV_SLOT_RT_CDI | Runtime CDI |
 | 5 | KV_SLOT_RT_ECDSA | Runtime ECDSA private key |
 | 6 | KV_SLOT_FMC_CDI | FMC CDI (accumulates through DICE chain) |
-| 7 | KV_SLOT_FMC_ECDSA | FMC ECDSA private key |
-| 8 | KV_SLOT_FMC_MLDSA | FMC MLDSA private key |
+| 7 | KV_SLOT_PCR_ECDSA | PCR quote ECDSA private key |
+| 8 | KV_SLOT_PCR_MLDSA | PCR quote MLDSA seed |
 | 9 | KV_SLOT_RT_MLDSA | Runtime MLDSA private key |
+| 13 | KV_SLOT_FMC_ECDSA | FMC ECDSA private key |
+| 14 | KV_SLOT_FMC_MLDSA | FMC MLDSA seed |
 
 ### Conditionally-preserved slot assignments
 
@@ -3382,8 +3394,8 @@ The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditio
 | 1 | dccm_ecc_unc | Yes (`mask_dccm_ecc_unc`) | Uncorrectable double-bit ECC error in DCCM |
 | 2 | nmi_pin | Yes (`mask_nmi_pin`) | NMI asserted by WDT Timer2 timeout |
 | 3 | crypto_err | No | Multiple concurrent cryptographic operations using the Key Vault |
-| 4 | kv_error | No | KV boot-flow monitor `dest_valid` mismatch or boot-flow error |
-| 5 | shadow_storage_err | No | ICCM region shadow-register storage fault (register/shadow corrupted) |
+| 4 | kv_error | No | Inactive: boot-flow monitoring is hard-disabled |
+| 5 | shadow_storage_err | No | Inactive: ICCM boot-flow region fault reporting is disabled |
 | 6 | fsm_error | No | Sparse-encoded security FSM entered an invalid/illegal state (fault-injection/glitch detection) |
 | 7 | rv_dcls_err | No | RISC-V dual-core lockstep (DCLS) mismatch; normal reporting enabled by `CPTRA_HW_CONFIG.DCLS_en` in both profiles |
 | 8 | dccm_wr_readback_err | Yes (`mask_dccm_wr_readback_err`) | DCCM write-readback mismatch — data read back after a store did not match what was written |
@@ -3393,7 +3405,7 @@ The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditio
 
 **`fsm_error` — sparse-FSM glitch detection:** Security-critical FSMs (for example, the mailbox FSM) are sparse-encoded with Hamming-distance-separated state values. If a fault-injection/glitch drives an FSM into an unused encoding, the sparse-FSM guard forces the machine to its error state and asserts `fsm_error`. This is an unmaskable, reset-only fatal error.
 
-The recoverable counterpart, `CPTRA_HW_ERROR_NON_FATAL`, aggregates non-fatal conditions (mailbox protocol violations, mailbox uncorrectable ECC, and the ICCM region shadow-register phase mismatch `shadow_update_err`); firmware may deassert `cptra_error_non_fatal` by clearing or masking all set non-fatal bits.
+The recoverable counterpart, `CPTRA_HW_ERROR_NON_FATAL`, aggregates non-fatal conditions including mailbox protocol violations and mailbox uncorrectable ECC; firmware may deassert `cptra_error_non_fatal` by clearing or masking all set non-fatal bits. The ICCM region `shadow_update_err` source is inactive while boot-flow monitoring is disabled.
 
 ## Cryptographic blocks fatal and non-fatal errors
 

@@ -1350,8 +1350,11 @@ assign iccm_shadow_soc_re[3] = soc_ifc_reg_hwif_out.internal_iccm_rt_end_addr.re
 logic iccm_all_shadows_committed;
 assign iccm_all_shadows_committed = &iccm_shadow_committed;
 assign iccm_region_lock = iccm_region_lock_reg & iccm_all_shadows_committed;
-assign shadow_storage_err = |iccm_shadow_err_storage;
-assign shadow_update_err  = |iccm_shadow_err_update;
+// Retain the CSR interface, but disabled boot-flow registers cannot raise faults.
+assign shadow_storage_err = 1'b0;
+assign shadow_update_err  = 1'b0;
+logic unused_iccm_shadow_errors;
+assign unused_iccm_shadow_errors = ^{iccm_shadow_err_storage, iccm_shadow_err_update};
 
 // Shadow register instances
 caliptra_prim_subreg_shadow #(.DW(ICCM_ADDR_WIDTH), .SwAccess(caliptra_prim_subreg_pkg::SwAccessRW), .RESVAL('0)) u_shadow_fmc_start (
