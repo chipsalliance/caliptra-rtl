@@ -267,6 +267,7 @@ import pv_defines_pkg::*;
 
         .cptra_pwrgood           (soc_ifc_ctrl_agent_bus.cptra_pwrgood             ),
         .cptra_rst_b             (soc_ifc_ctrl_agent_bus.cptra_rst_b               ),
+        .cold_boot(),
 
         .ready_for_fuses         (soc_ifc_status_agent_bus.ready_for_fuses         ),
         .ready_for_mb_processing (soc_ifc_status_agent_bus.ready_for_mb_processing ),

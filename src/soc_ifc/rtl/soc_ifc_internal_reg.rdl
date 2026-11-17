@@ -431,8 +431,8 @@ regfile intr_block_t {
         field {desc = "Bad Fuse received from SoC status bit";                           } error_bad_fuse_sts = 1'b0;
         field {desc = "ICCM access blocked by lock status bit";                          } error_iccm_blocked_sts = 1'b0;
         field {desc = "Mailbox ECC Double-bit Error (uncorrectable) status bit";         } error_mbox_ecc_unc_sts = 1'b0;
-        field {desc = "WDT Timer1 timeout status bit";                                   } error_wdt_timer1_timeout_sts = 1'b0;
-        field {desc = "WDT Timer2 timeout status bit";                                   } error_wdt_timer2_timeout_sts = 1'b0;
+        field {desc = "WDT Timer1 timeout status bit"; hw = rw;                          } error_wdt_timer1_timeout_sts = 1'b0;
+        field {desc = "WDT Timer2 timeout status bit"; hw = rw;                          } error_wdt_timer2_timeout_sts = 1'b0;
     };
 
     /* ---- Notification Interrupt Status ---- */

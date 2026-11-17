@@ -1085,11 +1085,8 @@ class soc_ifc_predictor #(
                     end
                 end
                 else begin
-                    if (ahb_txn.resp[0] != AHB_OKAY) begin
-                        do_reg_prediction = 1'b0;
-                        // "Expected" read data is 0
-                        soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
-                    end
+                    do_reg_prediction = 1'b0;
+                    soc_ifc_sb_ahb_ap_output_transaction.data[0] = 0;
                 end
             end
             "mbox_dataout": begin
@@ -2407,11 +2404,10 @@ class soc_ifc_predictor #(
                     end
                 end
                 else begin
+                    do_reg_prediction = 1'b0;
+                    soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
+                    soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
                     if (!(axi_txn.aruser inside {mbox_valid_users})) begin
-                        do_reg_prediction = 1'b0;
-                        // "Expected" read data is 0
-                        soc_ifc_sb_axi_ap_output_transaction.data = {0,0,0,0};
-                        soc_ifc_sb_axi_ap_output_transaction.beatQ = {0};
                         // "Expected" resp is SLVERR
                         soc_ifc_sb_axi_ap_output_transaction.resp = AAXI_RESP_SLVERR;
                     end

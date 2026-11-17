@@ -615,7 +615,8 @@ import aaxi_uvm_pkg::*;
     );
 
   caliptra_top_sva sva();
-  kv_boot_flow_sva kv_boot_flow_sva();
+  // Disabled until the boot-flow monitor is reworked.
+  // kv_boot_flow_sva kv_boot_flow_sva();
   // pragma uvmf custom dut_instantiation end
 
   initial begin      // tbx vif_binding_block 

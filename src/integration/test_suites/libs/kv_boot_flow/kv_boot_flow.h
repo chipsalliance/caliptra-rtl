@@ -38,6 +38,7 @@
 #define KV_SLOT_FMC_ECDSA    7
 #define KV_SLOT_FMC_MLDSA    8
 #define KV_SLOT_RT_MLDSA     9
+#define KV_SLOT_EXPORTED_DPE_CDI 12
 
 // Conditional slots (preserved only when corresponding mode is active)
 #define KV_SLOT_STABLE_OWNER 15

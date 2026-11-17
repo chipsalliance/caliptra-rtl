@@ -28,6 +28,8 @@ implementation results.
 
 ## Key Vault Boot Flow Monitoring, Enforcement, and Key-Length Checks
 
+**Removed boot-flow tests:** The six monitor-specific tests and their dedicated regression suite were removed while the feature is disabled. Their descriptions below are historical reference; recover the sources from commit `f2d4641cfac33b46c3e484ddd226b0495364e49d` when reworking the feature. Independent KV access/key-length tests and `directed_kv_fw_update_reset_abort` remain active.
+
 ### Feature Summary
 
 Hardware-enforced DICE key integrity monitoring and slot access control across ROM->FMC->RT boot phase transitions. Comprises a boot flow monitor (ICCM fetch detection), KV monitor (dest_valid/write count validation), KV enforcement (lock/clear), DOE lockdown, and ICCM region shadow registers with SoC write protection. Crypto clients also check stored key length, and reject short entries before using them.
@@ -211,9 +213,8 @@ Covergroups verify enforcement correctness, flush source attribution, monitor pa
 
 ### Regression
 
-- `src/integration/stimulus/L0_regression.yml` -- boot-flow smoke and mid-read lock test
-- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- seven boot-flow programs plus the in-flight control tests
-- `src/integration/stimulus/testsuites/caliptra_top_kv_monitor_regression.yml` -- six boot-flow programs; does not include `directed_kv_fw_update_reset_abort`
+- `src/integration/stimulus/L0_regression.yml` -- normal KV tests; boot-flow tests removed
+- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- independent KV reset-abort and in-flight control tests; boot-flow tests removed
 - `src/integration/stimulus/testsuites/caliptra_top_tb_nightly_random_regression.yml` -- five length-test configurations, including the incomplete DMA entry
 
 ---
@@ -602,9 +603,6 @@ interchangeable verdicts.
 | Test / Check | Type | Checks |
 | :----------- | :--- | :----- |
 | `directed_fsm_glitch_inject` | Firmware + testbench | DOE, SHA accelerator, mailbox, and boot-FSM fault requests; fatal-observed markers checked across reset-separated cases |
-| `directed_kv_glitch_inject` | Firmware + testbench | MuBi glitch/recovery, shadow storage fault detection, write lockout, fatal-status persistence, and W1C after reset |
-| `directed_kv_iccm_region` | Firmware | Uncommitted/locked region writes, mismatched shadow writes, unlocked fetches, and out-of-range fetches |
-| `directed_kv_debug_scan_bypass` | Firmware + testbench | Monitor qualification through debug-unlock and scan-mode transitions |
 | `directed_dcls_reporting_qualifications` | VCS YAML variant | DCLS debug/reset qualification and invalid multi-bit control scenarios |
 | `verify-prim-swap.yml` | CI build check | Technology primitive substitution resolves and elaborates with the fake technology wrappers |
 
@@ -615,8 +613,7 @@ be evaluated together with the testbench's injection and fatal/reset verdicts.
 
 ### Regression and Build Checks
 
-- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- FSM and KV glitch/debug/region tests plus the DCLS qualification variant
-- `src/integration/stimulus/testsuites/caliptra_top_kv_monitor_regression.yml` -- KV glitch/debug/region tests
+- `src/integration/stimulus/testsuites/caliptra_top_nightly_directed_regression.yml` -- FSM and DCLS tests; boot-flow glitch/debug/region tests removed
 - `.github/workflows/verify-prim-swap.yml` -- Verilator build/elaboration using `tools/ci/fake_prim/rtl`
 
 The primitive-swap workflow runs `verilator-build`, not a simulation. It checks
