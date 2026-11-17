@@ -303,6 +303,7 @@ module caliptra_top_tb_services
     } mlkem_test_vector_t;
 
     mlkem_test_vector_t mlkem_test_vector;
+    bit mlkem_test_vector_valid = 1'b0;
 
     logic inject_makehint_failure, inject_normcheck_failure;
     logic reset_mldsa_failure;
@@ -1023,6 +1024,14 @@ module caliptra_top_tb_services
     endgenerate
 
     //Keyvault check for MLKEM
+    always @(posedge clk) begin
+        if (cptra_rst_b && mailbox_write &&
+            (WriteData[7:0] inside {8'hb1, 8'hb2, 8'hb3}) &&
+            !mlkem_test_vector_valid) begin
+            $fatal(1, "Random ML-KEM vectors unavailable; enable +CLP_MLKEM_TEST_VECTORS and stage the public ML-KEM model");
+        end
+    end
+
     logic mlkem_kv_check_dis;
     logic [4:0] kv_entry_id;
     logic [7:0][31:0] kv_entry_data;
@@ -1989,6 +1998,9 @@ endgenerate //IV_NO
         bit [31:0] ciphertext[];
         bit [31:0] sharedkey[];
 
+        if ($system("python3 -c 'import sys; sys.exit(0 if sys.version_info >= (3, 9) else 1)'") != 0)
+            $fatal(1, "ML-KEM vector generation requires python3 (Python 3.9 or newer) on PATH");
+
         seed_d = new[8];
         seed_z = new[8];
         msg    = new[8];
@@ -2006,7 +2018,7 @@ endgenerate //IV_NO
         //Generate EK and DK
         input_fname = "ml-kem/tv/keygen_ext_input.txt";
         fd = $fopen(input_fname, "w");
-        if (fd == 0) $error("Cannot open %s for writing", input_fname);
+        if (fd == 0) $fatal(1, "Cannot open %s for writing", input_fname);
         // line1: operation code
         $fwrite(fd, "1\n");
         // line2-3: z, d as hex strings
@@ -2014,13 +2026,13 @@ endgenerate //IV_NO
         write_file(fd, 8, seed_d);
         $fclose(fd);
         // 3) invoke the python generator
-        cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt",input_fname);
+        cmd = $sformatf("python3 ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt",input_fname);
         $display("## Running: %s", cmd);
-        if ($system(cmd) != 0) $error("External Python script failed");
+        if ($system(cmd) != 0) $fatal(1, "ML-KEM key generation failed: %s", cmd);
         // 4) read back ek and dk from the output file
         output_fname = "ml-kem/tv/keygen_ext_output.txt";
         fd = $fopen(output_fname, "r");
-        if (fd == 0) $error("Cannot open %s for reading", output_fname);
+        if (fd == 0) $fatal(1, "Cannot open %s for reading", output_fname);
         // skip lines 1–3 (op, z, d)
         void'($fgets(line, fd));
         void'($fgets(line, fd));
@@ -2031,7 +2043,7 @@ endgenerate //IV_NO
         // 2) write the python‐readable input file
         input_fname = "ml-kem/tv/encap_ext_input.txt";
         fd = $fopen(input_fname, "w");
-        if (fd == 0) $error("Cannot open %s for writing", input_fname);
+        if (fd == 0) $fatal(1, "Cannot open %s for writing", input_fname);
         // line1: operation code
         $fwrite(fd, "2\n");
         // line2-3: z, d as hex strings
@@ -2039,13 +2051,13 @@ endgenerate //IV_NO
         write_file(fd, 392, ek);
         $fclose(fd);
         // 3) invoke the python generator
-        cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", input_fname);
+        cmd = $sformatf("python3 ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", input_fname);
         $display("## Running: %s", cmd);
-        if ($system(cmd) != 0) $error("External Python script failed");
+        if ($system(cmd) != 0) $fatal(1, "ML-KEM encapsulation failed: %s", cmd);
         // 4) read back ek and dk from the output file
         output_fname = "ml-kem/tv/encap_ext_output.txt";
         fd = $fopen(output_fname, "r");
-        if (fd == 0) $error("Cannot open %s for reading", output_fname);
+        if (fd == 0) $fatal(1, "Cannot open %s for reading", output_fname);
         // skip lines 1–3 (op, m, ek)
         void'($fgets(line, fd));
         void'($fgets(line, fd));
@@ -2068,6 +2080,7 @@ endgenerate //IV_NO
         for (int i = 0; i < 792; i++) begin
             mlkem_test_vector.dk[i] = dk[i];
         end
+        mlkem_test_vector_valid = 1'b1;
     endtask
 
     task mldsa_input_hex_gen(); //mode = CTRL.value-1
@@ -2679,7 +2692,9 @@ endgenerate //IV_NO
             doe_testvector_generator();
             sha256_wntz_testvector_generator();
             mldsa_input_hex_gen();
-            mlkem_testvector_generator();
+            if ($test$plusargs("CLP_MLKEM_TEST_VECTORS")) begin
+                mlkem_testvector_generator();
+            end
 
             //Note: Both obf_key_uds and obf_key_fe are the same
             //for(int dword = 0; dword < `CLP_OBF_KEY_DWORDS; dword++) begin
@@ -3261,22 +3276,28 @@ endfunction
 
 function void read_line(int fd, int bit_length_words, ref bit [31:0] array []);
 string line;
-int words_read;
 bit [31:0] word;
-bit [31:0] reversed_word;
+string word_hex;
 
-// Read the data from the file line by line
-words_read = 0;
-while (!$feof(fd) && words_read < bit_length_words) begin
-    line = "";
-    void'($fgets(line, fd)); // Read a line from the file
-    while ($sscanf(line, "%08x", word) == 1) begin
-    reversed_word = {word[7:0], word[15:8], word[23:16], word[31:24]};
-    array[words_read] = reversed_word;
-    words_read++;
-    // Remove the parsed part from the line
-    line = line.substr(8, line.len() - 1);
+if ($fgets(line, fd) == 0)
+    $fatal(1, "Missing ML-KEM vector field (%0d words expected)", bit_length_words);
+while (line.len() > 0) begin
+    if (!(line.getc(line.len() - 1) inside {8'h0a, 8'h0d})) break;
+    line = line.substr(0, line.len() - 2);
+end
+if (line.len() != bit_length_words * 8)
+    $fatal(1, "Invalid ML-KEM vector field length: %0d hex digits, expected %0d",
+           line.len(), bit_length_words * 8);
+for (int i = 0; i < line.len(); i++) begin
+    if (!(line.getc(i) inside {[8'h30:8'h39], [8'h41:8'h46], [8'h61:8'h66]}))
+        $fatal(1, "Invalid hexadecimal digit in ML-KEM vector field at offset %0d", i);
+end
+for (int i = 0; i < bit_length_words; i++) begin
+    word_hex = line.substr(i * 8, i * 8 + 7);
+    if ($sscanf(word_hex, "%h", word) != 1) begin
+        $fatal(1, "Cannot parse ML-KEM vector word %0d", i);
     end
+    array[i] = {word[7:0], word[15:8], word[23:16], word[31:24]};
 end
 endfunction
 

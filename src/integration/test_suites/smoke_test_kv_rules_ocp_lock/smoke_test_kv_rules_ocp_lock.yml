@@ -16,4 +16,8 @@
 seed: ${PLAYBOOK_RANDOM_SEED}
 plusargs:
   - +CLP_OCP_LOCK_EN
+  - +CLP_MLKEM_TEST_VECTORS
 testname: smoke_test_kv_rules_ocp_lock
+pre-exec: |
+  cp -r "$CALIPTRA_ROOT/submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem" . &&
+  mkdir -p ml-kem/tv

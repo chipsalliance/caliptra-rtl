@@ -244,6 +244,21 @@ caliptra-rtl GitHub repository.
     3. NOTE: The script automatically creates run output folders at `${CALIPTRA_WORKSPACE}/scratch/$USER/verilator/<timestamp>/<testname>` for each test run
     4. NOTE: The output folder is populated with a run log that reports the run results and pass/fail status
 
+### Randomized ML-KEM integration vectors
+
+Only tests using the randomized ML-KEM key-vault commands (`0xb1`, `0xb2`,
+and `0xb3`) need the Python reference model. Enable
+`+CLP_MLKEM_TEST_VECTORS` and copy
+`submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem` into the run
+directory, then create `ml-kem/tv`. The registered test YAML files do this
+setup for these tests. The generator invokes `python3` from `PATH`; use Python
+3.9 or newer. No third-party Python packages are needed for this generator.
+The copied model and generated vectors remain in the run directory for debugging.
+
+Other integration tests, including ML-KEM tests using fixed vectors, do not
+stage or execute this model. Requesting randomized vector injection or comparison
+without generating the vectors terminates simulation with a fatal error.
+
 ### Unit Test VCS Steps: ###
 1. Setup tools, add to PATH
 1. Define all environment variables above

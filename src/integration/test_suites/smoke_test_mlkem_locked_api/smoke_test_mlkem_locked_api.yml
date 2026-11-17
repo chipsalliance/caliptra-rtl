@@ -1,3 +1,8 @@
 ---
 seed: ${PLAYBOOK_RANDOM_SEED}
 testname: smoke_test_mlkem_locked_api
+plusargs:
+  - +CLP_MLKEM_TEST_VECTORS
+pre-exec: |
+  cp -r "$CALIPTRA_ROOT/submodules/adams-bridge/src/abr_top/uvmf/ML_KEM_ref/ml-kem" . &&
+  mkdir -p ml-kem/tv
