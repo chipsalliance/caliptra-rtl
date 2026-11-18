@@ -22,9 +22,11 @@
 //       - the HOLD path (hreadyout_o low wait-state), driven when a peripheral
 //         asserts its `hld` input. The transaction still completes OKAY, so
 //         these accesses do NOT fault the core.
+//     Also checks the ROM's independent two-cycle write-error response and
+//     verifies that the rejected write leaves the ROM contents unchanged.
 //
 //     IMPORTANT (how the fault is delivered):
-//     These faulting targets all live in the external AHB peripheral window.
+//     These faulting targets all live on the external AHB bus.
 //     In VeeR EL2 every external load is issued through the non-blocking load
 //     CAM, so an hresp error returns *after* the access has retired and is
 //     reported as an *imprecise* D-bus NMI (mcause 0xF0000001 for a load,
@@ -50,6 +52,8 @@
 //                   reg_error -> tlul d_error -> ahb_err (aes_reg_top.sv, AW=8).
 //       - kmac/sha3 : access to an unmapped KMAC-core (TLUL) offset -> addrmiss
 //                   -> reg_error -> tlul d_error -> ahb_err (kmac_reg_top.sv).
+//       - imem/ROM : a write to a mapped ROM word asserts sram_error in
+//                   caliptra_ahb_srom, producing its own two-cycle H_ERROR.
 //
 //     HOLD path (deterministically reachable from FW):
 //       - aes     : any access to a valid AES-core (TLUL) register asserts
@@ -85,8 +89,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 // ---------------------------------------------------------------------
 // FAULT-path target addresses. Each access to these addresses asserts the
-// corresponding peripheral's ahb_slv_sif `err` input, producing hresp=H_ERROR
-// and an imprecise D-bus NMI in the core.
+// peripheral or ROM error response, producing hresp=H_ERROR and an imprecise
+// D-bus NMI in the core.
 // ---------------------------------------------------------------------
 // soc_ifc window is 0x3000_0000-0x3007_FFFF; offset 0x0_0000 maps to no
 // sub-client (mbox=0x2_0000, sha_acc=0x2_1000, dma=0x2_2000, soc_ifc_reg=
@@ -107,6 +111,8 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 // at 0x400. Offset 0x50 is unmapped -> addrmiss -> reg_error -> tlul d_error ->
 // ahb_err.
 #define FLT_ADDR_KMAC        (CLP_KMAC_BASE_ADDR + 0x50UL)           /* 0x10040050 */
+// ROM occupies 0x00000000-0x00017FFF. Use a mapped, aligned, non-null word.
+#define FLT_ADDR_ROM         (0x00000004UL)
 
 // ---------------------------------------------------------------------
 // HOLD-path target addresses. Ordinary reads of these VALID core registers
@@ -116,9 +122,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define HOLD_ADDR_AES        (CLP_AES_REG_STATUS)                    /* 0x10011084 */
 #define HOLD_ADDR_KMAC       (CLP_KMAC_STATUS)                       /* 0x1004001C */
 
-// Flat list of faulting operations: a read and a write to each of the 5 FAULT
-// peripherals (2 * 5 = 10). Both directions assert `err` and are expected to
-// raise an imprecise D-bus NMI.
+// Read/write faults on the five peripherals, followed by a ROM write fault.
 typedef struct { const char *name; uintptr_t addr; uint8_t is_write; } fault_op_t;
 static const fault_op_t FAULT_OPS[] = {
     {"soc_ifc  rd", FLT_ADDR_SOC_IFC,     0}, {"soc_ifc  wr", FLT_ADDR_SOC_IFC,     1},
@@ -126,6 +130,7 @@ static const fault_op_t FAULT_OPS[] = {
     {"entropy  rd", FLT_ADDR_ENTROPY_SRC, 0}, {"entropy  wr", FLT_ADDR_ENTROPY_SRC, 1},
     {"aes      rd", FLT_ADDR_AES,         0}, {"aes      wr", FLT_ADDR_AES,         1},
     {"kmac     rd", FLT_ADDR_KMAC,        0}, {"kmac     wr", FLT_ADDR_KMAC,        1},
+    {"rom      wr", FLT_ADDR_ROM,         1},
 };
 #define NUM_FAULT_OPS (sizeof(FAULT_OPS) / sizeof(FAULT_OPS[0]))
 
@@ -133,11 +138,13 @@ static const fault_op_t FAULT_OPS[] = {
 // handler and read back in run_faults(); execution resumes in-place (no reset).
 volatile uint32_t g_fault_idx   = 0;
 volatile uint32_t g_fault_count = 0;
+volatile uint32_t g_fault_pending = 0;
+volatile uint32_t g_rom_word = 0;
 
 void run_faults(void);
 
-// Force the faulting accesses to be 4-byte (non-compressed) lw/sw so the bus
-// transaction (and thus the ahb_slv_sif stimulus) is an explicit 32-bit access.
+// Use explicit word accesses for fault probes and low ROM addresses, which
+// GCC otherwise treats as out-of-bounds C pointers.
 static inline uint32_t fault_lw(uintptr_t a) {
     uint32_t v;
     __asm__ volatile(".option push\n.option norvc\nlw %0,0(%1)\n.option pop"
@@ -149,23 +156,37 @@ static inline void fault_sw(uintptr_t a, uint32_t d) {
                      :: "r"(a), "r"(d) : "memory");
 }
 
+static inline uint32_t read_mdseac(void) {
+    uint32_t value;
+    // The shared CSR header exposes MDEAU, but not the read-only MDSEAC.
+    __asm__ volatile("csrr %0, 0xfc0" : "=r"(value));
+    return value;
+}
+
 // NMI handler installed at SOC_IFC INTERNAL_NMI_VECTOR. Only the expected
-// imprecise D-bus NMI (top nibble of mcause = 0xF, covers both load and store)
-// is tolerated: count it, clear the error state (mcause + mdeau to re-arm
+// load/store error for the pending operation and its captured address is
+// tolerated: count it, clear the error state (mcause + mdeau to re-arm
 // mdseac capture), advance to the next op, and redirect mepc so the (implicit)
 // mret resumes at run_faults(). The imprecise mepc is meaningless, so we
 // restart from a known point rather than resuming it.
 void __attribute__((interrupt("machine"), aligned(4))) nmi_handler(void) {
     uint_xlen_t cause = csr_read_mcause();
-    if ((cause & MCAUSE_NMI_BIT_MASK) == MCAUSE_NMI_BIT_MASK) {
+    uint32_t address = read_mdseac();
+    uint32_t index = g_fault_idx;
+    if (g_fault_pending && index < NUM_FAULT_OPS &&
+        cause == (FAULT_OPS[index].is_write ? MCAUSE_NMI_CODE_DBUS_STORE_VALUE :
+                                            MCAUSE_NMI_CODE_DBUS_LOAD_VALUE) &&
+        address == FAULT_OPS[index].addr) {
+        g_fault_pending = 0;
         g_fault_count++;
         g_fault_idx++;
         csr_write_mcause(0x0);
         csr_write_mdeau(0x0);
         csr_write_mepc((uintptr_t)run_faults);
     } else {
-        VPRINTF(FATAL, "Unexpected trap in hold/fault test: mcause=%x mepc=%x\n",
-                (uint32_t)cause, (uint32_t)csr_read_mepc());
+        VPRINTF(FATAL, "Unexpected trap in hold/fault test: mcause=%x mepc=%x mdseac=%x idx=%u pending=%u\n",
+                (uint32_t)cause, (uint32_t)csr_read_mepc(), address,
+                index, (uint32_t)g_fault_pending);
         SEND_STDOUT_CTRL(0x1);
         while (1);
     }
@@ -175,11 +196,21 @@ void __attribute__((interrupt("machine"), aligned(4))) nmi_handler(void) {
 // raises an imprecise D-bus NMI; the handler advances g_fault_idx and resumes
 // here, so the loop re-reads the updated index and continues.
 void run_faults(void) {
+    uint32_t actual = fault_lw(FLT_ADDR_ROM);
+    if (actual != g_rom_word) {
+        VPRINTF(FATAL, "[FAIL] ROM readback mismatch: got=0x%08x expected=0x%08x\n",
+                actual, (uint32_t)g_rom_word);
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
+
     while (g_fault_idx < NUM_FAULT_OPS) {
         uint32_t i = g_fault_idx;
         VPRINTF(LOW, "AHB fault path: %s addr=0x%08x\n", FAULT_OPS[i].name, (uint32_t)FAULT_OPS[i].addr);
+        g_fault_pending = 1;
         if (FAULT_OPS[i].is_write)
-            fault_sw(FAULT_OPS[i].addr, 0xDEADBEEF);
+            fault_sw(FAULT_OPS[i].addr,
+                     FAULT_OPS[i].addr == FLT_ADDR_ROM ? ~g_rom_word : 0xDEADBEEF);
         else
             (void)fault_lw(FAULT_OPS[i].addr);
 
@@ -188,6 +219,7 @@ void run_faults(void) {
         // not fall through. Give the error time to drain; if no NMI arrives the
         // op failed to fault and the test must fail.
         for (volatile uint32_t k = 0; k < 4000; k++) { }
+        g_fault_pending = 0;
         VPRINTF(FATAL, "[FAIL] no NMI for fault op idx=%u addr=0x%08x (count=%u)\n",
                 i, (uint32_t)FAULT_OPS[i].addr, (uint32_t)g_fault_count);
         SEND_STDOUT_CTRL(0x1);
@@ -222,6 +254,8 @@ void main(void) {
     // External AHB error responses arrive as imprecise D-bus NMIs, so route them
     // to a test-local handler instead of letting them escalate to a hang/reset.
     lsu_write_32((uintptr_t)(CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t)nmi_handler);
+    csr_write_mdeau(0x0);
+    g_rom_word = fault_lw(FLT_ADDR_ROM);
 
     // -----------------------------------------------------------------
     // HOLD phase (no faults). TLUL-backed AES and KMAC core register reads
