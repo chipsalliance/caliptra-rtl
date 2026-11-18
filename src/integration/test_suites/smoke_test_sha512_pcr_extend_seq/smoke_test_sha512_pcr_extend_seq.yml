@@ -14,4 +14,4 @@
 #
 ---
 seed: 1
-testname: directed_kv_debug_scan_bypass
+testname: smoke_test_sha512_pcr_extend_seq

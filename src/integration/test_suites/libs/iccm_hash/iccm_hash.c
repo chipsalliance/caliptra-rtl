@@ -97,6 +97,7 @@ static uint8_t wait_vault_rd_valid(void) {
 }
 
 uint8_t sha_ctrl_extend(uint32_t pcr_entry, const uint32_t *digest) {
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, SHA512_REG_SHA512_CTRL_ZEROIZE_MASK);
     if (!wait_sha512_ready()) return 0;
     lsu_write_32(CLP_SHA512_REG_SHA512_VAULT_RD_CTRL,
                  (1 << SHA512_REG_SHA512_VAULT_RD_CTRL_READ_EN_LOW) |
