@@ -308,10 +308,6 @@ module hmac_reg (
             struct packed{
                 logic next;
                 logic load_next;
-            } mlkem_msg_dest_valid;
-            struct packed{
-                logic next;
-                logic load_next;
             } dma_data_dest_valid;
             struct packed{
                 logic [16:0] next;
@@ -613,9 +609,6 @@ module hmac_reg (
             struct packed{
                 logic value;
             } mlkem_seed_dest_valid;
-            struct packed{
-                logic value;
-            } mlkem_msg_dest_valid;
             struct packed{
                 logic value;
             } dma_data_dest_valid;
@@ -1435,27 +1428,6 @@ module hmac_reg (
         end
     end
     assign hwif_out.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.value;
-    // Field: hmac_reg.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid
-    always_comb begin
-        automatic logic [0:0] next_c;
-        automatic logic load_next_c;
-        next_c = field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value;
-        load_next_c = '0;
-        if(decoded_reg_strb.HMAC512_KV_WR_CTRL && decoded_req_is_wr && hwif_in.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe) begin // SW write
-            next_c = (field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value & ~decoded_wr_biten[13:13]) | (decoded_wr_data[13:13] & decoded_wr_biten[13:13]);
-            load_next_c = '1;
-        end
-        field_combo.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.next = next_c;
-        field_combo.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.load_next = load_next_c;
-    end
-    always_ff @(posedge clk or negedge hwif_in.reset_b) begin
-        if(~hwif_in.reset_b) begin
-            field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value <= 1'h0;
-        end else if(field_combo.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.load_next) begin
-            field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value <= field_combo.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.next;
-        end
-    end
-    assign hwif_out.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value = field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value;
     // Field: hmac_reg.HMAC512_KV_WR_CTRL.dma_data_dest_valid
     always_comb begin
         automatic logic [0:0] next_c;
@@ -2337,7 +2309,7 @@ module hmac_reg (
     assign readback_array[25][10:10] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.value : '0;
     assign readback_array[25][11:11] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.aes_key_dest_valid.value : '0;
     assign readback_array[25][12:12] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.value : '0;
-    assign readback_array[25][13:13] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.value : '0;
+    assign readback_array[25][13:13] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? 1'h0 : '0;
     assign readback_array[25][14:14] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.dma_data_dest_valid.value : '0;
     assign readback_array[25][31:15] = (decoded_reg_strb.HMAC512_KV_WR_CTRL && !decoded_req_is_wr) ? field_storage.HMAC512_KV_WR_CTRL.rsvd.value : '0;
     assign readback_array[26][0:0] = (decoded_reg_strb.HMAC512_KV_WR_STATUS && !decoded_req_is_wr) ? hwif_in.HMAC512_KV_WR_STATUS.READY.next : '0;

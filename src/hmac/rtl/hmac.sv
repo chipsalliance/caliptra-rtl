@@ -381,7 +381,6 @@ always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_pkey_dest_valid.swwe   = !busy_o;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.ecc_seed_dest_valid.swwe   = !busy_o;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.aes_key_dest_valid.swwe    = !busy_o;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_seed_dest_valid.swwe = !busy_o;
-always_comb hwif_in.HMAC512_KV_WR_CTRL.mlkem_msg_dest_valid.swwe  = !busy_o;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.dma_data_dest_valid.swwe   = !busy_o;
 always_comb hwif_in.HMAC512_KV_WR_CTRL.rsvd.swwe                  = 0;
 

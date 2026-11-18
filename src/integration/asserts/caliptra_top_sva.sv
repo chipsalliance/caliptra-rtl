@@ -1775,15 +1775,6 @@ module caliptra_top_sva
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       `ABR_PATH.kv_mlkem_seed_read_inst.length_mismatch);
 
-  // MLKEM msg path
-  KV_mlkem_msg_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_msg_read_inst.read_done &&
-      !`ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
-  KV_mlkem_msg_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
-
   // DMA key-release path (MEK)
   KV_dma_len_match_C: cover property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
