@@ -2393,7 +2393,7 @@ endgenerate //IV_NO
             $fclose(fd);
 
             // 3) Invoke the python generator for KEYGEN
-            cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt", input_fname);
+            cmd = $sformatf("python3 ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt", input_fname);
             $display("## Running: %s", cmd);
             if ($system(cmd) != 0) $error("External Python script failed");
 
@@ -2421,7 +2421,7 @@ endgenerate //IV_NO
             $fclose(fd);
 
             // 6) Invoke the python generator for ENCAP
-            cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", input_fname);
+            cmd = $sformatf("python3 ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", input_fname);
             $display("## Running: %s", cmd);
             if ($system(cmd) != 0) $error("External Python script failed");
 
