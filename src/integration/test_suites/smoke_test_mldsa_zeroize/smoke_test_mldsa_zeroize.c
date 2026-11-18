@@ -61,6 +61,22 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {
     .axi_dma_error    = 0,
 };
 
+#define MLDSA_SCAN_POLL_LIMIT 10000u
+
+static void wait_for_mask(uintptr_t address, uint32_t mask, uint32_t expected,
+                          const char *phase) {
+    uint32_t status = 0;
+    for (uint32_t poll = 0; poll < MLDSA_SCAN_POLL_LIMIT; poll++) {
+        status = lsu_read_32(address);
+        if ((status & mask) == expected)
+            return;
+    }
+    VPRINTF(ERROR, "[FAIL] %s timed out: addr=0x%x status=0x%x\n",
+            phase, (uint32_t)address, status);
+    SEND_STDOUT_CTRL(0x1);
+    while (1);
+}
+
 void inject_command(uint8_t cmd){
     if (cmd == 0){
         lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, (1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
@@ -68,9 +84,12 @@ void inject_command(uint8_t cmd){
     else{
         VPRINTF(LOW, "Enable scan mode\n");
         SEND_STDOUT_CTRL(0xef);
-
-        for(uint8_t i=0;i<100;i++);
-        SEND_STDOUT_CTRL(0xf6);
+        // The TB defers scan entry; an empty software delay cannot acknowledge it.
+        wait_for_mask(CLP_SOC_IFC_REG_CPTRA_SECURITY_STATE,
+                      SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK,
+                      SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK, "scan entry");
+        wait_for_mask(CLP_ABR_REG_MLDSA_STATUS, ABR_REG_MLDSA_STATUS_READY_MASK,
+                      0, "scan zeroize busy");
     }
 } 
 
@@ -202,11 +221,21 @@ void main() {
             offset++;
         }
 
+        if (inject_cmd != 0) {
+            wait_for_mask(CLP_ABR_REG_MLDSA_STATUS, ABR_REG_MLDSA_STATUS_READY_MASK,
+                          ABR_REG_MLDSA_STATUS_READY_MASK, "scan zeroize completion");
+            SEND_STDOUT_CTRL(0xf0);
+            wait_for_mask(CLP_SOC_IFC_REG_CPTRA_SECURITY_STATE,
+                          SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK, 0, "scan exit");
+            // Restart only after leaving scan, preserving the normal shadow reset delay.
+            SEND_STDOUT_CTRL(0xf6);
+            while (1);
+        }
+
         cptra_intr_rcv.abr_notif = 0;
     }
 
     SEND_STDOUT_CTRL(0xff); //End the test
     
 }
-
 
