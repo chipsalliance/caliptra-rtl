@@ -30,7 +30,9 @@ enum doe_cmd_e {
 };
 
 /* --------------- Function Prototypes --------------- */
-void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_hek, uint32_t kv_dest_uds, uint32_t kv_dest_fe, uint32_t kv_dest_hek);
+// Programs and checks each four-word IV before its command. IV programming and
+// readback must not overlap a reset, scan/debug transition, or another writer.
+void doe_init(const uint32_t * iv_data_uds, const uint32_t * iv_data_fe, const uint32_t * iv_data_hek, uint32_t kv_dest_uds, uint32_t kv_dest_fe, uint32_t kv_dest_hek);
 void doe_clear_secrets();
 
 #endif
