@@ -288,7 +288,7 @@ Required for UVM simulation:<BR>
     - The expected output products are `program.hex`, `caliptra_fmc.hex`, `caliptra_rt.hex` and must be placed in the simulation run directory
     - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_top program.hex`
     - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_fmc caliptra_fmc.hex`
-    - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_rt  caliptra_rt.hex`
+    - `make -f ${CALIPTRA_ROOT}/tools/scripts/Makefile TESTNAME=caliptra_rt caliptra_rt.hex`
 1. Copy the test vectors to the run output directory:
     - [src/sha512/tb/vectors/SHA\*.rsp](src/sha512/tb/vectors/)
         * Required for SHA512 UVM unittest
