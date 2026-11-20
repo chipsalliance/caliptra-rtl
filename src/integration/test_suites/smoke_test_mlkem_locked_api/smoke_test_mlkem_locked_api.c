@@ -96,12 +96,11 @@ void main() {
     seed.kv_id = 8;
     seed.exp_kv_err = FALSE;
 
-    msg.kv_intf = TRUE;
-    msg.kv_id = 2;
-    msg.exp_kv_err = FALSE;
+    for (int i = 0; i < MLKEM_MSG_SIZE; i++) {
+        msg.data[i] = 0x5a5a0000 | i;
+    }
 
     lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors
-    lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors
 
     //Generate vectors
     mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
@@ -161,29 +160,6 @@ void main() {
     }
     
     mlkem_zeroize();
-
-    VPRINTF(LOW, "\nTry fw read by asserting zeroize during kv access\n");
-    SEND_STDOUT_CTRL(0xb4); //inject zeroize during kv access
-    
-    reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR;
-    offset = 0;
-    // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
-    lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
-                                                    ((msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
-    
-    while (offset < MLKEM_MSG_SIZE) {
-        if (*reg_ptr != 0) {
-            VPRINTF(ERROR, "At offset [%d], mlkem msg data mismatch!\n", offset);
-            VPRINTF(ERROR, "Actual   data: 0x%x\n", *reg_ptr);
-            VPRINTF(ERROR, "Expected data: 0x%x\n", 0);
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        reg_ptr++;
-        offset++;
-    }
-    
-    mlkem_zeroize();
     
     VPRINTF(LOW, "\nProgram MLKEM_SEED\n");
     // Program MLKEM_SEED Read with 12 dwords from seed_kv_id
@@ -207,7 +183,6 @@ void main() {
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_AES_KEY_DEST_VALID_MASK |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK |
-                                                      ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK |
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
     

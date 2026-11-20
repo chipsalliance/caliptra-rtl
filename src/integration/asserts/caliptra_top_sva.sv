@@ -1425,7 +1425,7 @@ module caliptra_top_sva
   //VALID flag SVA
   sha512_valid_flag:        assert property (
                                     @(posedge `SVA_RDC_CLK)
-                                    `SHA512_PATH.digest_valid_reg |-> `SHA512_PATH.ready_reg
+                                    `SHA512_PATH.digest_valid_reg |-> `SHA512_PATH.core_ready_q
                                     )
                         else $display("SVA ERROR: SHA512 VALID flag mismatch!");
                           
@@ -1774,15 +1774,6 @@ module caliptra_top_sva
   KV_mlkem_seed_len_mismatch_C: cover property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       `ABR_PATH.kv_mlkem_seed_read_inst.length_mismatch);
-
-  // MLKEM msg path
-  KV_mlkem_msg_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_msg_read_inst.read_done &&
-      !`ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
-  KV_mlkem_msg_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
 
   // DMA key-release path (MEK)
   KV_dma_len_match_C: cover property (

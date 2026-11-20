@@ -56,7 +56,7 @@ localparam KV_DEST_IDX_ECC_PKEY   = 3;
 localparam KV_DEST_IDX_ECC_SEED   = 4;
 localparam KV_DEST_IDX_AES_KEY    = 5;
 localparam KV_DEST_IDX_MLKEM_SEED = 6;
-localparam KV_DEST_IDX_MLKEM_MSG  = 7;
+localparam KV_DEST_IDX_RSVD0      = 7; // Reserved: no read client
 localparam KV_DEST_IDX_DMA_DATA   = 8;
 
 //KV slots

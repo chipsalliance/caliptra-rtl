@@ -132,7 +132,6 @@ void main() {
         seed.data[0][i] = 0x5a5a5a5a;
         seed.data[1][i] = 0x5a5a5a5a;
     }
-    msg.kv_intf = FALSE;
     for (int i = 0; i < MLKEM_MSG_SIZE; i++) {
         msg.data[i] = 0x5a5a5a5a;
     }

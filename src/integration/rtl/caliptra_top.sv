@@ -260,12 +260,6 @@ module caliptra_top
     logic [31:0] iccm_hash_data;
     logic        iccm_unlock;
 
-    // ICCM region registers for boot flow monitor
-    logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr;
-    logic [pt.ICCM_BITS-1:0] iccm_fmc_end_addr;
-    logic [pt.ICCM_BITS-1:0] iccm_rt_start_addr;
-    logic [pt.ICCM_BITS-1:0] iccm_rt_end_addr;
-    logic        iccm_region_lock;
     logic        csr_hmac_key_lock;
     // AES status signals
     logic aes_input_ready;
@@ -361,11 +355,6 @@ module caliptra_top
     logic crypto_error;
     logic doe_fsm_error;
     cptra_hw_fatal_error_t cptra_hw_fatal_errors;
-    logic kv_monitor_alert;
-
-    caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
-    caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt;
-    caliptra_prim_mubi_pkg::mubi4_t boot_flow_error;
 
     typedef enum logic [1:0] {
         CRYPTO_IDLE,
@@ -425,7 +414,7 @@ module caliptra_top
     // Build fatal error struct for soc_ifc_top
     always_comb cptra_hw_fatal_errors = '{
         crypto_err:    crypto_error,
-        kv_error:      kv_monitor_alert | mubi4_test_true_loose(boot_flow_error),
+        kv_error:      1'b0, // Boot-flow monitoring is hard-disabled.
         fsm_error:     doe_fsm_error,
         rv_dcls_error: ~el2_mubi_pkg::mubi_check_false(rv_dcls_error),
         dccm_wr_readback_error: dccm_write_readback_error
@@ -631,10 +620,14 @@ always_comb begin
   el2_icache_stub.ic_tag_data_raw_pre = '0;
 end
 
-//Boot flow monitor
-//Track the boot flow from ROM to FMC and then to RT
-//Trigger keyvault monitoring and enforcement blocks on transitions
-//Errors will be flagged as fatal and flush the keyvault
+// Disabled until the boot-flow monitor is reworked and validated.
+// Keep the instance for future rework; KV inputs and fault paths remain tied off.
+/*
+logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr, iccm_fmc_end_addr;
+logic [pt.ICCM_BITS-1:0] iccm_rt_start_addr, iccm_rt_end_addr;
+logic iccm_region_lock;
+logic kv_monitor_alert;
+caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc, boot_flow_rt, boot_flow_error;
 logic sim_boot_flow_monitor_dis;
 logic boot_flow_monitor_en;
 `ifdef SIMULATION
@@ -642,11 +635,8 @@ logic boot_flow_monitor_en;
 `else
     assign sim_boot_flow_monitor_dis = 1'b0;
 `endif
-
-// Disable boot flow monitoring when debug is unlocked or scan mode is active (clk_override can cause false ICCM read detection)
-// Default during simulation is to disable boot flow monitor as most tests don't go through the boot flow
 always_comb boot_flow_monitor_en = sim_boot_flow_monitor_dis ? '0 :
-                                   mubi4_test_true_loose(cptra_security_state_Latched.debug_locked) & ~cptra_scan_mode_Latched; 
+    mubi4_test_true_loose(cptra_security_state_Latched.debug_locked) & ~cptra_scan_mode_Latched;
 
 boot_flow_monitor i_boot_flow_monitor (
     .clk                (clk),
@@ -665,6 +655,7 @@ boot_flow_monitor i_boot_flow_monitor (
     .boot_flow_rt_o     (boot_flow_rt),
     .boot_flow_error_o  (boot_flow_error)
 );
+*/
 
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
@@ -1247,7 +1238,7 @@ doe_ctrl #(
     .kv_write (kv_write[KV_WRITE_IDX_DOE]),
     .kv_wr_resp (kv_wr_resp[KV_WRITE_IDX_DOE]),
     .ocp_lock_en(ocp_lock_en),
-    .doe_cmd_lock(mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
+    .doe_cmd_lock(1'b0),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
 );
@@ -1331,8 +1322,8 @@ abr_top #(
      .hresp_o           (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hresp),
      .hreadyout_o       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hreadyout),
      .hrdata_o          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hrdata),
-     .kv_read           ({kv_read[7:6],kv_read[2]}),
-     .kv_rd_resp        ({kv_rd_resp[7:6],kv_rd_resp[2]}),
+     .kv_read           ({kv_read[KV_DEST_IDX_MLKEM_SEED],kv_read[KV_DEST_IDX_MLDSA_SEED]}),
+     .kv_rd_resp        ({kv_rd_resp[KV_DEST_IDX_MLKEM_SEED],kv_rd_resp[KV_DEST_IDX_MLDSA_SEED]}),
      .kv_write          (kv_write[1]),
      .kv_wr_resp        (kv_wr_resp[1]),
      .pcr_signing_data  (pcr_signing_data),
@@ -1343,6 +1334,9 @@ abr_top #(
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
      .abr_memory_export (abr_memory_export)
 );
+
+// Dest_valid[7] is reserved; its KV read client is unused
+assign kv_read[KV_DEST_IDX_RSVD0] = '0;
 
 
 
@@ -1425,9 +1419,10 @@ key_vault1
     .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode),
     .debugUnlock_or_scan_mode_switch (debug_lock_or_scan_mode_switch),
     .cold_boot (cold_boot),
-    .boot_flow_fmc (boot_flow_fmc),
-    .boot_flow_rt (boot_flow_rt),
-    .boot_flow_error (boot_flow_error),
+    // Disabled boot-flow policy: do not reconnect before feature rework.
+    .boot_flow_fmc (caliptra_prim_mubi_pkg::MuBi4False),
+    .boot_flow_rt (caliptra_prim_mubi_pkg::MuBi4False),
+    .boot_flow_error (caliptra_prim_mubi_pkg::MuBi4False),
     .stable_owner_key_en (stable_owner_key_en),
     .ocp_lock_mode_en (ocp_lock_en),
 
@@ -1435,7 +1430,7 @@ key_vault1
     .kv_write             (kv_write),
     .kv_rd_resp           (kv_rd_resp),
     .kv_wr_resp           (kv_wr_resp),
-    .kv_monitor_alert     (kv_monitor_alert),
+    .kv_monitor_alert     (),
     .pcr_ecc_signing_key  (pcr_signing_data.pcr_ecc_signing_privkey),
     .pcr_mldsa_signing_key  (pcr_signing_data.pcr_mldsa_signing_seed)
 );
@@ -1671,10 +1666,8 @@ entropy_combiner #(
     // Dedicated strap: enable ES1 and combine, else bypass ES0
     // Dual iTRNG enable, sourced from CPTRA_HW_CONFIG.dual_iTRNG_en (via soc_ifc)
     .combine_en_i           (dual_itrng_en_reg),
-    // SEC_CM: hardware AHB-lock backstop. Mirrors the DOE doe_cmd_lock pattern:
-    // once the boot-flow monitor observes the first FMC/RT instruction fetch, the
-    // combiner's KAT register file is closed even if ROM never set AHB_LOCK.
-    .rt_active_i            (mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
+    // The monitor-derived backstop is disabled; software AHB_LOCK remains active.
+    .rt_active_i            (1'b0),
     // Zeroize on debug/scan mode switch, lifecycle change and fatal error
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
     // AMBA AHB Lite Interface (ROM power-on KAT only)
@@ -1871,11 +1864,12 @@ soc_ifc_top1
     .pv_read         (pv_read[1]),
     .pv_rd_resp      (pv_rd_resp[1]),
     // ICCM Region Registers for Boot Flow Monitor
-    .iccm_fmc_start_addr(iccm_fmc_start_addr),
-    .iccm_fmc_end_addr  (iccm_fmc_end_addr),
-    .iccm_rt_start_addr (iccm_rt_start_addr),
-    .iccm_rt_end_addr   (iccm_rt_end_addr),
-    .iccm_region_lock   (iccm_region_lock),
+    // Region outputs are unused while the monitor instance is disabled.
+    .iccm_fmc_start_addr(),
+    .iccm_fmc_end_addr  (),
+    .iccm_rt_start_addr (),
+    .iccm_rt_end_addr   (),
+    .iccm_region_lock  (),
     // CSR HMAC Key Lock
     .csr_hmac_key_lock  (csr_hmac_key_lock),
     //uC reset

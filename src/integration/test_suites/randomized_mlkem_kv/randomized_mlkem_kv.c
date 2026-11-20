@@ -49,6 +49,7 @@ void main() {
     uint32_t actual_dk[MLKEM_DK_SIZE];
     uint32_t actual_ciphertext[MLKEM_CIPHERTEXT_SIZE];
     uint32_t actual_sharedkey[MLKEM_SHAREDKEY_SIZE];
+    uint8_t encaps_kv_id;
 
     VPRINTF(LOW, "----------------------------\n");
     VPRINTF(LOW, " Running MLKEM Smoke Test !!\n");
@@ -63,25 +64,20 @@ void main() {
         seed.kv_intf = TRUE;
         seed.kv_id = xorshift32() % 24;
         seed.exp_kv_err = FALSE;
-        msg.kv_intf = TRUE;
-        msg.kv_id = xorshift32() % 24;
-        while (msg.kv_id == seed.kv_id) { //Ensure seed and msg KV IDs are different
-            msg.kv_id = xorshift32() % 24;
-        }
-        msg.exp_kv_err = FALSE;
         shared_key.kv_intf = TRUE;
         shared_key.kv_id = xorshift32() % 24;
-        while (shared_key.kv_id == seed.kv_id || shared_key.kv_id == msg.kv_id) { //Ensure shared key KV ID is different from seed and msg KV IDs
+        while (shared_key.kv_id == seed.kv_id) { //Ensure shared key KV ID is different from seed KV ID
             shared_key.kv_id = xorshift32() % 24;
         }
-
         shared_key.exp_kv_err = FALSE;
+        shared_key.skip_kv_check = FALSE;
         for (int i = 0; i < MLKEM_SHAREDKEY_SIZE; i++) {
             shared_key.data[i] = 0;
         }
 
-        lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors into KV 0
-        lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV 1
+        lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xb1); //Inject MLKEM SEED vectors into KV
+        //ENCAPS msg is API-only; supply the TB vector msg through MLKEM_MSG
+        mlkem_get_tb_random_msg(&msg);
 
         //Generate vectors
         mlkem_keygen_flow(seed, abr_entropy, actual_ek, actual_dk);
@@ -89,9 +85,15 @@ void main() {
         cptra_intr_rcv.abr_notif = 0;
 
         mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey);
+        lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check ENCAPS shared key in KV
         mlkem_zeroize();
         cptra_intr_rcv.abr_notif = 0;
 
+        //Use a different slot for DECAPS so a missing write cannot pass on the ENCAPS result
+        encaps_kv_id = shared_key.kv_id;
+        while (shared_key.kv_id == seed.kv_id || shared_key.kv_id == encaps_kv_id) {
+            shared_key.kv_id = xorshift32() % 24;
+        }
         mlkem_keygen_decaps_check(seed, actual_ciphertext, abr_entropy, shared_key);
         mlkem_zeroize();
         cptra_intr_rcv.abr_notif = 0;
