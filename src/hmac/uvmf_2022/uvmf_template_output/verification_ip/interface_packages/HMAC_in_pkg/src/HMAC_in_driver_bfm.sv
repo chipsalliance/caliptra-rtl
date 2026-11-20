@@ -487,7 +487,7 @@ task write_single_word(input [31 : 0]  address,
       hwrite_o    = 0;
       htrans_o    = AHB_HTRANS_IDLE;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
   //----------------------------------------------------------------
   // Write the given block to the dut.
@@ -528,7 +528,7 @@ task write_single_word(input [31 : 0]  address,
       write_single_word(ADDR_BLOCK31, block[31 : 0  ]);
       
     end
-  endtask // write_block
+  endtask : write_block
 
   //----------------------------------------------------------------
   // Write the given key to the dut.
@@ -552,7 +552,7 @@ task write_single_word(input [31 : 0]  address,
       write_single_word(ADDR_KEY14, key[63 : 32 ]);
       write_single_word(ADDR_KEY15, key[31 : 0  ]);
     end
-  endtask // write_key
+  endtask : write_key
 
   task drive_csr_key(input [15:0][31:0] key);
     begin
@@ -574,7 +574,7 @@ task write_single_word(input [31 : 0]  address,
       write_single_word(ADDR_SEED4,  seed[ 63:  32]);
       write_single_word(ADDR_SEED5,  seed[ 31:   0]);
     end
-  endtask // write_seed
+  endtask : write_seed
 
   //----------------------------------------------------------------
   // Read a data word from the given address in the DUT.
@@ -596,7 +596,7 @@ task write_single_word(input [31 : 0]  address,
       //htrans_o     = AHB_HTRANS_IDLE;
       //read_data = hrdata_i;
     end
-  endtask // read_single_word
+  endtask : read_single_word_driverbfm
 
   //----------------------------------------------------------------
   // Read the digest in the dut. The resulting digest will be
@@ -637,7 +637,7 @@ task write_single_word(input [31 : 0]  address,
       read_single_word_driverbfm(ADDR_TAG15);
       @(posedge clk_i);
     end
-  endtask // read_digest
+  endtask : read_digest
 
   //---------------------
   //Wait ready

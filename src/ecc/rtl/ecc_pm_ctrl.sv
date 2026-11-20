@@ -115,7 +115,7 @@ module ecc_pm_ctrl
             stalled_pipe1 <= '0;
         else
             stalled_pipe1 <= stalled;
-    end // ff_stalled_reg
+    end : ff_stalled_reg
 
     //----------------------------------------------------------------
     // Point_multiplication_FSM_flow
@@ -320,7 +320,7 @@ module ecc_pm_ctrl
                 endcase
             end 
         end
-    end // pm_fsm
+    end : pm_fsm
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : sequencer_pipeline1
@@ -334,7 +334,7 @@ module ecc_pm_ctrl
             else 
                 prog_instr_pipe1 <= prog_instr;
         end
-    end // sequencer_pipeline1
+    end : sequencer_pipeline1
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : sequencer_pipeline2
@@ -348,7 +348,7 @@ module ecc_pm_ctrl
             else 
                 prog_instr_pipe2 <= prog_instr_pipe1;
         end
-    end // sequencer_pipeline2
+    end : sequencer_pipeline2
 
     /*
     always_comb 
@@ -397,7 +397,7 @@ module ecc_pm_ctrl
                 instr_o.opb_addr  <= prog_instr_pipe2.opb_addr;    //Addr B for MULT result
             end 
         end
-    end // instruction_out
+    end : instruction_out
 
     assign busy_o = ~(prog_cntr == NOP);
 

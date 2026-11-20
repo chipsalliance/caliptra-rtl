@@ -140,7 +140,7 @@ module ecc_scalar_blinding #(
             b_reg       <= {zero_pad_rnd, rnd_i};
             scalar_reg  <= {zero_pad_reg_full, data_i};
         end 
-    end // input_reg
+    end : input_reg
 
     genvar i0;
     generate 

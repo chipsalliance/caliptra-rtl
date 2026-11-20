@@ -299,7 +299,7 @@ begin : error_interrupt_detection
       intr_kmac_done_reg  <= intr_kmac_done;
       intr_fifo_empty_reg <= intr_fifo_empty;
     end
-end // error_interrupt_detection
+end : error_interrupt_detection
 
 // Error/Interrupt edge detection signals.
 always_comb intr_kmac_err_edge = intr_kmac_err & (!intr_kmac_err_reg);

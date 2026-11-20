@@ -245,7 +245,7 @@ module hmac
           kv_block_data_present <= kv_block_data_present_set ? '1 :
                                    kv_data_present_reset ? '0 : kv_block_data_present;
         end
-    end // reg_update
+    end : reg_update
 
 //HMAC register hardware interfaces
 always_comb begin
@@ -456,7 +456,7 @@ begin : error_detection
       last_alone_error_reg <= last_alone_error;
       orphan_next_error_reg <= orphan_next_error;
     end
-end // error_detection
+end : error_detection
 
 always_comb error_flag_edge = error_flag & (!error_flag_reg);
 always_comb key_mode_error_edge = key_mode_error & (!key_mode_error_reg);
@@ -654,7 +654,7 @@ always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_r
     clk, !reset_n)
 
 
-endmodule // hmac
+endmodule : hmac
 
 //======================================================================
 // EOF hmac.sv

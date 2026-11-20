@@ -180,7 +180,7 @@ module ecc_hmac_drbg_interface#(
             SIGN_ST:        hmac_drbg_entropy = privKey;
             default:        hmac_drbg_entropy = sca_entropy_reg;
         endcase
-    end // hmac_drbg_entropy_input
+    end : hmac_drbg_entropy_input
 
     always_comb 
     begin : hmac_drbg_nonce_input
@@ -193,7 +193,7 @@ module ecc_hmac_drbg_interface#(
             SIGN_ST:        hmac_drbg_nonce = hashed_msg;
             default:        hmac_drbg_nonce = counter_nonce_reg;
         endcase
-    end // hmac_drbg_nonce_input
+    end : hmac_drbg_nonce_input
 
 
     always_comb
@@ -214,7 +214,7 @@ module ecc_hmac_drbg_interface#(
                 end
             endcase
         end
-    end //hmac_trigger
+    end : hmac_trigger
 
     //----------------------------------------------------------------
     // register updates
@@ -222,7 +222,7 @@ module ecc_hmac_drbg_interface#(
     // update the internal registers
     //----------------------------------------------------------------
     always_ff @(posedge clk or negedge reset_n) 
-    begin //reg_update
+    begin : reg_update
         if (!reset_n) begin
             lambda_reg <= '0;
             scalar_rnd_reg <= '0;
@@ -254,7 +254,7 @@ module ecc_hmac_drbg_interface#(
                     end
                 endcase
             end
-    end //reg_update
+    end : reg_update
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : state_reg_update
@@ -264,7 +264,7 @@ module ecc_hmac_drbg_interface#(
             state_reg       <= IDLE_ST;
         else
             state_reg       <= state_next;
-    end // state_reg_update
+    end : state_reg_update
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : ff_state_reg
@@ -274,7 +274,7 @@ module ecc_hmac_drbg_interface#(
             state_reg_last  <= IDLE_ST;
         else 
             state_reg_last  <= state_reg;
-    end // ff_state_reg
+    end : ff_state_reg
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : ff_hamc_valid
@@ -284,7 +284,7 @@ module ecc_hmac_drbg_interface#(
             hmac_drbg_valid_last <= '0;
         else
             hmac_drbg_valid_last <= hmac_drbg_valid;
-    end //ff_hamc_valid
+    end : ff_hamc_valid
 
     // without zeroize to make it more complex
     always_ff @(posedge clk or negedge reset_n) 
@@ -293,7 +293,7 @@ module ecc_hmac_drbg_interface#(
             counter_reg       <= '0;
         else
             counter_reg       <= counter_reg + 1;
-    end // counter_reg_update
+    end : counter_reg_update
 
     // without zeroize to make it more complex
     always_ff @(posedge clk or negedge reset_n) 
@@ -330,7 +330,7 @@ module ecc_hmac_drbg_interface#(
             DONE_ST:        state_next = IDLE_ST;
             default:        state_next = IDLE_ST;
         endcase
-    end // interface_fsm
+    end : interface_fsm
 
     //----------------------------------------------------------------
     // Concurrent connectivity for ports etc.

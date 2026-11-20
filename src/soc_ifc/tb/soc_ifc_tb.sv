@@ -555,7 +555,7 @@ module soc_ifc_tb
     begin : clk_gen
       #CLK_HALF_PERIOD;
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
 
   //----------------------------------------------------------------
@@ -696,7 +696,7 @@ module soc_ifc_tb
       repeat (5) @(posedge clk_tb);
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -719,7 +719,7 @@ module soc_ifc_tb
       repeat (5) @(posedge clk_tb);
       $display("*** Warm reset complete. ***");
     end
-  endtask // reset_dut
+  endtask : warm_reset_dut
 
   //----------------------------------------------------------------
   // load_fuses()
@@ -776,7 +776,7 @@ module soc_ifc_tb
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_results
+  endtask : display_test_results
 
   //----------------------------------------------------------------
   // init_sim()
@@ -884,7 +884,7 @@ module soc_ifc_tb
       update_CPTRA_HW_CONFIG();
       update_SS_STRAPS();
     end
-  endtask // init_sim
+  endtask : init_sim
 
   //----------------------------------------------------------------
   // write_single_word_ahb()
@@ -912,7 +912,7 @@ module soc_ifc_tb
       hsel_i_tb       <= 0;
 
     end
-  endtask // write_single_word_ahb
+  endtask : write_single_word_ahb
 
   //----------------------------------------------------------------
   // axi_txn_check())
@@ -1011,7 +1011,7 @@ module soc_ifc_tb
       write_single_word_ahb(MBOX_ADDR_DATAIN, block[63   :  32]);
       write_single_word_ahb(MBOX_ADDR_DATAIN, block[31   :   0]);
     end
-  endtask // write_block_ahb
+  endtask : write_block_ahb
 
   //----------------------------------------------------------------
   // write_block_axi_sub()
@@ -1025,7 +1025,7 @@ module soc_ifc_tb
       write_single_word_axi_sub(MBOX_ADDR_DATAIN, block[63   :  32]);
       write_single_word_axi_sub(MBOX_ADDR_DATAIN, block[31   :   0]);
     end
-  endtask // write_block_axi_sub
+  endtask : write_block_axi_sub
 
 
 
@@ -1054,7 +1054,7 @@ module soc_ifc_tb
       hsel_i_tb       <= 0;
 
     end
-  endtask // read_single_word_ahb
+  endtask : read_single_word_ahb
   
   //----------------------------------------------------------------
   // read_single_word_axi())
@@ -1080,7 +1080,7 @@ module soc_ifc_tb
       axi_txn_check(resp, read, exp_txn_sts);
       //$display("AXI txn check complete");
     end
-  endtask // read_single_word_axi_sub
+  endtask : read_single_word_axi_sub
 
   //----------------------------------------------------------------
   // read_single_word_axi_user_sub()
@@ -1107,7 +1107,7 @@ module soc_ifc_tb
       axi_txn_check(resp, read);
       //$display("AXI txn check complete");
     end
-  endtask // read_single_word_axi_user_sub
+  endtask : read_single_word_axi_user_sub
 
   //----------------------------------------------------------------
   // read_result_ahb()
@@ -1126,7 +1126,7 @@ module soc_ifc_tb
       read_single_word_ahb(MBOX_ADDR_DATAOUT);
       r_data[31  :  0] = MBOX_ADDR_DATAOUT[2] ? hrdata_o_tb[`AHB64_HI] : hrdata_o_tb[`AHB64_LO]; 
     end
-  endtask // read_result_ahb
+  endtask : read_result_ahb
 
   //----------------------------------------------------------------
   // read_result_axi_sub()
@@ -1146,7 +1146,7 @@ module soc_ifc_tb
       //r_data[ 31: 0] = prdata_o_tb;
   
     end
-  endtask // read_result_axi_sub
+  endtask : read_result_axi_sub
 
   //----------------------------------------------------------------
   // wait_unlock_ahb()
@@ -1166,7 +1166,7 @@ module soc_ifc_tb
           valid_hrdata =  MBOX_ADDR_LOCK[2] ?  hrdata_o_tb[`AHB64_HI] :hrdata_o_tb[`AHB64_LO]; 
         end
     end
-  endtask // wait_unlock_ahb
+  endtask : wait_unlock_ahb
 
   //----------------------------------------------------------------
   // wait_unlock_axi()
@@ -1182,7 +1182,7 @@ module soc_ifc_tb
           read_single_word_axi_sub(MBOX_ADDR_LOCK, rdata);
         end
     end
-  endtask // wait_unlock_axi
+  endtask : wait_unlock_axi
 
   //----------------------------------------------------------------
   // set_generic_input_wires()
@@ -1199,7 +1199,7 @@ module soc_ifc_tb
       update_CPTRA_GENERIC_INPUT_WIRES(generic_input_wires1_q, 1'b1); 
     end
 
-  endtask // set_generic_input_wires
+  endtask : set_generic_input_wires
 
 
   //----------------------------------------------------------------
@@ -1292,7 +1292,7 @@ module soc_ifc_tb
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // mbox_ahb_test
+  endtask : mbox_ahb_test
 
   //----------------------------------------------------------------
   // mbox_axi_test()
@@ -1360,7 +1360,7 @@ module soc_ifc_tb
         error_ctr = error_ctr + 1;
       end
     end
-  endtask // mbox_axi_test
+  endtask : mbox_axi_test
 
     //----------------------------------------------------------------
   // mbox_test()
@@ -1387,7 +1387,7 @@ module soc_ifc_tb
 
 
     end
-  endtask // mbox_test
+  endtask : mbox_test
 
 
   //----------------------------------------------------------------
@@ -1443,7 +1443,7 @@ module soc_ifc_tb
       end
     end
 
-  endtask // sim_dut_init
+  endtask : sim_dut_init
 
   
   //----------------------------------------------------------------
@@ -1468,7 +1468,7 @@ module soc_ifc_tb
       repeat (20) @(posedge clk_tb); // simulate FW boot
       $display("*** Done caliptra boot simulation. ***");
     end
-  endtask // simulate_caliptra_boot
+  endtask : simulate_caliptra_boot
 
 
 
@@ -1517,7 +1517,7 @@ module soc_ifc_tb
           repeat (wait_cycles) @(posedge clk_tb);
       end
     end
-  endtask // write_regs
+  endtask : write_regs
 
   //-----------------------------------------------------------------------------
   // read_reg_chk_inrange()
@@ -1551,7 +1551,7 @@ module soc_ifc_tb
       sb.check_entry_inrange(rdtrans, minval, maxval); 
     end
 
-  endtask // read_reg_chk_inrange
+  endtask : read_reg_chk_inrange
 
 
   //----------------------------------------------------------------
@@ -1585,7 +1585,7 @@ module soc_ifc_tb
 
         sb.record_entry(wrtrans, modifier, pfx);
       end
-    endtask // write_reg_trans
+    endtask : write_reg_trans
 
 
  //----------------------------------------------------------------
@@ -1628,7 +1628,7 @@ module soc_ifc_tb
 
         // sb.check_entry(rdtrans)
     end
-  endtask // read_reg_trans
+  endtask : read_reg_trans
 
 
   //----------------------------------------------------------------
@@ -1686,7 +1686,7 @@ module soc_ifc_tb
 
       end
     end
-  endtask // read_regs
+  endtask : read_regs
 
 
   //----------------------------------------------------------------
@@ -1774,7 +1774,7 @@ module soc_ifc_tb
 
     end
 
-  endtask // write_read_regs
+  endtask : write_read_regs
 
   //================================================================
   // Function Definitions
@@ -1805,7 +1805,7 @@ module soc_ifc_tb
           set_initval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val); 
           update_exp_regval("INTR_BRF_NOTIF_INTERNAL_INTR_R", intr_notif_val, SET_DIRECT);  
       end
-  endfunction // set_security_state
+  endfunction : set_security_state
 
 
   //----------------------------------------------------------------
@@ -1822,7 +1822,7 @@ module soc_ifc_tb
       set_security_state(security_state_t'(ss_code)); 
       return security_state_t'(ss_code); 
     end
-  endfunction // set_security_state_byname 
+  endfunction : set_security_state_byname
 
 
 //----------------------------------------------------------------
@@ -2002,7 +2002,7 @@ module soc_ifc_tb
 
         $display("\n*** '%s' test simulation done. ***", soc_ifc_testname);
         $finish;
-      end  // alternate_test
+      end : alternate_test
 
     else 
       begin : default_test  // Keeping original default test structure 
@@ -2038,6 +2038,6 @@ module soc_ifc_tb
         $display("");
         $display("*** MBOX simulation done. ***");
         $finish;
-      end // default_test 
-  end // main
-endmodule // soc_ifc_tb
+      end : default_test
+  end : main
+endmodule : soc_ifc_tb

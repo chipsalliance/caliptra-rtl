@@ -159,7 +159,7 @@ module csrng_tb
     begin : clk_gen
       #CLK_HALF_PERIOD
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 `endif
 
   //----------------------------------------------------------------
@@ -190,7 +190,7 @@ module csrng_tb
 
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -218,7 +218,7 @@ module csrng_tb
 
       entropy_src_hw_if_rsp = '{default:'0};
     end
-  endtask // init_dut
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -240,7 +240,7 @@ module csrng_tb
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_result
+  endtask : display_test_result
 
   //----------------------------------------------------------------
   // write_single_word()
@@ -268,7 +268,7 @@ module csrng_tb
       @(posedge clk_tb);
       hsel_i_tb       = 0;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
   //----------------------------------------------------------------
   // read_single_word()
@@ -298,7 +298,7 @@ module csrng_tb
       $display("[%t] read_single_word(addr=0x%x) = 0x%x", $time, address, read_data);
 
     end
-  endtask // read_single_word
+  endtask : read_single_word
 
   //----------------------------------------------------------------
   // read_and_compare()
@@ -440,7 +440,7 @@ module csrng_tb
 
     poll_register_value(ADDR_SW_CMD_STS, 32'h6);
 
-  endtask // run_smoke_test
+  endtask : run_smoke_test
 
   //----------------------------------------------------------------
   // run_entropy_source_seed_test()
@@ -474,7 +474,7 @@ module csrng_tb
 
     repeat (1000) @(posedge clk_tb);
 
-  endtask // run_entropy_source_seed_test
+  endtask : run_entropy_source_seed_test
 
   //----------------------------------------------------------------
   // The main test functionality.
@@ -497,8 +497,8 @@ module csrng_tb
 
       $display("   -- Testbench for csrng done. --");
       $finish;
-    end // main
-endmodule // csrng_tb
+    end : main
+endmodule : csrng_tb
 
 //======================================================================
 // EOF csrng_tb.sv

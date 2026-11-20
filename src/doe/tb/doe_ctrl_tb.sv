@@ -149,7 +149,7 @@ module doe_ctrl_tb();
     begin : clk_gen
       #CLK_HALF_PERIOD;
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
 
   //----------------------------------------------------------------
@@ -179,7 +179,7 @@ module doe_ctrl_tb();
       reset_n_tb = 1;
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -199,7 +199,7 @@ module doe_ctrl_tb();
                    tc_ctr, error_ctr);
         end
     end
-  endtask // display_test_results
+  endtask : display_test_results
 
   //----------------------------------------------------------------
   // init_sim()
@@ -225,7 +225,7 @@ module doe_ctrl_tb();
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
     end
-  endtask // init_sim
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -258,7 +258,7 @@ module doe_ctrl_tb();
                version[47 : 40], version[39 : 32],
                version[63 : 56], version[55 : 48]);
     end
-  endtask // check_name_version
+  endtask : check_name_version
 
   //----------------------------------------------------------------
   // write_single_word()
@@ -281,7 +281,7 @@ module doe_ctrl_tb();
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
 
   //----------------------------------------------------------------
@@ -296,7 +296,7 @@ module doe_ctrl_tb();
       write_single_word(ADDR_BLOCK2, block[63   :  32]);
       write_single_word(ADDR_BLOCK3, block[31   :   0]);
     end
-  endtask // write_block
+  endtask : write_block
 
 
   //----------------------------------------------------------------
@@ -324,7 +324,7 @@ module doe_ctrl_tb();
       read_data = hrdata_o_tb;
       // hsel_i_tb       = 0;
     end
-  endtask // read_word
+  endtask : read_single_word
 
   //----------------------------------------------------------------
   // wait_ready()
@@ -346,7 +346,7 @@ module doe_ctrl_tb();
           read_single_word(ADDR_STATUS);
         end
     end
-  endtask // wait_ready
+  endtask : wait_ready
 
   //----------------------------------------------------------------
   // read_result()
@@ -364,7 +364,7 @@ module doe_ctrl_tb();
       read_single_word(ADDR_RESULT3);
       result_data[31  :  0] = read_data;
     end
-  endtask // read_result
+  endtask : read_result
 
 
   //----------------------------------------------------------------
@@ -405,7 +405,7 @@ module doe_ctrl_tb();
       //     temp_ctr = temp_ctr + 1;
       //   end
     end
-  endtask // init_key
+  endtask : init_key
 
 
 
@@ -460,7 +460,7 @@ module doe_ctrl_tb();
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // ecb_mode_single_block_test
+  endtask : ecb_mode_single_block_test
 
   //----------------------------------------------------------------
   // ecb_mode_double_block_test()
@@ -547,7 +547,7 @@ module doe_ctrl_tb();
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // ecb_mode_single_block_test
+  endtask : ecb_mode_double_block_test
 
   //----------------------------------------------------------------
   // doe_test()
@@ -722,7 +722,7 @@ module doe_ctrl_tb();
                                  nist_ecb_256_enc_expected2, nist_ecb_256_enc_expected3,
                                  nist_plaintext2, nist_plaintext3);
     end
-  endtask // doe_test
+  endtask : doe_test
 
 
   //----------------------------------------------------------------
@@ -748,6 +748,6 @@ module doe_ctrl_tb();
       $display("");
       $display("*** DOE simulation done. ***");
       $finish;
-    end // main
+    end : main
 
-endmodule // doe_tb
+endmodule : doe_ctrl_tb
