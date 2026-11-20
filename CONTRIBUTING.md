@@ -40,3 +40,10 @@ Caliptra RTL repository uses the squash strategy to merge changes from a Pull Re
   - Pull Request Description:
     - Include one bullet point for each item that is touched (i.e., 1 bullet for each bug fixed, 1 bullet for each feature addition, 1 bullet for each TB modification, 1 bullet for each documentation update, etc).
     - Include one line for each GitHub issue that is resolved by the PR. That line should follow the format:<BR>`Resolves #<issue number>`<BR>This format causes GitHub to automatically close the issue upon Pull Request merge.
+
+### Pull Requests from Forks
+
+The [central guidelines](https://github.com/chipsalliance/Caliptra/blob/main/CONTRIBUTING.md) ask for Pull Requests from personal forks. In caliptra-rtl, this applies only to documentation:
+  - A Pull Request that only affects documentation files (the DOC area above) may come from a fork.
+  - Any other Pull Request must come from a branch in this repository. The required Hash Check needs a stamp from an internal regression, which currently runs only on branches in this repository.
+  - A contributor who cannot push to this repository may still open a Pull Request from a fork; someone with write access then moves the commit(s) to a branch in this repository.
