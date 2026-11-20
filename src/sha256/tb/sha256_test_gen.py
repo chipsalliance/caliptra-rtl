@@ -31,14 +31,7 @@ def generate_expected_digest():
     #Generate digest using OpenSSL HMAC SHA384
     command = 'echo '+block_str+' | xxd -r -p | openssl dgst -sha256'
     digest = subprocess.check_output(command, shell=True)
-    digest_str = str(digest)
-
-    #Chomp extra chars at beginning and end if python 3.6.8 is loaded
-    if digest_str[1] == "'":
-        digest_str = digest_str[11:-3]
-    else:
-        digest_str = digest_str.rstrip()
-        digest_str = digest_str[9:]
+    digest_str = digest.decode().split('=')[-1].strip()
     g.write('DIGEST = '+digest_str+'\n')
     h.write('DIGEST = '+digest_str+'\n')
     h.write("------------------------\n")
