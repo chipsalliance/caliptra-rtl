@@ -46,12 +46,12 @@ module dma_testcase_generator (
     end
     if ($test$plusargs("CPTRA_RAND_TEST_DMA")) begin
       int num_iterations;
-      int end_addr = `RV_DCCM_EADR;  // Base address for DCCM
+      static int end_addr = `RV_DCCM_EADR;  // Base address for DCCM
       int tc_start_addr;
       int dccm_addr;
-      int total_testcase_bytes_to_check = 32'h18000; // Initialize with the value indicating how many DCCM bytes can be used for TC stuffing
-                                                     // Compiled rand_test_dma is about 0x1b170 bytes
-                                                     // 0x1b170 + 0x18000 = 0x33170, which leaves a fair margin until the DCCM size of 0x40000
+      static int total_testcase_bytes_to_check = 32'h18000; // Initialize with the value indicating how many DCCM bytes can be used for TC stuffing
+                                                            // Compiled rand_test_dma is about 0x1b170 bytes
+                                                            // 0x1b170 + 0x18000 = 0x33170, which leaves a fair margin until the DCCM size of 0x40000
       struct packed {
         bit [11:0]           block_size;
         bit                  src_is_fifo;
@@ -102,7 +102,7 @@ module dma_testcase_generator (
           
       // Generate and store test cases
       for (int i = 0; i < num_iterations; i++) begin: gen_dma_tc
-        dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_gen = new(total_testcase_bytes_to_check/4, verbosity);
+        automatic dma_transfer_randomizer#(MAX_SIZE_TO_CHECK) dma_gen = new(total_testcase_bytes_to_check/4, verbosity);
         if (!dma_gen.randomize()) begin
           $error("Randomization failed for dma_transfer_generator %d", i);
         end
