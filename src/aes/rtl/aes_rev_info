@@ -12,3 +12,7 @@ Date:   Mon Feb 10 12:32:53 2025 +0100
     - aes_manual_config_err_test
     
     Signed-off-by: Pascal Nasahl <nasahlpa@lowrisc.org>
+
+Backported upstream fixes (not a full resync):
+    lowRISC/opentitan#31584: 5f2c688275d4380260663486f94635c55a47cebc
+    lowRISC/opentitan#32068: b442f113e05abf8bf89569bebf13221a86300c9c
