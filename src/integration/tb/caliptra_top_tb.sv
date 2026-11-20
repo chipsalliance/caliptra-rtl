@@ -34,14 +34,12 @@ module caliptra_top_tb (
     import soc_ifc_pkg::*;
     import caliptra_top_tb_pkg::*;
 
-`ifndef VERILATOR
     // Time formatting for %t in display tasks
     // -9 = ns units
     // 3  = 3 bits of precision (to the ps)
     // "ns" = nanosecond suffix for output time values
     // 15 = 15 bits minimum field width
     initial $timeformat(-9, 3, " ns", 15); // up to 99ms representable in this width
-`endif
 
 `ifndef VERILATOR
     bit                         core_clk;
