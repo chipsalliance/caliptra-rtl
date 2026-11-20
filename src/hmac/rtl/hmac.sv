@@ -619,7 +619,11 @@ hmac_result_kv_write
   .dest_done(kv_write_done)
 );
 
-always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_ready;
+// core_ready is still high on the command-accept edge, and kv_write_ready
+// is still high on the final-tag edge before the KV write FSM starts; cover
+// both so busy_o has no gap from command accept to KV write completion.
+always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_ready |
+                     cmd_accepted | (core_tag_we & is_last_op_reg);
 
 // What: KV provenance is never released before the final tag of the operation.
 // Why: releasing it on an intermediate tag exposes the KV-keyed inner state in TAG.
@@ -650,6 +654,17 @@ always_comb busy_o = ~kv_write_ready | ~kv_block_ready | ~kv_key_ready | ~core_r
 // Timing: 0 cycles; both latch on the same accepted command at core IDLE.
 `CALIPTRA_ASSERT(HmacLastTracksCore_A,
     core_tag_we |-> (is_last_op_reg == core.is_last_block),
+    clk, !reset_n)
+
+// What: KV_WR_CTRL destination (entry, dest valids) cannot change and write_en
+//       cannot be armed from the command-accept edge until the KV write ends.
+// Why: a gap in busy_o on the accept edge or the final-tag edge would let a
+//      KV_WR_CTRL write change the KV write target of an operation in flight.
+// Timing: 1 cycle; a SW write in cycle t updates the register at t+1.
+`CALIPTRA_ASSERT(HmacKvWrCtrlStableInOp_A,
+    ((cmd_accepted | ~core_ready | ~kv_write_ready | (core_tag_we & is_last_op_reg)) & ~zeroize_reg)
+      |=> ($stable(kv_write_ctrl_reg.write_entry) && $stable(kv_write_ctrl_reg.write_dest_vld) &&
+           !$rose(kv_write_ctrl_reg.write_en)),
     clk, !reset_n)
 
 
