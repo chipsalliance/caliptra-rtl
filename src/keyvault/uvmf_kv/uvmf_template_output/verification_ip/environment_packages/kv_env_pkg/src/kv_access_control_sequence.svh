@@ -23,11 +23,13 @@ class kv_access_control_sequence #(
     localparam int OTHER = 12;
     localparam int PARK = 13;
     localparam int WORD = 1;
+    localparam int PROBE_WORD = 2;
     localparam int CLEAR_STREAM_BEATS = 64;
     localparam int LOCK_STREAM_BEATS = 64;
     localparam int CPU_STREAM_BEATS = 64;
     localparam logic [KV_DATA_W-1:0] KEY_DATA = 32'h1357_9bdf;
     localparam logic [KV_DATA_W-1:0] DENIED_DATA = 32'h2468_ace1;
+    localparam logic [KV_DATA_W-1:0] PROBE_DATA = 32'h5a3c_96e1;
     localparam logic [KV_NUM_READ-1:0] ALL_DEST = '1;
 
     function new(string name = "");
@@ -170,6 +172,8 @@ class kv_access_control_sequence #(
         check_control(TARGET, lock_write, lock_use, ALL_DEST);
     endtask
 
+    // Register-model mirror check only. It cannot observe DUT storage; the
+    // pin-level readbacks in clear_overlap check the DUT data clear.
     function void check_cleared_mirrors(int entry);
         for (int word = 0; word < KV_NUM_DWORDS; word++) begin
             if (reg_model.kv_reg_rm.KEY_ENTRY[entry][word].get_mirrored_value() !== 0)
@@ -181,6 +185,23 @@ class kv_access_control_sequence #(
             `uvm_error("KV_POLICY_MIRROR", $sformatf(
                 "Entry %0d control mirror retained permissions or length after clear", entry))
     endfunction
+
+    // A cleared entry reads back masked, so restore read permission by
+    // writing only PROBE_WORD, then check at the pins that the clear erased
+    // word 0 and WORD. Clear again so the entry leaves in its cleared state.
+    task probe_cleared(int client, int entry);
+        write_word(client, entry, PROBE_DATA, ALL_DEST, PROBE_WORD);
+        settle();
+        check_control(entry, 0, 0, ALL_DEST, PROBE_WORD);
+        checked_read(reader_config(KV_DEST_IDX_HMAC_KEY), entry, 0, '0, 0, PROBE_WORD);
+        checked_read(reader_config(KV_DEST_IDX_HMAC_KEY), entry, WORD, '0, 0, PROBE_WORD);
+        checked_read(reader_config(KV_DEST_IDX_HMAC_KEY), entry, PROBE_WORD,
+                     PROBE_DATA, 0, PROBE_WORD);
+        control(entry, 0, 0, 1);
+        settle();
+        check_cleared_mirrors(entry);
+        check_control(entry, 0, 0, '0, 0);
+    endtask
 
     task clear_overlap(int client, int entry = TARGET);
         kv_write_configuration cfg;
@@ -258,16 +279,20 @@ class kv_access_control_sequence #(
         read_all(witness_entry, DENIED_DATA, 0);
         park_reads(park_entry);
 
-        write_word(client, entry, ~KEY_DATA, ALL_DEST);
+        // Recover by writing word 0 only, so WORD still holds whatever the
+        // clear left behind: every reader must see zero data without error.
+        write_word(client, entry, ~KEY_DATA, ALL_DEST, 0);
         settle();
-        check_control(entry, 0, 0, ALL_DEST);
-        read_all(entry, ~KEY_DATA, 0);
+        check_control(entry, 0, 0, ALL_DEST, 0);
+        checked_read(reader_config(KV_DEST_IDX_HMAC_KEY), entry, 0, ~KEY_DATA, 0, 0);
+        read_all(entry, '0, 0, 0);
         park_reads(park_entry);
         control(entry, 0, 0, 1);
         settle();
         check_cleared_mirrors(entry);
         read_all(entry, '0, 1, 0);
         check_control(entry, 0, 0, '0, 0);
+        probe_cleared(client, entry);
         check_control(witness_entry, 0, 0, ALL_DEST);
         read_all(witness_entry, DENIED_DATA, 0);
         control(witness_entry, 0, 0, 1);
@@ -275,6 +300,7 @@ class kv_access_control_sequence #(
         check_cleared_mirrors(witness_entry);
         read_all(witness_entry, '0, 1, 0);
         check_control(witness_entry, 0, 0, '0, 0);
+        probe_cleared(client, witness_entry);
         park_reads(park_entry);
     endtask
 

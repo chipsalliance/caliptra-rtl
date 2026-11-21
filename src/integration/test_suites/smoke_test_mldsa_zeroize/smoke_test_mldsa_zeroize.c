@@ -77,19 +77,27 @@ static void wait_for_mask(uintptr_t address, uint32_t mask, uint32_t expected,
     while (1);
 }
 
+static void request_scan_mode(void) {
+    VPRINTF(LOW, "Enable scan mode\n");
+    SEND_STDOUT_CTRL(0xef);
+}
+
+static void wait_for_scan_scrub(void) {
+    // The TB defers scan entry; an empty software delay cannot acknowledge it.
+    wait_for_mask(CLP_SOC_IFC_REG_CPTRA_SECURITY_STATE,
+                  SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK,
+                  SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK, "scan entry");
+    wait_for_mask(CLP_ABR_REG_MLDSA_STATUS, ABR_REG_MLDSA_STATUS_READY_MASK,
+                  0, "scan zeroize busy");
+}
+
 void inject_command(uint8_t cmd){
     if (cmd == 0){
         lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, (1 << ABR_REG_MLDSA_CTRL_ZEROIZE_LOW) & ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
     }
     else{
-        VPRINTF(LOW, "Enable scan mode\n");
-        SEND_STDOUT_CTRL(0xef);
-        // The TB defers scan entry; an empty software delay cannot acknowledge it.
-        wait_for_mask(CLP_SOC_IFC_REG_CPTRA_SECURITY_STATE,
-                      SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK,
-                      SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK, "scan entry");
-        wait_for_mask(CLP_ABR_REG_MLDSA_STATUS, ABR_REG_MLDSA_STATUS_READY_MASK,
-                      0, "scan zeroize busy");
+        request_scan_mode();
+        wait_for_scan_scrub();
     }
 } 
 
@@ -154,10 +162,20 @@ void main() {
         uint8_t test_mode = rand() % 16;
         if (test_mode == 0) {
             VPRINTF(LOW, "\nApplying MLDSA zeroize/scan_mode just before enabling MLDSA.\n");
-            inject_command(inject_cmd);
+            if (inject_cmd == 0) {
+                inject_command(inject_cmd);
 
-            VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
-            lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+                VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
+                lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+            }
+            else {
+                VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");
+                // CTRL accepts commands only while READY is high, so issue the
+                // command inside the TB's 100-cycle scan-entry delay, before the scrub.
+                request_scan_mode();
+                lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_KEYGEN_SIGN);
+                wait_for_scan_scrub();
+            }
         }
         else if (test_mode == 1){
             VPRINTF(LOW, "\nMLDSA KEYGEN + SIGNING\n");

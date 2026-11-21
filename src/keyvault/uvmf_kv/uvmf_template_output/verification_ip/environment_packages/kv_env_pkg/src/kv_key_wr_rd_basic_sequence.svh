@@ -130,8 +130,12 @@ class kv_key_wr_rd_basic_sequence #(
                 assert(sts == UVM_IS_OK) else `uvm_error("KV KEY WR RD BASIC", $sformatf("Failed when reading from KEY[%d][%d] entry",entry, offset))
             end
         end
-        data_bucket_sweep();
-        reader_sweep();
+        // The exhaustive coverage sweeps issue ~25k crypto writes; run them only
+        // from the dedicated kv_cov_sweep_test, not on every random seed.
+        if ($test$plusargs("KV_COVERAGE_SWEEP")) begin
+            data_bucket_sweep();
+            reader_sweep();
+        end
     endtask
 
 

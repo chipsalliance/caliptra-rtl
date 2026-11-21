@@ -17,8 +17,12 @@
 //
 // Two or more crypto write agents drive write_en simultaneously.
 // RTL detects this via kv_write_cnt > 1 and clears ALL entries.
-// After the collision, we verify that reads return error and that
-// a subsequent single-client write succeeds (recovery).
+// An untouched witness entry (pre_write_entry) is populated and checked
+// readable at the pins before each collision, then checked at the pins
+// afterwards for the cleared response (error, zero data, last_dword 0).
+// The three-writer phase also checks that all three write_en are high
+// on the same clock edge.
+// A subsequent single-client write must succeed (recovery).
 //----------------------------------------------------------------------
 
 class kv_multi_write_collision_sequence #(
@@ -47,6 +51,32 @@ class kv_multi_write_collision_sequence #(
     //dest_valid bit 0 corresponds to the hmac_key_read client, which is the
     //client used to read back the recovery entry
     localparam reg [KV_NUM_READ-1:0] HMAC_KEY_READ_DEST_VALID = 'h1;
+    localparam logic [KV_DATA_W-1:0] WITNESS_DATA = 32'h39c6_5a87;
+    // Clocks to wait after a collision before the pin-level witness read, so
+    // the check does not depend on the scoreboard's collision tolerance window.
+    localparam int COLLISION_SETTLE_CLKS = 20;
+    localparam int THREE_WAY_WATCH_CLKS = 32;
+
+    // Write WITNESS_DATA to word 0 of an entry and confirm it at the pins.
+    task write_witness(int entry);
+        kv_write_transaction tx;
+        tx = kv_write_transaction#()::type_id::create("witness_write_tx");
+        start_item(tx, -1, configuration.kv_hmac_write_agent_config.sequencer);
+        tx.write_en = 1'b1;
+        tx.write_entry = KV_ENTRY_ADDR_W'(entry);
+        tx.write_offset = '0;
+        tx.write_data = WITNESS_DATA;
+        tx.write_dest_valid = HMAC_KEY_READ_DEST_VALID;
+        finish_item(tx);
+        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
+        checked_read(configuration.kv_hmac_key_read_agent_config, entry, 0, WITNESS_DATA, 0, 0);
+    endtask
+
+    // A collision clears dest_valid, last_dword and data of every entry.
+    task check_witness_cleared(int entry);
+        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(COLLISION_SETTLE_CLKS);
+        checked_read(configuration.kv_hmac_key_read_agent_config, entry, 0, '0, 1, 0);
+    endtask
 
     constraint c_entries {
         collision_entry < KV_NUM_KEYS;
@@ -71,7 +101,7 @@ class kv_multi_write_collision_sequence #(
     virtual task body();
         int entry;
         int offset;
-        kv_write_transaction pre_write_tx;
+        bit three_way_seen;
 
         if(!this.randomize()) `uvm_error("KV_MULTI_WR", "Failed to randomize collision sequence");
 
@@ -86,26 +116,19 @@ class kv_multi_write_collision_sequence #(
 
         // ── Phase 2: Pre-populate an entry with valid data (single writer) ──
         `uvm_info("KV_MULTI_WR", "Pre-populating entry with HMAC write (single client)", UVM_LOW)
-        pre_write_tx = kv_write_transaction#()::type_id::create("pre_write_tx");
-        start_item(pre_write_tx, -1, configuration.kv_hmac_write_agent_config.sequencer);
-        pre_write_tx.write_en = 1'b1;
-        pre_write_tx.write_entry = pre_write_entry;
-        pre_write_tx.write_offset = '0;
-        pre_write_tx.write_data = 32'h39c6_5a87;
-        pre_write_tx.write_dest_valid = HMAC_KEY_READ_DEST_VALID;
-        finish_item(pre_write_tx);
-
-        // Small gap to let predictor settle
-        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
+        write_witness(pre_write_entry);
 
         // ── Phase 3: Multi-write collision — fork 2 agents writing simultaneously ──
+        // Neither colliding write targets pre_write_entry, so that entry is an
+        // untouched witness: it only reads back as cleared if the collision
+        // wipes the whole vault rather than just the two written entries.
         `uvm_info("KV_MULTI_WR", "Driving simultaneous HMAC + ECC writes to different entries", UVM_LOW)
         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
             "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq",
             "local_write_entry", collision_entry);
         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
             "uvm_test_top.environment.kv_ecc_write_agent.sequencer.ecc_write_seq",
-            "local_write_entry", pre_write_entry);
+            "local_write_entry", recovery_entry);
         fork
             hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
             ecc_write_seq.start(configuration.kv_ecc_write_agent_config.sequencer);
@@ -120,6 +143,9 @@ class kv_multi_write_collision_sequence #(
             "uvm_test_top.environment.kv_hmac_key_read_agent.sequencer.hmac_key_read_seq",
             "local_read_entry", pre_write_entry);
         hmac_key_read_seq.start(configuration.kv_hmac_key_read_agent_config.sequencer);
+        // The scoreboard skips read responses inside its collision tolerance
+        // window, so also check the untouched witness directly at the pins.
+        check_witness_cleared(pre_write_entry);
 
         configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
 
@@ -160,6 +186,8 @@ class kv_multi_write_collision_sequence #(
             "local_write_dest_valid", 'x);
 
         // ── Phase 6: Three-way collision ──
+        // Re-populate the witness (cleared by Phase 3); no Phase 6 writer targets it.
+        write_witness(pre_write_entry);
         `uvm_info("KV_MULTI_WR", "Driving 3-way collision: HMAC + ECC + DOE", UVM_LOW)
         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
             "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq",
@@ -170,13 +198,32 @@ class kv_multi_write_collision_sequence #(
         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
             "uvm_test_top.environment.kv_doe_write_agent.sequencer.doe_write_seq",
             "local_write_entry", collision_entry);
+        three_way_seen = 0;
         fork
             hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
             ecc_write_seq.start(configuration.kv_ecc_write_agent_config.sequencer);
             doe_write_seq.start(configuration.kv_doe_write_agent_config.sequencer);
+            begin
+                // Bounded watcher: the three requests must share one clock edge,
+                // otherwise this phase only proves a two-writer collision.
+                kv_write_t hmac_req, ecc_req, doe_req;
+                repeat (THREE_WAY_WATCH_CLKS) begin
+                    @(posedge configuration.kv_hmac_write_agent_config.monitor_bfm.clk_i);
+                    hmac_req = kv_write_t'(configuration.kv_hmac_write_agent_config.monitor_bfm.kv_write_i);
+                    ecc_req = kv_write_t'(configuration.kv_ecc_write_agent_config.monitor_bfm.kv_write_i);
+                    doe_req = kv_write_t'(configuration.kv_doe_write_agent_config.monitor_bfm.kv_write_i);
+                    if (hmac_req.write_en === 1'b1 && ecc_req.write_en === 1'b1 &&
+                        doe_req.write_en === 1'b1)
+                        three_way_seen = 1;
+                end
+            end
         join
+        if (!three_way_seen)
+            `uvm_error("KV_MULTI_WR", $sformatf(
+                "HMAC, ECC and DOE write_en were never high on the same edge within %0d clocks",
+                THREE_WAY_WATCH_CLKS))
 
-        configuration.kv_hmac_write_agent_config.wait_for_num_clocks(10);
+        check_witness_cleared(pre_write_entry);
 
         `uvm_info("KV_MULTI_WR", "Multi-write collision sequence complete", UVM_LOW)
     endtask
