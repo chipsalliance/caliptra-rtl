@@ -14,7 +14,28 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2026/11/09*_
+_*Last Update: 2026/11/21*_
+
+### Rev 2.2-rc2 ###
+
+#### Rev 2.2-rc2 release date: 2026/11/21 ###
+Second release candidate for Rev 2.2. `CPTRA_HW_REV_ID.CPTRA_GENERATION`
+continues to report `0x0022` (2.2.0). This candidate includes the following
+changes since Rev 2.2-rc1. Final Rev 2.2 sign-off remains subject to the
+[release checklist](docs/CaliptraReleaseChecklist.md).
+- Adams Bridge v3.0-rc2 ([Release Notes](https://github.com/chipsalliance/adams-bridge/blob/v3.0-rc2/Release_Notes.md))
+  - ML-DSA PCR signing accepts only `KEYGEN_SIGN` with the hardware PCR digest; `EXTERNAL_MU`, `STREAM_MSG`, and other command combinations are rejected
+  - ML-KEM ENCAPS messages must be provided through message registers; the message key vault read client is removed and its former key vault destination is reserved
+  - Caliptra integration, registers, firmware libraries, directed tests, and coverage updated for the new interface
+- SHA512 mandatory zeroize between operations and tighter PCR hash-extend command sequencing
+  - Firmware must complete PCR signing before the SHA512 zeroize and before starting another SHA512 operation
+  - The generated PCR digest may be reused for ECC and/or ML-DSA signing before SHA512 zeroize; fresh PCR values or a new nonce require regeneration, including after firmware-update reset
+- Key Vault boot flow monitoring and transition enforcement disabled pending re-architecture; this rc1 feature is not enabled in rc2
+- HMAC busy indication held throughout command acceptance, computation, and key vault write-back to prevent changes to active write controls
+- Upstream AES fixes for sideload-related key, IV, and input clearing, and GHASH state clearing
+- CSRNG synchronized with the updated OpenTitan counter primitive
+- Mailbox data input register made write-only, watchdog service detection corrected, and mailbox direct-read requests suppressed during DMA accesses
+- Expanded AHB error-response tests and Key Vault/PCR Vault coverage, predictor, scoreboard, and reset-sequence updates
 
 ### Rev 2.2-rc1 ###
 

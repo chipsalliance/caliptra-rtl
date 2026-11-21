@@ -14,9 +14,10 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Caliptra Hands-On Guide** #
-_*Last Update: 2026/11/09*_
+_*Last Update: 2026/11/21*_
 
 ## **Release Consumption and Integration** ##
+The v2.2-rc2 release candidate is described in the [release notes](Release_Notes.md#rev-22-rc2). `CPTRA_HW_REV_ID.CPTRA_GENERATION` remains `0x0022` (2.2.0); the release-candidate suffix is represented by the tag, not by the hardware revision register.
 Prior official releases are available at: https://github.com/chipsalliance/caliptra-rtl/releases<br>
 Releases are published as a tag, and also contain downloadable assets (which should not be used).
 Instead of downloading the assets attached to the published release, integrators should consume Caliptra releases by pulling code from the repository at the associated tag, due to https://github.com/chipsalliance/caliptra-rtl/issues/471.
