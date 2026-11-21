@@ -837,10 +837,19 @@ module caliptra_top_sva
   MLDSA_signature_comprehensive: assert property (
     @(posedge `SVA_RDC_CLK)
     disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input || `SERVICES_PATH.disable_mldsa_sva)
-    (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing || `SERVICES_PATH.check_pcr_mldsa_signing) && `ABR_PATH.abr_status_done) |=> 
+    (((`SERVICES_PATH.mldsa_signing || `SERVICES_PATH.mldsa_keygen_signing) && `ABR_PATH.abr_status_done) |=> 
      check_mldsa_signature())
   )
   else $display("SVA ERROR: [MLDSA signing] Signature verification failed");
+
+  // FW requests the PCR check after the completion interrupt, so compare the
+  // held signature when requested rather than on abr_status_done.
+  MLDSA_pcr_signature: assert property (
+    @(posedge `SVA_RDC_CLK)
+    disable iff (`CPTRA_TOP_PATH.scan_mode || debug_unlocked_input || `SERVICES_PATH.disable_mldsa_sva)
+    `SERVICES_PATH.check_pcr_mldsa_signing |-> check_mldsa_signature()
+  )
+  else $display("SVA ERROR: [MLDSA PCR signing] Signature verification failed");
 
   // Timing: |=> because abr_status_done pulses in the cycle MLDSA_STATUS.VALID
   // is being registered; VERIFY_RES is final by then and held until zeroize.
@@ -1774,15 +1783,6 @@ module caliptra_top_sva
   KV_mlkem_seed_len_mismatch_C: cover property (
       @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
       `ABR_PATH.kv_mlkem_seed_read_inst.length_mismatch);
-
-  // MLKEM msg path
-  KV_mlkem_msg_len_match_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_msg_read_inst.read_done &&
-      !`ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
-  KV_mlkem_msg_len_mismatch_C: cover property (
-      @(posedge `SVA_RDC_CLK) disable iff (~`SVA_RST)
-      `ABR_PATH.kv_mlkem_msg_read_inst.length_mismatch);
 
   // DMA key-release path (MEK)
   KV_dma_len_match_C: cover property (

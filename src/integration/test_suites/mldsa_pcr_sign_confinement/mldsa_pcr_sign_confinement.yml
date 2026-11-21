@@ -1,0 +1,5 @@
+---
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+FW_TESTNAME=mldsa_pcr_sign_confinement'
+testname: mldsa_pcr_sign_confinement

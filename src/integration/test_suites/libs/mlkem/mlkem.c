@@ -50,6 +50,25 @@ void write_mlkem_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size
     }
 }
 
+// Fetch the TB random ML-KEM vector msg (TB command 0xa3) so it can be supplied
+// through MLKEM_MSG. Data word i is written to MLKEM_MSG[i]; the resulting shared
+// key matches the vector checked by TB command 0xb3.
+void mlkem_get_tb_random_msg(mlkem_msg *msg) {
+    for (uint32_t i = 0; i < MLKEM_MSG_SIZE; i++) {
+        uint32_t timeout = 1000;
+        lsu_write_32(STDOUT, (i << 8) | 0xa3);
+        while (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_1) != (MLKEM_TB_MSG_MARKER | i)) {
+            if (--timeout == 0) {
+                VPRINTF(ERROR, "[MLKEM] Timed out fetching TB msg dword %d\n", i);
+                SEND_STDOUT_CTRL(0x1);
+                while(1);
+            }
+        }
+        msg->data[i] = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_GENERIC_INPUT_WIRES_0);
+    }
+    lsu_write_32(STDOUT, (1 << 11) | 0xa3);
+}
+
 void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint32_t encaps_key[MLKEM_EK_SIZE], uint32_t decaps_key[MLKEM_DK_SIZE])
 {
     uint16_t offset;
@@ -334,84 +353,16 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR, encaps_key, MLKEM_EK_SIZE);
 
     // Program MLKEM MSG
-    if(msg.kv_intf){
-        // Program keyvault msg read
-        lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
-                                                        ((msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
-
-        VPRINTF(LOW, "[MLKEM Encaps] Try to Overwrite msg\n");
-        reg_ptr = (uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR;
-        while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
-            *reg_ptr++ = 0;
-        }
-        VPRINTF(LOW, "[MLKEM Encaps] Try to Overwrite msg through MLDSA privkey\n");
-        reg_ptr = (uint32_t*) (CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR + 4768);
-        while (reg_ptr <= (uint32_t*) (CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR + 4800)) {
-            *reg_ptr++ = 0;
-        }
-
-        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & (ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK | ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK)) == 0);
-
-        if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) != 0) {
-            if (msg.exp_kv_err == TRUE) {
-                VPRINTF(LOW, "[MLKEM Encaps] Received expected err for MLKEM msg read from KV\n");
-            }
-            else {
-                VPRINTF(ERROR, "[MLKEM Encaps] Received unexpected err for MLKEM msg read from KV\n");
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
-            }
-        }
-        else {
-            if (msg.exp_kv_err == TRUE) {
-                VPRINTF(ERROR, "[MLKEM Encaps] Expected err but received success for MLKEM msg read from KV\n");
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
-            }
-        }
-
-        VPRINTF(LOW, "[MLKEM Encaps] Check that MSG api has 0s\n");
-        reg_ptr = (uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR;
-        offset = 0;
-        while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
-            actual_data = *reg_ptr;
-            if (actual_data != 0x0) {
-                VPRINTF(ERROR, "At offset [%d], mlkem_msg data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
-            }
-            *reg_ptr++;
-            offset++;
-        }
-     }
-     else{
-        write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR, msg.data, MLKEM_MSG_SIZE);
-    }
+    write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR, msg.data, MLKEM_MSG_SIZE);
 
     // Write MLKEM ENTROPY
     VPRINTF(LOW, "[MLKEM Encaps] Writing entropy\n");
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, ABR_ENTROPY_SIZE);
 
-   // Verify engine is not ready after KV read error
-    if (msg.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
-            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
-    }
-
     // Enable MLKEM ENCAPS flow
     VPRINTF(LOW, "[MLKEM Encaps] Sending command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
 
-    // Try to program keyvault msg read
-    lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
-                                                    ((!msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
- 
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
 
@@ -456,12 +407,9 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
             else {
                 VPRINTF(LOW, "[MLKEM Encaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if ((msg.kv_intf == TRUE) && (msg.exp_kv_err == FALSE) && (shared_key.skip_kv_check == FALSE)) {
-                lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
-            }
         }
     }
-    else if(!msg.kv_intf & !shared_key.kv_intf){
+    else {
         // Read the shared key from MLKEM register
         VPRINTF(LOW, "[MLKEM Encaps] Check Shared Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
@@ -472,23 +420,6 @@ void mlkem_encaps_check(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint3
                 VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
                 VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
                 VPRINTF(ERROR, "Expected data: 0x%x\n", shared_key.data[offset]);
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
-            }
-            reg_ptr++;
-            offset++;
-        }
-    } else {
-        // Read the shared key from MLKEM register
-        VPRINTF(LOW, "[MLKEM Encaps] KV used, check Shared Key is 0\n");
-        reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
-        offset = 0;
-        while (offset < MLKEM_SHAREDKEY_SIZE) {
-            actual_data = *reg_ptr;
-            if (actual_data != 0) {
-                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
                 SEND_STDOUT_CTRL(fail_cmd);
                 while(1);
             }
@@ -514,60 +445,7 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
     write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR, encaps_key, MLKEM_EK_SIZE);
 
     // Program MLKEM MSG
-    if(msg.kv_intf){
-        // Program keyvault msg read
-        lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
-                                                          ((msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
-
-        VPRINTF(LOW, "[MLKEM Encaps] Try to Overwrite msg\n");
-        reg_ptr = (uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR;
-        while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
-            *reg_ptr++ = 0;
-        }
-        VPRINTF(LOW, "[MLKEM Encaps] Try to Overwrite msg through MLDSA privkey\n");
-        reg_ptr = (uint32_t*) (CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR + 4768);
-        while (reg_ptr <= (uint32_t*) (CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR + 4800)) {
-            *reg_ptr++ = 0;
-        }
-
-        // Check that MLKEM MSG is loaded (poll for valid or error)
-        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & (ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK | ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK)) == 0);
-
-        if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) != 0) {
-            if (msg.exp_kv_err == TRUE) {
-                VPRINTF(LOW, "[MLKEM Encaps] Received expected err for MLKEM msg read from KV\n");
-            }
-            else {
-                VPRINTF(ERROR, "[MLKEM Encaps] Received unexpected err for MLKEM msg read from KV\n");
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
-            }
-        }
-        else {
-            if (msg.exp_kv_err == TRUE) {
-                VPRINTF(ERROR, "[MLKEM Encaps] Expected err but received success for MLKEM msg read from KV\n");
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
-            }
-        }
-        
-        VPRINTF(LOW, "[MLKEM Encaps] Check that MSG api has 0s\n");
-        reg_ptr = (uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR;
-        while (reg_ptr <= (uint32_t*) CLP_ABR_REG_MLKEM_MSG_END_ADDR) {
-            actual_data = *reg_ptr;
-            if (actual_data != 0x0) {
-                VPRINTF(ERROR, "At offset [%d], mlkem_msg data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
-            }
-            *reg_ptr++;
-        }
-     }
-     else{
-        write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR, msg.data, MLKEM_MSG_SIZE);
-    }
+    write_mlkem_reg((uint32_t*) CLP_ABR_REG_MLKEM_MSG_BASE_ADDR, msg.data, MLKEM_MSG_SIZE);
 
     // Write MLKEM ENTROPY
     VPRINTF(LOW, "[MLKEM Encaps] Writing entropy\n");
@@ -584,27 +462,12 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_AES_KEY_DEST_VALID_MASK |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK |
-                                                      ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK |
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
-    }
-
-    // Verify engine did is not ready after KV read error
-    if (msg.exp_kv_err == TRUE) {
-        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) != 0) {
-            VPRINTF(ERROR, "MLKEM engine is ready after KV read error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        return;
     }
 
     // Enable MLKEM ENCAPS flow
     VPRINTF(LOW, "[MLKEM Encaps] Sending Command\n");
     lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
-
-    // Try to program keyvault msg read
-    lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
-                                                    ((!msg.kv_id << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
 
     // wait for MLKEM ENCAPS process to be done
     wait_for_mlkem_intr();
@@ -642,34 +505,15 @@ void mlkem_encaps_flow(uint32_t encaps_key[MLKEM_EK_SIZE], mlkem_msg msg, uint32
             else {
                 VPRINTF(LOW, "[MLKEM Encaps] Received expected success for MLKEM sharedkey write from KV\n");
             }
-            if ((msg.kv_intf == TRUE) && (msg.exp_kv_err == FALSE) && (shared_key.skip_kv_check == FALSE)) {
-                lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check KV result in KV
-            }
         }
     }
-    else if(!msg.kv_intf & !shared_key.kv_intf){
+    else {
         // Read the shared key from MLKEM register
         VPRINTF(LOW, "[MLKEM Encaps] Read Shared Key\n");
         reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
         offset = 0;
         while (offset < MLKEM_SHAREDKEY_SIZE) {
             shared_key_o[offset] = *reg_ptr;
-            reg_ptr++;
-            offset++;
-        }
-    } else {
-        VPRINTF(LOW, "[MLKEM Encaps] KV used, check Shared Key is 0\n");
-        reg_ptr = (uint32_t *) CLP_ABR_REG_MLKEM_SHARED_KEY_0;
-        offset = 0;
-        while (offset < MLKEM_SHAREDKEY_SIZE) {
-            actual_data = *reg_ptr;
-            if (actual_data != 0) {
-                VPRINTF(ERROR, "At offset [%d], mlkem_shared_key data mismatch!\n", offset);
-                VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
-                VPRINTF(ERROR, "Expected data: 0x%x\n", 0x0);
-                SEND_STDOUT_CTRL(fail_cmd);
-                while(1);
-            }
             reg_ptr++;
             offset++;
         }
@@ -709,7 +553,6 @@ void mlkem_decaps_check(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_AES_KEY_DEST_VALID_MASK |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK |
-                                                      ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK |
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
 
@@ -814,7 +657,6 @@ void mlkem_decaps_flow(uint32_t decaps_key[MLKEM_DK_SIZE], uint32_t ciphertext[M
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_AES_KEY_DEST_VALID_MASK |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK |
-                                                      ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK |
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
     
@@ -955,7 +797,6 @@ void mlkem_keygen_decaps_check(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHER
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_AES_KEY_DEST_VALID_MASK |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK |
-                                                      ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK |
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
     
@@ -1119,7 +960,6 @@ void mlkem_keygen_decaps_flow(mlkem_seed seed, uint32_t ciphertext[MLKEM_CIPHERT
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_AES_KEY_DEST_VALID_MASK |
                                                       ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK |
-                                                      ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK |
                                                       ((shared_key.kv_id << ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_LOW) & ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL_WRITE_ENTRY_MASK));
     }
 

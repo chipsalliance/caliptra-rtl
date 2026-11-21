@@ -144,7 +144,7 @@ comparison of key contents.
 | `smoke_test_kv_len_mismatch_hmac` | Randomized | HMAC384/512 KEY lengths; short keys return length-mismatch status and do not start the engine |
 | `smoke_test_kv_len_mismatch_ecc` | Randomized | ECC seed/private-key lengths against the 12-dword requirement |
 | `smoke_test_kv_len_mismatch_aes` | Randomized | AES128/192/256 key lengths and read-versus-length-programming ordering |
-| `smoke_test_kv_len_mismatch_abr` | Randomized | ML-DSA seed and ML-KEM seed/message lengths |
+| `smoke_test_kv_len_mismatch_abr` | Randomized | ML-DSA seed and ML-KEM seed lengths |
 | `smoke_test_kv_len_mismatch_dma` | Incomplete | Skeleton only: no key-release trigger or checked counter comparison; not credited as length-mismatch coverage |
 | `smoke_test_kv_swwe_lock` | Directed | Busy HMAC/ECC KV control writes are blocked; idle writes and PCR hash-extend control protection |
 | `smoke_test_kv_wr_ctrl_zeroize` | Directed | HMAC/ECC zeroize clears stale KV write controls/VALID before the next operation |

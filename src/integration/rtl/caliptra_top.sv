@@ -1322,8 +1322,8 @@ abr_top #(
      .hresp_o           (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hresp),
      .hreadyout_o       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hreadyout),
      .hrdata_o          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hrdata),
-     .kv_read           ({kv_read[7:6],kv_read[2]}),
-     .kv_rd_resp        ({kv_rd_resp[7:6],kv_rd_resp[2]}),
+     .kv_read           ({kv_read[KV_DEST_IDX_MLKEM_SEED],kv_read[KV_DEST_IDX_MLDSA_SEED]}),
+     .kv_rd_resp        ({kv_rd_resp[KV_DEST_IDX_MLKEM_SEED],kv_rd_resp[KV_DEST_IDX_MLDSA_SEED]}),
      .kv_write          (kv_write[1]),
      .kv_wr_resp        (kv_wr_resp[1]),
      .pcr_signing_data  (pcr_signing_data),
@@ -1334,6 +1334,9 @@ abr_top #(
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
      .abr_memory_export (abr_memory_export)
 );
+
+// Dest_valid[7] is reserved; its KV read client is unused
+assign kv_read[KV_DEST_IDX_RSVD0] = '0;
 
 
 

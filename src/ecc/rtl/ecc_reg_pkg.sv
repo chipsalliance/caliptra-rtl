@@ -258,10 +258,6 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic swwe;
-    } kv_write_ctrl_reg__mlkem_msg_dest_valid__in_t;
-
-    typedef struct packed{
-        logic swwe;
     } kv_write_ctrl_reg__dma_data_dest_valid__in_t;
 
     typedef struct packed{
@@ -278,7 +274,6 @@ package ecc_reg_pkg;
         kv_write_ctrl_reg__ecc_seed_dest_valid__in_t ecc_seed_dest_valid;
         kv_write_ctrl_reg__aes_key_dest_valid__in_t aes_key_dest_valid;
         kv_write_ctrl_reg__mlkem_seed_dest_valid__in_t mlkem_seed_dest_valid;
-        kv_write_ctrl_reg__mlkem_msg_dest_valid__in_t mlkem_msg_dest_valid;
         kv_write_ctrl_reg__dma_data_dest_valid__in_t dma_data_dest_valid;
         kv_write_ctrl_reg__rsvd__in_t rsvd;
     } kv_write_ctrl_reg__in_t;
@@ -497,10 +492,6 @@ package ecc_reg_pkg;
 
     typedef struct packed{
         logic value;
-    } kv_write_ctrl_reg__mlkem_msg_dest_valid__out_t;
-
-    typedef struct packed{
-        logic value;
     } kv_write_ctrl_reg__dma_data_dest_valid__out_t;
 
     typedef struct packed{
@@ -517,7 +508,6 @@ package ecc_reg_pkg;
         kv_write_ctrl_reg__ecc_seed_dest_valid__out_t ecc_seed_dest_valid;
         kv_write_ctrl_reg__aes_key_dest_valid__out_t aes_key_dest_valid;
         kv_write_ctrl_reg__mlkem_seed_dest_valid__out_t mlkem_seed_dest_valid;
-        kv_write_ctrl_reg__mlkem_msg_dest_valid__out_t mlkem_msg_dest_valid;
         kv_write_ctrl_reg__dma_data_dest_valid__out_t dma_data_dest_valid;
         kv_write_ctrl_reg__rsvd__out_t rsvd;
     } kv_write_ctrl_reg__out_t;

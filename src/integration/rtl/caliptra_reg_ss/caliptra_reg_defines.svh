@@ -1897,8 +1897,6 @@
 `define CLP_ABR_REG_MLKEM_CIPHERTEXT_END_ADDR                                                       (32'h1003be1f)
 `define CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL                                                           (32'h1003c000)
 `define CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS                                                         (32'h1003c004)
-`define CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL                                                            (32'h1003c008)
-`define CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS                                                          (32'h1003c00c)
 `define CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_CTRL                                                      (32'h1003c010)
 `define CLP_ABR_REG_KV_MLKEM_SHAREDKEY_WR_STATUS                                                    (32'h1003c014)
 `define CLP_KMAC_BASE_ADDR                                                                          (32'h10040000)
