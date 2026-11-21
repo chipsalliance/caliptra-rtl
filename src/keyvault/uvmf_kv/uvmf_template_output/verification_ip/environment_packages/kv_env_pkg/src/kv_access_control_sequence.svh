@@ -59,7 +59,7 @@ class kv_access_control_sequence #(
             KV_DEST_IDX_ECC_SEED:   return configuration.kv_ecc_seed_read_agent_config;
             KV_DEST_IDX_AES_KEY:    return configuration.kv_aes_key_read_agent_config;
             KV_DEST_IDX_MLKEM_SEED: return configuration.kv_mlkem_seed_read_agent_config;
-            KV_DEST_IDX_MLKEM_MSG:  return configuration.kv_mlkem_msg_read_agent_config;
+            KV_DEST_IDX_RSVD0:      return configuration.kv_mlkem_msg_read_agent_config;
             KV_DEST_IDX_DMA_DATA:   return configuration.kv_dma_read_agent_config;
             default: begin
                 `uvm_fatal("KV_POLICY", $sformatf("Invalid reader %0d", client))
