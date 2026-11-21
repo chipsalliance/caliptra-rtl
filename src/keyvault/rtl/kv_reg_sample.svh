@@ -30,10 +30,10 @@
             foreach(rsvd0_bit_cg[bt]) this.rsvd0_bit_cg[bt].sample(data[3 + bt]);
             foreach(rsvd1_bit_cg[bt]) this.rsvd1_bit_cg[bt].sample(data[4 + bt]);
             foreach(dest_valid_bit_cg[bt]) this.dest_valid_bit_cg[bt].sample(data[9 + bt]);
-            foreach(last_dword_bit_cg[bt]) this.last_dword_bit_cg[bt].sample(data[17 + bt]);
+            foreach(last_dword_bit_cg[bt]) this.last_dword_bit_cg[bt].sample(data[18 + bt]);
         end
         if (get_coverage(UVM_CVR_FIELD_VALS)) begin
-            this.fld_cg.sample( data[0:0]/*lock_wr*/  ,  data[1:1]/*lock_use*/  ,  data[2:2]/*clear*/  ,  data[3:3]/*rsvd0*/  ,  data[8:4]/*rsvd1*/  ,  data[16:9]/*dest_valid*/  ,  data[20:17]/*last_dword*/   );
+            this.fld_cg.sample( data[0:0]/*lock_wr*/  ,  data[1:1]/*lock_use*/  ,  data[2:2]/*clear*/  ,  data[3:3]/*rsvd0*/  ,  data[8:4]/*rsvd1*/  ,  data[17:9]/*dest_valid*/  ,  data[21:18]/*last_dword*/   );
         end
     endfunction
 

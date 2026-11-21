@@ -39,6 +39,66 @@ class kv_key_wr_rd_basic_sequence #(
         if(!this.randomize()) `uvm_error("KV KEY WR RD BASIC", "Failed to randomize KV RST poweron seq");
     endfunction
 
+    task checked_write(int entry, int offset, logic [KV_DATA_W-1:0] data);
+        uvm_status_e status;
+        reg_model.kv_reg_rm.KEY_ENTRY[entry][offset].write(
+            status, data, UVM_FRONTDOOR, reg_model.kv_hmac_write_map, this);
+        if (status != UVM_IS_OK)
+            `uvm_fatal("KV KEY WR RD BASIC", $sformatf(
+                "Crypto write failed for KEY_ENTRY[%0d][%0d]", entry, offset))
+    endtask
+
+    task data_bucket_sweep();
+        logic [KV_DATA_W-1:0] data;
+        // The 64 field-value auto bins partition data by its top six bits.
+        for (int bucket = 0; bucket < 64; bucket++) begin
+            for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+                for (int offset = 0; offset < KV_NUM_DWORDS; offset++) begin
+                    if (!std::randomize(data))
+                        `uvm_fatal("KV KEY WR RD BASIC", "Data randomization failed")
+                    data[KV_DATA_W-1 -: 6] = 6'(bucket);
+                    checked_write(entry, offset, data);
+                    checked_read(configuration.kv_hmac_key_read_agent_config,
+                                 entry, offset, data, 0, offset);
+                end
+            end
+        end
+    endtask
+
+    task reader_sweep();
+        kv_read_configuration readers[KV_NUM_READ];
+        logic [KV_DATA_W-1:0] data;
+        int next_offset;
+        readers = '{configuration.kv_hmac_key_read_agent_config,
+                    configuration.kv_hmac_block_read_agent_config,
+                    configuration.kv_mldsa_key_read_agent_config,
+                    configuration.kv_ecc_privkey_read_agent_config,
+                    configuration.kv_ecc_seed_read_agent_config,
+                    configuration.kv_aes_key_read_agent_config,
+                    configuration.kv_mlkem_seed_read_agent_config,
+                    configuration.kv_mlkem_msg_read_agent_config,
+                    configuration.kv_dma_read_agent_config};
+        for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
+            for (int offset = 0; offset < KV_NUM_DWORDS; offset++) begin
+                data = KV_DATA_W'(32'ha5a5_0000 | (entry << 8) | offset);
+                checked_write(entry, offset, data);
+                foreach (readers[client])
+                    checked_read(readers[client], entry, offset, data, 0, offset);
+                next_offset = (offset + 1) % KV_NUM_DWORDS;
+                checked_write(entry, next_offset, ~data);
+                foreach (readers[client])
+                    checked_read(readers[client], entry, offset, data, 0, next_offset);
+            end
+        end
+        // The preceding address sweep leaves DMA away from entry/word zero,
+        // ensuring the first zero observation is delivered before the edges.
+        for (int phase = 0; phase < 3; phase++) begin
+            data = (phase == 1) ? '1 : '0;
+            checked_write(0, 0, data);
+            checked_read(configuration.kv_dma_read_agent_config, 0, 0, data, 0, 0);
+        end
+    endtask
+
     virtual task body();
         uvm_status_e sts;
         int offset;
@@ -70,6 +130,8 @@ class kv_key_wr_rd_basic_sequence #(
                 assert(sts == UVM_IS_OK) else `uvm_error("KV KEY WR RD BASIC", $sformatf("Failed when reading from KEY[%d][%d] entry",entry, offset))
             end
         end
+        data_bucket_sweep();
+        reader_sweep();
     endtask
 
 

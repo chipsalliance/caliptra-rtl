@@ -71,6 +71,7 @@ class kv_multi_write_collision_sequence #(
     virtual task body();
         int entry;
         int offset;
+        kv_write_transaction pre_write_tx;
 
         if(!this.randomize()) `uvm_error("KV_MULTI_WR", "Failed to randomize collision sequence");
 
@@ -85,22 +86,26 @@ class kv_multi_write_collision_sequence #(
 
         // ── Phase 2: Pre-populate an entry with valid data (single writer) ──
         `uvm_info("KV_MULTI_WR", "Pre-populating entry with HMAC write (single client)", UVM_LOW)
-        uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
-            "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq",
-            "local_write_entry", pre_write_entry);
-        hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
+        pre_write_tx = kv_write_transaction#()::type_id::create("pre_write_tx");
+        start_item(pre_write_tx, -1, configuration.kv_hmac_write_agent_config.sequencer);
+        pre_write_tx.write_en = 1'b1;
+        pre_write_tx.write_entry = pre_write_entry;
+        pre_write_tx.write_offset = '0;
+        pre_write_tx.write_data = 32'h39c6_5a87;
+        pre_write_tx.write_dest_valid = HMAC_KEY_READ_DEST_VALID;
+        finish_item(pre_write_tx);
 
         // Small gap to let predictor settle
         configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
 
         // ── Phase 3: Multi-write collision — fork 2 agents writing simultaneously ──
-        `uvm_info("KV_MULTI_WR", "Driving simultaneous writes from HMAC + ECC (collision)", UVM_LOW)
+        `uvm_info("KV_MULTI_WR", "Driving simultaneous HMAC + ECC writes to different entries", UVM_LOW)
         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
             "uvm_test_top.environment.kv_hmac_write_agent.sequencer.hmac_write_seq",
             "local_write_entry", collision_entry);
         uvm_config_db#(reg [KV_ENTRY_ADDR_W-1:0])::set(null,
             "uvm_test_top.environment.kv_ecc_write_agent.sequencer.ecc_write_seq",
-            "local_write_entry", collision_entry);
+            "local_write_entry", pre_write_entry);
         fork
             hmac_write_seq.start(configuration.kv_hmac_write_agent_config.sequencer);
             ecc_write_seq.start(configuration.kv_ecc_write_agent_config.sequencer);
