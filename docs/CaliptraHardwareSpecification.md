@@ -45,7 +45,7 @@ For information on the Caliptra Core, see the [High level architecture](https://
 
 ## Key Caliptra 2.2 Changes
 * [Dual-core lockstep (DCLS)](#dual-core-lockstep-dcls)
-* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement)
+* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement) (disabled for the v2.2 release; reference only)
 * [ICCM write hash measurement](#iccm-write-hash-measurement-pcr4pcr5)
 * [Dual iTRNG entropy combiner](#dual-itrng-entropy-combiner)
 * HMAC area optimization and multi-block interface updates

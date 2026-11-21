@@ -14,7 +14,23 @@ See the License for the specific language governing permissions and<BR>
 limitations under the License.*_<BR>
 
 # **Release Notes** #
-_*Last Update: 2026/11/09*_
+_*Last Update: 2026/11/21*_
+
+### Rev 2.2-rc2 ###
+
+#### Rev 2.2-rc2 release date: 2026/11/21 ###
+- Caliptra IP Specification: see docs/ folder
+- Caliptra Integration Specification: see docs/ folder
+- Caliptra testplan: see docs/ folder
+- Adams Bridge v3.0-rc2 with ML-DSA PCR signing enforcement and ML-KEM key vault interface updates ([Release Notes](https://github.com/chipsalliance/adams-bridge/blob/v3.0-rc2/Release_Notes.md))
+- SHA512 mandatory zeroization and PCR hash-extend command sequencing
+- PCR signing digest reuse and lifetime clarification
+- Key Vault boot flow monitoring and transition enforcement disabled pending re-architecture
+- HMAC command and Key Vault write-back busy handling
+- AES sideload and GHASH state clearing updates
+- CSRNG counter updates
+- Mailbox and watchdog fixes
+- AHB error-response tests and Key Vault/PCR Vault validation and coverage updates
 
 ### Rev 2.2-rc1 ###
 
