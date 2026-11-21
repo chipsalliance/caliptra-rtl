@@ -117,6 +117,35 @@ class kv_env_sequence_base #(
 
 
   // pragma uvmf custom class_item_additional begin
+  task checked_read(kv_read_configuration cfg, int entry, int offset,
+                    logic [KV_DATA_W-1:0] data, bit error, int last_word);
+    kv_read_transaction tx;
+    kv_read_t selection;
+    kv_rd_resp_t actual, expected;
+    if (cfg == null)
+      `uvm_fatal("KV_READ_CHECK", "Reader configuration is null")
+    if (cfg.sequencer == null)
+      `uvm_fatal("KV_READ_CHECK", "Reader sequencer is null")
+    tx = kv_read_transaction#()::type_id::create("checked_read");
+    start_item(tx, -1, cfg.sequencer);
+    tx.read_entry = KV_ENTRY_ADDR_W'(entry);
+    tx.read_offset = KV_ENTRY_SIZE_W'(offset);
+    finish_item(tx);
+    configuration.kv_rst_agent_config.wait_for_num_clocks(4);
+    @(negedge cfg.monitor_bfm.clk_i);
+    // Read drivers do not populate response fields on the sequence item.
+    selection = kv_read_t'(cfg.monitor_bfm.kv_read_i);
+    actual = kv_rd_resp_t'(cfg.monitor_bfm.kv_rd_resp_i);
+    expected.error = error;
+    expected.last = (offset == last_word);
+    expected.entry_last_dword = KV_ENTRY_SIZE_W'(last_word);
+    expected.read_data = data;
+    if (selection !== {KV_ENTRY_ADDR_W'(entry), KV_ENTRY_SIZE_W'(offset)} ||
+        actual !== expected)
+      `uvm_error("KV_READ_CHECK", $sformatf(
+        "%s entry %0d word %0d: selection=%h response=%h expected=%h",
+        cfg.get_full_name(), entry, offset, selection, actual, expected))
+  endtask
   // pragma uvmf custom class_item_additional end
   
   function new(string name = "" );
@@ -280,4 +309,3 @@ endclass
 
 // pragma uvmf custom external begin
 // pragma uvmf custom external end
-

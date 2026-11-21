@@ -93,8 +93,7 @@ uvmf:
 
       transaction_constraints:
       - name: dest_valid_c
-        # TODO correlate the actual values
-        value: '{ if (KV_WRITE_REQUESTOR inside {"ECC", "HMAC", "DOE", "MLDSA"}) write_dest_valid == 63; }'
+        value: '{ write_dest_valid inside {[0:((1 << KV_NUM_READ) - 1)]}; }'
 
       transaction_vars:
       # KV Write

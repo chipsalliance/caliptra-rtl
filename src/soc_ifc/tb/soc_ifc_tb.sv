@@ -638,16 +638,26 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   // Updates registers that have wired connections for status
   //
-  // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES, SS_CPTRA_DMA_AXI_USER
+  // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES, SS_CPTRA_DMA_AXI_USER, ICCM locks
   //----------------------------------------------------------------
 
   // default clocking used in $changed call
-  default clocking default_clk @(posedge clk_tb); endclocking
+  default clocking default_clk @(posedge clk_tb);
+    input #1step iccm_unlock = dut.iccm_unlock_o;
+  endclocking
   initial begin
       wait(socregs != null);
       socregs.wait_setup_done();
       $display("SocRegisters finished executing new()");
       fork
+        forever begin
+          @(default_clk);
+          if (default_clk.iccm_unlock) begin
+            // Apply after DUT NBA updates; same-edge bus reads keep pre-clear expectations.
+            update_exp_regval("INTERNAL_ICCM_LOCK", '0, SET_DIRECT);
+            update_exp_regval("INTERNAL_ICCM_REGION_LOCK", '0, SET_DIRECT);
+          end
+        end
         forever @($changed({scan_mode,security_state.debug_locked,security_state.device_lifecycle}))
           update_CPTRA_SECURITY_STATE(scan_mode, mubi4_test_true_loose(security_state.debug_locked), security_state.device_lifecycle);
         forever @($changed({ready_for_fuses,`REG_HIER_BOOT_FSM_PS}))

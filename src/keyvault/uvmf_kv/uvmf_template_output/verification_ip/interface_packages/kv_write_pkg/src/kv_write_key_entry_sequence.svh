@@ -70,8 +70,8 @@ task body();
       uvm_config_db#(reg [KV_ENTRY_SIZE_W-1:0])::get(null, get_full_name(), "local_write_offset", local_write_offset);
       // Optional dest_valid override from the top-level sequence (e.g. to make a
       // written entry readable by a chosen client). Unset => randomized as before.
-      void'(uvm_config_db#(reg [KV_NUM_READ-1:0])::get(null, get_full_name(), "local_write_dest_valid", local_write_dest_valid));
-      dv_set = !$isunknown(local_write_dest_valid);
+      dv_set = uvm_config_db#(reg [KV_NUM_READ-1:0])::get(null, get_full_name(), "local_write_dest_valid", local_write_dest_valid);
+      dv_set = dv_set && !$isunknown(local_write_dest_valid);
       if (!dv_set) local_write_dest_valid = '0; // keep the constraint state var X/Z-free
 
       if((local_write_entry !== 'x) && (local_write_offset !== 'x)) begin

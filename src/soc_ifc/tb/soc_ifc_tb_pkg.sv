@@ -362,7 +362,7 @@ package soc_ifc_tb_pkg;
     '{addr_min: SOCIFC_BASE + 16'h055c, addr_max: SOCIFC_BASE + 16'h059c},
     '{addr_min: SOCIFC_BASE + 16'h05b0, addr_max: SOCIFC_BASE + 16'h05bc},
     '{addr_min: SOCIFC_BASE + 16'h05e0, addr_max: SOCIFC_BASE + 16'h05fc},
-    '{addr_min: SOCIFC_BASE + 16'h0668, addr_max: SOCIFC_BASE + 16'h07fc},
+    '{addr_min: SOCIFC_BASE + 16'h066c, addr_max: SOCIFC_BASE + 16'h07fc},
     '{addr_min: SOCIFC_BASE + 16'h0824, addr_max: SOCIFC_BASE + 16'h08fc},
     '{addr_min: SOCIFC_BASE + 16'h0920, addr_max: SOCIFC_BASE + 16'h097c},
     '{addr_min: SOCIFC_BASE + 16'h0998, addr_max: SOCIFC_BASE + 16'h09fc}
@@ -1260,11 +1260,7 @@ package soc_ifc_tb_pkg;
           end
 
           "INTERNAL_ICCM_REGION_LOCK"                         : begin
-            // W1S against SW writes: once set, SW cannot clear it. It IS hardware-cleared
-            // by every reset flow -- cold/warm on cptra_noncore_rst_b, and hitless/fw-update
-            // via the boot-FSM iccm_unlock pulse -- so ROM can reprogram/re-lock the regions.
-            // Those clears are modeled in the reset paths (warm_reset_exp_data resets it to
-            // initval; the INTERNAL_FW_UPDATE_RESET handler below clears it), not here.
+            // W1S; the testbench mirrors the synchronous iccm_unlock hardware clear.
             iccm_region_locked = curr_data & get_mask(addr_name);
             exp_data = iccm_region_locked ? curr_data : (ahb_indata & get_mask(addr_name) | axi_rodata);
           end
@@ -1285,10 +1281,6 @@ package soc_ifc_tb_pkg;
               // FW update reset clears shadow register phase tracking
               iccm_shadow_phase = '0;
               foreach (iccm_shadow_staged[i]) iccm_shadow_staged[i] = '0;
-              // Hitless (fw-update) reset HW-clears INTERNAL_ICCM_REGION_LOCK via the boot-FSM
-              // iccm_unlock pulse, so ROM can reprogram/re-lock the ICCM regions. The uC is held
-              // in reset until that clear completes, so there is no read race with this update.
-              _exp_register_data_dict["INTERNAL_ICCM_REGION_LOCK"] = '0;
             end
           end
 

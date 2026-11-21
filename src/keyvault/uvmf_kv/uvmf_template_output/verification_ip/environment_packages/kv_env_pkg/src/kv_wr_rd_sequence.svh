@@ -51,6 +51,7 @@ class kv_wr_rd_sequence #(
     kv_read_agent_key_entry_sequence_t aes_key_read_seq;
     kv_read_agent_key_entry_sequence_t mlkem_seed_read_seq;
     kv_read_agent_key_entry_sequence_t mlkem_msg_read_seq;
+    kv_read_agent_key_entry_sequence_t dma_read_seq;
 
 
     function new(string name = "");
@@ -85,6 +86,8 @@ class kv_wr_rd_sequence #(
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
         mlkem_msg_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("mlkem_msg_read_seq");
         if(!this.randomize()) `uvm_error("KV WR RD", "Failed to randomize KV READ seq");
+        dma_read_seq = kv_read_agent_key_entry_sequence_t::type_id::create("dma_read_seq");
+        if(!dma_read_seq.randomize()) `uvm_fatal("KV WR RD", "Failed to randomize DMA READ seq");
         //kv_rst_agent_poweron_seq_2 = kv_rst_agent_poweron_sequence_t::type_id::create("kv_rst_agent_poweron_seq_2");
         
     endfunction
@@ -193,6 +196,12 @@ class kv_wr_rd_sequence #(
                     repeat(10) mlkem_msg_read_seq.start(configuration.kv_mlkem_msg_read_agent_config.sequencer);
                 else
                     `uvm_error("KV WR RD", "kv_mlkem_msg_read_agent_config.sequencer is null!");
+            end
+            begin
+                if(configuration.kv_dma_read_agent_config.sequencer != null)
+                    repeat(10) dma_read_seq.start(configuration.kv_dma_read_agent_config.sequencer);
+                else
+                    `uvm_error("KV WR RD", "kv_dma_read_agent_config.sequencer is null!");
             end
         join
         

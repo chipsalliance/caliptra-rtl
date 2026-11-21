@@ -1925,7 +1925,7 @@ generate
     `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        responder_inst[sva_i].hsize,       clk, !cptra_noncore_rst_b)
     `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        responder_inst[sva_i].hresp,       clk, !cptra_noncore_rst_b)
     `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    responder_inst[sva_i].hreadyout,   clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       responder_inst[sva_i].hreadyout ? responder_inst[sva_i].hrdata : '0,      clk, !cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       (responder_inst[sva_i].hreadyout && !responder_inst[sva_i].hresp) ? responder_inst[sva_i].hrdata : '0,      clk, !cptra_noncore_rst_b)
   end
 endgenerate
 
@@ -1936,8 +1936,19 @@ endgenerate
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       initiator_inst.htrans,      clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       (initiator_inst.hready && !initiator_inst.hresp) ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, !cptra_noncore_rst_b)
+
+// ROM write errors must follow the AHB-Lite two-cycle ERROR response on the
+// LSU-facing port: an ERROR wait cycle followed by an ERROR ready cycle.
+`CALIPTRA_ASSERT(AHB_ROM_ERR_WAIT_THEN_READY,
+                 (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp && !responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout) |=>
+                 (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp &&  responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout),
+                 clk_cg, !cptra_uc_rst_b)
+`CALIPTRA_ASSERT(AHB_ROM_ERR_READY_AFTER_WAIT,
+                 (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp &&  responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout) |->
+                 $past(responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp && !responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout),
+                 clk_cg, !cptra_uc_rst_b)
 
 // Safety assertion: verify single-bank-at-a-time ICCM write invariant
 `ifdef CALIPTRA_MODE_SUBSYSTEM

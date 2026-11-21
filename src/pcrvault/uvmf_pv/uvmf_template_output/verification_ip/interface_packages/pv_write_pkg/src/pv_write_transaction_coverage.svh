@@ -16,6 +16,14 @@
 // limitations under the License.
 
 // pragma uvmf custom header begin
+covergroup wr_data with function sample(input logic wr_data_bit);
+  option.per_instance = 1;
+  value: coverpoint wr_data_bit;
+  transition: coverpoint wr_data_bit {
+    bins bin01 = (0 => 1);
+    bins bin10 = (1 => 0);
+  }
+endgroup
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -28,15 +36,6 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-covergroup wr_data(input logic wr_data_bit);
-  //option.per_instance = 1;
-  value: coverpoint wr_data_bit;
-  transition:  coverpoint wr_data_bit {
-    bins bin01 = (0 => 1); 
-    bins bin10 = (1 => 0);
-  }
-endgroup
-
 class pv_write_transaction_coverage #(
       string PV_WRITE_REQUESTOR = "SHA512"
       )
@@ -80,6 +79,9 @@ class pv_write_transaction_coverage #(
   function new(string name="", uvm_component parent=null);
     super.new(name,parent);
     pv_write_transaction_cg=new;
+    // pragma uvmf custom new begin
+    foreach(wr_data_bus[i]) wr_data_bus[i] = new;
+    // pragma uvmf custom new end
   endfunction
 
   // ****************************************************************************
@@ -88,6 +90,9 @@ class pv_write_transaction_coverage #(
   //
   function void build_phase(uvm_phase phase);
     pv_write_transaction_cg.set_inst_name($sformatf("pv_write_transaction_cg_%s",get_full_name()));
+    // pragma uvmf custom build_phase begin
+    foreach(wr_data_bus[i]) wr_data_bus[i].set_inst_name($sformatf("wr_data_bus[%0d]_%s",i,get_full_name()));
+    // pragma uvmf custom build_phase end
   endfunction
 
   // ****************************************************************************
@@ -100,11 +105,10 @@ class pv_write_transaction_coverage #(
     `uvm_info("COV","Received transaction",UVM_HIGH);
     coverage_trans = t;
 
-    foreach(wr_data_bus[i]) wr_data_bus[i] = new(coverage_trans.write_data[i]);
-    foreach(wr_data_bus[i]) wr_data_bus[i].set_inst_name($sformatf("wr_data_bus[%0d]_%s",i,get_full_name()));
-
     pv_write_transaction_cg.sample();
-    foreach(wr_data_bus[i]) wr_data_bus[i].sample();
+    // pragma uvmf custom write begin
+    foreach(wr_data_bus[i]) wr_data_bus[i].sample(coverage_trans.write_data[i]);
+    // pragma uvmf custom write end
     
   endfunction
 

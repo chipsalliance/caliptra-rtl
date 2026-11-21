@@ -24,24 +24,36 @@ static inline void doe_set_ctrl(const enum doe_cmd_e cmd, uint32_t kv_dest) {
                                        (((cmd >> 2) << DOE_REG_DOE_CTRL_CMD_EXT_LOW) & DOE_REG_DOE_CTRL_CMD_EXT_MASK));
 }
 
+static void doe_write_iv(const uint32_t *iv_data) {
+    uint8_t offset;
+
+    for (offset = 0; offset < 4; offset++) {
+        lsu_write_32(CLP_DOE_REG_DOE_IV_0 + offset * sizeof(uint32_t), iv_data[offset]);
+    }
+
+    // Check both AHB return lanes before starting the flow or clearing secrets.
+    for (offset = 0; offset < 4; offset++) {
+        uint32_t actual = lsu_read_32(CLP_DOE_REG_DOE_IV_0 + offset * sizeof(uint32_t));
+        if (actual != iv_data[offset]) {
+            VPRINTF(ERROR, "DOE: IV[%d] readback mismatch! Actual: 0x%x, expected: 0x%x\n",
+                    offset, actual, iv_data[offset]);
+            SEND_STDOUT_CTRL(0x01);
+            while (1);
+        }
+    }
+}
+
 /**
  * @brief Initialize deobfuscation engine
  * @param iv_data_uds Init Vector for UDS. Pointer to 4-entry array of 32-bit values
  * @param iv_data_fe Init Vector for Field Entropy. Pointer to 4-entry array of 32-bit values
  */
-void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_hek, uint32_t kv_dest_uds, uint32_t kv_dest_fe, uint32_t kv_dest_hek) {
-    uint8_t offset;
-    uint32_t* reg_ptr;
-
+void doe_init(const uint32_t * iv_data_uds, const uint32_t * iv_data_fe, const uint32_t * iv_data_hek, uint32_t kv_dest_uds, uint32_t kv_dest_fe, uint32_t kv_dest_hek) {
     VPRINTF(LOW, "DOE: Init\n");
 
     // Write IV
     VPRINTF(MEDIUM,"DOE: Writing UDS IV\n");
-    reg_ptr = (uint32_t*) CLP_DOE_REG_DOE_IV_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_DOE_REG_DOE_IV_3) {
-        *reg_ptr++ = iv_data_uds[offset++];
-    }
+    doe_write_iv(iv_data_uds);
 
     //start UDS and store in KV0
     VPRINTF(MEDIUM,"DOE: Starting UDS Deobfuscation flow\n");
@@ -53,11 +65,7 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_
 
     // Write IV
     VPRINTF(MEDIUM,"DOE: Writing Field Entropy IV\n");
-    reg_ptr = (uint32_t*) CLP_DOE_REG_DOE_IV_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_DOE_REG_DOE_IV_3) {
-        *reg_ptr++ = iv_data_fe[offset++];
-    }
+    doe_write_iv(iv_data_fe);
 
     //start FE and store in KV6/7
     VPRINTF(MEDIUM,"DOE: Starting Field Entropy Deobfuscation flow\n");
@@ -69,11 +77,7 @@ void doe_init(uint32_t * iv_data_uds, uint32_t * iv_data_fe, uint32_t * iv_data_
 
     // Write IV
     VPRINTF(MEDIUM,"DOE: Writing HEK IV\n");
-    reg_ptr = (uint32_t*) CLP_DOE_REG_DOE_IV_0;
-    offset = 0;
-    while (reg_ptr <= (uint32_t*) CLP_DOE_REG_DOE_IV_3) {
-        *reg_ptr++ = iv_data_hek[offset++];
-    }
+    doe_write_iv(iv_data_hek);
 
     if (lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG) & SOC_IFC_REG_CPTRA_HW_CONFIG_OCP_LOCK_MODE_EN_MASK) {
         VPRINTF(MEDIUM,"DOE: Starting HEK Deobfuscation flow\n");

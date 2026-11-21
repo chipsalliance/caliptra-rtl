@@ -16,6 +16,14 @@
 // limitations under the License.
 
 // pragma uvmf custom header begin
+covergroup rd_data with function sample(input logic rd_data_bit);
+  option.per_instance = 1;
+  value: coverpoint rd_data_bit;
+  transition: coverpoint rd_data_bit {
+    bins bin01 = (0 => 1);
+    bins bin10 = (1 => 0);
+  }
+endgroup
 // pragma uvmf custom header end
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
@@ -28,15 +36,6 @@
 //----------------------------------------------------------------------
 //----------------------------------------------------------------------
 //
-covergroup rd_data(input logic rd_data_bit);
-  //option.per_instance = 1;
-  value: coverpoint rd_data_bit;
-  transition:  coverpoint rd_data_bit {
-    bins bin01 = (0 => 1); 
-    bins bin10 = (1 => 0);
-  }
-endgroup
-
 class pv_read_transaction_coverage #(
       string PV_READ_REQUESTOR = "SHA512_BLOCK"
       )
@@ -64,13 +63,22 @@ class pv_read_transaction_coverage #(
     option.per_instance=1;
     read_entry: coverpoint coverage_trans.read_entry;
     read_offset: coverpoint coverage_trans.read_offset {
+      // A PCR contains twelve words; offsets 12..15 are invalid.
       illegal_bins offset_12_15 = {['d12:'d15]};
     }
     error: coverpoint coverage_trans.error {
+      // pv.sv read mux always returns error=0.
       ignore_bins error1 = {'d1};
     }
     last: coverpoint coverage_trans.last;
-    lastXoffset: cross last, read_offset;
+    lastXoffset: cross last, read_offset {
+      // pv.sv asserts last only at PV_NUM_DWORDS-1, for every valid read entry.
+      ignore_bins last_before_final_word = binsof(last) intersect {1'b1} &&
+                                          binsof(read_offset) intersect {[0:PV_NUM_DWORDS-2]};
+      // All encoded entries are valid; pv.sv always asserts last at the final word.
+      ignore_bins no_last_at_final_word = binsof(last) intersect {1'b0} &&
+                                         binsof(read_offset) intersect {PV_NUM_DWORDS-1};
+    }
     // pragma uvmf custom covergroup end
   endgroup
 
@@ -81,6 +89,9 @@ class pv_read_transaction_coverage #(
   function new(string name="", uvm_component parent=null);
     super.new(name,parent);
     pv_read_transaction_cg=new;
+    // pragma uvmf custom new begin
+    foreach(rd_data_bus[i]) rd_data_bus[i] = new;
+    // pragma uvmf custom new end
   endfunction
 
   // ****************************************************************************
@@ -89,6 +100,9 @@ class pv_read_transaction_coverage #(
   //
   function void build_phase(uvm_phase phase);
     pv_read_transaction_cg.set_inst_name($sformatf("pv_read_transaction_cg_%s",get_full_name()));
+    // pragma uvmf custom build_phase begin
+    foreach(rd_data_bus[i]) rd_data_bus[i].set_inst_name($sformatf("rd_data_bus[%0d]_%s",i,get_full_name()));
+    // pragma uvmf custom build_phase end
   endfunction
 
   // ****************************************************************************
@@ -101,11 +115,10 @@ class pv_read_transaction_coverage #(
     `uvm_info("COV","Received transaction",UVM_HIGH);
     coverage_trans = t;
 
-    foreach(rd_data_bus[i]) rd_data_bus[i] = new(coverage_trans.read_data[i]);
-    foreach(rd_data_bus[i]) rd_data_bus[i].set_inst_name($sformatf("rd_data_bus[%0d]_%s",i,get_full_name()));
-
     pv_read_transaction_cg.sample();
-    foreach(rd_data_bus[i]) rd_data_bus[i].sample();
+    // pragma uvmf custom write begin
+    foreach(rd_data_bus[i]) rd_data_bus[i].sample(coverage_trans.read_data[i]);
+    // pragma uvmf custom write end
   endfunction
 
 endclass
