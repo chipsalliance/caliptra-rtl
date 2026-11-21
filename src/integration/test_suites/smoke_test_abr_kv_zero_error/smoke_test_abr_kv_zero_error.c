@@ -13,13 +13,13 @@
 // limitations under the License.
 //
 // Description:
-//   Validates that ABR (adams-bridge) detects all-zero KV seed/msg
+//   Validates that ABR (adams-bridge) detects all-zero KV seeds
 //   and raises an error interrupt, similar to HMAC key_zero_error.
+//   ML-KEM ENCAPS has no KV message source, so there is no msg zero check.
 //
 //   Test iterations (via warm reset):
 //     0 - MLDSA seed zero error: Inject all-zero seed via KV, trigger KEYGEN
 //     1 - MLKEM seed zero error: Inject all-zero seed via KV, trigger KEYGEN
-//     2 - MLKEM msg zero error:  Inject all-zero msg via KV, trigger ENCAPS
 
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -170,83 +170,6 @@ void main() {
         // Check STATUS.ERROR is set
         if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_ERROR_MASK) == 0) {
             VPRINTF(ERROR, "MLKEM STATUS.ERROR not set after seed_zero_error\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-
-        mlkem_zeroize();
-        rst_count++;
-        SEND_STDOUT_CTRL(0xf6); // warm reset
-    }
-    else if (rst_count == 2) {
-        //--------------------------------------------------------------
-        // Test 2: MLKEM msg zero error
-        // Write MLKEM seed via SW registers (not KV), then inject
-        // all-zero msg via KV. Only msg zero error should fire.
-        //--------------------------------------------------------------
-        VPRINTF(LOW, "\n=== TEST 2: MLKEM msg zero ===\n");
-
-        // Wait for MLKEM to be ready
-        while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
-
-        // Write non-zero MLKEM seed_d and seed_z via SW registers
-        for (int i = 0; i < 8; i++) {
-            lsu_write_32(CLP_ABR_REG_MLKEM_SEED_D_0 + i*4, 0xA5A5A500 + i);
-            lsu_write_32(CLP_ABR_REG_MLKEM_SEED_Z_0 + i*4, 0x5A5A5A00 + i);
-        }
-
-        // Inject all-zero MLKEM msg into KV via 0xa1 (reuses MLDSA zero seed cmd, both 8 dwords)
-        // 0xa1 writes to slot 8 (KV_ENTRY_FOR_MLDSA_SIGNING) with MLDSA_SEED+MLKEM_MSG dest_valid
-        kv_slot = 8;
-        VPRINTF(LOW, "Injecting zero MLKEM msg into KV slot %d\n", kv_slot);
-        SEND_STDOUT_CTRL(0xa1);
-
-        // Program KV read for MLKEM msg
-        lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL,
-                     ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
-                     ((kv_slot << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) &
-                      ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK));
-
-        // Wait for KV msg read to complete
-        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) &
-               (ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK |
-                ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK)) == 0);
-
-        if ((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) &
-             ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) != 0) {
-            VPRINTF(ERROR, "Unexpected KV read error for MLKEM msg\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-
-        // Write dummy entropy
-        for (int i = 0; i < 16; i++) {
-            lsu_write_32(CLP_ABR_REG_ABR_ENTROPY_0 + i*4, 0xdeadbeef);
-        }
-
-        // Write dummy encaps key (needed for ENCAPS command)
-        for (int i = 0; i < MLKEM_EK_SIZE; i++) {
-            lsu_write_32(CLP_ABR_REG_MLKEM_ENCAPS_KEY_BASE_ADDR + i*4, 0xcafebabe);
-        }
-
-        // Trigger MLKEM ENCAPS - should detect zero msg and raise error
-        VPRINTF(LOW, "Triggering MLKEM ENCAPS with zero msg\n");
-        lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, MLKEM_CMD_ENCAPS);
-
-        // Wait for interrupt
-        wait_for_mlkem_intr();
-
-        // Check that error interrupt was received
-        if (cptra_intr_rcv.abr_error == 0) {
-            VPRINTF(ERROR, "\nMLKEM msg_zero_error is NOT detected.\n");
-            SEND_STDOUT_CTRL(fail_cmd);
-            while(1);
-        }
-        VPRINTF(LOW, "MLKEM msg_zero_error detected successfully!\n");
-
-        // Check STATUS.ERROR is set
-        if ((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_ERROR_MASK) == 0) {
-            VPRINTF(ERROR, "MLKEM STATUS.ERROR not set after msg_zero_error\n");
             SEND_STDOUT_CTRL(fail_cmd);
             while(1);
         }

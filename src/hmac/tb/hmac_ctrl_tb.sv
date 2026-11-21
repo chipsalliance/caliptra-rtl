@@ -1579,7 +1579,6 @@ module hmac_ctrl_tb
                                    `HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK   |
                                    `HMAC_REG_HMAC512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK    |
                                    `HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK |
-                                   `HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK  |
                                    `HMAC_REG_HMAC512_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK;
       localparam [31:0] CTRL_A = `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
                                  ((32'd3 << `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) & `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |

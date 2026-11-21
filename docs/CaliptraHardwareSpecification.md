@@ -1958,6 +1958,9 @@ Please refer to the [Adams-bridge specification](https://github.com/chipsallianc
 ### Address map
 Address map of ML-KEM accelerator is shown here:  [ML-KEM\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
 
+### Key vault usage
+ML-KEM reads only the KEYGEN/KEYGEN\_DECAPS seed from the key vault and can write the shared key to the key vault. The ENCAPS message is supplied only through the MLKEM\_MSG registers; there is no key vault read path for it.
+
 ## AES
 
 The AES unit is a cryptographic accelerator that processes requests from the processor to encrypt or decrypt 16-byte data blocks. It supports AES-128/192/256 in various modes, including Electronic Codebook (ECB), Cipher Block Chaining (CBC), Cipher Feedback (CFB) with a fixed segment size of 128 bits (CFB-128), Output Feedback (OFB), Counter (CTR), and Galois/Counter Mode (GCM).
@@ -2823,7 +2826,7 @@ The destination valid field is programmed by FW in the cryptographic block gener
 | Clear\[2\]                | cptra_rst_b       | If unlocked, setting the clear bit causes KV to clear the associated entry. The clear bit is reset after entry is cleared.                                                                              |
 | rsvd0\[3\]                 |       |                                                                                                     |
 | rsvd1\[8:4\]          |       |                                                                                                                                                    |
-| Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set.  <br>\[0\] - HMAC KEY  <br>\[1\] - HMAC BLOCK  <br>\[2\] - MLDSA SEED  <br>\[3\] - ECC PRIVKEY  <br>\[4\] - ECC SEED  <br>\[5\] - AES KEY <br>\[6\] - MLKEM SEED <br>\[7\] - MLKEM MSG <br>\[8\] - AXI DMA DATA |
+| Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set.  <br>\[0\] - HMAC KEY  <br>\[1\] - HMAC BLOCK  <br>\[2\] - MLDSA SEED  <br>\[3\] - ECC PRIVKEY  <br>\[4\] - ECC SEED  <br>\[5\] - AES KEY <br>\[6\] - MLKEM SEED <br>\[7\] - Reserved (no read client) <br>\[8\] - AXI DMA DATA |
 | last_dword\[20:19\] | hard_reset_b      | Store the offset of the last valid dword, used to indicate the last cycle for read operations.                                                                                                          |
 
 ### Key vault cryptographic functional block 
@@ -2873,7 +2876,7 @@ consumed with undefined-tail bits) by a wider engine.
   FSM's `KV_DONE` state), comparing `stored_last_dword` to the fixed
   `expected_key_size` the consumer wires. Used by consumers whose
   expected size is stable at KV-read time (ECC privkey/seed, AXI-DMA
-  MEK, MLDSA/MLKEM seeds and message).
+  MEK, MLDSA/MLKEM seeds).
 - `LEN_CHECK_AT_KEY_USE=1` — check fires on the consumer's
   `check_key_size` strobe (typically at `INIT`/`START`/op-commit).
   Used by consumers whose expected size is not stable until the op
@@ -2921,7 +2924,7 @@ The following tables describe read, write, and status values for key vault block
 | ecc_seed_dest_valid\[10\]  | ECC SEED is a valid destination. |
 | aes_key_dest_valid\[11\]   | AES KEY is a valid destination. |
 | mlkem_seed_dest_valid\[12\]| MLKEM SEED is a valid destination. |
-| mlkem_msg_dest_valid\[13\] | MLKEM MSG is a valid destination. |
+| rsvd0\[13\]                | Reserved field |
 | dma_data_dest_valid\[14\]  | DMA DATA is a valid destination. |
 | rsvd\[31:15\]              | Reserved field |
 

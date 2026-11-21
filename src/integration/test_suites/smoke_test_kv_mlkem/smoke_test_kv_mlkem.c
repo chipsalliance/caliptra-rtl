@@ -295,9 +295,13 @@ void main() {
     seed.kv_id = 6;
     seed.exp_kv_err = FALSE;
 
-    msg.kv_intf = TRUE;
-    msg.kv_id = 2;
-    msg.exp_kv_err = FALSE;
+    // msg = 59C5154C04AE43AAFF32700F081700389D54BEC4C37C088B1C53F66212B12C72, supplied through MLKEM_MSG
+    const uint32_t exp_msg[MLKEM_MSG_SIZE] = {
+        0x4C15C559, 0xAA43AE04, 0x0F7032FF, 0x38001708, 0xC4BE549D, 0x8B087CC3, 0x62F6531C, 0x722CB112
+    };
+    for (int i = 0; i < MLKEM_MSG_SIZE; i++) {
+        msg.data[i] = exp_msg[i];
+    }
 
     shared_key.kv_intf = FALSE;
     shared_key.exp_kv_err = FALSE;
@@ -308,8 +312,6 @@ void main() {
 
     // Inject fixed MLKEM SEED vector into KV
     lsu_write_32(STDOUT, (seed.kv_id << 8) | 0xae);
-    // Inject fixed MLKEM MSG vector into KV
-    lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xaf);
 
     // KeyGen: compare ek/dk against expected vectors
     mlkem_keygen_check(seed, abr_entropy, (uint32_t*)exp_encaps_key, (uint32_t*)exp_decaps_key);

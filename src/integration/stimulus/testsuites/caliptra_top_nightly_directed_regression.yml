@@ -62,6 +62,7 @@ contents:
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_cg/smoke_test_kv_cg.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_mldsa/smoke_test_kv_mldsa.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_kv_mlkem/smoke_test_kv_mlkem.yml
+        - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_encaps_no_kv_msg/smoke_test_mlkem_encaps_no_kv_msg.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mldsa_all_zero_seed/smoke_test_mldsa_all_zero_seed.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/smoke_test_mlkem_all_zero_seed/smoke_test_mlkem_all_zero_seed.yml
         - ${CALIPTRA_ROOT}/src/integration/test_suites/pv_hash_and_sign/pv_hash_and_sign.yml

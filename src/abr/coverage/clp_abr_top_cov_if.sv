@@ -59,22 +59,18 @@ interface clp_abr_top_cov_if
     logic pcr_sign_input_invalid;
     logic kv_mldsa_seed_data_present;
     logic kv_mlkem_seed_data_present;
-    logic kv_mlkem_msg_data_present;
 
     assign pcr_sign_input_invalid = abr_top.abr_ctrl_inst.pcr_sign_input_invalid;
     assign pcr_sign_mode = abr_top.abr_ctrl_inst.pcr_sign_mode;
     
     assign kv_mldsa_seed_data_present = abr_top.abr_ctrl_inst.kv_mldsa_seed_data_present;
     assign kv_mlkem_seed_data_present = abr_top.abr_ctrl_inst.kv_mlkem_seed_data_present;
-    assign kv_mlkem_msg_data_present  = abr_top.abr_ctrl_inst.kv_mlkem_msg_data_present;
 
     logic mldsa_seed_zero_error;
     logic mlkem_seed_zero_error;
-    logic mlkem_msg_zero_error;
 
     assign mldsa_seed_zero_error = abr_top.abr_ctrl_inst.mldsa_seed_zero_error;
     assign mlkem_seed_zero_error = abr_top.abr_ctrl_inst.mlkem_seed_zero_error;
-    assign mlkem_msg_zero_error  = abr_top.abr_ctrl_inst.mlkem_msg_zero_error;
 
     always_ff @(posedge clk) begin
         if (!rst_b) begin
@@ -204,12 +200,8 @@ interface clp_abr_top_cov_if
         mlkem_keygenXkv: cross mlkem_keygen_process_cp, kv_mlkem_seed_data_present_cp;
         mlkem_keygen_decapsXkv: cross mlkem_keygen_decaps_process_cp, kv_mlkem_seed_data_present_cp;
 
-        kv_mlkem_msg_data_present_cp: coverpoint kv_mlkem_msg_data_present;
-        mlkem_encapsXkv: cross mlkem_encaps_process_cp, kv_mlkem_msg_data_present_cp;
-
         mldsa_seed_zero_error_cp: coverpoint mldsa_seed_zero_error;
         mlkem_seed_zero_error_cp: coverpoint mlkem_seed_zero_error;
-        mlkem_msg_zero_error_cp:  coverpoint mlkem_msg_zero_error;
 
         mldsa_seed_zero_errorXcmd: cross mldsa_seed_zero_error_cp, mldsa_cmd_cp {
             ignore_bins illegal_crosses = binsof(mldsa_cmd_cp.illegal_values);
@@ -218,10 +210,6 @@ interface clp_abr_top_cov_if
         mlkem_seed_zero_errorXcmd: cross mlkem_seed_zero_error_cp, mlkem_cmd_cp {
             ignore_bins illegal_crosses = binsof(mlkem_cmd_cp.illegal_values);
             ignore_bins irrelevant_cmds = binsof(mlkem_cmd_cp) intersect {0, MLKEM_ENCAPS, MLKEM_DECAPS};
-        }
-        mlkem_msg_zero_errorXcmd:  cross mlkem_msg_zero_error_cp, mlkem_cmd_cp {
-            ignore_bins illegal_crosses = binsof(mlkem_cmd_cp.illegal_values);
-            ignore_bins irrelevant_cmds = binsof(mlkem_cmd_cp) intersect {0, MLKEM_KEYGEN, MLKEM_DECAPS, MLKEM_KEYGEN_DEC};
         }
 
         pcr_sign_cp: coverpoint pcr_sign_mode;

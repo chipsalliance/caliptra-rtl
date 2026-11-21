@@ -54,6 +54,7 @@ contents:
         - ../test_suites/smoke_test_kv_cg/smoke_test_kv_cg.yml
         - ../test_suites/smoke_test_kv_mldsa/smoke_test_kv_mldsa.yml
         - ../test_suites/smoke_test_kv_mlkem/smoke_test_kv_mlkem.yml
+        - ../test_suites/smoke_test_mlkem_encaps_no_kv_msg/smoke_test_mlkem_encaps_no_kv_msg.yml
         - ../test_suites/pv_hash_zeroize/pv_hash_zeroize.yml
         - ../test_suites/smoke_test_fw_kv_backtoback_hmac/smoke_test_fw_kv_backtoback_hmac.yml
         - ../test_suites/smoke_test_hmac_errortrigger/smoke_test_hmac_errortrigger.yml

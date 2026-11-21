@@ -45,10 +45,8 @@ typedef struct {
   uint32_t  data[2][MLKEM_SEED_SIZE];
 } mlkem_seed;
 
+// ML-KEM ENCAPS message is firmware-supplied only (no KV message source).
 typedef struct {
-  BOOL      kv_intf;
-  BOOL      exp_kv_err;
-  uint8_t   kv_id;
   uint32_t  data[MLKEM_MSG_SIZE];
 } mlkem_msg;
 
@@ -64,6 +62,9 @@ void mlkem_hex_to_uint32_array(const char *hex_str, uint32_t *array);
 void mlkem_zeroize();
 void wait_for_mlkem_intr();
 void write_mlkem_reg(volatile uint32_t *base_addr, uint32_t *data, uint32_t size);
+
+#define MLKEM_TB_MSG_MARKER 0x4D534700u
+void mlkem_get_tb_random_msg(mlkem_msg *msg);
 
 //These check the results of the flow against expected values
 void mlkem_keygen_check(mlkem_seed seed, uint32_t entropy[ABR_ENTROPY_SIZE], uint32_t encaps_key[MLKEM_EK_SIZE], uint32_t decaps_key[MLKEM_DK_SIZE]);

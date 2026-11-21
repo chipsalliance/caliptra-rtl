@@ -795,7 +795,7 @@ class kv_predictor #(
     `uvm_info("PRED", {"            Data: ",t.convert2string()}, UVM_FULL)
     // Construct one of each output transaction type.
     kv_sb_ap_output_transaction = kv_sb_ap_output_transaction_t::type_id::create("kv_sb_ap_output_transaction");
-    client = "mlkem_msg_read";
+    client = "rsvd0_read";
     populate_expected_kv_read_txn(kv_sb_ap_output_transaction, t, client);
  
     // Code for sending output transaction out through kv_sb_ap
@@ -1010,7 +1010,7 @@ endclass
       "ecc_seed_read"     : client_dest_valid = dest_valid[4];
       "aes_key_read"      : client_dest_valid = dest_valid[5];
       "mlkem_seed_read"   : client_dest_valid = dest_valid[6];
-      "mlkem_msg_read"    : client_dest_valid = dest_valid[7];
+      "rsvd0_read"        : client_dest_valid = dest_valid[7];
       "dma_read"          : client_dest_valid = dest_valid[8];
       default: begin
         client_dest_valid = 0;
