@@ -2342,6 +2342,8 @@ endgenerate //IV_NO
         int fd, fd_py;
         string input_fname, output_fname, cmd, line;
         string py_script;
+        // The ML-KEM model needs Python 3.9+; use python3 when new enough, else python3.9.
+        string py_cmd = "PY=python3; $PY -c 'import sys; sys.exit(sys.version_info < (3, 9))' 2>/dev/null || PY=python3.9; $PY";
 
         bit [31:0] seed_d[];
         bit [31:0] seed_z[];
@@ -2388,7 +2390,7 @@ endgenerate //IV_NO
             $fclose(fd);
 
             // 3) Invoke the python generator for KEYGEN
-            cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt", input_fname);
+            cmd = $sformatf("%s ml-kem/random_test_ml_kem.py 1 -i %s -o ml-kem/tv/keygen_ext_output.txt", py_cmd, input_fname);
             $display("## Running: %s", cmd);
             if ($system(cmd) != 0) $error("External Python script failed");
 
@@ -2416,7 +2418,7 @@ endgenerate //IV_NO
             $fclose(fd);
 
             // 6) Invoke the python generator for ENCAP
-            cmd = $sformatf("python3.9 ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", input_fname);
+            cmd = $sformatf("%s ml-kem/random_test_ml_kem.py 2 -i %s -o ml-kem/tv/encap_ext_output.txt", py_cmd, input_fname);
             $display("## Running: %s", cmd);
             if ($system(cmd) != 0) $error("External Python script failed");
 
