@@ -25,6 +25,9 @@
 volatile char*    stdout           = (char *)STDOUT;
 volatile uint32_t intr_count = 0;
 volatile uint32_t  rst_count __attribute__((section(".dccm.persistent"))) = 0;
+// Set only after the scan-mode checks pass, so the post-reset boot can tell a
+// completed scan phase from an unexpected reset.
+volatile uint32_t  scan_phase_done __attribute__((section(".dccm.persistent"))) = 0;
 
 #ifdef CPT_VERBOSITY
     enum printf_verbosity verbosity_g = CPT_VERBOSITY;
@@ -238,19 +241,45 @@ void main() {
             reg_ptr++;
             offset++;
         }
+        VPRINTF(LOW, "Readback checked %d words while busy\n", offset);
 
         if (inject_cmd != 0) {
-            wait_for_mask(CLP_ABR_REG_MLDSA_STATUS, ABR_REG_MLDSA_STATUS_READY_MASK,
+            // The scan scrub is still running when the readback starts, so at
+            // least one word must have been checked.
+            if (offset == 0) {
+                VPRINTF(ERROR, "[FAIL] no readback during scan zeroize\n");
+                SEND_STDOUT_CTRL(fail_cmd);
+                while (1);
+            }
+            wait_for_mask(CLP_ABR_REG_MLDSA_STATUS,
+                          ABR_REG_MLDSA_STATUS_READY_MASK | ABR_REG_MLDSA_STATUS_VALID_MASK |
+                          ABR_REG_MLDSA_STATUS_ERROR_MASK,
                           ABR_REG_MLDSA_STATUS_READY_MASK, "scan zeroize completion");
             SEND_STDOUT_CTRL(0xf0);
             wait_for_mask(CLP_SOC_IFC_REG_CPTRA_SECURITY_STATE,
                           SOC_IFC_REG_CPTRA_SECURITY_STATE_SCAN_MODE_MASK, 0, "scan exit");
+            scan_phase_done = 1;
             // Restart only after leaving scan, preserving the normal shadow reset delay.
             SEND_STDOUT_CTRL(0xf6);
             while (1);
         }
 
         cptra_intr_rcv.abr_notif = 0;
+    }
+    else if ((rst_count == 2) && (scan_phase_done == 1)) {
+        if ((lsu_read_32(CLP_SOC_IFC_REG_CPTRA_RESET_REASON) &
+             SOC_IFC_REG_CPTRA_RESET_REASON_WARM_RESET_MASK) == 0) {
+            VPRINTF(ERROR, "[FAIL] boot 2 is not a warm reset\n");
+            SEND_STDOUT_CTRL(fail_cmd);
+            while (1);
+        }
+        VPRINTF(LOW, "Warm reset after scan zeroize phase\n");
+    }
+    else {
+        VPRINTF(ERROR, "[FAIL] unexpected boot: rst_count=%d scan_phase_done=%d\n",
+                rst_count, scan_phase_done);
+        SEND_STDOUT_CTRL(fail_cmd);
+        while (1);
     }
 
     SEND_STDOUT_CTRL(0xff); //End the test
