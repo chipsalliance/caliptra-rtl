@@ -153,7 +153,7 @@ end
 
   //******************************************************************                         
  
-  task wait_for_num_clocks(input int unsigned count); // pragma tbx xtf 
+  task automatic wait_for_num_clocks(input int unsigned count); // pragma tbx xtf 
     @(posedge clk_i);  
                                                                    
     repeat (count-1) @(posedge clk_i);                                                    

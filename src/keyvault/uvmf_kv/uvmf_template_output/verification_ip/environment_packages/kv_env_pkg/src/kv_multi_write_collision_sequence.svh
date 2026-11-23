@@ -20,6 +20,8 @@
 // An untouched witness entry (pre_write_entry) is populated and checked
 // readable at the pins before each collision, then checked at the pins
 // afterwards for the cleared response (error, zero data, last_dword 0).
+// Because a denied read is masked to zero, a probe word is then written to
+// restore read permission and word 0 is re-read to prove the data was erased.
 // The three-writer phase also checks that all three write_en are high
 // on the same clock edge.
 // A subsequent single-client write must succeed (recovery).
@@ -52,30 +54,44 @@ class kv_multi_write_collision_sequence #(
     //client used to read back the recovery entry
     localparam reg [KV_NUM_READ-1:0] HMAC_KEY_READ_DEST_VALID = 'h1;
     localparam logic [KV_DATA_W-1:0] WITNESS_DATA = 32'h39c6_5a87;
+    localparam logic [KV_DATA_W-1:0] PROBE_DATA   = 32'hc639_a578;
+    localparam int PROBE_WORD = 1;
     // Clocks to wait after a collision before the pin-level witness read, so
     // the check does not depend on the scoreboard's collision tolerance window.
     localparam int COLLISION_SETTLE_CLKS = 20;
     localparam int THREE_WAY_WATCH_CLKS = 32;
 
-    // Write WITNESS_DATA to word 0 of an entry and confirm it at the pins.
-    task write_witness(int entry);
+    // Single HMAC-client write of one word, readable by the hmac_key_read client.
+    task write_word(int entry, int offset, logic [KV_DATA_W-1:0] data);
         kv_write_transaction tx;
         tx = kv_write_transaction#()::type_id::create("witness_write_tx");
         start_item(tx, -1, configuration.kv_hmac_write_agent_config.sequencer);
         tx.write_en = 1'b1;
         tx.write_entry = KV_ENTRY_ADDR_W'(entry);
-        tx.write_offset = '0;
-        tx.write_data = WITNESS_DATA;
+        tx.write_offset = KV_ENTRY_SIZE_W'(offset);
+        tx.write_data = data;
         tx.write_dest_valid = HMAC_KEY_READ_DEST_VALID;
         finish_item(tx);
         configuration.kv_hmac_write_agent_config.wait_for_num_clocks(5);
+    endtask
+
+    // Write WITNESS_DATA to word 0 of an entry and confirm it at the pins.
+    task write_witness(int entry);
+        write_word(entry, 0, WITNESS_DATA);
         checked_read(configuration.kv_hmac_key_read_agent_config, entry, 0, WITNESS_DATA, 0, 0);
     endtask
 
     // A collision clears dest_valid, last_dword and data of every entry.
+    // The denied read only proves dest_valid was cleared (read data is masked
+    // without permission), so restore permission through PROBE_WORD and
+    // check that word 0 itself was erased.
     task check_witness_cleared(int entry);
         configuration.kv_hmac_write_agent_config.wait_for_num_clocks(COLLISION_SETTLE_CLKS);
         checked_read(configuration.kv_hmac_key_read_agent_config, entry, 0, '0, 1, 0);
+        write_word(entry, PROBE_WORD, PROBE_DATA);
+        checked_read(configuration.kv_hmac_key_read_agent_config, entry, 0, '0, 0, PROBE_WORD);
+        checked_read(configuration.kv_hmac_key_read_agent_config, entry, PROBE_WORD,
+                     PROBE_DATA, 0, PROBE_WORD);
     endtask
 
     constraint c_entries {
