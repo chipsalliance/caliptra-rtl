@@ -154,6 +154,14 @@ class dma_transfer_randomizer #(parameter MAX_SIZE_TO_CHECK = 16384);
       solve block_size before dst_offset;
   };
 
+  // A data-checked SRAM-to-SRAM transfer reads its source while writing its
+  // destination, so overlapping ranges corrupt the source before it is copied
+  // and the read-back no longer matches the payload.
+  constraint axi2axi_no_overlap_c {
+      (dma_xfer_type == AXI2AXI) && !src_is_fifo && !dst_is_fifo && (xfer_size <= MAX_SIZE_TO_CHECK) ->
+          (((src_offset + xfer_size*4) <= dst_offset) || ((dst_offset + xfer_size*4) <= src_offset));
+  };
+
   // TB stimulus injection
   constraint inject_c {
       inject_rand_delays dist { 0 := 5, 1 := 1 };
