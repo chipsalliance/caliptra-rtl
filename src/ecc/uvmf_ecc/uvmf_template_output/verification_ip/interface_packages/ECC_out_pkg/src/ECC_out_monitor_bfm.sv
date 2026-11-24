@@ -231,9 +231,6 @@ end
       test = test_i;
     end
     else begin
-      op = op_i;
-      test = test_i;
-
       privkey   = 0;
       pubkey_x  = 0;
       pubkey_y  = 0;
@@ -249,6 +246,10 @@ end
       //$display("@ %0t ** ECC_out_monitor_bfm** : op = %2b", $time, op);
 
       while (transaction_flag_out_monitor_i ==0) @(posedge clk_i);
+      // Sample op/test with the flag (as the in monitor does). The driver may
+      // still be finishing the previous item when this task is re-entered.
+      op = op_i;
+      test = test_i;
       if (transaction_flag_out_monitor_i == 1 ) begin
         //$display("***DEBUG*** transaction_flag_out_monitor is 1");
         transaction_flag = 1;
