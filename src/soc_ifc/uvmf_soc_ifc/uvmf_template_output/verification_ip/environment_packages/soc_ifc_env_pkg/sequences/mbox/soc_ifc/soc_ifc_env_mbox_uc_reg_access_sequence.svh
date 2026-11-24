@@ -87,7 +87,9 @@ class soc_ifc_env_mbox_uc_reg_access_sequence extends soc_ifc_env_mbox_sequence_
                            (out_of_bounds == 0) && (slave_sel[i] == `CALIPTRA_SLAVE_SEL_AES) -> !(reg_addr[i] inside {[`CLP_AES_REG_CTRL_GCM_SHADOWED+4:`CLP_AES_CLP_REG_BASE_ADDR-1]}); // These throw AHB errors and cause NMI
                            (out_of_bounds == 0) && (slave_sel[i] == `CALIPTRA_SLAVE_SEL_SHA3) -> !(reg_addr[i] inside {[`CLP_KMAC_ERR_CODE+4         :`CLP_KMAC_STATE_BASE_ADDR   -1],
                                                                                                                        [`CLP_KMAC_STATE_END_ADDR+1   :`CLP_KMAC_MSG_FIFO_BASE_ADDR-1],
-                                                                                                                       [`CLP_KMAC_MSG_FIFO_END_ADDR+1:`CLP_SHA3_BASE_ADDR         -1]}); // These throw AHB errors and cause NMI
+                                                                                                                       [`CLP_KMAC_MSG_FIFO_BASE_ADDR :`CLP_KMAC_MSG_FIFO_END_ADDR   ],
+                                                                                                                       [`CLP_KMAC_MSG_FIFO_END_ADDR+1:`CLP_SHA3_BASE_ADDR         -1],
+                                                                                                                       [`CLP_SHA3_MSG_FIFO_BASE_ADDR :`CLP_SHA3_MSG_FIFO_END_ADDR   ]}); // These throw AHB errors and cause NMI (KMAC and SHA3 MSG_FIFO are write-only)
                             out_of_bounds == 1 -> (reg_addr[i] >= 32'h7000_0000) ||
                                                   (reg_addr[i] inside {[`CLP_AES_REG_CTRL_GCM_SHADOWED+4:`CLP_AES_CLP_REG_BASE_ADDR]}) ||
                                                   (reg_addr[i] inside {[`CLP_KMAC_ERR_CODE+4         :`CLP_KMAC_STATE_BASE_ADDR   -1],
