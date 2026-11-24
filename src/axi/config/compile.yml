@@ -17,6 +17,7 @@ provides: [axi_sub]
 schema_version: 2.4.0
 requires:
   - libs
+  - caliptra_prim_pkg
   - axi_pkg
 targets:
   rtl:

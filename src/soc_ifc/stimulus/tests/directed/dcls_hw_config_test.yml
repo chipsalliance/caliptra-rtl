@@ -1,0 +1,6 @@
+# SPDX-License-Identifier: Apache-2.0
+---
+plusargs:
+  - +SOC_IFC_TEST='dcls_hw_config_test'
+testname: dcls_hw_config_test
+seed: ${PLAYBOOK_RANDOM_SEED}

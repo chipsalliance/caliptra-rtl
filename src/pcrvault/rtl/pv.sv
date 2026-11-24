@@ -112,6 +112,8 @@ always_comb begin : keyvault_ctrl
         //During a fw update reset we'll be de-asserting locks - avoid RDC violation by synchronously de-asserting
         pv_reg_hwif_in.PCR_CTRL[entry].lock.swwel = pv_reg_hwif_out.PCR_CTRL[entry].lock.value & ~fw_update_rst_window;
         pv_reg_hwif_in.PCR_CTRL[entry].clear.swwel = pv_reg_hwif_out.PCR_CTRL[entry].lock.value & ~fw_update_rst_window;
+        //tie-off
+        pv_reg_hwif_in.PCR_CTRL[entry].rsvd0.hwclr = '0;
     end
 
     //per-client x per-entry write guard
@@ -180,13 +182,6 @@ always_comb begin : keyvault_write_resp
         for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
             pv_wr_resp[client].error |= '0; //currently no write errors for PCR
         end
-    end
-end
-
-//tie-offs
-always_comb begin
-    for (int entry = 0; entry < PV_NUM_PCR; entry++) begin
-        pv_reg_hwif_in.PCR_CTRL[entry].rsvd0.hwclr = '0;
     end
 end
 

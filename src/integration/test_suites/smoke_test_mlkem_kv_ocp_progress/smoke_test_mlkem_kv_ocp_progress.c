@@ -114,25 +114,16 @@ void main() {
         }
         VPRINTF(LOW, "Running mlkem with seed kv_id = 0x%x\n", seed.kv_id);
 
-        //pick a kv read slot for msg
-        kv_slot_type = (xorshift32() % 3);
-        msg.kv_intf = read_from_kv;
-        msg.exp_kv_err = FALSE;
-        for (int i = 0; i < MLKEM_MSG_SIZE; i++) {
-            msg.data[i] = msg_array[i];
+        //ENCAPS msg is API-only. With a KV seed, use the TB vector msg so the
+        //ENCAPS shared key matches the vector checked by TB command 0xb3.
+        if (read_from_kv) {
+            mlkem_get_tb_random_msg(&msg);
         }
-        switch (kv_slot_type) {
-            case 0:
-                msg.kv_id = xorshift32() % KV_OCP_LOCK_SLOT_LOW;
-                break;
-            case 1:
-                msg.kv_id = (xorshift32() % (KV_OCP_LOCK_SLOT_HI - KV_OCP_LOCK_SLOT_LOW)) + KV_OCP_LOCK_SLOT_LOW;
-                break;
-            case 2:
-                msg.kv_id = KV_OCP_LOCK_KEY_RELEASE_KV_SLOT;
-                break;
+        else {
+            for (int i = 0; i < MLKEM_MSG_SIZE; i++) {
+                msg.data[i] = msg_array[i];
+            }
         }
-        VPRINTF(LOW, "Running mlkem with msg kv_id = 0x%x\n", msg.kv_id);
 
         //Choose any kv write slot
         kv_slot_type = (xorshift32() % 4);
@@ -164,42 +155,19 @@ void main() {
             if (seed.kv_intf == TRUE && seed.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
                 seed.exp_kv_err = TRUE;
             }
-            if (msg.kv_intf == TRUE && msg.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT){ 
-                msg.exp_kv_err = TRUE;
-            }
-            if ((shared_key.kv_intf == TRUE && shared_key.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT) ||                   //can't write to 23
-                (msg.kv_intf == TRUE && msg.kv_id < KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id >= KV_OCP_LOCK_SLOT_LOW) || //can't write from lower to upper
-                (msg.kv_intf == TRUE && msg.kv_id >= KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id < KV_OCP_LOCK_SLOT_LOW)) { //can't write from upper to lower 
+            //ENCAPS has no KV inputs, so only the key release slot write rule applies
+            if (shared_key.kv_intf == TRUE && shared_key.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT) { //can't write to 23
                 shared_key.exp_kv_err = TRUE;
             }
         }
 
-        lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV
         //run encaps flow to get ciphertext
         mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey);
+        if (read_from_kv && shared_key.kv_intf == TRUE && shared_key.exp_kv_err == FALSE) {
+            lsu_write_32(STDOUT, (shared_key.kv_id << 8) | 0xb3); //Check ENCAPS shared key in KV
+        }
         mlkem_zeroize();
         cptra_intr_rcv.abr_notif = 0;
-
-        //If msg KV error was expected, run again without error to get the ciphertext for the next step
-        if (msg.kv_intf == TRUE && msg.exp_kv_err == TRUE) {
-            msg.kv_id = (xorshift32() % KV_OCP_LOCK_SLOT_HI);
-            while (msg.kv_id == seed.kv_id) {
-                msg.kv_id = (xorshift32() % KV_OCP_LOCK_SLOT_HI);
-            }
-            msg.exp_kv_err = FALSE;
-            shared_key.exp_kv_err = FALSE;
-            //determine again if shared key should fail
-            if (ocp_progress_bit && 
-                ((shared_key.kv_intf == TRUE && shared_key.kv_id == KV_OCP_LOCK_KEY_RELEASE_KV_SLOT) ||                   //can't write to 23
-                (msg.kv_intf == TRUE && msg.kv_id < KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id >= KV_OCP_LOCK_SLOT_LOW) ||  //can't write from lower to upper
-                (msg.kv_intf == TRUE && msg.kv_id >= KV_OCP_LOCK_SLOT_LOW && shared_key.kv_id < KV_OCP_LOCK_SLOT_LOW))) { //can't write from upper to lower 
-                shared_key.exp_kv_err = TRUE;
-            }
-            lsu_write_32(STDOUT, (msg.kv_id << 8) | 0xb2); //Inject MLKEM MSG vectors into KV
-            mlkem_encaps_flow(actual_ek, msg, abr_entropy, actual_ciphertext, shared_key, actual_sharedkey);
-            mlkem_zeroize();
-            cptra_intr_rcv.abr_notif = 0;
-        }
 
         shared_key.exp_kv_err = FALSE;
         if (ocp_progress_bit) {

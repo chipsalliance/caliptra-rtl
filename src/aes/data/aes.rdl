@@ -91,6 +91,10 @@ addrmap aes {
         } DATA_OUT[31:0];
     } DATA_OUT[4] @ 0x64;
     reg {
+        desc = "Main control register. A successful second shadowed write starts a new message.
+                If sideload was enabled for the previous message, this write automatically
+                triggers key, IV and input-data clearing. Software must wait for STATUS.IDLE
+                before providing new key, IV or input data.";
         field {
             sw = rw;
             desc = "2-bit one-hot field to select the operation of AES
@@ -175,27 +179,33 @@ addrmap aes {
         } CTRL_AUX_REGWEN[0:0];
     } CTRL_AUX_REGWEN @ 0x7c;
     reg {
+        desc = "Readable write-one-to-set triggers. Writing zero leaves a pending trigger
+                unchanged. Hardware clears serviced trigger bits.";
         field {
-            sw = w;
+            sw = rw;
+            onwrite = woset;
             desc = "Keep AES unit paused (0) or trigger the
             encryption/decryption of one data block (1).  This trigger
             is cleared to `0` if MANUAL_OPERATION=0 or if MODE=AES_NONE
             (see Control Register).";
         } START[0:0];
         field {
-            sw = w;
+            sw = rw;
+            onwrite = woset;
             desc = "Keep current values in Initial Key, internal Full
             Key and Decryption Key registers, IV registers and Input
             Data registers (0) or clear all those registers with
             pseudo-random data (1).";
         } KEY_IV_DATA_IN_CLEAR[1:1];
         field {
-            sw = w;
+            sw = rw;
+            onwrite = woset;
             desc = "Keep current values in Output Data registers (0) or
             clear those registers with pseudo-random data (1).";
         } DATA_OUT_CLEAR[2:2];
         field {
-            sw = w;
+            sw = rw;
+            onwrite = woset;
             desc = "Keep continuing with the current states of the
             internal pseudo-random number generators used for register
             clearing and masking (0) or perform a reseed of the internal

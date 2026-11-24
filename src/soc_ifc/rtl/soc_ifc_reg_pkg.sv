@@ -303,6 +303,130 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__in_t;
 
     typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0__low_threshold__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0__high_threshold__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0__low_threshold__in_t low_threshold;
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0__high_threshold__in_t high_threshold;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1__repetition_count__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1__alert_threshold__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1__repetition_count__in_t repetition_count;
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1__alert_threshold__in_t alert_threshold;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__fips_window_size__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__single_bit_mode__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__rng_bit_sel__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__RSVD__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__bypass_mode__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__fips_window_size__in_t fips_window_size;
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__single_bit_mode__in_t single_bit_mode;
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__rng_bit_sel__in_t rng_bit_sel;
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__RSVD__in_t RSVD;
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__bypass_mode__in_t bypass_mode;
+    } soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0__low_threshold__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0__high_threshold__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0__low_threshold__in_t low_threshold;
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0__high_threshold__in_t high_threshold;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1__repetition_count__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1__alert_threshold__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1__repetition_count__in_t repetition_count;
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1__alert_threshold__in_t alert_threshold;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__fips_window_size__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__single_bit_mode__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__rng_bit_sel__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__RSVD__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__bypass_mode__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__fips_window_size__in_t fips_window_size;
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__single_bit_mode__in_t single_bit_mode;
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__rng_bit_sel__in_t rng_bit_sel;
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__RSVD__in_t RSVD;
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__bypass_mode__in_t bypass_mode;
+    } soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__CPTRA_AUX_PK_HASH__hash__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_AUX_PK_HASH__hash__in_t hash;
+    } soc_ifc_reg__CPTRA_AUX_PK_HASH__in_t;
+
+    typedef struct packed{
+        logic swwe;
+    } soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK__lock__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK__lock__in_t lock;
+    } soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK__in_t;
+
+    typedef struct packed{
         logic [31:0] next;
         logic we;
         logic swwel;
@@ -501,6 +625,40 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__SS_OCP_LOCK_CTRL__LOCK_IN_PROGRESS__in_t LOCK_IN_PROGRESS;
     } soc_ifc_reg__SS_OCP_LOCK_CTRL__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__SS_OTP_FC_STATUS_CFG__STATUS_OFFSET__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__SS_OTP_FC_STATUS_CFG__DAI_IDLE_BIT_NUM__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_OTP_FC_STATUS_CFG__STATUS_OFFSET__in_t STATUS_OFFSET;
+        soc_ifc_reg__SS_OTP_FC_STATUS_CFG__DAI_IDLE_BIT_NUM__in_t DAI_IDLE_BIT_NUM;
+    } soc_ifc_reg__SS_OTP_FC_STATUS_CFG__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__SS_OTP_FC_CMD_CFG__DIRECT_ACCESS_CMD_OFFSET__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_OTP_FC_CMD_CFG__DIRECT_ACCESS_CMD_OFFSET__in_t DIRECT_ACCESS_CMD_OFFSET;
+    } soc_ifc_reg__SS_OTP_FC_CMD_CFG__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__SS_FW_FEATURE_CFG__STABLE_OWNER_KEY_EN__in_t;
+
+    typedef struct packed{
+        logic swwel;
+    } soc_ifc_reg__SS_FW_FEATURE_CFG__VENDOR_DEBUG_IMAGES_DIS__in_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_FW_FEATURE_CFG__STABLE_OWNER_KEY_EN__in_t STABLE_OWNER_KEY_EN;
+        soc_ifc_reg__SS_FW_FEATURE_CFG__VENDOR_DEBUG_IMAGES_DIS__in_t VENDOR_DEBUG_IMAGES_DIS;
+    } soc_ifc_reg__SS_FW_FEATURE_CFG__in_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__in_t data;
@@ -832,6 +990,14 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_CAP_LOCK__in_t CPTRA_CAP_LOCK;
         soc_ifc_reg__CPTRA_OWNER_PK_HASH__in_t [12-1:0]CPTRA_OWNER_PK_HASH;
         soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__in_t CPTRA_OWNER_PK_HASH_LOCK;
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_0__in_t CPTRA_iTRNG_ENTROPY_CONFIG_0;
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_1__in_t CPTRA_iTRNG_ENTROPY_CONFIG_1;
+        soc_ifc_reg__CPTRA_iTRNG_ENTROPY_CONFIG_2__in_t CPTRA_iTRNG_ENTROPY_CONFIG_2;
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_0__in_t CPTRA_iTRNG1_ENTROPY_CONFIG_0;
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_1__in_t CPTRA_iTRNG1_ENTROPY_CONFIG_1;
+        soc_ifc_reg__CPTRA_iTRNG1_ENTROPY_CONFIG_2__in_t CPTRA_iTRNG1_ENTROPY_CONFIG_2;
+        soc_ifc_reg__CPTRA_AUX_PK_HASH__in_t [12-1:0]CPTRA_AUX_PK_HASH;
+        soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK__in_t CPTRA_AUX_PK_HASH_LOCK;
         soc_ifc_reg__fuse_uds_seed__in_t [16-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__in_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_vendor_pk_hash__in_t [12-1:0]fuse_vendor_pk_hash;
@@ -869,6 +1035,9 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H__in_t SS_KEY_RELEASE_BASE_ADDR_H;
         soc_ifc_reg__SS_KEY_RELEASE_SIZE__in_t SS_KEY_RELEASE_SIZE;
         soc_ifc_reg__SS_OCP_LOCK_CTRL__in_t SS_OCP_LOCK_CTRL;
+        soc_ifc_reg__SS_OTP_FC_STATUS_CFG__in_t SS_OTP_FC_STATUS_CFG;
+        soc_ifc_reg__SS_OTP_FC_CMD_CFG__in_t SS_OTP_FC_CMD_CFG;
+        soc_ifc_reg__SS_FW_FEATURE_CFG__in_t SS_FW_FEATURE_CFG;
         soc_ifc_reg__SS_STRAP_GENERIC__in_t [4-1:0]SS_STRAP_GENERIC;
         soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__in_t SS_DBG_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_SERVICE_REG_RSP__in_t SS_DBG_SERVICE_REG_RSP;
@@ -1233,6 +1402,22 @@ package soc_ifc_reg_pkg;
 
     typedef struct packed{
         logic [31:0] value;
+    } soc_ifc_reg__CPTRA_AUX_PK_HASH__hash__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_AUX_PK_HASH__hash__out_t hash;
+    } soc_ifc_reg__CPTRA_AUX_PK_HASH__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK__lock__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK__lock__out_t lock;
+    } soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK__out_t;
+
+    typedef struct packed{
+        logic [31:0] value;
     } soc_ifc_reg__secret_w32__out_t;
 
     typedef struct packed{
@@ -1422,6 +1607,40 @@ package soc_ifc_reg_pkg;
     typedef struct packed{
         soc_ifc_reg__SS_OCP_LOCK_CTRL__LOCK_IN_PROGRESS__out_t LOCK_IN_PROGRESS;
     } soc_ifc_reg__SS_OCP_LOCK_CTRL__out_t;
+
+    typedef struct packed{
+        logic [15:0] value;
+    } soc_ifc_reg__SS_OTP_FC_STATUS_CFG__STATUS_OFFSET__out_t;
+
+    typedef struct packed{
+        logic [15:0] value;
+    } soc_ifc_reg__SS_OTP_FC_STATUS_CFG__DAI_IDLE_BIT_NUM__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_OTP_FC_STATUS_CFG__STATUS_OFFSET__out_t STATUS_OFFSET;
+        soc_ifc_reg__SS_OTP_FC_STATUS_CFG__DAI_IDLE_BIT_NUM__out_t DAI_IDLE_BIT_NUM;
+    } soc_ifc_reg__SS_OTP_FC_STATUS_CFG__out_t;
+
+    typedef struct packed{
+        logic [15:0] value;
+    } soc_ifc_reg__SS_OTP_FC_CMD_CFG__DIRECT_ACCESS_CMD_OFFSET__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_OTP_FC_CMD_CFG__DIRECT_ACCESS_CMD_OFFSET__out_t DIRECT_ACCESS_CMD_OFFSET;
+    } soc_ifc_reg__SS_OTP_FC_CMD_CFG__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_FW_FEATURE_CFG__STABLE_OWNER_KEY_EN__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__SS_FW_FEATURE_CFG__VENDOR_DEBUG_IMAGES_DIS__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__SS_FW_FEATURE_CFG__STABLE_OWNER_KEY_EN__out_t STABLE_OWNER_KEY_EN;
+        soc_ifc_reg__SS_FW_FEATURE_CFG__VENDOR_DEBUG_IMAGES_DIS__out_t VENDOR_DEBUG_IMAGES_DIS;
+    } soc_ifc_reg__SS_FW_FEATURE_CFG__out_t;
 
     typedef struct packed{
         soc_ifc_reg__strap_w32__out_t data;
@@ -1663,6 +1882,14 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__internal_trace_ctrl__out_t;
 
     typedef struct packed{
+        logic value;
+    } soc_ifc_reg__internal_csr_hmac_key_lock__lock__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__internal_csr_hmac_key_lock__lock__out_t lock;
+    } soc_ifc_reg__internal_csr_hmac_key_lock__out_t;
+
+    typedef struct packed{
         logic intr;
     } soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_dd3dcf0a__out_t;
 
@@ -1671,6 +1898,16 @@ package soc_ifc_reg_pkg;
     } soc_ifc_reg__intr_block_t__global_intr_t_agg_sts_e6399b4a__out_t;
 
     typedef struct packed{
+        logic value;
+    } soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f__error_wdt_timer1_timeout_sts_enable_fa7e6d0f_next_293a6067_resetsignal_f7aac87a__out_t;
+
+    typedef struct packed{
+        logic value;
+    } soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f__error_wdt_timer2_timeout_sts_enable_38137b0c_next_1084f7bd_resetsignal_f7aac87a__out_t;
+
+    typedef struct packed{
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f__error_wdt_timer1_timeout_sts_enable_fa7e6d0f_next_293a6067_resetsignal_f7aac87a__out_t error_wdt_timer1_timeout_sts;
+        soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f__error_wdt_timer2_timeout_sts_enable_38137b0c_next_1084f7bd_resetsignal_f7aac87a__out_t error_wdt_timer2_timeout_sts;
         logic intr;
     } soc_ifc_reg__intr_block_t__error_intr_t_error_bad_fuse_sts_23f67582_error_cmd_fail_sts_b85845f8_error_iccm_blocked_sts_e81e6ad2_error_internal_sts_caad62e2_error_inv_dev_sts_6693e7db_error_mbox_ecc_unc_sts_30bff330_error_wdt_timer1_timeout_sts_6aaa9655_error_wdt_timer2_timeout_sts_cda8789f__out_t;
 
@@ -1755,6 +1992,8 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__CPTRA_CAP_LOCK__out_t CPTRA_CAP_LOCK;
         soc_ifc_reg__CPTRA_OWNER_PK_HASH__out_t [12-1:0]CPTRA_OWNER_PK_HASH;
         soc_ifc_reg__CPTRA_OWNER_PK_HASH_LOCK__out_t CPTRA_OWNER_PK_HASH_LOCK;
+        soc_ifc_reg__CPTRA_AUX_PK_HASH__out_t [12-1:0]CPTRA_AUX_PK_HASH;
+        soc_ifc_reg__CPTRA_AUX_PK_HASH_LOCK__out_t CPTRA_AUX_PK_HASH_LOCK;
         soc_ifc_reg__fuse_uds_seed__out_t [16-1:0]fuse_uds_seed;
         soc_ifc_reg__fuse_field_entropy__out_t [8-1:0]fuse_field_entropy;
         soc_ifc_reg__fuse_vendor_pk_hash__out_t [12-1:0]fuse_vendor_pk_hash;
@@ -1792,6 +2031,9 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__SS_KEY_RELEASE_BASE_ADDR_H__out_t SS_KEY_RELEASE_BASE_ADDR_H;
         soc_ifc_reg__SS_KEY_RELEASE_SIZE__out_t SS_KEY_RELEASE_SIZE;
         soc_ifc_reg__SS_OCP_LOCK_CTRL__out_t SS_OCP_LOCK_CTRL;
+        soc_ifc_reg__SS_OTP_FC_STATUS_CFG__out_t SS_OTP_FC_STATUS_CFG;
+        soc_ifc_reg__SS_OTP_FC_CMD_CFG__out_t SS_OTP_FC_CMD_CFG;
+        soc_ifc_reg__SS_FW_FEATURE_CFG__out_t SS_FW_FEATURE_CFG;
         soc_ifc_reg__SS_STRAP_GENERIC__out_t [4-1:0]SS_STRAP_GENERIC;
         soc_ifc_reg__SS_DBG_SERVICE_REG_REQ__out_t SS_DBG_SERVICE_REG_REQ;
         soc_ifc_reg__SS_DBG_SERVICE_REG_RSP__out_t SS_DBG_SERVICE_REG_RSP;
@@ -1816,6 +2058,7 @@ package soc_ifc_reg_pkg;
         soc_ifc_reg__internal_iccm_rt_end_addr__external__out_t internal_iccm_rt_end_addr;
         soc_ifc_reg__internal_iccm_region_lock__out_t internal_iccm_region_lock;
         soc_ifc_reg__internal_trace_ctrl__out_t internal_trace_ctrl;
+        soc_ifc_reg__internal_csr_hmac_key_lock__out_t internal_csr_hmac_key_lock;
         soc_ifc_reg__intr_block_t__out_t intr_block_rf;
         soc_ifc_reg__STASH_BANK_SLOT_DATA__out_t [208-1:0]STASH_BANK_SLOT_DATA;
         soc_ifc_reg__STASH_BANK_SOC_LOCK__out_t STASH_BANK_SOC_LOCK;

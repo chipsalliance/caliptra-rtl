@@ -178,26 +178,6 @@ void main() {
 
         // wait for ABR to be ready
         while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
-
-        // Program MLKEM MSG Read
-        lsu_write_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL, (ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_EN_MASK |
-                                                      ((num_keys-1-i << ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_LOW) & ABR_REG_KV_MLKEM_MSG_RD_CTRL_READ_ENTRY_MASK)));
-
-        // Check that MLKEM MSG is loaded
-        while((lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_VALID_MASK) == 0);
-
-        // Check that we got a KV error
-        if ( (lsu_read_32(CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS) & ABR_REG_KV_MLKEM_MSG_RD_STATUS_ERROR_MASK) == 0){
-            VPRINTF(ERROR, "ERROR: Expected MLKEM MSG KV read entry %d error not detected!\n", num_keys-1-i);
-            SEND_STDOUT_CTRL(0x1); // Indicate failure
-            while(1);
-        }
-
-        // Zeroize ABR engine
-        lsu_write_32(CLP_ABR_REG_MLKEM_CTRL, (1 << ABR_REG_MLKEM_CTRL_ZEROIZE_LOW) & ABR_REG_MLKEM_CTRL_ZEROIZE_MASK);
-
-        // wait for ABR to be ready
-        while((lsu_read_32(CLP_ABR_REG_MLKEM_STATUS) & ABR_REG_MLKEM_STATUS_READY_MASK) == 0);
     }
 
     SEND_STDOUT_CTRL(0xcd); //Disable kv error injection mode

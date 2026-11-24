@@ -37,6 +37,7 @@ provides: [pcrvault]
 schema_version: 2.4.0
 requires: 
   - libs
+  - caliptra_prim_pkg
   - pv_defines_pkg
 targets:
   rtl:
@@ -47,6 +48,10 @@ targets:
       - $COMPILE_ROOT/rtl/pv_defines_pkg.sv
       - $COMPILE_ROOT/rtl/pv.sv
     tops: [pv]
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/pv_reg_pkg.sv
   rtl_lint:
     directories: []
     waiver_files:

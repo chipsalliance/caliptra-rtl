@@ -66,6 +66,9 @@ package soc_ifc_pkg;
     parameter SOC_IFC_REG_END_ADDR    = SOC_IFC_REG_START_ADDR + 32'h0000_FFFF;
     parameter SOC_IFC_FUSE_START_ADDR = SOC_IFC_REG_START_ADDR + 32'h0000_0200;
     parameter SOC_IFC_FUSE_END_ADDR   = SOC_IFC_REG_START_ADDR + 32'h0000_05FF;
+    // iTRNG entropy configuration registers are fuse-like: SoC access restricted to the fuse AXI user
+    parameter SOC_IFC_ITRNG_CFG_START_ADDR = `CLP_SOC_IFC_REG_CPTRA_ITRNG_ENTROPY_CONFIG_0  - SOC_IFC_REG_OFFSET;
+    parameter SOC_IFC_ITRNG_CFG_END_ADDR   = `CLP_SOC_IFC_REG_CPTRA_ITRNG1_ENTROPY_CONFIG_2 - SOC_IFC_REG_OFFSET + 32'h3;
     parameter MBOX_DIR_START_ADDR     = `CLP_MBOX_SRAM_BASE_ADDR - SOC_IFC_REG_OFFSET;
     parameter MBOX_DIR_END_ADDR       = `CLP_MBOX_SRAM_END_ADDR  - SOC_IFC_REG_OFFSET;
     parameter MBOX_DIR_MEM_SIZE       = MBOX_DIR_END_ADDR + 1 - MBOX_DIR_START_ADDR;

@@ -107,6 +107,9 @@ module caliptra_top
     input  logic             itrng1_valid,
     input  logic             itrng1_en,
 
+    // DCLS enable in both profiles; synchronous to clk.
+    input logic        dcls_en,
+
     // Subsystem mode straps
     input logic [63:0] strap_ss_caliptra_base_addr,
     input logic [63:0] strap_ss_mci_base_addr,
@@ -127,8 +130,6 @@ module caliptra_top
 
     // Subsystem mode constant strap input indicating OCP LOCK configuration is enabled
     input logic        ss_ocp_lock_en,
-    // Subsystem mode strap input indicating DCLS is enabled
-    input logic        ss_dcls_en,
 
     // Subsystem mode debug outputs
     output logic        ss_dbg_manuf_enable,
@@ -191,28 +192,9 @@ module caliptra_top
     logic                       o_cpu_halt_status;
     logic                       o_cpu_run_ack;
 
-    logic                       mailbox_write;
-    logic        [63:0]         dma_hrdata       ;
-    logic        [63:0]         dma_hwdata       ;
-    logic                       dma_hready       ;
-    logic                       dma_hresp        ;
-
-    logic                       mpc_debug_halt_req;
-    logic                       mpc_debug_run_req;
-    logic                       mpc_reset_run_req;
     logic                       mpc_debug_halt_ack;
     logic                       mpc_debug_run_ack;
     logic                       debug_brkpt_status;
-
-    integer                     cycleCnt;
-    logic                       mailbox_data_val;
-
-    wire                        dma_hready_out;
-    integer                     commit_count;
-
-    logic                       wb_valid;
-    logic [4:0]                 wb_dest;
-    logic [31:0]                wb_data;
 
     logic [`CLP_OBF_KEY_DWORDS-1:0][31:0] cptra_obf_key_reg;
     logic [`CLP_OBF_FE_DWORDS-1 :0][31:0] obf_field_entropy;
@@ -230,10 +212,11 @@ module caliptra_top
     logic [31:0]                cptra_uncore_dmi_reg_wdata;
     logic                       unlock_caliptra_security_state;
     security_state_t            cptra_security_state_Latched;
-    security_state_t            cptra_security_state_Latched_d;
-    security_state_t            cptra_security_state_Latched_f;
+    device_lifecycle_e          device_lifecycle_d;
+    device_lifecycle_e          device_lifecycle_f;
     caliptra_prim_mubi_pkg::mubi4_t debug_locked_d;
     caliptra_prim_mubi_pkg::mubi4_t debug_locked_f;
+    caliptra_prim_mubi_pkg::mubi4_t debug_locked_d_next;
 
     logic                       cptra_dmi_reg_en_preQ;
     
@@ -247,7 +230,7 @@ module caliptra_top
     logic dccm_write_readback_error;
     // RISC-V dual-core lockstep error (MuBi encoded)
     el2_mubi_pkg::el2_mubi_t rv_dcls_error;
-    // DCLS corruption detection disable control (MuBi4, from SW register)
+    // DCLS disable control (MuBi4), from read-only CPTRA_HW_CONFIG.DCLS_en
     el2_mubi_pkg::el2_mubi_t dcls_disable_corruption_detection;
 
     // RISC-V trace-port core select (from SW register): 0 = main core (default), 1 = shadow core
@@ -277,12 +260,7 @@ module caliptra_top
     logic [31:0] iccm_hash_data;
     logic        iccm_unlock;
 
-    // ICCM region registers for boot flow monitor
-    logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr;
-    logic [pt.ICCM_BITS-1:0] iccm_fmc_end_addr;
-    logic [pt.ICCM_BITS-1:0] iccm_rt_start_addr;
-    logic [pt.ICCM_BITS-1:0] iccm_rt_end_addr;
-    logic        iccm_region_lock;
+    logic        csr_hmac_key_lock;
     // AES status signals
     logic aes_input_ready;
     logic aes_output_valid;
@@ -351,7 +329,8 @@ module caliptra_top
     logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0] cptra_csr_hmac_key_dbg;
     logic                                      cptra_in_debug_scan_mode;
 
-    // Subsystem mode OCP LOCK status
+    // Subsystem mode OCP LOCK configuration and status
+    logic ocp_lock_en;
     logic ss_ocp_lock_in_progress;
     // Key release size (used as input to AES operation)
     logic [15:0] ss_key_release_key_size;
@@ -359,6 +338,7 @@ module caliptra_top
     logic dual_itrng_en_reg;
     // Stable owner key enable (from soc_ifc, used by KV enforcement)
     logic stable_owner_key_en;
+    logic cold_boot;
 
     logic [31:0] imem_haddr;
     logic imem_hsel;
@@ -369,20 +349,12 @@ module caliptra_top
     logic [2:0] imem_hsize;
     logic [63:0] imem_hrdata;
     logic imem_hresp;
-    
-    logic lsu_addr_ph, lsu_data_ph, lsu_sel;
-    logic ic_addr_ph, ic_data_ph, ic_sel;
 
     logic hmac_busy, ecc_busy, doe_busy, aes_busy, abr_busy;
     logic aes_busy_filtered, ecc_busy_filtered;
     logic crypto_error;
     logic doe_fsm_error;
     cptra_hw_fatal_error_t cptra_hw_fatal_errors;
-    logic kv_monitor_alert;
-
-    caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc;
-    caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt;
-    caliptra_prim_mubi_pkg::mubi4_t boot_flow_error;
 
     typedef enum logic [1:0] {
         CRYPTO_IDLE,
@@ -442,7 +414,7 @@ module caliptra_top
     // Build fatal error struct for soc_ifc_top
     always_comb cptra_hw_fatal_errors = '{
         crypto_err:    crypto_error,
-        kv_error:      kv_monitor_alert | mubi4_test_true_loose(boot_flow_error),
+        kv_error:      1'b0, // Boot-flow monitoring is hard-disabled.
         fsm_error:     doe_fsm_error,
         rv_dcls_error: ~el2_mubi_pkg::mubi_check_false(rv_dcls_error),
         dccm_wr_readback_error: dccm_write_readback_error
@@ -648,10 +620,14 @@ always_comb begin
   el2_icache_stub.ic_tag_data_raw_pre = '0;
 end
 
-//Boot flow monitor
-//Track the boot flow from ROM to FMC and then to RT
-//Trigger keyvault monitoring and enforcement blocks on transitions
-//Errors will be flagged as fatal and flush the keyvault
+// Disabled until the boot-flow monitor is reworked and validated.
+// Keep the instance for future rework; KV inputs and fault paths remain tied off.
+/*
+logic [pt.ICCM_BITS-1:0] iccm_fmc_start_addr, iccm_fmc_end_addr;
+logic [pt.ICCM_BITS-1:0] iccm_rt_start_addr, iccm_rt_end_addr;
+logic iccm_region_lock;
+logic kv_monitor_alert;
+caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc, boot_flow_rt, boot_flow_error;
 logic sim_boot_flow_monitor_dis;
 logic boot_flow_monitor_en;
 `ifdef SIMULATION
@@ -659,11 +635,8 @@ logic boot_flow_monitor_en;
 `else
     assign sim_boot_flow_monitor_dis = 1'b0;
 `endif
-
-// Disable boot flow monitoring when debug is unlocked or scan mode is active (clk_override can cause false ICCM read detection)
-// Default during simulation is to disable boot flow monitor as most tests don't go through the boot flow
 always_comb boot_flow_monitor_en = sim_boot_flow_monitor_dis ? '0 :
-                                   mubi4_test_true_loose(cptra_security_state_Latched.debug_locked) & ~cptra_scan_mode_Latched; 
+    mubi4_test_true_loose(cptra_security_state_Latched.debug_locked) & ~cptra_scan_mode_Latched;
 
 boot_flow_monitor i_boot_flow_monitor (
     .clk                (clk),
@@ -682,6 +655,7 @@ boot_flow_monitor i_boot_flow_monitor (
     .boot_flow_rt_o     (boot_flow_rt),
     .boot_flow_error_o  (boot_flow_error)
 );
+*/
 
 el2_veer_wrapper rvtop (
 `ifdef CALIPTRA_FORCE_CPU_RESET
@@ -929,34 +903,37 @@ el2_veer_wrapper rvtop (
     end
 
     always_ff @(posedge clk or negedge cptra_noncore_rst_b) begin
-        if (~cptra_noncore_rst_b) begin //Setting the default value to be debug locked and in production mode
-            cptra_security_state_Latched_d <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4True}; 
-            cptra_security_state_Latched_f <= '{device_lifecycle: DEVICE_PRODUCTION, debug_locked: MuBi4True};
+        if (~cptra_noncore_rst_b) begin
+            device_lifecycle_d <= DEVICE_PRODUCTION;
+            device_lifecycle_f <= DEVICE_PRODUCTION;
         end
-        else if (unlock_caliptra_security_state) begin //capture the new value at reset or when unlocked
-            cptra_security_state_Latched_d <= security_state;
-            cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
-        end else begin //hold the previous value when locked
-            cptra_security_state_Latched_d <= cptra_security_state_Latched_d;
-            cptra_security_state_Latched_f <= cptra_security_state_Latched_d;
+        else begin
+            if (unlock_caliptra_security_state) begin
+                device_lifecycle_d <= security_state.device_lifecycle;
+            end
+            device_lifecycle_f <= device_lifecycle_d;
         end
     end
 
-    //MUBI4 buffer
+    always_comb debug_locked_d_next = unlock_caliptra_security_state ? security_state.debug_locked : debug_locked_d;
+
+    // Keep both existing stages in MuBi senders backed by technology-swappable flops.
     caliptra_prim_mubi4_sender #(
-        .AsyncOn (0)
+        .AsyncOn (1),
+        .ResetValue (MuBi4True)
     ) u_debug_locked_d_sender (
         .clk_i   (clk),
         .rst_ni  (cptra_noncore_rst_b),
-        .mubi_i  (cptra_security_state_Latched_d.debug_locked),
+        .mubi_i  (debug_locked_d_next),
         .mubi_o  (debug_locked_d)
     );
     caliptra_prim_mubi4_sender #(
-        .AsyncOn (0)
+        .AsyncOn (1),
+        .ResetValue (MuBi4True)
     ) u_debug_locked_f_sender (
         .clk_i   (clk),
         .rst_ni  (cptra_noncore_rst_b),
-        .mubi_i  (cptra_security_state_Latched_f.debug_locked),
+        .mubi_i  (debug_locked_d),
         .mubi_o  (debug_locked_f)
     );
 
@@ -974,7 +951,7 @@ el2_veer_wrapper rvtop (
     //Lock debug unless both flops are unlocked (MuBi4 OR: result is True/locked if either input is True/locked)
     always_comb cptra_security_state_Latched.debug_locked = mubi4_or_hi(debug_locked_d, debug_locked_f);
     //Pass on the latched value of device lifecycle
-    always_comb cptra_security_state_Latched.device_lifecycle = cptra_security_state_Latched_f.device_lifecycle;
+    always_comb cptra_security_state_Latched.device_lifecycle = device_lifecycle_f;
     //Only assert scan mode once both flops have set
     always_comb cptra_scan_mode_Latched = cptra_scan_mode_Latched_d & cptra_scan_mode_Latched_f;
     
@@ -985,8 +962,8 @@ el2_veer_wrapper rvtop (
     // Detect transition of debug mode
     always_comb debug_lock_switch = mubi4_test_true_loose(debug_locked_d) ^ mubi4_test_true_loose(debug_locked_f);
     // Detect transition from valid lifecycle state to invalid
-    always_comb device_lifecycle_switch = (cptra_security_state_Latched_f.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION}) &
-                                         ~(cptra_security_state_Latched_d.device_lifecycle inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION});
+    always_comb device_lifecycle_switch = (device_lifecycle_f inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION}) &
+                                         ~(device_lifecycle_d inside {DEVICE_MANUFACTURING, DEVICE_PRODUCTION});
 
     assign debug_lock_or_scan_mode_switch = debug_lock_switch | scan_mode_switch | device_lifecycle_switch | cptra_error_fatal;
 
@@ -998,8 +975,10 @@ el2_veer_wrapper rvtop (
         if (~cptra_noncore_rst_b) begin
             cptra_csr_hmac_key_reg <= '0;
         end
-        //Only latch the value during device manufacturing
-        else if (cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) begin
+        //Only latch the value during device manufacturing, and only until ROM sets the
+        //CSR HMAC key lock (before handoff to FMC). The lock is not cleared by a
+        //firmware-update reset, so the key is never available to FMC or Runtime FW.
+        else if ((cptra_security_state_Latched.device_lifecycle == DEVICE_MANUFACTURING) && !csr_hmac_key_lock) begin
             cptra_csr_hmac_key_reg <= cptra_csr_hmac_key;
         end
         else begin
@@ -1215,6 +1194,12 @@ sha3_ctrl #(
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
 );
 
+`ifdef CALIPTRA_MODE_SUBSYSTEM
+assign ocp_lock_en = ss_ocp_lock_en;
+`else
+assign ocp_lock_en = 1'b0;
+`endif
+
 //override device secrets with debug values in Debug, Debug Intent, or Scan Mode or any device lifecycle other than PROD and MANUF
 always_comb cptra_in_debug_scan_mode = mubi4_test_false_strict(cptra_security_state_Latched.debug_locked) | cptra_scan_mode_Latched | cptra_ss_debug_intent |
                                        ~(cptra_security_state_Latched.device_lifecycle inside {DEVICE_PRODUCTION, DEVICE_MANUFACTURING});
@@ -1252,8 +1237,8 @@ doe_ctrl #(
     .busy_o(doe_busy),
     .kv_write (kv_write[KV_WRITE_IDX_DOE]),
     .kv_wr_resp (kv_wr_resp[KV_WRITE_IDX_DOE]),
-    .ocp_lock_en(ss_ocp_lock_en),
-    .doe_cmd_lock(mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
+    .ocp_lock_en(ocp_lock_en),
+    .doe_cmd_lock(1'b0),
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch)
     
 );
@@ -1337,8 +1322,8 @@ abr_top #(
      .hresp_o           (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hresp),
      .hreadyout_o       (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hreadyout),
      .hrdata_o          (responder_inst[`CALIPTRA_SLAVE_SEL_MLDSA].hrdata),
-     .kv_read           ({kv_read[7:6],kv_read[2]}),
-     .kv_rd_resp        ({kv_rd_resp[7:6],kv_rd_resp[2]}),
+     .kv_read           ({kv_read[KV_DEST_IDX_MLKEM_SEED],kv_read[KV_DEST_IDX_MLDSA_SEED]}),
+     .kv_rd_resp        ({kv_rd_resp[KV_DEST_IDX_MLKEM_SEED],kv_rd_resp[KV_DEST_IDX_MLDSA_SEED]}),
      .kv_write          (kv_write[1]),
      .kv_wr_resp        (kv_wr_resp[1]),
      .pcr_signing_data  (pcr_signing_data),
@@ -1349,6 +1334,9 @@ abr_top #(
      .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
      .abr_memory_export (abr_memory_export)
 );
+
+// Dest_valid[7] is reserved; its KV read client is unused
+assign kv_read[KV_DEST_IDX_RSVD0] = '0;
 
 
 
@@ -1430,17 +1418,19 @@ key_vault1
 
     .cptra_in_debug_scan_mode(cptra_in_debug_scan_mode),
     .debugUnlock_or_scan_mode_switch (debug_lock_or_scan_mode_switch),
-    .boot_flow_fmc (boot_flow_fmc),
-    .boot_flow_rt (boot_flow_rt),
-    .boot_flow_error (boot_flow_error),
+    .cold_boot (cold_boot),
+    // Disabled boot-flow policy: do not reconnect before feature rework.
+    .boot_flow_fmc (caliptra_prim_mubi_pkg::MuBi4False),
+    .boot_flow_rt (caliptra_prim_mubi_pkg::MuBi4False),
+    .boot_flow_error (caliptra_prim_mubi_pkg::MuBi4False),
     .stable_owner_key_en (stable_owner_key_en),
-    .ocp_lock_mode_en (ss_ocp_lock_en),
+    .ocp_lock_mode_en (ocp_lock_en),
 
     .kv_read              (kv_read),
     .kv_write             (kv_write),
     .kv_rd_resp           (kv_rd_resp),
     .kv_wr_resp           (kv_wr_resp),
-    .kv_monitor_alert     (kv_monitor_alert),
+    .kv_monitor_alert     (),
     .pcr_ecc_signing_key  (pcr_signing_data.pcr_ecc_signing_privkey),
     .pcr_mldsa_signing_key  (pcr_signing_data.pcr_mldsa_signing_seed)
 );
@@ -1507,25 +1497,19 @@ entropy_src_hw_if_rsp_t entropy_src_hw_if_rsp1;
 // either ES0 (bypass) or SHA3-384(ES0||ES1) (combine) to CSRNG.
 entropy_src_hw_if_req_t csrng_hw_if_req;
 entropy_src_hw_if_rsp_t csrng_hw_if_rsp;
-cs_aes_halt_req_t       entropy_src_cs_aes_halt_req;
-cs_aes_halt_req_t       entropy_src_cs_aes_halt_req1;
-cs_aes_halt_rsp_t       combiner_es0_cs_aes_halt_rsp;
-cs_aes_halt_rsp_t       combiner_es1_cs_aes_halt_rsp;
-entropy_src_rng_req_t   entropy_src_rng_req;
-entropy_src_rng_rsp_t   entropy_src_rng_rsp;
-entropy_src_rng_req_t   entropy_src_rng_req1;
-entropy_src_rng_rsp_t   entropy_src_rng_rsp1;
+logic                   entropy_src_rng_enable;
+logic                   entropy_src_rng_valid;
+logic [3:0]             entropy_src_rng_bits;
+logic                   entropy_src_rng_enable1;
+logic                   entropy_src_rng_valid1;
+logic [3:0]             entropy_src_rng_bits1;
 
-assign etrng0_req = entropy_src_rng_req.rng_enable;
-assign etrng1_req = itrng1_en & entropy_src_rng_req1.rng_enable;
-assign entropy_src_rng_rsp.rng_valid = itrng0_valid;
-assign entropy_src_rng_rsp.rng_b = itrng0_data;
-assign entropy_src_rng_rsp1.rng_valid = itrng1_en & itrng1_valid;
-assign entropy_src_rng_rsp1.rng_b = itrng1_en ? itrng1_data : '0;
-// cs_aes_halt is functionally inert (only a CSRNG-AES/ES-SHA3 current-overlap
-// mitigation). The entropy_combiner grants each ES conditioner's halt request
-// locally (see combiner) so the conditioners never stall; CSRNG's cs_aes_halt
-// input is tied off below and its AES is left free-running.
+assign etrng0_req = entropy_src_rng_enable;
+assign etrng1_req = itrng1_en & entropy_src_rng_enable1;
+assign entropy_src_rng_valid = itrng0_valid;
+assign entropy_src_rng_bits = itrng0_data;
+assign entropy_src_rng_valid1 = itrng1_en & itrng1_valid;
+assign entropy_src_rng_bits1 = itrng1_en ? itrng1_data : '0;
 
 // TODO: Revisit ports and verify connectivity
 
@@ -1554,8 +1538,6 @@ csrng #(
     // Entropy Interface
     .entropy_src_hw_if_o    (csrng_hw_if_req),
     .entropy_src_hw_if_i    (csrng_hw_if_rsp),
-    .cs_aes_halt_i          (cs_aes_halt_req_t'('0)),
-    .cs_aes_halt_o          (),
     // Application Interfaces
     .csrng_cmd_i            ('0),
     .csrng_cmd_o            (),
@@ -1575,6 +1557,7 @@ entropy_src #(
 ) entropy_src (
     .clk_i                  (clk_cg),
     .rst_ni                 (cptra_noncore_rst_b),
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
     // AMBA AHB Lite Interface
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hwdata),
@@ -1586,31 +1569,30 @@ entropy_src #(
     .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hresp),
     .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hreadyout),
     .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC].hrdata),
-    // OTP Interface
-    .otp_en_entropy_src_fw_read_i(caliptra_prim_mubi_pkg::MuBi8True),
-    .otp_en_entropy_src_fw_over_i(caliptra_prim_mubi_pkg::MuBi8True),
     // RNG Interface
-    .rng_fips_o                       (),
+    .rng_fips_o                           (),
     // Entropy Interface
-    .entropy_src_hw_if_i              (entropy_src_hw_if_req),
-    .entropy_src_hw_if_o              (entropy_src_hw_if_rsp),
+    .entropy_src_hw_if_i                  (entropy_src_hw_if_req),
+    .entropy_src_hw_if_o                  (entropy_src_hw_if_rsp),
     // RNG Interface
-    .entropy_src_rng_o                (entropy_src_rng_req),
-    .entropy_src_rng_i                (entropy_src_rng_rsp),
-    // CSRNG Interface
-    .cs_aes_halt_o                    (entropy_src_cs_aes_halt_req),
-    .cs_aes_halt_i                    (combiner_es0_cs_aes_halt_rsp),
+    .entropy_src_rng_enable_o             (entropy_src_rng_enable),
+    .entropy_src_rng_valid_i              (entropy_src_rng_valid),
+    .entropy_src_rng_bits_i               (entropy_src_rng_bits),
     // External Health Test Interface
-    .entropy_src_xht_o                (),
-    .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
+    .entropy_src_xht_valid_o              (),
+    .entropy_src_xht_bits_o               (),
+    .entropy_src_xht_bit_sel_o            (),
+    .entropy_src_xht_health_test_window_o (),
+    .entropy_src_xht_meta_o               (),
+    .entropy_src_xht_meta_i               (entropy_src_xht_meta_rsp_t'('0)),
     // Alerts
-    .alert_rx_i                       ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
-    .alert_tx_o                       (),
+    .alert_rx_i                           ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
+    .alert_tx_o                           (),
     // Interrupts
-    .intr_es_entropy_valid_o          (),
-    .intr_es_health_test_failed_o     (),
-    .intr_es_observe_fifo_ready_o     (),
-    .intr_es_fatal_err_o              ()
+    .intr_es_entropy_valid_o              (),
+    .intr_es_health_test_failed_o         (),
+    .intr_es_observe_fifo_ready_o         (),
+    .intr_es_fatal_err_o                  ()
     );
 
 entropy_src #(
@@ -1619,6 +1601,7 @@ entropy_src #(
 ) entropy_src1 (
     .clk_i                  (clk_cg),
     .rst_ni                 (cptra_noncore_rst_b),
+    .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
     // AMBA AHB Lite Interface
     .haddr_i                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].haddr[`CALIPTRA_SLAVE_ADDR_WIDTH(`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1)-1:0]),
     .hwdata_i               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hwdata),
@@ -1630,31 +1613,30 @@ entropy_src #(
     .hresp_o                (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hresp),
     .hreadyout_o            (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hreadyout),
     .hrdata_o               (responder_inst[`CALIPTRA_SLAVE_SEL_ENTROPY_SRC1].hrdata),
-    // OTP Interface
-    .otp_en_entropy_src_fw_read_i(caliptra_prim_mubi_pkg::MuBi8True),
-    .otp_en_entropy_src_fw_over_i(caliptra_prim_mubi_pkg::MuBi8True),
     // RNG Interface
-    .rng_fips_o                       (),
+    .rng_fips_o                           (),
     // Entropy Interface
-    .entropy_src_hw_if_i              (entropy_src_hw_if_req1),
-    .entropy_src_hw_if_o              (entropy_src_hw_if_rsp1),
+    .entropy_src_hw_if_i                  (entropy_src_hw_if_req1),
+    .entropy_src_hw_if_o                  (entropy_src_hw_if_rsp1),
     // RNG Interface
-    .entropy_src_rng_o                (entropy_src_rng_req1),
-    .entropy_src_rng_i                (entropy_src_rng_rsp1),
-    // CSRNG Interface
-    .cs_aes_halt_o                    (entropy_src_cs_aes_halt_req1),
-    .cs_aes_halt_i                    (combiner_es1_cs_aes_halt_rsp),
+    .entropy_src_rng_enable_o             (entropy_src_rng_enable1),
+    .entropy_src_rng_valid_i              (entropy_src_rng_valid1),
+    .entropy_src_rng_bits_i               (entropy_src_rng_bits1),
     // External Health Test Interface
-    .entropy_src_xht_o                (),
-    .entropy_src_xht_i                (entropy_src_xht_rsp_t'('0)),
+    .entropy_src_xht_valid_o              (),
+    .entropy_src_xht_bits_o               (),
+    .entropy_src_xht_bit_sel_o            (),
+    .entropy_src_xht_health_test_window_o (),
+    .entropy_src_xht_meta_o               (),
+    .entropy_src_xht_meta_i               (entropy_src_xht_meta_rsp_t'('0)),
     // Alerts
-    .alert_rx_i                       ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
-    .alert_tx_o                       (),
+    .alert_rx_i                           ((2*$bits(caliptra_prim_alert_pkg::alert_rx_t))'({2{caliptra_prim_alert_pkg::ALERT_RX_DEFAULT}})),
+    .alert_tx_o                           (),
     // Interrupts
-    .intr_es_entropy_valid_o          (),
-    .intr_es_health_test_failed_o     (),
-    .intr_es_observe_fifo_ready_o     (),
-    .intr_es_fatal_err_o              ()
+    .intr_es_entropy_valid_o              (),
+    .intr_es_health_test_failed_o         (),
+    .intr_es_observe_fifo_ready_o         (),
+    .intr_es_fatal_err_o                  ()
     );
 
 // SHA3-384 entropy combiner: inserted between CSRNG and ES0/ES1.
@@ -1676,11 +1658,6 @@ entropy_combiner #(
     // CSRNG-facing entropy_src_hw_if
     .csrng_hw_if_req_i      (csrng_hw_if_req),
     .csrng_hw_if_rsp_o      (csrng_hw_if_rsp),
-    // cs_aes_halt: combiner grants each ES conditioner's halt request locally (no stall)
-    .es0_cs_aes_halt_i      (entropy_src_cs_aes_halt_req),
-    .es1_cs_aes_halt_i      (entropy_src_cs_aes_halt_req1),
-    .es0_cs_aes_halt_o      (combiner_es0_cs_aes_halt_rsp),
-    .es1_cs_aes_halt_o      (combiner_es1_cs_aes_halt_rsp),
     // ES0/ES1-facing entropy_src_hw_if
     .es0_hw_if_req_o        (entropy_src_hw_if_req),
     .es0_hw_if_rsp_i        (entropy_src_hw_if_rsp),
@@ -1689,10 +1666,8 @@ entropy_combiner #(
     // Dedicated strap: enable ES1 and combine, else bypass ES0
     // Dual iTRNG enable, sourced from CPTRA_HW_CONFIG.dual_iTRNG_en (via soc_ifc)
     .combine_en_i           (dual_itrng_en_reg),
-    // SEC_CM: hardware AHB-lock backstop. Mirrors the DOE doe_cmd_lock pattern:
-    // once the boot-flow monitor observes the first FMC/RT instruction fetch, the
-    // combiner's KAT register file is closed even if ROM never set AHB_LOCK.
-    .rt_active_i            (mubi4_test_true_loose(boot_flow_fmc) | mubi4_test_true_loose(boot_flow_rt)),
+    // The monitor-derived backstop is disabled; software AHB_LOCK remains active.
+    .rt_active_i            (1'b0),
     // Zeroize on debug/scan mode switch, lifecycle change and fatal error
     .debugUnlock_or_scan_mode_switch(debug_lock_or_scan_mode_switch),
     // AMBA AHB Lite Interface (ROM power-on KAT only)
@@ -1838,6 +1813,8 @@ soc_ifc_top1
     .kv_read   (kv_read   [KV_DEST_IDX_DMA_DATA]),
     .kv_rd_resp(kv_rd_resp[KV_DEST_IDX_DMA_DATA]),
 
+    .dcls_en(dcls_en),
+
     // Subsystem mode straps
     .strap_ss_caliptra_base_addr                            (strap_ss_caliptra_base_addr                            ),
     .strap_ss_mci_base_addr                                 (strap_ss_mci_base_addr                                 ),
@@ -1864,8 +1841,7 @@ soc_ifc_top1
     .ss_generic_fw_exec_ctrl(ss_generic_fw_exec_ctrl),
 
     // Subsystem mode OCP LOCK status
-    .ss_ocp_lock_en(ss_ocp_lock_en),
-    .ss_dcls_en(ss_dcls_en),
+    .ss_ocp_lock_en(ocp_lock_en),
     .ss_ocp_lock_in_progress(ss_ocp_lock_in_progress),
     .ss_key_release_key_size(ss_key_release_key_size),
     // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out (-> combiner)
@@ -1888,14 +1864,18 @@ soc_ifc_top1
     .pv_read         (pv_read[1]),
     .pv_rd_resp      (pv_rd_resp[1]),
     // ICCM Region Registers for Boot Flow Monitor
-    .iccm_fmc_start_addr(iccm_fmc_start_addr),
-    .iccm_fmc_end_addr  (iccm_fmc_end_addr),
-    .iccm_rt_start_addr (iccm_rt_start_addr),
-    .iccm_rt_end_addr   (iccm_rt_end_addr),
-    .iccm_region_lock   (iccm_region_lock),
+    // Region outputs are unused while the monitor instance is disabled.
+    .iccm_fmc_start_addr(),
+    .iccm_fmc_end_addr  (),
+    .iccm_rt_start_addr (),
+    .iccm_rt_end_addr   (),
+    .iccm_region_lock  (),
+    // CSR HMAC Key Lock
+    .csr_hmac_key_lock  (csr_hmac_key_lock),
     //uC reset
     .cptra_noncore_rst_b (cptra_noncore_rst_b),
     .cptra_uc_rst_b (cptra_uc_rst_b),
+    .cold_boot(cold_boot),
     //Clock gating en
     .clk_gating_en(clk_gating_en),
     .rdc_clk_dis(rdc_clk_dis),
@@ -1945,7 +1925,7 @@ generate
     `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HSIZE_X,        responder_inst[sva_i].hsize,       clk, !cptra_noncore_rst_b)
     `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRESP_X,        responder_inst[sva_i].hresp,       clk, !cptra_noncore_rst_b)
     `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HREADYOUT_X,    responder_inst[sva_i].hreadyout,   clk, !cptra_noncore_rst_b)
-    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       responder_inst[sva_i].hreadyout ? responder_inst[sva_i].hrdata : '0,      clk, !cptra_noncore_rst_b)
+    `CALIPTRA_ASSERT_KNOWN(AHB_SLAVE_HRDATA_X,       (responder_inst[sva_i].hreadyout && !responder_inst[sva_i].hresp) ? responder_inst[sva_i].hrdata : '0,      clk, !cptra_noncore_rst_b)
   end
 endgenerate
 
@@ -1956,8 +1936,19 @@ endgenerate
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HTRANS_X,       initiator_inst.htrans,      clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HSIZE_X,        initiator_inst.hsize,       clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRESP_X,        initiator_inst.hresp,       clk, !cptra_noncore_rst_b)
-`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       initiator_inst.hready ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b)
+`CALIPTRA_ASSERT_KNOWN(AHB_MASTER_HRDATA_X,       (initiator_inst.hready && !initiator_inst.hresp) ? initiator_inst.hrdata : '0,      clk, !cptra_noncore_rst_b)
 `CALIPTRA_ASSERT_NEVER(AHB_MASTER_HTRANS_BUSY,    initiator_inst.htrans == 2'b01, clk, !cptra_noncore_rst_b)
+
+// ROM write errors must follow the AHB-Lite two-cycle ERROR response on the
+// LSU-facing port: an ERROR wait cycle followed by an ERROR ready cycle.
+`CALIPTRA_ASSERT(AHB_ROM_ERR_WAIT_THEN_READY,
+                 (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp && !responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout) |=>
+                 (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp &&  responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout),
+                 clk_cg, !cptra_uc_rst_b)
+`CALIPTRA_ASSERT(AHB_ROM_ERR_READY_AFTER_WAIT,
+                 (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp &&  responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout) |->
+                 $past(responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp && !responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout),
+                 clk_cg, !cptra_uc_rst_b)
 
 // Safety assertion: verify single-bank-at-a-time ICCM write invariant
 `ifdef CALIPTRA_MODE_SUBSYSTEM

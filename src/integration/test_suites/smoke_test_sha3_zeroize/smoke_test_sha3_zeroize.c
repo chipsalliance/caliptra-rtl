@@ -20,8 +20,15 @@
 //   3. Start another SHA3-512 operation and zeroize while it is absorbing.
 //      Check that zeroize worked.
 //   4. Run the first operation again and check the digest.
+//   5. Zeroize at random points: a random number of times, start an operation,
+//      stop it at a random point (idle, started, after absorbing a random number
+//      of bytes, while processing, squeezing, after a manual RUN or DONE, after
+//      a cSHAKE start) and zeroize after a random delay.
+//      Check that zeroize worked and that a following operation is correct.
+//      The random points depend on MY_RANDOM_SEED.
 
 #include "caliptra_isr.h"
+#include "caliptra_rtl_lib.h"
 #include "printf.h"
 #include "sha3.h"
 #include <string.h>
@@ -48,6 +55,26 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 // Larger than the SHA3-512 rate (72 bytes) so that a Keccak permutation has
 // run and the remaining partial block is held in the Keccak state.
 #define PARTIAL_MSG_LEN (100)
+
+// Randomized zeroize (step 5)
+#define NUM_RAND_ZEROIZE (16)
+// Short enough to zeroize while the Keccak permutation is still running
+#define MAX_RAND_DELAY   (16)
+
+enum {
+  kZeroizeIdle,       // engine idle
+  kZeroizeStarted,    // operation started, nothing absorbed
+  kZeroizeAbsorbing,  // a random number of message bytes absorbed
+  kZeroizeProcessing, // whole message absorbed, PROCESS issued
+  kZeroizeSqueezing,  // digest computed, still exposed in the STATE window
+  kZeroizeManualRun,  // digest computed, RUN issued (manual Keccak run)
+  kZeroizeDone,       // digest computed, DONE issued (state flush)
+  kZeroizeCshake,     // cSHAKE operation started (prefix absorbed)
+  kNumZeroizePoints
+};
+
+const char *const kZeroizePointNames[kNumZeroizePoints] = {
+  "idle", "started", "absorbing", "processing", "squeezing", "manual run", "done", "cshake"};
 
 // Example taken from NIST FIPS-202 Algorithm Test Vectors:
 // https://csrc.nist.gov/CSRC/media/Projects/Cryptographic-Algorithm-Validation-Program/documents/sha3/sha-3bytetestvectors.zip
@@ -154,6 +181,66 @@ void check_zeroized(uintptr_t kmac, const char *ctx) {
   }
 }
 
+/**
+ * Zeroize at random points: NUM_RAND_ZEROIZE times, stop an operation at a
+ * random point (see kZeroizePointNames) and zeroize after a short random delay.
+ * Check that zeroize worked and that a following operation is correct.
+ */
+void run_random_zeroize_test(uintptr_t kmac) {
+  dif_kmac_operation_state_t operation_state;
+  uint32_t digest[DIGEST_LEN_SHA3_512];
+  dif_kmac_function_name_t n;
+
+  dif_kmac_function_name_init("ZERO", 4, &n);
+
+  VPRINTF(LOW, "Step 5: zeroize at random points (seed 0x%x)\n", MY_RANDOM_SEED);
+  for (int i = 0; i < NUM_RAND_ZEROIZE; i++) {
+    uint32_t point = xorshift32() % kNumZeroizePoints;
+    uint32_t len   = 0;
+    uint32_t delay = xorshift32() % MAX_RAND_DELAY;
+
+    if (point == kZeroizeCshake) {
+      dif_kmac_mode_cshake_start(kmac, &operation_state, kDifKmacModeCshakeLen128, &n, NULL,
+                                 kDifKmacMsgEndiannessLittle);
+    } else if (point >= kZeroizeStarted) {
+      dif_kmac_mode_sha3_start(kmac, &operation_state, kMode, kDifKmacMsgEndiannessLittle);
+    }
+    if (point == kZeroizeAbsorbing) {
+      len = 1 + xorshift32() % kMsgLen;
+      dif_kmac_absorb(kmac, &operation_state, kMsg, len, NULL);
+    } else if (point == kZeroizeProcessing) {
+      dif_kmac_absorb(kmac, &operation_state, kMsg, kMsgLen, NULL);
+      // Issue PROCESS without reading the digest
+      dif_kmac_squeeze(kmac, &operation_state, NULL, 0, NULL, NULL);
+    } else if (point >= kZeroizeSqueezing && point <= kZeroizeDone) {
+      dif_kmac_absorb(kmac, &operation_state, kMsg, kMsgLen, NULL);
+      dif_kmac_squeeze(kmac, &operation_state, digest, DIGEST_LEN_SHA3_512, NULL, NULL);
+      if (point == kZeroizeManualRun) {
+        // Zeroize directly after RUN, while the manual Keccak run (~24 cycles)
+        // is still ongoing
+        lsu_write_32(kmac + KMAC_CMD, KMAC_CMD_CMD_VALUE_RUN << KMAC_CMD_CMD_LOW);
+        lsu_write_32(CLP_SHA3_SHA3_CTRL, SHA3_SHA3_CTRL_ZEROIZE_MASK);
+      } else if (point == kZeroizeDone) {
+        lsu_write_32(kmac + KMAC_CMD, KMAC_CMD_CMD_VALUE_DONE << KMAC_CMD_CMD_LOW);
+      }
+    }
+
+    if (point != kZeroizeManualRun) {
+      // A short random delay, e.g. to hit a running Keccak permutation
+      for (volatile uint32_t d = delay; d > 0; d--);
+      sha3_zeroize();
+    }
+    VPRINTF(LOW, "Step 5.%d: zeroized %s (%d bytes absorbed, delay %d)\n",
+            i, kZeroizePointNames[point], len, delay);
+    check_zeroized(kmac, "random zeroize");
+
+    run_sha3_until_squeeze(kmac, &operation_state, digest);
+    dif_kmac_end(kmac, &operation_state);
+    dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
+    check_digest("run after random zeroize", digest, kExpectedDigest);
+  }
+}
+
 void main() {
   uintptr_t kmac = CLP_KMAC_BASE_ADDR;
   dif_kmac_operation_state_t operation_state;
@@ -220,6 +307,11 @@ void main() {
   dif_kmac_poll_status(kmac, KMAC_STATUS_SHA3_IDLE_LOW);
 
   check_digest("fourth run", digest, kExpectedDigest);
+
+  // ---------------------------------------------------------------------
+  // 5. Zeroize at random points
+  // ---------------------------------------------------------------------
+  run_random_zeroize_test(kmac);
 
   VPRINTF(LOW, "SHA3 zeroize test passed\n");
 

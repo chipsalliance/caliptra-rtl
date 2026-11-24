@@ -18,10 +18,12 @@ targets:
     directories: [$COMPILE_ROOT/rtl/caliptra_reg]
     files:
       - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_field_defines.svh
   rtl:
     directories: [$COMPILE_ROOT/rtl/caliptra_reg]
     files:
       - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg/caliptra_reg_field_defines.svh
 ---
 provides: [caliptra_top_reg_ss_defines]
 schema_version: 2.4.0
@@ -30,10 +32,12 @@ targets:
     directories: [$COMPILE_ROOT/rtl/caliptra_reg_ss]
     files:
       - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_field_defines.svh
   rtl:
     directories: [$COMPILE_ROOT/rtl/caliptra_reg_ss]
     files:
       - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_defines.svh
+      - $COMPILE_ROOT/rtl/caliptra_reg_ss/caliptra_reg_field_defines.svh
 ---
 provides: [caliptra_top]
 schema_version: 2.4.0
@@ -161,6 +165,9 @@ requires:
   - axi_dma_coverage
   - aes_coverage
   - doe_coverage
+  - sha3_coverage
+  - entropy_src_coverage
+  - entropy_combiner_coverage
 targets:
   dpi_compile:
     directories:
@@ -248,13 +255,15 @@ global:
         - +define+RV_TOP=caliptra_top_tb.caliptra_top_dut.rvtop
         - +define+CLP_ASSERT_ON
         - +define+ABR_ASSERT_ON
+        - +define+RV_ASSERT_ON
         - +define+SIMULATION
         #- '-v2k_generate'
         #- '-timescale=1ns/1ps'
         - '-noinherit_timescale=1ns/1ps'
         #- '-ucli -i dump.ucli'
-      #sim:
+      sim:
         #- '-ucli -i dump.ucli'
+        - '+cdc_instrumentation_enabled=1'
       elab:
         # Suppress "Bit Size Exceeded" warning.
         # VCS flags this during elab for ram signals (found under
@@ -330,6 +339,8 @@ global:
         - +define+SIMULATION
         - '-noinherit_timescale=1ns/1ps'
         - '+define+CALIPTRA_INTERNAL_TRNG'
+      sim:
+        - '+cdc_instrumentation_enabled=1'
       elab:
         # Suppress warning about unmatched wildcard patterns in
         # coverage configuration file.
@@ -399,8 +410,11 @@ global:
         - '+define+RV_TOP=caliptra_top_tb.caliptra_top_dut.rvtop'
         - '+define+CLP_ASSERT_ON'
         - '+define+ABR_ASSERT_ON'
-        - +define+SIMULATION
+        - '+define+RV_ASSERT_ON'
+        - '+define+SIMULATION'
         - '-noinherit_timescale=1ns/1ps'
+      sim:
+        - '+cdc_instrumentation_enabled=1'
       elab:
         # Suppress "Bit Size Exceeded" warning.
         # VCS flags this during elab for ram signals (found under

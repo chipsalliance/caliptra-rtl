@@ -469,7 +469,6 @@ void main() {
         seed.data[1][i] = 0;
     }
 
-    msg.kv_intf = FALSE;
     for (int i = 0; i < MLKEM_MSG_SIZE; i++) {
         msg.data[i] = 0;
     }

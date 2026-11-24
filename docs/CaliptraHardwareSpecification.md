@@ -2,7 +2,7 @@
 
 <p style="text-align: center;">Caliptra Hardware Specification</p>
 
-<p style="text-align: center;">Revision 2.1</p>
+<p style="text-align: center;">Revision 2.2</p>
 
 <div style="page-break-after: always"></div>
 
@@ -43,9 +43,17 @@ For information on the Caliptra Core, see the [High level architecture](https://
 * [SHA3](#sha3)
 * [ML-KEM](#adams-bridge-kyber-ml-kem)
 
-## Pre-release Features
-* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement) -- HW-enforced DICE key integrity monitoring and slot access control across boot phases
-
+## Key Caliptra 2.2 Changes
+* [Dual-core lockstep (DCLS)](#dual-core-lockstep-dcls)
+* [Key Vault Boot Flow Transition Enforcement](#key-vault-boot-flow-transition-enforcement) (disabled for the v2.2 release; reference only)
+* [ICCM write hash measurement](#iccm-write-hash-measurement-pcr4pcr5)
+* [Dual iTRNG entropy combiner](#dual-itrng-entropy-combiner)
+* HMAC area optimization and multi-block interface updates
+* ECC area optimization
+* Adams Bridge v3.0 area optimizations and security hardening
+* Fault injection countermeasures for FSMs and debug controls
+* CSR HMAC key lock
+* SoC-side stash-measurement register bank
 
 ## Boot FSM
 
@@ -91,8 +99,9 @@ The RISC-V core is highly configurable and has the following settings.
 | PMP                     | Enabled       |
 | Dual-Core Lockstep      | Enabled       |
 | RF Read Port Comparison | Enabled       |
-| DCCM Address Infection  | Enabled       |
-| ICCM Address Infection  | Enabled       |
+| DCCM Write-Readback     | Disabled      |
+| DCCM Address Infection  | Disabled      |
+| ICCM Address Infection  | Disabled      |
 
 ### Embedded memory export
 
@@ -210,13 +219,15 @@ Vector 0 is reserved by the RISC-V processor and may not be used, so vector assi
 
 ### Fault tolerance and FI hardening
 
-The Caliptra VeeR EL2 configuration provides several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep (DCLS) detection is enabled in this release; it is controlled by the subsystem and observable through a read-only status bit. The **DCCM write-readback** and **DCCM / ICCM address-XOR integrity** features are **disabled in this release** until the features mature - they are compiled out of the delivered configuration and are documented below for reference. All three are described below.
+The Caliptra VeeR EL2 configuration provides several fault-injection (FI) hardening features. These are compile-time properties of the delivered core configuration (enabled by defines in the auto-generated [common_defines.sv](../src/riscv_core/veer_el2/rtl/common_defines.sv)), not integrator-tunable options. Dual-core lockstep (DCLS) is enabled through `dcls_en` in both passive and subsystem profiles. The **DCCM write-readback** and **DCCM / ICCM address-XOR integrity** features are **disabled in this release** until the features mature - they are compiled out of the delivered configuration and are documented below for reference. All three are described below.
 
 #### Dual-core lockstep (DCLS)
 
-The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A redundant *shadow* core is driven with the same input stream as the main core, offset by a fixed number of pipeline stages. The main core's outputs are delayed by the same offset and compared cycle-by-cycle against the shadow core's outputs; any divergence indicates a fault in one of the cores. Optimization barriers are inserted on the shadow-core boundary so that synthesis cannot prove the redundant logic and comparison away. The shadow core is not architecturally visible and drives no system state; it exists solely for comparison.
+The RISC-V core is instantiated in a dual-core lockstep (DCLS) configuration. A redundant *shadow* core is driven with the same input stream as the main core, offset by a fixed number of pipeline stages. The main core's outputs are delayed by the same offset and compared cycle-by-cycle against the shadow core's outputs; any divergence indicates a fault in one of the cores. Tying `dcls_en` low may allow synthesis to remove the shadow core and comparison logic. The shadow core is not architecturally visible and drives no system state; it exists solely for comparison.
 
-Corruption detection is controlled by the subsystem. In subsystem mode, the `ss_dcls_en` strap input selects whether lockstep comparison is active, allowing the subsystem (for example, the MCU) to disable the feature should a late issue be found. In non-subsystem (passive) mode, lockstep comparison is always disabled. The effective state is reflected read-only in [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG)`.DCLS_en` (`1` = enabled, `0` = disabled); this status bit is read-only to both Caliptra firmware and the SoC, which can observe the state but cannot change it. The comparison logic fails safe: an invalid multi-bit encoding on the internal disable control is treated as a detected corruption.
+The `dcls_en` input enables DCLS in both passive and subsystem profiles (`1` = enabled, `0` = disabled), controlling normal mismatch reporting. Integrators may tie it low or high, or drive it from a synchronous SoC register. The sampled enable is reflected read-only to firmware and the SoC in [CPTRA_HW_CONFIG](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_CONFIG)`.DCLS_en`. The comparison logic fails safe: an invalid multi-bit encoding on the internal disable control is treated as a detected corruption.
+
+In scan mode (`scan_mode` = 1), the shadow core's resets are driven directly by the reset inputs so that they are controllable for scan test. The shadow core is then no longer aligned to the main core. Corruption detection is therefore suspended while `scan_mode` is set, and remains suspended until the next Caliptra reset after `scan_mode` is cleared.
 
 While detection is enabled, a detected mismatch asserts [CPTRA_HW_ERROR_FATAL](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.soc_ifc_reg.CPTRA_HW_ERROR_FATAL)`.rv_dcls_err` (bit [7]; see [Error register summary](#error-register-summary)) and raises the `cptra_error_fatal` interrupt to the SoC. The status bit and the interrupt clear independently: the bit is RW1C, so Caliptra firmware or the SoC can clear it, but its reset is `cptra_pwrgood`, so it survives a warm Caliptra reset. The interrupt has no clear mechanism by design — clearing the status bit does not deassert it, and it deasserts only on a Caliptra reset.
 
@@ -340,11 +351,7 @@ Note: When entering debug or scan mode, all crypto engines are zeroized. Before 
 
 ## Clock gating
 
-Caliptra provides a clock gating feature that turns off clocks when the microcontroller is halted. Clock gating is disabled by default, but can be globally enabled via the following register.
-
-| Control register     | Start address     | Description               |
-| :------------------- | :---------------- | :------------------------ |
-| CPTRA_CLK_GATING_EN  | 0x300300bc        | Register bit to enable or disable the clock gating feature. |
+Caliptra provides a clock gating feature that turns off clocks when the microcontroller is halted. Clock gating is disabled by default, but can be globally enabled via the [CPTRA_CLK_GATING_EN](https://chipsalliance.github.io/caliptra-rtl/main/external-regs/?p=caliptra_top_reg.generic_and_fuse_reg.CPTRA_CLK_GATING_EN) register.
 
 When enabled, halting the microcontroller turns off clocks to all of the cryptographic subsystem, the vaults (key vault, PCR vault, and data vault), mailbox SRAM, SoC interface, and peripherals subsystem. The Watchdog timer and SoC registers run on the gated RDC clock. The RV core implements its own clock gating mechanism. Halting the core automatically turns off its clock.
 
@@ -500,22 +507,50 @@ The following figure shows the top level signals defined in caliptra\_top.
 
 The following table provides descriptions of the entropy source signals.
 
-| Name | Input or output | Description |
-| :------------------ | :-------------- | :--------------- |
-| clk_i               | input           | All signal timings are related to the rising edge of clk.                                                                         |
-| rst_ni              | input           | The reset signal is active LOW and resets the core.                                                                               |
-| entropy_src_rng_req | output          | Request from the entropy_src module to the physical true random noise source to start generating data.                            |
-| entropy_src_rng_rsp | input           | Contains the internal TRNG data and a flag indicating the data is valid. Valid is asserted high for one cycle when data is valid. |
-| entropy_src_hw_if_i | input           | Downstream block request for entropy bits.                                                                                        |
-| entropy_src_hw_if_o | output          | 384 bits of entropy data. Valid when es_ack is asserted high.                                                                     |
-| cs_aes_halt_i       | input           | Response from csrng that all requests to AES block are halted.                                                                    |
-| cs_aes_halt_o       | output          | Request to csrng to halt requests to the AES block for power leveling purposes.                                                   |
+| Name                            | Input or output | Description                                                                                                                        |
+| :------------------------------ | :-------------- | :--------------------------------------------------------------------------------------------------------------------------------- |
+| clk_i                           | input           | All signal timings are related to the rising edge of clk.                                                                          |
+| rst_ni                          | input           | The reset signal is active LOW and resets the core.                                                                                |
+| debugUnlock_or_scan_mode_switch | input           | Zeroizes entropy\_src on debug lock/unlock, scan mode and lifecycle change. See [Entropy source zeroize](#entropy-source-zeroize). |
+| entropy_src_rng_enable_o        | output          | Request from the entropy_src module to the physical true random noise source to start generating data.                             |
+| entropy_src_rng_valid_i         | input           | Flag indicating the TRNG data is valid. Valid is asserted high for one cycle when data is valid.                                   |
+| entropy_src_rng_bits_i          | input           | The internal TRNG data. Sampled when entropy_src_rng_valid_i is asserted high.                                                     |
+| entropy_src_hw_if_i             | input           | Downstream block request for entropy bits.                                                                                         |
+| entropy_src_hw_if_o             | output          | 384 bits of entropy data. Valid when es_ack is asserted high.                                                                      |
+
+While `entropy_src_rng_enable_o` is asserted, entropy\_src accepts every `entropy_src_rng_bits_i` value marked by an asserted `entropy_src_rng_valid_i`; the noise source cannot be back-pressured.
+The maximum supported rate is one `entropy_src_rng_bits_i` value (i.e. one sample) every two clock cycles.
 
 The following figure shows the entropy source signals.
 
 *Figure: Entropy source signals*
 
 ![](./images/entropy_source_signals.png)
+
+### Entropy source zeroize
+
+Writing 1 to `ENTROPY_SRC_CTRL.ZEROIZE` zeroizes entropy\_src and aborts any operation in progress, in any state.
+entropy\_src is also zeroized on debug lock/unlock, scan mode and lifecycle change (`debugUnlock_or_scan_mode_switch`).
+While a Caliptra fatal error is asserted, entropy\_src is held in zeroize.
+
+Zeroize clears:
+- all FIFOs, including their storage: the raw entropy FIFOs, the observe FIFO and the esfinal FIFO that holds the conditioned seeds
+- the main and ack state machines, which return to idle
+- the health test state, the health test watermark and the alert counters
+- the SHA3 conditioner (see the Zeroize section of [SHA3](#sha3))
+
+All state is cleared synchronously at the end of the zeroize cycle, except for the data of the packer FIFOs, which is cleared one cycle later and is never output in between.
+In the zeroize cycle, no seed is acknowledged on the hardware interface, and `ENTROPY_DATA` and `FW_OV_RD_DATA` read 0.
+Zeroize has precedence over the Error state of the state machines. They only return to the Error state if the local escalation is still asserted.
+
+Zeroize does not clear:
+- the configuration registers
+- the interrupt and alert status
+- the enable of the noise source: the noise source keeps running. The sample received in the zeroize cycle is dropped.
+
+If entropy\_src is enabled, it restarts on its own after the zeroize: it runs the boot or startup health tests again and then delivers new seeds.
+No seed is delivered from the state before the zeroize, so firmware does not need to disable and re-enable entropy\_src.
+A pending request from CSRNG stays asserted and is served with a seed produced after the zeroize.
 
 ### CSRNG signal descriptions
 
@@ -529,10 +564,9 @@ The following table provides descriptions for the CSRNG signals.
 | lc_hw_debug_en_i           | input           | Lifecycle that selects which diversification value is used for xoring with the seed from entropy_src. |
 | entropy_src_hw_if_i        | input           | 384 bits of entropy data. Valid when es_ack is asserted high.                                         |
 | entropy_src_hw_if_o        | output          | Downstream block request for entropy bits.                                                            |
-| cs_aes_halt_i              | input           | Request from entropy_src to halt requests to the AES block for power leveling purposes.               |
-| cs_aes_halt_o              | output          | Response to entropy_src that all requests to AES block are halted.                                    |
 
-The CSRNG may only be enabled if entropy\_src is enabled. After it is disabled, CSRNG may only be re-enabled after entropy\_src has been disabled and re-enabled.
+The recommended enable sequence is to first enable entropy\_src and then CSRNG.
+entropy\_src can be disabled and re-enabled while CSRNG remains enabled; pending seed requests from CSRNG are served once entropy\_src is re-enabled.
 
 ### FIPS considerations
 
@@ -543,100 +577,180 @@ required for FIPS compliance. Additional details can be found in NIST
 publication SP 800-90B.
 
 The TRNG must be re-initialized whenever self-test parameter changes are
-needed. As described in the previous section, the initialization steps
-are as follows:
+needed. The initialization steps are as follows:
 
-1. Disable `csrng` and `entropy_src` in that order.
+1. Disable `entropy_src`. `csrng` can remain enabled.
 2. Apply new self-test configuration.
-3. Enable `entropy_src` and `csrng` in that order.
+3. Enable `entropy_src`.
 
 ### Adaptive self-test window and thresholds
 
-This section details the configuration of the `entropy_src`, focusing on how
-the test window size for the adaptive self-test is determined and how it
-relates to threshold calculations.
+This section details the configuration of the `entropy_src` health test
+windows and of the adaptive self-test thresholds.
 
-#### Understanding Test Window Sizes
+#### Test windows
 
-The adaptive self-test within the `entropy_src` block utilizes a
-configurable test window. To clarify its interpretation, two terms are
-defined:
+The size of a sample is determined by `CONF.RNG_BIT_ENABLE`:
 
-* `ENTROPY_TEST_WINDOW`: This refers to the test window size directly
-  configured in the hardware registers of the `entropy_src` block.
-* `ACTUAL_TEST_WINDOW`: This refers to the effective window size used for
-  the adaptive self-test threshold calculations. Its value depends on how
-  the test scores are aggregated.
+* In multi-channel mode (`CONF.RNG_BIT_ENABLE` disabled), a sample consists of
+  one bit from each of the 4 noise source lines.
+* In single-channel mode (`CONF.RNG_BIT_ENABLE` enabled), a sample is one bit
+  of the line selected by `CONF.RNG_BIT_SEL`.
 
-The aggregation method is determined by the CONF.THRESHOLD_SCOPE setting in
-the entropy_src block.
+The window size, in samples, depends on the operating mode:
 
-#### Aggregate per symbol
+* FIPS mode (`CONF.FIPS_ENABLE` enabled): the window size is configured in
+  `HEALTH_TEST_WINDOWS.FIPS_WINDOW`, in samples.
+* Boot-time / bypass mode (`CONF.FIPS_ENABLE` disabled): the window is
+  configured in `HEALTH_TEST_WINDOWS.BYPASS_WINDOW`, in bits over all tested
+  lines, so the window size is `BYPASS_WINDOW` / 4 samples in multi-channel
+  mode and `BYPASS_WINDOW` samples in single-channel mode. Only the default
+  value of 384 bits is supported: without the conditioner, each window of
+  tested bits is output directly as one 384-bit seed (the CSRNG seed width).
 
-When CONF.THRESHOLD_SCOPE is enabled:
+In both modes, each tested noise source line contributes one bit per sample,
+i.e. window size bits per window.
 
-* The adaptive test combines the inputs from all physical entropy lines
-  into a single, cumulative score.
-* The test essentially treats the combined input as a single binary stream,
-  counting the occurrences of '1's.
-* In this configuration:
-  * If `ENTROPY_TEST_WINDOW` is set to 1024, then
-  * `ACTUAL_TEST_WINDOW` = `ENTROPY_TEST_WINDOW` = 1024
+#### Threshold scope
 
-#### Handle each physical noise source separately
+Some health tests are executed on each noise source line individually. For
+example, the Adaptive Proportion test counts the number of '1's of each line
+over the window. In multi-channel mode (`CONF.RNG_BIT_ENABLE` disabled),
+`CONF.THRESHOLD_SCOPE` selects the scope in which the results of these tests
+are compared against the thresholds and health test failures are counted:
 
-When `CONF.THRESHOLD_SCOPE` is disabled:
+* `CONF.THRESHOLD_SCOPE` disabled: the count of each line is compared against
+  the thresholds individually. This allows detecting the failure of a single
+  noise source line.
+* `CONF.THRESHOLD_SCOPE` enabled: the counts of all lines are summed up and the
+  sum is compared against the thresholds. This setting should not be used in
+  Caliptra.
 
-* The adaptive test scores each individual physical noise input line
-  independently.
-* This allows for monitoring the health of each noise source.
-* In this configuration (assuming, for example, 4 noise sources):
-  * If `ENTROPY_TEST_WINDOW` is set to 4096 bits, then
-  * `ACTUAL_TEST_WINDOW` = (`ENTROPY_TEST_WINDOW` / 4) = 1024
+In single-channel mode (`CONF.RNG_BIT_ENABLE` enabled), `CONF.THRESHOLD_SCOPE` has no effect.
 
 #### Configuring adaptive self-test thresholds
 
-Once the `ACTUAL_TEST_WINDOW` is determined, the adaptive self-test
-thresholds can be configured as follows:
+`entropy_src` provides two variants of the NIST SP 800-90B Adaptive Proportion
+test (Section 4.4.2), which declares an error if the count reaches the cutoff
+value $C = 1 + critbinom(W, 2^{-H}, 1 - α)$, where $W$ is the window size and
+$H$ the min-entropy per sample:
 
-* `ADAPTP_HI_THRESHOLDS.FIPS_THRESH` = `adaptp_cutoff`
-* `ADAPTP_LO_THRESHOLDS.FIPS_THRESH` = `ACTUAL_TEST_WINDOW` - `adaptp_cutoff`
+* The Adaptive Proportion test (`ADAPTP_HI_THRESHOLD`, `ADAPTP_LO_THRESHOLD`)
+  treats the noise source lines as binary sources and counts the number of
+  '1's. It is used when the lines are modeled as binary noise sources.
+* The Adaptive Proportion Symbol test (`ADAPTPS_THRESHOLD`) treats the 4 lines
+  together as a non-binary source producing 4-bit symbols. It counts how often
+  the first symbol of the window occurs within the window.
 
-Here, `adaptp_cutoff` represents the pre-determined cutoff value for the
-adaptive proportion test, as defined by NIST SP 800-90B. See the threshold
-calculations below as an example.
+##### Adaptive Proportion test
+
+The thresholds depend on the number of bits `N` over which the compared count
+is taken:
+
+| Mode           | `CONF.THRESHOLD_SCOPE` disabled | `CONF.THRESHOLD_SCOPE` enabled |
+| :------------- | :------------------------------ | :----------------------------- |
+| Multi-channel  | `N` = window size               | `N` = 4 * window size          |
+| Single-channel | `N` = window size               | `N` = window size              |
+
+`CONF.THRESHOLD_SCOPE` enabled is listed for completeness only and should not
+be used in Caliptra.
+
+The test fails if the count of '1's is greater than or equal to
+`ADAPTP_HI_THRESHOLD` or less than or equal to `ADAPTP_LO_THRESHOLD`, i.e. if
+either the '1's or the '0's reach the cutoff value $C$. An
+`ADAPTP_LO_THRESHOLD` of 0 (reset value) disables the low check. The
+thresholds can then be configured as follows:
+
+* `ADAPTP_HI_THRESHOLD` = $C$
+* `ADAPTP_LO_THRESHOLD` = `N` - $C$
+
+with $W$ = `N` and $H$ the min-entropy per bit. See the threshold calculations
+below as an example.
 
 $α = 2^{-40}$ (recommended)\
 $H = 0.5$ (example, estimated entropy measured from hardware)\
-$W$ = `ACTUAL_TEST_WINDOW`\
-`adaptp_cutoff` =  $1 + critbinom(W, 2^{-H}, 1 - α)$
+$W$ = `N`\
+$C = 1 + critbinom(W, 2^{-H}, 1 - α)$
+
+##### Adaptive Proportion Symbol test
+
+The Adaptive Proportion Symbol test is used in multi-channel mode, where each
+sample is a 4-bit symbol. The test fails if the count of the first symbol
+reaches `ADAPTPS_THRESHOLD`, so the threshold can be configured as follows:
+
+* `ADAPTPS_THRESHOLD` = $C$
+
+with $W$ = window size and $H$ the min-entropy per 4-bit symbol.
+
+The same threshold registers are used in FIPS mode and in bypass mode.
+Since the counts are accumulated over the window, the cutoff $C$ depends on
+the window size, so thresholds calculated for the FIPS window are wrong for the
+much smaller bypass window and vice versa. The thresholds therefore have to be set for the window of the
+mode that is used, and reprogrammed (while `entropy_src` is disabled) when
+switching between bypass and FIPS mode.
 
 > Note: The `critbinom` function (critical binomial distribution function) is
 > implemented by most spreadsheet applications.
 
 ### Recommended configuration
 
-The following configuration is recommended for the adaptive and repetition
-count tests:
+The configuration of the health tests depends on how the 4 noise source lines
+can be modeled in the sense of NIST SP 800-90B. For the window size in the
+different operating modes, see [Test windows](#test-windows).
 
-#### Adaptive test
+#### Four independent binary noise sources
 
-1. Set `CONF.THRESHOLD_SCOPE` to disabled. This allows the test to monitor
-   and score each physical noise source individually, providing more granular
-   health information.
-2. Set `HEALTH_TEST_WINDOWS.FIPS_WINDOW` to 4096 bits. This value serves
-   as the `ENTROPY_TEST_WINDOW`. With the current 4 noise source configuration,
-   this is equivalent to 1024 bits per noise source, where each source produces
-   1 bit of entropy as defined in NIST SP 800-90B.
-3. Calculate thresholds. Use an `ACTUAL_TEST_WINDOW` of 1024 bits (derived
-   from step 2) in the adaptive test threshold formulas provided earlier in
-   this subsection.
+If the 4 lines come from independent noise sources, each line can be health
+tested as a separate binary noise source:
+
+1. Set `CONF.THRESHOLD_SCOPE` to disabled, so that the Adaptive Proportion
+   test evaluates each line individually. The Repetition Count test always
+   evaluates each line individually.
+2. Set the window size to the window size defined by NIST SP 800-90B
+   for binary noise sources. Each line is then tested over window size bits.
+3. Calculate the `ADAPTP_HI_THRESHOLD`, `ADAPTP_LO_THRESHOLD` and
+   `REPCNT_THRESHOLD` cutoffs with `N` = window size.
+
+`entropy_src` only supports one set of cutoff values, shared by all 4 lines.
+This configuration therefore requires a justification that:
+
+* the 4 lines can legitimately be treated as independent noise sources, and
+* the common cutoff values are appropriate for every line, i.e. they are
+  derived from an entropy estimate that holds for each of the 4 lines.
+
+If this cannot be justified, this configuration must not be used. Use one of
+the following configurations instead.
+
+#### Single-lane mode
+
+Health test and condition a single binary line:
+
+1. Set `CONF.RNG_BIT_ENABLE` to enabled and select the line with
+   `CONF.RNG_BIT_SEL`. `CONF.THRESHOLD_SCOPE` has no effect in this mode.
+2. Set the window size to the window size defined by NIST SP 800-90B
+   for binary noise sources. The selected line is then tested over window
+   size bits.
+3. Calculate the `ADAPTP_HI_THRESHOLD`, `ADAPTP_LO_THRESHOLD` and
+   `REPCNT_THRESHOLD` cutoffs for the selected line with `N` = window size.
+
+#### 4-bit symbol mode
+
+Treat the 4 lines together as a single noise source producing 4-bit symbols:
+
+1. Keep `CONF.RNG_BIT_ENABLE` disabled (multi-channel mode).
+2. Set the window size to the window size defined by NIST SP 800-90B
+   for non-binary noise sources. Each sample is a 4-bit symbol.
+3. Use the symbol-based tests: calculate the `ADAPTPS_THRESHOLD` (see
+   [Adaptive Proportion Symbol test](#adaptive-proportion-symbol-test)) with
+   `W` = window size and the `REPCNTS_THRESHOLD` (Repetition Count Symbol
+   test), both with the min-entropy `H` per 4-bit symbol.
 
 #### Repetition count test
 
 The methodology used for calculating the repetition count threshold in the
-ROM boot phase can be directly applied for this test as well. The threshold is
-applied on a per-noise-source basis.
+ROM boot phase can be directly applied in all three configurations, using
+the min-entropy per bit (independent sources, single-lane mode) or per 4-bit
+symbol (4-bit symbol mode).
 
 
 ## Dual iTRNG entropy combiner
@@ -727,9 +841,7 @@ blocks: `AHB_LOCK` uses a MuBi4 encoding that is fail-safe to *locked*, and the
 datapath sequencer uses a sparse Hamming-distance-3 (HD-3) FSM encoding. A
 single-bit glitch that produces an undefined FSM code is trapped to a terminal
 error state and latched into the combiner's error-interrupt status (alongside the
-`ot_sha3` countermeasure errors). The `cs_aes_halt` current-management
-handshake between each entropy source and CSRNG is terminated locally inside the
-combiner so that a conditioner is never left waiting on an acknowledge.
+`ot_sha3` countermeasure errors).
 
 
 ## External-TRNG REQ HW API
@@ -752,6 +864,7 @@ Using the HW API:
 * A user of the HW API first locks the accelerator by reading the LOCK register. A read that returns the value 0 indicates that the resource was locked for exclusive use by the requesting user. A write of ‘1 clears the lock.
 * The USER register captures the AXI USERID value of the requestor that locked the SHA accelerator. This is the only user that is allowed to control the SHA accelerator by performing AXI register writes. Writes by any other agent on the AXI subordinate interface are dropped.
 * SHA supports **Mailbox** mode: SHA is computed on LENGTH (DLEN) bytes of data stored in the mailbox beginning at START\_ADDRESS. This computation is performed when the EXECUTE register is set by the user. When the operation is completed and the result in the DIGEST register is valid, SHA accelerator sets the VALID bit of the STATUS register.
+* Mailbox-mode requests with START\_ADDRESS + DLEN greater than the mailbox capacity are rejected before any mailbox reads or hashing. Exact-fit requests are accepted. A rejected request leaves STATUS.VALID clear, clears EXECUTE, and sets the sticky ERROR1\_STS bit in the SHA accelerator's ERROR\_INTERNAL\_INTR\_R register. The corresponding error interrupt is asserted if enabled. Software may clear this write-one-to-clear status bit, correct the range, and retry under the same lock without resetting the accelerator. This range check does not apply to streaming or ICCM hashing.
 * Note that even though the mailbox size is fixed, due to SHA save/restore function enhancement, there is no limit on the size of the block that needs to be SHAd. SOC needs to follow FW API
 * The SHA computation engine in the SHA accelerator requires big endian data, but the SHA accelerator can accommodate mailbox input data in either the little endian or big endian format. By default, input data is assumed to be little endian and is swizzled to big endian at the byte level prior to computation. For the big endian format, data is loaded into the SHA engine as-is. Users may configure the SHA accelerator to treat data as big endian by setting the ENDIAN\_TOGGLE bit appropriately.
 * See the register definition for the encodings.
@@ -904,6 +1017,10 @@ The following pseudocode demonstrates how the SHA512 interface can be implemente
 *Figure: SHA512 pseudocode*
 
 ![](./images/SHA512_pseudo.png)
+
+### Command sequencing
+
+Only one hash operation, started by an “init” command, a “next” command (with or without “restore”), or a PCR hash generation start, is accepted between zeroize commands. FW must send a zeroize after each hash operation completes (and after reading the digest) before starting a new one; the first operation after reset does not require a prior zeroize. A zeroize also clears the PCR hash used for PCR signing, so after a PCR hash generation, FW must complete all PCR signing operations that use it before sending the zeroize (see [PCR signing](#pcr-signing)). An “init” sent without an intervening zeroize is ignored: the digest registers are cleared, and the VALID status bit stays low and “next” and “restore” commands are ignored until the next zeroize. The PCR hash generation VALID status bit is cleared by a zeroize and by every PCR hash generation start command written while the engine is ready, including one that is ignored because no zeroize preceded it. FW must poll READY before sending each command; commands other than zeroize are ignored while the engine is not ready.
 
 ### SCA countermeasure
 
@@ -1314,9 +1431,20 @@ The HMAC architecture has the finite-state machine as shown in the following fig
 
 ![](./images/HMAC_FSM.png)
 
+### Multi-block operations
+
+An HMAC operation starts with `INIT` on the first block and ends with the first block that has `LAST` set (`INIT|LAST` for a single block, otherwise `NEXT|LAST`). Each block without `LAST` produces an intermediate SHA-512 chaining state, not an HMAC tag.
+
+* `NEXT` is accepted only while an operation started by `INIT` is in flight. A `NEXT` (with or without `LAST`) issued after the final tag, after zeroize, or before any `INIT` is rejected and sets `error2_sts`.
+* If the key or block was read from the key vault, or the result is routed to the key vault, no intermediate or final result is written to `TAG`. The key vault provenance and the `KEY` register lock are held until the final tag or zeroize, and the key vault write happens only on the final tag.
+* In CSR mode, intermediate results are not written to `TAG`; only the final tag is.
+* Key vault read controls and `CSR_MODE` cannot be changed while an operation is in flight. They must be programmed before `INIT`, or the operation must be zeroized.
+
 ### CSR Mode
 
 When the CSR Mode register is set, the HMAC512 core uses the value latched from the cptra_csr_hmac_key interface pins in place of the API key register. These pins are latched internally after powergood assertion during DEVICE_MANUFACTURING lifecycle state. During debug mode operation this value is overridden with all 1's, and during any other lifecycle state it has a value of zero.
+
+ROM must set `internal_csr_hmac_key_lock` (write-1-to-set) before handing off to FMC. Once the lock is set, the latched CSR HMAC key is cleared to zero, so FMC and Runtime FW can never use it. The lock is cleared only by warm or cold reset. A firmware-update (hitless) reset does not clear it, so the key stays unavailable through hitless updates.
 
 ### Signal descriptions
 
@@ -1583,6 +1711,28 @@ The following pseudocode blocks demonstrate example implementations for KeyGen, 
 
 ![](./images/sharedkey_pseudo.png)
 
+### ECC zeroize
+
+Writing 1 to `ECC_CTRL.ZEROIZE` clears all ECC internal registers and API registers, including `ECC_PRIVKEY_IN`, `ECC_SEED`, `ECC_MSG`, and all outputs. ECC is also zeroized on debug lock/unlock and scan mode switch.
+
+Firmware must issue zeroize:
+- After every completed operation (KeyGen, Signing, Verifying, ECDH sharedkey, PCR signing), once the results have been read, before starting the next command.
+- After any error, before re-issuing a command.
+- After writing `ECC_CTRL.PCR_SIGN`, once the PCR signature has been read.
+
+Hardware enforces this requirement:
+- When an operation completes (`ECC_STATUS.VALID` set), when an error is detected, or when `ECC_CTRL.PCR_SIGN` loads the PCR signing key from key vault slot 7, `ECC_STATUS.READY` stays de-asserted until zeroize is issued.
+- While `ECC_STATUS.READY` is de-asserted, `ECC_CTRL` commands, all API input registers, and the key vault read controls cannot be written. Results remain readable.
+- After zeroize, the engine runs its internal initialization and then sets `ECC_STATUS.READY`.
+
+In addition, hardware clears key material sourced from the key vault without waiting for zeroize:
+- `ECC_PRIVKEY_IN` loaded from the key vault, including the PCR signing key loaded by `PCR_SIGN`, and `ECC_SEED` loaded from the key vault are cleared when the operation completes.
+- `ECC_PRIVKEY_IN` and `ECC_SEED` are cleared when an error is detected.
+- The internal copy of a generated private key or shared key destined for the key vault is cleared once the key vault write completes.
+- `ECC_CTRL.PCR_SIGN` must be written together with the Signing command in `ECC_CTRL.CTRL`. Any other combination, including `PCR_SIGN` alone, is reported as an error and clears the loaded key.
+
+This guarantees that a private key loaded into `ECC_PRIVKEY_IN`, in particular the PCR signing key that `PCR_SIGN` loads from key vault slot 7, is cleared before any subsequent firmware-controlled operation starts.
+
 ### SCA countermeasure
 
 The described ECC has four main routines: KeyGen, Signing, Verifying, and ECDH sharedkey. Since the Verifying routine requires operation with public values rather than a secret value, our side-channel analysis does not cover this routine. Our evaluation covers the KeyGen, Signing, and ECDH sharedkey routines where the secret values are processed.
@@ -1807,6 +1957,9 @@ Please refer to the [Adams-bridge specification](https://github.com/chipsallianc
 
 ### Address map
 Address map of ML-KEM accelerator is shown here:  [ML-KEM\_reg -- clp Reference (chipsalliance.github.io)](https://chipsalliance.github.io/caliptra-rtl/main/internal-regs/?p=clp.abr_reg)
+
+### Key vault usage
+ML-KEM reads only the KEYGEN/KEYGEN\_DECAPS seed from the key vault and can write the shared key to the key vault. The ENCAPS message is supplied only through the MLKEM\_MSG registers; there is no key vault read path for it.
 
 ## AES
 
@@ -2590,14 +2743,21 @@ FW provides the PCR entry to use as source and destination of the hash extend. H
 
 FW must set a last cycle flag before running the last iteration of the SHA engine. This could be the first “init” cycle, or the Nth “next” cycle. This flag allows HW to copy the final resulting hash output back to the source PCR.
 
+While a hash extend is in progress, HW accepts “next” commands only after the “init” command and ignores any command after the last cycle has been sent. “Restore” and the PCR hash generation start command are ignored until the hash extend completes. To abandon a hash extend before completion, FW must send a zeroize. The SHA512 key vault read controls cannot be written while the core, the key vault read, or the key vault write is busy, so the hash extend target cannot change while the result is written back. As for any SHA512 operation, a zeroize is required before a new “init” is accepted.
+
 ### PCR signing
 
 * PCR signing uses the key in key slot index 7 for PCR signing
 * HW implements a HW function called GEN\_PCR\_HASH
      * HW reads all the PCRs from all the PCR slots and hash extends them along with the NONCE that Caliptra FW provides
      * PCR Hash = Hash(PCR[0], …, PCR[31], Nonce)
+     * The PCR hash is held in the SHA512 engine and is used directly by the ECC and ML-DSA PCR signing functions. A SHA512 zeroize clears it. FW must complete all ECC and ML-DSA PCR signing operations before sending the SHA512 zeroize. Because a zeroize is required before the next SHA512 operation (see [Command sequencing](#command-sequencing)), PCR signing must also complete before any other SHA512 operation is started. The required order is: GEN\_PCR\_HASH, then ECC and/or ML-DSA PCR signing, then SHA512 zeroize.
 * HW also implements a HW function called SIGN\_PCR. This function takes the PCR digest that was generated by the previous routine and signs it using the key in key slot 7, following the same ECC sign flow defined in the [ECC](#ecc) section.
-     * The resulting PCR DIGEST is used only once for signing by the HW. If a new PCR signing is required, GEN\_PCR\_HASH needs to be redone.
+     * The generated PCR digest may be used for multiple ECC and/or ML-DSA PCR signing operations before the SHA512 zeroize. Signing does not consume or invalidate the digest. The mandatory zeroize of each signing engine is separate from the SHA512 zeroize and does not clear the digest held in SHA512.
+     * The digest is a snapshot of the PCR values and nonce used by GEN\_PCR\_HASH; subsequent PCR or nonce changes do not update it. To sign a fresh snapshot, FW must send a SHA512 zeroize and rerun GEN\_PCR\_HASH with the required nonce before signing.
+     * The generated digest is retained across FW-update reset. FW-update reset does not establish freshness: a quote requiring post-reset PCR values or a new nonce requires a SHA512 zeroize followed by a new GEN\_PCR\_HASH.
+     * `ECC_CTRL.PCR_SIGN` must be written in the same write as the Signing command; otherwise ECC reports an error. Hardware clears the key loaded from key slot 7 when the PCR signing completes or fails.
+     * Writing `ECC_CTRL.PCR_SIGN` locks the ECC engine (`ECC_STATUS.READY` de-asserted) until firmware issues zeroize, so the key loaded from key slot 7 can only be used to sign the hardware-generated PCR digest. See [ECC zeroize](#ecc-zeroize).
 
 ### ICCM write hash measurement (PCR4/PCR5)
 
@@ -2668,7 +2828,7 @@ The destination valid field is programmed by FW in the cryptographic block gener
 | Clear\[2\]                | cptra_rst_b       | If unlocked, setting the clear bit causes KV to clear the associated entry. The clear bit is reset after entry is cleared.                                                                              |
 | rsvd0\[3\]                 |       |                                                                                                     |
 | rsvd1\[8:4\]          |       |                                                                                                                                                    |
-| Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set.  <br>\[0\] - HMAC KEY  <br>\[1\] - HMAC BLOCK  <br>\[2\] - MLDSA SEED  <br>\[3\] - ECC PRIVKEY  <br>\[4\] - ECC SEED  <br>\[5\] - AES KEY <br>\[6\] - MLKEM SEED <br>\[7\] - MLKEM MSG <br>\[8\] - AXI DMA DATA |
+| Dest_valid\[16:9\]        | hard_reset_b      | KV entry can be used with the associated cryptographic block if the appropriate index is set.  <br>\[0\] - HMAC KEY  <br>\[1\] - HMAC BLOCK  <br>\[2\] - MLDSA SEED  <br>\[3\] - ECC PRIVKEY  <br>\[4\] - ECC SEED  <br>\[5\] - AES KEY <br>\[6\] - MLKEM SEED <br>\[7\] - Reserved (no read client) <br>\[8\] - AXI DMA DATA |
 | last_dword\[20:19\] | hard_reset_b      | Store the offset of the last valid dword, used to indicate the last cycle for read operations.                                                                                                          |
 
 ### Key vault cryptographic functional block 
@@ -2718,7 +2878,7 @@ consumed with undefined-tail bits) by a wider engine.
   FSM's `KV_DONE` state), comparing `stored_last_dword` to the fixed
   `expected_key_size` the consumer wires. Used by consumers whose
   expected size is stable at KV-read time (ECC privkey/seed, AXI-DMA
-  MEK, MLDSA/MLKEM seeds and message).
+  MEK, MLDSA/MLKEM seeds).
 - `LEN_CHECK_AT_KEY_USE=1` — check fires on the consumer's
   `check_key_size` strobe (typically at `INIT`/`START`/op-commit).
   Used by consumers whose expected size is not stable until the op
@@ -2744,7 +2904,7 @@ must observe `AES_KV_RD_KEY_STATUS.ERROR` after the status VALID bit
 sets. The `AES_KV_RD_KEY_STATUS.ERROR` field encodes the KV error
 code (`KV_SUCCESS=0`, `KV_READ_FAIL=1`, `KV_RD_LEN_MISMATCH=3`).
 
-If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable.
+If multiple iterations of the cryptographic function are required, the key vault read and write controls must be programmed for each iteration. This ensures that the lock is set and the digest is not readable. For HMAC, an iteration is a complete `INIT` ... `LAST` operation: the lock is held across all of its blocks, the key vault read controls cannot be reprogrammed until it ends, and the key vault write status becomes valid only after the final block (see [Multi-block operations](#multi-block-operations)).
 
 The following tables describe read, write, and status values for key vault blocks.
 
@@ -2766,7 +2926,7 @@ The following tables describe read, write, and status values for key vault block
 | ecc_seed_dest_valid\[10\]  | ECC SEED is a valid destination. |
 | aes_key_dest_valid\[11\]   | AES KEY is a valid destination. |
 | mlkem_seed_dest_valid\[12\]| MLKEM SEED is a valid destination. |
-| mlkem_msg_dest_valid\[13\] | MLKEM MSG is a valid destination. |
+| rsvd0\[13\]                | Reserved field |
 | dma_data_dest_valid\[14\]  | DMA DATA is a valid destination. |
 | rsvd\[31:15\]              | Reserved field |
 
@@ -2860,6 +3020,8 @@ The following tables describe DOE register and control fields.
 
 ## Key vault boot flow transition enforcement
 
+**Disabled until reworked:** the monitor instance is commented out and its KV/control/fault connections are tied inactive in all builds. Monitor-specific tests, assertions, coverage, and TB enable hooks are disabled. ICCM region CSRs remain but cannot raise feature faults. The policy below is reference only.
+
 The Key Vault Boot Flow Transition Enforcement feature provides hardware-enforced integrity monitoring and access control for DICE key derivation across boot phase transitions (ROM->FMC->RT). It detects ICCM code execution transitions, validates key vault state at each boundary, and atomically applies lock/clear enforcement to key slots.
 
 ### Overview
@@ -2924,7 +3086,7 @@ In simulation, `boot_flow_monitor_en` defaults to 0 (disabled). The testbench ov
 
 ### KV monitor
 
-At each boot phase transition, the KV monitor validates that the expected DICE key slots are correctly populated. The monitor checks **only DICE derivation key slots** (0–9) — optional feature keys (Stable Owner Key, OCP Lock keys) are excluded from monitoring because they are conditionally derived and do not participate in the DICE trust chain. A mismatch triggers `kv_monitor_alert`, which escalates to `CPTRA_HW_ERROR_FATAL.kv_error[4]` and flushes all key entries.
+At each boot phase transition, the KV monitor validates that the listed DICE and PCR quote key slots are correctly populated. Optional feature keys (Stable Owner Key, OCP Lock keys) are excluded from monitoring because they are conditionally derived and do not participate in the DICE trust chain. A mismatch triggers `kv_monitor_alert`, which escalates to `CPTRA_HW_ERROR_FATAL.kv_error[4]` and flushes all key entries.
 
 #### ROM->FMC checks (on `enter_fmc`)
 
@@ -2934,13 +3096,17 @@ At each boot phase transition, the KV monitor validates that the expected DICE k
 | 1 | SI_LDEV | AES_KEY |
 | 2 | KEY_LADDER | HMAC_KEY |
 | 6 | FMC_CDI | HMAC_KEY \| MLDSA_SEED \| ECC_SEED |
-| 7 | FMC_ECDSA | ECC_PKEY |
-| 8 | FMC_MLDSA | MLDSA_SEED |
+| 7 | PCR_ECDSA | ECC_PKEY |
+| 8 | PCR_MLDSA | MLDSA_SEED |
+| 13 | FMC_ECDSA | ECC_PKEY |
+| 14 | FMC_MLDSA | MLDSA_SEED |
 
 Additionally, per-slot crypto write counters verify **exact** expected derivation counts:
 - Slot 6 (FMC_CDI): == 4 writes (IDevID CDI + LDevID intermediate + LDevID CDI + FMC Alias CDI)
-- Slot 7 (FMC_ECDSA): == 2 writes (IDevID ECC keygen + FMC Alias ECC keygen)
-- Slot 8 (FMC_MLDSA): == 2 writes (IDevID MLDSA keygen + FMC Alias MLDSA keygen)
+- Slot 7 (PCR_ECDSA): == 2 writes (IDevID ECC keygen + PCR quote ECC keygen)
+- Slot 8 (PCR_MLDSA): == 2 writes (IDevID MLDSA keygen + PCR quote MLDSA keygen)
+
+The existing counters remain on accumulators 6/7/8, not the relocated FMC aliases. Slots 13/14 are checked for their final permissions and protected by phase locks; slot 14 may also hold temporary HEK material earlier in ROM. This policy requires the ROM allocation with dedicated quote keys in 7/8 and FMC aliases in 13/14.
 
 An exact match (rather than a minimum threshold) detects both truncated DICE chains (too few writes, indicating a skipped derivation step) and glitch-replayed operations (too many writes, which could overwrite the final safe key with an earlier intermediate value such as raw UDS).
 
@@ -2962,15 +3128,20 @@ Enforcement is applied continuously based on the current boot phase and atomical
 
 | Condition | Slots affected | Action |
 | :-------- | :------------- | :----- |
-| `boot_flow_fmc` = True | 0, 1, 2, 6, 7, 8 | `lock_wr` asserted via hwset (HW-driven, cannot be cleared by SW) |
+| `boot_flow_fmc` = True | 0, 1, 2, 6, 7, 8, 13, 14 | `lock_wr` asserted via hwset (HW-driven, cannot be cleared by SW) |
+| `boot_flow_fmc` = True | 7, 8 | `lock_use` asserted via hwset (PCR quote-only keys) |
 | `boot_flow_rt` = True | 4, 5, 9 | `lock_wr` asserted via hwset |
-| `boot_flow_rt` = True | 6, 7, 8 | `lock_use` asserted via hwset (FMC keys cannot be used in RT) |
+| `boot_flow_rt` = True | 6, 13, 14 | `lock_use` asserted via hwset (FMC keys cannot be used in RT) |
+
+PCR quote keys in slots 7/8 remain accessible through the dedicated PCR signing ports, which are unchanged. Their `lock_use` bits block ordinary KV client access from FMC onward, while the FMC aliases in 13/14 remain usable by FMC until the RT transition.
 
 The `lock_wr` and `lock_use` fields have `hwset` property in the register definition, allowing hardware to set them without firmware intervention. Once set, they can only be cleared by `core_only_rst_b` de-assertion.
 
-#### Slot clearing (atomic, on transition edge)
+#### Slot clearing (atomic, on cold-boot transition edges)
 
-**DICE slots** — unconditionally cleared or preserved at each transition:
+Unused-slot clearing runs only during cold boot, identified by both read-only `CPTRA_RESET_REASON.WARM_RESET` and `CPTRA_RESET_REASON.FW_UPD_RESET` being zero. Warm-reset and firmware-update transitions do not generate `boot_flow_key_clear` requests for any slot. Their key data, `dest_valid`, and `last_dword` are not modified by transition cleanup; firmware operations and independent clear/flush paths may still change them. Monitor checks, phase tracking, and lock enforcement remain active independently of this cold-boot gate.
+
+**DICE and runtime slots** — cold-boot transition behavior:
 
 | Slot | Purpose | ROM→FMC | FMC→RT |
 | :--- | :------ | :------ | :----- |
@@ -2981,12 +3152,15 @@ The `lock_wr` and `lock_use` fields have `hwset` property in the register defini
 | 4 | RT_CDI | Cleared | Preserved |
 | 5 | RT_ECDSA | Cleared | Preserved |
 | 6 | FMC_CDI | Preserved | Preserved |
-| 7 | FMC_ECDSA | Preserved | Preserved |
-| 8 | FMC_MLDSA | Preserved | Preserved |
+| 7 | PCR_ECDSA | Preserved | Preserved |
+| 8 | PCR_MLDSA | Preserved | Preserved |
 | 9 | RT_MLDSA | Cleared | Preserved |
-| 10–14 | Unused | Cleared | Cleared |
+| 10–11 | DPE scratch | Cleared | Cleared |
+| 12 | Exported DPE CDI | Cleared | Cleared |
+| 13 | FMC_ECDSA | Preserved | Preserved |
+| 14 | FMC_MLDSA | Preserved | Preserved |
 
-**Conditionally-preserved slots** — behavior depends on active mode:
+**Conditionally-preserved slots** — cold-boot behavior depends on active mode:
 
 | Slot | Purpose | Default (no optional features) | `stable_owner_key_en` | `ocp_lock_mode_en` |
 | :--- | :------ | :----------------------------- | :-------------------- | :----------------- |
@@ -2994,13 +3168,13 @@ The `lock_wr` and `lock_use` fields have `hwset` property in the register defini
 | 16 | MDK | Cleared | Cleared | Preserved |
 | 17–21 | Unused OCP range | Cleared | Cleared | Cleared |
 | 22 | HEK seed | Cleared | Cleared | Preserved |
-| 23 | MEK | Cleared | Cleared | **Always cleared** (DMA-accessible) |
+| 23 | MEK | Cleared | Cleared | Cleared (DMA-accessible) |
 
 Clearing destroys the key data and resets `dest_valid` and `last_dword` for the affected slots.
 
 #### Conditional slot preservation
 
-Two optional Caliptra features populate KV slots that must survive boot transitions when the feature is active, but must be cleared when inactive. These slots are **not monitored** (no dest_valid checks, no write counters) — the monitor is exclusively for DICE keys. Only the enforcement block (slot clearing) handles them conditionally.
+Two optional Caliptra features populate KV slots that must survive cold-boot transitions when the feature is active, but must be cleared when inactive. These slots are **not monitored** (no dest_valid checks, no write counters) — the monitor is exclusively for DICE keys. Only the enforcement block (slot clearing) handles them conditionally. Warm and firmware-update re-entry skip unused-slot clearing regardless of these feature enables.
 
 **Stable Owner Key (Slot 15)**
 
@@ -3008,21 +3182,23 @@ The Stable Owner Root Key is conditionally derived by ROM when all three conditi
 
 - `SUBSYSTEM_MODE_en` = 1 (Caliptra operating in subsystem mode)
 - `OCP_LOCK_MODE_en` = 0 (OCP Lock feature is not active)
-- `SS_STRAP_GENERIC[3][0]` = 1 (SoC strap enabling the stable owner key feature)
+- `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1 (SoC configuration, written prior to `CPTRA_FUSE_WR_DONE`, enabling the stable owner key feature)
 
-The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared normally.
+The combined signal `stable_owner_key_en` is computed in `soc_ifc_top` and routed to the Key Vault. When active, slot 15 is excluded from `boot_flow_key_clear` at both cold-boot ROM-to-FMC and FMC-to-RT transitions. When inactive, slot 15 is cleared at those cold-boot transitions.
 
 **OCP Lock Keys (Slots 16 and 22)**
 
+OCP Lock mode is supported only when `CALIPTRA_MODE_SUBSYSTEM` is defined. In Passive mode, the incoming strap is ignored and `ocp_lock_mode_en` is forced to 0.
+
 When OCP Lock mode is enabled (`ocp_lock_mode_en` = 1 from the `ss_ocp_lock_en` strap), DOE populates slot 16 (MDK) and slot 22 (HEK seed) before ROM runs. FMC and RT firmware require these keys for EPK, VEK, and MEK derivation in OCP Lock flows.
 
-When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at both transitions. When inactive, they are cleared normally.
+When `ocp_lock_mode_en` is active, slots 16 and 22 are excluded from clearing at both cold-boot transitions. When inactive, they are cleared at those cold-boot transitions.
 
-**Slot 23 (MEK) is always cleared** regardless of `ocp_lock_mode_en`. MEK has `DMA_DATA` in its `dest_valid` (it is DMA-accessible for key release), making it a security risk if it persists across transitions. RT firmware re-derives MEK when needed during OCP Lock key release flows.
+**Slot 23 (MEK) is always cleared at cold-boot transitions** regardless of `ocp_lock_mode_en`. This prevents early-stage key material from surviving in a DMA-accessible slot. Warm and firmware-update transitions do not clear it through this mechanism; runtime firmware remains responsible for its OCP Lock key lifecycle.
 
-Only the specific slots that ROM or FMC actually derive (16 and 22) are preserved — not the entire OCP Lock range (16–23). Slots 17–21 and 23 are always cleared.
+Only the specific slots that ROM or FMC actually derive (16 and 22) are preserved during cold boot — not the entire OCP Lock range (16–23). Slots 17–21 and 23 are cleared on cold-boot transitions.
 
-**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is always cleared even if `SS_STRAP_GENERIC[3][0]` = 1.
+**Mutual exclusion**: Stable Owner Key and OCP Lock are mutually exclusive by construction — `stable_owner_key_en` includes `~OCP_LOCK_MODE_en` in its definition. When OCP Lock is enabled, slot 15 is cleared at cold-boot transitions even if `SS_FW_FEATURE_CFG.STABLE_OWNER_KEY_EN` = 1.
 
 #### Error escalation
 
@@ -3043,7 +3219,7 @@ Once the boot flow monitor detects that execution has transitioned to FMC or RT 
 | :------- | :-- | :---- | :------ |
 | CPTRA_HW_ERROR_FATAL | 4 | kv_error | Boot flow error OR KV monitor alert |
 | CPTRA_HW_ERROR_FATAL | 5 | shadow_storage_err | ICCM region shadow register storage fault |
-| CPTRA_HW_ERROR_FATAL | 7 | rv_dcls_err | RISC-V dual-core lockstep (DCLS) corruption detected; gated by the subsystem DCLS enable (`CPTRA_HW_CONFIG.DCLS_en`) |
+| CPTRA_HW_ERROR_FATAL | 7 | rv_dcls_err | RISC-V dual-core lockstep (DCLS) mismatch; normal reporting enabled by `CPTRA_HW_CONFIG.DCLS_en` in both profiles |
 | CPTRA_HW_ERROR_FATAL | 8 | dccm_wr_readback_err | DCCM write-readback mismatch detected (store corrupted); maskable via `internal_hw_error_fatal_mask` |
 | CPTRA_HW_ERROR_NON_FATAL | 3 | shadow_update_err | ICCM region shadow register phase mismatch |
 
@@ -3059,9 +3235,11 @@ The following table documents the key vault slot assignments used by the DICE ke
 | 4 | KV_SLOT_RT_CDI | Runtime CDI |
 | 5 | KV_SLOT_RT_ECDSA | Runtime ECDSA private key |
 | 6 | KV_SLOT_FMC_CDI | FMC CDI (accumulates through DICE chain) |
-| 7 | KV_SLOT_FMC_ECDSA | FMC ECDSA private key |
-| 8 | KV_SLOT_FMC_MLDSA | FMC MLDSA private key |
+| 7 | KV_SLOT_PCR_ECDSA | PCR quote ECDSA private key |
+| 8 | KV_SLOT_PCR_MLDSA | PCR quote MLDSA seed |
 | 9 | KV_SLOT_RT_MLDSA | Runtime MLDSA private key |
+| 13 | KV_SLOT_FMC_ECDSA | FMC ECDSA private key |
+| 14 | KV_SLOT_FMC_MLDSA | FMC MLDSA seed |
 
 ### Conditionally-preserved slot assignments
 
@@ -3221,10 +3399,10 @@ The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditio
 | 1 | dccm_ecc_unc | Yes (`mask_dccm_ecc_unc`) | Uncorrectable double-bit ECC error in DCCM |
 | 2 | nmi_pin | Yes (`mask_nmi_pin`) | NMI asserted by WDT Timer2 timeout |
 | 3 | crypto_err | No | Multiple concurrent cryptographic operations using the Key Vault |
-| 4 | kv_error | No | KV boot-flow monitor `dest_valid` mismatch or boot-flow error |
-| 5 | shadow_storage_err | No | ICCM region shadow-register storage fault (register/shadow corrupted) |
+| 4 | kv_error | No | Inactive: boot-flow monitoring is hard-disabled |
+| 5 | shadow_storage_err | No | Inactive: ICCM boot-flow region fault reporting is disabled |
 | 6 | fsm_error | No | Sparse-encoded security FSM entered an invalid/illegal state (fault-injection/glitch detection) |
-| 7 | rv_dcls_err | No | RISC-V dual-core lockstep (DCLS) mismatch between the main and shadow core; gated by the subsystem DCLS enable (`CPTRA_HW_CONFIG.DCLS_en`) |
+| 7 | rv_dcls_err | No | RISC-V dual-core lockstep (DCLS) mismatch; normal reporting enabled by `CPTRA_HW_CONFIG.DCLS_en` in both profiles |
 | 8 | dccm_wr_readback_err | Yes (`mask_dccm_wr_readback_err`) | DCCM write-readback mismatch — data read back after a store did not match what was written |
 | 31:9 | rsvd | — | Reserved |
 
@@ -3232,7 +3410,7 @@ The `CPTRA_HW_ERROR_FATAL` register aggregates all fatal hardware error conditio
 
 **`fsm_error` — sparse-FSM glitch detection:** Security-critical FSMs (for example, the mailbox FSM) are sparse-encoded with Hamming-distance-separated state values. If a fault-injection/glitch drives an FSM into an unused encoding, the sparse-FSM guard forces the machine to its error state and asserts `fsm_error`. This is an unmaskable, reset-only fatal error.
 
-The recoverable counterpart, `CPTRA_HW_ERROR_NON_FATAL`, aggregates non-fatal conditions (mailbox protocol violations, mailbox uncorrectable ECC, and the ICCM region shadow-register phase mismatch `shadow_update_err`); firmware may deassert `cptra_error_non_fatal` by clearing or masking all set non-fatal bits.
+The recoverable counterpart, `CPTRA_HW_ERROR_NON_FATAL`, aggregates non-fatal conditions including mailbox protocol violations and mailbox uncorrectable ECC; firmware may deassert `cptra_error_non_fatal` by clearing or masking all set non-fatal bits. The ICCM region `shadow_update_err` source is inactive while boot-flow monitoring is disabled.
 
 ## Cryptographic blocks fatal and non-fatal errors
 

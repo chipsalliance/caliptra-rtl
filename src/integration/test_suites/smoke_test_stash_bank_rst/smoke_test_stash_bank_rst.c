@@ -15,12 +15,12 @@
 // Stash bank lock stickiness + cptra_rst_b clear smoke test (RFC #694).
 //
 // Boot ordering:
-//   1. First boot: BFM populates stash, locks all 8 slots, asserts end_stash.
+//   1. First boot: BFM populates stash, locks implemented slots, asserts end_stash.
 //   2. FW verifies uC (AHB, soc_req=0) writes to STASH_BANK_SLOT_DATA,
 //      STASH_BANK_SOC_LOCK, and STASH_END_STASH are all silently dropped -
 //      these registers are SoC/AXI-only per RFC 694 SS4.4 (soc_ifc_top.sv
 //      gates swwe/swwel on soc_req for all three).
-//   3. FW sets CPTRA_LOCK and verifies all STATUS lock mirrors are set (0x3FF).
+//   3. FW sets CPTRA_LOCK and verifies all implemented STATUS lock mirrors are set.
 //   4. FW attempts uC write of 0 to CPTRA_LOCK (W1S - must be ignored).
 //   5. FW issues warm reset (STDOUT 0xf6) which asserts cptra_rst_b.
 //   6. Second boot: BFM skips stash populate (+CALIPTRA_TEST_STASH_BANK_RST).
@@ -48,10 +48,7 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 // Survives warm reset (cptra_rst_b) in DCCM persistent section.
 volatile uint32_t rst_count __attribute__((section(".dccm.persistent"))) = 0;
 
-#define EXPECTED_NUM_SLOTS       8u
 #define STASH_SLOT_DWORDS        26u
-// slot_locked=0xFF | end_stash=0x100 | cptra_lock=0x200
-#define ALL_LOCKS_STATUS         0x3FFu
 
 // Must match write_stash_bank() pattern in caliptra_top_tb_soc_bfm.sv.
 static inline uint32_t stash_pattern(uint32_t slot, uint32_t dword) {
@@ -146,14 +143,23 @@ void main(void) {
     VPRINTF(LOW, "------------------------------------------\n");
 
     if (rst_count == 1u) {
+        uint32_t hw_config = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_CONFIG);
+        uint32_t expected_num_slots =
+            (hw_config & SOC_IFC_REG_CPTRA_HW_CONFIG_SUBSYSTEM_MODE_EN_MASK) ? 1u : 8u;
+        uint32_t expected_slot_locked_mask = (1u << expected_num_slots) - 1u;
+        uint32_t all_locks_status =
+            (expected_slot_locked_mask << SOC_IFC_REG_STASH_BANK_STATUS_SLOT_LOCKED_LOW) |
+            SOC_IFC_REG_STASH_BANK_STATUS_END_STASH_MASK |
+            SOC_IFC_REG_STASH_BANK_STATUS_CPTRA_LOCK_MASK;
+
         // Phase 1 (pre-reset): all lock bits must be set and sticky.
         wait_for_end_stash(&status);
 
         slot_locked_mask = (status & SOC_IFC_REG_STASH_BANK_STATUS_SLOT_LOCKED_MASK)
                            >> SOC_IFC_REG_STASH_BANK_STATUS_SLOT_LOCKED_LOW;
-        if (slot_locked_mask != ((1u << EXPECTED_NUM_SLOTS) - 1u)) {
+        if (slot_locked_mask != expected_slot_locked_mask) {
             fail("slot_locked mirror mismatch before reset", slot_locked_mask,
-                 (1u << EXPECTED_NUM_SLOTS) - 1u);
+                 expected_slot_locked_mask);
         }
         VPRINTF(LOW, "FW: STASH_BANK_STATUS = 0x%08x after BFM populate\n", status);
 
@@ -163,16 +169,16 @@ void main(void) {
 
         lsu_write_32(CLP_SOC_IFC_REG_STASH_BANK_CPTRA_LOCK, 1);
         status = lsu_read_32(CLP_SOC_IFC_REG_STASH_BANK_STATUS);
-        if (status != ALL_LOCKS_STATUS) {
-            fail("all lock mirrors should be set before reset", status, ALL_LOCKS_STATUS);
+        if (status != all_locks_status) {
+            fail("all lock mirrors should be set before reset", status, all_locks_status);
         }
         VPRINTF(LOW, "FW: all lock bits set (STATUS=0x%08x)\n", status);
 
         // W1S stickiness: uC write of 0 must not clear cptra_lock.
         lsu_write_32(CLP_SOC_IFC_REG_STASH_BANK_CPTRA_LOCK, 0);
         status = lsu_read_32(CLP_SOC_IFC_REG_STASH_BANK_STATUS);
-        if (status != ALL_LOCKS_STATUS) {
-            fail("lock bits not sticky (uC write of 0 cleared state)", status, ALL_LOCKS_STATUS);
+        if (status != all_locks_status) {
+            fail("lock bits not sticky (uC write of 0 cleared state)", status, all_locks_status);
         }
         VPRINTF(LOW, "FW: lock bits sticky after uC write of 0 to CPTRA_LOCK\n");
 

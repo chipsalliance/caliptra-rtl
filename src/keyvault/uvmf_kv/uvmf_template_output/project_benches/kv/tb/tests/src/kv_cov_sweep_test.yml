@@ -1,0 +1,7 @@
+---
+# Random seed desired...
+seed: ${PLAYBOOK_RANDOM_SEED}
+plusargs:
+- '+UVM_TESTNAME=kv_rand_wr_rd_test'
+- '+KV_COVERAGE_SWEEP'
+testname: kv_cov_sweep_test

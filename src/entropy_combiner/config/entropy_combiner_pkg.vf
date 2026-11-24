@@ -1,0 +1,2 @@
++incdir+${CALIPTRA_ROOT}/src/entropy_combiner/rtl
+${CALIPTRA_ROOT}/src/entropy_combiner/rtl/entropy_combiner_pkg.sv

@@ -118,8 +118,9 @@ def rng_seed_slice(lfsr_seed, k, fips_window):
 
     Seed 0 is the startup seed (2*FIPS_WINDOW samples); each subsequent
     steady-state seed consumes FIPS_WINDOW samples. Because the deterministic PRNG
-    streams a single contiguous sequence (hold-on-disable), seed k maps to a fixed
-    slice: k==0 -> [0, 2W); k>=1 -> [2W+(k-1)*W, 2W+k*W).
+    streams a single contiguous sequence while enabled (it restarts from its seed
+    when disabled), seed k maps to a fixed slice: k==0 -> [0, 2W);
+    k>=1 -> [2W+(k-1)*W, 2W+k*W).
     """
     W = fips_window
     if k == 0:

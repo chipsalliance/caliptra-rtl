@@ -174,7 +174,10 @@ module caliptra_prim_lfsr #(
        168'h5000000000028000000000000,
        168'h8000000004000000000000000,
        168'h18600000000000000000000000,
-       168'h30000000000000000C00000000,
+       // 102 bits: taps 102,101,26,25. The previous taps (102,101,36,35) formed a
+       // reducible polynomial, so the LFSR was not maximal-length and some seeds
+       // fell into short cycles. The new taps form a primitive polynomial.
+       168'h30000000000000000003000000,
        168'h40200000000000000000000000,
        168'hC0300000000000000000000000,
        168'h100010000000000000000000000,
@@ -298,8 +301,9 @@ module caliptra_prim_lfsr #(
     // lockup condition is all-zero
     assign lockup = ~(|lfsr_q);
 
-    // check that seed is not all-zero
-    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, |DefaultSeedLocal)
+    // check that seed is not all-zero. DefaultSeedLocal may still be X at time 0 in simulation,
+    // and its randomized values are constrained to exclude all-zero, so check the parameter.
+    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, |DefaultSeed)
 
 
   ////////////////////
@@ -323,8 +327,9 @@ module caliptra_prim_lfsr #(
     // lockup condition is all-ones
     assign lockup = &lfsr_q;
 
-    // check that seed is not all-ones
-    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, !(&DefaultSeedLocal))
+    // check that seed is not all-ones. DefaultSeedLocal may still be X at time 0 in simulation,
+    // and its randomized values are constrained to exclude all-ones, so check the parameter.
+    `CALIPTRA_ASSERT_INIT(DefaultSeedNzCheck_A, !(&DefaultSeed))
 
 
   /////////////

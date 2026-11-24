@@ -18,8 +18,8 @@
 // Consumer expected sizes:
 //   MLDSA seed -> 7
 //   MLKEM seed -> 15
-//   MLKEM msg  -> 7
-// dest_valid bits: bit2=MLDSA_SEED, bit6=MLKEM_SEED, bit7=MLKEM_MSG
+// dest_valid bits: bit2=MLDSA_SEED, bit6=MLKEM_SEED
+// (ML-KEM ENCAPS has no KV message read client.)
 //
 #include "caliptra_defines.h"
 #include "caliptra_isr.h"
@@ -46,15 +46,13 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
 #define DV_MLDSA_SEED 0x04u
 #define DV_MLKEM_SEED 0x40u
-#define DV_MLKEM_MSG  0x80u
 
-enum { ABR_MLDSA_SEED = 0, ABR_MLKEM_SEED = 1, ABR_MLKEM_MSG = 2 };
+enum { ABR_MLDSA_SEED = 0, ABR_MLKEM_SEED = 1 };
 
 static const char* consumer_name(int c) {
     switch (c) {
     case ABR_MLDSA_SEED: return "MLDSA_SEED";
     case ABR_MLKEM_SEED: return "MLKEM_SEED";
-    case ABR_MLKEM_MSG:  return "MLKEM_MSG";
     default:             return "?";
     }
 }
@@ -104,7 +102,7 @@ void main(void) {
     uint8_t slot       = (uint8_t)(rand() % 24);
     uint8_t last_dword = (uint8_t)(rand() & 0xF);
 
-    int consumer = rand() % 3;
+    int consumer = rand() % 2;
     uint32_t rd_ctrl, rd_status;
     uint8_t  dv;
     uint8_t  expected;
@@ -116,17 +114,11 @@ void main(void) {
         expected  = 7;
         break;
     case ABR_MLKEM_SEED:
+    default:
         rd_ctrl   = CLP_ABR_REG_KV_MLKEM_SEED_RD_CTRL;
         rd_status = CLP_ABR_REG_KV_MLKEM_SEED_RD_STATUS;
         dv        = DV_MLKEM_SEED;
         expected  = 15;
-        break;
-    case ABR_MLKEM_MSG:
-    default:
-        rd_ctrl   = CLP_ABR_REG_KV_MLKEM_MSG_RD_CTRL;
-        rd_status = CLP_ABR_REG_KV_MLKEM_MSG_RD_STATUS;
-        dv        = DV_MLKEM_MSG;
-        expected  = 7;
         break;
     }
 

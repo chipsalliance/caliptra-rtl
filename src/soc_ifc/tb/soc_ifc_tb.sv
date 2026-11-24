@@ -335,6 +335,7 @@ module soc_ifc_tb
 
              .cptra_pwrgood(cptra_pwrgood_tb),
              .cptra_rst_b(cptra_rst_b_tb),
+             .cold_boot(),
 
 
              .ready_for_fuses(ready_for_fuses),
@@ -448,8 +449,8 @@ module soc_ifc_tb
              .dual_itrng_en(1'b0),
              .dual_itrng_en_o(),
 
-             // DCLS corruption-detection enable strap (subsystem DCLS)
-             .ss_dcls_en(dcls_en_tb),
+             // DCLS enable
+             .dcls_en(dcls_en_tb),
 
              .stable_owner_key_en(),
 
@@ -473,6 +474,7 @@ module soc_ifc_tb
              .iccm_rt_start_addr(),
              .iccm_rt_end_addr(),
              .iccm_region_lock(),
+             .csr_hmac_key_lock(),
 
              .cptra_noncore_rst_b(cptra_noncore_rst_b_tb),
              .cptra_uc_rst_b(cptra_uc_rst_b_tb),
@@ -636,16 +638,26 @@ module soc_ifc_tb
   //----------------------------------------------------------------
   // Updates registers that have wired connections for status
   //
-  // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES, SS_CPTRA_DMA_AXI_USER
+  // CPTRA SECUIRTY_STATE, FLOW_STATUS, GENERIC_INPUT_WIRES, SS_CPTRA_DMA_AXI_USER, ICCM locks
   //----------------------------------------------------------------
 
   // default clocking used in $changed call
-  default clocking default_clk @(posedge clk_tb); endclocking
+  default clocking default_clk @(posedge clk_tb);
+    input #1step iccm_unlock = dut.iccm_unlock_o;
+  endclocking
   initial begin
       wait(socregs != null);
       socregs.wait_setup_done();
       $display("SocRegisters finished executing new()");
       fork
+        forever begin
+          @(default_clk);
+          if (default_clk.iccm_unlock) begin
+            // Apply after DUT NBA updates; same-edge bus reads keep pre-clear expectations.
+            update_exp_regval("INTERNAL_ICCM_LOCK", '0, SET_DIRECT);
+            update_exp_regval("INTERNAL_ICCM_REGION_LOCK", '0, SET_DIRECT);
+          end
+        end
         forever @($changed({scan_mode,security_state.debug_locked,security_state.device_lifecycle}))
           update_CPTRA_SECURITY_STATE(scan_mode, mubi4_test_true_loose(security_state.debug_locked), security_state.device_lifecycle);
         forever @($changed({ready_for_fuses,`REG_HIER_BOOT_FSM_PS}))
@@ -1846,6 +1858,7 @@ module soc_ifc_tb
   `include "debug_unlock_manuf_test.svh"
   `include "ss_strap_reg_reset_test.svh"
   `include "ss_soc_dbg_unlock_level_test.svh"
+  `include "dcls_hw_config_test.svh"
 //----------------------------------------------------------------
 
 
@@ -1980,6 +1993,12 @@ module soc_ifc_tb
           set_security_state_byname("RANDOM");
           sim_dut_init(.drive_straps(1'b1));
           ss_strap_reg_wrmrst_test();
+
+        end else if (soc_ifc_testname == "dcls_hw_config_test") begin
+          set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});
+          ocp_lock_en_tb = 1'b0;
+          sim_dut_init();
+          dcls_hw_config_test();
 
         end else if (soc_ifc_testname == "ss_soc_dbg_unlock_level_test") begin
           set_security_state('{device_lifecycle: DEVICE_PRODUCTION, debug_locked: DEBUG_LOCKED});

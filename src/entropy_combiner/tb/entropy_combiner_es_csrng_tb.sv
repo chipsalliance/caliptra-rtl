@@ -92,7 +92,7 @@ module entropy_combiner_es_csrng_tb
   // entropy_src registers / values (raw/bypass, as in entropy_src_tb.sv).
   localparam logic [31:0] ES_ADDR_MODULE_ENABLE = 32'h20;
   localparam logic [31:0] ES_ADDR_CONF          = 32'h24;
-  localparam logic [31:0] ES_CONF_RAW_BYPASS    = 32'h2649999;
+  localparam logic [31:0] ES_CONF_RAW_BYPASS    = 32'h0999999;
   localparam logic [31:0] ES_MODULE_ENABLE_ON   = 32'h6;
   localparam logic [31:0] ES_MODULE_ENABLE_OFF  = 32'h9;
 
@@ -150,15 +150,12 @@ module entropy_combiner_es_csrng_tb
   entropy_src_hw_if_req_t comb_csrng_req;           // CSRNG -> combiner (es_req)
   entropy_src_hw_if_rsp_t comb_csrng_rsp;           // combiner -> CSRNG (es_ack/es_bits)
 
-  // cs_aes_halt handshake: ES -> combiner request, combiner -> ES ack.
-  cs_aes_halt_req_t es0_cs_halt_req, es1_cs_halt_req;
-  cs_aes_halt_rsp_t es0_cs_halt_ack, es1_cs_halt_ack;
-
   //----------------------------------------------------------------
   // itrng wiring
   //----------------------------------------------------------------
-  entropy_src_rng_req_t es0_rng_req, es1_rng_req;
-  entropy_src_rng_rsp_t es0_rng_rsp, es1_rng_rsp;
+  logic       es0_rng_enable, es1_rng_enable;
+  logic       es0_rng_valid,  es1_rng_valid;
+  logic [3:0] es0_rng_bits,   es1_rng_bits;
 
   logic combine_en_tb;
 
@@ -200,11 +197,6 @@ module entropy_combiner_es_csrng_tb
     .csrng_hw_if_req_i(comb_csrng_req),
     .csrng_hw_if_rsp_o(comb_csrng_rsp),
 
-    .es0_cs_aes_halt_i(es0_cs_halt_req),
-    .es1_cs_aes_halt_i(es1_cs_halt_req),
-    .es0_cs_aes_halt_o(es0_cs_halt_ack),
-    .es1_cs_aes_halt_o(es1_cs_halt_ack),
-
     .es0_hw_if_req_o  (es0_hw_req),
     .es0_hw_if_rsp_i  (es0_hw_rsp),
     .es1_hw_if_req_o  (es1_hw_req),
@@ -239,48 +231,46 @@ module entropy_combiner_es_csrng_tb
     .AHBDataWidth(AHB_DATA_W),
     .AHBAddrWidth(AHB_ADDR_W)
   ) u_es0 (
-    .clk_i               (clk_tb),
-    .rst_ni              (reset_n_tb),
-    .haddr_i             (es_haddr),
-    .hwdata_i            (es_hwdata),
-    .hsel_i              (es_hsel),
-    .hwrite_i            (es_hwrite),
-    .hready_i            (es_hready),
-    .htrans_i            (es_htrans),
-    .hsize_i             (es_hsize),
-    .hresp_o             (es0_hresp),
-    .hreadyout_o         (es0_hreadyout),
-    .hrdata_o            (es0_hrdata),
-    .entropy_src_hw_if_i (es0_hw_req),
-    .entropy_src_hw_if_o (es0_hw_rsp),
-    .cs_aes_halt_o       (es0_cs_halt_req),
-    .cs_aes_halt_i       (es0_cs_halt_ack),
-    .entropy_src_rng_o   (es0_rng_req),
-    .entropy_src_rng_i   (es0_rng_rsp)
+    .clk_i                    (clk_tb),
+    .rst_ni                   (reset_n_tb),
+    .haddr_i                  (es_haddr),
+    .hwdata_i                 (es_hwdata),
+    .hsel_i                   (es_hsel),
+    .hwrite_i                 (es_hwrite),
+    .hready_i                 (es_hready),
+    .htrans_i                 (es_htrans),
+    .hsize_i                  (es_hsize),
+    .hresp_o                  (es0_hresp),
+    .hreadyout_o              (es0_hreadyout),
+    .hrdata_o                 (es0_hrdata),
+    .entropy_src_hw_if_i      (es0_hw_req),
+    .entropy_src_hw_if_o      (es0_hw_rsp),
+    .entropy_src_rng_enable_o (es0_rng_enable),
+    .entropy_src_rng_valid_i  (es0_rng_valid),
+    .entropy_src_rng_bits_i   (es0_rng_bits)
   );
 
   entropy_src_raw_wrap #(
     .AHBDataWidth(AHB_DATA_W),
     .AHBAddrWidth(AHB_ADDR_W)
   ) u_es1 (
-    .clk_i               (clk_tb),
-    .rst_ni              (reset_n_tb),
-    .haddr_i             (es_haddr),
-    .hwdata_i            (es_hwdata),
-    .hsel_i              (es_hsel),
-    .hwrite_i            (es_hwrite),
-    .hready_i            (es_hready),
-    .htrans_i            (es_htrans),
-    .hsize_i             (es_hsize),
-    .hresp_o             (es1_hresp),
-    .hreadyout_o         (es1_hreadyout),
-    .hrdata_o            (es1_hrdata),
-    .entropy_src_hw_if_i (es1_hw_req),
-    .entropy_src_hw_if_o (es1_hw_rsp),
-    .cs_aes_halt_o       (es1_cs_halt_req),
-    .cs_aes_halt_i       (es1_cs_halt_ack),
-    .entropy_src_rng_o   (es1_rng_req),
-    .entropy_src_rng_i   (es1_rng_rsp)
+    .clk_i                    (clk_tb),
+    .rst_ni                   (reset_n_tb),
+    .haddr_i                  (es_haddr),
+    .hwdata_i                 (es_hwdata),
+    .hsel_i                   (es_hsel),
+    .hwrite_i                 (es_hwrite),
+    .hready_i                 (es_hready),
+    .htrans_i                 (es_htrans),
+    .hsize_i                  (es_hsize),
+    .hresp_o                  (es1_hresp),
+    .hreadyout_o              (es1_hreadyout),
+    .hrdata_o                 (es1_hrdata),
+    .entropy_src_hw_if_i      (es1_hw_req),
+    .entropy_src_hw_if_o      (es1_hw_rsp),
+    .entropy_src_rng_enable_o (es1_rng_enable),
+    .entropy_src_rng_valid_i  (es1_rng_valid),
+    .entropy_src_rng_bits_i   (es1_rng_bits)
   );
 
   physical_rng #(
@@ -289,9 +279,9 @@ module entropy_combiner_es_csrng_tb
     .DutyCycle     (RNG_DUTY_CYCLE)
   ) u_rng0 (
     .clk    (clk_tb),
-    .enable (es0_rng_req.rng_enable & rng0_go),
-    .data   (es0_rng_rsp.rng_b),
-    .valid  (es0_rng_rsp.rng_valid)
+    .enable (es0_rng_enable & rng0_go),
+    .data   (es0_rng_bits),
+    .valid  (es0_rng_valid)
   );
 
   physical_rng #(
@@ -300,9 +290,9 @@ module entropy_combiner_es_csrng_tb
     .DutyCycle     (RNG_DUTY_CYCLE)
   ) u_rng1 (
     .clk    (clk_tb),
-    .enable (es1_rng_req.rng_enable & rng1_go),
-    .data   (es1_rng_rsp.rng_b),
-    .valid  (es1_rng_rsp.rng_valid)
+    .enable (es1_rng_enable & rng1_go),
+    .data   (es1_rng_bits),
+    .valid  (es1_rng_valid)
   );
 
   //----------------------------------------------------------------
@@ -944,11 +934,113 @@ module entropy_combiner_es_csrng_tb
   endtask
 
   //----------------------------------------------------------------
+  // run_random_zeroize_cases()
+  //
+  // Zeroize the combiner at a random point of a combine (random delay after
+  // the instantiate, ES0/ES1 skew and pulse length). No seed or digest may be
+  // left afterwards, and after restarting both ES the instantiate must
+  // complete with the golden seed and genbits.
+  // Iterations: +COMB_RAND_ZEROIZE_ITER=<n> (default 20).
+  //----------------------------------------------------------------
+  task run_random_zeroize_cases(input string tag);
+    integer err_at_entry;
+    integer num_iter;
+    integer es0_delay, es1_delay, zeroize_delay, pulse_len;
+    integer i, j;
+    begin
+      if (!$value$plusargs("COMB_RAND_ZEROIZE_ITER=%d", num_iter)) num_iter = 20;
+      $display("*** [%s] %0d random zeroizes", tag, num_iter);
+
+      for (i = 0; i < num_iter; i = i + 1) begin
+        err_at_entry = error_ctr;
+
+        rng0_go = 1'b0;
+        rng1_go = 1'b0;
+        combine_en_tb = 1'b1;
+        reset_dut();
+        repeat (50) @(posedge clk_tb);
+        configure_es();
+        repeat (20) @(posedge clk_tb);
+        write_cs(CS_ADDR_CTRL, CS_CTRL_ENABLE);
+        repeat (20) @(posedge clk_tb);
+
+        // The zeroize delay covers the whole combine (one seed takes SEED_W/4
+        // RNG samples) plus some margin.
+        es0_delay     = $urandom_range(300);
+        es1_delay     = $urandom_range(300);
+        zeroize_delay = $urandom_range(300 + 2 * (SEED_W/4) * RNG_DUTY_CYCLE);
+        pulse_len     = $urandom_range(3) ? 1 : $urandom_range(2, 32);
+
+        write_cs(CS_ADDR_CMD_REQ, CS_CMD_INSTANTIATE);
+        fork
+          begin
+            repeat (es0_delay) @(posedge clk_tb);
+            rng0_go = 1'b1;
+          end
+          begin
+            repeat (es1_delay) @(posedge clk_tb);
+            rng1_go = 1'b1;
+          end
+          begin
+            repeat (zeroize_delay) @(posedge clk_tb);
+            @(negedge clk_tb);
+            $display("    [%s] iter %0d: es0_delay=%0d es1_delay=%0d zeroize after %0d cycles for %0d cycles (state=%b es0_valid=%0b es1_valid=%0b)",
+                     tag, i, es0_delay, es1_delay, zeroize_delay, pulse_len,
+                     u_combiner.state_q, u_combiner.es0_valid_q, u_combiner.es1_valid_q);
+            zeroize_tb = 1'b1;
+            repeat (pulse_len) @(negedge clk_tb);
+            zeroize_tb = 1'b0;
+          end
+        join
+
+        // Directly after the zeroize: no captured seed or digest left.
+        if (u_combiner.es0_valid_q || u_combiner.es1_valid_q ||
+            u_combiner.es0_bits_q !== '0 || u_combiner.es1_bits_q !== '0 ||
+            u_combiner.digest_q !== '0) begin
+          error_ctr = error_ctr + 1;
+          $display("*** [%s] iter %0d: ERROR: combiner data not cleared by zeroize", tag, i);
+        end
+
+        // Restart both ES so that they deliver IS0/IS1 again if requested.
+        restart_es();
+
+        // Nothing may hang: the instantiate completes and generate returns bits.
+        poll_cs(CS_ADDR_SW_CMD_STS, CS_SW_CMD_RDY, "instantiate SW_CMD_STS");
+        if (!csrng_seed_valid) begin
+          error_ctr = error_ctr + 1;
+          $display("*** [%s] iter %0d: ERROR: no seed delivered to CSRNG", tag, i);
+        end else if (csrng_seed_seen !== EXP_SEED_COMBINE) begin
+          error_ctr = error_ctr + 1;
+          $display("*** [%s] iter %0d: combiner->CSRNG seed MISMATCH", tag, i);
+          $display("      exp = %096h", EXP_SEED_COMBINE);
+          $display("      got = %096h", csrng_seed_seen);
+        end
+
+        write_cs(CS_ADDR_CMD_REQ, CS_CMD_GENERATE_128);
+        poll_cs(CS_ADDR_GENBITS_VLD, CS_GENBITS_VALID, "generate GENBITS_VLD");
+        for (j = 0; j < 4; j = j + 1) begin
+          read_cs(CS_ADDR_GENBITS);
+          if (read_data !== EXP_GENBITS_COMBINE[j]) begin
+            error_ctr = error_ctr + 1;
+            $display("*** [%s] iter %0d: GENBITS[%0d] MISMATCH exp=0x%08x got=0x%08x",
+                     tag, i, j, EXP_GENBITS_COMBINE[j], read_data);
+          end
+        end
+
+        if (error_ctr == err_at_entry)
+          $display("    [%s] iter %0d: PASS", tag, i);
+        tc_ctr = tc_ctr + 1;
+        repeat (30) @(posedge clk_tb);
+      end
+    end
+  endtask
+
+  //----------------------------------------------------------------
   // Main - same inputs (IS0/IS1), ES timing/config, error, AHB-lock and zeroize cases.
   //----------------------------------------------------------------
   initial begin
     init_sim();
-    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 11 cases");
+    $display("*** entropy_combiner + dual entropy_src + CSRNG chain: 12 cases");
 
     // 1) ES1 (primary/ES0) arrives faster than ES2 (secondary/ES1).
     run_case(1'b1, 0,   257, 1'b1, 1'b0, "case1-ES1-faster-than-ES2");
@@ -976,6 +1068,9 @@ module entropy_combiner_es_csrng_tb
     run_zeroize_case(ZEROIZE_ONE_ES,  "case10-zeroize-one-es-outstanding");
     run_zeroize_case(ZEROIZE_SHA3,    "case11-zeroize-sha3-running");
 
+    // 12) Zeroize at random points in time during a combine.
+    run_random_zeroize_cases("case12-zeroize-random");
+
     display_test_result();
     $finish;
   end
@@ -989,5 +1084,10 @@ module entropy_combiner_es_csrng_tb
     $display("* TESTCASE FAILED");
     $finish;
   end
+
+`ifndef VERILATOR
+  entropy_src_cov_bind i_entropy_src_cov_bind();
+  entropy_combiner_cov_bind i_entropy_combiner_cov_bind();
+`endif
 
 endmodule

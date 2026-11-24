@@ -138,7 +138,8 @@ module caliptra_tlul_adapter_vh
     .err_o ( intg_err_chk )
   );
 
-  assign error_o = tl_i.d_error | int_error_i | intg_err_chk;
+  // The TL error payload can retain its previous value between valid responses.
+  assign error_o = (tl_i.d_valid & tl_i.d_error) | int_error_i | intg_err_chk;
 
   // Make sure the VH parameters are compatible with TLUL datapath widths.
   `CALIPTRA_ASSERT_INIT(TlInvalidAddrWidth_A, ADDR_WIDTH == TL_AW)

@@ -1025,7 +1025,9 @@ module ecc_top_tb
 
       write_block(`ECC_REG_ECC_PRIVKEY_IN_0, privKey_faulty);
       trig_ECC(ECC_CMD_SIGNING);
-      wait_ready();
+      // An error keeps ECC_STATUS.READY low until zeroize, so wait for the engine to go idle.
+      // Poll in whole clock periods to keep TB stimulus off the DUT sampling edge.
+      while (!dut.ecc_dsa_ctrl_i.ecc_idle) #(CLK_PERIOD);
 
       #(2 * CLK_PERIOD);  //there are 2 cycles latency to set error_intr
 
@@ -1042,9 +1044,17 @@ module ecc_top_tb
           error_ctr = error_ctr + 1;
         end
 
+      // After an error ECC must stay not-ready and reject new commands until zeroize
       trig_ECC(ECC_CMD_SIGNING);
-      
-      wait_ready();
+
+      read_single_word(`ECC_REG_ECC_STATUS);
+      if ((read_data[`ECC_REG_ECC_STATUS_READY_LOW] !== 1'b0) || (dut.ecc_dsa_ctrl_i.ecc_idle !== 1'b1))
+        begin
+          $display("*** ERROR: ECC accepted a command after an error without zeroize.");
+          $display("");
+
+          error_ctr = error_ctr + 1;
+        end
 
       trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
 
@@ -1103,6 +1113,8 @@ module ecc_top_tb
       read_block(`ECC_REG_ECC_PUBKEY_Y_0);
       pubkey.y = reg_read_data;
       
+      trig_ECC(`ECC_REG_ECC_CTRL_ZEROIZE_MASK); //zeroize
+
       end_time = cycle_ctr - start_time;
       $display("*** keygen test processing time = %01d cycles.", end_time);
       $display("privkey    : 0x%96x", test_vector.privkey);

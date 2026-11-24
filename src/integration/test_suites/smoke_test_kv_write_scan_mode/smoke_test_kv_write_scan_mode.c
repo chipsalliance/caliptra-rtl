@@ -99,7 +99,6 @@ void main(){
                                                       HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK  |
                                                       HMAC_REG_HMAC512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK  |
                                                       HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK  |
-                                                      HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_MSG_DEST_VALID_MASK  |
                                                       HMAC_REG_HMAC512_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK |
                                                       ((hmac512_tag_kv_id << HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) & HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK));
 
@@ -108,6 +107,7 @@ void main(){
 
     VPRINTF(LOW, "Enable HMAC core\n");
     lsu_write_32(CLP_HMAC_REG_HMAC512_CTRL, HMAC_REG_HMAC512_CTRL_INIT_MASK |
+                                                HMAC_REG_HMAC512_CTRL_LAST_MASK |
                                                 (HMAC512_MODE << HMAC_REG_HMAC512_CTRL_MODE_LOW));    
 
     // wait for HMAC process to be done

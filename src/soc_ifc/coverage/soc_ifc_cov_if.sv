@@ -1058,6 +1058,26 @@ interface soc_ifc_cov_if
   logic [3:0]    bus_CPTRA_OWNER_PK_HASH_LOCK;
   logic [31:0]   full_addr_CPTRA_OWNER_PK_HASH_LOCK = `CLP_SOC_IFC_REG_CPTRA_OWNER_PK_HASH_LOCK;
 
+  logic          hit_CPTRA_AUX_PK_HASH[0:11];
+  logic [3:0]    bus_CPTRA_AUX_PK_HASH[0:11];
+  logic [31:0]   full_addr_CPTRA_AUX_PK_HASH[0:11];
+  assign         full_addr_CPTRA_AUX_PK_HASH[0] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_0;
+  assign         full_addr_CPTRA_AUX_PK_HASH[1] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_1;
+  assign         full_addr_CPTRA_AUX_PK_HASH[2] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_2;
+  assign         full_addr_CPTRA_AUX_PK_HASH[3] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_3;
+  assign         full_addr_CPTRA_AUX_PK_HASH[4] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_4;
+  assign         full_addr_CPTRA_AUX_PK_HASH[5] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_5;
+  assign         full_addr_CPTRA_AUX_PK_HASH[6] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_6;
+  assign         full_addr_CPTRA_AUX_PK_HASH[7] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_7;
+  assign         full_addr_CPTRA_AUX_PK_HASH[8] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_8;
+  assign         full_addr_CPTRA_AUX_PK_HASH[9] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_9;
+  assign         full_addr_CPTRA_AUX_PK_HASH[10] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_10;
+  assign         full_addr_CPTRA_AUX_PK_HASH[11] = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_11;
+
+  logic          hit_CPTRA_AUX_PK_HASH_LOCK;
+  logic [3:0]    bus_CPTRA_AUX_PK_HASH_LOCK;
+  logic [31:0]   full_addr_CPTRA_AUX_PK_HASH_LOCK = `CLP_SOC_IFC_REG_CPTRA_AUX_PK_HASH_LOCK;
+
   logic          hit_fuse_uds_seed[0:15];
   logic [3:0]    bus_fuse_uds_seed[0:15];
   logic [31:0]   full_addr_fuse_uds_seed[0:15];
@@ -1301,6 +1321,18 @@ interface soc_ifc_cov_if
   logic          hit_SS_OCP_LOCK_CTRL;
   logic [3:0]    bus_SS_OCP_LOCK_CTRL;
   logic [31:0]   full_addr_SS_OCP_LOCK_CTRL = `CLP_SOC_IFC_REG_SS_OCP_LOCK_CTRL;
+
+  logic          hit_SS_OTP_FC_STATUS_CFG;
+  logic [3:0]    bus_SS_OTP_FC_STATUS_CFG;
+  logic [31:0]   full_addr_SS_OTP_FC_STATUS_CFG = `CLP_SOC_IFC_REG_SS_OTP_FC_STATUS_CFG;
+
+  logic          hit_SS_OTP_FC_CMD_CFG;
+  logic [3:0]    bus_SS_OTP_FC_CMD_CFG;
+  logic [31:0]   full_addr_SS_OTP_FC_CMD_CFG = `CLP_SOC_IFC_REG_SS_OTP_FC_CMD_CFG;
+
+  logic          hit_SS_FW_FEATURE_CFG;
+  logic [3:0]    bus_SS_FW_FEATURE_CFG;
+  logic [31:0]   full_addr_SS_FW_FEATURE_CFG = `CLP_SOC_IFC_REG_SS_FW_FEATURE_CFG;
 
   logic          hit_SS_STRAP_GENERIC[0:3];
   logic [3:0]    bus_SS_STRAP_GENERIC[0:3];
@@ -1823,6 +1855,45 @@ interface soc_ifc_cov_if
   assign hit_CPTRA_OWNER_PK_HASH_LOCK = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_OWNER_PK_HASH_LOCK[AXI_ADDR_WIDTH-1:0]);
   assign bus_CPTRA_OWNER_PK_HASH_LOCK = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_OWNER_PK_HASH_LOCK}};
 
+  assign hit_CPTRA_AUX_PK_HASH[0] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[0][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[0]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[1] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[1][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[1] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[1]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[2] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[2][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[2] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[2]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[3] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[3][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[3] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[3]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[4] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[4][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[4] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[4]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[5] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[5][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[5] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[5]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[6] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[6][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[6] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[6]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[7] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[7][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[7] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[7]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[8] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[8][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[8] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[8]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[9] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[9][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[9] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[9]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[10] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[10][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[10] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[10]}};
+
+  assign hit_CPTRA_AUX_PK_HASH[11] = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH[11][18-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH[11] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH[11]}};
+
+  assign hit_CPTRA_AUX_PK_HASH_LOCK = (soc_ifc_reg_req_data.addr == full_addr_CPTRA_AUX_PK_HASH_LOCK[AXI_ADDR_WIDTH-1:0]);
+  assign bus_CPTRA_AUX_PK_HASH_LOCK = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_CPTRA_AUX_PK_HASH_LOCK}};
+
   assign hit_fuse_uds_seed[0] = (soc_ifc_reg_req_data.addr == full_addr_fuse_uds_seed[0][18-1:0]);
   assign bus_fuse_uds_seed[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_fuse_uds_seed[0]}};
 
@@ -2194,6 +2265,15 @@ interface soc_ifc_cov_if
 
   assign hit_SS_OCP_LOCK_CTRL = (soc_ifc_reg_req_data.addr == full_addr_SS_OCP_LOCK_CTRL[AXI_ADDR_WIDTH-1:0]);
   assign bus_SS_OCP_LOCK_CTRL = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_OCP_LOCK_CTRL}};
+
+  assign hit_SS_OTP_FC_STATUS_CFG = (soc_ifc_reg_req_data.addr == full_addr_SS_OTP_FC_STATUS_CFG[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_OTP_FC_STATUS_CFG = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_OTP_FC_STATUS_CFG}};
+
+  assign hit_SS_OTP_FC_CMD_CFG = (soc_ifc_reg_req_data.addr == full_addr_SS_OTP_FC_CMD_CFG[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_OTP_FC_CMD_CFG = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_OTP_FC_CMD_CFG}};
+
+  assign hit_SS_FW_FEATURE_CFG = (soc_ifc_reg_req_data.addr == full_addr_SS_FW_FEATURE_CFG[AXI_ADDR_WIDTH-1:0]);
+  assign bus_SS_FW_FEATURE_CFG = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_FW_FEATURE_CFG}};
 
   assign hit_SS_STRAP_GENERIC[0] = (soc_ifc_reg_req_data.addr == full_addr_SS_STRAP_GENERIC[0][18-1:0]);
   assign bus_SS_STRAP_GENERIC[0] = {uc_rd, uc_wr, soc_rd, soc_wr} & {4{hit_SS_STRAP_GENERIC[0]}};
@@ -3072,6 +3152,79 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP CPTRA_AUX_PK_HASH [0:11] -----------------------
+  covergroup soc_ifc_CPTRA_AUX_PK_HASH_cg (ref logic [3:0] bus_event[0:11]) @(posedge clk);
+    CPTRA_AUX_PK_HASH0_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[0];
+    bus_CPTRA_AUX_PK_HASH0_cp : coverpoint bus_event[0] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH1_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[1];
+    bus_CPTRA_AUX_PK_HASH1_cp : coverpoint bus_event[1] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH2_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[2];
+    bus_CPTRA_AUX_PK_HASH2_cp : coverpoint bus_event[2] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH3_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[3];
+    bus_CPTRA_AUX_PK_HASH3_cp : coverpoint bus_event[3] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH4_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[4];
+    bus_CPTRA_AUX_PK_HASH4_cp : coverpoint bus_event[4] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH5_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[5];
+    bus_CPTRA_AUX_PK_HASH5_cp : coverpoint bus_event[5] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH6_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[6];
+    bus_CPTRA_AUX_PK_HASH6_cp : coverpoint bus_event[6] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH7_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[7];
+    bus_CPTRA_AUX_PK_HASH7_cp : coverpoint bus_event[7] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH8_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[8];
+    bus_CPTRA_AUX_PK_HASH8_cp : coverpoint bus_event[8] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH9_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[9];
+    bus_CPTRA_AUX_PK_HASH9_cp : coverpoint bus_event[9] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH10_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[10];
+    bus_CPTRA_AUX_PK_HASH10_cp : coverpoint bus_event[10] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+    CPTRA_AUX_PK_HASH11_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH[11];
+    bus_CPTRA_AUX_PK_HASH11_cp : coverpoint bus_event[11] {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP CPTRA_AUX_PK_HASH_LOCK -----------------------
+  covergroup soc_ifc_CPTRA_AUX_PK_HASH_LOCK_cg (ref logic [3:0] bus_event) @(posedge clk);
+    CPTRA_AUX_PK_HASH_LOCK_cp : coverpoint i_soc_ifc_reg.field_storage.CPTRA_AUX_PK_HASH_LOCK;
+    bus_CPTRA_AUX_PK_HASH_LOCK_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
   // ----------------------- COVERGROUP fuse_uds_seed [0:15] -----------------------
   covergroup soc_ifc_fuse_uds_seed_cg (ref logic [3:0] bus_event[0:15]) @(posedge clk);
     fuse_uds_seed0_cp : coverpoint i_soc_ifc_reg.field_storage.fuse_uds_seed[0];
@@ -3840,6 +3993,33 @@ interface soc_ifc_cov_if
     }
   endgroup
 
+  // ----------------------- COVERGROUP SS_OTP_FC_STATUS_CFG -----------------------
+  covergroup soc_ifc_SS_OTP_FC_STATUS_CFG_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_OTP_FC_STATUS_CFG_cp : coverpoint i_soc_ifc_reg.field_storage.SS_OTP_FC_STATUS_CFG;
+    bus_SS_OTP_FC_STATUS_CFG_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP SS_OTP_FC_CMD_CFG -----------------------
+  covergroup soc_ifc_SS_OTP_FC_CMD_CFG_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_OTP_FC_CMD_CFG_cp : coverpoint i_soc_ifc_reg.field_storage.SS_OTP_FC_CMD_CFG;
+    bus_SS_OTP_FC_CMD_CFG_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
+  // ----------------------- COVERGROUP SS_FW_FEATURE_CFG -----------------------
+  covergroup soc_ifc_SS_FW_FEATURE_CFG_cg (ref logic [3:0] bus_event) @(posedge clk);
+    SS_FW_FEATURE_CFG_cp : coverpoint i_soc_ifc_reg.field_storage.SS_FW_FEATURE_CFG;
+    bus_SS_FW_FEATURE_CFG_cp : coverpoint bus_event {
+      bins wr_rd[] = (AHB_WR, AXI_WR => IDLE [*1:1000] => AHB_RD, AXI_RD);
+      ignore_bins dont_care = {IDLE, 4'hf, (AXI_RD | AXI_WR), (AHB_RD | AHB_WR)};
+    }
+  endgroup
+
   // ----------------------- COVERGROUP SS_STRAP_GENERIC [0:3] -----------------------
   covergroup soc_ifc_SS_STRAP_GENERIC_cg (ref logic [3:0] bus_event[0:3]) @(posedge clk);
     SS_STRAP_GENERIC0_cp : coverpoint i_soc_ifc_reg.field_storage.SS_STRAP_GENERIC[0];
@@ -4486,6 +4666,8 @@ interface soc_ifc_cov_if
   soc_ifc_CPTRA_CAP_LOCK_cg CPTRA_CAP_LOCK_cg = new(bus_CPTRA_CAP_LOCK);
   soc_ifc_CPTRA_OWNER_PK_HASH_cg CPTRA_OWNER_PK_HASH_cg = new(bus_CPTRA_OWNER_PK_HASH);
   soc_ifc_CPTRA_OWNER_PK_HASH_LOCK_cg CPTRA_OWNER_PK_HASH_LOCK_cg = new(bus_CPTRA_OWNER_PK_HASH_LOCK);
+  soc_ifc_CPTRA_AUX_PK_HASH_cg CPTRA_AUX_PK_HASH_cg = new(bus_CPTRA_AUX_PK_HASH);
+  soc_ifc_CPTRA_AUX_PK_HASH_LOCK_cg CPTRA_AUX_PK_HASH_LOCK_cg = new(bus_CPTRA_AUX_PK_HASH_LOCK);
   soc_ifc_fuse_uds_seed_cg fuse_uds_seed_cg = new(bus_fuse_uds_seed);
   soc_ifc_fuse_field_entropy_cg fuse_field_entropy_cg = new(bus_fuse_field_entropy);
   soc_ifc_fuse_vendor_pk_hash_cg fuse_vendor_pk_hash_cg = new(bus_fuse_vendor_pk_hash);
@@ -4523,6 +4705,9 @@ interface soc_ifc_cov_if
   soc_ifc_SS_KEY_RELEASE_BASE_ADDR_H_cg SS_KEY_RELEASE_BASE_ADDR_H_cg = new(bus_SS_KEY_RELEASE_BASE_ADDR_H);
   soc_ifc_SS_KEY_RELEASE_SIZE_cg SS_KEY_RELEASE_SIZE_cg = new(bus_SS_KEY_RELEASE_SIZE);
   soc_ifc_SS_OCP_LOCK_CTRL_cg SS_OCP_LOCK_CTRL_cg = new(bus_SS_OCP_LOCK_CTRL);
+  soc_ifc_SS_OTP_FC_STATUS_CFG_cg SS_OTP_FC_STATUS_CFG_cg = new(bus_SS_OTP_FC_STATUS_CFG);
+  soc_ifc_SS_OTP_FC_CMD_CFG_cg SS_OTP_FC_CMD_CFG_cg = new(bus_SS_OTP_FC_CMD_CFG);
+  soc_ifc_SS_FW_FEATURE_CFG_cg SS_FW_FEATURE_CFG_cg = new(bus_SS_FW_FEATURE_CFG);
   soc_ifc_SS_STRAP_GENERIC_cg SS_STRAP_GENERIC_cg = new(bus_SS_STRAP_GENERIC);
   soc_ifc_SS_DBG_SERVICE_REG_REQ_cg SS_DBG_SERVICE_REG_REQ_cg = new(bus_SS_DBG_SERVICE_REG_REQ);
   soc_ifc_SS_DBG_SERVICE_REG_RSP_cg SS_DBG_SERVICE_REG_RSP_cg = new(bus_SS_DBG_SERVICE_REG_RSP);

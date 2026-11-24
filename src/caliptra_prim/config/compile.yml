@@ -107,6 +107,7 @@ targets:
       - $COMPILE_ROOT/rtl/caliptra_prim_subreg_shadow.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_esc_receiver.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_mubi4_dec.sv
+      - $COMPILE_ROOT/rtl/caliptra_prim_rst_mux2.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_clock_mux2.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_fifo_async.sv
       - $COMPILE_ROOT/rtl/caliptra_prim_fifo_async_simple.sv

@@ -1,4 +1,16 @@
 ---
+provides: [entropy_combiner_pkg]
+schema_version: 2.4.0
+targets:
+  rtl:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/entropy_combiner_pkg.sv
+  tb:
+    directories: [$COMPILE_ROOT/rtl]
+    files:
+      - $COMPILE_ROOT/rtl/entropy_combiner_pkg.sv
+---
 provides: [entropy_combiner]
 schema_version: 2.4.0
 requires:
@@ -7,11 +19,11 @@ requires:
   - lc_ctrl_pkg
   - entropy_src_pkg
   - sha3_ctrl
+  - entropy_combiner_pkg
 targets:
   rtl:
     directories: [$COMPILE_ROOT/rtl]
     files:
-      - $COMPILE_ROOT/rtl/entropy_combiner_pkg.sv
       - $COMPILE_ROOT/rtl/entropy_combiner_reg_pkg.sv
       - $COMPILE_ROOT/rtl/entropy_combiner_reg.sv
       - $COMPILE_ROOT/rtl/entropy_combiner.sv
@@ -115,6 +127,8 @@ requires:
   - csrng_raw_wrap
   - physical_rng
   - caliptra_top_reg_defines
+  - entropy_src_coverage
+  - entropy_combiner_coverage
 targets:
   tb:
     directories: [$COMPILE_ROOT/tb]
@@ -129,3 +143,16 @@ global:
         - +define+CLP_ASSERT_ON
         - +define+SIMULATION
         - '-noinherit_timescale=1ns/1ps'
+---
+provides: [entropy_combiner_coverage]
+schema_version: 2.4.0
+requires:
+  - entropy_combiner_pkg
+  - entropy_combiner
+targets:
+  tb:
+    directories:
+      - $COMPILE_ROOT/coverage
+    files:
+      - $COMPILE_ROOT/coverage/entropy_combiner_cov_if.sv
+      - $COMPILE_ROOT/coverage/entropy_combiner_cov_bind.sv

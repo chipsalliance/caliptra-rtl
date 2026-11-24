@@ -35,6 +35,7 @@ module kv
     input logic debugUnlock_or_scan_mode_switch,
 
     //Boot flow signals
+    input logic cold_boot,
     input caliptra_prim_mubi_pkg::mubi4_t boot_flow_fmc,
     input caliptra_prim_mubi_pkg::mubi4_t boot_flow_rt,
     input caliptra_prim_mubi_pkg::mubi4_t boot_flow_error,
@@ -90,6 +91,8 @@ kv_reg__out_t kv_reg_hwif_out;
 
 logic [KV_NUM_KEYS-1:0] key_entry_clear;
 logic [KV_NUM_KEYS-1:0] boot_flow_key_clear;
+logic [KV_NUM_KEYS-1:0] boot_flow_lock_wr;
+logic [KV_NUM_KEYS-1:0] boot_flow_lock_use;
 
 logic [$clog2(KV_NUM_WRITE)-1:0] kv_write_cnt;
 logic kv_multi_write_err;
@@ -248,6 +251,11 @@ always_comb begin : keyvault_ctrl
         //once lock is set, only reset can unset it
         kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.swwel = lock_wr_q[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].lock_use.swwel = lock_use_q[entry];
+        //boot flow locks from KV_ENFORCEMENT
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwset = boot_flow_lock_wr[entry];
+        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwset = boot_flow_lock_use[entry];
+        //tie-off
+        kv_reg_hwif_in.KEY_CTRL[entry].rsvd0.hwclr = '0;
         //clear dest valid and last dword (enforcement clear is same-cycle, key_entry_clear is registered)
         kv_reg_hwif_in.KEY_CTRL[entry].dest_valid.hwclr = key_entry_clear[entry];
         kv_reg_hwif_in.KEY_CTRL[entry].last_dword.hwclr = key_entry_clear[entry];
@@ -316,13 +324,6 @@ always_comb begin : keyvault_write_resp
             kv_wr_resp[client].error |= (kv_write[client].write_entry == entry) & kv_write[client].write_en &
                                         (key_entry_clear[entry] | lock_wr_q[entry] | lock_use_q[entry] | fw_update_rst_window);
         end
-    end
-end
-
-//tie-offs
-always_comb begin
-    for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
-        kv_reg_hwif_in.KEY_CTRL[entry].rsvd0.hwclr = '0;
     end
 end
 
@@ -401,25 +402,27 @@ end
 //KV Enforcement
 //This logic enforces that the keyvault is in the expected state at transition to FMC or RT
 //Asserts lock_wr, lock_use continuously in their appropriate layers
-//per-entry clear atomically in one cycle on each transition
+//per-entry clear atomically on cold-boot transitions only
 //Slot assignments from caliptra-sw KeyId: 0=UDS, 1=FE, 2=KeyLadder, 3=TMP,
 //  4=RT_CDI, 5=RT_ECDSA, 6=FMC_CDI, 7=FMC_ECDSA, 8=FMC_MLDSA, 9=RT_MLDSA, 10-12=DPE, 13-14=spare, 15=STABLE_OWNER
 //  16=MDK, 22=HEK (OCP Lock slots preserved conditionally)
 always_comb begin : KV_ENFORCEMENT
     for (int entry = 0; entry < KV_NUM_KEYS; entry++) begin
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_wr.hwset  = (mubi4_test_true_loose(boot_flow_fmc) &&
-                                                          entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA}) ||
-                                                         (mubi4_test_true_loose(boot_flow_rt) &&
-                                                          entry inside {KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA});
-        kv_reg_hwif_in.KEY_CTRL[entry].lock_use.hwset = (mubi4_test_true_loose(boot_flow_rt) &&
-                                                          entry inside {KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA});
-        boot_flow_key_clear[entry] = (enter_fmc && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})
+        //applied to KEY_CTRL lock_wr.hwset and lock_use.hwset in keyvault_ctrl
+        boot_flow_lock_wr[entry]  = (mubi4_test_true_loose(boot_flow_fmc) &&
+                                     entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA}) ||
+                                    (mubi4_test_true_loose(boot_flow_rt) &&
+                                     entry inside {KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA});
+        boot_flow_lock_use[entry] = (mubi4_test_true_loose(boot_flow_rt) &&
+                                     entry inside {KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA});
+        boot_flow_key_clear[entry] = cold_boot &&
+                                    ((enter_fmc && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA})
                                                  && ~(stable_owner_key_en && entry == KV_SLOT_STABLE_OWNER)
                                                  && ~(ocp_lock_mode_en && entry inside {OCP_LOCK_RT_OBF_KEY_KV_SLOT, OCP_LOCK_HEK_SEED_KV_SLOT})) ||
                                      (enter_rt && ~(entry inside {KV_SLOT_SI_IDEV, KV_SLOT_SI_LDEV, KV_SLOT_KEY_LADDER, KV_SLOT_FMC_CDI, KV_SLOT_FMC_ECDSA, KV_SLOT_FMC_MLDSA,
                                                                   KV_SLOT_RT_CDI, KV_SLOT_RT_ECDSA, KV_SLOT_RT_MLDSA})
                                                && ~(stable_owner_key_en && entry == KV_SLOT_STABLE_OWNER)
-                                               && ~(ocp_lock_mode_en && entry inside {OCP_LOCK_RT_OBF_KEY_KV_SLOT, OCP_LOCK_HEK_SEED_KV_SLOT}));
+                                               && ~(ocp_lock_mode_en && entry inside {OCP_LOCK_RT_OBF_KEY_KV_SLOT, OCP_LOCK_HEK_SEED_KV_SLOT})));
     end
 end
 

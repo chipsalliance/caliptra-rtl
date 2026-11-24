@@ -538,7 +538,7 @@ always_ff @(posedge clk or negedge rst_b) begin
                         hwif_out.mbox_lock.lock.value ? uc_has_lock : '0;
         tap_has_lock <= arc_MBOX_IDLE_MBOX_RDY_FOR_CMD ? tap_has_lock_nxt : 
                         hwif_out.mbox_lock.lock.value ? tap_has_lock : '0;
-        dir_req_rd_phase <= dir_req_dv_q & ~sha_sram_req_dv & ~(dma_sram_req_dv_q & dma_sram_req_write) & ~req_data_write;
+        dir_req_rd_phase <= dir_req_dv_q & ~sha_sram_req_dv & ~dma_sram_req_dv_q & ~req_data_write;
         dma_sram_req_rd_phase <= dma_sram_req_dv_q & ~sha_sram_req_dv & ~dma_sram_req_write;
         mbox_wrptr <= ((inc_wrptr & wrptr_inc_valid) | rst_mbox_wrptr) ? mbox_wrptr_nxt : mbox_wrptr;
         mbox_wr_full <= (inc_wrptr | rst_mbox_wrptr) ? mbox_wr_full_nxt : mbox_wr_full;
@@ -784,6 +784,8 @@ mbox_csr1(
 );
 
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_ACCESS_MUTEX, {dir_req_dv_q , mbox_protocol_sram_we , mbox_protocol_sram_rd }, clk, !rst_b)
+// A single SRAM read response cannot belong to both the uC and DMA.
+`CALIPTRA_ASSERT_MUTEX(DirectDmaReadResponseExclusive_A, {dir_req_rd_phase, dma_sram_req_rd_phase}, clk, !rst_b)
 //`CALIPTRA_ASSERT_MUTEX(ERR_MBOX_DIR_SHA_COLLISION, {dir_req_dv, sha_sram_req_dv}, clk, !rst_b)
 `CALIPTRA_ASSERT_NEVER(ERR_MBOX_DIR_REQ_FROM_SOC, (dir_req_dv & req_data_soc_req), clk, !rst_b)
 `CALIPTRA_ASSERT_MUTEX(ERR_MBOX_LOCK_MUTEX, {soc_has_lock, uc_has_lock, tap_has_lock}, clk, !rst_b)

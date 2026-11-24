@@ -38,6 +38,169 @@ volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 #define MY_RANDOM_SEED 17
 #endif // MY_RANDOM_SEED
 
+#define AES_KV_PROBE_POLL_LIMIT 1024u
+
+static uint32_t aes_kv_probe_wait(uint32_t address, uint32_t mask,
+                                  uint32_t expected, const char *stage) {
+    uint32_t value = 0;
+    for (uint32_t poll = 0; poll < AES_KV_PROBE_POLL_LIMIT; poll++) {
+        value = lsu_read_32(address);
+        if ((value & mask) == expected)
+            return value;
+    }
+    VPRINTF(FATAL, "AES KV probe timed out at %s: address=0x%x value=0x%x\n",
+            stage, address, value);
+    SEND_STDOUT_CTRL(0x01);
+    while (1);
+}
+
+static void aes_kv_probe_configure(uint32_t aes_ctrl) {
+    const uint32_t ctrl_mask = AES_REG_CTRL_SHADOWED_OPERATION_MASK |
+                               AES_REG_CTRL_SHADOWED_MODE_MASK |
+                               AES_REG_CTRL_SHADOWED_KEY_LEN_MASK |
+                               AES_REG_CTRL_SHADOWED_SIDELOAD_MASK |
+                               AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_MASK;
+    const uint32_t trigger_mask = AES_REG_TRIGGER_START_MASK |
+                                  AES_REG_TRIGGER_KEY_IV_DATA_IN_CLEAR_MASK |
+                                  AES_REG_TRIGGER_DATA_OUT_CLEAR_MASK |
+                                  AES_REG_TRIGGER_PRNG_RESEED_MASK;
+
+    aes_kv_probe_wait(CLP_AES_REG_STATUS, AES_REG_STATUS_IDLE_MASK,
+                      AES_REG_STATUS_IDLE_MASK, "configuration idle");
+    lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+    lsu_write_32(CLP_AES_REG_CTRL_SHADOWED, aes_ctrl);
+    // Let hardware clear the old sideloaded key; do not request a software clear.
+    aes_kv_probe_wait(CLP_AES_REG_TRIGGER, trigger_mask, 0, "control triggers complete");
+    aes_kv_probe_wait(CLP_AES_REG_STATUS, AES_REG_STATUS_IDLE_MASK,
+                      AES_REG_STATUS_IDLE_MASK, "control update complete");
+    aes_kv_probe_wait(CLP_AES_REG_CTRL_SHADOWED, ctrl_mask,
+                      aes_ctrl & ctrl_mask, "control readback");
+}
+
+static void aes_kv_probe_ecb_block(const uint32_t plaintext[4], uint32_t ciphertext[4],
+                                  BOOL manual_operation) {
+    aes_kv_probe_wait(CLP_AES_REG_STATUS,
+                      AES_REG_STATUS_IDLE_MASK | AES_REG_STATUS_INPUT_READY_MASK,
+                      AES_REG_STATUS_IDLE_MASK | AES_REG_STATUS_INPUT_READY_MASK, "input ready");
+    for (uint32_t word = 0; word < 4; word++)
+        aes_lsu_write_32(CLP_AES_REG_DATA_IN_0 + word * 4, plaintext[word], AES_LITTLE_ENDIAN);
+    if (manual_operation) {
+        if (lsu_read_32(CLP_AES_REG_STATUS) & AES_REG_STATUS_OUTPUT_VALID_MASK) {
+            VPRINTF(FATAL, "AES KV probe has output before manual start\n");
+            SEND_STDOUT_CTRL(0x01);
+            while (1);
+        }
+        lsu_write_32(CLP_AES_REG_TRIGGER, AES_REG_TRIGGER_START_MASK);
+    }
+    uint32_t status = aes_kv_probe_wait(CLP_AES_REG_STATUS, AES_REG_STATUS_OUTPUT_VALID_MASK,
+                                        AES_REG_STATUS_OUTPUT_VALID_MASK, "block output");
+    if (status & (AES_REG_STATUS_OUTPUT_LOST_MASK |
+                  AES_REG_STATUS_ALERT_RECOV_CTRL_UPDATE_ERR_MASK |
+                  AES_REG_STATUS_ALERT_FATAL_FAULT_MASK)) {
+        VPRINTF(FATAL, "AES KV probe unexpected block status=0x%x\n", status);
+        SEND_STDOUT_CTRL(0x01);
+        while (1);
+    }
+    for (uint32_t word = 0; word < 4; word++)
+        ciphertext[word] = lsu_read_32(CLP_AES_REG_DATA_OUT_0 + word * 4);
+    aes_kv_probe_wait(CLP_AES_REG_STATUS,
+                      AES_REG_STATUS_IDLE_MASK | AES_REG_STATUS_OUTPUT_VALID_MASK,
+                      AES_REG_STATUS_IDLE_MASK, "block completion and output drain");
+}
+
+static void aes_kv_partial_key_test(uint8_t kv_id, aes_key_len_e key_len,
+                                    const uint32_t key[8], const uint32_t plaintext[4],
+                                    const uint32_t expected_ciphertext[4]) {
+    uint32_t mixed_ciphertext[4];
+    uint32_t actual[4];
+    uint32_t aes_ctrl =
+        ((AES_ENC << AES_REG_CTRL_SHADOWED_OPERATION_LOW) & AES_REG_CTRL_SHADOWED_OPERATION_MASK) |
+        ((AES_ECB << AES_REG_CTRL_SHADOWED_MODE_LOW) & AES_REG_CTRL_SHADOWED_MODE_MASK) |
+        ((key_len << AES_REG_CTRL_SHADOWED_KEY_LEN_LOW) & AES_REG_CTRL_SHADOWED_KEY_LEN_MASK) |
+        AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_MASK;
+
+    VPRINTF(LOW, "AES KV partial-key test: establish Kmix reference\n");
+    aes_kv_probe_wait(CLP_AES_REG_STATUS, AES_REG_STATUS_IDLE_MASK,
+                      AES_REG_STATUS_IDLE_MASK, "initial idle");
+    lsu_write_32(CLP_AES_CLP_REG_CTRL0, 0);
+    lsu_write_32(CLP_AES_CLP_REG_AES_KV_WR_CTRL, 0);
+    aes_kv_probe_configure(aes_ctrl);
+    // Fully program Kmix before the sideloaded operation, not during the probe.
+    for (uint32_t word = 0; word < 8; word++) {
+        lsu_write_32(CLP_AES_REG_KEY_SHARE0_0 + word * 4, word == 0 ? 0 : key[word]);
+        lsu_write_32(CLP_AES_REG_KEY_SHARE1_0 + word * 4, 0);
+    }
+    aes_kv_probe_ecb_block(plaintext, mixed_ciphertext, TRUE);
+    if (memcmp(mixed_ciphertext, expected_ciphertext, sizeof(mixed_ciphertext)) == 0) {
+        VPRINTF(FATAL, "AES KV probe K and Kmix references must differ\n");
+        SEND_STDOUT_CTRL(0x01);
+        while (1);
+    }
+
+    VPRINTF(LOW, "AES KV partial-key test: normal sideloaded ECB block\n");
+    aes_kv_probe_wait(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS,
+                      AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_MASK,
+                      AES_CLP_REG_AES_KV_RD_KEY_STATUS_READY_MASK, "KV ready");
+    lsu_write_32(CLP_AES_CLP_REG_AES_KV_RD_KEY_CTRL,
+                 AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_EN_MASK |
+                 ((kv_id << AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_LOW) &
+                  AES_CLP_REG_AES_KV_RD_KEY_CTRL_READ_ENTRY_MASK));
+    aes_kv_probe_wait(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS,
+                      AES_CLP_REG_AES_KV_RD_KEY_STATUS_VALID_MASK,
+                      AES_CLP_REG_AES_KV_RD_KEY_STATUS_VALID_MASK, "KV valid");
+    kv_error_check(CLP_AES_CLP_REG_AES_KV_RD_KEY_STATUS);
+
+    aes_ctrl = (aes_ctrl & ~AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_MASK) |
+               AES_REG_CTRL_SHADOWED_SIDELOAD_MASK;
+    aes_kv_probe_configure(aes_ctrl);
+    // aes_flow() would clear the key on return, hiding the transition under test.
+    aes_kv_probe_ecb_block(plaintext, actual, FALSE);
+    if (memcmp(actual, expected_ciphertext, sizeof(actual)) != 0) {
+        VPRINTF(FATAL, "AES KV probe normal sideloaded ciphertext mismatch\n");
+        SEND_STDOUT_CTRL(0x01);
+        while (1);
+    }
+
+    VPRINTF(LOW, "AES KV partial-key test: switch to software-key/manual mode\n");
+    aes_ctrl = (aes_ctrl & ~AES_REG_CTRL_SHADOWED_SIDELOAD_MASK) |
+               AES_REG_CTRL_SHADOWED_MANUAL_OPERATION_MASK;
+    aes_kv_probe_configure(aes_ctrl);
+    lsu_write_32(CLP_AES_REG_KEY_SHARE0_0, 0);
+    lsu_write_32(CLP_AES_REG_KEY_SHARE1_0, 0);
+    // Manual mode bypasses key-completeness checks, so output must still arrive.
+    aes_kv_probe_ecb_block(plaintext, actual, TRUE);
+    for (uint32_t word = 0; word < 4; word++) {
+        VPRINTF(LOW, "AES KV partial-key output[%u]=0x%x, Kmix reference=0x%x\n",
+                word, actual[word], mixed_ciphertext[word]);
+    }
+    if (memcmp(actual, expected_ciphertext, sizeof(actual)) == 0 ||
+        memcmp(actual, mixed_ciphertext, sizeof(actual)) == 0) {
+        VPRINTF(FATAL, "AES KV probe retained original or mixed sideloaded key\n");
+        SEND_STDOUT_CTRL(0x01);
+        while (1);
+    }
+    VPRINTF(LOW, "AES KV partial-key output differs from K and Kmix\n");
+
+    VPRINTF(LOW, "AES KV partial-key test: complete software-key replacement\n");
+    for (uint32_t word = 0; word < 8; word++) {
+        lsu_write_32(CLP_AES_REG_KEY_SHARE0_0 + word * 4, key[word]);
+        lsu_write_32(CLP_AES_REG_KEY_SHARE1_0 + word * 4, 0);
+    }
+    aes_kv_probe_ecb_block(plaintext, actual, TRUE);
+    if (memcmp(actual, expected_ciphertext, sizeof(actual)) != 0) {
+        VPRINTF(FATAL, "AES KV probe complete replacement ciphertext mismatch\n");
+        SEND_STDOUT_CTRL(0x01);
+        while (1);
+    }
+    lsu_write_32(CLP_AES_REG_TRIGGER, AES_REG_TRIGGER_KEY_IV_DATA_IN_CLEAR_MASK |
+                                    AES_REG_TRIGGER_DATA_OUT_CLEAR_MASK);
+    aes_kv_probe_wait(CLP_AES_REG_TRIGGER,
+                      AES_REG_TRIGGER_KEY_IV_DATA_IN_CLEAR_MASK |
+                      AES_REG_TRIGGER_DATA_OUT_CLEAR_MASK, 0, "cleanup triggers complete");
+    aes_kv_probe_wait(CLP_AES_REG_STATUS, AES_REG_STATUS_IDLE_MASK,
+                      AES_REG_STATUS_IDLE_MASK, "cleanup idle");
+}
+
 /* HMAC384 test vector
     KEY = 0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b0b
     BLOCK = 4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440
@@ -302,6 +465,8 @@ void main() {
     op = AES_DEC;
     //Run DEC
     aes_flow(op, mode, key_len, aes_input, AES_LITTLE_ENDIAN);
+
+    aes_kv_partial_key_test(tag_kv_id, key_len, key, plaintext, ciphertext);
 
     //CASE2
     VPRINTF(LOW, "Test Case 2 - CBC\n");

@@ -129,6 +129,7 @@ module soc_ifc_axi_sha_acc_dis_tb
 
     .cptra_pwrgood(cptra_pwrgood_tb),
     .cptra_rst_b(cptra_rst_b_tb),
+    .cold_boot(),
 
     .ready_for_fuses(),
     .ready_for_mb_processing(),
@@ -242,8 +243,8 @@ module soc_ifc_axi_sha_acc_dis_tb
     .dual_itrng_en(1'b0),
     .dual_itrng_en_o(),
 
-    // DCLS corruption-detection enable strap (subsystem DCLS)
-    .ss_dcls_en(1'b0),
+    // DCLS enable
+    .dcls_en(1'b0),
 
     .stable_owner_key_en(),
 
@@ -266,6 +267,7 @@ module soc_ifc_axi_sha_acc_dis_tb
     .iccm_rt_start_addr(),
     .iccm_rt_end_addr(),
     .iccm_region_lock(),
+    .csr_hmac_key_lock(),
 
     .cptra_noncore_rst_b(),
     .cptra_uc_rst_b(),

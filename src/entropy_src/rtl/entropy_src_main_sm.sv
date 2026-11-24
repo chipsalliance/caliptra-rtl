@@ -6,19 +6,25 @@
 //
 //   determines when new entropy is ready to be forwarded
 
+`include "caliptra_prim_assert.sv"
+
 module entropy_src_main_sm
   import entropy_src_main_sm_pkg::*;
 (
   input logic                   clk_i,
   input logic                   rst_ni,
 
+  // Zeroize: drop the current operation and return to Idle in any state
+  input logic                   zeroize_i,
+
   input logic                   enable_i,
   input logic                   fw_ov_ent_insert_i,
   input logic                   fw_ov_sha3_start_i,
   input logic                   ht_done_pulse_i,
+  input logic                   pd_cntr_zero_i,
   input logic                   ht_fail_pulse_i,
   input logic                   alert_thresh_fail_i,
-  output logic                  rst_alert_cntr_o,
+  output logic                  alert_cntr_clr_ok_o,
   input logic                   bypass_mode_i,
   input logic                   bypass_stage_rdy_i,
   input logic                   sha3_state_vld_i,
@@ -35,7 +41,6 @@ module entropy_src_main_sm
   output logic                  main_sm_err_o
 );
 
-  `include "caliptra_prim_assert.sv"
   // The definition of state_e, the sparse FSM state enum, is in entropy_src_main_sm_pkg.sv
   state_e state_d, state_q;
 
@@ -45,7 +50,7 @@ module entropy_src_main_sm
 
   always_comb begin
     state_d = state_q;
-    rst_alert_cntr_o = 1'b0;
+    alert_cntr_clr_ok_o = 1'b0;
     main_stage_push_o = 1'b0;
     bypass_stage_pop_o = 1'b0;
     boot_phase_done_o = 1'b0;
@@ -79,6 +84,7 @@ module entropy_src_main_sm
         end
       end
       BootHTRunning: begin
+        alert_cntr_clr_ok_o = 1'b1;
         if (!enable_i) begin
           state_d = Idle;
         end else if (ht_done_pulse_i) begin
@@ -96,7 +102,6 @@ module entropy_src_main_sm
             // Window sizes other than 384 bits (the seed length) are currently not tested nor
             // supported in bypass or boot-time mode.
             state_d = BootPostHTChk;
-            rst_alert_cntr_o = 1'b1;
           end
         end
       end
@@ -117,13 +122,12 @@ module entropy_src_main_sm
         if (!enable_i) begin
           state_d = Idle;
         end
-        // Even when stalled we keep monitoring for alerts and maintaining  alert statistics.
+        // Even when stalled we keep monitoring for alerts and maintaining alert statistics.
         // However, we don't signal alerts or clear HT stats in FW_OV mode.
-        if(!fw_ov_ent_insert_i && ht_done_pulse_i) begin
-          if (alert_thresh_fail_i) begin
+        if (!fw_ov_ent_insert_i) begin
+          alert_cntr_clr_ok_o = 1'b1;
+          if (ht_done_pulse_i && alert_thresh_fail_i) begin
             state_d = AlertState;
-          end else if (!ht_fail_pulse_i) begin
-            rst_alert_cntr_o = 1'b1;
           end
         end
       end
@@ -139,12 +143,12 @@ module entropy_src_main_sm
         if (!enable_i) begin
           state_d = Idle;
         end else begin
+          alert_cntr_clr_ok_o = 1'b1;
           if (ht_done_pulse_i) begin
             if (ht_fail_pulse_i) begin
               state_d = StartupFail1;
             end else begin
               state_d = StartupPass1;
-              rst_alert_cntr_o = 1'b1;
             end
           end
         end
@@ -153,6 +157,7 @@ module entropy_src_main_sm
         if (!enable_i) begin
           state_d = Idle;
         end else begin
+          alert_cntr_clr_ok_o = 1'b1;
           if (ht_done_pulse_i) begin
             if (ht_fail_pulse_i) begin
               state_d = StartupFail1;
@@ -160,7 +165,6 @@ module entropy_src_main_sm
               // We've now passed two consecutive test windows of the configured window length.
               // Next, we're going to compress the collected entropy to produce a single seed.
               state_d = Sha3Process;
-              rst_alert_cntr_o = 1'b1;
             end
           end
         end
@@ -169,13 +173,13 @@ module entropy_src_main_sm
         if (!enable_i) begin
           state_d = Idle;
         end else begin
+          alert_cntr_clr_ok_o = 1'b1;
           if (ht_done_pulse_i) begin
             if (ht_fail_pulse_i) begin
               // Failed two consecutive tests
               state_d = AlertState;
             end else begin
               state_d = StartupPass1;
-              rst_alert_cntr_o = 1'b1;
             end
           end
         end
@@ -202,6 +206,7 @@ module entropy_src_main_sm
         if (!enable_i) begin
           state_d = Idle;
         end else begin
+          alert_cntr_clr_ok_o = 1'b1;
           if (ht_done_pulse_i) begin
             // We've finished testing the current window and all the collected and tested entropy
             // has been forwarded to the SHA3 engine and has at least partially been absorbed.
@@ -210,7 +215,6 @@ module entropy_src_main_sm
             end else if (!ht_fail_pulse_i) begin
               // Move forward and get the conditioner ready to finish the absorption process.
               state_d = Sha3Process;
-              rst_alert_cntr_o = 1'b1;
             end
           end
         end
@@ -230,9 +234,12 @@ module entropy_src_main_sm
         end
       end
       Sha3Process: begin
-        // Trigger the final absorption operation of the SHA3 engine.
-        sha3_process_o = 1'b1;
-        state_d = Sha3Valid;
+        // Wait for words belonging to the current window to flow into the conditioner before
+        // triggering the final absorption operation of the SHA3 engine.
+        if (pd_cntr_zero_i) begin
+          sha3_process_o = 1'b1;
+          state_d = Sha3Valid;
+        end
       end
       Sha3Valid: begin
         if (sha3_state_vld_i) begin
@@ -277,6 +284,22 @@ module entropy_src_main_sm
     endcase
     if (local_escalate_i) begin
       state_d = Error;
+    end
+
+    // Zeroize has the highest priority.
+    // Drops the current operation and returns to Idle, also from the Error state. The FSM only
+    // returns to the Error state if the local escalation is still asserted.
+    if (zeroize_i) begin
+      state_d = Idle;
+
+      alert_cntr_clr_ok_o = 1'b0;
+      main_stage_push_o   = 1'b0;
+      bypass_stage_pop_o  = 1'b0;
+      boot_phase_done_o   = 1'b0;
+      sha3_start_o        = 1'b0;
+      sha3_process_o      = 1'b0;
+      sha3_done_o         = caliptra_prim_mubi_pkg::MuBi4False;
+      main_sm_alert_o     = 1'b0;
     end
   end
 

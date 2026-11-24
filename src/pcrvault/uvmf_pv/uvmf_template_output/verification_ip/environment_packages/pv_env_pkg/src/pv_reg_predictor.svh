@@ -72,6 +72,14 @@ class pv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
         
         //Convert bus txn to reg model txn
         adapter.bus2reg(tr,rw);
+        pv_reg = map.get_reg_by_offset(rw.addr, rw.kind == UVM_READ);
+        if (pv_reg == null) begin
+            `uvm_info("PV_REG_UNMAPPED", $sformatf(
+                "No RAL register for %s at 0x%0h through %s",
+                rw.kind.name(), rw.addr, map.get_full_name()), UVM_MEDIUM)
+            return;
+        end
+        pv_reg_data = pv_reg.get_mirrored_value();
 
         //-----------------------------------------------
         //rw contains PCR entry info. Below steps are to
@@ -89,8 +97,6 @@ class pv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             `uvm_info("PV_REG_OUT", $sformatf("addr = %h, new data = %h", rw.addr, rw.data),UVM_MEDIUM);
             if ((rw.addr >= `PV_REG_PCR_CTRL_0) && (rw.addr < `PV_REG_PCR_ENTRY_0_0)) begin
                 //Read existing content of CTRL reg and see if lock has been set previously
-                pv_reg = map.get_reg_by_offset(rw.addr);
-                pv_reg_data = pv_reg.get_mirrored_value();
                 lock = pv_reg_data[0];
                 `uvm_info("PV_REG", $sformatf("addr = %h, new data = %h, old data = %h, lock = %h", rw.addr, rw.data, pv_reg_data, lock),UVM_MEDIUM);
                 if(!lock) begin
@@ -114,8 +120,9 @@ class pv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
             //6. Change access policy back to RO
             else begin //ENTRY reg access
                 //Get rights of reg being accessed
-                pv_reg = map.get_reg_by_offset(rw.addr);
                 pv_reg_data_field = pv_reg.get_field_by_name("data");
+                if (pv_reg_data_field == null)
+                    `uvm_fatal("PV_REG_FIELD", $sformatf("Missing data field in %s", pv_reg.get_full_name()))
                 //$display("Rights = %s, Info rights = %s", pv_reg.get_rights(), pv_reg_info.rights);
                 //$display("Rights = %s, Info rights = %s, map = %s", pv_reg.get_rights(), pv_reg_data_field.get_access(map), map.get_full_name());
                 if (map.get_name != "pv_AHB_map") begin
@@ -143,6 +150,13 @@ class pv_reg_predictor#(type BUSTYPE=int) extends uvm_reg_predictor #(.BUSTYPE(B
                 end
                 else begin
                     super.write(tr);
+                end
+                if (map.get_name() == "pv_sha512_write_map") begin
+                    // Keep the existing reg_ap/coverage publication, but do
+                    // not commit this one-clock-late monitor packet to storage.
+                    // pv_predictor.run_phase owns clocked write/clear priority.
+                    pv_reg.predict(pv_reg_data);
+                    pv_reg.set(pv_reg_data);
                 end
             end
             //-----------------------------------------------

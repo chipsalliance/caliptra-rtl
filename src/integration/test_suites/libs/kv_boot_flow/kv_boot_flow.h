@@ -38,6 +38,7 @@
 #define KV_SLOT_FMC_ECDSA    7
 #define KV_SLOT_FMC_MLDSA    8
 #define KV_SLOT_RT_MLDSA     9
+#define KV_SLOT_EXPORTED_DPE_CDI 12
 
 // Conditional slots (preserved only when corresponding mode is active)
 #define KV_SLOT_STABLE_OWNER 15
@@ -159,7 +160,7 @@ void check_doe_locked(const char *phase);
 // Copy code from LMA storage to an ICCM destination address.
 void copy_to_iccm(uint32_t dest, uint32_t *lma_start, uint32_t *lma_end);
 
-// Read CPTRA_HW_CONFIG and SS_STRAP_GENERIC_3 to compute stable_owner_key_en
+// Read CPTRA_HW_CONFIG and SS_FW_FEATURE_CFG to compute stable_owner_key_en
 // and ocp_lock_mode_en at runtime.
 void compute_conditional_enables(uint32_t *stable_owner_key_en, uint32_t *ocp_lock_mode_en);
 

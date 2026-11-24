@@ -84,6 +84,31 @@ module hmac_ctrl_tb
   reg [31 : 0]          read_data;
   reg [TAG_SIZE-1 : 0]  digest_data;
 
+  kv_defines_pkg::kv_write_t kv_write_tb;
+
+  // KV write monitor: counts the dwords HMAC writes to the key vault and
+  // records any dword whose slot or destination differs from what the TB
+  // programmed before the command was issued
+  logic                                       kvw_mon_en;
+  int                                         kvw_mon_cnt;
+  int                                         kvw_mon_bad;
+  logic [kv_defines_pkg::KV_ENTRY_ADDR_W-1:0] kvw_exp_entry;
+  logic [kv_defines_pkg::KV_NUM_READ-1:0]     kvw_exp_dest;
+
+  always @(posedge clk_tb)
+    if (kvw_mon_en && kv_write_tb.write_en)
+      begin
+        kvw_mon_cnt = kvw_mon_cnt + 1;
+        if ((kv_write_tb.write_entry != kvw_exp_entry) ||
+            ((kv_write_tb.write_dest_valid != '0) && (kv_write_tb.write_dest_valid != kvw_exp_dest)))
+          begin
+            kvw_mon_bad = kvw_mon_bad + 1;
+            $display("KV write monitor: entry=%0d dest=0x%0h offset=%0d, expected entry=%0d dest=0x%0h",
+                     kv_write_tb.write_entry, kv_write_tb.write_dest_valid, kv_write_tb.write_offset,
+                     kvw_exp_entry, kvw_exp_dest);
+          end
+      end
+
   //bind coverage file
   hmac_ctrl_cov_bind i_hmac_ctrl_cov_bind();
 
@@ -114,7 +139,7 @@ module hmac_ctrl_tb
              .hrdata_o(hrdata_o_tb),
 
              .kv_read(),
-             .kv_write(),
+             .kv_write(kv_write_tb),
              .kv_rd_resp('0),
              .kv_wr_resp('0),
              .busy_o(),
@@ -194,6 +219,10 @@ module hmac_ctrl_tb
       cptra_pwrgood_tb = 0;
 
       cptra_csr_hmac_key_tb = 0;
+
+      kvw_mon_en    = 0;
+      kvw_mon_cnt   = 0;
+      kvw_mon_bad   = 0;
 
       haddr_i_tb      = 0;
       hwdata_i_tb     = 0;
@@ -1395,6 +1424,288 @@ module hmac_ctrl_tb
     end
   endtask // hmac_tests
 
+  //----------------------------------------------------------------
+  // csr_back_to_back_last_test()
+  //
+  // CSR-keyed three-block HMAC. Right after the intermediate NEXT is
+  // accepted, a NEXT|LAST is written `gap` cycles later while the core
+  // is busy. The core ignores it, so the intermediate CSR-keyed state
+  // must stay hidden from TAG and the real final block must still
+  // produce HMAC-SHA512(csr_key, M).
+  //----------------------------------------------------------------
+  task csr_back_to_back_last_test(input int gap,
+                                  input [BLOCK_SIZE-1:0] block0,
+                                  input [BLOCK_SIZE-1:0] block1,
+                                  input [BLOCK_SIZE-1:0] block2,
+                                  input [LFSR_SEED_SIZE-1:0] seed,
+                                  input [TAG_SIZE-1:0] expected);
+    begin
+      reg [31:0] csr_ctrl;
+      csr_ctrl = HMAC512_MODE | `HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK;
+
+      $display("*** TC%01d - CSR back-to-back NEXT|LAST test (gap=%0d) started.", tc_ctr, gap);
+
+      hmac_write_key('0);
+      write_block(block0);
+      write_seed(seed);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, csr_ctrl | CTRL_INIT_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+
+      write_block(block1);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, csr_ctrl | CTRL_NEXT_VALUE);
+      if (gap > 0)
+        begin
+          hsel_i_tb       = 0;
+          repeat (gap) #(CLK_PERIOD);
+        end
+      write_single_word(`HMAC_REG_HMAC512_CTRL, csr_ctrl | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      if (digest_data != '0)
+        begin
+          $display("TC%01d: ERROR - CSR-keyed intermediate state exposed in TAG (gap=%0d)", tc_ctr, gap);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      write_block(block2);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, csr_ctrl | CTRL_NEXT_VALUE | CTRL_LAST_VALUE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d final block: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR in final digest (gap=%0d)", tc_ctr, gap);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - CSR back-to-back NEXT|LAST test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // csr_back_to_back_last_test
+
+  //----------------------------------------------------------------
+  // csr_init_edge_test()
+  //
+  // Single-block CSR-keyed HMAC. `gap` cycles after INIT|LAST|CSR_MODE,
+  // CTRL is rewritten with CSR_MODE=0 and no command, landing on or right
+  // after the cycle the core accepts INIT. The operation must still use
+  // the CSR key, so the tag must equal HMAC-SHA512(csr_key, M).
+  //----------------------------------------------------------------
+  task csr_init_edge_test(input int gap,
+                          input [BLOCK_SIZE-1:0] block,
+                          input [LFSR_SEED_SIZE-1:0] seed,
+                          input [TAG_SIZE-1:0] expected);
+    begin
+      $display("*** TC%01d - CSR INIT-edge CSR_MODE clear test (gap=%0d) started.", tc_ctr, gap);
+
+      hmac_write_key('0);
+      write_block(block);
+      write_seed(seed);
+      write_single_word(`HMAC_REG_HMAC512_CTRL, HMAC512_MODE | CTRL_INIT_VALUE | CTRL_LAST_VALUE | `HMAC_REG_HMAC512_CTRL_CSR_MODE_MASK);
+      if (gap > 0)
+        begin
+          hsel_i_tb       = 0;
+          repeat (gap) #(CLK_PERIOD);
+        end
+      write_single_word(`HMAC_REG_HMAC512_CTRL, HMAC512_MODE);
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+      wait_ready();
+      hmac_read_digest();
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+
+      if (digest_data == expected)
+        begin
+          $display("TC%01d: OK.", tc_ctr);
+        end
+      else
+        begin
+          $display("TC%01d: ERROR - operation did not use the CSR key (gap=%0d)", tc_ctr, gap);
+          $display("TC%01d: Expected: 0x%0128x", tc_ctr, expected);
+          $display("TC%01d: Got:      0x%0128x", tc_ctr, digest_data);
+          error_ctr = error_ctr + 1;
+        end
+
+      $display("*** TC%01d - CSR INIT-edge CSR_MODE clear test done.", tc_ctr);
+      tc_ctr = tc_ctr + 1;
+    end
+  endtask // csr_init_edge_test
+
+  //----------------------------------------------------------------
+  // kv_wr_ctrl_lock_test()
+  //
+  // HMAC512 whose tag is written to the key vault. KV_WR_CTRL is
+  // programmed with slot/destination A before the final command (for
+  // two_block, it is first armed with C before INIT and rewritten to A
+  // between blocks, which must remain allowed). If rewrite is set,
+  // KV_WR_CTRL is rewritten `gap` cycles after the final command with
+  // a different slot, all destinations and write_en=0. Every dword
+  // written to the key vault must go to slot A with destination A,
+  // and exactly 16 dwords (512-bit tag) must be written.
+  //----------------------------------------------------------------
+  task kv_wr_ctrl_lock_test(input int gap,
+                            input bit two_block,
+                            input bit rewrite,
+                            input [KEY_SIZE-1:0] key,
+                            input [BLOCK_SIZE-1:0] block0,
+                            input [BLOCK_SIZE-1:0] block1,
+                            output int op_cycles);
+    begin
+      localparam [31:0] ALL_DEST = `HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK   |
+                                   `HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_BLOCK_DEST_VALID_MASK |
+                                   `HMAC_REG_HMAC512_KV_WR_CTRL_MLDSA_SEED_DEST_VALID_MASK |
+                                   `HMAC_REG_HMAC512_KV_WR_CTRL_ECC_PKEY_DEST_VALID_MASK   |
+                                   `HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK   |
+                                   `HMAC_REG_HMAC512_KV_WR_CTRL_AES_KEY_DEST_VALID_MASK    |
+                                   `HMAC_REG_HMAC512_KV_WR_CTRL_MLKEM_SEED_DEST_VALID_MASK |
+                                   `HMAC_REG_HMAC512_KV_WR_CTRL_DMA_DATA_DEST_VALID_MASK;
+      localparam [31:0] CTRL_A = `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
+                                 ((32'd3 << `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) & `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
+                                 `HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_MASK;
+      localparam [31:0] CTRL_B = ((32'd20 << `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) & `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
+                                 ALL_DEST;
+      localparam [31:0] CTRL_C = `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_EN_MASK |
+                                 ((32'd9 << `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW) & `HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_MASK) |
+                                 `HMAC_REG_HMAC512_KV_WR_CTRL_ECC_SEED_DEST_VALID_MASK;
+      reg [31:0] cmd;
+      reg [63:0] start_cycle;
+      int        polls;
+
+      kvw_exp_entry = CTRL_A[`HMAC_REG_HMAC512_KV_WR_CTRL_WRITE_ENTRY_LOW +: kv_defines_pkg::KV_ENTRY_ADDR_W];
+      kvw_exp_dest  = CTRL_A[`HMAC_REG_HMAC512_KV_WR_CTRL_HMAC_KEY_DEST_VALID_LOW +: kv_defines_pkg::KV_NUM_READ];
+      kvw_mon_cnt   = 0;
+      kvw_mon_bad   = 0;
+      kvw_mon_en    = 1;
+
+      hmac_write_key(key);
+      write_block(block0);
+      write_seed(random_gen());
+      if (two_block)
+        begin
+          write_single_word(`HMAC_REG_HMAC512_KV_WR_CTRL, CTRL_C);
+          write_single_word(`HMAC_REG_HMAC512_CTRL, HMAC512_MODE | CTRL_INIT_VALUE);
+          #CLK_PERIOD;
+          hsel_i_tb       = 0;
+          #(CLK_PERIOD);
+          wait_ready();
+          write_block(block1);
+          cmd = HMAC512_MODE | CTRL_NEXT_VALUE | CTRL_LAST_VALUE;
+        end
+      else
+        cmd = HMAC512_MODE | CTRL_INIT_VALUE | CTRL_LAST_VALUE;
+      write_single_word(`HMAC_REG_HMAC512_KV_WR_CTRL, CTRL_A);
+
+      start_cycle = cycle_ctr;
+      write_single_word(`HMAC_REG_HMAC512_CTRL, cmd);
+      if (rewrite)
+        begin
+          if (gap > 0)
+            begin
+              hsel_i_tb       = 0;
+              repeat (gap) #(CLK_PERIOD);
+            end
+          write_single_word(`HMAC_REG_HMAC512_KV_WR_CTRL, CTRL_B);
+        end
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+
+      // Wait for the KV write to complete (bounded)
+      read_data = 0;
+      polls     = 0;
+      while (((read_data & `HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0) && (polls < 4000))
+        begin
+          read_single_word(`HMAC_REG_HMAC512_KV_WR_STATUS);
+          polls = polls + 1;
+        end
+      op_cycles = cycle_ctr - start_cycle;
+      repeat (4) #(CLK_PERIOD);
+      kvw_mon_en = 0;
+
+      if ((read_data & `HMAC_REG_HMAC512_KV_WR_STATUS_VALID_MASK) == 0)
+        begin
+          $display("TC%01d: ERROR - KV write never completed (gap=%0d two_block=%0d rewrite=%0d)", tc_ctr, gap, two_block, rewrite);
+          error_ctr = error_ctr + 1;
+        end
+      if ((read_data & `HMAC_REG_HMAC512_KV_WR_STATUS_ERROR_MASK) != 0)
+        begin
+          $display("TC%01d: ERROR - KV write status error 0x%0h (gap=%0d two_block=%0d rewrite=%0d)", tc_ctr, read_data, gap, two_block, rewrite);
+          error_ctr = error_ctr + 1;
+        end
+      if ((kvw_mon_cnt != 16) || (kvw_mon_bad != 0))
+        begin
+          $display("TC%01d: ERROR - KV write mismatch: %0d dwords, %0d to wrong slot/dest (gap=%0d two_block=%0d rewrite=%0d)",
+                   tc_ctr, kvw_mon_cnt, kvw_mon_bad, gap, two_block, rewrite);
+          error_ctr = error_ctr + 1;
+        end
+
+      write_single_word(`HMAC_REG_HMAC512_CTRL, CTRL_ZEROIZE); //zeroize
+      #CLK_PERIOD;
+      hsel_i_tb       = 0;
+      #(CLK_PERIOD);
+    end
+  endtask // kv_wr_ctrl_lock_test
+
+  //----------------------------------------------------------------
+  // hmac_kv_wr_ctrl_tests()
+  //
+  // Measure the operation length without a rewrite, then rewrite
+  // KV_WR_CTRL at every cycle offset from the final command through
+  // the end of the KV write, for one- and two-block operations.
+  //----------------------------------------------------------------
+  task hmac_kv_wr_ctrl_tests;
+    begin
+      reg [KEY_SIZE-1:0]   key;
+      reg [BLOCK_SIZE-1:0] block0;
+      reg [BLOCK_SIZE-1:0] block1;
+      int                  op_cycles;
+      int                  sweep_end;
+      int                  err_before;
+
+      $display("\n\n*** Testcases for KV_WR_CTRL lock started.");
+      key    = {16{$random}};
+      block0 = 1024'h4869205468657265800000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000440;
+      block1 = {32{$random}};
+
+      for (int two_block = 0; two_block < 2; two_block++)
+        begin
+          err_before = error_ctr;
+          kv_wr_ctrl_lock_test(0, two_block, 1'b0, key, block0, block1, op_cycles);
+          $display("*** TC%01d - KV_WR_CTRL lock: two_block=%0d, final command to KV write done = %0d cycles",
+                   tc_ctr, two_block, op_cycles);
+          sweep_end = op_cycles + 4;
+          for (int gap = 0; gap <= sweep_end; gap++)
+            kv_wr_ctrl_lock_test(gap, two_block, 1'b1, key, block0, block1, op_cycles);
+          if (error_ctr == err_before)
+            $display("TC%01d: OK.", tc_ctr);
+          tc_ctr = tc_ctr + 1;
+        end
+
+      $display("*** Testcases for KV_WR_CTRL lock completed.");
+    end
+  endtask // hmac_kv_wr_ctrl_tests
+
   task hmac_csr_tests;
     begin
       reg [KEY_SIZE-1   : 0] key;
@@ -1438,6 +1749,19 @@ module hmac_ctrl_tb
       
       $display("*** TC%01d - CSR test done.", tc_ctr);
       tc_ctr = tc_ctr + 1;
+
+      // Expected = HMAC-SHA512(csr_key, M) from Python hmac/hashlib, with M
+      // recovered from the padded blocks below
+      for (int gap = 0; gap < 4; gap++)
+        csr_back_to_back_last_test(gap,
+          1024'h8dbc773dac62e446067bca3a361ab54da9e5f8b43aeb7eed2666d4efa98c7a3fd8ccfa285ea19650b4efc000061d39458bebedcd6a140fe5032a98ed9131f078a594c95ee6e2383dca9b47ac304622093cfdab71bffa5dd843f1d06952c3580f6e0db840b06084b22e200c77a74b7b01a2a47d2b2c2ff885cd688bb6a96b30f4,
+          1024'ha576778214cf8c8a552b806cf287cd13aa6df4ec9aad70fdfdd4744ff52b2739cd6bbc5c2f82e2ea84340325dafd2a8b9eff488d1d1ed697c5770eef651d0288677d87796f541fd7a797cac728d0b948daca9ac5a27de97947ab217e16c165b6a50e227245a01f6cd5f0fdf9980c49ebaa59e14ee56588bbecb4696cba50bb53,
+          1024'h611aed9d86915a085981c8f303efe5fe91dc8365c19ebc612fb0b337e7750f96383062748f414edcd6d81e8bde4e012cc16bd8388c387c5e338000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000dc8,
+          random_gen(),
+          512'hf39ba60c96000cc7478073c5d30fb6390c07d9366b79022d9b3e85cb6f6f769041388e545c0c05f73ee469f5beeb6293f07fe076c1a72cee922ec86570d084f3);
+
+      for (int gap = 0; gap < 4; gap++)
+        csr_init_edge_test(gap, data, random_gen(), expected);
       
       $display("*** Testcases for CSR completed.");
     end
@@ -1458,6 +1782,8 @@ module hmac_ctrl_tb
       hmac512_tests();
 
       hmac_csr_tests();
+
+      hmac_kv_wr_ctrl_tests();
 
       display_test_result();
 

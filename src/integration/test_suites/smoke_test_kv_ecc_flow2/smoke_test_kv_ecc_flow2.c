@@ -19,6 +19,7 @@
 #include "riscv-csr.h"
 #include "printf.h"
 #include "ecc.h"
+#include <stdlib.h>
 #include "caliptra_rtl_lib.h"
 
 volatile uint32_t* stdout           = (uint32_t *)STDOUT;
@@ -280,6 +281,8 @@ void main(){
 
     ecc_keygen_flow(seed, nonce, iv, privkey, pubkey_x, pubkey_y, TRUE);
     cptra_intr_rcv.ecc_notif = 0;
+
+    ecc_zeroize();
 
     ecc_sharedkey_flow(iv, privkey_dh, pubkey_x_dh, pubkey_y_dh, sharedkey_dh);
     cptra_intr_rcv.ecc_notif = 0;

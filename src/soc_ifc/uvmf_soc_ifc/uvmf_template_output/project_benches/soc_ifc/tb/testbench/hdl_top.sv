@@ -267,6 +267,7 @@ import pv_defines_pkg::*;
 
         .cptra_pwrgood           (soc_ifc_ctrl_agent_bus.cptra_pwrgood             ),
         .cptra_rst_b             (soc_ifc_ctrl_agent_bus.cptra_rst_b               ),
+        .cold_boot(),
 
         .ready_for_fuses         (soc_ifc_status_agent_bus.ready_for_fuses         ),
         .ready_for_mb_processing (soc_ifc_status_agent_bus.ready_for_mb_processing ),
@@ -384,7 +385,7 @@ import pv_defines_pkg::*;
         .ss_ocp_lock_en         (1'b0/*TODO*/),
         .ss_ocp_lock_in_progress(    /*TODO*/),
         .ss_key_release_key_size(    /*TODO*/),
-        .ss_dcls_en             (1'b0/*TODO*/),
+        .dcls_en             (1'b0/*TODO*/),
         // Dual iTRNG enable strap in / CPTRA_HW_CONFIG.dual_iTRNG_en value out
         .dual_itrng_en          (1'b0/*TODO*/),
         .dual_itrng_en_o        (    /*TODO*/),
@@ -429,6 +430,7 @@ import pv_defines_pkg::*;
         .iccm_rt_start_addr   (                                           ),
         .iccm_rt_end_addr     (                                           ),
         .iccm_region_lock     (                                           ),
+        .csr_hmac_key_lock    (                                           ),
 
         //caliptra uncore jtag ports
         .cptra_uncore_dmi_reg_en   (1'b0 ),

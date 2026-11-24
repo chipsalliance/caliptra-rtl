@@ -359,6 +359,95 @@ const uint32_t mldsa_entropy[] = {
 0xAFB93DDD, 0xAB0493DA, 0xDB6B1CFF, 0x26DB9ED0, 0xA351E329, 0x49073AC1, 0xE20A7376, 0x3401CEFA
 };
 
+#define MLDSA_STREAM_POLL_LIMIT 1000000u
+
+static void mldsa_stream_fail(const char *reason) {
+    VPRINTF(ERROR, "MLDSA streaming %s\n", reason);
+    SEND_STDOUT_CTRL(0x1);
+    while (1);
+}
+
+static void mldsa_stream_clear_intr() {
+    lsu_write_32(CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R,
+                 ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R_ERROR_INTERNAL_STS_MASK);
+    lsu_write_32(CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R,
+                 ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK);
+    cptra_intr_rcv.abr_error = 0;
+    cptra_intr_rcv.abr_notif = 0;
+}
+
+static uint32_t mldsa_stream_wait(uint32_t status_mask, uint32_t notif_mask, const char *phase) {
+    uint32_t status = 0;
+
+    for (uint32_t poll = 0; poll < MLDSA_STREAM_POLL_LIMIT; poll++) {
+        status = lsu_read_32(CLP_ABR_REG_MLDSA_STATUS);
+        if ((status & ABR_REG_MLDSA_STATUS_ERROR_MASK) || cptra_intr_rcv.abr_error ||
+            lsu_read_32(CLP_ABR_REG_INTR_BLOCK_RF_ERROR_INTERNAL_INTR_R)) {
+            VPRINTF(ERROR, "MLDSA streaming error during %s, status = 0x%x\n", phase, status);
+            mldsa_stream_fail("operation failed");
+        }
+        if (((status & status_mask) == status_mask) &&
+            (((cptra_intr_rcv.abr_notif |
+               lsu_read_32(CLP_ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R)) & notif_mask) == notif_mask)) {
+            return status;
+        }
+    }
+
+    VPRINTF(ERROR, "MLDSA streaming timeout during %s, status = 0x%x\n", phase, status);
+    mldsa_stream_fail("operation timed out");
+    return status;
+}
+
+static void mldsa_streaming_signing_flow(uint32_t privkey[MLDSA87_PRIVKEY_SIZE],
+                                        uint32_t msg[MLDSA87_MSG_SIZE],
+                                        uint32_t sign_rnd[MLDSA87_SIGN_RND_SIZE],
+                                        uint32_t entropy[MLDSA87_ENTROPY_SIZE],
+                                        uint32_t sign[MLDSA87_SIGN_SIZE]) {
+    const uint32_t done_mask = ABR_REG_INTR_BLOCK_RF_NOTIF_INTERNAL_INTR_R_NOTIF_CMD_DONE_STS_MASK;
+    // READY returns only after zeroize; VALID and notification signal completion.
+    const uint32_t complete_mask = ABR_REG_MLDSA_STATUS_VALID_MASK;
+
+    VPRINTF(LOW, "\nMLDSA STREAMING SIGNING\n");
+    mldsa_stream_clear_intr();
+    if (mldsa_stream_wait(ABR_REG_MLDSA_STATUS_READY_MASK, 0, "ready") &
+        ABR_REG_MLDSA_STATUS_VALID_MASK) {
+        mldsa_stream_fail("VALID was not cleared by zeroize");
+    }
+
+    // The preceding zeroize erased the key and signing inputs.
+    write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_PRIVKEY_IN_BASE_ADDR, privkey, MLDSA87_PRIVKEY_SIZE);
+    write_mldsa_reg((uint32_t*) CLP_ABR_REG_MLDSA_SIGN_RND_0, sign_rnd, MLDSA87_SIGN_RND_SIZE);
+    write_mldsa_reg((uint32_t*) CLP_ABR_REG_ABR_ENTROPY_0, entropy, MLDSA87_ENTROPY_SIZE);
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTX_CONFIG, 0);
+
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, MLDSA_CMD_SIGNING | ABR_REG_MLDSA_CTRL_STREAM_MSG_MASK);
+    mldsa_stream_wait(ABR_REG_MLDSA_STATUS_MSG_STREAM_READY_MASK, 0, "message ready");
+    lsu_write_32(CLP_ABR_REG_MLDSA_MSG_STROBE, ABR_REG_MLDSA_MSG_STROBE_STROBE_MASK);
+    for (uint32_t offset = 0; offset < MLDSA87_MSG_SIZE; offset++) {
+        lsu_write_32(CLP_ABR_REG_MLDSA_MSG_0, msg[offset]);
+    }
+    // A word-aligned message needs a zero-byte write to terminate the stream.
+    lsu_write_32(CLP_ABR_REG_MLDSA_MSG_STROBE, 0);
+    lsu_write_32(CLP_ABR_REG_MLDSA_MSG_0, 0);
+
+    mldsa_stream_wait(complete_mask, done_mask, "completion");
+    for (uint32_t offset = 0; offset < MLDSA87_SIGN_SIZE; offset++) {
+        uint32_t actual_data = lsu_read_32(CLP_ABR_REG_MLDSA_SIGNATURE_BASE_ADDR + offset * sizeof(uint32_t));
+        if (actual_data != sign[offset]) {
+            VPRINTF(ERROR, "At offset [%d], streaming mldsa_sign data mismatch!\n", offset);
+            VPRINTF(ERROR, "Actual   data: 0x%x\n", actual_data);
+            VPRINTF(ERROR, "Expected data: 0x%x\n", sign[offset]);
+            mldsa_stream_fail("signature mismatch");
+        }
+    }
+
+    lsu_write_32(CLP_ABR_REG_MLDSA_CTRL, ABR_REG_MLDSA_CTRL_ZEROIZE_MASK);
+    if (mldsa_stream_wait(ABR_REG_MLDSA_STATUS_READY_MASK, 0, "zeroize") &
+        ABR_REG_MLDSA_STATUS_VALID_MASK) {
+        mldsa_stream_fail("VALID was not cleared by zeroize");
+    }
+    mldsa_stream_clear_intr();
+}
 
 void main() {
     VPRINTF(LOW, "----------------------------\n");
@@ -394,10 +483,9 @@ void main() {
     mldsa_signing_flow(privkey, msg, sign_rnd, entropy, sign);
     mldsa_zeroize();
     cptra_intr_rcv.abr_notif = 0;
-    
+
+    mldsa_streaming_signing_flow(privkey, msg, sign_rnd, entropy, sign);
 
     SEND_STDOUT_CTRL(0xff); //End the test
     
 }
-
-

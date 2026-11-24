@@ -32,6 +32,10 @@
 `include "config_defines.svh"
 `include "caliptra_reg_defines.svh"
 `include "caliptra_reg_field_defines.svh"
+// Explicit include so el2_mubi_pkg:: resolves regardless of overall file-list
+// compile order (this file uses it directly at line ~2014 for the DCLS
+// mismatch check).
+`include "el2_mubi_pkg.sv"
 
 
 module caliptra_top_tb_services
@@ -71,6 +75,7 @@ module caliptra_top_tb_services
     // TB Controls
     output var   ras_test_ctrl_t   ras_test_ctrl,
     output var   stash_test_ctrl_t stash_test_ctrl,
+    output logic dcls_test_start,
     output int   cycleCnt,
     output var   axi_complex_ctrl_t axi_complex_ctrl,
 
@@ -367,9 +372,12 @@ module caliptra_top_tb_services
     //         8'h9e        - Inject invalid pubkey_y into ECC
     //         8'h9f        - Inject AES key into KV
     //         8'ha0        - Inject HMAC384_KEY to kv_key register
-    //         8'ha1        - Inject zero as MLDSA_SEED/MLKEM_MSG to kv_key register (8 dwords)
+    //         8'ha1        - Inject zero as MLDSA_SEED to kv_key register (8 dwords)
     //         8'ha2        - Randomizable KV inject: slot=[12:8], last_dword=[16:13], dest_valid=[24:17]
-    //         8'ha3: 8'ha7 - Unused
+    //         8'ha3        - Drive MLKEM random-vector msg dword [10:8] on generic_input_wires as
+    //                        {32'h4D534700 | idx, msg[idx]}; [11]=1 releases the override.
+    //                        Firmware supplies the msg to ENCAPS through the MLKEM_MSG API.
+    //         8'ha4: 8'ha7 - Unused
     //         8'ha8        - Inject zero as HMAC_KEY/MLKEM_SEED to kv_key register (16 dwords)
     //         8'ha9        - Inject HMAC512_KEY to kv_key register
     //         8'haa        - Inject HMAC512_BLOCK to kv_key16 register
@@ -377,10 +385,11 @@ module caliptra_top_tb_services
     //         8'hac        - Inject ECC seed to kv_key22/23 register
     //         8'had        - Inject ECC_PRIVKEY to kv_key register
     //         8'hae        - Inject fixed MLKEM SEED (mlkem_seed_tb) to keyvault
-    //         8'haf        - Inject fixed MLKEM MSG (mlkem_msg_tb) to keyvault
+    //         8'haf        - Inject fixed MLKEM MSG pattern (mlkem_msg_tb) to keyvault with only the
+    //                        reserved dest_valid[7] bit set (no read client)
     //         8'hb0        - Inject HMAC512_BLOCK to kv_key register
     //         8'hb1        - Inject MLKEM SEED to keyvault
-    //         8'hb2        - Inject MLKEM MSG to keyvault
+    //         8'hb2        - Unused (ML-KEM ENCAPS message has no keyvault source)
     //         8'hb3        - Check MLKEM KV result against shared key test vector
     //         8'hb4        - Inject MLKEM zeroize during KV access
     //         8'hb5        - Turn on Assertion using $asserton
@@ -389,10 +398,10 @@ module caliptra_top_tb_services
     //         8'hb8        - AXI Error Injection Disabled
     //         8'hb9        - Enable scan mode and run DOE back to back
     //         8'hba        - Enable scan mode with KV write
-    //         8'hbb        - Enable KV boot phase transition enforcement
-    //         8'hbc        - Force MuBi4 glitch on boot_flow_fmc (invalid encoding, auto-release after 5 clocks)
+    //         8'hbb        - Disabled until boot-flow monitor rework
+    //         8'hbc        - Disabled until boot-flow monitor rework
     //         8'hbd        - Arm KV fw-update-reset alignment hook; flavor in WriteData[15:8]: 0=HMAC write_en (Case A), 1=HMAC digest_valid_new (Case B), 2=DOE write_en (Case C), 3=HMAC kv_key_write_en / KEY read (Case D) (TB-only, directed_kv_fw_update_reset_abort)
-    //         8'hbe        - Force shadow storage bit-flip on ICCM fmc_start shadow register (auto-release after 5 clocks)
+    //         8'hbe        - Disabled until boot-flow monitor rework
     //         8'hbf        - Force DCLS lockstep corruption inject (lockstep_err_injection_en_i = El2MuBiTrue, auto-release after 5 clocks)
     //         8'hc0:       - Inject MLDSA_SEED to kv_key register
     //         8'hc1        - Force DCLS lockstep corruption inject WITHOUT the TB self-check
@@ -400,7 +409,8 @@ module caliptra_top_tb_services
     //                         disabled and verifies in FW that rv_dcls_err stays 0)
     //         8'hc2        - Request BFM post-CPTRA_LOCK stash bank negative writes
     //         8'hc3        - Request BFM stash bank random overwrite with invalid AXI USER (PAUSER)
-    //         8'hc4: 8'hc7 - Unused
+    //         8'hc4        - Start directed DCLS (+CALIPTRA_TEST_DCLS only)
+    //         8'hc5: 8'hc7 - Unused
     //         8'hc8        - Inject key 0x0 into slot 16 for AES
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
@@ -607,6 +617,18 @@ module caliptra_top_tb_services
             generic_input_wire_ctrl.value[63:32]  <= `CPTRA_TOP_PATH.soc_ifc_top1.i_soc_ifc_reg.field_storage.CPTRA_GENERIC_OUTPUT_WIRES[1].generic_wires.value;
             generic_input_wire_ctrl.override_en   <= 1'b1;
         end
+        else if ((WriteData[7:0] == 8'ha3) && mailbox_write) begin
+            // Drive one dword of the random ML-KEM test vector msg to firmware. The high
+            // word carries a per-dword marker so firmware can detect the update.
+            if (WriteData[11]) begin
+                generic_input_wire_ctrl.override_en <= 1'b0;
+                generic_input_wire_ctrl.value       <= 64'h0;
+            end
+            else begin
+                generic_input_wire_ctrl.value       <= {32'h4D534700 | 32'(WriteData[10:8]), mlkem_test_vector.msg[WriteData[10:8]]};
+                generic_input_wire_ctrl.override_en <= 1'b1;
+            end
+        end
     end
 
     // AXI Complex Control
@@ -661,7 +683,6 @@ module caliptra_top_tb_services
     logic [0:15][31:0]   ecc_privkey_random;
     logic [0:15][31:0]   mldsa_seed_random;
     logic [15:0][31:0]   mlkem_seed_random;
-    logic [15:0][31:0]   mlkem_msg_random;
     logic [15:0] key_release_size_val = `CPTRA_TOP_PATH.soc_ifc_top1.i_axi_dma.key_release_size;
     logic [7:0] min_dwords ;
     logic [7:0] max_dwords ;
@@ -675,10 +696,6 @@ module caliptra_top_tb_services
         end
         for (int i = 0; i < 8; i++) begin
             mlkem_seed_random[8 + i] = mlkem_test_vector.seed_z[7 - i];
-        end
-        for (int i = 0; i < 8; i++) begin
-            mlkem_msg_random[i] = mlkem_test_vector.msg[7 - i];
-            mlkem_msg_random[8 + i] = 32'h0;
         end
     end
 
@@ -771,13 +788,13 @@ module caliptra_top_tb_services
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
                         force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = '0;
                     end
-                    //inject zero MLDSA seed / MLKEM msg to kv key reg (both 8 dwords)
+                    //inject zero MLDSA seed to kv key reg (8 dwords)
                     else if(((WriteData[7:0]) == 8'ha1) && mailbox_write) begin
                         inject_mldsa_seed <= 1'b1;
                         release_kv_inject_flags <= '0;
                         if (slot_id == KV_ENTRY_FOR_MLDSA_SIGNING) begin
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1000_0100; // MLDSA_SEED + MLKEM_MSG (both 8 dwords)
+                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b0000_0100; // MLDSA_SEED
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
@@ -1003,18 +1020,6 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mlkem_seed_random[dword_i][31 : 0];
                         end
                     end
-                    else if((WriteData[7:0] == 8'hb2) && mailbox_write) begin
-                        inject_mlkem_kv <= 1'b1;
-                        release_kv_inject_flags <= '0;
-                        if ((WriteData[12:8] == slot_id)) begin
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].dest_valid.next = 8'b1000_0000;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_CTRL[slot_id].last_dword.next = 'd7;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.we = 1'b1;
-                            force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mlkem_msg_random[dword_i][31 : 0];
-                        end
-                    end
                     //inject fixed mlkem seed (mlkem_seed_tb) to kv key reg
                     else if((WriteData[7:0] == 8'hae) && mailbox_write) begin
                         inject_mlkem_kv <= 1'b1;
@@ -1028,7 +1033,7 @@ module caliptra_top_tb_services
                             force `CPTRA_TOP_PATH.key_vault1.kv_reg_hwif_in.KEY_ENTRY[slot_id][dword_i].data.next = mlkem_seed_tb[dword_i][31 : 0];
                         end
                     end
-                    //inject fixed mlkem msg (mlkem_msg_tb) to kv key reg
+                    //inject fixed mlkem msg pattern (mlkem_msg_tb) to kv key reg; reserved dest_valid[7] has no read client
                     else if((WriteData[7:0] == 8'haf) && mailbox_write) begin
                         inject_mlkem_kv <= 1'b1;
                         release_kv_inject_flags <= '0;
@@ -1922,6 +1927,16 @@ endgenerate //IV_NO
         end
     end
 
+    // Old firmware requests cannot enable the feature or interrupt validation.
+    always @(posedge clk) begin
+        if ((mailbox_write === 1'b1) &&
+            ((WriteData[7:0] === 8'hbb) || (WriteData[7:0] === 8'hbc) ||
+             (WriteData[7:0] === 8'hbe))) begin
+            $warning("TB: boot-flow monitor disabled; ignoring command 0x%02h", WriteData[7:0]);
+        end
+    end
+
+    /* Disabled until the boot-flow monitor is reworked.
     // Enable boot flow monitoring (TB command 0xbb)
     // Forces the disable signal to 0, which enables monitoring.
     // By default the boot flow monitoring is disabled in simulation so legacy tests work
@@ -1948,7 +1963,18 @@ endgenerate //IV_NO
         end
     end
 
+    */
+
 `ifdef RV_LOCKSTEP_ENABLE
+    initial dcls_test_start = 0;
+    always @(posedge clk) begin
+        dcls_test_start <= 0;
+        if (mailbox_write && WriteData[7:0] == 8'hc4 && $test$plusargs("CALIPTRA_TEST_DCLS")) begin
+            if (UVM_TB) $fatal(1, "Directed DCLS requires the standalone SoC BFM");
+            dcls_test_start <= 1;
+        end
+    end
+
     // DCLS lockstep corruption injection (auto-release after 5 clocks).
     // Forces lockstep_err_injection_en_i = El2MuBiTrue (4'h6) to trigger corruption_detected_o.
     // NOTE: corruption detection must be ENABLED for corruption_detected_o to propagate.
@@ -2001,6 +2027,36 @@ endgenerate //IV_NO
     end
 `endif // RV_LOCKSTEP_ENABLE
 
+    // Fail the test on any main/shadow core divergence, independent of whether
+    // DCLS detection is enabled (ss_dcls_en) or which mode Caliptra runs in.
+    // Error injection (smoke_test_dcls_inject/_dis) bypasses corruption_detected,
+    // and the comparison is invalid once the core has entered debug mode or while
+    // scan mode is (or was, since the last reset) active. Directed output/regfile
+    // fault injection (caliptra_top_tb_dcls.svh) creates a real divergence on
+    // purpose, so also exempt its active fault windows.
+    logic dcls_mismatch_detected;
+    initial dcls_mismatch_detected = 1'b0;
+`ifdef RV_LOCKSTEP_ENABLE
+    always @(posedge clk) begin
+        if (!dcls_mismatch_detected &&
+            `CPTRA_TOP_PATH.rvtop.lockstep.rst_n &&
+            (`CPTRA_TOP_PATH.rvtop.lockstep.corruption_detected == el2_mubi_pkg::El2MuBiTrue) &&
+            (`CPTRA_TOP_PATH.rvtop.lockstep.dbg_detected        == el2_mubi_pkg::El2MuBiFalse) &&
+            (`CPTRA_TOP_PATH.rvtop.lockstep.scan_detected       == el2_mubi_pkg::El2MuBiFalse)
+`ifdef CALIPTRA_TOP_TB
+`ifndef VERILATOR
+            && !`CALIPTRA_TOP.soc_bfm_inst.dcls_output_fault_active
+            && !`CALIPTRA_TOP.soc_bfm_inst.dcls_regfile_fault_active
+`endif
+`endif
+            ) begin
+            dcls_mismatch_detected <= 1'b1;
+            $error("TB: unexpected DCLS mismatch between main and shadow core");
+        end
+    end
+`endif // RV_LOCKSTEP_ENABLE
+
+    /* Disabled until the boot-flow monitor is reworked.
     // Shadow storage bit-flip injection on ICCM fmc_start (auto-release after 5 clocks)
     logic [63:0] shadow_flip_cycle;
     initial shadow_flip_cycle = '0;
@@ -2017,6 +2073,8 @@ endgenerate //IV_NO
             $display("TB: Released shadow storage force (auto)");
         end
     end
+
+    */
 
     // ------------------------------------------------------------------
     // KV firmware-update-reset alignment hook for directed_kv_fw_update_reset_abort
@@ -2100,10 +2158,6 @@ endgenerate //IV_NO
         else if (inject_mlkem_zeroize_kv_read) begin
             if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_seed_write_en &
                 (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_seed_write_offset == 3)) begin
-                inject_zeroize_to_mlkem <= 1'b1;
-            end
-            else if (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_msg_write_en &
-                (`CPTRA_TOP_PATH.abr_inst.abr_ctrl_inst.kv_mlkem_msg_write_offset == 3)) begin
                 inject_zeroize_to_mlkem <= 1'b1;
             end
             if (inject_zeroize_to_mlkem) begin
@@ -2872,6 +2926,11 @@ endgenerate //IV_NO
                 $error("* TESTCASE FAILED");
                 $display(" -- Extending simulation for 100 clock cycles to capture ending waveform");
             end
+        end
+        if (dcls_mismatch_detected && !(|cycleCntKillReq) && !UVM_TB) begin
+            cycleCntKillReq <= cycleCnt;
+            $error("* TESTCASE FAILED");
+            $display(" -- DCLS mismatch: extending simulation for 100 clock cycles to capture ending waveform");
         end
         if (|cycleCntKillReq && (cycleCnt == (cycleCntKillReq + 100))) begin
                 $error("Dumping memory contents at simulation end due to FAILURE");
@@ -3696,6 +3755,11 @@ pcrvault_cov_bind i_pcrvault_cov_bind();
 axi_dma_top_cov_bind i_axi_dma_top_cov_bind();
 aes_cov_bind i_aes_cov_bind();
 doe_cov_bind i_doe_cov_bind();
+sha3_cov_bind i_sha3_cov_bind();
+`ifdef CALIPTRA_INTERNAL_TRNG
+entropy_src_cov_bind i_entropy_src_cov_bind();
+entropy_combiner_cov_bind i_entropy_combiner_cov_bind();
+`endif
 `endif
 
 /* verilator lint_off CASEINCOMPLETE */

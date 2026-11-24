@@ -199,6 +199,7 @@ package el2_lockstep_pkg;
 
   // Inputs
   typedef struct packed {
+    logic                           rst_l_sync;
     logic [31:1]                    rst_vec;
     logic                           nmi_int;
     logic [31:1]                    nmi_vec;
@@ -301,6 +302,5 @@ package el2_lockstep_pkg;
     logic [pt.PIC_TOTAL_INT:1]      extintsrc_req;
     logic                           timer_int;
     logic                           soft_int;
-    logic                           scan_mode;
   } veer_inputs_t;
 endpackage

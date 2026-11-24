@@ -100,12 +100,23 @@ class pv_scoreboard #(
   pv_read_transaction pv_sha512_block_read_expected_hash [int unsigned];
 
   //Use queues for AHB txns since there is no get_key() method
-  ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
-                              ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
-                              ahb_lite_slave_0_params::AHB_NUM_SLAVES,
-                              ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
-                              ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
-                              ahb_lite_slave_0_params::AHB_RDATA_WIDTH)     ahb_expected_q       [$]; // FIXME
+  typedef ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS,
+                                      ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS,
+                                      ahb_lite_slave_0_params::AHB_NUM_SLAVES,
+                                      ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH,
+                                      ahb_lite_slave_0_params::AHB_WDATA_WIDTH,
+                                      ahb_lite_slave_0_params::AHB_RDATA_WIDTH) pv_ahb_txn_t;
+  pv_ahb_txn_t ahb_expected_q [$];
+  // The predictor publishes an expected read only after both the AHB callback
+  // and its pre-edge storage snapshot arrive, so it can trail the actual txn.
+  pv_ahb_txn_t ahb_actual_q   [$];
+  // Each expected item is a copy of the monitored transfer with only read
+  // data[0] replaced from the predictor's storage snapshot. Address, RnW,
+  // resp and write data therefore match by construction; read data is the
+  // only independently predicted field. Randomized CTRL writes are checked
+  // through later reads against the predictor's register shadow.
+  int unsigned ahb_read_compares;
+  extern function void match_ahb_txns();
 
   // Variable used to delay run phase completion until scoreboard empty
   bit wait_for_scoreboard_empty; // FIXME
@@ -236,6 +247,7 @@ class pv_scoreboard #(
     `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_FULL)
     
     ahb_expected_q.push_back(t);
+    match_ahb_txns();
     // pragma uvmf custom expected_ahb_analysis_export_scoreboard end
   endfunction
   
@@ -246,27 +258,18 @@ class pv_scoreboard #(
   virtual function void write_actual_ahb_analysis_export(mvc_sequence_item_base _t);
     // pragma uvmf custom actual_ahb_analysis_export_scoreboard begin
     ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) t;
-    ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) t_exp;
-    bit txn_eq;
+    pv_ahb_txn_t t_act;
     if (!$cast(t,_t)) begin
       `uvm_fatal("SCBD_AHB","Cast from mvc_sequence_item_base to ahb_master_burst_transfer #(ahb_lite_slave_0_params::AHB_NUM_MASTERS, ahb_lite_slave_0_params::AHB_NUM_MASTER_BITS, ahb_lite_slave_0_params::AHB_NUM_SLAVES, ahb_lite_slave_0_params::AHB_ADDRESS_WIDTH, ahb_lite_slave_0_params::AHB_WDATA_WIDTH, ahb_lite_slave_0_params::AHB_RDATA_WIDTH) in write_actual_ahb_analysis_export failed!")
     end
     `uvm_info("SCBD_AHB", "Transaction Received through actual_ahb_analysis_export", UVM_MEDIUM)
     `uvm_info("SCBD_AHB",{"            Data: ",t.convert2string()}, UVM_FULL)
-    
-    if (ahb_expected_q.size() > 0) begin
-      t_exp = ahb_expected_q.pop_front();
-      txn_eq = t.compare(t_exp);
-      if (txn_eq) `uvm_info ("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} matches expected",t.address,t.data[0],t.RnW), UVM_MEDIUM)
-      else        `uvm_error("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Resp: %p} does not match expected: {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Resp: %p}",t.address,t.data[0],t.RnW,t.resp[0],t_exp.address,t_exp.data[0],t_exp.RnW,t_exp.resp[0]))
-  end
-  else begin
-  //  UVMF_CHANGE_ME: Implement custom scoreboard here.  
-  `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-  `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "UVMF_CHANGE_ME: The pv_scoreboard::write_actual_ahb_analysis_export function needs to be completed with custom scoreboard functionality",UVM_NONE)
-  `uvm_info("UNIMPLEMENTED_CUSTOM_SCOREBOARD", "******************************************************************************************************",UVM_NONE)
-  end
- 
+
+    // Hold a private copy; the monitor may reuse its item after this callback.
+    t_act = pv_ahb_txn_t::type_id::create("ahb_actual");
+    t_act.copy(t);
+    ahb_actual_q.push_back(t_act);
+    match_ahb_txns();
     // pragma uvmf custom actual_ahb_analysis_export_scoreboard end
   endfunction
   
@@ -282,6 +285,11 @@ class pv_scoreboard #(
   virtual function void check_phase(uvm_phase phase);
 // pragma uvmf custom check_phase begin
      super.check_phase(phase);
+     if (ahb_expected_q.size() != 0 || ahb_actual_q.size() != 0)
+       `uvm_error("SCBD_AHB", $sformatf("Unmatched AHB transactions at end of test: expected=%0d actual=%0d",
+                                        ahb_expected_q.size(), ahb_actual_q.size()))
+     // Some tests (e.g. pv_rand_test) issue no AHB traffic, so zero is legal.
+     `uvm_info("SCBD_AHB", $sformatf("Compared %0d AHB read(s) against the predictor", ahb_read_compares), UVM_LOW)
 // pragma uvmf custom check_phase end
   endfunction
 
@@ -295,6 +303,23 @@ class pv_scoreboard #(
 endclass 
 
 // pragma uvmf custom external begin
+// Both streams are in bus order, so pair them FIFO-to-FIFO regardless of
+// which side's callback ran first.
+function void pv_scoreboard::match_ahb_txns();
+  pv_ahb_txn_t t_act, t_exp;
+  while (ahb_expected_q.size() > 0 && ahb_actual_q.size() > 0) begin
+    t_act = ahb_actual_q.pop_front();
+    t_exp = ahb_expected_q.pop_front();
+    if (t_exp.RnW == AHB_READ)
+      ahb_read_compares++;
+    if (t_act.compare(t_exp))
+      `uvm_info ("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} matches expected",t_act.address,t_act.data[0],t_act.RnW), UVM_MEDIUM)
+    else
+      `uvm_error("SCBD_AHB", $sformatf("Actual AHB txn with {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Resp: %p} does not match expected: {Address: 0x%x} {Data: 0x%x} {RnW: %p} {Resp: %p}",t_act.address,t_act.data[0],t_act.RnW,t_act.resp[0],t_exp.address,t_exp.data[0],t_exp.RnW,t_exp.resp[0]))
+    ->entry_received;
+  end
+endfunction
+
   // FUNCTION: disable_wait_for_scoreboard_empty
   // Used to disable delaying run phase completion until scoreboard empty.
 function void pv_scoreboard::disable_wait_for_scoreboard_empty();
@@ -315,13 +340,13 @@ task pv_scoreboard::wait_for_scoreboard_drain();
    bit entries_remaining = 0;
    if (pv_sha512_block_read_expected_hash.size() != 0) entries_remaining |= 1;
    if (pv_sha512_write_expected_hash.size() != 0) entries_remaining |= 1;
-   if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
+   if (ahb_expected_q.size() != 0 || ahb_actual_q.size() != 0) entries_remaining |= 1;
    while (entries_remaining) begin : while_entries_remaining
        @entry_received; // FIXME
        entries_remaining=0;
        if (pv_sha512_block_read_expected_hash.size() != 0) entries_remaining |= 1;
        if (pv_sha512_write_expected_hash.size() != 0) entries_remaining |= 1;
-       if (ahb_expected_q.size() != 0)        entries_remaining |= 1;
+       if (ahb_expected_q.size() != 0 || ahb_actual_q.size() != 0) entries_remaining |= 1;
   end : while_entries_remaining
 endtask
 

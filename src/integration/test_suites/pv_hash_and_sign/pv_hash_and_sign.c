@@ -339,6 +339,8 @@ void main() {
     }
 
     //read 384 bits from PCR31 and write to SHA512 BLOCK
+    sha512_zeroize();
+    sha512_poll_ready();
     VPRINTF(MEDIUM,"KV: polling for kv ready\n");
     kv_poll_ready(CLP_SHA512_REG_SHA512_VAULT_RD_STATUS);
     pv_hash_extend(0x1f);
@@ -388,6 +390,8 @@ void main() {
     }
 
     //check endianness of result
+    sha512_zeroize();
+    sha512_poll_ready();
     //Write first msg to block
     offset = 0;
     reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_BLOCK_0;
@@ -428,6 +432,7 @@ void main() {
         offset++;
     }
 
+    sha512_zeroize();
     sha_poll_gen_hash_ready();
     reg_ptr = (uint32_t*) CLP_SHA512_REG_SHA512_GEN_PCR_HASH_NONCE_0;
     offset = 0;
@@ -463,8 +468,8 @@ void main() {
     lsu_write_32(CLP_ECC_REG_ECC_CTRL,reg);
 
     VPRINTF(MEDIUM,"ECC: Polling for PCR Sign to be complete\n");
-    // wait for ECC SIGNING process to be done
-    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
+    // wait for ECC SIGNING process to be done (READY stays low until zeroize)
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_VALID_MASK) == 0);
 
     //check expected output from sign r
     reg_ptr = (uint32_t*) CLP_ECC_REG_ECC_SIGN_R_0;
@@ -489,6 +494,11 @@ void main() {
         }
         offset++;
     }
+
+    // Mandatory ECC zeroize after the PCR signing operation
+    lsu_write_32(CLP_ECC_REG_ECC_CTRL, (1 << ECC_REG_ECC_CTRL_ZEROIZE_LOW) & ECC_REG_ECC_CTRL_ZEROIZE_MASK);
+    // Zeroize re-runs ECC initialization; wait for it before starting ML-DSA
+    while((lsu_read_32(CLP_ECC_REG_ECC_STATUS) & ECC_REG_ECC_STATUS_READY_MASK) == 0);
 
     VPRINTF(MEDIUM,"MLDSA: Running PCR Sign Function\n");
     //run MLDSA keygen+signing on PCR

@@ -198,7 +198,6 @@ void main() {
         hmac_lfsr_seed.data[i] = 0;
 
     // ML-KEM msg (same for both phases, byte-swapped to LE)
-    msg.kv_intf = FALSE;
     for (int i = 0; i < MLKEM_MSG_SIZE; i++)
         msg.data[i] = BSWAP32(msg_data[i]);
 

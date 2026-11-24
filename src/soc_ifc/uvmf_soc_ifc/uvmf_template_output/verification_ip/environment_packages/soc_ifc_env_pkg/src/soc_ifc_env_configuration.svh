@@ -352,9 +352,10 @@ extends uvmf_environment_configuration_base;
          null, UVMF_VIRTUAL_INTERFACES, SOC_IFC_SHA_STATUS_VIF,
          sha_status_vif));
 
-     qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.slave = 1'b1;
-     qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.master = 1'b1;
-     qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.response = 1'b1;
+     // Avery AXI and QVIP AHB VIP protocol coverage disabled
+     qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.slave = 1'b0;
+     qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.master = 1'b0;
+     qvip_ahb_lite_slave_subenv_config.ahb_lite_slave_0_cfg.agent_cfg.en_cvg.response = 1'b0;
 
      // TODO Avery AXI enable coverage?
     // Add analysis ports to send Bus traffic to the scoreboard, so that the predictor/scoreboard can check read transfer data

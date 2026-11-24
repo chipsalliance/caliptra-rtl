@@ -2,30 +2,34 @@
 // Licensed under the Apache License, Version 2.0, see LICENSE for details.
 // SPDX-License-Identifier: Apache-2.0
 //
-// Description: entropy_src repetitive count health test module
+// Description: entropy_src Repetition Count Test module
 //
 
 module entropy_src_repcnt_ht #(
-  parameter int RegWidth = 16,
-  parameter int RngBusWidth = 4
+  parameter int RegWidth          = 16,
+  parameter int RngBusWidth       = 4,
+  parameter int RngBusBitSelWidth = 2
 ) (
-  input logic                   clk_i,
-  input logic                   rst_ni,
+  input logic                        clk_i,
+  input logic                        rst_ni,
+  input logic                        zeroize_i,
 
    // ins req interface
-  input logic [RngBusWidth-1:0] entropy_bit_i,
-  input logic                   entropy_bit_vld_i,
-  input logic                   rng_bit_en_i,
-  input logic [1:0]             rng_bit_sel_i,
-  input logic                   clear_i,
-  input logic                   active_i,
-  input logic [RegWidth-1:0]    thresh_i,
-  output logic [RegWidth-1:0]   test_cnt_o,
-  output logic                  test_fail_pulse_o,
-  output logic                  count_err_o
+  input logic [RngBusWidth-1:0]       entropy_bit_i,
+  input logic                         entropy_bit_vld_i,
+  input logic                         rng_bit_en_i,
+  input logic [RngBusBitSelWidth-1:0] rng_bit_sel_i,
+  input logic                         clear_i,
+  input logic                         active_i,
+  input logic [RegWidth-1:0]          thresh_i,
+  output logic [RegWidth-1:0]         test_cnt_o,
+  output logic                        test_fail_pulse_o,
+  output logic                        count_err_o
 );
 
   // signals
+  logic                                 test_clr;
+  logic [RegWidth-1:0]                  rep_cntr_set_val;
   logic [RngBusWidth-1:0]               samples_match_pulse;
   logic [RngBusWidth-1:0]               samples_no_match_pulse;
   logic [RngBusWidth-1:0]               rep_cnt_fail;
@@ -44,6 +48,9 @@ module entropy_src_repcnt_ht #(
     if (!rst_ni) begin
       prev_sample_q       <= '0;
       fail_sample_mask_q  <= '0;
+    end else if (zeroize_i) begin
+      prev_sample_q       <= '0;
+      fail_sample_mask_q  <= '0;
     end else begin
       prev_sample_q       <= prev_sample_d;
       fail_sample_mask_q  <= fail_sample_mask_d;
@@ -53,15 +60,23 @@ module entropy_src_repcnt_ht #(
   // Repetitive Count Test
   //
   // Test operation
-  //  This test will look for catastrophic stuck bit failures. The rep_cntr
-  //  uses one as the starting value, just as the NIST algorithm does.
+  //  This test will look for catastrophic stuck bit failures. As in the NIST
+  //  algorithm (SP 800-90B, Section 4.4.1), the rep_cntr is one after the first
+  //  sample: it is cleared to zero and the first sample counts as one.
 
+
+  // Clear the previous samples and the counters when the test is inactive or cleared.
+  assign test_clr = !active_i || clear_i;
+
+  // At the beginning of testing we start counting after the first sample.
+  // From this point on each samples_no_match_pulse resets the count to 1.
+  assign rep_cntr_set_val = test_clr ? RegWidth'(0) : RegWidth'(1);
 
   for (genvar sh = 0; sh < RngBusWidth; sh = sh+1) begin : gen_cntrs
 
 
     // NIST A sample
-    assign prev_sample_d[sh] = (!active_i || clear_i) ? '0 :
+    assign prev_sample_d[sh] = test_clr ? '0 :
                                entropy_bit_vld_i ? entropy_bit_i[sh] :
                                prev_sample_q[sh];
 
@@ -78,8 +93,8 @@ module entropy_src_repcnt_ht #(
       .clk_i,
       .rst_ni,
       .clr_i(1'b0),
-      .set_i(!active_i || clear_i || samples_no_match_pulse[sh]),
-      .set_cnt_i(RegWidth'(1)),
+      .set_i(test_clr || samples_no_match_pulse[sh]),
+      .set_cnt_i(rep_cntr_set_val),
       .incr_en_i(samples_match_pulse[sh]),
       .decr_en_i(1'b0),
       .step_i(RegWidth'(1)),
@@ -106,15 +121,17 @@ module entropy_src_repcnt_ht #(
     .max_valid_o()
   );
 
-  assign rng_bit_cnt = (rng_bit_sel_i == 2'h0) ? rep_cntr[0] :
-                       (rng_bit_sel_i == 2'h1) ? rep_cntr[1] :
-                       (rng_bit_sel_i == 2'h2) ? rep_cntr[2] :
-                       rep_cntr[3];
+  always_comb begin
+    rng_bit_cnt      = '0;
+    rng_bit_cnt_fail = '0;
 
-  assign rng_bit_cnt_fail = (rng_bit_sel_i == 2'h0) ? rep_cnt_fail[0] :
-                            (rng_bit_sel_i == 2'h1) ? rep_cnt_fail[1] :
-                            (rng_bit_sel_i == 2'h2) ? rep_cnt_fail[2] :
-                            rep_cnt_fail[3];
+    for (int i = 0; i < RngBusWidth; i++) begin
+      if (rng_bit_sel_i == i) begin
+        rng_bit_cnt      = rep_cntr[i];
+        rng_bit_cnt_fail = rep_cnt_fail[i];
+      end
+    end
+  end
 
   // For the purposes of failure pulse generation, we want to sample
   // the test output for only one cycle and do it immediately after

@@ -315,11 +315,13 @@ end
   parameter SIGN_CMD         = 2'b10;
   parameter VERIFY_CMD       = 2'b11;
   parameter DH_SHARED_CMD    = (1 << 4);
+  parameter ZEROIZE_CMD      = (1 << 2);
 
 
   parameter ADDR_STATUS          = BASE_ADDR + 32'h00000018;
   parameter STATUS_READY_BIT = 0;
   parameter STATUS_VALID_BIT = 1;
+  parameter STATUS_VERIFY_PASS_BIT = 2;
 
   parameter ADDR_SEED_START      = BASE_ADDR + 32'h00000080;
   parameter ADDR_SEED_END        = BASE_ADDR + 32'h000000AC;
@@ -631,6 +633,22 @@ end
   endtask // trig_ECC
 
   //----------------------------------------------------------------
+  // zeroize_and_check()
+  //
+  // Mandatory zeroize after every operation (READY stays low until then).
+  // Waits for READY and checks the previous VERIFY_PASS result was cleared.
+  //----------------------------------------------------------------
+  task zeroize_and_check;
+    begin
+      trig_ECC(ZEROIZE_CMD);
+      wait_ready();
+      read_single_word(ADDR_STATUS);
+      if (hrdata_i[STATUS_VERIFY_PASS_BIT] !== 1'b0)
+        `uvm_error("ECC_IN_DRIVER_BFM", "ECC_STATUS.VERIFY_PASS is set after zeroize")
+    end
+  endtask // zeroize_and_check
+
+  //----------------------------------------------------------------
   // ecc_keygen_test()
   //
   // Perform a single point multiplication block test.
@@ -680,6 +698,8 @@ end
 
       read_block(ADDR_PUBKEYY_START);
       pubkey.y = reg_read_data;
+
+      zeroize_and_check();
 
       end_time = cycle_ctr - start_time;
 
@@ -752,6 +772,8 @@ end
       read_block(ADDR_SIGNS_START);
       S = reg_read_data;
 
+      zeroize_and_check();
+
       end_time = cycle_ctr - start_time;
       //$display("*** signing test processing time = %01d cycles.", end_time);
 
@@ -821,6 +843,8 @@ end
       read_block(ADDR_VERIFY_R_START);
       verify_r = reg_read_data;
 
+      zeroize_and_check();
+
       end_time = cycle_ctr - start_time;
       //$display("*** verifying test processing time = %01d cycles.", end_time);
 
@@ -883,6 +907,8 @@ end
 
       read_block(ADDR_DH_SHARED_KEY_START);
       DH_sharedkey = reg_read_data;
+
+      zeroize_and_check();
 
       // trig_ECC()
 

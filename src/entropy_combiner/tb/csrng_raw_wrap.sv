@@ -19,7 +19,7 @@
 // Thin structural wrapper around csrng for the combiner+CSRNG integration
 // testbench. It ties the RTL enum-typed straps (otp_en_csrng_sw_app_read_i =
 // MuBi8True, lc_hw_debug_en_i = On) and the other unused interfaces
-// (cs_aes_halt, hw application ports, alerts, interrupts) inside RTL, so the
+// (hw application ports, alerts, interrupts) inside RTL, so the
 // testbench never crosses the TB/RTL enum-type boundary (VCS partition compile
 // builds separate incompatible enum copies). Mirrors entropy_src_raw_wrap.sv
 // and how caliptra_top.sv drives these straps.
@@ -83,9 +83,6 @@ module csrng_raw_wrap
 
     .entropy_src_hw_if_o        (entropy_src_hw_if_o),
     .entropy_src_hw_if_i        (entropy_src_hw_if_i),
-
-    .cs_aes_halt_i              (cs_aes_halt_req_t'('0)),
-    .cs_aes_halt_o              (),
 
     // Hardware application interface unused (SW app interface via AHB is used).
     .csrng_cmd_i                ('0),

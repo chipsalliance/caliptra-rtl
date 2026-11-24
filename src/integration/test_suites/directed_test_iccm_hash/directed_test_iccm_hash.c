@@ -132,6 +132,7 @@ static uint8_t sha512_ctrl_hash_iccm(uint32_t num_words, uint32_t *digest_out) {
     uint32_t total_words = total_blocks * WORDS_PER_BLOCK;
     uint64_t bitlen = (uint64_t)num_words * 32;          // each ICCM word contributes 32 bits
 
+    lsu_write_32(CLP_SHA512_REG_SHA512_CTRL, SHA512_REG_SHA512_CTRL_ZEROIZE_MASK);
     for (uint32_t b = 0; b < total_blocks; b++) {
         if (!wait_sha512_ctrl_ready()) return 0;
 

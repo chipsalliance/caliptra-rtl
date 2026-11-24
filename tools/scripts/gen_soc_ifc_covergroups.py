@@ -68,6 +68,8 @@ soc_regs_txt = """
     CPTRA_CAP_LOCK
     CPTRA_OWNER_PK_HASH 12
     CPTRA_OWNER_PK_HASH_LOCK
+    CPTRA_AUX_PK_HASH 12
+    CPTRA_AUX_PK_HASH_LOCK
     fuse_uds_seed 16
     fuse_field_entropy 8
     fuse_vendor_pk_hash 12
@@ -105,6 +107,9 @@ soc_regs_txt = """
     SS_KEY_RELEASE_BASE_ADDR_H
     SS_KEY_RELEASE_SIZE
     SS_OCP_LOCK_CTRL
+    SS_OTP_FC_STATUS_CFG
+    SS_OTP_FC_CMD_CFG
+    SS_FW_FEATURE_CFG
     SS_STRAP_GENERIC 4
     SS_DBG_SERVICE_REG_REQ
     SS_DBG_SERVICE_REG_RSP

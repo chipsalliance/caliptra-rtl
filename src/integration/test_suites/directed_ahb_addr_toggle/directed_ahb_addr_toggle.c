@@ -15,12 +15,13 @@
 // ---------------------------------------------------------------------
 // Test: directed_ahb_addr_toggle
 // Description:
-//     Directed test to improve AHB address-bit toggle coverage. Certain
-//     haddr bits (26, 23, 19) never toggle in normal simulation runs. This
-//     test issues loads to addresses within the AHB peripheral window
-//     (0x1000_0000 - 0x3FFF_FFFF) that have those bits set. These addresses
-//     route to the bus and drive haddr with the bit asserted; being unmapped
-//     they return an hresp error.
+//     Directed test to improve shared AHB address-bit toggle coverage.
+//     The original probes cover bits 26, 23 and 19. Add the remaining
+//     unhit fabric bits 20-22, 24-25, 27 and 31 from the merged report.
+//     These external addresses are outside every mapped AHB responder, so
+//     they must reach the default error response. The decoder broadcasts
+//     HADDR to peripherals before their local address slicing; already-covered
+//     local offsets and physically truncated bits are not new targets.
 //
 //     IMPORTANT (why this uses the NMI vector, not mtvec):
 //     In VeeR EL2 *every* external (bus) load is issued through the
@@ -34,10 +35,11 @@
 //     mdeau to re-arm error detection for the next faulting load.
 //
 //     Flow: main() installs an NMI handler and enters run_targets(). Each
-//     target load produces an imprecise D-bus NMI; the handler counts it,
-//     clears mcause/mdeau, advances the target index, and resumes execution
-//     back at run_targets() (via mepc). A benign mapped read between targets
-//     drives the asserted haddr bits back 1->0 so both edges are covered.
+//     target load produces an imprecise D-bus NMI with the expected MDSEAC
+//     address; a core-local synchronous access fault is not accepted. The handler
+//     counts it, clears mcause/mdeau, advances the target index, and resumes execution
+//     back at run_targets() (via mepc). A checked mapped read between targets
+//     and after the final target drives the asserted haddr bits back 1->0.
 // ---------------------------------------------------------------------
 
 #include "caliptra_defines.h"
@@ -61,18 +63,21 @@ volatile uint32_t  intr_count;
 
 volatile caliptra_intr_received_s cptra_intr_rcv = {0};
 
-// Target addresses in the AHB peripheral window (0x1000_0000 - 0x3FFF_FFFF).
-// Each is unmapped, so a read drives haddr with the indicated bit(s) set and
-// returns an hresp error -> imprecise D-bus-load NMI.
-//   bit 26        : 0x14000000
-//   bit 23        : 0x10800000
-//   bit 19        : 0x10080000
-//   bits 26,23,19 : 0x14880000
+// External, unmapped targets: preserve the original probes, then walk each
+// remaining missing bit. The bit-31 target is also outside the core's local
+// memory/PIC regions; no PMP or memory-attribute settings are relaxed.
 static const uint32_t AHB_TARGETS[] = {
-    0x14000000UL,
-    0x10800000UL,
-    0x10080000UL,
-    0x14880000UL,
+    0x14000000UL, // bit 26
+    0x10800000UL, // bit 23
+    0x10080000UL, // bit 19
+    0x14880000UL, // bits 26, 23, 19
+    0x10100000UL, // bit 20
+    0x10200000UL, // bit 21
+    0x10400000UL, // bit 22
+    0x11000000UL, // bit 24
+    0x12000000UL, // bit 25
+    0x18000000UL, // bit 27
+    0x90000000UL, // bit 31
 };
 #define NUM_TARGETS (sizeof(AHB_TARGETS) / sizeof(AHB_TARGETS[0]))
 
@@ -81,12 +86,12 @@ static const uint32_t AHB_TARGETS[] = {
 // resumes in-place (no reset) so plain volatiles suffice.
 volatile uint32_t g_target_idx  = 0;
 volatile uint32_t g_fault_count = 0;
+volatile uint32_t g_target_pending = 0;
+volatile uint32_t g_hw_rev_id = 0;
 
 void run_targets(void);
 
-// Force the faulting access to be a 4-byte (non-compressed) lw. Using
-// lsu_read_32 could emit a compressed load; keeping it explicit documents that
-// the bus transaction (and thus the haddr drive) is a single 32-bit read.
+// Keep an explicit non-compressed word-load instruction at the probe boundary.
 static inline uint32_t fault_lw(uintptr_t a) {
     uint32_t v;
     __asm__ volatile(".option push\n.option norvc\nlw %0,0(%1)\n.option pop"
@@ -94,23 +99,35 @@ static inline uint32_t fault_lw(uintptr_t a) {
     return v;
 }
 
+static inline uint32_t read_mdseac(void) {
+    uint32_t value;
+    // The shared CSR header exposes MDEAU, but not the read-only MDSEAC.
+    __asm__ volatile("csrr %0, 0xfc0" : "=r"(value));
+    return value;
+}
+
 // NMI handler installed at SOC_IFC INTERNAL_NMI_VECTOR. Only the expected
 // imprecise D-bus-load NMI is tolerated: count it, clear the error state
 // (mcause + mdeau to re-arm mdseac capture), advance to the next target, and
 // redirect mepc so the (implicit) mret resumes at run_targets(). Because the
-// error is imprecise the interrupted mepc is meaningless, so we restart from a
-// known point rather than resuming it.
+// error is imprecise, mepc need not identify the faulting load, so we restart
+// from a known point rather than retrying an instruction inferred from mepc.
 void __attribute__((interrupt("machine"), aligned(4))) nmi_handler(void) {
     uint_xlen_t cause = csr_read_mcause();
-    if ((cause & MCAUSE_NMI_CODE_DBUS_LOAD_VALUE) == MCAUSE_NMI_CODE_DBUS_LOAD_VALUE) {
+    uint32_t address = read_mdseac();
+    uint32_t target = g_target_idx;
+    if (g_target_pending && target < NUM_TARGETS &&
+        cause == MCAUSE_NMI_CODE_DBUS_LOAD_VALUE && address == AHB_TARGETS[target]) {
+        g_target_pending = 0;
         g_fault_count++;
         g_target_idx++;
         csr_write_mcause(0x0);
         csr_write_mdeau(0x0);
         csr_write_mepc((uintptr_t)run_targets);
     } else {
-        VPRINTF(FATAL, "Unexpected NMI in ahb_addr_toggle: mcause=%x mepc=%x\n",
-                (uint32_t)cause, (uint32_t)csr_read_mepc());
+        VPRINTF(FATAL, "Unexpected NMI in ahb_addr_toggle: mcause=%x mepc=%x mdseac=%x target=%u pending=%u\n",
+                (uint32_t)cause, (uint32_t)csr_read_mepc(), address,
+                target, (uint32_t)g_target_pending);
         SEND_STDOUT_CTRL(0x1);
         while (1);
     }
@@ -121,17 +138,26 @@ void __attribute__((interrupt("machine"), aligned(4))) nmi_handler(void) {
 // load raises an imprecise D-bus NMI; the handler advances g_target_idx and
 // resumes here, so the loop below re-reads the updated index and continues.
 void run_targets(void) {
+    uint32_t actual = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_REV_ID);
+    if (actual != g_hw_rev_id) {
+        VPRINTF(FATAL, "[FAIL] mapped readback mismatch: got=0x%x expected=0x%x\n",
+                actual, (uint32_t)g_hw_rev_id);
+        SEND_STDOUT_CTRL(0x1);
+        while (1);
+    }
+
     while (g_target_idx < NUM_TARGETS) {
         uint32_t idx = g_target_idx;
         VPRINTF(LOW, "AHB toggle addr=0x%08x\n", AHB_TARGETS[idx]);
-        (void)lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_REV_ID); // 1->0 edge
-        (void)fault_lw(AHB_TARGETS[idx]);                   // 0->1 edge + NMI
+        g_target_pending = 1;
+        (void)fault_lw(AHB_TARGETS[idx]); // 0->1 edge + checked NMI
 
         // The imprecise error normally raises an NMI within a few cycles, and
         // the handler restarts run_targets() with g_target_idx advanced, so we
         // do not fall through. Give the error time to drain; if no NMI arrives
         // the target failed to fault and the test must fail.
         for (volatile uint32_t k = 0; k < 4000; k++) { }
+        g_target_pending = 0;
         VPRINTF(FATAL, "[FAIL] no NMI for target idx=%u addr=0x%08x (count=%u)\n",
                 idx, AHB_TARGETS[idx], (uint32_t)g_fault_count);
         SEND_STDOUT_CTRL(0x1);
@@ -160,6 +186,8 @@ void main(void) {
     // External AHB load errors arrive as imprecise D-bus NMIs, so route them to
     // a test-local handler instead of letting them escalate to a reset.
     lsu_write_32((uintptr_t)(CLP_SOC_IFC_REG_INTERNAL_NMI_VECTOR), (uint32_t)nmi_handler);
+    csr_write_mdeau(0x0);
+    g_hw_rev_id = lsu_read_32(CLP_SOC_IFC_REG_CPTRA_HW_REV_ID);
 
     run_targets();
 }
