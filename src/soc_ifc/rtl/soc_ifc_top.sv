@@ -1768,7 +1768,7 @@ always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.nmi_pin     .we = nmi_intr;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.kv_error    .we = cptra_hw_fatal_errors.kv_error;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.shadow_storage_err.we = shadow_storage_err;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.fsm_error   .we = boot_fsm_error | mbox_fsm_error | sha_fsm_error | cptra_hw_fatal_errors.fsm_error;
-always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.rv_dcls_err        .we = cptra_hw_fatal_errors.rv_dcls_error;
+always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.rv_dcls_err        .we = cptra_hw_fatal_errors.rv_dcls_error & ~fw_update_rst_window;
 always_comb soc_ifc_reg_hwif_in.CPTRA_HW_ERROR_FATAL.dccm_wr_readback_err.we = cptra_hw_fatal_errors.dccm_wr_readback_error & ~fw_update_rst_window;
 // Using we+next instead of hwset allows us to encode the reserved fields in some fashion
 // other than bit-hot in the future, if needed (e.g. we need to encode > 32 FATAL events)
