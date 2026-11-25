@@ -410,7 +410,9 @@ module caliptra_top_tb_services
     //         8'hc2        - Request BFM post-CPTRA_LOCK stash bank negative writes
     //         8'hc3        - Request BFM stash bank random overwrite with invalid AXI USER (PAUSER)
     //         8'hc4        - Start directed DCLS (+CALIPTRA_TEST_DCLS only)
-    //         8'hc5: 8'hc7 - Unused
+    //         8'hc5        - Re-run the DCCM preload for the range dccm.hex covers (first record to RV_DCCM_EADR);
+    //                        DCCM below the image is left intact. Sent by the validation ROM crt0 on every boot.
+    //         8'hc6: 8'hc7 - Unused
     //         8'hc8        - Inject key 0x0 into slot 16 for AES
     //         8'hc9        - Inject key smaller than key_release_size into KV23
     //         8'hca        - Inject key larger than key_release_size into KV23
@@ -3011,6 +3013,21 @@ endgenerate //IV_NO
 
     logic preload_dccm_done;
 
+    // DCCM address of the first dccm.hex record, captured at time 0 for cmd 8'hc5.
+    // Stays past RV_DCCM_EADR (8'hc5 is a no-op) if there is no dccm.hex.
+    logic [31:0] dccm_hex_saddr = `RV_DCCM_EADR + 1;
+    integer      dccm_hex_fd;
+
+    // 8'hc5: re-run the DCCM preload from the start of the dccm.hex image. The validation
+    // ROM sends this on every boot because RT reuses its DCCM range. DCCM below the image
+    // (FMC data that a FW update reset relies on) is not touched.
+    always @(negedge clk) begin
+        if (mailbox_write && (WriteData[7:0] == 8'hc5)) begin
+            $display("%0t: FW requested DCCM preload of dccm.hex (cmd 0xc5)", $time);
+            preload_dccm(dccm_hex_saddr);
+        end
+    end
+
     initial begin
         abi_reg[0] = "zero";
         abi_reg[1] = "ra";
@@ -3058,7 +3075,13 @@ endgenerate //IV_NO
         hex_file_is_empty = $system("test -s mailbox.hex");
         if (!hex_file_is_empty) $readmemh("mailbox.hex",  dummy_mbox_preloader.ram,0,MBOX_DIR_MEM_SIZE-1);
         hex_file_is_empty = $system("test -s dccm.hex");
-        if (!hex_file_is_empty) $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,`RV_DCCM_EADR - `RV_DCCM_SADR);
+        if (!hex_file_is_empty) begin
+            $readmemh("dccm.hex",     dummy_dccm_preloader.ram,0,`RV_DCCM_EADR - `RV_DCCM_SADR);
+            dccm_hex_fd = $fopen("dccm.hex", "r");
+            if ($fscanf(dccm_hex_fd, "@%h", dccm_hex_saddr) != 1) dccm_hex_saddr = 0;
+            dccm_hex_saddr += `RV_DCCM_SADR;
+            $fclose(dccm_hex_fd);
+        end
         hex_file_is_empty = $system("test -s iccm.hex");
         if (!hex_file_is_empty) $readmemh("iccm.hex",     dummy_iccm_preloader.ram,0,`RV_ICCM_EADR - `RV_ICCM_SADR);
 
@@ -3326,15 +3349,16 @@ task static preload_iccm;
 endtask
 
 
-task static preload_dccm ();
+// saddr defaults to the DCCM base: full preload at time 0. Cmd 8'hc5 passes the dccm.hex
+// start so only [saddr, RV_DCCM_EADR] is rewritten and DCCM below it is left intact.
+task static preload_dccm (input bit [31:0] saddr = `RV_DCCM_SADR);
     bit[31:0] data;
-    bit[31:0] addr, saddr, eaddr;
+    bit[31:0] addr, eaddr;
 
-    `ifndef VERILATOR
-    init_dccm();
-    `endif
-    saddr = `RV_DCCM_SADR;
     if (saddr < `RV_DCCM_SADR || saddr > `RV_DCCM_EADR) return;
+    `ifndef VERILATOR
+    if (saddr == `RV_DCCM_SADR) init_dccm();
+    `endif
     `ifndef RV_DCCM_ENABLE
         $display("********************************************************");
         $display("DCCM preload: there is no DCCM in VeeR, terminating !!!");

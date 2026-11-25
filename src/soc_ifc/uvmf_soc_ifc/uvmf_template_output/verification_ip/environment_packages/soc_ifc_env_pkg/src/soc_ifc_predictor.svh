@@ -1572,12 +1572,14 @@ class soc_ifc_predictor #(
                 "CPTRA_GENERIC_OUTPUT_WIRES[0]": begin
                     if (ahb_txn.RnW == AHB_WRITE) begin
                         case (data_active[7:0]) inside
-                            8'h0,[8'h2:8'h5],8'h7F,[8'h80:8'hf7]:
+                            8'h0,[8'h2:8'h5],8'h7F,[8'h80:8'hc4],[8'hc6:8'hf7]:
                                 `uvm_warning("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES with an unassigned value: 0x%x", data_active))
                             8'h1:
                                 `uvm_fatal("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES to Kill Simulation with Error!") /* TODO put this in the scoreboard? */
                             [8'h6:8'h7E]:
                                 `uvm_info("PRED_AHB", $sformatf("Observed write to CPTRA_GENERIC_OUTPUT_WIRES and translating as ASCII character: %c", data_active[7:0]), UVM_MEDIUM)
+                            8'hc5:
+                                `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Re-run DCCM preload from dccm.hex]", UVM_MEDIUM)
                             8'hf8:
                                 `uvm_info("PRED_AHB", "Observed write to CPTRA_GENERIC_OUTPUT_WIRES [Assert interrupt flags at fixed intervals to wake up halted core]", UVM_MEDIUM)
                             8'hf9:
