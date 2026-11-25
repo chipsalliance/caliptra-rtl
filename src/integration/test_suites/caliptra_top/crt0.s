@@ -19,18 +19,19 @@
 // in sync. The Makefile VPATH searches $(TEST_DIR) first, so this file replaces
 // the shared crt0 for this image only.
 //
-// The only difference is the ROM->DCCM data copy below. This ROM's data lives in
-// the upper half of DCCM (0x5002_0000), which the RT firmware it loads also uses
+// The only difference is the TB request below. This ROM's data lives in the
+// upper half of DCCM (0x5002_0000), which the RT firmware it loads also uses
 // for its own .data/.bss/stack (see caliptra_rt/caliptra_rt.ld). dccm.hex is
-// only backdoor-loaded at time 0, so after a warm or FW update reset DCCM holds
-// RT's values instead of the ROM's. caliptra_top.ld keeps the ROM's data in the
-// ROM image, and it is copied into DCCM here on every reset.
+// backdoor-loaded at time 0, so after a warm or FW update reset DCCM would hold
+// RT's values instead of the ROM's. On every boot, tb_services command 0xC5
+// re-runs the DCCM preload for the range dccm.hex covers, in zero sim time.
+// DCCM below that range (FMC's data, which the FW update reset flow reuses
+// without reloading) is left intact.
 
 #include "caliptra_defines.h"
 
 .set    mfdc, 0x7f9
 .set    mrac, 0x7c0
-.extern _data_lma_start, _data_lma_end, _data_vma_start
 .section .text.init
 .global _start
 _start:
@@ -66,18 +67,18 @@ _start:
     la t0, early_trap_vector
     csrw mtvec, t0
 
-    // Copy .data/.rodata/.bss and the ISR vector table from ROM (imem) to DCCM
-    la t0, _data_lma_start
-    la t1, _data_lma_end
-    la t2, _data_vma_start
-    bgeu t0, t1, data_cp_done
-data_cp_loop:
-    lw t3, 0(t0)
-    sw t3, 0(t2)
-    addi t0, t0, 4
-    addi t2, t2, 4
-    bltu t0, t1, data_cp_loop
-data_cp_done:
+    // Both .data and .bss are backdoor-loaded straight into DCCM via dccm.hex
+    // (see tools/scripts/Makefile): .bss is folded into the DCCM .data section
+    // with zero fill by the linker script, so crt0 copies nothing from ROM.
+    // This saves the slow ROM->DCCM word copy on every cold and warm reset.
+    // These benches are simulation-only, where DCCM is always preloaded.
+
+    // Ask the TB to re-run the DCCM preload (see header). The fence orders all
+    // later DCCM accesses (stack, .data) after that request.
+    li t0, STDOUT
+    li t1, 0xc5
+    sw t1, 0(t0)
+    fence
 
     // Init. the stack and transfer operation to main
     la sp, STACK
