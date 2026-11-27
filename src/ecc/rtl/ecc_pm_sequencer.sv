@@ -2564,6 +2564,6 @@ module ecc_pm_sequencer
                 endcase 
             end
         end
-    end // prog_rom
+    end : prog_rom
 
 endmodule

@@ -97,7 +97,7 @@ module doe_core_cbc_tb();
     begin : clk_gen
       #CLK_HALF_PERIOD;
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
 
   //----------------------------------------------------------------
@@ -127,7 +127,7 @@ module doe_core_cbc_tb();
       reset_n_tb = 1;
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -149,7 +149,7 @@ module doe_core_cbc_tb();
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_results
+  endtask : display_test_results
 
   //----------------------------------------------------------------
   // init_sim()
@@ -177,7 +177,7 @@ module doe_core_cbc_tb();
       IV_updated_tb   = 0;
       core_block_tb   = 0;
     end
-  endtask // init_sim
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -198,7 +198,7 @@ module doe_core_cbc_tb();
           #(CLK_PERIOD);
         end
     end
-  endtask // wait_ready
+  endtask : wait_ready
 
 
 
@@ -220,7 +220,7 @@ module doe_core_cbc_tb();
       wait_ready();
       
     end
-  endtask // init_key
+  endtask : init_key
 
 
   //----------------------------------------------------------------
@@ -279,7 +279,7 @@ module doe_core_cbc_tb();
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // cbc_mode_single_block_test
+  endtask : cbc_mode_single_block_test
 
 
   //----------------------------------------------------------------
@@ -364,7 +364,7 @@ module doe_core_cbc_tb();
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // cbc_mode_dual_block_test
+  endtask : cbc_mode_double_block_test
 
 
 
@@ -505,7 +505,7 @@ module doe_core_cbc_tb();
       end_time = cycle_ctr - start_time;
 
     end
-  endtask // cbc_mode_quat_block_test
+  endtask : cbc_mode_quadratic_block_test
 
   
   //----------------------------------------------------------------
@@ -643,7 +643,7 @@ module doe_core_cbc_tb();
       $display("---------------------");
 
     end
-  endtask // doe_cbc_test
+  endtask : doe_cbc_test
 
   //----------------------------------------------------------------
   // main
@@ -666,6 +666,6 @@ module doe_core_cbc_tb();
       $display("");
       $display("*** DOE simulation done. ***");
       $finish;
-    end // main
+    end : main
 
-endmodule // doe_tb
+endmodule : doe_core_cbc_tb

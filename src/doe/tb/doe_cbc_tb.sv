@@ -167,7 +167,7 @@ module doe_cbc_tb();
     begin : clk_gen
       #CLK_HALF_PERIOD;
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 
 
   //----------------------------------------------------------------
@@ -199,7 +199,7 @@ module doe_cbc_tb();
       cptra_pwrgood = 1;
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -221,7 +221,7 @@ module doe_cbc_tb();
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_results
+  endtask : display_test_results
 
   //----------------------------------------------------------------
   // init_sim()
@@ -247,7 +247,7 @@ module doe_cbc_tb();
       htrans_i_tb     = AHB_HTRANS_IDLE;
       hsize_i_tb      = 3'b011;
     end
-  endtask // init_sim
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -280,7 +280,7 @@ module doe_cbc_tb();
                version[47 : 40], version[39 : 32],
                version[63 : 56], version[55 : 48]);
     end
-  endtask // check_name_version
+  endtask : check_name_version
 
   //----------------------------------------------------------------
   // write_single_word()
@@ -303,7 +303,7 @@ module doe_cbc_tb();
       hwrite_i_tb     = 0;
       htrans_i_tb     = AHB_HTRANS_IDLE;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
 
   //----------------------------------------------------------------
@@ -318,7 +318,7 @@ module doe_cbc_tb();
       write_single_word(ADDR_BLOCK2, block[63   :  32]);
       write_single_word(ADDR_BLOCK3, block[31   :   0]);
     end
-  endtask // write_block
+  endtask : write_block
 
 
   //----------------------------------------------------------------
@@ -343,7 +343,7 @@ module doe_cbc_tb();
       htrans_i_tb     = AHB_HTRANS_IDLE;
       read_data = hrdata_o_tb;
     end
-  endtask // read_word
+  endtask : read_single_word
 
   //----------------------------------------------------------------
   // wait_ready()
@@ -365,7 +365,7 @@ module doe_cbc_tb();
           read_single_word(ADDR_STATUS);
         end
     end
-  endtask // wait_ready
+  endtask : wait_ready
 
   //----------------------------------------------------------------
   // read_result()
@@ -383,7 +383,7 @@ module doe_cbc_tb();
       read_single_word(ADDR_RESULT3);
       result_data[31  :  0] = read_data;
     end
-  endtask // read_result
+  endtask : read_result
 
 
   //----------------------------------------------------------------
@@ -424,7 +424,7 @@ module doe_cbc_tb();
       //     temp_ctr = temp_ctr + 1;
       //   end
     end
-  endtask // init_key
+  endtask : init_key
 
   //----------------------------------------------------------------
   // write_IV()
@@ -438,7 +438,7 @@ module doe_cbc_tb();
       write_single_word(ADDR_IV2, IV[63   :  32]);
       write_single_word(ADDR_IV3, IV[31   :   0]);
     end
-  endtask // write_IV
+  endtask : write_IV
 
 
 
@@ -499,7 +499,7 @@ module doe_cbc_tb();
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // cbc_mode_single_block_test
+  endtask : cbc_mode_single_block_test
 
 
   //----------------------------------------------------------------
@@ -592,7 +592,7 @@ module doe_cbc_tb();
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // cbc_mode_dual_block_test
+  endtask : cbc_mode_double_block_test
 
 
 
@@ -751,7 +751,7 @@ module doe_cbc_tb();
           error_ctr = error_ctr + 1;
         end
     end
-  endtask // cbc_mode_quat_block_test
+  endtask : cbc_mode_quadratic_block_test
 
   //----------------------------------------------------------------
   // cbc_mode_sequential_quadratic_block_test()
@@ -994,7 +994,7 @@ module doe_cbc_tb();
 
 
     end
-  endtask // cbc_mode_sequential_quadratic_block_test
+  endtask : cbc_mode_sequential_quadratic_block_test
 
   //----------------------------------------------------------------
   // cbc_mode_kat_vector_test()
@@ -1109,7 +1109,7 @@ module doe_cbc_tb();
       $fclose(fd_r);
       
     end
-  endtask // cbc_mode_kat_vector_test
+  endtask : cbc_mode_kat_vector_test
 
   //----------------------------------------------------------------
   // cbc_mode_mmt_vector_test()
@@ -1229,7 +1229,7 @@ module doe_cbc_tb();
       $fclose(fd_r);
       
     end
-  endtask // cbc_mode_mmt_vector_test
+  endtask : cbc_mode_mmt_vector_test
 
   //----------------------------------------------------------------
   // doe_cbc_test()
@@ -1390,7 +1390,7 @@ module doe_cbc_tb();
       $display("---------------------");
 
     end
-  endtask // doe_cbc_test
+  endtask : doe_cbc_test
 
   //----------------------------------------------------------------
   // main
@@ -1415,6 +1415,6 @@ module doe_cbc_tb();
       $display("");
       $display("*** DOE simulation done. ***");
       $finish;
-    end // main
+    end : main
 
-endmodule // doe_tb
+endmodule : doe_cbc_tb

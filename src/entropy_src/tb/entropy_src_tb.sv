@@ -202,7 +202,7 @@ module entropy_src_tb
     begin : clk_gen
       #CLK_HALF_PERIOD
       clk_tb = !clk_tb;
-    end // clk_gen
+    end : clk_gen
 `endif
 
   //----------------------------------------------------------------
@@ -233,7 +233,7 @@ module entropy_src_tb
 
       $display("");
     end
-  endtask // reset_dut
+  endtask : reset_dut
 
 
   //----------------------------------------------------------------
@@ -261,7 +261,7 @@ module entropy_src_tb
       htrans_i_tb  = AHB_HTRANS_IDLE;
       hsize_i_tb   = 3'b011;
     end
-  endtask // init_dut
+  endtask : init_sim
 
 
   //----------------------------------------------------------------
@@ -283,7 +283,7 @@ module entropy_src_tb
           $display("* TESTCASE FAILED");
         end
     end
-  endtask // display_test_result
+  endtask : display_test_result
 
   //----------------------------------------------------------------
   // write_single_word()
@@ -316,7 +316,7 @@ module entropy_src_tb
       @(posedge clk_tb);
       hsel_i_tb       = 0;
     end
-  endtask // write_single_word
+  endtask : write_single_word
 
   //----------------------------------------------------------------
   // read_word()
@@ -353,7 +353,7 @@ module entropy_src_tb
       $display("[%t] read_single_word(addr=0x%x) = 0x%x", $time, address, read_data);
 
     end
-  endtask // read_word
+  endtask : read_single_word
 
   logic [31:0] test_vector_q[$];  // queue of random input
 
@@ -401,7 +401,7 @@ module entropy_src_tb
     entropy_src_hw_if_req.es_req = 0;
     repeat (1000) @(posedge clk_tb);
 
-  endtask // run_hw_if_test
+  endtask : run_hw_if_test
 
   //----------------------------------------------------------------
   // Seed checker
@@ -445,7 +445,7 @@ module entropy_src_tb
     zeroize_tb = 1'b1;
     repeat (cycles) @(negedge clk_tb);
     zeroize_tb = 1'b0;
-  endtask // zeroize_pulse
+  endtask : zeroize_pulse
 
   //----------------------------------------------------------------
   // wait_new_seed()
@@ -465,7 +465,7 @@ module entropy_src_tb
                dut.u_entropy_src_core.u_entropy_src_main_sm.state_q.name());
       error_ctr += 1;
     end
-  endtask // wait_new_seed
+  endtask : wait_new_seed
 
   //----------------------------------------------------------------
   // check_no_error()
@@ -483,7 +483,7 @@ module entropy_src_tb
       $display("[%t] ERROR: %s: ERR_CODE = 0x%x", $time, ctx, read_data);
       error_ctr += 1;
     end
-  endtask // check_no_error
+  endtask : check_no_error
 
   //----------------------------------------------------------------
   // run_bypass_zeroize_test()
@@ -523,7 +523,7 @@ module entropy_src_tb
     repeat (1000) @(posedge clk_tb);
 
     check_no_error("bypass mode zeroize");
-  endtask // run_bypass_zeroize_test
+  endtask : run_bypass_zeroize_test
 
   //----------------------------------------------------------------
   // run_fips_zeroize_test()
@@ -608,7 +608,7 @@ module entropy_src_tb
     repeat (1000) @(posedge clk_tb);
 
     check_no_error("FIPS mode zeroize");
-  endtask // run_fips_zeroize_test
+  endtask : run_fips_zeroize_test
 
   //----------------------------------------------------------------
   // run_ht_fail_fw_ov_zeroize_test()
@@ -632,7 +632,7 @@ module entropy_src_tb
       $display("[%t] Zeroize in state %s", $time, state.name());
       zeroize_pulse(1);
     end
-  endtask // zeroize_in_state
+  endtask : zeroize_in_state
 
   task run_ht_fail_fw_ov_zeroize_test;
     $display("*** Zeroize with failing health tests and in firmware override mode");
@@ -667,7 +667,7 @@ module entropy_src_tb
     repeat (100) @(posedge clk_tb);
     write_single_word(ADDR_FW_OV_CONTROL, 32'h99);
     check_no_error("health test failure / firmware override zeroize");
-  endtask // run_ht_fail_fw_ov_zeroize_test
+  endtask : run_ht_fail_fw_ov_zeroize_test
 
   //----------------------------------------------------------------
   // Random zeroize
@@ -811,7 +811,7 @@ module entropy_src_tb
     repeat (1000) @(posedge clk_tb);
 
     check_no_error(ctx);
-  endtask // run_random_zeroize_test
+  endtask : run_random_zeroize_test
 
   //----------------------------------------------------------------
   // Scoreboard RNG Data
@@ -873,12 +873,12 @@ module entropy_src_tb
 
       $display("   -- Testbench for entropy_src done. --");
       $finish;
-    end // main
+    end : main
 
 `ifndef VERILATOR
   entropy_src_cov_bind i_entropy_src_cov_bind();
 `endif
-endmodule // entropy_src_tb
+endmodule : entropy_src_tb
 
 //======================================================================
 // EOF entropy_src_tb.sv

@@ -308,7 +308,7 @@ module doe_core_cbc(
              
             IV_updated_delayed <= IV_updated;      
         end
-  end //IV_storage_management
+  end : IV_storage_management
 
 
 
@@ -353,7 +353,7 @@ module doe_core_cbc(
           if (doe_core_ctrl_we)
             doe_core_ctrl_reg <= doe_core_ctrl_new;
         end
-    end // reg_update
+    end : reg_update
 
 
   //----------------------------------------------------------------
@@ -372,7 +372,7 @@ module doe_core_cbc(
         begin
           muxed_sboxw = enc_sboxw;
         end
-    end // sbox_mux
+    end : sbox_mux
 
 
   //----------------------------------------------------------------
@@ -402,7 +402,7 @@ module doe_core_cbc(
           muxed_new_block = dec_new_block^IV_decry;
           muxed_ready     = dec_ready;
         end
-    end // encdec_mux
+    end : encdec_mux
 
 
   //----------------------------------------------------------------
@@ -487,8 +487,8 @@ module doe_core_cbc(
           end
       endcase // case (doe_core_ctrl_reg)
 
-    end // doe_core_ctrl
-endmodule // doe_core
+    end : doe_core_ctrl
+endmodule : doe_core_cbc
 
 //======================================================================
 // EOF doe_core.v

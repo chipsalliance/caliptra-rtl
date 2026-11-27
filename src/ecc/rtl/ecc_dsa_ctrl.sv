@@ -625,7 +625,7 @@ module ecc_dsa_ctrl
                     end
             endcase
         end
-    end // wr_en_signals
+    end : wr_en_signals
 
     
     // set the write register value based on sequencer output of "DSA_UOP_WR_CORE"
@@ -666,7 +666,7 @@ module ecc_dsa_ctrl
                 default               : write_reg = '0;
             endcase
         end
-    end // write_to_pm_core
+    end : write_to_pm_core
 
     // Set the input scalar for scalar_blinding module
     always_ff @(posedge clk or negedge reset_n) 
@@ -682,7 +682,7 @@ module ecc_dsa_ctrl
                 scalar_in_reg <= scalar_G_reg;
             end
         end
-    end // scalar_sca_ctrl
+    end : scalar_sca_ctrl
 
     assign hmac_busy = ~hmac_ready;
     assign subcomponent_busy = pm_busy_o | hmac_busy | scalar_sca_busy_o;
@@ -706,7 +706,7 @@ module ecc_dsa_ctrl
                 pk_chk_reg <= read_reg;
             end
         end
-    end // pk_chk
+    end : pk_chk
 
     always_ff @(posedge clk or negedge reset_n) 
     begin : error_detection
@@ -716,7 +716,7 @@ module ecc_dsa_ctrl
             error_flag_reg <= 1'b0;
         else if (error_flag)
             error_flag_reg <= 1'b1;
-    end // error_detection
+    end : error_detection
     
     assign error_flag_edge = error_flag & (!error_flag_reg);
 
@@ -767,7 +767,7 @@ module ecc_dsa_ctrl
             ecc_verify_pass_reg <= 1'b0;
         else if (verifying_process & hw_verify_r_we)
             ecc_verify_pass_reg <= ecc_verify_res_match;
-    end // ecc_verify_result
+    end : ecc_verify_result
 
     //----------------------------------------------------------------
     // ECDSA_FSM_flow
@@ -921,7 +921,7 @@ module ecc_dsa_ctrl
                 endcase
             end
         end
-    end // ECDSA_FSM
+    end : ECDSA_FSM
 
     // Generate a pulse to trig the interupt after finishing the operation
     always_ff @(posedge clk or negedge reset_n)
@@ -947,7 +947,7 @@ module ecc_dsa_ctrl
             ecc_zeroize_req <= 1'b0;
         else if (ecc_zeroize_req_set)
             ecc_zeroize_req <= 1'b1;
-    end // ecc_zeroize_req_flag
+    end : ecc_zeroize_req_flag
 
     // Set the ready/busy flag of ECC
     assign dsa_busy = (prog_cntr == ECC_NOP)? 1'b0 : 1'b1;

@@ -227,7 +227,7 @@ module ecc_montgomerymultiplier #(
                 a_reg[FULL_REG_SIZE-1 : FULL_REG_SIZE-RADIX] <= 'b0; //Shift 
             end 
         end
-    end // input_reg
+    end : input_reg
 
     assign a_array[0] = a_reg[RADIX-1 : 0];
 
@@ -282,7 +282,7 @@ module ecc_montgomerymultiplier #(
                         t_reg[t0] <= t_reg[t0];
                 end
             end
-        end // gen_t_reg
+        end : gen_t_reg
     endgenerate
 
     genvar t1;
@@ -317,7 +317,7 @@ module ecc_montgomerymultiplier #(
                 always_comb sub_res[t2] = s_array[0] + p_neg_array[t2] + sub_b_i[t2];
             else
                 always_comb sub_res[t2] = s_array[t2_unsigned >> 1] + p_neg_array[t2] + sub_b_i[t2];
-        end // gen_sub_res_t
+        end : gen_sub_res_t
     endgenerate
 
     genvar t3;
@@ -333,7 +333,7 @@ module ecc_montgomerymultiplier #(
                 else 
                     t_subtracted_reg[t3] <= t_subtracted_reg[t3];
             end
-        end // gen_t_sub_reg
+        end : gen_t_sub_reg
     endgenerate
 
     // Storing the final results from the system

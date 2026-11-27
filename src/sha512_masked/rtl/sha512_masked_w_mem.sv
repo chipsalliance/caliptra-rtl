@@ -141,7 +141,7 @@ module sha512_masked_w_mem
               w_ctr_reg <= w_ctr_new;
         end
       end
-    end // reg_update
+    end : reg_update
 
 
   //----------------------------------------------------------------
@@ -156,7 +156,7 @@ module sha512_masked_w_mem
         w_tmp = w_mem[w_ctr_reg[3 : 0]];
       else
         w_tmp = w_new;
-    end // select_w
+    end : select_w
 
 
   //----------------------------------------------------------------
@@ -257,7 +257,7 @@ module sha512_masked_w_mem
           w_mem15_new = w_new;
           w_mem_we    = 1;
         end
-    end // w_mem_update_logic
+    end : w_mem_update_logic
 
 
   //----------------------------------------------------------------
@@ -281,9 +281,9 @@ module sha512_masked_w_mem
           w_ctr_new = w_ctr_reg + 7'h01;
           w_ctr_we  = 1'h1;
         end
-    end // w_ctr
+    end : w_ctr
 
-endmodule // sha512_w_mem
+endmodule : sha512_masked_w_mem
 
 //======================================================================
 // EOF sha512_masked_w_mem.v
