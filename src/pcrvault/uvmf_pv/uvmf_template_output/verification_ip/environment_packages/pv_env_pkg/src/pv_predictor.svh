@@ -447,6 +447,10 @@ class pv_predictor #(
     $cast(ahb_txn, t);
 
     pv_sb_ahb_ap_output_transaction.copy(ahb_txn);
+    // PV register accesses never return an AHB error, so do not copy the
+    // monitored response into the expectation.
+    foreach (pv_sb_ahb_ap_output_transaction.resp[i])
+      pv_sb_ahb_ap_output_transaction.resp[i] = AHB_OKAY;
     if (ahb_txn.RnW == AHB_READ) begin
       completed_ahb_reads.push_back(pv_sb_ahb_ap_output_transaction);
       publish_ahb_reads();

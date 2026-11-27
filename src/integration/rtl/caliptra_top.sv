@@ -1941,14 +1941,16 @@ endgenerate
 
 // ROM write errors must follow the AHB-Lite two-cycle ERROR response on the
 // LSU-facing port: an ERROR wait cycle followed by an ERROR ready cycle.
+// The IMEM 2:1 mux masks the response while force_bus_idle (fw_update_rst_window)
+// is asserted, so the sequence is not checked across that window.
 `CALIPTRA_ASSERT(AHB_ROM_ERR_WAIT_THEN_READY,
                  (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp && !responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout) |=>
                  (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp &&  responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout),
-                 clk_cg, !cptra_uc_rst_b)
+                 clk_cg, !cptra_uc_rst_b || fw_update_rst_window)
 `CALIPTRA_ASSERT(AHB_ROM_ERR_READY_AFTER_WAIT,
                  (responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp &&  responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout) |->
                  $past(responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hresp && !responder_inst[`CALIPTRA_SLAVE_SEL_IMEM].hreadyout),
-                 clk_cg, !cptra_uc_rst_b)
+                 clk_cg, !cptra_uc_rst_b || fw_update_rst_window)
 
 // Safety assertion: verify single-bank-at-a-time ICCM write invariant
 `ifdef CALIPTRA_MODE_SUBSYSTEM

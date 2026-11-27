@@ -283,6 +283,7 @@ package soc_ifc_tb_pkg;
     "INTERNAL_ICCM_RT_START_ADDR"                   : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR,                          // 0x658      Shadow: RT start addr
     "INTERNAL_ICCM_RT_END_ADDR"                     : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR,                            // 0x65c      Shadow: RT end addr
     "INTERNAL_ICCM_REGION_LOCK"                     : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK,                            // 0x660      ICCM Region Lock
+    "INTERNAL_CSR_HMAC_KEY_LOCK"                    : SOCIFC_BASE + `SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK,                           // 0x668      CSR HMAC Key Lock
     // SoC IFC Interrupt Block Register 
     "INTR_BRF_GLOBAL_INTR_EN_R"                     : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_GLOBAL_INTR_EN_R,                       // 0x800
     "INTR_BRF_ERROR_INTR_EN_R"                      : SOCIFC_BASE + `SOC_IFC_REG_INTR_BLOCK_RF_ERROR_INTR_EN_R,                        // 0x804
@@ -546,6 +547,7 @@ package soc_ifc_tb_pkg;
     "INTERNAL_ICCM_RT_START_ADDR"                      : `SOC_IFC_REG_INTERNAL_ICCM_RT_START_ADDR_ADDR_MASK,
     "INTERNAL_ICCM_RT_END_ADDR"                        : `SOC_IFC_REG_INTERNAL_ICCM_RT_END_ADDR_ADDR_MASK,
     "INTERNAL_ICCM_REGION_LOCK"                        : `SOC_IFC_REG_INTERNAL_ICCM_REGION_LOCK_LOCK_MASK,
+    "INTERNAL_CSR_HMAC_KEY_LOCK"                       : `SOC_IFC_REG_INTERNAL_CSR_HMAC_KEY_LOCK_LOCK_MASK,
     "INTERNAL_FW_UPDATE_RESET"                         : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_CORE_RST_MASK,
     "INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES"             : `SOC_IFC_REG_INTERNAL_FW_UPDATE_RESET_WAIT_CYCLES_WAIT_CYCLES_MASK,
     "INTERNAL_HW_ERROR_FATAL_MASK"                     : (`SOC_IFC_REG_INTERNAL_HW_ERROR_FATAL_MASK_MASK_NMI_PIN_MASK      | 
@@ -1264,6 +1266,10 @@ package soc_ifc_tb_pkg;
             iccm_region_locked = curr_data & get_mask(addr_name);
             exp_data = iccm_region_locked ? curr_data : (ahb_indata & get_mask(addr_name) | axi_rodata);
           end
+
+          // W1S from AHB only (SoC writes rejected); cleared by warm/cold reset,
+          // retained across firmware-update reset.
+          "INTERNAL_CSR_HMAC_KEY_LOCK"                        : exp_data = curr_data | (ahb_indata & get_mask(addr_name));
 
           "INTERNAL_FW_UPDATE_RESET"                        : begin
             exp_data = ahb_indata & get_mask(addr_name) | axi_rodata; 

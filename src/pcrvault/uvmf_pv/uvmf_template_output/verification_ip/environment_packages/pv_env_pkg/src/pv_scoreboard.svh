@@ -110,11 +110,11 @@ class pv_scoreboard #(
   // The predictor publishes an expected read only after both the AHB callback
   // and its pre-edge storage snapshot arrive, so it can trail the actual txn.
   pv_ahb_txn_t ahb_actual_q   [$];
-  // Each expected item is a copy of the monitored transfer with only read
-  // data[0] replaced from the predictor's storage snapshot. Address, RnW,
-  // resp and write data therefore match by construction; read data is the
-  // only independently predicted field. Randomized CTRL writes are checked
-  // through later reads against the predictor's register shadow.
+  // Each expected item is a copy of the monitored transfer with read data[0]
+  // replaced from the predictor's storage snapshot and every resp forced to
+  // AHB_OKAY. Address, RnW and write data match by construction; read data
+  // and the response are independently predicted. Randomized CTRL writes are
+  // checked through later reads against the predictor's register shadow.
   int unsigned ahb_read_compares;
   extern function void match_ahb_txns();
 
