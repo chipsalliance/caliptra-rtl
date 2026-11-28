@@ -37,14 +37,7 @@ def generate_expected_hmac384_tag():
     #Generate digest using OpenSSL HMAC SHA384
     command = 'echo '+msg_str+' | xxd -r -p | openssl dgst -sha384 -mac hmac -macopt hexkey:'+key_str+' -hex'
     tag = subprocess.check_output(command, shell=True)
-    tag_str = str(tag)
-
-    #Chomp extra chars at beginning and end if python 3.6.8 is loaded
-    if tag_str[1] == "'":
-        tag_str = tag_str[11:-3]
-    else:
-        tag_str = tag_str.rstrip()
-        tag_str = tag_str[9:]
+    tag_str = tag.decode().split('=')[-1].strip()
     g.write('TAG = '+tag_str+'\n')
     h.write('TAG = '+tag_str+'\n')
     h.write("------------------------\n")
@@ -74,14 +67,7 @@ def generate_expected_hmac512_tag():
     #Generate digest using OpenSSL HMAC SHA384
     command = 'echo '+msg_str+' | xxd -r -p | openssl dgst -sha512 -mac hmac -macopt hexkey:'+key_str+' -hex'
     tag = subprocess.check_output(command, shell=True)
-    tag_str = str(tag)
-
-    #Chomp extra chars at beginning and end if python 3.6.8 is loaded
-    if tag_str[1] == "'":
-        tag_str = tag_str[11:-3]
-    else:
-        tag_str = tag_str.rstrip()
-        tag_str = tag_str[9:]
+    tag_str = tag.decode().split('=')[-1].strip()
     g.write('TAG = '+tag_str+'\n')
     h.write('TAG = '+tag_str+'\n')
     h.write("------------------------\n")
