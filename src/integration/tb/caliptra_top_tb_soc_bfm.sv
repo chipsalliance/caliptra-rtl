@@ -34,7 +34,7 @@ import caliptra_top_tb_pkg::*; #(
     output logic                       cptra_pwrgood,
     output logic                       cptra_rst_b,
     output logic                       BootFSM_BrkPoint,
-    input int                          cycleCnt,
+    input var int                      cycleCnt,
 
     output logic [`CLP_OBF_KEY_DWORDS-1:0][31:0]          cptra_obf_key,
     output logic [`CLP_CSR_HMAC_KEY_DWORDS-1:0][31:0]     cptra_csr_hmac_key,
